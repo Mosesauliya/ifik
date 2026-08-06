@@ -102,14 +102,55 @@ body {
   transition: transform 0.3s ease;
 }
 
-/* ─── LOADING STATE: Swing/Sway during submission ─── */
+/* ─── LOADING STATE: Lift up + Glowing Pulsing Aura + Scanner ─── */
 .hang-root.is-loading {
-  animation: loadingSwing 1.6s ease-in-out infinite;
+  transform: translateY(-10px) scale(1.01);
+  animation: loadingPulse 1.4s ease-in-out infinite alternate;
 }
 
-@keyframes loadingSwing {
-  0%, 100% { transform: rotate(-3.5deg); }
-  50%      { transform: rotate(3.5deg); }
+@keyframes loadingPulse {
+  0%   { filter: drop-shadow(0 15px 30px rgba(245,158,11,0.35)); }
+  100% { filter: drop-shadow(0 25px 50px rgba(245,158,11,0.75)); }
+}
+
+/* ─── SCANNER BEAM (Sweeps down card during loading) ─── */
+.scanner-beam {
+  position: absolute;
+  left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, 
+    rgba(245,158,11,0) 0%, 
+    #fbbf24 25%, 
+    #ffffff 50%, 
+    #fbbf24 75%, 
+    rgba(245,158,11,0) 100%
+  );
+  box-shadow: 0 0 12px #f59e0b, 0 0 24px #fbbf24;
+  opacity: 0;
+  z-index: 45;
+  pointer-events: none;
+}
+
+.hang-root.is-loading .scanner-beam {
+  opacity: 1;
+  animation: scanSweep 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes scanSweep {
+  0%   { top: 52px; }
+  100% { top: calc(100% - 10px); }
+}
+
+/* Progress bar along the metallic cap */
+.cap-progress-bar {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 3px;
+  width: 0%;
+  background: linear-gradient(90deg, #f59e0b, #22c55e);
+  box-shadow: 0 0 8px #22c55e;
+  z-index: 30;
+  transition: width 0.1s linear;
 }
 
 /* ─── ERROR STATE: Shake/Sway on wrong credentials / error ─── */

@@ -109,10 +109,11 @@ document.addEventListener('DOMContentLoaded', () => {
     spheres.forEach(s => s.style.transform = '');
   });
 
-  // ─── FORM SUBMIT & LOADING SWING (MINIMAL 3 DETIK) ─────────────────────
-  const loginForm = document.getElementById('loginForm');
-  const submitBtn = document.getElementById('submitBtn');
-  let isSubmitting = false;
+  // ─── FORM SUBMIT & 3D SCANNER LOADING (MINIMAL 3.2 DETIK) ─────────────
+  const loginForm      = document.getElementById('loginForm');
+  const submitBtn      = document.getElementById('submitBtn');
+  const capProgressBar = document.getElementById('capProgressBar');
+  let isSubmitting     = false;
 
   if (loginForm && submitBtn) {
     loginForm.addEventListener('submit', (e) => {
@@ -130,25 +131,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
       isSubmitting = true;
 
-      // Add loading swing state
+      // Add loading state (Card lifts, scanner beam activates, glowing aura pulses)
       if (hangRoot) {
         hangRoot.classList.remove('is-error');
         hangRoot.classList.add('is-loading');
       }
 
       submitBtn.disabled = true;
-      submitBtn.innerHTML = `
-        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="margin-top:-2px;">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <span>Memverifikasi & Masuk...</span>
-      `;
+      let progress = 0;
+      
+      const updateButton = (pct) => {
+        submitBtn.innerHTML = `
+          <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="margin-top:-2px;">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span>Memverifikasi Autentikasi... ${pct}%</span>
+        `;
+        if (capProgressBar) capProgressBar.style.width = pct + '%';
+      };
 
-      // Simulasi loading minimal 3.2 detik sambil berayun sebelum masuk
-      setTimeout(() => {
-        loginForm.submit();
-      }, 3200);
+      updateButton(0);
+
+      // Smooth progress bar update over 3.2 seconds (3200ms)
+      const duration = 3200;
+      const intervalTime = 40;
+      const step = 100 / (duration / intervalTime);
+
+      const timer = setInterval(() => {
+        progress += step;
+        if (progress >= 100) {
+          progress = 100;
+          updateButton(100);
+          clearInterval(timer);
+          
+          setTimeout(() => {
+            loginForm.submit();
+          }, 200);
+        } else {
+          updateButton(Math.floor(progress));
+        }
+      }, intervalTime);
     });
   }
 

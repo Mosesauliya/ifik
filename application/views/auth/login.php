@@ -125,8 +125,12 @@
       <!-- THE HANGING CARD -->
       <div class="login-card-container" id="loginCard">
         
+        <!-- Glowing Scanner Beam (Active during loading) -->
+        <div class="scanner-beam" id="scannerBeam"></div>
+
         <!-- Premium Metallic Top Cap (Horizontal Bar with Hole) -->
         <div class="card-metallic-cap">
+          <div class="cap-progress-bar" id="capProgressBar"></div>
           <div class="cap-reflection"></div>
           <div class="cap-hole-wrapper">
             <div class="cap-hole"></div>
