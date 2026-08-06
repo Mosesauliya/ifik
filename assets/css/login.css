@@ -97,18 +97,34 @@ body {
   flex-shrink: 0;
   position: relative;
   margin-top: 50px;
-  /* Pivot point high up on the rope for natural pendulum swing */
+  /* Pivot point high up on the rope for natural movement */
   transform-origin: 50% -250px;
-  animation: pendulumSwing 5.5s ease-in-out infinite;
+  transition: transform 0.3s ease;
 }
 
-@keyframes pendulumSwing {
-  0%, 100% {
-    transform: rotate(-2.2deg);
-  }
-  50% {
-    transform: rotate(2.2deg);
-  }
+/* ─── LOADING STATE: Swing/Sway during submission ─── */
+.hang-root.is-loading {
+  animation: loadingSwing 1.6s ease-in-out infinite;
+}
+
+@keyframes loadingSwing {
+  0%, 100% { transform: rotate(-3.5deg); }
+  50%      { transform: rotate(3.5deg); }
+}
+
+/* ─── ERROR STATE: Shake/Sway on wrong credentials / error ─── */
+.hang-root.is-error {
+  animation: errorShake 0.65s ease-in-out;
+}
+
+@keyframes errorShake {
+  0%, 100% { transform: rotate(0deg); }
+  15%      { transform: rotate(-6deg); }
+  30%      { transform: rotate(5.5deg); }
+  45%      { transform: rotate(-3.5deg); }
+  60%      { transform: rotate(3deg); }
+  75%      { transform: rotate(-1.5deg); }
+  90%      { transform: rotate(1deg); }
 }
 
 /* ─── ROPE EXTENSION ──────────────────────────── */

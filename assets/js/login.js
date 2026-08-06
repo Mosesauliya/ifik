@@ -1,5 +1,28 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+  const hangRoot = document.getElementById('hangRoot');
+
+  // ─── ERROR SHAKE ON PAGE LOAD (if backend flash error exists) ───
+  const flashError = document.querySelector('.flash-error');
+  if (flashError && hangRoot) {
+    triggerErrorShake();
+  }
+
+  function triggerErrorShake() {
+    if (!hangRoot) return;
+    hangRoot.classList.remove('is-loading', 'is-error');
+    // Force reflow for animation restart
+    void hangRoot.offsetWidth;
+    hangRoot.classList.add('is-error');
+
+    hangRoot.addEventListener('animationend', function handler(e) {
+      if (e.animationName === 'errorShake') {
+        hangRoot.classList.remove('is-error');
+        hangRoot.removeEventListener('animationend', handler);
+      }
+    });
+  }
+
   // ─── PASSWORD TOGGLE ──────────────────────────
   const togglePasswordBtn = document.getElementById('togglePassword');
   const passwordInput     = document.getElementById('passwordInput');
@@ -43,13 +66,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function validateEmail(val, strict) {
-    if (!val) { setEmailState('none'); return; }
+    if (!val) { setEmailState('none'); return false; }
     const hasAt       = val.includes('@');
     const validDomain = /^[^\s@]+@telkomuniversity\.ac\.id$/i.test(val);
-    if (!hasAt && !strict) { setEmailState('none'); return; }
-    validDomain
-      ? setEmailState('valid', 'Email Telkom University valid')
-      : setEmailState('error', 'Harus email @telkomuniversity.ac.id');
+    if (!hasAt && !strict) { setEmailState('none'); return false; }
+    if (validDomain) {
+      setEmailState('valid', 'Email Telkom University valid');
+      return true;
+    } else {
+      setEmailState('error', 'Harus email @telkomuniversity.ac.id');
+      return false;
+    }
   }
 
   if (identityInput) {
@@ -67,12 +94,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const dx = (e.clientX - cx) / cx;
     const dy = (e.clientY - cy) / cy;
 
-    // BG parallax
     if (bgImg) {
       bgImg.style.transform = `translate(${dx * -10}px, ${dy * -7}px) scale(1.05)`;
     }
 
-    // Spheres parallax
     spheres.forEach((s, i) => {
       const d = (i % 3 + 1) * 0.55;
       s.style.transform = `translate(${dx * d * 16}px, ${dy * d * 11}px)`;
@@ -84,18 +109,45 @@ document.addEventListener('DOMContentLoaded', () => {
     spheres.forEach(s => s.style.transform = '');
   });
 
-  // ─── FORM SUBMIT LOADING ─────────────────────
+  // ─── FORM SUBMIT & LOADING SWING ─────────────────────
   const loginForm = document.getElementById('loginForm');
   const submitBtn = document.getElementById('submitBtn');
 
   if (loginForm && submitBtn) {
     loginForm.addEventListener('submit', (e) => {
+      const emailVal = identityInput ? identityInput.value.trim() : '';
+      const isEmailValid = /^[^\s@]+@telkomuniversity\.ac\.id$/i.test(emailVal);
+
+      if (!isEmailValid) {
+        e.preventDefault();
+        setEmailState('error', 'Harus email @telkomuniversity.ac.id');
+        triggerErrorShake();
+        return;
+      }
+
+      // Add loading state (swings while loading)
+      if (hangRoot) {
+        hangRoot.classList.remove('is-error');
+        hangRoot.classList.add('is-loading');
+      }
+
       const orig = submitBtn.innerHTML;
       submitBtn.disabled = true;
-      submitBtn.innerHTML = 'Memproses...';
+      submitBtn.innerHTML = `
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="margin-top:-2px;">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span>Memproses...</span>
+      `;
+
       if (!loginForm.action || loginForm.action.endsWith('#')) {
         e.preventDefault();
-        setTimeout(() => { submitBtn.disabled = false; submitBtn.innerHTML = orig; }, 1500);
+        setTimeout(() => {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = orig;
+          if (hangRoot) hangRoot.classList.remove('is-loading');
+        }, 1800);
       }
     });
   }
