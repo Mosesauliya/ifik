@@ -50,7 +50,7 @@
 
     <!-- LEFT HERO TEXT -->
     <div class="hero-text" id="heroText">
-      <p class="hero-eyebrow">IFIK LABS PORTAL</p>
+      <img src="<?= base_url('assets/images/logo-dummy.webp'); ?>" alt="Logo IFIK" class="hero-logo-img">
       <h1 class="hero-title">Reset your<br>password<br>here.</h1>
       <p class="hero-sub">Masukkan email kamu untuk menerima tautan pemulihan kata sandi.</p>
     </div>

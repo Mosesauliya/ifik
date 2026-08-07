@@ -39,7 +39,7 @@
 
     <!-- LEFT HERO TEXT -->
     <div class="hero-text" id="heroText">
-      <p class="hero-eyebrow">IFIK LABS PORTAL</p>
+      <img src="<?= base_url('assets/images/logo-dummy.webp'); ?>" alt="Logo IFIK" class="hero-logo-img">
       <h1 class="hero-title">Your next<br>idea starts<br>here.</h1>
       <p class="hero-sub">Satu ruang untuk terhubung, berkarya, dan mengembangkan ide terbaikmu.</p>
     </div>
