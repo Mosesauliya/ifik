@@ -1,180 +1,405 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+/* ===============================================
+   IK Labs Portal — Login CSS (Phishing / Rope Theme)
+   =============================================== */
 
-:root {
-  --font-main: 'Plus Jakarta Sans', sans-serif;
-  --color-orange-primary: #f46b1d;
-  --color-orange-dark: #ea580c;
-  --color-orange-light: #ff8c42;
-}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: var(--font-main);
-  background-color: #fbf7f1;
-  color: #1e293b;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   min-height: 100vh;
-  margin: 0;
+  overflow: hidden;
+  background: #d97706;
+}
+
+/* ─── BACKGROUND ─────────────────────────────── */
+.bg-layer {
+  position: fixed; inset: 0; z-index: 0;
+}
+.bg-img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  will-change: transform;
+  transform: scale(1.05);
+  transition: transform 0.12s linear;
+}
+.bg-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg,
+    rgba(251,191,36,0.5) 0%,
+    rgba(245,158,11,0.38) 40%,
+    rgba(180,83,9,0.32) 100%);
+}
+
+
+
+/* ─── PAGE LAYOUT ─────────────────────────────── */
+.page-wrap {
+  position: relative; z-index: 10;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow-x: hidden;
+  gap: 60px;
+  padding: 20px 40px;
 }
 
-/* Hero Section Polygon Clip Path */
-.hero-polygon {
-  clip-path: polygon(0 0, 88% 0, 100% 50%, 88% 100%, 0 100%);
+/* ─── HERO TEXT ───────────────────────────────── */
+.hero-text {
+  flex: 1; max-width: 380px;
+  display: none;
+}
+@media (min-width: 1024px) { .hero-text { display: block; } }
+
+.hero-eyebrow {
+  font-size: 0.7rem; font-weight: 800;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: #78350f; margin-bottom: 12px;
+}
+.hero-logo-img {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+  margin-bottom: 16px;
+  display: block;
+}
+.hero-title {
+  font-size: 4.5rem; font-weight: 900; line-height: 0.95;
+  color: #1c0a00;
+  text-shadow: 2px 4px 0 rgba(255,255,255,0.2), 0 8px 28px rgba(0,0,0,0.2);
+  margin-bottom: 20px;
+}
+.hero-sub {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.6;
+  max-width: 320px;
+  background: rgba(28, 10, 0, 0.42);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 12px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
-@media (max-width: 1024px) {
-  .hero-polygon {
-    clip-path: none;
-    border-radius: 1.5rem 1.5rem 0 0;
-  }
+/* ─── HANG ROOT ───────────────────────────────── */
+.hang-root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  position: relative;
+  margin-top: 50px;
+  /* Pivot point high up on the rope for natural movement */
+  transform-origin: 50% -250px;
+  transition: transform 0.3s ease;
 }
 
-/* 3D Scene Perspective */
-.scene-3d {
-  perspective: 1200px;
-  transform-style: preserve-3d;
+/* ─── LOADING STATE: Lift up + Glowing Pulsing Aura + Scanner ─── */
+.hang-root.is-loading {
+  transform: translateY(-10px) scale(1.01);
+  animation: loadingPulse 1.4s ease-in-out infinite alternate;
 }
 
-.preserve-3d {
-  transform-style: preserve-3d;
+@keyframes loadingPulse {
+  0%   { filter: drop-shadow(0 15px 30px rgba(245,158,11,0.35)); }
+  100% { filter: drop-shadow(0 25px 50px rgba(245,158,11,0.75)); }
 }
 
-/* Semi-3D Floating Cards & Objects */
-.card-3d-left {
-  transform: rotateX(16deg) rotateY(-22deg) rotateZ(8deg) translateZ(35px);
+/* ─── SCANNER BEAM (Sweeps down card during loading) ─── */
+.scanner-beam {
+  position: absolute;
+  left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, 
+    rgba(245,158,11,0) 0%, 
+    #fbbf24 25%, 
+    #ffffff 50%, 
+    #fbbf24 75%, 
+    rgba(245,158,11,0) 100%
+  );
+  box-shadow: 0 0 12px #f59e0b, 0 0 24px #fbbf24;
+  opacity: 0;
+  z-index: 45;
+  pointer-events: none;
+}
+
+.hang-root.is-loading .scanner-beam {
+  opacity: 1;
+  animation: scanSweep 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes scanSweep {
+  0%   { top: 52px; }
+  100% { top: calc(100% - 10px); }
+}
+
+/* Progress bar along the metallic cap */
+.cap-progress-bar {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 3px;
+  width: 0%;
+  background: linear-gradient(90deg, #f59e0b, #22c55e);
+  box-shadow: 0 0 8px #22c55e;
+  z-index: 30;
+  transition: width 0.1s linear;
+}
+
+/* ─── ERROR STATE: Shake/Sway on wrong credentials / error ─── */
+.hang-root.is-error {
+  animation: errorShake 0.65s ease-in-out;
+}
+
+@keyframes errorShake {
+  0%, 100% { transform: rotate(0deg); }
+  15%      { transform: rotate(-6deg); }
+  30%      { transform: rotate(5.5deg); }
+  45%      { transform: rotate(-3.5deg); }
+  60%      { transform: rotate(3deg); }
+  75%      { transform: rotate(-1.5deg); }
+  90%      { transform: rotate(1deg); }
+}
+
+/* ─── ROPE EXTENSION ──────────────────────────── */
+.rope-extension {
+  position: absolute;
+  top: -500px;
+  height: 500px;
+  width: 8px;
+  background: repeating-linear-gradient(
+    45deg,
+    #8a5a36,
+    #8a5a36 4px,
+    #b88358 4px,
+    #b88358 8px
+  );
   box-shadow: 
-    -15px 20px 35px rgba(180, 60, 0, 0.35),
-    inset 0 2px 3px rgba(255, 255, 255, 0.8),
-    inset -2px -2px 4px rgba(217, 83, 14, 0.2);
-  transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+    2px 0 5px rgba(0,0,0,0.25),
+    inset -1px 0 2px rgba(0,0,0,0.3);
+  z-index: 15;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
-.card-3d-right {
-  transform: rotateX(16deg) rotateY(18deg) rotateZ(-6deg) translateZ(45px);
+/* ─── ROPE & RING SVG WRAPPER ──────────────────── */
+.rope-ring-wrapper {
+  position: absolute;
+  top: -131px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 160px;
+  z-index: 25;
+}
+
+.rope-ring-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ─── HANGING CARD CONTAINER ───────────────────── */
+.login-card-container {
+  width: 360px;
+  background: #fffbef;
+  border-radius: 28px;
+  box-shadow:
+    0 20px 45px rgba(120,53,15,0.3),
+    0 6px 18px rgba(0,0,0,0.18);
+  border: 1px solid rgba(180,83,9,0.18);
+  overflow: hidden;
+  z-index: 20;
+  position: relative;
+}
+
+/* Premium Metallic Top Cap (Brushed Silver/Champagne) */
+.card-metallic-cap {
+  height: 54px;
+  background: linear-gradient(180deg, 
+    #ece6d7 0%, 
+    #d4caa7 30%, 
+    #b3a78c 70%, 
+    #998d72 100%
+  );
+  border-bottom: 2px solid #857a62;
+  position: relative;
   box-shadow: 
-    15px 22px 38px rgba(180, 60, 0, 0.35),
-    inset 0 2px 3px rgba(255, 255, 255, 0.8),
-    inset 2px -2px 4px rgba(217, 83, 14, 0.2);
-  transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+    inset 0 1.5px 0 rgba(255,255,255,0.7),
+    0 3px 6px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.box-3d-center {
-  transform: rotateX(20deg) rotateY(-15deg) rotateZ(4deg) translateZ(60px);
-  box-shadow: 
-    0 30px 60px rgba(150, 45, 0, 0.4),
-    0 10px 20px rgba(0, 0, 0, 0.15),
-    inset 0 3px 6px rgba(255, 255, 255, 0.9),
-    inset 0 -6px 12px rgba(217, 83, 14, 0.3);
-  transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+.cap-reflection {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, 
+    rgba(255,255,255,0) 0%, 
+    rgba(255,255,255,0.3) 40%, 
+    rgba(255,255,255,0.4) 50%, 
+    rgba(255,255,255,0) 70%
+  );
+  transform: skewX(-30deg);
+  animation: shineCap 6s ease-in-out infinite;
 }
 
-/* Floating Animations */
-.animate-float-slow {
-  animation: floatSlow 6s ease-in-out infinite;
+/* Hole in the Metallic Cap where the Ring connects */
+.cap-hole-wrapper {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 22;
 }
 
-.animate-float-medium {
-  animation: floatMedium 4.5s ease-in-out infinite;
+.cap-hole {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #2a1200, #0a0400);
+  box-shadow:
+    inset 0 3px 6px rgba(0,0,0,0.95),
+    0 1px 2px rgba(255,255,255,0.4);
+  border: 1.5px solid #786d57;
 }
 
-.animate-float-fast {
-  animation: floatFast 3.5s ease-in-out infinite;
+@keyframes shineCap {
+  0%   { left: -100%; }
+  35%, 100% { left: 150%; }
 }
 
-.animate-pulse-glow {
-  animation: pulseGlow 4s ease-in-out infinite;
+/* Card Body Content */
+.card-body {
+  padding: 32px 32px 28px;
 }
 
-@keyframes floatSlow {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-12px) rotate(2deg);
-  }
+.card-brand {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 8px;
+}
+.brand-badge {
+  width: 32px; height: 32px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f59e0b, #b45309);
+  box-shadow: 0 4px 0 #78350f, 0 6px 14px rgba(180,83,9,0.4);
+  color: #fff; font-weight: 900; font-size: 0.75rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.brand-logo-img {
+  height: 34px;
+  width: auto;
+  object-fit: contain;
+}
+.brand-label {
+  font-size: 0.65rem; font-weight: 800;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: #92400e;
+}
+.card-title {
+  font-size: 1.45rem; font-weight: 900;
+  color: #1c0a00; margin-bottom: 4px;
+}
+.card-sub {
+  font-size: 0.72rem; color: #78350f; margin-bottom: 22px;
 }
 
-@keyframes floatMedium {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-16px) rotate(-3deg);
-  }
+/* Flash error & success */
+.flash-error {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-radius: 12px; margin-bottom: 14px;
+  background: rgba(239,68,68,0.1); border: 1.5px solid rgba(239,68,68,0.3);
+  color: #dc2626; font-size: 0.78rem; font-weight: 600;
+}
+.flash-success {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-radius: 12px; margin-bottom: 14px;
+  background: rgba(34,197,94,0.12); border: 1.5px solid rgba(34,197,94,0.35);
+  color: #15803d; font-size: 0.78rem; font-weight: 600;
 }
 
-@keyframes floatFast {
-  0%, 100% {
-    transform: translateY(0px) scale(1);
-  }
-  50% {
-    transform: translateY(-10px) scale(1.05);
-  }
+
+/* ─── FORM FIELDS ─────────────────────────────── */
+.field-group { margin-bottom: 14px; }
+.field-label {
+  display: block;
+  font-size: 0.65rem; font-weight: 800;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: #78350f; margin-bottom: 6px;
+}
+.field-wrap {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.7);
+  border: 1.5px solid rgba(180,83,9,0.22);
+  box-shadow: inset 0 2px 5px rgba(180,83,9,0.05), 0 1px 2px rgba(255,255,255,0.8);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.field-wrap:focus-within {
+  border-color: #f59e0b;
+  background: rgba(255,255,255,0.95);
+  box-shadow: inset 0 2px 4px rgba(180,83,9,0.03), 0 0 0 3px rgba(245,158,11,0.22);
+}
+.field-icon {
+  width: 16px; height: 16px;
+  color: #d97706; flex-shrink: 0;
+}
+.field-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  font-size: 0.82rem; font-weight: 600; color: #1c0a00;
+  font-family: inherit;
+}
+.field-input::placeholder { color: rgba(180,83,9,0.4); }
+
+/* Validation hint */
+.field-hint {
+  display: none; align-items: center;
+  font-size: 0.72rem; font-weight: 700;
+  margin-top: 5px; padding-left: 3px;
 }
 
-@keyframes pulseGlow {
-  0%, 100% {
-    opacity: 0.4;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.75;
-    transform: scale(1.08);
-  }
+/* Eye toggle button */
+.eye-btn {
+  background: transparent; border: none; cursor: pointer;
+  color: #d97706; display: flex; align-items: center;
+  padding: 0; margin-left: 4px;
 }
 
-/* 3D Sphere Styles */
-.sphere-3d-top {
-  background: radial-gradient(circle at 35% 35%, #ffd2a6 0%, #ff802c 45%, #b83d00 100%);
-  box-shadow: 
-    0 15px 30px rgba(130, 35, 0, 0.4),
-    inset 0 2px 4px rgba(255, 255, 255, 0.8),
-    inset -4px -4px 8px rgba(100, 20, 0, 0.4);
+/* ─── SUBMIT BUTTON ───────────────────────────── */
+.btn-submit {
+  width: 100%; padding: 14px;
+  margin-top: 6px; margin-bottom: 4px;
+  border: none; border-radius: 16px; cursor: pointer;
+  font-family: inherit; font-size: 0.82rem; font-weight: 900;
+  letter-spacing: 0.12em; text-transform: uppercase; color: #fff;
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+  box-shadow:
+    0 6px 0 #92400e,
+    0 10px 24px rgba(146,64,14,0.45),
+    inset 0 2px 0 rgba(255,255,255,0.35);
+  transition: all 0.12s ease;
 }
-
-.sphere-3d-main {
-  background: radial-gradient(circle at 30% 30%, #ffe4cc 0%, #ff7b23 40%, #c44300 85%, #7a2600 100%);
-  box-shadow: 
-    0 25px 45px rgba(140, 40, 0, 0.45),
-    inset 0 3px 6px rgba(255, 255, 255, 0.9),
-    inset -6px -6px 12px rgba(80, 15, 0, 0.5);
-}
-
-/* Concentric Rings Overlay */
-.concentric-rings {
-  background: radial-gradient(circle at 40% 40%, transparent 20%, rgba(255, 255, 255, 0.08) 21%, transparent 22%, transparent 38%, rgba(255, 255, 255, 0.08) 39%, transparent 40%, transparent 58%, rgba(255, 255, 255, 0.08) 59%, transparent 60%);
-}
-
-/* Form Input Styling & Focus Glow */
-.input-focus-ring:focus-within {
-  border-color: #f46b1d;
-  box-shadow: 0 0 0 4px rgba(244, 107, 29, 0.15);
-}
-
-/* Custom 3D Button Elevation */
-.btn-3d {
-  background: linear-gradient(180deg, #f57429 0%, #e6560b 100%);
-  box-shadow: 
-    0 10px 25px -5px rgba(230, 86, 11, 0.45),
-    0 4px 6px -2px rgba(230, 86, 11, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.btn-3d:hover {
-  background: linear-gradient(180deg, #ff7e35 0%, #ed5e13 100%);
+.btn-submit:hover {
   transform: translateY(-2px);
-  box-shadow: 
-    0 16px 30px -5px rgba(230, 86, 11, 0.55),
-    0 6px 10px -2px rgba(230, 86, 11, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  box-shadow: 0 8px 0 #92400e, 0 14px 30px rgba(146,64,14,0.5), inset 0 2px 0 rgba(255,255,255,0.4);
+}
+.btn-submit:active {
+  transform: translateY(5px);
+  box-shadow: 0 1px 0 #92400e, 0 4px 10px rgba(146,64,14,0.3), inset 0 2px 0 rgba(0,0,0,0.1);
 }
 
-.btn-3d:active {
-  transform: translateY(1px);
-  box-shadow: 
-    0 5px 12px -3px rgba(230, 86, 11, 0.4),
-    inset 0 2px 4px rgba(0, 0, 0, 0.15);
+.forgot-link {
+  text-align: center; font-size: 0.75rem; color: #92400e; margin-top: 12px;
+}
+.forgot-link a { font-weight: 700; text-decoration: none; }
+.forgot-link a:hover { text-decoration: underline; }
+
+/* ─── FOOTER ──────────────────────────────────── */
+.footer-copy {
+  position: fixed; bottom: 14px; left: 0; right: 0; text-align: center;
+  font-size: 0.7rem; color: rgba(124,45,18,0.65); z-index: 10;
 }

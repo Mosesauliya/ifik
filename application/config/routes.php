@@ -51,5 +51,19 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 */
 $route['default_controller'] = 'login';
 $route['login'] = 'login';
+$route['forgot_password'] = 'login/forgot_password';
+
+// Dosen Wali Routes
+$route['dosenwali'] = 'DosenWali';
+$route['dosenwali/detail_mahasiswa/(:any)'] = 'DosenWali/detail_mahasiswa/$1';
+
+// Koordinator TA Routes
+$route['koordinatorta'] = 'KoordinatorTA';
+$route['koordinatorta/detail_mahasiswa/(:any)'] = 'KoordinatorTA/detail_mahasiswa/$1';
+$route['koordinator'] = 'KoordinatorTA';
+$route['koordinator/detail_mahasiswa/(:any)'] = 'KoordinatorTA/detail_mahasiswa/$1';
+
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
+
+

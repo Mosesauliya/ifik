@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login — IK Labs Portal</title>
-  <meta name="description" content="Masuk ke IK Labs Portal — Fakultas Industri Kreatif, Telkom University.">
+  <title>Lupa Password — IK Labs Portal</title>
+  <meta name="description" content="Reset password IK Labs Portal — Fakultas Industri Kreatif, Telkom University.">
 
   <!-- Tailwind CSS v3 -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -34,14 +34,25 @@
     <div class="bg-overlay"></div>
   </div>
 
+  <!-- ========== FLOATING CSS SPHERES ========== -->
+  <div class="sphere-layer" id="sphereLayer">
+    <div class="sph sph-xl" style="left:3%;  top:55%; --dur:8s; --delay:-2s; background:radial-gradient(circle at 35% 30%,#fff9e6,#f59e0b);"></div>
+    <div class="sph sph-lg" style="right:6%; top:8%;  --dur:7s; --delay:-1s; background:radial-gradient(circle at 35% 30%,#fff,#fbbf24);"></div>
+    <div class="sph sph-md" style="left:28%;bottom:6%;--dur:5s; --delay:-3s; background:radial-gradient(circle at 35% 30%,#fef3c7,#d97706);"></div>
+    <div class="sph sph-sm" style="left:12%;top:18%; --dur:6s; --delay:-0.5s;background:radial-gradient(circle at 35% 30%,#fffbeb,#f59e0b);"></div>
+    <div class="sph sph-xs" style="right:20%;bottom:28%;--dur:4s;--delay:-1.5s;background:radial-gradient(circle at 35% 30%,#fff,#fde68a);"></div>
+    <div class="sph sph-xs" style="left:52%;top:12%; --dur:5s; --delay:-2.5s;background:radial-gradient(circle at 35% 30%,#fff,#b45309);"></div>
+    <div class="sph sph-sm" style="right:33%;top:68%;--dur:7s; --delay:-0.8s;background:radial-gradient(circle at 35% 30%,#fef3c7,#92400e);"></div>
+  </div>
+
   <!-- ========== MAIN LAYOUT ========== -->
   <div class="page-wrap">
 
     <!-- LEFT HERO TEXT -->
     <div class="hero-text" id="heroText">
       <img src="<?= base_url('assets/images/logo-dummy.webp'); ?>" alt="Logo IFIK" class="hero-logo-img">
-      <h1 class="hero-title">Your next<br>idea starts<br>here.</h1>
-      <p class="hero-sub">Satu ruang untuk terhubung, berkarya, dan mengembangkan ide terbaikmu.</p>
+      <h1 class="hero-title">Reset your<br>password<br>here.</h1>
+      <p class="hero-sub">Masukkan email kamu untuk menerima tautan pemulihan kata sandi.</p>
     </div>
 
     <!-- RIGHT — HANGING CARD WITH ROPE -->
@@ -133,52 +144,45 @@
             <img src="<?= base_url('assets/images/logo-dummy.webp'); ?>" alt="Logo IFIK" class="brand-logo-img">
           </div>
 
-          <h2 class="card-title">Masuk ke workspace.</h2>
-          <p class="card-sub">Gunakan email Telkom University kamu</p>
+          <h2 class="card-title">Lupa password?</h2>
+          <p class="card-sub">Masukkan email Telkom University kamu</p>
 
           <!-- Flash Error -->
-          <?php if ($this->session->flashdata('error')): ?>
+          <?php if (isset($error) || $this->session->flashdata('error')): ?>
           <div class="flash-error">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span><?= $this->session->flashdata('error'); ?></span>
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span><?= isset($error) ? $error : $this->session->flashdata('error'); ?></span>
           </div>
           <?php endif; ?>
 
-          <!-- Login Form -->
-          <form action="<?= base_url('login/authenticate'); ?>" method="POST" id="loginForm">
+          <!-- Flash Success -->
+          <?php if (isset($success) || $this->session->flashdata('success')): ?>
+          <div class="flash-success">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span><?= isset($success) ? $success : $this->session->flashdata('success'); ?></span>
+          </div>
+          <?php endif; ?>
+
+          <!-- Forgot Password Form -->
+          <form action="<?= base_url('login/send_reset_link'); ?>" method="POST" id="forgotForm">
             <input type="hidden" name="<?= $this->security->get_csrf_token_name(); ?>" value="<?= $this->security->get_csrf_hash(); ?>">
 
             <!-- Email Input -->
             <div class="field-group">
               <label class="field-label">Email</label>
               <div class="field-wrap" id="emailWrapper">
-                <svg class="field-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                <input type="text" id="identityInput" name="identity" required
+                <svg class="field-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/></svg>
+                <input type="text" id="identityInput" name="email" required
                        placeholder="nama@telkomuniversity.ac.id"
                        class="field-input">
               </div>
               <p id="emailHint" class="field-hint"></p>
             </div>
 
-            <!-- Password Input -->
-            <div class="field-group">
-              <label class="field-label">Password</label>
-              <div class="field-wrap" id="passWrapper">
-                <svg class="field-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                <input type="password" id="passwordInput" name="password" required
-                       placeholder="Masukkan password"
-                       class="field-input">
-                <button type="button" id="togglePassword" class="eye-btn">
-                  <svg id="eyeIcon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                  <svg id="eyeOffIcon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
-                </button>
-              </div>
-            </div>
-
             <!-- Submit Button -->
-            <button type="submit" id="submitBtn" class="btn-submit">Masuk &rarr;</button>
+            <button type="submit" id="submitBtn" class="btn-submit">Kirim Link Reset &rarr;</button>
 
-            <p class="forgot-link"><a href="<?= base_url('forgot_password'); ?>">Lupa password?</a></p>
+            <p class="forgot-link"><a href="<?= base_url('login'); ?>">&larr; Kembali ke Login</a></p>
           </form>
         </div>
 
@@ -189,6 +193,6 @@
 
   <p class="footer-copy">&copy; 2025 Fakultas Industri Kreatif &mdash; Telkom University</p>
 
-  <script src="<?= base_url('assets/js/login.js'); ?>?v=<?= time(); ?>"></script>
+  <script src="<?= base_url('assets/js/forgot_password.js'); ?>?v=<?= time(); ?>"></script>
 </body>
 </html>
