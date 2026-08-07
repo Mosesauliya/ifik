@@ -128,10 +128,9 @@
 
         <!-- Card Body Content -->
         <div class="card-body">
-          <!-- Brand Badge & Text -->
+          <!-- Brand Logo -->
           <div class="card-brand">
             <img src="<?= base_url('assets/images/logo-dummy.webp'); ?>" alt="Logo IFIK" class="brand-logo-img">
-            <span class="brand-label">IFIK LABS PORTAL</span>
           </div>
 
           <h2 class="card-title">Masuk ke workspace.</h2>
