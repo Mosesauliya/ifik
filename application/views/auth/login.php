@@ -130,7 +130,7 @@
         <div class="card-body">
           <!-- Brand Badge & Text -->
           <div class="card-brand">
-            <div class="brand-badge">IK</div>
+            <img src="<?= base_url('assets/images/logo-dummy.webp'); ?>" alt="Logo IFIK" class="brand-logo-img">
             <span class="brand-label">IFIK LABS PORTAL</span>
           </div>
 

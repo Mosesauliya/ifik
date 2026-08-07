@@ -270,6 +270,11 @@ body {
   color: #fff; font-weight: 900; font-size: 0.75rem;
   display: flex; align-items: center; justify-content: center;
 }
+.brand-logo-img {
+  height: 34px;
+  width: auto;
+  object-fit: contain;
+}
 .brand-label {
   font-size: 0.65rem; font-weight: 800;
   letter-spacing: 0.2em; text-transform: uppercase;
