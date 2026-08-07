@@ -25,7 +25,13 @@ class DosenWali extends CI_Controller {
 
         if ($this->input->post('action')) {
             $status  = $this->input->post('status'); // 'Approved' atau 'Rejected'
-            $catatan = $this->input->post('catatan_wali');
+            $catatan = trim($this->input->post('catatan_wali') ?? '');
+
+            if ($status === 'Rejected' && empty($catatan)) {
+                $this->session->set_flashdata('error', 'Alasan penolakan / catatan revisi wajib diisi jika memilih Reject!');
+                redirect('dosenwali/detail_mahasiswa/' . $nim);
+                return;
+            }
 
             $this->DosenWali_model->update_approval_wali($nim, $status, $catatan);
             $this->session->set_flashdata('success', 'Status approval pendaftaran TA berhasil diperbarui!');

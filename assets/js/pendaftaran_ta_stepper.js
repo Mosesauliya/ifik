@@ -213,22 +213,82 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Dynamic Select Box Preview for Step 1
-    const selectJenisTA = document.getElementById('selectJenisTA');
-    const previewJenisTA = document.getElementById('previewJenisTA');
-    const previewTextJenisTA = document.getElementById('previewTextJenisTA');
+    // Custom 3D Glass Dropdown Interaction Handler
+    document.querySelectorAll('.custom-dropdown').forEach(dropdown => {
+        const trigger = dropdown.querySelector('.dropdown-trigger');
+        const menu = dropdown.querySelector('.dropdown-menu');
+        const hiddenInput = dropdown.querySelector('input[type="hidden"]');
+        const triggerLabel = dropdown.querySelector('.trigger-label');
+        const chevronIcon = dropdown.querySelector('.chevron-icon');
+        const options = dropdown.querySelectorAll('.dropdown-option');
 
-    if (selectJenisTA && previewJenisTA && previewTextJenisTA) {
-        selectJenisTA.addEventListener('change', function () {
-            if (this.value) {
-                previewTextJenisTA.textContent = this.options[this.selectedIndex].text;
-                previewJenisTA.classList.remove('hidden');
-                this.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/20');
-            } else {
-                previewJenisTA.classList.add('hidden');
+        if (!trigger || !menu) return;
+
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isHidden = menu.classList.contains('hidden');
+
+            // Close all open dropdowns first
+            document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
+            document.querySelectorAll('.chevron-icon').forEach(i => i.classList.remove('rotate-180'));
+
+            if (isHidden) {
+                menu.classList.remove('hidden');
+                if (chevronIcon) chevronIcon.classList.add('rotate-180');
             }
         });
-    }
+
+        options.forEach(opt => {
+            opt.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const val = opt.getAttribute('data-value');
+                const labelText = opt.querySelector('span').textContent;
+
+                if (hiddenInput) {
+                    hiddenInput.value = val;
+                    hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    trigger.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/20');
+                }
+
+                if (triggerLabel) {
+                    triggerLabel.textContent = labelText;
+                    triggerLabel.className = 'trigger-label text-slate-900 font-semibold';
+                }
+
+                options.forEach(o => {
+                    o.classList.remove('bg-orange-100/80', 'text-orange-700', 'font-bold');
+                    const check = o.querySelector('.check-icon');
+                    if (check) check.classList.add('hidden');
+                });
+
+                opt.classList.add('bg-orange-100/80', 'text-orange-700', 'font-bold');
+                const check = opt.querySelector('.check-icon');
+                if (check) check.classList.remove('hidden');
+
+                menu.classList.add('hidden');
+                if (chevronIcon) chevronIcon.classList.remove('rotate-180');
+
+                // Step 1 Jenis TA Preview Badge update
+                if (hiddenInput && hiddenInput.id === 'inputJenisTA') {
+                    const previewJenisTA = document.getElementById('previewJenisTA');
+                    const previewTextJenisTA = document.getElementById('previewTextJenisTA');
+                    if (previewJenisTA && previewTextJenisTA) {
+                        if (val) {
+                            previewTextJenisTA.textContent = labelText;
+                            previewJenisTA.classList.remove('hidden');
+                        } else {
+                            previewJenisTA.classList.add('hidden');
+                        }
+                    }
+                }
+            });
+        });
+    });
+
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
+        document.querySelectorAll('.chevron-icon').forEach(i => i.classList.remove('rotate-180'));
+    });
 
     // Interactive Drag and Drop PDF setup with Replace & Reset features
     const dropZones = document.querySelectorAll('.drop-zone');
@@ -244,6 +304,29 @@ document.addEventListener('DOMContentLoaded', function () {
         const stepAlert = stepContainer ? stepContainer.querySelector('.step-inline-alert') : null;
 
         if (!fileInput) return;
+
+        function renderFileCard(file) {
+            if (!file) return;
+
+            if (fileNameEl) fileNameEl.textContent = file.name;
+            if (fileSizeEl) fileSizeEl.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB • PDF Terverifikasi`;
+
+            if (promptContainer) {
+                promptContainer.classList.add('hidden');
+                promptContainer.style.display = 'none';
+            }
+            if (selectedContainer) {
+                selectedContainer.classList.remove('hidden');
+                selectedContainer.style.display = 'flex';
+            }
+
+            if (stepAlert) {
+                stepAlert.classList.add('hidden');
+            }
+
+            zone.classList.remove('border-rose-500', 'bg-rose-50');
+            zone.classList.add('border-emerald-400', 'bg-emerald-50/20');
+        }
 
         ['dragenter', 'dragover'].forEach(eventName => {
             zone.addEventListener(eventName, (e) => {
@@ -316,31 +399,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 zone.classList.remove('border-emerald-400', 'bg-emerald-50/20');
             });
         }
-
-        function renderFileCard(file) {
-            if (!file) return;
-
-            if (fileNameEl) fileNameEl.textContent = file.name;
-            if (fileSizeEl) fileSizeEl.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB • PDF Terverifikasi`;
-
-            if (promptContainer) {
-                promptContainer.classList.add('hidden');
-                promptContainer.style.display = 'none';
-            }
-            if (selectedContainer) {
-                selectedContainer.classList.remove('hidden');
-                selectedContainer.style.display = 'flex';
-            }
-
-            if (stepAlert) {
-                stepAlert.classList.add('hidden');
-            }
-
-            zone.classList.remove('border-rose-500', 'bg-rose-50');
-            zone.classList.add('border-emerald-400', 'bg-emerald-50/20');
-        }
     });
 
     // Initialize UI on load
     updateStepUI();
 });
+
