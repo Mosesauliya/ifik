@@ -23,21 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ─── PASSWORD TOGGLE ──────────────────────────
-  const togglePasswordBtn = document.getElementById('togglePassword');
-  const passwordInput     = document.getElementById('passwordInput');
-  const eyeIcon           = document.getElementById('eyeIcon');
-  const eyeOffIcon        = document.getElementById('eyeOffIcon');
-
-  if (togglePasswordBtn && passwordInput) {
-    togglePasswordBtn.addEventListener('click', () => {
-      const isPw = passwordInput.type === 'password';
-      passwordInput.type = isPw ? 'text' : 'password';
-      eyeIcon?.classList.toggle('hidden', isPw);
-      eyeOffIcon?.classList.toggle('hidden', !isPw);
-    });
-  }
-
   // ─── EMAIL VALIDATION ─────────────────────────
   const identityInput = document.getElementById('identityInput');
   const emailWrapper  = document.getElementById('emailWrapper');
@@ -84,8 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
     identityInput.addEventListener('blur',  () => validateEmail(identityInput.value.trim(), true));
   }
 
-  // ─── PARALLAX (Mouse moves background only) ───
-  const bgImg = document.getElementById('bgImg');
+  // ─── PARALLAX (Mouse moves spheres + bg only) ───
+  const bgImg   = document.getElementById('bgImg');
+  const spheres = document.querySelectorAll('.sph');
 
   window.addEventListener('mousemove', (e) => {
     const cx = window.innerWidth  / 2;
@@ -96,21 +82,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (bgImg) {
       bgImg.style.transform = `translate(${dx * -10}px, ${dy * -7}px) scale(1.05)`;
     }
+
+    spheres.forEach((s, i) => {
+      const d = (i % 3 + 1) * 0.55;
+      s.style.transform = `translate(${dx * d * 16}px, ${dy * d * 11}px)`;
+    });
   });
 
   document.addEventListener('mouseleave', () => {
     if (bgImg) bgImg.style.transform = 'scale(1.05)';
+    spheres.forEach(s => s.style.transform = '');
   });
 
-  // ─── FORM SUBMIT & 3D SCANNER LOADING (MINIMAL 3.2 DETIK) ─────────────
-  const loginForm      = document.getElementById('loginForm');
+  // ─── FORM SUBMIT & SCANNER LOADING ─────────────
+  const forgotForm     = document.getElementById('forgotForm');
   const submitBtn      = document.getElementById('submitBtn');
   const capProgressBar = document.getElementById('capProgressBar');
   let isSubmitting     = false;
 
-  if (loginForm && submitBtn) {
-    loginForm.addEventListener('submit', (e) => {
-      if (isSubmitting) return; // Prevent double submit
+  if (forgotForm && submitBtn) {
+    forgotForm.addEventListener('submit', (e) => {
+      if (isSubmitting) return;
       e.preventDefault();
 
       const emailVal = identityInput ? identityInput.value.trim() : '';
@@ -124,7 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       isSubmitting = true;
 
-      // Add loading state (Card lifts, scanner beam activates, glowing aura pulses)
       if (hangRoot) {
         hangRoot.classList.remove('is-error');
         hangRoot.classList.add('is-loading');
@@ -139,15 +130,14 @@ document.addEventListener('DOMContentLoaded', () => {
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <span>Memverifikasi Autentikasi... ${pct}%</span>
+          <span>Mengirim Link Reset... ${pct}%</span>
         `;
         if (capProgressBar) capProgressBar.style.width = pct + '%';
       };
 
       updateButton(0);
 
-      // Smooth progress bar update over 3.2 seconds (3200ms)
-      const duration = 3200;
+      const duration = 2500;
       const intervalTime = 40;
       const step = 100 / (duration / intervalTime);
 
@@ -159,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
           clearInterval(timer);
           
           setTimeout(() => {
-            loginForm.submit();
+            forgotForm.submit();
           }, 200);
         } else {
           updateButton(Math.floor(progress));
