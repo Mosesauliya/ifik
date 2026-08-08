@@ -1,8 +1,8 @@
 <style>
     /* Styling khusus Sesi 1 */
     #section-carousel {
-        /* Menggunakan gradasi oranye seperti di halaman login */
-        background: linear-gradient(to bottom right, #f86b1d, #ea580c, #d97706);
+        position: relative;
+        background-color: #d97706; /* Fallback color */
     }
 
     /* Horizontal Carousel Snapping (Hijacking kiri-kanan) */
@@ -26,45 +26,17 @@
         align-items: center;
         justify-content: center;
         position: relative;
-        z-index: 2; /* Kartu berada di belakang area interaksi 3D jika diperlukan, tapi kita atur posisinya di pinggir */
+        z-index: 2; /* Konten berada di atas background tapi di bawah UI interaktif jika ada */
+        
+        /* Latar Belakang dan Overlay dipindah ke sini agar ikut bergeser */
+        background-image: 
+            linear-gradient(135deg, rgba(251,191,36,0.6) 0%, rgba(245,158,11,0.5) 40%, rgba(180,83,9,0.5) 100%),
+            url('<?= base_url("assets/images/background.png") ?>');
+        background-size: cover;
+        background-position: center;
     }
 
-    /* Kartu Kaca (Glassmorphism) */
-    .glass-card {
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
-        backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px);
-        padding: 50px 40px;
-        border-radius: 24px;
-        width: 400px;
-        text-align: center;
-        opacity: 0.8;
-        transition: transform 0.4s ease, opacity 0.4s ease, box-shadow 0.4s ease;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    }
 
-    .carousel-slide:hover .glass-card {
-        opacity: 1;
-        transform: translateY(-10px);
-        box-shadow: 0 20px 40px rgba(0, 210, 255, 0.1);
-    }
-    
-    /* Penempatan Kartu agar tidak tertimpa Logo 3D yang ada di tengah */
-    .slide-left .glass-card { margin-right: 45vw; }
-    .slide-right .glass-card { margin-left: 45vw; }
-    
-    .glass-card h2 {
-        font-size: 2.2rem;
-        margin-bottom: 20px;
-        color: var(--text-color);
-        font-weight: 800;
-    }
-    .glass-card p {
-        font-size: 1.1rem;
-        line-height: 1.6;
-        color: #475569;
-    }
     
     .scroll-hint {
         position: absolute;
@@ -77,6 +49,8 @@
         text-transform: uppercase;
         animation: bounce 2s infinite;
         z-index: 20;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        font-weight: 700;
     }
 
     /* Carousel Indicators (Dots) */
@@ -94,9 +68,10 @@
         width: 10px;
         height: 10px;
         border-radius: 50%;
-        background: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.4);
         cursor: pointer;
         transition: all 0.3s ease;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.4);
     }
     
     .carousel-indicators .dot.active {
@@ -109,6 +84,77 @@
         40% { transform: translate(-50%, -10px); }
         60% { transform: translate(-50%, -5px); }
     }
+
+    /* --- KARTU PUTIH STATIS DI BAWAH --- */
+    .static-white-card {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 1100px;
+        background: #ffffff;
+        border-radius: 32px 32px 0 0; /* Sudut atas membulat, ujung bawah menyentuh layar */
+        display: flex; /* Membagi kartu menjadi dua kolom mutlak */
+        align-items: flex-end; /* Elemen di dalam kartu bersandar ke bawah */
+        justify-content: space-between;
+        padding: 0 40px; /* Padding horizontal card. Atas bawah ditangani child */
+        box-shadow: 0 -15px 40px rgba(0,0,0,0.2);
+        z-index: 5; /* Di bawah logo 3D (yang z-index: 8) agar logo tidak terhalangi saat geser ke sesi 2 */
+        min-height: 250px;
+        pointer-events: auto;
+    }
+
+    /* Kolom Kiri: Teks */
+    .card-left-section {
+        flex: 1; /* Mengambil semua sisa ruang */
+        padding: 40px 30px 40px 0; /* Memberi jarak ke atas, bawah, dan ruang antar kolom */
+        text-align: left;
+        z-index: 11;
+    }
+
+    /* Kolom Kanan: Ruang eksklusif untuk gambar */
+    .card-right-section {
+        flex: 0 0 350px; /* Lebar mutlak untuk wadah gambar (350px) */
+        position: relative;
+    }
+
+    .greeting-text {
+        font-size: 0.85rem;
+        font-weight: 800;
+        letter-spacing: 2px;
+        color: #f59e0b; /* Oranye */
+        margin-bottom: 6px;
+    }
+
+    .main-title {
+        font-size: 2.2rem;
+        line-height: 1.1;
+        font-weight: 900;
+        color: #1e293b; /* Teks gelap di atas putih */
+        margin-bottom: 12px;
+    }
+
+    .description {
+        font-size: 0.9rem;
+        line-height: 1.6;
+        color: #475569; /* Teks abu-abu */
+        font-weight: 500;
+        text-align: justify;
+    }
+
+    .dekanat-popout {
+        position: absolute;
+        bottom: 0; 
+        right: 0; /* Menempel ke batas kanan ruang eksklusifnya */
+        width: 380px; /* Membatasi lebar maksimum gambar agar tidak melebar ke kiri */
+        height: 380px; /* Tinggi gambar agar pop-out */
+        object-fit: contain; /* Memastikan gambar menyesuaikan rasio kotak (380x380) tanpa distorsi */
+        object-position: bottom right; /* Menjangkarkan gambar di pojok kanan bawah kotak */
+        z-index: 12;
+        pointer-events: none;
+        filter: drop-shadow(-10px 10px 15px rgba(0,0,0,0.2));
+    }
 </style>
 
 <!-- Sesi 1: Carousel -->
@@ -116,31 +162,29 @@
     
     <!-- Carousel Horizontal yang bisa digeser (Scroll Hijacking) -->
     <div class="carousel-container">
+        <!-- Slide 1 (Hanya Background) -->
+        <div class="carousel-slide"></div>
         
-        <!-- Slide 1 (Kartu di sebelah kiri) -->
-        <div class="carousel-slide slide-left">
-            <div class="glass-card">
-                <h2>Selamat Datang di IFIK</h2>
-                <p>Geser (scroll) ke kanan untuk melihat fitur-fitur unggulan, atau scroll ke bawah untuk pindah ke halaman berikutnya.</p>
-            </div>
+        <!-- Slide 2 (Hanya Background) -->
+        <div class="carousel-slide"></div>
+        
+        <!-- Slide 3 (Hanya Background) -->
+        <div class="carousel-slide"></div>
+    </div>
+    
+    <!-- Kartu Putih Statis (Tidak ikut ke-scroll saat geser horizontal) -->
+    <div class="static-white-card">
+        <!-- Bagian Kiri: Kolom Teks -->
+        <div class="card-left-section">
+            <h4 class="greeting-text">HI THERE, WELCOME TO</h4>
+            <h1 class="main-title">Fakultas Industri Kreatif</h1>
+            <p class="description">Seiring dengan berkembangnya kebutuhan pelayanan untuk mahasiswa, dosen dan pegawai FIK maka diperlukan peningkatan layanan yang mengusung efisiensi dan efektifitas. Ifik lahir dari keresahan dan kesulitan mahasiswa maupun dosen dalam beberapa layanan, antara lain pendaftaran TA, bimbingan online, dokumen online, peminjaman ruangan dan lain sebagainya. Sejak dibuat tahun 2021 oleh tim unit lab FIK, aplikasi berbasis web ini telah digunakan hingga saat ini untuk mempermudah layanan untuk kalangan internal FIK, baik untuk mahasiswa, dosen maupun pegawai FIK.</p>
         </div>
         
-        <!-- Slide 2 (Kartu di sebelah kanan) -->
-        <div class="carousel-slide slide-right">
-            <div class="glass-card">
-                <h2>Interaktif 3D</h2>
-                <p>Logo di tengah adalah objek 3D. Anda bisa menggeser, memutar, dan memperbesar logo tersebut secara interaktif.</p>
-            </div>
+        <!-- Bagian Kanan: Kolom Wadah Gambar -->
+        <div class="card-right-section">
+            <img src="<?= base_url('assets/images/dekanat.png') ?>" alt="Dekanat" class="dekanat-popout">
         </div>
-        
-        <!-- Slide 3 (Kartu di sebelah kiri lagi) -->
-        <div class="carousel-slide slide-left">
-            <div class="glass-card">
-                <h2>Desain Premium</h2>
-                <p>Kami menerapkan animasi yang mulus dan palet warna modern yang akan membuat pengalaman pengguna menjadi luar biasa.</p>
-            </div>
-        </div>
-
     </div>
     
     <!-- Indikator Dots -->

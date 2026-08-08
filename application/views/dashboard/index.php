@@ -100,7 +100,7 @@
         #global-model-container.pos-center {
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) scale(1) rotateY(0deg);
+            transform: translate(-50%, -50%) scale(0.6) rotateY(0deg);
             z-index: 8; /* Di bawah Sidebar (Sidebar z-index: 9) */
         }
         
