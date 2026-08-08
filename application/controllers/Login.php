@@ -15,7 +15,7 @@ class Login extends CI_Controller {
 
 		if (!empty($identity) && !empty($password)) {
 			// Successful login demo
-			redirect('welcome');
+			redirect('dashboard');
 		} else {
 			$data['error'] = 'Silakan masukkan Email / ID dan Password yang valid.';
 			$this->load->view('auth/login', $data);
