@@ -75,7 +75,7 @@ $query_builder = TRUE;
 
 $db['default'] = array(
 	'dsn'	=> '',
-	'hostname' => '100.83.19.18',
+	'hostname' => 'db',
 	'username' => 'root',
 	'password' => 'rootpassword',
 	'database' => 'db_ifik',
