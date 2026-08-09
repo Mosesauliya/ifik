@@ -63,7 +63,16 @@ $route['koordinatorta/detail_mahasiswa/(:any)'] = 'KoordinatorTA/detail_mahasisw
 $route['koordinator'] = 'KoordinatorTA';
 $route['koordinator/detail_mahasiswa/(:any)'] = 'KoordinatorTA/detail_mahasiswa/$1';
 
+// Admin Import Email & Token Routes
+$route['import-email'] = 'ImportEmail';
+$route['admin/import-email'] = 'ImportEmail';
+$route['admin/import'] = 'ImportEmail';
+
+// Onboarding & Force Change Password Routes
+$route['onboarding'] = 'login/onboarding';
+
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
+
 
 
