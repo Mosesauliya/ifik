@@ -1,4 +1,4 @@
-# IFIK - Sistem Informasi Akademik & Pendaftaran Tugas Akhir 2
+# IFIK - Sistem Informasi Akademik & Pendaftaran Tugas Akhir 2 (Repair)
 
 Sistem Informasi Akademik dan Pendaftaran Tugas Akhir berbasis web yang dikembangkan untuk lingkungan kampus **Fakultas Industri Kreatif (IFIK)**. Sistem ini dibangun menggunakan framework **CodeIgniter 3** dengan arsitektur modern yang mendukung alur kerja persetujuan (approval chain) bertingkat, pemetaan geodata mahasiswa, dan manajemen tugas akhir.
 
