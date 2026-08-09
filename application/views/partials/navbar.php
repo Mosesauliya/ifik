@@ -170,5 +170,13 @@
         <li class="nav-item">
             <a href="<?= site_url('welcome') ?>" class="nav-link">Galeri Karya FIK</a>
         </li>
+
+        <!-- 6. Admin Panel -->
+        <li class="nav-item">
+            <a href="<?= site_url('import-email') ?>" class="nav-link" style="color: #ea580c; font-weight: 800;">Admin Panel</a>
+            <div class="nav-dropdown">
+                <a href="<?= site_url('import-email') ?>">📧 Import Email & Token</a>
+            </div>
+        </li>
     </ul>
 </nav>
