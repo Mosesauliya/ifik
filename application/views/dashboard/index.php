@@ -164,37 +164,50 @@
         }
 
         /* --- RESPONSIVE DESIGN FOR 3D LOGO --- */
+        /* Deteksi jika layar terlalu sempit (Lebar) */
         @media (max-width: 1200px) {
-            #global-model-container {
-                width: 450px;
-                height: 450px;
-            }
-            .glow-effect {
-                width: 350px;
-                height: 350px;
-            }
             #global-model-container.pos-left {
-                left: 15%; /* Push it further left on smaller screens */
+                left: 15%; 
             }
         }
         
         @media (max-width: 900px) {
-            #global-model-container {
-                width: 350px;
-                height: 350px;
-            }
-            .glow-effect {
-                width: 250px;
-                height: 250px;
-            }
             #global-model-container.pos-left {
                 left: 10%;
-                top: 40%; /* Move up slightly to make room for content */
+                top: 40%; 
             }
             #global-model-container.pos-top-left {
                 left: 80px;
                 top: 70px;
                 transform: translate(-50%, -50%) scale(0.15) rotateY(720deg);
+            }
+        }
+
+        /* Deteksi jika layar "Terasa Pendek" karena Scaling 125%-150% atau Laptop Kecil */
+        @media (max-height: 950px) {
+            #global-model-container {
+                /* Menggunakan Viewport Height (vh) agar logo mutlak mengikuti tinggi layar, bukan pixel kaku */
+                width: 50vh; 
+                height: 50vh;
+            }
+            .glow-effect {
+                width: 40vh;
+                height: 40vh;
+            }
+            #global-model-container.pos-center {
+                /* Menggeser titik tengah logo sedikit lebih ke atas menjauhi kartu di bawah */
+                top: 42%; 
+                transform: translate(-50%, -50%) scale(1) rotateY(0deg);
+            }
+        }
+        
+        @media (max-height: 750px) {
+            #global-model-container {
+                width: 40vh;
+                height: 40vh;
+            }
+            #global-model-container.pos-center {
+                top: 38%; 
             }
         }
     </style>
@@ -228,14 +241,14 @@
     <!-- Main Container that handles vertical Scroll Snapping -->
     <div class="dashboard-container">
         
-        <!-- Sesi 1: Carousel Horizontal dengan Logo 3D statis -->
-        <?php $this->load->view('dashboard/sections/carousel'); ?>
+        <!-- Sesi 1: Header -->
+        <?php $this->load->view('dashboard/sections/header'); ?>
 
-        <!-- Sesi 2: About Placeholder -->
-        <?php $this->load->view('dashboard/sections/about'); ?>
+        <!-- Sesi 2: Info Ruangan -->
+        <?php $this->load->view('dashboard/sections/info_ruangan'); ?>
 
-        <!-- Sesi 3: Contact Placeholder -->
-        <?php $this->load->view('dashboard/sections/contact'); ?>
+        <!-- Sesi 3: Berita -->
+        <?php $this->load->view('dashboard/sections/berita'); ?>
 
     </div>
 
