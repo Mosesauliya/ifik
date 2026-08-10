@@ -170,6 +170,33 @@
         width: 24px;
         border-radius: 4px;
     }
+
+    /* --- RESPONSIVE DESIGN FOR SESI 2 (TABLE) --- */
+    @media (max-width: 1200px) {
+        .about-container h1 {
+            font-size: 2.5rem;
+        }
+        .room-table th, .room-table td {
+            padding: 12px 10px;
+            font-size: 0.9rem;
+        }
+    }
+
+    @media (max-width: 900px) {
+        .about-container {
+            width: 90%;
+            margin: 0 auto; /* Center the table */
+            margin-top: 15vh; /* Push down to avoid overlapping the logo which moved to top */
+            padding: 30px 20px;
+        }
+        .room-table-wrapper {
+            overflow-x: auto;
+        }
+        .room-table th, .room-table td {
+            white-space: nowrap; /* Prevent table text from wrapping on mobile */
+            font-size: 0.85rem;
+        }
+    }
 </style>
 
 <!-- Sesi 2: Informasi Ruangan -->
