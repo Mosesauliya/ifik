@@ -10,11 +10,11 @@
     }
 
     .about-container {
-        /* Menggeser container ke sisi kanan layar, menyisakan ruang di kiri untuk 3D Logo */
+        /* Menggeser container ke sisi kanan layar secara dinamis */
         margin-left: auto;
         margin-right: 5vw;
-        max-width: 1100px; /* Diperbesar dari 900px */
-        width: 100%;
+        width: calc(100% - 45vw); /* Memaksa menyisakan 45% layar kiri untuk logo 3D */
+        max-width: 1000px;
         padding: 50px 40px;
         z-index: 2;
         background: var(--glass-bg);
