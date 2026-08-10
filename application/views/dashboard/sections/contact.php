@@ -140,6 +140,43 @@
         font-size: 0.9rem;
         z-index: 2;
     }
+
+    /* --- RESPONSIVE DESIGN FOR SESI 3 (NEWS) --- */
+    @media (max-width: 1200px) {
+        .news-header h1 {
+            font-size: 2.2rem;
+        }
+        .news-card {
+            flex: 0 0 280px; /* Lebar kartu mengecil dari 320px */
+            height: 400px; /* Tinggi kartu mengecil dari 440px */
+        }
+        .news-title {
+            font-size: 1.1rem;
+        }
+    }
+
+    @media (max-width: 900px) {
+        .news-header {
+            top: 60px;
+        }
+        .news-header h1 {
+            font-size: 1.8rem;
+        }
+        .news-header p {
+            font-size: 0.9rem;
+        }
+        .news-card {
+            flex: 0 0 240px; 
+            height: 360px; 
+        }
+        .news-title {
+            font-size: 1rem;
+        }
+        .news-excerpt {
+            font-size: 0.85rem;
+            -webkit-line-clamp: 2;
+        }
+    }
 </style>
 
 <!-- Sesi 3: Carousel Berita 3D -->

@@ -162,6 +162,41 @@
             0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.8; }
             100% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
         }
+
+        /* --- RESPONSIVE DESIGN FOR 3D LOGO --- */
+        @media (max-width: 1200px) {
+            #global-model-container {
+                width: 450px;
+                height: 450px;
+            }
+            .glow-effect {
+                width: 350px;
+                height: 350px;
+            }
+            #global-model-container.pos-left {
+                left: 15%; /* Push it further left on smaller screens */
+            }
+        }
+        
+        @media (max-width: 900px) {
+            #global-model-container {
+                width: 350px;
+                height: 350px;
+            }
+            .glow-effect {
+                width: 250px;
+                height: 250px;
+            }
+            #global-model-container.pos-left {
+                left: 10%;
+                top: 40%; /* Move up slightly to make room for content */
+            }
+            #global-model-container.pos-top-left {
+                left: 80px;
+                top: 70px;
+                transform: translate(-50%, -50%) scale(0.15) rotateY(720deg);
+            }
+        }
     </style>
 </head>
 <body>
