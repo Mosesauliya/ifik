@@ -63,9 +63,15 @@ body {
   display: block;
 }
 .hero-title {
-  font-size: 4.5rem; font-weight: 900; line-height: 0.95;
-  color: #1c0a00;
-  text-shadow: 2px 4px 0 rgba(255,255,255,0.2), 0 8px 28px rgba(0,0,0,0.2);
+  font-size: 4.5rem;
+  font-weight: 900;
+  line-height: 0.95;
+  color: #ffffff;
+  -webkit-text-stroke: 2px #1c0a00;
+  paint-order: stroke fill;
+  text-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.75),
+    0 3px 6px rgba(28, 10, 0, 0.9);
   margin-bottom: 20px;
 }
 .hero-sub {
