@@ -1,58 +1,30 @@
 <style>
-    /* Sidebar Container (Tersembunyi secara default) */
-    .dashboard-sidebar {
+    /* Topbar Container - Normal Navbar */
+    .dashboard-topbar {
         position: fixed;
         top: 0;
         left: 0;
-        width: 260px;
-        height: 100vh;
-        padding: 20px;
-        z-index: 9;
+        width: 100vw;
+        height: 70px;
+        z-index: 100;
         display: flex;
-        flex-direction: column;
-        background: rgba(251, 247, 241, 0.6);
-        backdrop-filter: blur(25px);
-        -webkit-backdrop-filter: blur(25px);
-        border-right: 1px solid rgba(234, 88, 12, 0.15);
-        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.05);
-        transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-        
-        /* Geser ke kiri sejauh 245px, sisakan 15px sebagai area pancingan (trigger) hover */
-        transform: translateX(-245px);
-    }
-
-    /* Saat kursor diarahkan ke area 15px tersebut, sidebar akan keluar */
-    .dashboard-sidebar:hover {
-        transform: translateX(0);
-    }
-
-    /* Indikator visual (Garis kecil) agar user tahu ada menu di sebelah kiri */
-    .dashboard-sidebar::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        right: 5px; /* Nempel di ujung kanan sidebar yang masih terlihat */
-        transform: translateY(-50%);
-        width: 4px;
-        height: 50px;
-        background: rgba(234, 88, 12, 0.5);
-        border-radius: 10px;
-        transition: opacity 0.3s;
-    }
-
-    /* Sembunyikan indikator saat sidebar terbuka penuh */
-    .dashboard-sidebar:hover::after {
-        opacity: 0;
+        align-items: center;
+        justify-content: center; /* Menu ada di tengah */
+        background: rgba(251, 247, 241, 0.7);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(234, 88, 12, 0.15);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
     }
 
     .nav-list {
         display: flex;
-        flex-direction: column;
+        flex-direction: row; /* Menu menyamping (horizontal) */
         gap: 15px;
         list-style: none;
         margin: 0;
         padding: 0;
-        margin-top: 180px; /* Menyediakan ruang kosong di atas untuk tempat mendaratnya 3D Logo di Sesi 3 */
     }
 
     .nav-item {
@@ -60,15 +32,15 @@
     }
 
     .nav-link {
-        color: var(--text-color);
+        color: var(--text-color, #1e293b); /* Warna gelap teks aslinya */
         font-weight: 700;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         text-transform: uppercase;
         letter-spacing: 1px;
         text-decoration: none;
-        padding: 15px 20px;
+        padding: 10px 18px;
         display: block;
-        border-radius: 12px;
+        border-radius: 999px; /* Bentuk pill saat dihover */
         transition: all 0.3s;
     }
 
@@ -78,30 +50,80 @@
         box-shadow: 0 5px 15px rgba(234, 88, 12, 0.3);
     }
 
-    /* Dropdown Menjadi Side-Popup (Muncul di Kanan Sidebar) */
+    /* Tombol Dashboard Khusus (Kotak Kecil + Hover Overshoot) */
+    .dashboard-btn {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 8px;
+        background: #ea580c !important;
+        color: #ffffff !important;
+        padding: 7px 16px 7px 9px !important;
+        border-radius: 999px;
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                    box-shadow 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                    background 0.3s ease;
+        box-shadow: 0 4px 14px rgba(234, 88, 12, 0.3);
+        transform-origin: center;
+    }
+
+    .dashboard-btn .btn-box {
+        width: 24px;
+        height: 24px;
+        background: #ffffff;
+        color: #ea580c;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Hover Rotate + Scale dengan Easing Overshoot */
+    .dashboard-btn:hover {
+        background: #c2410c !important;
+        transform: scale(1.1) rotate(-4deg);
+        box-shadow: 0 8px 22px rgba(234, 88, 12, 0.5);
+    }
+
+    .dashboard-btn:hover .btn-box {
+        transform: scale(1.22) rotate(18deg);
+    }
+
+    /* Dropdown Menjadi Pop-down (Muncul di Bawah) */
     .nav-dropdown {
         position: absolute;
-        top: 0;
-        left: 100%; /* Muncul tepat di sebelah kanan item menu */
-        margin-left: 15px;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%) translateY(15px);
+        margin-top: 10px;
         background: #ffffff;
         border: 1px solid rgba(234, 88, 12, 0.2);
         border-radius: 16px;
         min-width: 220px;
-        box-shadow: 15px 15px 35px rgba(234, 88, 12, 0.1);
+        box-shadow: 0 15px 35px rgba(234, 88, 12, 0.1);
         opacity: 0;
         visibility: hidden;
-        transform: translateX(-15px);
         transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
         padding: 10px 0;
         z-index: 1000;
         pointer-events: none;
     }
 
+    /* Membuat jembatan invisible agar kursor tidak loss saat turun ke dropdown */
+    .nav-dropdown::before {
+        content: '';
+        position: absolute;
+        top: -15px;
+        left: 0;
+        width: 100%;
+        height: 15px;
+    }
+
     .nav-item:hover .nav-dropdown {
         opacity: 1;
         visibility: visible;
-        transform: translateX(0);
+        transform: translateX(-50%) translateY(0);
         pointer-events: auto;
     }
 
@@ -124,8 +146,23 @@
     }
 </style>
 
-<nav class="dashboard-sidebar">
+<nav class="dashboard-topbar">
     <ul class="nav-list">
+        <!-- 0. Tombol Dashboard (Kotak Kecil + Hover Overshoot) -->
+        <li class="nav-item">
+            <a href="<?= base_url() ?>" class="nav-link dashboard-btn" onclick="scrollToDashboard(event)">
+                <span class="btn-box">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+                        <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+                        <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+                        <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+                    </svg>
+                </span>
+                <span>Dashboard</span>
+            </a>
+        </li>
+
         <!-- 1. Layanan LAB -->
         <li class="nav-item">
             <a href="<?= site_url('welcome') ?>" class="nav-link">Layanan LAB</a>
@@ -180,3 +217,19 @@
         </li>
     </ul>
 </nav>
+
+<script>
+    function scrollToDashboard(e) {
+        const container = document.querySelector('.dashboard-container');
+        if (container) {
+            e.preventDefault();
+            container.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+            if (typeof window.goToSlide === 'function') {
+                window.goToSlide(0);
+            }
+        }
+    }
+</script>

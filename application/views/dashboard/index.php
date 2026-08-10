@@ -115,12 +115,12 @@
             z-index: 8; /* Di bawah Sidebar agar Sidebar tidak tertutup logo */
         }
         
-        /* Posisi Sesi 3: Mengecil jadi Logo di Kiri Atas (Masuk ke dalam Sidebar) */
+        /* Posisi Sesi 3: Mengecil jadi Logo di Kiri Atas (Masuk ke dalam Topbar) */
         #global-model-container.pos-top-left {
-            top: 90px;
-            left: 130px;
-            transform: translate(-50%, -50%) scale(0.2) rotateY(720deg);
-            z-index: 10; /* Di atas Sidebar agar Logo jelas dan tidak terhalang blur Glassmorphism */
+            top: 35px; /* Center of 70px topbar */
+            left: 50px;
+            transform: translate(-50%, -50%) scale(0.11) rotateY(720deg);
+            z-index: 110; /* Di atas Topbar agar Logo jelas */
         }
         
         #global-model-container model-viewer {
@@ -180,9 +180,9 @@
                 top: 40%; 
             }
             #global-model-container.pos-top-left {
-                left: 80px;
-                top: 70px;
-                transform: translate(-50%, -50%) scale(0.15) rotateY(720deg);
+                left: 40px;
+                top: 35px;
+                transform: translate(-50%, -50%) scale(0.1) rotateY(720deg);
             }
         }
 
@@ -213,9 +213,99 @@
                 top: 38%; 
             }
         }
+
+        /* --- SPLASH SCREEN --- */
+        #splash-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #ea580c; /* Warna Solid Oranye Premium */
+            z-index: 999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.8s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+        #splash-screen.hide-splash {
+            transform: translateY(-100%);
+        }
+        .splash-content {
+            display: flex; flex-direction: column; align-items: center; gap: 30px;
+        }
+        .splash-logo {
+            height: 65px;
+            filter: drop-shadow(0 0 20px rgba(255,255,255,0.4)) brightness(0) invert(1);
+        }
+        .splash-counter-wrapper {
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+        }
+        #splash-counter {
+            color: #ffffff;
+            font-size: 2.8rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .splash-progress-track {
+            width: 220px; height: 4px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px; overflow: hidden;
+        }
+        #splash-progress-bar {
+            width: 0%; height: 100%;
+            background: #ffffff;
+            box-shadow: 0 0 10px #ffffff;
+        }
     </style>
 </head>
 <body>
+
+    <!-- SPLASH SCREEN ENTRANCE -->
+    <div id="splash-screen">
+        <div class="splash-content">
+            <img src="<?= base_url('assets/images/logo-dummy.webp') ?>" alt="IFIK Logo" class="splash-logo">
+            <div class="splash-counter-wrapper">
+                <div id="splash-counter">0%</div>
+                <div class="splash-progress-track">
+                    <div id="splash-progress-bar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            window.splashScreenDone = false;
+            let count = 0;
+            const counterEl = document.getElementById('splash-counter');
+            const barEl = document.getElementById('splash-progress-bar');
+            const splash = document.getElementById('splash-screen');
+            
+            // Simulasi loading super cepat 0 - 100
+            const interval = setInterval(() => {
+                count += Math.floor(Math.random() * 18) + 4; // naik random 4-22%
+                if (count >= 100) {
+                    count = 100;
+                    clearInterval(interval);
+                    counterEl.innerText = count + '%';
+                    barEl.style.width = count + '%';
+                    
+                    // Jeda sebentar sebelum layar menyusut ke atas
+                    setTimeout(() => {
+                        splash.classList.add('hide-splash');
+                        // Beri tanda ke body bahwa entrance mulai setelah splash bergerak
+                        setTimeout(() => {
+                            window.splashScreenDone = true;
+                            document.body.classList.add('play-animations');
+                        }, 200);
+                    }, 400);
+                } else {
+                    counterEl.innerText = count + '%';
+                    barEl.style.width = count + '%';
+                }
+            }, 60);
+        });
+    </script>
 
     <!-- Progress Bar (Pengganti Scrollbar) -->
     <div id="scroll-progress-bar"></div>
@@ -273,11 +363,18 @@
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         const activeSectionId = entry.target.id;
-                        
+
                         // Logika perubahan CSS Class berdasarkan sesi aktif
                         if (activeSectionId === 'section-carousel') {
                             modelContainer.className = 'pos-center'; // Sesi 1
-                        } else if (activeSectionId === 'section-about') {
+                            if (window.splashScreenDone) {
+                                document.body.classList.add('play-animations'); // Putar ulang animasi
+                            }
+                        } else {
+                            document.body.classList.remove('play-animations'); // Reset animasi saat keluar Sesi 1
+                        }
+
+                        if (activeSectionId === 'section-about') {
                             modelContainer.className = 'pos-left';   // Sesi 2
                         } else if (activeSectionId === 'section-contact') {
                             modelContainer.className = 'pos-top-left'; // Sesi 3
