@@ -10,4 +10,11 @@ class Dashboard extends CI_Controller {
         
 		$this->load->view('dashboard/index');
 	}
+
+	public function lab_detail($id = 'multimedia')
+	{
+		$this->load->helper('url');
+		$data['lab_key'] = strtolower($id);
+		$this->load->view('dashboard/lab_detail', $data);
+	}
 }

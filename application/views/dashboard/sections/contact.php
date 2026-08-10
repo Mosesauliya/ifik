@@ -1,30 +1,35 @@
 <style>
-    /* Styling khusus Sesi 3 (Berita) */
+    /* Styling khusus Sesi 3 (Berita & Footer) */
     #section-contact {
         background-color: #fbf7f1; /* Mengikuti tema utama */
+        min-height: 100vh !important;
+        height: auto !important;
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        justify-content: space-between;
         align-items: center;
-        overflow: hidden;
+        padding-top: 50px;
+        padding-bottom: 0;
+        position: relative;
     }
 
     .news-header {
-        margin-bottom: 20px;
+        margin-bottom: 10px;
         text-align: center;
         z-index: 2;
     }
 
     .news-header h1 {
-        font-size: 3rem;
+        font-size: 2.5rem;
         color: #1e293b;
         font-weight: 900;
-        margin-bottom: 10px;
+        margin-bottom: 6px;
+        letter-spacing: -0.5px;
     }
     
     .news-header p {
         color: #64748b;
-        font-size: 1.1rem;
+        font-size: 1.05rem;
     }
 
     .news-carousel-container {
@@ -32,7 +37,9 @@
         gap: 30px;
         width: 100%;
         max-width: 1400px;
-        padding: 50px 60px;
+        padding: 30px 60px;
+        margin-top: 15px;
+        margin-bottom: 60px; /* Jarak Jauh Berjarak Lega (60px) antara Berita & Footer */
         overflow-x: auto;
         /* Sembunyikan scrollbar */
         scrollbar-width: none;
@@ -46,17 +53,15 @@
     }
 
     .news-card {
-        flex: 0 0 320px;
-        height: 440px;
+        flex: 0 0 300px;
+        height: 360px;
         background: #fff;
-        border-radius: 24px;
-        box-shadow: -15px 15px 30px rgba(0, 0, 0, 0.08);
+        border-radius: 20px;
+        box-shadow: -12px 12px 30px rgba(0, 0, 0, 0.08);
         position: relative;
         overflow: hidden;
         
         /* EFEK 3D SEBELUM DI-HOVER */
-        /* perspective langsung pada card agar kemiringan seragam di semua posisi scroll */
-        /* rotateY(-25deg) membuat kartu menghadap agak ke kanan */
         transform: perspective(1200px) rotateY(-25deg) scale(0.9);
         transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.5s ease, opacity 0.5s ease, filter 0.5s ease;
         cursor: pointer;
@@ -65,9 +70,9 @@
 
     /* Saat di-hover: Menghadap ke depan (normal) dan membesar */
     .news-card:hover {
-        transform: perspective(1200px) rotateY(0deg) scale(1.08);
-        box-shadow: 0 30px 60px rgba(234, 88, 12, 0.25);
-        z-index: 10; /* Membawa kartu ke depan */
+        transform: perspective(1200px) rotateY(0deg) scale(1.05);
+        box-shadow: 0 25px 50px rgba(234, 88, 12, 0.25);
+        z-index: 10;
     }
     
     /* Efek Blur & Mundur untuk kartu yang tidak di-hover (Fokus Mode) */
@@ -79,7 +84,7 @@
 
     .news-image {
         width: 100%;
-        height: 45%;
+        height: 44%;
         background-color: #ddd; 
         background-size: cover;
         background-position: center;
@@ -90,32 +95,32 @@
     .news-image::after {
         content: '';
         position: absolute;
-        bottom: 0; left: 0; width: 100%; height: 30px;
+        bottom: 0; left: 0; width: 100%; height: 25px;
         background: linear-gradient(to top, #ffffff, transparent);
     }
     
     .news-content {
-        padding: 24px;
-        height: 55%;
+        padding: 18px;
+        height: 56%;
         display: flex;
         flex-direction: column;
     }
     
     .news-date {
-        font-size: 0.8rem;
+        font-size: 0.78rem;
         color: #ea580c;
         font-weight: 700;
         text-transform: uppercase;
-        margin-bottom: 12px;
-        letter-spacing: 1px;
+        margin-bottom: 6px;
+        letter-spacing: 0.8px;
     }
     
     .news-title {
-        font-size: 1.25rem;
+        font-size: 1.05rem;
         font-weight: 800;
         color: #1e293b;
-        margin-bottom: 12px;
-        line-height: 1.4;
+        margin-bottom: 6px;
+        line-height: 1.35;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
@@ -123,26 +128,18 @@
     }
     
     .news-excerpt {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         color: #64748b;
-        line-height: 1.6;
+        line-height: 1.5;
         flex-grow: 1;
         display: -webkit-box;
         -webkit-line-clamp: 3;
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
-    
-    footer {
-        position: absolute;
-        bottom: 20px;
-        color: #94a3b8;
-        font-size: 0.9rem;
-        z-index: 2;
-    }
 </style>
 
-<!-- Sesi 3: Carousel Berita 3D -->
+<!-- Sesi 3: Carousel Berita 3D & Footer -->
 <!-- ID dipertahankan sebagai 'section-contact' agar IntersectionObserver di index.php tetap berfungsi -->
 <div class="section-wrapper" id="section-contact">
     
@@ -206,9 +203,8 @@
         
     </div>
 
-    <footer>
-        &copy; <?= date('Y') ?> IFIK Dashboard. All rights reserved.
-    </footer>
+    <!-- Partial Footer -->
+    <?php $this->load->view('partials/footer'); ?>
 </div>
 
 <script>

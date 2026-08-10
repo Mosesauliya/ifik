@@ -47,14 +47,12 @@
                 </div>
 
                 <!-- Nav Menu -->
-                <nav class="hidden md:flex items-center gap-1.5 p-1 bg-orange-50/80 rounded-xl border border-orange-200/70 relative" id="mainNav">
-                    <div class="nav-indicator-pill opacity-0" id="navIndicator"></div>
-
-                    <a href="<?= site_url('mahasiswa'); ?>" class="nav-link active-link relative z-10 font-semibold px-5 py-2 rounded-lg text-xs flex items-center gap-2 tracking-wide text-slate-700">
+                <nav class="hidden md:flex items-center gap-7 relative" id="mainNav">
+                    <a href="<?= site_url('mahasiswa'); ?>" class="nav-link active-link flex items-center gap-2 tracking-wide">
                         <i class="bi bi-grid-1x2-fill"></i>
                         <span>Dashboard</span>
                     </a>
-                    <a href="<?= site_url('mahasiswa/pendaftaran_ta'); ?>" class="nav-link relative z-10 font-semibold px-5 py-2 rounded-lg text-xs flex items-center gap-2 tracking-wide text-slate-700">
+                    <a href="<?= site_url('mahasiswa/pendaftaran_ta'); ?>" class="nav-link flex items-center gap-2 tracking-wide">
                         <i class="bi bi-file-earmark-text"></i>
                         <span>Pendaftaran TA</span>
                     </a>
@@ -145,7 +143,7 @@
             </div>
 
             <!-- Right Progress Circle Gauge (1 Col) - Warm Clay Card -->
-            <div class="card-3d-warm rounded-2xl p-6 flex flex-col justify-between items-center text-center">
+            <div class="card-3d-warm card-no-hover rounded-2xl p-6 flex flex-col justify-between items-center text-center">
                 <div class="w-full text-left flex items-center justify-between mb-2">
                     <span class="text-[11px] font-semibold uppercase tracking-wider text-orange-600 flex items-center gap-1">
                         <i class="bi bi-speedometer2"></i> Overall Progres
@@ -187,7 +185,7 @@
         </div>
 
         <!-- Workflow Approval Chain Tracker (3D Stepper Line) -->
-        <div class="card-3d-warm rounded-2xl p-6 sm:p-7 relative">
+        <div class="card-3d-warm card-no-hover rounded-2xl p-6 sm:p-7 relative">
             <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
                 <div>
                     <span class="text-[10px] font-bold uppercase tracking-wider text-orange-600 block mb-0.5">REAL-TIME WORKFLOW</span>
@@ -343,7 +341,7 @@
         </div>
 
         <!-- Proposal Status Summary Widget (Full Width) -->
-        <div class="card-3d-warm rounded-2xl p-6 sm:p-7 w-full">
+        <div class="card-3d-warm card-no-hover rounded-2xl p-6 sm:p-7 w-full">
             <div class="flex items-center justify-between border-b border-orange-100 pb-4 mb-5">
                 <div>
                     <span class="text-[9px] font-bold uppercase tracking-wider text-orange-600 block mb-0.5">RINGKASAN USULAN</span>
@@ -392,7 +390,7 @@
         &copy; <?= date('Y'); ?> IFIK Portal — Fakultas Industri Kreatif, Telkom University
     </footer>
 
-    <script src="<?= base_url('assets/js/navbar_animated.js'); ?>"></script>
+    <script src="<?= base_url('assets/js/navbar_animated.js'); ?>?v=<?= time(); ?>"></script>
 </body>
 </html>
 

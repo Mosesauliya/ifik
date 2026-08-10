@@ -172,7 +172,7 @@
     <!-- Navigation Bar Menu -->
     <?php $this->load->view('partials/navbar'); ?>
 
-    <!-- 3D Model diletakkan di luar container scroll agar statis (fixed) di layar -->
+    <!-- 3D Model diletakkan di luar container scroll -->
     <div id="global-model-container" class="pos-center">
         <div class="glow-effect"></div>
         <model-viewer 
@@ -196,10 +196,13 @@
         <!-- Sesi 1: Carousel Horizontal dengan Logo 3D statis -->
         <?php $this->load->view('dashboard/sections/carousel'); ?>
 
-        <!-- Sesi 2: About Placeholder -->
+        <!-- Sesi 2: Informasi Ruangan -->
         <?php $this->load->view('dashboard/sections/about'); ?>
 
-        <!-- Sesi 3: Contact Placeholder -->
+        <!-- Sesi 3: Laboratorium Fakultas -->
+        <?php $this->load->view('dashboard/sections/lab'); ?>
+
+        <!-- Sesi 4: Berita & Informasi Terkini (Contact) -->
         <?php $this->load->view('dashboard/sections/contact'); ?>
 
     </div>
@@ -228,8 +231,10 @@
                             modelContainer.className = 'pos-center'; // Sesi 1
                         } else if (activeSectionId === 'section-about') {
                             modelContainer.className = 'pos-left';   // Sesi 2
+                        } else if (activeSectionId === 'section-lab') {
+                            modelContainer.className = 'pos-left';   // Sesi 3
                         } else if (activeSectionId === 'section-contact') {
-                            modelContainer.className = 'pos-top-left'; // Sesi 3
+                            modelContainer.className = 'pos-top-left'; // Sesi 4
                         }
                     }
                 });

@@ -27,14 +27,12 @@
                 </div>
 
                 <!-- Nav Menu -->
-                <nav class="hidden md:flex items-center gap-1.5 p-1 bg-orange-50/80 rounded-xl border border-orange-200/70 relative" id="mainNav">
-                    <div class="nav-indicator-pill opacity-0" id="navIndicator"></div>
-
-                    <a href="<?= site_url('mahasiswa'); ?>" class="nav-link relative z-10 font-semibold px-5 py-2 rounded-lg text-xs flex items-center gap-2 tracking-wide text-slate-700">
+                <nav class="hidden md:flex items-center gap-7 relative" id="mainNav">
+                    <a href="<?= site_url('mahasiswa'); ?>" class="nav-link flex items-center gap-2 tracking-wide">
                         <i class="bi bi-grid-1x2-fill"></i>
                         <span>Dashboard</span>
                     </a>
-                    <a href="<?= site_url('mahasiswa/pendaftaran_ta'); ?>" class="nav-link relative z-10 font-semibold px-5 py-2 rounded-lg text-xs flex items-center gap-2 tracking-wide text-slate-700">
+                    <a href="<?= site_url('mahasiswa/pendaftaran_ta'); ?>" class="nav-link flex items-center gap-2 tracking-wide">
                         <i class="bi bi-file-earmark-text"></i>
                         <span>Pendaftaran TA</span>
                     </a>
@@ -118,6 +116,6 @@
         &copy; <?= date('Y'); ?> IFIK Portal — Fakultas Industri Kreatif, Telkom University
     </footer>
 
-    <script src="<?= base_url('assets/js/navbar_animated.js'); ?>"></script>
+    <script src="<?= base_url('assets/js/navbar_animated.js'); ?>?v=<?= time(); ?>"></script>
 </body>
 </html>
