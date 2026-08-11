@@ -155,6 +155,57 @@
         pointer-events: none;
         filter: drop-shadow(-10px 10px 15px rgba(0,0,0,0.2));
     }
+
+    /* --- RESPONSIVE DESIGN FOR SESI 1 (CAROUSEL CARD) --- */
+    @media (max-width: 1200px) {
+        .static-white-card {
+            width: 95%;
+            padding: 0 20px;
+        }
+        .main-title {
+            font-size: 1.8rem;
+        }
+        .description {
+            font-size: 0.85rem;
+        }
+        .card-right-section {
+            flex: 0 0 280px;
+        }
+        .dekanat-popout {
+            width: 300px;
+            height: 300px;
+        }
+    }
+
+    @media (max-width: 900px) {
+        .static-white-card {
+            flex-direction: column;
+            align-items: center;
+            min-height: auto;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+        }
+        .card-left-section {
+            padding: 10px 0;
+            text-align: center;
+        }
+        .card-right-section {
+            flex: 0 0 auto;
+            width: 100%;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+        }
+        .dekanat-popout {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            object-position: center bottom;
+        }
+        .main-title {
+            font-size: 1.5rem;
+        }
+    }
 </style>
 
 <!-- Sesi 1: Carousel -->

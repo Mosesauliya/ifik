@@ -14,6 +14,15 @@
     <!-- Model Viewer for 3D -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
 
+    <!-- jQuery & Flatpickr - harus di head agar tersedia saat inline script dijalankan -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <!-- Custom CSS untuk tiap Section -->
+    <link rel="stylesheet" href="<?= base_url('assets/css/timepicker.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/info_ruangan.css?v=' . time()) ?>">
+
     <script>
         // Mulai loading web saat halaman pertama kali diproses
         NProgress.start(); 
@@ -162,6 +171,54 @@
             0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.8; }
             100% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
         }
+
+        /* --- RESPONSIVE DESIGN FOR 3D LOGO --- */
+        /* Deteksi jika layar terlalu sempit (Lebar) */
+        @media (max-width: 1200px) {
+            #global-model-container.pos-left {
+                left: 15%; 
+            }
+        }
+        
+        @media (max-width: 900px) {
+            #global-model-container.pos-left {
+                left: 10%;
+                top: 40%; 
+            }
+            #global-model-container.pos-top-left {
+                left: 80px;
+                top: 70px;
+                transform: translate(-50%, -50%) scale(0.15) rotateY(720deg);
+            }
+        }
+
+        /* Deteksi jika layar "Terasa Pendek" karena Scaling 125%-150% atau Laptop Kecil */
+        @media (max-height: 950px) {
+            #global-model-container {
+                /* Menggunakan Viewport Height (vh) agar logo mutlak mengikuti tinggi layar, bukan pixel kaku */
+                width: 50vh; 
+                height: 50vh;
+            }
+            .glow-effect {
+                width: 40vh;
+                height: 40vh;
+            }
+            #global-model-container.pos-center {
+                /* Menggeser titik tengah logo sedikit lebih ke atas menjauhi kartu di bawah */
+                top: 42%; 
+                transform: translate(-50%, -50%) scale(1) rotateY(0deg);
+            }
+        }
+        
+        @media (max-height: 750px) {
+            #global-model-container {
+                width: 40vh;
+                height: 40vh;
+            }
+            #global-model-container.pos-center {
+                top: 38%; 
+            }
+        }
     </style>
 </head>
 <body>
@@ -193,17 +250,17 @@
     <!-- Main Container that handles vertical Scroll Snapping -->
     <div class="dashboard-container">
         
-        <!-- Sesi 1: Carousel Horizontal dengan Logo 3D statis -->
-        <?php $this->load->view('dashboard/sections/carousel'); ?>
+        <!-- Sesi 1: Header -->
+        <?php $this->load->view('dashboard/sections/header'); ?>
 
-        <!-- Sesi 2: Informasi Ruangan -->
-        <?php $this->load->view('dashboard/sections/about'); ?>
+        <!-- Sesi 2: Info Ruangan -->
+        <?php $this->load->view('dashboard/sections/info_ruangan'); ?>
 
         <!-- Sesi 3: Laboratorium Fakultas -->
         <?php $this->load->view('dashboard/sections/lab'); ?>
 
-        <!-- Sesi 4: Berita & Informasi Terkini (Contact) -->
-        <?php $this->load->view('dashboard/sections/contact'); ?>
+        <!-- Sesi 4: Berita & Informasi Terkini -->
+        <?php $this->load->view('dashboard/sections/berita'); ?>
 
     </div>
 
@@ -278,5 +335,10 @@
             }
         });
     </script>
+
+    <script src="<?= base_url('assets/js/timepicker.js?v=' . filemtime(FCPATH . 'assets/js/timepicker.js')) ?>"></script>
+    
+    <!-- External Custom Script (info_ruangan.js harus paling atas agar toggleFullscreen() tersedia) -->
+    <script src="<?= base_url('assets/js/info_ruangan.js?v=' . filemtime(FCPATH . 'assets/js/info_ruangan.js')) ?>"></script>
 </body>
 </html>

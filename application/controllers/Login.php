@@ -3,23 +3,73 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Login extends CI_Controller {
 
+	public function __construct()
+	{
+		parent::__construct();
+		$this->load->model('User_model');
+	}
+
 	public function index()
 	{
+		// If user is already logged in, redirect to dashboard
+		if ($this->session->userdata('logged_in')) {
+			redirect('dashboard');
+		}
 		$this->load->view('auth/login');
 	}
 
 	public function authenticate()
 	{
-		$identity = $this->input->post('identity');
+		$identity = trim($this->input->post('identity', true));
 		$password = $this->input->post('password');
 
-		if (!empty($identity) && !empty($password)) {
-			// Successful login demo
-			redirect('dashboard');
-		} else {
-			$data['error'] = 'Silakan masukkan Email / ID dan Password yang valid.';
-			$this->load->view('auth/login', $data);
+		if (empty($identity) || empty($password)) {
+			$this->session->set_flashdata('error', 'Silakan masukkan Email dan Password yang valid.');
+			redirect('login');
+			return;
 		}
+
+		// Validate domain @telkomuniversity.ac.id
+		if (!preg_match('/^[^\s@]+@telkomuniversity\.ac\.id$/i', $identity)) {
+			$this->session->set_flashdata('error', 'Email harus menggunakan domain @telkomuniversity.ac.id');
+			redirect('login');
+			return;
+		}
+
+		// Fetch user from database
+		$user = $this->User_model->get_by_email($identity);
+
+		if ($user && $user->status === 'active') {
+			// Verify bcrypt password hash
+			if (password_verify($password, $user->password)) {
+				// Set session data
+				$session_data = array(
+					'user_id'    => $user->id,
+					'role_id'    => $user->role_id,
+					'name'       => $user->name,
+					'email'      => $user->email,
+					'nidn_nim'   => $user->nidn_nim,
+					'status'     => $user->status,
+					'logged_in'  => TRUE
+				);
+				$this->session->set_userdata($session_data);
+
+				// Redirect to dashboard
+				redirect('dashboard');
+				return;
+			}
+		}
+
+		// Invalid credentials or inactive status
+		$this->session->set_flashdata('error', 'Email atau password salah.');
+		redirect('login');
+	}
+
+	public function logout()
+	{
+		$this->session->unset_userdata(array('user_id', 'role_id', 'name', 'email', 'nidn_nim', 'status', 'logged_in'));
+		$this->session->sess_destroy();
+		redirect('login');
 	}
 
 	public function forgot_password()
@@ -29,7 +79,7 @@ class Login extends CI_Controller {
 
 	public function send_reset_link()
 	{
-		$email = $this->input->post('email');
+		$email = trim($this->input->post('email', true));
 
 		if (!empty($email)) {
 			$data['success'] = 'Instruksi reset password telah dikirim ke email ' . htmlspecialchars($email);
@@ -62,5 +112,3 @@ class Login extends CI_Controller {
 		$this->load->view('auth/onboarding', $data);
 	}
 }
-
-
