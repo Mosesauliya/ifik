@@ -18,6 +18,8 @@
         background-color: var(--bg-color);
         display: flex;
         align-items: center;
+        overflow: hidden;
+        position: relative;
         background-image: 
             radial-gradient(at 100% 0%, rgba(234, 88, 12, 0.08) 0px, transparent 50%),
             radial-gradient(at 0% 100%, rgba(234, 88, 12, 0.08) 0px, transparent 50%);
@@ -29,7 +31,8 @@
         margin-right: 5vw;
         width: calc(100% - 45vw); /* Memaksa menyisakan 45% layar kiri untuk logo 3D */
         max-width: 1000px;
-        padding: 50px 40px;
+        max-height: calc(100vh - 40px);
+        padding: 32px 40px 24px 40px;
         z-index: 2;
         background: var(--glass-bg);
         border: 1px solid var(--glass-border);
@@ -38,6 +41,9 @@
         -webkit-backdrop-filter: blur(20px);
         box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
         position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
         transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
@@ -98,9 +104,9 @@
         scrollbar-width: none; /* Firefox */
         -ms-overflow-style: none; /* IE/Edge */
         width: 100%;
-        padding-top: 95px;
-        padding-bottom: 20px;
-        margin-top: 10px;
+        padding-top: 75px;
+        padding-bottom: 15px;
+        margin-top: 5px;
         scroll-behavior: smooth;
     }
 

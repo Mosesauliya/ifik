@@ -8,12 +8,13 @@
         flex-direction: column;
         justify-content: space-between;
         align-items: center;
-        padding-top: 50px;
+        padding-top: 60px;
         padding-bottom: 0;
         position: relative;
     }
 
     .news-header {
+        margin-top: 20px;
         margin-bottom: 10px;
         text-align: center;
         z-index: 2;
