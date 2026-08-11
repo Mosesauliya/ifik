@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Adminbooking extends CI_Controller {
+class Kelolabooking extends CI_Controller {
 
     public function __construct()
     {
@@ -54,6 +54,12 @@ class Adminbooking extends CI_Controller {
         $tanggal_mulai = $tgl_arr[0];
         $tanggal_selesai = isset($tgl_arr[1]) ? $tgl_arr[1] : $tgl_arr[0];
 
+        // Validasi Role: Jika bukan Admin (role_id = 1), batas peminjaman hanya 1 hari.
+        $role_id = $this->session->userdata('role_id');
+        if ($role_id != 1) {
+            $tanggal_selesai = $tanggal_mulai;
+        }
+
         $data_peminjaman = array(
             'nama_lengkap' => $nama_lengkap,
             'id_ruangan' => $id_ruangan,
@@ -77,9 +83,20 @@ class Adminbooking extends CI_Controller {
 
     public function approve($id)
     {
-        $update = $this->Booking_model->update_status($id, 'Disetujui');
+        $role_id = $this->session->userdata('role_id');
+
+        // Status disesuaikan per role, sesuai ENUM di DB
+        if ($role_id == 3) {
+            $status = 'Disetujui Ka. Ur';
+        } elseif ($role_id == 2) {
+            $status = 'Disetujui Laboran';
+        } else {
+            $status = 'Disetujui Admin';
+        }
+
+        $update = $this->Booking_model->update_status($id, $status);
         if($update) {
-            echo json_encode(['status' => 'success', 'message' => 'Peminjaman disetujui!']);
+            echo json_encode(['status' => 'success', 'message' => 'Peminjaman ' . $status . '!']);
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Gagal menyetujui peminjaman']);
         }

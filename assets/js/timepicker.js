@@ -216,3 +216,142 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// ===== DRAG SELECT UNTUK TIME RANGE SLOTS =====
+(function() {
+    var isDragging = false;
+    var dragStartIdx = -1;
+    var currentEndIdx = -1;
+
+    function getSlots() {
+        return Array.from(document.querySelectorAll('#tpTimeSlots .tp-slot'));
+    }
+
+    function resetSlotStyle(slot) {
+        slot.style.background    = '#fff';
+        slot.style.borderColor   = '#e2e8f0';
+        slot.style.color         = '#475569';
+        slot.style.boxShadow     = '0 1px 3px rgba(0,0,0,0.06)';
+    }
+
+    function previewSlotStyle(slot) {
+        slot.style.background    = '#ede9fe';
+        slot.style.borderColor   = '#7c3aed';
+        slot.style.color         = '#6d28d9';
+        slot.style.boxShadow     = '0 2px 6px rgba(124,58,237,0.2)';
+    }
+
+    function selectedSlotStyle(slot) {
+        slot.style.background    = '#7c3aed';
+        slot.style.borderColor   = '#7c3aed';
+        slot.style.color         = '#fff';
+        slot.style.boxShadow     = '0 3px 10px rgba(124,58,237,0.35)';
+    }
+
+    function updateHighlight(minIdx, maxIdx) {
+        getSlots().forEach(function(slot, i) {
+            if (i >= minIdx && i <= maxIdx) {
+                previewSlotStyle(slot);
+            } else {
+                resetSlotStyle(slot);
+            }
+        });
+    }
+
+    function finalizeSelection(minIdx, maxIdx) {
+        var slots = getSlots();
+
+        slots.forEach(function(slot, i) {
+            if (i >= minIdx && i <= maxIdx) {
+                selectedSlotStyle(slot);
+            } else {
+                resetSlotStyle(slot);
+            }
+        });
+
+        if (slots[minIdx] && slots[maxIdx]) {
+            var jamMulai  = slots[minIdx].getAttribute('data-start');
+            var jamSelesai = slots[maxIdx].getAttribute('data-end');
+
+            var elMulai   = document.getElementById('inputJamMulai');
+            var elSelesai = document.getElementById('inputJamSelesai');
+            if (elMulai)   elMulai.value   = jamMulai;
+            if (elSelesai) elSelesai.value  = jamSelesai;
+
+            // Tutup picker otomatis setelah sedikit delay supaya user lihat seleksinya
+            setTimeout(function() {
+                var panel = document.getElementById('inlineClockPanel');
+                if (panel) panel.style.display = 'none';
+                // Reset semua slot ke default
+                slots.forEach(resetSlotStyle);
+            }, 400);
+        }
+    }
+
+    document.addEventListener('mousedown', function(e) {
+        var slot = e.target.closest('.tp-slot');
+        if (!slot) return;
+        e.preventDefault();
+        isDragging = true;
+        var slots = getSlots();
+        dragStartIdx = slots.indexOf(slot);
+        currentEndIdx = dragStartIdx;
+        updateHighlight(dragStartIdx, dragStartIdx);
+    });
+
+    document.addEventListener('mouseover', function(e) {
+        if (!isDragging) return;
+        var slot = e.target.closest('.tp-slot');
+        if (!slot) return;
+        var slots = getSlots();
+        var idx = slots.indexOf(slot);
+        if (idx === -1) return;
+        currentEndIdx = idx;
+        var minIdx = Math.min(dragStartIdx, currentEndIdx);
+        var maxIdx = Math.max(dragStartIdx, currentEndIdx);
+        updateHighlight(minIdx, maxIdx);
+    });
+
+    document.addEventListener('mouseup', function(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        var minIdx = Math.min(dragStartIdx, currentEndIdx);
+        var maxIdx = Math.max(dragStartIdx, currentEndIdx);
+        finalizeSelection(minIdx, maxIdx);
+    });
+
+    // Touch support
+    document.addEventListener('touchstart', function(e) {
+        var slot = e.target.closest('.tp-slot');
+        if (!slot) return;
+        isDragging = true;
+        var slots = getSlots();
+        dragStartIdx = slots.indexOf(slot);
+        currentEndIdx = dragStartIdx;
+        updateHighlight(dragStartIdx, dragStartIdx);
+    }, {passive: true});
+
+    document.addEventListener('touchmove', function(e) {
+        if (!isDragging) return;
+        var touch = e.touches[0];
+        var el = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (!el) return;
+        var slot = el.closest('.tp-slot');
+        if (!slot) return;
+        var slots = getSlots();
+        var idx = slots.indexOf(slot);
+        if (idx === -1) return;
+        currentEndIdx = idx;
+        var minIdx = Math.min(dragStartIdx, currentEndIdx);
+        var maxIdx = Math.max(dragStartIdx, currentEndIdx);
+        updateHighlight(minIdx, maxIdx);
+    }, {passive: true});
+
+    document.addEventListener('touchend', function() {
+        if (!isDragging) return;
+        isDragging = false;
+        var minIdx = Math.min(dragStartIdx, currentEndIdx);
+        var maxIdx = Math.max(dragStartIdx, currentEndIdx);
+        finalizeSelection(minIdx, maxIdx);
+    });
+})();

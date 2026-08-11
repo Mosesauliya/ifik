@@ -298,13 +298,31 @@
                 </td>
                 <td><?= $p->keterangan ?></td>
                 <td>
-                    <?php if($p->status == 'Pending'): ?>
-                        <span class="badge badge-pending">Pending</span>
-                    <?php elseif($p->status == 'Disetujui'): ?>
-                        <span class="badge badge-approved">Disetujui</span>
-                    <?php elseif($p->status == 'Ditolak'): ?>
-                        <span class="badge" style="background: #fee2e2; color: #991b1b;">Ditolak</span>
-                    <?php endif; ?>
+                    <?php
+                        $s = $p->status;
+                        if ($s === 'Pending') {
+                            $dot = '#f59e0b'; $bg = '#fffbeb'; $color = '#b45309'; $label = 'Menunggu Persetujuan';
+                        } elseif (strpos($s, 'Ka. Ur') !== false) {
+                            $dot = '#22c55e'; $bg = '#f0fdf4'; $color = '#166534'; $label = 'Disetujui Ka. Ur';
+                        } elseif (strpos($s, 'Laboran') !== false) {
+                            $dot = '#3b82f6'; $bg = '#eff6ff'; $color = '#1d4ed8'; $label = 'Disetujui Laboran';
+                        } elseif (strpos($s, 'Admin') !== false) {
+                            $dot = '#8b5cf6'; $bg = '#f5f3ff'; $color = '#6d28d9'; $label = 'Disetujui Admin';
+                        } elseif (strpos($s, 'Disetujui') !== false) {
+                            $dot = '#22c55e'; $bg = '#f0fdf4'; $color = '#166534'; $label = 'Disetujui';
+                        } elseif ($s === 'Ditolak') {
+                            $dot = '#ef4444'; $bg = '#fef2f2'; $color = '#991b1b'; $label = 'Ditolak';
+                        } elseif ($s === 'Selesai') {
+                            $dot = '#94a3b8'; $bg = '#f8fafc'; $color = '#475569'; $label = 'Selesai';
+                        } else {
+                            $dot = '#94a3b8'; $bg = '#f8fafc'; $color = '#475569'; $label = htmlspecialchars($s);
+                        }
+                    ?>
+                    <span style="display:inline-flex;align-items:center;gap:5px;background:<?= $bg ?>;color:<?= $color ?>;border-radius:999px;padding:4px 11px;font-size:0.72rem;font-weight:700;white-space:nowrap;letter-spacing:0.01em;">
+                        <span style="width:6px;height:6px;border-radius:50%;background:<?= $dot ?>;flex-shrink:0;"></span>
+                        <?= $label ?>
+                    </span>
+
                 </td>
                 <td>
                     <div style="display: flex; gap: 8px;">
@@ -338,7 +356,7 @@
                     
                     <div class="form-group">
                         <label class="form-label">Nama Lengkap</label>
-                        <input type="text" class="form-control" name="nama_lengkap" value="muhammad alif muzakky" readonly style="background-color: #e2e8f0; cursor: not-allowed; color: #64748b;" required>
+                        <input type="text" class="form-control" name="nama_lengkap" value="<?= $this->session->userdata('name') ?>" readonly style="background-color: #e2e8f0; cursor: not-allowed; color: #64748b;" required>
                     </div>
 
                     <div class="form-group">
@@ -372,8 +390,60 @@
                     <div class="form-group" id="timeSelectionGroup" style="display: none;">
                         <label class="form-label">Waktu Peminjaman</label>
                         <div style="display: flex; gap: 15px; margin-top: 25px;">
-                            <input type="text" class="form-control" name="jam_mulai" id="inputJamMulai" placeholder="Jam Mulai" readonly style="cursor: pointer;" onclick="openTimePicker('mulai')" required>
-                            <input type="text" class="form-control" name="jam_selesai" id="inputJamSelesai" placeholder="Jam Selesai" readonly style="cursor: pointer;" onclick="openTimePicker('selesai')" required>
+                            <input type="text" class="form-control" name="jam_mulai" id="inputJamMulai" placeholder="Jam Mulai" readonly style="cursor: pointer;" onclick="openInlinePicker('mulai')" required>
+                            <input type="text" class="form-control" name="jam_selesai" id="inputJamSelesai" placeholder="Jam Selesai" readonly style="cursor: pointer;" onclick="openInlinePicker('selesai')" required>
+                        </div>
+
+                        <!-- Inline Clock Picker (di dalam modal) -->
+                        <div id="inlineClockPanel" style="display:none; margin-top: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px;">
+                            <div style="display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap;">
+
+                                <!-- Kiri: Display waktu & Pilih Cepat -->
+                                <div style="flex: 1; min-width: 160px;">
+                                    <div id="inlineTpLabel" style="font-size: 0.72rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Waktu dipilih</div>
+                                    <div style="font-size: 2.5rem; font-weight: 800; color: #1e293b; line-height: 1; margin-bottom: 6px;">
+                                        <span id="tpDisplayHour" onclick="setMode('hour')" style="cursor:pointer;">14</span><span style="color:#e2e8f0;">:</span><span id="tpDisplayMinute" onclick="setMode('minute')" style="cursor:pointer; color:#cbd5e1;">30</span>
+                                    </div>
+                                    <div style="display:inline-block; background:#ede9fe; color:#7c3aed; font-size:0.7rem; font-weight:600; border-radius:20px; padding:2px 10px; margin-bottom:12px;">24 Jam</div>
+
+                                    <div style="font-size: 0.72rem; color: #7c3aed; font-weight: 700; margin-bottom: 6px;">⚡ Pilih Cepat <span style="font-size:0.65rem;color:#94a3b8;font-weight:500;">(drag untuk rentang)</span></div>
+                                    <div id="tpTimeSlots" style="display:grid; grid-template-columns:1fr 1fr; gap:6px; user-select:none; margin-top:4px;">
+                                        <div class="tp-slot" data-start="08:00" data-end="09:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);">08:00 – 09:00</div>
+                                        <div class="tp-slot" data-start="09:00" data-end="10:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);">09:00 – 10:00</div>
+                                        <div class="tp-slot" data-start="10:00" data-end="11:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);">10:00 – 11:00</div>
+                                        <div class="tp-slot" data-start="11:00" data-end="12:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);">11:00 – 12:00</div>
+                                        <div class="tp-slot" data-start="12:00" data-end="13:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);">12:00 – 13:00</div>
+                                        <div class="tp-slot" data-start="13:00" data-end="14:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);">13:00 – 14:00</div>
+                                        <div class="tp-slot" data-start="14:00" data-end="15:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);">14:00 – 15:00</div>
+                                        <div class="tp-slot" data-start="15:00" data-end="16:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);">15:00 – 16:00</div>
+                                        <div class="tp-slot" data-start="16:00" data-end="17:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);">16:00 – 17:00</div>
+                                        <div class="tp-slot" data-start="17:00" data-end="18:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);">17:00 – 18:00</div>
+                                    </div>
+                                </div>
+
+                                <!-- Kanan: Clock -->
+                                <div style="flex: 1; min-width: 200px;">
+                                    <div class="tp-tabs" style="margin-bottom: 12px;">
+                                        <div class="tp-tab active" id="tpTabHour" onclick="setMode('hour')">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Jam
+                                        </div>
+                                        <div class="tp-tab" id="tpTabMinute" onclick="setMode('minute')">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg> Menit
+                                        </div>
+                                    </div>
+                                    <div class="tp-clock-container" id="tpClockContainer">
+                                        <div class="tp-clock-center"></div>
+                                        <div class="tp-clock-hand" id="tpClockHand"></div>
+                                        <div id="tpClockNumbers"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Footer -->
+                            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:14px; border-top: 1px solid #e2e8f0; padding-top:12px;">
+                                <button type="button" onclick="closeInlinePicker()" style="padding: 8px 18px; border-radius: 8px; border: 1px solid #e2e8f0; background:#fff; color:#64748b; font-size:0.85rem; cursor:pointer; font-weight:600;">Batal</button>
+                                <button type="button" onclick="applyInlinePicker()" style="padding: 8px 18px; border-radius: 8px; border: none; background: #7c3aed; color:#fff; font-size:0.85rem; cursor:pointer; font-weight:600;">✔ Terapkan</button>
+                            </div>
                         </div>
                     </div>
 
@@ -405,91 +475,39 @@
         </div>
     </div>
 
-    <!-- Time Picker Custom Modal -->
-    <div class="tp-modal-overlay" id="timePickerModal">
-        <div class="tp-modal">
-            <div class="tp-header">
-                <div class="tp-header-title">
-                    <div class="tp-icon-circle">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    </div>
-                    <div class="tp-header-text">
-                        <h3>Pilih Waktu</h3>
-                        <p>Pilih waktu yang sesuai</p>
-                    </div>
-                </div>
-                <button class="modal-close" onclick="closeTimePicker()" style="border:none;background:none;font-size:1.5rem;cursor:pointer;">&times;</button>
-            </div>
-            
-            <div class="tp-body">
-                <div class="tp-left">
-                    <div class="tp-selected-label">Waktu dipilih</div>
-                    <div class="tp-time-display">
-                        <span id="tpDisplayHour" onclick="setMode('hour')" style="cursor:pointer;">14</span><span class="colon">:</span><span id="tpDisplayMinute" onclick="setMode('minute')" style="cursor:pointer; color: #cbd5e1;">30</span>
-                    </div>
-                    <div class="tp-badge-24h">24 Jam</div>
-                    
-                    <div class="tp-date-display">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                        <span id="tpDateDisplay">-</span>
-                    </div>
-                    
-                    <div class="tp-quick-select-label">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Pilih Cepat
-                    </div>
-                    <div class="tp-quick-grid">
-                        <button type="button" class="tp-quick-btn" onclick="setQuickTime(8,0)">08:00</button>
-                        <button type="button" class="tp-quick-btn" onclick="setQuickTime(9,0)">09:00</button>
-                        <button type="button" class="tp-quick-btn" onclick="setQuickTime(10,0)">10:00</button>
-                        <button type="button" class="tp-quick-btn" onclick="setQuickTime(13,0)">13:00</button>
-                        <button type="button" class="tp-quick-btn" onclick="setQuickTime(14,0)">14:00</button>
-                        <button type="button" class="tp-quick-btn" onclick="setQuickTime(15,0)">15:00</button>
-                        <button type="button" class="tp-quick-btn" onclick="setQuickTime(16,0)">16:00</button>
-                        <button type="button" class="tp-quick-btn" onclick="setQuickTime(17,0)">17:00</button>
-                        <button type="button" class="tp-quick-btn" onclick="setQuickTime(18,0)">18:00</button>
-                    </div>
-                </div>
-                
-                <div class="tp-right">
-                    <div class="tp-tabs">
-                        <div class="tp-tab active" id="tpTabHour" onclick="setMode('hour')">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Jam
-                        </div>
-                        <div class="tp-tab" id="tpTabMinute" onclick="setMode('minute')">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg> Menit
-                        </div>
-                    </div>
-                    
-                    <div class="tp-clock-container" id="tpClockContainer">
-                        <div class="tp-clock-center"></div>
-                        <div class="tp-clock-hand" id="tpClockHand"></div>
-                        <div id="tpClockNumbers">
-                            <!-- JS Generated -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="tp-footer">
-                <button type="button" class="tp-btn tp-btn-cancel" onclick="closeTimePicker()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Batal
-                </button>
-                <button type="button" class="tp-btn tp-btn-apply" onclick="applyTimePicker()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Terapkan
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="<?= base_url('assets/js/timepicker.js') ?>"></script>
+    <script src="<?= base_url('assets/js/timepicker.js?v=' . filemtime(FCPATH . 'assets/js/timepicker.js')) ?>"></script>
     <script>
+        let currentTarget = '';
+
+        function openInlinePicker(target) {
+            currentTarget = target;
+            document.getElementById('inlineClockPanel').style.display = 'block';
+            document.getElementById('inlineTpLabel').innerText = (target === 'mulai') ? 'Waktu Mulai' : 'Waktu Selesai';
+        }
+
+        function closeInlinePicker() {
+            document.getElementById('inlineClockPanel').style.display = 'none';
+        }
+
+        function applyInlinePicker() {
+            let time = document.getElementById('tpDisplayHour').innerText.padStart(2, '0') + ':' + document.getElementById('tpDisplayMinute').innerText.padStart(2, '0');
+            if (currentTarget === 'mulai') {
+                document.getElementById('inputJamMulai').value = time;
+            } else {
+                document.getElementById('inputJamSelesai').value = time;
+            }
+            closeInlinePicker();
+        }
+
         $(document).ready(function() {
-            // Initialize Flatpickr for date range
+            // Initialize Flatpickr for date range/single
+            var fpMode = "<?= ($this->session->userdata('role_id') == 1) ? 'range' : 'single' ?>";
+            
             flatpickr("#tanggalPeminjaman", {
-                mode: "range",
+                mode: fpMode,
                 dateFormat: "Y-m-d",
                 minDate: "today",
                 onChange: function(selectedDates, dateStr, instance) {
@@ -515,7 +533,7 @@
                 let id_kategori = $(this).val();
                 if(id_kategori != '') {
                     $.ajax({
-                        url: "<?= base_url('adminbooking/get_ruangan') ?>",
+                        url: "<?= base_url('kelolabooking/get_ruangan') ?>",
                         method: "POST",
                         data: {id_kategori: id_kategori},
                         dataType: "json",
@@ -555,7 +573,7 @@
             const formData = new FormData(form);
             
             $.ajax({
-                url: '<?= base_url('adminbooking/submit_booking') ?>',
+                url: '<?= base_url('kelolabooking/submit_booking') ?>',
                 type: 'POST',
                 data: formData,
                 processData: false,
@@ -578,7 +596,7 @@
         function approveBooking(id) {
             if(confirm('Apakah Anda yakin ingin menyetujui peminjaman ini?')) {
                 $.ajax({
-                    url: '<?= base_url('adminbooking/approve/') ?>' + id,
+                    url: '<?= base_url('kelolabooking/approve/') ?>' + id,
                     type: 'POST',
                     success: function(response) {
                         const res = JSON.parse(response);
@@ -608,7 +626,7 @@
             const alasan = document.getElementById('alasanPenolakan').value;
             
             $.ajax({
-                url: '<?= base_url('adminbooking/reject/') ?>' + id,
+                url: '<?= base_url('kelolabooking/reject/') ?>' + id,
                 type: 'POST',
                 data: { alasan_penolakan: alasan },
                 success: function(response) {
@@ -626,7 +644,7 @@
         function deleteBooking(id) {
             if(confirm('Data akan dihapus permanen. Apakah Anda yakin?')) {
                 $.ajax({
-                    url: '<?= base_url('adminbooking/delete/') ?>' + id,
+                    url: '<?= base_url('kelolabooking/delete/') ?>' + id,
                     type: 'POST',
                     success: function(response) {
                         const res = JSON.parse(response);

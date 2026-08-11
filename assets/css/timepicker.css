@@ -135,6 +135,42 @@
 .tp-quick-btn:hover { background: #f1f5f9; }
 .tp-quick-btn.active { background: #ede9fe; color: #7c3aed; }
 
+/* Time Range Slots (Drag Select) */
+.tp-slot {
+    padding: 9px 6px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    background: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #475569;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s, box-shadow 0.12s;
+    user-select: none;
+    -webkit-user-select: none;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    letter-spacing: 0.01em;
+}
+.tp-slot:hover {
+    background: #f5f3ff;
+    border-color: #a78bfa;
+    color: #6d28d9;
+    box-shadow: 0 2px 6px rgba(124,58,237,0.12);
+}
+.tp-slot.tp-slot-selected {
+    background: #7c3aed;
+    border-color: #7c3aed;
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(124,58,237,0.3);
+}
+.tp-slot.tp-slot-preview {
+    background: #ede9fe;
+    border-color: #7c3aed;
+    color: #6d28d9;
+    box-shadow: 0 2px 6px rgba(124,58,237,0.15);
+}
+
 
 /* Right Panel (Clock) */
 .tp-right {
