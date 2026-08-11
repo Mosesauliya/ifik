@@ -70,5 +70,81 @@
 
 
         </div>
+
+        <!-- Kalender Fullscreen (Hidden by default) -->
+        <div class="gcal-wrapper" id="gcalWrapper" style="display: none;">
+            <div class="gcal-header">
+                <div class="gcal-header-left">
+                    <button class="gcal-btn-today" onclick="goToToday()">Today</button>
+                    <div class="gcal-nav-arrows">
+                        <button onclick="prevWeek()"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+                        <button onclick="nextWeek()"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+                    </div>
+                    <h2 class="gcal-month-title" id="gcalMonthTitle">August 2026</h2>
+                </div>
+                <div class="gcal-header-right">
+                    <button class="gcal-btn-booking" onclick="openBookingModal()">+ Ajukan Booking</button>
+                </div>
+            </div>
+            
+            <div class="gcal-body">
+                <div class="gcal-days-header" id="gcalDaysHeader">
+                    <!-- Digenerate via JS -->
+                </div>
+                <div class="gcal-grid-scroll">
+                    <div class="gcal-grid" id="gcalGrid">
+                        <!-- Digenerate via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
+
+<!-- Modal Ajukan Booking (Public) -->
+<div id="bookingModal" class="gcal-modal">
+    <div class="gcal-modal-content">
+        <span class="gcal-modal-close" onclick="closeBookingModal()">&times;</span>
+        <h2 style="margin-top:0; margin-bottom: 20px; font-weight: 700; color: var(--text-color);">Ajukan Booking Ruangan</h2>
+        <form id="formAjukanBooking" onsubmit="submitBooking(event)">
+            <div class="form-group-gcal">
+                <label>Nama Lengkap / NIM</label>
+                <input type="text" name="nama_lengkap" required placeholder="Masukkan nama peminjam">
+            </div>
+            <div class="form-group-gcal">
+                <label>Pilih Ruangan</label>
+                <select name="id_ruangan" required>
+                    <option value="" disabled selected>-- Pilih Ruangan --</option>
+                    <?php foreach($ruangan as $r): ?>
+                        <option value="<?= $r->id ?>"><?= $r->nama_ruangan ?> (<?= $r->kode_ruangan ?>)</option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="form-group-gcal">
+                <label>Tanggal Peminjaman (1 Hari)</label>
+                <input type="date" name="tanggal_peminjaman" required>
+            </div>
+            <div class="form-row-gcal">
+                <div class="form-group-gcal">
+                    <label>Jam Mulai</label>
+                    <input type="time" name="jam_mulai" required>
+                </div>
+                <div class="form-group-gcal">
+                    <label>Jam Selesai</label>
+                    <input type="time" name="jam_selesai" required>
+                </div>
+            </div>
+            <div class="form-group-gcal">
+                <label>Keterangan / Keperluan</label>
+                <textarea name="keterangan" rows="3" placeholder="Contoh: Rapat HIMA"></textarea>
+            </div>
+            <button type="submit" class="gcal-btn-submit">Submit Booking</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Passing data dari PHP ke JS
+    const bookingData = <?= json_encode($jadwal_peminjaman ? $jadwal_peminjaman : []) ?>;
+</script>
