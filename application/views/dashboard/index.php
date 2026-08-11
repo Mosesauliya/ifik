@@ -14,7 +14,13 @@
     <!-- Model Viewer for 3D -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
 
+    <!-- jQuery & Flatpickr - harus di head agar tersedia saat inline script dijalankan -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
     <!-- Custom CSS untuk tiap Section -->
+    <link rel="stylesheet" href="<?= base_url('assets/css/timepicker.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/info_ruangan.css?v=' . time()) ?>">
 
     <script>
@@ -409,6 +415,14 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="<?= base_url('assets/css/timepicker.css') ?>">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    
+    <!-- Custom Flatpickr Theme to match Dashboard -->
+    <style>
+        .flatpickr-calendar { font-family: 'Plus Jakarta Sans', sans-serif !important; border: 1px solid var(--glass-border) !important; border-radius: 12px !important; box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important; }
+        .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange, .flatpickr-day.selected.inRange, .flatpickr-day.startRange.inRange, .flatpickr-day.endRange.inRange, .flatpickr-day.selected:focus, .flatpickr-day.startRange:focus, .flatpickr-day.endRange:focus, .flatpickr-day.selected:hover, .flatpickr-day.startRange:hover, .flatpickr-day.endRange:hover, .flatpickr-day.selected.prevMonthDay, .flatpickr-day.startRange.prevMonthDay, .flatpickr-day.endRange.prevMonthDay, .flatpickr-day.selected.nextMonthDay, .flatpickr-day.startRange.nextMonthDay, .flatpickr-day.endRange.nextMonthDay { background: #ea580c !important; border-color: #ea580c !important; }
+    </style>
 </head>
 <body>
 
@@ -520,6 +534,8 @@
         });
     </script>
 
+    <script src="<?= base_url('assets/js/timepicker.js?v=' . filemtime(FCPATH . 'assets/js/timepicker.js')) ?>"></script>
+    
     <!-- External Custom Script (info_ruangan.js harus paling atas agar toggleFullscreen() tersedia) -->
     <script src="<?= base_url('assets/js/info_ruangan.js?v=' . filemtime(FCPATH . 'assets/js/info_ruangan.js')) ?>"></script>
 </body>
