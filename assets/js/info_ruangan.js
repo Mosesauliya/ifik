@@ -66,12 +66,11 @@
     function renderTimeGridAndEvents() {
         const gridContainer = document.getElementById('gcalGrid');
         
-        // Render Time Column (Y-Axis)
+        // Render Time Column (Y-Axis) — jam 07:00 s/d 22:00
         let timeColHTML = `<div class="gcal-time-col">`;
-        for (let i = 1; i < 24; i++) {
-            let ampm = i < 12 ? 'AM' : (i === 12 ? 'PM' : 'PM');
-            let hourStr = i <= 12 ? i : i - 12;
-            timeColHTML += `<div class="gcal-time-label"><span>${hourStr} ${ampm}</span></div>`;
+        for (let i = 7; i <= 22; i++) {
+            const hourStr = i.toString().padStart(2, '0') + ':00';
+            timeColHTML += `<div class="gcal-time-label"><span>${hourStr}</span></div>`;
         }
         timeColHTML += `</div>`;
 
@@ -86,15 +85,31 @@
             let dateString = `${y}-${m}-${d}`;
             
             dayColsHTML += `<div class="gcal-day-col" id="col-${dateString}">`;
-            
-            // Generate Events for this specific day
             dayColsHTML += generateEventsForDay(dateString);
-            
             dayColsHTML += `</div>`;
         }
         dayColsHTML += `</div>`;
 
         gridContainer.innerHTML = timeColHTML + dayColsHTML;
+    }
+
+    // Mapping status ke warna dan label singkat
+    function getStatusStyle(status) {
+        const s = (status || '').toLowerCase();
+        if (s === 'pending') {
+            return { bg: '#f59e0b', border: '#d97706', label: 'Menunggu Persetujuan' };
+        } else if (s.includes('ka. ur')) {
+            return { bg: '#10b981', border: '#059669', label: 'Disetujui Ka. Ur' };
+        } else if (s.includes('laboran')) {
+            return { bg: '#3b82f6', border: '#2563eb', label: 'Disetujui Laboran' };
+        } else if (s.includes('admin')) {
+            return { bg: '#8b5cf6', border: '#7c3aed', label: 'Disetujui Admin' };
+        } else if (s.includes('disetujui')) {
+            return { bg: '#10b981', border: '#059669', label: 'Disetujui' };
+        } else if (s === 'selesai') {
+            return { bg: '#64748b', border: '#475569', label: 'Selesai' };
+        }
+        return { bg: '#7c3aed', border: '#6d28d9', label: status };
     }
 
     function generateEventsForDay(targetDateStr) {
@@ -104,37 +119,38 @@
         const pxPerHour = 48;
 
         bookingData.forEach(booking => {
-            // Cek apakah event ini terjadi di tanggal target (bisa multi-hari)
             if (booking.tanggal_mulai <= targetDateStr && booking.tanggal_selesai >= targetDateStr) {
                 
-                let startHour = 0;
-                let startMin = 0;
-                let endHour = 24;
-                let endMin = 0;
+                let startHour = 0, startMin = 0, endHour = 24, endMin = 0;
 
-                // Jika di hari pertama peminjaman, gunakan jam mulai asli
                 if (booking.tanggal_mulai === targetDateStr) {
-                    const startParts = booking.jam_mulai.split(':');
-                    startHour = parseInt(startParts[0]);
-                    startMin = parseInt(startParts[1]);
+                    const p = booking.jam_mulai.split(':');
+                    startHour = parseInt(p[0]);
+                    startMin  = parseInt(p[1]);
                 }
-                
-                // Jika di hari terakhir peminjaman, gunakan jam selesai asli
                 if (booking.tanggal_selesai === targetDateStr) {
-                    const endParts = booking.jam_selesai.split(':');
-                    endHour = parseInt(endParts[0]);
-                    endMin = parseInt(endParts[1]);
+                    const p = booking.jam_selesai.split(':');
+                    endHour = parseInt(p[0]);
+                    endMin  = parseInt(p[1]);
                 }
 
-                // Kalkulasi posisi TOP & HEIGHT
-                const topPx = (startHour + (startMin / 60)) * pxPerHour;
-                const endPx = (endHour + (endMin / 60)) * pxPerHour;
-                const heightPx = endPx - topPx;
+                const gridStartHour = 7; // Grid dimulai dari jam 07:00
+                // Label CSS pakai bottom:-6px (Google Calendar style), sehingga label "07:00"
+                // muncul di batas BAWAH row 07:00 = batas ATAS row 08:00.
+                // Perlu tambah 1 row (pxPerHour) agar event 08:00 align dengan label 08:00.
+                const topPx    = ((startHour - gridStartHour + 1) + startMin / 60) * pxPerHour;
+                const endPx    = ((endHour   - gridStartHour + 1) + endMin   / 60) * pxPerHour;
+                const heightPx = Math.max(endPx - topPx, 24);
+
+                const st = getStatusStyle(booking.status);
+                const timeLabel = `${startHour}:${startMin.toString().padStart(2,'0')} - ${endHour}:${endMin.toString().padStart(2,'0')}`;
 
                 eventsHTML += `
-                    <div class="gcal-event" style="top: ${topPx}px; height: ${heightPx}px;" title="${booking.nama_ruangan} - ${booking.nama_lengkap}">
+                    <div class="gcal-event" style="top:${topPx}px; height:${heightPx}px; background:${st.bg}; border-left:3px solid ${st.border};"
+                         title="${booking.nama_ruangan} — ${booking.nama_lengkap} (${st.label})">
                         <div class="gcal-event-title">${booking.nama_ruangan}</div>
-                        <div class="gcal-event-time">${startHour}:${startMin.toString().padStart(2, '0')} - ${endHour}:${endMin.toString().padStart(2, '0')}</div>
+                        <div class="gcal-event-time">${timeLabel}</div>
+                        <div class="gcal-event-status">${st.label}</div>
                     </div>
                 `;
             }
@@ -179,12 +195,18 @@
         
         const form = document.getElementById('formAjukanBooking');
         const formData = new FormData(form);
-        const submitBtn = form.querySelector('button[type="submit"]');
-        
-        submitBtn.innerHTML = 'Memproses...';
-        submitBtn.disabled = true;
 
-        fetch(window.location.origin + '/dashboard/ajukan_booking', {
+        // Ambil tombol submit (bisa di luar form via form= attribute)
+        const submitBtn = document.querySelector('[form="formAjukanBooking"]') || form.querySelector('[type="submit"]');
+        
+        if (submitBtn) {
+            submitBtn.textContent = 'Memproses...';
+            submitBtn.disabled = true;
+        }
+
+        const url = (window.ajukanBookingUrl || window.location.origin + '/dashboard/ajukan_booking');
+
+        fetch(url, {
             method: 'POST',
             body: formData
         })
@@ -193,7 +215,6 @@
             if (data.status === 'success') {
                 alert(data.message);
                 closeBookingModal();
-                // Tidak perlu render ulang jadwal karena statusnya masih pending dan tidak masuk kalender dulu
             } else {
                 alert('Error: ' + data.message);
             }
@@ -203,7 +224,10 @@
             alert('Terjadi kesalahan pada server');
         })
         .finally(() => {
-            submitBtn.innerHTML = 'Submit Booking';
-            submitBtn.disabled = false;
+            if (submitBtn) {
+                submitBtn.textContent = 'Simpan Peminjaman';
+                submitBtn.disabled = false;
+            }
         });
     }
+
