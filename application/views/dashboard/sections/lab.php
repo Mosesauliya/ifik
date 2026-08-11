@@ -1,4 +1,18 @@
 <style>
+    /* Hide model-viewer hand interaction prompt graphic permanently */
+    model-viewer::part(user-prompt),
+    model-viewer::part(prompt),
+    model-viewer::part(interaction-prompt),
+    model-viewer .slot.user-prompt,
+    model-viewer #prompt,
+    model-viewer [slot="user-prompt"],
+    model-viewer img {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+
     /* Styling khusus Sesi Laboratorium Fakultas */
     #section-lab {
         background-color: var(--bg-color);
@@ -13,21 +27,25 @@
         /* Menggeser container ke sisi kanan layar, menyisakan ruang di kiri untuk 3D Logo */
         margin-left: auto;
         margin-right: 5vw;
-        max-width: 1100px;
-        width: 100%;
-        padding: 40px;
+        width: calc(100% - 45vw); /* Memaksa menyisakan 45% layar kiri untuk logo 3D */
+        max-width: 1000px;
+        padding: 50px 40px;
         z-index: 2;
         background: var(--glass-bg);
         border: 1px solid var(--glass-border);
         border-radius: 24px;
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
         position: relative;
+        transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
     .lab-header {
-        margin-bottom: 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 10px;
     }
 
     .lab-header h1 {
@@ -45,14 +63,55 @@
         font-weight: 500;
     }
 
+    .lab-nav-btns {
+        display: flex;
+        gap: 10px;
+    }
+
+    .lab-nav-btn {
+        background: rgba(234, 88, 12, 0.1);
+        border: 1px solid rgba(234, 88, 12, 0.3);
+        color: #ea580c;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1.1rem;
+        font-weight: 700;
+        transition: all 0.3s ease;
+    }
+
+    .lab-nav-btn:hover {
+        background: #ea580c;
+        color: #ffffff;
+        transform: scale(1.08);
+    }
+
     .lab-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        display: flex;
         gap: 20px;
-        margin-top: 110px; /* Ruang lebih luas di atas agar 3D model tidak bertabrakan dengan header saat diputar 360 derajat */
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE/Edge */
+        width: 100%;
+        padding-top: 95px;
+        padding-bottom: 20px;
+        margin-top: 10px;
+        scroll-behavior: smooth;
+    }
+
+    .lab-grid::-webkit-scrollbar {
+        display: none;
     }
 
     .lab-card {
+        flex: 0 0 320px;
+        min-width: 320px;
+        scroll-snap-align: start;
         background: linear-gradient(145deg, rgba(255, 255, 255, 0.92) 0%, rgba(254, 243, 237, 0.85) 100%);
         border-radius: 24px;
         padding: 24px;
@@ -184,12 +243,54 @@
         transform: translateX(4px);
     }
 
+    /* Indicators Garis Dempetan dengan 3 State: Passed (Border Oren), Active (Solid Lebar Tebal), Upcoming (Biasa) */
+    .lab-slide-indicators {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 4px; /* Dempetan seperti di gambar */
+        margin-top: 18px;
+    }
+
+    .slide-line {
+        width: 36px;
+        height: 5px;
+        border-radius: 4px;
+        background: rgba(0, 0, 0, 0.12);
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+        box-sizing: border-box;
+    }
+
+    .slide-line:hover {
+        background: rgba(234, 88, 12, 0.3);
+    }
+
+    /* State 1: Line sebelum nya yang sudah dilewati (Hanya Border Oren) */
+    .slide-line.passed {
+        background: transparent;
+        border: 1.5px solid #ea580c;
+    }
+
+    /* State 2: Line aktif saat ini (Solid Oren Lebar & Tebal) */
+    .slide-line.active {
+        width: 80px;
+        height: 6px;
+        background: #ea580c;
+        border: 1px solid #ea580c;
+        border-radius: 6px;
+        box-shadow: 0 2px 10px rgba(234, 88, 12, 0.45);
+    }
+
     @media (max-width: 992px) {
-        .lab-grid {
-            grid-template-columns: 1fr;
-        }
         .lab-container {
             margin: 20px;
+            width: calc(100% - 40px);
+        }
+        .lab-card {
+            flex: 0 0 280px;
+            min-width: 280px;
         }
     }
 </style>
@@ -199,11 +300,17 @@
     <div class="lab-container">
         
         <div class="lab-header">
-            <h1>LABORATORIUM FAKULTAS</h1>
-            <p>Fasilitas laboratorium di fakultas industri kreatif</p>
+            <div>
+                <h1>LABORATORIUM FAKULTAS</h1>
+                <p>Fasilitas laboratorium di fakultas industri kreatif</p>
+            </div>
+            <div class="lab-nav-btns">
+                <button class="lab-nav-btn" onclick="scrollLabGrid(-1)" title="Geser Kiri">&#8592;</button>
+                <button class="lab-nav-btn" onclick="scrollLabGrid(1)" title="Geser Kanan">&#8594;</button>
+            </div>
         </div>
 
-        <div class="lab-grid">
+        <div class="lab-grid" id="labGrid">
             
             <!-- Lab 1: Multimedia & Game -->
             <div class="lab-card">
@@ -214,9 +321,13 @@
                             src="<?= base_url('assets/3D/' . rawurlencode('lab.multi media (1).glb')) ?>" 
                             alt="3D Lab Multimedia" 
                             camera-orbit="45deg 75deg 75%"
-                            field-of-view="19deg"
+                            min-camera-orbit="auto 75deg 75%"
+                            max-camera-orbit="auto 75deg 75%"
+                            field-of-view="15.5deg"
                             camera-controls 
                             disable-zoom 
+                            disable-pan
+                            touch-action="pan-y"
                             shadow-intensity="1.5" 
                             shadow-softness="0.8"
                             exposure="1.2"
@@ -246,10 +357,14 @@
                         <model-viewer 
                             src="<?= base_url('assets/3D/Aula.glb') ?>" 
                             alt="3D Aula Utama Fakultas" 
-                            camera-orbit="45deg 75deg 75%"
-                            field-of-view="19deg"
+                            camera-orbit="-135deg 75deg 75%"
+                            min-camera-orbit="auto 75deg 75%"
+                            max-camera-orbit="auto 75deg 75%"
+                            field-of-view="15.5deg"
                             camera-controls 
                             disable-zoom 
+                            disable-pan
+                            touch-action="pan-y"
                             shadow-intensity="1.5" 
                             shadow-softness="0.8"
                             exposure="1.2"
@@ -280,9 +395,13 @@
                             src="<?= base_url('assets/3D/' . rawurlencode('lab tab cintiq (1).glb')) ?>" 
                             alt="3D Lab Tablet Cintiq" 
                             camera-orbit="45deg 75deg 75%"
-                            field-of-view="19deg"
+                            min-camera-orbit="auto 75deg 75%"
+                            max-camera-orbit="auto 75deg 75%"
+                            field-of-view="15.5deg"
                             camera-controls 
                             disable-zoom 
+                            disable-pan
+                            touch-action="pan-y"
                             shadow-intensity="1.5" 
                             shadow-softness="0.8"
                             exposure="1.2"
@@ -305,15 +424,65 @@
             </div>
 
         </div>
+
+        <!-- Slide Line Indicators Bar (Desain Garis Aktif Tebal & Lebih Lebar) -->
+        <div class="lab-slide-indicators" id="labIndicators">
+            <span class="slide-line active" onclick="scrollToLabSlide(0)" title="Lab 1: Multimedia & Game"></span>
+            <span class="slide-line" onclick="scrollToLabSlide(1)" title="Lab 2: Aula Utama Fakultas"></span>
+            <span class="slide-line" onclick="scrollToLabSlide(2)" title="Lab 3: Lab Tablet Cintiq"></span>
+        </div>
+
     </div>
 </div>
 
 <script>
+    function scrollToLabSlide(index) {
+        const grid = document.getElementById('labGrid');
+        if (grid) {
+            const cardWidth = 340; // Card width (320px) + gap (20px)
+            grid.scrollTo({ left: index * cardWidth, behavior: 'smooth' });
+            updateLabIndicators(index);
+        }
+    }
+
+    function updateLabIndicators(activeIndex) {
+        const lines = document.querySelectorAll('#labIndicators .slide-line');
+        lines.forEach((line, idx) => {
+            if (idx < activeIndex) {
+                line.classList.add('passed');
+                line.classList.remove('active');
+            } else if (idx === activeIndex) {
+                line.classList.add('active');
+                line.classList.remove('passed');
+            } else {
+                line.classList.remove('active');
+                line.classList.remove('passed');
+            }
+        });
+    }
+
+    function scrollLabGrid(direction) {
+        const grid = document.getElementById('labGrid');
+        if (grid) {
+            const scrollAmount = 340; // Card width (320px) + gap (20px)
+            grid.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
+        const grid = document.getElementById('labGrid');
+        if (grid) {
+            grid.addEventListener('scroll', () => {
+                const cardWidth = 340;
+                const activeIndex = Math.min(2, Math.max(0, Math.round(grid.scrollLeft / cardWidth)));
+                updateLabIndicators(activeIndex);
+            });
+        }
         const cardViewers = document.querySelectorAll('.card-3d-model-wrapper model-viewer');
         
         cardViewers.forEach(viewer => {
             const defaultOrbit = viewer.getAttribute('camera-orbit') || '45deg 75deg 100%';
+            const defaultTarget = viewer.getAttribute('camera-target') || 'auto auto auto';
             let resetTimer = null;
 
             // Kembalikan ke kecepatan gerak normal saat kursor disentuh/ditekan
@@ -334,6 +503,7 @@
                     resetTimer = setTimeout(() => {
                         viewer.interpolationDecay = 450; // Kecepatan kembali diperlambat (smooth & halus)
                         viewer.cameraOrbit = defaultOrbit;
+                        viewer.cameraTarget = defaultTarget;
                     }, 4000);
                 }
             });

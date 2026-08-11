@@ -279,6 +279,102 @@
         box-shadow: 0 5px 15px rgba(234, 88, 12, 0.3);
     }
 
+    /* Custom Orange Circle Cursor System - Total Override */
+    @media (pointer: fine) {
+        *,
+        *::before,
+        *::after,
+        html,
+        body,
+        a,
+        button,
+        input,
+        select,
+        textarea,
+        label,
+        summary,
+        model-viewer,
+        model-viewer::part(default-canvas),
+        [role="button"],
+        [onclick] {
+            cursor: none !important;
+        }
+    }
+
+    /* Permanent Hide for Model Viewer Interaction Hand Prompt Graphic */
+    model-viewer::part(user-prompt),
+    model-viewer::part(prompt),
+    model-viewer::part(interaction-prompt),
+    model-viewer .slot.user-prompt,
+    model-viewer #prompt,
+    model-viewer [slot="user-prompt"],
+    model-viewer img {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+
+    .custom-cursor-dot {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 8px;
+        height: 8px;
+        background-color: #ea580c;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 999999;
+        transform: translate(-50%, -50%);
+        transition: opacity 0.3s ease, transform 0.1s ease;
+        box-shadow: 0 0 10px rgba(234, 88, 12, 0.8);
+        opacity: 0;
+    }
+
+    .custom-cursor-circle {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 34px;
+        height: 34px;
+        border: 2px solid rgba(234, 88, 12, 0.7);
+        background: rgba(234, 88, 12, 0.08);
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 999998;
+        transform: translate(-50%, -50%);
+        transition: width 0.25s cubic-bezier(0.25, 1, 0.5, 1),
+                    height 0.25s cubic-bezier(0.25, 1, 0.5, 1),
+                    background-color 0.25s ease,
+                    border-color 0.25s ease,
+                    opacity 0.3s ease;
+        box-shadow: 0 0 15px rgba(234, 88, 12, 0.25);
+        opacity: 0;
+    }
+
+    /* Hover State on Interactive Elements */
+    body.cursor-hover .custom-cursor-circle {
+        width: 52px;
+        height: 52px;
+        background: rgba(234, 88, 12, 0.18);
+        border-color: #ea580c;
+        box-shadow: 0 0 25px rgba(234, 88, 12, 0.5);
+    }
+
+    body.cursor-hover .custom-cursor-dot {
+        transform: translate(-50%, -50%) scale(1.5);
+        background-color: #ffffff;
+    }
+
+    /* Active Click State */
+    body.cursor-active .custom-cursor-circle {
+        width: 26px;
+        height: 26px;
+        background: rgba(234, 88, 12, 0.35);
+    }
+
     /* Responsive */
     @media (max-width: 992px) {
         .site-footer {
@@ -386,6 +482,10 @@
     </div>
 </footer>
 
+<!-- Custom Orange Circle Cursor Elements -->
+<div class="custom-cursor-dot" id="customCursorDot"></div>
+<div class="custom-cursor-circle" id="customCursorCircle"></div>
+
 <script>
     function scrollToTopSection() {
         const dashboardContainer = document.querySelector('.dashboard-container');
@@ -395,4 +495,127 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
+
+    // Custom Smooth Circle Cursor Engine
+    document.addEventListener('DOMContentLoaded', () => {
+        const dot = document.getElementById('customCursorDot');
+        const circle = document.getElementById('customCursorCircle');
+        if (!dot || !circle) return;
+
+        let mouseX = -100, mouseY = -100;
+        let circleX = -100, circleY = -100;
+        let isVisible = false;
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+
+            if (!isVisible) {
+                dot.style.opacity = '1';
+                circle.style.opacity = '1';
+                isVisible = true;
+            }
+
+            dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+        });
+
+        // Ensure custom cursor stays visible during screenshots / window blur
+        window.addEventListener('blur', () => {
+            if (mouseX > 0 && mouseY > 0) {
+                dot.style.opacity = '1';
+                circle.style.opacity = '1';
+                isVisible = true;
+            }
+        });
+
+        function renderCursor() {
+            circleX += (mouseX - circleX) * 0.18;
+            circleY += (mouseY - circleY) * 0.18;
+
+            circle.style.transform = `translate(${circleX}px, ${circleY}px) translate(-50%, -50%)`;
+            requestAnimationFrame(renderCursor);
+        }
+        requestAnimationFrame(renderCursor);
+
+        const interactiveSelector = 'a, button, input, select, textarea, label, [role="button"], [onclick], model-viewer, .lab-card, .btn-detail-lab, .slide-line, .detail-line, .social-btn, .lab-nav-btn, .nav-link, .nav-item, img, svg';
+
+        document.addEventListener('mouseover', (e) => {
+            if (e.target.closest(interactiveSelector)) {
+                document.body.classList.add('cursor-hover');
+            }
+        });
+
+        document.addEventListener('mouseout', (e) => {
+            if (e.target.closest(interactiveSelector)) {
+                document.body.classList.remove('cursor-hover');
+            }
+        });
+
+        // Kill grab/grabbing cursor and hand interaction prompt graphic on model-viewer elements permanently
+        const killModelViewerCursor = () => {
+            document.querySelectorAll('model-viewer').forEach(viewer => {
+                viewer.removeAttribute('interaction-prompt');
+                viewer.setAttribute('interaction-prompt', 'none');
+                viewer.interactionPrompt = 'none';
+
+                if (viewer.shadowRoot) {
+                    // Inject style tag inside Shadow Root to override browser cursor boundary
+                    if (!viewer.shadowRoot.querySelector('#force-no-cursor-style')) {
+                        const styleEl = document.createElement('style');
+                        styleEl.id = 'force-no-cursor-style';
+                        styleEl.textContent = `
+                            *, *::before, *::after, canvas, .container, #prompt, .user-prompt, [slot="user-prompt"], img, div {
+                                cursor: none !important;
+                            }
+                            #prompt, .user-prompt, [slot="user-prompt"] {
+                                display: none !important;
+                                opacity: 0 !important;
+                                visibility: hidden !important;
+                                pointer-events: none !important;
+                            }
+                        `;
+                        viewer.shadowRoot.appendChild(styleEl);
+                    }
+
+                    const canvas = viewer.shadowRoot.querySelector('canvas');
+                    if (canvas) canvas.style.setProperty('cursor', 'none', 'important');
+
+                    const container = viewer.shadowRoot.querySelector('.container');
+                    if (container) container.style.setProperty('cursor', 'none', 'important');
+
+                    // Kill hand interaction prompt graphic elements
+                    const promptElems = viewer.shadowRoot.querySelectorAll('#prompt, .prompt, .user-prompt, [slot="user-prompt"], img');
+                    promptElems.forEach(el => {
+                        el.style.setProperty('display', 'none', 'important');
+                        el.style.setProperty('opacity', '0', 'important');
+                        el.style.setProperty('visibility', 'hidden', 'important');
+                        el.style.setProperty('pointer-events', 'none', 'important');
+                    });
+                }
+
+                viewer.style.setProperty('cursor', 'none', 'important');
+
+                ['pointerdown', 'pointermove', 'pointerup', 'dragstart', 'camera-change', 'mousedown', 'mousemove', 'mouseup', 'touchmove', 'touchstart', 'mouseenter', 'mouseover'].forEach(evt => {
+                    viewer.addEventListener(evt, () => {
+                        viewer.style.setProperty('cursor', 'none', 'important');
+                        if (viewer.shadowRoot) {
+                            const c = viewer.shadowRoot.querySelector('canvas');
+                            if (c) c.style.setProperty('cursor', 'none', 'important');
+                        }
+                    }, { passive: true });
+                });
+            });
+        };
+
+        killModelViewerCursor();
+        setInterval(killModelViewerCursor, 250);
+
+        document.addEventListener('mousedown', () => {
+            document.body.classList.add('cursor-active');
+        });
+
+        document.addEventListener('mouseup', () => {
+            document.body.classList.remove('cursor-active');
+        });
+    });
 </script>

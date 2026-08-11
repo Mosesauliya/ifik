@@ -11,10 +11,12 @@ $labs_data = [
         'status_class' => 'status-open',
         'model' => base_url('assets/3D/' . rawurlencode('lab.multi media (1).glb')),
         'orbit' => '45deg 75deg 85%',
-        'fov' => '28deg',
+        'fov' => '22deg',
         'bg_gradient' => 'radial-gradient(circle at 50% 60%, rgba(216, 184, 150, 0.35) 0%, rgba(248, 243, 238, 0.95) 100%)',
         'border_color' => 'rgba(216, 184, 150, 0.45)',
         'glow_color' => 'rgba(216, 184, 150, 0.55)',
+        'photo' => file_exists(FCPATH . 'assets/images/multimedia.jpg') ? base_url('assets/images/multimedia.jpg') : base_url('assets/images/lab_multimedia_real.jpg'),
+        'photo_fallback' => 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1000&auto=format&fit=crop',
         'location' => 'Gedung Industri Kreatif - Lantai 3 (Ruang FIK-302)',
         'capacity' => '36 Unit Workstation',
         'hours' => 'Senin - Jumat | 08:00 - 17:00 WIB',
@@ -39,11 +41,13 @@ $labs_data = [
         'status' => 'Tersedia',
         'status_class' => 'status-open',
         'model' => base_url('assets/3D/Aula.glb'),
-        'orbit' => '45deg 75deg 85%',
-        'fov' => '28deg',
+        'orbit' => '-135deg 75deg 85%',
+        'fov' => '22deg',
         'bg_gradient' => 'radial-gradient(circle at 50% 60%, rgba(234, 88, 12, 0.22) 0%, rgba(254, 243, 237, 0.95) 100%)',
         'border_color' => 'rgba(234, 88, 12, 0.35)',
         'glow_color' => 'rgba(234, 88, 12, 0.45)',
+        'photo' => file_exists(FCPATH . 'assets/images/aula.jpg') ? base_url('assets/images/aula.jpg') : base_url('assets/images/lab_aula_real.jpg'),
+        'photo_fallback' => 'https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=1000&auto=format&fit=crop',
         'location' => 'Gedung Utama Fakultas Industri Kreatif - Lantai 1',
         'capacity' => '300+ Kursi Peserta',
         'hours' => 'Senin - Sabtu | 07:30 - 21:00 WIB',
@@ -69,10 +73,12 @@ $labs_data = [
         'status_class' => 'status-open',
         'model' => base_url('assets/3D/' . rawurlencode('lab tab cintiq (1).glb')),
         'orbit' => '45deg 75deg 85%',
-        'fov' => '28deg',
+        'fov' => '22deg',
         'bg_gradient' => 'radial-gradient(circle at 50% 60%, rgba(71, 130, 158, 0.25) 0%, rgba(240, 246, 250, 0.95) 100%)',
         'border_color' => 'rgba(71, 130, 158, 0.4)',
         'glow_color' => 'rgba(71, 130, 158, 0.5)',
+        'photo' => file_exists(FCPATH . 'assets/images/cintiq.jpg') ? base_url('assets/images/cintiq.jpg') : base_url('assets/images/lab_cintiq_real.jpg'),
+        'photo_fallback' => 'https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=1000&auto=format&fit=crop',
         'location' => 'Gedung Industri Kreatif - Lantai 2 (Ruang FIK-205)',
         'capacity' => '30 Unit Cintiq Pro',
         'hours' => 'Senin - Jumat | 08:00 - 17:00 WIB',
@@ -109,6 +115,12 @@ $lab = $labs_data[$active_key];
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 
     <style>
+        @media (pointer: fine) {
+            *, *::before, *::after, html, body, a, button, input, select, textarea, label, summary, model-viewer, model-viewer::part(default-canvas), [role="button"], [onclick] {
+                cursor: none !important;
+            }
+        }
+
         :root {
             --primary: #ea580c;
             --primary-hover: #c2410c;
@@ -215,6 +227,67 @@ $lab = $labs_data[$active_key];
             border-radius: 50%;
             pointer-events: none;
             z-index: 1;
+        }
+
+        /* Indicators Garis Dempetan dengan 3 State: Passed (Border Oren), Active (Solid Lebar Tebal), Upcoming (Biasa) */
+        .showcase-line-indicators {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4px; /* Dempetan seperti di gambar */
+            margin-top: 18px;
+        }
+
+        .detail-line {
+            width: 36px;
+            height: 5px;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.12);
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+            box-sizing: border-box;
+        }
+
+        .detail-line:hover {
+            background: rgba(234, 88, 12, 0.3);
+        }
+
+        /* State 1: Line sebelum nya yang sudah dilewati (Hanya Border Oren) */
+        .detail-line.passed {
+            background: transparent;
+            border: 1.5px solid #ea580c;
+        }
+
+        /* State 2: Line aktif saat ini (Solid Oren Lebar & Tebal) */
+        .detail-line.active {
+            width: 80px;
+            height: 6px;
+            background: #ea580c;
+            border: 1px solid #ea580c;
+            border-radius: 6px;
+            box-shadow: 0 2px 10px rgba(234, 88, 12, 0.45);
+        }
+
+        .showcase-content-view {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            z-index: 10;
+            overflow: hidden;
+            border-radius: 24px;
+        }
+
+        .showcase-content-view img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 24px;
+            transition: transform 0.4s ease;
+        }
+
+        .showcase-content-view img:hover {
+            transform: scale(1.03);
         }
 
         .lab-showcase-box model-viewer {
@@ -511,27 +584,49 @@ $lab = $labs_data[$active_key];
             <!-- Hero Grid -->
             <div class="hero-grid">
                 
-                <!-- Left Column: 3D Interactive Model Showcase -->
-                <div class="lab-showcase-box" style="background: <?= $lab['bg_gradient'] ?>; border-color: <?= $lab['border_color'] ?>;">
-                    <style>
-                        .lab-showcase-box::before {
-                            background: radial-gradient(circle, <?= $lab['glow_color'] ?> 0%, rgba(251, 146, 60, 0.05) 50%, transparent 75%) !important;
-                        }
-                    </style>
-                    <model-viewer 
-                        id="labDetailViewer"
-                        src="<?= $lab['model'] ?>" 
-                        alt="3D Visual <?= $lab['title'] ?>" 
-                        camera-orbit="<?= $lab['orbit'] ?>"
-                        field-of-view="<?= $lab['fov'] ?>"
-                        camera-controls 
-                        touch-action="none"
-                        shadow-intensity="1.5" 
-                        shadow-softness="0.8"
-                        exposure="1.2"
-                        interaction-prompt="none"
-                        style="background-color: transparent;">
-                    </model-viewer>
+                <!-- Left Column: 3D Interactive Model Showcase & Photo Slider -->
+                <div>
+                    <div class="lab-showcase-box" id="showcaseBox" style="background: <?= $lab['bg_gradient'] ?>; border-color: <?= $lab['border_color'] ?>;">
+                        <style>
+                            .lab-showcase-box::before {
+                                background: radial-gradient(circle, <?= $lab['glow_color'] ?> 0%, rgba(251, 146, 60, 0.05) 50%, transparent 75%) !important;
+                            }
+                        </style>
+
+                        <!-- Mode View 1: Foto Asli (Default Tampil Pertama) -->
+                        <div class="showcase-content-view" id="viewPhoto" style="display: block;">
+                            <img id="labRealPhotoImg" 
+                                 src="<?= $lab['photo'] ?>" 
+                                 alt="Foto Asli <?= $lab['title'] ?>" 
+                                 onerror="this.onerror=null; this.src='<?= $lab['photo_fallback'] ?>';" />
+                        </div>
+
+                        <!-- Mode View 2: 3D Model (Tampil Kedua) -->
+                        <div class="showcase-content-view" id="view3D" style="display: none;">
+                            <model-viewer 
+                                id="labDetailViewer"
+                                src="<?= $lab['model'] ?>" 
+                                alt="3D Visual <?= $lab['title'] ?>" 
+                                bounds="tight"
+                                camera-orbit="<?= $lab['orbit'] ?>"
+                                camera-target="<?= isset($lab['target']) ? $lab['target'] : 'auto auto auto' ?>"
+                                field-of-view="<?= $lab['fov'] ?>"
+                                camera-controls 
+                                touch-action="none"
+                                shadow-intensity="1.5" 
+                                shadow-softness="0.8"
+                                exposure="1.2"
+                                interaction-prompt="none"
+                                style="background-color: transparent;">
+                            </model-viewer>
+                        </div>
+                    </div>
+
+                    <!-- Indicator Line Bar Murni (Line 1: Foto Asli, Line 2: Model 3D) -->
+                    <div class="showcase-line-indicators">
+                        <span class="detail-line active" id="detailLine0" onclick="switchShowcaseMode('photo')" title="Foto Dokumentasi Asli"></span>
+                        <span class="detail-line" id="detailLine1" onclick="switchShowcaseMode('3d')" title="Model 3D Interaktif"></span>
+                    </div>
                 </div>
 
                 <!-- Right Column: Lab Info & Actions -->
@@ -615,6 +710,36 @@ $lab = $labs_data[$active_key];
     <?php $this->load->view('partials/footer'); ?>
 
     <script>
+        let currentShowcaseMode = 'photo';
+
+        function toggleShowcasePrevNext() {
+            if (currentShowcaseMode === 'photo') {
+                switchShowcaseMode('3d');
+            } else {
+                switchShowcaseMode('photo');
+            }
+        }
+
+        function switchShowcaseMode(mode) {
+            currentShowcaseMode = mode;
+            const view3D = document.getElementById('view3D');
+            const viewPhoto = document.getElementById('viewPhoto');
+            const line0 = document.getElementById('detailLine0');
+            const line1 = document.getElementById('detailLine1');
+
+            if (mode === 'photo') {
+                if (viewPhoto) viewPhoto.style.display = 'block';
+                if (view3D) view3D.style.display = 'none';
+                if (line0) { line0.classList.add('active'); line0.classList.remove('passed'); }
+                if (line1) { line1.classList.remove('active'); line1.classList.remove('passed'); }
+            } else {
+                if (viewPhoto) viewPhoto.style.display = 'none';
+                if (view3D) view3D.style.display = 'block';
+                if (line0) { line0.classList.remove('active'); line0.classList.add('passed'); }
+                if (line1) { line1.classList.add('active'); line1.classList.remove('passed'); }
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const viewer = document.getElementById('labDetailViewer');
             if (!viewer) return;

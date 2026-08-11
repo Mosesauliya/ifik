@@ -1,4 +1,11 @@
 <style>
+    /* Global Universal Cursor Override */
+    @media (pointer: fine) {
+        *, *::before, *::after, html, body, a, button, input, select, textarea, label, summary, model-viewer, model-viewer::part(default-canvas), [role="button"], [onclick] {
+            cursor: none !important;
+        }
+    }
+
     /* Sidebar Container (Tersembunyi secara default) */
     .dashboard-sidebar {
         position: fixed;
