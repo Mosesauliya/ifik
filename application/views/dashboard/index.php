@@ -91,6 +91,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
         }
 
         /* 3D Model Center Piece - Global Fixed Position */
