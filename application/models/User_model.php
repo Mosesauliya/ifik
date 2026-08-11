@@ -40,4 +40,22 @@ class User_model extends CI_Model {
         $this->db->where('id', $id);
         return $this->db->update('users', $data);
     }
+
+    /**
+     * Check if user exists by NIM/NIDN or Name
+     * @param string $identifier
+     * @return bool
+     */
+    public function check_user_exists($identifier)
+    {
+        $identifier = trim($identifier);
+        
+        $this->db->group_start();
+        $this->db->where('nidn_nim', $identifier);
+        $this->db->or_where('name', $identifier);
+        $this->db->group_end();
+        
+        $query = $this->db->get('users');
+        return $query->num_rows() > 0;
+    }
 }

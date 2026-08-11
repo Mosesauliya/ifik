@@ -19,6 +19,7 @@ class Dashboard extends CI_Controller {
     public function ajukan_booking()
     {
         $this->load->model('Booking_model');
+        $this->load->model('User_model');
         
         $nama_lengkap = $this->input->post('nama_lengkap', true);
         $id_ruangan = $this->input->post('id_ruangan', true);
@@ -32,13 +33,18 @@ class Dashboard extends CI_Controller {
             return;
         }
 
+        // Validasi ke Database Users
+        if (!$this->User_model->check_user_exists($nama_lengkap)) {
+            echo json_encode(['status' => 'error', 'message' => 'Validasi Gagal: Nama atau NIM/NIDN tidak terdaftar di dalam sistem.']);
+            return;
+        }
+
         $data_peminjaman = array(
             'nama_lengkap' => $nama_lengkap,
             'id_ruangan' => $id_ruangan,
             'keterangan' => $keterangan,
             'tanggal_mulai' => $tanggal_peminjaman,
-            // Sesuai aturan: publik hanya boleh pesan 1 hari, tanggal selesai = tanggal mulai
-            'tanggal_selesai' => $tanggal_peminjaman,
+            'tanggal_selesai' => $tanggal_peminjaman, // Sesuai aturan publik 1 hari
             'jam_mulai' => $jam_mulai,
             'jam_selesai' => $jam_selesai,
             'status' => 'Pending',

@@ -77,9 +77,20 @@ class Adminbooking extends CI_Controller {
 
     public function approve($id)
     {
-        $update = $this->Booking_model->update_status($id, 'Disetujui');
+        $role_id = $this->session->userdata('role_id');
+        $status = 'Disetujui';
+
+        if ($role_id == 3) {
+            $status = 'Disetujui Ka. Ur';
+        } elseif ($role_id == 2) {
+            $status = 'Disetujui Laboran';
+        } elseif ($role_id == 1) {
+            $status = 'Disetujui Admin';
+        }
+
+        $update = $this->Booking_model->update_status($id, $status);
         if($update) {
-            echo json_encode(['status' => 'success', 'message' => 'Peminjaman disetujui!']);
+            echo json_encode(['status' => 'success', 'message' => 'Peminjaman ' . $status . '!']);
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Gagal menyetujui peminjaman']);
         }

@@ -69,7 +69,7 @@ class Booking_model extends CI_Model {
         $this->db->select('peminjaman.*, ruangan.nama_ruangan, ruangan.kode_ruangan');
         $this->db->from('peminjaman');
         $this->db->join('ruangan', 'ruangan.id = peminjaman.id_ruangan', 'left');
-        $this->db->where('peminjaman.status', 'Disetujui');
+        $this->db->like('peminjaman.status', 'Disetujui');
         $this->db->order_by('peminjaman.tanggal_mulai', 'ASC');
         $this->db->order_by('peminjaman.jam_mulai', 'ASC');
         return $this->db->get()->result();

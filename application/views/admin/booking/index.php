@@ -338,7 +338,7 @@
                     
                     <div class="form-group">
                         <label class="form-label">Nama Lengkap</label>
-                        <input type="text" class="form-control" name="nama_lengkap" value="muhammad alif muzakky" readonly style="background-color: #e2e8f0; cursor: not-allowed; color: #64748b;" required>
+                        <input type="text" class="form-control" name="nama_lengkap" value="<?= $this->session->userdata('name') ?>" readonly style="background-color: #e2e8f0; cursor: not-allowed; color: #64748b;" required>
                     </div>
 
                     <div class="form-group">

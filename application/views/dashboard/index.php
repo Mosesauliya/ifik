@@ -15,7 +15,7 @@
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
 
     <!-- Custom CSS untuk tiap Section -->
-    <link rel="stylesheet" href="<?= base_url('assets/css/info_ruangan.css?v=' . filemtime(FCPATH . 'assets/css/info_ruangan.css')) ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/info_ruangan.css?v=' . time()) ?>">
 
     <script>
         // Mulai loading web saat halaman pertama kali diproses
