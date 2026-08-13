@@ -11,7 +11,7 @@
 
         <h1>INFORMASI RUANGAN</h1>
         
-        <div class="room-list-wrapper">
+        <div class="room-list-wrapper" id="roomListWrapper">
             
             <?php if(empty($jadwal_peminjaman)): ?>
                 <!-- Empty State -->
@@ -29,7 +29,7 @@
                     $limited_jadwal = array_slice($jadwal_peminjaman, 0, 4); 
                 ?>
                 <?php foreach($limited_jadwal as $j): ?>
-                <div class="room-item">
+                <div class="room-item" onclick="openDetailBookingModal(<?= $j->id ?>)" style="cursor: pointer;">
                     <div class="room-item-left">
                         <div class="room-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -240,11 +240,96 @@
     </div>
 </div>
 
+<!-- Modal Detail & Approval Peminjaman -->
+<div class="modal-overlay" id="detailBookingModal">
+    <div class="modal-content" style="max-width: 520px; border-radius: 16px;">
+        <div class="modal-header" style="border-bottom: 1px solid #f1f5f9; padding: 18px 24px;">
+            <h2 style="font-size: 1.15rem; font-weight: 700; color: #1e293b; margin: 0;">Detail Peminjaman Ruangan</h2>
+            <button class="modal-close" type="button" onclick="closeDetailBookingModal()">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 20px 24px; overflow-y: auto;">
+            <input type="hidden" id="detailBookingId">
+            
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 10px;">
+                    <div>
+                        <span id="detailKodeRuangan" style="display: inline-block; background: #ede9fe; color: #7c3aed; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-bottom: 4px;"></span>
+                        <h3 id="detailNamaRuangan" style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #0f172a;"></h3>
+                    </div>
+                    <div id="detailStatusBadge"></div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.88rem; color: #334155; border-top: 1px solid #e2e8f0; padding-top: 12px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        <strong>Peminjam:</strong> <span id="detailNamaLengkap"></span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        <strong>Tanggal:</strong> <span id="detailTanggal"></span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        <strong>Waktu:</strong> <span id="detailWaktu"></span>
+                    </div>
+                    <div style="display: flex; align-items: flex-start; gap: 8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" style="margin-top: 2px; flex-shrink:0;"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                        <strong>Keterangan:</strong> <span id="detailKeterangan" style="color: #475569;"></span>
+                    </div>
+                    <div id="detailAlasanContainer" style="display: none; background: #fef2f2; border-left: 3px solid #ef4444; padding: 8px 12px; border-radius: 4px; margin-top: 4px;">
+                        <strong style="color: #991b1b;">Alasan Penolakan:</strong> <span id="detailAlasanPenolakan" style="color: #7f1d1d;"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel Aksi Approval (Hanya jika status Pending & untuk Admin / Laboran / Ka. Ur) -->
+            <div id="approvalActionPanel" style="display: none; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+                <h4 style="margin: 0 0 10px 0; font-size: 0.88rem; font-weight: 700; color: #166534; display: flex; align-items: center; gap: 6px;">
+                    ⚡ Persetujuan Peminjaman (<span id="approvalRoleLabel"></span>)
+                </h4>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" onclick="approveBookingAction()" style="flex: 1; background: #16a34a; color: #fff; border: none; padding: 10px 14px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.2s;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        Setujui
+                    </button>
+                    <button type="button" onclick="toggleRejectInput()" style="flex: 1; background: #dc2626; color: #fff; border: none; padding: 10px 14px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.2s;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        Tolak
+                    </button>
+                </div>
+
+                <!-- Input Alasan Penolakan -->
+                <div id="rejectReasonBox" style="display: none; margin-top: 12px; border-top: 1px dashed #cbd5e1; padding-top: 12px;">
+                    <label style="font-size: 0.8rem; font-weight: 600; color: #991b1b; display: block; margin-bottom: 6px;">Alasan Penolakan (Opsional):</label>
+                    <textarea id="rejectReasonInput" rows="2" class="form-control" placeholder="Tuliskan alasan penolakan..." style="font-size: 0.85rem; margin-bottom: 8px; border-color: #fca5a5; width: 100%; box-sizing: border-box;"></textarea>
+                    <button type="button" onclick="rejectBookingAction()" style="width: 100%; background: #991b1b; color: #fff; border: none; padding: 8px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">Konfirmasi Penolakan</button>
+                </div>
+            </div>
+
+            <!-- Panel Aksi Hapus Jadwal (Khusus Role 1: Admin, 2: Laboran, 3: Ka. Ur) -->
+            <div id="deleteActionPanel" style="display: none; margin-top: 8px;">
+                <button type="button" onclick="deleteBookingAction()" style="width: 100%; background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; padding: 9px 14px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    Hapus Jadwal Peminjaman
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     // Passing data dari PHP ke JS (prevent redeclaration error)
     window.bookingData = <?= json_encode($jadwal_peminjaman ? $jadwal_peminjaman : []) ?: '[]' ?>;
     window.ajukanBookingUrl = '<?= base_url('dashboard/ajukan_booking') ?>';
+    window.approveBookingUrl = '<?= base_url('dashboard/approve_booking') ?>';
+    window.rejectBookingUrl = '<?= base_url('dashboard/reject_booking') ?>';
+    window.deleteBookingUrl = '<?= base_url('dashboard/delete_booking') ?>';
+    window.getUpdatedBookingsUrl = '<?= base_url('dashboard/get_updated_bookings') ?>';
+    window.userRoleId = <?= json_encode($this->session->userdata('role_id')) ?>;
 </script>
+
+
+
 
 <script>
     // ===== INLINE CLOCK PICKER FUNCTIONS =====
