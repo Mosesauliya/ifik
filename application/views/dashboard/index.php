@@ -324,7 +324,7 @@
         <div class="glow-effect"></div>
         <model-viewer 
             id="ifik3dModel"
-            src="<?= base_url('assets/3D/ifik.glb') ?>" 
+            src="<?= base_url('assets/3D/ifikouter.glb') ?>" 
             alt="3D Logo IFIK" 
             disable-zoom 
             shadow-intensity="1.5" 
@@ -373,217 +373,16 @@
                         // Logika perubahan CSS Class berdasarkan sesi aktif
                         if (activeSectionId === 'section-carousel') {
                             modelContainer.className = 'pos-center'; // Sesi 1
+                            ifikModel.src = '<?= base_url('assets/3D/ifikouter.glb') ?>';
                             if (window.splashScreenDone) {
                                 document.body.classList.add('play-animations'); // Putar ulang animasi
                             }
                         } else {
                             document.body.classList.remove('play-animations'); // Reset animasi saat keluar Sesi 1
+                            ifikModel.src = '<?= base_url('assets/3D/ifik.glb') ?>';
                         }
 
                         if (activeSectionId === 'section-about') {
-                            modelContainer.className = 'pos-left';   // Sesi 2
-                        } else if (activeSectionId === 'section-contact') {
-                            modelContainer.className = 'pos-top-left'; // Sesi 3
-                        }
-                    }
-                });
-            }, observerOptions);
-
-            sections.forEach(section => {
-                sectionObserver.observe(section);
-            });
-
-            // 2. Parallax Camera Tracking (Mouse Movement)
-            const dashboardContainer = document.querySelector('.dashboard-container');
-            if (dashboardContainer && ifikModel) {
-                dashboardContainer.addEventListener('mousemove', (e) => {
-                    const centerX = window.innerWidth / 2;
-                    const centerY = window.innerHeight / 2;
-                    
-                    const rotateY = ((e.clientX - centerX) / (window.innerWidth / 2)) * 18; 
-                    const rotateX = -((e.clientY - centerY) / (window.innerHeight / 2)) * 18;
-
-                    const orbitAzimuth = 90 + (rotateY * 0.6); 
-                    const orbitElevation = 85 - (rotateX * 0.5); 
-                    ifikModel.cameraOrbit = `${orbitAzimuth}deg ${orbitElevation}deg 100%`;
-                });
-            }
-
-            // 3. Scroll Progress Bar (Top)
-            const progressBar = document.getElementById('scroll-progress-bar');
-            if (dashboardContainer && progressBar) {
-                // Set awal, karena saat refresh mungkin ada di tengah
-                const updateProgress = () => {
-                    const totalHeight = dashboardContainer.scrollHeight - dashboardContainer.clientHeight;
-                    const scrollPosition = dashboardContainer.scrollTop;
-                    const progressPercentage = (scrollPosition / totalHeight) * 100;
-                    progressBar.style.width = progressPercentage + '%';
-                };
-                
-                dashboardContainer.addEventListener('scroll', updateProgress);
-                window.addEventListener('resize', updateProgress);
-                // Inisialisasi awal
-            height: 100%;
-        }
-
-        /* Ambient Glow di belakang Model 3D */
-        .glow-effect {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0) 70%);
-            z-index: 1;
-            filter: blur(50px);
-            animation: pulse 4s infinite alternate;
-            transition: opacity 0.8s ease;
-        }
-
-        /* Hilangkan efek cahaya (glow) saat logo mengecil di pojok kiri atas */
-        #global-model-container.pos-top-left .glow-effect {
-            opacity: 0;
-        }
-
-        /* Scroll Progress Bar di Atas */
-        #scroll-progress-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #f86b1d, #ea580c);
-            width: 0%;
-            z-index: 10000;
-            transition: width 0.1s ease-out;
-            box-shadow: 0 0 10px rgba(234, 88, 12, 0.6);
-        }
-
-        @keyframes pulse {
-            0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.8; }
-            100% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
-        }
-
-        /* --- RESPONSIVE DESIGN FOR 3D LOGO --- */
-        /* Deteksi jika layar terlalu sempit (Lebar) */
-        @media (max-width: 1200px) {
-            #global-model-container.pos-left {
-                left: 15%; 
-            }
-        }
-        
-        @media (max-width: 900px) {
-            #global-model-container.pos-left {
-                left: 10%;
-                top: 40%; 
-            }
-            #global-model-container.pos-top-left {
-                left: 80px;
-                top: 70px;
-                transform: translate(-50%, -50%) scale(0.15) rotateY(720deg);
-            }
-        }
-
-        /* Deteksi jika layar "Terasa Pendek" karena Scaling 125%-150% atau Laptop Kecil */
-        @media (max-height: 950px) {
-            #global-model-container {
-                /* Menggunakan Viewport Height (vh) agar logo mutlak mengikuti tinggi layar, bukan pixel kaku */
-                width: 50vh; 
-                height: 50vh;
-            }
-            .glow-effect {
-                width: 40vh;
-                height: 40vh;
-            }
-            #global-model-container.pos-center {
-                /* Menggeser titik tengah logo sedikit lebih ke atas menjauhi kartu di bawah */
-                top: 42%; 
-                transform: translate(-50%, -50%) scale(1) rotateY(0deg);
-            }
-        }
-        
-        @media (max-height: 750px) {
-            #global-model-container {
-                width: 40vh;
-                height: 40vh;
-            }
-            #global-model-container.pos-center {
-                top: 38%; 
-            }
-        }
-    </style>
-    <link rel="stylesheet" href="<?= base_url('assets/css/timepicker.css') ?>">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    
-    <!-- Custom Flatpickr Theme to match Dashboard -->
-    <style>
-        .flatpickr-calendar { font-family: 'Plus Jakarta Sans', sans-serif !important; border: 1px solid var(--glass-border) !important; border-radius: 12px !important; box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important; }
-        .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange, .flatpickr-day.selected.inRange, .flatpickr-day.startRange.inRange, .flatpickr-day.endRange.inRange, .flatpickr-day.selected:focus, .flatpickr-day.startRange:focus, .flatpickr-day.endRange:focus, .flatpickr-day.selected:hover, .flatpickr-day.startRange:hover, .flatpickr-day.endRange:hover, .flatpickr-day.selected.prevMonthDay, .flatpickr-day.startRange.prevMonthDay, .flatpickr-day.endRange.prevMonthDay, .flatpickr-day.selected.nextMonthDay, .flatpickr-day.startRange.nextMonthDay, .flatpickr-day.endRange.nextMonthDay { background: #ea580c !important; border-color: #ea580c !important; }
-    </style>
-</head>
-<body>
-
-    <!-- Progress Bar (Pengganti Scrollbar) -->
-    <div id="scroll-progress-bar"></div>
-
-    <!-- Navigation Bar Menu -->
-    <?php $this->load->view('partials/navbar'); ?>
-
-    <!-- 3D Model diletakkan di luar container scroll agar statis (fixed) di layar -->
-    <div id="global-model-container" class="pos-center">
-        <div class="glow-effect"></div>
-        <model-viewer 
-            id="ifik3dModel"
-            src="<?= base_url('assets/3D/ifik.glb') ?>" 
-            alt="3D Logo IFIK" 
-            disable-zoom 
-            shadow-intensity="1.5" 
-            shadow-softness="0.8"
-            exposure="1.15"
-            camera-orbit="90deg 85deg 100%"
-            field-of-view="24deg"
-            interaction-prompt="none"
-            style="background-color: transparent; width: 100%; height: 100%;">
-        </model-viewer>
-    </div>
-
-    <!-- Main Container that handles vertical Scroll Snapping -->
-    <div class="dashboard-container">
-        
-        <!-- Sesi 1: Header -->
-        <?php $this->load->view('dashboard/sections/header'); ?>
-
-        <!-- Sesi 2: Info Ruangan -->
-        <?php $this->load->view('dashboard/sections/info_ruangan'); ?>
-
-        <!-- Sesi 3: Berita -->
-        <?php $this->load->view('dashboard/sections/berita'); ?>
-
-    </div>
-
-    <!-- JS untuk Parallax dan Deteksi Scroll (Scroll Hijacking State) -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const ifikModel = document.getElementById('ifik3dModel');
-            const modelContainer = document.getElementById('global-model-container');
-            const sections = document.querySelectorAll('.section-wrapper');
-
-            // 1. [KODE DETEKSI SCROLL] Intersection Observer untuk mendeteksi sesi mana yang aktif
-            const observerOptions = {
-                root: document.querySelector('.dashboard-container'),
-                rootMargin: '0px',
-                threshold: 0.5 // Memicu ketika 50% area sesi terlihat
-            };
-
-            const sectionObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const activeSectionId = entry.target.id;
-                        
-                        // Logika perubahan CSS Class berdasarkan sesi aktif
-                        if (activeSectionId === 'section-carousel') {
-                            modelContainer.className = 'pos-center'; // Sesi 1
-                        } else if (activeSectionId === 'section-about') {
                             modelContainer.className = 'pos-left';   // Sesi 2
                         } else if (activeSectionId === 'section-contact') {
                             modelContainer.className = 'pos-top-left'; // Sesi 3

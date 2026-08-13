@@ -28,13 +28,26 @@
         position: relative;
         z-index: 2; /* Konten berada di atas background tapi di bawah UI interaktif jika ada */
         
-        /* Latar Belakang dan Overlay dipindah ke sini agar ikut bergeser */
-        background-image: 
-            linear-gradient(135deg, rgba(251,191,36,0.6) 0%, rgba(245,158,11,0.5) 40%, rgba(180,83,9,0.5) 100%),
-            url('<?= base_url("assets/images/background.png") ?>');
-        background-size: 110%; /* Lebih besar untuk panning */
+        /* Latar Belakang default tanpa overlay gradient */
+        background-image: url('<?= base_url("assets/images/background.png") ?>');
+        background-size: cover; 
         background-position: center;
-        animation: slowPan 30s ease-in-out infinite;
+    }
+
+    /* Khusus Slide 1 background-nya fakultas.jpg tanpa filter */
+    .carousel-slide.slide-1 {
+        background-image: url('<?= base_url("assets/images/fakultas.jpg") ?>');
+    }
+
+    /* Background Video Fullscreen */
+    .background-video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: -1; /* Di bawah konten slide */
     }
 
 
@@ -109,7 +122,72 @@
     }
     
     .carousel-indicators .dot.active .progress {
-        animation: slideProgress 4s linear forwards;
+        /* Animasi ditangani oleh JS agar dinamis berdasarkan video/gambar */
+    }
+    
+    /* --- SLIDE 1 NEW LAYOUT --- */
+    .slide1-layout {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        padding: 0 80px;
+        display: flex;
+        align-items: center;
+        z-index: 10;
+        pointer-events: none; /* Allow clicks to pass through to carousel */
+    }
+    .slide1-text-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        width: 500px;
+        max-width: 90vw;
+        z-index: 10;
+        margin-top: -60px; /* geser sedikit ke atas */
+        margin-left: 20px;
+    }
+    .slide1-title-box {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 15px 30px;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        backdrop-filter: blur(5px);
+        pointer-events: auto; /* Enable clicks */
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .slide1-title-box h1 {
+        color: #ea580c;
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin: 0;
+    }
+    .slide1-content-box {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 25px 30px;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        color: #334155;
+        font-size: 0.85rem;
+        line-height: 1.6;
+        text-align: justify;
+        backdrop-filter: blur(5px);
+        pointer-events: auto; /* Enable clicks */
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .dekanat-img-right {
+        position: absolute;
+        bottom: 0;
+        right: 20px;
+        max-height: 380px;
+        z-index: 5;
+        pointer-events: none;
+    }
+    
+    @media (max-width: 900px) {
+        .slide1-layout { padding: 0 20px; }
+        .slide1-text-container { margin-top: 0; width: 100%; }
+        .dekanat-img-right { max-height: 250px; opacity: 0.5; }
     }
     
     @keyframes slideProgress {
@@ -334,40 +412,32 @@
 
 <!-- Sesi 1: Carousel -->
 <div class="section-wrapper" id="section-carousel">
+
+    <!-- Fixed Overlay untuk Text dan Image agar tetap ada di semua slide carousel -->
+    <div class="slide1-layout">
+        <div class="slide1-text-container">
+            <div class="slide1-title-box">
+                <h1>Fakultas Industri Kreatif</h1>
+            </div>
+            <div class="slide1-content-box">
+                Seiring dengan berkembangnya kebutuhan pelayanan untuk mahasiswa, dosen dan pegawai FIK maka diperlukan peningkatan layanan yang mengusung efisiensi dan efektifitas. Ifik lahir dari keresahan dan kesulitan mahasiswa maupun dosen dalam beberapa layanan, antara lain pendaftaran TA, bimbingan online, dokumen online, peminjaman ruangan dan lain sebagainya. Sejak dibuat tahun 2021 oleh tim unit lab FIK, aplikasi berbasis web ini telah digunakan hingga saat ini untuk mempermudah layanan untuk kalangan internal FIK, baik untuk mahasiswa, dosen maupun pegawai FIK.
+            </div>
+        </div>
+    </div>
+    <img src="<?= base_url('assets/images/dekanat2.png') ?>" alt="Dekanat" class="dekanat-img-right">
     
     <!-- Carousel Horizontal yang bisa digeser (Scroll Hijacking) -->
     <div class="carousel-container">
         <!-- Slide 1 -->
         <div class="carousel-slide slide-1">
-            <div class="hero-content-slide">
-                <!-- Bagian Kiri: Kolom Teks (Desain ID Card Premium) -->
-                <div class="floating-wrap" style="animation: floatIdle 5s ease-in-out infinite;">
-                    <div class="parallax-card">
-                        <div class="card-left-section">
-                            <div class="card-metallic-cap">
-                                <div class="cap-reflection"></div>
-                                <div class="cap-hole-wrapper"><div class="cap-hole"></div></div>
-                            </div>
-                            <div class="card-body">
-                                <h4 class="greeting-text">HI THERE, WELCOME TO</h4>
-                                <h1 class="main-title">Fakultas Industri Kreatif</h1>
-                                <p class="description">Seiring dengan berkembangnya kebutuhan pelayanan untuk mahasiswa, dosen dan pegawai FIK maka diperlukan peningkatan layanan yang mengusung efisiensi dan efektifitas. Ifik lahir dari keresahan dan kesulitan mahasiswa maupun dosen dalam beberapa layanan, antara lain pendaftaran TA, bimbingan online, dokumen online, peminjaman ruangan dan lain sebagainya. Sejak dibuat tahun 2021 oleh tim unit lab FIK, aplikasi berbasis web ini telah digunakan hingga saat ini untuk mempermudah layanan untuk kalangan internal FIK, baik untuk mahasiswa, dosen maupun pegawai FIK.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Bagian Kanan: Kolom Wadah Gambar -->
-                <div class="floating-wrap" style="animation: floatIdleSlow 6s ease-in-out infinite 0.5s;">
-                    <div class="parallax-img">
-                        <img src="<?= base_url('assets/images/dekanat.png') ?>" alt="Dekanat" class="dekanat-popout">
-                    </div>
-                </div>
-            </div>
         </div>
         
-        <!-- Slide 2 (Hanya Background) -->
-        <div class="carousel-slide"></div>
+        <!-- Slide 2 (Background Video) -->
+        <div class="carousel-slide slide-2">
+            <video id="slide2-video" autoplay muted playsinline class="background-video">
+                <source src="<?= base_url('assets/vids/vidtelkom.mp4') ?>" type="video/mp4">
+            </video>
+        </div>
         
         <!-- Slide 3 (Hanya Background) -->
         <div class="carousel-slide"></div>
@@ -421,6 +491,21 @@
         // Ekspos fungsi ke window agar bisa dipanggil dari tombol navbar
         window.goToSlide = goToSlide;
 
+        // Pastikan animasi terupdate saat durasi video sudah diketahui
+        const videoSlide2 = document.getElementById('slide2-video');
+        if (videoSlide2) {
+            videoSlide2.addEventListener('loadedmetadata', () => {
+                if (currentIndex === 1) {
+                    const activeProg = dots[1].querySelector('.progress');
+                    if (activeProg) {
+                        activeProg.style.animation = 'none';
+                        activeProg.offsetHeight;
+                        activeProg.style.animation = `slideProgress ${videoSlide2.duration}s linear forwards`;
+                    }
+                }
+            });
+        }
+
         // Fungsi memperbarui titik (dot) aktif dan visibility logo 3D
         const updateDots = (index) => {
             dots.forEach(dot => {
@@ -431,11 +516,22 @@
                 if (prog) {
                     prog.style.animation = 'none';
                     prog.offsetHeight; // trigger reflow
-                    prog.style.animation = null; 
+                    prog.style.width = '0%'; // reset width
                 }
             });
             if(dots[index]) {
                 dots[index].classList.add('active');
+                const activeProg = dots[index].querySelector('.progress');
+                if (activeProg) {
+                    let duration = 4; // default 4 detik
+                    if (index === 1) { // slide video
+                        const videoEl = document.getElementById('slide2-video');
+                        if (videoEl && videoEl.duration && !isNaN(videoEl.duration)) {
+                            duration = videoEl.duration;
+                        }
+                    }
+                    activeProg.style.animation = `slideProgress ${duration}s linear forwards`;
+                }
             }
 
             // 3D Logo logic: Hanya tampil di slide 1
@@ -447,6 +543,18 @@
                 } else {
                     modelContainer.style.opacity = '0';
                     modelContainer.style.pointerEvents = 'none';
+                }
+            }
+
+            // Video Slide 2 Logic
+            const videoSlide2 = document.getElementById('slide2-video');
+            if (videoSlide2) {
+                if (index === 1) {
+                    videoSlide2.currentTime = 0;
+                    videoSlide2.play();
+                    clearInterval(autoScrollTimer); // Berhenti auto-scroll selama video main
+                } else {
+                    videoSlide2.pause();
                 }
             }
         };
@@ -486,6 +594,13 @@
         // ----------------------------------------
 
         const startAutoScroll = () => {
+            clearInterval(autoScrollTimer); // Pastikan tidak ada duplikat interval
+            
+            // Jika berada di slide 2, tunggu video selesai (diatur via event ended)
+            if (currentIndex === 1) {
+                return;
+            }
+
             autoScrollTimer = setInterval(() => {
                 currentIndex += direction;
                 
@@ -501,6 +616,18 @@
                 goToSlide(currentIndex);
             }, 4000); // 4 detik tiap slide
         };
+
+        const videoEl = document.getElementById('slide2-video');
+        if (videoEl) {
+            videoEl.addEventListener('ended', () => {
+                if (currentIndex === 1) {
+                    currentIndex = 2;
+                    direction = 1;
+                    goToSlide(currentIndex);
+                    startAutoScroll();
+                }
+            });
+        }
 
         startAutoScroll();
 
