@@ -352,6 +352,9 @@
         <!-- Sesi 4: Berita & Informasi Terkini -->
         <?php $this->load->view('dashboard/sections/berita'); ?>
 
+        <!-- Sesi 5: Virtual Tour 3D -->
+        <?php $this->load->view('dashboard/sections/virtual_tour'); ?>
+
     </div>
 
     <!-- JS untuk Parallax dan Deteksi Scroll (Scroll Hijacking State) -->
@@ -439,5 +442,8 @@
     
     <!-- External Custom Script (info_ruangan.js harus paling atas agar toggleFullscreen() tersedia) -->
     <script src="<?= base_url('assets/js/info_ruangan.js?v=' . filemtime(FCPATH . 'assets/js/info_ruangan.js')) ?>"></script>
+
+    <!-- Footer (Custom Cursor & shared scripts) -->
+    <?php $this->load->view('partials/footer'); ?>
 </body>
 </html>
