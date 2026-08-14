@@ -36,7 +36,7 @@
 
     /* Khusus Slide 1 background-nya fakultas.jpg tanpa filter */
     .carousel-slide.slide-1 {
-        background-image: url('<?= base_url("assets/images/fakultas.jpg") ?>');
+        background-image: url('<?= base_url("assets/images/Fakultas.jpg") ?>');
     }
 
     /* Background Video Fullscreen */
@@ -534,15 +534,17 @@
                 }
             }
 
-            // 3D Logo logic: Hanya tampil di slide 1
+            // 3D Logo logic: Hanya sembunyikan jika di Slide 2 Sesi 1 (pos-center)
             const modelContainer = document.getElementById('global-model-container');
             if (modelContainer) {
-                if (index === 0) {
-                    modelContainer.style.opacity = '1';
-                    modelContainer.style.pointerEvents = 'none';
+                if (modelContainer.classList.contains('pos-center')) {
+                    if (index === 0) {
+                        modelContainer.style.opacity = '1';
+                    } else {
+                        modelContainer.style.opacity = '0';
+                    }
                 } else {
-                    modelContainer.style.opacity = '0';
-                    modelContainer.style.pointerEvents = 'none';
+                    modelContainer.style.opacity = '1';
                 }
             }
 

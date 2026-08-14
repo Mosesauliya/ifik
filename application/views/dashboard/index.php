@@ -54,6 +54,23 @@
             border-left-color: #ea580c !important;
         }
         
+        /* Permanent Hide for Google Model-Viewer Built-in Blue Arrow Interaction Prompt Graphic */
+        model-viewer::part(user-prompt),
+        model-viewer::part(prompt),
+        model-viewer::part(interaction-prompt),
+        model-viewer::part(ar-button),
+        model-viewer .slot.user-prompt,
+        model-viewer #prompt,
+        model-viewer [slot="user-prompt"],
+        model-viewer img,
+        .user-prompt,
+        #user-prompt {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -386,11 +403,13 @@
 
                         if (activeSectionId === 'section-about') {
                             modelContainer.className = 'pos-left';   // Sesi 2
+                            modelContainer.style.opacity = '1';
                         } else if (activeSectionId === 'section-lab') {
-                            modelContainer.className = 'pos-left';   // Sesi 3
+                            modelContainer.className = 'pos-top-left'; // Sesi 3 (Langsung mengecil ke posisi kiri atas)
+                            modelContainer.style.opacity = '1';
                         } else if (activeSectionId === 'section-contact') {
                             modelContainer.className = 'pos-top-left'; // Sesi 4
-                        }
+                            modelContainer.style.opacity = '1';
                         }
                     }
                 });
