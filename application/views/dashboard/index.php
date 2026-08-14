@@ -367,6 +367,9 @@
         <!-- Sesi 4: Berita & Informasi Terkini -->
         <?php $this->load->view('dashboard/sections/berita'); ?>
 
+        <!-- Sesi 5: Virtual Tour 3D -->
+        <?php $this->load->view('dashboard/sections/virtual_tour'); ?>
+
     </div>
 
     <!-- JS untuk Lenis Smooth Scroll, Parallax dan Continuous 3D Morphing -->
@@ -550,12 +553,16 @@
                         targetIndex = 1; // Informasi Ruangan
                     } else if (ratio < 2.30) {
                         targetIndex = 2; // Lab
-                    } else {
+                    } else if (ratio < 3.30) {
                         targetIndex = 3; // Berita
+                    } else {
+                        targetIndex = 4; // Virtual Tour
                     }
                 } else {
                     // Scroll ke Atas: Jika sudah lewati 30% perjalanan ke atas, lanjutkan meluncur ke sesi atasnya
-                    if (ratio > 2.70) {
+                    if (ratio > 3.70) {
+                        targetIndex = 4; // Virtual Tour
+                    } else if (ratio > 2.70) {
                         targetIndex = 3; // Berita
                     } else if (ratio > 1.70) {
                         targetIndex = 2; // Lab
@@ -632,5 +639,8 @@
     
     <!-- External Custom Script (info_ruangan.js harus paling atas agar toggleFullscreen() tersedia) -->
     <script src="<?= base_url('assets/js/info_ruangan.js?v=' . filemtime(FCPATH . 'assets/js/info_ruangan.js')) ?>"></script>
+
+    <!-- Footer (Custom Cursor & shared scripts) -->
+    <?php $this->load->view('partials/footer'); ?>
 </body>
 </html>
