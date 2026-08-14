@@ -452,34 +452,47 @@
                         document.body.classList.remove('play-animations');
                     }
                 } 
-                // 2. Transisi Menghilang Saat Meninggalkan Sesi 2 (Info Ruangan: 1 * vh) Menuju Sesi Bawahnya
-                else if (scrollTop <= 1.45 * vh) {
-                    const pFade = Math.max(0, Math.min(1, (scrollTop - vh) / (0.40 * vh)));
-                    const easeFade = pFade * pFade * (3 - 2 * pFade);
+                // Sesi 2 (Info Ruangan) -> Sesi 3 (Lab)
+                else if (scrollTop <= 2 * vh) {
+                    const p = Math.max(0, Math.min(1, (scrollTop - vh) / vh));
+                    const ease = p * p * (3 - 2 * p);
+
+                    const targetLeftPx = vw <= 900 ? 40 : 50;
+                    const targetTopPx = 35;
+                    const targetScale = vw <= 900 ? 0.1 : 0.11;
+                    const targetRotY = 720;
+
+                    const startLeftPx = (vw * leftPos2) / 100;
+                    const startTopPx = (vh * topPos2) / 100;
                     
-                    const currentLeft = leftPos2 - (10 * easeFade);
-                    const currentScale = 0.9 - (0.2 * easeFade);
-                    const currentRotY = 360 + (60 * easeFade);
-                    const innerOp = Math.max(0, 1 - easeFade);
+                    const currentLeftPx = startLeftPx + (targetLeftPx - startLeftPx) * ease;
+                    const currentTopPx = startTopPx + (targetTopPx - startTopPx) * ease;
+                    const currentScale = 0.9 + (targetScale - 0.9) * ease;
+                    const currentRotY = 360 + (targetRotY - 360) * ease;
 
-                    modelContainer.style.opacity = innerOp > 0.01 ? '1' : '0';
-                    modelContainer.style.left = `${currentLeft}%`;
-                    modelContainer.style.top = `${topPos2}%`;
+                    modelContainer.style.left = `${currentLeftPx}px`;
+                    modelContainer.style.top = `${currentTopPx}px`;
                     modelContainer.style.transform = `translate(-50%, -50%) scale(${currentScale}) rotateY(${currentRotY}deg)`;
-                    modelContainer.style.zIndex = '8';
-
-                    if (modelOuter) modelOuter.style.opacity = '0';
-                    if (modelInner) modelInner.style.opacity = innerOp;
-                    document.body.classList.remove('play-animations');
-                } 
-                // 3. Seluruh Sesi di bawah Informasi Ruangan (Lab, Berita, Virtual Tour, Footer): LOGO HILANG TOTAL
-                else {
-                    modelContainer.style.opacity = '0';
-                    modelContainer.style.pointerEvents = 'none';
+                    modelContainer.style.zIndex = p > 0.6 ? '110' : '8';
                     if (modelOuter) modelOuter.style.opacity = '0';
                     if (modelInner) modelInner.style.opacity = '0';
                     document.body.classList.remove('play-animations');
-                }
+                } 
+                // Sesi 3 (Lab) dan seterusnya -> Tetap di Navbar
+                else {
+                    const targetLeftPx = vw <= 900 ? 40 : 50;
+                    const targetTopPx = 35;
+                    const targetScale = vw <= 900 ? 0.1 : 0.11;
+                    const targetRotY = 720;
+
+                    modelContainer.style.left = `${targetLeftPx}px`;
+                    modelContainer.style.top = `${targetTopPx}px`;
+                    modelContainer.style.transform = `translate(-50%, -50%) scale(${targetScale}) rotateY(${targetRotY}deg)`;
+                    modelContainer.style.zIndex = '110';
+                    if (modelOuter) modelOuter.style.opacity = '0';
+                    if (modelInner) modelInner.style.opacity = '1';
+                    document.body.classList.remove('play-animations');
+                } 
 
                 // Update Progress Bar
                 if (dashboardContainer && progressBar) {
