@@ -14,14 +14,22 @@
     <!-- Model Viewer for 3D -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
 
-    <!-- jQuery & Flatpickr - harus di head agar tersedia saat inline script dijalankan -->
+    <!-- jQuery & Flatpickr & SweetAlert2 -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- Custom CSS untuk tiap Section -->
     <link rel="stylesheet" href="<?= base_url('assets/css/timepicker.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/info_ruangan.css?v=' . time()) ?>">
+
+    <!-- Preload 3D Models agar transisi instan tanpa delay/hilang -->
+    <link rel="preload" href="<?= base_url('assets/3D/ifikouter.glb') ?>" as="fetch" crossorigin>
+    <link rel="preload" href="<?= base_url('assets/3D/ifik.glb') ?>" as="fetch" crossorigin>
+
+    <!-- Lenis Smooth Scroll -->
+    <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
 
     <script>
         // Mulai loading web saat halaman pertama kali diproses
@@ -84,13 +92,12 @@
             overflow: hidden; /* Prevent default window scrolling */
         }
 
-        /* Scroll Hijacking Container for Vertical Sections */
+        /* Smooth Container for Vertical Sections with Lenis */
         .dashboard-container {
             height: 100vh;
             width: 100vw;
             overflow-y: scroll;
-            scroll-snap-type: y mandatory;
-            scroll-behavior: smooth;
+            overscroll-behavior: none;
             scrollbar-width: none; /* Firefox */
             position: relative;
         }
@@ -103,7 +110,6 @@
         .section-wrapper {
             height: 100vh;
             width: 100vw;
-            scroll-snap-align: start;
             position: relative;
             display: flex;
             align-items: center;
@@ -111,45 +117,36 @@
             overflow: hidden;
         }
 
-        /* 3D Model Center Piece - Global Fixed Position */
+        /* 3D Model Center Piece - Global Fixed Position (Scroll-Driven Continuous Morph) */
         #global-model-container {
             position: fixed;
             width: 600px;
             height: 600px;
             pointer-events: none;
-            /* Animasi transisi yang mengatur perpindahan, skala (ukuran), dan putaran (rotasi) */
-            transition: all 1.2s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-
-        /* [KODE ANIMASI] Modifiers untuk posisi model berdasarkan Sesi aktif */
-        
-        /* Posisi Sesi 1: Di Tengah */
-        #global-model-container.pos-center {
+            z-index: 8;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) scale(1) rotateY(0deg);
-            z-index: 8; /* Di bawah Sidebar (Sidebar z-index: 9) */
+            will-change: transform, left, top, opacity;
+            transition: opacity 0.4s ease;
         }
-        
-        /* Posisi Sesi 2: Di Kiri (Sambil berputar 360 derajat horizontal) */
-        #global-model-container.pos-left {
-            top: 50%;
-            left: 22%;
-            transform: translate(-50%, -50%) scale(0.9) rotateY(360deg);
-            z-index: 8; /* Di bawah Sidebar agar Sidebar tidak tertutup logo */
-        }
-        
-        /* Posisi Sesi 3: Mengecil jadi Logo di Kiri Atas (Masuk ke dalam Topbar) */
-        #global-model-container.pos-top-left {
-            top: 35px; /* Center of 70px topbar */
-            left: 50px;
-            transform: translate(-50%, -50%) scale(0.11) rotateY(720deg);
-            z-index: 110; /* Di atas Topbar agar Logo jelas */
+
+        .model-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: block !important;
+            will-change: opacity;
+            transition: opacity 0.15s linear;
         }
         
         #global-model-container model-viewer {
             width: 100%;
             height: 100%;
+            display: block;
         }
 
         /* Ambient Glow di belakang Model 3D */
@@ -337,11 +334,29 @@
     <?php $this->load->view('partials/navbar'); ?>
 
     <!-- 3D Model diletakkan di luar container scroll agar statis (fixed) di layar -->
-    <div id="global-model-container" class="pos-center">
-        <div class="glow-effect"></div>
+    <div id="global-model-container">
+        <div class="glow-effect" id="modelGlow"></div>
+        <!-- Model 1: ifikouter.glb (Logo Router 3D) untuk Header / Sesi 1 -->
         <model-viewer 
-            id="ifik3dModel"
+            id="modelOuter"
+            class="model-layer"
             src="<?= base_url('assets/3D/ifikouter.glb') ?>" 
+            alt="3D Logo IFIK Outer" 
+            disable-zoom 
+            shadow-intensity="1.5" 
+            shadow-softness="0.8"
+            exposure="1.15"
+            camera-orbit="90deg 85deg 100%"
+            field-of-view="24deg"
+            interaction-prompt="none"
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: transparent; opacity: 1;">
+        </model-viewer>
+
+        <!-- Model 2: ifik.glb (Logo IFIK 3D) untuk Informasi Ruangan / Sesi 2 dst -->
+        <model-viewer 
+            id="modelInner"
+            class="model-layer"
+            src="<?= base_url('assets/3D/ifik.glb') ?>" 
             alt="3D Logo IFIK" 
             disable-zoom 
             shadow-intensity="1.5" 
@@ -350,11 +365,11 @@
             camera-orbit="90deg 85deg 100%"
             field-of-view="24deg"
             interaction-prompt="none"
-            style="background-color: transparent; width: 100%; height: 100%;">
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: transparent; opacity: 0;">
         </model-viewer>
     </div>
 
-    <!-- Main Container that handles vertical Scroll Snapping -->
+    <!-- Main Container that handles vertical Smooth Scrolling -->
     <div class="dashboard-container">
         
         <!-- Sesi 1: Header -->
@@ -369,59 +384,265 @@
         <!-- Sesi 4: Berita & Informasi Terkini -->
         <?php $this->load->view('dashboard/sections/berita'); ?>
 
+        <!-- Sesi 5: Virtual Tour 3D -->
+        <?php $this->load->view('dashboard/sections/virtual_tour'); ?>
+
+        <!-- Sesi 6: Footer -->
+        <div class="section-wrapper" id="section-footer" style="height: auto; min-height: 100vh; scroll-snap-align: start; display: flex; align-items: flex-end;">
+            <?php $this->load->view('partials/footer'); ?>
+        </div>
+
     </div>
 
-    <!-- JS untuk Parallax dan Deteksi Scroll (Scroll Hijacking State) -->
+    <!-- JS untuk Lenis Smooth Scroll, Parallax dan Continuous 3D Morphing -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const ifikModel = document.getElementById('ifik3dModel');
+            const modelOuter = document.getElementById('modelOuter');
+            const modelInner = document.getElementById('modelInner');
             const modelContainer = document.getElementById('global-model-container');
-            const sections = document.querySelectorAll('.section-wrapper');
+            const dashboardContainer = document.querySelector('.dashboard-container');
+            const progressBar = document.getElementById('scroll-progress-bar');
 
-            // 1. [KODE DETEKSI SCROLL] Intersection Observer untuk mendeteksi sesi mana yang aktif
-            const observerOptions = {
-                root: document.querySelector('.dashboard-container'),
-                rootMargin: '0px',
-                threshold: 0.5 // Memicu ketika 50% area sesi terlihat
+            // Fungsi Kontinu Animasi Scroll-Driven 3D Model (Lusion Style Smooth Morph)
+            function updateScrollDrivenModel(scrollTop) {
+                const vh = window.innerHeight || 800;
+                const vw = window.innerWidth || 1200;
+
+                // Responsive target positions
+                let leftPos2 = 22; // persen
+                let topPos2 = 50;  // persen
+                if (vw <= 900) {
+                    leftPos2 = 10;
+                    topPos2 = 40;
+                } else if (vw <= 1200) {
+                    leftPos2 = 15;
+                }
+
+                let topPos1 = 50;
+                if (vh <= 750) topPos1 = 38;
+                else if (vh <= 950) topPos1 = 42;
+
+                // Transisi Mulus Sesi 1 (Header) -> Sesi 2 (Info Ruangan)
+                if (scrollTop <= vh) {
+                    const p = Math.max(0, Math.min(1, scrollTop / vh)); // 0.0 -> 1.0
+                    // Smoothstep easing: 3p^2 - 2p^3
+                    const ease = p * p * (3 - 2 * p);
+
+                    const currentLeft = 50 + (leftPos2 - 50) * ease;
+                    const currentTop = topPos1 + (topPos2 - topPos1) * ease;
+                    const currentScale = 1.0 + (0.9 - 1.0) * ease;
+                    const currentRotY = 360 * ease;
+
+                    modelContainer.style.left = `${currentLeft}%`;
+                    modelContainer.style.top = `${currentTop}%`;
+                    modelContainer.style.transform = `translate(-50%, -50%) scale(${currentScale}) rotateY(${currentRotY}deg)`;
+                    modelContainer.style.zIndex = '8';
+
+                    // Seamless Crossfade Opacity antara ifikouter.glb dan ifik.glb
+                    const outerOp = Math.max(0, Math.min(1, 1 - (p * 1.5)));
+                    const innerOp = Math.max(0, Math.min(1, (p - 0.15) * 1.5));
+
+                    if (modelOuter) modelOuter.style.opacity = outerOp;
+                    if (modelInner) modelInner.style.opacity = innerOp;
+
+                    if (p < 0.1 && window.splashScreenDone) {
+                        document.body.classList.add('play-animations');
+                    } else {
+                        document.body.classList.remove('play-animations');
+                    }
+                } 
+                // Sesi 2 (Info Ruangan) -> Sesi 3 (Lab)
+                else if (scrollTop <= 2 * vh) {
+                    modelContainer.style.left = `${leftPos2}%`;
+                    modelContainer.style.top = `${topPos2}%`;
+                    modelContainer.style.transform = `translate(-50%, -50%) scale(0.9) rotateY(360deg)`;
+                    modelContainer.style.zIndex = '8';
+                    if (modelOuter) modelOuter.style.opacity = '0';
+                    if (modelInner) modelInner.style.opacity = '1';
+                    document.body.classList.remove('play-animations');
+                } 
+                // Sesi 3 (Lab) -> Sesi 4 (Berita & Footer)
+                else {
+                    const p = Math.max(0, Math.min(1, (scrollTop - 2 * vh) / vh));
+                    const ease = p * p * (3 - 2 * p);
+
+                    const targetLeftPx = vw <= 900 ? 40 : 50;
+                    const targetTopPx = 35;
+                    const targetScale = vw <= 900 ? 0.1 : 0.11;
+                    const targetRotY = 720;
+
+                    const startLeftPx = (vw * leftPos2) / 100;
+                    const startTopPx = (vh * topPos2) / 100;
+                    
+                    const currentLeftPx = startLeftPx + (targetLeftPx - startLeftPx) * ease;
+                    const currentTopPx = startTopPx + (targetTopPx - startTopPx) * ease;
+                    const currentScale = 0.9 + (targetScale - 0.9) * ease;
+                    const currentRotY = 360 + (targetRotY - 360) * ease;
+
+                    modelContainer.style.left = `${currentLeftPx}px`;
+                    modelContainer.style.top = `${currentTopPx}px`;
+                    modelContainer.style.transform = `translate(-50%, -50%) scale(${currentScale}) rotateY(${currentRotY}deg)`;
+                    modelContainer.style.zIndex = p > 0.6 ? '110' : '8';
+                    if (modelOuter) modelOuter.style.opacity = '0';
+                    if (modelInner) modelInner.style.opacity = '1';
+                    document.body.classList.remove('play-animations');
+                }
+
+                // Update Progress Bar
+                if (dashboardContainer && progressBar) {
+                    const totalHeight = dashboardContainer.scrollHeight - dashboardContainer.clientHeight;
+                    if (totalHeight > 0) {
+                        const progressPercentage = (scrollTop / totalHeight) * 100;
+                        progressBar.style.width = progressPercentage + '%';
+                    }
+                }
+            }
+
+            // Inisialisasi Lenis Smooth Scroll (Lusion Style Momentum)
+            if (typeof Lenis !== 'undefined' && dashboardContainer) {
+                window.lenis = new Lenis({
+                    wrapper: dashboardContainer,
+                    content: dashboardContainer,
+                    duration: 1.2,
+                    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                    orientation: 'vertical',
+                    gestureOrientation: 'vertical',
+                    smoothWheel: true,
+                    wheelMultiplier: 1.05,
+                    touchMultiplier: 1.5,
+                    lerp: 0.09
+                });
+
+                function raf(time) {
+                    if (window.lenis) {
+                        window.lenis.raf(time);
+                    }
+                    requestAnimationFrame(raf);
+                }
+                requestAnimationFrame(raf);
+
+                // Sinkronisasi realtime saat user scroll via Lenis
+                window.lenis.on('scroll', (e) => {
+                    const scrollTop = e.scroll !== undefined ? e.scroll : dashboardContainer.scrollTop;
+                    
+                    if (scrollTop > lastScrollTop + 2) {
+                        scrollDirection = 1; // Arah Scroll ke Bawah
+                    } else if (scrollTop < lastScrollTop - 2) {
+                        scrollDirection = -1; // Arah Scroll ke Atas
+                    }
+                    lastScrollTop = scrollTop;
+                    
+                    updateScrollDrivenModel(scrollTop);
+                });
+            }
+
+            // Fallback native scroll listener
+            if (dashboardContainer) {
+                dashboardContainer.addEventListener('scroll', () => {
+                    const scrollTop = dashboardContainer.scrollTop;
+                    if (scrollTop > lastScrollTop + 2) {
+                        scrollDirection = 1;
+                    } else if (scrollTop < lastScrollTop - 2) {
+                        scrollDirection = -1;
+                    }
+                    lastScrollTop = scrollTop;
+                    updateScrollDrivenModel(scrollTop);
+                });
+            }
+
+            // Inisialisasi posisi awal saat halaman dibuka
+            updateScrollDrivenModel(dashboardContainer ? dashboardContainer.scrollTop : 0);
+
+            // --- GENTLE BIDIRECTIONAL SECTION COASTING (SCROLL DOWN & SCROLL UP) ---
+            let snapTimeout = null;
+            let isUserInteracting = false;
+            let lastScrollTop = 0;
+            let scrollDirection = 1; // 1 = down, -1 = up
+
+            const triggerSectionSnap = (scrollTop) => {
+                if (!window.lenis) return;
+                const vh = window.innerHeight || 800;
+                const ratio = scrollTop / vh;
+                
+                let targetIndex = Math.round(ratio);
+
+                // Perhitungan cerdas berdasarkan arah scroll pengguna:
+                if (scrollDirection === 1) {
+                    // Scroll ke Bawah: Jika sudah lewati 30% perjalanan, lanjutkan meluncur perlahan ke sesi bawahnya
+                    if (ratio < 0.30) {
+                        targetIndex = 0; // Balik ke Header
+                    } else if (ratio < 1.30) {
+                        targetIndex = 1; // Informasi Ruangan
+                    } else if (ratio < 2.30) {
+                        targetIndex = 2; // Lab
+                    } else if (ratio < 3.30) {
+                        targetIndex = 3; // Berita
+                    } else if (ratio < 4.30) {
+                        targetIndex = 4; // Virtual Tour
+                    } else {
+                        targetIndex = 5; // Footer
+                    }
+                } else {
+                    // Scroll ke Atas: Jika sudah lewati 30% perjalanan ke atas, lanjutkan meluncur ke sesi atasnya
+                    if (ratio > 4.70) {
+                        targetIndex = 5; // Footer
+                    } else if (ratio > 3.70) {
+                        targetIndex = 4; // Virtual Tour
+                    } else if (ratio > 2.70) {
+                        targetIndex = 3; // Berita
+                    } else if (ratio > 1.70) {
+                        targetIndex = 2; // Lab
+                    } else if (ratio > 0.70) {
+                        targetIndex = 1; // Informasi Ruangan
+                    } else {
+                        targetIndex = 0; // Header
+                    }
+                }
+
+                const targetScrollTop = targetIndex * vh;
+                
+                // Hanya lakukan glide halus jika posisi masih nanggung di tengah (selisih > 25px)
+                if (Math.abs(scrollTop - targetScrollTop) > 25) {
+                    window.lenis.scrollTo(targetScrollTop, {
+                        duration: 1.5, // Durasi diperpanjang agar terasa sangat lembut dan sinematik
+                        easing: (t) => 1 - Math.pow(1 - t, 4) // Quartic ease-out yang super smooth tanpa hentakan
+                    });
+                }
             };
 
-            const sectionObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const activeSectionId = entry.target.id;
-                        // Logika perubahan CSS Class berdasarkan sesi aktif
-                        if (activeSectionId === 'section-carousel') {
-                            modelContainer.className = 'pos-center'; // Sesi 1
-                            ifikModel.src = '<?= base_url('assets/3D/ifikouter.glb') ?>';
-                            if (window.splashScreenDone) {
-                                document.body.classList.add('play-animations'); // Putar ulang animasi
-                            }
-                        } else {
-                            document.body.classList.remove('play-animations'); // Reset animasi saat keluar Sesi 1
-                            ifikModel.src = '<?= base_url('assets/3D/ifik.glb') ?>';
-                        }
-
-                        if (activeSectionId === 'section-about') {
-                            modelContainer.className = 'pos-left';   // Sesi 2
-                            modelContainer.style.opacity = '1';
-                        } else if (activeSectionId === 'section-lab') {
-                            modelContainer.className = 'pos-top-left'; // Sesi 3 (Langsung mengecil ke posisi kiri atas)
-                            modelContainer.style.opacity = '1';
-                        } else if (activeSectionId === 'section-contact') {
-                            modelContainer.className = 'pos-top-left'; // Sesi 4
-                            modelContainer.style.opacity = '1';
-                        }
+            const scheduleSnap = () => {
+                clearTimeout(snapTimeout);
+                // Jeda 320ms setelah putaran wheel berhenti agar inersia alami user selesai dulu baru coasting aktif
+                snapTimeout = setTimeout(() => {
+                    if (!isUserInteracting && dashboardContainer) {
+                        triggerSectionSnap(dashboardContainer.scrollTop);
                     }
-                });
-            }, observerOptions);
+                }, 320);
+            };
 
-            sections.forEach(section => {
-                sectionObserver.observe(section);
-            });
+            if (dashboardContainer) {
+                dashboardContainer.addEventListener('wheel', () => {
+                    isUserInteracting = true;
+                    clearTimeout(snapTimeout);
+                    setTimeout(() => { 
+                        isUserInteracting = false; 
+                        scheduleSnap(); 
+                    }, 150);
+                }, { passive: true });
 
-            // 2. Parallax Camera Tracking (Mouse Movement)
-            const dashboardContainer = document.querySelector('.dashboard-container');
-            if (dashboardContainer && ifikModel) {
+                dashboardContainer.addEventListener('touchstart', () => {
+                    isUserInteracting = true;
+                    clearTimeout(snapTimeout);
+                }, { passive: true });
+
+                dashboardContainer.addEventListener('touchend', () => {
+                    isUserInteracting = false;
+                    scheduleSnap();
+                }, { passive: true });
+            }
+
+            // Parallax Camera Tracking (Mouse Movement) untuk Kedua Model 3D
+            if (dashboardContainer) {
                 dashboardContainer.addEventListener('mousemove', (e) => {
                     const centerX = window.innerWidth / 2;
                     const centerY = window.innerHeight / 2;
@@ -431,25 +652,11 @@
 
                     const orbitAzimuth = 90 + (rotateY * 0.6); 
                     const orbitElevation = 85 - (rotateX * 0.5); 
-                    ifikModel.cameraOrbit = `${orbitAzimuth}deg ${orbitElevation}deg 100%`;
-                });
-            }
+                    const orbitVal = `${orbitAzimuth}deg ${orbitElevation}deg 100%`;
 
-            // 3. Scroll Progress Bar (Top)
-            const progressBar = document.getElementById('scroll-progress-bar');
-            if (dashboardContainer && progressBar) {
-                // Set awal, karena saat refresh mungkin ada di tengah
-                const updateProgress = () => {
-                    const totalHeight = dashboardContainer.scrollHeight - dashboardContainer.clientHeight;
-                    const scrollPosition = dashboardContainer.scrollTop;
-                    const progressPercentage = (scrollPosition / totalHeight) * 100;
-                    progressBar.style.width = progressPercentage + '%';
-                };
-                
-                dashboardContainer.addEventListener('scroll', updateProgress);
-                window.addEventListener('resize', updateProgress);
-                // Inisialisasi awal
-                updateProgress();
+                    if (modelOuter) modelOuter.cameraOrbit = orbitVal;
+                    if (modelInner) modelInner.cameraOrbit = orbitVal;
+                });
             }
         });
     </script>
@@ -458,5 +665,6 @@
     
     <!-- External Custom Script (info_ruangan.js harus paling atas agar toggleFullscreen() tersedia) -->
     <script src="<?= base_url('assets/js/info_ruangan.js?v=' . filemtime(FCPATH . 'assets/js/info_ruangan.js')) ?>"></script>
+
 </body>
 </html>
