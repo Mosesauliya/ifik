@@ -216,14 +216,44 @@
     // ==========================================
     // LOGIKA MODAL BOOKING PUBLIK & DETAIL APPROVAL
     // ==========================================
+    function resetBookingForm() {
+        const form = document.getElementById('formAjukanBooking');
+        if (form) form.reset();
+
+        // Reset Ruangan Dropdown & Styles
+        if (typeof $ !== 'undefined') {
+            const roomSelect = $('#ruanganSelectPublic');
+            if (roomSelect.length) {
+                roomSelect.html('<option value="">Pilih Kategori Dahulu</option>');
+                roomSelect.css({'background-color': '#f8fafc', 'pointer-events': 'auto', 'color': 'var(--text-color)'});
+            }
+            $('#timeSelectionGroup').hide();
+        }
+
+        if (document.getElementById('tanggalPeminjaman')) {
+            document.getElementById('tanggalPeminjaman').value = '';
+        }
+        if (document.getElementById('inputJamMulai')) {
+            document.getElementById('inputJamMulai').value = '';
+        }
+        if (document.getElementById('inputJamSelesai')) {
+            document.getElementById('inputJamSelesai').value = '';
+        }
+        if (typeof closeInlinePicker === 'function') {
+            closeInlinePicker();
+        }
+    }
+
     function openBookingModal() {
+        resetBookingForm();
         document.getElementById('bookingModal').classList.add('show');
     }
 
     function closeBookingModal() {
         document.getElementById('bookingModal').classList.remove('show');
-        document.getElementById('formAjukanBooking').reset();
+        resetBookingForm();
     }
+
 
     function submitBooking(e) {
         e.preventDefault();
@@ -248,16 +278,31 @@
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                alert(data.message);
+                Swal.fire({
+                    title: 'Berhasil!',
+                    text: data.message,
+                    icon: 'success',
+                    confirmButtonColor: '#7c3aed'
+                });
                 closeBookingModal();
                 reloadBookingData();
             } else {
-                alert('Error: ' + data.message);
+                Swal.fire({
+                    title: 'Gagal',
+                    text: data.message,
+                    icon: 'error',
+                    confirmButtonColor: '#ea580c'
+                });
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Terjadi kesalahan pada server');
+            Swal.fire({
+                title: 'Error Server',
+                text: 'Terjadi kesalahan pada server',
+                icon: 'error',
+                confirmButtonColor: '#ea580c'
+            });
         })
         .finally(() => {
             if (submitBtn) {
@@ -353,24 +398,45 @@
         const id = document.getElementById('detailBookingId').value;
         if (!id) return;
 
-        if (!confirm('Apakah Anda yakin ingin menyetujui peminjaman ini?')) return;
+        Swal.fire({
+            title: 'Setujui Peminjaman',
+            text: 'Apakah Anda yakin ingin menyetujui peminjaman ini?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#16a34a',
+            cancelButtonColor: '#94a3b8',
+            confirmButtonText: 'Ya, Setujui',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const url = (window.approveBookingUrl || window.location.origin + '/dashboard/approve_booking') + '/' + id;
 
-        const url = (window.approveBookingUrl || window.location.origin + '/dashboard/approve_booking') + '/' + id;
-
-        fetch(url, { method: 'POST' })
-        .then(r => r.json())
-        .then(data => {
-            if (data.status === 'success') {
-                alert(data.message);
-                closeDetailBookingModal();
-                reloadBookingData();
-            } else {
-                alert('Error: ' + data.message);
+                fetch(url, { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        Swal.fire({
+                            title: 'Disetujui!',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonColor: '#16a34a'
+                        });
+                        closeDetailBookingModal();
+                        reloadBookingData();
+                    } else {
+                        Swal.fire({
+                            title: 'Gagal',
+                            text: data.message,
+                            icon: 'error',
+                            confirmButtonColor: '#dc2626'
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire('Error', 'Terjadi kesalahan pada server', 'error');
+                });
             }
-        })
-        .catch(err => {
-            console.error(err);
-            alert('Terjadi kesalahan pada server');
         });
     }
 
@@ -393,16 +459,26 @@
         .then(r => r.json())
         .then(data => {
             if (data.status === 'success') {
-                alert(data.message);
+                Swal.fire({
+                    title: 'Ditolak',
+                    text: data.message,
+                    icon: 'success',
+                    confirmButtonColor: '#dc2626'
+                });
                 closeDetailBookingModal();
                 reloadBookingData();
             } else {
-                alert('Error: ' + data.message);
+                Swal.fire({
+                    title: 'Gagal',
+                    text: data.message,
+                    icon: 'error',
+                    confirmButtonColor: '#dc2626'
+                });
             }
         })
         .catch(err => {
             console.error(err);
-            alert('Terjadi kesalahan pada server');
+            Swal.fire('Error', 'Terjadi kesalahan pada server', 'error');
         });
     }
 
@@ -410,26 +486,48 @@
         const id = document.getElementById('detailBookingId').value;
         if (!id) return;
 
-        if (!confirm('Apakah Anda yakin ingin menghapus jadwal peminjaman ini?')) return;
+        Swal.fire({
+            title: 'Hapus Jadwal',
+            text: 'Apakah Anda yakin ingin menghapus jadwal peminjaman ini secara permanen?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#94a3b8',
+            confirmButtonText: 'Ya, Hapus',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const url = (window.deleteBookingUrl || window.location.origin + '/dashboard/delete_booking') + '/' + id;
 
-        const url = (window.deleteBookingUrl || window.location.origin + '/dashboard/delete_booking') + '/' + id;
-
-        fetch(url, { method: 'POST' })
-        .then(r => r.json())
-        .then(data => {
-            if (data.status === 'success') {
-                alert(data.message);
-                closeDetailBookingModal();
-                reloadBookingData();
-            } else {
-                alert('Error: ' + data.message);
+                fetch(url, { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        Swal.fire({
+                            title: 'Terhapus!',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonColor: '#7c3aed'
+                        });
+                        closeDetailBookingModal();
+                        reloadBookingData();
+                    } else {
+                        Swal.fire({
+                            title: 'Gagal',
+                            text: data.message,
+                            icon: 'error',
+                            confirmButtonColor: '#dc2626'
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire('Error', 'Terjadi kesalahan pada server', 'error');
+                });
             }
-        })
-        .catch(err => {
-            console.error(err);
-            alert('Terjadi kesalahan pada server');
         });
     }
+
 
     // ==========================================
     // RE-FETCH DATA TANPA RELOAD HALAMAN
