@@ -36,7 +36,7 @@
 
     /* Khusus Slide 1 background-nya fakultas.jpg tanpa filter */
     .carousel-slide.slide-1 {
-        background-image: url('<?= base_url("assets/images/fakultas.jpg") ?>');
+        background-image: url('<?= base_url("assets/images/Fakultas.jpg") ?>');
     }
 
     /* Background Video Fullscreen */

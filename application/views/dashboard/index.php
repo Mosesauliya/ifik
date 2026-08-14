@@ -62,6 +62,23 @@
             border-left-color: #ea580c !important;
         }
         
+        /* Permanent Hide for Google Model-Viewer Built-in Blue Arrow Interaction Prompt Graphic */
+        model-viewer::part(user-prompt),
+        model-viewer::part(prompt),
+        model-viewer::part(interaction-prompt),
+        model-viewer::part(ar-button),
+        model-viewer .slot.user-prompt,
+        model-viewer #prompt,
+        model-viewer [slot="user-prompt"],
+        model-viewer img,
+        .user-prompt,
+        #user-prompt {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+        
         * {
             margin: 0;
             padding: 0;
