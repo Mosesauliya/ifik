@@ -32,7 +32,7 @@
         width: calc(100% - 45vw); /* Memaksa menyisakan 45% layar kiri untuk logo 3D */
         max-width: 1000px;
         max-height: calc(100vh - 40px);
-        padding: 32px 40px 24px 40px;
+        padding: 24px 32px 18px 32px;
         z-index: 2;
         background: var(--glass-bg);
         border: 1px solid var(--glass-border);
@@ -51,41 +51,41 @@
         display: flex;
         justify-content: space-between;
         align-items: flex-end;
-        margin-bottom: 10px;
+        margin-bottom: 6px;
     }
 
     .lab-header h1 {
-        font-size: 2.8rem;
+        font-size: 2.2rem;
         font-weight: 800;
         color: var(--text-color);
         letter-spacing: -1px;
         text-transform: uppercase;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
     }
 
     .lab-header p {
         color: #64748b;
-        font-size: 1.05rem;
+        font-size: 0.95rem;
         font-weight: 500;
     }
 
     .lab-nav-btns {
         display: flex;
-        gap: 10px;
+        gap: 8px;
     }
 
     .lab-nav-btn {
         background: rgba(234, 88, 12, 0.1);
         border: 1px solid rgba(234, 88, 12, 0.3);
         color: #ea580c;
-        width: 42px;
-        height: 42px;
-        border-radius: 12px;
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        font-size: 1.1rem;
+        font-size: 1rem;
         font-weight: 700;
         transition: all 0.3s ease;
     }
@@ -104,9 +104,9 @@
         scrollbar-width: none; /* Firefox */
         -ms-overflow-style: none; /* IE/Edge */
         width: 100%;
-        padding-top: 75px;
+        padding-top: 10px;
         padding-bottom: 15px;
-        margin-top: 5px;
+        margin-top: 0;
         scroll-behavior: smooth;
     }
 
@@ -115,12 +115,12 @@
     }
 
     .lab-card {
-        flex: 0 0 320px;
-        min-width: 320px;
+        flex: 0 0 310px;
+        min-width: 310px;
         scroll-snap-align: start;
-        background: linear-gradient(145deg, rgba(255, 255, 255, 0.92) 0%, rgba(254, 243, 237, 0.85) 100%);
-        border-radius: 24px;
-        padding: 24px;
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.94) 0%, rgba(254, 243, 237, 0.88) 100%);
+        border-radius: 20px;
+        padding: 16px;
         border: 1px solid rgba(234, 88, 12, 0.18);
         backdrop-filter: blur(15px);
         -webkit-backdrop-filter: blur(15px);
@@ -130,7 +130,7 @@
         flex-direction: column;
         justify-content: space-between;
         position: relative;
-        overflow: visible; /* PENTING: Izinkan objek 3D keluar dari garis batas atas KARTU UTAMA */
+        overflow: hidden;
     }
 
     .lab-card:hover {
@@ -140,71 +140,73 @@
         box-shadow: 0 20px 40px rgba(234, 88, 12, 0.16);
     }
 
-    .card-3d-model-wrapper {
+    .card-image-box {
         width: 100%;
         height: 150px;
-        background: transparent;
-        border: none;
-        margin-bottom: 18px;
+        border-radius: 14px;
+        overflow: hidden;
         position: relative;
-        overflow: visible;
-        box-shadow: none;
+        margin-bottom: 12px;
+        background: #0f172a;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
     }
 
-    /* Pendaran Cahaya Studio (Soft Ambient Backlight Glow) di Belakang 3D Model */
-    .card-3d-model-wrapper::before {
-        content: '';
+    .card-image-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .lab-card:hover .card-image-box img {
+        transform: scale(1.08);
+    }
+
+    .badge-3d-tag {
         position: absolute;
-        top: 30%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 180px;
-        height: 140px;
-        background: radial-gradient(circle, rgba(234, 88, 12, 0.22) 0%, rgba(251, 146, 60, 0.08) 50%, transparent 75%);
-        filter: blur(25px);
-        border-radius: 50%;
-        pointer-events: none;
-        z-index: 1;
-        transition: all 0.35s ease;
+        top: 10px;
+        right: 10px;
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        z-index: 5;
     }
 
-    .lab-card:hover .card-3d-model-wrapper::before {
-        width: 210px;
-        height: 160px;
-        background: radial-gradient(circle, rgba(234, 88, 12, 0.32) 0%, rgba(251, 146, 60, 0.12) 50%, transparent 75%);
-        filter: blur(28px);
-    }
-
-    .card-3d-model-wrapper model-viewer {
-        position: absolute;
-        top: -90px; /* MENYEMBUL KELUAR 90px DI ATAS GARIS KARTU UTAMA */
-        left: 50%;
-        transform: translateX(-50%);
-        width: 120%;
-        height: 245px;
-        z-index: 20;
-        pointer-events: auto;
+    .badge-3d-tag svg {
+        width: 13px;
+        height: 13px;
+        fill: #f97316;
     }
 
     .lab-title {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         font-weight: 800;
         color: #1e293b;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }
 
     .lab-desc {
-        font-size: 0.88rem;
+        font-size: 0.84rem;
         color: #64748b;
-        line-height: 1.55;
-        margin-bottom: 16px;
+        line-height: 1.45;
+        margin-bottom: 10px;
     }
 
     .lab-specs {
         display: flex;
-        gap: 8px;
+        gap: 6px;
         flex-wrap: wrap;
-        margin-bottom: 18px;
+        margin-bottom: 10px;
     }
 
     .spec-badge {
@@ -321,25 +323,13 @@
             <!-- Lab 1: Multimedia & Game -->
             <div class="lab-card">
                 <div>
-                    <!-- 3D Model Header khusus Lab 1 -->
-                    <div class="card-3d-model-wrapper">
-                        <model-viewer 
-                            src="<?= base_url('assets/3D/' . rawurlencode('lab.multi media (1).glb')) ?>" 
-                            alt="3D Lab Multimedia" 
-                            camera-orbit="45deg 75deg 75%"
-                            min-camera-orbit="auto 75deg 75%"
-                            max-camera-orbit="auto 75deg 75%"
-                            field-of-view="15.5deg"
-                            camera-controls 
-                            disable-zoom 
-                            disable-pan
-                            touch-action="pan-y"
-                            shadow-intensity="1.5" 
-                            shadow-softness="0.8"
-                            exposure="1.2"
-                            interaction-prompt="none"
-                            style="background-color: transparent;">
-                        </model-viewer>
+                    <!-- Photo Preview khusus Lab 1 -->
+                    <div class="card-image-box">
+                        <span class="badge-3d-tag">
+                            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                            3D Model
+                        </span>
+                        <img src="<?= file_exists(FCPATH . 'assets/images/multimedia.jpg') ? base_url('assets/images/multimedia.jpg') : 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1000&auto=format&fit=crop' ?>" alt="Lab Multimedia &amp; Game">
                     </div>
                     <h3 class="lab-title">Lab Multimedia &amp; Game</h3>
                     <p class="lab-desc">Fasilitas komputer spesifikasi tinggi untuk pengembangan game 3D, animasi digital, dan realitas virtual (VR).</p>
@@ -358,25 +348,13 @@
             <!-- Lab 2: Aula Utama Fakultas -->
             <div class="lab-card">
                 <div>
-                    <!-- 3D Model Header khusus Aula -->
-                    <div class="card-3d-model-wrapper">
-                        <model-viewer 
-                            src="<?= base_url('assets/3D/Aula.glb') ?>" 
-                            alt="3D Aula Utama Fakultas" 
-                            camera-orbit="-135deg 75deg 75%"
-                            min-camera-orbit="auto 75deg 75%"
-                            max-camera-orbit="auto 75deg 75%"
-                            field-of-view="15.5deg"
-                            camera-controls 
-                            disable-zoom 
-                            disable-pan
-                            touch-action="pan-y"
-                            shadow-intensity="1.5" 
-                            shadow-softness="0.8"
-                            exposure="1.2"
-                            interaction-prompt="none"
-                            style="background-color: transparent;">
-                        </model-viewer>
+                    <!-- Photo Preview khusus Aula -->
+                    <div class="card-image-box">
+                        <span class="badge-3d-tag">
+                            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                            3D Model
+                        </span>
+                        <img src="<?= file_exists(FCPATH . 'assets/images/Aula1.jpg') ? base_url('assets/images/Aula1.jpg') : (file_exists(FCPATH . 'assets/images/aula.jpg') ? base_url('assets/images/aula.jpg') : 'https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=1000&auto=format&fit=crop') ?>" alt="Aula Utama Fakultas">
                     </div>
                     <h3 class="lab-title">Aula Utama Fakultas</h3>
                     <p class="lab-desc">Ruang aula serbaguna berkapasitas besar untuk acara seminar, pameran seni &amp; desain, sidang komprehensif, dan event fakultas.</p>
@@ -395,25 +373,13 @@
             <!-- Lab 3: Lab Tablet Cintiq -->
             <div class="lab-card">
                 <div>
-                    <!-- 3D Model Header khusus Lab Tablet Cintiq -->
-                    <div class="card-3d-model-wrapper">
-                        <model-viewer 
-                            src="<?= base_url('assets/3D/' . rawurlencode('lab tab cintiq (1).glb')) ?>" 
-                            alt="3D Lab Tablet Cintiq" 
-                            camera-orbit="45deg 75deg 75%"
-                            min-camera-orbit="auto 75deg 75%"
-                            max-camera-orbit="auto 75deg 75%"
-                            field-of-view="15.5deg"
-                            camera-controls 
-                            disable-zoom 
-                            disable-pan
-                            touch-action="pan-y"
-                            shadow-intensity="1.5" 
-                            shadow-softness="0.8"
-                            exposure="1.2"
-                            interaction-prompt="none"
-                            style="background-color: transparent;">
-                        </model-viewer>
+                    <!-- Photo Preview khusus Lab Tablet Cintiq -->
+                    <div class="card-image-box">
+                        <span class="badge-3d-tag">
+                            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                            3D Model
+                        </span>
+                        <img src="<?= file_exists(FCPATH . 'assets/images/sintiq.jpg') ? base_url('assets/images/sintiq.jpg') : (file_exists(FCPATH . 'assets/images/cintiq.jpg') ? base_url('assets/images/cintiq.jpg') : 'https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=1000&auto=format&fit=crop') ?>" alt="Lab Tablet Cintiq">
                     </div>
                     <h3 class="lab-title">Lab Tablet Cintiq</h3>
                     <p class="lab-desc">Fasilitas pen display Wacom Cintiq profesional untuk ilustrasi digital, concept art, komik, 2D animation, dan 3D sculpting.</p>
