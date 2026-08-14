@@ -422,7 +422,7 @@
                 if (vh <= 750) topPos1 = 38;
                 else if (vh <= 950) topPos1 = 42;
 
-                // Transisi Mulus Sesi 1 (Header) -> Sesi 2 (Info Ruangan)
+                // 1. Transisi Mulus Sesi 1 (Header) -> Sesi 2 (Info Ruangan)
                 if (scrollTop <= vh) {
                     const p = Math.max(0, Math.min(1, scrollTop / vh)); // 0.0 -> 1.0
                     // Smoothstep easing: 3p^2 - 2p^3
@@ -433,6 +433,7 @@
                     const currentScale = 1.0 + (0.9 - 1.0) * ease;
                     const currentRotY = 360 * ease;
 
+                    modelContainer.style.opacity = '1';
                     modelContainer.style.left = `${currentLeft}%`;
                     modelContainer.style.top = `${currentTop}%`;
                     modelContainer.style.transform = `translate(-50%, -50%) scale(${currentScale}) rotateY(${currentRotY}deg)`;
@@ -451,40 +452,32 @@
                         document.body.classList.remove('play-animations');
                     }
                 } 
-                // Sesi 2 (Info Ruangan) -> Sesi 3 (Lab)
-                else if (scrollTop <= 2 * vh) {
-                    modelContainer.style.left = `${leftPos2}%`;
+                // 2. Transisi Menghilang Saat Meninggalkan Sesi 2 (Info Ruangan: 1 * vh) Menuju Sesi Bawahnya
+                else if (scrollTop <= 1.45 * vh) {
+                    const pFade = Math.max(0, Math.min(1, (scrollTop - vh) / (0.40 * vh)));
+                    const easeFade = pFade * pFade * (3 - 2 * pFade);
+                    
+                    const currentLeft = leftPos2 - (10 * easeFade);
+                    const currentScale = 0.9 - (0.2 * easeFade);
+                    const currentRotY = 360 + (60 * easeFade);
+                    const innerOp = Math.max(0, 1 - easeFade);
+
+                    modelContainer.style.opacity = innerOp > 0.01 ? '1' : '0';
+                    modelContainer.style.left = `${currentLeft}%`;
                     modelContainer.style.top = `${topPos2}%`;
-                    modelContainer.style.transform = `translate(-50%, -50%) scale(0.9) rotateY(360deg)`;
+                    modelContainer.style.transform = `translate(-50%, -50%) scale(${currentScale}) rotateY(${currentRotY}deg)`;
                     modelContainer.style.zIndex = '8';
+
                     if (modelOuter) modelOuter.style.opacity = '0';
-                    if (modelInner) modelInner.style.opacity = '1';
+                    if (modelInner) modelInner.style.opacity = innerOp;
                     document.body.classList.remove('play-animations');
                 } 
-                // Sesi 3 (Lab) -> Sesi 4 (Berita & Footer)
+                // 3. Seluruh Sesi di bawah Informasi Ruangan (Lab, Berita, Virtual Tour, Footer): LOGO HILANG TOTAL
                 else {
-                    const p = Math.max(0, Math.min(1, (scrollTop - 2 * vh) / vh));
-                    const ease = p * p * (3 - 2 * p);
-
-                    const targetLeftPx = vw <= 900 ? 40 : 50;
-                    const targetTopPx = 35;
-                    const targetScale = vw <= 900 ? 0.1 : 0.11;
-                    const targetRotY = 720;
-
-                    const startLeftPx = (vw * leftPos2) / 100;
-                    const startTopPx = (vh * topPos2) / 100;
-                    
-                    const currentLeftPx = startLeftPx + (targetLeftPx - startLeftPx) * ease;
-                    const currentTopPx = startTopPx + (targetTopPx - startTopPx) * ease;
-                    const currentScale = 0.9 + (targetScale - 0.9) * ease;
-                    const currentRotY = 360 + (targetRotY - 360) * ease;
-
-                    modelContainer.style.left = `${currentLeftPx}px`;
-                    modelContainer.style.top = `${currentTopPx}px`;
-                    modelContainer.style.transform = `translate(-50%, -50%) scale(${currentScale}) rotateY(${currentRotY}deg)`;
-                    modelContainer.style.zIndex = p > 0.6 ? '110' : '8';
+                    modelContainer.style.opacity = '0';
+                    modelContainer.style.pointerEvents = 'none';
                     if (modelOuter) modelOuter.style.opacity = '0';
-                    if (modelInner) modelInner.style.opacity = '1';
+                    if (modelInner) modelInner.style.opacity = '0';
                     document.body.classList.remove('play-animations');
                 }
 
