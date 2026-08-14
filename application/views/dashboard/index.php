@@ -370,6 +370,11 @@
         <!-- Sesi 5: Virtual Tour 3D -->
         <?php $this->load->view('dashboard/sections/virtual_tour'); ?>
 
+        <!-- Sesi 6: Footer -->
+        <div class="section-wrapper" id="section-footer" style="height: auto; min-height: 100vh; scroll-snap-align: start; display: flex; align-items: flex-end;">
+            <?php $this->load->view('partials/footer'); ?>
+        </div>
+
     </div>
 
     <!-- JS untuk Lenis Smooth Scroll, Parallax dan Continuous 3D Morphing -->
@@ -555,12 +560,16 @@
                         targetIndex = 2; // Lab
                     } else if (ratio < 3.30) {
                         targetIndex = 3; // Berita
-                    } else {
+                    } else if (ratio < 4.30) {
                         targetIndex = 4; // Virtual Tour
+                    } else {
+                        targetIndex = 5; // Footer
                     }
                 } else {
                     // Scroll ke Atas: Jika sudah lewati 30% perjalanan ke atas, lanjutkan meluncur ke sesi atasnya
-                    if (ratio > 3.70) {
+                    if (ratio > 4.70) {
+                        targetIndex = 5; // Footer
+                    } else if (ratio > 3.70) {
                         targetIndex = 4; // Virtual Tour
                     } else if (ratio > 2.70) {
                         targetIndex = 3; // Berita
@@ -640,7 +649,5 @@
     <!-- External Custom Script (info_ruangan.js harus paling atas agar toggleFullscreen() tersedia) -->
     <script src="<?= base_url('assets/js/info_ruangan.js?v=' . filemtime(FCPATH . 'assets/js/info_ruangan.js')) ?>"></script>
 
-    <!-- Footer (Custom Cursor & shared scripts) -->
-    <?php $this->load->view('partials/footer'); ?>
 </body>
 </html>
