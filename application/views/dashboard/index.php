@@ -91,6 +91,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
         }
 
         /* 3D Model Center Piece - Global Fixed Position */
@@ -312,7 +313,6 @@
             }, 60);
         });
     </script>
-
     <!-- Progress Bar (Pengganti Scrollbar) -->
     <div id="scroll-progress-bar"></div>
 
@@ -346,7 +346,10 @@
         <!-- Sesi 2: Info Ruangan -->
         <?php $this->load->view('dashboard/sections/info_ruangan'); ?>
 
-        <!-- Sesi 3: Berita -->
+        <!-- Sesi 3: Laboratorium Fakultas -->
+        <?php $this->load->view('dashboard/sections/lab'); ?>
+
+        <!-- Sesi 4: Berita & Informasi Terkini -->
         <?php $this->load->view('dashboard/sections/berita'); ?>
 
     </div>
@@ -369,7 +372,6 @@
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         const activeSectionId = entry.target.id;
-
                         // Logika perubahan CSS Class berdasarkan sesi aktif
                         if (activeSectionId === 'section-carousel') {
                             modelContainer.className = 'pos-center'; // Sesi 1
@@ -384,8 +386,11 @@
 
                         if (activeSectionId === 'section-about') {
                             modelContainer.className = 'pos-left';   // Sesi 2
+                        } else if (activeSectionId === 'section-lab') {
+                            modelContainer.className = 'pos-left';   // Sesi 3
                         } else if (activeSectionId === 'section-contact') {
-                            modelContainer.className = 'pos-top-left'; // Sesi 3
+                            modelContainer.className = 'pos-top-left'; // Sesi 4
+                        }
                         }
                     }
                 });

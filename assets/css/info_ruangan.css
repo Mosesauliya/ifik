@@ -3,6 +3,8 @@
         background-color: var(--bg-color);
         display: flex;
         align-items: center;
+        overflow: hidden;
+        position: relative;
         background-image: 
             radial-gradient(at 0% 0%, rgba(234, 88, 12, 0.1) 0px, transparent 50%),
             radial-gradient(at 100% 100%, rgba(234, 88, 12, 0.1) 0px, transparent 50%);
@@ -14,7 +16,8 @@
         margin-right: 2vw;
         width: calc(100% - 38vw); /* Memaksa menyisakan 38% layar kiri untuk logo 3D */
         max-width: 1200px;
-        padding: 50px 40px;
+        max-height: calc(100vh - 40px);
+        padding: 32px 40px 24px 40px;
         z-index: 2;
         background: var(--glass-bg);
         border: 1px solid var(--glass-border);
@@ -23,6 +26,9 @@
         -webkit-backdrop-filter: blur(20px);
         box-shadow: 0 25px 50px rgba(0,0,0,0.1);
         position: relative; /* Untuk penempatan tombol fullscreen absolute */
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
         transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
@@ -75,9 +81,9 @@
     }
 
     .about-container h1 {
-        font-size: 2.8rem;
-        margin-bottom: 30px;
-        letter-spacing: -1px;
+        font-size: 2.2rem;
+        margin-bottom: 18px;
+        letter-spacing: -0.5px;
         font-weight: 800;
         color: var(--text-color);
     }
@@ -98,7 +104,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 24px 0;
+        padding: 16px 0;
         border-bottom: 1px solid rgba(0, 0, 0, 0.1);
         transition: all 0.3s ease;
         gap: 20px;
@@ -705,25 +711,77 @@
          b o r d e r - c o l o r :   # e a 5 8 0 c ; 
  } 
  
- . f c   . f c - b u t t o n - p r i m a r y : h o v e r   { 
-         b a c k g r o u n d - c o l o r :   # 3 3 4 1 5 5 ; 
-         b o r d e r - c o l o r :   # 3 3 4 1 5 5 ; 
- } 
- 
- . f c - e v e n t   { 
-         b o r d e r :   n o n e ; 
-         b o r d e r - r a d i u s :   6 p x ; 
-         p a d d i n g :   2 p x   4 p x ; 
-         b o x - s h a d o w :   0   2 p x   8 p x   r g b a ( 2 3 4 ,   8 8 ,   1 2 ,   0 . 3 ) ; 
- } 
- 
- . f c - e v e n t - t i t l e   { 
-         f o n t - w e i g h t :   7 0 0 ; 
-         f o n t - s i z e :   0 . 8 5 r e m ; 
- } 
- 
- . f c - e v e n t - t i m e   { 
-         f o n t - w e i g h t :   5 0 0 ; 
-         f o n t - s i z e :   0 . 7 5 r e m ; 
- }  
- 
+ /* --- FULLCALENDAR CUSTOM STYLES --- */
+ #calendar {
+         background: rgba(255, 255, 255, 0.4);
+         border-radius: 16px;
+         padding: 20px;
+         box-sizing: border-box;
+ }
+
+ .fc-theme-standard td, .fc-theme-standard th {
+         border-color: rgba(0, 0, 0, 0.05);
+ }
+
+ .fc .fc-toolbar-title {
+         font-weight: 800;
+         font-size: 1.5rem;
+         color: var(--text-color);
+ }
+
+ .fc .fc-button-primary {
+         background-color: var(--text-color);
+         border-color: var(--text-color);
+         border-radius: 8px;
+         text-transform: capitalize;
+         font-weight: 600;
+         transition: all 0.2s;
+ }
+
+ .fc .fc-button-primary:not(:disabled):active,
+ .fc .fc-button-primary:not(:disabled).fc-button-active {
+         background-color: #ea580c;
+         border-color: #ea580c;
+ }
+
+ .fc .fc-button-primary:hover {
+         background-color: #334155;
+         border-color: #334155;
+ }
+
+.fc-event {
+    border: none;
+    border-radius: 6px;
+    padding: 2px 4px;
+    box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);
+}
+
+.fc-event-title {
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.fc-event-time {
+    font-weight: 500;
+    font-size: 0.75rem;
+}
+
+/* Responsive Max-Height Adjustment for Laptops & Small Displays */
+@media (max-height: 850px) {
+    .about-container {
+        padding: 24px 30px 18px 30px;
+        border-radius: 24px;
+        max-height: calc(100vh - 30px);
+    }
+    .about-container h1 {
+        font-size: 1.8rem;
+        margin-bottom: 12px;
+    }
+    .room-item {
+        padding: 12px 0;
+    }
+    .room-icon {
+        width: 42px;
+        height: 42px;
+    }
+}

@@ -1,4 +1,11 @@
 <style>
+    /* Global Universal Cursor Override */
+    @media (pointer: fine) {
+        *, *::before, *::after, html, body, a, button, input, select, textarea, label, summary, model-viewer, model-viewer::part(default-canvas), [role="button"], [onclick] {
+            cursor: none !important;
+        }
+    }
+
     /* Topbar Container - Normal Navbar */
     .dashboard-topbar {
         position: fixed;

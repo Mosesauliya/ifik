@@ -6,6 +6,76 @@ class Booking_model extends CI_Model {
     public function __construct()
     {
         parent::__construct();
+        $this->_ensure_tables();
+    }
+
+    private function _ensure_tables()
+    {
+        if (!$this->db->table_exists('kategori_ruangan')) {
+            $this->db->query("CREATE TABLE IF NOT EXISTS `kategori_ruangan` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `nama_kategori` VARCHAR(100) NOT NULL,
+                `keterangan` VARCHAR(255) NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+            $this->db->query("INSERT IGNORE INTO `kategori_ruangan` (`id`, `nama_kategori`, `keterangan`) VALUES
+                (1, 'Laboratorium Komputer', 'Lab dengan fasilitas PC high-end'),
+                (2, 'Laboratorium Desain', 'Lab untuk karya fisik'),
+                (3, 'Ruang Rapat & Seminar', 'Ruangan presentasi')");
+        }
+
+        if (!$this->db->table_exists('ruangan')) {
+            $this->db->query("CREATE TABLE IF NOT EXISTS `ruangan` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `id_kategori` INT NOT NULL,
+                `kode_ruangan` VARCHAR(50) NOT NULL,
+                `nama_ruangan` VARCHAR(150) NOT NULL,
+                `kapasitas` INT DEFAULT 30,
+                `lokasi` VARCHAR(150) DEFAULT 'Gedung Sebatik (FIK)',
+                `status` ENUM('Tersedia', 'Tidak Tersedia', 'Perbaikan') DEFAULT 'Tersedia'
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+            $this->db->query("INSERT IGNORE INTO `ruangan` (`id`, `id_kategori`, `kode_ruangan`, `nama_ruangan`, `kapasitas`, `lokasi`, `status`) VALUES
+                (1, 1, 'LAB-MM', 'Lab Multimedia & 3D Design', 40, 'Gedung Sebatik Lt. 2', 'Tersedia'),
+                (2, 1, 'LAB-UIUX', 'Lab UI/UX & Web Development', 35, 'Gedung Sebatik Lt. 2', 'Tersedia'),
+                (3, 2, 'LAB-GRAFIS', 'Studio Desain Grafis & Seni', 30, 'Gedung Sebatik Lt. 1', 'Tersedia'),
+                (4, 3, 'AUD-FIK', 'Auditorium FIK', 150, 'Gedung Sebatik Lt. 3', 'Tersedia')");
+        }
+
+        if (!$this->db->table_exists('peminjaman')) {
+            $this->db->query("CREATE TABLE IF NOT EXISTS `peminjaman` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `id_ruangan` INT NOT NULL,
+                `nama_lengkap` VARCHAR(150) NOT NULL,
+                `keterangan` TEXT NULL,
+                `tanggal_mulai` DATE NOT NULL,
+                `tanggal_selesai` DATE NOT NULL,
+                `jam_mulai` TIME NOT NULL,
+                `jam_selesai` TIME NOT NULL,
+                `status` VARCHAR(50) DEFAULT 'Pending',
+                `alasan_penolakan` TEXT NULL,
+                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+            $this->db->query("INSERT IGNORE INTO `peminjaman` (`id_ruangan`, `nama_lengkap`, `keterangan`, `tanggal_mulai`, `tanggal_selesai`, `jam_mulai`, `jam_selesai`, `status`) VALUES
+                (1, 'Alif Mahasiswa', 'Kegiatan Pameran Interaktif 3D', CURDATE(), CURDATE(), '08:00:00', '12:00:00', 'Disetujui Admin')");
+        }
+
+        if (!$this->db->table_exists('slot_waktu')) {
+            $this->db->query("CREATE TABLE IF NOT EXISTS `slot_waktu` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `nama_slot` VARCHAR(50) NOT NULL,
+                `jam_mulai` TIME NOT NULL,
+                `jam_selesai` TIME NOT NULL,
+                `urutan` INT DEFAULT 1
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+            $this->db->query("INSERT IGNORE INTO `slot_waktu` (`id`, `nama_slot`, `jam_mulai`, `jam_selesai`, `urutan`) VALUES
+                (1, 'Sesi Pagi 1', '08:00:00', '10:00:00', 1),
+                (2, 'Sesi Pagi 2', '10:00:00', '12:00:00', 2),
+                (3, 'Sesi Siang 1', '13:00:00', '15:00:00', 3),
+                (4, 'Sesi Siang 2', '15:00:00', '17:00:00', 4)");
+        }
     }
 
     public function get_all_kategori()
