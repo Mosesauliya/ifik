@@ -553,12 +553,16 @@
                         targetIndex = 1; // Informasi Ruangan
                     } else if (ratio < 2.30) {
                         targetIndex = 2; // Lab
-                    } else {
+                    } else if (ratio < 3.30) {
                         targetIndex = 3; // Berita
+                    } else {
+                        targetIndex = 4; // Virtual Tour
                     }
                 } else {
                     // Scroll ke Atas: Jika sudah lewati 30% perjalanan ke atas, lanjutkan meluncur ke sesi atasnya
-                    if (ratio > 2.70) {
+                    if (ratio > 3.70) {
+                        targetIndex = 4; // Virtual Tour
+                    } else if (ratio > 2.70) {
                         targetIndex = 3; // Berita
                     } else if (ratio > 1.70) {
                         targetIndex = 2; // Lab
