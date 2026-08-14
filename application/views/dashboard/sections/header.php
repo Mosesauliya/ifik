@@ -534,10 +534,13 @@
                 }
             }
 
-            // 3D Logo logic: Hanya sembunyikan jika di Slide 2 Sesi 1 (pos-center)
+            // 3D Logo logic: Hanya sembunyikan jika berada di Sesi 1 (Header) dan bukan slide 0
             const modelContainer = document.getElementById('global-model-container');
+            const dashboardContainer = document.querySelector('.dashboard-container');
             if (modelContainer) {
-                if (modelContainer.classList.contains('pos-center')) {
+                const currentScrollTop = dashboardContainer ? dashboardContainer.scrollTop : 0;
+                const isSection1 = currentScrollTop < (window.innerHeight || 800) * 0.45;
+                if (isSection1) {
                     if (index === 0) {
                         modelContainer.style.opacity = '1';
                     } else {
