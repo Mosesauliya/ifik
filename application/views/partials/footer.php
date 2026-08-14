@@ -567,6 +567,10 @@
 
 <script>
     function scrollToTopSection() {
+        if (window.lenis) {
+            window.lenis.scrollTo(0, { duration: 1.4 });
+            return;
+        }
         const dashboardContainer = document.querySelector('.dashboard-container');
         if (dashboardContainer) {
             dashboardContainer.scrollTo({ top: 0, behavior: 'smooth' });

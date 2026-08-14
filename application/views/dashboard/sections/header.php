@@ -459,7 +459,7 @@
         </div>
     </div>
 
-    <div class="scroll-hint">Scroll ↓</div>
+    <div class="scroll-hint" onclick="if(window.lenis){window.lenis.scrollTo('#section-about', {duration:1.2});}else{document.getElementById('section-about')?.scrollIntoView({behavior:'smooth'});}" style="cursor: pointer;" title="Scroll ke Informasi Ruangan">Scroll ↓</div>
 </div>
 
 <script>
@@ -534,16 +534,23 @@
                 }
             }
 
-            // 3D Logo logic: Hanya tampil di slide 1
+            // 3D Logo logic: Hanya disembunyikan jika berada di Sesi 1 (Header) dan bukan slide 1
             const modelContainer = document.getElementById('global-model-container');
+            const dashboardContainer = document.querySelector('.dashboard-container');
             if (modelContainer) {
-                if (index === 0) {
-                    modelContainer.style.opacity = '1';
-                    modelContainer.style.pointerEvents = 'none';
+                const currentScrollTop = dashboardContainer ? dashboardContainer.scrollTop : 0;
+                const isSection1 = currentScrollTop < (window.innerHeight || 800) * 0.45;
+                if (isSection1) {
+                    if (index === 0) {
+                        modelContainer.style.opacity = '1';
+                    } else {
+                        modelContainer.style.opacity = '0';
+                    }
                 } else {
-                    modelContainer.style.opacity = '0';
-                    modelContainer.style.pointerEvents = 'none';
+                    // Pastikan saat user di Informasi Ruangan, Lab, atau Berita, logo selalu tampil
+                    modelContainer.style.opacity = '1';
                 }
+                modelContainer.style.pointerEvents = 'none';
             }
 
             // Video Slide 2 Logic
@@ -650,10 +657,14 @@
                         setTimeout(() => {
                             const nextSection = document.getElementById('section-about');
                             if (nextSection) {
-                                dashboardContainer.scrollTo({
-                                    top: nextSection.offsetTop,
-                                    behavior: 'smooth'
-                                });
+                                if (window.lenis) {
+                                    window.lenis.scrollTo(nextSection, { duration: 1.2 });
+                                } else {
+                                    dashboardContainer.scrollTo({
+                                        top: nextSection.offsetTop,
+                                        behavior: 'smooth'
+                                    });
+                                }
                             }
                             
                             // Reset flag
