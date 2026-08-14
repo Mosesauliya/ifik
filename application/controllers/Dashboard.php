@@ -53,6 +53,21 @@ class Dashboard extends CI_Controller {
             $tanggal_selesai = $tanggal_mulai;
         }
 
+        // Check bentrok/konflik peminjaman untuk ruangan yang sama
+        $conflicts = $this->Booking_model->check_conflict($id_ruangan, $tanggal_mulai, $tanggal_selesai, $jam_mulai, $jam_selesai);
+        if (!empty($conflicts)) {
+            $c = $conflicts[0];
+            $jMulai = substr($c->jam_mulai, 0, 5);
+            $jSelesai = substr($c->jam_selesai, 0, 5);
+            $roomName = $c->kode_ruangan ? "{$c->kode_ruangan} - {$c->nama_ruangan}" : "Ruangan ini";
+            echo json_encode([
+                'status' => 'error',
+                'message' => "Bentrok! {$roomName} sudah diajukan/dipinjam pada jam {$jMulai} - {$jSelesai} oleh {$c->nama_lengkap}. Silakan pilih jam atau ruangan lain."
+            ]);
+            return;
+        }
+
+
         $data_peminjaman = array(
             'nama_lengkap' => $nama_lengkap,
             'id_ruangan' => $id_ruangan,
@@ -73,4 +88,80 @@ class Dashboard extends CI_Controller {
             echo json_encode(['status' => 'error', 'message' => 'Gagal mengajukan booking']);
         }
     }
+
+    public function approve_booking($id)
+    {
+        header('Content-Type: application/json');
+        $this->load->model('Booking_model');
+        $role_id = $this->session->userdata('role_id');
+
+        if (!in_array($role_id, [1, 2, 3])) {
+            echo json_encode(['status' => 'error', 'message' => 'Anda tidak memiliki hak akses untuk menyetujui peminjaman ini.']);
+            return;
+        }
+
+        if ($role_id == 3) {
+            $status = 'Disetujui Ka. Ur';
+        } elseif ($role_id == 2) {
+            $status = 'Disetujui Laboran';
+        } else {
+            $status = 'Disetujui Admin';
+        }
+
+        $update = $this->Booking_model->update_status($id, $status);
+        if($update) {
+            echo json_encode(['status' => 'success', 'message' => 'Peminjaman ' . $status . '!']);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Gagal menyetujui peminjaman']);
+        }
+    }
+
+    public function reject_booking($id)
+    {
+        header('Content-Type: application/json');
+        $this->load->model('Booking_model');
+        $role_id = $this->session->userdata('role_id');
+
+        if (!in_array($role_id, [1, 2, 3])) {
+            echo json_encode(['status' => 'error', 'message' => 'Anda tidak memiliki hak akses untuk menolak peminjaman ini.']);
+            return;
+        }
+
+        $alasan = $this->input->post('alasan_penolakan', true);
+        $update = $this->Booking_model->update_status($id, 'Ditolak', $alasan);
+        if($update) {
+            echo json_encode(['status' => 'success', 'message' => 'Peminjaman ditolak!']);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Gagal menolak peminjaman']);
+        }
+    }
+
+    public function delete_booking($id)
+    {
+        header('Content-Type: application/json');
+        $this->load->model('Booking_model');
+        $role_id = $this->session->userdata('role_id');
+
+        if (!in_array($role_id, [1, 2, 3])) {
+            echo json_encode(['status' => 'error', 'message' => 'Anda tidak memiliki hak akses untuk menghapus jadwal ini.']);
+            return;
+        }
+
+        $delete = $this->Booking_model->delete_booking($id);
+        if($delete) {
+            echo json_encode(['status' => 'success', 'message' => 'Jadwal peminjaman berhasil dihapus!']);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Gagal menghapus jadwal peminjaman']);
+        }
+    }
+
+    public function get_updated_bookings()
+    {
+        header('Content-Type: application/json');
+        $this->load->model('Booking_model');
+        $data = $this->Booking_model->get_approved_bookings();
+        echo json_encode($data ? $data : []);
+    }
 }
+
+

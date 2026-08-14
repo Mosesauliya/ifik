@@ -145,4 +145,31 @@ class Booking_model extends CI_Model {
         $this->db->order_by('peminjaman.jam_mulai', 'ASC');
         return $this->db->get()->result();
     }
+
+    /**
+     * Check if a room booking conflicts with existing non-rejected/non-cancelled bookings
+     */
+    public function check_conflict($id_ruangan, $tanggal_mulai, $tanggal_selesai, $jam_mulai, $jam_selesai, $ignore_id = null)
+    {
+        $this->db->select('peminjaman.*, ruangan.nama_ruangan, ruangan.kode_ruangan');
+        $this->db->from('peminjaman');
+        $this->db->join('ruangan', 'ruangan.id = peminjaman.id_ruangan', 'left');
+        $this->db->where('peminjaman.id_ruangan', $id_ruangan);
+        $this->db->where_not_in('peminjaman.status', ['Ditolak', 'Dibatalkan']);
+
+        // Check date range overlap
+        $this->db->where('peminjaman.tanggal_mulai <=', $tanggal_selesai);
+        $this->db->where('peminjaman.tanggal_selesai >=', $tanggal_mulai);
+
+        // Check time range overlap (strict overlap: start < existing_end AND end > existing_start)
+        $this->db->where('peminjaman.jam_mulai <', $jam_selesai);
+        $this->db->where('peminjaman.jam_selesai >', $jam_mulai);
+
+        if ($ignore_id !== null) {
+            $this->db->where('peminjaman.id !=', $ignore_id);
+        }
+
+        return $this->db->get()->result();
+    }
 }
+

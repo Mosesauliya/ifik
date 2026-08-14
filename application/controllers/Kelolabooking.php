@@ -60,6 +60,21 @@ class Kelolabooking extends CI_Controller {
             $tanggal_selesai = $tanggal_mulai;
         }
 
+        // Check bentrok/konflik peminjaman untuk ruangan yang sama
+        $conflicts = $this->Booking_model->check_conflict($id_ruangan, $tanggal_mulai, $tanggal_selesai, $jam_mulai, $jam_selesai);
+        if (!empty($conflicts)) {
+            $c = $conflicts[0];
+            $jMulai = substr($c->jam_mulai, 0, 5);
+            $jSelesai = substr($c->jam_selesai, 0, 5);
+            $roomName = $c->kode_ruangan ? "{$c->kode_ruangan} - {$c->nama_ruangan}" : "Ruangan ini";
+            echo json_encode([
+                'status' => 'error',
+                'message' => "Bentrok! {$roomName} sudah diajukan/dipinjam pada jam {$jMulai} - {$jSelesai} oleh {$c->nama_lengkap}. Silakan pilih jam atau ruangan lain."
+            ]);
+            return;
+        }
+
+
         $data_peminjaman = array(
             'nama_lengkap' => $nama_lengkap,
             'id_ruangan' => $id_ruangan,
