@@ -453,17 +453,7 @@
                 } 
                 // Sesi 2 (Info Ruangan) -> Sesi 3 (Lab)
                 else if (scrollTop <= 2 * vh) {
-                    modelContainer.style.left = `${leftPos2}%`;
-                    modelContainer.style.top = `${topPos2}%`;
-                    modelContainer.style.transform = `translate(-50%, -50%) scale(0.9) rotateY(360deg)`;
-                    modelContainer.style.zIndex = '8';
-                    if (modelOuter) modelOuter.style.opacity = '0';
-                    if (modelInner) modelInner.style.opacity = '1';
-                    document.body.classList.remove('play-animations');
-                } 
-                // Sesi 3 (Lab) -> Sesi 4 (Berita & Footer)
-                else {
-                    const p = Math.max(0, Math.min(1, (scrollTop - 2 * vh) / vh));
+                    const p = Math.max(0, Math.min(1, (scrollTop - vh) / vh));
                     const ease = p * p * (3 - 2 * p);
 
                     const targetLeftPx = vw <= 900 ? 40 : 50;
@@ -486,7 +476,22 @@
                     if (modelOuter) modelOuter.style.opacity = '0';
                     if (modelInner) modelInner.style.opacity = '1';
                     document.body.classList.remove('play-animations');
-                }
+                } 
+                // Sesi 3 (Lab) dan seterusnya -> Tetap di Navbar
+                else {
+                    const targetLeftPx = vw <= 900 ? 40 : 50;
+                    const targetTopPx = 35;
+                    const targetScale = vw <= 900 ? 0.1 : 0.11;
+                    const targetRotY = 720;
+
+                    modelContainer.style.left = `${targetLeftPx}px`;
+                    modelContainer.style.top = `${targetTopPx}px`;
+                    modelContainer.style.transform = `translate(-50%, -50%) scale(${targetScale}) rotateY(${targetRotY}deg)`;
+                    modelContainer.style.zIndex = '110';
+                    if (modelOuter) modelOuter.style.opacity = '0';
+                    if (modelInner) modelInner.style.opacity = '1';
+                    document.body.classList.remove('play-animations');
+                } 
 
                 // Update Progress Bar
                 if (dashboardContainer && progressBar) {
