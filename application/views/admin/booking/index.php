@@ -4,10 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $title ?></title>
-    <!-- Google Fonts -->
+    <!-- Google Fonts & SweetAlert2 -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        .swal2-container {
+            z-index: 99999 !important;
+        }
+
         :root {
+
             --bg-color: #fbf7f1; 
             --text-color: #1e293b;
             --border-color: rgba(30, 41, 59, 0.1);
@@ -263,9 +269,10 @@
 
     <div class="header">
         <h1>Dashboard Peminjaman</h1>
-        <button class="btn-primary" onclick="document.getElementById('bookingModal').classList.add('active')">
+        <button class="btn-primary" onclick="openAdminBookingModal()">
             + Buat Peminjaman
         </button>
+
     </div>
 
     <!-- Data Table -->
@@ -349,7 +356,8 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Buat Peminjaman</h2>
-                <button class="modal-close" onclick="document.getElementById('bookingModal').classList.remove('active')">&times;</button>
+                <button class="modal-close" onclick="closeAdminBookingModal()">&times;</button>
+
             </div>
             <div class="modal-body">
                 <form id="formBooking">
@@ -562,7 +570,33 @@
             });
         });
 
+        function resetAdminBookingForm() {
+            const form = document.getElementById('formBooking');
+            if (form) form.reset();
+            const roomSelect = $('#ruanganSelect');
+            if (roomSelect.length) {
+                roomSelect.html('<option value="">Pilih Ruangan</option>');
+                roomSelect.css({'background-color': '#f8fafc', 'pointer-events': 'auto', 'color': 'var(--text-color)'});
+            }
+            $('#timeSelectionGroup').hide();
+            if (document.getElementById('tanggalPeminjaman')) document.getElementById('tanggalPeminjaman').value = '';
+            if (document.getElementById('inputJamMulai')) document.getElementById('inputJamMulai').value = '';
+            if (document.getElementById('inputJamSelesai')) document.getElementById('inputJamSelesai').value = '';
+            if (typeof closeInlinePicker === 'function') closeInlinePicker();
+        }
+
+        function openAdminBookingModal() {
+            resetAdminBookingForm();
+            document.getElementById('bookingModal').classList.add('active');
+        }
+
+        function closeAdminBookingModal() {
+            document.getElementById('bookingModal').classList.remove('active');
+            resetAdminBookingForm();
+        }
+
         // Submit form via AJAX
+
         function submitForm() {
             const form = document.getElementById('formBooking');
             if(!form.checkValidity()) {
@@ -580,34 +614,49 @@
                 contentType: false,
                 success: function(res) {
                     if(res.status == 'success') {
-                        alert(res.message);
-                        window.location.reload();
+                        Swal.fire({
+                            title: 'Berhasil!',
+                            text: res.message,
+                            icon: 'success',
+                            confirmButtonColor: '#ea580c'
+                        }).then(() => window.location.reload());
                     } else {
-                        alert(res.message);
+                        Swal.fire('Gagal', res.message, 'error');
                     }
                 },
                 error: function() {
-                    alert('Terjadi kesalahan pada server');
+                    Swal.fire('Error', 'Terjadi kesalahan pada server', 'error');
                 }
             });
         }
 
         // Aksi Approve
         function approveBooking(id) {
-            if(confirm('Apakah Anda yakin ingin menyetujui peminjaman ini?')) {
-                $.ajax({
-                    url: '<?= base_url('kelolabooking/approve/') ?>' + id,
-                    type: 'POST',
-                    success: function(response) {
-                        const res = JSON.parse(response);
-                        if(res.status === 'success') {
-                            window.location.reload();
-                        } else {
-                            alert(res.message);
+            Swal.fire({
+                title: 'Setujui Peminjaman',
+                text: 'Apakah Anda yakin ingin menyetujui peminjaman ini?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#16a34a',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Ya, Setujui',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if(result.isConfirmed) {
+                    $.ajax({
+                        url: '<?= base_url('kelolabooking/approve/') ?>' + id,
+                        type: 'POST',
+                        success: function(response) {
+                            const res = JSON.parse(response);
+                            if(res.status === 'success') {
+                                window.location.reload();
+                            } else {
+                                Swal.fire('Gagal', res.message, 'error');
+                            }
                         }
-                    }
-                });
-            }
+                    });
+                }
+            });
         }
 
         // Aksi Reject
@@ -634,7 +683,7 @@
                     if(res.status === 'success') {
                         window.location.reload();
                     } else {
-                        alert(res.message);
+                        Swal.fire('Gagal', res.message, 'error');
                     }
                 }
             });
@@ -642,21 +691,33 @@
 
         // Aksi Delete
         function deleteBooking(id) {
-            if(confirm('Data akan dihapus permanen. Apakah Anda yakin?')) {
-                $.ajax({
-                    url: '<?= base_url('kelolabooking/delete/') ?>' + id,
-                    type: 'POST',
-                    success: function(response) {
-                        const res = JSON.parse(response);
-                        if(res.status === 'success') {
-                            window.location.reload();
-                        } else {
-                            alert(res.message);
+            Swal.fire({
+                title: 'Hapus Peminjaman',
+                text: 'Data akan dihapus permanen. Apakah Anda yakin?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if(result.isConfirmed) {
+                    $.ajax({
+                        url: '<?= base_url('kelolabooking/delete/') ?>' + id,
+                        type: 'POST',
+                        success: function(response) {
+                            const res = JSON.parse(response);
+                            if(res.status === 'success') {
+                                window.location.reload();
+                            } else {
+                                Swal.fire('Gagal', res.message, 'error');
+                            }
                         }
-                    }
-                });
-            }
+                    });
+                }
+            });
         }
+
     </script>
 </body>
 </html>

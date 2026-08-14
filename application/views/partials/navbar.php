@@ -264,16 +264,20 @@
 
 <script>
     function scrollToDashboard(e) {
-        const container = document.querySelector('.dashboard-container');
-        if (container) {
-            e.preventDefault();
-            container.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-            if (typeof window.goToSlide === 'function') {
-                window.goToSlide(0);
+        if (e) e.preventDefault();
+        if (window.lenis) {
+            window.lenis.scrollTo(0, { duration: 1.2 });
+        } else {
+            const container = document.querySelector('.dashboard-container');
+            if (container) {
+                container.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
             }
+        }
+        if (typeof window.goToSlide === 'function') {
+            window.goToSlide(0);
         }
     }
 </script>

@@ -550,6 +550,11 @@
         transform: translateY(-2px);
     }
 
+    /* SweetAlert2 Popup z-index Fix (Harus di atas is-fullscreen z-index 9999 dan modal-overlay z-index 10000) */
+    .swal2-container {
+        z-index: 99999 !important;
+    }
+
     .modal-overlay {
         display: none;
         position: fixed;
