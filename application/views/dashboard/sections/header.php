@@ -539,16 +539,19 @@
             const dashboardContainer = document.querySelector('.dashboard-container');
             if (modelContainer) {
                 const currentScrollTop = dashboardContainer ? dashboardContainer.scrollTop : 0;
-                const isSection1 = currentScrollTop < (window.innerHeight || 800) * 0.45;
-                if (isSection1) {
+                const vh = window.innerHeight || 800;
+                if (currentScrollTop < vh * 0.45) {
                     if (index === 0) {
                         modelContainer.style.opacity = '1';
                     } else {
                         modelContainer.style.opacity = '0';
                     }
-                } else {
-                    // Pastikan saat user di Informasi Ruangan, Lab, atau Berita, logo selalu tampil
+                } else if (currentScrollTop <= vh * 1.4) {
+                    // Sesi 2 (Informasi Ruangan): Logo 3D tampil
                     modelContainer.style.opacity = '1';
+                } else {
+                    // Sesi di bawah Informasi Ruangan (Lab, Berita, dll): Logo 3D disembunyikan
+                    modelContainer.style.opacity = '0';
                 }
                 modelContainer.style.pointerEvents = 'none';
             }

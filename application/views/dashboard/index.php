@@ -422,7 +422,7 @@
                 if (vh <= 750) topPos1 = 38;
                 else if (vh <= 950) topPos1 = 42;
 
-                // Transisi Mulus Sesi 1 (Header) -> Sesi 2 (Info Ruangan)
+                // 1. Transisi Mulus Sesi 1 (Header) -> Sesi 2 (Info Ruangan)
                 if (scrollTop <= vh) {
                     const p = Math.max(0, Math.min(1, scrollTop / vh)); // 0.0 -> 1.0
                     // Smoothstep easing: 3p^2 - 2p^3
@@ -433,6 +433,7 @@
                     const currentScale = 1.0 + (0.9 - 1.0) * ease;
                     const currentRotY = 360 * ease;
 
+                    modelContainer.style.opacity = '1';
                     modelContainer.style.left = `${currentLeft}%`;
                     modelContainer.style.top = `${currentTop}%`;
                     modelContainer.style.transform = `translate(-50%, -50%) scale(${currentScale}) rotateY(${currentRotY}deg)`;
@@ -474,7 +475,7 @@
                     modelContainer.style.transform = `translate(-50%, -50%) scale(${currentScale}) rotateY(${currentRotY}deg)`;
                     modelContainer.style.zIndex = p > 0.6 ? '110' : '8';
                     if (modelOuter) modelOuter.style.opacity = '0';
-                    if (modelInner) modelInner.style.opacity = '1';
+                    if (modelInner) modelInner.style.opacity = '0';
                     document.body.classList.remove('play-animations');
                 } 
                 // Sesi 3 (Lab) dan seterusnya -> Tetap di Navbar
