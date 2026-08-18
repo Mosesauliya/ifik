@@ -101,3 +101,4 @@ ifik/
 ## 📝 Lisensi
 
 Projek ini dikembangkan khusus untuk lingkungan internal **Fakultas Industri Kreatif (IFIK)**.
+Stack.byAlif
