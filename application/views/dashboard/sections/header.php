@@ -70,18 +70,19 @@
     /* Carousel Indicators (Dots) */
     .carousel-indicators {
         position: absolute;
-        bottom: 60px;
+        bottom: 50px;
         left: 50%;
         transform: translateX(-50%);
         width: 50vw; /* Menutupi 50% layar secara horizontal */
         display: flex;
+        align-items: flex-end; /* Presisi sejajar di baseline yang sama */
         justify-content: space-between;
         gap: 20px;
-        z-index: 20;
+        z-index: 30;
     }
     
     .carousel-indicators .dot {
-        flex: 1; /* Meregang memenuhi width 50vw */
+        flex: 1;
         display: flex;
         flex-direction: column;
         gap: 8px;
@@ -96,11 +97,14 @@
     }
 
     .carousel-indicators .dot .dot-label {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         font-weight: 800;
         text-transform: uppercase;
         color: #fff;
         letter-spacing: 1.5px;
+        height: 18px;
+        display: flex;
+        align-items: center;
     }
     
     .carousel-indicators .dot .dot-track {
@@ -118,11 +122,247 @@
         background: #fff;
         width: 0%;
         border-radius: 4px;
-        box-shadow: 0 0 8px #fff, 0 0 15px rgba(255,255,255,0.8); /* Tambahan Glow */
+        box-shadow: 0 0 8px #fff, 0 0 15px rgba(255,255,255,0.8);
     }
     
     .carousel-indicators .dot.active .progress {
         /* Animasi ditangani oleh JS agar dinamis berdasarkan video/gambar */
+    }
+
+    /* --- FASILITAS SEGMENTED SEEKBAR & CONTROLS GROUP --- */
+    .dot-fasilitas {
+        position: relative;
+    }
+
+    .dot-label-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        height: 18px;
+    }
+
+    .fasilitas-controls-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* Tombol Tambah Ruangan Khusus Admin */
+    .lab-add-room-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        height: 18px;
+        padding: 0 7px;
+        border-radius: 12px;
+        background: #ea580c;
+        border: none;
+        color: #ffffff;
+        font-size: 0.65rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 6px rgba(234, 88, 12, 0.5);
+    }
+
+    .lab-add-room-btn:hover {
+        background: #ffffff;
+        color: #ea580c;
+        transform: scale(1.1);
+        box-shadow: 0 4px 10px rgba(255, 255, 255, 0.6);
+    }
+
+    .lab-add-room-btn svg {
+        width: 10px;
+        height: 10px;
+        fill: currentColor;
+    }
+
+    .dot-track-segmented {
+        height: 4px;
+        width: 100%;
+        display: flex;
+        gap: 4px; /* Potongan segmen 6 ruangan */
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .dot-track-segmented .seg {
+        flex: 1;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 2px;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+    .dot-track-segmented .seg:hover {
+        background: rgba(255, 255, 255, 0.6);
+    }
+
+    .dot-track-segmented .seg .progress {
+        position: absolute;
+        top: 0; left: 0; height: 100%;
+        background: #ffffff;
+        width: 0%;
+        border-radius: 2px;
+        box-shadow: 0 0 8px #ffffff;
+    }
+
+    .dot-track-segmented .seg.completed .progress {
+        width: 100% !important;
+        animation: none !important;
+    }
+
+    /* Tombol Play/Pause Kecil di Pinggir Label Fasilitas */
+    .lab-play-pause-btn-side {
+        width: 18px;
+        height: 18px;
+        min-width: 18px;
+        border-radius: 50%;
+        background: #ea580c;
+        border: none;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 6px rgba(234, 88, 12, 0.5);
+    }
+
+    .lab-play-pause-btn-side:hover {
+        background: #ffffff;
+        color: #ea580c;
+        transform: scale(1.2);
+    }
+
+    .lab-play-pause-btn-side svg {
+        width: 9px;
+        height: 9px;
+        fill: currentColor;
+    }
+
+    /* --- MODAL TAMBAH RUANGAN KHUSUS ADMIN --- */
+    .lab-modal-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(9, 13, 22, 0.75);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        z-index: 999999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .lab-modal-overlay.active {
+        display: flex;
+    }
+
+    .lab-modal-card {
+        width: 90%;
+        max-width: 480px;
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        overflow: hidden;
+    }
+
+    .lab-modal-header {
+        padding: 18px 24px;
+        background: #0f172a;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .lab-modal-header h3 {
+        font-size: 1.05rem;
+        font-weight: 800;
+        margin: 0;
+    }
+
+    .lab-modal-close {
+        background: none; border: none;
+        color: #94a3b8; font-size: 1.5rem;
+        cursor: pointer; transition: color 0.2s;
+    }
+
+    .lab-modal-close:hover { color: #ffffff; }
+
+    .lab-modal-body {
+        padding: 20px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .lab-form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .lab-form-group label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #334155;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .lab-input {
+        width: 100%;
+        height: 38px;
+        padding: 0 12px;
+        border-radius: 8px;
+        border: 1.5px solid #cbd5e1;
+        font-size: 0.85rem;
+        color: #0f172a;
+        transition: border-color 0.2s;
+    }
+
+    .lab-input:focus {
+        outline: none;
+        border-color: #ea580c;
+    }
+
+    .lab-modal-footer {
+        padding: 14px 24px 18px 24px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .btn-cancel {
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 1.5px solid #cbd5e1;
+        background: #ffffff;
+        color: #64748b;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .btn-save {
+        padding: 8px 20px;
+        border-radius: 8px;
+        border: none;
+        background: #ea580c;
+        color: #ffffff;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4);
     }
     
     /* --- SLIDE 1 NEW LAYOUT --- */
@@ -413,34 +653,42 @@
 <!-- Sesi 1: Carousel -->
 <div class="section-wrapper" id="section-carousel">
 
-    <!-- Fixed Overlay untuk Text dan Image agar tetap ada di semua slide carousel -->
-    <div class="slide1-layout">
-        <div class="slide1-text-container">
-            <div class="slide1-title-box">
-                <h1>Fakultas Industri Kreatif</h1>
-            </div>
-            <div class="slide1-content-box">
-                Seiring dengan berkembangnya kebutuhan pelayanan untuk mahasiswa, dosen dan pegawai FIK maka diperlukan peningkatan layanan yang mengusung efisiensi dan efektifitas. Ifik lahir dari keresahan dan kesulitan mahasiswa maupun dosen dalam beberapa layanan, antara lain pendaftaran TA, bimbingan online, dokumen online, peminjaman ruangan dan lain sebagainya. Sejak dibuat tahun 2021 oleh tim unit lab FIK, aplikasi berbasis web ini telah digunakan hingga saat ini untuk mempermudah layanan untuk kalangan internal FIK, baik untuk mahasiswa, dosen maupun pegawai FIK.
-            </div>
-        </div>
-    </div>
-    <img src="<?= base_url('assets/images/dekanat2.png') ?>" alt="Dekanat" class="dekanat-img-right">
-    
     <!-- Carousel Horizontal yang bisa digeser (Scroll Hijacking) -->
     <div class="carousel-container">
-        <!-- Slide 1 -->
+        <!-- Slide 1 (Overview - Fakultas Industri Kreatif) -->
         <div class="carousel-slide slide-1">
+            <div class="slide1-layout">
+                <div class="slide1-text-container">
+                    <div class="slide1-title-box">
+                        <h1>Fakultas Industri Kreatif</h1>
+                    </div>
+                    <div class="slide1-content-box">
+                        Seiring dengan berkembangnya kebutuhan pelayanan untuk mahasiswa, dosen dan pegawai FIK maka diperlukan peningkatan layanan yang mengusung efisiensi dan efektifitas. Ifik lahir dari keresahan dan kesulitan mahasiswa maupun dosen dalam beberapa layanan, antara lain pendaftaran TA, bimbingan online, dokumen online, peminjaman ruangan dan lain sebagainya. Sejak dibuat tahun 2021 oleh tim unit lab FIK, aplikasi berbasis web ini telah digunakan hingga saat ini untuk mempermudah layanan untuk kalangan internal FIK, baik untuk mahasiswa, dosen maupun pegawai FIK.
+                    </div>
+                </div>
+            </div>
+            <img src="<?= base_url('assets/images/dekanat2.png') ?>" alt="Dekanat" class="dekanat-img-right">
         </div>
         
-        <!-- Slide 2 (Background Video) -->
-        <div class="carousel-slide slide-2">
-            <video id="slide2-video" autoplay muted playsinline class="background-video">
-                <source src="<?= base_url('assets/vids/vidtelkom.mp4') ?>" type="video/mp4">
-            </video>
+        <!-- Slide 2 (Fasilitas: Laboratorium Fakultas) -->
+        <div class="carousel-slide slide-2" style="position: relative; width: 100vw; height: 100%;">
+            <?php $this->load->view('dashboard/sections/lab'); ?>
         </div>
         
-        <!-- Slide 3 (Hanya Background) -->
-        <div class="carousel-slide"></div>
+        <!-- Slide 3 (Prestasi & Inovasi) -->
+        <div class="carousel-slide slide-3">
+            <div class="slide1-layout">
+                <div class="slide1-text-container">
+                    <div class="slide1-title-box">
+                        <h1>Prestasi &amp; Inovasi FIK</h1>
+                    </div>
+                    <div class="slide1-content-box">
+                        Fakultas Industri Kreatif secara konsisten mengukir berbagai prestasi baik di tingkat nasional maupun internasional. Melalui fasilitas laboratorium yang canggih dan bimbingan dosen berpengalaman, mahasiswa FIK terus melahirkan karya-karya inovatif di bidang desain, seni, media interaktif, dan teknologi kreatif.
+                    </div>
+                </div>
+            </div>
+            <img src="<?= base_url('assets/images/dekanat2.png') ?>" alt="Dekanat" class="dekanat-img-right">
+        </div>
     </div>
     
     <!-- Indikator Dots dengan Label (Lebar 50%) -->
@@ -449,10 +697,82 @@
             <span class="dot-label">Overview</span>
             <div class="dot-track"><div class="progress"></div></div>
         </div>
-        <div class="dot" data-index="1">
-            <span class="dot-label">Fasilitas</span>
-            <div class="dot-track"><div class="progress"></div></div>
+
+        <!-- Dot 1: Fasilitas (Track Dipotong-potong Menjadi 6 Segmen Ruangan) -->
+        <div class="dot dot-fasilitas" data-index="1">
+            <div class="dot-label-row">
+                <span class="dot-label">Fasilitas</span>
+                <div class="fasilitas-controls-group">
+                    <?php if ($this->session->userdata('role_id') == 1): ?>
+                        <!-- Tombol Tambah Ruangan Khusus Admin System (Navigasi ke Halaman Khusus /kelolaruangan) -->
+                        <a href="<?= base_url('kelolaruangan') ?>" class="lab-add-room-btn" title="Halaman Kelola &amp; Tambah Ruangan Admin">
+                            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                            <span>Ruangan</span>
+                        </a>
+                    <?php endif; ?>
+
+                    <!-- Tombol Play / Pause Kecil di Pinggir Seekbar Fasilitas -->
+                    <button class="lab-play-pause-btn-side" id="labAutoPlayBtn" title="Auto Play / Pause">
+                        <svg id="playPauseIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="dot-track-segmented" id="labIndicators">
+                <?php 
+                    $ruangan_with_3d = [];
+                    $seen_keys = [];
+                    if (!empty($ruangan)) {
+                        foreach ($ruangan as $r) {
+                            $n = strtolower(trim(isset($r->nama_ruangan) ? $r->nama_ruangan : ''));
+                            $c = strtolower(trim(isset($r->kode_ruangan) ? $r->kode_ruangan : ''));
+                            if (!empty($r->model_3d) && $n !== 'ss' && $c !== 'ss' && strpos($n, 'test') === false && strpos($n, 'qqq') === false) {
+                                if (strpos($n, 'multimedia') !== false) $lab_code = 'multimedia';
+                                elseif (strpos($n, 'aula') !== false) $lab_code = 'aula';
+                                elseif (strpos($n, 'cintiq') !== false || strpos($n, 'tablet') !== false || strpos($n, 'sablon') !== false) $lab_code = 'cintiq';
+                                elseif (strpos($n, 'green') !== false) $lab_code = 'greenscreen';
+                                elseif (strpos($n, 'inkubator') !== false || strpos($n, 'incubator') !== false) $lab_code = 'incubator';
+                                elseif (strpos($n, 'mac') !== false || strpos($n, '3d printing') !== false) $lab_code = 'mac';
+                                else $lab_code = preg_replace('/[^a-z0-9]/', '', $c);
+
+                                if (!empty($lab_code) && !in_array($lab_code, $seen_keys)) {
+                                    $seen_keys[] = $lab_code;
+                                    $r->mapped_key = $lab_code;
+                                    $ruangan_with_3d[] = $r;
+                                }
+                            }
+                        }
+                    }
+
+                    // Urutkan persis sesuai urutan sekuensial slide: multimedia -> aula -> cintiq -> greenscreen -> incubator -> mac
+                    $order_keys = ['multimedia', 'aula', 'cintiq', 'greenscreen', 'incubator', 'mac'];
+                    usort($ruangan_with_3d, function($a, $b) use ($order_keys) {
+                        $posA = array_search($a->mapped_key, $order_keys);
+                        $posB = array_search($b->mapped_key, $order_keys);
+                        if ($posA === false) $posA = 999;
+                        if ($posB === false) $posB = 999;
+                        return $posA - $posB;
+                    });
+                ?>
+                <?php if (!empty($ruangan_with_3d)): ?>
+                    <?php foreach ($ruangan_with_3d as $idx => $r): ?>
+                        <div class="seg <?= $idx === 0 ? 'active' : '' ?>" 
+                             data-lab="<?= htmlspecialchars($r->mapped_key) ?>" 
+                             data-id="<?= $r->id ?>"
+                             title="<?= htmlspecialchars($r->nama_ruangan) ?>">
+                            <div class="progress"></div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="seg active" data-lab="multimedia" title="Lab Multimedia &amp; Game"><div class="progress"></div></div>
+                    <div class="seg" data-lab="aula" title="Aula Utama"><div class="progress"></div></div>
+                    <div class="seg" data-lab="cintiq" title="Lab Cintiq"><div class="progress"></div></div>
+                    <div class="seg" data-lab="greenscreen" title="Lab Green Screen"><div class="progress"></div></div>
+                    <div class="seg" data-lab="incubator" title="Lab Inkubator"><div class="progress"></div></div>
+                    <div class="seg" data-lab="mac" title="Lab Mac Workstation"><div class="progress"></div></div>
+                <?php endif; ?>
+            </div>
         </div>
+
         <div class="dot" data-index="2">
             <span class="dot-label">Prestasi</span>
             <div class="dot-track"><div class="progress"></div></div>
@@ -461,6 +781,8 @@
 
     <div class="scroll-hint" onclick="if(window.lenis){window.lenis.scrollTo('#section-about', {duration:1.2});}else{document.getElementById('section-about')?.scrollIntoView({behavior:'smooth'});}" style="cursor: pointer;" title="Scroll ke Informasi Ruangan">Scroll ↓</div>
 </div>
+
+
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -491,155 +813,140 @@
         // Ekspos fungsi ke window agar bisa dipanggil dari tombol navbar
         window.goToSlide = goToSlide;
 
-        // Pastikan animasi terupdate saat durasi video sudah diketahui
-        const videoSlide2 = document.getElementById('slide2-video');
-        if (videoSlide2) {
-            videoSlide2.addEventListener('loadedmetadata', () => {
-                if (currentIndex === 1) {
-                    const activeProg = dots[1].querySelector('.progress');
-                    if (activeProg) {
-                        activeProg.style.animation = 'none';
-                        activeProg.offsetHeight;
-                        activeProg.style.animation = `slideProgress ${videoSlide2.duration}s linear forwards`;
-                    }
-                }
-            });
-        }
+        let activeProgEndListener = null;
 
-        // Fungsi memperbarui titik (dot) aktif dan visibility logo 3D
+        // Fungsi memperbarui titik (dot) aktif, seekbar sekuensial, dan 3D logo
         const updateDots = (index) => {
-            dots.forEach(dot => {
+            currentIndex = index;
+
+            // Reset status active pada semua dot
+            dots.forEach((dot, i) => {
                 dot.classList.remove('active');
                 
-                // Force animation restart for progress bar
-                const prog = dot.querySelector('.progress');
+                // Track tunggal (Overview & Prestasi)
+                const prog = dot.querySelector('.dot-track > .progress');
                 if (prog) {
                     prog.style.animation = 'none';
-                    prog.offsetHeight; // trigger reflow
-                    prog.style.width = '0%'; // reset width
+                    prog.offsetHeight; // Force reflow
+                    if (i < index) {
+                        prog.style.width = '100%';
+                    } else {
+                        prog.style.width = '0%';
+                    }
                 }
             });
-            if(dots[index]) {
+
+            if (dots[index]) {
                 dots[index].classList.add('active');
-                const activeProg = dots[index].querySelector('.progress');
-                if (activeProg) {
-                    let duration = 4; // default 4 detik
-                    if (index === 1) { // slide video
-                        const videoEl = document.getElementById('slide2-video');
-                        if (videoEl && videoEl.duration && !isNaN(videoEl.duration)) {
-                            duration = videoEl.duration;
-                        }
-                    }
-                    activeProg.style.animation = `slideProgress ${duration}s linear forwards`;
-                }
             }
 
-            // 3D Logo logic: Hanya disembunyikan jika berada di Sesi 1 (Header) dan bukan slide 1
+            // 3D Logo logic: Tampil di Slide 0 (Overview) dan Slide 2 (Prestasi), sembunyikan di Slide 1 (Fasilitas)
             const modelContainer = document.getElementById('global-model-container');
             const dashboardContainer = document.querySelector('.dashboard-container');
             if (modelContainer) {
                 const currentScrollTop = dashboardContainer ? dashboardContainer.scrollTop : 0;
                 const vh = window.innerHeight || 800;
                 if (currentScrollTop < vh * 0.45) {
-                    if (index === 0) {
-                        modelContainer.style.opacity = '1';
-                    } else {
-                        modelContainer.style.opacity = '0';
-                    }
-                } else if (currentScrollTop <= vh * 1.4) {
-                    // Sesi 2 (Informasi Ruangan): Logo 3D tampil
-                    modelContainer.style.opacity = '1';
-                } else {
-                    // Sesi di bawah Informasi Ruangan (Lab, Berita, dll): Logo 3D disembunyikan
-                    modelContainer.style.opacity = '0';
+                    modelContainer.style.opacity = (index === 0 || index === 2) ? '1' : '0';
                 }
                 modelContainer.style.pointerEvents = 'none';
             }
 
-            // Video Slide 2 Logic
-            const videoSlide2 = document.getElementById('slide2-video');
-            if (videoSlide2) {
-                if (index === 1) {
-                    videoSlide2.currentTime = 0;
-                    videoSlide2.play();
-                    clearInterval(autoScrollTimer); // Berhenti auto-scroll selama video main
-                } else {
-                    videoSlide2.pause();
+            // Manajemen Seekbar Sekuensial Berdasarkan Index Slide Aktif
+            if (index === 0) { // --- SLIDE 0: OVERVIEW ---
+                // Reset Fasilitas segmen ke 0%
+                const segs = document.querySelectorAll('#labIndicators .seg');
+                segs.forEach(seg => {
+                    seg.classList.remove('completed', 'active');
+                    const p = seg.querySelector('.progress');
+                    if (p) { p.style.animation = 'none'; p.style.width = '0%'; }
+                });
+
+                if (typeof pauseAutoPlay === 'function') pauseAutoPlay();
+
+                // Jalankan animasi seekbar Overview 0% -> 100% (6.5 Detik)
+                const overviewProg = dots[0].querySelector('.dot-track > .progress');
+                if (overviewProg) {
+                    if (activeProgEndListener) {
+                        overviewProg.removeEventListener('animationend', activeProgEndListener);
+                    }
+                    void overviewProg.offsetWidth;
+                    overviewProg.style.animation = 'slideProgress 6.5s linear forwards';
+                    overviewProg.style.animationPlayState = 'running';
+                    
+                    activeProgEndListener = () => {
+                        overviewProg.removeEventListener('animationend', activeProgEndListener);
+                        activeProgEndListener = null;
+                        if (currentIndex === 0) {
+                            goToSlide(1); // Lanjut ke FASILITAS HANYA setelah Overview Selesai!
+                        }
+                    };
+                    overviewProg.addEventListener('animationend', activeProgEndListener);
+                }
+
+            } else if (index === 1) { // --- SLIDE 1: FASILITAS ---
+                // Overview ditandai SELESAI (100% Penuh)
+                const overviewProg = dots[0].querySelector('.dot-track > .progress');
+                if (overviewProg) {
+                    overviewProg.style.animation = 'none';
+                    overviewProg.style.width = '100%';
+                }
+
+                // Prestasi di-reset ke 0%
+                const prestasiProg = dots[2].querySelector('.dot-track > .progress');
+                if (prestasiProg) {
+                    prestasiProg.style.animation = 'none';
+                    prestasiProg.style.width = '0%';
+                }
+
+                // Mulai jalankan urutan 6 ruangan Laboratorium dari room 0
+                if (typeof window.startLabSequence === 'function') {
+                    window.startLabSequence();
+                } else if (typeof startAutoPlay === 'function') {
+                    startAutoPlay();
+                }
+
+            } else if (index === 2) { // --- SLIDE 2: PRESTASI ---
+                // Overview dan seluruh 6 segmen Fasilitas ditandai SELESAI (100% Penuh)
+                const overviewProg = dots[0].querySelector('.dot-track > .progress');
+                if (overviewProg) {
+                    overviewProg.style.animation = 'none';
+                    overviewProg.style.width = '100%';
+                }
+
+                const segs = document.querySelectorAll('#labIndicators .seg');
+                segs.forEach(seg => {
+                    seg.classList.add('completed');
+                    const p = seg.querySelector('.progress');
+                    if (p) { p.style.animation = 'none'; p.style.width = '100%'; }
+                });
+
+                if (typeof pauseAutoPlay === 'function') pauseAutoPlay();
+
+                // Jalankan animasi seekbar Prestasi 0% -> 100% (6.5 Detik)
+                const prestasiProg = dots[2].querySelector('.dot-track > .progress');
+                if (prestasiProg) {
+                    if (activeProgEndListener) {
+                        prestasiProg.removeEventListener('animationend', activeProgEndListener);
+                    }
+                    void prestasiProg.offsetWidth;
+                    prestasiProg.style.animation = 'slideProgress 6.5s linear forwards';
+                    prestasiProg.style.animationPlayState = 'running';
+                    
+                    activeProgEndListener = () => {
+                        prestasiProg.removeEventListener('animationend', activeProgEndListener);
+                        activeProgEndListener = null;
+                        if (currentIndex === 2) {
+                            goToSlide(0); // Kembali loop ke Overview HANYA setelah Prestasi Selesai!
+                        }
+                    };
+                    prestasiProg.addEventListener('animationend', activeProgEndListener);
                 }
             }
         };
 
-        // --- MOUSE TRACKING PARALLAX (TERISOLASI) ---
-        const pCard = document.querySelector('.parallax-card');
-        const pImg = document.querySelector('.parallax-img');
-        
-        if (pCard) {
-            pCard.addEventListener('mousemove', (e) => {
-                const rect = pCard.getBoundingClientRect();
-                // Hitung posisi kursor relatif terhadap TENGAH CARD
-                const xAxis = ((rect.left + rect.width / 2) - e.clientX) / -18;
-                const yAxis = ((rect.top + rect.height / 2) - e.clientY) / 18;
-                pCard.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
-            });
-
-            pCard.addEventListener('mouseleave', () => {
-                pCard.style.transform = `rotateY(0deg) rotateX(0deg)`;
-            });
-        }
-
-        if (pImg) {
-            pImg.addEventListener('mousemove', (e) => {
-                const rect = pImg.getBoundingClientRect();
-                // Hitung posisi kursor relatif terhadap TENGAH GAMBAR
-                const xAxis = ((rect.left + rect.width / 2) - e.clientX) / 25;
-                const yAxis = ((rect.top + rect.height / 2) - e.clientY) / 25;
-                // Gambar bergeser kebalikan dari arah kursor
-                pImg.style.transform = `translateX(${xAxis}px) translateY(${yAxis}px)`;
-            });
-
-            pImg.addEventListener('mouseleave', () => {
-                pImg.style.transform = `translateX(0px) translateY(0px)`;
-            });
-        }
-        // ----------------------------------------
-
-        const startAutoScroll = () => {
-            clearInterval(autoScrollTimer); // Pastikan tidak ada duplikat interval
-            
-            // Jika berada di slide 2, tunggu video selesai (diatur via event ended)
-            if (currentIndex === 1) {
-                return;
-            }
-
-            autoScrollTimer = setInterval(() => {
-                currentIndex += direction;
-                
-                // Logika memantul (0 -> 1 -> 2 -> 1 -> 0)
-                if (currentIndex >= slides.length - 1) {
-                    currentIndex = slides.length - 1;
-                    direction = -1; // Balik arah ke kiri
-                } else if (currentIndex <= 0) {
-                    currentIndex = 0;
-                    direction = 1;  // Balik arah ke kanan
-                }
-                
-                goToSlide(currentIndex);
-            }, 4000); // 4 detik tiap slide
-        };
-
-        const videoEl = document.getElementById('slide2-video');
-        if (videoEl) {
-            videoEl.addEventListener('ended', () => {
-                if (currentIndex === 1) {
-                    currentIndex = 2;
-                    direction = 1;
-                    goToSlide(currentIndex);
-                    startAutoScroll();
-                }
-            });
-        }
-
-        startAutoScroll();
+        // Inisialisasi awal pada Slide 0 (Overview)
+        goToSlide(0);
 
         const dashboardContainer = document.querySelector('.dashboard-container');
         let isForcedScrolling = false;

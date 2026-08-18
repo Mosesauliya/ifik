@@ -191,7 +191,65 @@ $labs_data = [
     ]
 ];
 
-$active_key = isset($labs_data[$lab_key]) ? $lab_key : 'multimedia';
+$active_key = isset($labs_data[$lab_key]) ? $lab_key : null;
+
+// If not found in hardcoded array, look up from DB
+if (!$active_key && !empty($all_ruangan)) {
+    foreach ($all_ruangan as $r) {
+        $n = strtolower(trim($r->nama_ruangan));
+        $c = strtolower(trim($r->kode_ruangan));
+
+        // Map to key the same way as lab.php / header.php
+        if (strpos($n, 'multimedia') !== false) $rkey = 'multimedia';
+        elseif (strpos($n, 'aula') !== false) $rkey = 'aula';
+        elseif (strpos($n, 'cintiq') !== false || strpos($n, 'tablet') !== false || strpos($n, 'sablon') !== false) $rkey = 'cintiq';
+        elseif (strpos($n, 'green') !== false) $rkey = 'greenscreen';
+        elseif (strpos($n, 'inkubator') !== false || strpos($n, 'incubator') !== false) $rkey = 'incubator';
+        elseif (strpos($n, 'mac') !== false || strpos($n, '3d printing') !== false) $rkey = 'mac';
+        else $rkey = preg_replace('/[^a-z0-9]/', '', $c);
+
+        if ($rkey === $lab_key && !empty($r->model_3d)) {
+            $active_key = $lab_key;
+            $img_url = !empty($r->foto) ? (strpos($r->foto, 'http') === 0 ? $r->foto : base_url($r->foto)) : '';
+            $model_url = !empty($r->model_3d) ? (strpos($r->model_3d, 'http') === 0 ? $r->model_3d : base_url($r->model_3d)) : '';
+
+            $labs_data[$lab_key] = [
+                'title'        => $r->nama_ruangan,
+                'subtitle'     => !empty($r->tagline) ? $r->tagline : 'Fasilitas Ruangan Fakultas Industri Kreatif',
+                'badge'        => 'Laboratorium FIK',
+                'status'       => $r->status ?? 'Tersedia',
+                'status_class' => 'status-open',
+                'model'        => $model_url,
+                'orbit'        => '45deg 75deg 85%',
+                'fov'          => '22deg',
+                'bg_gradient'  => 'radial-gradient(circle at 50% 60%, rgba(234, 88, 12, 0.18) 0%, rgba(255, 251, 245, 0.97) 100%)',
+                'border_color' => 'rgba(234, 88, 12, 0.3)',
+                'glow_color'   => 'rgba(234, 88, 12, 0.4)',
+                'photo'        => $img_url,
+                'photo_fallback' => 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1000&auto=format&fit=crop',
+                'location'     => !empty($r->lokasi) ? $r->lokasi : 'Gedung Fakultas Industri Kreatif',
+                'capacity'     => !empty($r->jumlah_unit) ? $r->jumlah_unit : '-',
+                'hours'        => !empty($r->jam_operasional) ? $r->jam_operasional : 'Senin - Jumat | 08:00 - 17:00 WIB',
+                'desc'         => !empty($r->deskripsi) ? $r->deskripsi : '-',
+                'specs'        => !empty($r->spesifikasi_fasilitas)
+                    ? array_map(function($s) {
+                        return ['icon' => '⚙️', 'title' => 'Spesifikasi', 'desc' => trim($s)];
+                      }, array_filter(explode("\n", $r->spesifikasi_fasilitas)))
+                    : [['icon' => '🏫', 'title' => 'Fasilitas', 'desc' => 'Informasi fasilitas tersedia di lokasi.']],
+                'rules'        => !empty($r->tata_tertib)
+                    ? array_filter(array_map('trim', explode("\n", $r->tata_tertib)))
+                    : ['Ikuti tata tertib yang berlaku di ruangan.'],
+            ];
+            break;
+        }
+    }
+}
+
+// Final fallback: jika masih tidak ditemukan, pakai multimedia
+if (!$active_key) {
+    $active_key = 'multimedia';
+}
+
 $lab = $labs_data[$active_key];
 ?>
 <!DOCTYPE html>
