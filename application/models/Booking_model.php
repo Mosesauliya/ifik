@@ -136,9 +136,10 @@ class Booking_model extends CI_Model {
 
     public function get_approved_bookings()
     {
-        $this->db->select('peminjaman.*, ruangan.nama_ruangan, ruangan.kode_ruangan');
+        $this->db->select('peminjaman.*, ruangan.nama_ruangan, ruangan.kode_ruangan, ruangan.id_kategori, kategori_ruangan.nama_kategori');
         $this->db->from('peminjaman');
         $this->db->join('ruangan', 'ruangan.id = peminjaman.id_ruangan', 'left');
+        $this->db->join('kategori_ruangan', 'kategori_ruangan.id = ruangan.id_kategori', 'left');
         // Tampilkan semua kecuali yang Ditolak dan Dibatalkan
         $this->db->where_not_in('peminjaman.status', ['Ditolak', 'Dibatalkan']);
         $this->db->order_by('peminjaman.tanggal_mulai', 'ASC');

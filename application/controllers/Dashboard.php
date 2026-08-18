@@ -30,6 +30,9 @@ class Dashboard extends CI_Controller {
         $this->load->helper('url');
         $this->load->model('Booking_model');
         $data['jadwal_peminjaman'] = $this->Booking_model->get_approved_bookings();
+        $data['kategori'] = $this->Booking_model->get_all_kategori();
+        $this->db->where('status', 'Tersedia');
+        $data['ruangan'] = $this->db->get('ruangan')->result();
         $this->load->view('dashboard/kalender', $data);
     }
 
