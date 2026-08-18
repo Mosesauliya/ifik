@@ -7,9 +7,11 @@
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- jQuery & SweetAlert2 -->
+    <!-- jQuery & SweetAlert2 & Flatpickr -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
     <!-- Info Ruangan & Calendar CSS -->
     <link rel="stylesheet" href="<?= base_url('assets/css/info_ruangan.css?v=' . filemtime(FCPATH . 'assets/css/info_ruangan.css')) ?>">
@@ -32,6 +34,8 @@
         }
 
         .gcal-page-header {
+            position: relative;
+            z-index: 1000;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -56,6 +60,7 @@
             background: #f8fafc;
             border: 1px solid #e2e8f0;
             transition: all 0.2s ease;
+            white-space: nowrap;
         }
         .btn-back-home:hover {
             color: var(--primary);
@@ -85,48 +90,323 @@
             box-shadow: 0 6px 18px rgba(234, 88, 12, 0.4);
         }
 
-        /* ===== SEARCH BAR & AUTOCOMPLETE STYLES ===== */
-        .calendar-search-wrap {
+        /* ===== UNIFIED PAIRED SEARCH PILL STYLES ===== */
+        .search-filter-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             position: relative;
-            width: 320px;
         }
 
-        #calendarSearchInput {
-            width: 100%;
-            padding: 9px 36px 9px 40px;
+        .unified-search-pill {
+            display: flex;
+            align-items: center;
             background: #f8fafc;
             border: 1.5px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 0.86rem;
-            font-weight: 600;
-            color: #0f172a;
-            outline: none;
+            border-radius: 14px;
+            padding: 3px 10px;
+            width: 450px;
             transition: all 0.2s ease;
+            position: relative;
+            overflow: visible !important;
         }
-        #calendarSearchInput:focus {
-            border-color: var(--primary) !important;
+        .unified-search-pill:focus-within, .unified-search-pill.active {
+            border-color: #ea580c !important;
             background: #ffffff !important;
             box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.12) !important;
         }
-        #calendarSearchInput::placeholder {
-            color: #94a3b8;
-            font-weight: 500;
+
+        /* ===== CUSTOM STYLED CATEGORY DROPDOWN ===== */
+        .custom-cat-dropdown {
+            position: relative;
+            display: inline-block;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+        .custom-cat-dropdown.open {
+            z-index: 100020 !important;
         }
 
-        #calendarAutocompleteDropdown {
+        .custom-cat-trigger {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: transparent;
+            border: none;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #1e293b;
+            cursor: pointer;
+            padding: 6px 4px;
+            outline: none;
+            white-space: nowrap;
+            transition: color 0.2s ease;
+        }
+        .custom-cat-trigger:hover {
+            color: #ea580c;
+        }
+        .custom-cat-trigger svg {
+            transition: transform 0.2s ease;
+        }
+        .custom-cat-dropdown.open .custom-cat-trigger svg {
+            transform: rotate(180deg);
+            stroke: #ea580c;
+        }
+
+        .custom-cat-menu {
             display: none;
             position: absolute;
-            top: calc(100% + 6px);
+            top: calc(100% + 8px);
+            left: 0;
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 16px;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+            min-width: 200px;
+            z-index: 100030 !important;
+            padding: 6px;
+            overflow: hidden;
+        }
+        .custom-cat-dropdown.open .custom-cat-menu {
+            display: block;
+            animation: fadeInDrop 0.15s ease-out;
+        }
+
+        @keyframes fadeInDrop {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .cat-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .cat-option:hover {
+            background: #fff7ed;
+            color: #ea580c;
+        }
+        .cat-option.active {
+            background: #ea580c;
+            color: #ffffff;
+        }
+
+        /* ===== CUSTOM STYLED STATUS SELECTOR DROPDOWN ===== */
+        .custom-status-dropdown {
+            position: relative;
+            z-index: 10;
+        }
+        .custom-status-dropdown.open {
+            z-index: 100020 !important;
+        }
+
+        .custom-status-trigger {
+            display: inline-flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            background: transparent;
+            border: none;
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: #1e293b;
+            cursor: pointer;
+            padding: 6px 10px;
+            outline: none;
+        }
+
+        .custom-status-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
             left: 0;
             right: 0;
             background: #ffffff;
             border: 1.5px solid #e2e8f0;
             border-radius: 16px;
-            box-shadow: 0 14px 35px rgba(0,0,0,0.12);
-            max-height: 340px;
-            overflow-y: auto;
-            z-index: 10000;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+            z-index: 100030 !important;
             padding: 6px;
+            min-width: 220px;
+        }
+        .custom-status-dropdown.open .custom-status-menu {
+            display: block;
+            animation: fadeInDrop 0.15s ease-out;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .status-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .status-option:hover {
+            background: #fff7ed;
+            color: #ea580c;
+        }
+        .status-option.active {
+            background: #fff7ed;
+            color: #ea580c;
+            border: 1px solid #ffedd5;
+        }
+
+        .unified-divider {
+            width: 1px;
+            height: 22px;
+            background: #cbd5e1;
+            margin: 0 6px;
+            flex-shrink: 0;
+        }
+
+        .unified-input-key {
+            width: 100%;
+            border: none !important;
+            background: transparent !important;
+            font-size: 0.84rem;
+            font-weight: 600;
+            color: #0f172a;
+            outline: none;
+            padding: 6px 6px 6px 28px;
+        }
+        .unified-input-key::placeholder {
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        /* SEPARATE STANDALONE + TAMBAH BUTTON BESIDE SEARCH PILL */
+        .btn-standalone-add {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: #fff7ed;
+            border: 1.5px solid #ffedd5;
+            color: #ea580c;
+            height: 42px;
+            padding: 0 14px;
+            border-radius: 12px;
+            font-size: 0.86rem;
+            font-weight: 800;
+            cursor: pointer !important;
+            pointer-events: auto !important;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .btn-standalone-add:hover, .btn-standalone-add.active {
+            background: #ea580c;
+            color: #ffffff;
+            border-color: #ea580c;
+            box-shadow: 0 4px 14px rgba(234, 88, 12, 0.3);
+        }
+        .badge-standalone-count {
+            background: #ea580c;
+            color: #ffffff;
+            font-size: 0.76rem;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 99px;
+            transition: all 0.2s ease;
+        }
+        .btn-standalone-add:hover .badge-standalone-count, .btn-standalone-add.active .badge-standalone-count {
+            background: #ffffff;
+            color: #ea580c;
+        }
+
+        /* DEDICATED AUTOCOMPLETE DROPDOWN (PURE SUGGESTIONS ONLY) */
+        #mainAutocompleteList {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            width: 450px;
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 18px;
+            box-shadow: 0 16px 45px rgba(0,0,0,0.18);
+            max-height: 360px;
+            overflow-y: auto;
+            z-index: 100050 !important;
+            padding: 6px;
+        }
+
+        /* EXTRA FILTER ROWS CARD (CONTAINS ROW 2,3,4) */
+        #extraRowsCard {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 18px;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.14);
+            z-index: 100000;
+            padding: 14px;
+            overflow: visible !important;
+        }
+
+        #additionalFilterRowsContainer {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 10px;
+            overflow: visible !important;
+        }
+
+        .extra-filter-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            z-index: 10;
+            overflow: visible !important;
+        }
+        .extra-filter-row.dropdown-active {
+            z-index: 100010 !important;
+        }
+
+        .btn-remove-extra-row {
+            background: #fef2f2;
+            color: #ef4444;
+            border: 1.5px solid #fca5a5;
+            border-radius: 10px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.1rem;
+            line-height: 1;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+        .btn-remove-extra-row:hover {
+            background: #ef4444;
+            color: #ffffff;
+            border-color: #ef4444;
         }
 
         .search-autocomplete-item {
@@ -151,6 +431,28 @@
             padding: 0 2px;
         }
 
+        /* FLATPICKR BEAUTIFUL CUSTOM CALENDAR STYLING */
+        .flatpickr-calendar {
+            border-radius: 18px !important;
+            box-shadow: 0 18px 45px rgba(0,0,0,0.16) !important;
+            border: 1.5px solid #e2e8f0 !important;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            z-index: 100060 !important;
+            padding: 8px !important;
+        }
+        .flatpickr-day.selected, .flatpickr-day.selected:hover {
+            background: #ea580c !important;
+            border-color: #ea580c !important;
+            font-weight: 700 !important;
+        }
+        .flatpickr-day:hover {
+            background: #fff7ed !important;
+        }
+        .flatpickr-months .flatpickr-month {
+            color: #0f172a !important;
+            font-weight: 800 !important;
+        }
+
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -159,7 +461,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 99999;
+            z-index: 999999;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.2s ease;
@@ -185,20 +487,22 @@
         }
         .modal-close:hover { color: #1e293b; }
 
-        .swal2-container { z-index: 999999 !important; }
+        .swal2-container { z-index: 9999999 !important; }
 
-        @media (max-width: 900px) {
-            .calendar-search-wrap { width: 200px; }
+        @media (max-width: 1024px) {
+            .unified-search-pill { width: 340px; }
+            #mainAutocompleteList { width: 340px; }
         }
         @media (max-width: 640px) {
             .gcal-page-header { flex-wrap: wrap; height: auto; padding: 12px 16px; }
-            .calendar-search-wrap { width: 100%; order: 3; }
+            .search-filter-container { width: 100%; }
+            .unified-search-pill { width: 100%; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Header Kalender Full Page -->
+    <!-- Header Kalender Full Page (Single Row Height 70px) -->
     <div class="gcal-page-header">
         <div class="gcal-header-left" style="display: flex; align-items: center; gap: 16px;">
             <button class="gcal-btn-today" onclick="goToToday()">Today</button>
@@ -209,19 +513,106 @@
             <h2 class="gcal-month-title" id="gcalMonthTitle" style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0;">-</h2>
         </div>
 
-        <!-- SEARCH BAR WITH AUTOCOMPLETE -->
-        <div class="calendar-search-wrap">
-            <div style="position: relative; display: flex; align-items: center;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5" style="position: absolute; left: 14px; pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input type="text" id="calendarSearchInput" placeholder="Cari ruangan, peminjam, atau kode..." 
-                       oninput="handleCalendarSearchInput(this.value)"
-                       onfocus="handleCalendarSearchInput(this.value)"
-                       autocomplete="off">
-                <button id="clearSearchBtn" onclick="clearCalendarSearch()" style="display: none; position: absolute; right: 10px; background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 1.1rem; line-height: 1; padding: 2px;">&times;</button>
+        <!-- UNIFIED SEARCH PILL & SEPARATE STANDALONE + BUTTON IN HEADER -->
+        <div class="search-filter-container">
+            
+            <!-- Main Row 1 Pill (Kategori + Key Text Search / Custom Status Select) -->
+            <div class="unified-search-pill" id="unifiedSearchPill">
+                
+                <!-- CUSTOM STYLED CATEGORY DROPDOWN -->
+                <div class="custom-cat-dropdown" id="mainCatWrap">
+                    <button type="button" class="custom-cat-trigger" onclick="toggleCatDropdown('main', event)">
+                        <span id="mainCatLabel">Key / Kata Kunci</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+
+                    <input type="hidden" id="mainCategorySelect" class="extra-cat-select" value="keyword">
+
+                    <div class="custom-cat-menu" id="mainCatMenu">
+                        <div class="cat-option active" data-val="keyword" onclick="selectCatOption('main', 'keyword', 'Key / Kata Kunci', '🔑')">
+                            <span>🔑</span> Key / Kata Kunci
+                        </div>
+                        <div class="cat-option" data-val="kategori" onclick="selectCatOption('main', 'kategori', 'Kategori Ruangan', '📁')">
+                            <span>📁</span> Kategori Ruangan
+                        </div>
+                        <div class="cat-option" data-val="ruangan" onclick="selectCatOption('main', 'ruangan', 'Pilih Ruangan', '🏢')">
+                            <span>🏢</span> Pilih Ruangan
+                        </div>
+                        <div class="cat-option" data-val="status" onclick="selectCatOption('main', 'status', 'Status Peminjaman', '⚡')">
+                            <span>⚡</span> Status Peminjaman
+                        </div>
+                        <div class="cat-option" data-val="tanggal" onclick="selectCatOption('main', 'tanggal', 'Lompat Tanggal', '📅')">
+                            <span>📅</span> Lompat Tanggal
+                        </div>
+                    </div>
+                </div>
+
+                <div class="unified-divider"></div>
+
+                <!-- Text Search Container -->
+                <div style="position: relative; flex: 1; display: flex; align-items: center;" id="mainValueContainer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5" style="position: absolute; left: 8px; pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="mainSearchInput" placeholder="Cari ruangan, peminjam, kode (key)..." 
+                           oninput="handleUnifiedMultiSearch(this)" 
+                           onfocus="onMainInputFocused()"
+                           autocomplete="off" class="unified-input-key main-val-field">
+                    <button id="clearMainSearchBtn" onclick="clearMainSearch()" style="display: none; position: absolute; right: 6px; background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 1rem;">&times;</button>
+                </div>
+
+                <!-- Custom Styled Status Selector Dropdown (Shown when Status Peminjaman is selected) -->
+                <div class="custom-status-dropdown" id="mainStatusWrap" style="display: none; flex: 1;">
+                    <button type="button" class="custom-status-trigger" onclick="toggleStatusDropdown('main', event)">
+                        <span id="mainStatusLabel" style="display: flex; align-items: center; gap: 6px;">
+                            <span class="status-dot" style="background: #94a3b8;"></span> Semua Status
+                        </span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    
+                    <input type="hidden" id="mainStatusValue" class="extra-input-key main-val-field" value="">
+
+                    <div class="custom-status-menu" id="mainStatusMenu">
+                        <div class="status-option active" data-val="" onclick="selectStatusOption('main', '', 'Semua Status', '#94a3b8')">
+                            <span class="status-dot" style="background: #94a3b8;"></span> Semua Status
+                        </div>
+                        <div class="status-option" data-val="pending" onclick="selectStatusOption('main', 'pending', 'Menunggu Persetujuan', '#f59e0b')">
+                            <span class="status-dot" style="background: #f59e0b;"></span> Menunggu Persetujuan
+                        </div>
+                        <div class="status-option" data-val="disetujui" onclick="selectStatusOption('main', 'disetujui', 'Disetujui', '#10b981')">
+                            <span class="status-dot" style="background: #10b981;"></span> Disetujui
+                        </div>
+                        <div class="status-option" data-val="ditolak" onclick="selectStatusOption('main', 'ditolak', 'Ditolak', '#ef4444')">
+                            <span class="status-dot" style="background: #ef4444;"></span> Ditolak
+                        </div>
+                        <div class="status-option" data-val="selesai" onclick="selectStatusOption('main', 'selesai', 'Selesai', '#64748b')">
+                            <span class="status-dot" style="background: #64748b;"></span> Selesai
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
-            <!-- Autocomplete Popup Dropdown -->
-            <div id="calendarAutocompleteDropdown"></div>
+            <!-- SEPARATE STANDALONE + BUTTON RIGHT BESIDE SEARCH PILL -->
+            <button type="button" id="standaloneAddBtn" onclick="toggleOrAddFilterRow(event)" class="btn-standalone-add" title="Buka / Tutup / Tambah Filter Baru (Maks 4)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span id="filterCountBadge" class="badge-standalone-count">1/4</span>
+            </button>
+
+            <!-- Clean Dedicated Autocomplete Dropdown List (ONLY Suggestions) -->
+            <div id="mainAutocompleteList"></div>
+
+            <!-- Extra Filter Rows Card (Contains Row 2, 3, 4) -->
+            <div id="extraRowsCard">
+                <div id="additionalFilterRowsContainer">
+                    <!-- Additional rows appended via JS -->
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 8px; margin-top: 6px;">
+                    <button type="button" onclick="resetHeaderMultiSearch()" style="background: none; border: none; color: #dc2626; font-weight: 700; font-size: 0.76rem; cursor: pointer;">
+                        Reset All Filters
+                    </button>
+                </div>
+            </div>
+
         </div>
 
         <div class="gcal-header-right" style="display: flex; align-items: center; gap: 12px;">
@@ -239,7 +630,7 @@
         </div>
     </div>
 
-    <!-- Container Utama Grid Kalender -->
+    <!-- Container Utama Grid Kalender (Full Height) -->
     <div class="gcal-body" style="height: calc(100vh - 70px);">
         <div class="gcal-days-header" id="gcalDaysHeader">
             <!-- Digenerate via JS -->
@@ -327,9 +718,12 @@
         </div>
     </div>
 
-    <!-- JS Logic -->
+    <!-- JS Data Pass -->
     <script>
         window.bookingData = <?= json_encode($jadwal_peminjaman ? $jadwal_peminjaman : []) ?: '[]' ?>;
+        window.kategoriList = <?= json_encode($kategori ? $kategori : []) ?: '[]' ?>;
+        window.ruanganList = <?= json_encode($ruangan ? $ruangan : []) ?: '[]' ?>;
+
         window.isLoggedIn = <?= $this->session->userdata('logged_in') ? 'true' : 'false' ?>;
         window.userRoleId = <?= json_encode($this->session->userdata('role_id')) ?>;
 
@@ -341,7 +735,8 @@
 
         let currentWeekStart = new Date();
         currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay());
-        let currentSearchQuery = '';
+        let extraRowCounter = 0;
+        let activeInputTarget = null;
 
         function renderCalendar() {
             renderHeaderAndDays();
@@ -428,12 +823,69 @@
             if (typeof bookingData === 'undefined') return '';
             let eventsHTML = '';
             const pxPerHour = 48;
-            const q = currentSearchQuery.trim().toLowerCase();
+
+            let activeFilters = [];
+
+            // Main Row 1
+            const mainCrit = $('#mainCategorySelect').val();
+            let mainVal = (mainCrit === 'status') ? $('#mainStatusValue').val() : $('#mainSearchInput').val();
+            if (mainVal && mainVal.trim() !== '') {
+                activeFilters.push({ criterion: mainCrit, value: mainVal.trim() });
+            }
+
+            // Extra Rows (2, 3, 4)
+            $('.extra-filter-row').each(function() {
+                const crit = $(this).find('.extra-cat-select').val();
+                let val = (crit === 'status') ? $(this).find('.extra-status-value').val() : $(this).find('.extra-input-key').val();
+                if (val && val.trim() !== '') {
+                    activeFilters.push({ criterion: crit, value: val.trim() });
+                }
+            });
+
+            const isFilteringActive = (activeFilters.length > 0);
 
             bookingData.forEach(booking => {
                 if (booking.tanggal_mulai <= targetDateStr && booking.tanggal_selesai >= targetDateStr) {
-                    let startHour = 0, startMin = 0, endHour = 24, endMin = 0;
+                    
+                    let isMatched = true;
 
+                    activeFilters.forEach(f => {
+                        if (!isMatched) return;
+
+                        const q = f.value.toLowerCase();
+                        if (f.criterion === 'kategori') {
+                            const katName = (booking.nama_kategori || '').toLowerCase();
+                            const kode = (booking.kode_ruangan || '').toLowerCase();
+                            const namaR = (booking.nama_ruangan || '').toLowerCase();
+                            if (!katName.includes(q) && !kode.includes(q) && !namaR.includes(q)) isMatched = false;
+                        } else if (f.criterion === 'ruangan') {
+                            const kode = (booking.kode_ruangan || '').toLowerCase();
+                            const namaR = (booking.nama_ruangan || '').toLowerCase();
+                            if (!kode.includes(q) && !namaR.includes(q)) isMatched = false;
+                        } else if (f.criterion === 'status') {
+                            const statusRaw = (booking.status || '').toLowerCase();
+                            const statusLabel = getStatusStyle(booking.status).label.toLowerCase();
+                            if (!statusRaw.includes(q) && !statusLabel.includes(q)) isMatched = false;
+                        } else if (f.criterion === 'tanggal') {
+                            if (!(booking.tanggal_mulai <= f.value && booking.tanggal_selesai >= f.value)) isMatched = false;
+                        } else if (f.criterion === 'keyword') {
+                            const kode = (booking.kode_ruangan || '').toLowerCase();
+                            const namaR = (booking.nama_ruangan || '').toLowerCase();
+                            const namaL = (booking.nama_lengkap || '').toLowerCase();
+                            const ket = (booking.keterangan || '').toLowerCase();
+                            const katName = (booking.nama_kategori || '').toLowerCase();
+                            const statusRaw = (booking.status || '').toLowerCase();
+                            const statusLabel = getStatusStyle(booking.status).label.toLowerCase();
+                            if (!kode.includes(q) && !namaR.includes(q) && !namaL.includes(q) && !ket.includes(q) && !katName.includes(q) && !statusRaw.includes(q) && !statusLabel.includes(q)) {
+                                isMatched = false;
+                            }
+                        }
+                    });
+
+                    let opacityStyle = (isFilteringActive && !isMatched) ? 'opacity: 0.12; filter: grayscale(95%); scale(0.97);' : 'opacity: 1;';
+                    let highlightStyle = (isFilteringActive && isMatched) ? 'box-shadow: 0 0 0 3px #ea580c; z-index: 25;' : '';
+
+                    let startHour = 0, startMin = 0, endHour = 24, endMin = 0;
                     if (booking.tanggal_mulai === targetDateStr) {
                         const p = booking.jam_mulai.split(':');
                         startHour = parseInt(p[0]);
@@ -453,19 +905,6 @@
                     const st = getStatusStyle(booking.status);
                     const timeLabel = `${startHour}:${startMin.toString().padStart(2,'0')} - ${endHour}:${endMin.toString().padStart(2,'0')}`;
 
-                    // Realtime search filter on grid events
-                    let isMatched = true;
-                    if (q !== '') {
-                        const kode = (booking.kode_ruangan || '').toLowerCase();
-                        const namaR = (booking.nama_ruangan || '').toLowerCase();
-                        const namaL = (booking.nama_lengkap || '').toLowerCase();
-                        const ket = (booking.keterangan || '').toLowerCase();
-                        isMatched = kode.includes(q) || namaR.includes(q) || namaL.includes(q) || ket.includes(q);
-                    }
-
-                    let opacityStyle = isMatched ? 'opacity: 1;' : 'opacity: 0.15; filter: grayscale(90%);';
-                    let highlightStyle = (q !== '' && isMatched) ? 'box-shadow: 0 0 0 3px #ea580c; z-index: 20;' : '';
-
                     eventsHTML += `
                         <div class="gcal-event" onclick="openDetailBookingModal(${booking.id})" 
                              style="top:${topPx}px; height:${heightPx}px; background:${st.bg}; border-left:3px solid ${st.border}; cursor:pointer; ${opacityStyle} ${highlightStyle}"
@@ -481,78 +920,638 @@
             return eventsHTML;
         }
 
-        // ===== SEARCH & AUTOCOMPLETE LOGIC =====
-        function handleCalendarSearchInput(query) {
-            currentSearchQuery = query;
-            const dropdown = document.getElementById('calendarAutocompleteDropdown');
-            const clearBtn = document.getElementById('clearSearchBtn');
-            const q = query.trim().toLowerCase();
+        // ===== CUSTOM DROPDOWN ENGINE FOR CATEGORY SELECTOR =====
+        function toggleCatDropdown(prefix, e) {
+            if (e) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+            const wrap = (prefix === 'main') ? $('#mainCatWrap') : $(`#extraCatWrap_${prefix}`);
+            const row = (prefix === 'main') ? null : $(`#extraRow_${prefix}`);
+            const wasOpen = wrap.hasClass('open');
+            
+            $('.custom-cat-dropdown, .custom-status-dropdown').removeClass('open');
+            $('.extra-filter-row').removeClass('dropdown-active');
+            
+            if (!wasOpen) {
+                wrap.addClass('open');
+                if (row) row.addClass('dropdown-active');
+            }
+        }
 
-            if (clearBtn) clearBtn.style.display = (query.length > 0) ? 'block' : 'none';
+        function selectCatOption(prefix, val, label, icon) {
+            let hiddenInput, labelSpan, menu;
+            if (prefix === 'main') {
+                hiddenInput = $('#mainCategorySelect');
+                labelSpan = $('#mainCatLabel');
+                menu = $('#mainCatMenu');
+                $('#mainCatWrap').removeClass('open');
+            } else {
+                hiddenInput = $(`#extraCatSelect_${prefix}`);
+                labelSpan = $(`#extraCatLabel_${prefix}`);
+                menu = $(`#extraCatMenu_${prefix}`);
+                $(`#extraCatWrap_${prefix}`).removeClass('open');
+                $(`#extraRow_${prefix}`).removeClass('dropdown-active');
+            }
 
-            // Filter grid events in realtime
-            renderTimeGridAndEvents();
+            hiddenInput.val(val);
+            labelSpan.text(label);
 
-            if (!q) {
-                dropdown.style.display = 'none';
+            menu.find('.cat-option').removeClass('active');
+            menu.find(`.cat-option[data-val="${val}"]`).addClass('active');
+
+            if (prefix === 'main') {
+                updateMainPlaceholder();
+            } else {
+                updateExtraPlaceholder(prefix);
+            }
+        }
+
+        // ===== CUSTOM DROPDOWN ENGINE FOR STATUS SELECTOR =====
+        function toggleStatusDropdown(prefix, e) {
+            if (e) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+            const wrap = (prefix === 'main') ? $('#mainStatusWrap') : $(`#extraStatusWrap_${prefix}`);
+            const row = (prefix === 'main') ? null : $(`#extraRow_${prefix}`);
+            const wasOpen = wrap.hasClass('open');
+
+            $('.custom-cat-dropdown, .custom-status-dropdown').removeClass('open');
+            $('.extra-filter-row').removeClass('dropdown-active');
+
+            if (!wasOpen) {
+                wrap.addClass('open');
+                if (row) row.addClass('dropdown-active');
+            }
+        }
+
+        function selectStatusOption(prefix, val, label, color) {
+            let hiddenInput, labelSpan, menu;
+            if (prefix === 'main') {
+                hiddenInput = $('#mainStatusValue');
+                labelSpan = $('#mainStatusLabel');
+                menu = $('#mainStatusMenu');
+                $('#mainStatusWrap').removeClass('open');
+            } else {
+                hiddenInput = $(`#extraStatusValue_${prefix}`);
+                labelSpan = $(`#extraStatusLabel_${prefix}`);
+                menu = $(`#extraStatusMenu_${prefix}`);
+                $(`#extraStatusWrap_${prefix}`).removeClass('open');
+                $(`#extraRow_${prefix}`).removeClass('dropdown-active');
+            }
+
+            hiddenInput.val(val);
+            labelSpan.html(`<span class="status-dot" style="background: ${color};"></span> ${label}`);
+
+            menu.find('.status-option').removeClass('active');
+            menu.find(`.status-option[data-val="${val}"]`).addClass('active');
+
+            renderCalendar();
+        }
+
+        // ===== SETUP FLATPICKR CALENDAR POPUP WHEN LOMPAT TANGGAL IS ACTIVE =====
+        function setupDatePickerIfNeeded(inputEl, crit) {
+            if (inputEl._flatpickr) {
+                inputEl._flatpickr.destroy();
+            }
+
+            if (crit === 'tanggal') {
+                flatpickr(inputEl, {
+                    dateFormat: "Y-m-d",
+                    altInput: true,
+                    altFormat: "j F Y",
+                    altInputClass: inputEl.className + ' flatpickr-custom-trigger',
+                    allowInput: false,
+                    defaultDate: "today",
+                    onChange: function(selectedDates, dateStr) {
+                        if (dateStr) {
+                            onTanggalFilterChanged(dateStr);
+                        }
+                    }
+                });
+            }
+        }
+
+        // ===== ALWAYS CLICKABLE TOGGLE / ADD FILTER ROW LOGIC =====
+        function toggleOrAddFilterRow(e) {
+            if (e) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+
+            const extraCard = $('#extraRowsCard');
+            const hasExtraRows = $('.extra-filter-row').length > 0;
+
+            // If extra filter rows exist and card is hidden, OPEN IT!
+            if (hasExtraRows && extraCard.is(':hidden')) {
+                $('#mainAutocompleteList').hide();
+                extraCard.css({'display': 'block'}).show();
                 return;
             }
 
-            if (typeof bookingData === 'undefined' || bookingData.length === 0) {
-                dropdown.style.display = 'none';
+            // If maximum 4 filter rows reached, toggle open / close!
+            if ($('.extra-filter-row').length + 1 >= 4) {
+                if (extraCard.is(':visible')) {
+                    extraCard.hide();
+                } else {
+                    $('#mainAutocompleteList').hide();
+                    extraCard.css({'display': 'block'}).show();
+                }
                 return;
             }
 
-            // Search matching bookings
-            const matches = bookingData.filter(b => {
-                const kode = (b.kode_ruangan || '').toLowerCase();
-                const namaR = (b.nama_ruangan || '').toLowerCase();
-                const namaL = (b.nama_lengkap || '').toLowerCase();
-                const ket = (b.keterangan || '').toLowerCase();
-                return kode.includes(q) || namaR.includes(q) || namaL.includes(q) || ket.includes(q);
+            // Otherwise, add a new row and make sure card is shown
+            addAdditionalFilterRow(e);
+        }
+
+        function onMainInputFocused() {
+            activeInputTarget = document.getElementById('mainSearchInput');
+            if ($('.extra-filter-row').length > 0) {
+                $('#extraRowsCard').css({'display': 'block'}).show();
+            }
+        }
+
+        function updateMainPlaceholder() {
+            const crit = $('#mainCategorySelect').val();
+            const textContainer = $('#mainValueContainer');
+            const statusWrap = $('#mainStatusWrap');
+            const inputEl = document.getElementById('mainSearchInput');
+            
+            if (crit === 'status') {
+                textContainer.hide();
+                statusWrap.css({'display': 'flex'}).show();
+            } else {
+                statusWrap.hide();
+                textContainer.css({'display': 'flex'}).show();
+                
+                let ph = "Cari ruangan, peminjam, kode (key)...";
+                if (crit === 'kategori') ph = "Cari nama kategori / ruangan (misal: Lab Batik)...";
+                else if (crit === 'ruangan') ph = "Cari kode ruangan (misal: IK.01.10)...";
+                else if (crit === 'tanggal') ph = "Klik untuk pilih tanggal di kalender...";
+                $(inputEl).attr('placeholder', ph);
+
+                setupDatePickerIfNeeded(inputEl, crit);
+            }
+
+            handleUnifiedMultiSearch();
+        }
+
+        function addAdditionalFilterRow(e) {
+            if (e) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+            $('#mainAutocompleteList').hide();
+
+            const currentRows = $('.extra-filter-row').length + 1;
+            if (currentRows >= 4) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Maksimal 4 Filter',
+                    text: 'Maksimal 4 kriteria filter pencarian yang dapat aktif.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                return;
+            }
+
+            extraRowCounter++;
+            const rowId = extraRowCounter;
+
+            const availableCriteria = ['kategori', 'ruangan', 'status', 'tanggal', 'keyword'];
+            const usedCriteria = [$('#mainCategorySelect').val()];
+            $('.extra-cat-select').each(function() { usedCriteria.push($(this).val()); });
+            const defaultCrit = availableCriteria.find(c => !usedCriteria.includes(c)) || 'kategori';
+
+            let defaultLabel = "Kategori Ruangan";
+            let defaultIcon = "📁";
+            if (defaultCrit === 'ruangan') { defaultLabel = "Pilih Ruangan"; defaultIcon = "🏢"; }
+            else if (defaultCrit === 'status') { defaultLabel = "Status Peminjaman"; defaultIcon = "⚡"; }
+            else if (defaultCrit === 'tanggal') { defaultLabel = "Lompat Tanggal"; defaultIcon = "📅"; }
+            else if (defaultCrit === 'keyword') { defaultLabel = "Key / Kata Kunci"; defaultIcon = "🔑"; }
+
+            let ph = "Cari nama kategori (misal: Lab Batik)...";
+            if (defaultCrit === 'ruangan') ph = "Cari kode ruangan (misal: IK.01.10)...";
+            else if (defaultCrit === 'tanggal') ph = "Klik untuk pilih tanggal di kalender...";
+            else if (defaultCrit === 'keyword') ph = "Ketik kata kunci pencarian (key)...";
+
+            const rowHTML = `
+                <div class="extra-filter-row" id="extraRow_${rowId}">
+                    <div class="unified-search-pill" style="flex:1; width:auto;">
+                        
+                        <div class="custom-cat-dropdown" id="extraCatWrap_${rowId}">
+                            <button type="button" class="custom-cat-trigger" onclick="toggleCatDropdown(${rowId}, event)">
+                                <span id="extraCatLabel_${rowId}">${defaultLabel}</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+
+                            <input type="hidden" id="extraCatSelect_${rowId}" class="extra-cat-select" value="${defaultCrit}">
+
+                            <div class="custom-cat-menu" id="extraCatMenu_${rowId}">
+                                <div class="cat-option ${defaultCrit === 'kategori' ? 'active' : ''}" data-val="kategori" onclick="selectCatOption(${rowId}, 'kategori', 'Kategori Ruangan', '📁')">
+                                    <span>📁</span> Kategori Ruangan
+                                </div>
+                                <div class="cat-option ${defaultCrit === 'ruangan' ? 'active' : ''}" data-val="ruangan" onclick="selectCatOption(${rowId}, 'ruangan', 'Pilih Ruangan', '🏢')">
+                                    <span>🏢</span> Pilih Ruangan
+                                </div>
+                                <div class="cat-option ${defaultCrit === 'status' ? 'active' : ''}" data-val="status" onclick="selectCatOption(${rowId}, 'status', 'Status Peminjaman', '⚡')">
+                                    <span>⚡</span> Status Peminjaman
+                                </div>
+                                <div class="cat-option ${defaultCrit === 'tanggal' ? 'active' : ''}" data-val="tanggal" onclick="selectCatOption(${rowId}, 'tanggal', 'Lompat Tanggal', '📅')">
+                                    <span>📅</span> Lompat Tanggal
+                                </div>
+                                <div class="cat-option ${defaultCrit === 'keyword' ? 'active' : ''}" data-val="keyword" onclick="selectCatOption(${rowId}, 'keyword', 'Key / Kata Kunci', '🔑')">
+                                    <span>🔑</span> Key / Kata Kunci
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="unified-divider"></div>
+
+                        <!-- Text Search Container for Extra Row -->
+                        <div style="position:relative; flex:1; display:${defaultCrit === 'status' ? 'none' : 'flex'}; align-items:center;" id="extraValueContainer_${rowId}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5" style="position: absolute; left: 8px; pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            <input type="text" id="extraInput_${rowId}" class="unified-input-key extra-input-key" placeholder="${ph}" oninput="handleUnifiedMultiSearch(this)" onfocus="activeInputTarget = this" autocomplete="off">
+                        </div>
+
+                        <!-- Custom Status Selector Dropdown for Extra Row -->
+                        <div class="custom-status-dropdown" id="extraStatusWrap_${rowId}" style="display: ${defaultCrit === 'status' ? 'flex' : 'none'}; flex: 1;">
+                            <button type="button" class="custom-status-trigger" onclick="toggleStatusDropdown(${rowId}, event)">
+                                <span id="extraStatusLabel_${rowId}" style="display: flex; align-items: center; gap: 6px;">
+                                    <span class="status-dot" style="background: #94a3b8;"></span> Semua Status
+                                </span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            
+                            <input type="hidden" id="extraStatusValue_${rowId}" class="extra-status-value" value="">
+
+                            <div class="custom-status-menu" id="extraStatusMenu_${rowId}">
+                                <div class="status-option active" data-val="" onclick="selectStatusOption(${rowId}, '', 'Semua Status', '#94a3b8')">
+                                    <span class="status-dot" style="background: #94a3b8;"></span> Semua Status
+                                </div>
+                                <div class="status-option" data-val="pending" onclick="selectStatusOption(${rowId}, 'pending', 'Menunggu Persetujuan', '#f59e0b')">
+                                    <span class="status-dot" style="background: #f59e0b;"></span> Menunggu Persetujuan
+                                </div>
+                                <div class="status-option" data-val="disetujui" onclick="selectStatusOption(${rowId}, 'disetujui', 'Disetujui', '#10b981')">
+                                    <span class="status-dot" style="background: #10b981;"></span> Disetujui
+                                </div>
+                                <div class="status-option" data-val="ditolak" onclick="selectStatusOption(${rowId}, 'ditolak', 'Ditolak', '#ef4444')">
+                                    <span class="status-dot" style="background: #ef4444;"></span> Ditolak
+                                </div>
+                                <div class="status-option" data-val="selesai" onclick="selectStatusOption(${rowId}, 'selesai', 'Selesai', '#64748b')">
+                                    <span class="status-dot" style="background: #64748b;"></span> Selesai
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <button type="button" onclick="removeExtraFilterRow(${rowId}, event)" class="btn-remove-extra-row" title="Hapus filter ini">&times;</button>
+                </div>
+            `;
+
+            $('#additionalFilterRowsContainer').append(rowHTML);
+            $('#extraRowsCard').css({'display': 'block'}).show();
+            updateFilterCountBadge();
+            
+            const newEl = document.getElementById(`extraInput_${rowId}`);
+            if (newEl) setupDatePickerIfNeeded(newEl, defaultCrit);
+
+            renderCalendar();
+        }
+
+        function updateExtraPlaceholder(rowId) {
+            const row = $(`#extraRow_${rowId}`);
+            const crit = row.find('.extra-cat-select').val();
+            const textContainer = $(`#extraValueContainer_${rowId}`);
+            const statusWrap = $(`#extraStatusWrap_${rowId}`);
+            const inputEl = document.getElementById(`extraInput_${rowId}`);
+
+            if (crit === 'status') {
+                textContainer.hide();
+                statusWrap.css({'display': 'flex'}).show();
+            } else {
+                statusWrap.hide();
+                textContainer.css({'display': 'flex'}).show();
+
+                let ph = "Ketik kata kunci pencarian (key)...";
+                if (crit === 'kategori') ph = "Cari nama kategori (misal: Lab Batik)...";
+                else if (crit === 'ruangan') ph = "Cari kode ruangan (misal: IK.01.10)...";
+                else if (crit === 'tanggal') ph = "Klik untuk pilih tanggal di kalender...";
+                if (inputEl) {
+                    $(inputEl).attr('placeholder', ph);
+                    setupDatePickerIfNeeded(inputEl, crit);
+                }
+            }
+
+            renderCalendar();
+        }
+
+        function removeExtraFilterRow(rowId, e) {
+            if (e) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+
+            $(`#extraRow_${rowId}`).remove();
+            
+            if ($('.extra-filter-row').length === 0) {
+                $('#extraRowsCard').hide();
+            } else {
+                $('#extraRowsCard').css({'display': 'block'}).show();
+            }
+
+            updateFilterCountBadge();
+            renderCalendar();
+        }
+
+        function updateFilterCountBadge() {
+            const total = $('.extra-filter-row').length + 1;
+            $('#filterCountBadge').text(`${total}/4`);
+
+            // ALWAYS keep pointer-events: auto so user can click to re-open/close the panel!
+            $('#standaloneAddBtn').css({ opacity: 1, pointerEvents: 'auto' });
+            
+            if (total >= 4) {
+                $('#standaloneAddBtn').attr('title', 'Buka / Tutup Daftar Filter (Maksimal 4 Active Filter)');
+            } else {
+                $('#standaloneAddBtn').attr('title', 'Tambah Filter Baru / Tampilkan Filter');
+            }
+        }
+
+        // ===== CONTEXT-AWARE AUTOCOMPLETE SEARCH ENGINE WITH DEPENDENT ROOM FILTERING =====
+        function handleUnifiedMultiSearch(inputEl) {
+            if (inputEl) activeInputTarget = inputEl;
+            const mainInput = document.getElementById('mainSearchInput');
+            const qMain = mainInput ? mainInput.value.trim().toLowerCase() : '';
+            const clearBtn = document.getElementById('clearMainSearchBtn');
+            if (clearBtn) clearBtn.style.display = (qMain.length > 0) ? 'block' : 'none';
+
+            renderCalendar();
+
+            const autoList = document.getElementById('mainAutocompleteList');
+            const targetInput = inputEl || activeInputTarget || mainInput;
+            const targetVal = targetInput ? targetInput.value.trim().toLowerCase() : '';
+
+            if (!targetVal || !targetInput) {
+                if (autoList) autoList.style.display = 'none';
+                return;
+            }
+
+            // Detect current criterion for this active row
+            const parentRow = $(targetInput).closest('.unified-search-pill, .extra-filter-row');
+            let currentCrit = 'keyword';
+            if (parentRow.length) {
+                const catSelect = parentRow.find('.extra-cat-select, #mainCategorySelect');
+                if (catSelect.length) currentCrit = catSelect.val();
+            }
+
+            // Skip autocomplete for 'tanggal' or 'status'
+            if (currentCrit === 'tanggal' || currentCrit === 'status') {
+                if (autoList) autoList.style.display = 'none';
+                return;
+            }
+
+            // Check if ANY row has selected 'kategori'
+            let activeCategoryFilterVal = '';
+            const mainCrit = $('#mainCategorySelect').val();
+            const mainValText = $('#mainSearchInput').val().trim().toLowerCase();
+            if (mainCrit === 'kategori' && mainValText) {
+                activeCategoryFilterVal = mainValText;
+            }
+            $('.extra-filter-row').each(function() {
+                const crit = $(this).find('.extra-cat-select').val();
+                const val = $(this).find('.extra-input-key').val().trim().toLowerCase();
+                if (crit === 'kategori' && val) {
+                    activeCategoryFilterVal = val;
+                }
             });
 
-            if (matches.length === 0) {
-                dropdown.innerHTML = `
-                    <div style="padding: 14px; text-align: center; color: #94a3b8; font-size: 0.85rem; font-weight: 600;">
-                        🔍 Tidak ditemukan hasil untuk "${escapeHtml(query)}"
+            // Position autoList directly relative to targetInput
+            const rect = targetInput.getBoundingClientRect();
+            const containerRect = document.querySelector('.search-filter-container').getBoundingClientRect();
+            const topOffset = rect.bottom - containerRect.top + 6;
+            const leftOffset = rect.left - containerRect.left;
+
+            $(autoList).css({
+                'top': topOffset + 'px',
+                'left': leftOffset + 'px',
+                'width': Math.max(rect.width, 440) + 'px'
+            });
+
+            let suggestions = [];
+
+            // 1. IF CURRENT ROW IS 'kategori' (Kategori Ruangan): ONLY SUGGEST PURE NAMES! NO CODES!
+            if (currentCrit === 'kategori') {
+                if (window.kategoriList) {
+                    window.kategoriList.forEach(k => {
+                        const namaKat = k.nama_kategori || '';
+                        if (namaKat.toLowerCase().includes(targetVal)) {
+                            suggestions.push({
+                                type: 'kategori',
+                                title: namaKat,
+                                subtitle: 'Kategori Ruangan',
+                                queryVal: namaKat // PURE NAME!
+                            });
+                        }
+                    });
+                }
+                if (window.ruanganList) {
+                    window.ruanganList.forEach(r => {
+                        const nama = r.nama_ruangan || '';
+                        if (nama.toLowerCase().includes(targetVal)) {
+                            suggestions.push({
+                                type: 'kategori',
+                                title: nama,
+                                subtitle: 'Nama Ruangan',
+                                queryVal: nama // PURE NAME!
+                            });
+                        }
+                    });
+                }
+            }
+
+            // 2. IF CURRENT ROW IS 'ruangan' (Pilih Ruangan): SUGGEST ROOM CODES (DEPENDENT ON KATEGORI!)
+            else if (currentCrit === 'ruangan') {
+                if (window.ruanganList) {
+                    window.ruanganList.forEach(r => {
+                        const nama = r.nama_ruangan || '';
+                        const kode = r.kode_ruangan || '';
+                        const katName = r.nama_kategori || '';
+
+                        // DEPENDENT FILTER: Only show room codes matching activeCategoryFilterVal if set!
+                        if (activeCategoryFilterVal) {
+                            if (!nama.toLowerCase().includes(activeCategoryFilterVal) &&
+                                !katName.toLowerCase().includes(activeCategoryFilterVal) &&
+                                !kode.toLowerCase().includes(activeCategoryFilterVal)) {
+                                return; // Skip rooms outside the selected category!
+                            }
+                        }
+
+                        if (nama.toLowerCase().includes(targetVal) || kode.toLowerCase().includes(targetVal)) {
+                            suggestions.push({
+                                type: 'ruangan',
+                                title: kode ? `${kode} — ${nama}` : nama,
+                                subtitle: `Kode Ruangan: ${kode || '-'}`,
+                                queryVal: kode ? kode : nama // FILLS ROOM CODE!
+                            });
+                        }
+                    });
+                }
+            }
+
+            // 3. KEYWORD OR OTHER CRITERIA
+            else {
+                if (window.ruanganList) {
+                    window.ruanganList.forEach(r => {
+                        const nama = r.nama_ruangan || '';
+                        const kode = r.kode_ruangan || '';
+                        const katName = r.nama_kategori || '';
+
+                        if (activeCategoryFilterVal) {
+                            if (!nama.toLowerCase().includes(activeCategoryFilterVal) &&
+                                !katName.toLowerCase().includes(activeCategoryFilterVal) &&
+                                !kode.toLowerCase().includes(activeCategoryFilterVal)) {
+                                return;
+                            }
+                        }
+
+                        if (nama.toLowerCase().includes(targetVal) || kode.toLowerCase().includes(targetVal)) {
+                            suggestions.push({
+                                type: 'ruangan',
+                                title: kode ? `${kode} — ${nama}` : nama,
+                                subtitle: `Ruangan • ${nama}`,
+                                queryVal: nama
+                            });
+                        }
+                    });
+                }
+                if (window.kategoriList) {
+                    window.kategoriList.forEach(k => {
+                        const namaKat = k.nama_kategori || '';
+                        if (namaKat.toLowerCase().includes(targetVal)) {
+                            suggestions.push({
+                                type: 'kategori',
+                                title: namaKat,
+                                subtitle: 'Kategori Ruangan',
+                                queryVal: namaKat
+                            });
+                        }
+                    });
+                }
+                if (window.bookingData) {
+                    window.bookingData.forEach(b => {
+                        const peminjam = b.nama_lengkap || '';
+                        if (peminjam.toLowerCase().includes(targetVal)) {
+                            suggestions.push({
+                                type: 'peminjam',
+                                title: peminjam,
+                                subtitle: `Peminjam • ${b.nama_ruangan}`,
+                                bookingId: b.id,
+                                tgl: b.tanggal_mulai,
+                                queryVal: peminjam
+                            });
+                        }
+                    });
+                }
+            }
+
+            if (suggestions.length === 0) {
+                autoList.innerHTML = `
+                    <div style="padding: 10px; text-align: center; color: #94a3b8; font-size: 0.82rem; font-weight: 600;">
+                        🔍 Tidak ditemukan hasil yang cocok untuk "${escapeHtml(targetVal)}"
                     </div>
                 `;
-                dropdown.style.display = 'block';
+                autoList.style.display = 'block';
                 return;
             }
 
-            // Limit to top 8 matches for clean UI
-            const limitedMatches = matches.slice(0, 8);
-            let html = '';
+            const uniqueSuggestions = [];
+            const seenTitles = new Set();
+            for (const item of suggestions) {
+                if (!seenTitles.has(item.title.toLowerCase())) {
+                    seenTitles.add(item.title.toLowerCase());
+                    uniqueSuggestions.push(item);
+                }
+                if (uniqueSuggestions.length >= 8) break;
+            }
 
-            limitedMatches.forEach(b => {
-                const jMulai = b.jam_mulai ? b.jam_mulai.substring(0, 5) : '00:00';
-                const jSelesai = b.jam_selesai ? b.jam_selesai.substring(0, 5) : '00:00';
-                const st = getStatusStyle(b.status);
+            let html = '';
+            uniqueSuggestions.forEach(s => {
+                let icon = '🏢';
+                if (s.type === 'kategori') icon = '📁';
+                else if (s.type === 'peminjam') icon = '👤';
 
                 html += `
-                    <div class="search-autocomplete-item" onclick="selectSearchResult(${b.id}, '${b.tanggal_mulai}')">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <div class="search-autocomplete-item" onclick="applySuggestion(event, '${escapeHtml(s.queryVal)}', ${s.bookingId || 'null'}, '${s.tgl || ''}')">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="background: #ede9fe; color: #7c3aed; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 12px;">${highlightMatchText(b.kode_ruangan || '', q)}</span>
-                                <strong style="font-size: 0.88rem; color: #0f172a;">${highlightMatchText(b.nama_ruangan || '', q)}</strong>
+                                <span style="font-size: 0.9rem;">${icon}</span>
+                                <div>
+                                    <strong style="font-size: 0.86rem; color: #0f172a;">${highlightMatchText(s.title, targetVal)}</strong>
+                                    <span style="font-size: 0.74rem; color: #64748b; margin-left: 6px;">${s.subtitle}</span>
+                                </div>
                             </div>
-                            <span style="font-size: 0.75rem; font-weight: 700; color: #64748b;">${b.tanggal_mulai}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: #475569;">
-                            <span>👤 ${highlightMatchText(b.nama_lengkap || '', q)}</span>
-                            <span style="display: flex; align-items: center; gap: 6px;">
-                                ⏱ ${jMulai} - ${jSelesai}
-                                <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${st.dot};"></span>
-                            </span>
+                            <span style="font-size: 0.75rem; color: #ea580c; font-weight: 700;">↵</span>
                         </div>
                     </div>
                 `;
             });
 
-            dropdown.innerHTML = html;
-            dropdown.style.display = 'block';
+            autoList.innerHTML = html;
+            autoList.style.display = 'block';
+        }
+
+        function applySuggestion(e, queryVal, bookingId, targetDateStr) {
+            if (e) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+
+            const targetInput = activeInputTarget || document.getElementById('mainSearchInput');
+            if (targetInput) targetInput.value = queryVal;
+
+            document.getElementById('mainAutocompleteList').style.display = 'none';
+
+            // Ensure #extraRowsCard stays visible if extra filter rows are active!
+            if ($('.extra-filter-row').length > 0) {
+                $('#extraRowsCard').css({'display': 'block'}).show();
+            }
+
+            if (bookingId && targetDateStr) {
+                selectSearchResult(bookingId, targetDateStr);
+            } else {
+                renderCalendar();
+            }
+        }
+
+        function onTanggalFilterChanged(tglV) {
+            if (tglV) {
+                const parts = tglV.split('-');
+                if (parts.length === 3) {
+                    const targetDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                    currentWeekStart = new Date(targetDate);
+                    currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay());
+                    renderCalendar();
+                }
+            }
+        }
+
+        function resetHeaderMultiSearch() {
+            $('#additionalFilterRowsContainer').empty();
+            extraRowCounter = 0;
+            $('#extraRowsCard').hide();
+            selectCatOption('main', 'keyword', 'Key / Kata Kunci', '🔑');
+            selectStatusOption('main', '', 'Semua Status', '#94a3b8');
+            updateFilterCountBadge();
+            goToToday();
+        }
+
+        function clearMainSearch() {
+            const input = document.getElementById('mainSearchInput');
+            if (input) input.value = '';
+            handleUnifiedMultiSearch();
         }
 
         function highlightMatchText(text, query) {
@@ -567,10 +1566,8 @@
         }
 
         function selectSearchResult(bookingId, targetDateStr) {
-            // Hide autocomplete dropdown
-            document.getElementById('calendarAutocompleteDropdown').style.display = 'none';
+            document.getElementById('mainAutocompleteList').style.display = 'none';
 
-            // Jump week view to target date
             if (targetDateStr) {
                 const parts = targetDateStr.split('-');
                 if (parts.length === 3) {
@@ -581,22 +1578,25 @@
                 }
             }
 
-            // Open Detail Modal
             openDetailBookingModal(bookingId);
         }
 
-        function clearCalendarSearch() {
-            const input = document.getElementById('calendarSearchInput');
-            if (input) input.value = '';
-            handleCalendarSearchInput('');
-        }
-
-        // Close autocomplete when clicking outside
+        // Close popovers on click outside
         document.addEventListener('click', function(e) {
-            const wrap = document.querySelector('.calendar-search-wrap');
-            if (wrap && !wrap.contains(e.target)) {
-                const dropdown = document.getElementById('calendarAutocompleteDropdown');
-                if (dropdown) dropdown.style.display = 'none';
+            const wrap = document.querySelector('.search-filter-container');
+            if (wrap && !wrap.contains(e.target) && !$(e.target).closest('.flatpickr-calendar').length) {
+                const autoList = document.getElementById('mainAutocompleteList');
+                const extraCard = document.getElementById('extraRowsCard');
+                const pill = document.getElementById('unifiedSearchPill');
+                if (autoList) autoList.style.display = 'none';
+                if (extraCard) extraCard.style.display = 'none';
+                if (pill) pill.classList.remove('active');
+            }
+
+            // Close custom dropdown menus on click outside
+            if (!$(e.target).closest('.custom-cat-dropdown, .custom-status-dropdown, .flatpickr-calendar').length) {
+                $('.custom-cat-dropdown, .custom-status-dropdown').removeClass('open');
+                $('.extra-filter-row').removeClass('dropdown-active');
             }
         });
 
@@ -735,7 +1735,7 @@
 
             Swal.fire({
                 title: 'Hapus Jadwal',
-                text: 'Apakah Anda yakin ingin menghapus jadwal peminjaman ini secara permanen?',
+                text: 'Apakah Anda yakin ingin menghapus jadwal peminjaman me secara permanen?',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc2626',
