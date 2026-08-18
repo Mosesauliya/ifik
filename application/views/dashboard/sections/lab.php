@@ -16,7 +16,7 @@
         pointer-events: none !important;
     }
 
-    /* Styling Sesi Laboratorium Fakultas (100% Silk-Smooth Apple TV Slider) */
+    /* Styling Sesi Laboratorium Fakultas (Pergeseran Super Lambat 1.6s Ultra Silk-Smooth) */
     #section-lab {
         background-color: var(--bg-color);
         display: flex;
@@ -33,30 +33,30 @@
         width: 95vw;
         max-width: 1450px;
         max-height: calc(100vh - 40px);
-        padding: 20px 32px 16px 32px;
+        padding: 20px 32px 14px 32px;
         z-index: 2;
         background: var(--glass-bg);
         border: 1px solid var(--glass-border);
         border-radius: 28px;
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.08);
         position: relative;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .lab-header {
         display: flex;
         justify-content: space-between;
         align-items: flex-end;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }
 
     .lab-header h1 {
-        font-size: 2.2rem;
+        font-size: 2.1rem;
         font-weight: 800;
         color: var(--text-color);
         letter-spacing: -1px;
@@ -66,11 +66,11 @@
 
     .lab-header p {
         color: #64748b;
-        font-size: 0.95rem;
+        font-size: 0.92rem;
         font-weight: 500;
     }
 
-    /* Apple TV+ Style Viewport & Track */
+    /* Viewport Container */
     .lab-viewport {
         width: 100%;
         overflow: hidden;
@@ -85,38 +85,40 @@
         cursor: grabbing;
     }
 
+    /* Track Pergeseran Super Lambat & Ultra Silk-Smooth */
     .lab-track {
         display: flex;
-        gap: 24px;
+        gap: 14px;
         align-items: center;
-        transition: transform 0.48s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: transform 1.0s cubic-bezier(0.25, 1, 0.35, 1);
         will-change: transform;
     }
 
-    /* Apple TV+ Style Card (GPU Accelerated) */
+    /* Card Crisp Clear */
     .lab-card {
-        flex: 0 0 68vw;
+        flex: 0 0 65vw;
         max-width: 820px;
-        height: 390px;
-        border-radius: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.2);
-        transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+        height: 440px;
+        border-radius: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
         position: relative;
         overflow: hidden;
         background: #0f172a;
-        opacity: 0.6;
-        transform: scale(0.93) translateZ(0);
-        will-change: transform, opacity;
+        opacity: 1 !important;
+        transform: translateZ(0);
+        transition: border-color 0.4s ease, opacity 0.4s ease;
+        will-change: transform;
+        cursor: pointer;
     }
 
     .lab-card.active-card {
-        opacity: 1;
-        transform: scale(1) translateZ(0);
-        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
-        border-color: rgba(234, 88, 12, 0.5);
+        opacity: 1 !important;
+        border-color: rgba(234, 88, 12, 0.6);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
     }
 
+    /* Foto Jernih Murni */
     .lab-card-bg-img {
         position: absolute;
         top: 0;
@@ -125,15 +127,12 @@
         height: 100%;
         object-fit: cover;
         z-index: 1;
-        transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        transform: none !important;
+        filter: brightness(0.9) !important;
         pointer-events: none;
     }
 
-    .lab-card:hover .lab-card-bg-img {
-        transform: scale(1.04);
-    }
-
-    /* Gradient Overlay Khas Apple TV */
+    /* Gradient Overlay */
     .lab-card-overlay {
         position: absolute;
         top: 0;
@@ -141,128 +140,199 @@
         width: 100%;
         height: 100%;
         z-index: 2;
-        background: linear-gradient(0deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.4) 45%, rgba(0, 0, 0, 0) 80%);
+        background: linear-gradient(180deg, rgba(15, 23, 42, 0.82) 0%, rgba(15, 23, 42, 0.35) 45%, rgba(15, 23, 42, 0.88) 100%);
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        padding: 24px 32px;
+        padding: 32px 36px;
     }
 
-    .badge-3d-tag {
-        align-self: flex-start;
-        background: rgba(15, 23, 42, 0.68);
+    /* Content Flat Clean */
+    .lab-card-top-content {
+        max-width: 520px;
+        text-align: left;
+        transform: none !important;
+        opacity: 1 !important;
+    }
+
+    .lab-card-title-text {
+        font-size: 1.65rem;
+        font-weight: 800;
+        color: #ffffff;
+        margin: 0 0 8px 0;
+        letter-spacing: -0.4px;
+        line-height: 1.25;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+    }
+
+    .lab-card-desc-text {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.95rem;
+        line-height: 1.4;
+        font-weight: 500;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+    }
+
+    /* 3D Model Tag */
+    .badge-3d-tag-overlay {
+        display: inline-flex;
+        width: fit-content;
+        align-items: center;
+        background: rgba(15, 23, 42, 0.65);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.2);
         color: #ffffff;
-        font-size: 0.78rem;
+        font-size: 0.76rem;
         font-weight: 700;
-        padding: 6px 14px;
+        padding: 5px 12px;
         border-radius: 20px;
-        display: flex;
-        align-items: center;
         gap: 6px;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
     }
 
-    .badge-3d-tag svg {
-        width: 13px;
-        height: 13px;
+    .badge-3d-tag-overlay svg {
+        width: 12px;
+        height: 12px;
         fill: #f97316;
     }
 
-    /* Bottom Info Layout */
-    .lab-card-bottom-info {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .lab-title {
-        font-size: 2.2rem;
-        font-weight: 900;
-        color: #ffffff;
-        margin: 0;
-        letter-spacing: -0.5px;
-        text-transform: uppercase;
-        text-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
-        line-height: 1.1;
-    }
-
-    .lab-cta-row {
+    /* Bottom Action Row & Button */
+    .lab-card-bottom-row {
         display: flex;
         align-items: center;
-        gap: 20px;
-        flex-wrap: wrap;
-        margin-top: 2px;
+        justify-content: space-between;
+        width: 100%;
     }
 
-    .btn-apple-tv {
+    .btn-apple-action {
         background: #ffffff;
         color: #0f172a;
         font-weight: 800;
-        font-size: 0.9rem;
-        padding: 11px 26px;
-        border-radius: 30px;
+        font-size: 0.88rem;
+        padding: 10px 26px;
+        border-radius: 24px;
         text-decoration: none;
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-        transition: transform 0.25s ease, background 0.25s ease, color 0.25s ease;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+        transform: none !important;
+        opacity: 1 !important;
+        transition: background-color 0.3s ease, color 0.3s ease;
     }
 
-    .btn-apple-tv:hover {
+    .btn-apple-action:hover {
         background: #ea580c;
         color: #ffffff;
-        transform: scale(1.05);
     }
 
-    .lab-apple-desc-inline {
-        color: rgba(255, 255, 255, 0.95);
-        font-size: 0.95rem;
-        font-weight: 500;
-        line-height: 1.35;
-        max-width: 580px;
-        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
-    }
-
-    .lab-apple-desc-inline strong {
-        color: #ffffff;
-        font-weight: 700;
-    }
-
-    /* Dynamic Orange Pill Progress Lines (PERSIS TANGKAPAN LAYAR) */
-    .lab-indicators {
+    /* Apple Controls Capsule Bar & Seek Progress Fill Oranye (6 Detik Fill) */
+    .apple-controls-capsule-wrapper {
         display: flex;
-        justify-content: center;
         align-items: center;
-        gap: 8px;
-        margin-top: 16px;
-        z-index: 5;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 14px;
+        z-index: 10;
     }
 
-    .lab-indicator-pill {
-        height: 5px;
-        width: 24px;
-        border-radius: 6px;
-        background: rgba(220, 220, 225, 0.45);
+    .apple-controls-capsule {
+        background: rgba(30, 41, 59, 0.45);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        padding: 10px 22px;
+        border-radius: 30px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+    }
+
+    .apple-indicator-dots {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .apple-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.35);
         cursor: pointer;
-        transition: width 0.38s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.35s ease, box-shadow 0.35s ease;
-        will-change: width, background-color;
+        position: relative;
+        overflow: hidden;
+        transition: width 2.5s cubic-bezier(0.25, 1, 0.35, 1), background-color 0.6s ease, border-color 0.6s ease;
     }
 
-    .lab-indicator-pill:hover {
-        background: rgba(220, 220, 225, 0.7);
+    .apple-dot:hover {
+        background: rgba(255, 255, 255, 0.6);
     }
 
-    .lab-indicator-pill.active {
-        width: 64px;
+    /* Active Pill Bar Expands to 38px Seek Progress Track */
+    .apple-dot.active {
+        width: 38px;
+        height: 8px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(249, 115, 22, 0.4);
+    }
+
+    /* Inside Filler Animation (Progres Oranye Tepat 6 Detik) */
+    .apple-dot-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 0%;
         background: #f97316;
-        box-shadow: 0 3px 10px rgba(249, 115, 22, 0.65);
+        background: linear-gradient(135deg, #ff8c00 0%, #ea580c 100%);
+        border-radius: 6px;
+        box-shadow: 0 0 10px rgba(249, 115, 22, 0.8);
+        pointer-events: none;
     }
 
-    /* Premium Glassmorphic Left/Right Navigation Arrow Buttons ("Longgar Di Pinggir") */
+    .apple-dot.active .apple-dot-fill.animating {
+        animation: appleSeekProgress 6s linear forwards;
+    }
+
+    @keyframes appleSeekProgress {
+        from { width: 0%; }
+        to { width: 100%; }
+    }
+
+    /* Play / Pause Toggle Button */
+    .apple-play-pause-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(30, 41, 59, 0.45);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        transition: transform 0.25s ease, background-color 0.25s ease, border-color 0.25s ease;
+    }
+
+    .apple-play-pause-btn svg {
+        width: 15px;
+        height: 15px;
+        fill: #ffffff;
+        transition: fill 0.25s ease;
+    }
+
+    .apple-play-pause-btn:hover {
+        background: #ea580c;
+        border-color: rgba(234, 88, 12, 0.6);
+        transform: scale(1.08);
+    }
+
+    /* Premium Glassmorphic Left/Right Navigation Arrow Buttons */
     .lab-nav-btn {
         position: absolute;
         top: 50%;
@@ -281,7 +351,7 @@
         cursor: pointer;
         z-index: 10;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s ease, box-shadow 0.3s ease;
     }
 
     .lab-nav-btn svg {
@@ -313,15 +383,10 @@
     @media (max-width: 768px) {
         .lab-card {
             flex: 0 0 88vw;
-            height: 350px;
+            height: 360px;
         }
-        .lab-title {
-            font-size: 1.5rem;
-        }
-        .lab-cta-row {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 8px;
+        .lab-card-title-text {
+            font-size: 1.25rem;
         }
         .lab-nav-btn {
             width: 40px;
@@ -336,7 +401,7 @@
     }
 </style>
 
-<!-- Sesi: Laboratorium Fakultas (100% Simetris Instant Buffer dengan Tombol Navigasi Kiri & Kanan) -->
+<!-- Sesi: Laboratorium Fakultas (Pergeseran Super Lambat 2.5s & Ultra Silk-Smooth) -->
 <div class="section-wrapper" id="section-lab">
     <div class="lab-container">
         
@@ -356,157 +421,212 @@
                 <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
             </button>
 
+            <!-- 7 Slot Kartu Flat Presisi Tengah -->
             <div class="lab-track" id="labTrack">
-                
-                <!-- Card Index 0: Lab 2 Aula (Far Left) -->
-                <div class="lab-card" data-lab="aula">
-                    <img src="<?= file_exists(FCPATH . 'assets/images/Aula1.jpg') ? base_url('assets/images/Aula1.jpg') : (file_exists(FCPATH . 'assets/images/aula.jpg') ? base_url('assets/images/aula.jpg') : 'https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=1000&auto=format&fit=crop') ?>" alt="Aula Utama Fakultas" class="lab-card-bg-img">
-                    <div class="lab-card-overlay">
-                        <span class="badge-3d-tag">
-                            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                            3D Model
-                        </span>
-                        <div class="lab-card-bottom-info">
-                            <h3 class="lab-title">Aula Utama Fakultas</h3>
-                            <div class="lab-cta-row">
-                                <a href="<?= site_url('dashboard/lab_detail/aula') ?>" class="btn-apple-tv">Lihat Aula &rarr;</a>
-                                <div class="lab-apple-desc-inline">
-                                    <strong>Acara &amp; Seminar</strong> • Kapasitas 300+ orang dengan Sound System pro &amp; Stage LED.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card Index 1: Lab 3 Cintiq (LEFT PEEKING CARD - 100% PRE-RENDERED INSTAN) -->
-                <div class="lab-card" data-lab="cintiq">
-                    <img src="<?= file_exists(FCPATH . 'assets/images/sintiq.jpg') ? base_url('assets/images/sintiq.jpg') : (file_exists(FCPATH . 'assets/images/cintiq.jpg') ? base_url('assets/images/cintiq.jpg') : 'https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=1000&auto=format&fit=crop') ?>" alt="Lab Tablet Cintiq" class="lab-card-bg-img">
-                    <div class="lab-card-overlay">
-                        <span class="badge-3d-tag">
-                            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                            3D Model
-                        </span>
-                        <div class="lab-card-bottom-info">
-                            <h3 class="lab-title">Lab Tablet Cintiq</h3>
-                            <div class="lab-cta-row">
-                                <a href="<?= site_url('dashboard/lab_detail/cintiq') ?>" class="btn-apple-tv">Lihat Lab &rarr;</a>
-                                <div class="lab-apple-desc-inline">
-                                    <strong>Desain &amp; Animasi 2D/3D</strong> • Wacom Cintiq Pro Pen Display Stylus 8K.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card Index 2: Lab 1 Multimedia & Game (ACTIVE CENTER CARD AT START) -->
-                <div class="lab-card active-card" data-lab="multimedia">
-                    <img src="<?= file_exists(FCPATH . 'assets/images/multimedia.jpg') ? base_url('assets/images/multimedia.jpg') : 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1000&auto=format&fit=crop' ?>" alt="Lab Multimedia &amp; Game" class="lab-card-bg-img">
-                    <div class="lab-card-overlay">
-                        <span class="badge-3d-tag">
-                            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                            3D Model
-                        </span>
-                        <div class="lab-card-bottom-info">
-                            <h3 class="lab-title">Lab Multimedia &amp; Game</h3>
-                            <div class="lab-cta-row">
-                                <a href="<?= site_url('dashboard/lab_detail/multimedia') ?>" class="btn-apple-tv">Lihat Lab &rarr;</a>
-                                <div class="lab-apple-desc-inline">
-                                    <strong>Game &amp; VR</strong> • 36 Workstation PC RTX GPU untuk animasi digital &amp; 3D modelling.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card Index 3: Lab 2 Aula (RIGHT PEEKING CARD - 100% PRE-RENDERED INSTAN) -->
-                <div class="lab-card" data-lab="aula">
-                    <img src="<?= file_exists(FCPATH . 'assets/images/Aula1.jpg') ? base_url('assets/images/Aula1.jpg') : (file_exists(FCPATH . 'assets/images/aula.jpg') ? base_url('assets/images/aula.jpg') : 'https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=1000&auto=format&fit=crop') ?>" alt="Aula Utama Fakultas" class="lab-card-bg-img">
-                    <div class="lab-card-overlay">
-                        <span class="badge-3d-tag">
-                            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                            3D Model
-                        </span>
-                        <div class="lab-card-bottom-info">
-                            <h3 class="lab-title">Aula Utama Fakultas</h3>
-                            <div class="lab-cta-row">
-                                <a href="<?= site_url('dashboard/lab_detail/aula') ?>" class="btn-apple-tv">Lihat Aula &rarr;</a>
-                                <div class="lab-apple-desc-inline">
-                                    <strong>Acara &amp; Seminar</strong> • Kapasitas 300+ orang dengan Sound System pro &amp; Stage LED.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card Index 4: Lab 3 Cintiq -->
-                <div class="lab-card" data-lab="cintiq">
-                    <img src="<?= file_exists(FCPATH . 'assets/images/sintiq.jpg') ? base_url('assets/images/sintiq.jpg') : (file_exists(FCPATH . 'assets/images/cintiq.jpg') ? base_url('assets/images/cintiq.jpg') : 'https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=1000&auto=format&fit=crop') ?>" alt="Lab Tablet Cintiq" class="lab-card-bg-img">
-                    <div class="lab-card-overlay">
-                        <span class="badge-3d-tag">
-                            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                            3D Model
-                        </span>
-                        <div class="lab-card-bottom-info">
-                            <h3 class="lab-title">Lab Tablet Cintiq</h3>
-                            <div class="lab-cta-row">
-                                <a href="<?= site_url('dashboard/lab_detail/cintiq') ?>" class="btn-apple-tv">Lihat Lab &rarr;</a>
-                                <div class="lab-apple-desc-inline">
-                                    <strong>Desain &amp; Animasi 2D/3D</strong> • Wacom Cintiq Pro Pen Display Stylus 8K.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card Index 5: Lab 1 Multimedia & Game -->
-                <div class="lab-card" data-lab="multimedia">
-                    <img src="<?= file_exists(FCPATH . 'assets/images/multimedia.jpg') ? base_url('assets/images/multimedia.jpg') : 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1000&auto=format&fit=crop' ?>" alt="Lab Multimedia &amp; Game" class="lab-card-bg-img">
-                    <div class="lab-card-overlay">
-                        <span class="badge-3d-tag">
-                            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                            3D Model
-                        </span>
-                        <div class="lab-card-bottom-info">
-                            <h3 class="lab-title">Lab Multimedia &amp; Game</h3>
-                            <div class="lab-cta-row">
-                                <a href="<?= site_url('dashboard/lab_detail/multimedia') ?>" class="btn-apple-tv">Lihat Lab &rarr;</a>
-                                <div class="lab-apple-desc-inline">
-                                    <strong>Game &amp; VR</strong> • 36 Workstation PC RTX GPU untuk animasi digital &amp; 3D modelling.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+                <div class="lab-card" id="cardSlot0"></div>
+                <div class="lab-card" id="cardSlot1"></div>
+                <div class="lab-card" id="cardSlot2"></div>
+                <div class="lab-card active-card" id="cardSlot3"></div>
+                <div class="lab-card" id="cardSlot4"></div>
+                <div class="lab-card" id="cardSlot5"></div>
+                <div class="lab-card" id="cardSlot6"></div>
             </div>
         </div>
 
-        <!-- Dynamic Orange Pill Progress Lines (PERSIS TANGKAPAN LAYAR) -->
-        <div class="lab-indicators" id="labIndicators">
-            <span class="lab-indicator-pill active" data-lab="multimedia" title="Lab Multimedia &amp; Game"></span>
-            <span class="lab-indicator-pill" data-lab="aula" title="Aula Utama Fakultas"></span>
-            <span class="lab-indicator-pill" data-lab="cintiq" title="Lab Tablet Cintiq"></span>
+        <!-- Apple Controls Capsule Bar -->
+        <div class="apple-controls-capsule-wrapper">
+            <div class="apple-controls-capsule">
+                <div class="apple-indicator-dots" id="labIndicators">
+                    <div class="apple-dot active" data-lab="multimedia" title="Lab Multimedia &amp; Game">
+                        <div class="apple-dot-fill"></div>
+                    </div>
+                    <div class="apple-dot" data-lab="aula" title="Aula Utama Fakultas">
+                        <div class="apple-dot-fill"></div>
+                    </div>
+                    <div class="apple-dot" data-lab="cintiq" title="Lab Tablet Cintiq">
+                        <div class="apple-dot-fill"></div>
+                    </div>
+                    <div class="apple-dot" data-lab="greenscreen" title="Lab Green Screen Studio">
+                        <div class="apple-dot-fill"></div>
+                    </div>
+                    <div class="apple-dot" data-lab="incubator" title="Lab Inkubator Bisnis &amp; Tech">
+                        <div class="apple-dot-fill"></div>
+                    </div>
+                    <div class="apple-dot" data-lab="mac" title="Lab Workstation Apple Mac">
+                        <div class="apple-dot-fill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tombol Play / Pause -->
+            <button class="apple-play-pause-btn" id="labAutoPlayBtn" title="Auto Play / Pause">
+                <svg id="playPauseIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </button>
         </div>
 
     </div>
 </div>
 
 <script>
+    // DATA 6 LABORATORIUM UNIK
+    const LAB_DATA = {
+        multimedia: {
+            key: 'multimedia',
+            title: 'Lab Multimedia & Game',
+            desc: '36 Workstation PC RTX GPU untuk animasi digital &amp; 3D modelling.',
+            btnText: 'Lihat Lab &rarr;',
+            url: '<?= site_url('dashboard/lab_detail/multimedia') ?>',
+            img: '<?= base_url('assets/images/multimedia.jpg') ?>'
+        },
+        aula: {
+            key: 'aula',
+            title: 'Aula Utama Fakultas',
+            desc: 'Kapasitas 300+ orang dengan Sound System pro &amp; Stage LED.',
+            btnText: 'Lihat Aula &rarr;',
+            url: '<?= site_url('dashboard/lab_detail/aula') ?>',
+            img: '<?= file_exists(FCPATH . 'assets/images/Aula1.jpg') ? base_url('assets/images/Aula1.jpg') : base_url('assets/images/aula.jpg') ?>'
+        },
+        cintiq: {
+            key: 'cintiq',
+            title: 'Lab Tablet Cintiq',
+            desc: 'Studio Wacom Cintiq Pro 8K Pen Display untuk komik &amp; 2D art.',
+            btnText: 'Lihat Lab &rarr;',
+            url: '<?= site_url('dashboard/lab_detail/cintiq') ?>',
+            img: '<?= file_exists(FCPATH . 'assets/images/sintiq.jpg') ? base_url('assets/images/sintiq.jpg') : base_url('assets/images/cintiq.jpg') ?>'
+        },
+        greenscreen: {
+            key: 'greenscreen',
+            title: 'Lab Green Screen Studio',
+            desc: 'Dinding Cyclorama Chroma Key &amp; Lighting Rig DMX.',
+            btnText: 'Lihat Lab &rarr;',
+            url: '<?= site_url('dashboard/lab_detail/greenscreen') ?>',
+            img: '<?= base_url('assets/images/greenscreen.jpg') ?>'
+        },
+        incubator: {
+            key: 'incubator',
+            title: 'Lab Inkubator Bisnis & Tech',
+            desc: 'Ruang Pitching Investor, Co-Working Space, &amp; Wifi 6E.',
+            btnText: 'Lihat Lab &rarr;',
+            url: '<?= site_url('dashboard/lab_detail/incubator') ?>',
+            img: '<?= base_url('assets/images/incubator.jpg') ?>'
+        },
+        mac: {
+            key: 'mac',
+            title: 'Lab Workstation Apple Mac',
+            desc: 'Apple Mac Studio M2 Max &amp; Studio Display Retina 5K.',
+            btnText: 'Lihat Lab &rarr;',
+            url: '<?= site_url('dashboard/lab_detail/mac') ?>',
+            img: '<?= base_url('assets/images/mac.jpg') ?>'
+        }
+    };
+
+    const LAB_KEYS = ['multimedia', 'aula', 'cintiq', 'greenscreen', 'incubator', 'mac'];
+    const TOTAL_LABS = LAB_KEYS.length;
+    let activeLabIndex = 0; // Mulai dari Multimedia (Indeks 0)
+
     let isMoving = false;
     let isDragging = false;
+    let isPlaying = false;
     let startX = 0;
     let dragOffset = 0;
     let baseTargetX = 0;
-    const CENTER_INDEX = 2; // Index DOM 2 adalah posisi simetris kartu tengah (Index 1 kiri, Index 3 kanan)
+    const CENTER_SLOT_INDEX = 3; // Slot DOM Index 3 SELALU kartu aktif pas di tengah
+
+    function buildCardHTML(labKey) {
+        const data = LAB_DATA[labKey];
+        if (!data) return '';
+        return `
+            <img src="${data.img}" alt="${data.title}" class="lab-card-bg-img">
+            <div class="lab-card-overlay">
+                <div class="lab-card-top-content">
+                    <span class="badge-3d-tag-overlay">
+                        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                        3D Model
+                    </span>
+                    <h3 class="lab-card-title-text" style="margin-top: 14px;">${data.title}</h3>
+                    <div class="lab-card-desc-text">${data.desc}</div>
+                </div>
+
+                <div class="lab-card-bottom-row">
+                    <div></div>
+                    <a href="${data.url}" class="btn-apple-action">${data.btnText}</a>
+                </div>
+            </div>
+        `;
+    }
+
+    // UPDATE INDIKATOR TITIK & SEEK BAR SECARA SIMULTAN DENGAN KURVA SMOOTH 1.2S
+    function syncIndicators(targetIdx) {
+        const targetLabKey = LAB_KEYS[targetIdx];
+        const pills = document.querySelectorAll('#labIndicators .apple-dot');
+        
+        pills.forEach(pill => {
+            const isMatch = pill.getAttribute('data-lab') === targetLabKey;
+            pill.classList.toggle('active', isMatch);
+            const fill = pill.querySelector('.apple-dot-fill');
+            if (fill) {
+                fill.classList.remove('animating');
+                fill.style.width = '0%';
+            }
+        });
+
+        const activeDot = document.querySelector(`#labIndicators .apple-dot[data-lab="${targetLabKey}"]`);
+        if (activeDot) {
+            const activeFill = activeDot.querySelector('.apple-dot-fill');
+            if (activeFill && isPlaying) {
+                void activeFill.offsetWidth; // Force reflow
+                const onAnimationEnd = () => {
+                    activeFill.removeEventListener('animationend', onAnimationEnd);
+                    if (isPlaying && !isMoving && !isDragging) {
+                        setTimeout(() => {
+                            if (isPlaying && !isMoving && !isDragging) {
+                                shiftNext();
+                            }
+                        }, 500); // Jeda 0,5 detik setelah seekbar selesai sebelum kartu perpindah
+                    }
+                };
+                activeFill.addEventListener('animationend', onAnimationEnd);
+                activeFill.classList.add('animating');
+            }
+        }
+    }
+
+    function updateAllSlots(activeIdx) {
+        const slots = [
+            document.getElementById('cardSlot0'),
+            document.getElementById('cardSlot1'),
+            document.getElementById('cardSlot2'),
+            document.getElementById('cardSlot3'),
+            document.getElementById('cardSlot4'),
+            document.getElementById('cardSlot5'),
+            document.getElementById('cardSlot6')
+        ];
+
+        const relativeIndices = [-3, -2, -1, 0, 1, 2, 3];
+
+        relativeIndices.forEach((rel, slotIdx) => {
+            const computedLabIdx = (activeIdx + rel + TOTAL_LABS * 100) % TOTAL_LABS;
+            const labKey = LAB_KEYS[computedLabIdx];
+            const slotEl = slots[slotIdx];
+
+            if (slotEl) {
+                if (slotEl.getAttribute('data-lab') !== labKey) {
+                    slotEl.setAttribute('data-lab', labKey);
+                    slotEl.innerHTML = buildCardHTML(labKey);
+                }
+                slotEl.classList.toggle('active-card', slotIdx === CENTER_SLOT_INDEX);
+            }
+        });
+    }
 
     function getCardGeometry() {
         const track = document.getElementById('labTrack');
-        if (!track) return { cardWidth: 820, stepOffset: 844 };
+        if (!track) return { cardWidth: 820, stepOffset: 834 };
         const cards = track.querySelectorAll('.lab-card');
-        if (!cards.length) return { cardWidth: 820, stepOffset: 844 };
+        if (!cards.length) return { cardWidth: 820, stepOffset: 834 };
 
         const cardWidth = cards[0].getBoundingClientRect().width;
-        let gap = 24;
+        let gap = 14;
         if (cards.length > 1) {
             const r0 = cards[0].getBoundingClientRect();
             const r1 = cards[1].getBoundingClientRect();
@@ -515,7 +635,7 @@
         return { cardWidth, stepOffset: cardWidth + gap };
     }
 
-    function getTargetXForIndex(domIndex = CENTER_INDEX) {
+    function getTargetXForIndex(slotIndex = CENTER_SLOT_INDEX) {
         const viewport = document.getElementById('labViewport');
         const track = document.getElementById('labTrack');
         if (!viewport || !track) return 0;
@@ -524,7 +644,7 @@
 
         const { cardWidth, stepOffset } = getCardGeometry();
         const viewportWidth = viewport.clientWidth;
-        return (viewportWidth / 2) - (domIndex * stepOffset + cardWidth / 2);
+        return (viewportWidth / 2) - (slotIndex * stepOffset + cardWidth / 2);
     }
 
     function setTrackTransform(x, animate = true) {
@@ -533,19 +653,19 @@
         if (!track || !viewport) return;
 
         if (animate) {
-            track.style.transition = 'transform 0.48s cubic-bezier(0.16, 1, 0.3, 1)';
+            // PERGESERAN SMOOTH 1.0s ULTRA SILK-SMOOTH
+            track.style.transition = 'transform 1.0s cubic-bezier(0.25, 1, 0.35, 1)';
         } else {
             track.style.transition = 'none';
         }
 
         track.style.transform = `translate3d(${x}px, 0, 0)`;
 
-        // Highlight active center card & orange pill indicators secara REAL-TIME (0ms delay)
         const cards = track.querySelectorAll('.lab-card');
         const { cardWidth, stepOffset } = getCardGeometry();
         const viewportCenter = viewport.clientWidth / 2;
 
-        let closestIndex = CENTER_INDEX;
+        let closestIndex = CENTER_SLOT_INDEX;
         let minDistance = Infinity;
 
         cards.forEach((card, idx) => {
@@ -560,67 +680,105 @@
         cards.forEach((card, idx) => {
             card.classList.toggle('active-card', idx === closestIndex);
         });
-
-        // Sync Dynamic Orange Pill Line Indicators (Persis Tangkapan Layar)
-        const activeCard = cards[closestIndex];
-        const activeLabKey = activeCard ? activeCard.getAttribute('data-lab') : 'multimedia';
-
-        const pills = document.querySelectorAll('#labIndicators .lab-indicator-pill');
-        pills.forEach(pill => {
-            const pillLabKey = pill.getAttribute('data-lab');
-            pill.classList.toggle('active', pillLabKey === activeLabKey);
-        });
     }
 
-    function renderTrackPosition(domIndex = CENTER_INDEX, animate = true) {
-        const targetX = getTargetXForIndex(domIndex);
+    function renderTrackPosition(slotIndex = CENTER_SLOT_INDEX, animate = true) {
+        const targetX = getTargetXForIndex(slotIndex);
         setTrackTransform(targetX, animate);
     }
 
-    function shiftNext() {
-        if (isMoving) return;
+    function startAutoPlay() {
+        isPlaying = true;
+        const playPauseIcon = document.getElementById('playPauseIcon');
+        if (playPauseIcon) {
+            playPauseIcon.innerHTML = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`; // Icon Pause
+        }
+        syncIndicators(activeLabIndex);
+    }
+
+    function pauseAutoPlay() {
+        isPlaying = false;
+        const playPauseIcon = document.getElementById('playPauseIcon');
+        if (playPauseIcon) {
+            playPauseIcon.innerHTML = `<path d="M8 5v14l11-7z"/>`; // Icon Play
+        }
+
+        const dots = document.querySelectorAll('#labIndicators .apple-dot');
+        dots.forEach(dot => {
+            const fill = dot.querySelector('.apple-dot-fill');
+            if (fill) {
+                fill.classList.remove('animating');
+                fill.style.width = '0%';
+            }
+        });
+    }
+
+    function toggleAutoPlay() {
+        if (isPlaying) {
+            pauseAutoPlay();
+        } else {
+            startAutoPlay();
+        }
+    }
+
+    // NAVIGASI SMOOTH UNTUK SETIAP PERPINDAHAN MANUAL ATAU OTOMATIS
+    function navigateToIndex(targetIdx) {
+        if (isMoving || targetIdx === activeLabIndex || targetIdx < 0 || targetIdx >= TOTAL_LABS) return;
         isMoving = true;
         const track = document.getElementById('labTrack');
-        if (!track) return;
+        if (!track) {
+            isMoving = false;
+            return;
+        }
 
-        renderTrackPosition(3, true);
+        // Hitung jarak terdekat (forward/backward)
+        let diffForward = (targetIdx - activeLabIndex + TOTAL_LABS) % TOTAL_LABS;
+        let diffBackward = (activeLabIndex - targetIdx + TOTAL_LABS) % TOTAL_LABS;
+
+        let targetSlotIndex;
+        if (diffForward <= diffBackward) {
+            targetSlotIndex = CENTER_SLOT_INDEX + diffForward;
+        } else {
+            targetSlotIndex = CENTER_SLOT_INDEX - diffBackward;
+        }
+
+        // Langsung update titik indikator & seek bar secara bersamaan
+        syncIndicators(targetIdx);
+
+        // Mulai meluncurkan track dengan animasi smooth
+        renderTrackPosition(targetSlotIndex, true);
 
         const onEnd = (e) => {
             if (e.target !== track) return;
             track.removeEventListener('transitionend', onEnd);
 
-            track.appendChild(track.firstElementChild);
+            const cards = track.querySelectorAll('.lab-card');
+            cards.forEach(c => c.style.transition = 'none');
 
-            renderTrackPosition(CENTER_INDEX, false);
-            void track.offsetHeight;
+            activeLabIndex = targetIdx;
+            updateAllSlots(activeLabIndex);
 
-            isMoving = false;
+            renderTrackPosition(CENTER_SLOT_INDEX, false);
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    cards.forEach(c => c.style.transition = '');
+                    isMoving = false;
+                });
+            });
         };
 
         track.addEventListener('transitionend', onEnd);
     }
 
+    function shiftNext() {
+        const nextLabIndex = (activeLabIndex + 1) % TOTAL_LABS;
+        navigateToIndex(nextLabIndex);
+    }
+
     function shiftPrev() {
-        if (isMoving) return;
-        isMoving = true;
-        const track = document.getElementById('labTrack');
-        if (!track) return;
-
-        renderTrackPosition(1, true);
-
-        const onEnd = (e) => {
-            if (e.target !== track) return;
-            track.removeEventListener('transitionend', onEnd);
-
-            track.insertBefore(track.lastElementChild, track.firstElementChild);
-
-            renderTrackPosition(CENTER_INDEX, false);
-            void track.offsetHeight;
-
-            isMoving = false;
-        };
-
-        track.addEventListener('transitionend', onEnd);
+        const prevLabIndex = (activeLabIndex - 1 + TOTAL_LABS) % TOTAL_LABS;
+        navigateToIndex(prevLabIndex);
     }
 
     // 1:1 REAL-TIME PHYSICAL DRAG ENGINE
@@ -629,7 +787,7 @@
         isDragging = true;
         startX = clientX;
         dragOffset = 0;
-        baseTargetX = getTargetXForIndex(CENTER_INDEX);
+        baseTargetX = getTargetXForIndex(CENTER_SLOT_INDEX);
         const viewport = document.getElementById('labViewport');
         if (viewport) viewport.classList.add('active-drag');
     }
@@ -652,7 +810,7 @@
         } else if (dragOffset > 50) {
             shiftPrev();
         } else {
-            renderTrackPosition(CENTER_INDEX, true);
+            renderTrackPosition(CENTER_SLOT_INDEX, true);
         }
     }
 
@@ -661,10 +819,11 @@
         const viewport = document.getElementById('labViewport');
 
         if (track && viewport) {
-            renderTrackPosition(CENTER_INDEX, false);
+            updateAllSlots(activeLabIndex);
+            renderTrackPosition(CENTER_SLOT_INDEX, false);
 
-            window.addEventListener('resize', () => renderTrackPosition(CENTER_INDEX, false));
-            window.addEventListener('load', () => renderTrackPosition(CENTER_INDEX, false));
+            window.addEventListener('resize', () => renderTrackPosition(CENTER_SLOT_INDEX, false));
+            window.addEventListener('load', () => renderTrackPosition(CENTER_SLOT_INDEX, false));
 
             // POINTER EVENTS (1:1 Real-Time Mouse & Touchpad Dragging)
             viewport.addEventListener('pointerdown', (e) => {
@@ -700,25 +859,31 @@
                 }
             }, { passive: false });
 
-            // Klik Indikator Garis Pill Oranye (Persis Screenshot)
-            document.querySelectorAll('#labIndicators .lab-indicator-pill').forEach(pill => {
+            // Klik Indikator Titik Apple
+            document.querySelectorAll('#labIndicators .apple-dot').forEach(pill => {
                 pill.addEventListener('click', () => {
-                    if (isMoving) return;
                     const targetLab = pill.getAttribute('data-lab');
-                    const cards = Array.from(track.querySelectorAll('.lab-card'));
-                    const currentCenterLab = cards[CENTER_INDEX].getAttribute('data-lab');
-
-                    if (targetLab === currentCenterLab) return;
-
-                    if (cards[3] && cards[3].getAttribute('data-lab') === targetLab) {
-                        shiftNext();
-                    } else if (cards[1] && cards[1].getAttribute('data-lab') === targetLab) {
-                        shiftPrev();
+                    const targetIdx = LAB_KEYS.indexOf(targetLab);
+                    if (targetIdx !== -1) {
+                        navigateToIndex(targetIdx);
                     }
                 });
             });
 
-            // Tombol Navigasi Kanan & Kiri (Glassmorphism Apple TV)
+            // Klik langsung pada kartu di samping untuk berpindah dengan animasi smooth
+            document.querySelectorAll('.lab-card').forEach((card) => {
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('.btn-apple-action') || e.target.closest('.lab-nav-btn')) return;
+
+                    const targetLab = card.getAttribute('data-lab');
+                    const targetIdx = LAB_KEYS.indexOf(targetLab);
+                    if (targetIdx !== -1 && targetIdx !== activeLabIndex) {
+                        navigateToIndex(targetIdx);
+                    }
+                });
+            });
+
+            // Tombol Navigasi Kanan & Kiri
             const prevBtn = document.getElementById('labPrevBtn');
             const nextBtn = document.getElementById('labNextBtn');
 
@@ -733,6 +898,15 @@
                 nextBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     shiftNext();
+                });
+            }
+
+            // Tombol Auto Play / Pause
+            const playPauseBtn = document.getElementById('labAutoPlayBtn');
+            if (playPauseBtn) {
+                playPauseBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleAutoPlay();
                 });
             }
         }
