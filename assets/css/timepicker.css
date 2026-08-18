@@ -258,7 +258,12 @@
     transition: background 0.2s, color 0.2s;
 }
 .tp-clock-number.active {
-    color: #fff;
+    background: #7c3aed !important;
+    color: #ffffff !important;
+    border-radius: 50% !important;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4) !important;
+    z-index: 20 !important;
 }
 .tp-clock-number.inner {
     font-size: 0.75rem;

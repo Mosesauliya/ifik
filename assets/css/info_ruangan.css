@@ -11,12 +11,11 @@
     }
 
     .about-container {
-        /* Menggeser container ke sisi kanan layar secara dinamis */
-        margin-left: auto;
-        margin-right: 2vw;
-        width: calc(100% - 38vw); /* Memaksa menyisakan 38% layar kiri untuk logo 3D */
-        max-width: 1200px;
-        max-height: calc(100vh - 40px);
+        /* Tampilan Full Width di Tengah Layar (Tanpa Logo 3D di Sesi 2) */
+        margin: 0 auto;
+        width: 92%;
+        max-width: 1350px;
+        max-height: calc(100vh - 80px);
         padding: 32px 40px 24px 40px;
         z-index: 2;
         background: var(--glass-bg);
@@ -24,7 +23,7 @@
         border-radius: 32px;
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        box-shadow: 0 25px 50px rgba(0,0,0,0.1);
+        box-shadow: 0 25px 50px rgba(0,0,0,0.08);
         position: relative; /* Untuk penempatan tombol fullscreen absolute */
         display: flex;
         flex-direction: column;
@@ -34,20 +33,27 @@
 
     /* State ketika Fullscreen Aktif */
     .about-container.is-fullscreen {
-        position: fixed;
-        top: 0;
-        left: 0;
-        margin: 0;
-        padding: 0; /* Hilangkan padding agar kalender full 100% layar */
-        max-width: 100vw;
-        width: 100vw;
-        height: 100vh;
-        border-radius: 0;
-        z-index: 9999;
-        background: var(--bg-color);
-        display: flex;
-        flex-direction: column;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        right: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important; /* Hilangkan padding agar kalender full 100% layar */
+        max-width: 100vw !important;
+        max-height: 100vh !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        border-radius: 0 !important;
+        z-index: 99998 !important;
+        background: #fbf7f1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
     }
+
+
 
     /* Tombol Fullscreen di Kanan Atas */
     .btn-fullscreen {
@@ -88,6 +94,12 @@
         color: var(--text-color);
     }
 
+    @keyframes pulseGlow {
+        0% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.7); }
+        70% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 0 6px rgba(234, 88, 12, 0); }
+        100% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(234, 88, 12, 0); }
+    }
+
     /* Sembunyikan judul saat mode fullscreen agar kalender lebih luas */
     .about-container.is-fullscreen h1 {
         display: none;
@@ -101,13 +113,13 @@
     }
 
     .room-item {
-        display: flex;
+        display: grid;
+        grid-template-columns: minmax(220px, 2.2fr) minmax(170px, 1.4fr) minmax(120px, 1fr) minmax(140px, 1.1fr);
         align-items: center;
-        justify-content: space-between;
         padding: 16px 0;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
-        gap: 20px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        transition: all 0.25s ease;
+        gap: 16px;
     }
     .room-item:last-child {
         border-bottom: none;
@@ -119,13 +131,13 @@
     .room-item-left {
         display: flex;
         align-items: center;
-        gap: 20px;
-        flex: 2.5;
+        gap: 16px;
+        min-width: 0;
     }
 
     .room-icon {
-        width: 50px;
-        height: 50px;
+        width: 48px;
+        height: 48px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -138,32 +150,39 @@
     .room-info {
         display: flex;
         flex-direction: column;
+        min-width: 0;
     }
 
     .room-info h3 {
-        font-size: 1.15rem;
+        font-size: 1.1rem;
         font-weight: 700;
         color: var(--text-color);
-        margin: 0 0 6px 0;
+        margin: 0 0 4px 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .room-info p {
-        font-size: 0.85rem;
+        font-size: 0.84rem;
         color: rgba(30, 41, 59, 0.6);
         margin: 0;
-        line-height: 1.4;
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .room-item-tags {
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        gap: 8px;
-        flex: 1.5;
+        gap: 6px;
+        min-width: 0;
     }
 
     .tag {
-        padding: 6px 14px;
+        padding: 5px 12px;
         border: 1px solid var(--text-color);
         border-radius: 20px;
         font-size: 0.75rem;
@@ -174,18 +193,18 @@
     }
 
     .room-item-date {
-        flex: 1;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         font-weight: 700;
         color: var(--text-color);
         text-align: right;
         white-space: nowrap;
+        padding-right: 8px;
     }
 
     .room-item-action {
-        flex: 0.5;
         display: flex;
         justify-content: flex-end;
+        align-items: center;
     }
 
     .btn-status {
@@ -266,22 +285,26 @@
        ========================================= */
     .gcal-wrapper {
         width: 100%;
-        flex: 1;
-        background: transparent;
+        height: 100%;
+        flex: 1 1 auto;
+        background: #fbf7f1;
         color: var(--text-color);
         display: flex;
         flex-direction: column;
         font-family: 'Plus Jakarta Sans', sans-serif;
         overflow: hidden;
+        box-sizing: border-box;
     }
 
     .gcal-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 16px 70px 16px 20px; /* Padding kanan ditambah jadi 70px supaya tidak nabrak tombol minimize absolut */
+        padding: 16px 70px 16px 24px; /* Padding kanan ditambah jadi 70px supaya tidak nabrak tombol minimize absolut */
         border-bottom: 1px solid rgba(30, 41, 59, 0.1);
         flex-shrink: 0;
+        height: 70px;
+        box-sizing: border-box;
     }
 
     .gcal-header-left, .gcal-header-right {
@@ -375,10 +398,13 @@
     }
 
     .gcal-body {
-        flex: 1;
+        flex: 1 1 auto;
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        height: calc(100vh - 70px);
+        position: relative;
+        box-sizing: border-box;
     }
 
     .gcal-days-header {
@@ -426,11 +452,15 @@
     }
 
     .gcal-grid-scroll {
-        flex: 1;
-        overflow-y: auto;
-        overflow-x: hidden;
+        flex: 1 1 auto;
+        height: 100%;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
         position: relative;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
     }
+
 
     /* Kustomisasi Scrollbar agar nyambung dengan tema terang */
     .gcal-grid-scroll::-webkit-scrollbar {
@@ -550,15 +580,16 @@
         transform: translateY(-2px);
     }
 
-    /* SweetAlert2 Popup z-index Fix (Harus di atas is-fullscreen z-index 9999 dan modal-overlay z-index 10000) */
+    /* SweetAlert2 Popup z-index Fix (Harus di paling atas di atas modal-overlay) */
     .swal2-container {
-        z-index: 99999 !important;
+        z-index: 999999 !important;
     }
 
     .modal-overlay {
         display: none;
         position: fixed;
-        z-index: 10000;
+        z-index: 99999 !important;
+
         left: 0;
         top: 0;
         width: 100%;
