@@ -8,12 +8,16 @@ class Dashboard extends CI_Controller {
         // Load the URL helper if it's not loaded globally, since we need base_url()
         $this->load->helper('url');
         $this->load->model('Booking_model');
+        $this->load->model('Header_model');
         
         $data['jadwal_peminjaman'] = $this->Booking_model->get_approved_bookings();
         $data['kategori'] = $this->Booking_model->get_all_kategori();
         
         $this->db->where('status', 'Tersedia');
         $data['ruangan'] = $this->db->get('ruangan')->result();
+
+        $data['header_settings'] = $this->Header_model->get_settings();
+        $data['header_slides'] = $this->Header_model->get_slides();
         
         $this->load->view('dashboard/index', $data);
     }
