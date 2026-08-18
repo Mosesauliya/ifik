@@ -200,7 +200,7 @@
                 <span>Layanan LAB</span>
             </a>
             <div class="nav-dropdown">
-                <a href="<?= site_url('welcome') ?>">
+                <a href="<?= base_url('ajukan-booking') ?>">
                     <span class="btn-box">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -209,6 +209,7 @@
                     </span>
                     <span>Peminjaman Ruang</span>
                 </a>
+
                 <a href="<?= site_url('welcome') ?>">
                     <span class="btn-box">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

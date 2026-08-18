@@ -422,29 +422,27 @@
                 if (vh <= 750) topPos1 = 38;
                 else if (vh <= 950) topPos1 = 42;
 
-                // 1. Transisi Mulus Sesi 1 (Header) -> Sesi 2 (Info Ruangan)
+                // 1. Transisi Mulus Sesi 1 (Header) -> Sesi 2 (Info Ruangan: 3D Logo Fade Out)
                 if (scrollTop <= vh) {
                     const p = Math.max(0, Math.min(1, scrollTop / vh)); // 0.0 -> 1.0
-                    // Smoothstep easing: 3p^2 - 2p^3
                     const ease = p * p * (3 - 2 * p);
 
-                    const currentLeft = 50 + (leftPos2 - 50) * ease;
-                    const currentTop = topPos1 + (topPos2 - topPos1) * ease;
-                    const currentScale = 1.0 + (0.9 - 1.0) * ease;
-                    const currentRotY = 360 * ease;
+                    const currentLeft = 50;
+                    const currentTop = topPos1;
+                    const currentScale = 1.0 - (0.35 * ease);
+                    const currentRotY = 180 * ease;
 
-                    modelContainer.style.opacity = '1';
+                    // Fade out container saat scroll masuk ke Sesi 2 (Informasi Ruangan)
+                    const containerOp = Math.max(0, 1 - (p * 1.8));
+                    modelContainer.style.opacity = containerOp;
+                    modelContainer.style.pointerEvents = containerOp < 0.1 ? 'none' : 'auto';
                     modelContainer.style.left = `${currentLeft}%`;
                     modelContainer.style.top = `${currentTop}%`;
                     modelContainer.style.transform = `translate(-50%, -50%) scale(${currentScale}) rotateY(${currentRotY}deg)`;
                     modelContainer.style.zIndex = '8';
 
-                    // Seamless Crossfade Opacity antara ifikouter.glb dan ifik.glb
-                    const outerOp = Math.max(0, Math.min(1, 1 - (p * 1.5)));
-                    const innerOp = Math.max(0, Math.min(1, (p - 0.15) * 1.5));
-
-                    if (modelOuter) modelOuter.style.opacity = outerOp;
-                    if (modelInner) modelInner.style.opacity = innerOp;
+                    if (modelOuter) modelOuter.style.opacity = Math.max(0, 1 - (p * 2));
+                    if (modelInner) modelInner.style.opacity = '0';
 
                     if (p < 0.1 && window.splashScreenDone) {
                         document.body.classList.add('play-animations');
@@ -452,7 +450,7 @@
                         document.body.classList.remove('play-animations');
                     }
                 } 
-                // Sesi 2 (Info Ruangan) -> Sesi 3 (Lab)
+                // Sesi 2 (Info Ruangan) -> Sesi 3 (Lab: 3D Logo Fade In menuju Navbar)
                 else if (scrollTop <= 2 * vh) {
                     const p = Math.max(0, Math.min(1, (scrollTop - vh) / vh));
                     const ease = p * p * (3 - 2 * p);
@@ -462,20 +460,14 @@
                     const targetScale = vw <= 900 ? 0.1 : 0.11;
                     const targetRotY = 720;
 
-                    const startLeftPx = (vw * leftPos2) / 100;
-                    const startTopPx = (vh * topPos2) / 100;
-                    
-                    const currentLeftPx = startLeftPx + (targetLeftPx - startLeftPx) * ease;
-                    const currentTopPx = startTopPx + (targetTopPx - startTopPx) * ease;
-                    const currentScale = 0.9 + (targetScale - 0.9) * ease;
-                    const currentRotY = 360 + (targetRotY - 360) * ease;
-
-                    modelContainer.style.left = `${currentLeftPx}px`;
-                    modelContainer.style.top = `${currentTopPx}px`;
-                    modelContainer.style.transform = `translate(-50%, -50%) scale(${currentScale}) rotateY(${currentRotY}deg)`;
-                    modelContainer.style.zIndex = p > 0.6 ? '110' : '8';
+                    modelContainer.style.left = `${targetLeftPx}px`;
+                    modelContainer.style.top = `${targetTopPx}px`;
+                    modelContainer.style.transform = `translate(-50%, -50%) scale(${targetScale}) rotateY(${targetRotY}deg)`;
+                    modelContainer.style.zIndex = '110';
+                    modelContainer.style.opacity = ease; // Fade in saat mendekati Sesi 3
+                    modelContainer.style.pointerEvents = 'none';
                     if (modelOuter) modelOuter.style.opacity = '0';
-                    if (modelInner) modelInner.style.opacity = '0';
+                    if (modelInner) modelInner.style.opacity = '1';
                     document.body.classList.remove('play-animations');
                 } 
                 // Sesi 3 (Lab) dan seterusnya -> Tetap di Navbar
@@ -489,10 +481,13 @@
                     modelContainer.style.top = `${targetTopPx}px`;
                     modelContainer.style.transform = `translate(-50%, -50%) scale(${targetScale}) rotateY(${targetRotY}deg)`;
                     modelContainer.style.zIndex = '110';
+                    modelContainer.style.opacity = '1';
+                    modelContainer.style.pointerEvents = 'none';
                     if (modelOuter) modelOuter.style.opacity = '0';
                     if (modelInner) modelInner.style.opacity = '1';
                     document.body.classList.remove('play-animations');
-                } 
+                }
+ 
 
                 // Update Progress Bar
                 if (dashboardContainer && progressBar) {

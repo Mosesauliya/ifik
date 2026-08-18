@@ -25,6 +25,33 @@ class Dashboard extends CI_Controller {
         $this->load->view('dashboard/lab_detail', $data);
     }
 
+    public function kalender()
+    {
+        $this->load->helper('url');
+        $this->load->model('Booking_model');
+        $data['jadwal_peminjaman'] = $this->Booking_model->get_approved_bookings();
+        $this->load->view('dashboard/kalender', $data);
+    }
+
+    public function ajukan()
+    {
+        $this->load->helper('url');
+        // Pengecekan Login: Hanya pengguna yang sudah login yang bisa mengajukan peminjaman
+        if (!$this->session->userdata('logged_in')) {
+            $this->session->set_flashdata('error', 'Silakan login terlebih dahulu untuk mengajukan peminjaman ruangan.');
+            redirect('login');
+            return;
+        }
+
+        $this->load->model('Booking_model');
+        $data['kategori'] = $this->Booking_model->get_all_kategori();
+        $this->db->where('status', 'Tersedia');
+        $data['ruangan'] = $this->db->get('ruangan')->result();
+
+        $this->load->view('dashboard/ajukan_booking', $data);
+    }
+
+
     public function ajukan_booking()
     {
         header('Content-Type: application/json');
