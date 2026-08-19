@@ -69,8 +69,11 @@ $route['koordinator/detail_mahasiswa/(:any)'] = 'KoordinatorTA/detail_mahasiswa/
 
 // Admin Import Email & Token Routes
 $route['import-email'] = 'ImportEmail';
+$route['import-email/(:any)'] = 'ImportEmail/$1';
 $route['admin/import-email'] = 'ImportEmail';
+$route['admin/import-email/(:any)'] = 'ImportEmail/$1';
 $route['admin/import'] = 'ImportEmail';
+$route['admin/import/(:any)'] = 'ImportEmail/$1';
 
 // Onboarding & Force Change Password Routes
 $route['onboarding'] = 'login/onboarding';
