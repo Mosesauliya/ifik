@@ -17,11 +17,11 @@
         display: flex;
         align-items: center;
         justify-content: center; /* Menu ada di tengah */
-        background: rgba(251, 247, 241, 0.7);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-bottom: 1px solid rgba(234, 88, 12, 0.15);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        background: rgba(255, 255, 255, 0.95); /* Putih solid tapi sedikit kaca */
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-bottom: 2px solid #ea580c; /* Highlight oranye jelas tapi simple */
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); /* Soft shadow */
         transition: all 0.3s ease;
     }
 
@@ -39,6 +39,59 @@
     }
 
     .nav-link {
+        color: #1e293b;
+        background: transparent;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-decoration: none;
+        padding: 7px 5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        position: relative;
+        transition: color 0.3s ease;
+    }
+
+    /* Orange line from left to right on hover */
+    .nav-link::after {
+        content: '';
+        position: absolute;
+        bottom: 2px;
+        left: 0;
+        width: 0%;
+        height: 2px;
+        background: #ea580c;
+        transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .nav-link:hover {
+        color: #ea580c;
+    }
+
+    .nav-link:hover::after {
+        width: 100%;
+    }
+
+    /* Minimalist btn-box for transparent links */
+    .nav-link .btn-box {
+        width: 24px;
+        height: 24px;
+        background: transparent;
+        color: inherit;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.3s ease;
+    }
+
+    .nav-link:hover .btn-box {
+        transform: scale(1.1);
+    }
+
+    /* Nav Link Login (Preserve Old Orange Pill Style) */
+    .nav-link-login {
         color: #ffffff;
         background: #ea580c;
         font-weight: 700;
@@ -58,14 +111,14 @@
         transform-origin: center;
     }
     
-    .nav-link:hover {
+    .nav-link-login:hover {
         background: #c2410c;
         transform: scale(1.1) rotate(-4deg);
         box-shadow: 0 8px 22px rgba(234, 88, 12, 0.5);
         color: #ffffff;
     }
 
-    .nav-link .btn-box {
+    .nav-link-login .btn-box {
         width: 24px;
         height: 24px;
         background: #ffffff;
@@ -78,7 +131,7 @@
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
     }
 
-    .nav-link:hover .btn-box {
+    .nav-link-login:hover .btn-box {
         transform: scale(1.22) rotate(18deg);
     }
 
@@ -167,6 +220,34 @@
         color: #ea580c;
         transform: scale(1.15) rotate(10deg);
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    /* Responsiveness */
+    @media (max-width: 1200px) {
+        .nav-list { gap: 10px; }
+        .nav-link { font-size: 0.75rem; padding: 7px 2px; }
+        .nav-link-login { font-size: 0.75rem; }
+        .nav-dropdown { padding: 15px; gap: 10px; }
+        .nav-dropdown a { padding: 10px 15px; min-width: 110px; }
+    }
+
+    @media (max-width: 992px) {
+        .nav-list { gap: 5px; }
+        .nav-link .btn-box { display: none; } /* Hide icons to save space */
+        .nav-link { font-size: 0.7rem; gap: 4px; }
+        
+        .nav-link-login span:last-child { display: none; } /* Hide "Login" text */
+        .nav-link-login { padding: 6px; }
+        .nav-link-login .btn-box { margin: 0; }
+        
+        .nav-dropdown {
+            flex-direction: column; /* Stack dropdown items vertically */
+            left: 0;
+            transform: translateX(-20px) translateY(15px);
+        }
+        .nav-item:hover .nav-dropdown {
+            transform: translateX(-20px) translateY(0);
+        }
     }
 </style>
 
@@ -400,21 +481,40 @@
                     </span>
                     <span>Import Email & Token</span>
                 </a>
+                <a href="<?= site_url('adminheader') ?>">
+                    <span class="btn-box">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    </span>
+                    <span>Pengaturan Header</span>
+                </a>
             </div>
         </li>
 
-        <!-- 7. Login -->
+        <!-- 7. Login / Logout -->
         <li class="nav-item">
-            <a href="<?= base_url('login') ?>" class="nav-link">
-                <span class="btn-box">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-                        <polyline points="10 17 15 12 10 7"></polyline>
-                        <line x1="15" y1="12" x2="3" y2="12"></line>
-                    </svg>
-                </span>
-                <span>Login</span>
-            </a>
+            <?php if ($this->session->userdata('logged_in')): ?>
+                <a href="<?= base_url('login/logout') ?>" class="nav-link-login">
+                    <span class="btn-box">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                    </span>
+                    <span>Logout</span>
+                </a>
+            <?php else: ?>
+                <a href="<?= base_url('login') ?>" class="nav-link-login">
+                    <span class="btn-box">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                            <polyline points="10 17 15 12 10 7"></polyline>
+                            <line x1="15" y1="12" x2="3" y2="12"></line>
+                        </svg>
+                    </span>
+                    <span>Login</span>
+                </a>
+            <?php endif; ?>
         </li>
     </ul>
 </nav>
