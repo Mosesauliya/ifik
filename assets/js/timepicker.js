@@ -78,7 +78,12 @@ function drawNumber(container, val, isInner) {
     if(!isSelectingHour && selectedMinute === val) isActive = true;
     
     if(isActive) {
-        el.style.color = '#fff';
+        el.classList.add('active');
+        el.style.background = '#7c3aed';
+        el.style.color = '#ffffff';
+        el.style.borderRadius = '50%';
+        el.style.fontWeight = '700';
+        el.style.boxShadow = '0 2px 8px rgba(124, 58, 237, 0.4)';
         el.style.zIndex = 20;
     }
     

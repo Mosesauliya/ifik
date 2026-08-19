@@ -277,6 +277,57 @@
             background: #ffffff;
             box-shadow: 0 0 10px #ffffff;
         }
+
+        /* Global Sticky Scroll Button */
+        .global-scroll-btn {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 5; /* Di atas slide sesi 1 (z-index 2), tapi di bawah card/tabel spesifik (z-index 10) */
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background: rgba(234, 88, 12, 0.95);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px solid rgba(255,255,255,0.3);
+            box-shadow: 0 6px 20px rgba(234, 88, 12, 0.5);
+            transition: all 0.3s ease;
+            padding: 0;
+            backdrop-filter: blur(4px);
+        }
+        .global-scroll-btn:hover {
+            background: #ea580c;
+            transform: translateX(-50%) translateY(-5px);
+            box-shadow: 0 10px 25px rgba(234, 88, 12, 0.7);
+        }
+        .global-scroll-btn svg {
+            width: 32px;
+            height: 32px;
+            animation: arrowBounce 2s infinite;
+            transition: transform 0.5s ease;
+        }
+        @keyframes arrowBounce {
+            0%, 100% { transform: translateY(-3px); }
+            50% { transform: translateY(3px); }
+        }
+        /* Rotasi panah ke atas jika di sesi terakhir */
+        .global-scroll-btn.pointing-up svg {
+            transform: rotate(180deg);
+        }
+
+        /* Elevate specific content cards so they glide over the global scroll button (z-index: 1) */
+        .about-container, 
+        .lab-container, 
+        .news-stage,
+        .vt-grid {
+            position: relative;
+            z-index: 10 !important;
+        }
     </style>
 </head>
 <body>
@@ -369,6 +420,11 @@
         </model-viewer>
     </div>
 
+    <!-- Sticky Center Scroll Button (Ditaruh sebelum konten dashboard agar tertutup jika ada elemen dgn z-index >= 1) -->
+    <button class="global-scroll-btn" id="globalScrollBtn" onclick="scrollToNextSection()" title="Scroll ke Sesi Selanjutnya">
+        <svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+    </button>
+
     <!-- Main Container that handles vertical Smooth Scrolling -->
     <div class="dashboard-container">
         
@@ -419,29 +475,27 @@
                 if (vh <= 750) topPos1 = 38;
                 else if (vh <= 950) topPos1 = 42;
 
-                // 1. Transisi Mulus Sesi 1 (Header) -> Sesi 2 (Info Ruangan)
+                // 1. Transisi Mulus Sesi 1 (Header) -> Sesi 2 (Info Ruangan: 3D Logo Fade Out)
                 if (scrollTop <= vh) {
                     const p = Math.max(0, Math.min(1, scrollTop / vh)); // 0.0 -> 1.0
-                    // Smoothstep easing: 3p^2 - 2p^3
                     const ease = p * p * (3 - 2 * p);
 
-                    const currentLeft = 50 + (leftPos2 - 50) * ease;
-                    const currentTop = topPos1 + (topPos2 - topPos1) * ease;
-                    const currentScale = 1.0 + (0.9 - 1.0) * ease;
-                    const currentRotY = 360 * ease;
+                    const currentLeft = 50;
+                    const currentTop = topPos1;
+                    const currentScale = 1.0 - (0.35 * ease);
+                    const currentRotY = 180 * ease;
 
-                    modelContainer.style.opacity = '1';
+                    // Fade out container saat scroll masuk ke Sesi 2 (Informasi Ruangan)
+                    const containerOp = Math.max(0, 1 - (p * 1.8));
+                    modelContainer.style.opacity = containerOp;
+                    modelContainer.style.pointerEvents = containerOp < 0.1 ? 'none' : 'auto';
                     modelContainer.style.left = `${currentLeft}%`;
                     modelContainer.style.top = `${currentTop}%`;
                     modelContainer.style.transform = `translate(-50%, -50%) scale(${currentScale}) rotateY(${currentRotY}deg)`;
                     modelContainer.style.zIndex = '8';
 
-                    // Seamless Crossfade Opacity antara ifikouter.glb dan ifik.glb
-                    const outerOp = Math.max(0, Math.min(1, 1 - (p * 1.5)));
-                    const innerOp = Math.max(0, Math.min(1, (p - 0.15) * 1.5));
-
-                    if (modelOuter) modelOuter.style.opacity = outerOp;
-                    if (modelInner) modelInner.style.opacity = innerOp;
+                    if (modelOuter) modelOuter.style.opacity = Math.max(0, 1 - (p * 2));
+                    if (modelInner) modelInner.style.opacity = '0';
 
                     if (p < 0.1 && window.splashScreenDone) {
                         document.body.classList.add('play-animations');
@@ -449,7 +503,7 @@
                         document.body.classList.remove('play-animations');
                     }
                 } 
-                // Sesi 2 (Info Ruangan) -> Sesi 3 (Lab)
+                // Sesi 2 (Info Ruangan) -> Sesi 3 (Lab: 3D Logo Fade In menuju Navbar)
                 else if (scrollTop <= 2 * vh) {
                     const p = Math.max(0, Math.min(1, (scrollTop - vh) / vh));
                     const ease = p * p * (3 - 2 * p);
@@ -459,20 +513,14 @@
                     const targetScale = vw <= 900 ? 0.1 : 0.11;
                     const targetRotY = 720;
 
-                    const startLeftPx = (vw * leftPos2) / 100;
-                    const startTopPx = (vh * topPos2) / 100;
-                    
-                    const currentLeftPx = startLeftPx + (targetLeftPx - startLeftPx) * ease;
-                    const currentTopPx = startTopPx + (targetTopPx - startTopPx) * ease;
-                    const currentScale = 0.9 + (targetScale - 0.9) * ease;
-                    const currentRotY = 360 + (targetRotY - 360) * ease;
-
-                    modelContainer.style.left = `${currentLeftPx}px`;
-                    modelContainer.style.top = `${currentTopPx}px`;
-                    modelContainer.style.transform = `translate(-50%, -50%) scale(${currentScale}) rotateY(${currentRotY}deg)`;
-                    modelContainer.style.zIndex = p > 0.6 ? '110' : '8';
+                    modelContainer.style.left = `${targetLeftPx}px`;
+                    modelContainer.style.top = `${targetTopPx}px`;
+                    modelContainer.style.transform = `translate(-50%, -50%) scale(${targetScale}) rotateY(${targetRotY}deg)`;
+                    modelContainer.style.zIndex = '110';
+                    modelContainer.style.opacity = ease; // Fade in saat mendekati Sesi 3
+                    modelContainer.style.pointerEvents = 'none';
                     if (modelOuter) modelOuter.style.opacity = '0';
-                    if (modelInner) modelInner.style.opacity = '0';
+                    if (modelInner) modelInner.style.opacity = '1';
                     document.body.classList.remove('play-animations');
                 } 
                 // Sesi 3 (Lab) dan seterusnya -> Tetap di Navbar
@@ -486,10 +534,13 @@
                     modelContainer.style.top = `${targetTopPx}px`;
                     modelContainer.style.transform = `translate(-50%, -50%) scale(${targetScale}) rotateY(${targetRotY}deg)`;
                     modelContainer.style.zIndex = '110';
+                    modelContainer.style.opacity = '1';
+                    modelContainer.style.pointerEvents = 'none';
                     if (modelOuter) modelOuter.style.opacity = '0';
                     if (modelInner) modelInner.style.opacity = '1';
                     document.body.classList.remove('play-animations');
-                } 
+                }
+ 
 
                 // Update Progress Bar
                 if (dashboardContainer && progressBar) {
@@ -668,6 +719,64 @@
     
     <!-- External Custom Script (info_ruangan.js harus paling atas agar toggleFullscreen() tersedia) -->
     <script src="<?= base_url('assets/js/info_ruangan.js?v=' . filemtime(FCPATH . 'assets/js/info_ruangan.js')) ?>"></script>
+
+    <script>
+        // Fungsi Scroll Dinamis ke Sesi Berikutnya
+        function scrollToNextSection() {
+            const vh = window.innerHeight;
+            const container = document.querySelector('.dashboard-container');
+            const currentScroll = window.lenis ? window.lenis.scroll : container.scrollTop;
+            
+            // Hitung index section saat ini (pembulatan ke bawah dengan toleransi 10px)
+            const currentIndex = Math.floor((currentScroll + 10) / vh);
+            const totalSections = 5; // 0=Header, 1=Info, 2=Lab, 3=Berita, 4=Virtual, 5=Footer
+            
+            let nextIndex = currentIndex + 1;
+            
+            if (nextIndex > totalSections) {
+                // Balik ke paling atas jika sudah di footer
+                nextIndex = 0;
+            }
+            
+            const targetScroll = nextIndex * vh;
+            
+            if (window.lenis) {
+                window.lenis.scrollTo(targetScroll, { 
+                    duration: 1.5, 
+                    easing: (t) => 1 - Math.pow(1 - t, 4) 
+                });
+            } else {
+                container.scrollTo({ top: targetScroll, behavior: 'smooth' });
+            }
+        }
+
+        // Update arah panah (ke atas/bawah) secara realtime saat di-scroll
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('globalScrollBtn');
+            const container = document.querySelector('.dashboard-container');
+            
+            function checkScrollPos() {
+                const vh = window.innerHeight;
+                const currentScroll = window.lenis ? window.lenis.scroll : container.scrollTop;
+                const ratio = currentScroll / vh;
+                
+                // Jika sudah masuk area footer (di atas 4.5 dari total tinggi layar), ubah panah ke atas
+                if (ratio > 4.5) {
+                    btn.classList.add('pointing-up');
+                    btn.title = "Kembali ke Atas";
+                } else {
+                    btn.classList.remove('pointing-up');
+                    btn.title = "Scroll ke Sesi Selanjutnya";
+                }
+            }
+            
+            if (window.lenis) {
+                window.lenis.on('scroll', checkScrollPos);
+            } else {
+                container.addEventListener('scroll', checkScrollPos);
+            }
+        });
+    </script>
 
 </body>
 </html>

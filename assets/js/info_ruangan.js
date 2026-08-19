@@ -10,21 +10,59 @@
         const listWrapper = document.querySelector('.room-list-wrapper');
         const gcalWrapper = document.getElementById('gcalWrapper');
         
-        card.classList.toggle('is-fullscreen');
+        const isCurrentlyFullscreen = card.classList.contains('is-fullscreen');
         
-        if (card.classList.contains('is-fullscreen')) {
+        if (!isCurrentlyFullscreen) {
+            // Masuk Mode Fullscreen (Pindahkan langsung ke document.body agar tidak terjebak transform Lenis/celah)
+            let placeholder = document.getElementById('ruanganCardPlaceholder');
+            if (!placeholder) {
+                placeholder = document.createElement('div');
+                placeholder.id = 'ruanganCardPlaceholder';
+                placeholder.style.display = 'none';
+                card.parentNode.insertBefore(placeholder, card);
+            }
+            document.body.appendChild(card);
+            card.classList.add('is-fullscreen');
+
             icon.innerHTML = '<path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>';
             listWrapper.style.display = 'none';
             gcalWrapper.style.display = 'flex';
             
+            // Hentikan Lenis scroll agar layar di belakang tidak bergerak
+            if (window.lenis) window.lenis.stop();
+            document.body.style.overflow = 'hidden';
+            
             // Inisialisasi Kalender saat dibuka
             renderCalendar();
         } else {
+            // Keluar Mode Fullscreen (Kembalikan ke posisi semula di Section 2)
+            const placeholder = document.getElementById('ruanganCardPlaceholder');
+            if (placeholder && placeholder.parentNode) {
+                placeholder.parentNode.insertBefore(card, placeholder);
+            } else {
+                const sec = document.getElementById('section-about');
+                if (sec) sec.appendChild(card);
+            }
+            card.classList.remove('is-fullscreen');
+
             icon.innerHTML = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>';
             listWrapper.style.display = 'flex';
             gcalWrapper.style.display = 'none';
+
+            // Nyalakan kembali Lenis scroll
+            if (window.lenis) window.lenis.start();
+            document.body.style.overflow = '';
         }
     }
+
+    // Isolasi event wheel di dalam grid kalender agar scroll lancar tanpa dicegat Lenis
+    document.addEventListener('wheel', function(e) {
+        if (e.target && e.target.closest && e.target.closest('.gcal-grid-scroll')) {
+            e.stopPropagation();
+        }
+    }, { passive: true });
+
+
 
     // ==========================================
     // LOGIKA RENDER GOOGLE CALENDAR GRID
@@ -214,108 +252,10 @@
     }
 
     // ==========================================
-    // LOGIKA MODAL BOOKING PUBLIK & DETAIL APPROVAL
-    // ==========================================
-    function resetBookingForm() {
-        const form = document.getElementById('formAjukanBooking');
-        if (form) form.reset();
-
-        // Reset Ruangan Dropdown & Styles
-        if (typeof $ !== 'undefined') {
-            const roomSelect = $('#ruanganSelectPublic');
-            if (roomSelect.length) {
-                roomSelect.html('<option value="">Pilih Kategori Dahulu</option>');
-                roomSelect.css({'background-color': '#f8fafc', 'pointer-events': 'auto', 'color': 'var(--text-color)'});
-            }
-            $('#timeSelectionGroup').hide();
-        }
-
-        if (document.getElementById('tanggalPeminjaman')) {
-            document.getElementById('tanggalPeminjaman').value = '';
-        }
-        if (document.getElementById('inputJamMulai')) {
-            document.getElementById('inputJamMulai').value = '';
-        }
-        if (document.getElementById('inputJamSelesai')) {
-            document.getElementById('inputJamSelesai').value = '';
-        }
-        if (typeof closeInlinePicker === 'function') {
-            closeInlinePicker();
-        }
-    }
-
-    function openBookingModal() {
-        resetBookingForm();
-        document.getElementById('bookingModal').classList.add('show');
-    }
-
-    function closeBookingModal() {
-        document.getElementById('bookingModal').classList.remove('show');
-        resetBookingForm();
-    }
-
-
-    function submitBooking(e) {
-        e.preventDefault();
-        
-        const form = document.getElementById('formAjukanBooking');
-        const formData = new FormData(form);
-
-        // Ambil tombol submit (bisa di luar form via form= attribute)
-        const submitBtn = document.querySelector('[form="formAjukanBooking"]') || form.querySelector('[type="submit"]');
-        
-        if (submitBtn) {
-            submitBtn.textContent = 'Memproses...';
-            submitBtn.disabled = true;
-        }
-
-        const url = (window.ajukanBookingUrl || window.location.origin + '/dashboard/ajukan_booking');
-
-        fetch(url, {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                Swal.fire({
-                    title: 'Berhasil!',
-                    text: data.message,
-                    icon: 'success',
-                    confirmButtonColor: '#7c3aed'
-                });
-                closeBookingModal();
-                reloadBookingData();
-            } else {
-                Swal.fire({
-                    title: 'Gagal',
-                    text: data.message,
-                    icon: 'error',
-                    confirmButtonColor: '#ea580c'
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            Swal.fire({
-                title: 'Error Server',
-                text: 'Terjadi kesalahan pada server',
-                icon: 'error',
-                confirmButtonColor: '#ea580c'
-            });
-        })
-        .finally(() => {
-            if (submitBtn) {
-                submitBtn.textContent = 'Simpan Peminjaman';
-                submitBtn.disabled = false;
-            }
-        });
-    }
-
-    // ==========================================
     // LOGIKA MODAL DETAIL & APPROVAL PEMINJAMAN
     // ==========================================
     function openDetailBookingModal(id) {
+
         if (typeof bookingData === 'undefined') return;
         const booking = bookingData.find(b => parseInt(b.id) === parseInt(id));
         if (!booking) return;
@@ -387,8 +327,13 @@
             deletePanel.style.display = 'none';
         }
 
-        document.getElementById('detailBookingModal').classList.add('show');
+        const modal = document.getElementById('detailBookingModal');
+        if (modal && modal.parentNode !== document.body) {
+            document.body.appendChild(modal);
+        }
+        if (modal) modal.classList.add('show');
     }
+
 
     function closeDetailBookingModal() {
         document.getElementById('detailBookingModal').classList.remove('show');
@@ -550,7 +495,17 @@
         .catch(err => console.error('Error fetching updated bookings:', err));
     }
 
+    // ===== CLEAN 4-ROW AUTO-ROTATION ANIMATION =====
+    let rowRotateInterval = null;
+    let currentRotateIndex = 0;
+
     function renderRoomList(data) {
+        startRowRotation(data);
+    }
+
+    function startRowRotation(data) {
+        if (rowRotateInterval) clearInterval(rowRotateInterval);
+
         const wrapper = document.getElementById('roomListWrapper');
         if (!wrapper) return;
 
@@ -568,56 +523,161 @@
             return;
         }
 
-        const limited = data.slice(0, 4);
-        let html = '';
+        let today = new Date();
+        let y = today.getFullYear();
+        let m = String(today.getMonth() + 1).padStart(2, '0');
+        let d = String(today.getDate()).padStart(2, '0');
+        let todayStr = `${y}-${m}-${d}`;
 
-        limited.forEach(j => {
-            const st = getStatusStyle(j.status);
+        // Filter jadwal aktif (hari ini & mendatang)
+        let activeList = data.filter(b => b.tanggal_selesai >= todayStr);
 
-            let dateStr = j.tanggal_mulai;
-            if (j.tanggal_selesai && j.tanggal_selesai !== j.tanggal_mulai) {
-                dateStr = j.tanggal_mulai + ' - ' + j.tanggal_selesai;
+        activeList.sort((a, b) => {
+            if (a.tanggal_mulai !== b.tanggal_mulai) {
+                return a.tanggal_mulai.localeCompare(b.tanggal_mulai);
             }
-
-            const jMulai = j.jam_mulai ? j.jam_mulai.substring(0, 5) : '00:00';
-            const jSelesai = j.jam_selesai ? j.jam_selesai.substring(0, 5) : '00:00';
-
-            html += `
-                <div class="room-item" onclick="openDetailBookingModal(${j.id})" style="cursor: pointer;">
-                    <div class="room-item-left">
-                        <div class="room-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                        </div>
-                        <div class="room-info">
-                            <h3>${j.kode_ruangan || ''}</h3>
-                            <p>${j.nama_ruangan || ''}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="room-item-tags">
-                        <span class="tag">
-                            <svg style="margin-right:4px; vertical-align:text-bottom" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                            ${j.nama_lengkap || ''}
-                        </span>
-                        <span class="tag" style="background: rgba(234, 88, 12, 0.1); border-color: #ea580c; color: #ea580c;">
-                            ${jMulai} - ${jSelesai}
-                        </span>
-                    </div>
-
-                    <div class="room-item-date">${dateStr}</div>
-
-                    <div class="room-item-action">
-                        <span style="display:inline-flex; align-items:center; gap:6px; background:${st.badgeBg}; color:${st.badgeColor}; border-radius:999px; padding:5px 13px; font-size:0.76rem; font-weight:700; white-space:nowrap;">
-                            <span style="width:7px;height:7px;border-radius:50%;background:${st.dot};flex-shrink:0;"></span>
-                            ${st.label}
-                        </span>
-                    </div>
-                </div>
-            `;
+            return (a.jam_mulai || '').localeCompare(b.jam_mulai || '');
         });
 
-        wrapper.innerHTML = html;
+        const pageSize = 4;
+        const totalPages = Math.ceil(activeList.length / pageSize);
+        currentRotateIndex = 0;
+
+        // Render Pertama
+        renderRowPage(activeList, currentRotateIndex, pageSize, false);
+
+        // Putar Otomatis 4 Baris Setiap 4.5 Detik dengan Animasi Slide Smooth (Tanpa Titik / Badge)
+        if (totalPages > 1) {
+            rowRotateInterval = setInterval(() => {
+                currentRotateIndex = (currentRotateIndex + 1) % totalPages;
+                renderRowPage(activeList, currentRotateIndex, pageSize, true);
+            }, 4500);
+        }
     }
+
+    function renderRowPage(list, pageIndex, pageSize, isTransitioning) {
+        const wrapper = document.getElementById('roomListWrapper');
+        if (!wrapper) return;
+
+        const pageData = list.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize);
+
+        if (!isTransitioning) {
+            let html = '';
+            pageData.forEach(j => { html += createRowHTML(j); });
+            wrapper.innerHTML = html;
+            return;
+        }
+
+        // ANIMASI TRANSISI ROTASI BARIS (SLIDE & FADE SMOOTH)
+        const existingRows = wrapper.querySelectorAll('.room-item');
+        existingRows.forEach(row => {
+            row.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+            row.style.opacity = '0';
+            row.style.transform = 'translateY(-6px)';
+        });
+
+        setTimeout(() => {
+            let html = '';
+            pageData.forEach(j => { html += createRowHTML(j); });
+            wrapper.innerHTML = html;
+
+            const newRows = wrapper.querySelectorAll('.room-item');
+            newRows.forEach((row, idx) => {
+                row.style.opacity = '0';
+                row.style.transform = 'translateY(8px)';
+
+                setTimeout(() => {
+                    row.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                    row.style.opacity = '1';
+                    row.style.transform = 'translateY(0)';
+
+                    // ANIMASI KETIK TEKS KARAKTER PER KARAKTER (TYPEWRITER EFFECT)
+                    const titleEl = row.querySelector('.room-info h3');
+                    const subEl   = row.querySelector('.room-info p');
+                    const userEl  = row.querySelector('.tag-user-name');
+
+                    if (titleEl) typeTextEffect(titleEl, 20);
+                    if (subEl)   typeTextEffect(subEl, 14);
+                    if (userEl)  typeTextEffect(userEl, 16);
+                }, idx * 60);
+            });
+        }, 220);
+    }
+
+    function typeTextEffect(element, speed) {
+        if (!element) return;
+        const fullText = element.getAttribute('data-text') || element.innerText || '';
+        if (!fullText) return;
+        element.innerText = '';
+        let i = 0;
+        let timer = setInterval(() => {
+            if (i < fullText.length) {
+                element.innerText += fullText.charAt(i);
+                i++;
+            } else {
+                clearInterval(timer);
+            }
+        }, speed || 18);
+    }
+
+    function createRowHTML(j) {
+        const st = getStatusStyle(j.status);
+
+        let dateStr = j.tanggal_mulai;
+        if (j.tanggal_selesai && j.tanggal_selesai !== j.tanggal_mulai) {
+            dateStr = j.tanggal_mulai + ' - ' + j.tanggal_selesai;
+        }
+
+        const jMulai = j.jam_mulai ? j.jam_mulai.substring(0, 5) : '00:00';
+        const jSelesai = j.jam_selesai ? j.jam_selesai.substring(0, 5) : '00:00';
+
+        const kode = (j.kode_ruangan || '').replace(/"/g, '&quot;');
+        const namaRuangan = (j.nama_ruangan || '').replace(/"/g, '&quot;');
+        const namaLengkap = (j.nama_lengkap || '').replace(/"/g, '&quot;');
+
+        return `
+            <div class="room-item" onclick="openDetailBookingModal(${j.id})" style="cursor: pointer;">
+                <div class="room-item-left">
+                    <div class="room-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    </div>
+                    <div class="room-info">
+                        <h3 data-text="${kode}">${kode}</h3>
+                        <p data-text="${namaRuangan}">${namaRuangan}</p>
+                    </div>
+                </div>
+                
+                <div class="room-item-tags">
+                    <span class="tag">
+                        <svg style="margin-right:4px; vertical-align:text-bottom" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        <span class="tag-user-name" data-text="${namaLengkap}">${namaLengkap}</span>
+                    </span>
+                    <span class="tag" style="background: rgba(234, 88, 12, 0.1); border-color: #ea580c; color: #ea580c;">
+                        ${jMulai} - ${jSelesai}
+                    </span>
+                </div>
+
+                <div class="room-item-date">${dateStr}</div>
+
+                <div class="room-item-action">
+                    <span style="display:inline-flex; align-items:center; gap:6px; background:${st.badgeBg}; color:${st.badgeColor}; border-radius:999px; padding:5px 13px; font-size:0.76rem; font-weight:700; white-space:nowrap;">
+                        <span style="width:7px;height:7px;border-radius:50%;background:${st.dot};flex-shrink:0;"></span>
+                        ${st.label}
+                    </span>
+                </div>
+            </div>
+        `;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof window.bookingData !== 'undefined' && window.bookingData.length > 0) {
+            renderRoomList(window.bookingData);
+        }
+    });
+
+
+
+
 
 
 
