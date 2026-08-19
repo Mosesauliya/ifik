@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Ketua KK - IFIK</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#ed6b23',
+                        primaryHover: '#d15a1b',
+                        dark: '#2c3e50',
+                        light: '#f8f9fa'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    
+    <style>
+        /* Custom overrides for DataTables and Select2 to match Tailwind */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; }
+        
+        table.dataTable {
+            width: 100% !important;
+        }
+
+        .dataTables_wrapper .dataTables_length select,
+        .dataTables_wrapper .dataTables_filter input {
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            padding: 0.25rem 0.5rem;
+            outline: none;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: #ed6b23 !important;
+            color: white !important;
+            border: none;
+            border-radius: 0.375rem;
+        }
+        table.dataTable thead th { border-bottom: 2px solid #e5e7eb; }
+        table.dataTable tbody td { border-bottom: 1px solid #e5e7eb; padding: 12px 10px; }
+        
+        .select2-container--default .select2-selection--single {
+            height: 42px !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 0.375rem !important;
+            display: flex !important;
+            align-items: center !important;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+            background-color: #ffffff !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #374151 !important;
+            padding-left: 0.75rem !important;
+            line-height: 40px !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 40px !important;
+            right: 4px !important;
+        }
+        /* Select2 Dropdown Panel Modern Styling */
+        .select2-dropdown {
+            border: 1px solid #e5e7eb !important;
+            border-radius: 0.5rem !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+            padding: 4px !important;
+            z-index: 9999 !important;
+        }
+        .select2-search--dropdown .select2-search__field {
+            border: 1px solid #d1d5db !important;
+            border-radius: 0.375rem !important;
+            padding: 8px 12px !important;
+            outline: none !important;
+        }
+        .select2-search--dropdown .select2-search__field:focus {
+            border-color: #ed6b23 !important;
+            box-shadow: 0 0 0 1px #ed6b23 !important;
+        }
+        .select2-results__option {
+            padding: 8px 12px !important;
+            border-radius: 0.375rem !important;
+            margin-bottom: 2px !important;
+            transition: all 0.2s;
+        }
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #fef0e8 !important;
+            color: #ed6b23 !important;
+            font-weight: 500 !important;
+        }
+        .select2-container--default .select2-results__option[aria-selected=true] {
+            background-color: #f3f4f6 !important;
+            color: #374151 !important;
+        }
+        
+        /* Collapsible Sidebar Styles */
+        #sidebar {
+            transition: width 0.3s ease;
+        }
+        #sidebar.collapsed {
+            width: 5rem !important; /* w-20 */
+        }
+        #sidebar.collapsed .sidebar-text {
+            display: none;
+        }
+        #sidebar.collapsed .logo-image {
+            display: none;
+        }
+        #sidebar.collapsed .logo-icon {
+            display: block !important;
+        }
+        
+        /* Modal Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes popupSlide {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
+        .animate-popup { animation: popupSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        /* Page Load Animations */
+        @keyframes progressBar {
+            0% { width: 0; opacity: 1; }
+            50% { width: 70%; opacity: 1; }
+            100% { width: 100%; opacity: 0; }
+        }
+        .page-loader-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(to right, #ed6b23, #ff8b4d);
+            z-index: 9999;
+            animation: progressBar 0.8s ease-out forwards;
+        }
+        
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+        .animate-slide-in-left {
+            animation: slideInLeft 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+        }
+        
+        @keyframes fadeUpIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-up-1 { opacity: 0; animation: fadeUpIn 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; animation-delay: 0.2s; }
+        .animate-fade-up-2 { opacity: 0; animation: fadeUpIn 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; animation-delay: 0.3s; }
+        .animate-fade-up-3 { opacity: 0; animation: fadeUpIn 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; animation-delay: 0.4s; }
+    </style>
+</head>
+<body class="text-gray-800">
+    <div class="page-loader-bar"></div>
+
+    <div class="flex h-screen overflow-hidden">
+        
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-dark text-white flex flex-col hidden md:flex z-10 shrink-0 animate-slide-in-left">
+            <div class="p-6 border-b border-gray-700 text-center flex items-center justify-center relative h-[97px]">
+                <img src="../assets/images/logo.png" alt="IFIK Logo" class="h-12 mx-auto object-contain logo-image" style="filter: drop-shadow(0px 0px 1px white) drop-shadow(0px 0px 2px white);">
+                <i class="fa-solid fa-graduation-cap text-3xl text-white logo-icon hidden absolute"></i>
+            </div>
+            <nav class="flex-1 px-2 py-4 space-y-2 overflow-x-hidden">
+                <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider sidebar-text">Admin Layanan</div>
+                <a href="admin_layanan.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-white/5 rounded transition-colors relative group" title="Dashboard Layanan">
+                    <i class="fa-solid fa-gauge w-6 text-center"></i>
+                    <span class="sidebar-text ml-3">Dashboard Layanan</span>
+                </a>
+                <a href="data_mahasiswa.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-white/5 rounded transition-colors relative group" title="Data Mahasiswa">
+                    <i class="fa-solid fa-users w-6 text-center"></i>
+                    <span class="sidebar-text ml-3">Data Mahasiswa</span>
+                </a>
+                <a href="pengajuan_surat.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-white/5 rounded transition-colors relative group" title="Pengajuan Surat">
+                    <i class="fa-solid fa-file-signature w-6 text-center"></i>
+                    <span class="sidebar-text ml-3">Pengajuan Surat</span>
+                </a>
+                
+                <div class="px-4 py-2 mt-4 text-xs font-semibold text-gray-500 uppercase tracking-wider sidebar-text">Ketua KK</div>
+                <a href="ketua_kk.html" class="flex items-center px-4 py-3 bg-white/10 text-white border-l-4 border-primary rounded-r font-medium transition-colors relative group" title="Dashboard Ketua KK">
+                    <i class="fa-solid fa-chalkboard-user w-6 text-center"></i>
+                    <span class="sidebar-text ml-3">Dashboard Ketua KK</span>
+                </a>
+                
+                <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors mt-8 relative group" title="Logout">
+                    <i class="fa-solid fa-right-from-bracket w-6 text-center"></i>
+                    <span class="sidebar-text ml-3">Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto p-6 bg-light">
+            
+            <!-- Top Navbar -->
+            <header class="bg-white shadow-sm rounded-lg p-4 mb-6 flex justify-between items-center animate-fade-up-1">
+                <div class="flex items-center">
+                    <button id="sidebarToggle" class="mr-4 text-gray-600 hover:text-primary transition-colors"><i class="fa-solid fa-bars text-xl"></i></button>
+                    <h4 class="text-xl font-semibold m-0 text-dark">Panel Ketua Kelompok Keahlian</h4>
+                </div>
+                <div class="flex items-center space-x-3 cursor-pointer">
+                    <img src="https://ui-avatars.com/api/?name=Ketua+KK&background=2c3e50&color=fff" class="rounded-full w-10 h-10" alt="User">
+                    <span class="font-medium hidden sm:block">Ketua KK (RPL)</span>
+                    <i class="fa-solid fa-chevron-down text-sm text-gray-500"></i>
+                </div>
+            </header>
+
+            <!-- Filter Section -->
+            <div class="bg-white rounded-lg shadow-sm mb-6 border border-gray-100 animate-fade-up-2">
+                <div class="px-6 py-4 border-b border-gray-100">
+                    <h5 class="font-semibold text-dark"><i class="fa-solid fa-filter mr-2 text-gray-500"></i>Filter Data & Pencarian</h5>
+                </div>
+                <div class="p-6">
+                    <div id="dynamicFilterBuilder" class="space-y-3">
+                        <div id="filterRows" class="space-y-3">
+                            <!-- Dynamic rows will be injected here -->
+                        </div>
+                        
+                        <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
+                            <button type="button" id="btnAddFilter" class="text-sm font-medium text-gray-600 hover:text-primary transition-colors bg-gray-50 hover:bg-orange-50 px-3 py-2 rounded border border-gray-200 hover:border-primary">
+                                <i class="fa-solid fa-plus mr-1"></i> Tambah Filter
+                            </button>
+                            <button type="button" id="btnFilter" class="bg-primary hover:bg-primaryHover text-white font-medium py-2 px-6 rounded-md transition-colors shadow-sm">
+                                <i class="fa-solid fa-magnifying-glass mr-2"></i> Terapkan Filter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Table Section -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-100 animate-fade-up-3">
+                <div class="px-6 py-4 border-b border-gray-100">
+                    <h5 class="font-semibold text-dark"><i class="fa-solid fa-list-check mr-2 text-gray-500"></i>Daftar Pengajuan Mahasiswa (Kelompok Keahlian)</h5>
+                </div>
+                <div class="p-6">
+                    <div class="overflow-x-auto">
+                        <table id="dataTable" class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 border-b border-gray-200">
+                                    <th class="p-3 text-sm font-semibold text-gray-600">ID</th>
+                                    <th class="p-3 text-sm font-semibold text-gray-600">NIM</th>
+                                    <th class="p-3 text-sm font-semibold text-gray-600">Nama Mahasiswa</th>
+                                    <th class="p-3 text-sm font-semibold text-gray-600">Jenis Pengajuan</th>
+                                    <th class="p-3 text-sm font-semibold text-gray-600">Judul / Topik</th>
+                                    <th class="p-3 text-sm font-semibold text-gray-600">Status</th>
+                                    <th class="p-3 text-sm font-semibold text-gray-600 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm">
+                                <!-- Data will be loaded by DataTables -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Detail Pengajuan -->
+    <div id="modalDetail" class="fixed inset-0 z-50 bg-black/50 hidden items-center justify-center p-4 animate-fade-in">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl transform transition-all animate-popup">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-800">Detail Pengajuan (Ketua KK)</h3>
+                <button class="text-gray-400 hover:text-gray-600 focus:outline-none" onclick="closeModal('#modalDetail')">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <div id="loadingDetail" class="text-center py-8 hidden">
+                    <i class="fa-solid fa-circle-notch fa-spin text-primary text-3xl"></i>
+                    <p class="mt-2 text-gray-500">Memuat data...</p>
+                </div>
+                <div id="dataDetail">
+                    <div class="grid grid-cols-3 gap-y-3 mb-6">
+                        <div class="font-medium text-gray-600">NIM</div>
+                        <div class="col-span-2 font-semibold text-gray-900">: <span id="detailNim"></span></div>
+                        
+                        <div class="font-medium text-gray-600">Nama Lengkap</div>
+                        <div class="col-span-2 font-semibold text-gray-900">: <span id="detailNama"></span></div>
+                    </div>
+                    
+                    <hr class="border-gray-200 mb-4">
+                    <h4 class="font-semibold text-gray-800 mb-4">Informasi Pengajuan (Akademik/Riset)</h4>
+                    
+                    <div class="grid grid-cols-3 gap-y-3">
+                        <div class="font-medium text-gray-600">Jenis Pengajuan</div>
+                        <div class="col-span-2 font-semibold text-gray-900">: <span id="detailJenis"></span></div>
+                        
+                        <div class="font-medium text-gray-600">Judul / Topik Riset</div>
+                        <div class="col-span-2 font-semibold text-primary">: <span id="detailJudul"></span></div>
+                        
+                        <div class="font-medium text-gray-600">Deskripsi Singkat</div>
+                        <div class="col-span-2 text-gray-700">: <span id="detailDeskripsi"></span></div>
+                        
+                        <div class="font-medium text-gray-600">Calon Pembimbing</div>
+                        <div class="col-span-2 font-semibold text-gray-900">: <span id="detailDosen"></span></div>
+                        
+                        <div class="font-medium text-gray-600">Proposal Draft</div>
+                        <div class="col-span-2">: 
+                            <button class="ml-1 text-sm bg-red-50 hover:bg-red-100 text-red-600 py-1 px-3 rounded border border-red-200 inline-flex items-center transition-colors">
+                                <i class="fa-solid fa-file-pdf mr-2"></i> Lihat Draft Proposal
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
+                <button class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded transition-colors" onclick="closeModal('#modalDetail')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Review & Reject -->
+    <div id="modalReview" class="fixed inset-0 z-50 bg-black/50 hidden items-center justify-center p-4 animate-fade-in">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg transform transition-all animate-popup">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-800">Review / Tolak Pengajuan</h3>
+                <button class="text-gray-400 hover:text-gray-600 focus:outline-none" onclick="closeModal('#modalReview')">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <form id="formReview">
+                    <input type="hidden" id="reviewId">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Revisi / Alasan Penolakan</label>
+                        <textarea class="w-full border border-gray-300 rounded-md p-3 focus:ring-primary focus:border-primary outline-none" id="reviewNotes" rows="4" required placeholder="Tuliskan alasan mengapa topik ini ditolak atau butuh revisi..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-2">
+                <button class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded transition-colors" onclick="closeModal('#modalReview')">Batal</button>
+                <button type="button" class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded transition-colors" id="btnSubmitReject">Kirim Penolakan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // Modal helpers globally
+        function openModal(id) { $(id).removeClass('hidden').addClass('flex'); }
+        function closeModal(id) { $(id).removeClass('flex').addClass('hidden'); }
+
+        $(document).ready(function() {
+            // Sidebar Toggle
+            $('#sidebarToggle').click(function() {
+                $('#sidebar').toggleClass('collapsed');
+                setTimeout(() => {
+                    if (typeof table !== 'undefined') {
+                        table.columns.adjust();
+                    }
+                }, 310);
+            });
+
+            // Data Mockup
+            const mockData = [
+                { id: 1, nim: '1302201001', nama: 'Fajar Nugraha', jenis: 'Topik Tugas Akhir', judul: 'Implementasi Machine Learning untuk Prediksi Cuaca', status: 'Pending', deskripsi: 'Penelitian ini akan membandingkan algoritma SVM dan Random Forest...', dosen: 'Dr. Eng. Antonius' },
+                { id: 2, nim: '1302201002', nama: 'Gita Pertiwi', jenis: 'Seminar Proposal', judul: 'Analisis Keamanan Jaringan IoT Berbasis Blockchain', status: 'Approved', deskripsi: 'Mengusulkan metode baru untuk mengamankan perangkat IoT...', dosen: 'Prof. Budi Raharjo' },
+                { id: 3, nim: '1302201003', nama: 'Hendra Saputra', jenis: 'Pergantian Pembimbing', judul: 'Sistem Pakar Diagnosa Penyakit Tanaman', status: 'Pending', deskripsi: 'Pengajuan pergantian pembimbing 2 dari Pak Andi ke Bu Siska.', dosen: 'Dr. Siska Amelia' },
+                { id: 4, nim: '1302201004', nama: 'Intan Permata', jenis: 'Topik Tugas Akhir', judul: 'Pengembangan Aplikasi Mobile E-Commerce', status: 'Rejected', deskripsi: 'Membangun aplikasi e-commerce menggunakan React Native dan Firebase.', dosen: 'Dr. Cipta' },
+                { id: 5, nim: '1302201005', nama: 'Joko Anwar', jenis: 'Topik Tugas Akhir', judul: 'Deteksi Intrusi Jaringan Menggunakan Deep Learning', status: 'Pending', deskripsi: 'Fokus pada arsitektur CNN-LSTM untuk mendeteksi anomali paket jaringan.', dosen: 'Prof. Budi Raharjo' },
+            ];
+
+            // Mockup Auto Complete Search Mahasiswa (Select2)
+            const searchSelect = $('#searchMahasiswa');
+            mockData.forEach(item => {
+                searchSelect.append(new Option(`${item.nim} - ${item.nama}`, item.nim));
+            });
+            searchSelect.select2({
+                placeholder: "Ketik NIM atau Nama...",
+                allowClear: true,
+                width: '100%'
+            });
+
+            // Initialize DataTable
+            const table = $('#dataTable').DataTable({
+                data: mockData,
+                columns: [
+                    { data: 'id', visible: false },
+                    { 
+                        data: 'nim',
+                        render: function(data) { return `<span class="text-primary font-semibold">${data}</span>`; }
+                    },
+                    { 
+                        data: 'nama',
+                        render: function(data) { return `<span class="font-semibold text-gray-900">${data}</span>`; }
+                    },
+                    { data: 'jenis' },
+                    { 
+                        data: 'judul',
+                        render: function(data) { return `<span class="font-semibold text-gray-900">${data}</span>`; }
+                    },
+                    { 
+                        data: 'status',
+                        render: function(data) {
+                            let badgeClass = '';
+                            let label = '';
+                            if(data === 'Pending') { badgeClass = 'bg-yellow-100 text-yellow-800 border border-yellow-200'; label = 'Menunggu'; }
+                            else if(data === 'Approved') { badgeClass = 'bg-green-100 text-green-800 border border-green-200'; label = 'Disetujui'; }
+                            else if(data === 'Rejected') { badgeClass = 'bg-red-100 text-red-800 border border-red-200'; label = 'Ditolak'; }
+                            return `<span class="px-2.5 py-1 rounded-full text-xs font-medium shadow-sm inline-block w-24 text-center ${badgeClass}">${label}</span>`;
+                        }
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        render: function(data, type, row) {
+                            let actionBtns = `<div class="flex space-x-1 justify-center">
+                                <div class="relative group flex items-center justify-center">
+                                    <button class="bg-blue-500 hover:bg-blue-600 text-white p-1.5 rounded transition-all duration-300 hover:scale-110 hover:-translate-y-0.5 active:scale-90 active:translate-y-0 btn-detail" data-id="${row.id}"><i class="fa-solid fa-eye w-4 text-center"></i></button>
+                                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-all duration-300 scale-75 group-hover:scale-100 pointer-events-none z-50 whitespace-nowrap shadow-xl">Detail
+                                        <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                    </div>
+                                </div>`;
+                            
+                            if(row.status === 'Pending') {
+                                actionBtns += `<div class="relative group flex items-center justify-center">
+                                    <button class="bg-green-500 hover:bg-green-600 text-white p-1.5 rounded transition-all duration-300 hover:scale-110 hover:-translate-y-0.5 active:scale-90 active:translate-y-0 btn-approve" data-id="${row.id}"><i class="fa-solid fa-check-double w-4 text-center"></i></button>
+                                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-all duration-300 scale-75 group-hover:scale-100 pointer-events-none z-50 whitespace-nowrap shadow-xl">Approve Topik
+                                        <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                    </div>
+                                </div>`;
+                                actionBtns += `<div class="relative group flex items-center justify-center">
+                                    <button class="bg-red-500 hover:bg-red-600 text-white p-1.5 rounded transition-all duration-300 hover:scale-110 hover:-translate-y-0.5 active:scale-90 active:translate-y-0 btn-reject-modal" data-id="${row.id}"><i class="fa-solid fa-ban w-4 text-center"></i></button>
+                                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-all duration-300 scale-75 group-hover:scale-100 pointer-events-none z-50 whitespace-nowrap shadow-xl">Tolak / Revisi
+                                        <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                    </div>
+                                </div>`;
+                            }
+                            
+                            actionBtns += `</div>`;
+                            return actionBtns;
+                        }
+                    }
+                ],
+                language: {
+                    emptyTable: "Tidak ada data yang tersedia pada tabel ini",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+                    infoEmpty: "Menampilkan 0 sampai 0 dari 0 entri",
+                    infoFiltered: "(disaring dari _MAX_ entri keseluruhan)",
+                    lengthMenu: "Tampilkan _MENU_ entri",
+                    loadingRecords: "Sedang memuat...",
+                    processing: "Sedang memproses...",
+                    search: "Cari:",
+                    zeroRecords: "Tidak ditemukan data yang sesuai",
+                    paginate: {
+                        first: "Pertama",
+                        last: "Terakhir",
+                        next: '<i class="fa-solid fa-chevron-right text-sm"></i>',
+                        previous: '<i class="fa-solid fa-chevron-left text-sm"></i>'
+                    }
+                }
+            });
+
+            // Dynamic Filter Builder Logic
+            const maxFilters = 4;
+            let filterCount = 0;
+            const $filterRows = $('#filterRows');
+            const $btnAddFilter = $('#btnAddFilter');
+
+            const filterOptions = {
+                'jenis': { label: 'Jenis Pengajuan', suggestions: ['Topik Tugas Akhir', 'Pergantian Pembimbing', 'Seminar Proposal'] },
+                'status': { label: 'Status', suggestions: ['Menunggu', 'Disetujui', 'Ditolak'] },
+                'search': { label: 'Pencarian Bebas (NIM/Nama/Judul)', suggestions: [] }
+            };
+
+            function updateAddButtonState() {
+                if (filterCount >= maxFilters) {
+                    $btnAddFilter.prop('disabled', true).addClass('opacity-50 cursor-not-allowed').removeClass('hover:bg-orange-50 hover:text-primary hover:border-primary');
+                } else {
+                    $btnAddFilter.prop('disabled', false).removeClass('opacity-50 cursor-not-allowed').addClass('hover:bg-orange-50 hover:text-primary hover:border-primary');
+                }
+            }
+
+            function addFilterRow() {
+                if (filterCount >= maxFilters) return;
+                
+                const rowId = 'filterRow_' + Date.now();
+                const $row = $(`<div id="${rowId}" class="flex flex-wrap md:flex-nowrap items-center gap-3 bg-gray-50 p-3 rounded border border-gray-100 animate-fade-in shadow-sm"></div>`);
+                
+                // Column Select
+                const $colSelect = $('<select class="flex-1 min-w-[200px] border border-gray-300 rounded shadow-sm p-2 text-sm focus:ring-primary focus:border-primary outline-none filter-column"></select>');
+                Object.entries(filterOptions).forEach(([key, opt]) => {
+                    $colSelect.append(new Option(opt.label, key));
+                });
+                
+                // Value Input Container (Always text input with custom autocomplete)
+                const $valContainer = $('<div class="flex-1 min-w-[200px] filter-value-container relative"></div>');
+                const $valInput = $('<input type="text" class="w-full border border-gray-300 rounded shadow-sm p-2 text-sm focus:ring-primary focus:border-primary outline-none filter-value" placeholder="Ketik kata kunci...">');
+                const $autocompleteDiv = $('<div class="absolute z-50 w-full bg-white border border-gray-200 rounded-md shadow-lg mt-1 hidden max-h-48 overflow-y-auto"></div>');
+                
+                $valContainer.append($valInput).append($autocompleteDiv);
+                
+                $valInput.on('input focus', function() {
+                    const colKey = $colSelect.val();
+                    const suggestions = filterOptions[colKey] ? filterOptions[colKey].suggestions : [];
+                    const val = $(this).val().toLowerCase();
+                    
+                    $autocompleteDiv.empty();
+                    if (!val || !suggestions || suggestions.length === 0) {
+                        $autocompleteDiv.addClass('hidden');
+                        return;
+                    }
+                    
+                    const matches = suggestions.filter(s => s.toLowerCase().includes(val));
+                    if (matches.length > 0) {
+                        matches.forEach(match => {
+                            const $item = $(`<div class="px-3 py-2 text-sm hover:bg-orange-50 hover:text-primary cursor-pointer transition-colors">${match}</div>`);
+                            $item.click(function() {
+                                $valInput.val(match);
+                                $autocompleteDiv.addClass('hidden');
+                            });
+                            $autocompleteDiv.append($item);
+                        });
+                        $autocompleteDiv.removeClass('hidden');
+                    } else {
+                        $autocompleteDiv.addClass('hidden');
+                    }
+                });
+                
+                $(document).click(function(e) {
+                    if (!$(e.target).closest($valContainer).length) {
+                        $autocompleteDiv.addClass('hidden');
+                    }
+                });
+                
+                $colSelect.change(function() {
+                    $valInput.val('');
+                    $autocompleteDiv.addClass('hidden');
+                });
+                
+                // Delete Button
+                const $btnDel = $('<button type="button" class="text-gray-400 hover:text-red-500 transition-colors p-2 bg-white border border-gray-200 rounded shadow-sm hover:border-red-200"><i class="fa-solid fa-xmark w-4 h-4 flex items-center justify-center"></i></button>');
+                $btnDel.click(function() {
+                    $row.remove();
+                    filterCount--;
+                    updateAddButtonState();
+                    if(filterCount === 0) {
+                        $('#filterRows').html('<div class="text-center py-4 text-sm text-gray-400 italic no-filter-msg">Belum ada filter yang diterapkan.</div>');
+                    }
+                });
+                
+                $row.append($colSelect).append($valContainer).append($btnDel);
+                $('.no-filter-msg').remove();
+                $filterRows.append($row);
+                
+                filterCount++;
+                updateAddButtonState();
+            }
+
+            $btnAddFilter.click(addFilterRow);
+            
+            // Add initial filter
+            addFilterRow();
+
+            // Custom Search Logic for DataTables
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                // If there are no filters, show all
+                if ($('.filter-column').length === 0) return true;
+                
+                let isMatch = true;
+                
+                // Evaluate each filter row (AND logic)
+                $('#filterRows > div.flex').each(function() {
+                    const colKey = $(this).find('.filter-column').val();
+                    const val = $(this).find('.filter-value').val();
+                    const cond = (colKey === 'search') ? 'like' : '='; // Implicit condition
+                    
+                    if (!val) return; // Skip empty filters
+                    
+                    let colData = '';
+                    if (colKey === 'jenis') colData = data[3].toLowerCase(); // jenis is column 3
+                    else if (colKey === 'status') {
+                        // Status in data[5] contains HTML
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = data[5];
+                        colData = (tempDiv.textContent || tempDiv.innerText || "").toLowerCase();
+                    }
+                    else if (colKey === 'search') {
+                        colData = (data[1] + ' ' + data[2] + ' ' + data[4]).toLowerCase(); // NIM + Nama + Judul
+                    }
+                    
+                    const lowerVal = val.toLowerCase();
+                    
+                    if (colData.indexOf(lowerVal) === -1) {
+                        isMatch = false;
+                    }
+                });
+                
+                return isMatch;
+            });
+
+            // Handle Filter Button
+            $('#btnFilter').click(function() {
+                table.draw();
+                
+                Swal.fire({
+                    title: 'Memfilter Data...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                        setTimeout(() => Swal.close(), 400);
+                    }
+                });
+            });
+
+            // Handle Detail Button Click
+            $('#dataTable tbody').on('click', '.btn-detail', function() {
+                const id = $(this).data('id');
+                const data = mockData.find(item => item.id === id);
+                
+                openModal('#modalDetail');
+                $('#dataDetail').hide();
+                $('#loadingDetail').show();
+                
+                setTimeout(() => {
+                    $('#detailNim').text(data.nim);
+                    $('#detailNama').text(data.nama);
+                    $('#detailJenis').text(data.jenis);
+                    $('#detailJudul').text(data.judul);
+                    $('#detailDeskripsi').text(data.deskripsi);
+                    $('#detailDosen').text(data.dosen);
+                    
+                    $('#loadingDetail').hide();
+                    $('#dataDetail').show();
+                }, 500);
+            });
+
+            // Handle Approve Button Ketua KK
+            $('#dataTable tbody').on('click', '.btn-approve', function() {
+                const id = $(this).data('id');
+                Swal.fire({
+                    title: 'Setujui Pengajuan Topik?',
+                    text: "Apakah Anda yakin menyetujui topik ini?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10b981',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Ya, Setujui',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Menyimpan...',
+                            allowOutsideClick: false,
+                            didOpen: () => { Swal.showLoading(); }
+                        });
+                        setTimeout(() => {
+                            const idx = mockData.findIndex(item => item.id === id);
+                            if(idx > -1) mockData[idx].status = 'Approved';
+                            
+                            table.clear().rows.add(mockData).draw();
+                            Swal.fire('Berhasil!', 'Topik disetujui (Approved by Ketua KK).', 'success');
+                        }, 800);
+                    }
+                });
+            });
+
+            // Handle Reject/Revisi Button (Opens Modal for Notes)
+            $('#dataTable tbody').on('click', '.btn-reject-modal', function() {
+                const id = $(this).data('id');
+                $('#reviewId').val(id);
+                $('#reviewNotes').val(''); // clear notes
+                
+                openModal('#modalReview');
+            });
+
+            // Handle Submit Reject
+            $('#btnSubmitReject').click(function() {
+                const id = parseInt($('#reviewId').val());
+                const notes = $('#reviewNotes').val();
+                
+                if(!notes) {
+                    Swal.fire('Error', 'Harap isi catatan revisi atau alasan penolakan!', 'error');
+                    return;
+                }
+                
+                closeModal('#modalReview');
+                
+                Swal.fire({
+                    title: 'Memproses Penolakan...',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+                setTimeout(() => {
+                    const idx = mockData.findIndex(item => item.id === id);
+                    if(idx > -1) mockData[idx].status = 'Rejected';
+                    
+                    table.clear().rows.add(mockData).draw();
+                    Swal.fire('Berhasil', 'Pengajuan ditolak / dikembalikan untuk revisi.', 'success');
+                }, 800);
+            });
+        });
+    </script>
+</body>
+</html>
