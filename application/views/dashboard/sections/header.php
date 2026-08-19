@@ -2,10 +2,10 @@
     /* Styling khusus Sesi 1 */
     #section-carousel {
         position: relative;
-        background-color: #d97706;
+        background-color: #d97706; /* Fallback color asli */
     }
 
-    /* Horizontal Carousel Snapping */
+    /* Horizontal Carousel Snapping (Hijacking kiri-kanan) */
     .carousel-container {
         display: flex;
         overflow-x: scroll;
@@ -17,7 +17,7 @@
     }
     .carousel-container::-webkit-scrollbar { display: none; }
 
-    /* Tiap Slide Carousel */
+    /* Tiap Layar/Slide Carousel */
     .carousel-slide {
         flex: 0 0 100vw;
         height: 100%;
@@ -32,14 +32,18 @@
         background-position: center;
     }
 
+    /* Khusus Slide 1 background-nya fakultas.jpg tanpa filter */
     .carousel-slide.slide-1 {
         background-image: url('<?= base_url("assets/images/Fakultas.jpg") ?>');
     }
 
+    /* Background Video Fullscreen */
     .background-video {
         position: absolute;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
         object-fit: cover;
         z-index: -1;
     }
@@ -73,6 +77,13 @@
         z-index: 30;
     }
     
+    .dots-half {
+        flex: 1;
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+
     .carousel-indicators .dot {
         flex: 1;
         display: flex;
@@ -146,6 +157,7 @@
         gap: 6px;
     }
 
+    /* Tombol Tambah Ruangan Khusus Admin */
     .lab-add-room-btn {
         display: inline-flex;
         align-items: center;
@@ -168,6 +180,7 @@
         background: #ffffff;
         color: #ea580c;
         transform: scale(1.1);
+        box-shadow: 0 4px 10px rgba(255, 255, 255, 0.6);
     }
 
     .lab-add-room-btn svg {
@@ -214,6 +227,7 @@
         animation: none !important;
     }
 
+    /* Tombol Play/Pause Kecil di Pinggir Label Fasilitas */
     .lab-play-pause-btn-side {
         width: 18px;
         height: 18px;
@@ -508,6 +522,21 @@
 
         window.goToSlide = goToSlide;
 
+        // Video support handler
+        document.querySelectorAll('video').forEach((vid) => {
+            vid.addEventListener('loadedmetadata', () => {
+                const slideIndex = Array.from(slides).indexOf(vid.closest('.carousel-slide'));
+                if (currentIndex === slideIndex && dots[slideIndex]) {
+                    const activeProg = dots[slideIndex].querySelector('.progress');
+                    if (activeProg) {
+                        activeProg.style.animation = 'none';
+                        activeProg.offsetHeight;
+                        activeProg.style.animation = `slideProgress ${vid.duration}s linear forwards`;
+                    }
+                }
+            });
+        });
+
         const updateDots = (index) => {
             currentIndex = index;
 
@@ -628,16 +657,27 @@
 
         goToSlide(0);
 
+        // Click on dots
         dots.forEach((dot, index) => {
             dot.addEventListener('click', () => {
                 goToSlide(index);
             });
         });
+
+        // Scroll listener synchronization
+        carousel.addEventListener('scroll', () => {
+            const slideWidth = carousel.clientWidth;
+            const newIndex = Math.round(carousel.scrollLeft / slideWidth);
+            if (newIndex !== currentIndex && newIndex >= 0 && newIndex < dots.length) {
+                currentIndex = newIndex;
+                updateDots(currentIndex);
+            }
+        });
     });
 </script>
 
 <script>
-    // Script Logika Pagination Teks (Fitur Teman)
+    // Script Logika Pagination Teks Deskripsi (Fitur Teman)
     document.addEventListener('DOMContentLoaded', () => {
         const fullText = <?= json_encode($header_settings->description ?? 'Seiring dengan berkembangnya kebutuhan pelayanan untuk mahasiswa, dosen dan pegawai FIK maka diperlukan peningkatan layanan yang mengusung efisiensi dan efektifitas. Ifik lahir dari keresahan dan kesulitan mahasiswa maupun dosen dalam beberapa layanan, antara lain pendaftaran TA, bimbingan online, dokumen online, peminjaman ruangan dan lain sebagainya. Sejak dibuat tahun 2021 oleh tim unit lab FIK, aplikasi berbasis web ini telah digunakan hingga saat ini untuk mempermudah layanan untuk kalangan internal FIK, baik untuk mahasiswa, dosen maupun pegawai FIK.') ?>;
         const charLimit = 420;
