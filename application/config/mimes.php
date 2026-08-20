@@ -182,5 +182,9 @@ return array(
 	'odt'	=>	'application/vnd.oasis.opendocument.text',
 	'odm'	=>	'application/vnd.oasis.opendocument.text-master',
 	'ott'	=>	'application/vnd.oasis.opendocument.text-template',
-	'oth'	=>	'application/vnd.oasis.opendocument.text-web'
+	'oth'	=>	'application/vnd.oasis.opendocument.text-web',
+	'glb'	=>	array('model/gltf-binary', 'application/octet-stream', 'model/gltf+json', 'binary/octet-stream'),
+	'gltf'	=>	array('model/gltf+json', 'application/json', 'application/octet-stream'),
+	'fbx'	=>	array('application/octet-stream', 'application/x-fbx', 'application/fbx'),
+	'obj'	=>	array('text/plain', 'application/object', 'application/octet-stream')
 );

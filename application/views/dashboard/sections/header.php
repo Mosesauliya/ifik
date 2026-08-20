@@ -13,22 +13,20 @@
         width: 100%;
         height: 100%;
         scrollbar-width: none;
-        scroll-behavior: smooth; /* Tambahan agar pergeserannya selalu mulus/animasi */
+        scroll-behavior: smooth;
     }
     .carousel-container::-webkit-scrollbar { display: none; }
 
     /* Tiap Layar/Slide Carousel */
     .carousel-slide {
-        flex: 0 0 100vw; /* 100% lebar viewport per slide */
+        flex: 0 0 100vw;
         height: 100%;
         scroll-snap-align: center;
         display: flex;
         align-items: center;
         justify-content: center;
         position: relative;
-        z-index: 2; /* Konten berada di atas background tapi di bawah UI interaktif jika ada */
-        
-        /* Latar Belakang default tanpa overlay gradient */
+        z-index: 2;
         background-image: url('<?= base_url("assets/images/background.png") ?>');
         background-size: cover; 
         background-position: center;
@@ -47,25 +45,36 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
-        z-index: -1; /* Di bawah konten slide */
+        z-index: -1;
     }
 
-
-    
-
-
-    /* Carousel Indicators (Dots) */
-    .carousel-indicators {
+    .scroll-hint {
         position: absolute;
-        bottom: 32px; /* Sesuaikan dengan tinggi tombol agar pas di tengah-tengah vertikal */
+        bottom: 30px;
         left: 50%;
         transform: translateX(-50%);
-        width: 70vw; 
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 15px; /* Jarak antara dots */
+        color: #fff;
+        font-size: 0.9rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        animation: bounce 2s infinite;
         z-index: 20;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        font-weight: 700;
+    }
+
+    /* Carousel Indicators (Dots) - Modern Glassmorphism Hybrid */
+    .carousel-indicators {
+        position: absolute;
+        bottom: 45px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60vw;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        z-index: 30;
     }
     
     .dots-half {
@@ -74,37 +83,41 @@
         gap: 15px;
         align-items: center;
     }
-    
+
     .carousel-indicators .dot {
-        flex: 1; /* Meregang memenuhi width 50vw */
+        flex: 1;
         display: flex;
         flex-direction: column;
         gap: 8px;
         cursor: pointer;
-        opacity: 0.6;
+        opacity: 0.7;
         transition: all 0.3s ease;
-        background: rgba(0, 0, 0, 0.4);
-        padding: 10px 15px;
-        border-radius: 8px;
-        backdrop-filter: blur(6px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.45);
+        padding: 10px 14px;
+        border-radius: 12px;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
     }
     
     .carousel-indicators .dot.active, 
     .carousel-indicators .dot:hover {
         opacity: 1;
-        background: rgba(0, 0, 0, 0.65);
-        border-color: rgba(234, 88, 12, 0.6); /* Highlight orange */
+        background: rgba(0, 0, 0, 0.75);
+        border-color: rgba(234, 88, 12, 0.7);
         box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         transform: translateY(-2px);
     }
 
     .carousel-indicators .dot .dot-label {
-        font-size: 0.9rem;
+        font-size: 0.82rem;
         font-weight: 800;
         text-transform: uppercase;
         color: #fff;
-        letter-spacing: 1.5px;
+        letter-spacing: 1.2px;
+        height: 18px;
+        display: flex;
+        align-items: center;
     }
     
     .carousel-indicators .dot .dot-track {
@@ -122,14 +135,128 @@
         background: #fff;
         width: 0%;
         border-radius: 4px;
-        box-shadow: 0 0 8px #fff, 0 0 15px rgba(255,255,255,0.8); /* Tambahan Glow */
+        box-shadow: 0 0 8px #fff, 0 0 15px rgba(255,255,255,0.8);
     }
-    
-    .carousel-indicators .dot.active .progress {
-        /* Animasi ditangani oleh JS agar dinamis berdasarkan video/gambar */
+
+    /* --- FASILITAS SEGMENTED SEEKBAR & CONTROLS GROUP --- */
+    .dot-fasilitas {
+        position: relative;
     }
-    
-    /* --- SLIDE 1 NEW LAYOUT --- */
+
+    .dot-label-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        height: 18px;
+    }
+
+    .fasilitas-controls-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* Tombol Tambah Ruangan Khusus Admin */
+    .lab-add-room-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        height: 18px;
+        padding: 0 7px;
+        border-radius: 12px;
+        background: #ea580c;
+        border: none;
+        color: #ffffff;
+        font-size: 0.65rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 6px rgba(234, 88, 12, 0.5);
+    }
+
+    .lab-add-room-btn:hover {
+        background: #ffffff;
+        color: #ea580c;
+        transform: scale(1.1);
+        box-shadow: 0 4px 10px rgba(255, 255, 255, 0.6);
+    }
+
+    .lab-add-room-btn svg {
+        width: 10px;
+        height: 10px;
+        fill: currentColor;
+    }
+
+    .dot-track-segmented {
+        height: 4px;
+        width: 100%;
+        display: flex;
+        gap: 4px;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .dot-track-segmented .seg {
+        flex: 1;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 2px;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+    .dot-track-segmented .seg:hover {
+        background: rgba(255, 255, 255, 0.6);
+    }
+
+    .dot-track-segmented .seg .progress {
+        position: absolute;
+        top: 0; left: 0; height: 100%;
+        background: #ffffff;
+        width: 0%;
+        border-radius: 2px;
+        box-shadow: 0 0 8px #ffffff;
+    }
+
+    .dot-track-segmented .seg.completed .progress {
+        width: 100% !important;
+        animation: none !important;
+    }
+
+    /* Tombol Play/Pause Kecil di Pinggir Label Fasilitas */
+    .lab-play-pause-btn-side {
+        width: 18px;
+        height: 18px;
+        min-width: 18px;
+        border-radius: 50%;
+        background: #ea580c;
+        border: none;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 6px rgba(234, 88, 12, 0.5);
+    }
+
+    .lab-play-pause-btn-side:hover {
+        background: #ffffff;
+        color: #ea580c;
+        transform: scale(1.2);
+    }
+
+    .lab-play-pause-btn-side svg {
+        width: 9px;
+        height: 9px;
+        fill: currentColor;
+    }
+
+    /* --- SLIDE 1 LAYOUT DENGAN PAGINATION TEKS --- */
     .slide1-layout {
         position: absolute;
         top: 0; left: 0; width: 100%; height: 100%;
@@ -137,45 +264,45 @@
         display: flex;
         align-items: center;
         z-index: 10;
-        pointer-events: none; /* Allow clicks to pass through to carousel */
+        pointer-events: none;
     }
     .slide1-text-container {
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        gap: 15px;
         width: 500px;
         max-width: 90vw;
         z-index: 10;
-        margin-top: -60px; /* geser sedikit ke atas */
+        margin-top: -40px;
         margin-left: 20px;
     }
     .slide1-title-box {
         background: rgba(255, 255, 255, 0.95);
         padding: 15px 30px;
-        border-radius: 12px;
+        border-radius: 14px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-        backdrop-filter: blur(5px);
-        pointer-events: auto; /* Enable clicks */
+        backdrop-filter: blur(8px);
+        pointer-events: auto;
         width: 100%;
         box-sizing: border-box;
     }
     .slide1-title-box h1 {
         color: #ea580c;
-        font-size: 2.2rem;
+        font-size: 2.1rem;
         font-weight: 800;
         margin: 0;
     }
     .slide1-content-box {
         background: rgba(255, 255, 255, 0.95);
-        padding: 25px 30px;
-        border-radius: 12px;
+        padding: 22px 28px;
+        border-radius: 14px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.15);
         color: #334155;
         font-size: 0.85rem;
         line-height: 1.6;
         text-align: justify;
-        backdrop-filter: blur(5px);
-        pointer-events: auto; /* Enable clicks */
+        backdrop-filter: blur(8px);
+        pointer-events: auto;
         width: 100%;
         box-sizing: border-box;
     }
@@ -187,29 +314,43 @@
         z-index: 5;
         pointer-events: none;
     }
+    
+    /* Pagination Button Teks Deskripsi */
     .header-pagination {
         display: none;
         pointer-events: auto;
-        margin-top: 10px;
+        margin-top: 5px;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
     }
     .header-pagination button {
-        background: #fff; border: none; padding: 5px 12px;
-        border-radius: 6px; font-weight: bold; color: #ea580c;
-        cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        background: #ffffff;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-weight: 700;
+        color: #ea580c;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
         font-size: 0.75rem;
+        transition: all 0.2s;
     }
-    .header-pagination button:hover { background: #ea580c; color: #fff; }
+    .header-pagination button:hover {
+        background: #ea580c;
+        color: #ffffff;
+    }
     .header-pagination span {
-        color: #fff; font-size: 0.8rem; font-weight: bold;
-        text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        color: #ffffff;
+        font-size: 0.8rem;
+        font-weight: 800;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.8);
     }
     
     @media (max-width: 900px) {
         .slide1-layout { padding: 0 20px; }
         .slide1-text-container { margin-top: 0; width: 100%; }
         .dekanat-img-right { max-height: 250px; opacity: 0.5; }
+        .carousel-indicators { width: 90vw; bottom: 25px; }
     }
     
     @keyframes slideProgress {
@@ -222,292 +363,143 @@
         40% { transform: translate(-50%, -10px); }
         60% { transform: translate(-50%, -5px); }
     }
-
-    /* --- KEYFRAMES ANIMASI DINAMIS --- */
-    @keyframes slideUpFade {
-        0% { opacity: 0; transform: translateY(50px); }
-        100% { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes softZoomFade {
-        0% { opacity: 0; transform: scale(0.85); filter: blur(10px); }
-        100% { opacity: 1; transform: scale(1); filter: blur(0); }
-    }
-    @keyframes floatIdle {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-12px); }
-    }
-    @keyframes floatIdleSlow {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-18px); }
-    }
-    @keyframes slowPan {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-    @keyframes shineCap {
-        0% { left: -100%; opacity: 1; }
-        100% { left: 150%; opacity: 0.5; }
-    }
-
-    /* --- HERO CONTENT PADA SLIDE 1 --- */
-    .hero-content-slide {
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 50px;
-        pointer-events: none; /* Biarkan klik tembus kecuali card */
-        z-index: 5;
-        perspective: 1500px; /* Kedalaman untuk efek tilt 3D */
-    }
-
-    /* Animasi Staggered Entrance (Berjalan HANYA setelah loading splash selesai) */
-    .card-left-section, .greeting-text, .main-title, .description, .dekanat-popout {
-        opacity: 0; /* Sembunyi sebelum animasi jalan */
-    }
-
-    body.play-animations .card-left-section {
-        animation: slideUpFade 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    }
-    body.play-animations .greeting-text {
-        animation: slideUpFade 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.15s forwards;
-    }
-    body.play-animations .main-title {
-        animation: slideUpFade 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.3s forwards;
-    }
-    body.play-animations .description {
-        animation: slideUpFade 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.45s forwards;
-    }
-    body.play-animations .dekanat-popout {
-        animation: softZoomFade 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.25s forwards;
-    }
-
-    /* Hover efek bersinar pada Metallic Cap saat kursor mendekat */
-    .card-left-section:hover .cap-reflection {
-        animation: shineCap 1.2s ease-in-out forwards;
-    }
-
-    /* Wrapper untuk Isolasi Transform */
-    .floating-wrap {
-        display: inline-block;
-        pointer-events: none; /* Diteruskan ke anak */
-    }
-    .parallax-card, .parallax-img {
-        pointer-events: none; /* Diteruskan ke anak */
-        transition: transform 0.15s ease-out; /* Sangat responsif ke kursor */
-        will-change: transform;
-    }
-
-    /* Card di Kiri - Desain ID Card Premium (Tanpa Tali) */
-    .card-left-section {
-        background: #fffbef;
-        border-radius: 28px;
-        width: 380px;
-        box-shadow:
-            0 20px 45px rgba(120,53,15,0.3),
-            0 6px 18px rgba(0,0,0,0.18);
-        border: 1px solid rgba(180,83,9,0.18);
-        pointer-events: auto;
-        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        overflow: hidden;
-        position: relative;
-    }
-    
-    .card-left-section:hover {
-        transform: scale(1.05);
-    }
-
-    /* Metallic Cap di bagian atas card */
-    .card-metallic-cap {
-        height: 54px;
-        background: linear-gradient(180deg, 
-            #ece6d7 0%, 
-            #d4caa7 30%, 
-            #b3a78c 70%, 
-            #998d72 100%
-        );
-        border-bottom: 2px solid #857a62;
-        position: relative;
-        box-shadow: 
-            inset 0 1.5px 0 rgba(255,255,255,0.7),
-            0 3px 6px rgba(0,0,0,0.1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    /* Lubang ID Card */
-    .cap-hole-wrapper {
-        position: absolute;
-        top: 14px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 22;
-    }
-
-    .cap-hole {
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        background: radial-gradient(circle at 35% 30%, #2a1200, #0a0400);
-        box-shadow:
-            inset 0 3px 6px rgba(0,0,0,0.95),
-            0 1px 2px rgba(255,255,255,0.4);
-        border: 1.5px solid #786d57;
-    }
-
-    /* Konten dalam Card */
-    .card-body {
-        padding: 30px;
-    }
-
-    .greeting-text {
-        font-size: 0.8rem;
-        font-weight: 800;
-        letter-spacing: 0.22em;
-        text-transform: uppercase;
-        color: #78350f;
-        margin-bottom: 12px;
-    }
-
-    .main-title {
-        font-size: 1.8rem;
-        line-height: 1.2;
-        font-weight: 900;
-        color: #1e293b;
-        margin-bottom: 12px;
-    }
-
-    .description {
-        font-size: 0.85rem;
-        line-height: 1.6;
-        color: #475569;
-        font-weight: 500;
-        text-align: justify;
-    }
-
-    .dekanat-popout {
-        width: 480px; /* Poto diperbesar */
-        height: auto;
-        object-fit: contain;
-        filter: drop-shadow(-10px 10px 15px rgba(0,0,0,0.2));
-        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        transform-origin: bottom center;
-    }
-
-    .dekanat-popout:hover {
-        transform: scale(1.08);
-    }
-
-    /* --- RESPONSIVE DESIGN FOR SESI 1 (CAROUSEL CARD) --- */
-    @media (max-width: 1200px) {
-        .hero-content-slide {
-            padding: 0 20px;
-        }
-        .card-left-section {
-            width: 340px;
-            padding: 20px;
-        }
-        .main-title { font-size: 1.5rem; }
-        .description { font-size: 0.8rem; }
-        .dekanat-popout { width: 300px; }
-    }
-
-    @media (max-width: 900px) {
-        .hero-content-slide {
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-        }
-        .card-left-section {
-            width: 90%;
-            text-align: center;
-        }
-        .dekanat-popout {
-            width: 250px;
-        }
-    }
 </style>
 
 <!-- Sesi 1: Carousel -->
 <div class="section-wrapper" id="section-carousel">
 
-    <!-- Fixed Overlay untuk Text dan Image agar tetap ada di semua slide carousel -->
-    <div class="slide1-layout">
-        <div class="slide1-text-container">
-            <div class="slide1-title-box">
-                <h1><?= htmlspecialchars($header_settings->title ?? 'Fakultas Industri Kreatif') ?></h1>
+    <!-- Carousel Horizontal (Scroll Hijacking) -->
+    <div class="carousel-container">
+        <!-- Slide 1 (Overview - Fakultas Industri Kreatif) -->
+        <div class="carousel-slide slide-1">
+            <div class="slide1-layout">
+                <div class="slide1-text-container">
+                    <div class="slide1-title-box">
+                        <h1><?= htmlspecialchars($header_settings->title ?? 'Fakultas Industri Kreatif') ?></h1>
+                    </div>
+                    <div class="slide1-content-box" id="headerDescBox">
+                        <?= htmlspecialchars($header_settings->description ?? 'Seiring dengan berkembangnya kebutuhan pelayanan untuk mahasiswa, dosen dan pegawai FIK maka diperlukan peningkatan layanan yang mengusung efisiensi dan efektifitas. Ifik lahir dari keresahan dan kesulitan mahasiswa maupun dosen dalam beberapa layanan, antara lain pendaftaran TA, bimbingan online, dokumen online, peminjaman ruangan dan lain sebagainya. Sejak dibuat tahun 2021 oleh tim unit lab FIK, aplikasi berbasis web ini telah digunakan hingga saat ini untuk mempermudah layanan untuk kalangan internal FIK, baik untuk mahasiswa, dosen maupun pegawai FIK.') ?>
+                    </div>
+                    <div class="header-pagination" id="headerPagination">
+                        <button onclick="prevDescPage()">&larr; Prev</button>
+                        <span id="headerPageInfo">1/1</span>
+                        <button onclick="nextDescPage()">Next &rarr;</button>
+                    </div>
+                </div>
             </div>
-            <div class="slide1-content-box" id="headerDescBox">
-                <!-- Text will be loaded by JS if pagination is needed -->
-                <?= htmlspecialchars($header_settings->description ?? 'Loading...') ?>
+            
+            <?php $dekanat_img = $header_settings->dekanat_image ?? 'dekanat2.png'; ?>
+            <img src="<?= base_url('assets/images/' . $dekanat_img) ?>" alt="Dekanat" class="dekanat-img-right">
+        </div>
+        
+        <!-- Slide 2 (Fasilitas: Lab Fakultas) -->
+        <div class="carousel-slide slide-2" style="position: relative; width: 100vw; height: 100%;">
+            <?php $this->load->view('dashboard/sections/lab'); ?>
+        </div>
+        
+        <!-- Slide 3 (Prestasi & Inovasi) -->
+        <div class="carousel-slide slide-3">
+            <div class="slide1-layout">
+                <div class="slide1-text-container">
+                    <div class="slide1-title-box">
+                        <h1>Prestasi &amp; Inovasi FIK</h1>
+                    </div>
+                    <div class="slide1-content-box">
+                        Fakultas Industri Kreatif secara konsisten mengukir berbagai prestasi baik di tingkat nasional maupun internasional. Melalui fasilitas laboratorium yang canggih dan bimbingan dosen berpengalaman, mahasiswa FIK terus melahirkan karya-karya inovatif di bidang desain, seni, media interaktif, dan teknologi kreatif.
+                    </div>
+                </div>
             </div>
-            <div class="header-pagination" id="headerPagination">
-                <button onclick="prevDescPage()">&larr; Prev</button>
-                <span id="headerPageInfo">1/1</span>
-                <button onclick="nextDescPage()">Next &rarr;</button>
-            </div>
+            <img src="<?= base_url('assets/images/dekanat2.png') ?>" alt="Dekanat" class="dekanat-img-right">
         </div>
     </div>
     
-    <?php $dekanat_img = $header_settings->dekanat_image ?? 'dekanat2.png'; ?>
-    <img src="<?= base_url('assets/images/' . $dekanat_img) ?>" alt="Dekanat" class="dekanat-img-right">
-    
-    <!-- Carousel Horizontal yang bisa digeser (Scroll Hijacking) -->
-    <div class="carousel-container">
-        <?php if(!empty($header_slides)): foreach($header_slides as $index => $slide): ?>
-            <div class="carousel-slide">
-                <?php if($slide->media_type == 'video'): ?>
-                    <video id="slide<?= $index ?>-video" autoplay muted playsinline loop class="background-video">
-                        <source src="<?= base_url('assets/vids/' . $slide->media_path) ?>" type="video/mp4">
-                    </video>
+    <!-- Indikator Dots Gabungan -->
+    <div class="carousel-indicators" id="carouselDots">
+        <!-- Dot 0: Overview -->
+        <div class="dot active" data-index="0">
+            <span class="dot-label">Overview</span>
+            <div class="dot-track"><div class="progress"></div></div>
+        </div>
+
+        <!-- Dot 1: Fasilitas (6 Segmen Ruangan) -->
+        <div class="dot dot-fasilitas" data-index="1">
+            <div class="dot-label-row">
+                <span class="dot-label">Fasilitas</span>
+                <div class="fasilitas-controls-group">
+                    <?php if ($this->session->userdata('role_id') == 1): ?>
+                        <a href="<?= base_url('kelolaruangan') ?>" class="lab-add-room-btn" title="Kelola Ruangan">
+                            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                            <span>Ruangan</span>
+                        </a>
+                    <?php endif; ?>
+
+                    <button class="lab-play-pause-btn-side" id="labAutoPlayBtn" title="Auto Play / Pause">
+                        <svg id="playPauseIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="dot-track-segmented" id="labIndicators">
+                <?php 
+                    $ruangan_with_3d = [];
+                    $seen_keys = [];
+                    if (!empty($ruangan)) {
+                        foreach ($ruangan as $r) {
+                            $n = strtolower(trim(isset($r->nama_ruangan) ? $r->nama_ruangan : ''));
+                            $c = strtolower(trim(isset($r->kode_ruangan) ? $r->kode_ruangan : ''));
+                            if (!empty($r->model_3d) && $n !== 'ss' && $c !== 'ss' && strpos($n, 'test') === false && strpos($n, 'qqq') === false) {
+                                if (strpos($n, 'multimedia') !== false) $lab_code = 'multimedia';
+                                elseif (strpos($n, 'aula') !== false) $lab_code = 'aula';
+                                elseif (strpos($n, 'cintiq') !== false || strpos($n, 'tablet') !== false || strpos($n, 'sablon') !== false) $lab_code = 'cintiq';
+                                elseif (strpos($n, 'green') !== false) $lab_code = 'greenscreen';
+                                elseif (strpos($n, 'inkubator') !== false || strpos($n, 'incubator') !== false) $lab_code = 'incubator';
+                                elseif (strpos($n, 'mac') !== false || strpos($n, '3d printing') !== false) $lab_code = 'mac';
+                                else $lab_code = preg_replace('/[^a-z0-9]/', '', $c);
+
+                                if (!empty($lab_code) && !in_array($lab_code, $seen_keys)) {
+                                    $seen_keys[] = $lab_code;
+                                    $r->mapped_key = $lab_code;
+                                    $ruangan_with_3d[] = $r;
+                                }
+                            }
+                        }
+                    }
+
+                    $order_keys = ['multimedia', 'aula', 'cintiq', 'greenscreen', 'incubator', 'mac'];
+                    usort($ruangan_with_3d, function($a, $b) use ($order_keys) {
+                        $posA = array_search($a->mapped_key, $order_keys);
+                        $posB = array_search($b->mapped_key, $order_keys);
+                        if ($posA === false) $posA = 999;
+                        if ($posB === false) $posB = 999;
+                        return $posA - $posB;
+                    });
+                ?>
+                <?php if (!empty($ruangan_with_3d)): ?>
+                    <?php foreach ($ruangan_with_3d as $idx => $r): ?>
+                        <div class="seg <?= $idx === 0 ? 'active' : '' ?>" 
+                             data-lab="<?= htmlspecialchars($r->mapped_key) ?>" 
+                             data-id="<?= $r->id ?>"
+                             title="<?= htmlspecialchars($r->nama_ruangan) ?>">
+                            <div class="progress"></div>
+                        </div>
+                    <?php endforeach; ?>
                 <?php else: ?>
-                    <img src="<?= base_url('assets/images/' . $slide->media_path) ?>" class="background-video" style="object-fit: cover;">
+                    <div class="seg active" data-lab="multimedia" title="Lab Multimedia &amp; Game"><div class="progress"></div></div>
+                    <div class="seg" data-lab="aula" title="Aula Utama"><div class="progress"></div></div>
+                    <div class="seg" data-lab="cintiq" title="Lab Cintiq"><div class="progress"></div></div>
+                    <div class="seg" data-lab="greenscreen" title="Lab Green Screen"><div class="progress"></div></div>
+                    <div class="seg" data-lab="incubator" title="Lab Inkubator"><div class="progress"></div></div>
+                    <div class="seg" data-lab="mac" title="Lab Mac Workstation"><div class="progress"></div></div>
                 <?php endif; ?>
             </div>
-        <?php endforeach; else: ?>
-            <div class="carousel-slide" style="background-image: url('<?= base_url('assets/images/Fakultas.jpg') ?>'); background-size: cover; background-position: center;"></div>
-        <?php endif; ?>
-    </div>
-    
-    <!-- Indikator Dots dengan Label -->
-    <div class="carousel-indicators" id="carouselDots">
-        <div class="dots-half" style="justify-content: flex-end;">
-        <?php 
-        $total_slides = !empty($header_slides) ? count($header_slides) : 1;
-        $half_index = ceil($total_slides / 2);
-        
-        if(!empty($header_slides)): foreach($header_slides as $index => $slide): 
-            if($index == $half_index) {
-                echo '</div>'; // close first half
-                
-                // Ruang kosong di tengah agar tombol bulat fixed bisa pas
-                echo '<div style="width: 75px; flex: 0 0 auto;"></div>';
-                
-                echo '<div class="dots-half" style="justify-content: flex-start;">'; // open second half
-            }
-        ?>
-            <div class="dot <?= $index == 0 ? 'active' : '' ?>" data-index="<?= $index ?>" data-duration="<?= htmlspecialchars($slide->duration ?? 4) ?>">
-                <span class="dot-label"><?= htmlspecialchars($slide->label) ?></span>
-                <div class="dot-track"><div class="progress"></div></div>
-            </div>
-        <?php endforeach; else: ?>
-            <div class="dot active" data-index="0" data-duration="4">
-                <span class="dot-label">Overview</span>
-                <div class="dot-track"><div class="progress"></div></div>
-            </div>
-            </div>
-            <!-- Ruang kosong di tengah untuk 1 slide -->
-            <div style="width: 75px; flex: 0 0 auto;"></div>
-            <div class="dots-half" style="display:none;">
-        <?php endif; ?>
+        </div>
+
+        <!-- Dot 2: Prestasi -->
+        <div class="dot" data-index="2">
+            <span class="dot-label">Prestasi</span>
+            <div class="dot-track"><div class="progress"></div></div>
         </div>
     </div>
 </div>
-
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -516,33 +508,25 @@
         const dots = document.querySelectorAll('#carouselDots .dot');
         
         let currentIndex = 0;
-        let direction = 1; // 1 = gerak ke kanan, -1 = gerak ke kiri
-        let autoScrollTimer;
+        let activeProgEndListener = null;
 
-        // Fungsi berpindah ke slide tertentu dengan halus
         const goToSlide = (index) => {
             if (!carousel || !slides[index]) return;
-            
-            // Hitung posisi absolut slide yang dituju
             const slideLeftPos = slides[index].offsetLeft;
-            
-            // Gunakan scrollTo untuk memastikan animasinya presisi dari awal sampai akhir slide
             carousel.scrollTo({
                 left: slideLeftPos,
                 behavior: 'smooth'
             });
-            
             updateDots(index);
         };
 
-        // Ekspos fungsi ke window agar bisa dipanggil dari tombol navbar
         window.goToSlide = goToSlide;
 
-        // Pastikan animasi terupdate saat durasi video sudah diketahui
-        document.querySelectorAll('video').forEach((vid, idx) => {
+        // Video support handler
+        document.querySelectorAll('video').forEach((vid) => {
             vid.addEventListener('loadedmetadata', () => {
                 const slideIndex = Array.from(slides).indexOf(vid.closest('.carousel-slide'));
-                if (currentIndex === slideIndex) {
+                if (currentIndex === slideIndex && dots[slideIndex]) {
                     const activeProg = dots[slideIndex].querySelector('.progress');
                     if (activeProg) {
                         activeProg.style.animation = 'none';
@@ -553,244 +537,156 @@
             });
         });
 
-        // Fungsi memperbarui titik (dot) aktif dan visibility logo 3D
         const updateDots = (index) => {
-            dots.forEach(dot => {
+            currentIndex = index;
+
+            dots.forEach((dot, i) => {
                 dot.classList.remove('active');
-                
-                // Force animation restart for progress bar
-                const prog = dot.querySelector('.progress');
+                const prog = dot.querySelector('.dot-track > .progress');
                 if (prog) {
                     prog.style.animation = 'none';
-                    prog.offsetHeight; // trigger reflow
-                    prog.style.width = '0%'; // reset width
+                    prog.offsetHeight;
+                    if (i < index) {
+                        prog.style.width = '100%';
+                    } else {
+                        prog.style.width = '0%';
+                    }
                 }
             });
-            if(dots[index]) {
+
+            if (dots[index]) {
                 dots[index].classList.add('active');
-                const activeProg = dots[index].querySelector('.progress');
-                if (activeProg) {
-                    let duration = dots[index].dataset.duration ? parseInt(dots[index].dataset.duration) : 4; // durasi dinamis dari per-slide
-                    const currentSlide = slides[index];
-                    const videoEl = currentSlide ? currentSlide.querySelector('video') : null;
-                    
-                    if (videoEl && videoEl.duration && !isNaN(videoEl.duration)) {
-                        duration = videoEl.duration;
-                        videoEl.currentTime = 0;
-                        videoEl.play();
-                    }
-                    
-                    activeProg.style.animation = `slideProgress ${duration}s linear forwards`;
-                }
             }
 
-            // 3D Logo logic: Hanya disembunyikan jika berada di Sesi 1 (Header) dan bukan slide 1
+            // 3D Logo logic: tampil di Slide 0 dan Slide 2
             const modelContainer = document.getElementById('global-model-container');
             const dashboardContainer = document.querySelector('.dashboard-container');
             if (modelContainer) {
                 const currentScrollTop = dashboardContainer ? dashboardContainer.scrollTop : 0;
                 const vh = window.innerHeight || 800;
                 if (currentScrollTop < vh * 0.45) {
-                    if (index === 0) {
-                        modelContainer.style.opacity = '1';
-                    } else {
-                        modelContainer.style.opacity = '0';
-                    }
-                } else if (currentScrollTop <= vh * 1.4) {
-                    // Sesi 2 (Informasi Ruangan): Logo 3D tampil
-                    modelContainer.style.opacity = '1';
-                } else {
-                    // Sesi di bawah Informasi Ruangan (Lab, Berita, dll): Logo 3D disembunyikan
-                    modelContainer.style.opacity = '0';
+                    modelContainer.style.opacity = (index === 0 || index === 2) ? '1' : '0';
                 }
                 modelContainer.style.pointerEvents = 'none';
             }
 
-            // Hentikan video lain dan pause auto-scroll jika video sedang aktif
-            let hasActiveVideo = false;
-            slides.forEach((slide, i) => {
-                const vid = slide.querySelector('video');
-                if(vid) {
-                    if (i === index) {
-                        vid.currentTime = 0;
-                        vid.play();
-                        hasActiveVideo = true;
-                    } else {
-                        vid.pause();
-                    }
-                }
-            });
+            if (index === 0) {
+                const segs = document.querySelectorAll('#labIndicators .seg');
+                segs.forEach(seg => {
+                    seg.classList.remove('completed', 'active');
+                    const p = seg.querySelector('.progress');
+                    if (p) { p.style.animation = 'none'; p.style.width = '0%'; }
+                });
 
-            if (hasActiveVideo) {
-                clearInterval(autoScrollTimer);
+                if (typeof pauseAutoPlay === 'function') pauseAutoPlay();
+
+                const overviewProg = dots[0].querySelector('.dot-track > .progress');
+                if (overviewProg) {
+                    if (activeProgEndListener) {
+                        overviewProg.removeEventListener('animationend', activeProgEndListener);
+                    }
+                    void overviewProg.offsetWidth;
+                    overviewProg.style.animation = 'slideProgress 6.5s linear forwards';
+                    overviewProg.style.animationPlayState = 'running';
+                    
+                    activeProgEndListener = () => {
+                        overviewProg.removeEventListener('animationend', activeProgEndListener);
+                        activeProgEndListener = null;
+                        if (currentIndex === 0) {
+                            goToSlide(1);
+                        }
+                    };
+                    overviewProg.addEventListener('animationend', activeProgEndListener);
+                }
+
+            } else if (index === 1) {
+                const overviewProg = dots[0].querySelector('.dot-track > .progress');
+                if (overviewProg) {
+                    overviewProg.style.animation = 'none';
+                    overviewProg.style.width = '100%';
+                }
+
+                const prestasiProg = dots[2].querySelector('.dot-track > .progress');
+                if (prestasiProg) {
+                    prestasiProg.style.animation = 'none';
+                    prestasiProg.style.width = '0%';
+                }
+
+                if (typeof window.startLabSequence === 'function') {
+                    window.startLabSequence();
+                } else if (typeof startAutoPlay === 'function') {
+                    startAutoPlay();
+                }
+
+            } else if (index === 2) {
+                const overviewProg = dots[0].querySelector('.dot-track > .progress');
+                if (overviewProg) {
+                    overviewProg.style.animation = 'none';
+                    overviewProg.style.width = '100%';
+                }
+
+                const segs = document.querySelectorAll('#labIndicators .seg');
+                segs.forEach(seg => {
+                    seg.classList.add('completed');
+                    const p = seg.querySelector('.progress');
+                    if (p) { p.style.animation = 'none'; p.style.width = '100%'; }
+                });
+
+                if (typeof pauseAutoPlay === 'function') pauseAutoPlay();
+
+                const prestasiProg = dots[2].querySelector('.dot-track > .progress');
+                if (prestasiProg) {
+                    if (activeProgEndListener) {
+                        prestasiProg.removeEventListener('animationend', activeProgEndListener);
+                    }
+                    void prestasiProg.offsetWidth;
+                    prestasiProg.style.animation = 'slideProgress 6.5s linear forwards';
+                    prestasiProg.style.animationPlayState = 'running';
+                    
+                    activeProgEndListener = () => {
+                        prestasiProg.removeEventListener('animationend', activeProgEndListener);
+                        activeProgEndListener = null;
+                        if (currentIndex === 2) {
+                            goToSlide(0);
+                        }
+                    };
+                    prestasiProg.addEventListener('animationend', activeProgEndListener);
+                }
             }
         };
 
-        // --- MOUSE TRACKING PARALLAX (TERISOLASI) ---
-        const pCard = document.querySelector('.parallax-card');
-        const pImg = document.querySelector('.parallax-img');
-        
-        if (pCard) {
-            pCard.addEventListener('mousemove', (e) => {
-                const rect = pCard.getBoundingClientRect();
-                // Hitung posisi kursor relatif terhadap TENGAH CARD
-                const xAxis = ((rect.left + rect.width / 2) - e.clientX) / -18;
-                const yAxis = ((rect.top + rect.height / 2) - e.clientY) / 18;
-                pCard.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
-            });
+        goToSlide(0);
 
-            pCard.addEventListener('mouseleave', () => {
-                pCard.style.transform = `rotateY(0deg) rotateX(0deg)`;
-            });
-        }
-
-        if (pImg) {
-            pImg.addEventListener('mousemove', (e) => {
-                const rect = pImg.getBoundingClientRect();
-                // Hitung posisi kursor relatif terhadap TENGAH GAMBAR
-                const xAxis = ((rect.left + rect.width / 2) - e.clientX) / 25;
-                const yAxis = ((rect.top + rect.height / 2) - e.clientY) / 25;
-                // Gambar bergeser kebalikan dari arah kursor
-                pImg.style.transform = `translateX(${xAxis}px) translateY(${yAxis}px)`;
-            });
-
-            pImg.addEventListener('mouseleave', () => {
-                pImg.style.transform = `translateX(0px) translateY(0px)`;
-            });
-        }
-        // ----------------------------------------
-
-        const startAutoScroll = () => {
-            clearTimeout(autoScrollTimer); // Pastikan tidak ada duplikat interval
-            
-            // Jika slide aktif adalah video, tunggu event ended
-            const currentSlide = slides[currentIndex];
-            if (currentSlide && currentSlide.querySelector('video')) {
-                return;
-            }
-
-            let slideDuration = dots[currentIndex] && dots[currentIndex].dataset.duration ? parseInt(dots[currentIndex].dataset.duration) * 1000 : 4000;
-
-            autoScrollTimer = setTimeout(() => {
-                currentIndex += direction;
-                
-                // Logika memantul (0 -> 1 -> 2 -> 1 -> 0)
-                if (currentIndex >= slides.length - 1) {
-                    currentIndex = slides.length - 1;
-                    direction = -1; // Balik arah ke kiri
-                } else if (currentIndex <= 0) {
-                    currentIndex = 0;
-                    direction = 1;  // Balik arah ke kanan
-                }
-                
-                goToSlide(currentIndex);
-            }, slideDuration); 
-        };
-
-        document.querySelectorAll('video').forEach((vid) => {
-            vid.addEventListener('ended', () => {
-                const slideIndex = Array.from(slides).indexOf(vid.closest('.carousel-slide'));
-                if (currentIndex === slideIndex) {
-                    currentIndex++;
-                    if (currentIndex >= slides.length) {
-                        currentIndex = slides.length - 1;
-                        direction = -1;
-                    }
-                    goToSlide(currentIndex);
-                    startAutoScroll();
-                }
+        // Click on dots
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                goToSlide(index);
             });
         });
 
-        startAutoScroll();
-
-        const dashboardContainer = document.querySelector('.dashboard-container');
-        let isForcedScrolling = false;
-
-        if (dashboardContainer) {
-            dashboardContainer.addEventListener('wheel', (e) => {
-                // Jika berada di Sesi 1 (scroll paling atas), scroll ke bawah, TAPI tidak di Slide 1
-                if (dashboardContainer.scrollTop < 50 && e.deltaY > 0 && currentIndex > 0) {
-                    if (!isForcedScrolling) {
-                        e.preventDefault(); // Cegah scroll bawah
-                        isForcedScrolling = true;
-                        
-                        // 1. Pindah ke slide 1 dengan animasi horizontal
-                        currentIndex = 0;
-                        goToSlide(0);
-                        
-                        // 2. Tunggu animasi horizontal selesai, lalu otomatis gulir ke bawah (Ke Sesi 2: Info Ruangan)
-                        setTimeout(() => {
-                            const nextSection = document.getElementById('section-about');
-                            if (nextSection) {
-                                if (window.lenis) {
-                                    window.lenis.scrollTo(nextSection, { duration: 1.2 });
-                                } else {
-                                    dashboardContainer.scrollTo({
-                                        top: nextSection.offsetTop,
-                                        behavior: 'smooth'
-                                    });
-                                }
-                            }
-                            
-                            // Reset flag
-                            setTimeout(() => {
-                                isForcedScrolling = false;
-                            }, 800);
-                            
-                        }, 600); // Tunggu 600ms (kurang lebih waktu untuk scroll horizontal)
-                    } else {
-                        // Jika animasi paksa sedang jalan, abaikan scroll tambahan
-                        e.preventDefault();
-                    }
-                }
-            }, { passive: false });
-        }
-
-        // Hentikan auto-scroll saat disentuh/scroll manual
+        // Scroll listener synchronization
         carousel.addEventListener('scroll', () => {
-            clearTimeout(autoScrollTimer);
-            
-            // Sinkronisasi index dot dengan posisi scroll manual
             const slideWidth = carousel.clientWidth;
             const newIndex = Math.round(carousel.scrollLeft / slideWidth);
-            
-            if (newIndex !== currentIndex) {
+            if (newIndex !== currentIndex && newIndex >= 0 && newIndex < dots.length) {
                 currentIndex = newIndex;
                 updateDots(currentIndex);
             }
-            
-            // Lanjutkan otomatis setelah durasi slide aktif
-            startAutoScroll();
-        });
-
-        // Event listener saat titik (dot) diklik
-        dots.forEach((dot, index) => {
-            dot.addEventListener('click', () => {
-                currentIndex = index;
-                goToSlide(currentIndex);
-                
-                // Reset timer agar tidak tabrakan
-                clearTimeout(autoScrollTimer);
-                startAutoScroll();
-            });
         });
     });
 </script>
 
 <script>
-    // Teks Pagination Logic
+    // Script Logika Pagination Teks Deskripsi (Fitur Teman)
     document.addEventListener('DOMContentLoaded', () => {
-        const fullText = <?= json_encode($header_settings->description ?? '') ?>;
-        const charLimit = 560; // Karakter maksimal per halaman
+        const fullText = <?= json_encode($header_settings->description ?? 'Seiring dengan berkembangnya kebutuhan pelayanan untuk mahasiswa, dosen dan pegawai FIK maka diperlukan peningkatan layanan yang mengusung efisiensi dan efektifitas. Ifik lahir dari keresahan dan kesulitan mahasiswa maupun dosen dalam beberapa layanan, antara lain pendaftaran TA, bimbingan online, dokumen online, peminjaman ruangan dan lain sebagainya. Sejak dibuat tahun 2021 oleh tim unit lab FIK, aplikasi berbasis web ini telah digunakan hingga saat ini untuk mempermudah layanan untuk kalangan internal FIK, baik untuk mahasiswa, dosen maupun pegawai FIK.') ?>;
+        const charLimit = 420;
         
         let pages = [];
-        // Pemecahan kata-kata secara sederhana
         if (fullText.length > charLimit) {
             let currentIdx = 0;
             while(currentIdx < fullText.length) {
                 let slice = fullText.slice(currentIdx, currentIdx + charLimit);
-                // Usahakan tidak memotong kata di tengah
                 if (currentIdx + charLimit < fullText.length) {
                     let lastSpace = slice.lastIndexOf(' ');
                     if (lastSpace > -1) {
@@ -816,9 +712,9 @@
         function renderDescPage() {
             if(!descBox) return;
             descBox.innerHTML = pages[currentDescPage];
-            if (pages.length > 1) {
+            if (pages.length > 1 && paginationBox) {
                 paginationBox.style.display = 'flex';
-                pageInfo.innerText = (currentDescPage + 1) + '/' + pages.length;
+                if (pageInfo) pageInfo.innerText = (currentDescPage + 1) + '/' + pages.length;
             }
         }
 
@@ -827,14 +723,14 @@
                 currentDescPage--;
                 renderDescPage();
             }
-        }
+        };
         
         window.nextDescPage = function() {
             if(currentDescPage < pages.length - 1) {
                 currentDescPage++;
                 renderDescPage();
             }
-        }
+        };
 
         renderDescPage();
     });

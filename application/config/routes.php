@@ -75,6 +75,11 @@ $route['admin/import-email/(:any)'] = 'ImportEmail/$1';
 $route['admin/import'] = 'ImportEmail';
 $route['admin/import/(:any)'] = 'ImportEmail/$1';
 
+// Admin Kelola Ruangan Routes
+$route['kelolaruangan'] = 'Kelolaruangan';
+$route['admin/ruangan'] = 'Kelolaruangan';
+$route['admin/kelolaruangan'] = 'Kelolaruangan';
+
 // Onboarding & Force Change Password Routes
 $route['onboarding'] = 'login/onboarding';
 

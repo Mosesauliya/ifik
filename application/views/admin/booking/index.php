@@ -267,12 +267,18 @@
 </head>
 <body>
 
-    <div class="header">
+    <div class="header" style="display: flex; align-items: center; justify-content: space-between;">
         <h1>Dashboard Peminjaman</h1>
-        <button class="btn-primary" onclick="openAdminBookingModal()">
-            + Buat Peminjaman
-        </button>
-
+        <div style="display: flex; gap: 10px;">
+            <?php if ($this->session->userdata('role_id') == 1): ?>
+                <button class="btn-primary" onclick="openTambahRuanganModalAdmin()" style="background: #0f172a;">
+                    🏢 + Tambah Ruangan
+                </button>
+            <?php endif; ?>
+            <button class="btn-primary" onclick="openAdminBookingModal()">
+                + Buat Peminjaman
+            </button>
+        </div>
     </div>
 
     <!-- Data Table -->
@@ -718,6 +724,91 @@
             });
         }
 
+        // Modal Tambah Ruangan Admin
+        function openTambahRuanganModalAdmin() {
+            document.getElementById('modalTambahRuanganAdmin').classList.add('active');
+        }
+
+        function closeTambahRuanganModalAdmin() {
+            document.getElementById('modalTambahRuanganAdmin').classList.remove('active');
+        }
+
+        function handleTambahRuanganSubmitAdmin(e) {
+            e.preventDefault();
+            const form = document.getElementById('formTambahRuanganAdmin');
+            const formData = new FormData(form);
+
+            fetch('<?= base_url("dashboard/tambah_ruangan") ?>', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    Swal.fire('Berhasil!', data.message, 'success').then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire('Gagal', data.message, 'error');
+                }
+            })
+            .catch(err => {
+                Swal.fire('Error', 'Terjadi kesalahan koneksi server.', 'error');
+            });
+        }
     </script>
+
+    <!-- Modal Popup Form Tambah Ruangan Khusus Admin -->
+    <div id="modalTambahRuanganAdmin" class="modal-backdrop" onclick="if(event.target===this)closeTambahRuanganModalAdmin()">
+        <div class="modal-card" style="max-width: 480px; padding: 0; overflow: hidden;">
+            <div style="padding: 18px 24px; background: #0f172a; color: #fff; display: flex; align-items: center; justify-content: space-between;">
+                <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800;">🏢 Tambah Ruangan / Lab Baru</h3>
+                <button type="button" onclick="closeTambahRuanganModalAdmin()" style="background: none; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <form id="formTambahRuanganAdmin" onsubmit="handleTambahRuanganSubmitAdmin(event)" style="padding: 20px 24px;">
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <div class="form-group">
+                        <label style="font-size: 0.75rem; font-weight: 700; color: #334155; text-transform: uppercase;">Nama Ruangan / Lab *</label>
+                        <input type="text" name="nama_ruangan" placeholder="Contoh: Lab AR/VR &amp; Metaverse" required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 0.75rem; font-weight: 700; color: #334155; text-transform: uppercase;">Kode Ruangan *</label>
+                        <input type="text" name="kode_ruangan" placeholder="Contoh: LAB-VR" required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 0.75rem; font-weight: 700; color: #334155; text-transform: uppercase;">Kategori Ruangan *</label>
+                        <select name="id_kategori" required class="form-control">
+                            <option value="1">Laboratorium Komputer</option>
+                            <option value="2">Laboratorium Desain</option>
+                            <option value="3">Ruang Rapat &amp; Seminar</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 0.75rem; font-weight: 700; color: #334155; text-transform: uppercase;">Kapasitas (Orang)</label>
+                        <input type="number" name="kapasitas" value="35" min="1" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 0.75rem; font-weight: 700; color: #334155; text-transform: uppercase;">Lokasi Ruangan</label>
+                        <input type="text" name="lokasi" value="Gedung Sebatik (FIK)" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 0.75rem; font-weight: 700; color: #334155; text-transform: uppercase;">Status Ketersediaan</label>
+                        <select name="status" class="form-control">
+                            <option value="Tersedia">Tersedia</option>
+                            <option value="Tidak Tersedia">Tidak Tersedia</option>
+                            <option value="Perbaikan">Perbaikan</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" onclick="closeTambahRuanganModalAdmin()" style="padding: 8px 18px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; color: #64748b; font-weight: 700; cursor: pointer;">Batal</button>
+                    <button type="submit" style="padding: 8px 22px; border-radius: 8px; border: none; background: #ea580c; color: #fff; font-weight: 700; cursor: pointer;">Simpan Ruangan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Global Custom Circle Cursor -->
+    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>

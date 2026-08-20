@@ -26,6 +26,11 @@ class Dashboard extends CI_Controller {
     {
         $this->load->helper('url');
         $data['lab_key'] = strtolower($id);
+
+        // Load ruangan data from DB for dynamic rooms (non-hardcoded keys)
+        $this->db->where('status', 'Tersedia');
+        $data['all_ruangan'] = $this->db->get('ruangan')->result();
+
         $this->load->view('dashboard/lab_detail', $data);
     }
 
@@ -195,6 +200,46 @@ class Dashboard extends CI_Controller {
         $this->load->model('Booking_model');
         $data = $this->Booking_model->get_approved_bookings();
         echo json_encode($data ? $data : []);
+    }
+
+    public function tambah_ruangan()
+    {
+        header('Content-Type: application/json');
+        $role_id = $this->session->userdata('role_id');
+
+        if ($role_id != 1) {
+            echo json_encode(['status' => 'error', 'message' => 'Hanya Admin System yang dapat menambahkan ruangan baru!']);
+            return;
+        }
+
+        $nama_ruangan = $this->input->post('nama_ruangan', true);
+        $kode_ruangan = $this->input->post('kode_ruangan', true);
+        $id_kategori  = $this->input->post('id_kategori', true);
+        $kapasitas    = $this->input->post('kapasitas', true);
+        $lokasi       = $this->input->post('lokasi', true);
+        $status       = $this->input->post('status', true);
+
+        if (empty($nama_ruangan) || empty($kode_ruangan) || empty($id_kategori)) {
+            echo json_encode(['status' => 'error', 'message' => 'Harap isi Nama Ruangan, Kode Ruangan, dan Kategori!']);
+            return;
+        }
+
+        $data_ruangan = array(
+            'nama_ruangan' => $nama_ruangan,
+            'kode_ruangan' => strtoupper($kode_ruangan),
+            'id_kategori'  => $id_kategori,
+            'kapasitas'    => $kapasitas ? $kapasitas : 30,
+            'lokasi'       => $lokasi ? $lokasi : 'Gedung Sebatik (FIK)',
+            'status'       => $status ? $status : 'Tersedia'
+        );
+
+        $insert = $this->db->insert('ruangan', $data_ruangan);
+
+        if ($insert) {
+            echo json_encode(['status' => 'success', 'message' => 'Ruangan baru berhasil ditambahkan!']);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Gagal menambahkan ruangan baru.']);
+        }
     }
 }
 

@@ -95,10 +95,161 @@ $labs_data = [
             'Dilarang menggunakan benda tajam yang berpotensi menggores permukaan layar.',
             'Cadangkan hasil karya digital di cloud storage pribadi sebelum meninggalkan lab.'
         ]
+    ],
+    'greenscreen' => [
+        'title' => 'Lab Green Screen Studio',
+        'subtitle' => 'Studio Produksi Virtual, Motion Capture, Video Editing, & Lighting Setup',
+        'badge' => 'Studio Visual FX',
+        'status' => 'Tersedia',
+        'status_class' => 'status-open',
+        'model' => base_url('assets/3D/greenscreen.glb'),
+        'orbit' => '45deg 75deg 85%',
+        'fov' => '22deg',
+        'bg_gradient' => 'radial-gradient(circle at 50% 60%, rgba(34, 197, 94, 0.25) 0%, rgba(240, 253, 244, 0.95) 100%)',
+        'border_color' => 'rgba(34, 197, 94, 0.4)',
+        'glow_color' => 'rgba(34, 197, 94, 0.5)',
+        'photo' => file_exists(FCPATH . 'assets/images/greenscreen.jpg') ? base_url('assets/images/greenscreen.jpg') : 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?q=80&w=1000&auto=format&fit=crop',
+        'photo_fallback' => 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?q=80&w=1000&auto=format&fit=crop',
+        'location' => 'Gedung Industri Kreatif - Lantai 2 (Ruang FIK-208)',
+        'capacity' => 'Studio Prod. & Lighting Rig',
+        'hours' => 'Senin - Jumat | 08:00 - 17:00 WIB',
+        'desc' => 'Lab Green Screen Studio dilengkapi dengan dinding Cyclorama Green Screen berukuran besar, sistem tata cahaya profesional Studio Lighting Rig, peredam suara khusus, serta kamera sinematik untuk kebutuhan pengambilan gambar Visual Effects (VFX), live streaming, dan produksi video profesional.',
+        'specs' => [
+            ['icon' => '🎥', 'title' => 'Cyclorama Wall', 'desc' => 'Dinding lengkung Chroma Key Green Screen seamless untuk penggantian latar visual secara real-time.'],
+            ['icon' => '💡', 'title' => 'Studio Lighting Rig', 'desc' => 'Set lampu Aputure Studio LED Panel, Softbox, & Spotlights dengan kontrol DMX Console.'],
+            ['icon' => '🎙️', 'title' => 'Audio Isolation', 'desc' => 'Peredam akustik dinding dan mikrofon wireless Telefunken / Rode Broadcast.'],
+            ['icon' => '🎬', 'title' => 'Production Switcher', 'desc' => 'Blackmagic ATEM Mini Pro & Teleprompter untuk siaran langsung & produksi program tv.']
+        ],
+        'rules' => [
+            'Gunakan sepatu studio khusus atau buka alas kaki sebelum melangkah di atas cyclorama green screen.',
+            'Dilarang menggeser posisi lampu rig tanpa izin dan pendampingan teknisi studio.',
+            'Matikan seluruh sakelar daya utama lighting dan AC setelah sesi produksi selesai.',
+            'Menjaga kebersihan dan kerapian seluruh properti shooting.'
+        ]
+    ],
+    'incubator' => [
+        'title' => 'Lab Inkubator Bisnis & Tech',
+        'subtitle' => 'Ruang Kolaborasi Startup, Ideasi Bisnis Kreatif, Pitching & Co-Working Space',
+        'badge' => 'Inkubator Startup',
+        'status' => 'Tersedia',
+        'status_class' => 'status-open',
+        'model' => base_url('assets/3D/' . rawurlencode('lab incubator.glb')),
+        'orbit' => '45deg 75deg 85%',
+        'fov' => '22deg',
+        'bg_gradient' => 'radial-gradient(circle at 50% 60%, rgba(168, 85, 247, 0.25) 0%, rgba(250, 245, 255, 0.95) 100%)',
+        'border_color' => 'rgba(168, 85, 247, 0.4)',
+        'glow_color' => 'rgba(168, 85, 247, 0.5)',
+        'photo' => file_exists(FCPATH . 'assets/images/incubator.jpg') ? base_url('assets/images/incubator.jpg') : 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1000&auto=format&fit=crop',
+        'photo_fallback' => 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1000&auto=format&fit=crop',
+        'location' => 'Gedung Industri Kreatif - Lantai 4 (Ruang FIK-401)',
+        'capacity' => '50+ Seat Co-Working',
+        'hours' => 'Senin - Sabtu | 08:00 - 20:00 WIB',
+        'desc' => 'Lab Inkubator Bisnis & Tech dirancang sebagai hub inkubasi bagi mahasiswa dan peneliti yang sedang membangun proyek startup digital, inovasi teknologi, dan industri kreatif. Dilengkapi dengan area co-working fleksibel, ruang pitching investor, dan fasilitas pendampingan bisnis.',
+        'specs' => [
+            ['icon' => '🚀', 'title' => 'Flexible Co-Working', 'desc' => 'Meja modular yang mudah diatur ulang untuk kerja tim, diskusi kelompok, atau curah pendapat.'],
+            ['icon' => '📊', 'title' => 'Pitching Arena', 'desc' => 'Ruang presentasi dilengkapi Smart TV 85 inch & High-Def Soundbar untuk pitching project.'],
+            ['icon' => '🌐', 'title' => 'High-Speed Wifi 6E', 'desc' => 'Jaringan internet dedicated fiber optic berkecepatan hingga 1 Gbps untuk kelancaran riset.'],
+            ['icon' => '☕', 'title' => 'Brainstorming Lounge', 'desc' => 'Area santai dengan papan whiteboard interaktif untuk diskusi konsep kreatif.']
+        ],
+        'rules' => [
+            'Sesi penggunaan area pitching disarankan untuk dibooking H-1 melalui e-ticketing.',
+            'Menjaga suasana kondusif dan saling menghormati antar tim startup pengguna area co-working.',
+            'Membuang sampah pada tempat yang disediakan di area pantry luar lab.',
+            'Merapikan kembali konfigurasi meja modular setelah sesi diskusi kelompok usai.'
+        ]
+    ],
+    'mac' => [
+        'title' => 'Lab Workstation Apple Mac',
+        'subtitle' => 'Studio Editing Video, Color Grading, Sound Design, & Desktop Publishing',
+        'badge' => 'Studio Apple Mac',
+        'status' => 'Tersedia',
+        'status_class' => 'status-open',
+        'model' => base_url('assets/3D/' . rawurlencode('lab Mac (1).glb')),
+        'orbit' => '45deg 75deg 85%',
+        'fov' => '22deg',
+        'bg_gradient' => 'radial-gradient(circle at 50% 60%, rgba(14, 165, 233, 0.25) 0%, rgba(240, 249, 255, 0.95) 100%)',
+        'border_color' => 'rgba(14, 165, 233, 0.4)',
+        'glow_color' => 'rgba(14, 165, 233, 0.5)',
+        'photo' => file_exists(FCPATH . 'assets/images/mac.jpg') ? base_url('assets/images/mac.jpg') : 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=1000&auto=format&fit=crop',
+        'photo_fallback' => 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=1000&auto=format&fit=crop',
+        'location' => 'Gedung Industri Kreatif - Lantai 3 (Ruang FIK-305)',
+        'capacity' => '32 Workstation Mac',
+        'hours' => 'Senin - Jumat | 08:00 - 17:00 WIB',
+        'desc' => 'Lab Workstation Apple Mac merupakan studio komputasi khusus berbasis macOS yang dioptimalkan untuk kebutuhan pasca-produksi film, color grading sinematik, desain tata letak penerbitan, komposisi musik digital, serta pengembangan aplikasi ekosistem Apple.',
+        'specs' => [
+            ['icon' => '🖥️', 'title' => 'Apple Mac Studio M2 Max', 'desc' => '32-core GPU, 64GB Unified Memory, SSD 1TB NVMe untuk rendering video ultra-cepat.'],
+            ['icon' => '📺', 'title' => 'Apple Studio Display 27"', 'desc' => 'Layar Retina 5K dengan akurasi warna P3 dan teknologi True Tone.'],
+            ['icon' => '🎛️', 'title' => 'DaVinci Resolve Console', 'desc' => 'Hardware Speed Editor & Studio Control Panel untuk color grading presisi.'],
+            ['icon' => '🎵', 'title' => 'Pro Tools & Logic Pro', 'desc' => 'Audio Interface Logic Pro X & Final Cut Pro X terinstal penuh.']
+        ],
+        'rules' => [
+            'Dilarang menginstal aplikasi secara tidak resmi tanpa persetujuan Admin IT/Laboran.',
+            'Selalu log out dari akun Apple ID pribadi setelah selesai menggunakan komputer Mac.',
+            'Simpan file pekerjaan pada folder data pribadi atau eksternal drive (HDD/SSD).',
+            'Dilarang mencabut atau mengubah jalur kabel konektivitas Thunderbolt/USB-C.'
+        ]
     ]
 ];
 
-$active_key = isset($labs_data[$lab_key]) ? $lab_key : 'multimedia';
+$active_key = isset($labs_data[$lab_key]) ? $lab_key : null;
+
+// If not found in hardcoded array, look up from DB
+if (!$active_key && !empty($all_ruangan)) {
+    foreach ($all_ruangan as $r) {
+        $n = strtolower(trim($r->nama_ruangan));
+        $c = strtolower(trim($r->kode_ruangan));
+
+        // Map to key the same way as lab.php / header.php
+        if (strpos($n, 'multimedia') !== false) $rkey = 'multimedia';
+        elseif (strpos($n, 'aula') !== false) $rkey = 'aula';
+        elseif (strpos($n, 'cintiq') !== false || strpos($n, 'tablet') !== false || strpos($n, 'sablon') !== false) $rkey = 'cintiq';
+        elseif (strpos($n, 'green') !== false) $rkey = 'greenscreen';
+        elseif (strpos($n, 'inkubator') !== false || strpos($n, 'incubator') !== false) $rkey = 'incubator';
+        elseif (strpos($n, 'mac') !== false || strpos($n, '3d printing') !== false) $rkey = 'mac';
+        else $rkey = preg_replace('/[^a-z0-9]/', '', $c);
+
+        if ($rkey === $lab_key && !empty($r->model_3d)) {
+            $active_key = $lab_key;
+            $img_url = !empty($r->foto) ? (strpos($r->foto, 'http') === 0 ? $r->foto : base_url($r->foto)) : '';
+            $model_url = !empty($r->model_3d) ? (strpos($r->model_3d, 'http') === 0 ? $r->model_3d : base_url($r->model_3d)) : '';
+
+            $labs_data[$lab_key] = [
+                'title'        => $r->nama_ruangan,
+                'subtitle'     => !empty($r->tagline) ? $r->tagline : 'Fasilitas Ruangan Fakultas Industri Kreatif',
+                'badge'        => 'Laboratorium FIK',
+                'status'       => $r->status ?? 'Tersedia',
+                'status_class' => 'status-open',
+                'model'        => $model_url,
+                'orbit'        => '45deg 75deg 85%',
+                'fov'          => '22deg',
+                'bg_gradient'  => 'radial-gradient(circle at 50% 60%, rgba(234, 88, 12, 0.18) 0%, rgba(255, 251, 245, 0.97) 100%)',
+                'border_color' => 'rgba(234, 88, 12, 0.3)',
+                'glow_color'   => 'rgba(234, 88, 12, 0.4)',
+                'photo'        => $img_url,
+                'photo_fallback' => 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1000&auto=format&fit=crop',
+                'location'     => !empty($r->lokasi) ? $r->lokasi : 'Gedung Fakultas Industri Kreatif',
+                'capacity'     => !empty($r->jumlah_unit) ? $r->jumlah_unit : '-',
+                'hours'        => !empty($r->jam_operasional) ? $r->jam_operasional : 'Senin - Jumat | 08:00 - 17:00 WIB',
+                'desc'         => !empty($r->deskripsi) ? $r->deskripsi : '-',
+                'specs'        => !empty($r->spesifikasi_fasilitas)
+                    ? array_map(function($s) {
+                        return ['icon' => '⚙️', 'title' => 'Spesifikasi', 'desc' => trim($s)];
+                      }, array_filter(explode("\n", $r->spesifikasi_fasilitas)))
+                    : [['icon' => '🏫', 'title' => 'Fasilitas', 'desc' => 'Informasi fasilitas tersedia di lokasi.']],
+                'rules'        => !empty($r->tata_tertib)
+                    ? array_filter(array_map('trim', explode("\n", $r->tata_tertib)))
+                    : ['Ikuti tata tertib yang berlaku di ruangan.'],
+            ];
+            break;
+        }
+    }
+}
+
+// Final fallback: jika masih tidak ditemukan, pakai multimedia
+if (!$active_key) {
+    $active_key = 'multimedia';
+}
+
 $lab = $labs_data[$active_key];
 ?>
 <!DOCTYPE html>
@@ -688,17 +839,32 @@ $lab = $labs_data[$active_key];
             </div>
 
             <!-- Switch Labs Footer Links -->
+            <?php
+                $lab_order = ['multimedia', 'aula', 'cintiq', 'greenscreen', 'incubator', 'mac'];
+                $lab_labels = [
+                    'multimedia' => 'Lab Multimedia & Game',
+                    'aula'       => 'Aula Utama Fakultas',
+                    'cintiq'     => 'Lab Tablet Cintiq',
+                    'greenscreen'=> 'Lab Green Screen Studio',
+                    'incubator'  => 'Lab Inkubator Bisnis & Tech',
+                    'mac'        => 'Lab Workstation Apple Mac',
+                ];
+                $count = count($lab_order);
+                $current_pos = array_search($active_key, $lab_order);
+                $prev_key = $lab_order[($current_pos - 1 + $count) % $count];
+                $next_key = $lab_order[($current_pos + 1) % $count];
+            ?>
             <div class="nav-switch-labs">
-                <?php if ($active_key !== 'multimedia'): ?>
-                    <a href="<?= site_url('dashboard/lab_detail/multimedia') ?>" class="switch-link">&larr; Lab Multimedia &amp; Game</a>
+                <?php if ($prev_key): ?>
+                    <a href="<?= site_url('dashboard/lab_detail/' . $prev_key) ?>" class="switch-link">&larr; <?= $lab_labels[$prev_key] ?></a>
                 <?php else: ?>
                     <span></span>
                 <?php endif; ?>
 
-                <?php if ($active_key !== 'aula'): ?>
-                    <a href="<?= site_url('dashboard/lab_detail/aula') ?>" class="switch-link">Aula Utama Fakultas &rarr;</a>
-                <?php elseif ($active_key !== 'cintiq'): ?>
-                    <a href="<?= site_url('dashboard/lab_detail/cintiq') ?>" class="switch-link">Lab Tablet Cintiq &rarr;</a>
+                <?php if ($next_key): ?>
+                    <a href="<?= site_url('dashboard/lab_detail/' . $next_key) ?>" class="switch-link"><?= $lab_labels[$next_key] ?> &rarr;</a>
+                <?php else: ?>
+                    <span></span>
                 <?php endif; ?>
             </div>
 

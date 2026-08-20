@@ -370,61 +370,44 @@
     }
 
     .custom-cursor-dot {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 8px;
-        height: 8px;
-        background-color: #ea580c;
-        border-radius: 50%;
-        pointer-events: none;
-        z-index: 999999;
-        transform: translate(-50%, -50%);
-        transition: opacity 0.3s ease, transform 0.1s ease;
-        box-shadow: 0 0 10px rgba(234, 88, 12, 0.8);
-        opacity: 0;
+        display: none !important;
     }
 
     .custom-cursor-circle {
         position: fixed;
         top: 0;
         left: 0;
-        width: 34px;
-        height: 34px;
-        border: 2px solid rgba(234, 88, 12, 0.7);
-        background: rgba(234, 88, 12, 0.08);
-        backdrop-filter: blur(2px);
-        -webkit-backdrop-filter: blur(2px);
+        width: 24px;
+        height: 24px;
+        border: 2px solid rgba(234, 88, 12, 0.85);
+        background: rgba(234, 88, 12, 0.12);
+        backdrop-filter: blur(1px);
+        -webkit-backdrop-filter: blur(1px);
         border-radius: 50%;
         pointer-events: none;
         z-index: 999998;
         transform: translate(-50%, -50%);
-        transition: width 0.25s cubic-bezier(0.25, 1, 0.5, 1),
-                    height 0.25s cubic-bezier(0.25, 1, 0.5, 1),
-                    background-color 0.25s ease,
-                    border-color 0.25s ease,
+        transition: width 0.2s cubic-bezier(0.25, 1, 0.5, 1),
+                    height 0.2s cubic-bezier(0.25, 1, 0.5, 1),
+                    background-color 0.2s ease,
+                    border-color 0.2s ease,
                     opacity 0.3s ease;
-        box-shadow: 0 0 15px rgba(234, 88, 12, 0.25);
+        box-shadow: 0 0 12px rgba(234, 88, 12, 0.4);
         opacity: 0;
     }
 
     body.cursor-hover .custom-cursor-circle {
-        width: 52px;
-        height: 52px;
-        background: rgba(234, 88, 12, 0.18);
+        width: 44px;
+        height: 44px;
+        background: rgba(234, 88, 12, 0.22);
         border-color: #ea580c;
-        box-shadow: 0 0 25px rgba(234, 88, 12, 0.5);
-    }
-
-    body.cursor-hover .custom-cursor-dot {
-        transform: translate(-50%, -50%) scale(1.5);
-        background-color: #ffffff;
+        box-shadow: 0 0 20px rgba(234, 88, 12, 0.6);
     }
 
     body.cursor-active .custom-cursor-circle {
-        width: 26px;
-        height: 26px;
-        background: rgba(234, 88, 12, 0.35);
+        width: 18px;
+        height: 18px;
+        background: rgba(234, 88, 12, 0.4);
     }
 
     /* Responsive */
@@ -561,9 +544,8 @@
     </div>
 </footer>
 
-<!-- Custom Orange Circle Cursor Elements -->
-<div class="custom-cursor-dot" id="customCursorDot"></div>
-<div class="custom-cursor-circle" id="customCursorCircle"></div>
+<!-- Global Custom Circle Cursor -->
+<?php $this->load->view('partials/custom_cursor'); ?>
 
 <script>
     function scrollToTopSection() {

@@ -434,10 +434,7 @@
         <!-- Sesi 2: Info Ruangan -->
         <?php $this->load->view('dashboard/sections/info_ruangan'); ?>
 
-        <!-- Sesi 3: Laboratorium Fakultas -->
-        <?php $this->load->view('dashboard/sections/lab'); ?>
-
-        <!-- Sesi 4: Berita & Informasi Terkini -->
+        <!-- Sesi 3: Berita & Informasi Terkini -->
         <?php $this->load->view('dashboard/sections/berita'); ?>
 
         <!-- Sesi 5: Virtual Tour 3D -->
