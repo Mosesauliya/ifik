@@ -81,7 +81,8 @@ $route['admin/ruangan'] = 'Kelolaruangan';
 $route['admin/kelolaruangan'] = 'Kelolaruangan';
 
 // Onboarding & Force Change Password Routes
-$route['onboarding'] = 'login/onboarding';
+$route['onboarding'] = 'Onboarding';
+$route['onboarding/(:any)'] = 'Onboarding/$1';
 
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
