@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const totalSteps = 3;
     const userNim = window.CURRENT_USER_NIM ? window.CURRENT_USER_NIM.trim() : 'guest';
     const STEP_KEY = 'ifik_ta_active_step_' + userNim;
+    const DRAFT_KEY = 'ifik_ta_draft_' + userNim;
 
     let currentStep = 1;
 
@@ -386,6 +387,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (btnNext) {
         btnNext.addEventListener('click', function () {
             if (validateStep(currentStep)) {
+                saveDraft(true);
                 if (currentStep < totalSteps) {
                     currentStep++;
                     updateStepUI();
@@ -616,59 +618,124 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // --- DRAFT FORM PERSISTENCE ---
-    function saveDraft() {
+    // --- DRAFT FORM PERSISTENCE (LOCAL STORAGE + DATABASE AUTO-SAVE) ---
+    let draftDebounceTimer = null;
+
+    function saveDraft(syncToServer = true) {
         try {
+            const inputJenis = document.getElementById('inputJenisTA');
+            const inputJ1 = document.getElementById('inputJudul1');
+            const inputJ2 = document.getElementById('inputJudul2');
+            const inputJ3 = document.getElementById('inputJudul3');
+            const inputJEn = document.getElementById('inputJudulEn');
+
             const draft = {
-                jenis_ta: document.getElementById('inputJenisTA')?.value || '',
-                judul_1: document.getElementById('inputJudul1')?.value || '',
-                judul_2: document.getElementById('inputJudul2')?.value || '',
-                judul_3: document.getElementById('inputJudul3')?.value || '',
-                judul_en: document.getElementById('inputJudulEn')?.value || ''
+                jenis_ta: inputJenis ? inputJenis.value : '',
+                judul_1: inputJ1 ? inputJ1.value : '',
+                judul_2: inputJ2 ? inputJ2.value : '',
+                judul_3: inputJ3 ? inputJ3.value : '',
+                judul_en: inputJEn ? inputJEn.value : '',
+                draft_step: currentStep
             };
+
+            // 1. Simpan langsung ke memori lokal browser (localStorage)
             localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-        } catch (e) {}
+
+            // 2. Simpan otomatis langsung ke Database MySQL via AJAX
+            if (syncToServer && window.SAVE_DRAFT_AJAX_URL && (draft.jenis_ta || draft.judul_1)) {
+                clearTimeout(draftDebounceTimer);
+                draftDebounceTimer = setTimeout(() => {
+                    const fd = new FormData();
+                    fd.append('nim', userNim);
+                    fd.append('jenis_ta', draft.jenis_ta);
+                    fd.append('judul_1', draft.judul_1);
+                    fd.append('judul_2', draft.judul_2);
+                    fd.append('judul_3', draft.judul_3);
+                    fd.append('judul_en', draft.judul_en);
+                    fd.append('draft_step', currentStep);
+
+                    fetch(window.SAVE_DRAFT_AJAX_URL, {
+                        method: 'POST',
+                        body: fd
+                    })
+                    .then(res => res.json())
+                    .then(resData => {
+                        // Draft berhasil tersimpan di MySQL database
+                    })
+                    .catch(err => console.warn('Auto-save draft warning:', err));
+                }, 400);
+            }
+        } catch (e) {
+            console.warn('saveDraft error:', e);
+        }
     }
 
     function loadDraft() {
         try {
+            const inputJenis = document.getElementById('inputJenisTA');
+            const inputJ1 = document.getElementById('inputJudul1');
+            const inputJ2 = document.getElementById('inputJudul2');
+            const inputJ3 = document.getElementById('inputJudul3');
+            const inputJEn = document.getElementById('inputJudulEn');
+
+            // 1. Sinkronkan UI dropdown & badge jika nilai sudah terisi dari Database PHP
+            function syncJenisUI(val) {
+                if (!val) return;
+                const opt = document.querySelector(`.dropdown-option[data-value="${val}"]`);
+                const labelText = opt ? (opt.querySelector('span')?.textContent || val) : val;
+                const triggerLabel = document.querySelector('#dropdownJenisTA .trigger-label');
+                if (triggerLabel) {
+                    triggerLabel.textContent = labelText;
+                    triggerLabel.className = 'trigger-label text-slate-900 font-semibold';
+                }
+                const previewJenisTA = document.getElementById('previewJenisTA');
+                const previewTextJenisTA = document.getElementById('previewTextJenisTA');
+                if (previewJenisTA && previewTextJenisTA) {
+                    previewTextJenisTA.textContent = labelText;
+                    previewJenisTA.classList.remove('hidden');
+                }
+            }
+
+            if (inputJenis && inputJenis.value) {
+                syncJenisUI(inputJenis.value);
+            }
+            if (inputJ2 && inputJ2.value) {
+                const c2 = document.getElementById('containerJudul2');
+                if (c2) c2.classList.remove('hidden');
+            }
+            if (inputJ3 && inputJ3.value) {
+                const c3 = document.getElementById('containerJudul3');
+                if (c3) c3.classList.remove('hidden');
+            }
+
+            // 2. Baca dari localStorage jika ada isian yang belum tersimpan di DB
             const draftStr = localStorage.getItem(DRAFT_KEY);
             if (!draftStr) return;
             const draft = JSON.parse(draftStr);
 
-            if (draft.jenis_ta) {
-                const inputJenis = document.getElementById('inputJenisTA');
-                if (inputJenis && !inputJenis.value) {
-                    inputJenis.value = draft.jenis_ta;
-                    const opt = document.querySelector(`.dropdown-option[data-value="${draft.jenis_ta}"]`);
-                    if (opt) opt.click();
-                }
+            if (draft.jenis_ta && inputJenis && !inputJenis.value) {
+                inputJenis.value = draft.jenis_ta;
+                syncJenisUI(draft.jenis_ta);
             }
-            if (draft.judul_1) {
-                const el = document.getElementById('inputJudul1');
-                if (el && !el.value) el.value = draft.judul_1;
+            if (draft.judul_1 && inputJ1 && !inputJ1.value) {
+                inputJ1.value = draft.judul_1;
             }
-            if (draft.judul_2) {
-                const el = document.getElementById('inputJudul2');
-                if (el && !el.value) {
-                    el.value = draft.judul_2;
-                    const c2 = document.getElementById('containerJudul2');
-                    if (c2) c2.classList.remove('hidden');
-                }
+            if (draft.judul_2 && inputJ2 && !inputJ2.value) {
+                inputJ2.value = draft.judul_2;
+                const c2 = document.getElementById('containerJudul2');
+                if (c2) c2.classList.remove('hidden');
             }
-            if (draft.judul_3) {
-                const el = document.getElementById('inputJudul3');
-                if (el && !el.value) {
-                    el.value = draft.judul_3;
-                    const c3 = document.getElementById('containerJudul3');
-                    if (c3) c3.classList.remove('hidden');
-                }
+            if (draft.judul_3 && inputJ3 && !inputJ3.value) {
+                inputJ3.value = draft.judul_3;
+                const c3 = document.getElementById('containerJudul3');
+                if (c3) c3.classList.remove('hidden');
             }
-            if (draft.judul_en) {
-                const el = document.getElementById('inputJudulEn');
-                if (el && !el.value) el.value = draft.judul_en;
+            if (draft.judul_en && inputJEn && !inputJEn.value) {
+                inputJEn.value = draft.judul_en;
             }
-        } catch (e) {}
+        } catch (e) {
+            console.warn('loadDraft error:', e);
+        }
     }
 
     // Form submission validation, double-submit protection & progress bar

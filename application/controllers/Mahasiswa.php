@@ -781,7 +781,7 @@ class Mahasiswa extends CI_Controller {
 
     // AJAX Endpoint: Auto-Save Draft Teks (Jenis TA & Judul) ke Database Server
     public function ajax_save_draft_ta() {
-        $nim = $this->_get_current_nim();
+        $nim = $this->input->post('nim') ?: $this->_get_current_nim();
         $mhs = $this->Mahasiswa_model->get_mahasiswa($nim);
         $mhs_konsentrasi = !empty($mhs['konsentrasi_dkv']) ? $mhs['konsentrasi_dkv'] : 'Desain Komunikasi Visual';
         $mhs_id_kk = !empty($mhs['id_kk']) ? $mhs['id_kk'] : 1;
