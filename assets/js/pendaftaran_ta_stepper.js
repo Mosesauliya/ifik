@@ -11,15 +11,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let currentStep = 1;
 
-    // Direct navigation support from URL or localStorage
+    // Direct navigation support from URL, localStorage, or Database (Server Step)
     const urlParams = new URLSearchParams(window.location.search);
     const urlStep = parseInt(urlParams.get('step'));
     const savedStep = parseInt(localStorage.getItem(STEP_KEY));
+    const serverStep = parseInt(window.SERVER_DRAFT_STEP);
 
     if (urlStep && urlStep >= 1 && urlStep <= totalSteps) {
         currentStep = urlStep;
     } else if (savedStep && savedStep >= 1 && savedStep <= totalSteps) {
         currentStep = savedStep;
+    } else if (serverStep && serverStep >= 1 && serverStep <= totalSteps) {
+        currentStep = serverStep;
     }
 
     const btnNext = document.getElementById('btnNext');
@@ -1078,5 +1081,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Initialize UI and load draft on load
     loadDraft();
+
+    // Auto-advance ke step terakhir yang terisi jika URL tidak spesifik menentukan parameter ?step=
+    if (!urlStep) {
+        const hasStep1Data = checkStepCompletionStatus(1);
+        if (hasStep1Data && currentStep < 2) {
+            currentStep = 2;
+        }
+        if (serverStep === 3 && checkStepCompletionStatus(2)) {
+            currentStep = 3;
+        }
+    }
+
     updateStepUI();
 });

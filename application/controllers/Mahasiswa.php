@@ -255,31 +255,34 @@ class Mahasiswa extends CI_Controller {
 
         $has_ta = !empty($pendaftaran['jenis_ta']) || !empty($pendaftaran['judul_1']) || !empty($pendaftaran['file_ksm']);
 
-        // Hitung server_draft_step secara cerdas & presisi berdasarkan riwayat pengisian mahasiswa
+        // Hitung server_draft_step secara presisi untuk 3-Step Wizard
         $server_draft_step = 1;
         if (!empty($pendaftaran)) {
-            $highest_step = 1;
-            if (!empty($pendaftaran['file_bebas_lab'])) {
-                $highest_step = 6;
-            } elseif (!empty($pendaftaran['file_pernyataan'])) {
-                $highest_step = 6;
-            } elseif (!empty($pendaftaran['file_transkrip'])) {
-                $highest_step = 5;
-            } elseif (!empty($pendaftaran['file_ksm'])) {
-                $highest_step = 4;
-            } elseif (!empty($pendaftaran['judul_1']) && !empty($pendaftaran['judul_en'])) {
-                $highest_step = 3;
-            } elseif (!empty($pendaftaran['jenis_ta'])) {
-                $highest_step = 2;
+            $saved_step = !empty($pendaftaran['draft_step']) ? (int)$pendaftaran['draft_step'] : 1;
+            // Normalisasi data lama skala 6 step ke 3 step
+            if ($saved_step >= 4) {
+                $saved_step = 2;
             }
 
-            $saved_step = !empty($pendaftaran['draft_step']) ? (int)$pendaftaran['draft_step'] : 1;
-            $server_draft_step = max($saved_step, $highest_step);
+            $has_any_file = !empty($pendaftaran['file_ksm']) || !empty($pendaftaran['file_transkrip']) || !empty($pendaftaran['file_pernyataan']) || !empty($pendaftaran['file_bebas_lab']) || !empty($data['student_berkas']);
+            $has_step1 = !empty($pendaftaran['jenis_ta']) && !empty($pendaftaran['judul_1']);
+
+            if ($has_any_file) {
+                $server_draft_step = 2;
+            } elseif ($has_step1) {
+                $server_draft_step = 2;
+            } else {
+                $server_draft_step = 1;
+            }
+
+            if ($saved_step >= 1 && $saved_step <= 3) {
+                $server_draft_step = max($server_draft_step, $saved_step);
+            }
+            if ($server_draft_step > 3) $server_draft_step = 3;
             if ($server_draft_step < 1) $server_draft_step = 1;
-            if ($server_draft_step > 6) $server_draft_step = 6;
         }
 
-        $data['title']          = $is_locked ? 'Pendaftaran Tugas Akhir (Sedang Ditinjau)' : 'Pendaftaran Tugas Akhir (6 Step)';
+        $data['title']          = $is_locked ? 'Pendaftaran Tugas Akhir (Sedang Ditinjau)' : 'Pendaftaran Tugas Akhir (3 Step)';
         $data['mahasiswa']      = $this->Mahasiswa_model->get_mahasiswa($nim);
         $data['pendaftaran']    = $pendaftaran;
         $data['is_locked']      = $is_locked;
