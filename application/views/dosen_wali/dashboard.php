@@ -415,7 +415,7 @@
                             </th>
                             <th class="py-3.5 px-4 pl-3">MAHASISWA</th>
                             <th class="py-3.5 px-4">JUDUL RENCANA TA</th>
-                            <th class="py-3.5 px-4 text-center">STATUS 4 BERKAS</th>
+                            <th class="py-3.5 px-4 text-center">STATUS <?= !empty($syarat_berkas) ? count($syarat_berkas) : 4; ?> BERKAS</th>
                             <th class="py-3.5 px-4 text-center">DOSEN WALI</th>
                             <th class="py-3.5 px-4 text-center">TAHAP SAAT INI</th>
                             <th class="py-3.5 px-4 pr-6 text-right">AKSI</th>
@@ -475,40 +475,49 @@
                                         <?php endif; ?>
                                     </td>
 
-                                    <!-- Status 4 Berkas -->
+                                    <!-- Status Berkas Dinamis -->
                                     <td class="py-4 px-4 text-center whitespace-nowrap">
                                         <div class="inline-flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200 text-[10px] font-mono shadow-2xs">
-                                            <button type="button" 
-                                                    onclick="openQuickDocReview('<?= $mhs['nim']; ?>', 'ksm')" 
-                                                    id="badge_doc_<?= $mhs['nim']; ?>_ksm"
-                                                    title="Review Berkas KSM - <?= htmlspecialchars($full_name); ?>"
-                                                    class="px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer <?= $ksm_st === 'Approved' ? 'bg-emerald-100/90 text-emerald-700 hover:bg-emerald-200' : ($ksm_st === 'Rejected' ? 'bg-rose-100/90 text-rose-700 hover:bg-rose-200' : 'bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60'); ?>">
-                                                KSM
-                                            </button>
-                                            <span class="text-slate-300">·</span>
-                                            <button type="button" 
-                                                    onclick="openQuickDocReview('<?= $mhs['nim']; ?>', 'transkrip')" 
-                                                    id="badge_doc_<?= $mhs['nim']; ?>_transkrip"
-                                                    title="Review Transkrip Nilai - <?= htmlspecialchars($full_name); ?>"
-                                                    class="px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer <?= $trs_st === 'Approved' ? 'bg-emerald-100/90 text-emerald-700 hover:bg-emerald-200' : ($trs_st === 'Rejected' ? 'bg-rose-100/90 text-rose-700 hover:bg-rose-200' : 'bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60'); ?>">
-                                                TRS
-                                            </button>
-                                            <span class="text-slate-300">·</span>
-                                            <button type="button" 
-                                                    onclick="openQuickDocReview('<?= $mhs['nim']; ?>', 'pernyataan')" 
-                                                    id="badge_doc_<?= $mhs['nim']; ?>_pernyataan"
-                                                    title="Review Surat Pernyataan - <?= htmlspecialchars($full_name); ?>"
-                                                    class="px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer <?= $prn_st === 'Approved' ? 'bg-emerald-100/90 text-emerald-700 hover:bg-emerald-200' : ($prn_st === 'Rejected' ? 'bg-rose-100/90 text-rose-700 hover:bg-rose-200' : 'bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60'); ?>">
-                                                SRT
-                                            </button>
-                                            <span class="text-slate-300">·</span>
-                                            <button type="button" 
-                                                    onclick="openQuickDocReview('<?= $mhs['nim']; ?>', 'bebas_lab')" 
-                                                    id="badge_doc_<?= $mhs['nim']; ?>_bebas_lab"
-                                                    title="Review Bebas Lab & Perpus - <?= htmlspecialchars($full_name); ?>"
-                                                    class="px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer <?= $lab_st === 'Approved' ? 'bg-emerald-100/90 text-emerald-700 hover:bg-emerald-200' : ($lab_st === 'Rejected' ? 'bg-rose-100/90 text-rose-700 hover:bg-rose-200' : 'bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60'); ?>">
-                                                LAB
-                                            </button>
+                                            <?php 
+                                                $active_sb = !empty($syarat_berkas) ? $syarat_berkas : [
+                                                    ['kode_berkas' => 'ksm', 'nama_berkas' => 'KSM'],
+                                                    ['kode_berkas' => 'transkrip', 'nama_berkas' => 'Transkrip'],
+                                                    ['kode_berkas' => 'pernyataan', 'nama_berkas' => 'Surat Pernyataan'],
+                                                    ['kode_berkas' => 'bebas_lab', 'nama_berkas' => 'Bebas Lab']
+                                                ];
+                                                $total_sb = count($active_sb);
+                                                $b_count = 0;
+                                            ?>
+                                            <?php foreach ($active_sb as $sb): ?>
+                                                <?php 
+                                                    $b_count++;
+                                                    $k_code = $sb['kode_berkas'];
+                                                    $b_st = $mhs['status_file_' . $k_code] ?? 'Pending';
+                                                    if ($b_st === 'Pending' && !empty($mhs['berkas_map'][$k_code]['status_verifikasi'])) {
+                                                        $ver = $mhs['berkas_map'][$k_code]['status_verifikasi'];
+                                                        $b_st = ($ver === 'Valid') ? 'Approved' : (($ver === 'Invalid') ? 'Rejected' : 'Pending');
+                                                    }
+                                                    $btn_class = ($b_st === 'Approved') ? 'bg-emerald-100/90 text-emerald-700 hover:bg-emerald-200' : (($b_st === 'Rejected') ? 'bg-rose-100/90 text-rose-700 hover:bg-rose-200' : 'bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60');
+                                                    
+                                                    $map_abbr = ['ksm' => 'KSM', 'transkrip' => 'TRS', 'pernyataan' => 'SRT', 'bebas_lab' => 'LAB'];
+                                                    if (isset($map_abbr[$k_code])) {
+                                                        $abbr = $map_abbr[$k_code];
+                                                    } else {
+                                                        $w = preg_split('/[\s_-]+/', trim($sb['nama_berkas']));
+                                                        $abbr = strtoupper(substr($w[0], 0, 4));
+                                                    }
+                                                ?>
+                                                <button type="button" 
+                                                        onclick="openQuickDocReview('<?= $mhs['nim']; ?>', '<?= $k_code; ?>')" 
+                                                        id="badge_doc_<?= $mhs['nim']; ?>_<?= $k_code; ?>"
+                                                        title="Review <?= htmlspecialchars($sb['nama_berkas']); ?> - <?= htmlspecialchars($full_name); ?>"
+                                                        class="px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer <?= $btn_class; ?>">
+                                                    <?= $abbr; ?>
+                                                </button>
+                                                <?php if($b_count < $total_sb): ?>
+                                                    <span class="text-slate-300">·</span>
+                                                <?php endif; ?>
+                                            <?php endforeach; ?>
                                         </div>
                                     </td>
 
@@ -534,7 +543,7 @@
                                                 onclick="toggleLihatBerkasPanel('<?= $mhs['nim']; ?>')" 
                                                 id="btn_lihat_berkas_<?= $mhs['nim']; ?>"
                                                 class="btn-3d-orange inline-flex items-center gap-1.5 text-white font-bold px-4 py-2 rounded-xl text-xs cursor-pointer"
-                                                title="Lihat 4 Berkas Persyaratan TA">
+                                                title="Lihat <?= !empty($syarat_berkas) ? count($syarat_berkas) : 4; ?> Berkas Persyaratan TA">
                                             <i class="fa-solid fa-folder-open text-xs"></i> Lihat Berkas
                                         </button>
                                     </td>
@@ -806,6 +815,12 @@
 
     <script>
     window.mhsDataMap = <?= json_encode(array_column($list_mahasiswa ?: array(), null, 'nim')); ?>;
+    window.SYARAT_BERKAS = <?= json_encode(!empty($syarat_berkas) ? $syarat_berkas : [
+        ['kode_berkas' => 'ksm', 'nama_berkas' => 'KSM (Kartu Studi Mahasiswa)'],
+        ['kode_berkas' => 'transkrip', 'nama_berkas' => 'Transkrip Nilai Akademik'],
+        ['kode_berkas' => 'pernyataan', 'nama_berkas' => 'Surat Pernyataan TA'],
+        ['kode_berkas' => 'bebas_lab', 'nama_berkas' => 'Surat Bebas Pinjam Lab']
+    ]); ?>;
     let allRows      = Array.from(document.querySelectorAll('.mhs-row'));
     const tableBody  = document.getElementById('tableBodyMhs');
     const filterRows = document.getElementById('filterRows');
@@ -1136,10 +1151,27 @@
                             : '<span class="text-slate-400 italic font-normal">Belum Mendaftar</span>';
                         const isChecked = currentlyChecked.includes(mhs.nim) ? 'checked' : '';
 
-                        const ksmClass = (mhs.status_file_ksm === 'Approved') ? 'bg-emerald-100/90 text-emerald-700 hover:bg-emerald-200' : ((mhs.status_file_ksm === 'Rejected') ? 'bg-rose-100/90 text-rose-700 hover:bg-rose-200' : 'bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60');
-                        const trsClass = (mhs.status_file_transkrip === 'Approved') ? 'bg-emerald-100/90 text-emerald-700 hover:bg-emerald-200' : ((mhs.status_file_transkrip === 'Rejected') ? 'bg-rose-100/90 text-rose-700 hover:bg-rose-200' : 'bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60');
-                        const srtClass = (mhs.status_file_pernyataan === 'Approved') ? 'bg-emerald-100/90 text-emerald-700 hover:bg-emerald-200' : ((mhs.status_file_pernyataan === 'Rejected') ? 'bg-rose-100/90 text-rose-700 hover:bg-rose-200' : 'bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60');
-                        const labClass = (mhs.status_file_bebas_lab === 'Approved') ? 'bg-emerald-100/90 text-emerald-700 hover:bg-emerald-200' : ((mhs.status_file_bebas_lab === 'Rejected') ? 'bg-rose-100/90 text-rose-700 hover:bg-rose-200' : 'bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60');
+                        // Bangun badge status berkas dinamis
+                        const activeSyaratList = (window.SYARAT_BERKAS && window.SYARAT_BERKAS.length > 0) ? window.SYARAT_BERKAS : [
+                            { kode_berkas: 'ksm', nama_berkas: 'KSM' },
+                            { kode_berkas: 'transkrip', nama_berkas: 'Transkrip' },
+                            { kode_berkas: 'pernyataan', nama_berkas: 'Surat Pernyataan' },
+                            { kode_berkas: 'bebas_lab', nama_berkas: 'Bebas Lab' }
+                        ];
+                        const berkasPillsHtml = activeSyaratList.map((sb, bIdx) => {
+                            const k = sb.kode_berkas;
+                            const bSt = mhs[`status_file_${k}`] || (mhs.berkas_map && mhs.berkas_map[k] ? (mhs.berkas_map[k].status_verifikasi === 'Valid' ? 'Approved' : (mhs.berkas_map[k].status_verifikasi === 'Invalid' ? 'Rejected' : 'Pending')) : 'Pending');
+                            const bClass = (bSt === 'Approved') ? 'bg-emerald-100/90 text-emerald-700 hover:bg-emerald-200' : ((bSt === 'Rejected') ? 'bg-rose-100/90 text-rose-700 hover:bg-rose-200' : 'bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60');
+                            
+                            const mapAbbr = { ksm: 'KSM', transkrip: 'TRS', pernyataan: 'SRT', bebas_lab: 'LAB' };
+                            let abbr = mapAbbr[k];
+                            if (!abbr) {
+                                const w = (sb.nama_berkas || k).trim().split(/[\s_-]+/);
+                                abbr = (w[0] || 'DOC').substring(0, 4).toUpperCase();
+                            }
+                            const dot = (bIdx < activeSyaratList.length - 1) ? '<span class="text-slate-300">·</span>' : '';
+                            return `<button type="button" onclick="openQuickDocReview('${mhs.nim}', '${k}')" id="badge_doc_${mhs.nim}_${k}" title="Review ${sb.nama_berkas} - ${mhs.nama}" class="px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer ${bClass}">${abbr}</button>${dot}`;
+                        }).join('');
 
                         const prodiHtml = mhs.konsentrasi ? `<span>•</span><span class="text-orange-600 font-medium">${mhs.konsentrasi}</span>` : '';
 
@@ -1165,10 +1197,7 @@
                                 <td class="py-4 px-4 text-slate-700 max-w-xs leading-relaxed text-xs">${judulShort}</td>
                                 <td class="py-4 px-4 text-center whitespace-nowrap">
                                     <div class="inline-flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200 text-[10px] font-mono shadow-2xs">
-                                        <button type="button" onclick="openQuickDocReview('${mhs.nim}', 'ksm')" id="badge_doc_${mhs.nim}_ksm" class="px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer ${ksmClass}">KSM</button><span class="text-slate-300">·</span>
-                                        <button type="button" onclick="openQuickDocReview('${mhs.nim}', 'transkrip')" id="badge_doc_${mhs.nim}_transkrip" class="px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer ${trsClass}">TRS</button><span class="text-slate-300">·</span>
-                                        <button type="button" onclick="openQuickDocReview('${mhs.nim}', 'pernyataan')" id="badge_doc_${mhs.nim}_pernyataan" class="px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer ${srtClass}">SRT</button><span class="text-slate-300">·</span>
-                                        <button type="button" onclick="openQuickDocReview('${mhs.nim}', 'bebas_lab')" id="badge_doc_${mhs.nim}_bebas_lab" class="px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer ${labClass}">LAB</button>
+                                        ${berkasPillsHtml}
                                     </div>
                                 </td>
                                 <td class="py-4 px-4 text-center whitespace-nowrap">
@@ -1178,17 +1207,12 @@
                                     <span class="px-3 py-1 font-semibold text-[11px] rounded-full bg-slate-100 text-slate-700 border border-slate-200 shadow-xs inline-block">${mhs.current_stage || 'Draft'}</span>
                                 </td>
                                 <td class="py-4 px-4 pr-6 text-right whitespace-nowrap">
-                                    <!-- Tombol Lama Detail & Approval (Dicomment)
-                                    <a href="${mhs.detail_url}" class="btn-3d-orange inline-flex items-center gap-1.5 text-white font-bold px-4 py-2 rounded-xl text-xs">
-                                        <i class="bi bi-search text-xs"></i> Detail & Approval
-                                    </a>
-                                    -->
                                     <!-- Tombol Baru: Lihat Berkas -->
                                     <button type="button" 
                                             onclick="toggleLihatBerkasPanel('${mhs.nim}')" 
                                             id="btn_lihat_berkas_${mhs.nim}"
                                             class="btn-3d-orange inline-flex items-center gap-1.5 text-white font-bold px-4 py-2 rounded-xl text-xs cursor-pointer"
-                                            title="Lihat 4 Berkas Persyaratan TA">
+                                            title="Lihat ${activeSyaratList.length} Berkas Persyaratan TA">
                                         <i class="fa-solid fa-folder-open text-xs"></i> Lihat Berkas
                                     </button>
                                 </td>
@@ -1308,12 +1332,21 @@
                     const rawJenis = getInitStatus(st.status_jenis_ta);
                     const rawJudul = getInitStatus(st.status_judul);
 
-                    const fileKsmStatus = getInitStatus(st.files?.ksm?.status);
-                    const fileTrnStatus = getInitStatus(st.files?.transkrip?.status);
-                    const filePrnStatus = getInitStatus(st.files?.pernyataan?.status);
-                    const fileLabStatus = getInitStatus(st.files?.bebas_lab?.status);
+                    const processedFiles = {};
+                    const fileStatuses = [];
+                    if (st.files) {
+                        Object.keys(st.files).forEach(k => {
+                            const fStatus = getInitStatus(st.files[k]?.status);
+                            fileStatuses.push(fStatus);
+                            processedFiles[k] = {
+                                ...st.files[k],
+                                status: fStatus,
+                                note: st.files[k]?.note || ''
+                            };
+                        });
+                    }
 
-                    const allStatuses = [rawJenis, rawJudul, fileKsmStatus, fileTrnStatus, filePrnStatus, fileLabStatus];
+                    const allStatuses = [rawJenis, rawJudul, ...fileStatuses];
                     const hasRej = allStatuses.some(s => s === 'Rejected');
                     const allApp = allStatuses.every(s => s === 'Approved');
                     const initAction = hasRej ? 'reject' : (allApp ? 'approve' : 'pending');
@@ -1326,28 +1359,7 @@
                         status_judul: rawJudul,
                         catatan_judul: st.catatan_judul || '',
                         catatan_wali: st.catatan_wali || '',
-                        files: {
-                            ksm: {
-                                ...st.files.ksm,
-                                status: fileKsmStatus,
-                                note: st.files.ksm.note || ''
-                            },
-                            transkrip: {
-                                ...st.files.transkrip,
-                                status: fileTrnStatus,
-                                note: st.files.transkrip.note || ''
-                            },
-                            pernyataan: {
-                                ...st.files.pernyataan,
-                                status: filePrnStatus,
-                                note: st.files.pernyataan.note || ''
-                            },
-                            bebas_lab: {
-                                ...st.files.bebas_lab,
-                                status: fileLabStatus,
-                                note: st.files.bebas_lab.note || ''
-                            }
-                        }
+                        files: processedFiles
                     };
                 });
                 renderAllBatchStudentsContentDW();
@@ -1425,6 +1437,19 @@
                 icon: 'fa-building-columns'
             }
         };
+
+        if (window.SYARAT_BERKAS && Array.isArray(window.SYARAT_BERKAS)) {
+            window.SYARAT_BERKAS.forEach((sb, idx) => {
+                const k = sb.kode_berkas;
+                if (!docNames[k]) {
+                    docNames[k] = {
+                        title: `${idx + 1}. ${sb.nama_berkas}`,
+                        short: sb.nama_berkas,
+                        icon: 'fa-file-pdf'
+                    };
+                }
+            });
+        }
 
         // Render Student Review Cards
         let html = '';
@@ -1968,12 +1993,18 @@
         for (const st of window.batchStudentsDW) {
             const items = [
                 { name: 'Jenis & Skema TA', status: st.status_jenis_ta, secId: `batch_sec_jenis_${st.nim}` },
-                { name: 'Usulan Judul TA', status: st.status_judul, secId: `batch_sec_judul_${st.nim}` },
-                { name: 'KSM', status: st.files.ksm.status, secId: `batch_sec_file_ksm_${st.nim}` },
-                { name: 'Transkrip', status: st.files.transkrip.status, secId: `batch_sec_file_transkrip_${st.nim}` },
-                { name: 'Surat Pernyataan', status: st.files.pernyataan.status, secId: `batch_sec_file_pernyataan_${st.nim}` },
-                { name: 'Bebas Lab', status: st.files.bebas_lab.status, secId: `batch_sec_file_bebas_lab_${st.nim}` }
+                { name: 'Usulan Judul TA', status: st.status_judul, secId: `batch_sec_judul_${st.nim}` }
             ];
+            if (st.files) {
+                Object.keys(st.files).forEach(k => {
+                    const docInfo = (typeof docNames !== 'undefined' && docNames[k]) ? docNames[k].short : k.toUpperCase();
+                    items.push({
+                        name: docInfo,
+                        status: st.files[k]?.status,
+                        secId: `batch_sec_file_${k}_${st.nim}`
+                    });
+                });
+            }
             const pendingItems = items.filter(i => i.status !== 'Approved' && i.status !== 'Rejected');
             if (pendingItems.length > 0) {
                 const firstPending = pendingItems[0];
@@ -2063,23 +2094,24 @@
 
                 const formData = new FormData();
                 formData.append('action', 'batch_update');
-                formData.append('decisions_json', JSON.stringify(window.batchStudentsDW.map(st => ({
-                    nim: st.nim,
-                    action: st.action,
-                    status_jenis_ta: st.status_jenis_ta,
-                    catatan_jenis_ta: st.catatan_jenis_ta,
-                    status_judul: st.status_judul,
-                    catatan_judul: st.catatan_judul,
-                    status_file_ksm: st.files.ksm.status,
-                    catatan_file_ksm: st.files.ksm.note,
-                    status_file_transkrip: st.files.transkrip.status,
-                    catatan_file_transkrip: st.files.transkrip.note,
-                    status_file_pernyataan: st.files.pernyataan.status,
-                    catatan_file_pernyataan: st.files.pernyataan.note,
-                    status_file_bebas_lab: st.files.bebas_lab.status,
-                    catatan_file_bebas_lab: st.files.bebas_lab.note,
-                    catatan_wali: st.catatan_wali
-                }))));
+                formData.append('decisions_json', JSON.stringify(window.batchStudentsDW.map(st => {
+                    const dec = {
+                        nim: st.nim,
+                        action: st.action,
+                        status_jenis_ta: st.status_jenis_ta,
+                        catatan_jenis_ta: st.catatan_jenis_ta,
+                        status_judul: st.status_judul,
+                        catatan_judul: st.catatan_judul,
+                        catatan_wali: st.catatan_wali
+                    };
+                    if (st.files) {
+                        Object.keys(st.files).forEach(k => {
+                            dec[`status_file_${k}`] = st.files[k]?.status;
+                            dec[`catatan_file_${k}`] = st.files[k]?.note || '';
+                        });
+                    }
+                    return dec;
+                })));
                 window.batchStudentsDW.forEach(st => formData.append('nims[]', st.nim));
 
                 fetch('<?= site_url("dosenwali/submit_batch_approval"); ?>', {
@@ -2247,6 +2279,32 @@
             presets: ['Tanpa Stempel Resmi Lab', 'Pinjaman Alat Lab Belum Lunas', 'Buku Perpus Belum Kembali']
         }
     };
+
+    // Daftarkan seluruh syarat berkas dinamis ke docDefinitions
+    if (window.SYARAT_BERKAS && Array.isArray(window.SYARAT_BERKAS)) {
+        window.SYARAT_BERKAS.forEach((sb, idx) => {
+            const k = sb.kode_berkas;
+            if (!docDefinitions[k]) {
+                const mapAbbr = { ksm: 'KSM', transkrip: 'TRS', pernyataan: 'SRT', bebas_lab: 'LAB' };
+                let abbr = mapAbbr[k];
+                if (!abbr) {
+                    const w = (sb.nama_berkas || k).trim().split(/[\s_-]+/);
+                    abbr = (w[0] || 'DOC').substring(0, 4).toUpperCase();
+                }
+                docDefinitions[k] = {
+                    type: 'file',
+                    title: `${idx + 1}. ${sb.nama_berkas}`,
+                    short: abbr,
+                    desc: sb.deskripsi || `Dokumen persyaratan ${sb.nama_berkas}.`,
+                    fileField: `file_${k}`,
+                    statusField: `status_file_${k}`,
+                    noteField: `catatan_file_${k}`,
+                    icon: 'fa-solid fa-file-pdf',
+                    presets: ['Format Berkas Salah', 'Berkas Buram / Kurang Jelas', 'Dokumen Belum Lengkap', 'TTD / Stempel Belum Ada']
+                };
+            }
+        });
+    }
 
     function resolveDocPdfUrl(filename) {
         if (!filename) return '<?= base_url("uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf"); ?>';
@@ -2955,12 +3013,29 @@
         const isPreviewActive = window.activePreviews && window.activePreviews.length > 0;
         const cardWidthClass = isPreviewActive ? 'w-full' : (totalActive > 1 ? 'w-[350px] sm:w-[370px]' : 'w-[390px] sm:w-[410px]');
 
-        const docList = [
-            { key: 'ksm', title: '1. KSM', fileField: 'file_ksm', statusField: 'status_file_ksm', icon: 'fa-solid fa-file-lines' },
-            { key: 'transkrip', title: '2. Transkrip Nilai', fileField: 'file_transkrip', statusField: 'status_file_transkrip', icon: 'fa-solid fa-file-spreadsheet' },
-            { key: 'pernyataan', title: '3. Surat Pernyataan', fileField: 'file_pernyataan', statusField: 'status_file_pernyataan', icon: 'fa-solid fa-file-contract' },
-            { key: 'bebas_lab', title: '4. Bebas Lab & Perpus', fileField: 'file_bebas_lab', statusField: 'status_file_bebas_lab', icon: 'fa-solid fa-building-circle-check' }
-        ];
+        const docList = (window.SYARAT_BERKAS && window.SYARAT_BERKAS.length > 0)
+            ? window.SYARAT_BERKAS.map((sb, i) => {
+                const k = sb.kode_berkas;
+                const iconMap = {
+                    ksm: 'fa-solid fa-file-lines',
+                    transkrip: 'fa-solid fa-file-spreadsheet',
+                    pernyataan: 'fa-solid fa-file-contract',
+                    bebas_lab: 'fa-solid fa-building-circle-check'
+                };
+                return {
+                    key: k,
+                    title: `${i + 1}. ${sb.nama_berkas}`,
+                    fileField: `file_${k}`,
+                    statusField: `status_file_${k}`,
+                    icon: iconMap[k] || 'fa-solid fa-file-pdf'
+                };
+            })
+            : [
+                { key: 'ksm', title: '1. KSM', fileField: 'file_ksm', statusField: 'status_file_ksm', icon: 'fa-solid fa-file-lines' },
+                { key: 'transkrip', title: '2. Transkrip Nilai', fileField: 'file_transkrip', statusField: 'status_file_transkrip', icon: 'fa-solid fa-file-spreadsheet' },
+                { key: 'pernyataan', title: '3. Surat Pernyataan', fileField: 'file_pernyataan', statusField: 'status_file_pernyataan', icon: 'fa-solid fa-file-contract' },
+                { key: 'bebas_lab', title: '4. Bebas Lab & Perpus', fileField: 'file_bebas_lab', statusField: 'status_file_bebas_lab', icon: 'fa-solid fa-building-circle-check' }
+            ];
 
         // Bar header jika ada lebih dari 1 mahasiswa aktif di mode preview
         let headerSummaryBar = '';

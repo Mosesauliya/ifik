@@ -16,9 +16,11 @@ class DosenWali extends CI_Controller {
     // Dashboard Dosen Wali: Daftar Mahasiswa Bimbingan Akademik
     public function index() {
         $nip_dosen = $this->_get_current_nip();
+        $this->load->model('AdminLayanan_model');
         $data['title'] = 'Dashboard Dosen Wali';
         $data['dosen_info'] = $this->DosenWali_model->get_dosen_wali_info($nip_dosen);
         $data['list_mahasiswa'] = $this->DosenWali_model->get_mahasiswa_bimbingan($nip_dosen);
+        $data['syarat_berkas'] = $this->AdminLayanan_model->get_active_syarat_berkas();
 
         $this->load->view('dosen_wali/dashboard', $data);
     }
@@ -264,6 +266,8 @@ class DosenWali extends CI_Controller {
     // AJAX Endpoint: Realtime fetch daftar mahasiswa bimbingan & statistik status
     public function get_mahasiswa_ajax() {
         $nip_dosen = $this->_get_current_nip();
+        $this->load->model('AdminLayanan_model');
+        $active_syarat = $this->AdminLayanan_model->get_active_syarat_berkas();
         $list = $this->DosenWali_model->get_mahasiswa_bimbingan($nip_dosen);
 
         $totalMhs = count($list);
@@ -283,33 +287,40 @@ class DosenWali extends CI_Controller {
             }
 
             $nama = trim(($m['nama_depan'] ?? '') . ' ' . ($m['nama_belakang'] ?? ''));
-            $formattedList[] = [
+            $item = [
                 'nim'                    => $m['nim'],
                 'nama'                   => $nama,
                 'konsentrasi'            => $m['mhs_konsentrasi'] ?? '',
                 'judul'                  => $m['judul_1'] ?? '',
                 'status_approval_wali'   => $st,
                 'current_stage'          => $m['current_stage'] ?? 'Dosen Wali',
-                'status_file_ksm'        => $m['status_file_ksm'] ?? 'Pending',
-                'status_file_transkrip'  => $m['status_file_transkrip'] ?? 'Pending',
-                'status_file_pernyataan' => $m['status_file_pernyataan'] ?? 'Pending',
-                'status_file_bebas_lab'  => $m['status_file_bebas_lab'] ?? 'Pending',
-                'detail_url'             => site_url('dosenwali/detail_mahasiswa/' . $m['nim'])
+                'detail_url'             => site_url('dosenwali/detail_mahasiswa/' . $m['nim']),
+                'berkas_map'             => $m['berkas_map'] ?? []
             ];
+
+            // Pasang status & file untuk setiap berkas dinamis
+            foreach ($m as $k => $v) {
+                if (strpos($k, 'file_') === 0 || strpos($k, 'status_file_') === 0 || strpos($k, 'catatan_file_') === 0) {
+                    $item[$k] = $v;
+                }
+            }
+
+            $formattedList[] = $item;
         }
 
         $this->output
             ->set_content_type('application/json')
             ->set_output(json_encode([
-                'success' => true,
-                'stats'   => [
+                'success'       => true,
+                'syarat_berkas' => $active_syarat,
+                'stats'         => [
                     'total'        => $totalMhs,
                     'pending'      => $pendingCount,
                     'approved'     => $approvedCount,
                     'rejected'     => $rejectedCount,
                     'approved_pct' => $totalMhs > 0 ? round(($approvedCount / $totalMhs) * 100) : 0
                 ],
-                'data'    => $formattedList
+                'data'          => $formattedList
             ]));
     }
 
@@ -365,32 +376,30 @@ class DosenWali extends CI_Controller {
                 'catatan_judul'        => ($st_judul === 'Rejected') ? htmlspecialchars($r['catatan_judul'] ?? '') : '',
                 'status_approval_wali' => $st_wali,
                 'catatan_wali'         => ($st_wali === 'Rejected') ? htmlspecialchars($r['catatan_wali'] ?? '') : '',
-                'files' => array(
-                    'ksm'        => array(
-                        'name'   => $r['file_ksm'] ?? 'ksm_' . $r['nim'] . '.pdf', 
-                        'url'    => $resolve_pdf_url($r['file_ksm'] ?? ''), 
-                        'status' => $r['status_file_ksm'] ?? 'Pending',
-                        'note'   => (($r['status_file_ksm'] ?? '') === 'Rejected') ? htmlspecialchars($r['catatan_file_ksm'] ?? '') : ''
-                    ),
-                    'transkrip'  => array(
-                        'name'   => $r['file_transkrip'] ?? 'transkrip_' . $r['nim'] . '.pdf', 
-                        'url'    => $resolve_pdf_url($r['file_transkrip'] ?? ''), 
-                        'status' => $r['status_file_transkrip'] ?? 'Pending',
-                        'note'   => (($r['status_file_transkrip'] ?? '') === 'Rejected') ? htmlspecialchars($r['catatan_file_transkrip'] ?? '') : ''
-                    ),
-                    'pernyataan' => array(
-                        'name'   => $r['file_pernyataan'] ?? 'pernyataan_' . $r['nim'] . '.pdf', 
-                        'url'    => $resolve_pdf_url($r['file_pernyataan'] ?? ''), 
-                        'status' => $r['status_file_pernyataan'] ?? 'Pending',
-                        'note'   => (($r['status_file_pernyataan'] ?? '') === 'Rejected') ? htmlspecialchars($r['catatan_file_pernyataan'] ?? '') : ''
-                    ),
-                    'bebas_lab'  => array(
-                        'name'   => $r['file_bebas_lab'] ?? 'bebas_lab_' . $r['nim'] . '.pdf', 
-                        'url'    => $resolve_pdf_url($r['file_bebas_lab'] ?? ''), 
-                        'status' => $r['status_file_bebas_lab'] ?? 'Pending',
-                        'note'   => (($r['status_file_bebas_lab'] ?? '') === 'Rejected') ? htmlspecialchars($r['catatan_file_bebas_lab'] ?? '') : ''
-                    ),
-                )
+                'files' => (function() use ($r, $resolve_pdf_url) {
+                    $ci =& get_instance();
+                    $ci->load->model('AdminLayanan_model');
+                    $active_syarat = $ci->AdminLayanan_model->get_active_syarat_berkas();
+                    if (empty($active_syarat)) {
+                        $active_syarat = [
+                            ['kode_berkas' => 'ksm'],
+                            ['kode_berkas' => 'transkrip'],
+                            ['kode_berkas' => 'pernyataan'],
+                            ['kode_berkas' => 'bebas_lab']
+                        ];
+                    }
+                    $fMap = array();
+                    foreach ($active_syarat as $asb) {
+                        $k = $asb['kode_berkas'];
+                        $fMap[$k] = array(
+                            'name'   => $r['file_' . $k] ?? ($k . '_' . $r['nim'] . '.pdf'),
+                            'url'    => $resolve_pdf_url($r['file_' . $k] ?? ''),
+                            'status' => $r['status_file_' . $k] ?? 'Pending',
+                            'note'   => (($r['status_file_' . $k] ?? '') === 'Rejected') ? htmlspecialchars($r['catatan_file_' . $k] ?? '') : ''
+                        );
+                    }
+                    return $fMap;
+                })()
             );
         }
 
