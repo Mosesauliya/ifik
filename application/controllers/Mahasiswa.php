@@ -693,16 +693,15 @@ class Mahasiswa extends CI_Controller {
             ]));
     }
 
-    // AJAX Endpoint: Instant Background Auto-Upload berkas persyaratan TA (Step 3-6)
+    // AJAX Endpoint: Instant Background Auto-Upload berkas persyaratan TA
     public function ajax_upload_file_ta() {
-        $nim = $this->_get_current_nim();
-        $field_name = $this->input->post('field_name'); // 'file_ksm', 'file_transkrip', 'file_pernyataan', 'file_bebas_lab'
+        $nim = $this->input->post('nim') ?: $this->_get_current_nim();
+        $field_name = $this->input->post('field_name');
 
-        $allowed_fields = ['file_ksm', 'file_transkrip', 'file_pernyataan', 'file_bebas_lab'];
-        if (!in_array($field_name, $allowed_fields)) {
+        if (empty($field_name) || !preg_match('/^file_[a-z0-9_]+$/i', $field_name)) {
             $this->output
                 ->set_content_type('application/json')
-                ->set_output(json_encode(['success' => false, 'message' => 'Field tidak valid.']));
+                ->set_output(json_encode(['success' => false, 'message' => 'Field berkas tidak valid.']));
             return;
         }
 
@@ -727,36 +726,39 @@ class Mahasiswa extends CI_Controller {
             $mhs_konsentrasi = !empty($mhs['konsentrasi_dkv']) ? $mhs['konsentrasi_dkv'] : 'Desain Komunikasi Visual';
             $mhs_id_kk = !empty($mhs['id_kk']) ? $mhs['id_kk'] : 1;
 
-            // Map upload field name to corresponding wizard step
-            $step_map = [
-                'file_ksm'        => 3,
-                'file_transkrip'  => 4,
-                'file_pernyataan' => 5,
-                'file_bebas_lab'  => 6
-            ];
-            $step_for_file = $step_map[$field_name] ?? 3;
+            $kode_berkas = str_replace('file_', '', $field_name);
 
-            // Simpan / update ke database sebagai draft
+            // 1. Simpan / update ke database pendaftaran_ta sebagai draft
             $existing_ta = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
+            $upData = [];
+            if ($this->db->field_exists($field_name, 'pendaftaran_ta')) {
+                $upData[$field_name] = $file_name;
+            }
+            $upData['draft_step'] = 2; // Step berkas
+            $upData['updated_at'] = date('Y-m-d H:i:s');
+
             if ($existing_ta) {
-                $upData = [$field_name => $file_name];
                 if (empty($existing_ta['konsentrasi_dkv'])) $upData['konsentrasi_dkv'] = $mhs_konsentrasi;
                 if (empty($existing_ta['id_kk'])) $upData['id_kk'] = $mhs_id_kk;
-                $current_db_step = !empty($existing_ta['draft_step']) ? (int)$existing_ta['draft_step'] : 1;
-                $upData['draft_step'] = max($current_db_step, $step_for_file);
                 $this->db->where('nim', $nim)->update('pendaftaran_ta', $upData);
             } else {
-                $this->db->insert('pendaftaran_ta', [
-                    'nim'                  => $nim,
-                    'konsentrasi_dkv'      => $mhs_konsentrasi,
-                    'id_kk'                => $mhs_id_kk,
-                    'is_submitted'         => 0,
-                    'status_approval_wali' => 'Draft',
-                    'current_stage'        => 'Draft',
-                    'draft_step'           => $step_for_file,
-                    $field_name            => $file_name,
-                    'created_at'           => date('Y-m-d H:i:s')
-                ]);
+                $upData['nim']                  = $nim;
+                $upData['konsentrasi_dkv']      = $mhs_konsentrasi;
+                $upData['id_kk']                = $mhs_id_kk;
+                $upData['is_submitted']         = 0;
+                $upData['status_approval_wali'] = 'Draft';
+                $upData['status_approval_admin'] = 'Pending';
+                $upData['status_approval_koor'] = 'Pending';
+                $upData['status_approval_kk']   = 'Pending';
+                $upData['current_stage']        = 'Draft';
+                $upData['created_at']           = date('Y-m-d H:i:s');
+                $this->db->insert('pendaftaran_ta', $upData);
+            }
+
+            // 2. Simpan juga ke tabel pendaftaran_berkas via AdminLayanan_model
+            $this->load->model('AdminLayanan_model');
+            if (method_exists($this->AdminLayanan_model, 'save_student_berkas')) {
+                $this->AdminLayanan_model->save_student_berkas($nim, $kode_berkas, $file_name, 'Pending');
             }
 
             $this->output
@@ -764,17 +766,19 @@ class Mahasiswa extends CI_Controller {
                 ->set_output(json_encode([
                     'success'    => true,
                     'field_name' => $field_name,
+                    'kode_berkas'=> $kode_berkas,
                     'file_name'  => $file_name,
                     'file_size'  => number_format($upload_data['file_size'] / 1024, 2) . ' MB',
                     'file_url'   => base_url('uploads/persyaratan_ta/' . $file_name),
-                    'message'    => 'Berkas berhasil diunggah dan tersimpan di server.'
+                    'message'    => 'Berkas berhasil diunggah dan tersimpan di database.'
                 ]));
         } else {
+            $error_msg = $this->upload->display_errors('', '');
             $this->output
                 ->set_content_type('application/json')
                 ->set_output(json_encode([
                     'success' => false,
-                    'message' => strip_tags($this->upload->display_errors())
+                    'message' => $error_msg ?: 'Gagal mengunggah berkas.'
                 ]));
         }
     }

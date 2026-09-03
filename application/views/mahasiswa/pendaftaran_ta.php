@@ -73,13 +73,20 @@
     <!-- Main Container (Centered Form Wizard Layout) -->
     <div class="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow space-y-6">
         
-        <!-- Section Title & Step Counter -->
-        <div class="flex items-end justify-between mb-6">
+        <!-- Section Title, Database Status Indicator & Step Counter -->
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
             <div>
                 <span class="text-xs font-bold uppercase tracking-wider text-orange-600 block mb-1">FORMULIR PENDAFTARAN</span>
-                <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Selesaikan data Anda</h2>
+                <div class="flex items-center gap-3 flex-wrap">
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Selesaikan data Anda</h2>
+                    <!-- Status Tersimpan di Database Indicator -->
+                    <div id="dbSaveStatus" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/90 shadow-2xs transition-all duration-300">
+                        <i class="bi bi-cloud-check-fill text-emerald-500 text-sm" id="dbSaveStatusIcon"></i>
+                        <span id="dbSaveStatusText">Draft tersimpan di database</span>
+                    </div>
+                </div>
             </div>
-            <span class="text-xs font-bold tracking-wider text-orange-700 uppercase bg-orange-100/90 px-4 py-1.5 rounded-full border border-orange-300 badge-3d" id="stepCounterText">LANGKAH 1 / 6</span>
+            <span class="text-xs font-bold tracking-wider text-orange-700 uppercase bg-orange-100/90 px-4 py-1.5 rounded-full border border-orange-300 badge-3d shrink-0 self-start sm:self-auto" id="stepCounterText">LANGKAH 1 / 3</span>
         </div>
 
         <!-- Horizontal Stepper Progress Bar (3 Steps) -->

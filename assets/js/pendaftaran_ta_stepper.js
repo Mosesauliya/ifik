@@ -564,6 +564,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (files[0].type === 'application/pdf' || files[0].name.toLowerCase().endsWith('.pdf')) {
                     fileInput.files = files;
                     renderFileCard(files[0]);
+                    uploadDocFile(fileInput, files[0], zone);
                 } else {
                     showInPageAlert('⚠️ Hanya berkas berformat .PDF yang diperbolehkan!', 'error');
                 }
@@ -587,6 +588,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     return;
                 }
                 renderFileCard(fileInput.files[0]);
+                uploadDocFile(fileInput, fileInput.files[0], zone);
             }
         });
 
@@ -614,9 +616,82 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 zone.classList.remove('border-emerald-400', 'bg-emerald-50/20');
                 updateStepUI();
+                saveDraft(true);
             });
         }
     });
+
+    // Background Auto-Upload berkas PDF langsung ke database server
+    function uploadDocFile(fileInput, file, zone) {
+        if (!file || !window.UPLOAD_AJAX_URL) return;
+
+        const oldFileInput = document.querySelector(`input[type="hidden"][name="${fileInput.name}_old"]`);
+        const fileSizeEl = zone.querySelector('.file-size');
+
+        if (fileSizeEl) {
+            fileSizeEl.innerHTML = '<span class="text-orange-600 font-semibold flex items-center gap-1.5"><i class="bi bi-arrow-repeat animate-spin text-orange-500"></i> Mengunggah berkas ke database...</span>';
+        }
+        setDbStatus('saving', 'Mengunggah berkas ke database...');
+
+        const fd = new FormData();
+        fd.append('nim', userNim);
+        fd.append('field_name', fileInput.name);
+        fd.append(fileInput.name, file);
+
+        fetch(window.UPLOAD_AJAX_URL, {
+            method: 'POST',
+            body: fd
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                if (oldFileInput) {
+                    oldFileInput.value = data.file_name;
+                }
+                if (fileSizeEl) {
+                    fileSizeEl.innerHTML = `<span class="text-emerald-600 font-semibold flex items-center gap-1.5"><i class="bi bi-check-circle-fill text-emerald-500"></i> ${data.file_size || ''} • Tersimpan di database</span>`;
+                }
+                setDbStatus('saved', 'Berkas berhasil disimpan di database');
+                showInPageAlert('✅ Berkas PDF berhasil diunggah & tersimpan aman di database!', 'success');
+                updateStepUI();
+            } else {
+                if (fileSizeEl) {
+                    fileSizeEl.innerHTML = `<span class="text-rose-600 font-semibold flex items-center gap-1.5"><i class="bi bi-exclamation-triangle-fill text-rose-500"></i> Gagal: ${data.message || 'Error'}</span>`;
+                }
+                setDbStatus('error', 'Gagal menyimpan berkas');
+                showInPageAlert(`⚠️ ${data.message || 'Gagal mengunggah berkas'}`, 'error');
+            }
+        })
+        .catch(err => {
+            console.error('File auto-upload error:', err);
+            if (fileSizeEl) {
+                fileSizeEl.innerHTML = '<span class="text-amber-600 font-semibold">Tersimpan sementara (akan diunggah saat submit)</span>';
+            }
+            setDbStatus('saved', 'Draft formulir aktif');
+        });
+    }
+
+    // Indikator Status Simpan Database di Header Formulir
+    function setDbStatus(state, message) {
+        const pill = document.getElementById('dbSaveStatus');
+        const icon = document.getElementById('dbSaveStatusIcon');
+        const text = document.getElementById('dbSaveStatusText');
+        if (!pill || !text) return;
+
+        if (state === 'saving') {
+            pill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/90 shadow-2xs transition-all duration-300';
+            if (icon) icon.className = 'bi bi-arrow-repeat animate-spin text-amber-500 text-sm';
+            text.textContent = message || 'Menyimpan ke database...';
+        } else if (state === 'saved') {
+            pill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/90 shadow-2xs transition-all duration-300';
+            if (icon) icon.className = 'bi bi-cloud-check-fill text-emerald-500 text-sm';
+            text.textContent = message || 'Draft tersimpan di database';
+        } else if (state === 'error') {
+            pill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200/90 shadow-2xs transition-all duration-300';
+            if (icon) icon.className = 'bi bi-exclamation-triangle-fill text-rose-500 text-sm';
+            text.textContent = message || 'Gagal menyimpan ke database';
+        }
+    }
 
     // --- DRAFT FORM PERSISTENCE (LOCAL STORAGE + DATABASE AUTO-SAVE) ---
     let draftDebounceTimer = null;
@@ -644,6 +719,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // 2. Simpan otomatis langsung ke Database MySQL via AJAX
             if (syncToServer && window.SAVE_DRAFT_AJAX_URL && (draft.jenis_ta || draft.judul_1)) {
                 clearTimeout(draftDebounceTimer);
+                setDbStatus('saving', 'Menyimpan perubahan ke database...');
                 draftDebounceTimer = setTimeout(() => {
                     const fd = new FormData();
                     fd.append('nim', userNim);
@@ -660,9 +736,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     })
                     .then(res => res.json())
                     .then(resData => {
-                        // Draft berhasil tersimpan di MySQL database
+                        setDbStatus('saved', 'Draft tersimpan di database');
                     })
-                    .catch(err => console.warn('Auto-save draft warning:', err));
+                    .catch(err => {
+                        console.warn('Auto-save draft warning:', err);
+                        setDbStatus('error', 'Gagal tersambung ke database');
+                    });
                 }, 400);
             }
         } catch (e) {
