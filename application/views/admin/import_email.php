@@ -791,9 +791,9 @@
                     <div class="unified-divider"></div>
 
                     <!-- Main Text Input Container -->
-                    <div id="mainValueContainer" class="flex-1 flex items-center relative">
-                        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs mr-2"></i>
-                        <input type="text" id="mainSearchInput" oninput="handleUnifiedMultiSearch()" placeholder="Cari Nama, Email, Token, NIM..." class="w-full text-xs font-medium bg-transparent border-none focus:outline-none text-slate-800">
+                    <div id="mainValueContainer" class="flex-1 flex items-center relative min-w-0">
+                        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs mr-2 shrink-0"></i>
+                        <input type="text" id="mainSearchInput" onkeydown="if(event.key==='Enter') executeSearch()" placeholder="Ketik kata kunci lalu tekan Enter atau klik Cari..." class="w-full text-xs font-medium bg-transparent border-none focus:outline-none text-slate-800">
                     </div>
 
                     <!-- Main Custom Select Dropdown Container (When Category != query) -->
@@ -807,6 +807,12 @@
                             <!-- Options injected dynamically -->
                         </div>
                     </div>
+
+                    <!-- Search Button inside pill -->
+                    <button type="button" onclick="executeSearch()" class="btn-gradient-base btn-gradient-orange-solid h-7 px-3.5 text-xs flex items-center gap-1.5 rounded-lg shadow-xs font-semibold cursor-pointer shrink-0 ml-1.5" title="Klik untuk Cari data (atau tekan Enter)">
+                        <i class="fa-solid fa-magnifying-glass text-[10px]"></i>
+                        <span>Cari</span>
+                    </button>
                 </div>
 
                 <!-- Standalone Add Filter Button (+ 1/4) -->
@@ -2653,11 +2659,17 @@
         }
 
         function getPlaceholderForCategory(cat) {
-            if (cat === 'name') return 'Cari nama lengkap pengguna (misal: Budi)...';
-            if (cat === 'nim_nip') return 'Cari NIM / NIP / ID (misal: 1301210045)...';
-            if (cat === 'email_addr') return 'Cari email Telkom (misal: @student.telkomuniversity.ac.id)...';
-            if (cat === 'token_code') return 'Cari 8-char kode token (misal: X8#kP2w!)...';
-            return 'Cari Nama, Email, Token, NIM...';
+            if (cat === 'name') return 'Ketik nama lengkap lalu tekan Enter atau klik Cari...';
+            if (cat === 'nim_nip') return 'Ketik NIM / NIP lalu tekan Enter atau klik Cari...';
+            if (cat === 'email_addr') return 'Ketik email Telkom lalu tekan Enter atau klik Cari...';
+            if (cat === 'token_code') return 'Ketik kode token lalu tekan Enter atau klik Cari...';
+            return 'Ketik kata kunci lalu tekan Enter atau klik Cari...';
+        }
+
+        function executeSearch() {
+            closeAllCustomDropdowns();
+            state.currentPage = 1;
+            renderTable();
         }
 
         function addAdditionalFilterRow(e) {
@@ -2747,9 +2759,9 @@
                     <div class="unified-divider"></div>
 
                     <!-- Extra Text Input Container -->
-                    <div id="extraValueContainer_${rowId}" class="${isTextCategory(defaultCrit) ? 'flex-1 flex items-center relative' : 'hidden flex-1 items-center relative'}">
-                        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs mr-2"></i>
-                        <input type="text" id="extraInput_${rowId}" oninput="handleUnifiedMultiSearch()" placeholder="${getPlaceholderForCategory(defaultCrit)}" class="w-full text-xs font-medium bg-transparent border-none focus:outline-none text-slate-800">
+                    <div id="extraValueContainer_${rowId}" class="${isTextCategory(defaultCrit) ? 'flex-1 flex items-center relative min-w-0' : 'hidden flex-1 items-center relative min-w-0'}">
+                        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs mr-2 shrink-0"></i>
+                        <input type="text" id="extraInput_${rowId}" onkeydown="if(event.key==='Enter') executeSearch()" placeholder="${getPlaceholderForCategory(defaultCrit)}" class="w-full text-xs font-medium bg-transparent border-none focus:outline-none text-slate-800">
                     </div>
 
                     <!-- Extra Custom Select Container -->
@@ -2763,6 +2775,12 @@
                             <!-- Injected dynamically -->
                         </div>
                     </div>
+
+                    <!-- Search Button inside extra pill -->
+                    <button type="button" onclick="executeSearch()" class="btn-gradient-base btn-gradient-orange-solid h-7 px-3 text-xs flex items-center gap-1.5 rounded-lg shadow-xs font-semibold cursor-pointer shrink-0 ml-1.5" title="Klik untuk Cari data (atau tekan Enter)">
+                        <i class="fa-solid fa-magnifying-glass text-[10px]"></i>
+                        <span>Cari</span>
+                    </button>
                 </div>
 
                 <!-- Remove Row Button (x) -->
@@ -2774,7 +2792,6 @@
             container.appendChild(rowDiv);
             updateExtraValueOptions(rowId, defaultCrit);
             updateFilterBadge();
-            handleUnifiedMultiSearch();
         }
 
         function removeExtraFilterRow(rowId, e) {
@@ -2817,7 +2834,6 @@
             }
 
             closeAllCustomDropdowns();
-            handleUnifiedMultiSearch();
         }
 
         function updateMainSelectOptions(cat) {
@@ -2881,7 +2897,6 @@
             }
 
             closeAllCustomDropdowns();
-            handleUnifiedMultiSearch();
         }
 
         function selectExtraCategory(rowId, cat, label, el) {
@@ -2905,7 +2920,6 @@
             }
 
             closeAllCustomDropdowns();
-            handleUnifiedMultiSearch();
         }
 
         function updateExtraValueOptions(rowId, cat) {
@@ -2969,7 +2983,6 @@
             }
 
             closeAllCustomDropdowns();
-            handleUnifiedMultiSearch();
         }
 
         function resetImportMultiSearch() {
