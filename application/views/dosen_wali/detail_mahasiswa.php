@@ -296,44 +296,47 @@
                             return base_url('uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf');
                         };
 
-                        $berkas_items = array(
-                            array(
-                                'key'       => 'ksm',
-                                'label'     => '1. KSM (Kartu Studi Mahasiswa)',
-                                'desc'      => 'Bukti KRS semester aktif yang memuat mata kuliah Tugas Akhir.',
-                                'file'      => $detail['file_ksm'] ?? 'ksm_' . $detail['nim'] . '.pdf',
-                                'status'    => $detail['status_file_ksm'] ?? 'Pending',
-                                'icon'      => 'bi-card-checklist',
-                                'presets'   => array('Tanpa TTD Dosen Wali', 'Mata Kuliah TA Belum Ada', 'File Buram / Tidak Jelas')
-                            ),
-                            array(
-                                'key'       => 'transkrip',
-                                'label'     => '2. Transkrip Nilai Akademik Terakhir',
-                                'desc'      => 'Transkrip nilai resmi yang sudah divalidasi dan memenuhi syarat SKS kelulusan.',
-                                'file'      => $detail['file_transkrip'] ?? 'transkrip_' . $detail['nim'] . '.pdf',
-                                'status'    => $detail['status_file_transkrip'] ?? 'Pending',
-                                'icon'      => 'bi-file-earmark-spreadsheet',
-                                'presets'   => array('Belum Update Semester Terbaru', 'SKS Kelulusan Kurang', 'Belum Tervalidasi Resmi')
-                            ),
-                            array(
-                                'key'       => 'pernyataan',
-                                'label'     => '3. Surat Pernyataan Mahasiswa',
-                                'desc'      => 'Surat kesanggupan menyelesaikan TA bermaterai dan ditandatangani.',
-                                'file'      => $detail['file_pernyataan'] ?? 'pernyataan_' . $detail['nim'] . '.pdf',
-                                'status'    => $detail['status_file_pernyataan'] ?? 'Pending',
-                                'icon'      => 'bi-file-earmark-ruled',
-                                'presets'   => array('Tanpa Materai Rp 10.000', 'Belum Ditandatangani', 'Format Surat Salah')
-                            ),
-                            array(
-                                'key'       => 'bebas_lab',
-                                'label'     => '4. Surat Bebas Laboratorium & Perpustakaan',
-                                'desc'      => 'Surat keterangan bebas pinjaman alat lab FIK dan buku perpustakaan.',
-                                'file'      => $detail['file_bebas_lab'] ?? 'bebas_lab_' . $detail['nim'] . '.pdf',
-                                'status'    => $detail['status_file_bebas_lab'] ?? 'Pending',
-                                'icon'      => 'bi-building-check',
-                                'presets'   => array('Tanpa Stempel Resmi Lab', 'Pinjaman Alat Lab Belum Lunas', 'Buku Perpus Belum Kembali')
-                            )
-                        );
+                        $berkas_items = [];
+                        $active_sb = !empty($syarat_berkas) ? $syarat_berkas : [
+                            ['kode_berkas' => 'ksm', 'nama_berkas' => 'KSM (Kartu Studi Mahasiswa)', 'deskripsi' => 'Bukti KRS semester aktif yang memuat mata kuliah Tugas Akhir.'],
+                            ['kode_berkas' => 'transkrip', 'nama_berkas' => 'Transkrip Nilai Akademik Terakhir', 'deskripsi' => 'Transkrip nilai resmi yang sudah divalidasi dan memenuhi syarat SKS kelulusan.'],
+                            ['kode_berkas' => 'pernyataan', 'nama_berkas' => 'Surat Pernyataan Mahasiswa', 'deskripsi' => 'Surat kesanggupan menyelesaikan TA bermaterai dan ditandatangani.'],
+                            ['kode_berkas' => 'bebas_lab', 'nama_berkas' => 'Surat Bebas Laboratorium & Perpustakaan', 'deskripsi' => 'Surat keterangan bebas pinjaman alat lab FIK dan buku perpustakaan.']
+                        ];
+                        $icon_map = [
+                            'ksm' => 'bi-card-checklist',
+                            'transkrip' => 'bi-file-earmark-spreadsheet',
+                            'pernyataan' => 'bi-file-earmark-ruled',
+                            'bebas_lab' => 'bi-building-check'
+                        ];
+                        $preset_map = [
+                            'ksm' => ['Tanpa TTD Dosen Wali', 'Mata Kuliah TA Belum Ada', 'File Buram / Tidak Jelas'],
+                            'transkrip' => ['Belum Update Semester Terbaru', 'SKS Kelulusan Kurang', 'Belum Tervalidasi Resmi'],
+                            'pernyataan' => ['Tanpa Materai Rp 10.000', 'Belum Ditandatangani', 'Format Surat Salah'],
+                            'bebas_lab' => ['Tanpa Stempel Resmi Lab', 'Pinjaman Alat Lab Belum Lunas', 'Buku Perpus Belum Kembali']
+                        ];
+
+                        $sb_idx = 1;
+                        foreach ($active_sb as $sb) {
+                            $k = $sb['kode_berkas'];
+                            $file_val = $student_berkas[$k]['file_name'] ?? ($detail['file_' . $k] ?? ($k . '_' . $detail['nim'] . '.pdf'));
+                            $st_val = $detail['status_file_' . $k] ?? 'Pending';
+                            if ($st_val === 'Pending' && !empty($student_berkas[$k]['status_verifikasi'])) {
+                                $ver = $student_berkas[$k]['status_verifikasi'];
+                                $st_val = ($ver === 'Valid') ? 'Approved' : (($ver === 'Invalid') ? 'Rejected' : 'Pending');
+                            }
+                            $berkas_items[] = [
+                                'key'     => $k,
+                                'label'   => $sb_idx . '. ' . $sb['nama_berkas'],
+                                'desc'    => $sb['deskripsi'] ?: ('Dokumen persyaratan ' . $sb['nama_berkas']),
+                                'file'    => $file_val,
+                                'status'  => $st_val,
+                                'icon'    => $icon_map[$k] ?? 'bi-file-earmark-pdf',
+                                'presets' => $preset_map[$k] ?? ['Format Berkas Salah', 'Berkas Buram / Kurang Jelas', 'Dokumen Belum Lengkap']
+                            ];
+                            $sb_idx++;
+                        }
+                        $total_berkas_count = count($berkas_items);
                     ?>
 
                     <div id="docGridContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -794,7 +797,7 @@
                 if (cbKurang) cbKurang.checked = false;
                 updateCardState(card);
             });
-            showToast('Semua 4 berkas berhasil ditandai Valid!');
+            showToast('Semua <?= $total_berkas_count; ?> berkas berhasil ditandai Valid!');
         }
 
         function simulateDownload() {
@@ -823,7 +826,7 @@
             const checkedValid = document.querySelectorAll('input[name="berkas_valid[]"]:checked').length;
             const catatan = document.getElementById('catatan_admin').value.trim();
 
-            if (checkedCount === 0 && checkedValid === 4) {
+            if (checkedCount === 0 && checkedValid === <?= $total_berkas_count; ?>) {
                 alert('Peringatan: Seluruh berkas telah dicentang Valid. Silakan gunakan tombol "Setujui Semua Berkas" jika semua berkas sudah sesuai!');
                 return false;
             }
@@ -848,8 +851,8 @@
             }
 
             const checkedValid = document.querySelectorAll('input[name="berkas_valid[]"]:checked').length;
-            if (checkedValid < 4) {
-                const setAll = confirm('Informasi: Baru ' + checkedValid + ' dari 4 berkas yang dicentang Valid.\n\nApakah Anda ingin otomatis menandai SELURUH 4 berkas sebagai VALID dan menyetujui pengajuan ini ke tahap Admin Layanan (LAA)?');
+            if (checkedValid < <?= $total_berkas_count; ?>) {
+                const setAll = confirm('Informasi: Baru ' + checkedValid + ' dari <?= $total_berkas_count; ?> berkas yang dicentang Valid.\n\nApakah Anda ingin otomatis menandai SELURUH <?= $total_berkas_count; ?> berkas sebagai VALID dan menyetujui pengajuan ini ke tahap Admin Layanan (LAA)?');
                 if (setAll) {
                     markAllValid();
                     document.getElementById('formStatus').value = 'Approved';
@@ -858,7 +861,7 @@
                 return false;
             }
 
-            if (confirm('Yakin seluruh 4 berkas mahasiswa ini telah lengkap dan valid? Pengajuan akan disetujui dan diteruskan ke tahap Admin Layanan (LAA).')) {
+            if (confirm('Yakin seluruh <?= $total_berkas_count; ?> berkas mahasiswa ini telah lengkap dan valid? Pengajuan akan disetujui dan diteruskan ke tahap Admin Layanan (LAA).')) {
                 document.getElementById('formStatus').value = 'Approved';
                 return true;
             }

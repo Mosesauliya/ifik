@@ -7,18 +7,22 @@ document.addEventListener('DOMContentLoaded', function () {
     const totalSteps = 3;
     const userNim = window.CURRENT_USER_NIM ? window.CURRENT_USER_NIM.trim() : 'guest';
     const STEP_KEY = 'ifik_ta_active_step_' + userNim;
+    const DRAFT_KEY = 'ifik_ta_draft_' + userNim;
 
     let currentStep = 1;
 
-    // Direct navigation support from URL or localStorage
+    // Direct navigation support from URL, localStorage, or Database (Server Step)
     const urlParams = new URLSearchParams(window.location.search);
     const urlStep = parseInt(urlParams.get('step'));
     const savedStep = parseInt(localStorage.getItem(STEP_KEY));
+    const serverStep = parseInt(window.SERVER_DRAFT_STEP);
 
     if (urlStep && urlStep >= 1 && urlStep <= totalSteps) {
         currentStep = urlStep;
     } else if (savedStep && savedStep >= 1 && savedStep <= totalSteps) {
         currentStep = savedStep;
+    } else if (serverStep && serverStep >= 1 && serverStep <= totalSteps) {
+        currentStep = serverStep;
     }
 
     const btnNext = document.getElementById('btnNext');
@@ -386,6 +390,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (btnNext) {
         btnNext.addEventListener('click', function () {
             if (validateStep(currentStep)) {
+                saveDraft(true);
                 if (currentStep < totalSteps) {
                     currentStep++;
                     updateStepUI();
@@ -562,6 +567,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (files[0].type === 'application/pdf' || files[0].name.toLowerCase().endsWith('.pdf')) {
                     fileInput.files = files;
                     renderFileCard(files[0]);
+                    uploadDocFile(fileInput, files[0], zone);
                 } else {
                     showInPageAlert('⚠️ Hanya berkas berformat .PDF yang diperbolehkan!', 'error');
                 }
@@ -585,6 +591,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     return;
                 }
                 renderFileCard(fileInput.files[0]);
+                uploadDocFile(fileInput, fileInput.files[0], zone);
             }
         });
 
@@ -612,63 +619,205 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 zone.classList.remove('border-emerald-400', 'bg-emerald-50/20');
                 updateStepUI();
+                saveDraft(true);
             });
         }
     });
 
-    // --- DRAFT FORM PERSISTENCE ---
-    function saveDraft() {
+    // Background Auto-Upload berkas PDF langsung ke database server
+    function uploadDocFile(fileInput, file, zone) {
+        if (!file || !window.UPLOAD_AJAX_URL) return;
+
+        const oldFileInput = document.querySelector(`input[type="hidden"][name="${fileInput.name}_old"]`);
+        const fileSizeEl = zone.querySelector('.file-size');
+
+        if (fileSizeEl) {
+            fileSizeEl.innerHTML = '<span class="text-orange-600 font-semibold flex items-center gap-1.5"><i class="bi bi-arrow-repeat animate-spin text-orange-500"></i> Mengunggah berkas ke database...</span>';
+        }
+        setDbStatus('saving', 'Mengunggah berkas ke database...');
+
+        const fd = new FormData();
+        fd.append('nim', userNim);
+        fd.append('field_name', fileInput.name);
+        fd.append(fileInput.name, file);
+
+        fetch(window.UPLOAD_AJAX_URL, {
+            method: 'POST',
+            body: fd
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                if (oldFileInput) {
+                    oldFileInput.value = data.file_name;
+                }
+                if (fileSizeEl) {
+                    fileSizeEl.innerHTML = `<span class="text-emerald-600 font-semibold flex items-center gap-1.5"><i class="bi bi-check-circle-fill text-emerald-500"></i> ${data.file_size || ''} • Tersimpan di database</span>`;
+                }
+                setDbStatus('saved', 'Berkas berhasil disimpan di database');
+                showInPageAlert('✅ Berkas PDF berhasil diunggah & tersimpan aman di database!', 'success');
+                updateStepUI();
+            } else {
+                if (fileSizeEl) {
+                    fileSizeEl.innerHTML = `<span class="text-rose-600 font-semibold flex items-center gap-1.5"><i class="bi bi-exclamation-triangle-fill text-rose-500"></i> Gagal: ${data.message || 'Error'}</span>`;
+                }
+                setDbStatus('error', 'Gagal menyimpan berkas');
+                showInPageAlert(`⚠️ ${data.message || 'Gagal mengunggah berkas'}`, 'error');
+            }
+        })
+        .catch(err => {
+            console.error('File auto-upload error:', err);
+            if (fileSizeEl) {
+                fileSizeEl.innerHTML = '<span class="text-amber-600 font-semibold">Tersimpan sementara (akan diunggah saat submit)</span>';
+            }
+            setDbStatus('saved', 'Draft formulir aktif');
+        });
+    }
+
+    // Indikator Status Simpan Database di Header Formulir
+    function setDbStatus(state, message) {
+        const pill = document.getElementById('dbSaveStatus');
+        const icon = document.getElementById('dbSaveStatusIcon');
+        const text = document.getElementById('dbSaveStatusText');
+        if (!pill || !text) return;
+
+        if (state === 'saving') {
+            pill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/90 shadow-2xs transition-all duration-300';
+            if (icon) icon.className = 'bi bi-arrow-repeat animate-spin text-amber-500 text-sm';
+            text.textContent = message || 'Menyimpan ke database...';
+        } else if (state === 'saved') {
+            pill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/90 shadow-2xs transition-all duration-300';
+            if (icon) icon.className = 'bi bi-cloud-check-fill text-emerald-500 text-sm';
+            text.textContent = message || 'Draft tersimpan di database';
+        } else if (state === 'error') {
+            pill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200/90 shadow-2xs transition-all duration-300';
+            if (icon) icon.className = 'bi bi-exclamation-triangle-fill text-rose-500 text-sm';
+            text.textContent = message || 'Gagal menyimpan ke database';
+        }
+    }
+
+    // --- DRAFT FORM PERSISTENCE (LOCAL STORAGE + DATABASE AUTO-SAVE) ---
+    let draftDebounceTimer = null;
+
+    function saveDraft(syncToServer = true) {
         try {
+            const inputJenis = document.getElementById('inputJenisTA');
+            const inputJ1 = document.getElementById('inputJudul1');
+            const inputJ2 = document.getElementById('inputJudul2');
+            const inputJ3 = document.getElementById('inputJudul3');
+            const inputJEn = document.getElementById('inputJudulEn');
+
             const draft = {
-                jenis_ta: document.getElementById('inputJenisTA')?.value || '',
-                judul_1: document.getElementById('inputJudul1')?.value || '',
-                judul_2: document.getElementById('inputJudul2')?.value || '',
-                judul_3: document.getElementById('inputJudul3')?.value || '',
-                judul_en: document.getElementById('inputJudulEn')?.value || ''
+                jenis_ta: inputJenis ? inputJenis.value : '',
+                judul_1: inputJ1 ? inputJ1.value : '',
+                judul_2: inputJ2 ? inputJ2.value : '',
+                judul_3: inputJ3 ? inputJ3.value : '',
+                judul_en: inputJEn ? inputJEn.value : '',
+                draft_step: currentStep
             };
+
+            // 1. Simpan langsung ke memori lokal browser (localStorage)
             localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-        } catch (e) {}
+
+            // 2. Simpan otomatis langsung ke Database MySQL via AJAX
+            if (syncToServer && window.SAVE_DRAFT_AJAX_URL && (draft.jenis_ta || draft.judul_1)) {
+                clearTimeout(draftDebounceTimer);
+                setDbStatus('saving', 'Menyimpan perubahan ke database...');
+                draftDebounceTimer = setTimeout(() => {
+                    const fd = new FormData();
+                    fd.append('nim', userNim);
+                    fd.append('jenis_ta', draft.jenis_ta);
+                    fd.append('judul_1', draft.judul_1);
+                    fd.append('judul_2', draft.judul_2);
+                    fd.append('judul_3', draft.judul_3);
+                    fd.append('judul_en', draft.judul_en);
+                    fd.append('draft_step', currentStep);
+
+                    fetch(window.SAVE_DRAFT_AJAX_URL, {
+                        method: 'POST',
+                        body: fd
+                    })
+                    .then(res => res.json())
+                    .then(resData => {
+                        setDbStatus('saved', 'Draft tersimpan di database');
+                    })
+                    .catch(err => {
+                        console.warn('Auto-save draft warning:', err);
+                        setDbStatus('error', 'Gagal tersambung ke database');
+                    });
+                }, 400);
+            }
+        } catch (e) {
+            console.warn('saveDraft error:', e);
+        }
     }
 
     function loadDraft() {
         try {
+            const inputJenis = document.getElementById('inputJenisTA');
+            const inputJ1 = document.getElementById('inputJudul1');
+            const inputJ2 = document.getElementById('inputJudul2');
+            const inputJ3 = document.getElementById('inputJudul3');
+            const inputJEn = document.getElementById('inputJudulEn');
+
+            // 1. Sinkronkan UI dropdown & badge jika nilai sudah terisi dari Database PHP
+            function syncJenisUI(val) {
+                if (!val) return;
+                const opt = document.querySelector(`.dropdown-option[data-value="${val}"]`);
+                const labelText = opt ? (opt.querySelector('span')?.textContent || val) : val;
+                const triggerLabel = document.querySelector('#dropdownJenisTA .trigger-label');
+                if (triggerLabel) {
+                    triggerLabel.textContent = labelText;
+                    triggerLabel.className = 'trigger-label text-slate-900 font-semibold';
+                }
+                const previewJenisTA = document.getElementById('previewJenisTA');
+                const previewTextJenisTA = document.getElementById('previewTextJenisTA');
+                if (previewJenisTA && previewTextJenisTA) {
+                    previewTextJenisTA.textContent = labelText;
+                    previewJenisTA.classList.remove('hidden');
+                }
+            }
+
+            if (inputJenis && inputJenis.value) {
+                syncJenisUI(inputJenis.value);
+            }
+            if (inputJ2 && inputJ2.value) {
+                const c2 = document.getElementById('containerJudul2');
+                if (c2) c2.classList.remove('hidden');
+            }
+            if (inputJ3 && inputJ3.value) {
+                const c3 = document.getElementById('containerJudul3');
+                if (c3) c3.classList.remove('hidden');
+            }
+
+            // 2. Baca dari localStorage jika ada isian yang belum tersimpan di DB
             const draftStr = localStorage.getItem(DRAFT_KEY);
             if (!draftStr) return;
             const draft = JSON.parse(draftStr);
 
-            if (draft.jenis_ta) {
-                const inputJenis = document.getElementById('inputJenisTA');
-                if (inputJenis && !inputJenis.value) {
-                    inputJenis.value = draft.jenis_ta;
-                    const opt = document.querySelector(`.dropdown-option[data-value="${draft.jenis_ta}"]`);
-                    if (opt) opt.click();
-                }
+            if (draft.jenis_ta && inputJenis && !inputJenis.value) {
+                inputJenis.value = draft.jenis_ta;
+                syncJenisUI(draft.jenis_ta);
             }
-            if (draft.judul_1) {
-                const el = document.getElementById('inputJudul1');
-                if (el && !el.value) el.value = draft.judul_1;
+            if (draft.judul_1 && inputJ1 && !inputJ1.value) {
+                inputJ1.value = draft.judul_1;
             }
-            if (draft.judul_2) {
-                const el = document.getElementById('inputJudul2');
-                if (el && !el.value) {
-                    el.value = draft.judul_2;
-                    const c2 = document.getElementById('containerJudul2');
-                    if (c2) c2.classList.remove('hidden');
-                }
+            if (draft.judul_2 && inputJ2 && !inputJ2.value) {
+                inputJ2.value = draft.judul_2;
+                const c2 = document.getElementById('containerJudul2');
+                if (c2) c2.classList.remove('hidden');
             }
-            if (draft.judul_3) {
-                const el = document.getElementById('inputJudul3');
-                if (el && !el.value) {
-                    el.value = draft.judul_3;
-                    const c3 = document.getElementById('containerJudul3');
-                    if (c3) c3.classList.remove('hidden');
-                }
+            if (draft.judul_3 && inputJ3 && !inputJ3.value) {
+                inputJ3.value = draft.judul_3;
+                const c3 = document.getElementById('containerJudul3');
+                if (c3) c3.classList.remove('hidden');
             }
-            if (draft.judul_en) {
-                const el = document.getElementById('inputJudulEn');
-                if (el && !el.value) el.value = draft.judul_en;
+            if (draft.judul_en && inputJEn && !inputJEn.value) {
+                inputJEn.value = draft.judul_en;
             }
-        } catch (e) {}
+        } catch (e) {
+            console.warn('loadDraft error:', e);
+        }
     }
 
     // Form submission validation, double-submit protection & progress bar
@@ -932,5 +1081,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Initialize UI and load draft on load
     loadDraft();
+
+    // Auto-advance ke step terakhir yang terisi jika URL tidak spesifik menentukan parameter ?step=
+    if (!urlStep) {
+        const hasStep1Data = checkStepCompletionStatus(1);
+        if (hasStep1Data && currentStep < 2) {
+            currentStep = 2;
+        }
+        if (serverStep === 3 && checkStepCompletionStatus(2)) {
+            currentStep = 3;
+        }
+    }
+
     updateStepUI();
 });

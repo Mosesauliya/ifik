@@ -94,7 +94,34 @@ class DosenWali_model extends CI_Model {
         }
         $this->db->order_by('p.id', 'DESC');
         $query = $this->db->get();
-        return $query ? $query->result_array() : array();
+        $results = $query ? $query->result_array() : array();
+
+        if (!empty($results) && $this->db->table_exists('pendaftaran_berkas')) {
+            $nims = array_column($results, 'nim');
+            $this->db->where_in('nim', $nims);
+            $berkas_rows = $this->db->get('pendaftaran_berkas')->result_array();
+            $berkas_by_nim = [];
+            foreach ($berkas_rows as $br) {
+                $berkas_by_nim[$br['nim']][$br['kode_berkas']] = $br;
+            }
+            foreach ($results as &$row) {
+                $nim = $row['nim'];
+                $row['berkas_map'] = $berkas_by_nim[$nim] ?? [];
+                if (!empty($row['berkas_map'])) {
+                    foreach ($row['berkas_map'] as $kb => $bdata) {
+                        if (empty($row['file_' . $kb])) {
+                            $row['file_' . $kb] = $bdata['file_name'];
+                        }
+                        if (empty($row['status_file_' . $kb])) {
+                            $row['status_file_' . $kb] = ($bdata['status_verifikasi'] === 'Valid') ? 'Approved' : (($bdata['status_verifikasi'] === 'Invalid') ? 'Rejected' : 'Pending');
+                        }
+                    }
+                }
+            }
+            unset($row);
+        }
+
+        return $results;
     }
 
     // Get Detail Mahasiswa dan Pendaftaran TA (Real Data from MySQL)
@@ -160,12 +187,14 @@ class DosenWali_model extends CI_Model {
 
     // Log ketika Dosen Wali membuka/meninjau file PDF
     public function log_file_review($nim, $file_type) {
-        if (!$this->db->table_exists('pendaftaran_ta')) return false;
-
-        $valid_cols = array('ksm', 'transkrip', 'pernyataan', 'bebas_lab');
-        if (!in_array($file_type, $valid_cols)) return false;
+        if (!$this->db->table_exists('pendaftaran_ta') || empty($file_type)) return false;
 
         $col_name = 'review_file_' . $file_type;
+        $fields = $this->db->list_fields('pendaftaran_ta');
+        if (!in_array($col_name, $fields)) {
+            $this->db->query("ALTER TABLE `pendaftaran_ta` ADD COLUMN `{$col_name}` TINYINT(1) DEFAULT 0");
+        }
+
         $data = array(
             $col_name => 1,
             'updated_at' => date('Y-m-d H:i:s')
@@ -177,40 +206,75 @@ class DosenWali_model extends CI_Model {
 
     // Update status approval per-file (Approved / Rejected / Pending) oleh Dosen Wali
     public function update_file_approval($nim, $file_type, $status, $comment = '') {
-        if (!$this->db->table_exists('pendaftaran_ta')) return false;
+        if (!$this->db->table_exists('pendaftaran_ta') || empty($file_type)) return false;
 
-        $valid_cols = array('ksm', 'transkrip', 'pernyataan', 'bebas_lab');
-        if (!in_array($file_type, $valid_cols)) return false;
+        $col_status  = 'status_file_' . $file_type;
+        $col_review  = 'review_file_' . $file_type;
+        $col_catatan = 'catatan_file_' . $file_type;
 
-        $col_name = 'status_file_' . $file_type;
+        $fields = $this->db->list_fields('pendaftaran_ta');
+        if (!in_array($col_status, $fields)) {
+            $this->db->query("ALTER TABLE `pendaftaran_ta` ADD COLUMN `{$col_status}` VARCHAR(20) DEFAULT 'Pending'");
+        }
+        if (!in_array($col_review, $fields)) {
+            $this->db->query("ALTER TABLE `pendaftaran_ta` ADD COLUMN `{$col_review}` TINYINT(1) DEFAULT 0");
+        }
+        if (!in_array($col_catatan, $fields)) {
+            $this->db->query("ALTER TABLE `pendaftaran_ta` ADD COLUMN `{$col_catatan}` TEXT NULL");
+        }
+
         $data = array(
-            $col_name => $status,
+            $col_status  => $status,
+            $col_catatan => $comment,
             'updated_at' => date('Y-m-d H:i:s')
         );
 
         if ($status !== 'Pending') {
-            $data['review_file_' . $file_type] = 1;
+            $data[$col_review] = 1;
         }
-
-        // Selalu perbarui catatan berkas sesuai input dosen wali (hanya ke kolom catatan_file_*)
-        $data['catatan_file_' . $file_type] = $comment;
 
         $this->db->where('nim', $nim);
         $this->db->update('pendaftaran_ta', $data);
 
+        // Update juga pendaftaran_berkas jika ada
+        if ($this->db->table_exists('pendaftaran_berkas')) {
+            $ver = ($status === 'Approved') ? 'Valid' : (($status === 'Rejected') ? 'Invalid' : 'Pending');
+            $this->db->where('nim', $nim)->where('kode_berkas', $file_type)->update('pendaftaran_berkas', [
+                'status_verifikasi' => $ver,
+                'updated_at'        => date('Y-m-d H:i:s')
+            ]);
+        }
+
         // Auto-sinkronisasi status keseluruhan & tahap pendaftaran di DB
         $row = $this->db->get_where('pendaftaran_ta', array('nim' => $nim))->row_array();
         if ($row) {
-            $s_ksm = $row['status_file_ksm'] ?? 'Pending';
-            $s_trn = $row['status_file_transkrip'] ?? 'Pending';
-            $s_prn = $row['status_file_pernyataan'] ?? 'Pending';
-            $s_lab = $row['status_file_bebas_lab'] ?? 'Pending';
+            $active_syarat = [];
+            if ($this->db->table_exists('syarat_berkas_ta')) {
+                $active_syarat = $this->db->get_where('syarat_berkas_ta', ['is_active' => 1])->result_array();
+            }
+            if (empty($active_syarat)) {
+                $active_syarat = [
+                    ['kode_berkas' => 'ksm'],
+                    ['kode_berkas' => 'transkrip'],
+                    ['kode_berkas' => 'pernyataan'],
+                    ['kode_berkas' => 'bebas_lab']
+                ];
+            }
+
+            $all_approved = true;
+            $all_rejected = true;
+            foreach ($active_syarat as $asb) {
+                $k = $asb['kode_berkas'];
+                $s = $row['status_file_' . $k] ?? 'Pending';
+                if ($s !== 'Approved') $all_approved = false;
+                if ($s !== 'Rejected') $all_rejected = false;
+            }
 
             $overall_data = array('updated_at' => date('Y-m-d H:i:s'));
-            if ($s_ksm === 'Approved' && $s_trn === 'Approved' && $s_prn === 'Approved' && $s_lab === 'Approved') {
+            if ($all_approved) {
                 $overall_data['status_approval_wali'] = 'Approved';
                 $overall_data['current_stage'] = 'Admin Layanan';
-            } else if ($s_ksm === 'Rejected' && $s_trn === 'Rejected' && $s_prn === 'Rejected' && $s_lab === 'Rejected') {
+            } else if ($all_rejected) {
                 $overall_data['status_approval_wali'] = 'Rejected';
                 $overall_data['current_stage'] = 'Dosen Wali (Ditolak)';
             } else {
@@ -229,35 +293,58 @@ class DosenWali_model extends CI_Model {
     public function update_all_files_approval($nim, $status) {
         if (!$this->db->table_exists('pendaftaran_ta')) return false;
 
-        $data = array(
-            'status_file_ksm'        => $status,
-            'status_file_transkrip'  => $status,
-            'status_file_pernyataan' => $status,
-            'status_file_bebas_lab'   => $status,
-            'updated_at'             => date('Y-m-d H:i:s')
-        );
+        $active_syarat = [];
+        if ($this->db->table_exists('syarat_berkas_ta')) {
+            $active_syarat = $this->db->get_where('syarat_berkas_ta', ['is_active' => 1])->result_array();
+        }
+        if (empty($active_syarat)) {
+            $active_syarat = [
+                ['kode_berkas' => 'ksm'],
+                ['kode_berkas' => 'transkrip'],
+                ['kode_berkas' => 'pernyataan'],
+                ['kode_berkas' => 'bebas_lab']
+            ];
+        }
+
+        $fields = $this->db->list_fields('pendaftaran_ta');
+        $data = array('updated_at' => date('Y-m-d H:i:s'));
+
+        foreach ($active_syarat as $asb) {
+            $k = $asb['kode_berkas'];
+            $col_s = 'status_file_' . $k;
+            $col_r = 'review_file_' . $k;
+            if (in_array($col_s, $fields)) {
+                $data[$col_s] = $status;
+            }
+            if (in_array($col_r, $fields)) {
+                $data[$col_r] = 1;
+            }
+        }
 
         if ($status === 'Approved') {
             $data['status_approval_wali'] = 'Approved';
             $data['current_stage'] = 'Admin Layanan';
-            $data['review_file_ksm'] = 1;
-            $data['review_file_transkrip'] = 1;
-            $data['review_file_pernyataan'] = 1;
-            $data['review_file_bebas_lab'] = 1;
         } else if ($status === 'Rejected') {
             $data['status_approval_wali'] = 'Rejected';
             $data['current_stage'] = 'Dosen Wali (Revisi)';
-            $data['review_file_ksm'] = 1;
-            $data['review_file_transkrip'] = 1;
-            $data['review_file_pernyataan'] = 1;
-            $data['review_file_bebas_lab'] = 1;
         } else if ($status === 'Pending') {
             $data['status_approval_wali'] = 'Pending';
             $data['current_stage'] = 'Dosen Wali';
         }
 
         $this->db->where('nim', $nim);
-        return $this->db->update('pendaftaran_ta', $data);
+        $res = $this->db->update('pendaftaran_ta', $data);
+
+        // Sinkronisasi ke pendaftaran_berkas
+        if ($this->db->table_exists('pendaftaran_berkas')) {
+            $ver = ($status === 'Approved') ? 'Valid' : (($status === 'Rejected') ? 'Invalid' : 'Pending');
+            $this->db->where('nim', $nim)->update('pendaftaran_berkas', [
+                'status_verifikasi' => $ver,
+                'updated_at'        => date('Y-m-d H:i:s')
+            ]);
+        }
+
+        return $res;
     }
 
     // Approval / Reject Pendaftaran TA oleh Dosen Wali
@@ -271,24 +358,40 @@ class DosenWali_model extends CI_Model {
 
         // Jika disetujui, lanjut ke status berikutnya (Admin Layanan) dan hapus catatan revisi lama
         if ($status === 'Approved') {
-            $data['current_stage']          = 'Admin Layanan';
-            $data['status_file_ksm']        = 'Approved';
-            $data['status_file_transkrip']  = 'Approved';
-            $data['status_file_pernyataan'] = 'Approved';
-            $data['status_file_bebas_lab']  = 'Approved';
-            $data['status_judul']           = 'Approved';
-            $data['status_jenis_ta']        = 'Approved';
-            $data['catatan_wali']           = '';
-            $data['catatan_judul']          = '';
-            $data['catatan_jenis_ta']       = '';
-            $data['catatan_file_ksm']       = '';
-            $data['catatan_file_transkrip'] = '';
-            $data['catatan_file_pernyataan']= '';
-            $data['catatan_file_bebas_lab'] = '';
-            $data['review_file_ksm']        = 1;
-            $data['review_file_transkrip']  = 1;
-            $data['review_file_pernyataan'] = 1;
-            $data['review_file_bebas_lab']  = 1;
+            $data['current_stage']   = 'Admin Layanan';
+            $data['status_judul']    = 'Approved';
+            $data['status_jenis_ta'] = 'Approved';
+            $data['catatan_wali']    = '';
+            $data['catatan_judul']   = '';
+            $data['catatan_jenis_ta']= '';
+
+            $active_syarat = [];
+            if ($this->db->table_exists('syarat_berkas_ta')) {
+                $active_syarat = $this->db->get_where('syarat_berkas_ta', ['is_active' => 1])->result_array();
+            }
+            if (empty($active_syarat)) {
+                $active_syarat = [
+                    ['kode_berkas' => 'ksm'],
+                    ['kode_berkas' => 'transkrip'],
+                    ['kode_berkas' => 'pernyataan'],
+                    ['kode_berkas' => 'bebas_lab']
+                ];
+            }
+
+            $fields = $this->db->list_fields('pendaftaran_ta');
+            foreach ($active_syarat as $asb) {
+                $k = $asb['kode_berkas'];
+                if (in_array('status_file_' . $k, $fields)) $data['status_file_' . $k] = 'Approved';
+                if (in_array('review_file_' . $k, $fields)) $data['review_file_' . $k] = 1;
+                if (in_array('catatan_file_' . $k, $fields)) $data['catatan_file_' . $k] = '';
+            }
+
+            if ($this->db->table_exists('pendaftaran_berkas')) {
+                $this->db->where('nim', $nim)->update('pendaftaran_berkas', [
+                    'status_verifikasi' => 'Valid',
+                    'updated_at'        => date('Y-m-d H:i:s')
+                ]);
+            }
         } else if ($status === 'Rejected') {
             $data['current_stage'] = 'Dosen Wali (Revisi)';
         }
@@ -331,7 +434,33 @@ class DosenWali_model extends CI_Model {
         $this->db->order_by('p.id', 'DESC');
 
         $query = $this->db->get();
-        return $query ? $query->result_array() : array();
+        $results = $query ? $query->result_array() : array();
+
+        if (!empty($results) && $this->db->table_exists('pendaftaran_berkas')) {
+            $this->db->where_in('nim', $nims);
+            $berkas_rows = $this->db->get('pendaftaran_berkas')->result_array();
+            $berkas_by_nim = [];
+            foreach ($berkas_rows as $br) {
+                $berkas_by_nim[$br['nim']][$br['kode_berkas']] = $br;
+            }
+            foreach ($results as &$row) {
+                $nim = $row['nim'];
+                $row['berkas_map'] = $berkas_by_nim[$nim] ?? [];
+                if (!empty($row['berkas_map'])) {
+                    foreach ($row['berkas_map'] as $kb => $bdata) {
+                        if (empty($row['file_' . $kb])) {
+                            $row['file_' . $kb] = $bdata['file_name'];
+                        }
+                        if (empty($row['status_file_' . $kb])) {
+                            $row['status_file_' . $kb] = ($bdata['status_verifikasi'] === 'Valid') ? 'Approved' : (($bdata['status_verifikasi'] === 'Invalid') ? 'Rejected' : 'Pending');
+                        }
+                    }
+                }
+            }
+            unset($row);
+        }
+
+        return $results;
     }
 
     // Update status approval Jenis TA oleh Dosen Wali
@@ -354,34 +483,47 @@ class DosenWali_model extends CI_Model {
             return 0;
         }
 
+        $active_syarat = [];
+        if ($this->db->table_exists('syarat_berkas_ta')) {
+            $active_syarat = $this->db->get_where('syarat_berkas_ta', ['is_active' => 1])->result_array();
+        }
+        if (empty($active_syarat)) {
+            $file_keys = array('ksm', 'transkrip', 'pernyataan', 'bebas_lab');
+        } else {
+            $file_keys = array_column($active_syarat, 'kode_berkas');
+        }
+
+        $fields = $this->db->list_fields('pendaftaran_ta');
         $data = array(
-            'status_approval_wali'    => 'Approved',
-            'status_jenis_ta'        => 'Approved',
-            'status_judul'           => 'Approved',
-            'status_file_ksm'        => 'Approved',
-            'status_file_transkrip'  => 'Approved',
-            'status_file_pernyataan' => 'Approved',
-            'status_file_bebas_lab'   => 'Approved',
-            'catatan_wali'           => '',
-            'catatan_judul'          => '',
-            'catatan_jenis_ta'       => '',
-            'catatan_file_ksm'       => '',
-            'catatan_file_transkrip' => '',
-            'catatan_file_pernyataan'=> '',
-            'catatan_file_bebas_lab' => '',
-            'review_file_ksm'        => 1,
-            'review_file_transkrip'  => 1,
-            'review_file_pernyataan' => 1,
-            'review_file_bebas_lab'   => 1,
-            'current_stage'          => 'Admin Layanan',
-            'updated_at'             => date('Y-m-d H:i:s')
+            'status_approval_wali' => 'Approved',
+            'status_jenis_ta'      => 'Approved',
+            'status_judul'         => 'Approved',
+            'catatan_wali'         => '',
+            'catatan_judul'        => '',
+            'catatan_jenis_ta'     => '',
+            'current_stage'        => 'Admin Layanan',
+            'updated_at'           => date('Y-m-d H:i:s')
         );
+
+        foreach ($file_keys as $fk) {
+            if (in_array('status_file_' . $fk, $fields)) $data['status_file_' . $fk] = 'Approved';
+            if (in_array('review_file_' . $fk, $fields)) $data['review_file_' . $fk] = 1;
+            if (in_array('catatan_file_' . $fk, $fields)) $data['catatan_file_' . $fk] = '';
+        }
 
         $this->db->where_in('nim', $nims);
         if ($this->db->field_exists('is_submitted', 'pendaftaran_ta')) {
             $this->db->where('is_submitted', 1);
         }
         $this->db->update('pendaftaran_ta', $data);
+
+        // Update juga ke pendaftaran_berkas
+        if ($this->db->table_exists('pendaftaran_berkas')) {
+            $this->db->where_in('nim', $nims)->update('pendaftaran_berkas', [
+                'status_verifikasi' => 'Valid',
+                'updated_at'        => date('Y-m-d H:i:s')
+            ]);
+        }
 
         return $this->db->affected_rows();
     }
@@ -392,6 +534,17 @@ class DosenWali_model extends CI_Model {
             return array('approved' => 0, 'rejected' => 0);
         }
 
+        $active_syarat = [];
+        if ($this->db->table_exists('syarat_berkas_ta')) {
+            $active_syarat = $this->db->get_where('syarat_berkas_ta', ['is_active' => 1])->result_array();
+        }
+        if (empty($active_syarat)) {
+            $file_keys = array('ksm', 'transkrip', 'pernyataan', 'bebas_lab');
+        } else {
+            $file_keys = array_column($active_syarat, 'kode_berkas');
+        }
+
+        $fields = $this->db->list_fields('pendaftaran_ta');
         $appCount = 0;
         $rejCount = 0;
 
@@ -414,15 +567,22 @@ class DosenWali_model extends CI_Model {
             $updateData['status_judul'] = (isset($d['status_judul']) && $d['status_judul'] === 'Rejected') ? 'Rejected' : 'Approved';
             $updateData['catatan_judul'] = ($updateData['status_judul'] === 'Rejected') ? ($d['catatan_judul'] ?? '') : '';
 
-            // 3. Section 4 Berkas Dokumen Persyaratan
-            $file_keys = array('ksm', 'transkrip', 'pernyataan', 'bebas_lab');
+            // 3. Section Berkas Dokumen Persyaratan Dinamis
             $hasAnyFileReject = false;
 
             foreach ($file_keys as $fk) {
                 $fStatus = (isset($d['status_file_' . $fk]) && $d['status_file_' . $fk] === 'Rejected') ? 'Rejected' : 'Approved';
-                $updateData['status_file_' . $fk] = $fStatus;
-                $updateData['catatan_file_' . $fk] = ($fStatus === 'Rejected') ? ($d['catatan_file_' . $fk] ?? '') : '';
-                $updateData['review_file_' . $fk]  = 1;
+                if (in_array('status_file_' . $fk, $fields)) $updateData['status_file_' . $fk] = $fStatus;
+                if (in_array('catatan_file_' . $fk, $fields)) $updateData['catatan_file_' . $fk] = ($fStatus === 'Rejected') ? ($d['catatan_file_' . $fk] ?? '') : '';
+                if (in_array('review_file_' . $fk, $fields)) $updateData['review_file_' . $fk]  = 1;
+
+                if ($this->db->table_exists('pendaftaran_berkas')) {
+                    $ver = ($fStatus === 'Approved') ? 'Valid' : 'Invalid';
+                    $this->db->where('nim', $nim)->where('kode_berkas', $fk)->update('pendaftaran_berkas', [
+                        'status_verifikasi' => $ver,
+                        'updated_at'        => date('Y-m-d H:i:s')
+                    ]);
+                }
 
                 if ($fStatus === 'Rejected') {
                     $hasAnyFileReject = true;
@@ -441,10 +601,9 @@ class DosenWali_model extends CI_Model {
                 $updateData['catatan_wali'] = '';
                 $updateData['catatan_judul'] = '';
                 $updateData['catatan_jenis_ta'] = '';
-                $updateData['catatan_file_ksm'] = '';
-                $updateData['catatan_file_transkrip'] = '';
-                $updateData['catatan_file_pernyataan'] = '';
-                $updateData['catatan_file_bebas_lab'] = '';
+                foreach ($file_keys as $fk) {
+                    if (in_array('catatan_file_' . $fk, $fields)) $updateData['catatan_file_' . $fk] = '';
+                }
                 $appCount++;
             }
 
