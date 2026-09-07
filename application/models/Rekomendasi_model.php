@@ -348,6 +348,12 @@ class Rekomendasi_model extends CI_Model {
             ];
 
             if ($existing) {
+                // Preserve existing assignments
+                if (!empty($existing['pembimbing_1'])) unset($ta_data['pembimbing_1']);
+                if (!empty($existing['pembimbing_2'])) unset($ta_data['pembimbing_2']);
+                if (!empty($existing['penguji_1'])) unset($ta_data['penguji_1']);
+                if (!empty($existing['penguji_2'])) unset($ta_data['penguji_2']);
+                
                 $this->db->where('nim', $nim)->update('pendaftaran_ta', $ta_data);
             } else {
                 $this->db->insert('pendaftaran_ta', $ta_data);

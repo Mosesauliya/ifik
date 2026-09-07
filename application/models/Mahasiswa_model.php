@@ -113,22 +113,25 @@ class Mahasiswa_model extends CI_Model {
 
     // Reset atau Hapus Pendaftaran TA
     public function reset_pendaftaran_ta($nim) {
-        if (!$this->db->table_exists('pendaftaran_ta')) return true;
-
         $upload_path = FCPATH . 'uploads/persyaratan_ta/';
 
-        // 1. Bersihkan berkas fisik legacy dari pendaftaran_ta
-        $existing = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
-        if ($existing) {
-            $files_to_delete = ['file_ksm', 'file_transkrip', 'file_pernyataan', 'file_bebas_lab'];
-            foreach ($files_to_delete as $field) {
-                if (!empty($existing[$field])) {
-                    $filepath = $upload_path . $existing[$field];
-                    if (file_exists($filepath) && is_file($filepath)) {
-                        @unlink($filepath);
+        // 1. Bersihkan berkas fisik legacy dari pendaftaran_ta & hapus record
+        if ($this->db->table_exists('pendaftaran_ta')) {
+            $existing = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
+            if ($existing) {
+                $files_to_delete = ['file_ksm', 'file_transkrip', 'file_pernyataan', 'file_bebas_lab'];
+                foreach ($files_to_delete as $field) {
+                    if (!empty($existing[$field])) {
+                        $filepath = $upload_path . $existing[$field];
+                        if (file_exists($filepath) && is_file($filepath)) {
+                            @unlink($filepath);
+                        }
                     }
                 }
             }
+
+            $this->db->where('nim', $nim);
+            $this->db->delete('pendaftaran_ta');
         }
 
         // 2. Bersihkan berkas fisik dan record dari pendaftaran_berkas
@@ -143,13 +146,12 @@ class Mahasiswa_model extends CI_Model {
                         }
                     }
                 }
-                $this->db->where('nim', $nim)->delete('pendaftaran_berkas');
             }
+            $this->db->where('nim', $nim);
+            $this->db->delete('pendaftaran_berkas');
         }
 
-        // 3. Hapus baris pendaftaran_ta
-        $this->db->where('nim', $nim);
-        return $this->db->delete('pendaftaran_ta');
+        return true;
     }
 
     // Ambil riwayat upload berkas preview TA

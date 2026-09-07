@@ -477,6 +477,36 @@ class Mahasiswa extends CI_Controller {
             if ($file_step5) $data_ta['status_pernyataan'] = 'Pending';
             if ($file_step6) $data_ta['status_bebas_lab'] = 'Pending';
 
+            // Sync status_verifikasi di pendaftaran_berkas menjadi Pending jika berkas baru diunggah
+            $file_updates = array(
+                'ksm'        => $file_step3,
+                'transkrip'  => $file_step4,
+                'pernyataan' => $file_step5,
+                'bebas_lab'  => $file_step6
+            );
+            if ($this->db->table_exists('pendaftaran_berkas')) {
+                foreach ($file_updates as $f_code => $f_name) {
+                    if (!empty($f_name)) {
+                        $ex_b = $this->db->get_where('pendaftaran_berkas', ['nim' => $nim, 'kode_berkas' => $f_code])->row_array();
+                        if ($ex_b) {
+                            $this->db->where('id', $ex_b['id'])->update('pendaftaran_berkas', [
+                                'file_name'         => $f_name,
+                                'status_verifikasi' => 'Pending',
+                                'updated_at'        => date('Y-m-d H:i:s')
+                            ]);
+                        } else {
+                            $this->db->insert('pendaftaran_berkas', [
+                                'nim'               => $nim,
+                                'kode_berkas'       => $f_code,
+                                'file_name'         => $f_name,
+                                'status_verifikasi' => 'Pending',
+                                'created_at'        => date('Y-m-d H:i:s')
+                            ]);
+                        }
+                    }
+                }
+            }
+
             // Jika siswa mengunggah file baru saat LAA revisi, reset berkas_kurang setelah perbaikan
             if ($a_status === 'Pending' && !empty($existing_ta['berkas_kurang'])) {
                 $data_ta['berkas_kurang'] = NULL;
@@ -605,7 +635,6 @@ class Mahasiswa extends CI_Controller {
 
         $nim = $this->_get_current_nim();
         $this->load->model('Rekomendasi_model');
-        $this->Rekomendasi_model->seed_dummy_bimbingan_data($nim ?: '1301210001');
 
         $data['title'] = 'Bimbingan & Evaluasi Preview TA';
         $data['mahasiswa'] = $this->Mahasiswa_model->get_mahasiswa($nim);
@@ -872,6 +901,27 @@ class Mahasiswa extends CI_Controller {
                 $this->AdminLayanan_model->save_student_berkas($nim, $kode_berkas, $file_name, 'Pending');
             }
 
+            // Sync ke pendaftaran_berkas agar status verifikasi Admin LAA di-reset ke Pending untuk berkas baru ini
+            $kode_berkas = str_replace('file_', '', $field_name);
+            if ($this->db->table_exists('pendaftaran_berkas')) {
+                $existing_berkas = $this->db->get_where('pendaftaran_berkas', ['nim' => $nim, 'kode_berkas' => $kode_berkas])->row_array();
+                if ($existing_berkas) {
+                    $this->db->where('id', $existing_berkas['id'])->update('pendaftaran_berkas', [
+                        'file_name'         => $file_name,
+                        'status_verifikasi' => 'Pending',
+                        'updated_at'        => date('Y-m-d H:i:s')
+                    ]);
+                } else {
+                    $this->db->insert('pendaftaran_berkas', [
+                        'nim'               => $nim,
+                        'kode_berkas'       => $kode_berkas,
+                        'file_name'         => $file_name,
+                        'status_verifikasi' => 'Pending',
+                        'created_at'        => date('Y-m-d H:i:s')
+                    ]);
+                }
+            }
+
             $this->output
                 ->set_content_type('application/json')
                 ->set_output(json_encode([
@@ -1035,6 +1085,13 @@ class Mahasiswa extends CI_Controller {
                 }
 
                 $rekomen = $this->Rekomendasi_model->get_latest_submission($student['nim']);
+                
+                if ($latest && !empty($latest['file_draft'])) {
+                    $filePath = FCPATH . 'uploads/preview_ta/' . $latest['file_draft'];
+                    if (!file_exists($filePath)) {
+                        $latest['file_missing'] = true;
+                    }
+                }
                 
                 $data[] = [
                     'nim' => $student['nim'],

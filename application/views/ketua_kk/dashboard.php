@@ -617,10 +617,16 @@
             <input type="text" name="catatan_kk_bulk" placeholder="Catatan rekomendasi massal (opsional)..." 
                    class="bg-slate-800 text-white text-xs px-3 py-1.5 rounded-xl border border-slate-700 focus:outline-none focus:border-brand-500 placeholder-slate-500 w-64">
 
-            <button type="submit" onclick="return confirm('Yakin ingin menyetujui topik TA semua mahasiswa terpilih sekaligus & membuka akses modul bimbingan mereka?');" 
-                    class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white rounded-xl text-xs font-extrabold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
-                <i class="fa-solid fa-unlock-keyhole"></i> Setujui &amp; Unlock Terpilih
-            </button>
+            <div class="flex items-center gap-2">
+                <button type="submit" name="bulk_action" value="Approved" onclick="return confirm('Yakin ingin menyetujui topik TA semua mahasiswa terpilih sekaligus & membuka akses modul bimbingan mereka?');" 
+                        class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white rounded-xl text-xs font-extrabold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-unlock-keyhole"></i> Setujui &amp; Unlock Terpilih
+                </button>
+                <button type="submit" name="bulk_action" value="Rejected" onclick="return confirm('Yakin ingin meminta revisi/penolakan untuk mahasiswa terpilih sekaligus?');" 
+                        class="px-4 py-2 bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white rounded-xl text-xs font-extrabold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-circle-xmark"></i> Minta Revisi Terpilih
+                </button>
+            </div>
         </div>
     </form>
 
@@ -931,6 +937,8 @@
             refreshKKTable();
         }
 
+        window.selectedKKNims = window.selectedKKNims || new Set();
+
         function rebindKKCheckboxes() {
             const selectAllKK = document.getElementById('selectAllKK');
             const kkCheckboxes = document.querySelectorAll('.kk-checkbox');
@@ -938,10 +946,10 @@
             const selectedCount = document.getElementById('selectedCount');
 
             function updateBulkToolbar() {
-                const checkedCount = document.querySelectorAll('.kk-checkbox:checked').length;
-                if (selectedCount) selectedCount.innerText = checkedCount;
+                const count = window.selectedKKNims ? window.selectedKKNims.size : 0;
+                if (selectedCount) selectedCount.innerText = count;
                 if (bulkToolbar) {
-                    if (checkedCount > 0) {
+                    if (count > 0) {
                         bulkToolbar.classList.remove('hidden');
                     } else {
                         bulkToolbar.classList.add('hidden');
@@ -949,29 +957,50 @@
                 }
             }
 
+            kkCheckboxes.forEach(cb => {
+                if (window.selectedKKNims.has(cb.value)) {
+                    cb.checked = true;
+                }
+                cb.onchange = function() {
+                    if (this.checked) {
+                        window.selectedKKNims.add(this.value);
+                    } else {
+                        window.selectedKKNims.delete(this.value);
+                    }
+                    updateBulkToolbar();
+                    if (selectAllKK) {
+                        const enabledCbs = Array.from(kkCheckboxes).filter(c => !c.disabled);
+                        const checkedCount = enabledCbs.filter(c => c.checked).length;
+                        selectAllKK.checked = (enabledCbs.length > 0 && checkedCount === enabledCbs.length);
+                    }
+                };
+            });
+
             if (selectAllKK) {
-                selectAllKK.checked = false;
+                const enabledCbs = Array.from(kkCheckboxes).filter(c => !c.disabled);
+                const checkedCount = enabledCbs.filter(c => c.checked).length;
+                selectAllKK.checked = (enabledCbs.length > 0 && checkedCount === enabledCbs.length);
+
                 selectAllKK.onchange = function() {
-                    kkCheckboxes.forEach(cb => {
-                        if (!cb.disabled) cb.checked = this.checked;
+                    enabledCbs.forEach(cb => {
+                        cb.checked = this.checked;
+                        if (this.checked) {
+                            window.selectedKKNims.add(cb.value);
+                        } else {
+                            window.selectedKKNims.delete(cb.value);
+                        }
                     });
                     updateBulkToolbar();
                 };
             }
 
-            kkCheckboxes.forEach(cb => {
-                cb.onchange = function() {
-                    updateBulkToolbar();
-                    if (!this.checked && selectAllKK) {
-                        selectAllKK.checked = false;
-                    }
-                };
-            });
-
             updateBulkToolbar();
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            // Initial binding for checkboxes on page load
+            rebindKKCheckboxes();
+
             const inputSearch = document.getElementById('inputSearchKK');
             const btnClear = document.getElementById('btnClearSearchKK');
             const formSearchKK = document.getElementById('formSearchKK');
@@ -1001,13 +1030,26 @@
             // 3. Form Bulk Approval Submit Handler via AJAX
             const formBulk = document.getElementById('formBulkApproval');
             if (formBulk) {
+                let clickedBulkAction = 'Approved';
+                formBulk.querySelectorAll('button[type="submit"]').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        clickedBulkAction = this.value || 'Approved';
+                    });
+                });
+
                 formBulk.addEventListener('submit', function(e) {
                     e.preventDefault();
                     
-                    const checkedCbs = document.querySelectorAll('.kk-checkbox:checked');
-                    if (checkedCbs.length === 0) return;
+                    const selectedNims = Array.from(window.selectedKKNims || []);
+                    if (selectedNims.length === 0) return;
 
                     const formData = new FormData(formBulk);
+                    formData.delete('nim_list[]');
+                    selectedNims.forEach(nim => {
+                        formData.append('nim_list[]', nim);
+                    });
+                    formData.append('bulk_action', clickedBulkAction);
+
                     fetch(formBulk.action, {
                         method: 'POST',
                         body: formData,
@@ -1015,6 +1057,8 @@
                     })
                     .then(res => res.json())
                     .then(res => {
+                        if (window.selectedKKNims) window.selectedKKNims.clear();
+
                         const bulkToolbar = document.getElementById('bulkToolbar');
                         if (bulkToolbar) bulkToolbar.classList.add('hidden');
                         
@@ -1022,7 +1066,7 @@
                         if (selectAllKK) selectAllKK.checked = false;
 
                         refreshKKTable();
-                        showKKToast(res.message || 'Persetujuan massal Ketua KK berhasil!');
+                        showKKToast(res.message || 'Proses verifikasi massal Ketua KK berhasil!');
                     })
                     .catch(err => {
                         console.error('Bulk approval error:', err);
