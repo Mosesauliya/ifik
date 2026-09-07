@@ -56,17 +56,35 @@
     }
     .read-more-modal.active { opacity: 1; pointer-events: auto; }
     .read-more-modal-content {
-        background: rgba(255, 255, 255, 0.95);
+        background: rgba(255, 255, 255, 0.97);
         border: 1px solid rgba(234, 88, 12, 0.3);
-        padding: 40px; border-radius: 20px;
-        max-width: 650px; width: 90%; max-height: 80vh; overflow-y: auto;
+        border-radius: 20px;
+        max-width: 650px; width: 90%; max-height: 82vh;
+        overflow: hidden;
+        display: flex; flex-direction: column;
         box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative;
         transform: translateY(20px); transition: transform 0.3s ease;
         font-family: 'Inter', sans-serif;
     }
     .read-more-modal.active .read-more-modal-content { transform: translateY(0); }
+    .read-more-modal-header {
+        padding: 28px 40px 16px 40px;
+        flex-shrink: 0;
+        position: relative;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .read-more-modal-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px 40px 32px 40px;
+        scrollbar-width: thin;
+        scrollbar-color: #ea580c #f1f5f9;
+    }
+    .read-more-modal-body::-webkit-scrollbar { width: 5px; }
+    .read-more-modal-body::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 3px; }
+    .read-more-modal-body::-webkit-scrollbar-thumb { background: #ea580c; border-radius: 3px; }
     .read-more-close {
-        position: absolute; top: 20px; right: 20px;
+        position: absolute; top: 16px; right: 20px;
         width: 36px; height: 36px; border-radius: 50%;
         background: #f1f5f9; border: none; cursor: pointer;
         display: flex; align-items: center; justify-content: center;
@@ -74,17 +92,15 @@
     }
     .read-more-close:hover { background: #e2e8f0; }
     .read-more-close svg { width: 20px; height: 20px; stroke: #475569; stroke-width: 2; fill: none; }
-    #readMoreTitle { font-size: 1.6rem; font-weight: 800; color: #1e293b; margin-bottom: 20px; line-height: 1.3; }
+    #readMoreTitle { font-size: 1.6rem; font-weight: 800; color: #1e293b; margin: 0; line-height: 1.3; padding-right: 40px; }
 
-    /* [FIX #1] Scrollable description area inside the modal, independent of the close button */
+    /* Scrollable description area inside the modal */
     #readMoreDesc {
         font-size: 1.05rem;
         color: #334155;
-        line-height: 1.7;
+        line-height: 1.8;
         text-align: justify;
-        max-height: 60vh;
-        overflow-y: auto;
-        padding-right: 6px;
+        white-space: pre-line;
     }
 
     .multi-bg-fade { transition: background-image 1s ease-in-out; }
@@ -714,7 +730,8 @@
                         <h1 class="slide1-card-title"><?= htmlspecialchars($header_settings->title ?? 'Fakultas Industri Kreatif') ?></h1>
                         <div class="slide1-card-desc">
                             <?php
-                                $full_desc = $header_settings->description ?? 'Seiring dengan berkembangnya kebutuhan pelayanan untuk mahasiswa, dosen dan pegawai FIK maka diperlukan peningkatan layanan yang mengusung efisiensi dan efektifitas. Ifik lahir dari keresahan dan kesulitan mahasiswa maupun dosen dalam beberapa layanan, antara lain pendaftaran TA, bimbingan online, dokumen online, peminjaman ruangan dan lain sebagainya. Sejak dibuat tahun 2021 oleh tim unit lab FIK, aplikasi berbasis web ini telah digunakan hingga saat ini untuk mempermudah layanan untuk kalangan internal FIK, baik untuk mahasiswa, dosen maupun pegawai FIK.';
+                                $default_desc = 'Seiring dengan berkembangnya kebutuhan pelayanan untuk mahasiswa, dosen dan pegawai FIK maka diperlukan peningkatan layanan yang mengusung efisiensi dan efektifitas. Ifik lahir dari keresahan dan kesulitan mahasiswa maupun dosen dalam beberapa layanan, antara lain pendaftaran TA, bimbingan online, dokumen online, peminjaman ruangan dan lain sebagainya. Sejak dibuat tahun 2021 oleh tim unit lab FIK, aplikasi berbasis web ini telah digunakan hingga saat ini untuk mempermudah layanan untuk kalangan internal FIK, baik untuk mahasiswa, dosen maupun pegawai FIK.';
+                                $full_desc = (!empty($header_settings->description)) ? $header_settings->description : $default_desc;
                                 $plain_desc = strip_tags($full_desc);
                                 $char_limit = 280;
                                 if (mb_strlen($plain_desc) > $char_limit) {
@@ -726,11 +743,14 @@
                                 }
                             ?>
                             <?php
-                                $modalTitle1 = htmlspecialchars($header_settings->title ?? 'Fakultas Industri Kreatif', ENT_QUOTES);
-                                $modalDesc1 = htmlspecialchars(json_encode($header_settings->description ?? ''), ENT_QUOTES);
+                                $modalTitle1 = (!empty($header_settings->title)) ? $header_settings->title : 'Fakultas Industri Kreatif';
+                                $modalDesc1 = $full_desc; // pakai $full_desc yang sudah ada fallback
                             ?>
                             <div class="read-more-container">
-                                <button class="read-more-btn" onclick='openReadMoreModal("<?= $modalTitle1 ?>", <?= $modalDesc1 ?>)'>
+                                <button class="read-more-btn"
+                                    data-modal-title="<?= htmlspecialchars($modalTitle1, ENT_QUOTES) ?>"
+                                    data-modal-desc="<?= htmlspecialchars($modalDesc1, ENT_QUOTES) ?>"
+                                    onclick="openReadMoreModal(this)">
                                     Baca Selengkapnya
                                     <svg fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                                 </button>
@@ -802,11 +822,10 @@
                                     ?>
                                     <?php if (mb_strlen($def_plain) > 280): ?>
                                     <div class="read-more-container">
-                                        <?php
-                                            $modalTitle = htmlspecialchars($used_title, ENT_QUOTES);
-                                            $modalDesc = htmlspecialchars(json_encode($used_desc), ENT_QUOTES);
-                                        ?>
-                                        <button class="read-more-btn" onclick='openReadMoreModal("<?= $modalTitle ?>", <?= $modalDesc ?>)'>
+                                        <button class="read-more-btn"
+                                            data-modal-title="<?= htmlspecialchars($used_title, ENT_QUOTES) ?>"
+                                            data-modal-desc="<?= htmlspecialchars($used_desc, ENT_QUOTES) ?>"
+                                            onclick="openReadMoreModal(this)">
                                             Baca Selengkapnya
                                             <svg fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                                         </button>
@@ -1198,24 +1217,45 @@
 <!-- [FIX #1] Modal Baca Selengkapnya — SATU-SATUNYA instance, dipindah ke luar #section-carousel,
      ID duplikat pada versi sebelumnya (dua elemen #readMoreModal) dihapus karena itulah
      penyebab tombol "Baca Selengkapnya" terasa tidak berfungsi. -->
-<div class="read-more-modal" id="readMoreModal">
+<div class="read-more-modal" id="readMoreModal" onclick="closeReadMoreModalOnBackdrop(event)">
     <div class="read-more-modal-content">
-        <button class="read-more-close" onclick="closeReadMoreModal()">
-            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-        </button>
-        <h2 id="readMoreTitle"></h2>
-        <div id="readMoreDesc"></div>
+        <div class="read-more-modal-header">
+            <button class="read-more-close" onclick="closeReadMoreModal()" title="Tutup">
+                <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+            <h2 id="readMoreTitle"></h2>
+        </div>
+        <div class="read-more-modal-body">
+            <div id="readMoreDesc"></div>
+        </div>
     </div>
 </div>
 
 <script>
-    function openReadMoreModal(title, descHtml) {
-        document.getElementById('readMoreTitle').innerText = title;
-        document.getElementById('readMoreDesc').innerHTML = descHtml;
+    function openReadMoreModal(btnEl) {
+        const title = btnEl.getAttribute('data-modal-title') || '';
+        const desc  = btnEl.getAttribute('data-modal-desc')  || '';
+        document.getElementById('readMoreTitle').textContent = title;
+        document.getElementById('readMoreDesc').textContent  = desc;
+        // Reset scroll setiap buka modal
+        const body = document.querySelector('.read-more-modal-body');
+        if (body) body.scrollTop = 0;
         document.getElementById('readMoreModal').classList.add('active');
     }
-    
+
     function closeReadMoreModal() {
         document.getElementById('readMoreModal').classList.remove('active');
     }
+
+    function closeReadMoreModalOnBackdrop(e) {
+        // Tutup hanya jika klik tepat di overlay, bukan di konten modal
+        if (e.target === document.getElementById('readMoreModal')) {
+            closeReadMoreModal();
+        }
+    }
+
+    // Tutup dengan tombol Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeReadMoreModal();
+    });
 </script>

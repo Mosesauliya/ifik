@@ -31,6 +31,32 @@
         .unified-search-pill:focus-within {
             border-color: #ea580c !important; background: #ffffff !important; box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12) !important;
         }
+        .unified-divider { width: 1.5px; height: 20px; background-color: #cbd5e1; margin: 0 10px; flex-shrink: 0; }
+        .search-cat-btn {
+            display: flex; align-items: center; gap: 5px; background: transparent; border: none;
+            font-size: 0.75rem; font-weight: 700; color: #1e293b; cursor: pointer; padding: 4px 2px;
+            white-space: nowrap; flex-shrink: 0;
+        }
+        .search-cat-btn:hover { color: #ea580c; }
+        .search-cat-menu {
+            position: absolute; top: calc(100% + 8px); left: 0; width: 220px;
+            background: #fff; border: 1.5px solid #e2e8f0; border-radius: 14px;
+            box-shadow: 0 16px 40px -8px rgba(15,23,42,0.16); z-index: 200;
+            padding: 6px; display: none;
+        }
+        .search-cat-menu.open { display: block; }
+        .search-cat-item {
+            padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 0.75rem;
+            font-weight: 600; color: #475569; display: flex; align-items: center; gap: 8px;
+        }
+        .search-cat-item:hover, .search-cat-item.active { background: #fff7ed; color: #ea580c; font-weight: 700; }
+        .btn-search-cari {
+            padding: 6px 16px; background: linear-gradient(135deg, #ea580c, #f97316);
+            color: #fff; font-size: 0.75rem; font-weight: 700; border: none; border-radius: 12px;
+            cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;
+            flex-shrink: 0; height: 36px; box-shadow: 0 2px 8px rgba(234,88,12,0.25);
+        }
+        .btn-search-cari:hover { transform: scale(1.03); box-shadow: 0 4px 14px rgba(234,88,12,0.4); }
 
         /* Rotating Border Table */
         @keyframes spinRotatingBorder { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -203,11 +229,33 @@
             <div id="dosenTableContainer" class="space-y-4">
                 <!-- Search Pill -->
                 <div class="relative search-pill-container" id="multiSearchWrapper">
-                    <div class="unified-search-pill">
-                        <div class="flex-1 flex items-center pl-2">
-                            <i class="bi bi-search text-slate-400 text-sm mr-3"></i>
-                            <input type="text" id="searchInput" oninput="fetchBimbinganData()" placeholder="Cari Nama, NIM, Judul TA..." class="w-full text-sm font-medium bg-transparent border-none focus:outline-none text-slate-800">
+                    <div class="unified-search-pill" style="position: relative;">
+                        <!-- Dropdown Kategori -->
+                        <div class="relative" id="searchCatWrap">
+                            <button type="button" class="search-cat-btn" id="searchCatBtn" onclick="toggleSearchCatMenu()">
+                                <span id="searchCatLabel">🔍 Kata Kunci</span>
+                                <i class="bi bi-chevron-down text-[10px] text-slate-400"></i>
+                            </button>
+                            <div class="search-cat-menu" id="searchCatMenu">
+                                <div class="search-cat-item active" data-val="all" onclick="setSearchCat(this, 'all', '🔍 Kata Kunci')">🔍 Kata Kunci (Semua)</div>
+                                <div class="search-cat-item" data-val="nama" onclick="setSearchCat(this, 'nama', '🏷️ Nama')">🏷️ Nama Mahasiswa</div>
+                                <div class="search-cat-item" data-val="nim" onclick="setSearchCat(this, 'nim', '🆔 NIM')">🆔 NIM Mahasiswa</div>
+                                <div class="search-cat-item" data-val="judul" onclick="setSearchCat(this, 'judul', '📖 Judul TA')">📖 Judul Tugas Akhir</div>
+                            </div>
                         </div>
+                        <div class="unified-divider"></div>
+                        <!-- Input Pencarian -->
+                        <div class="flex-1 flex items-center min-w-0">
+                            <i class="bi bi-search text-slate-400 text-sm mr-2 shrink-0"></i>
+                            <input type="text" id="searchInput"
+                                placeholder="Ketik kata kunci lalu klik Cari atau tekan Enter..."
+                                onkeydown="if(event.key==='Enter'){doSearch();}"
+                                class="w-full text-sm font-medium bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400">
+                        </div>
+                        <!-- Tombol Cari -->
+                        <button type="button" class="btn-search-cari ml-2" onclick="doSearch()">
+                            <i class="bi bi-search text-xs"></i> Cari
+                        </button>
                     </div>
                 </div>
 
@@ -311,6 +359,25 @@
         let currentTahap = 'Preview 1';
         let bimbinganData = [];
         let currentDosenFilter = 'all';
+        let searchCategory = 'all'; // 'all' | 'nama' | 'nim' | 'judul'
+        let activeKeyword = '';    // keyword yang aktif setelah klik Cari
+
+        // ── Search Kategori Functions ──
+        function toggleSearchCatMenu() {
+            document.getElementById('searchCatMenu').classList.toggle('open');
+        }
+        function setSearchCat(el, val, label) {
+            searchCategory = val;
+            document.getElementById('searchCatLabel').textContent = label;
+            document.querySelectorAll('.search-cat-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('searchCatMenu').classList.remove('open');
+            document.getElementById('searchInput').focus();
+        }
+        function doSearch() {
+            activeKeyword = document.getElementById('searchInput').value.trim().toLowerCase();
+            renderTable();
+        }
 
         // Initialize TinyMCE for single review modal
         function initModalTinyMCE() {
@@ -332,6 +399,13 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             fetchBimbinganData();
+            // Tutup dropdown kategori saat klik di luar
+            document.addEventListener('click', function(e) {
+                const wrap = document.getElementById('searchCatWrap');
+                if (wrap && !wrap.contains(e.target)) {
+                    document.getElementById('searchCatMenu').classList.remove('open');
+                }
+            });
         });
 
         function switchDosenTab(tab) {
@@ -432,15 +506,27 @@
 
         function renderTable() {
             const tbody = document.getElementById('bimbinganTableBody');
-            const keyword = document.getElementById('searchInput').value.toLowerCase();
-            
+            const keyword = activeKeyword;
+
             let html = '';
             let count = 0;
-            
+
             bimbinganData.forEach((mhs, index) => {
-                const match = mhs.nim.toLowerCase().includes(keyword) || 
-                              mhs.nama_mahasiswa.toLowerCase().includes(keyword) ||
-                              (mhs.judul && mhs.judul.toLowerCase().includes(keyword));
+                // Category-based matching
+                let match = false;
+                if (!keyword) {
+                    match = true;
+                } else if (searchCategory === 'nim') {
+                    match = mhs.nim.toLowerCase().includes(keyword);
+                } else if (searchCategory === 'nama') {
+                    match = mhs.nama_mahasiswa.toLowerCase().includes(keyword);
+                } else if (searchCategory === 'judul') {
+                    match = (mhs.judul && mhs.judul.toLowerCase().includes(keyword));
+                } else { // 'all'
+                    match = mhs.nim.toLowerCase().includes(keyword) ||
+                            mhs.nama_mahasiswa.toLowerCase().includes(keyword) ||
+                            (mhs.judul && mhs.judul.toLowerCase().includes(keyword));
+                }
                               
                 if(!match) return;
 
