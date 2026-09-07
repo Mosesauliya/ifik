@@ -378,7 +378,9 @@ class DosenWali_model extends CI_Model {
         );
 
         $this->db->where_in('nim', $nims);
-        $this->db->where('is_submitted', 1);
+        if ($this->db->field_exists('is_submitted', 'pendaftaran_ta')) {
+            $this->db->where('is_submitted', 1);
+        }
         $this->db->update('pendaftaran_ta', $data);
 
         return $this->db->affected_rows();
