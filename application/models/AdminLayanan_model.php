@@ -141,16 +141,14 @@ class AdminLayanan_model extends CI_Model {
         $has_invalid   = false;
         $has_pending   = false;
 
-        $is_explicit_approve = (is_string($status_input) && strtolower($status_input) === 'approved' && empty($berkas_valid) && empty($berkas_kurang));
+        $is_explicit_approve = (is_string($status_input) && in_array(strtolower($status_input), array('approve', 'approved')));
 
         foreach ($active_syarat as $sb) {
             $kode = $sb['kode_berkas'];
 
-            if ($is_explicit_approve) {
-                $st = 'Valid';
-            } elseif (in_array($kode, (array)$berkas_kurang)) {
+            if (in_array($kode, (array)$berkas_kurang)) {
                 $st = 'Invalid';
-            } elseif (in_array($kode, (array)$berkas_valid)) {
+            } elseif ($is_explicit_approve || in_array($kode, (array)$berkas_valid)) {
                 $st = 'Valid';
             } else {
                 $st = 'Pending';
@@ -177,7 +175,7 @@ class AdminLayanan_model extends CI_Model {
             }
         }
 
-        if ($has_invalid || (is_string($status_input) && strtolower($status_input) === 'reject')) {
+        if ($has_invalid || (is_string($status_input) && in_array(strtolower($status_input), array('reject', 'rejected')))) {
             $status_approval = 'Rejected';
             $berkas_kurang_str = !empty($invalid_items) ? implode(', ', $invalid_items) : ($extra_catatan ?: 'Dokumen Persyaratan Perlu Revisi');
             $current_stage = 'Admin Layanan';
