@@ -526,7 +526,6 @@ class Mahasiswa extends CI_Controller {
 
         $nim = $this->_get_current_nim();
         $this->load->model('Rekomendasi_model');
-        $this->Rekomendasi_model->seed_dummy_bimbingan_data($nim ?: '1301210001');
 
         $data['title'] = 'Bimbingan & Evaluasi Preview TA';
         $data['mahasiswa'] = $this->Mahasiswa_model->get_mahasiswa($nim);
@@ -902,6 +901,13 @@ class Mahasiswa extends CI_Controller {
                 }
 
                 $rekomen = $this->Rekomendasi_model->get_latest_submission($student['nim']);
+                
+                if ($latest && !empty($latest['file_draft'])) {
+                    $filePath = FCPATH . 'uploads/preview_ta/' . $latest['file_draft'];
+                    if (!file_exists($filePath)) {
+                        $latest['file_missing'] = true;
+                    }
+                }
                 
                 $data[] = [
                     'nim' => $student['nim'],

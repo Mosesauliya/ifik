@@ -344,8 +344,8 @@
 
         <!-- Milestone Stepper Workflow / Tab Switcher -->
         <?php
-            $is_p1_app = true; // Unlocked for direct access & testing
-            $is_p2_app = true; // Unlocked for direct access & testing
+            $is_p1_app = ($latest_p1 && $latest_p1['status_pembimbing'] === 'Approved');
+            $is_p2_app = ($latest_p2 && $latest_p2['status_pembimbing'] === 'Approved');
             $is_p3_app = ($latest_p3 && $latest_p3['status_pembimbing'] === 'Approved');
             
             // Determine active step
