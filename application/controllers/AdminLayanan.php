@@ -546,7 +546,7 @@ class AdminLayanan extends CI_Controller {
             $count = 0;
             foreach ($nims as $nim) {
                 $detail = $this->AdminLayanan_model->get_detail_pengajuan($nim);
-                if ($detail && ($detail['status_approval_wali'] ?? '') === 'Approved') {
+                if ($detail && strcasecmp($detail['status_approval_wali'] ?? '', 'Approved') === 0) {
                     $this->AdminLayanan_model->update_verifikasi($nim, 'approve', NULL, '');
                     $count++;
                 }
