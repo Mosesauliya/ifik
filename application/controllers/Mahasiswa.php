@@ -255,31 +255,34 @@ class Mahasiswa extends CI_Controller {
 
         $has_ta = !empty($pendaftaran['jenis_ta']) || !empty($pendaftaran['judul_1']) || !empty($pendaftaran['file_ksm']);
 
-        // Hitung server_draft_step secara cerdas & presisi berdasarkan riwayat pengisian mahasiswa
+        // Hitung server_draft_step secara presisi untuk 3-Step Wizard
         $server_draft_step = 1;
         if (!empty($pendaftaran)) {
-            $highest_step = 1;
-            if (!empty($pendaftaran['file_bebas_lab'])) {
-                $highest_step = 6;
-            } elseif (!empty($pendaftaran['file_pernyataan'])) {
-                $highest_step = 6;
-            } elseif (!empty($pendaftaran['file_transkrip'])) {
-                $highest_step = 5;
-            } elseif (!empty($pendaftaran['file_ksm'])) {
-                $highest_step = 4;
-            } elseif (!empty($pendaftaran['judul_1']) && !empty($pendaftaran['judul_en'])) {
-                $highest_step = 3;
-            } elseif (!empty($pendaftaran['jenis_ta'])) {
-                $highest_step = 2;
+            $saved_step = !empty($pendaftaran['draft_step']) ? (int)$pendaftaran['draft_step'] : 1;
+            // Normalisasi data lama skala 6 step ke 3 step
+            if ($saved_step >= 4) {
+                $saved_step = 2;
             }
 
-            $saved_step = !empty($pendaftaran['draft_step']) ? (int)$pendaftaran['draft_step'] : 1;
-            $server_draft_step = max($saved_step, $highest_step);
+            $has_any_file = !empty($pendaftaran['file_ksm']) || !empty($pendaftaran['file_transkrip']) || !empty($pendaftaran['file_pernyataan']) || !empty($pendaftaran['file_bebas_lab']) || !empty($data['student_berkas']);
+            $has_step1 = !empty($pendaftaran['jenis_ta']) && !empty($pendaftaran['judul_1']);
+
+            if ($has_any_file) {
+                $server_draft_step = 2;
+            } elseif ($has_step1) {
+                $server_draft_step = 2;
+            } else {
+                $server_draft_step = 1;
+            }
+
+            if ($saved_step >= 1 && $saved_step <= 3) {
+                $server_draft_step = max($server_draft_step, $saved_step);
+            }
+            if ($server_draft_step > 3) $server_draft_step = 3;
             if ($server_draft_step < 1) $server_draft_step = 1;
-            if ($server_draft_step > 6) $server_draft_step = 6;
         }
 
-        $data['title']          = $is_locked ? 'Pendaftaran Tugas Akhir (Sedang Ditinjau)' : 'Pendaftaran Tugas Akhir (6 Step)';
+        $data['title']          = $is_locked ? 'Pendaftaran Tugas Akhir (Sedang Ditinjau)' : 'Pendaftaran Tugas Akhir (3 Step)';
         $data['mahasiswa']      = $this->Mahasiswa_model->get_mahasiswa($nim);
         $data['pendaftaran']    = $pendaftaran;
         $data['is_locked']      = $is_locked;
@@ -722,16 +725,15 @@ class Mahasiswa extends CI_Controller {
             ]));
     }
 
-    // AJAX Endpoint: Instant Background Auto-Upload berkas persyaratan TA (Step 3-6)
+    // AJAX Endpoint: Instant Background Auto-Upload berkas persyaratan TA
     public function ajax_upload_file_ta() {
-        $nim = $this->_get_current_nim();
-        $field_name = $this->input->post('field_name'); // 'file_ksm', 'file_transkrip', 'file_pernyataan', 'file_bebas_lab'
+        $nim = $this->input->post('nim') ?: $this->_get_current_nim();
+        $field_name = $this->input->post('field_name');
 
-        $allowed_fields = ['file_ksm', 'file_transkrip', 'file_pernyataan', 'file_bebas_lab'];
-        if (!in_array($field_name, $allowed_fields)) {
+        if (empty($field_name) || !preg_match('/^file_[a-z0-9_]+$/i', $field_name)) {
             $this->output
                 ->set_content_type('application/json')
-                ->set_output(json_encode(['success' => false, 'message' => 'Field tidak valid.']));
+                ->set_output(json_encode(['success' => false, 'message' => 'Field berkas tidak valid.']));
             return;
         }
 
@@ -756,36 +758,39 @@ class Mahasiswa extends CI_Controller {
             $mhs_konsentrasi = !empty($mhs['konsentrasi_dkv']) ? $mhs['konsentrasi_dkv'] : 'Desain Komunikasi Visual';
             $mhs_id_kk = !empty($mhs['id_kk']) ? $mhs['id_kk'] : 1;
 
-            // Map upload field name to corresponding wizard step
-            $step_map = [
-                'file_ksm'        => 3,
-                'file_transkrip'  => 4,
-                'file_pernyataan' => 5,
-                'file_bebas_lab'  => 6
-            ];
-            $step_for_file = $step_map[$field_name] ?? 3;
+            $kode_berkas = str_replace('file_', '', $field_name);
 
-            // Simpan / update ke database sebagai draft
+            // 1. Simpan / update ke database pendaftaran_ta sebagai draft
             $existing_ta = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
+            $upData = [];
+            if ($this->db->field_exists($field_name, 'pendaftaran_ta')) {
+                $upData[$field_name] = $file_name;
+            }
+            $upData['draft_step'] = 2; // Step berkas
+            $upData['updated_at'] = date('Y-m-d H:i:s');
+
             if ($existing_ta) {
-                $upData = [$field_name => $file_name];
                 if (empty($existing_ta['konsentrasi_dkv'])) $upData['konsentrasi_dkv'] = $mhs_konsentrasi;
                 if (empty($existing_ta['id_kk'])) $upData['id_kk'] = $mhs_id_kk;
-                $current_db_step = !empty($existing_ta['draft_step']) ? (int)$existing_ta['draft_step'] : 1;
-                $upData['draft_step'] = max($current_db_step, $step_for_file);
                 $this->db->where('nim', $nim)->update('pendaftaran_ta', $upData);
             } else {
-                $this->db->insert('pendaftaran_ta', [
-                    'nim'                  => $nim,
-                    'konsentrasi_dkv'      => $mhs_konsentrasi,
-                    'id_kk'                => $mhs_id_kk,
-                    'is_submitted'         => 0,
-                    'status_approval_wali' => 'Draft',
-                    'current_stage'        => 'Draft',
-                    'draft_step'           => $step_for_file,
-                    $field_name            => $file_name,
-                    'created_at'           => date('Y-m-d H:i:s')
-                ]);
+                $upData['nim']                  = $nim;
+                $upData['konsentrasi_dkv']      = $mhs_konsentrasi;
+                $upData['id_kk']                = $mhs_id_kk;
+                $upData['is_submitted']         = 0;
+                $upData['status_approval_wali'] = 'Draft';
+                $upData['status_approval_admin'] = 'Pending';
+                $upData['status_approval_koor'] = 'Pending';
+                $upData['status_approval_kk']   = 'Pending';
+                $upData['current_stage']        = 'Draft';
+                $upData['created_at']           = date('Y-m-d H:i:s');
+                $this->db->insert('pendaftaran_ta', $upData);
+            }
+
+            // 2. Simpan juga ke tabel pendaftaran_berkas via AdminLayanan_model
+            $this->load->model('AdminLayanan_model');
+            if (method_exists($this->AdminLayanan_model, 'save_student_berkas')) {
+                $this->AdminLayanan_model->save_student_berkas($nim, $kode_berkas, $file_name, 'Pending');
             }
 
             $this->output
@@ -793,24 +798,26 @@ class Mahasiswa extends CI_Controller {
                 ->set_output(json_encode([
                     'success'    => true,
                     'field_name' => $field_name,
+                    'kode_berkas'=> $kode_berkas,
                     'file_name'  => $file_name,
                     'file_size'  => number_format($upload_data['file_size'] / 1024, 2) . ' MB',
                     'file_url'   => base_url('uploads/persyaratan_ta/' . $file_name),
-                    'message'    => 'Berkas berhasil diunggah dan tersimpan di server.'
+                    'message'    => 'Berkas berhasil diunggah dan tersimpan di database.'
                 ]));
         } else {
+            $error_msg = $this->upload->display_errors('', '');
             $this->output
                 ->set_content_type('application/json')
                 ->set_output(json_encode([
                     'success' => false,
-                    'message' => strip_tags($this->upload->display_errors())
+                    'message' => $error_msg ?: 'Gagal mengunggah berkas.'
                 ]));
         }
     }
 
     // AJAX Endpoint: Auto-Save Draft Teks (Jenis TA & Judul) ke Database Server
     public function ajax_save_draft_ta() {
-        $nim = $this->_get_current_nim();
+        $nim = $this->input->post('nim') ?: $this->_get_current_nim();
         $mhs = $this->Mahasiswa_model->get_mahasiswa($nim);
         $mhs_konsentrasi = !empty($mhs['konsentrasi_dkv']) ? $mhs['konsentrasi_dkv'] : 'Desain Komunikasi Visual';
         $mhs_id_kk = !empty($mhs['id_kk']) ? $mhs['id_kk'] : 1;
