@@ -289,5 +289,9 @@
     window.deleteBookingUrl = '<?= base_url('dashboard/delete_booking') ?>';
     window.getUpdatedBookingsUrl = '<?= base_url('dashboard/get_updated_bookings') ?>';
     window.userRoleId = <?= json_encode($this->session->userdata('role_id')) ?>;
+
+    if (typeof window.renderRoomList === 'function' && window.bookingData.length > 0) {
+        window.renderRoomList(window.bookingData);
+    }
 </script>
 
