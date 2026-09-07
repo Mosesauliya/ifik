@@ -1663,7 +1663,6 @@
                                 <p class="text-xs text-slate-400 mt-1 flex items-center gap-3 flex-wrap">
                                     <span><i class="fa-solid fa-user-tie text-orange-400 mr-1"></i> Wali: <strong>${escapeHtml(st.nama_dosen_wali || 'Dosen Wali')}</strong></span>
                                     <span><i class="fa-solid fa-envelope text-slate-500 mr-1"></i> ${escapeHtml(st.email || '-')}</span>
-                                    <span><i class="fa-solid fa-phone text-slate-500 mr-1"></i> ${escapeHtml(st.no_hp || '-')}</span>
                                 </p>
                             </div>
                         </div>
@@ -1675,7 +1674,7 @@
                         </div>
                     </div>
 
-                    <!-- 2. Usulan Judul TA (Utama & Alternatif) -->
+                    <!-- 2. Usulan Judul TA (Utama, Bahasa Inggris & Alternatif) -->
                     <div class="p-4 bg-orange-50/40 border border-orange-200/80 rounded-2xl space-y-3">
                         <div>
                             <span class="text-[10px] font-extrabold uppercase tracking-wider text-orange-700 block mb-1 flex items-center gap-1.5">
@@ -1685,6 +1684,16 @@
                                 ${escapeHtml(st.judul_1 || '-')}
                             </p>
                         </div>
+                        ${st.judul_en ? `
+                            <div>
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700 block mb-1 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-language text-indigo-500"></i> Judul Tugas Akhir (Bahasa Inggris):
+                                </span>
+                                <p class="text-xs font-semibold italic text-slate-700 leading-relaxed bg-white/95 p-3 rounded-xl border border-indigo-100 shadow-2xs">
+                                    "${escapeHtml(st.judul_en)}"
+                                </p>
+                            </div>
+                        ` : ''}
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                             ${st.judul_2 ? `
                                 <div class="bg-white/90 p-2.5 rounded-xl border border-slate-200">
