@@ -168,16 +168,20 @@ class KoordinatorTA_model extends CI_Model {
             return array();
         }
 
-        $this->db->select('m.nama_depan, m.nama_belakang, m.konsentrasi_dkv as prodi_mhs, m.alamat, m.kota, m.provinsi, m.email, m.no_hp, p.*, dw1.nama_dosen as nama_pembimbing_1, dw2.nama_dosen as nama_pembimbing_2');
+        $this->db->select('m.nama_depan, m.nama_belakang, m.konsentrasi_dkv as prodi_mhs, m.alamat, m.kota, m.provinsi, m.email, m.no_hp, p.*, COALESCE(dw.nama_dosen, dw_alt.nama_dosen, "Dosen Wali") as nama_dosen_wali, dw.nip as nip_dosen_wali, COALESCE(dw1.nama_dosen, u1.name, p.pembimbing_1) as nama_pembimbing_1, COALESCE(dw2.nama_dosen, u2.name, p.pembimbing_2) as nama_pembimbing_2');
         $this->db->from('pendaftaran_ta p');
         $this->db->join('mahasiswa m', 'm.nim = p.nim', 'left');
+        $this->db->join('dosen_wali dw', 'dw.nip = m.nip_dosen_wali', 'left');
+        $this->db->join('dosen_wali dw_alt', 'dw_alt.id = p.id_dosen_wali', 'left');
         $this->db->join('dosen_wali dw1', 'dw1.nip = p.pembimbing_1', 'left');
+        $this->db->join('users u1', 'u1.nidn_nim = p.pembimbing_1', 'left');
         $this->db->join('dosen_wali dw2', 'dw2.nip = p.pembimbing_2', 'left');
+        $this->db->join('users u2', 'u2.nidn_nim = p.pembimbing_2', 'left');
         $this->db->where('p.is_submitted', 1);
         $this->db->order_by('p.created_at', 'DESC');
         $query = $this->db->get();
 
-        $result = $query->result_array();
+        $result = $query ? $query->result_array() : array();
 
         // Normalisasi data
         foreach ($result as &$row) {
@@ -190,6 +194,14 @@ class KoordinatorTA_model extends CI_Model {
             }
             if (empty($row['konsentrasi_dkv'])) {
                 $row['konsentrasi_dkv'] = 'Informatika';
+            }
+            if (empty($row['nama_dosen_wali'])) {
+                $row['nama_dosen_wali'] = 'Dosen Wali';
+            }
+            if (empty($row['email'])) {
+                $fn = preg_replace('/[^a-zA-Z0-9]/', '', strtolower($row['nama_depan']));
+                $ln = preg_replace('/[^a-zA-Z0-9]/', '', strtolower($row['nama_belakang']));
+                $row['email'] = ($fn ? $fn : 'mhs') . ($ln ? '.' . $ln : '.' . $row['nim']) . '@student.telkomuniversity.ac.id';
             }
             if (empty($row['status_approval_koor'])) {
                 $row['status_approval_koor'] = 'Pending';
@@ -208,41 +220,20 @@ class KoordinatorTA_model extends CI_Model {
             return null;
         }
 
-        $has_mhs   = $this->db->table_exists('mahasiswa');
-        $has_depan = $has_mhs && $this->db->field_exists('nama_depan', 'mahasiswa');
-        $has_users = $this->db->table_exists('users');
-        $has_dw    = $this->db->table_exists('dosen_wali');
-
-        if ($has_depan) {
-            $select = 'm.nama_depan, m.nama_belakang, m.konsentrasi_dkv as prodi_mhs, m.alamat as mhs_alamat, m.kota, m.provinsi, m.email, m.no_hp, p.*';
-        } else if ($has_users) {
-            $select = 'COALESCE(u.name, p.nim) as nama_depan, "" as nama_belakang, "" as prodi_mhs, "" as mhs_alamat, "" as kota, "" as provinsi, u.email, "" as no_hp, p.*';
-        } else {
-            $select = 'p.nim as nama_depan, "" as nama_belakang, "" as prodi_mhs, "" as mhs_alamat, "" as kota, "" as provinsi, "" as email, "" as no_hp, p.*';
-        }
-
-        if ($has_dw) {
-            $select .= ', dw1.nama_dosen as nama_pembimbing_1, dw2.nama_dosen as nama_pembimbing_2';
-        }
-
-        $this->db->select($select);
+        $this->db->select('m.nama_depan, m.nama_belakang, m.konsentrasi_dkv as prodi_mhs, m.alamat as mhs_alamat, m.kota, m.provinsi, m.email, m.no_hp, p.*, COALESCE(dw.nama_dosen, dw_alt.nama_dosen, "Dosen Wali") as nama_dosen_wali, dw.nip as nip_dosen_wali, COALESCE(dw1.nama_dosen, u1.name, p.pembimbing_1) as nama_pembimbing_1, COALESCE(dw2.nama_dosen, u2.name, p.pembimbing_2) as nama_pembimbing_2');
         $this->db->from('pendaftaran_ta p');
-        if ($has_depan) {
-            $this->db->join('mahasiswa m', 'm.nim = p.nim', 'left');
-        } else if ($has_users) {
-            $this->db->join('users u', 'u.nidn_nim = p.nim', 'left');
-        }
-
-        if ($has_dw) {
-            $this->db->join('dosen_wali dw1', 'dw1.nip = p.pembimbing_1', 'left');
-            $this->db->join('dosen_wali dw2', 'dw2.nip = p.pembimbing_2', 'left');
-        }
-
+        $this->db->join('mahasiswa m', 'm.nim = p.nim', 'left');
+        $this->db->join('dosen_wali dw', 'dw.nip = m.nip_dosen_wali', 'left');
+        $this->db->join('dosen_wali dw_alt', 'dw_alt.id = p.id_dosen_wali', 'left');
+        $this->db->join('dosen_wali dw1', 'dw1.nip = p.pembimbing_1', 'left');
+        $this->db->join('users u1', 'u1.nidn_nim = p.pembimbing_1', 'left');
+        $this->db->join('dosen_wali dw2', 'dw2.nip = p.pembimbing_2', 'left');
+        $this->db->join('users u2', 'u2.nidn_nim = p.pembimbing_2', 'left');
         $this->db->where('p.nim', $nim);
         $query = $this->db->get();
         $row = $query ? $query->row_array() : null;
 
-        if (!$row && $has_mhs) {
+        if (!$row && $this->db->table_exists('mahasiswa')) {
             $this->db->where('nim', $nim);
             $row = $this->db->get('mahasiswa')->row_array();
         }
@@ -253,6 +244,14 @@ class KoordinatorTA_model extends CI_Model {
             }
             if (empty($row['konsentrasi_dkv']) && !empty($row['prodi_mhs'])) {
                 $row['konsentrasi_dkv'] = $row['prodi_mhs'];
+            }
+            if (empty($row['nama_dosen_wali'])) {
+                $row['nama_dosen_wali'] = 'Dosen Wali';
+            }
+            if (empty($row['email'])) {
+                $fn = preg_replace('/[^a-zA-Z0-9]/', '', strtolower($row['nama_depan'] ?? 'mhs'));
+                $ln = preg_replace('/[^a-zA-Z0-9]/', '', strtolower($row['nama_belakang'] ?? ''));
+                $row['email'] = ($fn ? $fn : 'mhs') . ($ln ? '.' . $ln : '.' . ($row['nim'] ?? '1')) . '@student.telkomuniversity.ac.id';
             }
             if (empty($row['status_approval_koor'])) {
                 $row['status_approval_koor'] = 'Pending';
@@ -361,24 +360,52 @@ class KoordinatorTA_model extends CI_Model {
 
     // Ambil detail lengkap sekumpulan mahasiswa terpilih (untuk Cek Dokumen Massal)
     public function get_batch_details_by_nims($nims) {
-        if (empty($nims) || !is_array($nims)) return array();
+        if (empty($nims) || !is_array($nims) || !$this->db->table_exists('pendaftaran_ta')) return array();
 
         $this->db->select('
             p.*, 
             m.nama_depan, 
             m.nama_belakang, 
             m.prodi, 
-            m.konsentrasi_dkv as m_konsentrasi, 
+            m.konsentrasi_dkv, 
             m.email as m_email, 
             m.no_hp as m_no_hp,
             m.nip_dosen_wali,
-            dw.nama_dosen as nama_dosen_wali
+            COALESCE(dw.nama_dosen, dw_alt.nama_dosen, "Dosen Wali") as nama_dosen_wali,
+            COALESCE(dw1.nama_dosen, u1.name, p.pembimbing_1) as nama_pembimbing_1,
+            COALESCE(dw2.nama_dosen, u2.name, p.pembimbing_2) as nama_pembimbing_2
         ');
         $this->db->from('pendaftaran_ta p');
         $this->db->join('mahasiswa m', 'm.nim = p.nim', 'left');
         $this->db->join('dosen_wali dw', 'dw.nip = m.nip_dosen_wali', 'left');
+        $this->db->join('dosen_wali dw_alt', 'dw_alt.id = p.id_dosen_wali', 'left');
+        $this->db->join('dosen_wali dw1', 'dw1.nip = p.pembimbing_1', 'left');
+        $this->db->join('users u1', 'u1.nidn_nim = p.pembimbing_1', 'left');
+        $this->db->join('dosen_wali dw2', 'dw2.nip = p.pembimbing_2', 'left');
+        $this->db->join('users u2', 'u2.nidn_nim = p.pembimbing_2', 'left');
         $this->db->where_in('p.nim', $nims);
-        return $this->db->get()->result_array();
+        $query = $this->db->get();
+        $result = $query ? $query->result_array() : array();
+
+        foreach ($result as &$row) {
+            if (empty($row['nama_depan']) && empty($row['nama_belakang'])) {
+                $row['nama_depan'] = 'Mahasiswa';
+                $row['nama_belakang'] = $row['nim'];
+            }
+            if (empty($row['nama_dosen_wali'])) {
+                $row['nama_dosen_wali'] = 'Dosen Wali';
+            }
+            if (empty($row['email'])) {
+                $row['email'] = !empty($row['m_email']) ? $row['m_email'] : '';
+            }
+            if (empty($row['email'])) {
+                $fn = preg_replace('/[^a-zA-Z0-9]/', '', strtolower($row['nama_depan']));
+                $ln = preg_replace('/[^a-zA-Z0-9]/', '', strtolower($row['nama_belakang']));
+                $row['email'] = ($fn ? $fn : 'mhs') . ($ln ? '.' . $ln : '.' . $row['nim']) . '@student.telkomuniversity.ac.id';
+            }
+        }
+
+        return $result;
     }
 
     // Approval Pendaftaran TA Massal (Batch / Multi-Select) oleh Koordinator TA dengan Opsi Per-Mahasiswa
