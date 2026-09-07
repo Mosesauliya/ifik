@@ -339,14 +339,14 @@
                         $total_berkas_count = count($berkas_items);
                     ?>
 
-                    <div id="docGridContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div id="docGridContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                         <?php foreach($berkas_items as $b): ?>
                             <?php
                                 $is_invalid = ($b['status'] === 'Rejected');
                                 $is_valid = ($b['status'] === 'Approved');
                                 $card_border = $is_valid ? 'border-emerald-200 bg-emerald-50/20' : ($is_invalid ? 'border-rose-200 bg-rose-50/30' : 'border-slate-200 bg-white');
                             ?>
-                            <div class="clean-card doc-card rounded-2xl p-5 border <?= $card_border; ?> flex flex-col justify-between space-y-4" data-key="<?= $b['key']; ?>">
+                            <div class="clean-card doc-card rounded-2xl p-5 border <?= $card_border; ?> flex flex-col space-y-4" data-key="<?= $b['key']; ?>">
                                 <div>
                                     <div class="flex items-start justify-between gap-3 mb-2">
                                         <div class="flex items-center gap-2.5">

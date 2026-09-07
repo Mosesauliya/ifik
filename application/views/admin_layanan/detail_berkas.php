@@ -293,14 +293,14 @@
                         }
                     ?>
 
-                    <div id="docGridContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div id="docGridContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                         <?php foreach($berkas_items as $b): ?>
                             <?php
                                 $is_invalid = ($b['status'] === 'Invalid') || in_array($b['key'], $berkas_kurang_selected);
                                 $is_valid = ($b['status'] === 'Valid') && !$is_invalid;
                                 $card_border = $is_valid ? 'border-emerald-200 bg-emerald-50/20' : ($is_invalid ? 'border-rose-200 bg-rose-50/30' : 'border-slate-200 bg-white');
                             ?>
-                            <div id="doc_card_<?= $b['key']; ?>" class="clean-card doc-card rounded-2xl p-5 border <?= $card_border; ?> flex flex-col justify-between space-y-4 transition-all duration-300" data-key="<?= $b['key']; ?>">
+                            <div id="doc_card_<?= $b['key']; ?>" class="clean-card doc-card rounded-2xl p-5 border <?= $card_border; ?> flex flex-col space-y-4 transition-all duration-300" data-key="<?= $b['key']; ?>">
                                 <div>
                                     <div class="flex items-start justify-between gap-3 mb-2">
                                         <div class="flex items-center gap-2.5">
@@ -536,15 +536,6 @@
             const isOpen = wrapper.classList.contains('is-preview-open');
 
             if (!isOpen) {
-                // Close any other open dropdowns smoothly first
-                document.querySelectorAll('[id^="inlinePdfWrapper_"]').forEach(el => {
-                    el.classList.remove('is-preview-open', 'opacity-100');
-                    el.classList.add('opacity-0');
-                    el.style.maxHeight = '0px';
-                });
-                document.querySelectorAll('[id^="iconPdf_"]').forEach(el => el.classList.remove('rotate-180'));
-                document.querySelectorAll('[id^="btnTogglePdf_"]').forEach(el => el.classList.remove('ring-2', 'ring-orange-500/40'));
-
                 if (iframe && (iframe.src === 'about:blank' || !iframe.src)) {
                     if (targetUrl.match(/\.(docx|doc)$/i)) {
                         iframe.src = 'https://docs.google.com/gview?url=' + encodeURIComponent(targetUrl) + '&embedded=true';
