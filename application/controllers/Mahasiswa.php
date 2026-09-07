@@ -903,6 +903,13 @@ class Mahasiswa extends CI_Controller {
 
                 $rekomen = $this->Rekomendasi_model->get_latest_submission($student['nim']);
                 
+                if ($latest && !empty($latest['file_draft'])) {
+                    $filePath = FCPATH . 'uploads/preview_ta/' . $latest['file_draft'];
+                    if (!file_exists($filePath)) {
+                        $latest['file_missing'] = true;
+                    }
+                }
+                
                 $data[] = [
                     'nim' => $student['nim'],
                     'nama_mahasiswa' => $student['nama_mahasiswa'] ?? $student['nim'],

@@ -101,7 +101,11 @@
             flex-direction: column;
             gap: 8px;
         }
-        #hoverPreviewPanel .panel-body { padding: 16px 18px 18px; }
+        #hoverPreviewPanel .panel-body { 
+            padding: 16px 18px 18px; 
+            max-height: 400px;
+            overflow-y: auto;
+        }
         #hoverPreviewPanel .panel-label {
             font-size: 10px;
             font-weight: 800;
@@ -110,17 +114,7 @@
             color: #94a3b8;
             margin-bottom: 6px;
         }
-        /* P2 comment modal */
-        #p2CommentModal {
-            position: fixed;
-            inset: 0;
-            z-index: 200;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-        }
-        #p2CommentModal.open { display: flex; }
+        /* P2 comment modal removed in favor of tailwind classes */
     </style>
 </head>
 <body class="bg-gradient-to-br from-amber-50/40 via-orange-50/25 to-slate-100 min-h-screen text-slate-800 antialiased flex flex-col justify-between selection:bg-orange-500 selection:text-white">
@@ -231,9 +225,10 @@
                                     <th class="py-4 px-4">Berkas Terbaru</th>
                                     <th class="py-4 px-4 text-center">Waktu Upload</th>
                                     <th class="py-4 px-4 text-center">Status Review</th>
-                                    <th class="py-4 px-4 text-center">Rekomendasi</th>
+                                    <?php if($posisi == 1): ?><th class="py-4 px-4 text-center">Rekomendasi</th><?php endif; ?>
+                                    <th class="py-4 px-4 text-center">Komentar P1</th>
                                     <th class="py-4 px-4 text-center">Komentar P2</th>
-                                    <th class="py-4 px-4 pr-6 text-right">Aksi (Review)</th>
+                                    <th class="py-4 px-4 pr-6 text-right">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 font-medium bg-white" id="bimbinganTableBody">
@@ -483,7 +478,12 @@
                 if (mhs.latest_preview) {
                     const latest = mhs.latest_preview;
                     const fileUrl = `<?= base_url('uploads/preview_ta/') ?>${latest.file_draft}`;
-                    previewHtml = `<button onclick="openPdfModal('${fileUrl}')" class="text-orange-600 hover:underline font-bold text-xs cursor-pointer text-left"><i class="bi bi-file-earmark-pdf-fill"></i> ${latest.file_draft}</button>`;
+                    
+                    if (latest.file_missing) {
+                        previewHtml = `<span class="text-rose-500 font-bold text-xs"><i class="bi bi-exclamation-triangle-fill"></i> File 404 (Hilang)</span>`;
+                    } else {
+                        previewHtml = `<button onclick="openPdfModal('${fileUrl}')" class="text-orange-600 hover:underline font-bold text-xs cursor-pointer text-left"><i class="bi bi-file-earmark-pdf-fill"></i> ${latest.file_draft}</button>`;
+                    }
                     
                     const dt = new Date(latest.created_at);
                     timeHtml = `<div class="text-xs font-semibold text-slate-700">${dt.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'})}</div><div class="text-[10px] text-slate-500">${dt.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})} WIB</div>`;
@@ -493,34 +493,48 @@
                     else if (st === 'Revision') statusBadge = `<span class="badge badge-danger"><i class="bi bi-x-circle-fill"></i> Revisi</span>`;
                     else statusBadge = `<span class="badge badge-warning"><i class="bi bi-clock-fill"></i> Pending</span>`;
                     
-                    btnHtml = `
-                        <div class="flex items-center justify-end gap-1.5 whitespace-nowrap">
-                            <button onclick="openReviewModal(${index})" class="px-3 py-1.5 bg-orange-100 hover:bg-orange-200 text-orange-700 border border-orange-200 rounded-lg text-xs font-bold transition shadow-2xs flex items-center gap-1">
-                                <i class="bi bi-pencil-square"></i> Review
-                            </button>
-                            <button onclick="openRekomendasiModal('${mhs.nim}', '${mhs.latest_preview ? mhs.latest_preview.id : ''}')" class="px-2.5 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-lg text-xs font-bold transition shadow-2xs flex items-center gap-1 cursor-pointer" title="Rekomendasikan Sidang / Non-Sidang">
-                                <i class="bi bi-award-fill"></i> Rekomendasi
-                            </button>
-                        </div>
-                    `;
+                    let aksiBtnText = <?= $posisi ?> == 1 ? 'Review' : 'Komentari';
+                    
+                    if (latest.file_missing) {
+                        btnHtml = `<button disabled class="px-3 py-1.5 bg-slate-100 text-rose-500 rounded-lg text-xs font-bold cursor-not-allowed border border-rose-200 whitespace-nowrap" title="File fisik tidak ditemukan"><i class="bi bi-exclamation-triangle"></i> File Hilang</button>`;
+                    } else if (st === 'Approved') {
+                        btnHtml = `<button disabled class="px-3 py-1.5 bg-slate-100 text-emerald-600 rounded-lg text-xs font-bold cursor-not-allowed border border-emerald-200 whitespace-nowrap"><i class="bi bi-check-all"></i> Sudah Disetujui</button>`;
+                    } else {
+                        btnHtml = `
+                            <div class="flex items-center justify-end gap-1.5 whitespace-nowrap">
+                                <button onclick="openSingleBatchModal(${index})" class="px-3 py-1.5 bg-orange-100 hover:bg-orange-200 text-orange-700 border border-orange-200 rounded-lg text-xs font-bold transition shadow-2xs flex items-center gap-1">
+                                    <i class="bi bi-pencil-square"></i> ${aksiBtnText}
+                                </button>
+                            </div>
+                        `;
+                    }
                 }
 
                 
                 let checkboxHtml = '';
-                if (mhs.latest_preview && mhs.latest_preview.status_pembimbing !== 'Approved') {
-                    checkboxHtml = `<input type="checkbox" value="${mhs.latest_preview.id}" data-name="${mhs.nama_mahasiswa}" data-file="${mhs.latest_preview.file_draft}" data-id="${mhs.latest_preview.id}" data-status="${mhs.latest_preview.status_pembimbing || 'Pending'}" data-catatan="${encodeURIComponent(mhs.latest_preview.catatan_pembimbing || '')}" data-catatan2="${encodeURIComponent(mhs.latest_preview.catatan_pembimbing_2 || '')}" class="dosen-student-cb w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer">`;
-                } else if (mhs.latest_preview && mhs.latest_preview.status_pembimbing === 'Approved') {
-                    checkboxHtml = `<input type="checkbox" disabled class="w-4 h-4 rounded border-slate-200 cursor-not-allowed opacity-50" title="Sudah Disetujui">`;
+                if (mhs.latest_preview && !mhs.latest_preview.file_missing) {
+                    if (mhs.latest_preview.status_pembimbing !== 'Approved') {
+                        checkboxHtml = `<input type="checkbox" value="${mhs.latest_preview.id}" data-name="${mhs.nama_mahasiswa}" data-file="${mhs.latest_preview.file_draft}" data-id="${mhs.latest_preview.id}" data-status="${mhs.latest_preview.status_pembimbing || 'Pending'}" data-catatan="${encodeURIComponent(mhs.latest_preview.catatan_pembimbing || '')}" data-catatan2="${encodeURIComponent(mhs.latest_preview.catatan_pembimbing_2 || '')}" class="dosen-student-cb w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer">`;
+                    } else {
+                        checkboxHtml = `<input type="checkbox" disabled class="w-4 h-4 rounded border-slate-200 cursor-not-allowed opacity-50" title="Sudah Disetujui">`;
+                    }
                 } else {
-                    checkboxHtml = `<input type="checkbox" disabled class="w-4 h-4 rounded border-slate-200 cursor-not-allowed opacity-50" title="Belum ada berkas">`;
+                    checkboxHtml = `<input type="checkbox" disabled class="w-4 h-4 rounded border-slate-200 cursor-not-allowed opacity-50" title="Belum ada berkas atau file hilang">`;
                 }
 
-                // Komentar P2 button
+                // Komentar P1 & P2 buttons
+                let p1Comment = mhs.latest_preview ? (mhs.latest_preview.catatan_pembimbing || '') : '';
+                let hasP1Comment = p1Comment.trim().length > 0;
+                let encodedP1 = hasP1Comment ? encodeURIComponent(p1Comment) : '';
+                let p1BtnHtml = hasP1Comment
+                    ? `<button onclick="showCommentModal(decodeURIComponent('${encodedP1}'), '${mhs.nama_mahasiswa}', 1)" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-100 hover:bg-orange-200 text-orange-700 border border-orange-200 rounded-lg text-xs font-bold transition cursor-pointer"><i class="bi bi-chat-quote-fill"></i> Lihat</button>`
+                    : `<span class="text-slate-400 text-xs italic">-</span>`;
+
                 let p2Comment = mhs.latest_preview ? (mhs.latest_preview.catatan_pembimbing_2 || '') : '';
                 let hasP2Comment = p2Comment.trim().length > 0;
                 let encodedP2 = hasP2Comment ? encodeURIComponent(p2Comment) : '';
                 let p2BtnHtml = hasP2Comment
-                    ? `<button onclick="showP2Comment(decodeURIComponent('${encodedP2}'), '${mhs.nama_mahasiswa}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition cursor-pointer"><i class="bi bi-chat-quote-fill"></i> Lihat</button>`
+                    ? `<button onclick="showCommentModal(decodeURIComponent('${encodedP2}'), '${mhs.nama_mahasiswa}', 2)" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition cursor-pointer"><i class="bi bi-chat-quote-fill"></i> Lihat</button>`
                     : `<span class="text-slate-400 text-xs italic">-</span>`;
 
                 // Hover data
@@ -546,7 +560,8 @@
                         <td class="py-4 px-4">${previewHtml}</td>
                         <td class="py-4 px-4 text-center">${timeHtml}</td>
                         <td class="py-4 px-4 text-center">${statusBadge}</td>
-                        <td class="py-4 px-4 text-center">${rekomenBadge}</td>
+                        ${<?= $posisi ?> == 1 ? `<td class="py-4 px-4 text-center">${rekomenBadge}</td>` : ''}
+                        <td class="py-4 px-4 text-center">${p1BtnHtml}</td>
                         <td class="py-4 px-4 text-center">${p2BtnHtml}</td>
                         <td class="py-4 px-4 pr-6 text-right">${btnHtml}</td>
                     </tr>
@@ -724,10 +739,32 @@
             updateDosenBatchBar();
         }
 
+        function openSingleBatchModal(index) {
+            const mhs = bimbinganData[index];
+            if(!mhs || !mhs.latest_preview) return;
+            
+            const cb = {
+                getAttribute: function(attr) {
+                    if (attr === 'data-name') return mhs.nama_mahasiswa;
+                    if (attr === 'data-file') return mhs.latest_preview.file_draft;
+                    if (attr === 'data-id') return mhs.latest_preview.id;
+                    if (attr === 'data-status') return mhs.latest_preview.status_pembimbing || 'Pending';
+                    if (attr === 'data-catatan') return encodeURIComponent(mhs.latest_preview.catatan_pembimbing || '');
+                    if (attr === 'data-catatan2') return encodeURIComponent(mhs.latest_preview.catatan_pembimbing_2 || '');
+                    return null;
+                }
+            };
+            
+            renderBatchModal([cb]);
+        }
+
         function openDosenBatchModal() {
             const checkedCbs = document.querySelectorAll('.dosen-student-cb:checked');
             if (checkedCbs.length === 0) return;
+            renderBatchModal(checkedCbs);
+        }
 
+        function renderBatchModal(checkedCbs) {
             const posisi = <?= $posisi ?>;
             let html = '';
 
@@ -744,7 +781,6 @@
                     <div class="mb-2">
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Status Penilaian (P1)</label>
                         <select id="batchStatus_${i}" class="w-full p-2.5 rounded-xl border border-slate-200 focus:ring-orange-500 focus:border-orange-500 text-xs font-semibold bg-white">
-                            <option value="Pending" ${statusCurrent === 'Pending' ? 'selected' : ''}>Menunggu Review</option>
                             <option value="Approved" ${statusCurrent === 'Approved' ? 'selected' : ''}>Disetujui (ACC)</option>
                             <option value="Revision" ${statusCurrent === 'Revision' ? 'selected' : ''}>Perlu Revisi</option>
                         </select>
@@ -785,11 +821,11 @@
                             ${statusOptions}
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">${catatanLabel}</label>
-                                <textarea id="batchCatatan_${i}" rows="2" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-medium resize-none focus:outline-none focus:ring-2 focus:ring-orange-400/25 focus:border-orange-400" placeholder="Tuliskan komentar...">${catatanVal}</textarea>
+                                <textarea id="batchCatatan_${i}" rows="2" class="batch-textarea w-full p-2.5 rounded-xl border border-slate-200 text-xs font-medium resize-none focus:outline-none focus:ring-2 focus:ring-orange-400/25 focus:border-orange-400" placeholder="Tuliskan komentar...">${catatanVal}</textarea>
                             </div>
                             <button
                                 onclick="submitBatchItemReview('${idPreview}', ${posisi}, ${i})"
-                                class="w-full py-2 px-4 rounded-xl ${btnColor} text-white font-bold text-xs shadow transition cursor-pointer flex items-center justify-center gap-1.5"
+                                class="w-full py-2.5 px-4 rounded-xl ${btnColor} text-white font-bold text-xs shadow transition cursor-pointer flex items-center justify-center gap-1.5 mt-1"
                             >
                                 <i class="bi bi-send-fill"></i> Simpan Review
                             </button>
@@ -800,9 +836,26 @@
 
             document.getElementById('dosenBatchModalBody').innerHTML = html;
             document.getElementById('dosenBatchReviewModal').classList.remove('hidden');
+
+            tinymce.remove('.batch-textarea');
+            tinymce.init({
+                selector: '.batch-textarea',
+                menubar: false,
+                statusbar: false,
+                plugins: 'lists link',
+                toolbar: 'bold italic underline | bullist numlist | link',
+                height: 200,
+                skin: 'oxide',
+                setup: function (editor) {
+                    editor.on('change', function () {
+                        tinymce.triggerSave();
+                    });
+                }
+            });
         }
 
         function submitBatchItemReview(idPreview, posisi, idx) {
+            tinymce.triggerSave();
             const catatan = document.getElementById('batchCatatan_' + idx)?.value || '';
             const statusEl = document.getElementById('batchStatus_' + idx);
             const status = statusEl ? statusEl.value : null;
@@ -946,7 +999,6 @@
                     formWrap.innerHTML = `
                         <div class="panel-label">Status Penilaian (P1)</div>
                         <select id="hoverStatusSelect" class="w-full mb-3 p-2.5 rounded-xl border border-slate-300 focus:ring-orange-500 focus:border-orange-500 text-sm font-semibold">
-                            <option value="Pending" ${(latest.status_pembimbing||'Pending')==='Pending'?'selected':''}>Menunggu Review</option>
                             <option value="Approved" ${latest.status_pembimbing==='Approved'?'selected':''}>Disetujui (ACC)</option>
                             <option value="Revision" ${latest.status_pembimbing==='Revision'?'selected':''}>Perlu Revisi</option>
                         </select>
@@ -984,6 +1036,22 @@
                 panel.style.left = left + 'px';
                 panel.style.top = top + 'px';
                 panel.classList.add('visible');
+                
+                tinymce.remove('#hoverCatatanTA');
+                tinymce.init({
+                    selector: '#hoverCatatanTA',
+                    menubar: false,
+                    statusbar: false,
+                    plugins: 'lists link',
+                    toolbar: 'bold italic underline | bullist numlist | link',
+                    height: 150,
+                    skin: 'oxide',
+                    setup: function (editor) {
+                        editor.on('change', function () {
+                            tinymce.triggerSave();
+                        });
+                    }
+                });
             }, 350);
         }
 
@@ -998,6 +1066,7 @@
         panel.addEventListener('mouseleave', scheduleHidePanel);
 
         function submitHoverReview(idPreview, posisi) {
+            tinymce.triggerSave();
             const catatan = document.getElementById('hoverCatatanTA')?.value || '';
             const status = posisi === 1 ? (document.getElementById('hoverStatusSelect')?.value || 'Pending') : null;
 
@@ -1025,15 +1094,23 @@
             .catch(() => showToast('Kesalahan koneksi', 'error'));
         }
 
-        /* ===== P2 COMMENT MODAL ===== */
-        function showP2Comment(comment, name) {
-            document.getElementById('p2ModalName').textContent = name;
-            document.getElementById('p2ModalContent').innerHTML = comment || '<em class="text-slate-400">Tidak ada komentar.</em>';
-            document.getElementById('p2CommentModal').classList.add('open');
+        /* ===== COMMENT MODAL ===== */
+        function showCommentModal(comment, name, pos) {
+            document.getElementById('commentModalName').textContent = name;
+            document.getElementById('commentModalContent').innerHTML = comment || '<em class="text-slate-400">Tidak ada komentar.</em>';
+            document.getElementById('commentModalTitle').innerHTML = pos === 1 
+                ? '<i class="bi bi-chat-quote-fill text-orange-500"></i> Komentar Pembimbing 1'
+                : '<i class="bi bi-chat-quote-fill text-indigo-500"></i> Komentar Pembimbing 2';
+            
+            const modal = document.getElementById('commentModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
         }
 
-        function closeP2Comment() {
-            document.getElementById('p2CommentModal').classList.remove('open');
+        function closeCommentModal() {
+            const modal = document.getElementById('commentModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
         }
     </script>
 
@@ -1053,16 +1130,16 @@
         </div>
     </div>
 
-    <!-- P2 Comment Modal -->
-    <div id="p2CommentModal">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeP2Comment()"></div>
-        <div class="relative bg-white rounded-3xl p-6 sm:p-8 w-full max-w-lg shadow-2xl">
-            <button onclick="closeP2Comment()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
-            <h3 class="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">
-                <i class="bi bi-chat-quote-fill text-indigo-500"></i> Komentar Pembimbing 2
+    <!-- Comment Modal -->
+    <div id="commentModal" class="hidden fixed inset-0 z-[200] items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeCommentModal()"></div>
+        <div class="relative bg-white rounded-3xl p-6 sm:p-8 w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
+            <button onclick="closeCommentModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
+            <h3 class="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2" id="commentModalTitle">
+                <i class="bi bi-chat-quote-fill text-indigo-500"></i> Komentar
             </h3>
-            <p class="text-xs text-slate-500 font-semibold mb-4" id="p2ModalName">Nama Mahasiswa</p>
-            <div class="p-4 bg-indigo-50 border border-indigo-200 rounded-2xl text-sm text-slate-800 font-medium leading-relaxed" id="p2ModalContent">
+            <p class="text-xs text-slate-500 font-semibold mb-4" id="commentModalName">Nama Mahasiswa</p>
+            <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm text-slate-800 font-medium leading-relaxed overflow-y-auto flex-1" id="commentModalContent">
                 <!-- Comment content -->
             </div>
         </div>
@@ -1096,9 +1173,9 @@
     </div>
 
     <!-- Multi-Student Batch Review Modal Popup -->
-    <div id="dosenBatchReviewModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="closeDosenBatchModal()"></div>
-        <div class="relative bg-white rounded-3xl w-full max-w-6xl flex flex-col overflow-hidden shadow-2xl" style="max-height:90vh">
+    <div id="dosenBatchReviewModal" class="hidden fixed inset-0 z-[100] overflow-y-auto p-4 sm:p-6">
+        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="closeDosenBatchModal()"></div>
+        <div class="relative bg-white rounded-3xl w-full max-w-6xl mx-auto flex flex-col overflow-hidden shadow-2xl my-4 sm:my-8">
             <div class="p-4 px-6 bg-slate-900 text-white flex items-center justify-between shrink-0">
                 <h3 class="text-sm font-extrabold flex items-center gap-2">
                     <i class="bi bi-files text-orange-500"></i> Review Preview Massal
@@ -1109,7 +1186,7 @@
                 </button>
             </div>
             
-            <div class="p-5 sm:p-6 overflow-y-auto flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5" id="dosenBatchModalBody">
+            <div class="p-5 sm:p-6 flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5" id="dosenBatchModalBody">
                 <!-- Data cards injected via JS -->
             </div>
             
