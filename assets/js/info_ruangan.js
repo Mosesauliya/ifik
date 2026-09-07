@@ -256,8 +256,8 @@
     // ==========================================
     function openDetailBookingModal(id) {
 
-        if (typeof bookingData === 'undefined') return;
-        const booking = bookingData.find(b => parseInt(b.id) === parseInt(id));
+        const bList = window.bookingData || (typeof bookingData !== 'undefined' ? bookingData : []);
+        const booking = bList.find(b => parseInt(b.id) === parseInt(id));
         if (!booking) return;
 
         document.getElementById('detailBookingId').value = booking.id;
@@ -554,15 +554,18 @@
         // Render Pertama
         renderRowPage(activeList, currentRotateIndex, pageSize, false);
 
-        // Putar Otomatis 4 Baris Setiap 9 Detik secara konsisten
+        // Putar Otomatis 4 Baris Setiap 5 Detik secara konsisten
         if (rowRotateInterval) clearInterval(rowRotateInterval);
         if (totalPages > 1) {
             rowRotateInterval = setInterval(() => {
                 currentRotateIndex = (currentRotateIndex + 1) % totalPages;
                 renderRowPage(activeList, currentRotateIndex, pageSize, true);
-            }, 9000);
+            }, 5000);
         }
     }
+
+    window.renderRoomList = renderRoomList;
+    window.startRowRotation = startRowRotation;
 
     function renderRowPage(list, pageIndex, pageSize, isTransitioning) {
         const wrapper = document.getElementById('roomListWrapper');
@@ -687,6 +690,13 @@
 
         const jMulai = j.jam_mulai ? j.jam_mulai.substring(0, 5) : '00:00';
         const jSelesai = j.jam_selesai ? j.jam_selesai.substring(0, 5) : '00:00';
+        const timeStr = `${jMulai} - ${jSelesai}`;
+
+        const kode = (j.kode_ruangan || '').replace(/"/g, '&quot;');
+        const namaRuangan = (j.nama_ruangan || '').replace(/"/g, '&quot;');
+        const namaLengkap = (j.nama_lengkap || '').replace(/"/g, '&quot;');
+        const keterangan = (j.keterangan || '-').replace(/"/g, '&quot;');
+
         const lokasi = (j.lokasi || '').replace(/"/g, '&quot;');
         const kapasitas = j.kapasitas || '';
         const namaKategori = (j.nama_kategori || 'Ruangan').replace(/"/g, '&quot;');
@@ -757,11 +767,17 @@
         `;
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        if (typeof window.bookingData !== 'undefined' && window.bookingData.length > 0) {
+    function initRoomRotater() {
+        if (typeof window.bookingData !== 'undefined' && Array.isArray(window.bookingData) && window.bookingData.length > 0) {
             renderRoomList(window.bookingData);
         }
-    });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initRoomRotater);
+    } else {
+        initRoomRotater();
+    }
 
 
 
