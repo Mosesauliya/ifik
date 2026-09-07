@@ -113,6 +113,33 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // Check actual submission/file completion status of each step (available across whole scope)
+    function checkStepCompletionStatus(stepIndex) {
+        if (stepIndex === 1) {
+            const inputJenis = document.getElementById('inputJenisTA');
+            const inputJ1 = document.getElementById('inputJudul1') || document.querySelector('input[name="judul_1"]');
+            const inputJEn = document.getElementById('inputJudulEn') || document.querySelector('input[name="judul_en"]');
+            return !!(inputJenis && inputJenis.value.trim() !== '' &&
+                      inputJ1 && inputJ1.value.trim() !== '' &&
+                      inputJEn && inputJEn.value.trim() !== '');
+        } else if (stepIndex === 2) {
+            const reqCards = document.querySelectorAll('.doc-requirement-card[data-required="1"]');
+            if (reqCards.length === 0) return true;
+            let allUploaded = true;
+            reqCards.forEach(card => {
+                const fileInput = card.querySelector('.input-doc-file');
+                const oldInput = card.querySelector('.input-doc-old');
+                const hasFile = (fileInput && fileInput.files && fileInput.files.length > 0) || (oldInput && oldInput.value.trim() !== '');
+                if (!hasFile) allUploaded = false;
+            });
+            return allUploaded;
+        } else if (stepIndex === 3) {
+            const checkSubmit = document.getElementById('checkKonfirmasiSubmit');
+            return checkSubmit ? checkSubmit.checked : false;
+        }
+        return false;
+    }
+
     // Update UI step state
     function updateStepUI() {
         if (currentStep === 3) {
@@ -146,11 +173,24 @@ document.addEventListener('DOMContentLoaded', function () {
                 const counter = stepItem.querySelector('.step-counter');
                 const title = stepItem.querySelector('.step-title');
 
-                stepItem.style.cursor = (i <= currentStep) ? 'pointer' : 'default';
+                // Cursor pointer if clickable
+                const canClick = (i <= currentStep) || (i === currentStep + 1 && checkStepCompletionStatus(currentStep));
+                stepItem.style.cursor = canClick ? 'pointer' : 'default';
+
                 stepItem.onclick = () => {
-                    if (i <= currentStep) {
+                    if (i === currentStep) return;
+                    if (i < currentStep) {
                         currentStep = i;
+                        saveDraft(true);
                         updateStepUI();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } else if (i > currentStep) {
+                        if (validateStep(currentStep)) {
+                            currentStep = i;
+                            saveDraft(true);
+                            updateStepUI();
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
                     }
                 };
 
@@ -158,47 +198,31 @@ document.addEventListener('DOMContentLoaded', function () {
                     stepItem.classList.add('active');
                     if (counter) {
                         counter.className = 'step-counter w-11 h-11 rounded-full bg-gradient-to-tr from-orange-600 to-amber-500 text-white font-bold flex items-center justify-center text-sm box-3d ring-4 ring-orange-200/80 transition-all duration-300 z-10';
+                        counter.innerHTML = `${i}`;
                     }
                     if (title) {
                         title.className = 'step-title font-bold text-xs sm:text-sm text-orange-600 mt-2 text-center transition-all duration-300';
                     }
                 } else if (i < currentStep) {
+                    stepItem.classList.remove('active');
+                    if (counter) {
+                        counter.className = 'step-counter w-10 h-10 rounded-full bg-emerald-500 text-white font-bold flex items-center justify-center text-xs shadow-xs transition-all duration-300 z-10';
+                        counter.innerHTML = '<i class="bi bi-check-lg text-sm font-bold"></i>';
+                    }
+                    if (title) {
+                        title.className = 'step-title font-semibold text-xs sm:text-sm text-slate-700 mt-2 text-center transition-all duration-300';
+                    }
+                } else {
+                    stepItem.classList.remove('active');
+                    if (counter) {
+                        counter.className = 'step-counter w-10 h-10 rounded-full bg-white text-slate-400 font-semibold border border-orange-200 flex items-center justify-center text-xs transition-all duration-300 z-10';
+                        counter.innerHTML = `${i}`;
+                    }
+                    if (title) {
+                        title.className = 'step-title font-medium text-xs text-slate-400 mt-2 text-center transition-all duration-300';
+                    }
                 }
             }
-        }
-
-        // Stepper progress line width
-        const progressLine = document.getElementById('stepperProgressLine');
-        if (progressLine) {
-            const percent = ((currentStep - 1) / (totalSteps - 1)) * 100;
-            progressLine.style.width = percent + '%';
-        }
-
-        // Check actual submission/file completion status of each step:
-        function checkStepCompletionStatus(stepIndex) {
-            if (stepIndex === 1) {
-                const inputJenis = document.getElementById('inputJenisTA');
-                const inputJ1 = document.querySelector('input[name="judul_1"]');
-                const inputJEn = document.querySelector('input[name="judul_en"]');
-                return (inputJenis && inputJenis.value.trim() !== '') &&
-                       (inputJ1 && inputJ1.value.trim() !== '') &&
-                       (inputJEn && inputJEn.value.trim() !== '');
-            } else if (stepIndex === 2) {
-                const reqCards = document.querySelectorAll('.doc-requirement-card[data-required="1"]');
-                if (reqCards.length === 0) return true;
-                let allUploaded = true;
-                reqCards.forEach(card => {
-                    const fileInput = card.querySelector('.input-doc-file');
-                    const oldInput = card.querySelector('.input-doc-old');
-                    const hasFile = (fileInput && fileInput.files && fileInput.files.length > 0) || (oldInput && oldInput.value.trim() !== '');
-                    if (!hasFile) allUploaded = false;
-                });
-                return allUploaded;
-            } else if (stepIndex === 3) {
-                const checkSubmit = document.getElementById('checkKonfirmasiSubmit');
-                return checkSubmit ? checkSubmit.checked : false;
-            }
-            return false;
         }
 
         // Update Right Sidebar (Progres Pendaftaran)
@@ -214,13 +238,23 @@ document.addEventListener('DOMContentLoaded', function () {
             const isFilled = checkStepCompletionStatus(i);
             if (isFilled) filledCount++;
 
-            // Sidebar item clickable to navigate back to previous steps
-            sideItem.style.cursor = (i <= currentStep) ? 'pointer' : 'default';
+            // Sidebar item clickable to navigate back or forward if valid
+            const canSideClick = (i <= currentStep) || (i === currentStep + 1 && checkStepCompletionStatus(currentStep));
+            sideItem.style.cursor = canSideClick ? 'pointer' : 'default';
             sideItem.onclick = () => {
+                if (i === currentStep) return;
                 if (i < currentStep) {
                     currentStep = i;
+                    saveDraft(true);
                     updateStepUI();
                     window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else if (i > currentStep) {
+                    if (validateStep(currentStep)) {
+                        currentStep = i;
+                        saveDraft(true);
+                        updateStepUI();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
                 }
             };
 
@@ -388,11 +422,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Tombol Lanjut & Kembali
     if (btnNext) {
-        btnNext.addEventListener('click', function () {
+        btnNext.addEventListener('click', function (e) {
+            e.preventDefault();
             if (validateStep(currentStep)) {
-                saveDraft(true);
                 if (currentStep < totalSteps) {
                     currentStep++;
+                    saveDraft(true);
                     updateStepUI();
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
@@ -401,9 +436,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (btnPrev) {
-        btnPrev.addEventListener('click', function () {
+        btnPrev.addEventListener('click', function (e) {
+            e.preventDefault();
             if (currentStep > 1) {
                 currentStep--;
+                saveDraft(true);
                 updateStepUI();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } else {
@@ -607,6 +644,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (btnReset) {
             btnReset.addEventListener('click', (e) => {
                 e.stopPropagation();
+                const fieldNameToDelete = fileInput.name;
                 fileInput.value = ''; // Clear file input
                 if (oldFileInput) oldFileInput.value = ''; // Clear old file reference too
                 if (promptContainer) {
@@ -620,9 +658,39 @@ document.addEventListener('DOMContentLoaded', function () {
                 zone.classList.remove('border-emerald-400', 'bg-emerald-50/20');
                 updateStepUI();
                 saveDraft(true);
+                deleteDocFile(fieldNameToDelete, zone);
             });
         }
     });
+
+    // Background Delete berkas PDF dari database server
+    function deleteDocFile(fieldName, zone) {
+        if (!fieldName || !window.DELETE_FILE_AJAX_URL) return;
+
+        setDbStatus('saving', 'Menghapus berkas dari database...');
+
+        const fd = new FormData();
+        fd.append('nim', userNim);
+        fd.append('field_name', fieldName);
+
+        fetch(window.DELETE_FILE_AJAX_URL, {
+            method: 'POST',
+            body: fd
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                setDbStatus('saved', 'Berkas berhasil dihapus');
+                showInPageAlert('🗑️ Berkas berhasil dihapus dari database!', 'warning');
+            } else {
+                setDbStatus('error', 'Gagal menghapus berkas');
+            }
+        })
+        .catch(err => {
+            console.error('File delete error:', err);
+            setDbStatus('error', 'Gagal tersambung ke server');
+        });
+    }
 
     // Background Auto-Upload berkas PDF langsung ke database server
     function uploadDocFile(fileInput, file, zone) {
@@ -827,7 +895,23 @@ document.addEventListener('DOMContentLoaded', function () {
     if (form) {
         form.addEventListener('input', saveDraft);
 
+        // Cegah submit otomatis saat menekan Enter di input teks jika belum di Langkah terakhir
+        form.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                if (currentStep < totalSteps) {
+                    if (btnNext) btnNext.click();
+                }
+            }
+        });
+
         form.addEventListener('submit', function (e) {
+            if (currentStep < totalSteps) {
+                e.preventDefault();
+                if (btnNext) btnNext.click();
+                return false;
+            }
+
             if (isSubmitting) {
                 e.preventDefault();
                 return false;
@@ -1082,8 +1166,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize UI and load draft on load
     loadDraft();
 
-    // Auto-advance ke step terakhir yang terisi jika URL tidak spesifik menentukan parameter ?step=
-    if (!urlStep) {
+    // Auto-advance ke step berikutnya hanya jika tidak ada parameter ?step= di URL dan tidak ada step tersimpan di localStorage
+    if (!urlStep && !savedStep) {
         const hasStep1Data = checkStepCompletionStatus(1);
         if (hasStep1Data && currentStep < 2) {
             currentStep = 2;

@@ -115,11 +115,12 @@ class Mahasiswa_model extends CI_Model {
     public function reset_pendaftaran_ta($nim) {
         if (!$this->db->table_exists('pendaftaran_ta')) return true;
 
-        // Bersihkan berkas fisik yang pernah diunggah jika ada
+        $upload_path = FCPATH . 'uploads/persyaratan_ta/';
+
+        // 1. Bersihkan berkas fisik legacy dari pendaftaran_ta
         $existing = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
         if ($existing) {
             $files_to_delete = ['file_ksm', 'file_transkrip', 'file_pernyataan', 'file_bebas_lab'];
-            $upload_path = FCPATH . 'uploads/persyaratan_ta/';
             foreach ($files_to_delete as $field) {
                 if (!empty($existing[$field])) {
                     $filepath = $upload_path . $existing[$field];
@@ -130,6 +131,23 @@ class Mahasiswa_model extends CI_Model {
             }
         }
 
+        // 2. Bersihkan berkas fisik dan record dari pendaftaran_berkas
+        if ($this->db->table_exists('pendaftaran_berkas')) {
+            $berkas_rows = $this->db->get_where('pendaftaran_berkas', ['nim' => $nim])->result_array();
+            if (!empty($berkas_rows)) {
+                foreach ($berkas_rows as $br) {
+                    if (!empty($br['file_name'])) {
+                        $filepath = $upload_path . $br['file_name'];
+                        if (file_exists($filepath) && is_file($filepath)) {
+                            @unlink($filepath);
+                        }
+                    }
+                }
+                $this->db->where('nim', $nim)->delete('pendaftaran_berkas');
+            }
+        }
+
+        // 3. Hapus baris pendaftaran_ta
         $this->db->where('nim', $nim);
         return $this->db->delete('pendaftaran_ta');
     }

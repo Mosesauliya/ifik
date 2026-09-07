@@ -42,10 +42,15 @@ class AdminLayanan_model extends CI_Model {
                 `kode_berkas` VARCHAR(50) NOT NULL,
                 `file_name` VARCHAR(255) NOT NULL,
                 `status_verifikasi` ENUM('Pending','Valid','Invalid') DEFAULT 'Pending',
+                `catatan` TEXT NULL,
                 `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 UNIQUE KEY `nim_kode` (`nim`, `kode_berkas`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+        } else {
+            if (!$this->db->field_exists('catatan', 'pendaftaran_berkas')) {
+                $this->db->query("ALTER TABLE `pendaftaran_berkas` ADD COLUMN `catatan` TEXT NULL AFTER `status_verifikasi`;");
+            }
         }
 
         if ($this->db->table_exists('pendaftaran_ta')) {
@@ -107,25 +112,28 @@ class AdminLayanan_model extends CI_Model {
         return $map;
     }
 
-    public function save_student_berkas($nim, $kode_berkas, $file_name, $status = 'Pending') {
+    public function save_student_berkas($nim, $kode_berkas, $file_name, $status = 'Pending', $catatan = null) {
         $this->_ensure_tables();
         $existing = $this->db->get_where('pendaftaran_berkas', ['nim' => $nim, 'kode_berkas' => $kode_berkas])->row_array();
 
+        $data = [
+            'file_name' => $file_name,
+            'status_verifikasi' => $status,
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        if ($catatan !== null && $this->db->field_exists('catatan', 'pendaftaran_berkas')) {
+            $data['catatan'] = $catatan;
+        }
+
         if ($existing) {
             $this->db->where('id', $existing['id']);
-            return $this->db->update('pendaftaran_berkas', [
-                'file_name' => $file_name,
-                'status_verifikasi' => $status,
-                'updated_at' => date('Y-m-d H:i:s')
-            ]);
+            return $this->db->update('pendaftaran_berkas', $data);
         } else {
-            return $this->db->insert('pendaftaran_berkas', [
-                'nim' => $nim,
-                'kode_berkas' => $kode_berkas,
-                'file_name' => $file_name,
-                'status_verifikasi' => $status,
-                'created_at' => date('Y-m-d H:i:s')
-            ]);
+            $data['nim'] = $nim;
+            $data['kode_berkas'] = $kode_berkas;
+            $data['created_at'] = date('Y-m-d H:i:s');
+            return $this->db->insert('pendaftaran_berkas', $data);
         }
     }
 
