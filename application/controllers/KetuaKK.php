@@ -255,9 +255,9 @@ class KetuaKK extends CI_Controller {
         foreach ($nim_list as $nim) {
             $detail = $this->KetuaKK_model->get_detail_mahasiswa($nim);
             if ($detail) {
-                $is_wali_app  = ($detail['status_approval_wali'] === 'Approved');
-                $is_admin_app = ($detail['status_approval_admin'] === 'Approved');
-                $is_koor_app  = ($detail['status_approval_koor'] === 'Approved');
+                $is_wali_app  = (strcasecmp($detail['status_approval_wali'] ?? '', 'Approved') === 0);
+                $is_admin_app = (strcasecmp($detail['status_approval_admin'] ?? '', 'Approved') === 0);
+                $is_koor_app  = (strcasecmp($detail['status_approval_koor'] ?? '', 'Approved') === 0);
 
                 // Hanya approve yang sudah memenuhi prasyarat
                 if ($is_wali_app && $is_admin_app && $is_koor_app) {

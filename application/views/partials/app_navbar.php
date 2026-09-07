@@ -33,10 +33,10 @@
             </a>
 
             <!-- Nav Links (Role-Based Unlocked Tabs) -->
-            <nav class="hidden md:flex items-center gap-3 lg:gap-4">
+            <nav class="hidden md:flex items-center gap-2 lg:gap-3.5 xl:gap-4 shrink-0">
                 <!-- Beranda Utama / Portal Publik -->
                 <a href="<?= base_url('/'); ?>" 
-                   class="text-xs font-bold text-slate-700 hover:text-orange-600 transition-colors flex items-center gap-1.5 py-1.5 px-3 rounded-xl hover:bg-orange-50 border border-transparent hover:border-orange-200">
+                   class="whitespace-nowrap text-xs font-bold text-slate-700 hover:text-orange-600 transition-colors flex items-center gap-1.5 py-1.5 px-2.5 rounded-xl hover:bg-orange-50 border border-transparent hover:border-orange-200">
                     <i class="bi bi-house-door-fill text-orange-600"></i>
                     <span>Beranda Utama</span>
                 </a>
@@ -44,7 +44,7 @@
                 <!-- Dosen Wali - Role 1 or 2 -->
                 <?php if (in_array($role_id, [1, 2])): ?>
                 <a href="<?= site_url('dosenwali'); ?>" 
-                   class="text-xs font-semibold flex items-center gap-1.5 transition-colors py-1 <?= $current_uri === 'dosenwali' ? 'text-orange-600 font-bold border-b-2 border-orange-600' : 'text-slate-600 hover:text-orange-600'; ?>">
+                   class="whitespace-nowrap text-xs font-semibold flex items-center gap-1.5 transition-colors py-1 <?= $current_uri === 'dosenwali' ? 'text-orange-600 font-bold border-b-2 border-orange-600' : 'text-slate-600 hover:text-orange-600'; ?>">
                     <i class="bi bi-person-check-fill <?= $current_uri === 'dosenwali' ? 'text-orange-600' : 'text-slate-400'; ?>"></i>
                     <span>Dosen Wali</span>
                 </a>
@@ -53,7 +53,7 @@
                 <!-- Admin Layanan (LAA) - Role 1 or 3 -->
                 <?php if (in_array($role_id, [1, 3])): ?>
                 <a href="<?= site_url('adminlayanan'); ?>" 
-                   class="text-xs font-semibold flex items-center gap-1.5 transition-colors py-1 <?= $current_uri === 'adminlayanan' ? 'text-orange-600 font-bold border-b-2 border-orange-600' : 'text-slate-600 hover:text-orange-600'; ?>">
+                   class="whitespace-nowrap text-xs font-semibold flex items-center gap-1.5 transition-colors py-1 <?= $current_uri === 'adminlayanan' ? 'text-orange-600 font-bold border-b-2 border-orange-600' : 'text-slate-600 hover:text-orange-600'; ?>">
                     <i class="bi bi-file-earmark-check-fill <?= $current_uri === 'adminlayanan' ? 'text-orange-600' : 'text-slate-400'; ?>"></i>
                     <span>Admin LAA</span>
                 </a>
@@ -62,7 +62,7 @@
                 <!-- Ketua KK - Role 1 or 7 -->
                 <?php if (in_array($role_id, [1, 7])): ?>
                 <a href="<?= site_url('ketuakk'); ?>" 
-                   class="text-xs font-semibold flex items-center gap-1.5 transition-colors py-1 <?= $current_uri === 'ketuakk' ? 'text-orange-600 font-bold border-b-2 border-orange-600' : 'text-slate-600 hover:text-orange-600'; ?>">
+                   class="whitespace-nowrap text-xs font-semibold flex items-center gap-1.5 transition-colors py-1 <?= $current_uri === 'ketuakk' ? 'text-orange-600 font-bold border-b-2 border-orange-600' : 'text-slate-600 hover:text-orange-600'; ?>">
                     <i class="bi bi-diagram-3-fill <?= $current_uri === 'ketuakk' ? 'text-orange-600' : 'text-slate-400'; ?>"></i>
                     <span>Ketua KK</span>
                 </a>
@@ -71,7 +71,7 @@
                 <!-- Koordinator TA - Role 1 or 6 -->
                 <?php if (in_array($role_id, [1, 6])): ?>
                 <a href="<?= site_url('koordinatorta'); ?>" 
-                   class="text-xs font-semibold flex items-center gap-1.5 transition-colors py-1 <?= $current_uri === 'koordinatorta' ? 'text-orange-600 font-bold border-b-2 border-orange-600' : 'text-slate-600 hover:text-orange-600'; ?>">
+                   class="whitespace-nowrap text-xs font-semibold flex items-center gap-1.5 transition-colors py-1 <?= $current_uri === 'koordinatorta' ? 'text-orange-600 font-bold border-b-2 border-orange-600' : 'text-slate-600 hover:text-orange-600'; ?>">
                     <i class="bi bi-mortarboard-fill <?= $current_uri === 'koordinatorta' ? 'text-orange-600' : 'text-slate-400'; ?>"></i>
                     <span>Koor TA</span>
                 </a>
@@ -80,7 +80,7 @@
                 <!-- Kelola Berita - Role 1 or 3 -->
                 <?php if (in_array($role_id, [1, 3])): ?>
                 <a href="<?= site_url('news/newsroom'); ?>" 
-                   class="text-xs font-semibold flex items-center gap-1.5 transition-colors py-1 <?= $current_uri === 'news' ? 'text-orange-600 font-bold border-b-2 border-orange-600' : 'text-slate-600 hover:text-orange-600'; ?>">
+                   class="whitespace-nowrap text-xs font-semibold flex items-center gap-1.5 transition-colors py-1 <?= $current_uri === 'news' ? 'text-orange-600 font-bold border-b-2 border-orange-600' : 'text-slate-600 hover:text-orange-600'; ?>">
                     <i class="bi bi-newspaper <?= $current_uri === 'news' ? 'text-orange-600' : 'text-slate-400'; ?>"></i>
                     <span>Berita</span>
                 </a>
@@ -89,7 +89,7 @@
                 <!-- Riwayat Log Approval - Global Access for Admin & Staff -->
                 <?php if (in_array($role_id, [1, 2, 3, 4, 6, 7])): ?>
                 <a href="<?= site_url('admin/log_history'); ?>" 
-                   class="text-xs font-semibold flex items-center gap-1.5 transition-colors py-1 <?= $current_uri === 'log_history' || $this->uri->segment(2) === 'log_history' ? 'text-orange-600 font-bold border-b-2 border-orange-600' : 'text-slate-600 hover:text-orange-600'; ?>" title="Audit Trail & Riwayat Log Approval System (Seluruh Modul)">
+                   class="whitespace-nowrap text-xs font-semibold flex items-center gap-1.5 transition-colors py-1 <?= $current_uri === 'log_history' || $this->uri->segment(2) === 'log_history' ? 'text-orange-600 font-bold border-b-2 border-orange-600' : 'text-slate-600 hover:text-orange-600'; ?>" title="Audit Trail & Riwayat Log Approval System (Seluruh Modul)">
                     <i class="bi bi-clock-history <?= $current_uri === 'log_history' || $this->uri->segment(2) === 'log_history' ? 'text-orange-600' : 'text-slate-400'; ?>"></i>
                     <span>Log History</span>
                 </a>
@@ -98,7 +98,7 @@
                 <!-- Pusat Admin Hub (Hanya Super Admin - Role 1) -->
                 <?php if ($role_id == 1): ?>
                 <a href="<?= site_url('admin'); ?>" 
-                   class="text-xs font-semibold flex items-center gap-1.5 transition-colors py-1 <?= $current_uri === 'admin' ? 'text-orange-600 font-bold border-b-2 border-orange-600' : 'text-slate-600 hover:text-orange-600'; ?>">
+                   class="whitespace-nowrap text-xs font-semibold flex items-center gap-1.5 transition-colors py-1 <?= $current_uri === 'admin' ? 'text-orange-600 font-bold border-b-2 border-orange-600' : 'text-slate-600 hover:text-orange-600'; ?>">
                     <i class="bi bi-grid-fill <?= $current_uri === 'admin' ? 'text-orange-600' : 'text-slate-400'; ?>"></i>
                     <span>Pusat Admin</span>
                 </a>

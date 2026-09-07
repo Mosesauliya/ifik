@@ -511,17 +511,19 @@ class ImportEmail extends CI_Controller {
             $this->load->library('email');
             $this->email->clear(TRUE);
 
-            $fromEmail = getenv('SMTP_USER') ? getenv('SMTP_USER') : 'no-reply@telkomuniversity.ac.id';
-            $this->email->from($fromEmail, 'Portal Layanan IFIK Telkom University');
+            $this->email->from('apgchannel11@gmail.com', 'Portal Layanan IFIK — Telkom University');
             $this->email->to($to);
             $this->email->subject($subject);
             $this->email->message($htmlMessage);
 
             // Attempt SMTP Dispatch
-            $sent = @$this->email->send();
+            $sent = $this->email->send();
+            if (!$sent) {
+                log_message('error', 'SMTP Dispatch Error to ' . $to . ': ' . $this->email->print_debugger(['headers']));
+            }
             return $sent;
         } catch (Exception $e) {
-            log_message('error', 'SMTP Dispatch Error to ' . $to . ': ' . $e->getMessage());
+            log_message('error', 'SMTP Dispatch Exception to ' . $to . ': ' . $e->getMessage());
             return false;
         }
     }

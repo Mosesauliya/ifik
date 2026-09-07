@@ -999,7 +999,7 @@
                             <th class="py-4 px-4">Usulan Judul TA (Utama)</th>
                             <th class="py-4 px-4 text-center">Status Approval</th>
                             <th class="py-4 px-4 text-center">Tahap Saat Ini</th>
-                            <th class="py-4 px-4 pr-6 text-right">Aksi</th>
+                            <th class="py-4 px-4 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 font-medium bg-white" id="tableBodyMhs">
@@ -1358,7 +1358,7 @@
                                 <th class="w-36 py-3.5 px-2">Dosen Pembimbing</th>
                                 <th class="w-36 py-3.5 px-2">Dosen Penguji</th>
                                 <th class="w-28 py-3.5 px-2 text-center">Status</th>
-                                <th class="w-32 py-3.5 px-3 pr-4 text-right">Aksi</th>
+                                <th class="w-32 py-3.5 px-3 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 font-medium bg-white" id="tableBodyP2">
@@ -1694,21 +1694,21 @@
             <div class="table-rotating-border-wrap">
                 <span class="table-rotating-border-spin"></span>
                 <div class="table-rotating-border-inner overflow-hidden">
-                    <table class="table-custom-rounded text-left text-xs w-full">
+                    <table class="table-custom-rounded text-left text-xs w-full table-auto">
                         <thead class="bg-white text-slate-700 font-semibold text-xs border-b border-slate-200/90">
                             <tr>
-                                <th class="w-8 py-3.5 px-3 text-center">
+                                <th class="w-10 py-3.5 px-3 pl-5 text-center">
                                     <input type="checkbox" id="selectAllCheckboxSidang" onchange="toggleSelectAllSidang(this)" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 cursor-pointer" title="Pilih Semua di Halaman Ini">
                                 </th>
-                                <th class="w-24 py-3.5 px-2 font-bold">NIM</th>
-                                <th class="w-36 py-3.5 px-2 font-semibold">Nama Mahasiswa</th>
+                                <th class="py-3.5 px-2 font-bold">NIM</th>
+                                <th class="py-3.5 px-2 font-semibold">Nama Mahasiswa</th>
                                 <th class="py-3.5 px-2">Usulan Judul TA</th>
-                                <th class="w-36 py-3.5 px-2">Dosen Pembimbing</th>
-                                <th class="w-36 py-3.5 px-2">Dosen Penguji</th>
-                                <th class="w-32 py-3.5 px-2">Waktu Sidang</th>
-                                <th class="w-28 py-3.5 px-2">Ruangan</th>
-                                <th class="w-28 py-3.5 px-2 text-center">Status</th>
-                                <th class="w-32 py-3.5 px-3 pr-4 text-right">Aksi</th>
+                                <th class="py-3.5 px-2">Dosen Pembimbing</th>
+                                <th class="py-3.5 px-2">Dosen Penguji</th>
+                                <th class="py-3.5 px-2">Waktu Sidang</th>
+                                <th class="py-3.5 px-2">Ruangan</th>
+                                <th class="py-3.5 px-2 text-center">Status</th>
+                                <th class="py-3.5 px-3 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 font-medium bg-white" id="tbodySidang">

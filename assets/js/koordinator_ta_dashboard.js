@@ -2284,8 +2284,8 @@
                     <td class="py-4 px-4 text-center">
                         ${stageBadgeHtml}
                     </td>
-                    <td class="py-4 px-4 pr-6 text-right">
-                        <div class="flex items-center justify-end gap-1.5 ml-auto">
+                    <td class="py-4 px-4 text-center">
+                        <div class="flex items-center justify-center gap-1.5 mx-auto">
                             <button type="button" onclick="openHistoryPlottingModal('Pembimbing', '${mhs.nim}')" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-orange-50 hover:text-orange-600 text-slate-500 border border-slate-200/80 flex items-center justify-center text-xs transition cursor-pointer shrink-0 shadow-2xs" title="Lihat Riwayat Histori Pembimbing Mahasiswa Ini">
                                 <i class="fa-solid fa-clock-rotate-left"></i>
                             </button>
@@ -2924,7 +2924,7 @@
                     <td class="w-36 py-3 px-2">${pembimbingHtml}</td>
                     <td class="w-36 py-3 px-2">${pengujiHtml}</td>
                     <td class="w-28 py-3 px-2 text-center">${statusBadge}</td>
-                    <td class="w-32 py-3 px-3 pr-4 text-right">
+                    <td class="w-32 py-3 px-3 text-center">
                         ${(() => {
                             const isReady = (peng1 && peng2) || (statusP2 === 'Penguji Ditetapkan');
                             const btnColor = isReady ? 'btn-emerald' : 'btn-indigo';
@@ -2934,7 +2934,7 @@
                             const btnTitle = isReady ? 'Ubah Dosen Penguji' : 'Plot Dosen Penguji';
 
                             return `
-                                <div class="flex items-center justify-end gap-1.5 ml-auto">
+                                <div class="flex items-center justify-center gap-1.5 mx-auto">
                                     <button type="button" onclick="openHistoryPengujiModal('${mhs.nim}')" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-500 border border-slate-200/80 flex items-center justify-center text-xs transition cursor-pointer shrink-0 shadow-2xs" title="Lihat Riwayat Histori Perubahan Penguji Mahasiswa Ini">
                                         <i class="fa-solid fa-clock-rotate-left"></i>
                                     </button>
@@ -5760,20 +5760,20 @@
 
             html += `
                 <tr class="table-row-animate ${rowHighlight} transition-colors" style="--row-index: ${idx};">
-                    <td class="w-8 py-3 px-3 text-center">
+                    <td class="w-10 py-3 px-3 pl-5 text-center">
                         <input type="checkbox" 
                             class="row-select-sidang w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 cursor-pointer" 
                             value="${row.nim}" 
                             ${isChecked ? 'checked' : ''}
                             onchange="toggleRowSelectSidang(this)">
                     </td>
-                    <td class="w-24 py-3 px-2 font-bold font-mono text-[11px] text-slate-900">${row.nim}</td>
-                    <td class="w-40 py-3 px-2 font-semibold text-slate-800 text-xs">
-                        <span class="truncate block max-w-[140px] cursor-pointer hover:text-amber-600 transition" onclick="openModalSingleSidang('${escapeHtml(row.nim)}')" title="${escapeHtml(fullName)}">${escapeHtml(fullName)}</span>
+                    <td class="py-3 px-2 font-bold font-mono text-[11px] text-slate-900 whitespace-nowrap">${row.nim}</td>
+                    <td class="py-3 px-2 font-semibold text-slate-800 text-xs">
+                        <span class="truncate block max-w-[130px] cursor-pointer hover:text-amber-600 transition" onclick="openModalSingleSidang('${escapeHtml(row.nim)}')" title="${escapeHtml(fullName)}">${escapeHtml(fullName)}</span>
                         ${nilaiBadge}
                     </td>
                     <td class="py-3 px-2 text-slate-600 font-normal">
-                        <div class="inline-flex items-center gap-1.5 cursor-pointer group/title max-w-[200px]"
+                        <div class="inline-flex items-center gap-1 cursor-pointer group/title max-w-[170px]"
                             data-tooltip-type="sidang"
                             data-nim="${escapeHtml(row.nim)}"
                             data-name="${escapeHtml(fullName)}"
@@ -5791,18 +5791,18 @@
                             <i class="fa-solid fa-circle-info text-[10px] text-slate-400 group-hover/title:text-amber-500 shrink-0 opacity-0 group-hover/title:opacity-100 transition-opacity"></i>
                         </div>
                     </td>
-                    <td class="w-36 py-3 px-2">${pembimbingHtml}</td>
-                    <td class="w-36 py-3 px-2">${pengujiHtml}</td>
-                    <td class="w-32 py-3 px-2">${waktuDisplay}</td>
-                    <td class="w-28 py-3 px-2">${ruanganDisplay}</td>
-                    <td class="w-28 py-3 px-2 text-center">${statusBadge}</td>
-                    <td class="w-36 py-3 px-3 pr-4 text-right">
-                        <div class="flex items-center justify-end gap-1.5 ml-auto">
-                            <button type="button" onclick="openHistorySidangModal('${escapeHtml(row.nim)}')" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-slate-600 border border-slate-200 flex items-center justify-center text-xs transition cursor-pointer shadow-2xs shrink-0" title="Lihat Riwayat Histori Sidang Mahasiswa Ini">
-                                <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                    <td class="py-3 px-2">${pembimbingHtml}</td>
+                    <td class="py-3 px-2">${pengujiHtml}</td>
+                    <td class="py-3 px-2">${waktuDisplay}</td>
+                    <td class="py-3 px-2">${ruanganDisplay}</td>
+                    <td class="py-3 px-2 text-center">${statusBadge}</td>
+                    <td class="py-3 px-3 text-center whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-1.5 mx-auto shrink-0">
+                            <button type="button" onclick="openHistorySidangModal('${escapeHtml(row.nim)}')" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-slate-600 border border-slate-200 flex items-center justify-center text-xs transition cursor-pointer shadow-2xs shrink-0" title="Lihat Riwayat Histori Sidang Mahasiswa Ini">
+                                <i class="fa-solid fa-clock-rotate-left text-[11px]"></i>
                             </button>
-                            <button type="button" onclick="openModalPenilaianSidang('${escapeHtml(row.nim)}')" class="w-8 h-8 rounded-xl ${hasNilai ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300' : 'bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-slate-600 border border-slate-200'} flex items-center justify-center text-xs transition cursor-pointer shadow-2xs shrink-0" title="${hasNilai ? 'Lihat / Edit Penilaian Akhir Sidang' : 'Input Penilaian Akhir Sidang TA'}">
-                                <i class="fa-solid ${hasNilai ? 'fa-award text-sm' : 'fa-clipboard-check text-sm'}"></i>
+                            <button type="button" onclick="openModalPenilaianSidang('${escapeHtml(row.nim)}')" class="w-7 h-7 rounded-lg ${hasNilai ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300' : 'bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-slate-600 border border-slate-200'} flex items-center justify-center text-xs transition cursor-pointer shadow-2xs shrink-0" title="${hasNilai ? 'Lihat / Edit Penilaian Akhir Sidang' : 'Input Penilaian Akhir Sidang TA'}">
+                                <i class="fa-solid ${hasNilai ? 'fa-award text-xs' : 'fa-clipboard-check text-xs'}"></i>
                             </button>
                             <button type="button" onclick="openModalSingleSidang('${escapeHtml(row.nim)}')" class="btn-3d-kinetic ${btnColor} btn-compact cursor-pointer" title="${btnTitle}">
                                 <div class="bg"></div>
