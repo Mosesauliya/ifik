@@ -1333,8 +1333,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         newsList.forEach((news, i) => {
             const card = document.createElement('div');
-            // Selang-seling: genap = cutout kanan atas, ganjil = cutout kiri bawah
-            card.className = 'news-modal-card' + (i % 2 !== 0 ? ' news-modal-card--alt' : '');
+            // Selang-seling per baris (3 kolom): atas, bawah, atas
+            card.className = 'news-modal-card' + (i % 3 === 1 ? ' news-modal-card--alt' : '');
             if (!animate) {
                 card.classList.add('visible');
             }
