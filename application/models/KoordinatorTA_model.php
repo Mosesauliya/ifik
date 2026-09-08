@@ -1031,14 +1031,67 @@ class KoordinatorTA_model extends CI_Model {
         }
     }
 
+    // Helper Cek Bentrok Jadwal Sidang (Ruangan & Waktu)
+    public function check_sidang_conflict($nim, $tgl_sidang, $jam_mulai, $jam_selesai, $ruangan) {
+        if (!$this->db->table_exists('pendaftaran_ta') || empty($tgl_sidang) || empty($jam_mulai) || empty($ruangan)) {
+            return null;
+        }
+
+        $jam_mulai_norm = substr(trim($jam_mulai), 0, 5);
+        $jam_selesai_norm = !empty($jam_selesai) ? substr(trim($jam_selesai), 0, 5) : date('H:i', strtotime($jam_mulai_norm . ' + 90 minutes'));
+
+        $startA = strtotime("2000-01-01 {$jam_mulai_norm}:00");
+        $endA   = strtotime("2000-01-01 {$jam_selesai_norm}:00");
+
+        // Cek apakah ada mahasiswa lain yang memakai ruangan yang sama di tanggal & jam bertabrakan
+        $this->db->select('p.nim, m.nama_depan, m.nama_belakang, p.tgl_sidang, p.jam_mulai_sidang, p.jam_selesai_sidang, p.ruangan_sidang');
+        $this->db->from('pendaftaran_ta p');
+        $this->db->join('mahasiswa m', 'm.nim = p.nim', 'left');
+        $this->db->where('p.nim !=', $nim);
+        $this->db->where('p.tgl_sidang', $tgl_sidang);
+        $this->db->where('p.ruangan_sidang', $ruangan);
+        $this->db->where('p.jam_mulai_sidang IS NOT NULL', null, false);
+        $this->db->where("p.jam_mulai_sidang !=", "");
+        $query = $this->db->get();
+        $conflicts = $query->result_array();
+
+        foreach ($conflicts as $c) {
+            $c_mulai = substr(trim($c['jam_mulai_sidang']), 0, 5);
+            $c_selesai = !empty($c['jam_selesai_sidang']) ? substr(trim($c['jam_selesai_sidang']), 0, 5) : date('H:i', strtotime($c_mulai . ' + 90 minutes'));
+
+            $startB = strtotime("2000-01-01 {$c_mulai}:00");
+            $endB   = strtotime("2000-01-01 {$c_selesai}:00");
+
+            // Check time overlap: (StartA < EndB) and (EndA > StartB)
+            if (($startA < $endB) && ($endA > $startB)) {
+                $mhsName = trim(($c['nama_depan'] ?? '') . ' ' . ($c['nama_belakang'] ?? ''));
+                if (empty($mhsName)) $mhsName = 'Mahasiswa NIM ' . $c['nim'];
+                return array(
+                    'conflict' => true,
+                    'type'     => 'ruangan',
+                    'message'  => "Ruangan {$ruangan} sudah dijadwalkan untuk {$mhsName} ({$c['nim']}) pada tanggal {$tgl_sidang} pukul {$c_mulai} - {$c_selesai} WIB!"
+                );
+            }
+        }
+        return null;
+    }
+
     // Update Jadwal Sidang Single Mahasiswa
-    public function update_jadwal_sidang_ajax($nim, $tgl_sidang, $jam_mulai, $jam_selesai, $ruangan) {
+    public function update_jadwal_sidang_ajax($nim, $tgl_sidang, $jam_mulai, $jam_selesai, $ruangan, $bypass_conflict = false) {
         if (!$this->db->table_exists('pendaftaran_ta')) {
             return array('status' => false, 'message' => 'Tabel pendaftaran_ta tidak ditemukan.');
         }
 
         if (empty($nim) || empty($tgl_sidang) || empty($jam_mulai) || empty($ruangan)) {
             return array('status' => false, 'message' => 'NIM, Tanggal Sidang, Jam Mulai, dan Ruangan Sidang wajib diisi.');
+        }
+
+        // Cek bentrok jika tidak di-bypass
+        if (!$bypass_conflict) {
+            $conflict = $this->check_sidang_conflict($nim, $tgl_sidang, $jam_mulai, $jam_selesai, $ruangan);
+            if ($conflict) {
+                return array('status' => false, 'message' => $conflict['message'], 'is_conflict' => true);
+            }
         }
 
         $data = array(
@@ -1092,33 +1145,105 @@ class KoordinatorTA_model extends CI_Model {
         }
     }
 
-    // Batch Update Jadwal Sidang Massal (Multi-Select)
-    public function batch_jadwal_sidang_ajax($nims, $tgl_sidang, $jam_mulai, $jam_selesai, $ruangan) {
+    // Batch Update Jadwal Sidang Massal (Per-Mahasiswa Schedules)
+    public function batch_jadwal_sidang_per_mhs_ajax($schedules) {
         if (!$this->db->table_exists('pendaftaran_ta')) {
             return array('status' => false, 'message' => 'Tabel pendaftaran_ta tidak ditemukan.');
         }
 
-        if (empty($nims) || !is_array($nims)) {
-            return array('status' => false, 'message' => 'Pilih setidaknya satu mahasiswa.');
+        if (empty($schedules) || !is_array($schedules)) {
+            return array('status' => false, 'message' => 'Tidak ada data jadwal mahasiswa yang diproses.');
         }
 
-        if (empty($tgl_sidang) || empty($jam_mulai) || empty($ruangan)) {
-            return array('status' => false, 'message' => 'Tanggal, jam mulai, dan ruangan sidang wajib diisi.');
+        // 1. Cek bentrok internal di antara schedule yang dikirim bersamaan
+        $seen = array();
+        foreach ($schedules as $idx => $sch) {
+            $nim = $sch['nim'] ?? '';
+            $tgl = $sch['tgl_sidang'] ?? '';
+            $mulai = substr(trim($sch['jam_mulai_sidang'] ?? ''), 0, 5);
+            $selesai = !empty($sch['jam_selesai_sidang']) ? substr(trim($sch['jam_selesai_sidang']), 0, 5) : date('H:i', strtotime($mulai . ' + 90 minutes'));
+            $ruang = $sch['ruangan_sidang'] ?? '';
+
+            if (empty($nim) || empty($tgl) || empty($mulai) || empty($ruang)) continue;
+
+            $startA = strtotime("2000-01-01 {$mulai}:00");
+            $endA   = strtotime("2000-01-01 {$selesai}:00");
+
+            foreach ($seen as $prev) {
+                if ($prev['tgl'] === $tgl && $prev['ruang'] === $ruang) {
+                    $startB = strtotime("2000-01-01 {$prev['mulai']}:00");
+                    $endB   = strtotime("2000-01-01 {$prev['selesai']}:00");
+
+                    if (($startA < $endB) && ($endA > $startB)) {
+                        return array(
+                            'status' => false,
+                            'message' => "Jadwal bentrok antar mahasiswa terpilih! Mahasiswa NIM {$nim} dan NIM {$prev['nim']} dijadwalkan di ruangan {$ruang} pada jam yang bersamaan ({$mulai}-{$selesai} vs {$prev['mulai']}-{$prev['selesai']})."
+                        );
+                    }
+                }
+            }
+
+            $seen[] = array('nim' => $nim, 'tgl' => $tgl, 'mulai' => $mulai, 'selesai' => $selesai, 'ruang' => $ruang);
         }
 
+        // 2. Eksekusi update per-mahasiswa
         $successCount = 0;
-        foreach ($nims as $nim) {
-            $res = $this->update_jadwal_sidang_ajax($nim, $tgl_sidang, $jam_mulai, $jam_selesai, $ruangan);
+        $failedList = array();
+
+        foreach ($schedules as $sch) {
+            $nim     = $sch['nim'] ?? '';
+            $tgl     = $sch['tgl_sidang'] ?? '';
+            $mulai   = $sch['jam_mulai_sidang'] ?? '';
+            $selesai = $sch['jam_selesai_sidang'] ?? '';
+            $ruang   = $sch['ruangan_sidang'] ?? '';
+
+            if (empty($nim) || empty($tgl) || empty($mulai) || empty($ruang)) {
+                $failedList[] = "NIM {$nim} (Data tanggal/waktu/ruangan belum lengkap)";
+                continue;
+            }
+
+            $res = $this->update_jadwal_sidang_ajax($nim, $tgl, $mulai, $selesai, $ruang);
             if ($res['status']) {
                 $successCount++;
+            } else {
+                $failedList[] = "NIM {$nim} ({$res['message']})";
             }
+        }
+
+        if ($successCount === 0) {
+            $msg = 'Gagal menyimpan jadwal sidang mahasiswa.';
+            if (!empty($failedList)) $msg .= ' ' . implode(', ', $failedList);
+            return array('status' => false, 'message' => $msg);
+        }
+
+        $msg = "Berhasil menetapkan jadwal sidang individual untuk {$successCount} mahasiswa!";
+        if (!empty($failedList)) {
+            $msg .= " (" . count($failedList) . " gagal: " . implode(', ', $failedList) . ")";
         }
 
         return array(
             'status'        => true,
-            'message'       => "Berhasil menetapkan jadwal sidang untuk {$successCount} mahasiswa!",
-            'success_count' => $successCount
+            'message'       => $msg,
+            'success_count' => $successCount,
+            'failed_list'   => $failedList
         );
+    }
+
+    // Legacy Batch Update Fallback (Multi-Select)
+    public function batch_jadwal_sidang_ajax($nims, $tgl_sidang, $jam_mulai, $jam_selesai, $ruangan) {
+        $schedules = array();
+        if (is_array($nims)) {
+            foreach ($nims as $n) {
+                $schedules[] = array(
+                    'nim'                => $n,
+                    'tgl_sidang'         => $tgl_sidang,
+                    'jam_mulai_sidang'   => $jam_mulai,
+                    'jam_selesai_sidang' => $jam_selesai,
+                    'ruangan_sidang'     => $ruangan
+                );
+            }
+        }
+        return $this->batch_jadwal_sidang_per_mhs_ajax($schedules);
     }
 
     // =========================================================
