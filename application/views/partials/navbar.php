@@ -380,7 +380,7 @@
                         </a>
                         <?php endif; ?>
 
-                        <?php if (in_array($role_id, [1, 2])): ?>
+                        <?php if (in_array($role_id, [1, 2, 4]) || stripos($this->session->userdata('name') ?? '', 'dosen') !== false): ?>
                         <a href="<?= site_url('dosenwali') ?>">
                             <span class="btn-box">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
@@ -443,6 +443,23 @@
             <!-- 7. Login / Logout -->
             <li class="nav-item">
                 <?php if ($this->session->userdata('logged_in')): ?>
+                    <?php
+                        $user_role_id = $this->session->userdata('role_id');
+                        $user_name = $this->session->userdata('name') ?? '';
+                        $user_portal_url = base_url('mahasiswa');
+                        $user_portal_label = 'Mahasiswa';
+                        
+                        if ($user_role_id == 4 || stripos($user_name, 'dosen') !== false) {
+                            $user_portal_url = base_url('dosenwali');
+                            $user_portal_label = 'Dosen Wali';
+                        } elseif ($user_role_id == 6) {
+                            $user_portal_url = base_url('koordinatorta');
+                            $user_portal_label = 'Koordinator TA';
+                        } elseif (in_array($user_role_id, [1, 2, 3])) {
+                            $user_portal_url = base_url('admin');
+                            $user_portal_label = 'Admin Panel';
+                        }
+                    ?>
                     <a href="#" class="nav-link-login user-link">
                         <span class="btn-box">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
@@ -464,13 +481,13 @@
                             </span>
                             <span>Logout</span>
                         </a>
-                        <a href="<?php echo base_url('mahasiswa'); ?>">
+                        <a href="<?php echo $user_portal_url; ?>">
                             <span class="btn-box">
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                                 </svg>
                             </span>
-                            <span>Mahasiswa</span>
+                            <span><?php echo $user_portal_label; ?></span>
                         </a>
                     </div>
                 <?php else: ?>
