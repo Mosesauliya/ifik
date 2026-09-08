@@ -278,7 +278,7 @@
         /* Global Sticky Scroll Button */
         .global-scroll-btn {
             position: fixed;
-            bottom: 30px;
+            bottom: 50px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 9999; /* Frontmost */
@@ -322,7 +322,7 @@
             .global-scroll-btn {
                 width: 38px;
                 height: 38px;
-                bottom: 18px;
+                bottom: 24px;
                 border-width: 1.5px;
             }
             .global-scroll-btn svg {
@@ -335,7 +335,7 @@
             .global-scroll-btn {
                 width: 34px;
                 height: 34px;
-                bottom: 12px;
+                bottom: 16px;
                 border-width: 1.5px;
             }
             .global-scroll-btn svg {

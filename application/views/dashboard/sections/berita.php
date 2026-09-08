@@ -2,32 +2,45 @@
     /* ===== SESI 3: BERITA ===== */
     #section-contact {
         background-color: #fbf7f1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        /* overflow dibiarkan visible agar kartu tidak terpotong */
-        overflow: visible;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+        overflow: hidden;
         position: relative;
-        padding: 60px 0 48px;
+        padding-top: 65px !important;
+        padding-bottom: 65px !important;
+        box-sizing: border-box;
+        height: 100vh;
     }
 
     .news-header {
-        margin-bottom: 20px;
+        margin-top: 0;
+        margin-bottom: 12px;
         text-align: center;
-        z-index: 2;
+        z-index: 10;
+        position: relative;
+        flex-shrink: 0;
     }
 
     .news-header h1 {
-        font-size: 3rem;
+        font-size: 2rem;
         color: #1e293b;
         font-weight: 900;
-        margin-bottom: 10px;
+        margin: 0 0 4px 0;
+        line-height: 1.15;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
     
     .news-header p {
         color: #64748b;
-        font-size: 1.1rem;
+        font-size: 0.92rem;
+        margin: 0;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
 
     /* ===== WRAPPER UTAMA BERITA (Fan + Kontrol) ===== */
@@ -37,6 +50,7 @@
         align-items: center;
         justify-content: center;
         width: 100%;
+        position: relative;
     }
 
     /* ===== KONTAINER KARTU ===== */
@@ -45,10 +59,9 @@
         justify-content: center;
         align-items: center;
         width: 100%;
-        height: 560px;
+        height: 420px;
         position: relative;
-        overflow: visible;
-        clip-path: inset(-20px -9999px);
+        overflow: visible !important;
     }
 
     /* ===== KARTU BERITA ===== */
@@ -230,22 +243,30 @@
         height: 48px;
         border-radius: 50%;
         border: 2px solid #ea580c;
-        background: transparent;
+        background: #ffffff;
         color: #ea580c;
         font-size: 1.3rem;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all 0.3s ease;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(234, 88, 12, 0.08);
     }
 
-    .news-arrow-btn:hover {
-        background: #ea580c;
-        color: #fff;
+    .news-arrow-btn:hover:not(:disabled) {
+        background: #fff7ed;
+        color: #ea580c;
+        border-color: #f97316;
         transform: scale(1.1);
-        box-shadow: 0 8px 24px rgba(234, 88, 12, 0.35);
+        box-shadow: 0 0 22px rgba(234, 88, 12, 0.45), 0 4px 14px rgba(234, 88, 12, 0.22);
+    }
+
+    .news-arrow-btn:active:not(:disabled) {
+        transform: scale(0.96);
+        background: #ffedd5;
+        box-shadow: 0 0 12px rgba(234, 88, 12, 0.3);
     }
 
     .news-arrow-btn:disabled {
@@ -416,31 +437,33 @@
     /* ===== RESPONSIVE ===== */
     /* ===== VIEW ALL BUTTON ===== */
     .news-view-all-btn {
-        position: absolute;
-        bottom: 28px;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
+        position: relative;
+        margin-top: 8px;
+        bottom: auto;
+        left: auto;
+        transform: none;
+        display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 12px 28px;
+        padding: 9px 24px;
         border-radius: 50px;
         border: 2px solid #ea580c;
         background: transparent;
         color: #ea580c;
-        font-size: 0.95rem;
+        font-size: 0.85rem;
         font-weight: 700;
         cursor: pointer;
         letter-spacing: 0.5px;
         transition: all 0.3s ease;
-        z-index: 20;
+        z-index: 25;
         white-space: nowrap;
     }
     .news-view-all-btn:hover {
-        background: #ea580c;
-        color: #fff;
-        box-shadow: 0 8px 28px rgba(234, 88, 12, 0.35);
-        transform: translateX(-50%) translateY(-2px);
+        background: #fff7ed;
+        color: #ea580c;
+        border-color: #f97316;
+        box-shadow: 0 0 22px rgba(234, 88, 12, 0.4), 0 6px 18px rgba(234, 88, 12, 0.2);
+        transform: translateY(-2px);
     }
     .news-view-all-btn svg {
         width: 16px;
@@ -855,17 +878,19 @@
     }
 
     @media (max-width: 1200px) {
-        .news-header h1 { font-size: 2.2rem; }
-        .news-card { width: 270px; height: 390px; }
+        .news-header h1 { font-size: 2rem; }
+        .news-card { width: 260px; height: 370px; }
+        .news-fan-container { height: 390px; }
         .news-title { font-size: 1.05rem; }
     }
 
     @media (max-width: 900px) {
-        .news-header h1 { font-size: 1.8rem; }
-        .news-header p { font-size: 0.9rem; }
-        .news-card { width: 230px; height: 350px; }
-        .news-title { font-size: 1rem; }
-        .news-excerpt { font-size: 0.85rem; -webkit-line-clamp: 2; }
+        .news-header h1 { font-size: 1.7rem; }
+        .news-header p { font-size: 0.88rem; }
+        .news-card { width: 230px; height: 340px; }
+        .news-fan-container { height: 350px; }
+        .news-title { font-size: 0.95rem; }
+        .news-excerpt { font-size: 0.82rem; -webkit-line-clamp: 2; }
         .news-modal-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
         .news-modal-header {
             flex-direction: column;

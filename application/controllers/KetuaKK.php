@@ -243,15 +243,20 @@ class KetuaKK extends CI_Controller {
     public function submit_bulk_approval() {
         $nim_list = $this->input->post('nim_list');
         $catatan  = trim($this->input->post('catatan_kk_bulk') ?? '');
+        $status_action = $this->input->post('bulk_action') ?: 'Approved';
+
+        if (!in_array($status_action, array('Approved', 'Rejected'))) {
+            $status_action = 'Approved';
+        }
 
         if (empty($nim_list) || !is_array($nim_list)) {
-            $this->session->set_flashdata('error', 'Pilih minimal satu mahasiswa untuk disetujui sekaligus!');
+            $this->session->set_flashdata('error', 'Pilih minimal satu mahasiswa terlebih dahulu!');
             redirect('ketuakk');
             return;
         }
 
         $this->load->model('Approval_log_model');
-        $approved_count = 0;
+        $processed_count = 0;
         foreach ($nim_list as $nim) {
             $detail = $this->KetuaKK_model->get_detail_mahasiswa($nim);
             if ($detail) {
@@ -259,20 +264,21 @@ class KetuaKK extends CI_Controller {
                 $is_admin_app = (strcasecmp($detail['status_approval_admin'] ?? '', 'Approved') === 0);
                 $is_koor_app  = (strcasecmp($detail['status_approval_koor'] ?? '', 'Approved') === 0);
 
-                // Hanya approve yang sudah memenuhi prasyarat
+                // Hanya proses yang sudah memenuhi prasyarat
                 if ($is_wali_app && $is_admin_app && $is_koor_app) {
-                    $note = !empty($catatan) ? $catatan : 'Disetujui secara masif oleh Ketua KK.';
-                    $this->KetuaKK_model->update_approval_kk($nim, 'Approved', $note);
+                    $default_note = ($status_action === 'Approved') ? 'Disetujui secara masif oleh Ketua KK.' : 'Minta revisi secara masif oleh Ketua KK.';
+                    $note = !empty($catatan) ? $catatan : $default_note;
+                    $this->KetuaKK_model->update_approval_kk($nim, $status_action, $note);
                     
                     $mhs_name = trim(($detail['nama_depan'] ?? '') . ' ' . ($detail['nama_belakang'] ?? ''));
                     $this->Approval_log_model->log(array(
                         'modul'       => 'Ketua KK',
                         'ref_id'      => $nim,
                         'target_name' => $mhs_name,
-                        'action'      => 'Approved',
+                        'action'      => $status_action,
                         'catatan'     => $note
                     ));
-                    $approved_count++;
+                    $processed_count++;
                 }
             }
         }
@@ -280,9 +286,13 @@ class KetuaKK extends CI_Controller {
         $msg = "";
         $is_success = false;
 
-        if ($approved_count > 0) {
+        if ($processed_count > 0) {
             $is_success = true;
-            $msg = "Berhasil menyetujui $approved_count mahasiswa sekaligus! Akses modul Bimbingan Tugas Akhir mereka resmi DIBUKA (Unlocked).";
+            if ($status_action === 'Approved') {
+                $msg = "Berhasil menyetujui $processed_count mahasiswa sekaligus! Akses modul Bimbingan Tugas Akhir mereka resmi DIBUKA (Unlocked).";
+            } else {
+                $msg = "Berhasil mengirim status revisi massal untuk $processed_count mahasiswa terpilih.";
+            }
             $this->session->set_flashdata('success', $msg);
         } else {
             $msg = "Tidak ada mahasiswa terpilih yang memenuhi prasyarat persetujuan.";
