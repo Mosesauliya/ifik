@@ -1,4 +1,4 @@
-<!-- Global Custom Cursor Partial: Glowing Orange Solid Circle (Hover Expand Support) -->
+<!-- Global Custom Cursor Partial: Glowing Orange Solid Circle (Ultra-Fast 60+ FPS GPU Accelerated) -->
 <style>
     /* Ensure SweetAlert2 popups always render in front of all modal overlays */
     .swal2-container {
@@ -12,7 +12,7 @@
         }
     }
 
-    /* Di Responsif Layar HP: Kembalikan kursor standar & sembunyikan bulatan custom kursor */
+    /* Di Responsif Layar HP / Touchscreen: Kembalikan kursor standar & sembunyikan bulatan custom kursor */
     @media (max-width: 900px), (pointer: coarse) {
         *, *::before, *::after, html, body, a, button, input, select, textarea, label, [role="button"], tr, td, th {
             cursor: auto !important;
@@ -31,51 +31,65 @@
         }
     }
 
+    /* Pastikan iframe file (seperti PDF viewer) mengizinkan kursor sistem bawaan */
+    iframe {
+        cursor: auto !important;
+    }
+
     #customCursorCircle {
         position: fixed !important;
-        top: -100px;
-        left: -100px;
-        width: 24px !important;
-        height: 24px !important;
-        border: 2.5px solid #ea580c !important;
-        background: rgba(234, 88, 12, 0.25) !important;
-        backdrop-filter: blur(1px) !important;
-        -webkit-backdrop-filter: blur(1px) !important;
+        top: 0;
+        left: 0;
+        width: 22px;
+        height: 22px;
+        margin-top: -11px;
+        margin-left: -11px;
+        border: 2px solid #ea580c !important;
+        background: rgba(234, 88, 12, 0.3) !important;
         border-radius: 50% !important;
         pointer-events: none !important;
         z-index: 2147483647 !important;
-        transform: translate(-50%, -50%) !important;
-        box-shadow: 0 0 16px rgba(234, 88, 12, 0.8), inset 0 0 6px rgba(234, 88, 12, 0.2) !important;
-        transition: width 0.22s cubic-bezier(0.25, 1, 0.5, 1),
-                    height 0.22s cubic-bezier(0.25, 1, 0.5, 1),
-                    background-color 0.22s ease,
-                    border-color 0.22s ease,
-                    border-width 0.22s ease,
-                    box-shadow 0.22s ease !important;
-        will-change: left, top, width, height;
+        box-shadow: 0 0 14px rgba(234, 88, 12, 0.75), inset 0 0 4px rgba(234, 88, 12, 0.2) !important;
+        opacity: 0;
+        transition: width 0.16s cubic-bezier(0.2, 0.9, 0.2, 1),
+                    height 0.16s cubic-bezier(0.2, 0.9, 0.2, 1),
+                    margin 0.16s cubic-bezier(0.2, 0.9, 0.2, 1),
+                    background-color 0.16s ease,
+                    border-color 0.16s ease,
+                    box-shadow 0.16s ease,
+                    opacity 0.12s ease !important;
+        will-change: transform;
+        transform: translate3d(-100px, -100px, 0);
+    }
+
+    /* Status kursor disembunyikan (misal saat masuk ke area file PDF iframe atau kursor keluar window) */
+    #customCursorCircle.cursor-hidden {
+        opacity: 0 !important;
+        visibility: hidden !important;
     }
 
     /* Membesar saat mendekat / hover ke button, link, atau elemen interaktif */
-    html.cursor-hover #customCursorCircle,
-    body.cursor-hover #customCursorCircle,
     #customCursorCircle.hovered {
-        width: 48px !important;
-        height: 48px !important;
-        background: rgba(234, 88, 12, 0.35) !important;
+        width: 44px !important;
+        height: 44px !important;
+        margin-top: -22px !important;
+        margin-left: -22px !important;
+        background: rgba(234, 88, 12, 0.38) !important;
         border-color: #ea580c !important;
-        border-width: 3px !important;
-        box-shadow: 0 0 26px rgba(234, 88, 12, 0.95), inset 0 0 10px rgba(234, 88, 12, 0.35) !important;
+        border-width: 2.5px !important;
+        box-shadow: 0 0 22px rgba(234, 88, 12, 0.9), inset 0 0 8px rgba(234, 88, 12, 0.3) !important;
     }
 
     /* Efek klik ditekan */
-    html.cursor-active #customCursorCircle,
-    body.cursor-active #customCursorCircle,
     #customCursorCircle.active {
         width: 14px !important;
         height: 14px !important;
+        margin-top: -7px !important;
+        margin-left: -7px !important;
         background: #ea580c !important;
         border-color: #ea580c !important;
-        border-width: 3px !important;
+        border-width: 2.5px !important;
+        box-shadow: 0 0 10px rgba(234, 88, 12, 0.8) !important;
     }
 </style>
 
@@ -102,76 +116,67 @@
         }
 
         let mouseX = -100, mouseY = -100;
-        let circleX = -100, circleY = -100;
+        let isVisible = false;
 
-        function updateMouse(e) {
+        function hideCircleCursor() {
+            if (circle) circle.classList.add('cursor-hidden');
+            isVisible = false;
+        }
+
+        function showCircleCursor() {
+            if (circle) {
+                circle.classList.remove('cursor-hidden');
+                circle.style.opacity = '1';
+            }
+            isVisible = true;
+        }
+
+        window.hideCircleCursor = hideCircleCursor;
+        window.showCircleCursor = showCircleCursor;
+
+        // Update posisi 1:1 instan tanpa delay menggunakan GPU Compositor translate3d
+        function updateCursorPos(e) {
             mouseX = e.clientX;
             mouseY = e.clientY;
+            if (!isVisible) showCircleCursor();
+            circle.style.transform = 'translate3d(' + mouseX + 'px, ' + mouseY + 'px, 0)';
         }
 
-        function updateTouch(e) {
-            if (e.touches && e.touches[0]) {
-                mouseX = e.touches[0].clientX;
-                mouseY = e.touches[0].clientY;
-            }
-        }
+        window.addEventListener('pointermove', updateCursorPos, { passive: true });
 
-        window.addEventListener('mousemove', updateMouse, { passive: true });
-        document.addEventListener('mousemove', updateMouse, { passive: true });
-        window.addEventListener('pointermove', updateMouse, { passive: true });
-        document.addEventListener('pointermove', updateMouse, { passive: true });
-        window.addEventListener('touchmove', updateTouch, { passive: true });
-        window.addEventListener('touchstart', updateTouch, { passive: true });
+        // Sembunyikan kursor kustom saat mouse keluar jendela atau masuk ke iframe PDF
+        document.addEventListener('mouseleave', hideCircleCursor);
+        document.addEventListener('mouseenter', showCircleCursor);
+        window.addEventListener('blur', hideCircleCursor);
+        window.addEventListener('focus', showCircleCursor);
 
-        function render() {
-            circleX += (mouseX - circleX) * 0.28;
-            circleY += (mouseY - circleY) * 0.28;
-            circle.style.left = circleX + 'px';
-            circle.style.top = circleY + 'px';
-            requestAnimationFrame(render);
-        }
-        requestAnimationFrame(render);
+        // Delegasi hover elemen interaktif tanpa getComputedStyle dan tanpa merusak style tree halaman
+        const interactiveSelector = 'a, button, input, select, textarea, label, [role="button"], [onclick], .cursor-pointer, .box-3d, .btn-action, .nav-link, .card-3d-orange, .btn-3d-orange, img, svg';
 
-        // Selector seluruh elemen yang bisa diklik / berinteraksi
-        const hoverSelector = 'a, button, input, select, textarea, label, [role="button"], tr, [onclick], .cursor-pointer, .box-3d, .btn-action, .nav-link, .card-3d-orange, img, svg, i.bi, i.fa-solid';
-        
         document.addEventListener('mouseover', function(e) {
-            if (e.target && e.target.closest && (e.target.closest(hoverSelector) || window.getComputedStyle(e.target).cursor === 'pointer')) {
-                document.documentElement.classList.add('cursor-hover');
-                document.body.classList.add('cursor-hover');
-                circle.classList.add('hovered');
-            }
-        }, { passive: true });
+            const target = e.target;
+            if (!target) return;
 
-        document.addEventListener('mouseout', function(e) {
-            if (e.target && e.target.closest && (e.target.closest(hoverSelector) || window.getComputedStyle(e.target).cursor === 'pointer')) {
-                document.documentElement.classList.remove('cursor-hover');
-                document.body.classList.remove('cursor-hover');
+            // Sembunyikan kursor saat di dalam iframe (misal viewer PDF)
+            if (target.tagName === 'IFRAME' || (target.closest && (target.closest('iframe') || target.closest('#quickDocFileViewerWrapper') || target.closest('.pdf-viewer-container')))) {
+                hideCircleCursor();
+                return;
+            }
+
+            // Cek elemen interaktif (hovered) hanya menempel pada elemen kursor itu sendiri
+            if (target.closest && target.closest(interactiveSelector)) {
+                circle.classList.add('hovered');
+            } else {
                 circle.classList.remove('hovered');
             }
         }, { passive: true });
 
-        document.addEventListener('mousedown', function() {
-            document.documentElement.classList.add('cursor-active');
-            document.body.classList.add('cursor-active');
+        // Efek klik ditekan
+        window.addEventListener('pointerdown', function() {
             circle.classList.add('active');
         }, { passive: true });
 
-        document.addEventListener('mouseup', function() {
-            document.documentElement.classList.remove('cursor-active');
-            document.body.classList.remove('cursor-active');
-            circle.classList.remove('active');
-        }, { passive: true });
-
-        document.addEventListener('pointerdown', function() {
-            document.documentElement.classList.add('cursor-active');
-            document.body.classList.add('cursor-active');
-            circle.classList.add('active');
-        }, { passive: true });
-
-        document.addEventListener('pointerup', function() {
-            document.documentElement.classList.remove('cursor-active');
-            document.body.classList.remove('cursor-active');
+        window.addEventListener('pointerup', function() {
             circle.classList.remove('active');
         }, { passive: true });
     }

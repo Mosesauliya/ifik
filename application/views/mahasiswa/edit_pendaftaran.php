@@ -287,10 +287,15 @@
                     if (empty($note_lab) && preg_match('/\[BEBAS_LAB[^\]]*\]\s*:\s*([^\n\r]+)/i', $gen_notes, $m)) $note_lab = trim($m[1]);
                 }
 
-                $st_ksm = $pendaftaran['status_file_ksm'] ?? 'Pending';
-                $st_trn = $pendaftaran['status_file_transkrip'] ?? 'Pending';
-                $st_prn = $pendaftaran['status_file_pernyataan'] ?? 'Pending';
-                $st_lab = $pendaftaran['status_file_bebas_lab'] ?? 'Pending';
+                $st_ksm = (($pendaftaran['status_ksm'] ?? '') === 'Invalid') ? 'Rejected' : ($pendaftaran['status_file_ksm'] ?? 'Pending');
+                $st_trn = (($pendaftaran['status_transkrip'] ?? '') === 'Invalid') ? 'Rejected' : ($pendaftaran['status_file_transkrip'] ?? 'Pending');
+                $st_prn = (($pendaftaran['status_pernyataan'] ?? '') === 'Invalid') ? 'Rejected' : ($pendaftaran['status_file_pernyataan'] ?? 'Pending');
+                $st_lab = (($pendaftaran['status_bebas_lab'] ?? '') === 'Invalid') ? 'Rejected' : ($pendaftaran['status_file_bebas_lab'] ?? 'Pending');
+
+                if (empty($note_ksm) && !empty($pendaftaran['catatan_admin']) && ($pendaftaran['status_ksm'] ?? '') === 'Invalid') $note_ksm = $pendaftaran['catatan_admin'];
+                if (empty($note_trn) && !empty($pendaftaran['catatan_admin']) && ($pendaftaran['status_transkrip'] ?? '') === 'Invalid') $note_trn = $pendaftaran['catatan_admin'];
+                if (empty($note_prn) && !empty($pendaftaran['catatan_admin']) && ($pendaftaran['status_pernyataan'] ?? '') === 'Invalid') $note_prn = $pendaftaran['catatan_admin'];
+                if (empty($note_lab) && !empty($pendaftaran['catatan_admin']) && ($pendaftaran['status_bebas_lab'] ?? '') === 'Invalid') $note_lab = $pendaftaran['catatan_admin'];
             ?>
             <div class="card-3d-warm card-no-hover rounded-2xl p-6 sm:p-8 space-y-6">
                 <div class="flex items-center gap-3.5 pb-4 border-b border-orange-100">

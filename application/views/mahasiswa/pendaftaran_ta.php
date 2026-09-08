@@ -140,6 +140,16 @@
                             <strong>Catatan Admin Layanan (LAA):</strong> <?= htmlspecialchars($pendaftaran['catatan_admin']); ?>
                         </div>
                     <?php endif; ?>
+                    <?php if(!empty($pendaftaran['catatan_koor'])): ?>
+                        <div class="mt-2 p-3 bg-white/80 rounded-xl border border-rose-200 text-xs text-rose-900 font-medium">
+                            <strong>Catatan Koordinator TA:</strong> <?= htmlspecialchars($pendaftaran['catatan_koor']); ?>
+                        </div>
+                    <?php endif; ?>
+                    <?php if(!empty($pendaftaran['catatan_kk'])): ?>
+                        <div class="mt-2 p-3 bg-white/80 rounded-xl border border-rose-200 text-xs text-rose-900 font-medium">
+                            <strong>Catatan Ketua Kelompok Keahlian (KK):</strong> <?= htmlspecialchars($pendaftaran['catatan_kk']); ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         <?php endif; ?>
@@ -526,11 +536,12 @@
     </footer>
 
     <?php
-        $has_saved_draft = !empty($has_ta) && !empty($pendaftaran) && (!empty($pendaftaran['jenis_ta']) || !empty($pendaftaran['judul_1']) || !empty($pendaftaran['file_ksm']));
+        $has_saved_draft = !empty($has_ta) && (!empty($pendaftaran['jenis_ta']) || !empty($pendaftaran['judul_1']) || !empty($pendaftaran['file_ksm']) || !empty($student_berkas));
     ?>
     <script>
         window.CURRENT_USER_NIM = "<?= htmlspecialchars($mahasiswa['nim'] ?? ($this->session->userdata('nim') ?: ($this->session->userdata('nidn_nim') ?: ''))); ?>";
         window.UPLOAD_AJAX_URL = "<?= site_url('mahasiswa/ajax_upload_file_ta'); ?>";
+        window.DELETE_FILE_AJAX_URL = "<?= site_url('mahasiswa/ajax_delete_file_ta'); ?>";
         window.SAVE_DRAFT_AJAX_URL = "<?= site_url('mahasiswa/ajax_save_draft_ta'); ?>";
         window.SERVER_DRAFT_STEP = <?= (int)($server_draft_step ?? 1); ?>;
         window.SERVER_HAS_DRAFT = <?= $has_saved_draft ? 'true' : 'false'; ?>;

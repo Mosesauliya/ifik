@@ -656,45 +656,164 @@
                                     <?= !empty($pendaftaran['created_at']) ? date('d F Y', strtotime($pendaftaran['created_at'])) : date('d F Y'); ?>
                                 </td>
                                 <?php
-                                    $s_ksm = $pendaftaran['status_file_ksm'] ?? 'Pending';
-                                    $s_trn = $pendaftaran['status_file_transkrip'] ?? 'Pending';
-                                    $s_prn = $pendaftaran['status_file_pernyataan'] ?? 'Pending';
-                                    $s_lab = $pendaftaran['status_file_bebas_lab'] ?? 'Pending';
+                                    $active_syarat = !empty($syarat_berkas) ? $syarat_berkas : array(
+                                        array('kode_berkas' => 'ksm', 'nama_berkas' => 'Kartu Studi Mahasiswa (KSM)'),
+                                        array('kode_berkas' => 'transkrip', 'nama_berkas' => 'Transkrip Nilai Akademik'),
+                                        array('kode_berkas' => 'pernyataan', 'nama_berkas' => 'Surat Pernyataan Keaslian'),
+                                        array('kode_berkas' => 'bebas_lab', 'nama_berkas' => 'Surat Bebas Laboratorium')
+                                    );
+
+                                    $w_st  = $pendaftaran['status_approval_wali']  ?? 'Pending';
+                                    $a_st  = $pendaftaran['status_approval_admin'] ?? 'Pending';
+                                    $k_st  = $pendaftaran['status_approval_koor']  ?? 'Pending';
+                                    $kk_st = $pendaftaran['status_approval_kk']    ?? 'Pending';
+
                                     $s_jud = $pendaftaran['status_judul'] ?? 'Pending';
                                     $s_jen = $pendaftaran['status_jenis_ta'] ?? 'Pending';
 
+                                    $gen_notes = $pendaftaran['catatan_wali'] ?? '';
+                                    $files_list = [];
+
+                                    // Periksa berkas_kurang baik dalam format JSON array maupun string teks koma
+                                    $bk_raw = $pendaftaran['berkas_kurang'] ?? '';
+                                    $bk_decoded = !empty($bk_raw) ? json_decode($bk_raw, true) : null;
+
+                                    foreach ($active_syarat as $sb) {
+                                        $k = $sb['kode_berkas'];
+                                        $title = $sb['nama_berkas'];
+
+                                        // Status dari masing-masing reviewer
+                                        $st_dw  = $pendaftaran['status_file_' . $k] ?? null;
+                                        $st_laa = $student_berkas[$k]['status_verifikasi'] ?? ($pendaftaran['status_' . $k] ?? null);
+
+                                        // Cek apakah berkas termasuk yang ditandai kurang/invalid oleh Admin Layanan
+                                        $is_in_kurang = false;
+                                        if (!empty($bk_raw)) {
+                                            if (is_array($bk_decoded)) {
+                                                if (in_array($k, $bk_decoded) || in_array($title, $bk_decoded)) {
+                                                    $is_in_kurang = true;
+                                                } else {
+                                                    foreach ($bk_decoded as $item) {
+                                                        if (is_string($item) && (stripos($item, $k) !== false || stripos($item, $title) !== false)) {
+                                                            $is_in_kurang = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                            } elseif (is_string($bk_raw)) {
+                                                if (stripos($bk_raw, $k) !== false || stripos($bk_raw, $title) !== false) {
+                                                    $is_in_kurang = true;
+                                                }
+                                            }
+                                        }
+
+                                        $file_rej_by = null;
+                                        if ($st_laa === 'Invalid' || $is_in_kurang) {
+                                            $status = 'Rejected';
+                                            $file_rej_by = 'admin';
+                                        } elseif ($st_dw === 'Rejected') {
+                                            $status = 'Rejected';
+                                            $file_rej_by = 'wali';
+                                        } elseif ($st_laa === 'Valid') {
+                                            $status = 'Approved';
+                                        } elseif ($st_dw === 'Approved') {
+                                            $status = 'Approved';
+                                        } else {
+                                            $status = 'Pending';
+                                        }
+
+                                        // Nama file
+                                        $filename = $student_berkas[$k]['file_name'] ?? ($pendaftaran['file_' . $k] ?? '');
+
+                                        // Catatan perbaikan spesifik berkas
+                                        $note = '';
+                                        if ($file_rej_by === 'admin') {
+                                            $note = $student_berkas[$k]['catatan'] ?? '';
+                                            if (empty($note) && !empty($pendaftaran['catatan_admin'])) {
+                                                $note = $pendaftaran['catatan_admin'];
+                                            }
+                                        } elseif ($file_rej_by === 'wali') {
+                                            $note = $pendaftaran['catatan_file_' . $k] ?? '';
+                                            if (empty($note) && !empty($gen_notes)) {
+                                                if (preg_match('/\[' . preg_quote($k, '/') . '[^\]]*\]\s*:\s*([^\n\r]+)/i', $gen_notes, $m)) {
+                                                    $note = trim($m[1]);
+                                                } elseif ($k === 'ksm' && preg_match('/\[KSM[^\]]*\]\s*:\s*([^\n\r]+)/i', $gen_notes, $m)) {
+                                                    $note = trim($m[1]);
+                                                } elseif ($k === 'transkrip' && preg_match('/\[TRANSKRIP[^\]]*\]\s*:\s*([^\n\r]+)/i', $gen_notes, $m)) {
+                                                    $note = trim($m[1]);
+                                                } elseif ($k === 'pernyataan' && preg_match('/\[PERNYATAAN[^\]]*\]\s*:\s*([^\n\r]+)/i', $gen_notes, $m)) {
+                                                    $note = trim($m[1]);
+                                                } elseif ($k === 'bebas_lab' && preg_match('/\[BEBAS_LAB[^\]]*\]\s*:\s*([^\n\r]+)/i', $gen_notes, $m)) {
+                                                    $note = trim($m[1]);
+                                                }
+                                            }
+                                        } else {
+                                            $note = $student_berkas[$k]['catatan'] ?? ($pendaftaran['catatan_file_' . $k] ?? '');
+                                        }
+
+                                        $files_list[] = [
+                                            'key'         => $k,
+                                            'field'       => 'file_' . $k,
+                                            'title'       => $title,
+                                            'filename'    => $filename,
+                                            'status'      => $status,
+                                            'rejected_by' => $file_rej_by,
+                                            'note'        => $note,
+                                        ];
+                                    }
+
+                                    $w_is_rej  = ($w_st === 'Rejected');
+                                    $a_is_rej  = ($a_st === 'Rejected' || !empty($bk_raw));
+                                    $kk_is_rej = ($kk_st === 'Rejected');
+
                                     $app_items = 0;
-                                    if ($s_ksm === 'Approved') $app_items++;
-                                    if ($s_trn === 'Approved') $app_items++;
-                                    if ($s_prn === 'Approved') $app_items++;
-                                    if ($s_lab === 'Approved') $app_items++;
                                     if ($s_jud === 'Approved') $app_items++;
                                     if ($s_jen === 'Approved') $app_items++;
 
                                     $rej_items = 0;
-                                    if ($s_ksm === 'Rejected') $rej_items++;
-                                    if ($s_trn === 'Rejected') $rej_items++;
-                                    if ($s_prn === 'Rejected') $rej_items++;
-                                    if ($s_lab === 'Rejected') $rej_items++;
                                     if ($s_jud === 'Rejected') $rej_items++;
                                     if ($s_jen === 'Rejected') $rej_items++;
 
-                                    $total_eval_items = 6;
-                                    $pen_items = max(0, 6 - $app_items - $rej_items);
+                                    $rej_files_count = 0;
+                                    foreach ($files_list as $f) {
+                                        if ($f['status'] === 'Approved') $app_items++;
+                                        elseif ($f['status'] === 'Rejected') {
+                                            $rej_items++;
+                                            $rej_files_count++;
+                                        }
+                                    }
 
-                                    $overall_status = $pendaftaran['status_approval_wali'] ?? 'Pending';
-                                    if ($overall_status === 'Approved') {
+                                    if ($kk_is_rej && $s_jud !== 'Rejected') {
+                                        $rej_items++;
+                                    }
+
+                                    $total_eval_items = 2 + count($files_list);
+                                    $pen_items = max(0, $total_eval_items - $app_items - $rej_items);
+
+                                    $active_reviewer_rej = null;
+                                    if ($w_is_rej || ($w_st !== 'Approved' && ($s_jud === 'Rejected' || $s_jen === 'Rejected' || $rej_files_count > 0))) {
+                                        $overall_badge_text = 'Perlu Revisi (Dosen Wali)';
+                                        $overall_badge_cls  = 'bg-rose-100 text-rose-800 border-rose-300';
+                                        $overall_dot_cls    = 'bg-rose-500 animate-pulse';
+                                        $active_reviewer_rej = 'wali';
+                                    } elseif ($a_is_rej || ($a_st !== 'Approved' && $rej_files_count > 0 && $w_st === 'Approved')) {
+                                        $overall_badge_text = 'Perlu Revisi (Admin Layanan)';
+                                        $overall_badge_cls  = 'bg-rose-100 text-rose-800 border-rose-300';
+                                        $overall_dot_cls    = 'bg-rose-500 animate-pulse';
+                                        $active_reviewer_rej = 'admin';
+                                    } elseif ($kk_is_rej) {
+                                        $overall_badge_text = 'Perlu Revisi (Ketua KK)';
+                                        $overall_badge_cls  = 'bg-rose-100 text-rose-800 border-rose-300';
+                                        $overall_dot_cls    = 'bg-rose-500 animate-pulse';
+                                        $active_reviewer_rej = 'kk';
+                                    } elseif ($w_st === 'Approved' && $a_st === 'Approved' && $k_st === 'Approved' && $kk_st === 'Approved') {
                                         $overall_badge_text = 'Disetujui';
-                                        $overall_badge_cls = 'bg-emerald-100 text-emerald-800 border-emerald-300';
-                                        $overall_dot_cls = 'bg-emerald-500';
-                                    } elseif ($overall_status === 'Rejected' || $rej_items > 0) {
-                                        $overall_badge_text = 'Perlu Revisi';
-                                        $overall_badge_cls = 'bg-rose-100 text-rose-800 border-rose-300';
-                                        $overall_dot_cls = 'bg-rose-500 animate-pulse';
+                                        $overall_badge_cls  = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                                        $overall_dot_cls    = 'bg-emerald-500';
                                     } else {
                                         $overall_badge_text = 'Pending';
-                                        $overall_badge_cls = 'bg-amber-100 text-amber-800 border-amber-300';
-                                        $overall_dot_cls = 'bg-amber-500 animate-pulse';
+                                        $overall_badge_cls  = 'bg-amber-100 text-amber-800 border-amber-300';
+                                        $overall_dot_cls    = 'bg-amber-500 animate-pulse';
                                     }
                                 ?>
                                 <!-- Kolom Status Keseluruhan -->
@@ -711,9 +830,9 @@
                                         <?php if($rej_items > 0): ?>
                                             <i class="bi bi-exclamation-triangle-fill text-rose-500"></i>
                                             <span><?= $rej_items; ?> Revisi</span>
-                                        <?php elseif($app_items >= 6): ?>
+                                        <?php elseif($app_items >= $total_eval_items): ?>
                                             <i class="bi bi-check-all text-emerald-600 font-bold text-sm"></i>
-                                            <span class="text-emerald-800">Semua Valid (6/6)</span>
+                                            <span class="text-emerald-800">Semua Valid (<?= $app_items; ?>/<?= $total_eval_items; ?>)</span>
                                         <?php else: ?>
                                             <i class="bi bi-clock text-slate-500"></i>
                                             <span><?= $app_items > 0 ? $app_items . ' Valid, ' : ''; ?><?= $pen_items; ?> Menunggu</span>
@@ -759,56 +878,6 @@
 
     <?php if($has_ta): ?>
         <!-- Modal Rincian Status Berkas Persyaratan & Catatan Dosen -->
-        <?php
-            $note_ksm = !empty($pendaftaran['catatan_file_ksm']) ? $pendaftaran['catatan_file_ksm'] : '';
-            $note_trn = !empty($pendaftaran['catatan_file_transkrip']) ? $pendaftaran['catatan_file_transkrip'] : '';
-            $note_prn = !empty($pendaftaran['catatan_file_pernyataan']) ? $pendaftaran['catatan_file_pernyataan'] : '';
-            $note_lab = !empty($pendaftaran['catatan_file_bebas_lab']) ? $pendaftaran['catatan_file_bebas_lab'] : '';
-
-            // Fallback parse dari catatan_wali jika catatan_file_* kosong
-            $gen_notes = $pendaftaran['catatan_wali'] ?? '';
-            if (!empty($gen_notes)) {
-                if (empty($note_ksm) && preg_match('/\[KSM[^\]]*\]\s*:\s*([^\n\r]+)/i', $gen_notes, $m)) $note_ksm = trim($m[1]);
-                if (empty($note_trn) && preg_match('/\[TRANSKRIP[^\]]*\]\s*:\s*([^\n\r]+)/i', $gen_notes, $m)) $note_trn = trim($m[1]);
-                if (empty($note_prn) && preg_match('/\[PERNYATAAN[^\]]*\]\s*:\s*([^\n\r]+)/i', $gen_notes, $m)) $note_prn = trim($m[1]);
-                if (empty($note_lab) && preg_match('/\[BEBAS_LAB[^\]]*\]\s*:\s*([^\n\r]+)/i', $gen_notes, $m)) $note_lab = trim($m[1]);
-            }
-
-            $files_list = [
-                [
-                    'key'      => 'ksm',
-                    'field'    => 'file_ksm',
-                    'title'    => 'Kartu Studi Mahasiswa (KSM)',
-                    'filename' => $pendaftaran['file_ksm'] ?? '',
-                    'status'   => $pendaftaran['status_file_ksm'] ?? 'Pending',
-                    'note'     => $note_ksm,
-                ],
-                [
-                    'key'      => 'transkrip',
-                    'field'    => 'file_transkrip',
-                    'title'    => 'Transkrip Nilai Akademik',
-                    'filename' => $pendaftaran['file_transkrip'] ?? '',
-                    'status'   => $pendaftaran['status_file_transkrip'] ?? 'Pending',
-                    'note'     => $note_trn,
-                ],
-                [
-                    'key'      => 'pernyataan',
-                    'field'    => 'file_pernyataan',
-                    'title'    => 'Surat Pernyataan Keaslian',
-                    'filename' => $pendaftaran['file_pernyataan'] ?? '',
-                    'status'   => $pendaftaran['status_file_pernyataan'] ?? 'Pending',
-                    'note'     => $note_prn,
-                ],
-                [
-                    'key'      => 'bebas_lab',
-                    'field'    => 'file_bebas_lab',
-                    'title'    => 'Surat Bebas Laboratorium',
-                    'filename' => $pendaftaran['file_bebas_lab'] ?? '',
-                    'status'   => $pendaftaran['status_file_bebas_lab'] ?? 'Pending',
-                    'note'     => $note_lab,
-                ],
-            ];
-        ?>
 
         <div id="modalFileBreakdown" style="display: none;" onclick="if(event.target === this) closeFileBreakdownModal()" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 sm:p-6 md:p-8 overflow-hidden">
             <div class="bg-white rounded-3xl max-w-3xl lg:max-w-4xl w-full shadow-2xl border border-orange-100 max-h-[88vh] flex flex-col overflow-hidden my-auto mx-auto">
@@ -824,7 +893,15 @@
                                     <?= ($rej_items > 0) ? 'Perbaikan Tugas Akhir (' . $rej_items . ' Bagian Perlu Revisi)' : 'Rincian Verifikasi Berkas & Usulan Judul'; ?>
                                 </h3>
                                 <p class="text-xs text-slate-500 font-medium">
-                                    <?= ($rej_items > 0) ? 'Silakan perbaiki usulan judul atau unggah dokumen perbaikan yang ditolak oleh Dosen Wali di bawah ini.' : 'Status persetujuan &amp; catatan perbaikan dari Dosen Wali.'; ?>
+                                    <?php if($active_reviewer_rej === 'admin'): ?>
+                                        Silakan periksa catatan dari Admin Layanan dan unggah berkas PDF perbaikan di bawah ini.
+                                    <?php elseif($active_reviewer_rej === 'kk'): ?>
+                                        Silakan periksa catatan arahan dari Ketua KK dan perbarui usulan judul tugas akhir Anda.
+                                    <?php elseif($active_reviewer_rej === 'wali'): ?>
+                                        Silakan perbaiki usulan judul atau unggah dokumen perbaikan yang ditolak oleh Dosen Wali di bawah ini.
+                                    <?php else: ?>
+                                        Status persetujuan &amp; catatan perbaikan pengajuan Tugas Akhir.
+                                    <?php endif; ?>
                                 </p>
                             </div>
                         </div>
@@ -853,7 +930,46 @@
                             $note_jen = $pendaftaran['catatan_jenis_ta'] ?? '';
                             $st_j = $pendaftaran['status_judul'] ?? 'Pending';
                             $note_j = $pendaftaran['catatan_judul'] ?? '';
+
+                            $gen_note_clean = trim($pendaftaran['catatan_wali'] ?? '');
+                            $gen_note_clean = trim(preg_replace('/\[(KSM|TRANSKRIP|PERNYATAAN|BEBAS_LAB|JENIS TA|JUDUL TA|[A-Z0-9_]+)[^\]]*\]\s*:\s*[^\n\r]+/i', '', $gen_note_clean));
                         ?>
+
+                        <?php if(!empty($gen_note_clean)): ?>
+                            <div class="p-4 rounded-2xl bg-amber-50/90 border border-amber-200/90 text-amber-950 text-xs flex items-start gap-3 shadow-2xs">
+                                <div class="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center text-sm shrink-0 shadow-2xs">
+                                    <i class="bi bi-chat-left-quote-fill"></i>
+                                </div>
+                                <div class="min-w-0 space-y-1">
+                                    <span class="font-extrabold text-[11px] uppercase tracking-wider text-amber-900 block">Catatan Keseluruhan Dosen Wali:</span>
+                                    <p class="font-medium italic leading-relaxed text-slate-800">"<?= htmlspecialchars($gen_note_clean); ?>"</p>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if(!empty($pendaftaran['catatan_admin'])): ?>
+                            <div class="p-4 rounded-2xl bg-rose-50/90 border border-rose-200/90 text-rose-950 text-xs flex items-start gap-3 shadow-2xs">
+                                <div class="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center text-sm shrink-0 shadow-2xs">
+                                    <i class="bi bi-shield-exclamation"></i>
+                                </div>
+                                <div class="min-w-0 space-y-1">
+                                    <span class="font-extrabold text-[11px] uppercase tracking-wider text-rose-900 block">Catatan Verifikasi Admin Layanan (LAA):</span>
+                                    <p class="font-medium italic leading-relaxed text-slate-800">"<?= htmlspecialchars($pendaftaran['catatan_admin']); ?>"</p>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if(!empty($pendaftaran['catatan_kk'])): ?>
+                            <div class="p-4 rounded-2xl bg-orange-50/90 border border-orange-200/90 text-orange-950 text-xs flex items-start gap-3 shadow-2xs">
+                                <div class="w-8 h-8 rounded-xl bg-orange-600 text-white flex items-center justify-center text-sm shrink-0 shadow-2xs">
+                                    <i class="bi bi-mortarboard-fill"></i>
+                                </div>
+                                <div class="min-w-0 space-y-1">
+                                    <span class="font-extrabold text-[11px] uppercase tracking-wider text-orange-900 block">Catatan Arahan Ketua Kelompok Keahlian (KK):</span>
+                                    <p class="font-medium italic leading-relaxed text-slate-800">"<?= htmlspecialchars($pendaftaran['catatan_kk']); ?>"</p>
+                                </div>
+                            </div>
+                        <?php endif; ?>
 
                         <!-- Daftar Berkas & Usulan Komponen Pendaftaran -->
                         <div class="space-y-3.5">
@@ -894,7 +1010,7 @@
                                     </div>
                                 <?php endif; ?>
 
-                                <?php if($st_j === 'Rejected'): ?>
+                                <?php if($st_j === 'Rejected' || $kk_is_rej): ?>
                                     <div class="p-5 rounded-2xl border-2 border-rose-400 bg-rose-50/70 shadow-sm space-y-3.5 transition-all">
                                         <div class="flex items-start justify-between gap-3">
                                             <div class="flex items-center gap-3 min-w-0">
@@ -916,7 +1032,16 @@
                                             </span>
                                         </div>
 
-                                        <?php if(!empty($note_j)): ?>
+                                        <?php if($kk_is_rej && !empty($pendaftaran['catatan_kk'])): ?>
+                                            <div class="p-3.5 rounded-xl bg-white/95 border border-orange-200 text-xs space-y-1.5 shadow-2xs">
+                                                <div class="flex items-center gap-1.5 font-black text-[11px] text-orange-700 uppercase tracking-wider">
+                                                    <i class="bi bi-chat-left-dots-fill"></i> Catatan Arahan Ketua KK:
+                                                </div>
+                                                <p class="text-xs font-medium leading-relaxed italic text-slate-800">
+                                                    "<?= htmlspecialchars($pendaftaran['catatan_kk']); ?>"
+                                                </p>
+                                            </div>
+                                        <?php elseif(!empty($note_j)): ?>
                                             <div class="p-3.5 rounded-xl bg-white/95 border border-rose-200 text-xs space-y-1.5 shadow-2xs">
                                                 <div class="flex items-center gap-1.5 font-black text-[11px] text-rose-700 uppercase tracking-wider">
                                                     <i class="bi bi-chat-left-dots-fill"></i> Saran / Catatan Dosen Wali:
@@ -959,13 +1084,13 @@
                                                 </span>
                                             </div>
 
-                                            <!-- Catatan Perbaikan dari Dosen Wali -->
+                                            <!-- Catatan Perbaikan Berkas -->
                                             <div class="p-3.5 rounded-xl bg-white/95 border border-rose-200 text-xs space-y-1.5 shadow-2xs">
                                                 <div class="flex items-center gap-1.5 font-black text-[11px] text-rose-700 uppercase tracking-wider">
-                                                    <i class="bi bi-chat-left-dots-fill"></i> Catatan Perbaikan Dosen Wali:
+                                                    <i class="bi bi-chat-left-dots-fill"></i> <?= ($f['rejected_by'] === 'admin' || $active_reviewer_rej === 'admin') ? 'Catatan Verifikasi Admin Layanan:' : 'Catatan Perbaikan Dosen Wali:'; ?>
                                                 </div>
                                                 <p class="text-xs font-medium leading-relaxed italic text-slate-800">
-                                                    "<?= !empty($f['note']) ? htmlspecialchars($f['note']) : 'Berkas belum sesuai ketentuan, silakan unggah ulang file PDF perbaikan.'; ?>"
+                                                    "<?= !empty($f['note']) ? htmlspecialchars($f['note']) : (!empty($pendaftaran['catatan_admin']) ? htmlspecialchars($pendaftaran['catatan_admin']) : 'Berkas belum sesuai ketentuan, silakan unggah ulang file PDF perbaikan.'); ?>"
                                                 </p>
                                             </div>
 
@@ -1174,15 +1299,19 @@
                 if (userNim) {
                     try {
                         localStorage.removeItem('ifik_ta_active_step_' + userNim);
+                        localStorage.removeItem('ifik_ta_draft_' + userNim);
                         localStorage.removeItem('ifik_ta_form_draft_' + userNim);
                         sessionStorage.removeItem('ifik_ta_active_step_' + userNim);
+                        sessionStorage.removeItem('ifik_ta_draft_' + userNim);
                         sessionStorage.removeItem('ifik_ta_form_draft_' + userNim);
                     } catch (e) {}
                 }
                 try {
                     localStorage.removeItem('ifik_ta_active_step');
+                    localStorage.removeItem('ifik_ta_draft');
                     localStorage.removeItem('ifik_ta_form_draft');
                     sessionStorage.removeItem('ifik_ta_active_step');
+                    sessionStorage.removeItem('ifik_ta_draft');
                     sessionStorage.removeItem('ifik_ta_form_draft');
                 } catch (e) {}
 

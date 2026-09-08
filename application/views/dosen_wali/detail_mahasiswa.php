@@ -325,18 +325,24 @@
                                 $ver = $student_berkas[$k]['status_verifikasi'];
                                 $st_val = ($ver === 'Valid') ? 'Approved' : (($ver === 'Invalid') ? 'Rejected' : 'Pending');
                             }
+                            $is_reviewed = !empty($detail['review_file_' . $k]) || ($st_val === 'Approved' || $st_val === 'Rejected');
                             $berkas_items[] = [
                                 'key'     => $k,
                                 'label'   => $sb_idx . '. ' . $sb['nama_berkas'],
                                 'desc'    => $sb['deskripsi'] ?: ('Dokumen persyaratan ' . $sb['nama_berkas']),
                                 'file'    => $file_val,
                                 'status'  => $st_val,
+                                'reviewed'=> $is_reviewed,
                                 'icon'    => $icon_map[$k] ?? 'bi-file-earmark-pdf',
                                 'presets' => $preset_map[$k] ?? ['Format Berkas Salah', 'Berkas Buram / Kurang Jelas', 'Dokumen Belum Lengkap']
                             ];
                             $sb_idx++;
                         }
                         $total_berkas_count = count($berkas_items);
+                        $reviewed_map = [];
+                        foreach ($berkas_items as $b) {
+                            $reviewed_map[$b['key']] = !empty($b['reviewed']);
+                        }
                     ?>
 
                     <div id="docGridContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
@@ -367,16 +373,22 @@
                                     <p class="text-xs text-slate-500 leading-relaxed mb-3 font-medium"><?= $b['desc']; ?></p>
 
                                     <!-- Document Action Buttons (Modal Preview & New Tab) -->
-                                    <div class="flex items-center gap-2 pt-1">
-                                        <button type="button" onclick="openPdfModal('<?= addslashes($b['label']); ?>', '<?= htmlspecialchars($b['file']); ?>', '<?= $b['key']; ?>', '<?= $resolve_pdf_url($b['file']); ?>')" 
+                                    <div class="flex flex-wrap items-center gap-2 pt-1">
+                                        <button type="button" id="btnPreview_<?= $b['key']; ?>" onclick="openPdfModal('<?= addslashes($b['label']); ?>', '<?= htmlspecialchars($b['file']); ?>', '<?= $b['key']; ?>', '<?= $resolve_pdf_url($b['file']); ?>')" 
                                                 class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs flex items-center gap-2 shadow-xs cursor-pointer transition-all">
                                             <i class="bi bi-file-earmark-pdf text-rose-400 text-sm"></i>
                                             <span>Pratinjau Dokumen</span>
                                         </button>
-                                        <a href="<?= $resolve_pdf_url($b['file']); ?>" target="_blank" 
+                                        <a href="<?= $resolve_pdf_url($b['file']); ?>" target="_blank" onclick="markDocAsReviewed('<?= $b['key']; ?>')" 
                                            class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all">
                                             <i class="bi bi-box-arrow-up-right"></i> Unduh
                                         </a>
+
+                                        <!-- Document Review Indicator Badge -->
+                                        <span id="reviewBadge_<?= $b['key']; ?>" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all <?= $b['reviewed'] ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'; ?>">
+                                            <i class="bi <?= $b['reviewed'] ? 'bi-check-circle-fill text-emerald-500' : 'bi-eye-slash text-amber-500'; ?>"></i>
+                                            <span class="badge-text"><?= $b['reviewed'] ? 'Sudah Dilihat' : 'Belum Dilihat'; ?></span>
+                                        </span>
                                     </div>
                                 </div>
 
@@ -437,8 +449,12 @@
                                             value="<?= htmlspecialchars($saved_note); ?>"
                                             placeholder="Tuliskan catatan perbaikan spesifik berkas ini..."
                                             <?= $isLocked ? 'readonly' : ''; ?>
-                                            oninput="syncAllCatatanAdmin()"
+                                            oninput="handleDocNoteInput('<?= $b['key']; ?>')"
                                             class="w-full px-3 py-1.5 bg-white border border-rose-300 rounded-xl text-xs font-medium text-slate-800 placeholder-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-2xs">
+
+                                    <p id="err_doc_<?= $b['key']; ?>" class="text-[11px] font-bold text-rose-600 flex items-center gap-1 hidden pt-1">
+                                        <i class="bi bi-exclamation-circle-fill text-xs"></i> <span>Catatan belum ditambahkan. Wajib diisi alasan revisi berkas ini.</span>
+                                    </p>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -560,10 +576,72 @@
     <script>
         let currentModalKey = '';
         let currentModalFileUrl = '';
+        window.reviewedDocs = <?= json_encode($reviewed_map ?? []); ?>;
+
+        function isDocReviewed(key) {
+            return Boolean(window.reviewedDocs && window.reviewedDocs[key]);
+        }
+
+        function markDocAsReviewed(key) {
+            if (!key) return;
+            if (!window.reviewedDocs) {
+                window.reviewedDocs = {};
+            }
+            window.reviewedDocs[key] = true;
+
+            // Update status badge UI on the card
+            const badge = document.getElementById('reviewBadge_' + key);
+            if (badge) {
+                badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all bg-emerald-50 text-emerald-700 border border-emerald-200';
+                badge.innerHTML = '<i class="bi bi-check-circle-fill text-emerald-500"></i> <span class="badge-text">Sudah Dilihat</span>';
+            }
+
+            // Remove highlight on preview button if active
+            const btn = document.getElementById('btnPreview_' + key);
+            if (btn) {
+                btn.classList.remove('ring-4', 'ring-amber-400', 'animate-pulse');
+            }
+
+            // Send AJAX to server to log review timestamp
+            try {
+                const fd = new FormData();
+                fd.append('nim', '<?= $detail['nim']; ?>');
+                fd.append('file_type', key);
+                fetch('<?= site_url("dosenwali/log_review_ajax"); ?>', {
+                    method: 'POST',
+                    body: fd
+                }).then(res => res.json()).then(data => {
+                    // Review logged successfully
+                }).catch(err => {});
+            } catch(e) {}
+        }
+
+        function promptUnreviewedDoc(key) {
+            const card = document.querySelector('.doc-card[data-key="' + key + '"]');
+            const docTitle = card && card.querySelector('h3') ? card.querySelector('h3').textContent.trim() : ('Dokumen ' + key.toUpperCase());
+
+            flashDocPreviewButton(key);
+            alert('⚠️ Dokumen Belum Dibuka!\n\nAnda harus membuka dan memeriksa berkas "' + docTitle + '" terlebih dahulu sebelum dapat menentukan status verifikasi (Valid atau Kurang/Revisi).\n\nSilakan klik tombol "Pratinjau Dokumen" atau "Unduh".');
+        }
+
+        function flashDocPreviewButton(key) {
+            const btn = document.getElementById('btnPreview_' + key);
+            if (btn) {
+                btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                btn.classList.add('ring-4', 'ring-amber-400', 'animate-pulse');
+                setTimeout(() => {
+                    btn.classList.remove('ring-4', 'ring-amber-400', 'animate-pulse');
+                }, 3000);
+            }
+        }
 
         function openPdfModal(title, filename, key, fileUrl) {
             currentModalKey = key;
             currentModalFileUrl = fileUrl || '';
+
+            if (key) {
+                markDocAsReviewed(key);
+            }
 
             document.getElementById('pdfModalTitle').textContent = title;
             document.getElementById('pdfModalFilename').textContent = filename;
@@ -611,6 +689,10 @@
         });
 
         function toggleDocStatus(key, isKurang) {
+            if (!isDocReviewed(key)) {
+                promptUnreviewedDoc(key);
+                return;
+            }
             const card = document.querySelector('.doc-card[data-key="' + key + '"]');
             if (card) {
                 const cbValid = card.querySelector('input[name="berkas_valid[]"]');
@@ -629,6 +711,12 @@
 
         function handleValidCheck(cbValid) {
             const card = cbValid.closest('.doc-card');
+            const key = card ? card.getAttribute('data-key') : '';
+            if (cbValid.checked && !isDocReviewed(key)) {
+                cbValid.checked = false;
+                promptUnreviewedDoc(key);
+                return false;
+            }
             const cbKurang = card.querySelector('input[name="berkas_kurang[]"]');
             if (cbValid.checked && cbKurang) {
                 cbKurang.checked = false;
@@ -638,6 +726,12 @@
 
         function handleKurangCheck(cbKurang) {
             const card = cbKurang.closest('.doc-card');
+            const key = card ? card.getAttribute('data-key') : '';
+            if (cbKurang.checked && !isDocReviewed(key)) {
+                cbKurang.checked = false;
+                promptUnreviewedDoc(key);
+                return false;
+            }
             const cbValid = card.querySelector('input[name="berkas_valid[]"]');
             if (cbKurang.checked && cbValid) {
                 cbValid.checked = false;
@@ -646,11 +740,13 @@
         }
 
         function updateCardState(card) {
+            const key = card ? card.getAttribute('data-key') : '';
             const cbValid = card.querySelector('input[name="berkas_valid[]"]');
             const cbKurang = card.querySelector('input[name="berkas_kurang[]"]');
             const badge = card.querySelector('.doc-badge');
             const noteBox = card.querySelector('.catatan-doc-box');
             const noteInput = noteBox ? noteBox.querySelector('input') : null;
+            const errEl = document.getElementById('err_doc_' + key);
 
             card.classList.remove('border-emerald-200', 'bg-emerald-50/20', 'border-rose-200', 'bg-rose-50/30', 'border-slate-200', 'bg-white');
 
@@ -661,7 +757,10 @@
                     badge.textContent = 'Valid';
                 }
                 if (noteBox) noteBox.classList.add('hidden');
-                if (noteInput) noteInput.value = '';
+                if (noteInput) {
+                    noteInput.value = '';
+                    clearDocNoteError(noteInput, errEl);
+                }
             } else if (cbKurang && cbKurang.checked) {
                 card.classList.add('border-rose-200', 'bg-rose-50/30');
                 if (badge) {
@@ -679,7 +778,44 @@
                     badge.textContent = 'Belum Dicek';
                 }
                 if (noteBox) noteBox.classList.add('hidden');
-                if (noteInput) noteInput.value = '';
+                if (noteInput) {
+                    noteInput.value = '';
+                    clearDocNoteError(noteInput, errEl);
+                }
+            }
+            syncAllCatatanAdmin();
+            updateActionButtonsUI();
+        }
+
+        function clearDocNoteError(inputEl, errEl) {
+            if (inputEl) {
+                inputEl.classList.remove('border-rose-600', 'ring-4', 'ring-rose-500/30', 'bg-rose-50/80');
+                inputEl.classList.add('border-rose-300');
+            }
+            if (errEl) {
+                errEl.classList.add('hidden');
+            }
+        }
+
+        function highlightDocNoteError(inputEl, errEl, msg) {
+            if (inputEl) {
+                inputEl.classList.remove('border-rose-300');
+                inputEl.classList.add('border-rose-600', 'ring-4', 'ring-rose-500/30', 'bg-rose-50/80');
+            }
+            if (errEl) {
+                if (msg) {
+                    const spanEl = errEl.querySelector('span');
+                    if (spanEl) spanEl.textContent = msg;
+                }
+                errEl.classList.remove('hidden');
+            }
+        }
+
+        function handleDocNoteInput(key) {
+            const inputEl = document.getElementById('catatan_doc_' + key);
+            const errEl = document.getElementById('err_doc_' + key);
+            if (inputEl && inputEl.value.trim() !== '') {
+                clearDocNoteError(inputEl, errEl);
             }
             syncAllCatatanAdmin();
             updateActionButtonsUI();
@@ -704,8 +840,6 @@
                     const labelName = labels[key] || key;
                     if (text) {
                         compiledNotes.push('- ' + labelName + ': ' + text);
-                    } else {
-                        compiledNotes.push('- ' + labelName + ': Memerlukan perbaikan / revisi.');
                     }
                 }
             });
@@ -717,6 +851,10 @@
         }
 
         function setDocNote(key, noteText) {
+            if (!isDocReviewed(key)) {
+                promptUnreviewedDoc(key);
+                return;
+            }
             const card = document.querySelector('.doc-card[data-key="' + key + '"]');
             if (!card) return;
 
@@ -727,6 +865,7 @@
             }
 
             const noteInput = card.querySelector('.catatan-doc-box input');
+            const errEl = document.getElementById('err_doc_' + key);
             if (noteInput) {
                 if (noteInput.value.trim().length > 0) {
                     if (!noteInput.value.includes(noteText)) {
@@ -735,6 +874,7 @@
                 } else {
                     noteInput.value = noteText;
                 }
+                clearDocNoteError(noteInput, errEl);
                 noteInput.focus();
             }
             syncAllCatatanAdmin();
@@ -790,6 +930,23 @@
         });
 
         function markAllValid() {
+            const unreviewedCards = [];
+            document.querySelectorAll('.doc-card').forEach(card => {
+                const key = card.getAttribute('data-key');
+                if (!isDocReviewed(key)) {
+                    const title = card.querySelector('h3') ? card.querySelector('h3').textContent.trim() : key;
+                    unreviewedCards.push({ key: key, title: title });
+                }
+            });
+
+            if (unreviewedCards.length > 0) {
+                flashDocPreviewButton(unreviewedCards[0].key);
+                alert('⚠️ Perhatian: Terdapat ' + unreviewedCards.length + ' berkas yang belum dibuka/diperiksa:\n\n' +
+                      unreviewedCards.map(item => '• ' + item.title).join('\n') +
+                      '\n\nAnda harus membuka dan memeriksa semua berkas terlebih dahulu sebelum menandai semua berkas sebagai Valid!');
+                return false;
+            }
+
             document.querySelectorAll('.doc-card').forEach(card => {
                 const cbValid = card.querySelector('input[name="berkas_valid[]"]');
                 const cbKurang = card.querySelector('input[name="berkas_kurang[]"]');
@@ -822,6 +979,36 @@
         }
 
         function confirmReject() {
+            // 1. Cek apakah berkas yang ditandai Kurang/Revisi sudah dibuka
+            const unreviewedKurang = [];
+            document.querySelectorAll('input[name="berkas_kurang[]"]:checked').forEach(cb => {
+                const card = cb.closest('.doc-card');
+                const key = card.getAttribute('data-key');
+                if (!isDocReviewed(key)) {
+                    const title = card.querySelector('h3') ? card.querySelector('h3').textContent.trim() : key;
+                    unreviewedKurang.push({ key: key, title: title });
+                }
+            });
+
+            if (unreviewedKurang.length > 0) {
+                flashDocPreviewButton(unreviewedKurang[0].key);
+                alert('⚠️ Peringatan: Berkas yang ditandai Kurang/Revisi harus dibuka dan diperiksa terlebih dahulu:\n\n' +
+                      unreviewedKurang.map(item => '• ' + item.title).join('\n') +
+                      '\n\nSilakan klik "Pratinjau Dokumen" atau "Unduh" pada berkas tersebut sebelum mengembalikan pengajuan!');
+                return false;
+            }
+
+            // 2. Cek apakah Dosen Wali sudah membuka setidaknya salah satu berkas mahasiswa
+            const anyReviewed = Object.keys(window.reviewedDocs || {}).some(k => window.reviewedDocs[k]);
+            if (!anyReviewed) {
+                const firstCard = document.querySelector('.doc-card');
+                if (firstCard) {
+                    flashDocPreviewButton(firstCard.getAttribute('data-key'));
+                }
+                alert('⚠️ Peringatan: Anda belum membuka/memeriksa berkas pendaftaran mahasiswa!\n\nHarap buka dan periksa dokumen terlebih dahulu (klik "Pratinjau Dokumen" atau "Unduh") sebelum dapat mengembalikan/menolak pengajuan.');
+                return false;
+            }
+
             const checkedCount = document.querySelectorAll('input[name="berkas_kurang[]"]:checked').length;
             const checkedValid = document.querySelectorAll('input[name="berkas_valid[]"]:checked').length;
             const catatan = document.getElementById('catatan_admin').value.trim();
@@ -833,6 +1020,42 @@
 
             if (checkedCount === 0 && !catatan) {
                 alert('Peringatan: Silakan centang minimal 1 dokumen yang "Kurang / Revisi" atau tuliskan catatan instruksi revisi sebelum mengembalikan pengajuan ke mahasiswa!');
+                return false;
+            }
+
+            // Validasi jika ada dokumen yang ditandai Kurang/Revisi tetapi belum diberikan catatan
+            let emptyErrors = [];
+            let firstEmptyInput = null;
+
+            document.querySelectorAll('.doc-card').forEach(card => {
+                const key = card.getAttribute('data-key');
+                const cbKurang = card.querySelector('input[name="berkas_kurang[]"]');
+                const noteInput = card.querySelector('.catatan-doc-box input');
+                const errEl = document.getElementById('err_doc_' + key);
+                const docTitle = card.querySelector('h3') ? card.querySelector('h3').textContent.trim() : key;
+
+                if (cbKurang && cbKurang.checked) {
+                    const noteVal = noteInput ? noteInput.value.trim() : '';
+                    if (!noteVal) {
+                        highlightDocNoteError(noteInput, errEl, 'Catatan belum ditambahkan. Wajib diisi alasan revisi berkas ini.');
+                        emptyErrors.push(docTitle);
+                        if (!firstEmptyInput) {
+                            firstEmptyInput = noteInput;
+                        }
+                    } else {
+                        clearDocNoteError(noteInput, errEl);
+                    }
+                }
+            });
+
+            if (emptyErrors.length > 0) {
+                if (firstEmptyInput) {
+                    firstEmptyInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(() => firstEmptyInput.focus(), 300);
+                }
+                alert('⚠️ Peringatan: Terdapat ' + emptyErrors.length + ' berkas yang ditandai Kurang/Revisi tetapi belum diberikan catatan perbaikan:\n\n' +
+                      emptyErrors.map(e => '• ' + e).join('\n') + 
+                      '\n\nHarap isi alasan revisi atau pilih salah satu opsi perbaikan sebelum mengembalikan pengajuan!');
                 return false;
             }
 
@@ -850,9 +1073,27 @@
                 return false;
             }
 
+            // Validasi seluruh berkas harus sudah dibuka/diperiksa
+            const unreviewedCards = [];
+            document.querySelectorAll('.doc-card').forEach(card => {
+                const key = card.getAttribute('data-key');
+                if (!isDocReviewed(key)) {
+                    const title = card.querySelector('h3') ? card.querySelector('h3').textContent.trim() : key;
+                    unreviewedCards.push({ key: key, title: title });
+                }
+            });
+
+            if (unreviewedCards.length > 0) {
+                flashDocPreviewButton(unreviewedCards[0].key);
+                alert('⚠️ Peringatan: Anda belum membuka/memeriksa seluruh berkas pendaftaran mahasiswa ini!\n\nBerkas yang belum dibuka (' + unreviewedCards.length + '):\n' +
+                      unreviewedCards.map(item => '• ' + item.title).join('\n') +
+                      '\n\nSilakan klik "Pratinjau Dokumen" atau "Unduh" untuk setiap berkas sebelum menyetujui pengajuan pendaftaran TA.');
+                return false;
+            }
+
             const checkedValid = document.querySelectorAll('input[name="berkas_valid[]"]:checked').length;
             if (checkedValid < <?= $total_berkas_count; ?>) {
-                const setAll = confirm('Informasi: Baru ' + checkedValid + ' dari <?= $total_berkas_count; ?> berkas yang dicentang Valid.\n\nApakah Anda ingin otomatis menandai SELURUH <?= $total_berkas_count; ?> berkas sebagai VALID dan menyetujui pengajuan ini ke tahap Admin Layanan (LAA)?');
+                const setAll = confirm('Informasi: Baru ' + checkedValid + ' dari <?= $total_berkas_count; ?> berkas yang dicentang Valid.\n\nSemua berkas sudah Anda periksa. Apakah Anda ingin menandai SELURUH <?= $total_berkas_count; ?> berkas sebagai VALID dan menyetujui pengajuan ini ke tahap Admin Layanan (LAA)?');
                 if (setAll) {
                     markAllValid();
                     document.getElementById('formStatus').value = 'Approved';
