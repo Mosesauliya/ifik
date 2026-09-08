@@ -58,10 +58,21 @@ class DosenWali extends CI_Controller {
             }
             $catatan = trim($this->input->post('catatan_wali') ?? '');
 
-            if ($status === 'Rejected' && empty($catatan)) {
-                $this->session->set_flashdata('error', 'Alasan penolakan / catatan revisi wajib diisi jika memilih Reject!');
-                redirect('dosenwali/detail_mahasiswa/' . $nim);
-                return;
+            if ($status === 'Rejected') {
+                if (empty($catatan) && empty($this->input->post('berkas_kurang'))) {
+                    $this->session->set_flashdata('error', 'Alasan penolakan / catatan revisi wajib diisi jika memilih Reject!');
+                    redirect('dosenwali/detail_mahasiswa/' . $nim);
+                    return;
+                }
+                $submitted_kurang = $this->input->post('berkas_kurang') ?: array();
+                $submitted_notes  = $this->input->post('catatan_berkas') ?: array();
+                foreach ($submitted_kurang as $bk) {
+                    if (empty(trim($submitted_notes[$bk] ?? ''))) {
+                        $this->session->set_flashdata('error', 'Catatan revisi untuk setiap berkas yang ditandai Kurang/Revisi wajib diisi!');
+                        redirect('dosenwali/detail_mahasiswa/' . $nim);
+                        return;
+                    }
+                }
             }
 
             // Simpan status per berkas jika dikirim melalui form

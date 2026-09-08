@@ -3170,6 +3170,7 @@
                                 <input type="text" 
                                        id="inputPreviewCatatan_${p.nim}_${p.docKey}" 
                                        placeholder="Alasan penolakan / revisi dokumen..." 
+                                       oninput="clearPreviewDocNoteError('${p.nim}', '${p.docKey}')"
                                        class="flex-1 text-xs px-2.5 py-1.5 rounded-lg border border-rose-300 focus:ring-2 focus:ring-rose-500/30 focus:border-rose-500 focus:outline-none bg-rose-50/20 text-slate-800">
                                 <button type="button" 
                                         onclick="submitPreviewDocApproval('${p.nim}', '${p.docKey}', 'Rejected')" 
@@ -3184,6 +3185,9 @@
                                     Batal
                                 </button>
                             </div>
+                            <p id="errPreviewCatatan_${p.nim}_${p.docKey}" class="text-[10px] font-bold text-rose-600 flex items-center gap-1 hidden">
+                                <i class="fa-solid fa-circle-exclamation"></i> <span>Alasan / catatan revisi dokumen wajib diisi!</span>
+                            </p>
                         </div>
                     </div>
                 `;
@@ -3204,6 +3208,7 @@
         if (!box) return;
         box.classList.toggle('hidden');
         if (!box.classList.contains('hidden')) {
+            clearPreviewDocNoteError(nim, docKey);
             const input = document.getElementById(`inputPreviewCatatan_${nim}_${docKey}`);
             if (input) input.focus();
         }
@@ -3213,7 +3218,20 @@
         const input = document.getElementById(`inputPreviewCatatan_${nim}_${docKey}`);
         if (input) {
             input.value = noteText;
+            clearPreviewDocNoteError(nim, docKey);
             input.focus();
+        }
+    }
+
+    function clearPreviewDocNoteError(nim, docKey) {
+        const input = document.getElementById(`inputPreviewCatatan_${nim}_${docKey}`);
+        const err = document.getElementById(`errPreviewCatatan_${nim}_${docKey}`);
+        if (input) {
+            input.classList.remove('border-rose-600', 'ring-2', 'ring-rose-500/30', 'bg-rose-50/80');
+            input.classList.add('border-rose-300');
+        }
+        if (err) {
+            err.classList.add('hidden');
         }
     }
 
@@ -3226,7 +3244,21 @@
         let comment = '';
         if (status === 'Rejected') {
             const inputCatatan = document.getElementById(`inputPreviewCatatan_${nim}_${docKey}`);
+            const errEl = document.getElementById(`errPreviewCatatan_${nim}_${docKey}`);
             comment = inputCatatan ? inputCatatan.value.trim() : '';
+
+            if (!comment) {
+                if (inputCatatan) {
+                    inputCatatan.classList.remove('border-rose-300');
+                    inputCatatan.classList.add('border-rose-600', 'ring-2', 'ring-rose-500/30', 'bg-rose-50/80');
+                    inputCatatan.focus();
+                }
+                if (errEl) {
+                    errEl.classList.remove('hidden');
+                }
+                showDWToast('⚠️ Alasan / catatan revisi dokumen wajib diisi sebelum mengirim revisi!', false);
+                return;
+            }
         }
 
         const btnApprove = document.getElementById(`btnPreviewApprove_${nim}_${docKey}`);

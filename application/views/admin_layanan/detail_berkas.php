@@ -407,8 +407,12 @@
                                             name="catatan_berkas[<?= $b['key']; ?>]" 
                                             id="catatan_doc_<?= $b['key']; ?>"
                                             placeholder="Tuliskan catatan perbaikan spesifik berkas ini..."
-                                            oninput="syncAllCatatanAdmin()"
+                                            oninput="handleDocNoteInput('<?= $b['key']; ?>')"
                                             class="w-full px-3 py-1.5 bg-white border border-rose-300 rounded-xl text-xs font-medium text-slate-800 placeholder-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-2xs">
+
+                                     <p id="err_doc_<?= $b['key']; ?>" class="text-[11px] font-bold text-rose-600 flex items-center gap-1 hidden pt-1">
+                                         <i class="bi bi-exclamation-circle-fill text-xs"></i> <span>Catatan belum ditambahkan. Wajib diisi alasan revisi berkas ini.</span>
+                                     </p>
                                  </div>
                              </div>
                         <?php endforeach; ?>
@@ -686,6 +690,8 @@
 
             card.classList.remove('border-emerald-200', 'bg-emerald-50/20', 'border-rose-200', 'bg-rose-50/30', 'border-slate-200', 'bg-white');
 
+            const errEl = document.getElementById('err_doc_' + key);
+
             if (cbValid && cbValid.checked) {
                 targetStatus = 'Valid';
                 card.classList.add('border-emerald-200', 'bg-emerald-50/20');
@@ -694,7 +700,10 @@
                     badge.innerHTML = '<i class="bi bi-check-circle-fill text-emerald-600"></i> Valid';
                 }
                 if (noteBox) noteBox.classList.add('hidden');
-                if (noteInput) noteInput.value = '';
+                if (noteInput) {
+                    noteInput.value = '';
+                    clearDocNoteError(noteInput, errEl);
+                }
             } else if (cbKurang && cbKurang.checked) {
                 targetStatus = 'Invalid';
                 card.classList.add('border-rose-200', 'bg-rose-50/30');
@@ -714,7 +723,10 @@
                     badge.textContent = 'Belum Dicek';
                 }
                 if (noteBox) noteBox.classList.add('hidden');
-                if (noteInput) noteInput.value = '';
+                if (noteInput) {
+                    noteInput.value = '';
+                    clearDocNoteError(noteInput, errEl);
+                }
             }
 
             if (key) {
@@ -726,6 +738,39 @@
             updateActionButtonsUI();
         }
 
+        function clearDocNoteError(inputEl, errEl) {
+            if (inputEl) {
+                inputEl.classList.remove('border-rose-600', 'ring-4', 'ring-rose-500/30', 'bg-rose-50/80');
+                inputEl.classList.add('border-rose-300');
+            }
+            if (errEl) {
+                errEl.classList.add('hidden');
+            }
+        }
+
+        function highlightDocNoteError(inputEl, errEl, msg) {
+            if (inputEl) {
+                inputEl.classList.remove('border-rose-300');
+                inputEl.classList.add('border-rose-600', 'ring-4', 'ring-rose-500/30', 'bg-rose-50/80');
+            }
+            if (errEl) {
+                if (msg) {
+                    const spanEl = errEl.querySelector('span');
+                    if (spanEl) spanEl.textContent = msg;
+                }
+                errEl.classList.remove('hidden');
+            }
+        }
+
+        function handleDocNoteInput(key) {
+            const inputEl = document.getElementById('catatan_doc_' + key);
+            const errEl = document.getElementById('err_doc_' + key);
+            if (inputEl && inputEl.value.trim() !== '') {
+                clearDocNoteError(inputEl, errEl);
+            }
+            syncAllCatatanAdmin();
+            updateActionButtonsUI();
+        }
 
         function syncAllCatatanAdmin() {
             const compiledNotes = [];
@@ -746,8 +791,6 @@
                     const labelName = labels[key] || key;
                     if (text) {
                         compiledNotes.push('- ' + labelName + ': ' + text);
-                    } else {
-                        compiledNotes.push('- ' + labelName + ': Memerlukan perbaikan / revisi.');
                     }
                 }
             });
@@ -769,6 +812,7 @@
             }
 
             const noteInput = card.querySelector('.catatan-doc-box input');
+            const errEl = document.getElementById('err_doc_' + key);
             if (noteInput) {
                 if (noteInput.value.trim().length > 0) {
                     if (!noteInput.value.includes(noteText)) {
@@ -777,6 +821,7 @@
                 } else {
                     noteInput.value = noteText;
                 }
+                clearDocNoteError(noteInput, errEl);
                 noteInput.focus();
             }
             syncAllCatatanAdmin();
@@ -910,6 +955,42 @@
 
             if (checkedCount === 0 && !catatan) {
                 alert('Peringatan: Silakan centang minimal 1 dokumen yang "Kurang / Revisi" atau tuliskan catatan instruksi revisi sebelum mengembalikan pengajuan ke mahasiswa!');
+                return false;
+            }
+
+            // Validasi jika ada dokumen yang ditandai Kurang/Revisi tetapi belum diberikan catatan
+            let emptyErrors = [];
+            let firstEmptyInput = null;
+
+            document.querySelectorAll('.doc-card').forEach(card => {
+                const key = card.getAttribute('data-key');
+                const cbKurang = card.querySelector('input[name="berkas_kurang[]"]');
+                const noteInput = card.querySelector('.catatan-doc-box input');
+                const errEl = document.getElementById('err_doc_' + key);
+                const docTitle = card.querySelector('h3') ? card.querySelector('h3').textContent.trim() : key;
+
+                if (cbKurang && cbKurang.checked) {
+                    const noteVal = noteInput ? noteInput.value.trim() : '';
+                    if (!noteVal) {
+                        highlightDocNoteError(noteInput, errEl, 'Catatan belum ditambahkan. Wajib diisi alasan revisi berkas ini.');
+                        emptyErrors.push(docTitle);
+                        if (!firstEmptyInput) {
+                            firstEmptyInput = noteInput;
+                        }
+                    } else {
+                        clearDocNoteError(noteInput, errEl);
+                    }
+                }
+            });
+
+            if (emptyErrors.length > 0) {
+                if (firstEmptyInput) {
+                    firstEmptyInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(() => firstEmptyInput.focus(), 300);
+                }
+                alert('⚠️ Peringatan: Terdapat ' + emptyErrors.length + ' berkas yang ditandai Kurang/Revisi tetapi belum diberikan catatan perbaikan:\n\n' +
+                      emptyErrors.map(e => '• ' + e).join('\n') + 
+                      '\n\nHarap isi alasan revisi atau pilih salah satu opsi perbaikan sebelum mengembalikan pengajuan!');
                 return false;
             }
 
