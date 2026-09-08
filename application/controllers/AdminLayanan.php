@@ -50,6 +50,12 @@ class AdminLayanan extends CI_Controller {
 
         $data['berkas_summaries'] = $this->AdminLayanan_model->get_batch_student_berkas_summaries($data['list_pengajuan'], $data['syarat_berkas']);
 
+        foreach ($data['list_pengajuan'] as &$r) {
+            $nim = $r['nim'] ?? '';
+            $r['berkas_summary'] = $data['berkas_summaries'][$nim] ?? null;
+        }
+        unset($r);
+
         $this->load->view('admin_layanan/dashboard', $data);
     }
 

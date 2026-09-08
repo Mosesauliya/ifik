@@ -2322,8 +2322,12 @@
         }
         window.showLAAToast = showLAAToast;
 
-        function resolveDocPdfUrl(filename) {
-            if (!filename) return '<?= base_url("uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf"); ?>';
+        function resolveDocPdfUrl(filename, existingUrl) {
+            const fallbackPdf = '<?= base_url("uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf"); ?>';
+            if (existingUrl && (existingUrl.startsWith('http://') || existingUrl.startsWith('https://'))) {
+                return existingUrl;
+            }
+            if (!filename) return fallbackPdf;
             filename = String(filename).trim();
             if (filename.startsWith('http://') || filename.startsWith('https://')) return filename;
             if (filename.startsWith('uploads/')) return '<?= base_url(); ?>' + filename;
@@ -2373,9 +2377,10 @@
         }
 
         function getMhsDocInfo(mhs, docKey, nim) {
+            const fallbackPdf = '<?= base_url("uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf"); ?>';
             if (!mhs) {
                 const fallbackName = `${docKey}_${nim}.pdf`;
-                return { filename: fallbackName, url: resolveDocPdfUrl(fallbackName), status: 'Pending' };
+                return { filename: fallbackName, url: fallbackPdf, status: 'Pending' };
             }
 
             let filename = '';
@@ -2388,12 +2393,12 @@
                 status = mhs.files[docKey].status || 'Pending';
             }
 
-            if (!filename && mhs.berkas_summary && mhs.berkas_summary.items) {
-                const item = mhs.berkas_summary.items.find(i => i.kode === docKey);
+            if ((!filename || !url) && mhs.berkas_summary && mhs.berkas_summary.items) {
+                const item = mhs.berkas_summary.items.find(i => String(i.kode).trim() === String(docKey).trim());
                 if (item) {
-                    filename = item.file_name || '';
-                    url = item.file_url || '';
-                    status = item.status || 'Pending';
+                    if (!filename) filename = item.file_name || '';
+                    if (!url) url = item.file_url || '';
+                    if (!status || status === 'Pending') status = item.status || 'Pending';
                 }
             }
 
@@ -2405,7 +2410,7 @@
             }
 
             if (!filename) filename = `${docKey}_${nim}.pdf`;
-            if (!url) url = resolveDocPdfUrl(filename);
+            if (!url) url = resolveDocPdfUrl(filename, url);
 
             return { filename, url, status };
         }

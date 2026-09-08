@@ -885,27 +885,178 @@
     }
 
     @media (max-width: 900px) {
-        .news-header h1 { font-size: 1.7rem; }
+        .news-header h1 { font-size: 1.75rem; }
         .news-header p { font-size: 0.88rem; }
-        .news-card { width: 230px; height: 340px; }
-        .news-fan-container { height: 350px; }
+        .news-card {
+            width: 230px;
+            height: 340px;
+            --spread-x: calc(var(--offset) * 75px);
+            --angle-per-card: 8deg;
+        }
+        .news-fan-container { height: 360px; }
         .news-title { font-size: 0.95rem; }
         .news-excerpt { font-size: 0.82rem; -webkit-line-clamp: 2; }
-        .news-modal-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+    }
+
+    @media (max-width: 768px) {
+        #section-contact {
+            height: auto !important;
+            min-height: 100vh;
+            padding-top: 50px !important;
+            padding-bottom: 50px !important;
+            justify-content: flex-start !important;
+        }
+        .news-header {
+            margin-bottom: 8px;
+        }
+        .news-header h1 {
+            font-size: 1.6rem;
+        }
+        .news-header p {
+            font-size: 0.85rem;
+            padding: 0 16px;
+        }
+        .news-fan-container {
+            height: 360px;
+        }
+        .news-card {
+            width: 230px;
+            height: 335px;
+            --spread-x: calc(var(--offset) * 45px);
+            --arc-y: calc(var(--offset) * var(--offset) * 4px);
+            --angle-per-card: 6deg;
+        }
+        .news-card:hover {
+            --hover-shift-x: calc(var(--offset) * 15px);
+            transform: translate(calc(-50% + var(--spread-x) + var(--hover-shift-x)), calc(-50% - 25px)) rotate(0deg) scale(1.03) !important;
+        }
+        .news-card:hover ~ .news-card {
+            transform: translate(calc(-50% + var(--spread-x) + 40px), calc(-50% + var(--arc-y) + 10px)) rotate(calc(var(--angle) + 4deg)) !important;
+        }
+        .news-fan-container:has(.news-card:hover) .news-card:not(:hover):not(.news-card:hover ~ .news-card) {
+            transform: translate(calc(-50% + var(--spread-x) - 40px), calc(-50% + var(--arc-y) + 10px)) rotate(calc(var(--angle) - 4deg)) !important;
+        }
+        /* Mobile horizontal controls */
+        .news-controls {
+            position: relative;
+            right: auto;
+            top: auto;
+            transform: none;
+            flex-direction: row;
+            width: auto;
+            gap: 14px;
+            margin-top: 14px;
+            margin-bottom: 6px;
+            z-index: 20;
+        }
+        .news-arrow-btn {
+            width: 42px;
+            height: 42px;
+            font-size: 1.1rem;
+        }
+        .news-arrow-btn#newsPrevBtn {
+            transform: rotate(-90deg);
+        }
+        .news-arrow-btn#newsNextBtn {
+            transform: rotate(-90deg);
+        }
+        .news-dots {
+            flex-direction: row;
+            gap: 6px;
+            margin: 0 4px;
+        }
+        .news-dot {
+            width: 8px;
+            height: 8px;
+        }
+        .news-dot.active {
+            width: 24px;
+            height: 8px;
+            border-radius: 99px;
+        }
+        .news-dot-fill {
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #ea580c, #f97316);
+        }
         .news-modal-header {
             flex-direction: column;
             align-items: stretch;
             gap: 16px;
+            position: relative;
         }
         .news-search-wrapper {
             margin: 0;
             max-width: 100%;
         }
         .news-modal-close {
-            align-self: flex-end;
             position: absolute;
-            top: 24px;
-            right: 24px;
+            top: 0;
+            right: 0;
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+        }
+        .news-modal-grid {
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 16px;
+        }
+        #newsModal {
+            padding: 32px 16px 40px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        #section-contact {
+            padding-top: 36px !important;
+            padding-bottom: 36px !important;
+        }
+        .news-header h1 {
+            font-size: 1.35rem;
+        }
+        .news-header p {
+            font-size: 0.78rem;
+        }
+        .news-fan-container {
+            height: 330px;
+        }
+        .news-card {
+            width: 215px;
+            height: 315px;
+            border-radius: 18px;
+            --spread-x: calc(var(--offset) * 30px);
+            --arc-y: calc(var(--offset) * var(--offset) * 3px);
+            --angle-per-card: 4deg;
+        }
+        .news-content {
+            padding: 14px 16px;
+        }
+        .news-title {
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+        .news-date {
+            font-size: 0.7rem;
+            margin-bottom: 6px;
+        }
+        .news-excerpt {
+            font-size: 0.78rem;
+            -webkit-line-clamp: 2;
+        }
+        .news-view-all-btn {
+            padding: 8px 18px;
+            font-size: 0.8rem;
+        }
+        .news-modal-grid {
+            grid-template-columns: 1fr;
+        }
+        .news-modal-card {
+            height: 280px;
+        }
+        .news-modal-header h2 {
+            font-size: 1.35rem;
         }
     }
 </style>
@@ -1222,7 +1373,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateProgressBar(pct) {
         const activeDotFill = dotsEl.querySelector('.news-dot.active .news-dot-fill');
         if (activeDotFill) {
-            activeDotFill.style.height = `${Math.min(100, Math.max(0, pct))}%`;
+            const isMobile = window.innerWidth <= 768;
+            const cappedPct = Math.min(100, Math.max(0, pct));
+            if (isMobile) {
+                activeDotFill.style.width = `${cappedPct}%`;
+                activeDotFill.style.height = '100%';
+            } else {
+                activeDotFill.style.height = `${cappedPct}%`;
+                activeDotFill.style.width = '100%';
+            }
         }
     }
 
@@ -1271,6 +1430,33 @@ document.addEventListener('DOMContentLoaded', () => {
         elapsedMs = 0;
         updateProgressBar(0);
         lastTimestamp = null;
+    }
+
+    // Touch Swipe Support for Mobile
+    let touchStartX = 0;
+    let touchEndX = 0;
+    container.addEventListener('touchstart', (e) => {
+        if (e.changedTouches && e.changedTouches.length > 0) {
+            touchStartX = e.changedTouches[0].screenX;
+        }
+    }, { passive: true });
+
+    container.addEventListener('touchend', (e) => {
+        if (e.changedTouches && e.changedTouches.length > 0) {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }
+    }, { passive: true });
+
+    function handleSwipe() {
+        const diff = touchStartX - touchEndX;
+        if (Math.abs(diff) > 40) {
+            if (diff > 0) {
+                if (!nextBtn.disabled) nextBtn.click();
+            } else {
+                if (!prevBtn.disabled) prevBtn.click();
+            }
+        }
     }
 
     // Pause auto-scroll HANYA saat kursor berada langsung di atas kartu (.news-card)
