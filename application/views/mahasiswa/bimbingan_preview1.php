@@ -857,6 +857,8 @@
                                 </div>
                                 <span id="fileNameP3" class="truncate font-mono">draft.pdf</span>
                             </div>
+                            <span id="fileSizeP3" class="text-xs text-emerald-800 font-bold shrink-0 ml-3 bg-white px-3 py-1 rounded-xl border border-emerald-200">2.4 MB</span>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wider mb-2.5">Catatan Kelayakan Pra-Sidang</label>

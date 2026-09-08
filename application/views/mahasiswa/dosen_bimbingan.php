@@ -140,7 +140,179 @@
             color: #94a3b8;
             margin-bottom: 6px;
         }
-        /* P2 comment modal removed in favor of tailwind classes */
+
+        /* ========== FLOATING NON-BLOCKING PREVIEW (DARI REFERENSI) ========== */
+        @keyframes popInCard {
+            0% { opacity: 0; transform: scale(0.9) translateY(24px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes fadeInSlideRight {
+            0% { opacity: 0; transform: scale(0.95) translateX(60px); }
+            100% { opacity: 1; transform: scale(1) translateX(0); }
+        }
+        @keyframes fadeInDownSmooth {
+            0% { opacity: 0; transform: translateY(-16px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-pop-in {
+            animation: popInCard 0.8s cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+        }
+        .animate-preview-in {
+            animation: fadeInSlideRight 1.1s cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+        }
+        .animate-bar-in {
+            animation: fadeInDownSmooth 0.8s cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+        }
+        .smooth-dock-panel {
+            transition: width 1.1s cubic-bezier(0.2, 0.9, 0.2, 1),
+                        max-width 1.1s cubic-bezier(0.2, 0.9, 0.2, 1),
+                        opacity 0.8s ease,
+                        transform 1.1s cubic-bezier(0.2, 0.9, 0.2, 1);
+            will-change: width, max-width, opacity, transform;
+        }
+        .student-card-item {
+            will-change: transform;
+            transition: box-shadow 0.4s ease, border-color 0.4s ease;
+        }
+        .preview-card-item {
+            will-change: transform, width, max-width, opacity;
+        }
+        #wrapperPreviewBerkas {
+            transition: all 1.1s cubic-bezier(0.2, 0.9, 0.2, 1);
+        }
+        #wrapperDaftarMhs::-webkit-scrollbar {
+            width: 5px;
+        }
+        #wrapperDaftarMhs::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.5);
+            border-radius: 9999px;
+        }
+        #wrapperDaftarMhs::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        /* Container utama floating */
+        #lihatBerkasContainer {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 50;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            gap: 1.5rem;
+            overflow-x: auto;
+            background: rgba(15, 23, 42, 0.3);
+            backdrop-filter: blur(4px);
+        }
+        #lihatBerkasContainer.active {
+            display: flex;
+        }
+        #wrapperDaftarMhs {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 1rem;
+            max-height: 92vh;
+            overflow-y: auto;
+            flex-shrink: 0;
+            padding: 0.25rem;
+        }
+        #wrapperPreviewBerkas {
+            display: none;
+            align-items: center;
+            gap: 1rem;
+            flex-shrink: 0;
+        }
+        #wrapperPreviewBerkas.active {
+            display: flex;
+        }
+        /* Kartu mahasiswa */
+        .student-card-item {
+            pointer-events: auto;
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 40px -12px rgba(0,0,0,0.25);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            width: 380px;
+            max-width: 95vw;
+        }
+        /* Kartu preview */
+        .preview-card-item {
+            pointer-events: auto;
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            width: 520px;
+            max-width: 95vw;
+            max-height: 92vh;
+        }
+        .preview-card-item iframe {
+            pointer-events: none;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .preview-card-item .iframe-interact {
+            pointer-events: auto;
+        }
+        .btn-3d-orange {
+            background: linear-gradient(135deg, #ea580c, #f97316);
+            color: #fff;
+            border: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(234,88,12,0.3);
+        }
+        .btn-3d-orange:hover {
+            transform: scale(1.03);
+            box-shadow: 0 6px 20px rgba(234,88,12,0.4);
+        }
+        /* Prevent overflow */
+        .preview-card-item .preview-body {
+            flex: 1;
+            min-height: 300px;
+            height: 55vh;
+            position: relative;
+            background: #e2e8f0;
+            overflow: hidden;
+        }
+        .preview-card-item .preview-body iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            position: relative;
+            z-index: 10;
+        }
+        .preview-card-item .preview-body .loader {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            background: #e2e8f0;
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 600;
+            gap: 0.5rem;
+        }
+        .preview-card-item .preview-body .loader i {
+            font-size: 1.5rem;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-amber-50/40 via-orange-50/25 to-slate-100 min-h-screen text-slate-800 antialiased flex flex-col justify-between selection:bg-orange-500 selection:text-white">
@@ -179,7 +351,6 @@
                         <a href="<?= site_url('dosen/bimbingan?posisi=2') ?>" class="flex-1 py-3 px-4 rounded-2xl font-bold text-center border <?= $posisi == 2 ? 'bg-orange-500 border-orange-400 text-white shadow-lg' : 'bg-white/10 border-white/20 hover:bg-white/20' ?> transition">
                             <i class="bi bi-person mr-2"></i> Sebagai P2
                         </a>
-
                     </div>
                 </div>
             </div>
@@ -282,7 +453,6 @@
                             <tbody class="divide-y divide-slate-100 font-medium bg-white" id="bimbinganTableBody">
                                 <tr><td colspan="8" class="text-center py-10 text-slate-500"><i class="bi bi-arrow-repeat animate-spin mr-2"></i> Memuat data...</td></tr>
                             </tbody>
-
                         </table>
                     </div>
                 </div>
@@ -334,35 +504,125 @@
                 </div>
             </div>
 
-            <!-- Modal PDF Preview -->
-            <div id="pdfPreviewModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
-                <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm" onclick="closePdfModal()"></div>
-                <div class="relative bg-white rounded-3xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden shadow-2xl">
-                    <div class="p-4 bg-slate-900 text-white flex items-center justify-between shrink-0">
-                        <h3 class="text-sm font-bold flex items-center gap-2"><i class="bi bi-file-earmark-pdf-fill text-orange-500"></i> Preview Dokumen</h3>
-                        <button onclick="closePdfModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition cursor-pointer"><i class="bi bi-x-lg text-sm"></i></button>
-                    </div>
-                    <div class="flex-1 bg-slate-100 p-2 relative">
-                        <div id="pdfLoadingIndicator" class="absolute inset-0 flex flex-col items-center justify-center text-slate-500 z-0">
-                            <i class="bi bi-arrow-repeat animate-spin text-3xl mb-2"></i>
-                            <span class="text-sm font-semibold text-slate-600">Memuat Dokumen...</span>
-                        </div>
-                        <iframe id="pdfIframe" src="" class="w-full h-full rounded-xl border border-slate-300 relative z-10 bg-white" frameborder="0"></iframe>
-                    </div>
+            <!-- Floating Non-Blocking Container: Lihat & Pratinjau Berkas (hanya 2 file terbaru) -->
+            <div id="lihatBerkasContainer" class="fixed inset-0 pointer-events-none z-50 flex items-center justify-center p-3 sm:p-5 gap-4 sm:gap-5 overflow-x-auto" style="display: none;">
+                <!-- Wrapper Kartu Mahasiswa -->
+                <div id="wrapperDaftarMhs" class="flex flex-row items-center gap-4 shrink-0 max-h-[92vh] overflow-y-auto">
+                    <!-- Kartu mahasiswa dirender dinamis -->
+                </div>
+
+                <!-- Wrapper Pratinjau Dokumen Berkas (Maksimal 2 Panel Berdampingan) -->
+                <div id="wrapperPreviewBerkas" class="flex items-center gap-4 shrink-0 hidden">
+                    <!-- 1 atau 2 Panel Pratinjau -->
                 </div>
             </div>
 
         </div>
     </main>
 
+    <!-- Hover Preview Panel -->
+    <div id="hoverPreviewPanel">
+        <div class="panel-header">
+            <i class="bi bi-person-circle"></i>
+            <span id="hoverPanelName">Nama Mahasiswa</span>
+        </div>
+        <div class="pdf-frame-wrap" id="hoverPdfWrap">
+            <div class="pdf-no-file"><i class="bi bi-file-earmark-x text-3xl"></i><span>Belum ada berkas</span></div>
+        </div>
+        <div class="panel-body">
+            <div id="hoverFormWrap">
+                <!-- Injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Comment Modal -->
+    <div id="commentModal" class="hidden fixed inset-0 z-[200] items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeCommentModal()"></div>
+        <div class="relative bg-white rounded-3xl p-6 sm:p-8 w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
+            <button onclick="closeCommentModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
+            <h3 class="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2" id="commentModalTitle">
+                <i class="bi bi-chat-quote-fill text-indigo-500"></i> Komentar
+            </h3>
+            <p class="text-xs text-slate-500 font-semibold mb-4" id="commentModalName">Nama Mahasiswa</p>
+            <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm text-slate-800 font-medium leading-relaxed overflow-y-auto flex-1" id="commentModalContent">
+                <!-- Comment content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Batch Action Bar -->
+    <div id="dosenBatchActionBar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 text-white px-5 py-3 rounded-2xl shadow-2xl backdrop-blur-md border border-slate-700 hidden flex-wrap items-center gap-4 transition-all duration-300">
+        <div class="flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-orange-500 text-white font-black text-xs flex items-center justify-center shadow-xs" id="dosenSelectedCountBadge">0</span>
+            <span class="text-xs font-bold tracking-tight">Mahasiswa Terpilih</span>
+        </div>
+        
+        <div class="h-5 w-px bg-slate-700 hidden sm:block"></div>
+
+        <div class="flex items-center gap-2.5">
+            <!-- Button 1: Popup Batch Review -->
+            <button type="button" onclick="openDosenBatchModal()" class="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-xl text-xs font-extrabold shadow-md flex items-center gap-2 transition-all active:scale-95 cursor-pointer">
+                <i class="bi bi-files"></i> Preview Massal
+            </button>
+
+            <!-- Button 2: Direct Batch Approve -->
+            <button type="button" onclick="submitDosenBatchApprove()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer">
+                <i class="bi bi-check2-all"></i> Approve Massal
+            </button>
+
+            <!-- Button 3: Uncheck All -->
+            <button type="button" onclick="unselectAllDosenStudents()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition-all cursor-pointer">
+                <i class="bi bi-x-lg"></i> Batal
+            </button>
+        </div>
+    </div>
+
+    <!-- Multi-Student Batch Review Modal Popup -->
+    <div id="dosenBatchReviewModal" class="hidden fixed inset-0 z-[100] overflow-y-auto p-4 sm:p-6">
+        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="closeDosenBatchModal()"></div>
+        <div class="relative bg-white rounded-3xl w-full max-w-6xl mx-auto flex flex-col overflow-hidden shadow-2xl my-4 sm:my-8">
+            <div class="p-4 px-6 bg-slate-900 text-white flex items-center justify-between shrink-0">
+                <h3 class="text-sm font-extrabold flex items-center gap-2">
+                    <i class="bi bi-files text-orange-500"></i> Review Preview Massal
+                    <span class="text-[10px] font-normal text-slate-400 ml-1">— Setiap kartu berisi preview langsung, komentar, dan tombol simpan</span>
+                </h3>
+                <button type="button" onclick="closeDosenBatchModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer">
+                    <i class="bi bi-x-lg text-sm"></i>
+                </button>
+            </div>
+            
+            <div class="p-5 sm:p-6 flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5" id="dosenBatchModalBody">
+                <!-- Data cards injected via JS -->
+            </div>
+            
+            <div class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
+                <span class="text-xs text-slate-500 font-medium">Simpan setiap kartu secara individual, atau gunakan Approve Massal dari toolbar bawah.</span>
+                <button type="button" onclick="closeDosenBatchModal()" class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition cursor-pointer">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Rekomendasi Sidang / Non-Sidang (Jalur Prestasi/Ekuivalensi) -->
+    <?php $this->load->view('partials/modal_rekomendasi_sidang'); ?>
+
     <script>
+        // ============================================================
+        // GLOBAL VARIABLES
+        // ============================================================
         let currentTahap = 'Preview 1';
         let bimbinganData = [];
         let currentDosenFilter = 'all';
-        let searchCategory = 'all'; // 'all' | 'nama' | 'nim' | 'judul'
-        let activeKeyword = '';    // keyword yang aktif setelah klik Cari
+        let searchCategory = 'all';
+        let activeKeyword = '';
 
-        // ── Search Kategori Functions ──
+        // Floating preview state
+        window.activeLihatBerkasIndex = null; // index di bimbinganData
+        window.activePreviews = [];            // array { nim, fileIndex } maks 2
+
+        // ============================================================
+        // SEARCH FUNCTIONS
+        // ============================================================
         function toggleSearchCatMenu() {
             document.getElementById('searchCatMenu').classList.toggle('open');
         }
@@ -379,7 +639,9 @@
             renderTable();
         }
 
-        // Initialize TinyMCE for single review modal
+        // ============================================================
+        // TINYMCE INIT
+        // ============================================================
         function initModalTinyMCE() {
             tinymce.init({
                 selector: '#modalCatatan',
@@ -397,9 +659,11 @@
             });
         }
 
+        // ============================================================
+        // FETCH DATA
+        // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
             fetchBimbinganData();
-            // Tutup dropdown kategori saat klik di luar
             document.addEventListener('click', function(e) {
                 const wrap = document.getElementById('searchCatWrap');
                 if (wrap && !wrap.contains(e.target)) {
@@ -431,7 +695,6 @@
                 document.getElementById('dosenTab3').classList.remove(...btnClassInactive);
                 document.getElementById('dosenTab3').classList.add(...btnClassActive);
             }
-            
             fetchBimbinganData();
         }
 
@@ -454,7 +717,6 @@
                     }
                     if(res.status) {
                         bimbinganData = res.data;
-                        // Sort by newest upload (created_at) descending
                         bimbinganData.sort((a, b) => {
                             let dateA = a.latest_preview ? new Date(a.latest_preview.created_at).getTime() : 0;
                             let dateB = b.latest_preview ? new Date(b.latest_preview.created_at).getTime() : 0;
@@ -504,6 +766,9 @@
             }
         }
 
+        // ============================================================
+        // RENDER TABLE
+        // ============================================================
         function renderTable() {
             const tbody = document.getElementById('bimbinganTableBody');
             const keyword = activeKeyword;
@@ -512,7 +777,6 @@
             let count = 0;
 
             bimbinganData.forEach((mhs, index) => {
-                // Category-based matching
                 let match = false;
                 if (!keyword) {
                     match = true;
@@ -522,15 +786,13 @@
                     match = mhs.nama_mahasiswa.toLowerCase().includes(keyword);
                 } else if (searchCategory === 'judul') {
                     match = (mhs.judul && mhs.judul.toLowerCase().includes(keyword));
-                } else { // 'all'
+                } else {
                     match = mhs.nim.toLowerCase().includes(keyword) ||
                             mhs.nama_mahasiswa.toLowerCase().includes(keyword) ||
                             (mhs.judul && mhs.judul.toLowerCase().includes(keyword));
                 }
-                              
                 if(!match) return;
 
-                // Apply current filter
                 if (currentDosenFilter !== 'all') {
                     if (currentDosenFilter === 'empty' && mhs.latest_preview) return;
                     if (currentDosenFilter !== 'empty' && !mhs.latest_preview) return;
@@ -556,7 +818,6 @@
                         const titleText = mhs.rekomendasi.jalur_title || 'Non-Sidang';
                         rekomenBadge = `<span onclick="openRekomendasiModal('${mhs.nim}', '${mhs.latest_preview ? mhs.latest_preview.id : ''}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-extrabold cursor-pointer hover:bg-amber-200 transition whitespace-nowrap shadow-2xs" title="Jalur: ${titleText} (Klik untuk ubah)"><i class="bi bi-award-fill text-amber-600 text-sm"></i> ${titleText}</span>`;
                     }
-
                 }
 
                 let btnHtml = `<button disabled class="px-3 py-1.5 bg-slate-100 text-slate-400 rounded-lg text-xs font-bold cursor-not-allowed border border-slate-200">Belum ada file</button>`;
@@ -565,11 +826,12 @@
                     const latest = mhs.latest_preview;
                     const fileUrl = `<?= base_url('uploads/preview_ta/') ?>${latest.file_draft}`;
                     
-                    if (latest.file_missing) {
-                        previewHtml = `<span class="text-rose-500 font-bold text-xs"><i class="bi bi-exclamation-triangle-fill"></i> File 404 (Hilang)</span>`;
-                    } else {
-                        previewHtml = `<button onclick="openPdfModal('${fileUrl}')" class="text-orange-600 hover:underline font-bold text-xs cursor-pointer text-left"><i class="bi bi-file-earmark-pdf-fill"></i> ${latest.file_draft}</button>`;
-                    }
+                    const btnClass = latest.file_missing ? 'bg-rose-100 text-rose-700 opacity-80' : 'btn-3d-orange scale-95 hover:scale-100';
+                    const icon = latest.file_missing ? 'bi-exclamation-triangle-fill' : 'fa-solid fa-folder-open';
+                    const label = latest.file_missing ? 'File Hilang' : 'Lihat Berkas';
+                    const countBadge = mhs.riwayat_previews && mhs.riwayat_previews.length > 1 ? ` <span class="bg-white/30 text-white px-1.5 py-0.5 rounded-md ml-1 text-[10px] font-black">${mhs.riwayat_previews.length}</span>` : '';
+                    
+                    previewHtml = `<button onclick="toggleLihatBerkasPanel(${index})" class="${btnClass} inline-flex items-center gap-1.5 text-white font-bold px-3 py-1.5 rounded-xl text-xs cursor-pointer shadow-md transition-transform"><i class="${icon} text-xs"></i> ${label}${countBadge}</button>`;
                     
                     const dt = new Date(latest.created_at);
                     timeHtml = `<div class="text-xs font-semibold text-slate-700">${dt.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'})}</div><div class="text-[10px] text-slate-500">${dt.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})} WIB</div>`;
@@ -596,7 +858,6 @@
                     }
                 }
 
-                
                 let checkboxHtml = '';
                 if (mhs.latest_preview && !mhs.latest_preview.file_missing) {
                     if (mhs.latest_preview.status_pembimbing !== 'Approved') {
@@ -608,7 +869,6 @@
                     checkboxHtml = `<input type="checkbox" disabled class="w-4 h-4 rounded border-slate-200 cursor-not-allowed opacity-50" title="Belum ada berkas atau file hilang">`;
                 }
 
-                // Komentar P1 & P2 buttons
                 let p1Comment = mhs.latest_preview ? (mhs.latest_preview.catatan_pembimbing || '') : '';
                 let hasP1Comment = p1Comment.trim().length > 0;
                 let encodedP1 = hasP1Comment ? encodeURIComponent(p1Comment) : '';
@@ -622,12 +882,6 @@
                 let p2BtnHtml = hasP2Comment
                     ? `<button onclick="showCommentModal(decodeURIComponent('${encodedP2}'), '${mhs.nama_mahasiswa}', 2)" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition cursor-pointer"><i class="bi bi-chat-quote-fill"></i> Lihat</button>`
                     : `<span class="text-slate-400 text-xs italic">-</span>`;
-
-                // Hover data
-                const fileUrlEncoded = mhs.latest_preview ? encodeURIComponent(`<?= base_url('uploads/preview_ta/') ?>${mhs.latest_preview.file_draft}`) : '';
-                const nameEncoded = encodeURIComponent(mhs.nama_mahasiswa);
-                const idPreview = mhs.latest_preview ? mhs.latest_preview.id : '';
-                const statusVal = mhs.latest_preview ? (mhs.latest_preview.status_pembimbing || 'Pending') : 'Pending';
 
                 html += `
                     <tr class="hover:bg-slate-50 transition-colors" data-index="${index}">
@@ -658,11 +912,13 @@
                 html = `<tr><td colspan="8" class="text-center py-10 text-slate-500 font-medium">Tidak ada data mahasiswa ditemukan.</td></tr>`;
             }
 
-            
             tbody.innerHTML = html;
             rebindDosenCheckboxes();
         }
 
+        // ============================================================
+        // REVIEW MODAL
+        // ============================================================
         function openReviewModal(index) {
             const mhs = bimbinganData[index];
             const latest = mhs.latest_preview;
@@ -676,16 +932,12 @@
             document.getElementById('modalFileLink').href = `<?= base_url('uploads/preview_ta/') ?>${latest.file_draft}`;
             document.getElementById('modalIdPreview').value = latest.id;
 
-
-            
-            // Populate form values
             if (document.getElementById('modalStatus')) {
                 document.getElementById('modalStatus').value = latest.status_pembimbing || 'Pending';
             }
             
             let catatanDosen = <?= $posisi ?> === 1 ? (latest.catatan_pembimbing || '') : (latest.catatan_pembimbing_2 || '');
             
-            // Re-init TinyMCE if already exists, else setContent
             if (tinymce.get('modalCatatan')) {
                 tinymce.get('modalCatatan').setContent(catatanDosen);
             } else {
@@ -740,7 +992,6 @@
                     if (data.status) {
                         showToast(data.message, 'success');
                         closeReviewModal();
-                        // Dosen list will automatically update via SSE
                     } else {
                         showToast(data.message || 'Gagal menyimpan', 'error');
                     }
@@ -756,6 +1007,9 @@
             });
         }
 
+        // ============================================================
+        // SSE
+        // ============================================================
         let dosenEventSource = null;
         function startDosenSSE() {
             if (dosenEventSource) dosenEventSource.close();
@@ -766,15 +1020,15 @@
                 try {
                     const data = JSON.parse(event.data);
                     if(data && data.length !== undefined) {
-                        // SSE sends data only when there is a change.
-                        // We use the existing fetchBimbinganData() to refresh the view to ensure 
-                        // format compatibility with the current rendering logic.
                         fetchBimbinganData(true);
                     }
                 } catch(e) { console.error('SSE Error:', e); }
             };
         }
 
+        // ============================================================
+        // BATCH CHECKBOXES
+        // ============================================================
         function rebindDosenCheckboxes() {
             const checkAll = document.getElementById('checkAllDosenStudents');
             const studentCbs = document.querySelectorAll('.dosen-student-cb');
@@ -881,7 +1135,6 @@
 
                 html += `
                     <div class="mb-6 rounded-2xl border border-slate-200 overflow-hidden shadow-sm bg-white">
-                        <!-- Card Header -->
                         <div class="flex items-center gap-3 px-4 py-3 bg-slate-900 text-white">
                             <span class="w-7 h-7 rounded-lg bg-orange-500 text-white font-black text-xs flex items-center justify-center shrink-0">${i+1}</span>
                             <div class="min-w-0">
@@ -890,7 +1143,6 @@
                             </div>
                         </div>
 
-                        <!-- PDF Preview Inline -->
                         <div class="relative bg-slate-100" style="height:220px;">
                             <div class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 text-xs z-0" id="batchPdfLoader_${i}">
                                 <i class="bi bi-arrow-repeat animate-spin text-2xl mb-1"></i> Memuat dokumen...
@@ -902,7 +1154,6 @@
                             ></iframe>
                         </div>
 
-                        <!-- Form Area -->
                         <div class="p-4 space-y-2 border-t border-slate-100">
                             ${statusOptions}
                             <div>
@@ -985,22 +1236,6 @@
             document.getElementById('dosenBatchReviewModal').classList.add('hidden');
         }
 
-        function openPdfModal(url) {
-            const iframe = document.getElementById('pdfIframe');
-            iframe.src = '';
-            document.getElementById('pdfLoadingIndicator').style.display = 'flex';
-            iframe.onload = function() {
-                document.getElementById('pdfLoadingIndicator').style.display = 'none';
-            };
-            iframe.src = url;
-            document.getElementById('pdfPreviewModal').classList.remove('hidden');
-        }
-
-        function closePdfModal() {
-            document.getElementById('pdfIframe').src = '';
-            document.getElementById('pdfPreviewModal').classList.add('hidden');
-        }
-
         function submitDosenBatchApprove() {
             const checkedCbs = document.querySelectorAll('.dosen-student-cb:checked');
             if (checkedCbs.length === 0) return;
@@ -1048,7 +1283,9 @@
             startDosenSSE();
         });
 
-        /* ===== HOVER PREVIEW PANEL ===== */
+        // ============================================================
+        // HOVER PREVIEW PANEL
+        // ============================================================
         let hoverHideTimer = null;
         let hoverShowTimer = null;
         const panel = document.getElementById('hoverPreviewPanel');
@@ -1064,10 +1301,8 @@
                 const posisi = <?= $posisi ?>;
                 const latest = mhs.latest_preview;
 
-                // Header
                 document.getElementById('hoverPanelName').textContent = mhs.nama_mahasiswa + ' (' + mhs.nim + ')';
 
-                // PDF Preview
                 const pdfWrap = document.getElementById('hoverPdfWrap');
                 if (latest && latest.file_draft) {
                     const fileUrl = `<?= base_url('uploads/preview_ta/') ?>${latest.file_draft}`;
@@ -1076,12 +1311,10 @@
                     pdfWrap.innerHTML = `<div class="pdf-no-file"><i class="bi bi-file-earmark-x text-3xl"></i><span>Belum ada berkas diunggah</span></div>`;
                 }
 
-                // Comment field & action
                 const formWrap = document.getElementById('hoverFormWrap');
                 if (!latest) {
                     formWrap.innerHTML = `<p class="text-xs text-slate-500 italic">Tidak ada berkas untuk dikomentari.</p>`;
                 } else if (posisi === 1) {
-                    // P1: TinyMCE comment + Approve/Revisi
                     formWrap.innerHTML = `
                         <div class="panel-label">Status Penilaian (P1)</div>
                         <select id="hoverStatusSelect" class="w-full mb-3 p-2.5 rounded-xl border border-slate-300 focus:ring-orange-500 focus:border-orange-500 text-sm font-semibold">
@@ -1093,7 +1326,6 @@
                         <button onclick="submitHoverReview(${latest.id}, 1)" class="mt-2 w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs shadow-md transition cursor-pointer"><i class="bi bi-send-fill mr-1"></i> Simpan Review</button>
                     `;
                 } else {
-                    // P2: comment only
                     formWrap.innerHTML = `
                         <div class="panel-label">Komentar untuk P1</div>
                         <textarea id="hoverCatatanTA" rows="3" class="w-full p-2.5 rounded-xl border border-slate-300 text-sm font-medium resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400/30 focus:border-indigo-500" placeholder="Tuliskan komentar untuk Pembimbing 1...">${latest.catatan_pembimbing_2 || ''}</textarea>
@@ -1101,19 +1333,16 @@
                     `;
                 }
 
-                // Position panel
                 const rect = event.target.getBoundingClientRect();
                 let left = rect.left + window.scrollX;
                 let top = rect.bottom + window.scrollY + 8;
 
-                // Ensure not off-screen right
                 const panelW = 520;
                 if (left + panelW > window.innerWidth - 16) {
                     left = window.innerWidth - panelW - 16;
                 }
                 if (left < 8) left = 8;
 
-                // Ensure not off-screen bottom
                 const panelEstH = 480;
                 if (top + panelEstH > window.innerHeight + window.scrollY - 16) {
                     top = rect.top + window.scrollY - panelEstH - 8;
@@ -1180,7 +1409,9 @@
             .catch(() => showToast('Kesalahan koneksi', 'error'));
         }
 
-        /* ===== COMMENT MODAL ===== */
+        // ============================================================
+        // COMMENT MODAL
+        // ============================================================
         function showCommentModal(comment, name, pos) {
             document.getElementById('commentModalName').textContent = name;
             document.getElementById('commentModalContent').innerHTML = comment || '<em class="text-slate-400">Tidak ada komentar.</em>';
@@ -1198,93 +1429,390 @@
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }
+
+        // ============================================================
+        // FLOATING NON-BLOCKING: LIHAT & PREVIEW BERKAS (HANYA 2 FILE TERBARU)
+        // ============================================================
+        function toggleLihatBerkasPanel(index) {
+            const mhs = bimbinganData[index];
+            if (!mhs || !mhs.riwayat_previews || mhs.riwayat_previews.length === 0) {
+                showToast('Mahasiswa ini belum memiliki berkas yang diunggah.', 'error');
+                return;
+            }
+
+            if (window.activeLihatBerkasIndex === index) {
+                closeLihatBerkasPanel();
+                return;
+            }
+
+            window.activeLihatBerkasIndex = index;
+            window.activePreviews = [];
+
+            showLihatBerkasContainer();
+            renderLihatBerkasCards();
+            updateTableButtonHighlights();
+        }
+
+        function showLihatBerkasContainer() {
+            const container = document.getElementById('lihatBerkasContainer');
+            if (container) {
+                container.style.display = 'flex';
+                container.classList.add('active');
+                // Pastikan layout awal: center
+                container.classList.remove('justify-start');
+                container.classList.add('justify-center');
+            }
+            const mhsWrapper = document.getElementById('wrapperDaftarMhs');
+            if (mhsWrapper) {
+                mhsWrapper.className = 'flex flex-row items-center gap-4 max-h-[92vh] overflow-y-auto shrink-0';
+            }
+            const previewWrapper = document.getElementById('wrapperPreviewBerkas');
+            if (previewWrapper) {
+                previewWrapper.classList.remove('active');
+                previewWrapper.innerHTML = '';
+            }
+        }
+
+        function renderLihatBerkasCards() {
+            const wrapper = document.getElementById('wrapperDaftarMhs');
+            if (!wrapper) return;
+
+            const mhs = bimbinganData[window.activeLihatBerkasIndex];
+            if (!mhs) {
+                wrapper.innerHTML = '';
+                return;
+            }
+
+            const latestFiles = mhs.riwayat_previews.slice(0, 2);
+            const totalFiles = latestFiles.length;
+
+            const fullName = mhs.nama_mahasiswa || 'Mahasiswa';
+            const nim = mhs.nim;
+
+            let itemsHtml = '';
+            latestFiles.forEach((preview, idx) => {
+                const fileUrl = `<?= base_url('uploads/preview_ta/') ?>${preview.file_draft}`;
+                const fileName = preview.file_draft;
+                const status = preview.status_pembimbing || 'Pending';
+                const isPreviewActive = window.activePreviews.some(p => p.nim === nim && p.fileIndex === idx);
+
+                let statusBadge = '';
+                if (status === 'Approved') {
+                    statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Valid</span>';
+                } else if (status === 'Revision') {
+                    statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Revisi</span>';
+                } else {
+                    statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending</span>';
+                }
+
+                const activeCardBorder = isPreviewActive 
+                    ? 'ring-2 ring-orange-500 border-orange-300 bg-orange-50/45' 
+                    : 'border-slate-200 bg-white hover:border-slate-300';
+
+                const previewBtnStyle = isPreviewActive 
+                    ? 'bg-orange-600 text-white border-orange-600 shadow-xs ring-2 ring-orange-400' 
+                    : 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200 shadow-2xs';
+
+                itemsHtml += `
+                    <div class="p-2 px-2.5 rounded-xl border shadow-2xs hover:shadow-xs transition-all flex items-center justify-between gap-2 ${activeCardBorder}">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-1.5">
+                                <i class="bi bi-file-earmark-pdf text-orange-500 text-xs shrink-0"></i>
+                                <span class="font-bold text-slate-800 text-[11px] truncate">File #${idx+1}</span>
+                                ${statusBadge}
+                            </div>
+                            <p class="text-[10px] font-mono text-slate-400 truncate mt-0.5" title="${fileName}">
+                                <i class="bi bi-file-pdf text-rose-500 mr-1 text-[9px]"></i>${fileName}
+                            </p>
+                            <p class="text-[9px] text-slate-400 mt-0.5"><i class="bi bi-clock mr-0.5"></i> ${new Date(preview.created_at).toLocaleString('id-ID')}</p>
+                        </div>
+                        <div class="flex items-center gap-1 shrink-0">
+                            <button type="button" 
+                                    onclick="previewBerkasItem('${nim}', ${idx})" 
+                                    class="w-7 h-7 rounded-lg border text-xs font-bold transition flex items-center justify-center cursor-pointer active:scale-95 ${previewBtnStyle}" 
+                                    title="${isPreviewActive ? 'Tutup Pratinjau Ini' : 'Pratinjau Berkas'}">
+                                <i class="bi bi-eye text-xs"></i>
+                            </button>
+                            <a href="${fileUrl}" 
+                               download="${fileName}" 
+                               target="_blank" 
+                               class="w-7 h-7 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold transition flex items-center justify-center cursor-pointer shadow-2xs active:scale-95" 
+                               title="Unduh Berkas">
+                                <i class="bi bi-download text-xs"></i>
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (totalFiles === 0) {
+                itemsHtml = `<div class="p-3 text-center text-slate-400 text-xs">Tidak ada riwayat berkas.</div>`;
+            }
+
+            wrapper.innerHTML = `
+                <div class="student-card-item pointer-events-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200/90 overflow-hidden flex flex-col shrink-0 w-[380px] animate-pop-in">
+                    <div class="p-3 px-4 bg-slate-900 text-white flex items-center justify-between gap-2 shrink-0 border-b border-slate-800">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <div class="w-7 h-7 rounded-lg bg-orange-600/30 border border-orange-500/50 text-orange-400 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <div class="min-w-0 flex items-center gap-2">
+                                <h4 class="text-xs font-bold text-white truncate max-w-[180px]">${fullName}</h4>
+                                <span class="px-1.5 py-0.5 rounded bg-white/10 text-orange-300 font-mono text-[10px] font-bold">${nim}</span>
+                            </div>
+                        </div>
+                        <button type="button" onclick="closeLihatBerkasPanel()" class="w-7 h-7 rounded-md bg-white/10 hover:bg-rose-600/80 text-slate-300 hover:text-white flex items-center justify-center text-sm font-bold transition-colors cursor-pointer" title="Tutup">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+
+                    <div class="p-2.5 space-y-1.5 bg-slate-50/80 overflow-y-auto">
+                        ${itemsHtml}
+                    </div>
+
+                    <div class="p-2.5 border-t border-slate-200 bg-white flex justify-end">
+                        <button onclick="closeLihatBerkasPanel()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">Tutup Semua</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function previewBerkasItem(nim, fileIndex) {
+            const mhs = bimbinganData[window.activeLihatBerkasIndex];
+            if (!mhs) return;
+
+            const existingIdx = window.activePreviews.findIndex(p => p.nim === nim && p.fileIndex === fileIndex);
+            if (existingIdx > -1) {
+                window.activePreviews.splice(existingIdx, 1);
+                renderPreviewCards();
+                renderLihatBerkasCards();
+                if (window.activePreviews.length === 0) {
+                    resetContainerLayout();
+                }
+                return;
+            }
+
+            if (window.activePreviews.length >= 2) {
+                window.activePreviews.shift();
+            }
+            window.activePreviews.push({ nim, fileIndex });
+
+            setContainerLayoutPreview();
+            renderPreviewCards();
+            renderLihatBerkasCards();
+        }
+
+        function setContainerLayoutPreview() {
+            const container = document.getElementById('lihatBerkasContainer');
+            if (container) {
+                container.classList.remove('justify-center');
+                container.classList.add('justify-start');
+            }
+            const mhsWrapper = document.getElementById('wrapperDaftarMhs');
+            if (mhsWrapper) {
+                mhsWrapper.className = 'flex flex-col gap-3 max-h-[92vh] overflow-y-auto pr-1.5 shrink-0 w-[350px]';
+            }
+            const previewWrapper = document.getElementById('wrapperPreviewBerkas');
+            if (previewWrapper) {
+                previewWrapper.classList.add('active');
+            }
+        }
+
+        function resetContainerLayout() {
+            const container = document.getElementById('lihatBerkasContainer');
+            if (container) {
+                container.classList.remove('justify-start');
+                container.classList.add('justify-center');
+            }
+            const mhsWrapper = document.getElementById('wrapperDaftarMhs');
+            if (mhsWrapper) {
+                mhsWrapper.className = 'flex flex-row items-center gap-4 max-h-[92vh] overflow-y-auto shrink-0';
+            }
+            const previewWrapper = document.getElementById('wrapperPreviewBerkas');
+            if (previewWrapper) {
+                previewWrapper.classList.remove('active');
+                previewWrapper.innerHTML = '';
+            }
+        }
+
+        function renderPreviewCards() {
+            const wrapper = document.getElementById('wrapperPreviewBerkas');
+            if (!wrapper) return;
+
+            const mhs = bimbinganData[window.activeLihatBerkasIndex];
+            if (!mhs || window.activePreviews.length === 0) {
+                wrapper.innerHTML = '';
+                wrapper.classList.remove('active');
+                resetContainerLayout();
+                return;
+            }
+
+            wrapper.classList.add('active');
+
+            const totalPreviews = window.activePreviews.length;
+            const panelWidthClass = totalPreviews > 1 ? 'w-[430px] sm:w-[470px] lg:w-[490px]' : 'w-[500px] sm:w-[540px]';
+
+            let html = '';
+            window.activePreviews.forEach((p, idx) => {
+                const preview = mhs.riwayat_previews[p.fileIndex];
+                if (!preview) return;
+                const fileUrl = `<?= base_url('uploads/preview_ta/') ?>${preview.file_draft}`;
+                const fileName = preview.file_draft;
+                const fullName = mhs.nama_mahasiswa || 'Mahasiswa';
+                const slotNum = idx + 1;
+
+                html += `
+                    <div class="preview-card-item pointer-events-auto bg-white rounded-3xl shadow-2xl border border-slate-200/90 overflow-hidden flex flex-col shrink-0 animate-preview-in ${panelWidthClass}">
+                        <div class="p-2.5 px-3.5 bg-slate-900 text-white flex items-center justify-between gap-2.5 shrink-0 border-b border-slate-800">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <div class="preview-slot-badge w-7 h-7 rounded-lg bg-rose-600/30 border border-rose-500/50 text-rose-400 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                                    ${totalPreviews > 1 ? slotNum : '<i class="bi bi-file-pdf"></i>'}
+                                </div>
+                                <div class="min-w-0">
+                                    <h4 class="text-xs font-bold text-white truncate max-w-[190px] sm:max-w-[240px]">File #${p.fileIndex+1}</h4>
+                                    <p class="text-[10px] text-slate-300 font-medium truncate">${fullName} · <span class="font-mono text-slate-400">${fileName}</span></p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1 shrink-0">
+                                <button type="button" onclick="togglePreviewIframeInteraction('${p.nim}', ${p.fileIndex})" id="btnPreviewInteract_${p.nim}_${p.fileIndex}" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Kursor Terkunci (Normal). Klik untuk aktifkan scroll">
+                                    <i class="bi bi-arrow-pointer" id="iconPreviewInteract_${p.nim}_${p.fileIndex}"></i>
+                                </button>
+                                <a href="${fileUrl}" target="_blank" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Buka di tab baru">
+                                    <i class="bi bi-box-arrow-up-right"></i>
+                                </a>
+                                <button type="button" onclick="closeSinglePreview(${idx})" class="preview-close-btn w-7 h-7 rounded-lg bg-white/10 hover:bg-rose-600/80 text-slate-300 hover:text-white flex items-center justify-center text-xs font-bold transition-colors cursor-pointer ml-0.5" title="Tutup Pratinjau Ini">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="preview-body relative">
+                            <div class="loader" id="previewLoader_${p.nim}_${p.fileIndex}">
+                                <i class="bi bi-arrow-repeat"></i> Memuat dokumen...
+                            </div>
+                            <iframe id="iframePreviewBerkas_${p.nim}_${p.fileIndex}" 
+                                    src="${fileUrl}#toolbar=0&navpanes=0" 
+                                    class="w-full h-full border-0 relative z-10 pointer-events-none"
+                                    onload="document.getElementById('previewLoader_${p.nim}_${p.fileIndex}').style.display='none'"
+                                    title="Pratinjau Berkas"></iframe>
+                        </div>
+
+                        <div class="p-2 px-3 bg-white flex items-center justify-between text-xs shrink-0 gap-2 border-t border-slate-200">
+                            <a href="${fileUrl}" download="${fileName}" target="_blank" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs text-[11px]">
+                                <i class="bi bi-download"></i>
+                                <span>Unduh</span>
+                            </a>
+                            <button type="button" onclick="closeSinglePreview(${idx})" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold transition cursor-pointer text-[11px] shadow-2xs">
+                                Tutup
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            wrapper.innerHTML = html;
+        }
+
+        function togglePreviewIframeInteraction(nim, fileIndex) {
+            const iframe = document.getElementById(`iframePreviewBerkas_${nim}_${fileIndex}`);
+            const btn = document.getElementById(`btnPreviewInteract_${nim}_${fileIndex}`);
+            const icon = document.getElementById(`iconPreviewInteract_${nim}_${fileIndex}`);
+            if (!iframe) return;
+
+            const isLocked = iframe.classList.contains('pointer-events-none');
+            if (isLocked) {
+                iframe.classList.remove('pointer-events-none');
+                if (btn) {
+                    btn.className = 'w-7 h-7 rounded-lg bg-orange-600 text-white flex items-center justify-center text-xs transition cursor-pointer shadow-2xs';
+                    btn.title = 'Mode Scroll Aktif. Klik untuk kunci kursor kembali.';
+                }
+                if (icon) icon.className = 'bi bi-hand';
+            } else {
+                iframe.classList.add('pointer-events-none');
+                if (btn) {
+                    btn.className = 'w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer';
+                    btn.title = 'Kursor Normal (Terkunci). Klik untuk aktifkan scroll.';
+                }
+                if (icon) icon.className = 'bi bi-arrow-pointer';
+            }
+        }
+
+        function closeSinglePreview(index) {
+            if (index < 0 || index >= window.activePreviews.length) return;
+            window.activePreviews.splice(index, 1);
+            if (window.activePreviews.length === 0) {
+                resetContainerLayout();
+                renderLihatBerkasCards();
+                return;
+            }
+            renderPreviewCards();
+            renderLihatBerkasCards();
+        }
+
+        function closeLihatBerkasPanel() {
+            const container = document.getElementById('lihatBerkasContainer');
+            if (container) {
+                container.style.display = 'none';
+                container.classList.remove('active');
+                container.classList.remove('justify-start');
+                container.classList.add('justify-center');
+            }
+            const wrapper = document.getElementById('wrapperDaftarMhs');
+            if (wrapper) {
+                wrapper.innerHTML = '';
+                wrapper.className = 'flex flex-row items-center gap-4 max-h-[92vh] overflow-y-auto shrink-0';
+            }
+            const previewWrapper = document.getElementById('wrapperPreviewBerkas');
+            if (previewWrapper) {
+                previewWrapper.innerHTML = '';
+                previewWrapper.classList.remove('active');
+            }
+            window.activeLihatBerkasIndex = null;
+            window.activePreviews = [];
+            updateTableButtonHighlights();
+        }
+
+        function updateTableButtonHighlights() {
+            const activeIndex = window.activeLihatBerkasIndex;
+            document.querySelectorAll('#bimbinganTableBody tr').forEach((tr, idx) => {
+                const btn = tr.querySelector('button[onclick^="toggleLihatBerkasPanel"]');
+                if (btn) {
+                    if (idx === activeIndex) {
+                        btn.className = 'inline-flex items-center gap-1.5 text-white font-bold px-3 py-1.5 rounded-xl text-xs cursor-pointer shadow-md transition-transform bg-orange-600 ring-2 ring-orange-400 scale-105';
+                        btn.innerHTML = '<i class="bi bi-eye-fill text-xs"></i> Melihat';
+                    } else {
+                        btn.className = 'inline-flex items-center gap-1.5 text-white font-bold px-3 py-1.5 rounded-xl text-xs cursor-pointer shadow-md transition-transform btn-3d-orange';
+                        btn.innerHTML = '<i class="fa-solid fa-folder-open text-xs"></i> Lihat Berkas';
+                    }
+                }
+            });
+        }
+
+        // Keyboard ESC untuk menutup panel
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (window.activeLihatBerkasIndex !== null) {
+                    closeLihatBerkasPanel();
+                }
+            }
+        });
+
+        // Daftarkan fungsi ke global
+        window.toggleLihatBerkasPanel = toggleLihatBerkasPanel;
+        window.closeLihatBerkasPanel = closeLihatBerkasPanel;
+        window.previewBerkasItem = previewBerkasItem;
+        window.closeSinglePreview = closeSinglePreview;
+        window.togglePreviewIframeInteraction = togglePreviewIframeInteraction;
+        window.updateTableButtonHighlights = updateTableButtonHighlights;
+        window.openReviewModal = openReviewModal;
+        window.closeReviewModal = closeReviewModal;
+        window.showCommentModal = showCommentModal;
+        window.closeCommentModal = closeCommentModal;
+        window.showHoverPanel = showHoverPanel;
+        window.scheduleHidePanel = scheduleHidePanel;
+        window.submitHoverReview = submitHoverReview;
+
     </script>
 
-    <!-- Hover Preview Panel -->
-    <div id="hoverPreviewPanel">
-        <div class="panel-header">
-            <i class="bi bi-person-circle"></i>
-            <span id="hoverPanelName">Nama Mahasiswa</span>
-        </div>
-        <div class="pdf-frame-wrap" id="hoverPdfWrap">
-            <div class="pdf-no-file"><i class="bi bi-file-earmark-x text-3xl"></i><span>Belum ada berkas</span></div>
-        </div>
-        <div class="panel-body">
-            <div id="hoverFormWrap">
-                <!-- Injected by JS -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Comment Modal -->
-    <div id="commentModal" class="hidden fixed inset-0 z-[200] items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeCommentModal()"></div>
-        <div class="relative bg-white rounded-3xl p-6 sm:p-8 w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
-            <button onclick="closeCommentModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
-            <h3 class="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2" id="commentModalTitle">
-                <i class="bi bi-chat-quote-fill text-indigo-500"></i> Komentar
-            </h3>
-            <p class="text-xs text-slate-500 font-semibold mb-4" id="commentModalName">Nama Mahasiswa</p>
-            <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm text-slate-800 font-medium leading-relaxed overflow-y-auto flex-1" id="commentModalContent">
-                <!-- Comment content -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Floating Batch Action Bar -->
-    <div id="dosenBatchActionBar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 text-white px-5 py-3 rounded-2xl shadow-2xl backdrop-blur-md border border-slate-700 hidden flex-wrap items-center gap-4 transition-all duration-300">
-        <div class="flex items-center gap-2">
-            <span class="w-7 h-7 rounded-lg bg-orange-500 text-white font-black text-xs flex items-center justify-center shadow-xs" id="dosenSelectedCountBadge">0</span>
-            <span class="text-xs font-bold tracking-tight">Mahasiswa Terpilih</span>
-        </div>
-        
-        <div class="h-5 w-px bg-slate-700 hidden sm:block"></div>
-
-        <div class="flex items-center gap-2.5">
-            <!-- Button 1: Popup Batch Review -->
-            <button type="button" onclick="openDosenBatchModal()" class="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-xl text-xs font-extrabold shadow-md flex items-center gap-2 transition-all active:scale-95 cursor-pointer">
-                <i class="bi bi-files"></i> Preview Massal
-            </button>
-
-            <!-- Button 2: Direct Batch Approve -->
-            <button type="button" onclick="submitDosenBatchApprove()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer">
-                <i class="bi bi-check2-all"></i> Approve Massal
-            </button>
-
-            <!-- Button 3: Uncheck All -->
-            <button type="button" onclick="unselectAllDosenStudents()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition-all cursor-pointer">
-                <i class="bi bi-x-lg"></i> Batal
-            </button>
-        </div>
-    </div>
-
-    <!-- Multi-Student Batch Review Modal Popup -->
-    <div id="dosenBatchReviewModal" class="hidden fixed inset-0 z-[100] overflow-y-auto p-4 sm:p-6">
-        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="closeDosenBatchModal()"></div>
-        <div class="relative bg-white rounded-3xl w-full max-w-6xl mx-auto flex flex-col overflow-hidden shadow-2xl my-4 sm:my-8">
-            <div class="p-4 px-6 bg-slate-900 text-white flex items-center justify-between shrink-0">
-                <h3 class="text-sm font-extrabold flex items-center gap-2">
-                    <i class="bi bi-files text-orange-500"></i> Review Preview Massal
-                    <span class="text-[10px] font-normal text-slate-400 ml-1">— Setiap kartu berisi preview langsung, komentar, dan tombol simpan</span>
-                </h3>
-                <button type="button" onclick="closeDosenBatchModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer">
-                    <i class="bi bi-x-lg text-sm"></i>
-                </button>
-            </div>
-            
-            <div class="p-5 sm:p-6 flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5" id="dosenBatchModalBody">
-                <!-- Data cards injected via JS -->
-            </div>
-            
-            <div class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
-                <span class="text-xs text-slate-500 font-medium">Simpan setiap kartu secara individual, atau gunakan Approve Massal dari toolbar bawah.</span>
-                <button type="button" onclick="closeDosenBatchModal()" class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition cursor-pointer">Tutup</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Rekomendasi Sidang / Non-Sidang (Jalur Prestasi/Ekuivalensi) -->
-    <?php $this->load->view('partials/modal_rekomendasi_sidang'); ?>
 </body>
 </html>
-

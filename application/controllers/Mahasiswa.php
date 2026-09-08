@@ -915,6 +915,7 @@ class Mahasiswa extends CI_Controller {
                     'judul' => $student['judul'] ?? '-',
                     'konsentrasi_dkv' => $student['konsentrasi_dkv'] ?? '',
                     'latest_preview' => $latest,
+                    'riwayat_previews' => $previews,
                     'rekomendasi' => $rekomen
                 ];
             }
