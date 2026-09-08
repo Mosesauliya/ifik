@@ -141,7 +141,9 @@
             margin-bottom: 6px;
         }
 
-        /* ========== FLOATING NON-BLOCKING PREVIEW (DARI REFERENSI) ========== */
+        /* ==========================================================
+           FLOATING NON-BLOCKING PREVIEW (Dari Dosen Wali)
+           ========================================================== */
         @keyframes popInCard {
             0% { opacity: 0; transform: scale(0.9) translateY(24px); }
             100% { opacity: 1; transform: scale(1) translateY(0); }
@@ -191,39 +193,47 @@
             background: transparent;
         }
 
-        /* Container utama floating */
+        /* Container utama: flex-row, justify-start, item di kiri, preview di kanan */
         #lihatBerkasContainer {
             position: fixed;
             inset: 0;
             pointer-events: none;
             z-index: 50;
             display: none;
-            align-items: center;
-            justify-content: center;
+            align-items: flex-start;
+            justify-content: flex-start;
             padding: 1rem;
             gap: 1.5rem;
             overflow-x: auto;
-            background: rgba(15, 23, 42, 0.3);
-            backdrop-filter: blur(4px);
+            overflow-y: hidden;
+            background: rgba(15, 23, 42, 0.15);
+            backdrop-filter: blur(0.5px);
+            flex-direction: row;
         }
         #lihatBerkasContainer.active {
             display: flex;
         }
+        /* Wrapper daftar mahasiswa: vertikal, scroll */
         #wrapperDaftarMhs {
             display: flex;
-            flex-direction: row;
+            flex-direction: column;
             align-items: center;
             gap: 1rem;
             max-height: 92vh;
             overflow-y: auto;
             flex-shrink: 0;
             padding: 0.25rem;
+            width: 380px;
+            max-width: 95vw;
         }
+        /* Wrapper preview: tetap horizontal, di sisi kanan */
         #wrapperPreviewBerkas {
             display: none;
+            flex-direction: row;
             align-items: center;
             gap: 1rem;
             flex-shrink: 0;
+            padding: 0.25rem;
         }
         #wrapperPreviewBerkas.active {
             display: flex;
@@ -239,8 +249,9 @@
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
-            width: 380px;
-            max-width: 95vw;
+            width: 100%;
+            max-width: 100%;
+            max-height: 92vh;
         }
         /* Kartu preview */
         .preview-card-item {
@@ -256,35 +267,15 @@
             width: 520px;
             max-width: 95vw;
             max-height: 92vh;
+            height: auto;
         }
-        .preview-card-item iframe {
-            pointer-events: none;
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        .preview-card-item .iframe-interact {
-            pointer-events: auto;
-        }
-        .btn-3d-orange {
-            background: linear-gradient(135deg, #ea580c, #f97316);
-            color: #fff;
-            border: none;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 12px rgba(234,88,12,0.3);
-        }
-        .btn-3d-orange:hover {
-            transform: scale(1.03);
-            box-shadow: 0 6px 20px rgba(234,88,12,0.4);
-        }
-        /* Prevent overflow */
         .preview-card-item .preview-body {
-            flex: 1;
-            min-height: 300px;
-            height: 55vh;
+            flex: 1 1 0;
+            min-height: 0;
             position: relative;
             background: #e2e8f0;
             overflow: hidden;
+            height: 60vh;
         }
         .preview-card-item .preview-body iframe {
             width: 100%;
@@ -312,6 +303,47 @@
         }
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+        .preview-card-item .preview-header {
+            flex-shrink: 0;
+        }
+        .preview-card-item .preview-footer {
+            flex-shrink: 0;
+        }
+        .btn-3d-orange {
+            background: linear-gradient(135deg, #ea580c, #f97316);
+            color: #fff;
+            border: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(234,88,12,0.3);
+        }
+        .btn-3d-orange:hover {
+            transform: scale(1.03);
+            box-shadow: 0 6px 20px rgba(234,88,12,0.4);
+        }
+        /* Responsif untuk layar kecil: preview turun ke bawah */
+        @media (max-width: 1024px) {
+            #lihatBerkasContainer {
+                flex-direction: column;
+                align-items: center;
+                overflow-y: auto;
+                overflow-x: hidden;
+            }
+            #wrapperDaftarMhs {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                max-height: none;
+                width: 100%;
+            }
+            #wrapperPreviewBerkas {
+                flex-direction: column;
+                width: 100%;
+            }
+            .preview-card-item {
+                width: 100%;
+                max-width: 100%;
+            }
         }
     </style>
 </head>
@@ -401,7 +433,6 @@
                 <!-- Search Pill -->
                 <div class="relative search-pill-container" id="multiSearchWrapper">
                     <div class="unified-search-pill" style="position: relative;">
-                        <!-- Dropdown Kategori -->
                         <div class="relative" id="searchCatWrap">
                             <button type="button" class="search-cat-btn" id="searchCatBtn" onclick="toggleSearchCatMenu()">
                                 <span id="searchCatLabel">🔍 Kata Kunci</span>
@@ -415,7 +446,6 @@
                             </div>
                         </div>
                         <div class="unified-divider"></div>
-                        <!-- Input Pencarian -->
                         <div class="flex-1 flex items-center min-w-0">
                             <i class="bi bi-search text-slate-400 text-sm mr-2 shrink-0"></i>
                             <input type="text" id="searchInput"
@@ -423,7 +453,6 @@
                                 onkeydown="if(event.key==='Enter'){doSearch();}"
                                 class="w-full text-sm font-medium bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400">
                         </div>
-                        <!-- Tombol Cari -->
                         <button type="button" class="btn-search-cari ml-2" onclick="doSearch()">
                             <i class="bi bi-search text-xs"></i> Cari
                         </button>
@@ -504,17 +533,10 @@
                 </div>
             </div>
 
-            <!-- Floating Non-Blocking Container: Lihat & Pratinjau Berkas (hanya 2 file terbaru) -->
-            <div id="lihatBerkasContainer" class="fixed inset-0 pointer-events-none z-50 flex items-center justify-center p-3 sm:p-5 gap-4 sm:gap-5 overflow-x-auto" style="display: none;">
-                <!-- Wrapper Kartu Mahasiswa -->
-                <div id="wrapperDaftarMhs" class="flex flex-row items-center gap-4 shrink-0 max-h-[92vh] overflow-y-auto">
-                    <!-- Kartu mahasiswa dirender dinamis -->
-                </div>
-
-                <!-- Wrapper Pratinjau Dokumen Berkas (Maksimal 2 Panel Berdampingan) -->
-                <div id="wrapperPreviewBerkas" class="flex items-center gap-4 shrink-0 hidden">
-                    <!-- 1 atau 2 Panel Pratinjau -->
-                </div>
+            <!-- Floating Non-Blocking Container: Lihat & Pratinjau Berkas (VERTIKAL POP UP, HORIZONTAL PREVIEW) -->
+            <div id="lihatBerkasContainer" class="fixed inset-0 pointer-events-none z-50 flex items-start justify-start p-3 sm:p-5 gap-4 sm:gap-5 overflow-x-auto overflow-y-hidden" style="display: none; flex-direction: row;">
+                <div id="wrapperDaftarMhs" class="flex flex-col items-center gap-4 max-h-[92vh] overflow-y-auto flex-shrink-0 w-[380px] max-w-[95vw]"></div>
+                <div id="wrapperPreviewBerkas" class="flex flex-row items-center gap-4 flex-shrink-0 hidden"></div>
             </div>
 
         </div>
@@ -530,9 +552,7 @@
             <div class="pdf-no-file"><i class="bi bi-file-earmark-x text-3xl"></i><span>Belum ada berkas</span></div>
         </div>
         <div class="panel-body">
-            <div id="hoverFormWrap">
-                <!-- Injected by JS -->
-            </div>
+            <div id="hoverFormWrap"></div>
         </div>
     </div>
 
@@ -545,9 +565,7 @@
                 <i class="bi bi-chat-quote-fill text-indigo-500"></i> Komentar
             </h3>
             <p class="text-xs text-slate-500 font-semibold mb-4" id="commentModalName">Nama Mahasiswa</p>
-            <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm text-slate-800 font-medium leading-relaxed overflow-y-auto flex-1" id="commentModalContent">
-                <!-- Comment content -->
-            </div>
+            <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm text-slate-800 font-medium leading-relaxed overflow-y-auto flex-1" id="commentModalContent"></div>
         </div>
     </div>
 
@@ -557,21 +575,14 @@
             <span class="w-7 h-7 rounded-lg bg-orange-500 text-white font-black text-xs flex items-center justify-center shadow-xs" id="dosenSelectedCountBadge">0</span>
             <span class="text-xs font-bold tracking-tight">Mahasiswa Terpilih</span>
         </div>
-        
         <div class="h-5 w-px bg-slate-700 hidden sm:block"></div>
-
         <div class="flex items-center gap-2.5">
-            <!-- Button 1: Popup Batch Review -->
             <button type="button" onclick="openDosenBatchModal()" class="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-xl text-xs font-extrabold shadow-md flex items-center gap-2 transition-all active:scale-95 cursor-pointer">
                 <i class="bi bi-files"></i> Preview Massal
             </button>
-
-            <!-- Button 2: Direct Batch Approve -->
             <button type="button" onclick="submitDosenBatchApprove()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer">
                 <i class="bi bi-check2-all"></i> Approve Massal
             </button>
-
-            <!-- Button 3: Uncheck All -->
             <button type="button" onclick="unselectAllDosenStudents()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition-all cursor-pointer">
                 <i class="bi bi-x-lg"></i> Batal
             </button>
@@ -591,11 +602,7 @@
                     <i class="bi bi-x-lg text-sm"></i>
                 </button>
             </div>
-            
-            <div class="p-5 sm:p-6 flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5" id="dosenBatchModalBody">
-                <!-- Data cards injected via JS -->
-            </div>
-            
+            <div class="p-5 sm:p-6 flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5" id="dosenBatchModalBody"></div>
             <div class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
                 <span class="text-xs text-slate-500 font-medium">Simpan setiap kartu secara individual, atau gunakan Approve Massal dari toolbar bawah.</span>
                 <button type="button" onclick="closeDosenBatchModal()" class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition cursor-pointer">Tutup</button>
@@ -603,7 +610,6 @@
         </div>
     </div>
 
-    <!-- Modal Rekomendasi Sidang / Non-Sidang (Jalur Prestasi/Ekuivalensi) -->
     <?php $this->load->view('partials/modal_rekomendasi_sidang'); ?>
 
     <script>
@@ -616,9 +622,8 @@
         let searchCategory = 'all';
         let activeKeyword = '';
 
-        // Floating preview state
-        window.activeLihatBerkasIndex = null; // index di bimbinganData
-        window.activePreviews = [];            // array { nim, fileIndex } maks 2
+        window.activeLihatBerkasIndices = [];
+        window.activePreviews = [];
 
         // ============================================================
         // SEARCH FUNCTIONS
@@ -914,6 +919,7 @@
 
             tbody.innerHTML = html;
             rebindDosenCheckboxes();
+            updateTableButtonHighlights();
         }
 
         // ============================================================
@@ -1431,229 +1437,186 @@
         }
 
         // ============================================================
-        // FLOATING NON-BLOCKING: LIHAT & PREVIEW BERKAS (HANYA 2 FILE TERBARU)
+        // FLOATING NON-BLOCKING: LIHAT & PREVIEW BERKAS (VERTIKAL POP UP, HORIZONTAL PREVIEW)
         // ============================================================
-        function toggleLihatBerkasPanel(index) {
-            const mhs = bimbinganData[index];
-            if (!mhs || !mhs.riwayat_previews || mhs.riwayat_previews.length === 0) {
-                showToast('Mahasiswa ini belum memiliki berkas yang diunggah.', 'error');
-                return;
-            }
-
-            if (window.activeLihatBerkasIndex === index) {
-                closeLihatBerkasPanel();
-                return;
-            }
-
-            window.activeLihatBerkasIndex = index;
-            window.activePreviews = [];
-
-            showLihatBerkasContainer();
-            renderLihatBerkasCards();
+        function refreshLihatBerkasView() {
+            updateLihatBerkasLayout();
+            renderAllLihatBerkasCards();
+            renderAllPreviewCards();
             updateTableButtonHighlights();
         }
 
-        function showLihatBerkasContainer() {
+        function updateLihatBerkasLayout() {
             const container = document.getElementById('lihatBerkasContainer');
-            if (container) {
-                container.style.display = 'flex';
-                container.classList.add('active');
-                // Pastikan layout awal: center
-                container.classList.remove('justify-start');
-                container.classList.add('justify-center');
-            }
-            const mhsWrapper = document.getElementById('wrapperDaftarMhs');
-            if (mhsWrapper) {
-                mhsWrapper.className = 'flex flex-row items-center gap-4 max-h-[92vh] overflow-y-auto shrink-0';
-            }
-            const previewWrapper = document.getElementById('wrapperPreviewBerkas');
-            if (previewWrapper) {
-                previewWrapper.classList.remove('active');
-                previewWrapper.innerHTML = '';
+            const wrapperDaftar = document.getElementById('wrapperDaftarMhs');
+            const wrapperPreview = document.getElementById('wrapperPreviewBerkas');
+
+            if (!container || !wrapperDaftar || !wrapperPreview) return;
+
+            const isPreviewActive = window.activePreviews && window.activePreviews.length > 0;
+
+            // Container: flex-row, item di kiri, preview di kanan
+            container.style.display = 'flex';
+            container.style.flexDirection = 'row';
+            container.style.alignItems = 'flex-start';
+            container.style.justifyContent = 'flex-start';
+            container.style.overflowX = 'auto';
+            container.style.overflowY = 'hidden';
+
+            // Wrapper daftar: vertikal, scroll
+            wrapperDaftar.className = 'flex flex-col items-center gap-4 max-h-[92vh] overflow-y-auto flex-shrink-0 w-[380px] max-w-[95vw]';
+            wrapperDaftar.style.overflowY = 'auto';
+
+            if (isPreviewActive) {
+                wrapperPreview.classList.add('active');
+                wrapperPreview.className = 'flex flex-row items-center gap-4 flex-shrink-0';
+                wrapperPreview.style.overflowY = 'auto';
+                wrapperPreview.style.maxHeight = '92vh';
+            } else {
+                wrapperPreview.classList.remove('active');
+                wrapperPreview.className = 'flex flex-row items-center gap-4 flex-shrink-0 hidden';
             }
         }
 
-        function renderLihatBerkasCards() {
+        function renderAllLihatBerkasCards() {
             const wrapper = document.getElementById('wrapperDaftarMhs');
             if (!wrapper) return;
 
-            const mhs = bimbinganData[window.activeLihatBerkasIndex];
-            if (!mhs) {
+            if (!window.activeLihatBerkasIndices || window.activeLihatBerkasIndices.length === 0) {
                 wrapper.innerHTML = '';
                 return;
             }
 
-            const latestFiles = mhs.riwayat_previews.slice(0, 2);
-            const totalFiles = latestFiles.length;
+            const totalActive = window.activeLihatBerkasIndices.length;
+            const cardWidthClass = 'w-full';
 
-            const fullName = mhs.nama_mahasiswa || 'Mahasiswa';
-            const nim = mhs.nim;
+            let headerSummaryBar = '';
+            if (totalActive > 1) {
+                headerSummaryBar = `
+                    <div class="bg-slate-900 text-white px-3.5 py-2 rounded-2xl flex items-center justify-between shadow-lg border border-slate-800 shrink-0 pointer-events-auto w-full animate-bar-in">
+                        <div class="flex items-center gap-2">
+                            <i class="bi bi-people-fill text-orange-400 text-xs"></i>
+                            <span class="text-xs font-bold">${totalActive} Mahasiswa <span class="text-slate-400 font-normal text-[10px]">(Maks. 4)</span></span>
+                        </div>
+                        <button type="button" onclick="closeLihatBerkasPanel()" class="text-[11px] text-slate-300 hover:text-rose-400 font-bold transition cursor-pointer">
+                            Tutup Semua
+                        </button>
+                    </div>
+                `;
+            }
 
-            let itemsHtml = '';
-            latestFiles.forEach((preview, idx) => {
-                const fileUrl = `<?= base_url('uploads/preview_ta/') ?>${preview.file_draft}`;
-                const fileName = preview.file_draft;
-                const status = preview.status_pembimbing || 'Pending';
-                const isPreviewActive = window.activePreviews.some(p => p.nim === nim && p.fileIndex === idx);
+            let cardsHtml = '';
+            window.activeLihatBerkasIndices.forEach((index, cardIdx) => {
+                const mhs = bimbinganData[index];
+                if (!mhs) return;
+                const fileList = (mhs.riwayat_previews || []).slice(0, 2);
+                const cardNum = cardIdx + 1;
 
-                let statusBadge = '';
-                if (status === 'Approved') {
-                    statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Valid</span>';
-                } else if (status === 'Revision') {
-                    statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Revisi</span>';
+                let itemsHtml = '';
+                if (fileList.length === 0) {
+                    itemsHtml = `<div class="p-3 text-center text-slate-400 text-xs">Tidak ada riwayat berkas.</div>`;
                 } else {
-                    statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending</span>';
+                    fileList.forEach((preview, idx) => {
+                        const fileUrl = `<?= base_url('uploads/preview_ta/') ?>${preview.file_draft}`;
+                        const fileName = preview.file_draft;
+                        const status = preview.status_pembimbing || 'Pending';
+                        const isPreviewActive = window.activePreviews.some(p => p.nim === mhs.nim && p.fileIndex === idx);
+
+                        let statusBadge = '';
+                        if (status === 'Approved') {
+                            statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Valid</span>';
+                        } else if (status === 'Revision') {
+                            statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Revisi</span>';
+                        } else {
+                            statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending</span>';
+                        }
+
+                        const activeCardBorder = isPreviewActive 
+                            ? 'ring-2 ring-orange-500 border-orange-300 bg-orange-50/45' 
+                            : 'border-slate-200 bg-white hover:border-slate-300';
+
+                        const previewBtnStyle = isPreviewActive 
+                            ? 'bg-orange-600 text-white border-orange-600 shadow-xs ring-2 ring-orange-400' 
+                            : 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200 shadow-2xs';
+
+                        itemsHtml += `
+                            <div class="p-2 px-2.5 rounded-xl border shadow-2xs hover:shadow-xs transition-all flex items-center justify-between gap-2 ${activeCardBorder}">
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-1.5">
+                                        <i class="bi bi-file-earmark-pdf text-orange-500 text-xs shrink-0"></i>
+                                        <span class="font-bold text-slate-800 text-[11px] truncate">File #${idx+1}</span>
+                                        ${statusBadge}
+                                    </div>
+                                    <p class="text-[10px] font-mono text-slate-400 truncate mt-0.5" title="${fileName}">
+                                        <i class="bi bi-file-pdf text-rose-500 mr-1 text-[9px]"></i>${fileName}
+                                    </p>
+                                    <p class="text-[9px] text-slate-400 mt-0.5"><i class="bi bi-clock mr-0.5"></i> ${new Date(preview.created_at).toLocaleString('id-ID')}</p>
+                                </div>
+                                <div class="flex items-center gap-1 shrink-0">
+                                    <button type="button" 
+                                            onclick="event.stopPropagation(); previewBerkasItem('${mhs.nim}', ${idx})" 
+                                            class="w-7 h-7 rounded-lg border text-xs font-bold transition flex items-center justify-center cursor-pointer active:scale-95 ${previewBtnStyle}" 
+                                            title="${isPreviewActive ? 'Tutup Pratinjau Ini' : 'Pratinjau Berkas'}">
+                                        <i class="bi bi-eye text-xs"></i>
+                                    </button>
+                                    <a href="${fileUrl}" 
+                                       download="${fileName}" 
+                                       target="_blank" 
+                                       class="w-7 h-7 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold transition flex items-center justify-center cursor-pointer shadow-2xs active:scale-95" 
+                                       title="Unduh Berkas">
+                                        <i class="bi bi-download text-xs"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                    });
                 }
 
-                const activeCardBorder = isPreviewActive 
-                    ? 'ring-2 ring-orange-500 border-orange-300 bg-orange-50/45' 
-                    : 'border-slate-200 bg-white hover:border-slate-300';
-
-                const previewBtnStyle = isPreviewActive 
-                    ? 'bg-orange-600 text-white border-orange-600 shadow-xs ring-2 ring-orange-400' 
-                    : 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200 shadow-2xs';
-
-                itemsHtml += `
-                    <div class="p-2 px-2.5 rounded-xl border shadow-2xs hover:shadow-xs transition-all flex items-center justify-between gap-2 ${activeCardBorder}">
-                        <div class="min-w-0 flex-1">
-                            <div class="flex items-center gap-1.5">
-                                <i class="bi bi-file-earmark-pdf text-orange-500 text-xs shrink-0"></i>
-                                <span class="font-bold text-slate-800 text-[11px] truncate">File #${idx+1}</span>
-                                ${statusBadge}
+                cardsHtml += `
+                    <div class="student-card-item pointer-events-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200/90 overflow-hidden flex flex-col shrink-0 ${cardWidthClass} animate-pop-in" id="cardMhs_${mhs.nim}">
+                        <div class="p-2.5 px-3.5 bg-slate-900 text-white flex items-center justify-between gap-2 shrink-0 border-b border-slate-800">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <div class="w-6 h-6 rounded-lg bg-orange-600/30 border border-orange-500/50 text-orange-400 flex items-center justify-center font-bold text-[11px] shrink-0 shadow-2xs">
+                                    ${cardNum}
+                                </div>
+                                <div class="min-w-0 flex items-center gap-2">
+                                    <h4 class="text-xs font-bold text-white truncate max-w-[150px] sm:max-w-[180px]">${mhs.nama_mahasiswa}</h4>
+                                    <span class="px-1.5 py-0.2 rounded bg-white/10 text-orange-300 font-mono text-[10px] font-bold">${mhs.nim}</span>
+                                </div>
                             </div>
-                            <p class="text-[10px] font-mono text-slate-400 truncate mt-0.5" title="${fileName}">
-                                <i class="bi bi-file-pdf text-rose-500 mr-1 text-[9px]"></i>${fileName}
-                            </p>
-                            <p class="text-[9px] text-slate-400 mt-0.5"><i class="bi bi-clock mr-0.5"></i> ${new Date(preview.created_at).toLocaleString('id-ID')}</p>
-                        </div>
-                        <div class="flex items-center gap-1 shrink-0">
-                            <button type="button" 
-                                    onclick="previewBerkasItem('${nim}', ${idx})" 
-                                    class="w-7 h-7 rounded-lg border text-xs font-bold transition flex items-center justify-center cursor-pointer active:scale-95 ${previewBtnStyle}" 
-                                    title="${isPreviewActive ? 'Tutup Pratinjau Ini' : 'Pratinjau Berkas'}">
-                                <i class="bi bi-eye text-xs"></i>
+                            <button type="button" onclick="removeStudentFromLihatBerkas(${index})" class="w-6 h-6 rounded-md bg-white/10 hover:bg-rose-600/80 text-slate-300 hover:text-white flex items-center justify-center text-[11px] font-bold transition-colors cursor-pointer" title="Tutup Mahasiswa Ini">
+                                <i class="bi bi-x-lg"></i>
                             </button>
-                            <a href="${fileUrl}" 
-                               download="${fileName}" 
-                               target="_blank" 
-                               class="w-7 h-7 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold transition flex items-center justify-center cursor-pointer shadow-2xs active:scale-95" 
-                               title="Unduh Berkas">
-                                <i class="bi bi-download text-xs"></i>
-                            </a>
+                        </div>
+
+                        <div class="p-2.5 space-y-1.5 bg-slate-50/50 overflow-y-auto">
+                            ${itemsHtml}
                         </div>
                     </div>
                 `;
             });
 
-            if (totalFiles === 0) {
-                itemsHtml = `<div class="p-3 text-center text-slate-400 text-xs">Tidak ada riwayat berkas.</div>`;
-            }
-
-            wrapper.innerHTML = `
-                <div class="student-card-item pointer-events-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200/90 overflow-hidden flex flex-col shrink-0 w-[380px] animate-pop-in">
-                    <div class="p-3 px-4 bg-slate-900 text-white flex items-center justify-between gap-2 shrink-0 border-b border-slate-800">
-                        <div class="flex items-center gap-2 min-w-0">
-                            <div class="w-7 h-7 rounded-lg bg-orange-600/30 border border-orange-500/50 text-orange-400 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
-                                <i class="bi bi-person-fill"></i>
-                            </div>
-                            <div class="min-w-0 flex items-center gap-2">
-                                <h4 class="text-xs font-bold text-white truncate max-w-[180px]">${fullName}</h4>
-                                <span class="px-1.5 py-0.5 rounded bg-white/10 text-orange-300 font-mono text-[10px] font-bold">${nim}</span>
-                            </div>
-                        </div>
-                        <button type="button" onclick="closeLihatBerkasPanel()" class="w-7 h-7 rounded-md bg-white/10 hover:bg-rose-600/80 text-slate-300 hover:text-white flex items-center justify-center text-sm font-bold transition-colors cursor-pointer" title="Tutup">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
-                    </div>
-
-                    <div class="p-2.5 space-y-1.5 bg-slate-50/80 overflow-y-auto">
-                        ${itemsHtml}
-                    </div>
-
-                    <div class="p-2.5 border-t border-slate-200 bg-white flex justify-end">
-                        <button onclick="closeLihatBerkasPanel()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">Tutup Semua</button>
-                    </div>
-                </div>
-            `;
+            wrapper.innerHTML = headerSummaryBar + cardsHtml;
         }
 
-        function previewBerkasItem(nim, fileIndex) {
-            const mhs = bimbinganData[window.activeLihatBerkasIndex];
-            if (!mhs) return;
-
-            const existingIdx = window.activePreviews.findIndex(p => p.nim === nim && p.fileIndex === fileIndex);
-            if (existingIdx > -1) {
-                window.activePreviews.splice(existingIdx, 1);
-                renderPreviewCards();
-                renderLihatBerkasCards();
-                if (window.activePreviews.length === 0) {
-                    resetContainerLayout();
-                }
-                return;
-            }
-
-            if (window.activePreviews.length >= 2) {
-                window.activePreviews.shift();
-            }
-            window.activePreviews.push({ nim, fileIndex });
-
-            setContainerLayoutPreview();
-            renderPreviewCards();
-            renderLihatBerkasCards();
-        }
-
-        function setContainerLayoutPreview() {
-            const container = document.getElementById('lihatBerkasContainer');
-            if (container) {
-                container.classList.remove('justify-center');
-                container.classList.add('justify-start');
-            }
-            const mhsWrapper = document.getElementById('wrapperDaftarMhs');
-            if (mhsWrapper) {
-                mhsWrapper.className = 'flex flex-col gap-3 max-h-[92vh] overflow-y-auto pr-1.5 shrink-0 w-[350px]';
-            }
-            const previewWrapper = document.getElementById('wrapperPreviewBerkas');
-            if (previewWrapper) {
-                previewWrapper.classList.add('active');
-            }
-        }
-
-        function resetContainerLayout() {
-            const container = document.getElementById('lihatBerkasContainer');
-            if (container) {
-                container.classList.remove('justify-start');
-                container.classList.add('justify-center');
-            }
-            const mhsWrapper = document.getElementById('wrapperDaftarMhs');
-            if (mhsWrapper) {
-                mhsWrapper.className = 'flex flex-row items-center gap-4 max-h-[92vh] overflow-y-auto shrink-0';
-            }
-            const previewWrapper = document.getElementById('wrapperPreviewBerkas');
-            if (previewWrapper) {
-                previewWrapper.classList.remove('active');
-                previewWrapper.innerHTML = '';
-            }
-        }
-
-        function renderPreviewCards() {
+        function renderAllPreviewCards() {
             const wrapper = document.getElementById('wrapperPreviewBerkas');
             if (!wrapper) return;
 
-            const mhs = bimbinganData[window.activeLihatBerkasIndex];
-            if (!mhs || window.activePreviews.length === 0) {
+            if (!window.activePreviews || window.activePreviews.length === 0) {
                 wrapper.innerHTML = '';
                 wrapper.classList.remove('active');
-                resetContainerLayout();
                 return;
             }
 
             wrapper.classList.add('active');
 
-            const totalPreviews = window.activePreviews.length;
-            const panelWidthClass = totalPreviews > 1 ? 'w-[430px] sm:w-[470px] lg:w-[490px]' : 'w-[500px] sm:w-[540px]';
-
+            // Tampilkan preview secara horizontal (max 2)
+            const previews = window.activePreviews;
             let html = '';
-            window.activePreviews.forEach((p, idx) => {
+            previews.forEach((p, idx) => {
+                const mhs = bimbinganData.find(m => m.nim === p.nim);
+                if (!mhs) return;
                 const preview = mhs.riwayat_previews[p.fileIndex];
                 if (!preview) return;
                 const fileUrl = `<?= base_url('uploads/preview_ta/') ?>${preview.file_draft}`;
@@ -1662,11 +1625,11 @@
                 const slotNum = idx + 1;
 
                 html += `
-                    <div class="preview-card-item pointer-events-auto bg-white rounded-3xl shadow-2xl border border-slate-200/90 overflow-hidden flex flex-col shrink-0 animate-preview-in ${panelWidthClass}">
-                        <div class="p-2.5 px-3.5 bg-slate-900 text-white flex items-center justify-between gap-2.5 shrink-0 border-b border-slate-800">
+                    <div class="preview-card-item pointer-events-auto bg-white rounded-3xl shadow-2xl border border-slate-200/90 overflow-hidden flex flex-col shrink-0 animate-preview-in" style="width: 520px; max-width: 95vw;">
+                        <div class="preview-header p-2.5 px-3.5 bg-slate-900 text-white flex items-center justify-between gap-2.5 shrink-0 border-b border-slate-800">
                             <div class="flex items-center gap-2 min-w-0">
                                 <div class="preview-slot-badge w-7 h-7 rounded-lg bg-rose-600/30 border border-rose-500/50 text-rose-400 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
-                                    ${totalPreviews > 1 ? slotNum : '<i class="bi bi-file-pdf"></i>'}
+                                    ${previews.length > 1 ? slotNum : '<i class="bi bi-file-pdf"></i>'}
                                 </div>
                                 <div class="min-w-0">
                                     <h4 class="text-xs font-bold text-white truncate max-w-[190px] sm:max-w-[240px]">File #${p.fileIndex+1}</h4>
@@ -1686,7 +1649,7 @@
                             </div>
                         </div>
 
-                        <div class="preview-body relative">
+                        <div class="preview-body" style="height: 60vh; min-height: 300px;">
                             <div class="loader" id="previewLoader_${p.nim}_${p.fileIndex}">
                                 <i class="bi bi-arrow-repeat"></i> Memuat dokumen...
                             </div>
@@ -1697,7 +1660,7 @@
                                     title="Pratinjau Berkas"></iframe>
                         </div>
 
-                        <div class="p-2 px-3 bg-white flex items-center justify-between text-xs shrink-0 gap-2 border-t border-slate-200">
+                        <div class="preview-footer p-2 px-3 bg-white flex items-center justify-between text-xs shrink-0 gap-2 border-t border-slate-200">
                             <a href="${fileUrl}" download="${fileName}" target="_blank" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs text-[11px]">
                                 <i class="bi bi-download"></i>
                                 <span>Unduh</span>
@@ -1711,6 +1674,27 @@
             });
 
             wrapper.innerHTML = html;
+        }
+
+        function previewBerkasItem(nim, fileIndex) {
+            const existingIdx = window.activePreviews.findIndex(p => p.nim === nim && p.fileIndex === fileIndex);
+            if (existingIdx > -1) {
+                window.activePreviews.splice(existingIdx, 1);
+                refreshLihatBerkasView();
+                return;
+            }
+
+            if (window.activePreviews.length >= 2) {
+                window.activePreviews.shift();
+            }
+            window.activePreviews.push({ nim, fileIndex });
+            refreshLihatBerkasView();
+        }
+
+        function closeSinglePreview(index) {
+            if (index < 0 || index >= window.activePreviews.length) return;
+            window.activePreviews.splice(index, 1);
+            refreshLihatBerkasView();
         }
 
         function togglePreviewIframeInteraction(nim, fileIndex) {
@@ -1737,16 +1721,68 @@
             }
         }
 
-        function closeSinglePreview(index) {
-            if (index < 0 || index >= window.activePreviews.length) return;
-            window.activePreviews.splice(index, 1);
-            if (window.activePreviews.length === 0) {
-                resetContainerLayout();
-                renderLihatBerkasCards();
+        function removeStudentFromLihatBerkas(index) {
+            const idx = window.activeLihatBerkasIndices.indexOf(index);
+            if (idx === -1) return;
+            window.activeLihatBerkasIndices.splice(idx, 1);
+            const mhs = bimbinganData[index];
+            if (mhs) {
+                window.activePreviews = window.activePreviews.filter(p => p.nim !== mhs.nim);
+            }
+            if (window.activeLihatBerkasIndices.length === 0) {
+                closeLihatBerkasPanel();
+            } else {
+                refreshLihatBerkasView();
+            }
+            updateTableButtonHighlights();
+        }
+
+        function toggleLihatBerkasPanel(index) {
+            const mhs = bimbinganData[index];
+            if (!mhs || !mhs.riwayat_previews || mhs.riwayat_previews.length === 0) {
+                showToast('Mahasiswa ini belum memiliki berkas yang diunggah.', 'error');
                 return;
             }
-            renderPreviewCards();
-            renderLihatBerkasCards();
+
+            const idx = window.activeLihatBerkasIndices.indexOf(index);
+            if (idx > -1) {
+                removeStudentFromLihatBerkas(index);
+                return;
+            }
+
+            if (window.activeLihatBerkasIndices.length >= 4) {
+                const removed = window.activeLihatBerkasIndices.shift();
+                const removedMhs = bimbinganData[removed];
+                if (removedMhs) {
+                    window.activePreviews = window.activePreviews.filter(p => p.nim !== removedMhs.nim);
+                }
+            }
+            window.activeLihatBerkasIndices.push(index);
+
+            showLihatBerkasContainer();
+            refreshLihatBerkasView();
+        }
+
+        function showLihatBerkasContainer() {
+            const container = document.getElementById('lihatBerkasContainer');
+            if (container) {
+                container.style.display = 'flex';
+                container.classList.add('active');
+                container.style.flexDirection = 'row';
+                container.style.alignItems = 'flex-start';
+                container.style.justifyContent = 'flex-start';
+                container.style.overflowX = 'auto';
+                container.style.overflowY = 'hidden';
+            }
+            const wrapperDaftar = document.getElementById('wrapperDaftarMhs');
+            if (wrapperDaftar) {
+                wrapperDaftar.className = 'flex flex-col items-center gap-4 max-h-[92vh] overflow-y-auto flex-shrink-0 w-[380px] max-w-[95vw]';
+            }
+            const wrapperPreview = document.getElementById('wrapperPreviewBerkas');
+            if (wrapperPreview) {
+                wrapperPreview.classList.remove('active');
+                wrapperPreview.innerHTML = '';
+            }
         }
 
         function closeLihatBerkasPanel() {
@@ -1754,35 +1790,31 @@
             if (container) {
                 container.style.display = 'none';
                 container.classList.remove('active');
-                container.classList.remove('justify-start');
-                container.classList.add('justify-center');
             }
-            const wrapper = document.getElementById('wrapperDaftarMhs');
-            if (wrapper) {
-                wrapper.innerHTML = '';
-                wrapper.className = 'flex flex-row items-center gap-4 max-h-[92vh] overflow-y-auto shrink-0';
+            const wrapperDaftar = document.getElementById('wrapperDaftarMhs');
+            if (wrapperDaftar) wrapperDaftar.innerHTML = '';
+            const wrapperPreview = document.getElementById('wrapperPreviewBerkas');
+            if (wrapperPreview) {
+                wrapperPreview.innerHTML = '';
+                wrapperPreview.classList.remove('active');
             }
-            const previewWrapper = document.getElementById('wrapperPreviewBerkas');
-            if (previewWrapper) {
-                previewWrapper.innerHTML = '';
-                previewWrapper.classList.remove('active');
-            }
-            window.activeLihatBerkasIndex = null;
+            window.activeLihatBerkasIndices = [];
             window.activePreviews = [];
             updateTableButtonHighlights();
         }
 
         function updateTableButtonHighlights() {
-            const activeIndex = window.activeLihatBerkasIndex;
+            const activeIndices = window.activeLihatBerkasIndices || [];
             document.querySelectorAll('#bimbinganTableBody tr').forEach((tr, idx) => {
                 const btn = tr.querySelector('button[onclick^="toggleLihatBerkasPanel"]');
                 if (btn) {
-                    if (idx === activeIndex) {
+                    const isActive = activeIndices.includes(idx);
+                    if (isActive) {
                         btn.className = 'inline-flex items-center gap-1.5 text-white font-bold px-3 py-1.5 rounded-xl text-xs cursor-pointer shadow-md transition-transform bg-orange-600 ring-2 ring-orange-400 scale-105';
                         btn.innerHTML = '<i class="bi bi-eye-fill text-xs"></i> Melihat';
                     } else {
                         btn.className = 'inline-flex items-center gap-1.5 text-white font-bold px-3 py-1.5 rounded-xl text-xs cursor-pointer shadow-md transition-transform btn-3d-orange';
-                        btn.innerHTML = '<i class="fa-solid fa-folder-open text-xs"></i> Lihat Berkas';
+                        btn.innerHTML = '<i class="bi bi-folder-open text-xs"></i> Lihat Berkas';
                     }
                 }
             });
@@ -1791,19 +1823,20 @@
         // Keyboard ESC untuk menutup panel
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                if (window.activeLihatBerkasIndex !== null) {
+                if (window.activeLihatBerkasIndices && window.activeLihatBerkasIndices.length > 0) {
                     closeLihatBerkasPanel();
                 }
             }
         });
 
-        // Daftarkan fungsi ke global
+        // Daftarkan ke global
         window.toggleLihatBerkasPanel = toggleLihatBerkasPanel;
         window.closeLihatBerkasPanel = closeLihatBerkasPanel;
         window.previewBerkasItem = previewBerkasItem;
         window.closeSinglePreview = closeSinglePreview;
         window.togglePreviewIframeInteraction = togglePreviewIframeInteraction;
         window.updateTableButtonHighlights = updateTableButtonHighlights;
+        window.removeStudentFromLihatBerkas = removeStudentFromLihatBerkas;
         window.openReviewModal = openReviewModal;
         window.closeReviewModal = closeReviewModal;
         window.showCommentModal = showCommentModal;
