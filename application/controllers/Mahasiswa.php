@@ -612,27 +612,6 @@ class Mahasiswa extends CI_Controller {
 
     // Modul Bimbingan TA & Upload Berkas Preview (Multi-Stage Hub)
     public function bimbingan() {
-        $role_id = $this->session->userdata('role_id');
-
-        if (in_array($role_id, [1, 2, 3, 4])) {
-
-            $dosen_id = $this->session->userdata('user_id');
-            $posisi = $this->input->get('posisi') ?: 1;
-            
-            $data['title'] = 'Dashboard Bimbingan Dosen';
-            $data['posisi'] = $posisi;
-            $data['students'] = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, $posisi);
-            
-            foreach ($data['students'] as &$student) {
-                $student['preview1'] = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], 'Preview 1');
-                $student['preview2'] = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], 'Preview 2');
-                $student['preview3'] = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], 'Preview 3');
-            }
-            
-            $this->load->view('mahasiswa/dosen_bimbingan', $data);
-            return;
-        }
-
         $nim = $this->_get_current_nim();
         $this->load->model('Rekomendasi_model');
 
@@ -672,6 +651,43 @@ class Mahasiswa extends CI_Controller {
     // Alias route preview1
     public function preview1() {
         $this->bimbingan();
+    }
+
+    public function dosen_bimbingan() {
+        $dosen_id = $this->session->userdata('user_id');
+        $posisi = $this->input->get('posisi') ?: 1;
+        
+        $data['title'] = 'Dashboard Bimbingan Dosen';
+        $data['posisi'] = $posisi;
+        $data['students'] = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, $posisi);
+        
+        foreach ($data['students'] as &$student) {
+            $student['preview1'] = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], 'Preview 1');
+            $student['preview2'] = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], 'Preview 2');
+            $student['preview3'] = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], 'Preview 3');
+        }
+        
+        $this->load->view('mahasiswa/dosen_bimbingan', $data);
+    }
+
+    public function dosen_penguji() {
+        $dosen_id = $this->session->userdata('user_id');
+        $posisi = $this->input->get('posisi') ?: 1;
+        
+        $model_posisi = $posisi == 1 ? 3 : 4;
+
+        $data['title'] = 'Dashboard Dosen Penguji';
+        $data['posisi'] = $posisi;
+        $data['model_posisi'] = $model_posisi;
+        $data['students'] = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, $model_posisi);
+        
+        foreach ($data['students'] as &$student) {
+            $student['preview1'] = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], 'Preview 1');
+            $student['preview2'] = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], 'Preview 2');
+            $student['preview3'] = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], 'Preview 3');
+        }
+        
+        $this->load->view('mahasiswa/dosen_penguji', $data);
     }
 
     // Endpoint Upload Draft Berkas Preview (Preview 1 / 2 / 3)
@@ -1049,73 +1065,63 @@ class Mahasiswa extends CI_Controller {
             ->set_output(json_encode(['success' => true, 'message' => 'Draft berhasil tersimpan di server.']));
     }
 
-    // AJAX Endpoint: Get list of students and their previews for Dosen Bimbingan
+    // AJAX Endpoint: Ambil data mahasiswa bimbingan & preview secara efisien
     public function ajax_get_dosen_bimbingan() {
         header('Content-Type: application/json');
-        
-        $role_id = $this->session->userdata('role_id');
-        if (!in_array($role_id, [1, 2, 3, 4])) {
-            echo json_encode(['status' => false, 'message' => 'Unauthorized']);
-            return;
+
+        $dosen_id = $this->session->userdata('user_id');
+        $posisi = $this->input->get('posisi') ?: 1;
+        if ($this->input->get('model_posisi')) {
+            $posisi = $this->input->get('model_posisi');
         }
-
-
-        try {
-            $dosen_id = $this->session->userdata('user_id');
-            $posisi = $this->input->get('posisi') ?: 1;
-            $tahap = $this->input->get('tahap') ?: 'Preview 1';
+        $tahap = $this->input->get('tahap') ?: 'Preview 1';
             
-            $students = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, $posisi);
+        $students = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, $posisi);
             
-            $data = [];
-            $total = count($students);
+        $data = [];
+        $total = count($students);
             
-            $this->load->model('Rekomendasi_model');
+        $this->load->model('Rekomendasi_model');
 
-            foreach ($students as $student) {
-                $previews = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], $tahap);
-                $latest = !empty($previews) ? $previews[0] : null;
-                
-                // Smart fallback: If current tab stage has no upload yet, fetch latest preview across any stage (P1/P2/P3)
-                if (empty($latest)) {
-                    $all_previews = $this->Mahasiswa_model->get_riwayat_preview($student['nim']);
-                    if (!empty($all_previews)) {
-                        $latest = $all_previews[0];
-                    }
+        foreach ($students as $student) {
+            $previews = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], $tahap);
+            $latest = !empty($previews) ? $previews[0] : null;
+            
+            // Smart fallback: If current tab stage has no upload yet, fetch latest preview across any stage (P1/P2/P3)
+            if (empty($latest)) {
+                $all_previews = $this->Mahasiswa_model->get_riwayat_preview($student['nim']);
+                if (!empty($all_previews)) {
+                    $latest = $all_previews[0];
                 }
-
-                $rekomen = $this->Rekomendasi_model->get_latest_submission($student['nim']);
-                
-                if ($latest && !empty($latest['file_draft'])) {
-                    $filePath = FCPATH . 'uploads/preview_ta/' . $latest['file_draft'];
-                    if (!file_exists($filePath)) {
-                        $latest['file_missing'] = true;
-                    }
-                }
-                
-                $data[] = [
-                    'nim' => $student['nim'],
-                    'nama_mahasiswa' => $student['nama_mahasiswa'] ?? $student['nim'],
-                    'judul' => $student['judul'] ?? '-',
-                    'konsentrasi_dkv' => $student['konsentrasi_dkv'] ?? '',
-                    'latest_preview' => $latest,
-                    'riwayat_previews' => $previews,
-                    'rekomendasi' => $rekomen
-                ];
             }
 
-
-
-            echo json_encode([
-                'status' => true,
-                'data' => $data,
-                'stats' => [
-                    'total' => $total
-                ]
-            ]);
-        } catch (Exception $e) {
-            echo json_encode(['status' => false, 'message' => 'Server error: ' . $e->getMessage()]);
+            $rekomen = $this->Rekomendasi_model->get_latest_submission($student['nim']);
+            
+            if ($latest && !empty($latest['file_draft'])) {
+                $filePath = FCPATH . 'uploads/preview_ta/' . $latest['file_draft'];
+                if (!file_exists($filePath)) {
+                    $latest['file_missing'] = true;
+                }
+            }
+            
+            $data[] = [
+                'nim' => $student['nim'],
+                'nama_mahasiswa' => $student['nama_mahasiswa'] ?? $student['nim'],
+                'judul' => $student['judul'] ?? '-',
+                'konsentrasi_dkv' => $student['konsentrasi_dkv'] ?? '',
+                'latest_preview' => $latest,
+                'riwayat_previews' => $previews,
+                'rekomendasi' => $rekomen
+            ];
         }
+
+        echo json_encode([
+            'status' => true,
+            'data' => $data,
+            'stats' => [
+                'total' => $total
+            ]
+        ]);
     }
 
     // AJAX Endpoint: Get preview log for logged in Mahasiswa
@@ -1216,18 +1222,28 @@ class Mahasiswa extends CI_Controller {
                 'status_pembimbing' => $status,
                 'catatan_pembimbing' => $catatan
             ];
-            $this->Mahasiswa_model->update_review_preview($id, $data);
             $message = 'Review Pembimbing 1 berhasil disimpan.';
         } else if ($posisi == 2) {
             $data = [
                 'catatan_pembimbing_2' => $catatan
             ];
-            $this->Mahasiswa_model->update_review_preview($id, $data);
-            $message = 'Komentar Pembimbing 2 berhasil disimpan.';
+            $message = 'Catatan Pembimbing 2 berhasil disimpan.';
+        } else if ($posisi == 3) {
+            $data = [
+                'catatan_penguji_1' => $catatan
+            ];
+            $message = 'Catatan Penguji 1 berhasil disimpan.';
+        } else if ($posisi == 4) {
+            $data = [
+                'catatan_penguji_2' => $catatan
+            ];
+            $message = 'Catatan Penguji 2 berhasil disimpan.';
         } else {
             echo json_encode(['status' => false, 'message' => 'Posisi tidak valid']);
             return;
         }
+
+        $this->Mahasiswa_model->update_review_preview($id, $data);
 
         echo json_encode([
             'status' => true,
@@ -1269,6 +1285,22 @@ class Mahasiswa extends CI_Controller {
                 $this->Mahasiswa_model->update_review_preview($id, $data);
             }
             $message = count($ids) . ' berkas berhasil diberi catatan (P2).';
+        } else if ($posisi == 3) {
+            $data = [
+                'catatan_penguji_1' => 'Telah ditinjau (massal)'
+            ];
+            foreach ($ids as $id) {
+                $this->Mahasiswa_model->update_review_preview($id, $data);
+            }
+            $message = count($ids) . ' berkas berhasil diberi catatan (Penguji 1).';
+        } else if ($posisi == 4) {
+            $data = [
+                'catatan_penguji_2' => 'Telah ditinjau (massal)'
+            ];
+            foreach ($ids as $id) {
+                $this->Mahasiswa_model->update_review_preview($id, $data);
+            }
+            $message = count($ids) . ' berkas berhasil diberi catatan (Penguji 2).';
         } else {
             echo json_encode(['status' => false, 'message' => 'Posisi tidak valid']);
             return;
@@ -1295,6 +1327,9 @@ class Mahasiswa extends CI_Controller {
 
         $dosen_id = $this->session->userdata('user_id');
         $posisi = $this->input->get('posisi') ?: 1;
+        if ($this->input->get('model_posisi')) {
+            $posisi = $this->input->get('model_posisi');
+        }
         $lastData = null;
 
         while (true) {
