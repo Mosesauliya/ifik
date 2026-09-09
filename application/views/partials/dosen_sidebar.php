@@ -1,0 +1,82 @@
+<?php
+$current_uri = uri_string();
+$active_bimbingan = (strpos($current_uri, 'bimbingan') !== false);
+$active_penguji = (strpos($current_uri, 'penguji') !== false);
+$active_wali = (strpos($current_uri, 'dosenwali') !== false);
+?>
+
+<!-- Dosen Sidebar -->
+<aside class="fixed left-0 top-0 h-screen w-64 bg-white/80 backdrop-blur-xl border-r border-orange-100 shadow-xl z-50 flex flex-col transition-all duration-300">
+    
+    <!-- Brand -->
+    <div class="h-20 flex items-center px-6 border-b border-orange-100/60 bg-gradient-to-r from-orange-50/50 to-transparent">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gradient-to-tr from-orange-600 to-amber-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/30">
+                <span class="text-white font-extrabold text-xl">I</span>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-slate-800 leading-none">IFIK Portal</h2>
+                <p class="text-[10px] uppercase font-bold text-orange-500 tracking-wider mt-1">Dosen Dashboard</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+        <div class="px-2 mb-2">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Navigasi Peran</span>
+        </div>
+        
+        <a href="<?= site_url('dosen/bimbingan') ?>" 
+           class="flex items-center gap-3 px-3 py-3 rounded-xl font-semibold transition-all group <?= $active_bimbingan ? 'bg-orange-50 text-orange-600 shadow-sm border border-orange-100' : 'text-slate-600 hover:bg-slate-50 hover:text-orange-500' ?>">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors <?= $active_bimbingan ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-500' ?>">
+                <i class="bi bi-person-workspace text-lg"></i>
+            </div>
+            Dosen Pembimbing
+        </a>
+
+        <a href="<?= site_url('dosen/penguji') ?>" 
+           class="flex items-center gap-3 px-3 py-3 rounded-xl font-semibold transition-all group <?= $active_penguji ? 'bg-orange-50 text-orange-600 shadow-sm border border-orange-100' : 'text-slate-600 hover:bg-slate-50 hover:text-orange-500' ?>">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors <?= $active_penguji ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-500' ?>">
+                <i class="bi bi-clipboard-check text-lg"></i>
+            </div>
+            Dosen Penguji
+        </a>
+
+        <a href="<?= site_url('dosenwali') ?>" 
+           class="flex items-center gap-3 px-3 py-3 rounded-xl font-semibold transition-all group <?= $active_wali ? 'bg-orange-50 text-orange-600 shadow-sm border border-orange-100' : 'text-slate-600 hover:bg-slate-50 hover:text-orange-500' ?>">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors <?= $active_wali ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-500' ?>">
+                <i class="bi bi-people-fill text-lg"></i>
+            </div>
+            Dosen Wali
+        </a>
+    </nav>
+
+    <!-- User Section -->
+    <div class="p-4 border-t border-slate-100 bg-slate-50/50">
+        <div class="flex items-center gap-3 p-3 bg-white rounded-2xl shadow-sm border border-slate-100">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-slate-700 to-slate-900 flex items-center justify-center text-white font-bold shrink-0">
+                <?= strtoupper(substr($this->session->userdata('name') ?: 'D', 0, 1)) ?>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-slate-800 truncate"><?= htmlspecialchars($this->session->userdata('name') ?: 'User') ?></p>
+                <p class="text-xs text-slate-500 truncate"><?= htmlspecialchars($this->session->userdata('nidn_nim') ?: 'NIDN') ?></p>
+            </div>
+        </div>
+        <a href="<?= site_url('auth/logout') ?>" class="mt-2 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-rose-500 hover:bg-rose-50 text-sm font-bold transition-colors">
+            <i class="bi bi-box-arrow-right"></i> Logout
+        </a>
+    </div>
+</aside>
+
+<!-- Spacer for sidebar to push main content -->
+<style>
+    /* Prevent body from overflowing under sidebar */
+    body { padding-left: 16rem !important; }
+    
+    /* Responsive adjustment */
+    @media (max-width: 1024px) {
+        aside { transform: translateX(-100%); }
+        body { padding-left: 0 !important; }
+    }
+</style>

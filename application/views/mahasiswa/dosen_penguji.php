@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $title ?? 'Dashboard Bimbingan Dosen — IFIK Portal'; ?></title>
+    <title><?= $title ?? 'Dashboard Dosen Penguji — IFIK Portal'; ?></title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Bootstrap Icons -->
@@ -388,7 +388,7 @@
             <div class="relative z-10 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-8">
                 <div class="space-y-4 max-w-3xl">
                     <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
-                        Dashboard Bimbingan Dosen
+                        Dashboard Dosen Penguji
                     </h1>
                     <p class="text-sm sm:text-base text-orange-100/95 font-normal leading-relaxed">
                         Kelola dan evaluasi dokumen Tugas Akhir mahasiswa bimbingan Anda.
@@ -396,11 +396,11 @@
                 </div>
                 <div class="w-full xl:w-[400px] bg-black/25 backdrop-blur-xl rounded-3xl p-6 border border-white/20 shadow-2xl space-y-4 text-white">
                     <div class="flex gap-4">
-                        <a href="<?= site_url('dosen/bimbingan?posisi=1') ?>" class="flex-1 py-3 px-4 rounded-2xl font-bold text-center border <?= $posisi == 1 ? 'bg-orange-500 border-orange-400 text-white shadow-lg' : 'bg-white/10 border-white/20 hover:bg-white/20' ?> transition">
-                            <i class="bi bi-person-fill mr-2"></i> Sebagai P1
+                        <a href="<?= site_url('mahasiswa/dosen_penguji?posisi=1') ?>" class="flex-1 py-3 px-4 rounded-2xl font-bold text-center border <?= $posisi == 1 ? 'bg-orange-500 border-orange-400 text-white shadow-lg' : 'bg-white/10 border-white/20 hover:bg-white/20' ?> transition">
+                            <i class="bi bi-person-fill mr-2"></i> Sebagai Penguji 1
                         </a>
-                        <a href="<?= site_url('dosen/bimbingan?posisi=2') ?>" class="flex-1 py-3 px-4 rounded-2xl font-bold text-center border <?= $posisi == 2 ? 'bg-orange-500 border-orange-400 text-white shadow-lg' : 'bg-white/10 border-white/20 hover:bg-white/20' ?> transition">
-                            <i class="bi bi-person mr-2"></i> Sebagai P2
+                        <a href="<?= site_url('mahasiswa/dosen_penguji?posisi=2') ?>" class="flex-1 py-3 px-4 rounded-2xl font-bold text-center border <?= $posisi == 2 ? 'bg-orange-500 border-orange-400 text-white shadow-lg' : 'bg-white/10 border-white/20 hover:bg-white/20' ?> transition">
+                            <i class="bi bi-person mr-2"></i> Sebagai Penguji 2
                         </a>
                     </div>
                 </div>
@@ -411,7 +411,7 @@
             <div class="flex flex-wrap items-center justify-between border-b border-orange-100 pb-5">
                 <div>
                     <h3 class="text-xl sm:text-2xl font-bold text-slate-900">
-                        <i class="bi bi-people-fill text-orange-500 text-xl"></i> Daftar Mahasiswa Bimbingan (Pembimbing <?= $posisi ?>)
+                        <i class="bi bi-people-fill text-orange-500 text-xl"></i> Daftar Mahasiswa Bimbingan (Penguji <?= $posisi ?>)
                     </h3>
                 </div>
             </div>
@@ -492,14 +492,12 @@
                                     <th class="py-4 px-4">Berkas Terbaru</th>
                                     <th class="py-4 px-4 text-center">Waktu Upload</th>
                                     <th class="py-4 px-4 text-center">Status Review</th>
-                                    <?php if($posisi == 1): ?><th class="py-4 px-4 text-center">Rekomendasi</th><?php endif; ?>
-                                    <th class="py-4 px-4 text-center">Komentar P1</th>
-                                    <th class="py-4 px-4 text-center">Komentar P2</th>
+                                    <th class="py-4 px-4 text-center">Komentar</th>
                                     <th class="py-4 px-4 pr-6 text-right">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 font-medium bg-white" id="bimbinganTableBody">
-                                <tr><td colspan="8" class="text-center py-10 text-slate-500"><i class="bi bi-arrow-repeat animate-spin mr-2"></i> Memuat data...</td></tr>
+                                <tr><td colspan="7" class="text-center py-10 text-slate-500"><i class="bi bi-arrow-repeat animate-spin mr-2"></i> Memuat data...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -522,23 +520,9 @@
                     <form id="formReview" action="<?= site_url('mahasiswa/review_preview') ?>" method="POST" class="space-y-4">
 
                         <input type="hidden" name="id_preview" id="modalIdPreview" value="">
-                        <input type="hidden" name="posisi" value="<?= $posisi ?>">
+                        <input type="hidden" name="posisi" value="<?= $model_posisi ?>">
                         
-                        <?php if($posisi == 1): ?>
-                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 mb-4 hidden" id="modalRiwayatContainer">
-                            <p class="text-sm font-bold text-blue-900 mb-1"><i class="bi bi-clock-history"></i> Catatan Sebelumnya:</p>
-                            <p class="text-xs text-blue-800 italic" id="modalCatatanSebelumnya"></p>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 uppercase mb-2">Status Penilaian (P1)</label>
-                            <select name="status_pembimbing" id="modalStatus" class="w-full p-3 rounded-xl border border-slate-300 focus:ring-orange-500 focus:border-orange-500 text-sm font-semibold">
-                                <option value="Pending">Menunggu Review</option>
-                                <option value="Approved">Disetujui (ACC)</option>
-                                <option value="Revision">Perlu Revisi</option>
-                            </select>
-                        </div>
-                        <?php endif; ?>
+
 
                         <div>
                             <label class="block text-xs font-bold text-slate-700 uppercase mb-2">Catatan / Feedback Anda</label>
@@ -603,15 +587,24 @@
         </div>
     </div>
 
-    <!-- Comment Modal -->
+    <!-- Comment Modal (Unified 4-tab) -->
     <div id="commentModal" class="hidden fixed inset-0 z-[200] items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeCommentModal()"></div>
         <div class="relative bg-white rounded-3xl p-6 sm:p-8 w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
             <button onclick="closeCommentModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
             <h3 class="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2" id="commentModalTitle">
-                <i class="bi bi-chat-quote-fill text-indigo-500"></i> Komentar
+                <i class="bi bi-chat-quote-fill text-indigo-500"></i> Komentar Dosen
             </h3>
             <p class="text-xs text-slate-500 font-semibold mb-4" id="commentModalName">Nama Mahasiswa</p>
+            
+            <!-- Tabs for 4 roles -->
+            <div class="flex flex-wrap gap-1.5 mb-4 border-b border-slate-200 pb-3" id="commentTabsContainer">
+                <button onclick="switchCommentTab('p1')" id="commentTabP1" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-orange-100 text-orange-700 border border-orange-300 transition">Pembimbing 1</button>
+                <button onclick="switchCommentTab('p2')" id="commentTabP2" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 transition">Pembimbing 2</button>
+                <button onclick="switchCommentTab('u1')" id="commentTabU1" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 transition">Penguji 1</button>
+                <button onclick="switchCommentTab('u2')" id="commentTabU2" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 transition">Penguji 2</button>
+            </div>
+            
             <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm text-slate-800 font-medium leading-relaxed overflow-y-auto flex-1" id="commentModalContent"></div>
         </div>
     </div>
@@ -628,7 +621,7 @@
                 <i class="bi bi-files"></i> Preview Massal
             </button>
             <button type="button" onclick="submitDosenBatchApprove()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer">
-                <i class="bi bi-check2-all"></i> Approve Massal
+                <i class="bi bi-check2-all"></i> Tinjau Massal
             </button>
             <button type="button" onclick="unselectAllDosenStudents()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition-all cursor-pointer">
                 <i class="bi bi-x-lg"></i> Batal
@@ -764,7 +757,7 @@
             const posisi = <?= $posisi ?>;
             if(!silent) tbody.innerHTML = '<tr><td colspan="7" class="text-center py-10 text-slate-500"><i class="bi bi-arrow-repeat animate-spin text-xl"></i> Memuat data...</td></tr>';
             
-            fetch(`<?= site_url('mahasiswa/ajax_get_dosen_bimbingan') ?>?posisi=${posisi}&tahap=${encodeURIComponent(currentTahap)}`)
+            fetch(`<?= site_url('mahasiswa/ajax_get_dosen_bimbingan') ?>?model_posisi=<?= $model_posisi ?>&tahap=${encodeURIComponent(currentTahap)}`)
                 .then(res => {
                     if (!res.ok) throw new Error('HTTP ' + res.status);
                     return res.text();
@@ -931,17 +924,19 @@
                 }
 
                 let p1Comment = mhs.latest_preview ? (mhs.latest_preview.catatan_pembimbing || '') : '';
-                let hasP1Comment = p1Comment.trim().length > 0;
-                let encodedP1 = hasP1Comment ? encodeURIComponent(p1Comment) : '';
-                let p1BtnHtml = hasP1Comment
-                    ? `<button onclick="showCommentModal(decodeURIComponent('${encodedP1}'), '${mhs.nama_mahasiswa}', 1)" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-100 hover:bg-orange-200 text-orange-700 border border-orange-200 rounded-lg text-xs font-bold transition cursor-pointer"><i class="bi bi-chat-quote-fill"></i> Lihat</button>`
-                    : `<span class="text-slate-400 text-xs italic">-</span>`;
-
                 let p2Comment = mhs.latest_preview ? (mhs.latest_preview.catatan_pembimbing_2 || '') : '';
-                let hasP2Comment = p2Comment.trim().length > 0;
-                let encodedP2 = hasP2Comment ? encodeURIComponent(p2Comment) : '';
-                let p2BtnHtml = hasP2Comment
-                    ? `<button onclick="showCommentModal(decodeURIComponent('${encodedP2}'), '${mhs.nama_mahasiswa}', 2)" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition cursor-pointer"><i class="bi bi-chat-quote-fill"></i> Lihat</button>`
+                let u1Comment = mhs.latest_preview ? (mhs.latest_preview.catatan_penguji_1 || '') : '';
+                let u2Comment = mhs.latest_preview ? (mhs.latest_preview.catatan_penguji_2 || '') : '';
+                let hasAnyComment = p1Comment.trim().length > 0 || p2Comment.trim().length > 0 || u1Comment.trim().length > 0 || u2Comment.trim().length > 0;
+                
+                let commentCountParts = [];
+                if (p1Comment.trim()) commentCountParts.push('P1');
+                if (p2Comment.trim()) commentCountParts.push('P2');
+                if (u1Comment.trim()) commentCountParts.push('U1');
+                if (u2Comment.trim()) commentCountParts.push('U2');
+                
+                let commentBtnHtml = hasAnyComment
+                    ? `<button onclick="showUnifiedCommentModal('${mhs.nama_mahasiswa}', '${encodeURIComponent(p1Comment)}', '${encodeURIComponent(p2Comment)}', '${encodeURIComponent(u1Comment)}', '${encodeURIComponent(u2Comment)}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-violet-100 hover:bg-violet-200 text-violet-700 border border-violet-200 rounded-lg text-xs font-bold transition cursor-pointer"><i class="bi bi-chat-quote-fill"></i> ${commentCountParts.join(', ')}</button>`
                     : `<span class="text-slate-400 text-xs italic">-</span>`;
 
                 html += `
@@ -961,16 +956,14 @@
                         <td class="py-4 px-4">${previewHtml}</td>
                         <td class="py-4 px-4 text-center">${timeHtml}</td>
                         <td class="py-4 px-4 text-center">${statusBadge}</td>
-                        ${<?= $posisi ?> == 1 ? `<td class="py-4 px-4 text-center">${rekomenBadge}</td>` : ''}
-                        <td class="py-4 px-4 text-center">${p1BtnHtml}</td>
-                        <td class="py-4 px-4 text-center">${p2BtnHtml}</td>
+                        <td class="py-4 px-4 text-center">${commentBtnHtml}</td>
                         <td class="py-4 px-4 pr-6 text-right">${btnHtml}</td>
                     </tr>
                 `;
             });
             
             if(count === 0) {
-                html = `<tr><td colspan="8" class="text-center py-10 text-slate-500 font-medium">Tidak ada data mahasiswa ditemukan.</td></tr>`;
+                html = `<tr><td colspan="7" class="text-center py-10 text-slate-500 font-medium">Tidak ada data mahasiswa ditemukan.</td></tr>`;
             }
 
             tbody.innerHTML = html;
@@ -998,22 +991,13 @@
                 document.getElementById('modalStatus').value = latest.status_pembimbing || 'Pending';
             }
             
-            let catatanDosen = <?= $posisi ?> === 1 ? (latest.catatan_pembimbing || '') : (latest.catatan_pembimbing_2 || '');
+            let catatanDosen = <?= $posisi ?> === 1 ? (latest.catatan_penguji_1 || '') : (latest.catatan_penguji_2 || '');
             
             if (tinymce.get('modalCatatan')) {
                 tinymce.get('modalCatatan').setContent(catatanDosen);
             } else {
                 document.getElementById('modalCatatan').value = catatanDosen;
                 initModalTinyMCE();
-            }
-            
-            if (<?= $posisi ?> === 1 && document.getElementById('modalRiwayatContainer')) {
-                if (latest.catatan_pembimbing) {
-                    document.getElementById('modalRiwayatContainer').classList.remove('hidden');
-                    document.getElementById('modalCatatanSebelumnya').textContent = latest.catatan_pembimbing;
-                } else {
-                    document.getElementById('modalRiwayatContainer').classList.add('hidden');
-                }
             }
             
             document.getElementById('reviewModal').classList.remove('hidden');
@@ -1474,16 +1458,66 @@
         // ============================================================
         // COMMENT MODAL
         // ============================================================
-        function showCommentModal(comment, name, pos) {
+        // Unified comment modal data store
+        let _commentData = { p1: '', p2: '', u1: '', u2: '' };
+        let _activeCommentTab = 'p1';
+
+        function showUnifiedCommentModal(name, encodedP1, encodedP2, encodedU1, encodedU2) {
+            _commentData.p1 = decodeURIComponent(encodedP1 || '');
+            _commentData.p2 = decodeURIComponent(encodedP2 || '');
+            _commentData.u1 = decodeURIComponent(encodedU1 || '');
+            _commentData.u2 = decodeURIComponent(encodedU2 || '');
+            
             document.getElementById('commentModalName').textContent = name;
-            document.getElementById('commentModalContent').innerHTML = comment || '<em class="text-slate-400">Tidak ada komentar.</em>';
-            document.getElementById('commentModalTitle').innerHTML = pos === 1 
-                ? '<i class="bi bi-chat-quote-fill text-orange-500"></i> Komentar Pembimbing 1'
-                : '<i class="bi bi-chat-quote-fill text-indigo-500"></i> Komentar Pembimbing 2';
+            document.getElementById('commentModalTitle').innerHTML = '<i class="bi bi-chat-quote-fill text-violet-500"></i> Komentar Dosen';
+            
+            // Default to first tab that has content, or p1
+            if (_commentData.p1.trim()) _activeCommentTab = 'p1';
+            else if (_commentData.p2.trim()) _activeCommentTab = 'p2';
+            else if (_commentData.u1.trim()) _activeCommentTab = 'u1';
+            else if (_commentData.u2.trim()) _activeCommentTab = 'u2';
+            else _activeCommentTab = 'p1';
+            
+            switchCommentTab(_activeCommentTab);
             
             const modal = document.getElementById('commentModal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
+        }
+
+        function switchCommentTab(tab) {
+            _activeCommentTab = tab;
+            const content = document.getElementById('commentModalContent');
+            const tabs = { p1: 'commentTabP1', p2: 'commentTabP2', u1: 'commentTabU1', u2: 'commentTabU2' };
+            const activeClasses = 'px-3 py-1.5 rounded-lg text-xs font-bold border transition';
+            const colors = {
+                p1: { active: 'bg-orange-100 text-orange-700 border-orange-300', inactive: 'bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200' },
+                p2: { active: 'bg-indigo-100 text-indigo-700 border-indigo-300', inactive: 'bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200' },
+                u1: { active: 'bg-emerald-100 text-emerald-700 border-emerald-300', inactive: 'bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200' },
+                u2: { active: 'bg-purple-100 text-purple-700 border-purple-300', inactive: 'bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200' }
+            };
+            
+            for (const [key, elId] of Object.entries(tabs)) {
+                const el = document.getElementById(elId);
+                if (el) {
+                    el.className = activeClasses + ' ' + (key === tab ? colors[key].active : colors[key].inactive);
+                }
+            }
+            
+            const labels = { p1: 'Pembimbing 1', p2: 'Pembimbing 2', u1: 'Penguji 1', u2: 'Penguji 2' };
+            const comment = _commentData[tab] || '';
+            if (comment.trim()) {
+                content.innerHTML = comment;
+            } else {
+                content.innerHTML = `<em class="text-slate-400">Belum ada komentar dari ${labels[tab]}.</em>`;
+            }
+        }
+
+        // Legacy compat
+        function showCommentModal(comment, name, pos) {
+            const p1 = pos === 1 ? comment : '';
+            const p2 = pos === 2 ? comment : '';
+            showUnifiedCommentModal(name, encodeURIComponent(p1), encodeURIComponent(p2), '', '');
         }
 
         function closeCommentModal() {
