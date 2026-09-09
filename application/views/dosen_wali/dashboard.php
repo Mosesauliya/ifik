@@ -100,6 +100,9 @@
 </head>
 <body class="bg-gradient-to-br from-amber-100/80 via-orange-50 to-amber-100/90 text-slate-900 font-sans antialiased min-h-screen flex flex-col selection:bg-orange-500 selection:text-white relative">
 
+    <!-- Auto Role-Aware Curved Animated Sidebar -->
+    <?php $this->load->view('components/curved_sidebar'); ?>
+
     <!-- Header Glass Navbar -->
     <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-2xl border-b border-orange-100/80 shadow-xs">
         <div class="w-full px-4 sm:px-6 lg:px-10">

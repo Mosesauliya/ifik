@@ -589,6 +589,8 @@
             const status = (mhs.status_approval_koor || 'Pending').toLowerCase();
             const stage = (mhs.current_stage || 'Koordinator TA').toLowerCase();
             const prodi = (mhs.konsentrasi_dkv || 'Informatika').toLowerCase();
+            const pemb1 = (mhs.nama_pembimbing_1 || mhs.pembimbing_1 || '').toLowerCase();
+            const pemb2 = (mhs.nama_pembimbing_2 || mhs.pembimbing_2 || '').toLowerCase();
 
             for (let filter of activeFilters) {
                 const valLower = filter.val.toLowerCase();
@@ -596,12 +598,16 @@
                     const match = nim.includes(valLower) || 
                                   nama.includes(valLower) || 
                                   judul.includes(valLower) || 
+                                  pemb1.includes(valLower) || 
+                                  pemb2.includes(valLower) || 
                                   status.includes(valLower) || 
                                   stage.includes(valLower) || 
                                   prodi.includes(valLower);
                     if (!match) return false;
                 } else if (filter.type === 'nama') {
                     if (!nama.includes(valLower)) return false;
+                } else if (filter.type === 'pembimbing') {
+                    if (!pemb1.includes(valLower) && !pemb2.includes(valLower)) return false;
                 } else if (filter.type === 'nim') {
                     if (!nim.includes(valLower)) return false;
                 } else if (filter.type === 'judul') {
@@ -2184,7 +2190,7 @@
         if (pageData.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7" class="p-8 text-center text-slate-400">
+                    <td colspan="8" class="p-8 text-center text-slate-400">
                         <i class="fa-solid fa-inbox text-3xl mb-2 text-slate-300 block"></i>
                         <p class="font-medium text-xs">Tidak ada data pengajuan yang ditemukan.</p>
                     </td>
@@ -2203,6 +2209,30 @@
 
             const fullName = `${mhs.nama_depan || ''} ${mhs.nama_belakang || ''}`.trim();
             const judul = mhs.judul_1 || 'Belum Mendaftar';
+
+            const p1 = mhs.nama_pembimbing_1 || mhs.pembimbing_1 || '';
+            const p2 = mhs.nama_pembimbing_2 || mhs.pembimbing_2 || '';
+            let pembimbingHtml = '';
+            if (p1 || p2) {
+                pembimbingHtml = `
+                    <div class="flex flex-col gap-1 text-[11px] max-w-[180px]">
+                        ${p1 ? `
+                            <div class="flex items-center gap-1.5 text-slate-800 font-medium truncate whitespace-nowrap" title="Pembimbing 1: ${escapeHtml(p1)}">
+                                <span class="w-4 h-4 rounded-full bg-orange-100 text-orange-700 font-bold text-[9px] flex items-center justify-center shrink-0 border border-orange-200">1</span>
+                                <span class="truncate">${escapeHtml(p1)}</span>
+                            </div>
+                        ` : ''}
+                        ${p2 ? `
+                            <div class="flex items-center gap-1.5 text-slate-600 truncate whitespace-nowrap" title="Pembimbing 2: ${escapeHtml(p2)}">
+                                <span class="w-4 h-4 rounded-full bg-slate-100 text-slate-600 font-bold text-[9px] flex items-center justify-center shrink-0 border border-slate-200">2</span>
+                                <span class="truncate">${escapeHtml(p2)}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            } else {
+                pembimbingHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-400 border border-slate-200/60 whitespace-nowrap"><i class="fa-solid fa-user-slash text-[9px]"></i> Belum Diplot</span>`;
+            }
 
             const isWaliApproved = (stWali.toLowerCase() === 'approved');
             const isAdminApproved = (stAdmin.toLowerCase() === 'approved');
@@ -2226,34 +2256,34 @@
 
             const isSelected = isEligibleForKoor && state.selectedStudents.has(mhs.nim);
 
-            // 1. Status Badge Koordinator
+            // 1. Status Badge Koordinator (with whitespace-nowrap)
             let statusBadgeHtml = '';
             if (stKoor === 'Approved') {
-                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-3 py-1 font-bold text-[11px] rounded-full border border-emerald-300 bg-emerald-50 text-emerald-700 shadow-2xs"><i class="fa-solid fa-circle-check text-xs"></i> Disetujui</span>`;
+                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 font-bold text-[11px] rounded-full border border-emerald-300 bg-emerald-50 text-emerald-700 shadow-2xs whitespace-nowrap"><i class="fa-solid fa-circle-check text-xs"></i> Disetujui</span>`;
             } else if (stKoor === 'Rejected') {
-                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-3 py-1 font-bold text-[11px] rounded-full border border-rose-300 bg-rose-50 text-rose-700 shadow-2xs"><i class="fa-solid fa-circle-xmark text-xs"></i> Perlu Revisi</span>`;
+                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 font-bold text-[11px] rounded-full border border-rose-300 bg-rose-50 text-rose-700 shadow-2xs whitespace-nowrap"><i class="fa-solid fa-circle-xmark text-xs"></i> Perlu Revisi</span>`;
             } else if (isEligibleForKoor) {
-                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-3 py-1 font-bold text-[11px] rounded-full border border-orange-400 bg-orange-100 text-orange-950 shadow-xs"><i class="fa-solid fa-bell text-xs text-orange-600"></i> Siap Diproses</span>`;
+                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 font-bold text-[11px] rounded-full border border-orange-400 bg-orange-100 text-orange-950 shadow-xs whitespace-nowrap"><i class="fa-solid fa-bell text-xs text-orange-600"></i> Siap Diproses</span>`;
             } else if (!isWaliApproved) {
-                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 font-medium text-[11px] rounded-full border border-sky-200 bg-sky-50 text-sky-700"><i class="fa-solid fa-clock text-[10px]"></i> Antre Dosen Wali</span>`;
+                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 font-medium text-[11px] rounded-full border border-sky-200 bg-sky-50 text-sky-700 whitespace-nowrap"><i class="fa-solid fa-clock text-[10px]"></i> Antre Dosen Wali</span>`;
             } else if (!isAdminApproved) {
-                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 font-medium text-[11px] rounded-full border border-indigo-200 bg-indigo-50 text-indigo-700"><i class="fa-solid fa-clock text-[10px]"></i> Antre Admin</span>`;
+                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 font-medium text-[11px] rounded-full border border-indigo-200 bg-indigo-50 text-indigo-700 whitespace-nowrap"><i class="fa-solid fa-clock text-[10px]"></i> Antre Admin</span>`;
             } else {
-                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-3 py-1 font-bold text-[11px] rounded-full border border-amber-300 bg-amber-50 text-amber-700">Pending</span>`;
+                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 font-bold text-[11px] rounded-full border border-amber-300 bg-amber-50 text-amber-700 whitespace-nowrap">Pending</span>`;
             }
 
-            // 2. Tahap Saat Ini Badge
+            // 2. Tahap Saat Ini Badge (with whitespace-nowrap)
             let stageBadgeHtml = '';
             if (stage === 'Dosen Wali' || !isWaliApproved) {
-                stageBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 font-semibold text-[11px] rounded-full border border-sky-200 bg-sky-50 text-sky-700"><i class="fa-solid fa-user-tie text-[10px]"></i> Dosen Wali</span>`;
+                stageBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 font-semibold text-[11px] rounded-full border border-sky-200 bg-sky-50 text-sky-700 whitespace-nowrap"><i class="fa-solid fa-user-tie text-[10px]"></i> Dosen Wali</span>`;
             } else if (stage === 'Admin Layanan' || (isWaliApproved && !isAdminApproved)) {
-                stageBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 font-semibold text-[11px] rounded-full border border-indigo-200 bg-indigo-50 text-indigo-700"><i class="fa-solid fa-file-signature text-[10px]"></i> Admin Layanan</span>`;
+                stageBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 font-semibold text-[11px] rounded-full border border-indigo-200 bg-indigo-50 text-indigo-700 whitespace-nowrap"><i class="fa-solid fa-file-signature text-[10px]"></i> Admin Layanan</span>`;
             } else if (stage === 'Koordinator TA') {
-                stageBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 font-bold text-[11px] rounded-full border border-orange-300 bg-orange-50 text-orange-800 shadow-2xs"><i class="fa-solid fa-graduation-cap text-[10px] text-orange-600"></i> Koordinator TA</span>`;
+                stageBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 font-bold text-[11px] rounded-full border border-orange-300 bg-orange-50 text-orange-800 shadow-2xs whitespace-nowrap"><i class="fa-solid fa-graduation-cap text-[10px] text-orange-600"></i> Koordinator TA</span>`;
             } else if (stage === 'Ketua KK') {
-                stageBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 font-semibold text-[11px] rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700"><i class="fa-solid fa-user-check text-[10px]"></i> Ketua KK</span>`;
+                stageBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 font-semibold text-[11px] rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 whitespace-nowrap"><i class="fa-solid fa-user-check text-[10px]"></i> Ketua KK</span>`;
             } else {
-                stageBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 font-semibold text-[11px] rounded-full border border-slate-200 bg-slate-100 text-slate-700">${escapeHtml(stage)}</span>`;
+                stageBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 font-semibold text-[11px] rounded-full border border-slate-200 bg-slate-100 text-slate-700 whitespace-nowrap">${escapeHtml(stage)}</span>`;
             }
 
             // 3. Row styling with Left Border highlight
@@ -2266,7 +2296,7 @@
 
             html += `
                 <tr class="table-row-animate ${rowClass} transition-colors" style="--row-index: ${idx};">
-                    <td class="py-4 px-4 pl-6 text-center">
+                    <td class="py-3 px-3.5 pl-6 text-center whitespace-nowrap">
                         ${isEligibleForKoor ? `
                             <input type="checkbox" 
                                 class="row-select-checkbox w-4 h-4 rounded text-orange-600 focus:ring-orange-500 border-slate-300 cursor-pointer" 
@@ -2284,9 +2314,9 @@
                                 title="${escapeHtml(disabledTitle)}">
                         `}
                     </td>
-                    <td class="py-4 px-4 font-bold text-slate-900">${mhs.nim}</td>
-                    <td class="py-4 px-4 font-semibold text-slate-800">${escapeHtml(fullName)}</td>
-                    <td class="py-4 px-4 text-slate-600 max-w-xs font-normal">
+                    <td class="py-3 px-3.5 font-bold text-slate-900 whitespace-nowrap">${mhs.nim}</td>
+                    <td class="py-3 px-3.5 font-semibold text-slate-800 whitespace-nowrap">${escapeHtml(fullName)}</td>
+                    <td class="py-3 px-3.5 text-slate-600 max-w-[200px] font-normal">
                         <div class="inline-flex items-center gap-1.5 cursor-pointer group/title max-w-full"
                             data-tooltip-type="pendaftaran"
                             data-nim="${escapeHtml(mhs.nim)}"
@@ -2307,13 +2337,16 @@
                             <i class="fa-solid fa-circle-info text-[11px] text-slate-400 group-hover/title:text-orange-500 shrink-0 opacity-0 group-hover/title:opacity-100 transition-opacity"></i>
                         </div>
                     </td>
-                    <td class="py-4 px-4 text-center">
+                    <td class="py-3 px-3.5 font-normal whitespace-nowrap">
+                        ${pembimbingHtml}
+                    </td>
+                    <td class="py-3 px-3.5 text-center whitespace-nowrap">
                         ${statusBadgeHtml}
                     </td>
-                    <td class="py-4 px-4 text-center">
+                    <td class="py-3 px-3.5 text-center whitespace-nowrap">
                         ${stageBadgeHtml}
                     </td>
-                    <td class="py-4 px-4 text-center">
+                    <td class="py-3 px-3.5 text-center whitespace-nowrap">
                         <div class="flex items-center justify-center gap-1.5 mx-auto">
                             <button type="button" onclick="openHistoryPlottingModal('Pembimbing', '${mhs.nim}')" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-orange-50 hover:text-orange-600 text-slate-500 border border-slate-200/80 flex items-center justify-center text-xs transition cursor-pointer shrink-0 shadow-2xs" title="Lihat Riwayat Histori Pembimbing Mahasiswa Ini">
                                 <i class="fa-solid fa-clock-rotate-left"></i>

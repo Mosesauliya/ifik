@@ -783,7 +783,7 @@
 <body>
 
     <!-- =========================================================
-         CURVED SIDEBAR INTEGRATION (ROLE ADMIN / LABORAN)
+         CURVED SIDEBAR INTEGRATION (ROLE LABORAN)
          ========================================================= -->
     <?php $this->load->view('components/curved_sidebar'); ?>
 
@@ -1068,7 +1068,7 @@
                                                 <i class="fa-solid fa-xmark"></i>
                                             </button>
                                         <?php elseif ($statusCategory === 'laboran' || $statusCategory === 'kaur' || $statusCategory === 'admin'): ?>
-                                            <a href="<?= site_url('kaur/surat/' . $p->id) ?>" target="_blank" class="btn-table-action btn-qr" title="Cetak Surat Resmi Ber-QR Code">
+                                            <a href="<?= site_url('laboran/surat/' . $p->id) ?>" target="_blank" class="btn-table-action btn-qr" title="Cetak Surat Resmi Ber-QR Code">
                                                 <i class="fa-solid fa-qrcode"></i>
                                             </a>
                                         <?php endif; ?>
@@ -1380,7 +1380,7 @@
                 cancelButtonText: 'Batal'
             }).then((res) => {
                 if (res.isConfirmed) {
-                    $.post(BASE_URL + 'kelolabooking/approve/' + id, function(resp) {
+                    $.post(BASE_URL + 'laboran/approve/' + id, function(resp) {
                         if (resp.status === 'success') {
                             Swal.fire({ 
                                 title: 'Disetujui!', 
@@ -1430,7 +1430,7 @@
                 cancelButtonText: 'Batal'
             }).then((res) => {
                 if (res.isConfirmed) {
-                    $.post(BASE_URL + 'kelolabooking/batch_approve', { ids: ids }, function(resp) {
+                    $.post(BASE_URL + 'laboran/batch_approve', { ids: ids }, function(resp) {
                         if (resp.status === 'success') {
                             Swal.fire({ title: 'Berhasil!', text: resp.message, icon: 'success', confirmButtonColor: '#16a34a' })
                             .then(() => location.reload());
@@ -1472,7 +1472,7 @@
             }
 
             if (isBatch) {
-                $.post(BASE_URL + 'kelolabooking/batch_reject', { ids: ids, alasan_penolakan: alasan }, function(resp) {
+                $.post(BASE_URL + 'laboran/batch_reject', { ids: ids, alasan_penolakan: alasan }, function(resp) {
                     if (resp.status === 'success') {
                         closeRejectModal();
                         Swal.fire({ title: 'Ditolak!', text: resp.message, icon: 'success', confirmButtonColor: '#dc2626' })
@@ -1483,7 +1483,7 @@
                 }, 'json').fail(() => Swal.fire('Error', 'Terjadi kesalahan pada server', 'error'));
             } else {
                 const singleId = ids[0];
-                $.post(BASE_URL + 'kelolabooking/reject/' + singleId, { alasan_penolakan: alasan }, function(resp) {
+                $.post(BASE_URL + 'laboran/reject/' + singleId, { alasan_penolakan: alasan }, function(resp) {
                     if (resp.status === 'success') {
                         closeRejectModal();
                         Swal.fire({ title: 'Ditolak!', text: resp.message, icon: 'success', confirmButtonColor: '#dc2626' })
@@ -1521,7 +1521,7 @@
             const suratBtn = document.getElementById('dtlSuratBtn');
             const st = data.status || '';
             if (st.includes('Laboran') || st.includes('Ka. Ur') || st.includes('Kaur') || st.includes('Admin')) {
-                suratBtn.href = BASE_URL + 'kaur/surat/' + data.id;
+                suratBtn.href = BASE_URL + 'laboran/surat/' + data.id;
                 suratBtn.style.display = 'inline-flex';
             } else {
                 suratBtn.style.display = 'none';
@@ -1549,7 +1549,7 @@
                 cancelButtonText: 'Batal'
             }).then((res) => {
                 if (res.isConfirmed) {
-                    $.post(BASE_URL + 'kelolabooking/delete/' + id, function(resp) {
+                    $.post(BASE_URL + 'laboran/delete/' + id, function(resp) {
                         if (resp.status === 'success') {
                             Swal.fire({ title: 'Terhapus!', text: resp.message, icon: 'success', confirmButtonColor: '#ea580c' })
                             .then(() => location.reload());
@@ -1577,7 +1577,7 @@
             var id_kategori = $(this).val();
             if(id_kategori != ''){
                 $.ajax({
-                    url: BASE_URL + 'kelolabooking/get_ruangan',
+                    url: BASE_URL + 'laboran/get_ruangan',
                     method: 'POST',
                     data: {id_kategori: id_kategori},
                     dataType: 'json',
@@ -1642,7 +1642,7 @@
 
         function submitForm() {
             $.ajax({
-                url: BASE_URL + 'kelolabooking/submit_booking',
+                url: BASE_URL + 'laboran/submit_booking',
                 method: 'POST',
                 data: $('#formBooking').serialize(),
                 dataType: 'json',

@@ -170,13 +170,13 @@ class KoordinatorTA_model extends CI_Model {
 
         $this->db->select('m.nama_depan, m.nama_belakang, m.konsentrasi_dkv as prodi_mhs, m.alamat, m.kota, m.provinsi, m.email, m.no_hp, p.*, COALESCE(dw.nama_dosen, dw_alt.nama_dosen, "Dosen Wali") as nama_dosen_wali, dw.nip as nip_dosen_wali, COALESCE(dw1.nama_dosen, u1.name, p.pembimbing_1) as nama_pembimbing_1, COALESCE(dw2.nama_dosen, u2.name, p.pembimbing_2) as nama_pembimbing_2');
         $this->db->from('pendaftaran_ta p');
-        $this->db->join('mahasiswa m', 'm.nim = p.nim', 'left');
-        $this->db->join('dosen_wali dw', 'dw.nip = m.nip_dosen_wali', 'left');
+        $this->db->join('(SELECT nim, MIN(nama_depan) as nama_depan, MIN(nama_belakang) as nama_belakang, MIN(konsentrasi_dkv) as konsentrasi_dkv, MIN(alamat) as alamat, MIN(kota) as kota, MIN(provinsi) as provinsi, MIN(email) as email, MIN(no_hp) as no_hp, MIN(nip_dosen_wali) as nip_dosen_wali FROM mahasiswa GROUP BY nim) m', 'm.nim = p.nim', 'left');
+        $this->db->join('(SELECT nip, MIN(nama_dosen) as nama_dosen FROM dosen_wali GROUP BY nip) dw', 'dw.nip = m.nip_dosen_wali', 'left');
         $this->db->join('dosen_wali dw_alt', 'dw_alt.id = p.id_dosen_wali', 'left');
-        $this->db->join('dosen_wali dw1', 'dw1.nip = p.pembimbing_1', 'left');
-        $this->db->join('users u1', 'u1.nidn_nim = p.pembimbing_1', 'left');
-        $this->db->join('dosen_wali dw2', 'dw2.nip = p.pembimbing_2', 'left');
-        $this->db->join('users u2', 'u2.nidn_nim = p.pembimbing_2', 'left');
+        $this->db->join('(SELECT nip, MIN(nama_dosen) as nama_dosen FROM dosen_wali GROUP BY nip) dw1', 'dw1.nip = p.pembimbing_1', 'left');
+        $this->db->join('(SELECT nidn_nim, MIN(name) as name FROM users WHERE nidn_nim IS NOT NULL AND nidn_nim != "" GROUP BY nidn_nim) u1', 'u1.nidn_nim = p.pembimbing_1', 'left');
+        $this->db->join('(SELECT nip, MIN(nama_dosen) as nama_dosen FROM dosen_wali GROUP BY nip) dw2', 'dw2.nip = p.pembimbing_2', 'left');
+        $this->db->join('(SELECT nidn_nim, MIN(name) as name FROM users WHERE nidn_nim IS NOT NULL AND nidn_nim != "" GROUP BY nidn_nim) u2', 'u2.nidn_nim = p.pembimbing_2', 'left');
         $this->db->where('p.is_submitted', 1);
         $this->db->order_by('p.created_at', 'DESC');
         $query = $this->db->get();
@@ -222,13 +222,13 @@ class KoordinatorTA_model extends CI_Model {
 
         $this->db->select('m.nama_depan, m.nama_belakang, m.konsentrasi_dkv as prodi_mhs, m.alamat as mhs_alamat, m.kota, m.provinsi, m.email, m.no_hp, p.*, COALESCE(dw.nama_dosen, dw_alt.nama_dosen, "Dosen Wali") as nama_dosen_wali, dw.nip as nip_dosen_wali, COALESCE(dw1.nama_dosen, u1.name, p.pembimbing_1) as nama_pembimbing_1, COALESCE(dw2.nama_dosen, u2.name, p.pembimbing_2) as nama_pembimbing_2');
         $this->db->from('pendaftaran_ta p');
-        $this->db->join('mahasiswa m', 'm.nim = p.nim', 'left');
-        $this->db->join('dosen_wali dw', 'dw.nip = m.nip_dosen_wali', 'left');
+        $this->db->join('(SELECT nim, MIN(nama_depan) as nama_depan, MIN(nama_belakang) as nama_belakang, MIN(konsentrasi_dkv) as konsentrasi_dkv, MIN(alamat) as alamat, MIN(kota) as kota, MIN(provinsi) as provinsi, MIN(email) as email, MIN(no_hp) as no_hp, MIN(nip_dosen_wali) as nip_dosen_wali FROM mahasiswa GROUP BY nim) m', 'm.nim = p.nim', 'left');
+        $this->db->join('(SELECT nip, MIN(nama_dosen) as nama_dosen FROM dosen_wali GROUP BY nip) dw', 'dw.nip = m.nip_dosen_wali', 'left');
         $this->db->join('dosen_wali dw_alt', 'dw_alt.id = p.id_dosen_wali', 'left');
-        $this->db->join('dosen_wali dw1', 'dw1.nip = p.pembimbing_1', 'left');
-        $this->db->join('users u1', 'u1.nidn_nim = p.pembimbing_1', 'left');
-        $this->db->join('dosen_wali dw2', 'dw2.nip = p.pembimbing_2', 'left');
-        $this->db->join('users u2', 'u2.nidn_nim = p.pembimbing_2', 'left');
+        $this->db->join('(SELECT nip, MIN(nama_dosen) as nama_dosen FROM dosen_wali GROUP BY nip) dw1', 'dw1.nip = p.pembimbing_1', 'left');
+        $this->db->join('(SELECT nidn_nim, MIN(name) as name FROM users WHERE nidn_nim IS NOT NULL AND nidn_nim != "" GROUP BY nidn_nim) u1', 'u1.nidn_nim = p.pembimbing_1', 'left');
+        $this->db->join('(SELECT nip, MIN(nama_dosen) as nama_dosen FROM dosen_wali GROUP BY nip) dw2', 'dw2.nip = p.pembimbing_2', 'left');
+        $this->db->join('(SELECT nidn_nim, MIN(name) as name FROM users WHERE nidn_nim IS NOT NULL AND nidn_nim != "" GROUP BY nidn_nim) u2', 'u2.nidn_nim = p.pembimbing_2', 'left');
         $this->db->where('p.nim', $nim);
         $query = $this->db->get();
         $row = $query ? $query->row_array() : null;
@@ -376,13 +376,13 @@ class KoordinatorTA_model extends CI_Model {
             COALESCE(dw2.nama_dosen, u2.name, p.pembimbing_2) as nama_pembimbing_2
         ');
         $this->db->from('pendaftaran_ta p');
-        $this->db->join('mahasiswa m', 'm.nim = p.nim', 'left');
-        $this->db->join('dosen_wali dw', 'dw.nip = m.nip_dosen_wali', 'left');
+        $this->db->join('(SELECT nim, MIN(nama_depan) as nama_depan, MIN(nama_belakang) as nama_belakang, MIN(prodi) as prodi, MIN(konsentrasi_dkv) as konsentrasi_dkv, MIN(email) as m_email, MIN(no_hp) as m_no_hp, MIN(nip_dosen_wali) as nip_dosen_wali FROM mahasiswa GROUP BY nim) m', 'm.nim = p.nim', 'left');
+        $this->db->join('(SELECT nip, MIN(nama_dosen) as nama_dosen FROM dosen_wali GROUP BY nip) dw', 'dw.nip = m.nip_dosen_wali', 'left');
         $this->db->join('dosen_wali dw_alt', 'dw_alt.id = p.id_dosen_wali', 'left');
-        $this->db->join('dosen_wali dw1', 'dw1.nip = p.pembimbing_1', 'left');
-        $this->db->join('users u1', 'u1.nidn_nim = p.pembimbing_1', 'left');
-        $this->db->join('dosen_wali dw2', 'dw2.nip = p.pembimbing_2', 'left');
-        $this->db->join('users u2', 'u2.nidn_nim = p.pembimbing_2', 'left');
+        $this->db->join('(SELECT nip, MIN(nama_dosen) as nama_dosen FROM dosen_wali GROUP BY nip) dw1', 'dw1.nip = p.pembimbing_1', 'left');
+        $this->db->join('(SELECT nidn_nim, MIN(name) as name FROM users WHERE nidn_nim IS NOT NULL AND nidn_nim != "" GROUP BY nidn_nim) u1', 'u1.nidn_nim = p.pembimbing_1', 'left');
+        $this->db->join('(SELECT nip, MIN(nama_dosen) as nama_dosen FROM dosen_wali GROUP BY nip) dw2', 'dw2.nip = p.pembimbing_2', 'left');
+        $this->db->join('(SELECT nidn_nim, MIN(name) as name FROM users WHERE nidn_nim IS NOT NULL AND nidn_nim != "" GROUP BY nidn_nim) u2', 'u2.nidn_nim = p.pembimbing_2', 'left');
         $this->db->where_in('p.nim', $nims);
         $query = $this->db->get();
         $result = $query ? $query->result_array() : array();
@@ -574,12 +574,12 @@ class KoordinatorTA_model extends CI_Model {
             r.nama_ruangan as detail_nama_ruangan
         ');
         $this->db->from('pendaftaran_ta p');
-        $this->db->join('mahasiswa m', 'm.nim = p.nim', 'left');
-        $this->db->join('dosen_wali dw1', 'dw1.nip = p.pembimbing_1', 'left');
-        $this->db->join('dosen_wali dw2', 'dw2.nip = p.pembimbing_2', 'left');
-        $this->db->join('dosen_wali dp1', 'dp1.nip = p.penguji_1', 'left');
-        $this->db->join('dosen_wali dp2', 'dp2.nip = p.penguji_2', 'left');
-        $this->db->join('ruangan r', 'r.nama_ruangan = p.ruangan_sidang OR r.kode_ruangan = p.ruangan_sidang', 'left');
+        $this->db->join('(SELECT nim, MIN(nama_depan) as nama_depan, MIN(nama_belakang) as nama_belakang, MIN(konsentrasi_dkv) as konsentrasi_dkv, MIN(email) as email, MIN(no_hp) as no_hp FROM mahasiswa GROUP BY nim) m', 'm.nim = p.nim', 'left');
+        $this->db->join('(SELECT nip, MIN(nama_dosen) as nama_dosen FROM dosen_wali GROUP BY nip) dw1', 'dw1.nip = p.pembimbing_1', 'left');
+        $this->db->join('(SELECT nip, MIN(nama_dosen) as nama_dosen FROM dosen_wali GROUP BY nip) dw2', 'dw2.nip = p.pembimbing_2', 'left');
+        $this->db->join('(SELECT nip, MIN(nama_dosen) as nama_dosen FROM dosen_wali GROUP BY nip) dp1', 'dp1.nip = p.penguji_1', 'left');
+        $this->db->join('(SELECT nip, MIN(nama_dosen) as nama_dosen FROM dosen_wali GROUP BY nip) dp2', 'dp2.nip = p.penguji_2', 'left');
+        $this->db->join('(SELECT nama_ruangan, MIN(kode_ruangan) as kode_ruangan FROM ruangan GROUP BY nama_ruangan) r', 'r.nama_ruangan = p.ruangan_sidang OR r.kode_ruangan = p.ruangan_sidang', 'left');
         
         // Hanya mahasiswa yang telah disetujui pendaftarannya oleh Koordinator TA & memiliki Dosen Pembimbing lengkap
         $this->db->where('p.status_approval_koor', 'Approved');
@@ -907,13 +907,13 @@ class KoordinatorTA_model extends CI_Model {
             ps.status as status_verifikasi_sidang
         ');
         $this->db->from('pendaftaran_ta p');
-        $this->db->join('mahasiswa m', 'm.nim = p.nim', 'left');
-        $this->db->join('dosen_wali dw1', 'dw1.nip = p.pembimbing_1', 'left');
-        $this->db->join('dosen_wali dw2', 'dw2.nip = p.pembimbing_2', 'left');
-        $this->db->join('dosen_wali dp1', 'dp1.nip = p.penguji_1', 'left');
-        $this->db->join('dosen_wali dp2', 'dp2.nip = p.penguji_2', 'left');
-        $this->db->join('ruangan r', 'r.nama_ruangan = p.ruangan_sidang OR r.kode_ruangan = p.ruangan_sidang', 'left');
-        $this->db->join('ta_pendaftaran_sidang ps', 'ps.nim = p.nim', 'left');
+        $this->db->join('(SELECT nim, MIN(nama_depan) as nama_depan, MIN(nama_belakang) as nama_belakang, MIN(konsentrasi_dkv) as konsentrasi_dkv, MIN(prodi) as prodi, MIN(email) as email, MIN(no_hp) as no_hp FROM mahasiswa GROUP BY nim) m', 'm.nim = p.nim', 'left');
+        $this->db->join('(SELECT nip, MIN(nama_dosen) as nama_dosen FROM dosen_wali GROUP BY nip) dw1', 'dw1.nip = p.pembimbing_1', 'left');
+        $this->db->join('(SELECT nip, MIN(nama_dosen) as nama_dosen FROM dosen_wali GROUP BY nip) dw2', 'dw2.nip = p.pembimbing_2', 'left');
+        $this->db->join('(SELECT nip, MIN(nama_dosen) as nama_dosen FROM dosen_wali GROUP BY nip) dp1', 'dp1.nip = p.penguji_1', 'left');
+        $this->db->join('(SELECT nip, MIN(nama_dosen) as nama_dosen FROM dosen_wali GROUP BY nip) dp2', 'dp2.nip = p.penguji_2', 'left');
+        $this->db->join('(SELECT nama_ruangan, MIN(kode_ruangan) as kode_ruangan, MIN(lokasi) as lokasi FROM ruangan GROUP BY nama_ruangan) r', 'r.nama_ruangan = p.ruangan_sidang OR r.kode_ruangan = p.ruangan_sidang', 'left');
+        $this->db->join('(SELECT nim, MIN(id) as id, MIN(status) as status FROM ta_pendaftaran_sidang GROUP BY nim) ps', 'ps.nim = p.nim', 'left');
         
         // Mahasiswa yang telah disetujui Koordinator TA
         $this->db->where('p.status_approval_koor', 'Approved');
@@ -1342,11 +1342,11 @@ class KoordinatorTA_model extends CI_Model {
             dp1.nama_dosen as nama_penguji_1, dp2.nama_dosen as nama_penguji_2
         ');
         $this->db->from('pendaftaran_ta p');
-        $this->db->join('mahasiswa m', 'm.nim = p.nim', 'left');
-        $this->db->join('dosen_wali dw1', 'dw1.nip = p.pembimbing_1', 'left');
-        $this->db->join('dosen_wali dw2', 'dw2.nip = p.pembimbing_2', 'left');
-        $this->db->join('dosen_wali dp1', 'dp1.nip = p.penguji_1', 'left');
-        $this->db->join('dosen_wali dp2', 'dp2.nip = p.penguji_2', 'left');
+        $this->db->join('(SELECT nim, MIN(nama_depan) as nama_depan, MIN(nama_belakang) as nama_belakang, MIN(konsentrasi_dkv) as konsentrasi_dkv, MIN(prodi) as prodi FROM mahasiswa GROUP BY nim) m', 'm.nim = p.nim', 'left');
+        $this->db->join('(SELECT nip, MIN(nama_dosen) as nama_dosen FROM dosen_wali GROUP BY nip) dw1', 'dw1.nip = p.pembimbing_1', 'left');
+        $this->db->join('(SELECT nip, MIN(nama_dosen) as nama_dosen FROM dosen_wali GROUP BY nip) dw2', 'dw2.nip = p.pembimbing_2', 'left');
+        $this->db->join('(SELECT nip, MIN(nama_dosen) as nama_dosen FROM dosen_wali GROUP BY nip) dp1', 'dp1.nip = p.penguji_1', 'left');
+        $this->db->join('(SELECT nip, MIN(nama_dosen) as nama_dosen FROM dosen_wali GROUP BY nip) dp2', 'dp2.nip = p.penguji_2', 'left');
         $this->db->where('p.nim', $nim);
 
         $row = $this->db->get()->row_array();

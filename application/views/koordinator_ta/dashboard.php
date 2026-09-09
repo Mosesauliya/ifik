@@ -641,9 +641,63 @@
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased pb-24">
 
+    <!-- Include Curved Animated Sidebar Component -->
+    <?php $this->load->view('components/curved_sidebar', [
+        'navItems' => [
+            [
+                'heading' => 'Dashboard Utama',
+                'href' => site_url('dashboard'),
+                'subheading' => 'Beranda Utama & Denah 3D',
+                'icon_3d' => 'assets/images/icons_3d/home.png',
+                'icon' => 'fa-solid fa-house',
+                'index' => 1
+            ],
+            [
+                'heading' => 'Pendaftaran TA',
+                'href' => 'javascript:switchDashboardTab("pendaftaran")',
+                'subheading' => 'Tab 1: Plotting Dosen Pembimbing',
+                'icon_3d' => 'assets/images/icons_3d/daftar.png',
+                'icon' => 'fa-solid fa-file-signature',
+                'index' => 2
+            ],
+            [
+                'heading' => 'Tahap Preview 2',
+                'href' => 'javascript:switchDashboardTab("preview2")',
+                'subheading' => 'Tab 2: Plotting Dosen Penguji',
+                'icon_3d' => 'assets/images/icons_3d/preview.png',
+                'icon' => 'fa-solid fa-chalkboard-user',
+                'index' => 3
+            ],
+            [
+                'heading' => 'Jadwal Sidang TA',
+                'href' => 'javascript:switchDashboardTab("sidang")',
+                'subheading' => 'Tab 3: Penjadwalan Sidang & Ruangan',
+                'icon_3d' => 'assets/images/icons_3d/sidang.png',
+                'icon' => 'fa-solid fa-calendar-check',
+                'index' => 4
+            ],
+            [
+                'heading' => 'Ajukan Peminjaman Ruangan',
+                'href' => site_url('ajukan-booking'),
+                'subheading' => 'Peminjaman Ruang Sidang & Lab',
+                'icon_3d' => 'assets/images/icons_3d/ruangan.png',
+                'icon' => 'fa-solid fa-door-open',
+                'index' => 5
+            ],
+            [
+                'heading' => 'Keluar / Logout',
+                'href' => site_url('login/logout'),
+                'subheading' => 'Akhiri Sesi Portal Koordinator',
+                'icon_3d' => 'assets/images/icons_3d/logout.png',
+                'icon' => 'fa-solid fa-arrow-right-from-bracket',
+                'index' => 6
+            ],
+        ]
+    ]); ?>
+
     <!-- Top Navigation Header -->
     <header class="sticky top-0 z-40 glass-header px-6 py-4 mb-8">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 pl-14 md:pl-16">
             <div class="flex items-center gap-4">
                 <div class="w-10 h-10 rounded-xl bg-orange-100 text-brand-600 flex items-center justify-center font-bold text-lg shadow-sm">
                     <i class="fa-solid fa-graduation-cap"></i>
@@ -671,7 +725,8 @@
 
     <main class="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
 
-        <!-- Section Tab Switcher (Tahap Pendaftaran TA vs Preview 2 vs Penjadwalan Sidang) -->
+        <!-- Section Tab Switcher (Dipindahkan & Diintegrasikan ke Curved Animated Sidebar) -->
+        <!--
         <div class="flex items-center justify-between flex-wrap gap-4 mb-6">
             <div class="inline-flex p-1.5 bg-slate-200/70 backdrop-blur-md rounded-2xl border border-slate-300/60 shadow-inner">
                 <button type="button" id="tabBtnPendaftaran" onclick="switchDashboardTab('pendaftaran')" class="dashboard-tab-btn active px-5 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 flex items-center gap-2 bg-white text-orange-600 shadow-sm cursor-pointer">
@@ -689,6 +744,7 @@
                 </button>
             </div>
         </div>
+        -->
 
         <!-- ========================================================= -->
         <!-- TAB 1: PENDAFTARAN TA (PLOTTING PEMBIMBING)               -->
@@ -993,15 +1049,16 @@
                 <table class="table-custom-rounded text-left text-xs w-full">
                     <thead class="bg-white text-slate-700 font-semibold text-xs border-b border-slate-200/90">
                         <tr>
-                            <th class="w-10 py-4 px-4 pl-6 text-center">
+                            <th class="w-10 py-3 px-3.5 pl-6 text-center whitespace-nowrap">
                                 <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)" class="w-4 h-4 rounded text-orange-600 focus:ring-orange-500 border-slate-300 cursor-pointer" title="Pilih Semua di Halaman Ini">
                             </th>
-                            <th class="py-4 px-4 font-bold">NIM</th>
-                            <th class="py-4 px-4">Nama Mahasiswa</th>
-                            <th class="py-4 px-4">Usulan Judul TA (Utama)</th>
-                            <th class="py-4 px-4 text-center">Status Approval</th>
-                            <th class="py-4 px-4 text-center">Tahap Saat Ini</th>
-                            <th class="py-4 px-4 text-center">Aksi</th>
+                            <th class="py-3 px-3.5 font-bold whitespace-nowrap">NIM</th>
+                            <th class="py-3 px-3.5 whitespace-nowrap">Nama Mahasiswa</th>
+                            <th class="py-3 px-3.5 min-w-[200px]">Usulan Judul TA (Utama)</th>
+                            <th class="py-3 px-3.5 whitespace-nowrap">Dosen Pembimbing</th>
+                            <th class="py-3 px-3.5 text-center whitespace-nowrap">Status Approval</th>
+                            <th class="py-3 px-3.5 text-center whitespace-nowrap">Tahap Saat Ini</th>
+                            <th class="py-3 px-3.5 text-center whitespace-nowrap">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 font-medium bg-white" id="tableBodyMhs">
