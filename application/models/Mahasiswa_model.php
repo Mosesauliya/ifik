@@ -256,9 +256,15 @@ class Mahasiswa_model extends CI_Model {
             if ($posisi == 1) {
                 if ($nip_dosen) $this->db->or_where('pt.pembimbing_1', $nip_dosen);
                 if ($name_dosen) $this->db->or_like('pt.pembimbing_1', $name_dosen);
-            } else {
+            } else if ($posisi == 2) {
                 if ($nip_dosen) $this->db->or_where('pt.pembimbing_2', $nip_dosen);
                 if ($name_dosen) $this->db->or_like('pt.pembimbing_2', $name_dosen);
+            } else if ($posisi == 3) {
+                if ($nip_dosen) $this->db->or_where('pt.penguji_1', $nip_dosen);
+                if ($name_dosen) $this->db->or_like('pt.penguji_1', $name_dosen);
+            } else if ($posisi == 4) {
+                if ($nip_dosen) $this->db->or_where('pt.penguji_2', $nip_dosen);
+                if ($name_dosen) $this->db->or_like('pt.penguji_2', $name_dosen);
             }
             $this->db->group_end();
         }

@@ -64,10 +64,15 @@ $route['mahasiswa/detail_pendaftaran'] = 'Mahasiswa/detail_pendaftaran';
 $route['mahasiswa/edit'] = 'Mahasiswa/edit_pendaftaran';
 $route['mahasiswa/edit_pendaftaran'] = 'Mahasiswa/edit_pendaftaran';
 
-// Dosen Bimbingan Routes
-$route['dosen/bimbingan'] = 'Mahasiswa/bimbingan';
-$route['dosenbimbingan'] = 'Mahasiswa/bimbingan';
-$route['bimbingan-dosen'] = 'Mahasiswa/bimbingan';
+// Dosen Bimbingan & Penguji Routes
+$route['dosen/bimbingan'] = 'Mahasiswa/dosen_bimbingan';
+$route['dosenbimbingan'] = 'Mahasiswa/dosen_bimbingan';
+$route['bimbingan-dosen'] = 'Mahasiswa/dosen_bimbingan';
+$route['mahasiswa/dosen_bimbingan'] = 'Mahasiswa/dosen_bimbingan';
+
+$route['dosen/penguji'] = 'Mahasiswa/dosen_penguji';
+$route['dosenpenguji'] = 'Mahasiswa/dosen_penguji';
+$route['mahasiswa/dosen_penguji'] = 'Mahasiswa/dosen_penguji';
 
 // Dosen Wali Routes
 
