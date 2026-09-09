@@ -34,7 +34,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
 
         case 3: // Kaur / Ka Lab
             $defaultNavItems = [
-                ['heading' => 'Bimbingan Mahasiswa', 'href' => site_url('bimbingan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png', 'index' => 1],
+                ['heading' => 'Bimbingan Mahasiswa', 'href' => site_url('dosen/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png', 'index' => 1],
                 ['heading' => 'Approval Peminjaman', 'href' => site_url('kaur/approval'), 'icon_3d' => 'assets/images/icons_3d/approval.png', 'index' => 2],
                 ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png', 'index' => 3],
                 ['heading' => 'Respon Ticketing Lab', 'href' => site_url('kaur#ticketing'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png', 'index' => 4],
@@ -58,7 +58,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
         case 4: // Dosen
             $defaultNavItems = [
                 ['heading' => 'Menu Dosen Utama', 'href' => site_url('dosenwali'), 'icon_3d' => 'assets/images/icons_3d/home.png', 'index' => 1],
-                ['heading' => 'Bimbingan Mahasiswa', 'href' => site_url('bimbingan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png', 'index' => 2],
+                ['heading' => 'Bimbingan Mahasiswa', 'href' => site_url('dosen/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png', 'index' => 2],
                 ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png', 'index' => 3],
                 ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png', 'index' => 4],
                 ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png', 'index' => 5],
