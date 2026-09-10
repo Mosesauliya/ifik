@@ -351,8 +351,9 @@
                     $file_ksm = $pendaftaran['file_ksm'] ?? '';
                     $has_ksm = !empty($file_ksm);
                     $url_ksm = $has_ksm ? base_url('uploads/persyaratan_ta/' . $file_ksm) : '#';
-                    $st_ksm = $pendaftaran['status_file_ksm'] ?? 'Pending';
+                    $st_ksm = (($pendaftaran['status_ksm'] ?? '') === 'Invalid') ? 'Rejected' : ($pendaftaran['status_file_ksm'] ?? 'Pending');
                     $note_ksm = $pendaftaran['catatan_file_ksm'] ?? '';
+                    if (empty($note_ksm) && !empty($pendaftaran['catatan_admin']) && ($pendaftaran['status_ksm'] ?? '') === 'Invalid') $note_ksm = $pendaftaran['catatan_admin'];
                     if (empty($note_ksm) && !empty($pendaftaran['catatan_wali']) && preg_match('/\[KSM[^\]]*\]\s*:\s*([^\n\r]+)/i', $pendaftaran['catatan_wali'], $m)) $note_ksm = trim($m[1]);
                 ?>
                 <div class="p-5 rounded-2xl border <?= ($st_ksm === 'Rejected') ? 'border-rose-300 bg-rose-50/40 ring-1 ring-rose-200' : (($st_ksm === 'Approved') ? 'border-emerald-300 bg-emerald-50/30' : 'border-slate-200/90 bg-white'); ?> shadow-2xs transition-all flex flex-col justify-between space-y-4">
@@ -403,8 +404,9 @@
                     $file_transkrip = $pendaftaran['file_transkrip'] ?? '';
                     $has_transkrip = !empty($file_transkrip);
                     $url_transkrip = $has_transkrip ? base_url('uploads/persyaratan_ta/' . $file_transkrip) : '#';
-                    $st_trn = $pendaftaran['status_file_transkrip'] ?? 'Pending';
+                    $st_trn = (($pendaftaran['status_transkrip'] ?? '') === 'Invalid') ? 'Rejected' : ($pendaftaran['status_file_transkrip'] ?? 'Pending');
                     $note_trn = $pendaftaran['catatan_file_transkrip'] ?? '';
+                    if (empty($note_trn) && !empty($pendaftaran['catatan_admin']) && ($pendaftaran['status_transkrip'] ?? '') === 'Invalid') $note_trn = $pendaftaran['catatan_admin'];
                     if (empty($note_trn) && !empty($pendaftaran['catatan_wali']) && preg_match('/\[TRANSKRIP[^\]]*\]\s*:\s*([^\n\r]+)/i', $pendaftaran['catatan_wali'], $m)) $note_trn = trim($m[1]);
                 ?>
                 <div class="p-5 rounded-2xl border <?= ($st_trn === 'Rejected') ? 'border-rose-300 bg-rose-50/40 ring-1 ring-rose-200' : (($st_trn === 'Approved') ? 'border-emerald-300 bg-emerald-50/30' : 'border-slate-200/90 bg-white'); ?> shadow-2xs transition-all flex flex-col justify-between space-y-4">
@@ -455,8 +457,9 @@
                     $file_pernyataan = $pendaftaran['file_pernyataan'] ?? '';
                     $has_pernyataan = !empty($file_pernyataan);
                     $url_pernyataan = $has_pernyataan ? base_url('uploads/persyaratan_ta/' . $file_pernyataan) : '#';
-                    $st_prn = $pendaftaran['status_file_pernyataan'] ?? 'Pending';
+                    $st_prn = (($pendaftaran['status_pernyataan'] ?? '') === 'Invalid') ? 'Rejected' : ($pendaftaran['status_file_pernyataan'] ?? 'Pending');
                     $note_prn = $pendaftaran['catatan_file_pernyataan'] ?? '';
+                    if (empty($note_prn) && !empty($pendaftaran['catatan_admin']) && ($pendaftaran['status_pernyataan'] ?? '') === 'Invalid') $note_prn = $pendaftaran['catatan_admin'];
                     if (empty($note_prn) && !empty($pendaftaran['catatan_wali']) && preg_match('/\[PERNYATAAN[^\]]*\]\s*:\s*([^\n\r]+)/i', $pendaftaran['catatan_wali'], $m)) $note_prn = trim($m[1]);
                 ?>
                 <div class="p-5 rounded-2xl border <?= ($st_prn === 'Rejected') ? 'border-rose-300 bg-rose-50/40 ring-1 ring-rose-200' : (($st_prn === 'Approved') ? 'border-emerald-300 bg-emerald-50/30' : 'border-slate-200/90 bg-white'); ?> shadow-2xs transition-all flex flex-col justify-between space-y-4">
@@ -507,8 +510,9 @@
                     $file_bebas_lab = $pendaftaran['file_bebas_lab'] ?? '';
                     $has_bebas_lab = !empty($file_bebas_lab);
                     $url_bebas_lab = $has_bebas_lab ? base_url('uploads/persyaratan_ta/' . $file_bebas_lab) : '#';
-                    $st_lab = $pendaftaran['status_file_bebas_lab'] ?? 'Pending';
+                    $st_lab = (($pendaftaran['status_bebas_lab'] ?? '') === 'Invalid') ? 'Rejected' : ($pendaftaran['status_file_bebas_lab'] ?? 'Pending');
                     $note_lab = $pendaftaran['catatan_file_bebas_lab'] ?? '';
+                    if (empty($note_lab) && !empty($pendaftaran['catatan_admin']) && ($pendaftaran['status_bebas_lab'] ?? '') === 'Invalid') $note_lab = $pendaftaran['catatan_admin'];
                     if (empty($note_lab) && !empty($pendaftaran['catatan_wali']) && preg_match('/\[BEBAS_LAB[^\]]*\]\s*:\s*([^\n\r]+)/i', $pendaftaran['catatan_wali'], $m)) $note_lab = trim($m[1]);
                 ?>
                 <div class="p-5 rounded-2xl border <?= ($st_lab === 'Rejected') ? 'border-rose-300 bg-rose-50/40 ring-1 ring-rose-200' : (($st_lab === 'Approved') ? 'border-emerald-300 bg-emerald-50/30' : 'border-slate-200/90 bg-white'); ?> shadow-2xs transition-all flex flex-col justify-between space-y-4">

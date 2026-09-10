@@ -201,12 +201,19 @@ class AdminLayanan extends CI_Controller {
         $file_name = $student_berkas_map[$kode_berkas]['file_name'] ?? ($detail['file_' . $kode_berkas] ?? ($kode_berkas . '_' . $nim . '.pdf'));
 
         // Save status in pendaftaran_berkas table
-        $this->AdminLayanan_model->save_student_berkas($nim, $kode_berkas, $file_name, $status);
+        $this->AdminLayanan_model->save_student_berkas($nim, $kode_berkas, $file_name, $status, $catatan);
 
         // Update legacy column if exists (status_ksm, status_transkrip, etc)
+        $legacy_update = array();
         if (in_array($kode_berkas, array('ksm', 'transkrip', 'pernyataan', 'bebas_lab'))) {
+            $legacy_update['status_' . $kode_berkas] = $status;
+        }
+        if ($this->db->field_exists('catatan_file_' . $kode_berkas, 'pendaftaran_ta')) {
+            $legacy_update['catatan_file_' . $kode_berkas] = ($status === 'Invalid') ? $catatan : '';
+        }
+        if (!empty($legacy_update)) {
             $this->db->where('nim', $nim);
-            $this->db->update('pendaftaran_ta', array('status_' . $kode_berkas => $status));
+            $this->db->update('pendaftaran_ta', $legacy_update);
         }
 
         // Recompute all berkas summary for this student

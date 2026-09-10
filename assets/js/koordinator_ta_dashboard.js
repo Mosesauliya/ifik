@@ -166,6 +166,26 @@
         }).join('');
     }
 
+    // Helper: Format tanggal lokal Indonesia (misal: 18 September 2026)
+    function formatIndonesianDate(dateStr) {
+        if (!dateStr) return '';
+        const clean = String(dateStr).trim().split(' ')[0];
+        const parts = clean.split('-');
+        if (parts.length === 3) {
+            const year = parts[0];
+            const monthIdx = parseInt(parts[1], 10) - 1;
+            const day = parseInt(parts[2], 10);
+            const months = [
+                'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+            ];
+            if (monthIdx >= 0 && monthIdx < 12 && !isNaN(day)) {
+                return `${day} ${months[monthIdx]} ${year}`;
+            }
+        }
+        return dateStr;
+    }
+
     // =========================================================
     // 1. MULTI-SEARCH CRITERIA ENGINE (EXACT IMPORT AKUN STYLE)
     // =========================================================
@@ -569,6 +589,8 @@
             const status = (mhs.status_approval_koor || 'Pending').toLowerCase();
             const stage = (mhs.current_stage || 'Koordinator TA').toLowerCase();
             const prodi = (mhs.konsentrasi_dkv || 'Informatika').toLowerCase();
+            const pemb1 = (mhs.nama_pembimbing_1 || mhs.pembimbing_1 || '').toLowerCase();
+            const pemb2 = (mhs.nama_pembimbing_2 || mhs.pembimbing_2 || '').toLowerCase();
 
             for (let filter of activeFilters) {
                 const valLower = filter.val.toLowerCase();
@@ -576,12 +598,16 @@
                     const match = nim.includes(valLower) || 
                                   nama.includes(valLower) || 
                                   judul.includes(valLower) || 
+                                  pemb1.includes(valLower) || 
+                                  pemb2.includes(valLower) || 
                                   status.includes(valLower) || 
                                   stage.includes(valLower) || 
                                   prodi.includes(valLower);
                     if (!match) return false;
                 } else if (filter.type === 'nama') {
                     if (!nama.includes(valLower)) return false;
+                } else if (filter.type === 'pembimbing') {
+                    if (!pemb1.includes(valLower) && !pemb2.includes(valLower)) return false;
                 } else if (filter.type === 'nim') {
                     if (!nim.includes(valLower)) return false;
                 } else if (filter.type === 'judul') {
@@ -2164,7 +2190,7 @@
         if (pageData.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7" class="p-8 text-center text-slate-400">
+                    <td colspan="8" class="p-8 text-center text-slate-400">
                         <i class="fa-solid fa-inbox text-3xl mb-2 text-slate-300 block"></i>
                         <p class="font-medium text-xs">Tidak ada data pengajuan yang ditemukan.</p>
                     </td>
@@ -2183,6 +2209,30 @@
 
             const fullName = `${mhs.nama_depan || ''} ${mhs.nama_belakang || ''}`.trim();
             const judul = mhs.judul_1 || 'Belum Mendaftar';
+
+            const p1 = mhs.nama_pembimbing_1 || mhs.pembimbing_1 || '';
+            const p2 = mhs.nama_pembimbing_2 || mhs.pembimbing_2 || '';
+            let pembimbingHtml = '';
+            if (p1 || p2) {
+                pembimbingHtml = `
+                    <div class="flex flex-col gap-1 text-[11px] max-w-[180px]">
+                        ${p1 ? `
+                            <div class="flex items-center gap-1.5 text-slate-800 font-medium truncate whitespace-nowrap" title="Pembimbing 1: ${escapeHtml(p1)}">
+                                <span class="w-4 h-4 rounded-full bg-orange-100 text-orange-700 font-bold text-[9px] flex items-center justify-center shrink-0 border border-orange-200">1</span>
+                                <span class="truncate">${escapeHtml(p1)}</span>
+                            </div>
+                        ` : ''}
+                        ${p2 ? `
+                            <div class="flex items-center gap-1.5 text-slate-600 truncate whitespace-nowrap" title="Pembimbing 2: ${escapeHtml(p2)}">
+                                <span class="w-4 h-4 rounded-full bg-slate-100 text-slate-600 font-bold text-[9px] flex items-center justify-center shrink-0 border border-slate-200">2</span>
+                                <span class="truncate">${escapeHtml(p2)}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            } else {
+                pembimbingHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-400 border border-slate-200/60 whitespace-nowrap"><i class="fa-solid fa-user-slash text-[9px]"></i> Belum Diplot</span>`;
+            }
 
             const isWaliApproved = (stWali.toLowerCase() === 'approved');
             const isAdminApproved = (stAdmin.toLowerCase() === 'approved');
@@ -2206,34 +2256,34 @@
 
             const isSelected = isEligibleForKoor && state.selectedStudents.has(mhs.nim);
 
-            // 1. Status Badge Koordinator
+            // 1. Status Badge Koordinator (with whitespace-nowrap)
             let statusBadgeHtml = '';
             if (stKoor === 'Approved') {
-                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-3 py-1 font-bold text-[11px] rounded-full border border-emerald-300 bg-emerald-50 text-emerald-700 shadow-2xs"><i class="fa-solid fa-circle-check text-xs"></i> Disetujui</span>`;
+                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 font-bold text-[11px] rounded-full border border-emerald-300 bg-emerald-50 text-emerald-700 shadow-2xs whitespace-nowrap"><i class="fa-solid fa-circle-check text-xs"></i> Disetujui</span>`;
             } else if (stKoor === 'Rejected') {
-                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-3 py-1 font-bold text-[11px] rounded-full border border-rose-300 bg-rose-50 text-rose-700 shadow-2xs"><i class="fa-solid fa-circle-xmark text-xs"></i> Perlu Revisi</span>`;
+                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 font-bold text-[11px] rounded-full border border-rose-300 bg-rose-50 text-rose-700 shadow-2xs whitespace-nowrap"><i class="fa-solid fa-circle-xmark text-xs"></i> Perlu Revisi</span>`;
             } else if (isEligibleForKoor) {
-                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-3 py-1 font-bold text-[11px] rounded-full border border-orange-400 bg-orange-100 text-orange-950 shadow-xs"><i class="fa-solid fa-bell text-xs text-orange-600"></i> Siap Diproses</span>`;
+                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 font-bold text-[11px] rounded-full border border-orange-400 bg-orange-100 text-orange-950 shadow-xs whitespace-nowrap"><i class="fa-solid fa-bell text-xs text-orange-600"></i> Siap Diproses</span>`;
             } else if (!isWaliApproved) {
-                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 font-medium text-[11px] rounded-full border border-sky-200 bg-sky-50 text-sky-700"><i class="fa-solid fa-clock text-[10px]"></i> Antre Dosen Wali</span>`;
+                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 font-medium text-[11px] rounded-full border border-sky-200 bg-sky-50 text-sky-700 whitespace-nowrap"><i class="fa-solid fa-clock text-[10px]"></i> Antre Dosen Wali</span>`;
             } else if (!isAdminApproved) {
-                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 font-medium text-[11px] rounded-full border border-indigo-200 bg-indigo-50 text-indigo-700"><i class="fa-solid fa-clock text-[10px]"></i> Antre Admin</span>`;
+                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 font-medium text-[11px] rounded-full border border-indigo-200 bg-indigo-50 text-indigo-700 whitespace-nowrap"><i class="fa-solid fa-clock text-[10px]"></i> Antre Admin</span>`;
             } else {
-                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-3 py-1 font-bold text-[11px] rounded-full border border-amber-300 bg-amber-50 text-amber-700">Pending</span>`;
+                statusBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 font-bold text-[11px] rounded-full border border-amber-300 bg-amber-50 text-amber-700 whitespace-nowrap">Pending</span>`;
             }
 
-            // 2. Tahap Saat Ini Badge
+            // 2. Tahap Saat Ini Badge (with whitespace-nowrap)
             let stageBadgeHtml = '';
             if (stage === 'Dosen Wali' || !isWaliApproved) {
-                stageBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 font-semibold text-[11px] rounded-full border border-sky-200 bg-sky-50 text-sky-700"><i class="fa-solid fa-user-tie text-[10px]"></i> Dosen Wali</span>`;
+                stageBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 font-semibold text-[11px] rounded-full border border-sky-200 bg-sky-50 text-sky-700 whitespace-nowrap"><i class="fa-solid fa-user-tie text-[10px]"></i> Dosen Wali</span>`;
             } else if (stage === 'Admin Layanan' || (isWaliApproved && !isAdminApproved)) {
-                stageBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 font-semibold text-[11px] rounded-full border border-indigo-200 bg-indigo-50 text-indigo-700"><i class="fa-solid fa-file-signature text-[10px]"></i> Admin Layanan</span>`;
+                stageBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 font-semibold text-[11px] rounded-full border border-indigo-200 bg-indigo-50 text-indigo-700 whitespace-nowrap"><i class="fa-solid fa-file-signature text-[10px]"></i> Admin Layanan</span>`;
             } else if (stage === 'Koordinator TA') {
-                stageBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 font-bold text-[11px] rounded-full border border-orange-300 bg-orange-50 text-orange-800 shadow-2xs"><i class="fa-solid fa-graduation-cap text-[10px] text-orange-600"></i> Koordinator TA</span>`;
+                stageBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 font-bold text-[11px] rounded-full border border-orange-300 bg-orange-50 text-orange-800 shadow-2xs whitespace-nowrap"><i class="fa-solid fa-graduation-cap text-[10px] text-orange-600"></i> Koordinator TA</span>`;
             } else if (stage === 'Ketua KK') {
-                stageBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 font-semibold text-[11px] rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700"><i class="fa-solid fa-user-check text-[10px]"></i> Ketua KK</span>`;
+                stageBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 font-semibold text-[11px] rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 whitespace-nowrap"><i class="fa-solid fa-user-check text-[10px]"></i> Ketua KK</span>`;
             } else {
-                stageBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 font-semibold text-[11px] rounded-full border border-slate-200 bg-slate-100 text-slate-700">${escapeHtml(stage)}</span>`;
+                stageBadgeHtml = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 font-semibold text-[11px] rounded-full border border-slate-200 bg-slate-100 text-slate-700 whitespace-nowrap">${escapeHtml(stage)}</span>`;
             }
 
             // 3. Row styling with Left Border highlight
@@ -2246,7 +2296,7 @@
 
             html += `
                 <tr class="table-row-animate ${rowClass} transition-colors" style="--row-index: ${idx};">
-                    <td class="py-4 px-4 pl-6 text-center">
+                    <td class="py-3 px-3.5 pl-6 text-center whitespace-nowrap">
                         ${isEligibleForKoor ? `
                             <input type="checkbox" 
                                 class="row-select-checkbox w-4 h-4 rounded text-orange-600 focus:ring-orange-500 border-slate-300 cursor-pointer" 
@@ -2264,9 +2314,9 @@
                                 title="${escapeHtml(disabledTitle)}">
                         `}
                     </td>
-                    <td class="py-4 px-4 font-bold text-slate-900">${mhs.nim}</td>
-                    <td class="py-4 px-4 font-semibold text-slate-800">${escapeHtml(fullName)}</td>
-                    <td class="py-4 px-4 text-slate-600 max-w-xs font-normal">
+                    <td class="py-3 px-3.5 font-bold text-slate-900 whitespace-nowrap">${mhs.nim}</td>
+                    <td class="py-3 px-3.5 font-semibold text-slate-800 whitespace-nowrap">${escapeHtml(fullName)}</td>
+                    <td class="py-3 px-3.5 text-slate-600 max-w-[200px] font-normal">
                         <div class="inline-flex items-center gap-1.5 cursor-pointer group/title max-w-full"
                             data-tooltip-type="pendaftaran"
                             data-nim="${escapeHtml(mhs.nim)}"
@@ -2287,13 +2337,16 @@
                             <i class="fa-solid fa-circle-info text-[11px] text-slate-400 group-hover/title:text-orange-500 shrink-0 opacity-0 group-hover/title:opacity-100 transition-opacity"></i>
                         </div>
                     </td>
-                    <td class="py-4 px-4 text-center">
+                    <td class="py-3 px-3.5 font-normal whitespace-nowrap">
+                        ${pembimbingHtml}
+                    </td>
+                    <td class="py-3 px-3.5 text-center whitespace-nowrap">
                         ${statusBadgeHtml}
                     </td>
-                    <td class="py-4 px-4 text-center">
+                    <td class="py-3 px-3.5 text-center whitespace-nowrap">
                         ${stageBadgeHtml}
                     </td>
-                    <td class="py-4 px-4 text-center">
+                    <td class="py-3 px-3.5 text-center whitespace-nowrap">
                         <div class="flex items-center justify-center gap-1.5 mx-auto">
                             <button type="button" onclick="openHistoryPlottingModal('Pembimbing', '${mhs.nim}')" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-orange-50 hover:text-orange-600 text-slate-500 border border-slate-200/80 flex items-center justify-center text-xs transition cursor-pointer shrink-0 shadow-2xs" title="Lihat Riwayat Histori Pembimbing Mahasiswa Ini">
                                 <i class="fa-solid fa-clock-rotate-left"></i>
@@ -5712,18 +5765,18 @@
                 : '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 font-bold text-[10px] rounded-full border border-rose-300 bg-rose-50 text-rose-700 shadow-2xs whitespace-nowrap"><i class="fa-solid fa-clock text-[10px]"></i> Belum Dijadwalkan</span>';
 
             const waktuDisplay = isTerjadwal && row.tgl_sidang
-                ? `<div class="space-y-0.5 text-slate-800 text-[11px] leading-tight">
-                    <div class="flex items-center gap-1 font-bold text-slate-900"><i class="fa-solid fa-calendar-day text-amber-500 text-[10px]"></i> <span>${escapeHtml(row.tgl_sidang)}</span></div>
-                    <div class="flex items-center gap-1 text-[10px] text-slate-500 font-mono"><i class="fa-solid fa-clock text-slate-400 text-[9px]"></i> <span>${escapeHtml(row.jam_mulai_sidang ? row.jam_mulai_sidang.substring(0, 5) : '')} ${row.jam_selesai_sidang ? '- ' + escapeHtml(row.jam_selesai_sidang.substring(0, 5)) : 'WIB'}</span></div>
+                ? `<div class="space-y-0.5 text-slate-800 text-[10.5px] leading-tight">
+                    <div class="flex items-center gap-1 font-bold text-slate-900 whitespace-nowrap"><i class="fa-solid fa-calendar-day text-amber-500 text-[10px] shrink-0"></i> <span>${escapeHtml(formatIndonesianDate(row.tgl_sidang))}</span></div>
+                    <div class="flex items-center gap-1 text-[9.5px] text-slate-500 font-medium whitespace-nowrap"><i class="fa-solid fa-clock text-slate-400 text-[8.5px] shrink-0"></i> <span>${escapeHtml(row.jam_mulai_sidang ? row.jam_mulai_sidang.substring(0, 5) : '')} ${row.jam_selesai_sidang ? '- ' + escapeHtml(row.jam_selesai_sidang.substring(0, 5)) : ''} WIB</span></div>
                    </div>`
-                : '<span class="text-slate-400 italic text-[11px]">Belum diatur</span>';
+                : '<span class="text-slate-400 italic text-[10.5px]">Belum diatur</span>';
 
             const roomText = row.detail_nama_ruangan || row.ruangan_sidang;
             const ruanganDisplay = isTerjadwal && roomText
-                ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-cyan-50 text-cyan-800 border border-cyan-200 shadow-2xs max-w-[120px] truncate" title="${escapeHtml(roomText)}">
-                    <i class="fa-solid fa-door-open text-cyan-600 text-[10px]"></i> <span class="truncate">${escapeHtml(roomText)}</span>
+                ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-cyan-50 text-cyan-800 border border-cyan-200 shadow-2xs whitespace-nowrap max-w-[105px] truncate" title="${escapeHtml(roomText)}">
+                    <i class="fa-solid fa-door-open text-cyan-600 text-[9.5px] shrink-0"></i> <span class="truncate">${escapeHtml(roomText)}</span>
                    </span>`
-                : '<span class="text-slate-400 italic text-[11px]">-</span>';
+                : '<span class="text-slate-400 italic text-[10.5px]">-</span>';
 
             const p1Name = row.nama_pembimbing_1 || (row.pembimbing_1 ? 'NIP: ' + row.pembimbing_1 : '-');
             const p2Name = row.nama_pembimbing_2 || (row.pembimbing_2 ? 'NIP: ' + row.pembimbing_2 : '-');
@@ -5731,22 +5784,22 @@
             const pg2Name = row.nama_penguji_2 || (row.penguji_2 ? 'NIP: ' + row.penguji_2 : '-');
 
             const pembimbingHtml = `
-                <div class="space-y-0.5 text-slate-700 text-[11px] leading-tight">
-                    <div class="flex items-center gap-1"><span class="w-3.5 h-3.5 rounded bg-orange-100 text-orange-700 flex items-center justify-center text-[9px] font-bold shrink-0">1</span> <span class="truncate max-w-[125px]" title="${escapeHtml(p1Name)}">${escapeHtml(p1Name)}</span></div>
-                    <div class="flex items-center gap-1"><span class="w-3.5 h-3.5 rounded bg-orange-100 text-orange-700 flex items-center justify-center text-[9px] font-bold shrink-0">2</span> <span class="truncate max-w-[125px]" title="${escapeHtml(p2Name)}">${escapeHtml(p2Name)}</span></div>
+                <div class="space-y-0.5 text-slate-700 text-[10.5px] leading-tight">
+                    <div class="flex items-center gap-1"><span class="w-3.5 h-3.5 rounded bg-orange-100 text-orange-700 flex items-center justify-center text-[8.5px] font-bold shrink-0">1</span> <span class="truncate max-w-[95px] font-medium" title="${escapeHtml(p1Name)}">${escapeHtml(p1Name)}</span></div>
+                    <div class="flex items-center gap-1"><span class="w-3.5 h-3.5 rounded bg-orange-100 text-orange-700 flex items-center justify-center text-[8.5px] font-bold shrink-0">2</span> <span class="truncate max-w-[95px] font-medium" title="${escapeHtml(p2Name)}">${escapeHtml(p2Name)}</span></div>
                 </div>
             `;
 
             let pengujiHtml = '';
             if (row.penguji_1 || row.nama_penguji_1 || row.penguji_2 || row.nama_penguji_2) {
                 pengujiHtml = `
-                    <div class="space-y-0.5 text-slate-800 text-[11px] leading-tight">
-                        <div class="flex items-center gap-1"><span class="w-3.5 h-3.5 rounded bg-indigo-100 text-indigo-700 flex items-center justify-center text-[9px] font-bold shrink-0">1</span> <span class="truncate max-w-[125px] font-semibold" title="${escapeHtml(pg1Name)}">${escapeHtml(pg1Name)}</span></div>
-                        <div class="flex items-center gap-1"><span class="w-3.5 h-3.5 rounded bg-indigo-100 text-indigo-700 flex items-center justify-center text-[9px] font-bold shrink-0">2</span> <span class="truncate max-w-[125px] font-semibold" title="${escapeHtml(pg2Name)}">${escapeHtml(pg2Name)}</span></div>
+                    <div class="space-y-0.5 text-slate-800 text-[10.5px] leading-tight">
+                        <div class="flex items-center gap-1"><span class="w-3.5 h-3.5 rounded bg-indigo-100 text-indigo-700 flex items-center justify-center text-[8.5px] font-bold shrink-0">1</span> <span class="truncate max-w-[95px] font-semibold" title="${escapeHtml(pg1Name)}">${escapeHtml(pg1Name)}</span></div>
+                        <div class="flex items-center gap-1"><span class="w-3.5 h-3.5 rounded bg-indigo-100 text-indigo-700 flex items-center justify-center text-[8.5px] font-bold shrink-0">2</span> <span class="truncate max-w-[95px] font-semibold" title="${escapeHtml(pg2Name)}">${escapeHtml(pg2Name)}</span></div>
                     </div>
                 `;
             } else {
-                pengujiHtml = `<span class="text-slate-400 italic text-[11px]">Belum ditentukan</span>`;
+                pengujiHtml = `<span class="text-slate-400 italic text-[10.5px]">Belum ditentukan</span>`;
             }
 
             const rowHighlight = isChecked ? 'bg-amber-50/70 border-l-4 border-l-amber-600' : 'hover:bg-slate-50/80';
@@ -5761,28 +5814,28 @@
 
             const hasNilai = Boolean(row.nilai_akhir_sidang && parseFloat(row.nilai_akhir_sidang) > 0);
             const peminatanBadge = row.peminatan
-                ? `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase tracking-wider bg-violet-50 text-violet-700 border border-violet-200 mt-1 block max-w-fit">${escapeHtml(row.peminatan)}</span>`
+                ? `<span class="inline-flex items-center px-1.5 py-0.2 rounded text-[8.5px] font-extrabold uppercase tracking-wider bg-violet-50 text-violet-700 border border-violet-200 mt-0.5 block max-w-fit">${escapeHtml(row.peminatan)}</span>`
                 : '';
             const nilaiBadge = hasNilai
-                ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 mt-1" title="Status: ${escapeHtml(row.status_kelulusan_sidang || 'Lulus')}"><i class="fa-solid fa-award text-emerald-600 text-[10px]"></i> ${escapeHtml(row.nilai_akhir_sidang)} (${escapeHtml(row.grade_sidang || 'A')})</span>`
-                : `<span class="text-[10px] text-slate-400 italic block mt-1">Belum dinilai</span>`;
+                ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 mt-0.5" title="Status: ${escapeHtml(row.status_kelulusan_sidang || 'Lulus')}"><i class="fa-solid fa-award text-emerald-600 text-[9px]"></i> ${escapeHtml(row.nilai_akhir_sidang)} (${escapeHtml(row.grade_sidang || 'A')})</span>`
+                : `<span class="text-[9.5px] text-slate-400 italic block mt-0.5">Belum dinilai</span>`;
 
             html += `
                 <tr class="table-row-animate ${rowHighlight} transition-colors" style="--row-index: ${idx};">
-                    <td class="w-10 py-3 px-3 pl-5 text-center">
+                    <td class="w-8 py-2.5 px-2 text-center">
                         <input type="checkbox" 
                             class="row-select-sidang w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 cursor-pointer" 
                             value="${row.nim}" 
                             ${isChecked ? 'checked' : ''}
                             onchange="toggleRowSelectSidang(this)">
                     </td>
-                    <td class="py-3 px-2 font-bold font-mono text-[11px] text-slate-900 whitespace-nowrap">${row.nim}</td>
-                    <td class="py-3 px-2 font-semibold text-slate-800 text-xs">
-                        <span class="truncate block max-w-[130px] cursor-pointer hover:text-amber-600 transition" onclick="openModalSingleSidang('${escapeHtml(row.nim)}')" title="${escapeHtml(fullName)}">${escapeHtml(fullName)}</span>
+                    <td class="w-24 py-2.5 px-2 font-bold font-mono text-[11px] text-slate-900 truncate">${row.nim}</td>
+                    <td class="w-36 py-2.5 px-2 font-semibold text-slate-800 text-xs">
+                        <span class="truncate block max-w-[125px] cursor-pointer hover:text-amber-600 transition font-bold" onclick="openModalSingleSidang('${escapeHtml(row.nim)}')" title="${escapeHtml(fullName)}">${escapeHtml(fullName)}</span>
                         ${nilaiBadge}
                     </td>
-                    <td class="py-3 px-2 text-slate-600 font-normal">
-                        <div class="inline-flex items-center gap-1 cursor-pointer group/title max-w-[170px]"
+                    <td class="py-2.5 px-2 text-slate-600 font-normal">
+                        <div class="inline-flex items-center gap-1 cursor-pointer group/title max-w-full"
                             data-tooltip-type="sidang"
                             data-nim="${escapeHtml(row.nim)}"
                             data-name="${escapeHtml(fullName)}"
@@ -5794,26 +5847,26 @@
                             data-status="${escapeHtml(isTerjadwal ? 'Sudah Dijadwalkan' : 'Belum Dijadwalkan')}"
                             onmouseenter="handleJudulTooltipEnter(this, event)"
                             onmouseleave="handleJudulTooltipLeave(this)">
-                            <p class="line-clamp-2 text-[11px] leading-snug text-slate-700 font-medium group-hover/title:text-amber-600 transition-colors">
+                            <p class="line-clamp-2 text-[11px] leading-tight text-slate-700 font-medium group-hover/title:text-amber-600 transition-colors">
                                 ${escapeHtml(judul)}
                             </p>
                             <i class="fa-solid fa-circle-info text-[10px] text-slate-400 group-hover/title:text-amber-500 shrink-0 opacity-0 group-hover/title:opacity-100 transition-opacity"></i>
                         </div>
                     </td>
-                    <td class="py-3 px-2">${pembimbingHtml}</td>
-                    <td class="py-3 px-2">${pengujiHtml}</td>
-                    <td class="py-3 px-2">${waktuDisplay}</td>
-                    <td class="py-3 px-2">${ruanganDisplay}</td>
-                    <td class="py-3 px-2 text-center">${statusBadge}</td>
-                    <td class="py-3 px-3 text-center whitespace-nowrap">
-                        <div class="flex items-center justify-center gap-1.5 mx-auto shrink-0">
+                    <td class="w-32 py-2.5 px-2">${pembimbingHtml}</td>
+                    <td class="w-32 py-2.5 px-2">${pengujiHtml}</td>
+                    <td class="w-36 py-2.5 px-2">${waktuDisplay}</td>
+                    <td class="w-28 py-2.5 px-2">${ruanganDisplay}</td>
+                    <td class="w-24 py-2.5 px-1 text-center">${statusBadge}</td>
+                    <td class="w-36 py-2.5 px-2 text-center whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-1 mx-auto shrink-0">
                             <button type="button" onclick="openHistorySidangModal('${escapeHtml(row.nim)}')" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-slate-600 border border-slate-200 flex items-center justify-center text-xs transition cursor-pointer shadow-2xs shrink-0" title="Lihat Riwayat Histori Sidang Mahasiswa Ini">
                                 <i class="fa-solid fa-clock-rotate-left text-[11px]"></i>
                             </button>
                             <button type="button" onclick="openModalPenilaianSidang('${escapeHtml(row.nim)}')" class="w-7 h-7 rounded-lg ${hasNilai ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300' : 'bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-slate-600 border border-slate-200'} flex items-center justify-center text-xs transition cursor-pointer shadow-2xs shrink-0" title="${hasNilai ? 'Lihat / Edit Penilaian Akhir Sidang' : 'Input Penilaian Akhir Sidang TA'}">
                                 <i class="fa-solid ${hasNilai ? 'fa-award text-xs' : 'fa-clipboard-check text-xs'}"></i>
                             </button>
-                            <button type="button" onclick="openModalSingleSidang('${escapeHtml(row.nim)}')" class="btn-3d-kinetic ${btnColor} btn-compact cursor-pointer" title="${btnTitle}">
+                            <button type="button" onclick="openModalSingleSidang('${escapeHtml(row.nim)}')" class="btn-3d-kinetic ${btnColor} btn-compact cursor-pointer shrink-0" title="${btnTitle}">
                                 <div class="bg"></div>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 342 208" height="208" width="342" class="splash">
                                     <path stroke-linecap="round" stroke-width="3" d="M54.1054 99.7837C54.1054 99.7837 40.0984 90.7874 26.6893 97.6362C13.2802 104.485 1.5 97.6362 1.5 97.6362" />
@@ -6019,7 +6072,6 @@
     // FLATPICKR DATEPICKER ENGINE (TAB PENJADWALAN SIDANG)
     // =========================================================
     let singleSidangDatePicker = null;
-    let batchSidangDatePicker = null;
 
     function initSidangDatePickers() {
         const singleInput = document.getElementById('singleSidangTgl');
@@ -6027,16 +6079,9 @@
             if (singleInput._flatpickr) singleInput._flatpickr.destroy();
             singleSidangDatePicker = flatpickr(singleInput, {
                 dateFormat: 'Y-m-d',
-                minDate: 'today',
-                disableMobile: true
-            });
-        }
-
-        const batchInput = document.getElementById('batchSidangTgl');
-        if (batchInput && typeof flatpickr !== 'undefined') {
-            if (batchInput._flatpickr) batchInput._flatpickr.destroy();
-            batchSidangDatePicker = flatpickr(batchInput, {
-                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'j F Y',
+                locale: (typeof flatpickr !== 'undefined' && flatpickr.l10ns && flatpickr.l10ns.id) ? flatpickr.l10ns.id : 'default',
                 minDate: 'today',
                 disableMobile: true
             });
@@ -6057,7 +6102,7 @@
         const ruanganInput = document.getElementById('singleSidangRuanganInput');
 
         if (nimInput) nimInput.value = student.nim;
-        if (infoEl) infoEl.textContent = `${student.nama_lengkap} (${student.nim})`;
+        if (infoEl) infoEl.textContent = `${student.nama_lengkap || student.nama} (${student.nim}) - ${student.prodi || 'DKV'}`;
         
         if (singleSidangDatePicker) {
             if (student.tgl_sidang) {
@@ -6172,56 +6217,61 @@
         });
     };
 
-    // Modal Batch Sidang
+    // =========================================================
+    // MODAL BATCH SIDANG (INDIVIDUAL PER MAHASISWA ENGINE)
+    // =========================================================
+    state.sidangBatchStudents = [];
+
     window.openModalBatchSidang = function () {
         if (state.sidangSelectedStudents.size === 0) {
-            Swal.fire({ icon: 'info', title: 'Pilih Mahasiswa', text: 'Centang setidaknya satu mahasiswa untuk menjadwalkan sidang secara massal.' });
+            Swal.fire({
+                icon: 'info',
+                title: 'Pilih Mahasiswa',
+                text: 'Centang setidaknya satu mahasiswa untuk mengatur jadwal sidang.',
+                confirmButtonColor: '#f59e0b'
+            });
             return;
         }
 
-        const modal = document.getElementById('modalBatchSidang');
-        const listEl = document.getElementById('batchSidangSelectedList');
+        // Siapkan data per mahasiswa secara independen
+        state.sidangBatchStudents = Array.from(state.sidangSelectedStudents.values()).map((st, i) => {
+            // Default time slot bertingkat jika belum ada jam
+            let defaultMulai = '08:00';
+            let defaultSelesai = '10:00';
+            if (st.jam_mulai_sidang) {
+                defaultMulai = st.jam_mulai_sidang.substring(0, 5);
+                defaultSelesai = st.jam_selesai_sidang ? st.jam_selesai_sidang.substring(0, 5) : '10:00';
+            } else {
+                const hourStart = 8 + (i * 2);
+                const hourEnd = hourStart + 2;
+                if (hourStart <= 16) {
+                    defaultMulai = (hourStart < 10 ? '0' : '') + hourStart + ':00';
+                    defaultSelesai = (hourEnd < 10 ? '0' : '') + hourEnd + ':00';
+                }
+            }
+
+            return {
+                nim: st.nim,
+                nama: st.nama_lengkap || st.nama || ('Mahasiswa ' + st.nim),
+                prodi: st.prodi || 'DKV',
+                judul: st.judul_1 || '',
+                pemb1_name: st.nama_pembimbing_1 || '',
+                pemb2_name: st.nama_pembimbing_2 || '',
+                peng1_name: st.nama_penguji_1 || '',
+                peng2_name: st.nama_penguji_2 || '',
+                tgl_sidang: st.tgl_sidang || '',
+                jam_mulai_sidang: defaultMulai,
+                jam_selesai_sidang: defaultSelesai,
+                ruangan_sidang: st.ruangan_sidang || ''
+            };
+        });
+
         const countBadge = document.getElementById('badgeBatchSidangCount');
+        if (countBadge) countBadge.textContent = `${state.sidangBatchStudents.length} Mahasiswa`;
 
-        if (countBadge) countBadge.textContent = `${state.sidangSelectedStudents.size} Mahasiswa`;
+        renderBatchSidangCards();
 
-        if (listEl) {
-            let html = '';
-            state.sidangSelectedStudents.forEach(item => {
-                html += `
-                    <div class="flex items-center justify-between px-3.5 py-2.5 bg-white rounded-xl border border-slate-200 shadow-2xs hover:border-amber-300 transition">
-                        <div class="flex items-center gap-2.5 min-w-0">
-                            <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xs shrink-0">
-                                <i class="fa-solid fa-user-graduate"></i>
-                            </div>
-                            <span class="font-bold text-xs sm:text-sm text-slate-800 truncate">${escapeHtml(item.nama_lengkap)} <span class="text-slate-400 font-mono text-xs">(${escapeHtml(item.nim)})</span></span>
-                        </div>
-                        <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg shrink-0">${escapeHtml(item.prodi || 'Informatika')}</span>
-                    </div>
-                `;
-            });
-            listEl.innerHTML = html;
-        }
-
-        const ruanganHidden = document.getElementById('batchSidangRuangan');
-        const ruanganInput = document.getElementById('batchSidangRuanganInput');
-        const jamMulaiInput = document.getElementById('batchSidangJamMulai');
-        const jamSelesaiInput = document.getElementById('batchSidangJamSelesai');
-
-        if (ruanganHidden) ruanganHidden.value = '';
-        if (ruanganInput) ruanganInput.value = '';
-        if (jamMulaiInput) jamMulaiInput.value = '08:00';
-        if (jamSelesaiInput) jamSelesaiInput.value = '10:00';
-
-        closeRuanganDropdown('batch');
-
-        if (batchSidangDatePicker) {
-            batchSidangDatePicker.clear();
-        } else {
-            const batchTgl = document.getElementById('batchSidangTgl');
-            if (batchTgl) batchTgl.value = '';
-        }
-
+        const modal = document.getElementById('modalBatchSidang');
         if (modal) {
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -6238,32 +6288,311 @@
         }
     };
 
-    window.submitBatchSidang = function (e) {
-        e.preventDefault();
+    window.renderBatchSidangCards = function () {
+        const container = document.getElementById('batchSidangCardsContainer');
+        if (!container) return;
 
-        const nims = Array.from(state.sidangSelectedStudents.keys());
-        const tgl = document.getElementById('batchSidangTgl').value;
-        const jamMulai = document.getElementById('batchSidangJamMulai').value;
-        const jamSelesai = document.getElementById('batchSidangJamSelesai').value;
-        const ruangan = document.getElementById('batchSidangRuangan').value;
-        const btn = document.getElementById('btnSubmitBatchSidang');
-
-        if (nims.length === 0 || !tgl || !jamMulai || !ruangan) {
-            Swal.fire({ icon: 'warning', title: 'Data Belum Lengkap', text: 'Tanggal, jam mulai, dan ruangan sidang wajib diisi!' });
+        if (!state.sidangBatchStudents || state.sidangBatchStudents.length === 0) {
+            container.innerHTML = '<div class="p-8 text-center text-slate-400 italic">Tidak ada mahasiswa yang dipilih.</div>';
             return;
         }
 
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i> Memproses...';
+        const ruanganOptions = (state.ruanganList || []).map(r => {
+            const val = r.kode_ruangan || r.nama_ruangan;
+            const lbl = `${r.kode_ruangan ? r.kode_ruangan + ' - ' : ''}${r.nama_ruangan} (${r.lokasi || 'Gedung FIK'})`;
+            return { val, lbl };
+        });
+
+        let html = '';
+        state.sidangBatchStudents.forEach((st, idx) => {
+            const rObj = (state.ruanganList || []).find(r => r.kode_ruangan === st.ruangan_sidang || r.nama_ruangan === st.ruangan_sidang);
+            const initialDisplay = rObj ? `${rObj.kode_ruangan ? rObj.kode_ruangan + ' - ' : ''}${rObj.nama_ruangan}` : (st.ruangan_sidang || '');
+
+            html += `
+                <div id="batch_sidang_card_${idx}" class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-visible transition-all hover:border-amber-300">
+                    <!-- Header Kartu Mahasiswa -->
+                    <div class="p-4 sm:p-5 bg-gradient-to-r from-amber-50/60 via-slate-50 to-white border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center font-black text-sm shadow-xs shrink-0">
+                                ${idx + 1}
+                            </div>
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h4 class="font-extrabold text-slate-900 text-sm truncate">${escapeHtml(st.nama)}</h4>
+                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 font-mono">${escapeHtml(st.nim)}</span>
+                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-600">${escapeHtml(st.prodi || 'DKV')}</span>
+                                </div>
+                                <p class="text-xs text-slate-500 font-medium truncate mt-0.5 max-w-xl" title="${escapeHtml(st.judul)}">
+                                    <i class="fa-solid fa-book-bookmark text-amber-500 text-[10px] mr-1"></i> ${escapeHtml(st.judul || 'Judul belum ditentukan')}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Input Jadwal Terpisah untuk Mahasiswa Ini -->
+                    <div class="p-4 sm:p-5 grid grid-cols-1 md:grid-cols-3 gap-4 bg-white">
+                        <!-- 1. Tanggal Sidang -->
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 block">
+                                Tanggal Sidang <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <input type="text" 
+                                       id="batchSidangTgl_${idx}" 
+                                       value="${escapeHtml(st.tgl_sidang || '')}"
+                                       placeholder="Pilih Tanggal..."
+                                       class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-none transition cursor-pointer">
+                                <div class="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs">
+                                    <i class="fa-solid fa-calendar-day"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Ruangan Sidang (Search Autocomplete Combobox) -->
+                        <div class="space-y-1.5 relative">
+                            <label class="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 block">
+                                Ruangan Sidang <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="relative custom-combobox-wrap" id="batchRuanganCombobox_${idx}">
+                                <input type="text" 
+                                       id="batchSidangRuanganInput_${idx}" 
+                                       value="${escapeHtml(initialDisplay)}"
+                                       placeholder="Cari / pilih ruangan sidang..." 
+                                       autocomplete="off"
+                                       class="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:bg-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition cursor-pointer" 
+                                       oninput="openBatchRuanganDropdown(${idx})" 
+                                       onfocus="openBatchRuanganDropdown(${idx})"
+                                       onclick="openBatchRuanganDropdown(${idx})">
+                                <div class="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-600 pointer-events-none text-xs">
+                                    <i class="fa-solid fa-door-open"></i>
+                                </div>
+                                <button type="button" onclick="toggleBatchRuanganDropdown(${idx})" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+                                    <i class="fa-solid fa-chevron-down text-xs transition duration-200" id="batchRuanganArrow_${idx}"></i>
+                                </button>
+                                <input type="hidden" id="batchSidangRuangan_${idx}" value="${escapeHtml(st.ruangan_sidang || '')}">
+
+                                <!-- Dropdown Menu List -->
+                                <div id="batchRuanganDropdown_${idx}" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl z-[90] max-h-48 overflow-y-auto divide-y divide-slate-100 text-xs custom-scrollbar">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Waktu Sidang (Jam Mulai & Selesai) -->
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 block">
+                                Waktu Sidang <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="relative">
+                                    <input type="text" 
+                                           id="batchSidangJamMulai_${idx}"
+                                           value="${escapeHtml(st.jam_mulai_sidang || '08:00')}"
+                                           placeholder="08:00"
+                                           readonly
+                                           onclick="openBatchTimePickerModal(${idx}, 'mulai')"
+                                           class="w-full px-2.5 py-2.5 bg-slate-50 hover:bg-white border-2 border-slate-200 hover:border-amber-400 focus:border-amber-500 rounded-xl text-xs font-bold text-slate-800 text-center cursor-pointer shadow-2xs transition">
+                                </div>
+                                <div class="relative">
+                                    <input type="text" 
+                                           id="batchSidangJamSelesai_${idx}"
+                                           value="${escapeHtml(st.jam_selesai_sidang || '10:00')}"
+                                           placeholder="10:00"
+                                           readonly
+                                           onclick="openBatchTimePickerModal(${idx}, 'selesai')"
+                                           class="w-full px-2.5 py-2.5 bg-slate-50 hover:bg-white border-2 border-slate-200 hover:border-amber-400 focus:border-amber-500 rounded-xl text-xs font-bold text-slate-800 text-center cursor-pointer shadow-2xs transition">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+
+        // Render Quick Jump Nav Chips (Lompat Cepat)
+        const navContainer = document.getElementById('batchSidangQuickTabs');
+        if (navContainer) {
+            let navHtml = '';
+            state.sidangBatchStudents.forEach((st, idx) => {
+                const isComplete = (st.tgl_sidang && st.ruangan_sidang && st.jam_mulai_sidang && st.jam_selesai_sidang);
+                navHtml += `
+                    <button type="button" onclick="jumpToBatchSidangStudent(${idx})" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-amber-600 border border-slate-700/80 hover:border-amber-500 text-slate-200 hover:text-white transition-all shadow-xs whitespace-nowrap flex items-center gap-2 shrink-0 active:scale-95 cursor-pointer">
+                        <span class="w-5 h-5 rounded-lg ${isComplete ? 'bg-emerald-600' : 'bg-amber-500'} text-white flex items-center justify-center text-[10px] font-black shadow-xs">${idx + 1}</span>
+                        <span>${escapeHtml((st.nama || '').split(' ')[0])}</span>
+                    </button>
+                `;
+            });
+            navContainer.innerHTML = navHtml;
+            initBatchSidangTabsDragAndWheel();
         }
 
+        // Inisialisasi Flatpickr per kartu mahasiswa dengan format lokal Indonesia
+        state.sidangBatchStudents.forEach((st, idx) => {
+            const dateInput = document.getElementById(`batchSidangTgl_${idx}`);
+            if (dateInput && typeof flatpickr !== 'undefined') {
+                flatpickr(dateInput, {
+                    dateFormat: 'Y-m-d',
+                    altInput: true,
+                    altFormat: 'j F Y',
+                    locale: (typeof flatpickr !== 'undefined' && flatpickr.l10ns && flatpickr.l10ns.id) ? flatpickr.l10ns.id : 'default',
+                    minDate: 'today',
+                    defaultDate: st.tgl_sidang || null,
+                    disableMobile: true,
+                    onChange: function (selectedDates, dateStr) {
+                        state.sidangBatchStudents[idx].tgl_sidang = dateStr;
+                    }
+                });
+            }
+        });
+    };
+
+    window.jumpToBatchSidangStudent = function (idx) {
+        const card = document.getElementById(`batch_sidang_card_${idx}`);
+        if (!card) return;
+
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.classList.add('ring-2', 'ring-amber-500');
+        setTimeout(() => card.classList.remove('ring-2', 'ring-amber-500'), 1500);
+    };
+
+    window.scrollBatchSidangQuickTabs = function (direction) {
+        const container = document.getElementById('batchSidangQuickTabs');
+        if (!container) return;
+        const scrollAmount = 260;
+        if (direction === 'left') {
+            container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+        } else {
+            container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        }
+    };
+
+    function initBatchSidangTabsDragAndWheel() {
+        const container = document.getElementById('batchSidangQuickTabs');
+        if (!container || container.dataset.initEvents) return;
+        container.dataset.initEvents = 'true';
+
+        // Mouse Wheel Horizontal Scroll
+        container.addEventListener('wheel', (e) => {
+            if (e.deltaY !== 0) {
+                e.preventDefault();
+                container.scrollLeft += e.deltaY * 0.8;
+            }
+        }, { passive: false });
+
+        // Mouse Drag to Scroll
+        let isDown = false;
+        let startX;
+        let scrollLeftPos;
+
+        container.addEventListener('mousedown', (e) => {
+            isDown = true;
+            container.classList.add('cursor-grabbing');
+            container.classList.remove('cursor-grab');
+            startX = e.pageX - container.offsetLeft;
+            scrollLeftPos = container.scrollLeft;
+        });
+
+        container.addEventListener('mouseleave', () => {
+            isDown = false;
+            container.classList.remove('cursor-grabbing');
+            container.classList.add('cursor-grab');
+        });
+
+        container.addEventListener('mouseup', () => {
+            isDown = false;
+            container.classList.remove('cursor-grabbing');
+            container.classList.add('cursor-grab');
+        });
+
+        container.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - container.offsetLeft;
+            const walk = (x - startX) * 1.5;
+            container.scrollLeft = scrollLeftPos - walk;
+        });
+    }
+
+    window.submitBatchSidang = function (e) {
+        e.preventDefault();
+
+        if (!state.sidangBatchStudents || state.sidangBatchStudents.length === 0) {
+            Swal.fire({ icon: 'warning', title: 'Data Kosong', text: 'Tidak ada data mahasiswa yang dipilih.' });
+            return;
+        }
+
+        // Sync data dari input DOM
+        for (let idx = 0; idx < state.sidangBatchStudents.length; idx++) {
+            const st = state.sidangBatchStudents[idx];
+            const tglInput = document.getElementById(`batchSidangTgl_${idx}`);
+            const rSelect = document.getElementById(`batchSidangRuangan_${idx}`);
+            const jamMulaiInput = document.getElementById(`batchSidangJamMulai_${idx}`);
+            const jamSelesaiInput = document.getElementById(`batchSidangJamSelesai_${idx}`);
+
+            if (tglInput && tglInput.value) st.tgl_sidang = tglInput.value;
+            if (rSelect && rSelect.value) st.ruangan_sidang = rSelect.value;
+            if (jamMulaiInput && jamMulaiInput.value) st.jam_mulai_sidang = jamMulaiInput.value;
+            if (jamSelesaiInput && jamSelesaiInput.value) st.jam_selesai_sidang = jamSelesaiInput.value;
+
+            if (!st.tgl_sidang || !st.ruangan_sidang || !st.jam_mulai_sidang) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Jadwal Belum Lengkap',
+                    text: `Lengkapi tanggal, ruangan, dan jam sidang untuk mahasiswa ${st.nama} (${st.nim})!`,
+                    confirmButtonColor: '#f59e0b'
+                });
+                return;
+            }
+        }
+
+        // Validasi bentrok internal antar mahasiswa di dalam batch ini
+        function toMinutes(timeStr) {
+            if (!timeStr) return 0;
+            const parts = timeStr.trim().split(':');
+            return (parseInt(parts[0], 10) || 0) * 60 + (parseInt(parts[1], 10) || 0);
+        }
+
+        for (let i = 0; i < state.sidangBatchStudents.length; i++) {
+            for (let j = i + 1; j < state.sidangBatchStudents.length; j++) {
+                const a = state.sidangBatchStudents[i];
+                const b = state.sidangBatchStudents[j];
+
+                if (a.tgl_sidang === b.tgl_sidang && a.ruangan_sidang === b.ruangan_sidang) {
+                    const aMulai = toMinutes(a.jam_mulai_sidang);
+                    const aSelesai = toMinutes(a.jam_selesai_sidang || '23:59');
+                    const bMulai = toMinutes(b.jam_mulai_sidang);
+                    const bSelesai = toMinutes(b.jam_selesai_sidang || '23:59');
+
+                    if ((aMulai < bSelesai) && (aSelesai > bMulai)) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Jadwal Bentrok!',
+                            text: `Jadwal ${a.nama} (${a.jam_mulai_sidang}-${a.jam_selesai_sidang}) dan ${b.nama} (${b.jam_mulai_sidang}-${b.jam_selesai_sidang}) bentrok di ruangan ${a.ruangan_sidang} pada tanggal ${formatIndonesianDate(a.tgl_sidang)}! Harap atur waktu atau ruangan yang berbeda untuk masing-masing mahasiswa.`,
+                            confirmButtonColor: '#ef4444'
+                        });
+                        return;
+                    }
+                }
+            }
+        }
+
+        const btn = document.getElementById('btnSubmitBatchSidang');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i> Menyimpan...';
+        }
+
+        const schedules = state.sidangBatchStudents.map(st => ({
+            nim: st.nim,
+            tgl_sidang: st.tgl_sidang,
+            jam_mulai_sidang: st.jam_mulai_sidang,
+            jam_selesai_sidang: st.jam_selesai_sidang,
+            ruangan_sidang: st.ruangan_sidang
+        }));
+
         const formData = new FormData();
-        formData.append('nims', JSON.stringify(nims));
-        formData.append('tgl_sidang', tgl);
-        formData.append('jam_mulai_sidang', jamMulai);
-        formData.append('jam_selesai_sidang', jamSelesai);
-        formData.append('ruangan_sidang', ruangan);
+        formData.append('schedules', JSON.stringify(schedules));
 
         fetch(cfg.ajaxSidangBatchUrl, {
             method: 'POST',
@@ -6273,15 +6602,16 @@
         .then(res => {
             if (res.status) {
                 // Update local state
-                nims.forEach(nim => {
-                    const student = (state.sidangList || []).find(s => s.nim == nim);
+                schedules.forEach(sch => {
+                    const student = (state.sidangList || []).find(s => s.nim == sch.nim);
                     if (student) {
-                        student.tgl_sidang = tgl;
-                        student.jam_mulai_sidang = jamMulai;
-                        student.jam_selesai_sidang = jamSelesai;
-                        student.ruangan_sidang = ruangan;
+                        student.tgl_sidang = sch.tgl_sidang;
+                        student.jam_mulai_sidang = sch.jam_mulai_sidang;
+                        student.jam_selesai_sidang = sch.jam_selesai_sidang;
+                        student.ruangan_sidang = sch.ruangan_sidang;
                         student.status_sidang = 'Terjadwal';
-                        const rObj = (state.ruanganList || []).find(r => r.kode_ruangan === ruangan || r.nama_ruangan === ruangan);
+
+                        const rObj = (state.ruanganList || []).find(r => r.kode_ruangan === sch.ruangan_sidang || r.nama_ruangan === sch.ruangan_sidang);
                         if (rObj) student.detail_nama_ruangan = rObj.nama_ruangan;
                     }
                 });
@@ -6293,83 +6623,30 @@
                 Swal.fire({
                     icon: 'success',
                     title: 'Berhasil!',
-                    text: res.message || 'Jadwal sidang massal berhasil diterapkan!',
+                    text: res.message || 'Jadwal sidang individual berhasil disimpan!',
                     timer: 2500,
                     showConfirmButton: false
                 });
             } else {
-                Swal.fire({ icon: 'error', title: 'Gagal', text: res.message || 'Terjadi kesalahan saat memproses jadwal massal.' });
+                Swal.fire({ icon: 'error', title: 'Gagal', text: res.message || 'Terjadi kesalahan saat menyimpan jadwal.' });
             }
         })
-        .catch(err => {
+        .catch(() => {
             Swal.fire({ icon: 'error', title: 'Error', text: 'Gagal menghubungi server.' });
         })
         .finally(() => {
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-check-double text-xs"></i> Terapkan ke Semua Terpilih';
+                btn.innerHTML = '<i class="fa-solid fa-save text-xs sm:text-sm"></i> Simpan Semua Jadwal Sidang';
             }
         });
     };
 
-    // Modal Kelola Ruangan Dinamis
-    window.openModalKelolaRuangan = function () {
-        const modal = document.getElementById('modalKelolaRuangan');
-        renderRuanganListModal();
-
-        if (modal) {
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            document.body.classList.add('overflow-hidden');
-        }
-    };
-
-    window.closeModalKelolaRuangan = function () {
-        const modal = document.getElementById('modalKelolaRuangan');
-        if (modal) {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            document.body.classList.remove('overflow-hidden');
-        }
-    };
-
-    window.renderRuanganListModal = function () {
-        const tbody = document.getElementById('tbodyRuanganList');
-        const badgeTotal = document.getElementById('badgeTotalRuanganModal');
-        const list = state.ruanganList || [];
-
-        if (badgeTotal) badgeTotal.textContent = `${list.length} Ruangan`;
-
-        if (!tbody) return;
-
-        if (list.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400 italic">Belum ada ruangan yang ditambahkan.</td></tr>';
-            return;
-        }
-
-        let html = '';
-        list.forEach((item, idx) => {
-            html += `
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="py-2.5 px-3.5 font-bold font-mono text-slate-900">${escapeHtml(item.kode_ruangan || '-')}</td>
-                    <td class="py-2.5 px-3.5 font-semibold text-slate-800">${escapeHtml(item.nama_ruangan || '-')}</td>
-                    <td class="py-2.5 px-3.5 text-slate-500">${escapeHtml(item.lokasi || '-')}</td>
-                    <td class="py-2.5 px-3.5 text-center">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            ${escapeHtml(item.status || 'Tersedia')}
-                        </span>
-                    </td>
-                    <td class="py-2.5 px-3.5 text-center">
-                        <button type="button" onclick="hapusRuangan(${item.id}, '${escapeHtml(item.nama_ruangan)}')" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 transition flex items-center justify-center mx-auto cursor-pointer" title="Hapus Ruangan">
-                            <i class="fa-solid fa-trash-can text-xs"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-        });
-
-        tbody.innerHTML = html;
-    };
+    // No-op compatibility handlers for kelola ruangan
+    window.openModalKelolaRuangan = function () {};
+    window.closeModalKelolaRuangan = function () {};
+    window.renderRuanganListModal = function () {};
+    window.hapusRuangan = function () {};
 
     // =========================================================
     // RUANGAN SIDANG AUTOCOMPLETE COMBOBOX (SEARCH + DYNAMIC ADD)
@@ -6492,6 +6769,140 @@
         if (textInput) textInput.value = display || val;
         closeRuanganDropdown(modalType);
     };
+
+    // =========================================================
+    // BATCH RUANGAN AUTOCOMPLETE COMBOBOX (PER KARTU MAHASISWA)
+    // =========================================================
+    window.openBatchRuanganDropdown = function (idx) {
+        const dropdown = document.getElementById(`batchRuanganDropdown_${idx}`);
+        const arrow = document.getElementById(`batchRuanganArrow_${idx}`);
+        const input = document.getElementById(`batchSidangRuanganInput_${idx}`);
+        const query = input ? input.value : '';
+
+        filterBatchRuanganDropdown(idx, query);
+        if (dropdown) dropdown.classList.remove('hidden');
+        if (arrow) arrow.classList.add('rotate-180');
+    };
+
+    window.closeBatchRuanganDropdown = function (idx) {
+        const dropdown = document.getElementById(`batchRuanganDropdown_${idx}`);
+        const arrow = document.getElementById(`batchRuanganArrow_${idx}`);
+        if (dropdown) dropdown.classList.add('hidden');
+        if (arrow) arrow.classList.remove('rotate-180');
+    };
+
+    window.toggleBatchRuanganDropdown = function (idx) {
+        const dropdown = document.getElementById(`batchRuanganDropdown_${idx}`);
+        if (dropdown && dropdown.classList.contains('hidden')) {
+            openBatchRuanganDropdown(idx);
+        } else {
+            closeBatchRuanganDropdown(idx);
+        }
+    };
+
+    window.filterBatchRuanganDropdown = function (idx, query) {
+        const dropdown = document.getElementById(`batchRuanganDropdown_${idx}`);
+        const arrow = document.getElementById(`batchRuanganArrow_${idx}`);
+        const hiddenInput = document.getElementById(`batchSidangRuangan_${idx}`);
+        if (!dropdown) return;
+
+        dropdown.classList.remove('hidden');
+        if (arrow) arrow.classList.add('rotate-180');
+
+        let list = state.ruanganList || [];
+        if ((!list || list.length === 0) && Array.isArray(cfg.ruanganList) && cfg.ruanganList.length > 0) {
+            list = cfg.ruanganList;
+            state.ruanganList = list;
+        }
+
+        const q = (query || '').toLowerCase().trim();
+        let filtered = list.filter(r => {
+            const codeMatch = (r.kode_ruangan || '').toLowerCase().includes(q);
+            const nameMatch = (r.nama_ruangan || '').toLowerCase().includes(q);
+            const locMatch = (r.lokasi || '').toLowerCase().includes(q);
+            return codeMatch || nameMatch || locMatch;
+        });
+
+        let html = '';
+
+        // Opsi kustom jika user ketik nama ruangan baru
+        const exactMatch = list.some(r => (r.nama_ruangan || '').toLowerCase() === q || (r.kode_ruangan || '').toLowerCase() === q);
+        if (q && !exactMatch) {
+            html += `
+                <div onclick="selectBatchRuangan(${idx}, '${escapeHtml(query.trim())}', '${escapeHtml(query.trim())}')" 
+                     class="p-2.5 bg-amber-50 hover:bg-amber-100 text-amber-950 font-bold cursor-pointer flex items-center justify-between transition border-b border-amber-200">
+                    <span class="flex items-center gap-1.5 text-xs truncate">
+                        <i class="fa-solid fa-pen-to-square text-amber-600 text-xs"></i>
+                        <span class="truncate">Gunakan: <strong>"${escapeHtml(query.trim())}"</strong></span>
+                    </span>
+                    <span class="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider shrink-0">Kustom</span>
+                </div>
+            `;
+        }
+
+        if (filtered.length > 0) {
+            filtered.forEach(r => {
+                const code = r.kode_ruangan || '';
+                const name = r.nama_ruangan || '';
+                const loc = r.lokasi ? `(${r.lokasi})` : '';
+                const display = `${code ? code + ' - ' : ''}${name} ${loc}`.trim();
+                const val = code || name;
+                const isSelected = (hiddenInput && hiddenInput.value === val);
+
+                html += `
+                    <div onclick="selectBatchRuangan(${idx}, '${escapeHtml(val)}', '${escapeHtml(display)}')" 
+                         class="p-2.5 hover:bg-amber-50 text-slate-800 font-medium cursor-pointer flex items-center justify-between transition">
+                        <div class="flex items-center gap-2 min-w-0">
+                            ${code ? `<span class="px-1.5 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded text-[10px] font-black font-mono shrink-0">${escapeHtml(code)}</span>` : ''}
+                            <span class="font-bold text-slate-900 text-xs truncate">${escapeHtml(name)}</span>
+                            <span class="text-slate-400 text-[10.5px] shrink-0">${escapeHtml(loc)}</span>
+                        </div>
+                        <i class="fa-solid fa-check text-xs text-amber-600 shrink-0 ${isSelected ? '' : 'hidden'}"></i>
+                    </div>
+                `;
+            });
+        } else if (q) {
+            html += `<div class="p-3 text-center text-slate-400 text-xs italic">Ruangan "${escapeHtml(query)}" tidak ditemukan. Klik opsi di atas untuk memakai nama ini.</div>`;
+        } else {
+            html += `<div class="p-3 text-center text-slate-400 text-xs italic">Ketik untuk mencari ruangan...</div>`;
+        }
+
+        dropdown.innerHTML = html;
+        if (hiddenInput) {
+            hiddenInput.value = query.trim();
+            if (state.sidangBatchStudents[idx]) {
+                state.sidangBatchStudents[idx].ruangan_sidang = query.trim();
+            }
+        }
+    };
+
+    window.selectBatchRuangan = function (idx, val, display) {
+        const hiddenInput = document.getElementById(`batchSidangRuangan_${idx}`);
+        const textInput = document.getElementById(`batchSidangRuanganInput_${idx}`);
+        if (hiddenInput) hiddenInput.value = val;
+        if (textInput) textInput.value = display || val;
+        if (state.sidangBatchStudents[idx]) {
+            state.sidangBatchStudents[idx].ruangan_sidang = val;
+        }
+        closeBatchRuanganDropdown(idx);
+    };
+
+    // Global Click Listener to close room dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+        const singleCombobox = document.getElementById('singleRuanganCombobox');
+        if (singleCombobox && !singleCombobox.contains(e.target)) {
+            closeRuanganDropdown('single');
+        }
+
+        if (state.sidangBatchStudents && state.sidangBatchStudents.length > 0) {
+            state.sidangBatchStudents.forEach((_, idx) => {
+                const batchCombobox = document.getElementById(`batchRuanganCombobox_${idx}`);
+                if (batchCombobox && !batchCombobox.contains(e.target)) {
+                    closeBatchRuanganDropdown(idx);
+                }
+            });
+        }
+    });
 
     // =========================================================
     // EXACT RADIAL CLOCK & DRAG-SLOT ENGINE (TAB SIDANG)
@@ -6951,6 +7362,522 @@
             finalizeSelection(minIdx, maxIdx);
         });
     }
+
+    // =========================================================
+    // MODAL POPUP BATCH CARD TIMEPICKER ENGINE
+    // =========================================================
+    let batchCardTpState = {
+        activeStudentIdx: null,
+        target: 'mulai', // 'mulai' or 'selesai'
+        hour: 8,
+        minute: 0,
+        isHourMode: true,
+        isDragging: false
+    };
+
+    window.openBatchTimePickerModal = function (idx, target) {
+        const student = (state.sidangBatchStudents || [])[idx];
+        if (!student) return;
+
+        batchCardTpState.activeStudentIdx = idx;
+        batchCardTpState.target = target || 'mulai';
+
+        const titleEl = document.getElementById('batchTpStudentTitle');
+        const subtitleEl = document.getElementById('batchTpStudentSubtitle');
+        if (titleEl) titleEl.textContent = `Atur Waktu Sidang: ${student.nama}`;
+        if (subtitleEl) subtitleEl.textContent = `NIM: ${student.nim} • ${student.prodi || 'DKV'}`;
+
+        const inputMulai = document.getElementById(`batchSidangJamMulai_${idx}`);
+        const inputSelesai = document.getElementById(`batchSidangJamSelesai_${idx}`);
+
+        const jamMulai = (inputMulai && inputMulai.value) ? inputMulai.value : (student.jam_mulai_sidang || '08:00');
+        const jamSelesai = (inputSelesai && inputSelesai.value) ? inputSelesai.value : (student.jam_selesai_sidang || '10:00');
+
+        const valMulaiEl = document.getElementById('batchTpValMulai');
+        const valSelesaiEl = document.getElementById('batchTpValSelesai');
+        if (valMulaiEl) valMulaiEl.textContent = jamMulai;
+        if (valSelesaiEl) valSelesaiEl.textContent = jamSelesai;
+
+        const currentVal = (batchCardTpState.target === 'mulai') ? jamMulai : jamSelesai;
+        if (currentVal && currentVal.includes(':')) {
+            const parts = currentVal.split(':');
+            batchCardTpState.hour = parseInt(parts[0]) || 8;
+            batchCardTpState.minute = parseInt(parts[1]) || 0;
+        }
+
+        setBatchClockTarget(batchCardTpState.target);
+        setBatchCardClockMode('hour');
+        updateBatchCardClockDisplay();
+
+        const modal = document.getElementById('modalBatchTimePicker');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        initBatchCardClockDragEvents();
+        initBatchSlotDragEvents();
+        syncBatchSlotHighlight(jamMulai, jamSelesai);
+    };
+
+    function initBatchSlotDragEvents() {
+        const slotContainer = document.getElementById('batchTpTimeSlots');
+        if (!slotContainer || slotContainer.dataset.slotInit) return;
+        slotContainer.dataset.slotInit = 'true';
+
+        let isDraggingSlots = false;
+        let dragStartIdx = -1;
+        let currentEndIdx = -1;
+
+        function getSlots() {
+            return Array.from(slotContainer.querySelectorAll('.tp-slot'));
+        }
+
+        function resetSlotStyle(slot) {
+            slot.style.background = '#fff';
+            slot.style.borderColor = '#e2e8f0';
+            slot.style.color = '#475569';
+            slot.style.boxShadow = 'none';
+        }
+
+        function previewSlotStyle(slot) {
+            slot.style.background = '#fef3c7';
+            slot.style.borderColor = '#f59e0b';
+            slot.style.color = '#b45309';
+            slot.style.boxShadow = '0 2px 6px rgba(217,119,6,0.2)';
+        }
+
+        function selectedSlotStyle(slot) {
+            slot.style.background = '#d97706';
+            slot.style.borderColor = '#d97706';
+            slot.style.color = '#fff';
+            slot.style.boxShadow = '0 3px 10px rgba(217,119,6,0.35)';
+        }
+
+        function updateHighlight(minIdx, maxIdx) {
+            getSlots().forEach(function (slot, i) {
+                if (i >= minIdx && i <= maxIdx) {
+                    previewSlotStyle(slot);
+                } else {
+                    resetSlotStyle(slot);
+                }
+            });
+        }
+
+        function finalizeSelection(minIdx, maxIdx) {
+            const slots = getSlots();
+            slots.forEach(function (slot, i) {
+                if (i >= minIdx && i <= maxIdx) {
+                    selectedSlotStyle(slot);
+                } else {
+                    resetSlotStyle(slot);
+                }
+            });
+
+            if (slots[minIdx] && slots[maxIdx]) {
+                const jamMulai = slots[minIdx].getAttribute('data-start');
+                const jamSelesai = slots[maxIdx].getAttribute('data-end');
+
+                const valMulaiEl = document.getElementById('batchTpValMulai');
+                const valSelesaiEl = document.getElementById('batchTpValSelesai');
+                if (valMulaiEl) valMulaiEl.textContent = jamMulai;
+                if (valSelesaiEl) valSelesaiEl.textContent = jamSelesai;
+
+                if (batchCardTpState.target === 'mulai') {
+                    const parts = jamMulai.split(':');
+                    batchCardTpState.hour = parseInt(parts[0]) || 8;
+                    batchCardTpState.minute = parseInt(parts[1]) || 0;
+                } else {
+                    const parts = jamSelesai.split(':');
+                    batchCardTpState.hour = parseInt(parts[0]) || 10;
+                    batchCardTpState.minute = parseInt(parts[1]) || 0;
+                }
+                updateBatchCardClockDisplay();
+            }
+        }
+
+        slotContainer.addEventListener('mousedown', function (e) {
+            const slot = e.target.closest('.tp-slot');
+            if (!slot) return;
+            e.preventDefault();
+            isDraggingSlots = true;
+            const slots = getSlots();
+            dragStartIdx = slots.indexOf(slot);
+            currentEndIdx = dragStartIdx;
+            updateHighlight(dragStartIdx, dragStartIdx);
+        });
+
+        document.addEventListener('mouseover', function (e) {
+            if (!isDraggingSlots) return;
+            const slot = e.target.closest('#batchTpTimeSlots .tp-slot');
+            if (!slot) return;
+            const slots = getSlots();
+            const idx = slots.indexOf(slot);
+            if (idx === -1) return;
+            currentEndIdx = idx;
+            const minIdx = Math.min(dragStartIdx, currentEndIdx);
+            const maxIdx = Math.max(dragStartIdx, currentEndIdx);
+            updateHighlight(minIdx, maxIdx);
+        });
+
+        document.addEventListener('mouseup', function () {
+            if (!isDraggingSlots) return;
+            isDraggingSlots = false;
+            const minIdx = Math.min(dragStartIdx, currentEndIdx);
+            const maxIdx = Math.max(dragStartIdx, currentEndIdx);
+            finalizeSelection(minIdx, maxIdx);
+        });
+
+        slotContainer.addEventListener('touchstart', function (e) {
+            const slot = e.target.closest('.tp-slot');
+            if (!slot) return;
+            isDraggingSlots = true;
+            const slots = getSlots();
+            dragStartIdx = slots.indexOf(slot);
+            currentEndIdx = dragStartIdx;
+            updateHighlight(dragStartIdx, dragStartIdx);
+        }, { passive: true });
+
+        document.addEventListener('touchmove', function (e) {
+            if (!isDraggingSlots) return;
+            const touch = e.touches[0];
+            const el = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (!el) return;
+            const slot = el.closest('#batchTpTimeSlots .tp-slot');
+            if (!slot) return;
+            const slots = getSlots();
+            const idx = slots.indexOf(slot);
+            if (idx === -1) return;
+            currentEndIdx = idx;
+            const minIdx = Math.min(dragStartIdx, currentEndIdx);
+            const maxIdx = Math.max(dragStartIdx, currentEndIdx);
+            updateHighlight(minIdx, maxIdx);
+        }, { passive: true });
+
+        document.addEventListener('touchend', function () {
+            if (!isDraggingSlots) return;
+            isDraggingSlots = false;
+            const minIdx = Math.min(dragStartIdx, currentEndIdx);
+            const maxIdx = Math.max(dragStartIdx, currentEndIdx);
+            finalizeSelection(minIdx, maxIdx);
+        });
+    }
+
+    function syncBatchSlotHighlight(jamMulai, jamSelesai) {
+        const slotContainer = document.getElementById('batchTpTimeSlots');
+        if (!slotContainer) return;
+        const slots = Array.from(slotContainer.querySelectorAll('.tp-slot'));
+        let startIdx = -1;
+        let endIdx = -1;
+
+        slots.forEach((slot, idx) => {
+            const sStart = slot.getAttribute('data-start');
+            const sEnd = slot.getAttribute('data-end');
+            if (sStart === jamMulai) startIdx = idx;
+            if (sEnd === jamSelesai) endIdx = idx;
+        });
+
+        slots.forEach((slot, idx) => {
+            if (startIdx !== -1 && endIdx !== -1 && idx >= startIdx && idx <= endIdx) {
+                slot.style.background = '#d97706';
+                slot.style.borderColor = '#d97706';
+                slot.style.color = '#fff';
+                slot.style.boxShadow = '0 3px 10px rgba(217,119,6,0.35)';
+            } else {
+                slot.style.background = '#fff';
+                slot.style.borderColor = '#e2e8f0';
+                slot.style.color = '#475569';
+                slot.style.boxShadow = 'none';
+            }
+        });
+    }
+
+    window.closeBatchCardTimePicker = function () {
+        const modal = document.getElementById('modalBatchTimePicker');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    };
+
+    window.setBatchClockTarget = function (target) {
+        batchCardTpState.target = target;
+        const boxMulai = document.getElementById('batchTpBoxMulai');
+        const boxSelesai = document.getElementById('batchTpBoxSelesai');
+        const valMulai = document.getElementById('batchTpValMulai');
+        const valSelesai = document.getElementById('batchTpValSelesai');
+
+        if (boxMulai && boxSelesai) {
+            if (target === 'mulai') {
+                boxMulai.classList.remove('border-slate-200');
+                boxMulai.classList.add('border-amber-500');
+                boxSelesai.classList.remove('border-amber-500');
+                boxSelesai.classList.add('border-slate-200');
+            } else {
+                boxSelesai.classList.remove('border-slate-200');
+                boxSelesai.classList.add('border-amber-500');
+                boxMulai.classList.remove('border-amber-500');
+                boxMulai.classList.add('border-slate-200');
+            }
+        }
+
+        const currentText = (target === 'mulai') ? (valMulai ? valMulai.textContent : '08:00') : (valSelesai ? valSelesai.textContent : '10:00');
+        if (currentText && currentText.includes(':')) {
+            const parts = currentText.split(':');
+            batchCardTpState.hour = parseInt(parts[0]) || 8;
+            batchCardTpState.minute = parseInt(parts[1]) || 0;
+        }
+        updateBatchCardClockDisplay();
+    };
+
+    window.applyBatchQuickSlot = function (start, end) {
+        const valMulaiEl = document.getElementById('batchTpValMulai');
+        const valSelesaiEl = document.getElementById('batchTpValSelesai');
+        if (valMulaiEl) valMulaiEl.textContent = start;
+        if (valSelesaiEl) valSelesaiEl.textContent = end;
+
+        if (batchCardTpState.target === 'mulai') {
+            const parts = start.split(':');
+            batchCardTpState.hour = parseInt(parts[0]) || 8;
+            batchCardTpState.minute = parseInt(parts[1]) || 0;
+        } else {
+            const parts = end.split(':');
+            batchCardTpState.hour = parseInt(parts[0]) || 10;
+            batchCardTpState.minute = parseInt(parts[1]) || 0;
+        }
+        updateBatchCardClockDisplay();
+    };
+
+    window.setBatchCardClockMode = function (mode) {
+        batchCardTpState.isHourMode = (mode === 'hour');
+        const tabHour = document.getElementById('batchCardTpTabHour');
+        const tabMinute = document.getElementById('batchCardTpTabMinute');
+
+        if (tabHour && tabMinute) {
+            if (batchCardTpState.isHourMode) {
+                tabHour.style.background = '#d97706';
+                tabHour.style.color = '#fff';
+                tabMinute.style.background = 'transparent';
+                tabMinute.style.color = '#64748b';
+            } else {
+                tabMinute.style.background = '#d97706';
+                tabMinute.style.color = '#fff';
+                tabHour.style.background = 'transparent';
+                tabHour.style.color = '#64748b';
+            }
+        }
+        renderBatchCardClock();
+    };
+
+    function updateBatchCardClockDisplay() {
+        const hh = batchCardTpState.hour.toString().padStart(2, '0');
+        const mm = batchCardTpState.minute.toString().padStart(2, '0');
+        const timeStr = `${hh}:${mm}`;
+
+        if (batchCardTpState.target === 'mulai') {
+            const el = document.getElementById('batchTpValMulai');
+            if (el) el.textContent = timeStr;
+        } else {
+            const el = document.getElementById('batchTpValSelesai');
+            if (el) el.textContent = timeStr;
+        }
+
+        renderBatchCardClock();
+    }
+
+    function renderBatchCardClock() {
+        const container = document.getElementById('batchCardTpClockNumbers');
+        const hand = document.getElementById('batchCardTpClockHand');
+        if (!container || !hand) return;
+
+        container.innerHTML = '';
+        const isHour = batchCardTpState.isHourMode;
+        const items = isHour ? 12 : 60;
+        const step = isHour ? 1 : 5;
+
+        for (let i = step; i <= items; i += step) {
+            const val = (i === 60) ? 0 : i;
+            if (isHour) {
+                drawBatchCardClockNumber(container, val, false);
+                drawBatchCardClockNumber(container, val + 12 === 24 ? 0 : val + 12, true);
+            } else {
+                drawBatchCardClockNumber(container, val, false);
+            }
+        }
+
+        if (!isHour && batchCardTpState.minute % 5 !== 0) {
+            drawBatchCardClockNumber(container, batchCardTpState.minute, false);
+        }
+
+        const val = isHour ? batchCardTpState.hour : batchCardTpState.minute;
+        const targetAngle = isHour ? (val % 12) * 30 : val * 6;
+
+        if (typeof hand.currentAngle === 'undefined') {
+            hand.currentAngle = targetAngle;
+        } else {
+            const diff = (targetAngle - (hand.currentAngle % 360) + 540) % 360 - 180;
+            hand.currentAngle += diff;
+        }
+
+        const isInner = isHour && (val === 0 || val > 12);
+        hand.style.height = isInner ? '55px' : '85px';
+        hand.style.transition = batchCardTpState.isDragging ? 'none' : 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)';
+        hand.style.transform = `translate(-50%, 0) rotate(${hand.currentAngle}deg)`;
+    }
+
+    function drawBatchCardClockNumber(container, val, isInner) {
+        const el = document.createElement('div');
+        el.className = 'tp-clock-number ' + (isInner ? 'inner' : '');
+        el.innerText = val.toString().padStart(isInner ? 2 : 1, '0');
+
+        const radius = isInner ? 55 : 85;
+        const angleBase = batchCardTpState.isHourMode ? (val % 12) * 30 : val * 6;
+        const rad = (angleBase - 90) * (Math.PI / 180);
+
+        const x = 110 + radius * Math.cos(rad);
+        const y = 110 + radius * Math.sin(rad);
+
+        el.style.position = 'absolute';
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+        el.style.transform = 'translate(-50%, -50%)';
+        el.style.width = '24px';
+        el.style.height = '24px';
+        el.style.lineHeight = '24px';
+        el.style.textAlign = 'center';
+        el.style.fontSize = isInner ? '0.68rem' : '0.75rem';
+        el.style.fontWeight = '600';
+        el.style.color = isInner ? '#94a3b8' : '#334155';
+        el.style.cursor = 'pointer';
+        el.style.userSelect = 'none';
+
+        let isActive = false;
+        if (batchCardTpState.isHourMode && batchCardTpState.hour === val) isActive = true;
+        if (!batchCardTpState.isHourMode && batchCardTpState.minute === val) isActive = true;
+
+        if (isActive) {
+            el.style.background = '#d97706';
+            el.style.color = '#ffffff';
+            el.style.borderRadius = '50%';
+            el.style.fontWeight = '700';
+            el.style.boxShadow = '0 2px 6px rgba(217, 119, 6, 0.4)';
+            el.style.zIndex = '20';
+        }
+
+        el.onclick = function (e) {
+            e.stopPropagation();
+            if (batchCardTpState.isHourMode) {
+                batchCardTpState.hour = val;
+                updateBatchCardClockDisplay();
+                setTimeout(() => setBatchCardClockMode('minute'), 180);
+            } else {
+                batchCardTpState.minute = val;
+                updateBatchCardClockDisplay();
+            }
+        };
+
+        container.appendChild(el);
+    }
+
+    function initBatchCardClockDragEvents() {
+        const clockContainer = document.getElementById('batchCardTpClockContainer');
+        if (!clockContainer || clockContainer.dataset.clockInit) return;
+        clockContainer.dataset.clockInit = 'true';
+
+        function handleEvent(e) {
+            let clientX = e.clientX;
+            let clientY = e.clientY;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            }
+
+            const rect = clockContainer.getBoundingClientRect();
+            const x = clientX - rect.left - 110;
+            const y = clientY - rect.top - 110;
+
+            let angle = Math.atan2(y, x) * (180 / Math.PI) + 90;
+            if (angle < 0) angle += 360;
+
+            const distance = Math.sqrt(x * x + y * y);
+
+            if (batchCardTpState.isHourMode) {
+                let hour = Math.round(angle / 30);
+                if (hour === 0) hour = 12;
+                if (distance < 65) {
+                    hour += 12;
+                    if (hour === 24) hour = 0;
+                }
+                if (batchCardTpState.hour !== hour) {
+                    batchCardTpState.hour = hour;
+                    updateBatchCardClockDisplay();
+                }
+            } else {
+                let minute = Math.round(angle / 6);
+                if (minute === 60) minute = 0;
+                if (batchCardTpState.minute !== minute) {
+                    batchCardTpState.minute = minute;
+                    updateBatchCardClockDisplay();
+                }
+            }
+        }
+
+        clockContainer.addEventListener('mousedown', (e) => {
+            batchCardTpState.isDragging = true;
+            handleEvent(e);
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (batchCardTpState.isDragging) handleEvent(e);
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (batchCardTpState.isDragging && batchCardTpState.isHourMode) {
+                setTimeout(() => setBatchCardClockMode('minute'), 180);
+            }
+            batchCardTpState.isDragging = false;
+        });
+
+        clockContainer.addEventListener('touchstart', (e) => {
+            batchCardTpState.isDragging = true;
+            handleEvent(e);
+        }, { passive: false });
+
+        document.addEventListener('touchmove', (e) => {
+            if (batchCardTpState.isDragging) handleEvent(e);
+        }, { passive: false });
+
+        document.addEventListener('touchend', () => {
+            if (batchCardTpState.isDragging && batchCardTpState.isHourMode) {
+                setTimeout(() => setBatchCardClockMode('minute'), 180);
+            }
+            batchCardTpState.isDragging = false;
+        });
+    }
+
+    window.applyBatchCardTimePicker = function () {
+        const idx = batchCardTpState.activeStudentIdx;
+        if (idx === null || typeof idx === 'undefined') {
+            closeBatchCardTimePicker();
+            return;
+        }
+
+        const valMulai = document.getElementById('batchTpValMulai')?.textContent || '08:00';
+        const valSelesai = document.getElementById('batchTpValSelesai')?.textContent || '10:00';
+
+        const inputMulai = document.getElementById(`batchSidangJamMulai_${idx}`);
+        const inputSelesai = document.getElementById(`batchSidangJamSelesai_${idx}`);
+
+        if (inputMulai) inputMulai.value = valMulai;
+        if (inputSelesai) inputSelesai.value = valSelesai;
+
+        if (state.sidangBatchStudents && state.sidangBatchStudents[idx]) {
+            state.sidangBatchStudents[idx].jam_mulai_sidang = valMulai;
+            state.sidangBatchStudents[idx].jam_selesai_sidang = valSelesai;
+        }
+
+        closeBatchCardTimePicker();
+    };
 
     window.populateRuanganDropdowns = function () {
         filterRuanganDropdown('single', '');

@@ -64,10 +64,19 @@ $route['mahasiswa/detail_pendaftaran'] = 'Mahasiswa/detail_pendaftaran';
 $route['mahasiswa/edit'] = 'Mahasiswa/edit_pendaftaran';
 $route['mahasiswa/edit_pendaftaran'] = 'Mahasiswa/edit_pendaftaran';
 
-// Dosen Bimbingan Routes
-$route['dosen/bimbingan'] = 'Mahasiswa/bimbingan';
-$route['dosenbimbingan'] = 'Mahasiswa/bimbingan';
-$route['bimbingan-dosen'] = 'Mahasiswa/bimbingan';
+// Bimbingan Mahasiswa Routes
+$route['bimbingan'] = 'Mahasiswa/bimbingan';
+$route['bimbingan/(:any)'] = 'Mahasiswa/bimbingan/$1';
+
+// Dosen Bimbingan & Penguji Routes
+$route['dosen/bimbingan'] = 'Mahasiswa/dosen_bimbingan';
+$route['dosenbimbingan'] = 'Mahasiswa/dosen_bimbingan';
+$route['bimbingan-dosen'] = 'Mahasiswa/dosen_bimbingan';
+$route['mahasiswa/dosen_bimbingan'] = 'Mahasiswa/dosen_bimbingan';
+
+$route['dosen/penguji'] = 'Mahasiswa/dosen_penguji';
+$route['dosenpenguji'] = 'Mahasiswa/dosen_penguji';
+$route['mahasiswa/dosen_penguji'] = 'Mahasiswa/dosen_penguji';
 
 // Dosen Wali Routes
 
@@ -141,6 +150,15 @@ $route['news/get_all_json'] = 'News/get_all_json';
 
 // About / Baca Selengkapnya Route
 $route['dashboard/about'] = 'Dashboard/about';
+
+// Laboran & Kaur Dedicated Routes
+$route['laboran'] = 'Laboran/booking';
+$route['laboran/booking'] = 'Laboran/booking';
+$route['kaur'] = 'Kaur/approval';
+$route['kaur/approval'] = 'Kaur/approval';
+$route['kaur/surat/(:num)'] = 'Kaur/surat/$1';
+$route['laboran/surat/(:num)'] = 'Laboran/surat/$1';
+$route['kelolabooking/surat/(:num)'] = 'Kelolabooking/surat/$1';
 
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;

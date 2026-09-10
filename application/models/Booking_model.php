@@ -154,6 +154,19 @@ class Booking_model extends CI_Model {
         return $this->db->update('peminjaman', $data);
     }
 
+    public function batch_update_status($ids, $status, $alasan = null)
+    {
+        if (empty($ids) || !is_array($ids)) return false;
+
+        $data = array('status' => $status);
+        if ($alasan !== null) {
+            $data['alasan_penolakan'] = $alasan;
+        }
+
+        $this->db->where_in('id', $ids);
+        return $this->db->update('peminjaman', $data);
+    }
+
     public function delete_booking($id)
     {
         $this->db->where('id', $id);

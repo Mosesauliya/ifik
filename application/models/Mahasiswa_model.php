@@ -113,12 +113,13 @@ class Mahasiswa_model extends CI_Model {
 
     // Reset atau Hapus Pendaftaran TA
     public function reset_pendaftaran_ta($nim) {
+        $upload_path = FCPATH . 'uploads/persyaratan_ta/';
+
+        // 1. Bersihkan berkas fisik legacy dari pendaftaran_ta & hapus record
         if ($this->db->table_exists('pendaftaran_ta')) {
-            // Bersihkan berkas fisik yang pernah diunggah jika ada
             $existing = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
             if ($existing) {
                 $files_to_delete = ['file_ksm', 'file_transkrip', 'file_pernyataan', 'file_bebas_lab'];
-                $upload_path = FCPATH . 'uploads/persyaratan_ta/';
                 foreach ($files_to_delete as $field) {
                     if (!empty($existing[$field])) {
                         $filepath = $upload_path . $existing[$field];
@@ -133,7 +134,19 @@ class Mahasiswa_model extends CI_Model {
             $this->db->delete('pendaftaran_ta');
         }
 
+        // 2. Bersihkan berkas fisik dan record dari pendaftaran_berkas
         if ($this->db->table_exists('pendaftaran_berkas')) {
+            $berkas_rows = $this->db->get_where('pendaftaran_berkas', ['nim' => $nim])->result_array();
+            if (!empty($berkas_rows)) {
+                foreach ($berkas_rows as $br) {
+                    if (!empty($br['file_name'])) {
+                        $filepath = $upload_path . $br['file_name'];
+                        if (file_exists($filepath) && is_file($filepath)) {
+                            @unlink($filepath);
+                        }
+                    }
+                }
+            }
             $this->db->where('nim', $nim);
             $this->db->delete('pendaftaran_berkas');
         }
@@ -243,9 +256,15 @@ class Mahasiswa_model extends CI_Model {
             if ($posisi == 1) {
                 if ($nip_dosen) $this->db->or_where('pt.pembimbing_1', $nip_dosen);
                 if ($name_dosen) $this->db->or_like('pt.pembimbing_1', $name_dosen);
-            } else {
+            } else if ($posisi == 2) {
                 if ($nip_dosen) $this->db->or_where('pt.pembimbing_2', $nip_dosen);
                 if ($name_dosen) $this->db->or_like('pt.pembimbing_2', $name_dosen);
+            } else if ($posisi == 3) {
+                if ($nip_dosen) $this->db->or_where('pt.penguji_1', $nip_dosen);
+                if ($name_dosen) $this->db->or_like('pt.penguji_1', $name_dosen);
+            } else if ($posisi == 4) {
+                if ($nip_dosen) $this->db->or_where('pt.penguji_2', $nip_dosen);
+                if ($name_dosen) $this->db->or_like('pt.penguji_2', $name_dosen);
             }
             $this->db->group_end();
         }

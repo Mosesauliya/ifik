@@ -3,447 +3,1255 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $title ?></title>
-    <!-- Google Fonts & SweetAlert2 -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title><?= htmlspecialchars($title ?? 'Approval & Kelola Peminjaman - Panel Laboran') ?></title>
+    
+    <!-- Google Fonts & FontAwesome & SweetAlert2 -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="<?= base_url('assets/css/timepicker.css') ?>">
+
     <style>
-        .swal2-container {
-            z-index: 99999 !important;
+        :root {
+            --bg-color: #f8fafc;
+            --surface-color: #ffffff;
+            --text-color: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --primary: #ea580c;
+            --primary-hover: #c2410c;
+            --accent-blue: #2563eb;
+            --accent-green: #16a34a;
+            --accent-red: #dc2626;
+            --radius-md: 12px;
+            --radius-lg: 16px;
         }
 
-        :root {
-
-            --bg-color: #fbf7f1; 
-            --text-color: #1e293b;
-            --border-color: rgba(30, 41, 59, 0.1);
-            --primary: #ea580c;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            margin: 0;
-            padding: 20px;
+            min-height: 100vh;
+            padding: 24px 32px 100px 76px; /* space for fixed left sidebar burger */
         }
 
-        .header {
+        .main-container {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        /* Top Header */
+        .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .header-title-wrap h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-title-wrap h1 .role-badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            padding: 3px 10px;
+            border-radius: 999px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .header-title-wrap p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+            text-decoration: none;
         }
 
         .btn-primary {
             background-color: var(--primary);
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(234, 88, 12, 0.2);
         }
 
-        /* Modal Styles */
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: #ffffff;
+            color: #334155;
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: #f1f5f9;
+        }
+
+        /* Stat Cards Bar */
+        /* =========================================================
+           3D CLAYMORPHIC / GLASS STAT CARDS (IMPORT-EMAIL STYLE)
+           ========================================================= */
+        .stat-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 18px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card-highlight {
+            position: relative;
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.95);
+            border-radius: 20px;
+            padding: 20px 22px 16px 22px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+            backdrop-filter: blur(12px);
+            overflow: hidden;
+            cursor: default;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .stat-card-highlight:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 30px -8px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        /* Ambient Glow Backdrop */
+        .stat-card-glow {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+        .stat-card-glow .glow-bubble {
+            position: absolute;
+            bottom: -40px;
+            right: -40px;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: var(--card-accent-soft, rgba(234, 88, 12, 0.12));
+            filter: blur(28px);
+            transition: transform 0.5s ease;
+        }
+        .stat-card-highlight:hover .glow-bubble {
+            transform: scale(1.4);
+        }
+
+        /* Top Row Content */
+        .stat-card-top {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .stat-card-meta {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .stat-card-label {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #94a3b8;
+            margin-bottom: 4px;
+            transition: color 0.2s ease;
+        }
+        .stat-card-highlight:hover .stat-card-label {
+            color: var(--card-accent, #ea580c);
+        }
+
+        .stat-card-val {
+            font-size: 1.85rem;
+            font-weight: 900;
+            color: #0f172a;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .stat-card-percent {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--card-accent, #ea580c);
+        }
+
+        .stat-card-desc {
+            font-size: 0.76rem;
+            font-weight: 500;
+            color: #64748b;
+            margin-top: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 3D Claymorphic Icon Box */
+        .stat-card-3d-icon {
+            position: relative;
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            background: var(--card-icon-bg, linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%));
+            border: 1px solid var(--card-icon-border, #fed7aa);
+            color: var(--card-accent, #ea580c);
+            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.9), 0 6px 16px var(--card-icon-shadow, rgba(234, 88, 12, 0.16));
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease;
+        }
+        .stat-card-highlight:hover .stat-card-3d-icon {
+            transform: rotate(6deg) scale(1.1);
+        }
+
+        /* Bottom Row Divider & Pulse Dots */
+        .stat-card-bottom {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 14px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(241, 245, 249, 0.9);
+        }
+
+        .stat-card-bar {
+            width: 38%;
+            height: 2.5px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--card-accent, #ea580c), transparent);
+            transition: width 0.4s ease;
+        }
+        .stat-card-highlight:hover .stat-card-bar {
+            width: 65%;
+        }
+
+        .stat-card-dots {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            opacity: 0.55;
+            transition: opacity 0.3s ease;
+        }
+        .stat-card-highlight:hover .stat-card-dots {
+            opacity: 1;
+        }
+
+        .stat-card-dots span {
+            width: 4.5px;
+            height: 4.5px;
+            border-radius: 50%;
+            background: var(--card-accent, #ea580c);
+            display: inline-block;
+        }
+
+        /* Theme Variants */
+        .theme-orange {
+            --card-accent: #ea580c;
+            --card-accent-soft: rgba(234, 88, 12, 0.14);
+            --card-icon-bg: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+            --card-icon-border: #fed7aa;
+            --card-icon-shadow: rgba(234, 88, 12, 0.18);
+        }
+        .theme-amber {
+            --card-accent: #d97706;
+            --card-accent-soft: rgba(245, 158, 11, 0.14);
+            --card-icon-bg: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            --card-icon-border: #fde68a;
+            --card-icon-shadow: rgba(245, 158, 11, 0.18);
+        }
+        .theme-sky {
+            --card-accent: #0284c7;
+            --card-accent-soft: rgba(2, 132, 199, 0.14);
+            --card-icon-bg: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            --card-icon-border: #bae6fd;
+            --card-icon-shadow: rgba(2, 132, 199, 0.18);
+        }
+        .theme-emerald {
+            --card-accent: #059669;
+            --card-accent-soft: rgba(16, 185, 129, 0.14);
+            --card-icon-bg: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            --card-icon-border: #a7f3d0;
+            --card-icon-shadow: rgba(16, 185, 129, 0.18);
+        }
+        .theme-rose {
+            --card-accent: #e11d48;
+            --card-accent-soft: rgba(225, 29, 72, 0.14);
+            --card-icon-bg: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
+            --card-icon-border: #fecdd3;
+            --card-icon-shadow: rgba(225, 29, 72, 0.18);
+        }
+
+        /* Filter & Search Bar */
+        .toolbar-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        .filter-pills-wrap {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-pill {
+            padding: 7px 14px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1.5px solid var(--border-color);
+            background: #ffffff;
+            color: #475569;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-pill:hover {
+            border-color: #cbd5e1;
+            background: #f8fafc;
+        }
+
+        .filter-pill.active {
+            background: #0f172a;
+            border-color: #0f172a;
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15);
+        }
+
+        .filter-pill.active .pill-count {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+
+        .pill-count {
+            background: #f1f5f9;
+            color: #475569;
+            border-radius: 999px;
+            padding: 1px 7px;
+            font-size: 0.72rem;
+            font-weight: 800;
+        }
+
+        .search-box-wrap {
+            position: relative;
+            min-width: 260px;
+        }
+
+        .search-box-wrap input {
+            width: 100%;
+            padding: 9px 16px 9px 38px;
+            border-radius: var(--radius-md);
+            border: 1.5px solid var(--border-color);
+            font-size: 0.84rem;
+            font-family: inherit;
+            color: var(--text-color);
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .search-box-wrap input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12);
+        }
+
+        .search-box-wrap i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        /* Table Card */
+        .table-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table.laboran-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        table.laboran-table th {
+            background: #f8fafc;
+            padding: 14px 18px;
+            font-size: 0.76rem;
+            font-weight: 800;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1.5px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        table.laboran-table td {
+            padding: 14px 18px;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+
+        table.laboran-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        table.laboran-table tr:hover td {
+            background: #f8fafc;
+        }
+
+        /* Custom Checkbox */
+        .custom-checkbox {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 1.5px solid #cbd5e1;
+            cursor: pointer;
+            accent-color: var(--primary);
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 11px;
+            border-radius: 999px;
+            font-size: 0.74rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* Action Buttons */
+        .btn-table-action {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: #ffffff;
+            color: #475569;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.82rem;
+        }
+
+        .btn-table-action.btn-acc:hover {
+            background: #16a34a;
+            color: #ffffff;
+            border-color: #16a34a;
+        }
+
+        .btn-table-action.btn-rej:hover {
+            background: #dc2626;
+            color: #ffffff;
+            border-color: #dc2626;
+        }
+
+        .btn-table-action.btn-del:hover {
+            background: #ef4444;
+            color: #ffffff;
+            border-color: #ef4444;
+        }
+
+        .btn-table-action.btn-qr {
+            background: #f0fdf4;
+            color: #166534;
+            border-color: #bbf7d0;
+            text-decoration: none;
+        }
+
+        .btn-table-action.btn-qr:hover {
+            background: #16a34a;
+            color: #ffffff;
+            border-color: #16a34a;
+            transform: scale(1.05);
+        }
+
+        .btn-table-action.btn-view:hover {
+            background: #2563eb;
+            color: #ffffff;
+            border-color: #2563eb;
+        }
+
+        /* Floating Multiple Select Action Bar */
+        .floating-batch-bar {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(120px);
+            background: #0f172a;
+            color: #ffffff;
+            padding: 12px 24px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.35);
+            z-index: 9999;
+            transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+        }
+
+        .floating-batch-bar.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .batch-count-badge {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #f8fafc;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .batch-count-badge span {
+            background: var(--primary);
+            color: #ffffff;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 0.76rem;
+            font-weight: 800;
+        }
+
+        .btn-batch-acc {
+            background: #16a34a;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.82rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+
+        .btn-batch-acc:hover {
+            background: #15803d;
+        }
+
+        .btn-batch-rej {
+            background: #dc2626;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.82rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+
+        .btn-batch-rej:hover {
+            background: #b91c1c;
+        }
+
+        .btn-batch-cancel {
+            background: transparent;
+            color: #94a3b8;
+            border: none;
+            padding: 6px 10px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-batch-cancel:hover {
+            color: #ffffff;
+        }
+
+        /* Modals */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.4);
+            background: rgba(15, 23, 42, 0.6);
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 100000;
             backdrop-filter: blur(4px);
+            padding: 16px;
         }
 
         .modal-overlay.active {
             display: flex;
         }
 
-        .modal-content {
-            background: #fff;
+        .modal-card {
+            background: #ffffff;
             width: 100%;
-            max-width: 600px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 540px;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            max-height: 90vh;
+            animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
         }
 
         .modal-header {
-            padding: 20px 24px;
+            padding: 18px 24px;
             border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .modal-header h2 {
-            margin: 0;
+        .modal-header h3 {
             font-size: 1.1rem;
-            color: rgba(30, 41, 59, 0.7);
+            font-weight: 800;
+            color: #0f172a;
         }
 
-        .modal-close {
+        .modal-close-btn {
             background: none;
             border: none;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             cursor: pointer;
-            color: rgba(30, 41, 59, 0.5);
+            color: #94a3b8;
+            transition: color 0.2s;
+        }
+
+        .modal-close-btn:hover {
+            color: #0f172a;
         }
 
         .modal-body {
             padding: 24px;
+            max-height: 75vh;
             overflow-y: auto;
         }
 
-        .form-group {
-            margin-bottom: 20px;
-            position: relative;
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            background: #f8fafc;
         }
 
-        .form-label {
-            font-size: 0.75rem;
-            color: rgba(30, 41, 59, 0.5);
-            position: absolute;
-            top: 10px;
-            left: 16px;
-            z-index: 1;
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 6px;
         }
 
         .form-control {
             width: 100%;
-            padding: 28px 16px 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
+            padding: 10px 14px;
+            border-radius: var(--radius-md);
+            border: 1.5px solid var(--border-color);
+            font-size: 0.85rem;
             font-family: inherit;
-            font-size: 0.95rem;
             color: var(--text-color);
-            background: #f8fafc;
-            box-sizing: border-box;
             outline: none;
-            transition: border-color 0.3s;
+            transition: border-color 0.2s;
         }
 
         .form-control:focus {
             border-color: var(--primary);
-            background: #fff;
-        }
-        
-        textarea.form-control {
-            resize: vertical;
-            min-height: 100px;
         }
 
-        /* Time slot grid */
-        .time-slots-container {
-            margin-top: 10px;
-        }
-
-        .time-slots-label {
+        /* Detail Modal Rows */
+        .detail-row {
+            display: flex;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f5f9;
             font-size: 0.85rem;
-            color: rgba(30, 41, 59, 0.5);
-            margin-bottom: 10px;
         }
 
-        .time-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
+        .detail-label {
+            width: 140px;
+            font-weight: 700;
+            color: #64748b;
+            flex-shrink: 0;
         }
 
-        .time-slot {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: #f8fafc;
-            font-size: 0.75rem;
-            color: rgba(30, 41, 59, 0.6);
+        .detail-val {
+            color: #0f172a;
+            font-weight: 500;
+            flex: 1;
         }
-
-        .time-slot.active {
-            border-color: var(--primary);
-            background: rgba(234, 88, 12, 0.05);
-            color: var(--primary);
-        }
-
-        .time-slot input[type="checkbox"] {
-            display: none;
-        }
-
-        /* Checkbox pseudo-element */
-        .custom-checkbox {
-            width: 14px;
-            height: 14px;
-            border: 1px solid var(--border-color);
-            border-radius: 3px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #fff;
-        }
-
-        .time-slot.active .custom-checkbox {
-            background: var(--primary);
-            border-color: var(--primary);
-        }
-
-        .time-slot.active .custom-checkbox::after {
-            content: "✓";
-            color: #fff;
-            font-size: 10px;
-        }
-
-        .modal-footer {
-            padding: 20px 24px;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            justify-content: flex-end;
-        }
-        
-        /* Dashboard Table */
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #fff;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-        .table th, .table td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-        .table th {
-            background: #f8fafc;
-            font-size: 0.85rem;
-            color: rgba(30, 41, 59, 0.6);
-            text-transform: uppercase;
-        }
-        .badge {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        .badge-pending { background: #fef08a; color: #854d0e; }
-        .badge-approved { background: #dcfce7; color: #166534; }
-        
-        /* Action Buttons */
-        .btn-action {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-approve { background: #dcfce7; color: #166534; }
-        .btn-approve:hover { background: #bbf7d0; }
-        .btn-reject { background: #fee2e2; color: #991b1b; }
-        .btn-reject:hover { background: #fecaca; }
-        .btn-delete { background: #f1f5f9; color: #64748b; }
-        .btn-delete:hover { background: #e2e8f0; color: #0f172a; }
-        
-        /* Custom Flatpickr Theme */
-        .flatpickr-calendar { font-family: 'Plus Jakarta Sans', sans-serif !important; border: 1px solid var(--border-color) !important; border-radius: 12px !important; box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important; }
-        .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange, .flatpickr-day.selected.inRange, .flatpickr-day.startRange.inRange, .flatpickr-day.endRange.inRange, .flatpickr-day.selected:focus, .flatpickr-day.startRange:focus, .flatpickr-day.endRange:focus, .flatpickr-day.selected:hover, .flatpickr-day.startRange:hover, .flatpickr-day.endRange:hover, .flatpickr-day.selected.prevMonthDay, .flatpickr-day.startRange.prevMonthDay, .flatpickr-day.endRange.prevMonthDay, .flatpickr-day.selected.nextMonthDay, .flatpickr-day.startRange.nextMonthDay, .flatpickr-day.endRange.nextMonthDay { background: var(--primary) !important; border-color: var(--primary) !important; }
     </style>
-    <link rel="stylesheet" href="<?= base_url('assets/css/timepicker.css') ?>">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
 
-    <div class="header" style="display: flex; align-items: center; justify-content: space-between;">
-        <h1>Dashboard Peminjaman</h1>
-        <div style="display: flex; gap: 10px;">
-            <?php if ($this->session->userdata('role_id') == 1): ?>
-                <button class="btn-primary" onclick="openTambahRuanganModalAdmin()" style="background: #0f172a;">
-                    🏢 + Tambah Ruangan
+    <!-- =========================================================
+         CURVED SIDEBAR INTEGRATION (ROLE ADMIN / LABORAN)
+         ========================================================= -->
+    <?php $this->load->view('components/curved_sidebar'); ?>
+
+    <div class="main-container">
+        
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-title-wrap">
+                <h1>
+                    <span>Persetujuan & Kelola Peminjaman</span>
+                    <span class="role-badge">Panel Laboran</span>
+                </h1>
+                <p>Kelola verifikasi permohonan ruangan, persetujuan operasional (ACC), dan penolakan massal.</p>
+            </div>
+            <div class="header-actions">
+                <button type="button" class="btn btn-primary" onclick="openAdminBookingModal()">
+                    <i class="fa-solid fa-plus"></i> + Buat Peminjaman
                 </button>
-            <?php endif; ?>
-            <button class="btn-primary" onclick="openAdminBookingModal()">
-                + Buat Peminjaman
+            </div>
+        </div>
+
+        <?php
+            // Calculate summary statistics
+            $totalCount = count($peminjaman);
+            $pendingCount = 0;
+            $approvedLaboranCount = 0;
+            $approvedKaurCount = 0;
+            $approvedAdminCount = 0;
+            $rejectedCount = 0;
+
+            foreach ($peminjaman as $p) {
+                $st = $p->status;
+                if ($st === 'Pending') $pendingCount++;
+                elseif (stripos($st, 'Laboran') !== false) $approvedLaboranCount++;
+                elseif (stripos($st, 'Ka. Ur') !== false || stripos($st, 'Kaur') !== false) $approvedKaurCount++;
+                elseif (stripos($st, 'Admin') !== false) $approvedAdminCount++;
+                elseif ($st === 'Ditolak') $rejectedCount++;
+            }
+        ?>
+
+        <!-- Stat Cards Grid (3D Claymorphic Highlight Style) -->
+        <div class="stat-cards-grid">
+            <!-- 1. Total Pengajuan -->
+            <div class="stat-card-highlight theme-orange">
+                <div class="stat-card-glow"><div class="glow-bubble"></div></div>
+                <div class="stat-card-top">
+                    <div class="stat-card-meta">
+                        <div class="stat-card-label">Total Pengajuan</div>
+                        <div class="stat-card-val" id="statTotalCount"><?= $totalCount ?></div>
+                        <div class="stat-card-desc">Semua permohonan masuk</div>
+                    </div>
+                    <div class="stat-card-3d-icon">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                </div>
+                <div class="stat-card-bottom">
+                    <div class="stat-card-bar"></div>
+                    <div class="stat-card-dots"><span></span><span></span><span></span></div>
+                </div>
+            </div>
+
+            <!-- 2. Menunggu Pending -->
+            <div class="stat-card-highlight theme-amber">
+                <div class="stat-card-glow"><div class="glow-bubble"></div></div>
+                <div class="stat-card-top">
+                    <div class="stat-card-meta">
+                        <div class="stat-card-label">Menunggu (Pending)</div>
+                        <div class="stat-card-val">
+                            <span id="statPendingCount"><?= $pendingCount ?></span>
+                            <?php if ($totalCount > 0): ?>
+                                <span class="stat-card-percent">(<?= round(($pendingCount / $totalCount) * 100) ?>%)</span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="stat-card-desc">Perlu review Laboran</div>
+                    </div>
+                    <div class="stat-card-3d-icon">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                </div>
+                <div class="stat-card-bottom">
+                    <div class="stat-card-bar"></div>
+                    <div class="stat-card-dots"><span></span><span></span><span></span></div>
+                </div>
+            </div>
+
+            <!-- 3. Disetujui Laboran -->
+            <div class="stat-card-highlight theme-sky">
+                <div class="stat-card-glow"><div class="glow-bubble"></div></div>
+                <div class="stat-card-top">
+                    <div class="stat-card-meta">
+                        <div class="stat-card-label">Disetujui Laboran</div>
+                        <div class="stat-card-val">
+                            <?= $approvedLaboranCount ?>
+                            <?php if ($totalCount > 0): ?>
+                                <span class="stat-card-percent">(<?= round(($approvedLaboranCount / $totalCount) * 100) ?>%)</span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="stat-card-desc">Menunggu validasi Ka. Ur</div>
+                    </div>
+                    <div class="stat-card-3d-icon">
+                        <i class="fa-solid fa-flask"></i>
+                    </div>
+                </div>
+                <div class="stat-card-bottom">
+                    <div class="stat-card-bar"></div>
+                    <div class="stat-card-dots"><span></span><span></span><span></span></div>
+                </div>
+            </div>
+
+            <!-- 4. Disetujui Ka. Ur -->
+            <div class="stat-card-highlight theme-emerald">
+                <div class="stat-card-glow"><div class="glow-bubble"></div></div>
+                <div class="stat-card-top">
+                    <div class="stat-card-meta">
+                        <div class="stat-card-label">Disetujui Ka. Ur</div>
+                        <div class="stat-card-val">
+                            <?= $approvedKaurCount ?>
+                            <?php if ($totalCount > 0): ?>
+                                <span class="stat-card-percent">(<?= round(($approvedKaurCount / $totalCount) * 100) ?>%)</span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="stat-card-desc">Surat QR resmi terbit</div>
+                    </div>
+                    <div class="stat-card-3d-icon">
+                        <i class="fa-solid fa-certificate"></i>
+                    </div>
+                </div>
+                <div class="stat-card-bottom">
+                    <div class="stat-card-bar"></div>
+                    <div class="stat-card-dots"><span></span><span></span><span></span></div>
+                </div>
+            </div>
+
+            <!-- 5. Ditolak -->
+            <div class="stat-card-highlight theme-rose">
+                <div class="stat-card-glow"><div class="glow-bubble"></div></div>
+                <div class="stat-card-top">
+                    <div class="stat-card-meta">
+                        <div class="stat-card-label">Ditolak</div>
+                        <div class="stat-card-val">
+                            <?= $rejectedCount ?>
+                            <?php if ($totalCount > 0): ?>
+                                <span class="stat-card-percent">(<?= round(($rejectedCount / $totalCount) * 100) ?>%)</span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="stat-card-desc">Permohonan tidak disetujui</div>
+                    </div>
+                    <div class="stat-card-3d-icon">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </div>
+                </div>
+                <div class="stat-card-bottom">
+                    <div class="stat-card-bar"></div>
+                    <div class="stat-card-dots"><span></span><span></span><span></span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="toolbar-card">
+            <div class="filter-pills-wrap">
+                <button type="button" class="filter-pill active" data-status="all" onclick="setFilterStatus('all')">
+                    <span>Semua</span>
+                    <span class="pill-count"><?= $totalCount ?></span>
+                </button>
+                <button type="button" class="filter-pill" data-status="pending" onclick="setFilterStatus('pending')">
+                    <span>⏳ Menunggu ACC</span>
+                    <span class="pill-count"><?= $pendingCount ?></span>
+                </button>
+                <button type="button" class="filter-pill" data-status="laboran" onclick="setFilterStatus('laboran')">
+                    <span>🔵 Disetujui Laboran</span>
+                    <span class="pill-count"><?= $approvedLaboranCount ?></span>
+                </button>
+                <button type="button" class="filter-pill" data-status="kaur" onclick="setFilterStatus('kaur')">
+                    <span>🟢 Disetujui Ka. Ur</span>
+                    <span class="pill-count"><?= $approvedKaurCount ?></span>
+                </button>
+                <button type="button" class="filter-pill" data-status="admin" onclick="setFilterStatus('admin')">
+                    <span>🟣 Disetujui Admin</span>
+                    <span class="pill-count"><?= $approvedAdminCount ?></span>
+                </button>
+                <button type="button" class="filter-pill" data-status="rejected" onclick="setFilterStatus('rejected')">
+                    <span>🔴 Ditolak</span>
+                    <span class="pill-count"><?= $rejectedCount ?></span>
+                </button>
+            </div>
+
+            <div class="search-box-wrap">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="tableSearchInput" placeholder="Cari peminjam, ruangan, keterangan..." onkeyup="filterTableRows()">
+            </div>
+        </div>
+
+        <!-- Table Card -->
+        <div class="table-card">
+            <div class="table-responsive">
+                <table class="laboran-table" id="laboranBookingTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 44px; text-align: center;">
+                                <input type="checkbox" id="selectAllCheckbox" class="custom-checkbox" onchange="toggleSelectAll(this)">
+                            </th>
+                            <th>Peminjam</th>
+                            <th>Ruangan</th>
+                            <th>Waktu & Tanggal</th>
+                            <th>Keterangan / Keperluan</th>
+                            <th>Status Persetujuan</th>
+                            <th style="text-align: right;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($peminjaman)): ?>
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 40px; color: #94a3b8;">
+                                    <i class="fa-solid fa-inbox" style="font-size: 2rem; margin-bottom: 8px; display: block;"></i>
+                                    Belum ada data peminjaman ruangan.
+                                </td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach($peminjaman as $p): 
+                                $s = $p->status;
+                                $isPending = ($s === 'Pending');
+                                $statusCategory = 'other';
+                                
+                                if ($isPending) {
+                                    $dot = '#f59e0b'; $bg = '#fffbeb'; $color = '#b45309'; $label = 'Menunggu Persetujuan'; $statusCategory = 'pending';
+                                } elseif (stripos($s, 'Ka. Ur') !== false || stripos($s, 'Kaur') !== false) {
+                                    $dot = '#22c55e'; $bg = '#f0fdf4'; $color = '#166534'; $label = 'Disetujui Ka. Ur'; $statusCategory = 'kaur';
+                                } elseif (stripos($s, 'Laboran') !== false) {
+                                    $dot = '#3b82f6'; $bg = '#eff6ff'; $color = '#1d4ed8'; $label = 'Disetujui Laboran'; $statusCategory = 'laboran';
+                                } elseif (stripos($s, 'Admin') !== false) {
+                                    $dot = '#8b5cf6'; $bg = '#f5f3ff'; $color = '#6d28d9'; $label = 'Disetujui Admin'; $statusCategory = 'admin';
+                                } elseif ($s === 'Ditolak') {
+                                    $dot = '#ef4444'; $bg = '#fef2f2'; $color = '#991b1b'; $label = 'Ditolak'; $statusCategory = 'rejected';
+                                } else {
+                                    $dot = '#94a3b8'; $bg = '#f8fafc'; $color = '#475569'; $label = htmlspecialchars($s);
+                                }
+
+                                $dateFormatted = ($p->tanggal_mulai === $p->tanggal_selesai)
+                                    ? date('d M Y', strtotime($p->tanggal_mulai))
+                                    : date('d M', strtotime($p->tanggal_mulai)) . ' - ' . date('d M Y', strtotime($p->tanggal_selesai));
+                                $timeFormatted = substr($p->jam_mulai, 0, 5) . ' - ' . substr($p->jam_selesai, 0, 5);
+                            ?>
+                            <tr class="booking-row" data-id="<?= $p->id ?>" data-status-category="<?= $statusCategory ?>" data-search="<?= strtolower(htmlspecialchars($p->nama_lengkap . ' ' . $p->kode_ruangan . ' ' . $p->nama_ruangan . ' ' . $p->keterangan)) ?>">
+                                <td style="text-align: center;">
+                                    <input type="checkbox" class="custom-checkbox row-checkbox" data-id="<?= $p->id ?>" data-status="<?= $p->status ?>" onchange="updateBatchBar()">
+                                </td>
+                                <td>
+                                    <strong style="color: #0f172a; display: block;"><?= htmlspecialchars($p->nama_lengkap) ?></strong>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 700; color: #ea580c;"><?= htmlspecialchars($p->kode_ruangan ?: '-') ?></div>
+                                    <div style="font-size: 0.8rem; color: #64748b;"><?= htmlspecialchars($p->nama_ruangan ?: '-') ?></div>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 600; color: #0f172a;"><?= $dateFormatted ?></div>
+                                    <div style="font-size: 0.78rem; color: #64748b; font-weight: 600;">⏰ <?= $timeFormatted ?></div>
+                                </td>
+                                <td>
+                                    <div style="max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #334155;" title="<?= htmlspecialchars($p->keterangan) ?>">
+                                        <?= htmlspecialchars($p->keterangan ?: '-') ?>
+                                    </div>
+                                    <?php if ($p->status === 'Ditolak' && !empty($p->alasan_penolakan)): ?>
+                                        <div style="font-size: 0.75rem; color: #dc2626; margin-top: 2px;">
+                                            <i class="fa-solid fa-triangle-exclamation"></i> Alasan: <?= htmlspecialchars($p->alasan_penolakan) ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <span class="status-badge" style="background: <?= $bg ?>; color: <?= $color ?>;">
+                                        <span class="status-dot" style="background: <?= $dot ?>;"></span>
+                                        <?= $label ?>
+                                    </span>
+                                </td>
+                                <td style="text-align: right;">
+                                    <div style="display: inline-flex; gap: 6px; align-items: center;">
+                                        <?php if ($isPending): ?>
+                                            <button type="button" class="btn-table-action btn-acc" title="ACC Disetujui Laboran" onclick="singleApprove(<?= $p->id ?>)">
+                                                <i class="fa-solid fa-check"></i>
+                                            </button>
+                                            <button type="button" class="btn-table-action btn-rej" title="Tolak Peminjaman" onclick="openSingleRejectModal(<?= $p->id ?>)">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </button>
+                                        <?php elseif ($statusCategory === 'laboran' || $statusCategory === 'kaur' || $statusCategory === 'admin'): ?>
+                                            <a href="<?= site_url('kaur/surat/' . $p->id) ?>" target="_blank" class="btn-table-action btn-qr" title="Cetak Surat Resmi Ber-QR Code">
+                                                <i class="fa-solid fa-qrcode"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                        <button type="button" class="btn-table-action btn-view" title="Lihat Detail" onclick="openDetailModal(<?= htmlspecialchars(json_encode($p)) ?>)">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </button>
+                                        <button type="button" class="btn-table-action btn-del" title="Hapus Data" onclick="deleteBooking(<?= $p->id ?>)">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- =========================================================
+         FLOATING BATCH ACTION BAR (MULTIPLE SELECT ACC / TOLAK)
+         ========================================================= -->
+    <div id="floatingBatchBar" class="floating-batch-bar">
+        <div class="batch-count-badge">
+            <i class="fa-solid fa-circle-check"></i>
+            <span id="selectedCountBadge">0</span> Data Terpilih
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn-batch-acc" onclick="submitBatchApprove()">
+                <i class="fa-solid fa-check-double"></i> ACC Massal (Laboran)
+            </button>
+            <button type="button" class="btn-batch-rej" onclick="openBatchRejectModal()">
+                <i class="fa-solid fa-ban"></i> Tolak Massal
+            </button>
+            <button type="button" class="btn-batch-cancel" onclick="deselectAll()">
+                Batal
             </button>
         </div>
     </div>
 
-    <!-- Data Table -->
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Nama Lengkap</th>
-                <th>Ruangan</th>
-                <th>Tanggal</th>
-                <th>Keterangan</th>
-                <th>Status</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach($peminjaman as $p): ?>
-            <tr>
-                <td><?= $p->nama_lengkap ?></td>
-                <td><?= $p->kode_ruangan ?> - <?= $p->nama_ruangan ?></td>
-                <td>
-                    <?php 
-                        if ($p->tanggal_mulai == $p->tanggal_selesai) {
-                            echo date('d M Y', strtotime($p->tanggal_mulai));
-                        } else {
-                            echo date('d M', strtotime($p->tanggal_mulai)) . ' - ' . date('d M Y', strtotime($p->tanggal_selesai));
-                        }
-                    ?> 
-                    <br>
-                    <small style="color: #64748b;"><?= substr($p->jam_mulai, 0, 5) ?> - <?= substr($p->jam_selesai, 0, 5) ?></small>
-                </td>
-                <td><?= $p->keterangan ?></td>
-                <td>
-                    <?php
-                        $s = $p->status;
-                        if ($s === 'Pending') {
-                            $dot = '#f59e0b'; $bg = '#fffbeb'; $color = '#b45309'; $label = 'Menunggu Persetujuan';
-                        } elseif (strpos($s, 'Ka. Ur') !== false) {
-                            $dot = '#22c55e'; $bg = '#f0fdf4'; $color = '#166534'; $label = 'Disetujui Ka. Ur';
-                        } elseif (strpos($s, 'Laboran') !== false) {
-                            $dot = '#3b82f6'; $bg = '#eff6ff'; $color = '#1d4ed8'; $label = 'Disetujui Laboran';
-                        } elseif (strpos($s, 'Admin') !== false) {
-                            $dot = '#8b5cf6'; $bg = '#f5f3ff'; $color = '#6d28d9'; $label = 'Disetujui Admin';
-                        } elseif (strpos($s, 'Disetujui') !== false) {
-                            $dot = '#22c55e'; $bg = '#f0fdf4'; $color = '#166534'; $label = 'Disetujui';
-                        } elseif ($s === 'Ditolak') {
-                            $dot = '#ef4444'; $bg = '#fef2f2'; $color = '#991b1b'; $label = 'Ditolak';
-                        } elseif ($s === 'Selesai') {
-                            $dot = '#94a3b8'; $bg = '#f8fafc'; $color = '#475569'; $label = 'Selesai';
-                        } else {
-                            $dot = '#94a3b8'; $bg = '#f8fafc'; $color = '#475569'; $label = htmlspecialchars($s);
-                        }
-                    ?>
-                    <span style="display:inline-flex;align-items:center;gap:5px;background:<?= $bg ?>;color:<?= $color ?>;border-radius:999px;padding:4px 11px;font-size:0.72rem;font-weight:700;white-space:nowrap;letter-spacing:0.01em;">
-                        <span style="width:6px;height:6px;border-radius:50%;background:<?= $dot ?>;flex-shrink:0;"></span>
-                        <?= $label ?>
-                    </span>
-
-                </td>
-                <td>
-                    <div style="display: flex; gap: 8px;">
-                        <?php if($p->status == 'Pending'): ?>
-                            <button class="btn-action btn-approve" onclick="approveBooking(<?= $p->id ?>)" title="Setujui">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            </button>
-                            <button class="btn-action btn-reject" onclick="openRejectModal(<?= $p->id ?>)" title="Tolak">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                            </button>
-                        <?php endif; ?>
-                        <button class="btn-action btn-delete" onclick="deleteBooking(<?= $p->id ?>)" title="Hapus">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-
-    <!-- Modal Form -->
-    <div class="modal-overlay" id="bookingModal">
-        <div class="modal-content">
+    <!-- =========================================================
+         MODAL CATATAN PENOLAKAN (WAJIB ALASAN)
+         ========================================================= -->
+    <div class="modal-overlay" id="rejectModal">
+        <div class="modal-card">
             <div class="modal-header">
-                <h2>Buat Peminjaman</h2>
-                <button class="modal-close" onclick="closeAdminBookingModal()">&times;</button>
+                <h3><i class="fa-solid fa-triangle-exclamation text-red-500"></i> Catatan Penolakan Peminjaman</h3>
+                <button type="button" class="modal-close-btn" onclick="closeRejectModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="rejectTargetIds">
+                <input type="hidden" id="rejectIsBatch" value="0">
+                <div class="form-group">
+                    <label style="color: #991b1b;">Alasan Penolakan (Wajib Diisi) <span style="color:red;">*</span></label>
+                    <textarea id="alasanPenolakanTextarea" rows="3" class="form-control" placeholder="Tuliskan alasan penolakan secara jelas (contoh: Ruangan sedang dalam pemeliharaan berkala / Jadwal praktikum reguler)..." required></textarea>
+                    <small style="color: #64748b; font-size: 0.75rem; margin-top: 4px; display: block;">Catatan ini akan dikirimkan dan ditampilkan pada status permohonan peminjam.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeRejectModal()">Batal</button>
+                <button type="button" class="btn" style="background: #dc2626; color: #fff;" onclick="submitRejectConfirm()">
+                    <i class="fa-solid fa-ban"></i> Konfirmasi Penolakan
+                </button>
+            </div>
+        </div>
+    </div>
 
+    <!-- =========================================================
+         MODAL DETAIL PEMINJAMAN
+         ========================================================= -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-circle-info text-blue-500"></i> Detail Permohonan Peminjaman</h3>
+                <button type="button" class="modal-close-btn" onclick="closeDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-row">
+                    <div class="detail-label">Nama Peminjam</div>
+                    <div class="detail-val" id="dtlNama">-</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Ruangan</div>
+                    <div class="detail-val" id="dtlRuangan">-</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Tanggal</div>
+                    <div class="detail-val" id="dtlTanggal">-</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Waktu</div>
+                    <div class="detail-val" id="dtlWaktu">-</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Keperluan</div>
+                    <div class="detail-val" id="dtlKeterangan">-</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-val" id="dtlStatus">-</div>
+                </div>
+                <div class="detail-row" id="dtlAlasanRow" style="display: none;">
+                    <div class="detail-label" style="color: #dc2626;">Alasan Tolak</div>
+                    <div class="detail-val" id="dtlAlasan" style="color: #dc2626;">-</div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                <a id="dtlSuratBtn" href="#" target="_blank" class="btn btn-primary" style="display: none; background: #16a34a; border-color: #16a34a; text-decoration: none; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-qrcode"></i> Cetak Surat Resmi (QR)
+                </a>
+                <button type="button" class="btn btn-secondary" onclick="closeDetailModal()">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         MODAL BUAT PEMINJAMAN MANUAL
+         ========================================================= -->
+    <div class="modal-overlay" id="bookingModal">
+        <div class="modal-card" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-plus-circle text-orange-500"></i> Buat Peminjaman Ruangan</h3>
+                <button type="button" class="modal-close-btn" onclick="closeAdminBookingModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="formBooking">
-                    
                     <div class="form-group">
-                        <label class="form-label">Nama Lengkap</label>
-                        <input type="text" class="form-control" name="nama_lengkap" value="<?= $this->session->userdata('name') ?>" readonly style="background-color: #e2e8f0; cursor: not-allowed; color: #64748b;" required>
+                        <label>Nama Lengkap</label>
+                        <input type="text" class="form-control" name="nama_lengkap" value="<?= $this->session->userdata('name') ?>" readonly style="background: #f1f5f9; color: #64748b;">
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Kategori Ruangan</label>
+                        <label>Kategori Ruangan</label>
                         <select class="form-control" id="kategoriSelect" name="id_kategori" required>
                             <option value="">Pilih Kategori</option>
                             <?php foreach($kategori as $k): ?>
-                                <option value="<?= $k->id ?>"><?= $k->nama_kategori ?></option>
+                                <option value="<?= $k->id ?>"><?= htmlspecialchars($k->nama_kategori) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Ruangan</label>
+                        <label>Ruangan</label>
                         <select class="form-control" id="ruanganSelect" name="id_ruangan" required>
                             <option value="">Pilih Ruangan</option>
-                            <!-- Diisi via AJAX -->
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Keterangan</label>
-                        <textarea class="form-control" name="keterangan" required></textarea>
+                        <label>Keterangan / Keperluan</label>
+                        <textarea class="form-control" name="keterangan" rows="2" placeholder="Contoh: Praktikum Pemrograman Web / Ujian Praktikum..." required></textarea>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Tanggal Peminjaman</label>
-                        <input type="text" class="form-control" name="tanggal_peminjaman" id="tanggalPeminjaman" placeholder="Pilih Rentang Tanggal" required>
+                        <label>Tanggal Peminjaman</label>
+                        <input type="text" class="form-control" name="tanggal_peminjaman" id="tanggalPeminjaman" placeholder="Pilih Rentang Tanggal..." required>
                     </div>
 
                     <div class="form-group" id="timeSelectionGroup" style="display: none;">
-                        <label class="form-label">Waktu Peminjaman</label>
-                        <div style="display: flex; gap: 15px; margin-top: 25px;">
+                        <label>Waktu Peminjaman</label>
+                        <div style="display: flex; gap: 12px;">
                             <input type="text" class="form-control" name="jam_mulai" id="inputJamMulai" placeholder="Jam Mulai" readonly style="cursor: pointer;" onclick="openInlinePicker('mulai')" required>
                             <input type="text" class="form-control" name="jam_selesai" id="inputJamSelesai" placeholder="Jam Selesai" readonly style="cursor: pointer;" onclick="openInlinePicker('selesai')" required>
                         </div>
 
-                        <!-- Inline Clock Picker (di dalam modal) -->
-                        <div id="inlineClockPanel" style="display:none; margin-top: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px;">
-                            <div style="display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap;">
-
-                                <!-- Kiri: Display waktu & Pilih Cepat -->
-                                <div style="flex: 1; min-width: 160px;">
-                                    <div id="inlineTpLabel" style="font-size: 0.72rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Waktu dipilih</div>
-                                    <div style="font-size: 2.5rem; font-weight: 800; color: #1e293b; line-height: 1; margin-bottom: 6px;">
-                                        <span id="tpDisplayHour" onclick="setMode('hour')" style="cursor:pointer;">14</span><span style="color:#e2e8f0;">:</span><span id="tpDisplayMinute" onclick="setMode('minute')" style="cursor:pointer; color:#cbd5e1;">30</span>
-                                    </div>
-                                    <div style="display:inline-block; background:#ede9fe; color:#7c3aed; font-size:0.7rem; font-weight:600; border-radius:20px; padding:2px 10px; margin-bottom:12px;">24 Jam</div>
-
-                                    <div style="font-size: 0.72rem; color: #7c3aed; font-weight: 700; margin-bottom: 6px;">⚡ Pilih Cepat <span style="font-size:0.65rem;color:#94a3b8;font-weight:500;">(drag untuk rentang)</span></div>
-                                    <div id="tpTimeSlots" style="display:grid; grid-template-columns:1fr 1fr; gap:6px; user-select:none; margin-top:4px;">
-                                        <div class="tp-slot" data-start="08:00" data-end="09:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);">08:00 – 09:00</div>
-                                        <div class="tp-slot" data-start="09:00" data-end="10:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);">09:00 – 10:00</div>
-                                        <div class="tp-slot" data-start="10:00" data-end="11:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);">10:00 – 11:00</div>
-                                        <div class="tp-slot" data-start="11:00" data-end="12:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);">11:00 – 12:00</div>
-                                        <div class="tp-slot" data-start="12:00" data-end="13:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);">12:00 – 13:00</div>
-                                        <div class="tp-slot" data-start="13:00" data-end="14:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);">13:00 – 14:00</div>
-                                        <div class="tp-slot" data-start="14:00" data-end="15:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);">14:00 – 15:00</div>
-                                        <div class="tp-slot" data-start="15:00" data-end="16:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);">15:00 – 16:00</div>
-                                        <div class="tp-slot" data-start="16:00" data-end="17:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);">16:00 – 17:00</div>
-                                        <div class="tp-slot" data-start="17:00" data-end="18:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);">17:00 – 18:00</div>
+                        <!-- Inline Clock Picker Panel -->
+                        <div id="inlineClockPanel" style="display:none; margin-top: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px;">
+                            <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+                                <div style="flex: 1; min-width: 140px;">
+                                    <div style="font-size: 0.72rem; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Pilih Cepat</div>
+                                    <div id="tpTimeSlots" style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px;">
+                                        <div class="tp-slot" data-start="08:00" data-end="10:00" style="padding:7px 4px; border:1px solid #e2e8f0; border-radius:8px; background:#fff; font-size:0.72rem; font-weight:700; text-align:center; cursor:pointer;">08:00–10:00</div>
+                                        <div class="tp-slot" data-start="10:00" data-end="12:00" style="padding:7px 4px; border:1px solid #e2e8f0; border-radius:8px; background:#fff; font-size:0.72rem; font-weight:700; text-align:center; cursor:pointer;">10:00–12:00</div>
+                                        <div class="tp-slot" data-start="13:00" data-end="15:00" style="padding:7px 4px; border:1px solid #e2e8f0; border-radius:8px; background:#fff; font-size:0.72rem; font-weight:700; text-align:center; cursor:pointer;">13:00–15:00</div>
+                                        <div class="tp-slot" data-start="15:00" data-end="17:00" style="padding:7px 4px; border:1px solid #e2e8f0; border-radius:8px; background:#fff; font-size:0.72rem; font-weight:700; text-align:center; cursor:pointer;">15:00–17:00</div>
                                     </div>
                                 </div>
-
-                                <!-- Kanan: Clock -->
-                                <div style="flex: 1; min-width: 200px;">
-                                    <div class="tp-tabs" style="margin-bottom: 12px;">
-                                        <div class="tp-tab active" id="tpTabHour" onclick="setMode('hour')">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Jam
-                                        </div>
-                                        <div class="tp-tab" id="tpTabMinute" onclick="setMode('minute')">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg> Menit
-                                        </div>
+                                <div style="flex: 1; min-width: 180px;">
+                                    <div class="tp-tabs" style="margin-bottom: 8px;">
+                                        <div class="tp-tab active" id="tpTabHour" onclick="setMode('hour')">Jam</div>
+                                        <div class="tp-tab" id="tpTabMinute" onclick="setMode('minute')">Menit</div>
                                     </div>
                                     <div class="tp-clock-container" id="tpClockContainer">
                                         <div class="tp-clock-center"></div>
@@ -452,39 +1260,17 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Footer -->
-                            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:14px; border-top: 1px solid #e2e8f0; padding-top:12px;">
-                                <button type="button" onclick="closeInlinePicker()" style="padding: 8px 18px; border-radius: 8px; border: 1px solid #e2e8f0; background:#fff; color:#64748b; font-size:0.85rem; cursor:pointer; font-weight:600;">Batal</button>
-                                <button type="button" onclick="applyInlinePicker()" style="padding: 8px 18px; border-radius: 8px; border: none; background: #7c3aed; color:#fff; font-size:0.85rem; cursor:pointer; font-weight:600;">✔ Terapkan</button>
+                            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px; border-top:1px solid #e2e8f0; padding-top:10px;">
+                                <button type="button" onclick="closeInlinePicker()" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem;">Batal</button>
+                                <button type="button" onclick="applyInlinePicker()" class="btn btn-primary" style="padding:6px 12px; font-size:0.78rem;">Terapkan</button>
                             </div>
                         </div>
                     </div>
-
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn-primary" onclick="submitForm()">Simpan Peminjaman</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Reject Modal -->
-    <div class="modal-overlay" id="rejectModal">
-        <div class="modal">
-            <div class="modal-header">
-                <h2>Alasan Penolakan</h2>
-                <button class="modal-close" onclick="closeRejectModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">Tuliskan alasan penolakan</label>
-                    <textarea class="form-control" id="alasanPenolakan" placeholder="Ruangan sedang direnovasi..."></textarea>
-                    <input type="hidden" id="rejectBookingId">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-primary" style="background: #ef4444;" onclick="submitReject()">Tolak Peminjaman</button>
+                <button type="button" class="btn btn-secondary" onclick="closeAdminBookingModal()">Batal</button>
+                <button type="button" class="btn btn-primary" onclick="submitForm()">Simpan Peminjaman</button>
             </div>
         </div>
     </div>
@@ -492,183 +1278,177 @@
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="<?= base_url('assets/js/timepicker.js?v=' . filemtime(FCPATH . 'assets/js/timepicker.js')) ?>"></script>
+    <script src="<?= base_url('assets/js/timepicker.js?v=' . time()) ?>"></script>
+
     <script>
-        let currentTarget = '';
+        const BASE_URL = '<?= base_url() ?>';
+        let currentFilterStatus = 'all';
 
-        function openInlinePicker(target) {
-            currentTarget = target;
-            document.getElementById('inlineClockPanel').style.display = 'block';
-            document.getElementById('inlineTpLabel').innerText = (target === 'mulai') ? 'Waktu Mulai' : 'Waktu Selesai';
-        }
+        // ==========================================
+        // FILTER & SEARCH TABLE
+        // ==========================================
+        function setFilterStatus(status) {
+            currentFilterStatus = status;
 
-        function closeInlinePicker() {
-            document.getElementById('inlineClockPanel').style.display = 'none';
-        }
-
-        function applyInlinePicker() {
-            let time = document.getElementById('tpDisplayHour').innerText.padStart(2, '0') + ':' + document.getElementById('tpDisplayMinute').innerText.padStart(2, '0');
-            if (currentTarget === 'mulai') {
-                document.getElementById('inputJamMulai').value = time;
-            } else {
-                document.getElementById('inputJamSelesai').value = time;
-            }
-            closeInlinePicker();
-        }
-
-        $(document).ready(function() {
-            // Initialize Flatpickr for date range/single
-            var fpMode = "<?= ($this->session->userdata('role_id') == 1) ? 'range' : 'single' ?>";
-            
-            flatpickr("#tanggalPeminjaman", {
-                mode: fpMode,
-                dateFormat: "Y-m-d",
-                minDate: "today",
-                onChange: function(selectedDates, dateStr, instance) {
-                    // Jika range tanggal sudah terisi (baik beda hari atau hari yang sama)
-                    if (selectedDates.length > 0) {
-                        $('#timeSelectionGroup').slideDown();
-                        
-                        // Set the date display in time picker modal
-                        let displayStr = selectedDates[0].toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'});
-                        if(selectedDates.length === 2 && selectedDates[0].getTime() !== selectedDates[1].getTime()) {
-                            displayStr += " - " + selectedDates[1].toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'});
-                        }
-                        $('#tpDateDisplay').text(displayStr);
-                        
-                    } else {
-                        $('#timeSelectionGroup').slideUp();
-                    }
-                }
+            document.querySelectorAll('.filter-pill').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-status') === status);
             });
 
-            // Dependent Dropdown for Ruangan
-            $('#kategoriSelect').change(function() {
-                let id_kategori = $(this).val();
-                if(id_kategori != '') {
-                    $.ajax({
-                        url: "<?= base_url('kelolabooking/get_ruangan') ?>",
-                        method: "POST",
-                        data: {id_kategori: id_kategori},
-                        dataType: "json",
-                        success: function(data) {
-                            if(data.length === 1) {
-                                // Hanya ada 1 ruangan, otomatis pilih dan beri style disabled
-                                let room = data[0];
-                                let html = `<option value="${room.id}" selected>${room.kode_ruangan} - ${room.nama_ruangan}</option>`;
-                                $('#ruanganSelect').html(html);
-                                $('#ruanganSelect').css({'background-color': '#e2e8f0', 'pointer-events': 'none', 'color': '#64748b'});
-                            } else {
-                                // Lebih dari 1 ruangan, munculkan dropdown normal
-                                let html = '<option value="">Pilih Ruangan</option>';
-                                $.each(data, function(i, room) {
-                                    html += `<option value="${room.id}">${room.kode_ruangan} - ${room.nama_ruangan}</option>`;
-                                });
-                                $('#ruanganSelect').html(html);
-                                $('#ruanganSelect').css({'background-color': '#f8fafc', 'pointer-events': 'auto', 'color': 'var(--text-color)'});
-                            }
-                        }
-                    });
+            filterTableRows();
+        }
+
+        function filterTableRows() {
+            const query = (document.getElementById('tableSearchInput').value || '').toLowerCase().trim();
+            const rows = document.querySelectorAll('.booking-row');
+
+            rows.forEach(row => {
+                const rowCat = row.getAttribute('data-status-category');
+                const rowSearch = row.getAttribute('data-search') || '';
+
+                const matchesStatus = (currentFilterStatus === 'all') || (rowCat === currentFilterStatus);
+                const matchesSearch = !query || rowSearch.includes(query);
+
+                if (matchesStatus && matchesSearch) {
+                    row.style.display = '';
                 } else {
-                    $('#ruanganSelect').html('<option value="">Pilih Ruangan</option>');
-                    $('#ruanganSelect').css({'background-color': '#f8fafc', 'pointer-events': 'auto', 'color': 'var(--text-color)'});
+                    row.style.display = 'none';
+                    // Uncheck if hidden
+                    const cb = row.querySelector('.row-checkbox');
+                    if (cb) cb.checked = false;
                 }
             });
-        });
 
-        function resetAdminBookingForm() {
-            const form = document.getElementById('formBooking');
-            if (form) form.reset();
-            const roomSelect = $('#ruanganSelect');
-            if (roomSelect.length) {
-                roomSelect.html('<option value="">Pilih Ruangan</option>');
-                roomSelect.css({'background-color': '#f8fafc', 'pointer-events': 'auto', 'color': 'var(--text-color)'});
-            }
-            $('#timeSelectionGroup').hide();
-            if (document.getElementById('tanggalPeminjaman')) document.getElementById('tanggalPeminjaman').value = '';
-            if (document.getElementById('inputJamMulai')) document.getElementById('inputJamMulai').value = '';
-            if (document.getElementById('inputJamSelesai')) document.getElementById('inputJamSelesai').value = '';
-            if (typeof closeInlinePicker === 'function') closeInlinePicker();
+            updateBatchBar();
         }
 
-        function openAdminBookingModal() {
-            resetAdminBookingForm();
-            document.getElementById('bookingModal').classList.add('active');
-        }
-
-        function closeAdminBookingModal() {
-            document.getElementById('bookingModal').classList.remove('active');
-            resetAdminBookingForm();
-        }
-
-        // Submit form via AJAX
-
-        function submitForm() {
-            const form = document.getElementById('formBooking');
-            if(!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
-
-            const formData = new FormData(form);
-            
-            $.ajax({
-                url: '<?= base_url('kelolabooking/submit_booking') ?>',
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(res) {
-                    if(res.status == 'success') {
-                        Swal.fire({
-                            title: 'Berhasil!',
-                            text: res.message,
-                            icon: 'success',
-                            confirmButtonColor: '#ea580c'
-                        }).then(() => window.location.reload());
-                    } else {
-                        Swal.fire('Gagal', res.message, 'error');
-                    }
-                },
-                error: function() {
-                    Swal.fire('Error', 'Terjadi kesalahan pada server', 'error');
-                }
+        // ==========================================
+        // MULTIPLE SELECT (BATCH ACTION) LOGIC
+        // ==========================================
+        function toggleSelectAll(masterCb) {
+            const visibleRows = document.querySelectorAll('.booking-row:not([style*="display: none"]) .row-checkbox');
+            visibleRows.forEach(cb => {
+                cb.checked = masterCb.checked;
             });
+            updateBatchBar();
         }
 
-        // Aksi Approve
-        function approveBooking(id) {
+        function deselectAll() {
+            const masterCb = document.getElementById('selectAllCheckbox');
+            if (masterCb) masterCb.checked = false;
+
+            document.querySelectorAll('.row-checkbox').forEach(cb => {
+                cb.checked = false;
+            });
+            updateBatchBar();
+        }
+
+        function getSelectedIds() {
+            const selected = [];
+            document.querySelectorAll('.row-checkbox:checked').forEach(cb => {
+                selected.push(cb.getAttribute('data-id'));
+            });
+            return selected;
+        }
+
+        function updateBatchBar() {
+            const selectedIds = getSelectedIds();
+            const bar = document.getElementById('floatingBatchBar');
+            const countBadge = document.getElementById('selectedCountBadge');
+
+            if (selectedIds.length > 0) {
+                if (countBadge) countBadge.innerText = selectedIds.length;
+                if (bar) bar.classList.add('show');
+            } else {
+                if (bar) bar.classList.remove('show');
+                const masterCb = document.getElementById('selectAllCheckbox');
+                if (masterCb) masterCb.checked = false;
+            }
+        }
+
+        // ==========================================
+        // SINGLE APPROVE & REJECT ACTIONS
+        // ==========================================
+        function singleApprove(id) {
             Swal.fire({
-                title: 'Setujui Peminjaman',
-                text: 'Apakah Anda yakin ingin menyetujui peminjaman ini?',
+                title: 'Setujui Peminjaman?',
+                text: 'Peminjaman ini akan disetujui atas nama Laboran.',
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#16a34a',
                 cancelButtonColor: '#94a3b8',
                 confirmButtonText: 'Ya, Setujui',
                 cancelButtonText: 'Batal'
-            }).then((result) => {
-                if(result.isConfirmed) {
-                    $.ajax({
-                        url: '<?= base_url('kelolabooking/approve/') ?>' + id,
-                        type: 'POST',
-                        success: function(response) {
-                            const res = JSON.parse(response);
-                            if(res.status === 'success') {
-                                window.location.reload();
-                            } else {
-                                Swal.fire('Gagal', res.message, 'error');
-                            }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    $.post(BASE_URL + 'kelolabooking/approve/' + id, function(resp) {
+                        if (resp.status === 'success') {
+                            Swal.fire({ 
+                                title: 'Disetujui!', 
+                                text: resp.message, 
+                                icon: 'success', 
+                                showCancelButton: true,
+                                confirmButtonColor: '#16a34a',
+                                cancelButtonColor: '#64748b',
+                                confirmButtonText: '<i class="fa-solid fa-qrcode"></i> Cetak Surat QR',
+                                cancelButtonText: 'Tutup'
+                            }).then((r) => {
+                                if (r.isConfirmed && resp.surat_url) {
+                                    window.open(resp.surat_url, '_blank');
+                                }
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('Gagal', resp.message, 'error');
                         }
-                    });
+                    }, 'json').fail(() => Swal.fire('Error', 'Terjadi kesalahan pada server', 'error'));
                 }
             });
         }
 
-        // Aksi Reject
-        function openRejectModal(id) {
-            document.getElementById('rejectBookingId').value = id;
-            document.getElementById('alasanPenolakan').value = '';
+        function openSingleRejectModal(id) {
+            document.getElementById('rejectTargetIds').value = JSON.stringify([id]);
+            document.getElementById('rejectIsBatch').value = '0';
+            document.getElementById('alasanPenolakanTextarea').value = '';
+            document.getElementById('rejectModal').classList.add('active');
+        }
+
+        // ==========================================
+        // BATCH APPROVE & REJECT ACTIONS
+        // ==========================================
+        function submitBatchApprove() {
+            const ids = getSelectedIds();
+            if (ids.length === 0) return;
+
+            Swal.fire({
+                title: `ACC ${ids.length} Data Sekaligus?`,
+                text: `Semua ${ids.length} peminjaman terpilih akan disetujui (Disetujui Laboran).`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#16a34a',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Ya, ACC Semua',
+                cancelButtonText: 'Batal'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    $.post(BASE_URL + 'kelolabooking/batch_approve', { ids: ids }, function(resp) {
+                        if (resp.status === 'success') {
+                            Swal.fire({ title: 'Berhasil!', text: resp.message, icon: 'success', confirmButtonColor: '#16a34a' })
+                            .then(() => location.reload());
+                        } else {
+                            Swal.fire('Gagal', resp.message, 'error');
+                        }
+                    }, 'json').fail(() => Swal.fire('Error', 'Terjadi kesalahan pada server', 'error'));
+                }
+            });
+        }
+
+        function openBatchRejectModal() {
+            const ids = getSelectedIds();
+            if (ids.length === 0) return;
+
+            document.getElementById('rejectTargetIds').value = JSON.stringify(ids);
+            document.getElementById('rejectIsBatch').value = '1';
+            document.getElementById('alasanPenolakanTextarea').value = '';
             document.getElementById('rejectModal').classList.add('active');
         }
 
@@ -676,139 +1456,210 @@
             document.getElementById('rejectModal').classList.remove('active');
         }
 
-        function submitReject() {
-            const id = document.getElementById('rejectBookingId').value;
-            const alasan = document.getElementById('alasanPenolakan').value;
-            
-            $.ajax({
-                url: '<?= base_url('kelolabooking/reject/') ?>' + id,
-                type: 'POST',
-                data: { alasan_penolakan: alasan },
-                success: function(response) {
-                    const res = JSON.parse(response);
-                    if(res.status === 'success') {
-                        window.location.reload();
+        function submitRejectConfirm() {
+            const ids = JSON.parse(document.getElementById('rejectTargetIds').value || '[]');
+            const alasan = document.getElementById('alasanPenolakanTextarea').value.trim();
+            const isBatch = document.getElementById('rejectIsBatch').value === '1';
+
+            if (!alasan) {
+                Swal.fire({
+                    title: 'Catatan Penolakan Wajib',
+                    text: 'Harap tuliskan alasan penolakan pada kolom yang tersedia.',
+                    icon: 'warning',
+                    confirmButtonColor: '#ea580c'
+                });
+                return;
+            }
+
+            if (isBatch) {
+                $.post(BASE_URL + 'kelolabooking/batch_reject', { ids: ids, alasan_penolakan: alasan }, function(resp) {
+                    if (resp.status === 'success') {
+                        closeRejectModal();
+                        Swal.fire({ title: 'Ditolak!', text: resp.message, icon: 'success', confirmButtonColor: '#dc2626' })
+                        .then(() => location.reload());
                     } else {
-                        Swal.fire('Gagal', res.message, 'error');
+                        Swal.fire('Gagal', resp.message, 'error');
                     }
-                }
-            });
+                }, 'json').fail(() => Swal.fire('Error', 'Terjadi kesalahan pada server', 'error'));
+            } else {
+                const singleId = ids[0];
+                $.post(BASE_URL + 'kelolabooking/reject/' + singleId, { alasan_penolakan: alasan }, function(resp) {
+                    if (resp.status === 'success') {
+                        closeRejectModal();
+                        Swal.fire({ title: 'Ditolak!', text: resp.message, icon: 'success', confirmButtonColor: '#dc2626' })
+                        .then(() => location.reload());
+                    } else {
+                        Swal.fire('Gagal', resp.message, 'error');
+                    }
+                }, 'json').fail(() => Swal.fire('Error', 'Terjadi kesalahan pada server', 'error'));
+            }
         }
 
-        // Aksi Delete
+        // ==========================================
+        // DETAIL MODAL
+        // ==========================================
+        function openDetailModal(data) {
+            document.getElementById('dtlNama').innerText = data.nama_lengkap || '-';
+            document.getElementById('dtlRuangan').innerText = (data.kode_ruangan ? data.kode_ruangan + ' - ' : '') + (data.nama_ruangan || '-');
+            
+            const tgl = (data.tanggal_mulai === data.tanggal_selesai) 
+                ? data.tanggal_mulai 
+                : `${data.tanggal_mulai} s/d ${data.tanggal_selesai}`;
+            document.getElementById('dtlTanggal').innerText = tgl;
+            document.getElementById('dtlWaktu').innerText = `${(data.jam_mulai || '').substring(0,5)} - ${(data.jam_selesai || '').substring(0,5)}`;
+            document.getElementById('dtlKeterangan').innerText = data.keterangan || '-';
+            document.getElementById('dtlStatus').innerText = data.status || '-';
+
+            const alasanRow = document.getElementById('dtlAlasanRow');
+            if (data.status === 'Ditolak' && data.alasan_penolakan) {
+                document.getElementById('dtlAlasan').innerText = data.alasan_penolakan;
+                alasanRow.style.display = 'flex';
+            } else {
+                alasanRow.style.display = 'none';
+            }
+
+            const suratBtn = document.getElementById('dtlSuratBtn');
+            const st = data.status || '';
+            if (st.includes('Laboran') || st.includes('Ka. Ur') || st.includes('Kaur') || st.includes('Admin')) {
+                suratBtn.href = BASE_URL + 'kaur/surat/' + data.id;
+                suratBtn.style.display = 'inline-flex';
+            } else {
+                suratBtn.style.display = 'none';
+            }
+
+            document.getElementById('detailModal').classList.add('active');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.remove('active');
+        }
+
+        // ==========================================
+        // DELETE BOOKING
+        // ==========================================
         function deleteBooking(id) {
             Swal.fire({
-                title: 'Hapus Peminjaman',
-                text: 'Data akan dihapus permanen. Apakah Anda yakin?',
+                title: 'Hapus Data Peminjaman?',
+                text: 'Data yang dihapus tidak dapat dikembalikan.',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#dc2626',
+                confirmButtonColor: '#ef4444',
                 cancelButtonColor: '#94a3b8',
                 confirmButtonText: 'Ya, Hapus',
                 cancelButtonText: 'Batal'
-            }).then((result) => {
-                if(result.isConfirmed) {
-                    $.ajax({
-                        url: '<?= base_url('kelolabooking/delete/') ?>' + id,
-                        type: 'POST',
-                        success: function(response) {
-                            const res = JSON.parse(response);
-                            if(res.status === 'success') {
-                                window.location.reload();
-                            } else {
-                                Swal.fire('Gagal', res.message, 'error');
-                            }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    $.post(BASE_URL + 'kelolabooking/delete/' + id, function(resp) {
+                        if (resp.status === 'success') {
+                            Swal.fire({ title: 'Terhapus!', text: resp.message, icon: 'success', confirmButtonColor: '#ea580c' })
+                            .then(() => location.reload());
+                        } else {
+                            Swal.fire('Gagal', resp.message, 'error');
                         }
-                    });
+                    }, 'json').fail(() => Swal.fire('Error', 'Terjadi kesalahan pada server', 'error'));
                 }
             });
         }
 
-        // Modal Tambah Ruangan Admin
-        function openTambahRuanganModalAdmin() {
-            document.getElementById('modalTambahRuanganAdmin').classList.add('active');
+        // ==========================================
+        // CREATE BOOKING MODAL LOGIC
+        // ==========================================
+        function openAdminBookingModal() {
+            document.getElementById('bookingModal').classList.add('active');
         }
 
-        function closeTambahRuanganModalAdmin() {
-            document.getElementById('modalTambahRuanganAdmin').classList.remove('active');
+        function closeAdminBookingModal() {
+            document.getElementById('bookingModal').classList.remove('active');
         }
 
-        function handleTambahRuanganSubmitAdmin(e) {
-            e.preventDefault();
-            const form = document.getElementById('formTambahRuanganAdmin');
-            const formData = new FormData(form);
+        // Dependent Dropdown
+        $('#kategoriSelect').change(function(){
+            var id_kategori = $(this).val();
+            if(id_kategori != ''){
+                $.ajax({
+                    url: BASE_URL + 'kelolabooking/get_ruangan',
+                    method: 'POST',
+                    data: {id_kategori: id_kategori},
+                    dataType: 'json',
+                    success: function(data){
+                        var html = '<option value="">Pilih Ruangan</option>';
+                        for(var i=0; i<data.length; i++){
+                            html += '<option value="'+data[i].id+'">'+data[i].kode_ruangan+' - '+data[i].nama_ruangan+'</option>';
+                        }
+                        $('#ruanganSelect').html(html);
+                    }
+                });
+            } else {
+                $('#ruanganSelect').html('<option value="">Pilih Ruangan</option>');
+            }
+        });
 
-            fetch('<?= base_url("dashboard/tambah_ruangan") ?>', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    Swal.fire('Berhasil!', data.message, 'success').then(() => {
-                        window.location.reload();
-                    });
+        // Flatpickr setup
+        flatpickr("#tanggalPeminjaman", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            minDate: "today",
+            onChange: function(selectedDates) {
+                const group = document.getElementById('timeSelectionGroup');
+                if (selectedDates.length === 1 || selectedDates.length === 2) {
+                    group.style.display = 'block';
                 } else {
-                    Swal.fire('Gagal', data.message, 'error');
+                    group.style.display = 'none';
                 }
-            })
-            .catch(err => {
-                Swal.fire('Error', 'Terjadi kesalahan koneksi server.', 'error');
+            }
+        });
+
+        // Timepicker Integration
+        let currentTarget = '';
+        function openInlinePicker(target) {
+            currentTarget = target;
+            document.getElementById('inlineClockPanel').style.display = 'block';
+        }
+
+        function closeInlinePicker() {
+            document.getElementById('inlineClockPanel').style.display = 'none';
+        }
+
+        function applyInlinePicker() {
+            const h = document.getElementById('tpDisplayHour').innerText;
+            const m = document.getElementById('tpDisplayMinute').innerText;
+            const val = `${h}:${m}`;
+            if (currentTarget === 'mulai') {
+                document.getElementById('inputJamMulai').value = val;
+            } else {
+                document.getElementById('inputJamSelesai').value = val;
+            }
+            closeInlinePicker();
+        }
+
+        $(document).on('click', '.tp-slot', function() {
+            const start = $(this).data('start');
+            const end = $(this).data('end');
+            $('#inputJamMulai').val(start);
+            $('#inputJamSelesai').val(end);
+            closeInlinePicker();
+        });
+
+        function submitForm() {
+            $.ajax({
+                url: BASE_URL + 'kelolabooking/submit_booking',
+                method: 'POST',
+                data: $('#formBooking').serialize(),
+                dataType: 'json',
+                success: function(resp) {
+                    if (resp.status === 'success') {
+                        closeAdminBookingModal();
+                        Swal.fire({ title: 'Berhasil!', text: resp.message, icon: 'success', confirmButtonColor: '#16a34a' })
+                        .then(() => location.reload());
+                    } else {
+                        Swal.fire('Gagal', resp.message, 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
+                }
             });
         }
     </script>
-
-    <!-- Modal Popup Form Tambah Ruangan Khusus Admin -->
-    <div id="modalTambahRuanganAdmin" class="modal-backdrop" onclick="if(event.target===this)closeTambahRuanganModalAdmin()">
-        <div class="modal-card" style="max-width: 480px; padding: 0; overflow: hidden;">
-            <div style="padding: 18px 24px; background: #0f172a; color: #fff; display: flex; align-items: center; justify-content: space-between;">
-                <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800;">🏢 Tambah Ruangan / Lab Baru</h3>
-                <button type="button" onclick="closeTambahRuanganModalAdmin()" style="background: none; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer;">&times;</button>
-            </div>
-            <form id="formTambahRuanganAdmin" onsubmit="handleTambahRuanganSubmitAdmin(event)" style="padding: 20px 24px;">
-                <div style="display: flex; flex-direction: column; gap: 14px;">
-                    <div class="form-group">
-                        <label style="font-size: 0.75rem; font-weight: 700; color: #334155; text-transform: uppercase;">Nama Ruangan / Lab *</label>
-                        <input type="text" name="nama_ruangan" placeholder="Contoh: Lab AR/VR &amp; Metaverse" required class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label style="font-size: 0.75rem; font-weight: 700; color: #334155; text-transform: uppercase;">Kode Ruangan *</label>
-                        <input type="text" name="kode_ruangan" placeholder="Contoh: LAB-VR" required class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label style="font-size: 0.75rem; font-weight: 700; color: #334155; text-transform: uppercase;">Kategori Ruangan *</label>
-                        <select name="id_kategori" required class="form-control">
-                            <option value="1">Laboratorium Komputer</option>
-                            <option value="2">Laboratorium Desain</option>
-                            <option value="3">Ruang Rapat &amp; Seminar</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label style="font-size: 0.75rem; font-weight: 700; color: #334155; text-transform: uppercase;">Kapasitas (Orang)</label>
-                        <input type="number" name="kapasitas" value="35" min="1" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label style="font-size: 0.75rem; font-weight: 700; color: #334155; text-transform: uppercase;">Lokasi Ruangan</label>
-                        <input type="text" name="lokasi" value="Gedung Sebatik (FIK)" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label style="font-size: 0.75rem; font-weight: 700; color: #334155; text-transform: uppercase;">Status Ketersediaan</label>
-                        <select name="status" class="form-control">
-                            <option value="Tersedia">Tersedia</option>
-                            <option value="Tidak Tersedia">Tidak Tersedia</option>
-                            <option value="Perbaikan">Perbaikan</option>
-                        </select>
-                    </div>
-                </div>
-                <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
-                    <button type="button" onclick="closeTambahRuanganModalAdmin()" style="padding: 8px 18px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; color: #64748b; font-weight: 700; cursor: pointer;">Batal</button>
-                    <button type="submit" style="padding: 8px 22px; border-radius: 8px; border: none; background: #ea580c; color: #fff; font-weight: 700; cursor: pointer;">Simpan Ruangan</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Global Custom Circle Cursor -->
-    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>

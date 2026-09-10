@@ -115,6 +115,9 @@ class DosenWali_model extends CI_Model {
                         if (empty($row['status_file_' . $kb])) {
                             $row['status_file_' . $kb] = ($bdata['status_verifikasi'] === 'Valid') ? 'Approved' : (($bdata['status_verifikasi'] === 'Invalid') ? 'Rejected' : 'Pending');
                         }
+                        if (empty($row['catatan_file_' . $kb]) && !empty($bdata['catatan'])) {
+                            $row['catatan_file_' . $kb] = $bdata['catatan'];
+                        }
                     }
                 }
             }
@@ -156,6 +159,25 @@ class DosenWali_model extends CI_Model {
         if (!$row && $has_mhs) {
             $this->db->where('nim', $nim);
             $row = $this->db->get('mahasiswa')->row_array();
+        }
+
+        if ($row && $this->db->table_exists('pendaftaran_berkas')) {
+            $berkas_rows = $this->db->get_where('pendaftaran_berkas', ['nim' => $nim])->result_array();
+            $berkas_map = [];
+            foreach ($berkas_rows as $br) {
+                $kb = $br['kode_berkas'];
+                $berkas_map[$kb] = $br;
+                if (empty($row['file_' . $kb])) {
+                    $row['file_' . $kb] = $br['file_name'];
+                }
+                if (empty($row['status_file_' . $kb])) {
+                    $row['status_file_' . $kb] = ($br['status_verifikasi'] === 'Valid') ? 'Approved' : (($br['status_verifikasi'] === 'Invalid') ? 'Rejected' : 'Pending');
+                }
+                if (empty($row['catatan_file_' . $kb]) && !empty($br['catatan'])) {
+                    $row['catatan_file_' . $kb] = $br['catatan'];
+                }
+            }
+            $row['berkas_map'] = $berkas_map;
         }
 
         return $row;
@@ -236,7 +258,18 @@ class DosenWali_model extends CI_Model {
         $this->db->where('nim', $nim);
         $this->db->update('pendaftaran_ta', $data);
 
-
+        // Update juga pendaftaran_berkas jika ada
+        if ($this->db->table_exists('pendaftaran_berkas')) {
+            $ver = ($status === 'Approved') ? 'Valid' : (($status === 'Rejected') ? 'Invalid' : 'Pending');
+            $berkasUpdate = [
+                'status_verifikasi' => $ver,
+                'updated_at'        => date('Y-m-d H:i:s')
+            ];
+            if ($this->db->field_exists('catatan', 'pendaftaran_berkas')) {
+                $berkasUpdate['catatan'] = ($status === 'Rejected') ? $comment : '';
+            }
+            $this->db->where('nim', $nim)->where('kode_berkas', $file_type)->update('pendaftaran_berkas', $berkasUpdate);
+        }
 
         // Auto-sinkronisasi status keseluruhan & tahap pendaftaran di DB
         $row = $this->db->get_where('pendaftaran_ta', array('nim' => $nim))->row_array();
@@ -435,6 +468,9 @@ class DosenWali_model extends CI_Model {
                         if (empty($row['status_file_' . $kb])) {
                             $row['status_file_' . $kb] = ($bdata['status_verifikasi'] === 'Valid') ? 'Approved' : (($bdata['status_verifikasi'] === 'Invalid') ? 'Rejected' : 'Pending');
                         }
+                        if (empty($row['catatan_file_' . $kb]) && !empty($bdata['catatan'])) {
+                            $row['catatan_file_' . $kb] = $bdata['catatan'];
+                        }
                     }
                 }
             }
@@ -547,11 +583,40 @@ class DosenWali_model extends CI_Model {
 
             foreach ($file_keys as $fk) {
                 $fStatus = (isset($d['status_file_' . $fk]) && $d['status_file_' . $fk] === 'Rejected') ? 'Rejected' : 'Approved';
-                if (in_array('status_file_' . $fk, $fields)) $updateData['status_file_' . $fk] = $fStatus;
-                if (in_array('catatan_file_' . $fk, $fields)) $updateData['catatan_file_' . $fk] = ($fStatus === 'Rejected') ? ($d['catatan_file_' . $fk] ?? '') : '';
-                if (in_array('review_file_' . $fk, $fields)) $updateData['review_file_' . $fk]  = 1;
+                $fNote   = ($fStatus === 'Rejected') ? ($d['catatan_file_' . $fk] ?? '') : '';
 
+                $col_status  = 'status_file_' . $fk;
+                $col_review  = 'review_file_' . $fk;
+                $col_catatan = 'catatan_file_' . $fk;
 
+                if (!in_array($col_status, $fields)) {
+                    $this->db->query("ALTER TABLE `pendaftaran_ta` ADD COLUMN `{$col_status}` VARCHAR(20) DEFAULT 'Pending'");
+                    $fields[] = $col_status;
+                }
+                if (!in_array($col_review, $fields)) {
+                    $this->db->query("ALTER TABLE `pendaftaran_ta` ADD COLUMN `{$col_review}` TINYINT(1) DEFAULT 0");
+                    $fields[] = $col_review;
+                }
+                if (!in_array($col_catatan, $fields)) {
+                    $this->db->query("ALTER TABLE `pendaftaran_ta` ADD COLUMN `{$col_catatan}` TEXT NULL");
+                    $fields[] = $col_catatan;
+                }
+
+                $updateData[$col_status]  = $fStatus;
+                $updateData[$col_catatan] = $fNote;
+                $updateData[$col_review]  = 1;
+
+                if ($this->db->table_exists('pendaftaran_berkas')) {
+                    $ver = ($fStatus === 'Approved') ? 'Valid' : 'Invalid';
+                    $berkasUpdate = [
+                        'status_verifikasi' => $ver,
+                        'updated_at'        => date('Y-m-d H:i:s')
+                    ];
+                    if ($this->db->field_exists('catatan', 'pendaftaran_berkas')) {
+                        $berkasUpdate['catatan'] = $fNote;
+                    }
+                    $this->db->where('nim', $nim)->where('kode_berkas', $fk)->update('pendaftaran_berkas', $berkasUpdate);
+                }
 
                 if ($fStatus === 'Rejected') {
                     $hasAnyFileReject = true;
@@ -571,7 +636,11 @@ class DosenWali_model extends CI_Model {
                 $updateData['catatan_judul'] = '';
                 $updateData['catatan_jenis_ta'] = '';
                 foreach ($file_keys as $fk) {
-                    if (in_array('catatan_file_' . $fk, $fields)) $updateData['catatan_file_' . $fk] = '';
+                    $col_catatan = 'catatan_file_' . $fk;
+                    if (in_array($col_catatan, $fields)) $updateData[$col_catatan] = '';
+                }
+                if ($this->db->table_exists('pendaftaran_berkas') && $this->db->field_exists('catatan', 'pendaftaran_berkas')) {
+                    $this->db->where('nim', $nim)->update('pendaftaran_berkas', ['catatan' => '']);
                 }
                 $appCount++;
             }

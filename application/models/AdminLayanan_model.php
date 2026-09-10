@@ -43,6 +43,7 @@ class AdminLayanan_model extends CI_Model {
                 `nama_berkas` VARCHAR(150) NULL,
                 `file_name` VARCHAR(255) NOT NULL,
                 `status_verifikasi` ENUM('Pending','Valid','Invalid') DEFAULT 'Pending',
+                `catatan` TEXT NULL,
                 `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 UNIQUE KEY `nim_kode` (`nim`, `kode_berkas`)
@@ -50,6 +51,9 @@ class AdminLayanan_model extends CI_Model {
         } else {
             if (!$this->db->field_exists('nama_berkas', 'pendaftaran_berkas')) {
                 $this->db->query("ALTER TABLE `pendaftaran_berkas` ADD COLUMN `nama_berkas` VARCHAR(150) NULL AFTER `kode_berkas`;");
+            }
+            if (!$this->db->field_exists('catatan', 'pendaftaran_berkas')) {
+                $this->db->query("ALTER TABLE `pendaftaran_berkas` ADD COLUMN `catatan` TEXT NULL AFTER `status_verifikasi`;");
             }
             if ($this->db->table_exists('syarat_berkas_ta')) {
                 $this->db->query("UPDATE `pendaftaran_berkas` pb 
@@ -166,8 +170,22 @@ class AdminLayanan_model extends CI_Model {
         return $map;
     }
 
-    public function save_student_berkas($nim, $kode_berkas, $file_name, $status = 'Pending', $nama_berkas = null) {
+    public function save_student_berkas($nim, $kode_berkas, $file_name, $status = 'Pending', $arg5 = null, $arg6 = null) {
         $this->_ensure_tables();
+
+        $nama_berkas = null;
+        $catatan     = null;
+
+        if ($arg6 !== null) {
+            $nama_berkas = $arg5;
+            $catatan     = $arg6;
+        } else if ($arg5 !== null) {
+            if ($status === 'Pending' || ($this->db->table_exists('syarat_berkas_ta') && $this->db->get_where('syarat_berkas_ta', ['nama_berkas' => $arg5])->num_rows() > 0)) {
+                $nama_berkas = $arg5;
+            } else {
+                $catatan = $arg5;
+            }
+        }
 
         if (empty($nama_berkas)) {
             $sb = $this->db->get_where('syarat_berkas_ta', ['kode_berkas' => $kode_berkas])->row_array();
@@ -180,27 +198,28 @@ class AdminLayanan_model extends CI_Model {
 
         $existing = $this->db->get_where('pendaftaran_berkas', ['nim' => $nim, 'kode_berkas' => $kode_berkas])->row_array();
 
+        $data = [
+            'file_name'         => $file_name,
+            'status_verifikasi' => $status,
+            'updated_at'        => date('Y-m-d H:i:s')
+        ];
+
+        if (!empty($nama_berkas) && $this->db->field_exists('nama_berkas', 'pendaftaran_berkas')) {
+            $data['nama_berkas'] = $nama_berkas;
+        }
+
+        if ($catatan !== null && $this->db->field_exists('catatan', 'pendaftaran_berkas')) {
+            $data['catatan'] = $catatan;
+        }
+
         if ($existing) {
             $this->db->where('id', $existing['id']);
-            $update_data = [
-                'file_name' => $file_name,
-                'status_verifikasi' => $status,
-                'updated_at' => date('Y-m-d H:i:s')
-            ];
-            if (!empty($nama_berkas)) {
-                $update_data['nama_berkas'] = $nama_berkas;
-            }
-            $res = $this->db->update('pendaftaran_berkas', $update_data);
+            $res = $this->db->update('pendaftaran_berkas', $data);
         } else {
-            $res = $this->db->insert('pendaftaran_berkas', [
-                'nim' => $nim,
-                'kode_berkas' => $kode_berkas,
-                'nama_berkas' => $nama_berkas,
-                'file_name' => $file_name,
-                'status_verifikasi' => $status,
-                'created_at' => date('Y-m-d H:i:s'),
-                'updated_at' => date('Y-m-d H:i:s')
-            ]);
+            $data['nim']         = $nim;
+            $data['kode_berkas'] = $kode_berkas;
+            $data['created_at']  = date('Y-m-d H:i:s');
+            $res = $this->db->insert('pendaftaran_berkas', $data);
         }
 
         // Fail-safe sync: If a berkas is uploaded/set to Pending, ensure pendaftaran_ta's status_approval_admin resets to Pending

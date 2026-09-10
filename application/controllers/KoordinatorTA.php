@@ -471,27 +471,43 @@ class KoordinatorTA extends CI_Controller {
         echo json_encode($res);
     }
 
-    // AJAX Endpoint: Batch Update Jadwal Sidang TA (Multi-Select)
+    // AJAX Endpoint: Batch Update Jadwal Sidang TA (Per-Mahasiswa Schedules)
     public function ajax_batch_jadwal_sidang() {
         header('Content-Type: application/json');
 
-        $nims_raw     = $this->input->post('nims');
+        $schedules_raw = $this->input->post('schedules');
+        $schedules = is_array($schedules_raw) ? $schedules_raw : json_decode($schedules_raw ?? '[]', true);
+
+        // Fallback jika dikirim nims + global fields
+        $nims_raw = $this->input->post('nims');
+        $nims = is_array($nims_raw) ? $nims_raw : json_decode($nims_raw ?? '[]', true);
         $tgl_sidang   = $this->input->post('tgl_sidang');
         $jam_mulai    = $this->input->post('jam_mulai_sidang');
         $jam_selesai  = $this->input->post('jam_selesai_sidang');
         $ruangan      = $this->input->post('ruangan_sidang');
 
-        $nims = is_array($nims_raw) ? $nims_raw : json_decode($nims_raw, true);
+        if (empty($schedules) && !empty($nims)) {
+            $schedules = array();
+            foreach ($nims as $n) {
+                $schedules[] = array(
+                    'nim'                => $n,
+                    'tgl_sidang'         => $tgl_sidang,
+                    'jam_mulai_sidang'   => $jam_mulai,
+                    'jam_selesai_sidang' => $jam_selesai,
+                    'ruangan_sidang'     => $ruangan
+                );
+            }
+        }
 
-        if (empty($nims) || !is_array($nims) || empty($tgl_sidang) || empty($jam_mulai) || empty($ruangan)) {
+        if (empty($schedules) || !is_array($schedules)) {
             echo json_encode(array(
                 'status' => false,
-                'message' => 'Pilih mahasiswa serta tentukan Tanggal, Jam, dan Ruangan Sidang.'
+                'message' => 'Pilih mahasiswa dan atur jadwal sidang untuk masing-masing mahasiswa.'
             ));
             return;
         }
 
-        $res = $this->KoordinatorTA_model->batch_jadwal_sidang_ajax($nims, $tgl_sidang, $jam_mulai, $jam_selesai, $ruangan);
+        $res = $this->KoordinatorTA_model->batch_jadwal_sidang_per_mhs_ajax($schedules);
         echo json_encode($res);
     }
 

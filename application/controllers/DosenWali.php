@@ -58,17 +58,28 @@ class DosenWali extends CI_Controller {
             }
             $catatan = trim($this->input->post('catatan_wali') ?? '');
 
-            if ($status === 'Rejected' && empty($catatan)) {
-                $this->session->set_flashdata('error', 'Alasan penolakan / catatan revisi wajib diisi jika memilih Reject!');
-                redirect('dosenwali/detail_mahasiswa/' . $nim);
-                return;
+            if ($status === 'Rejected') {
+                if (empty($catatan) && empty($this->input->post('berkas_kurang'))) {
+                    $this->session->set_flashdata('error', 'Alasan penolakan / catatan revisi wajib diisi jika memilih Reject!');
+                    redirect('dosenwali/detail_mahasiswa/' . $nim);
+                    return;
+                }
+                $submitted_kurang = $this->input->post('berkas_kurang') ?: array();
+                $submitted_notes  = $this->input->post('catatan_berkas') ?: array();
+                foreach ($submitted_kurang as $bk) {
+                    if (empty(trim($submitted_notes[$bk] ?? ''))) {
+                        $this->session->set_flashdata('error', 'Catatan revisi untuk setiap berkas yang ditandai Kurang/Revisi wajib diisi!');
+                        redirect('dosenwali/detail_mahasiswa/' . $nim);
+                        return;
+                    }
+                }
             }
 
             // Simpan status per berkas jika dikirim melalui form
             $berkas_valid_arr  = $this->input->post('berkas_valid') ?: array();
             $berkas_kurang_arr = $this->input->post('berkas_kurang') ?: array();
             $catatan_berkas    = $this->input->post('catatan_berkas') ?: array();
-            $semua_berkas      = array('ksm', 'transkrip', 'pernyataan', 'bebas_lab');
+            $semua_berkas      = !empty($data['syarat_berkas']) ? array_column($data['syarat_berkas'], 'kode_berkas') : array('ksm', 'transkrip', 'pernyataan', 'bebas_lab');
 
             foreach ($semua_berkas as $bk) {
                 if (in_array($bk, $berkas_kurang_arr)) {
@@ -376,6 +387,15 @@ class DosenWali extends CI_Controller {
                 'catatan_judul'        => ($st_judul === 'Rejected') ? htmlspecialchars($r['catatan_judul'] ?? '') : '',
                 'status_approval_wali' => $st_wali,
                 'catatan_wali'         => ($st_wali === 'Rejected') ? htmlspecialchars($r['catatan_wali'] ?? '') : '',
+                'current_stage'        => $r['current_stage'] ?? 'Dosen Wali',
+                'file_ksm'             => $r['file_ksm'] ?? '',
+                'status_file_ksm'      => $r['status_file_ksm'] ?? 'Pending',
+                'file_transkrip'       => $r['file_transkrip'] ?? '',
+                'status_file_transkrip'=> $r['status_file_transkrip'] ?? 'Pending',
+                'file_pernyataan'      => $r['file_pernyataan'] ?? '',
+                'status_file_pernyataan'=> $r['status_file_pernyataan'] ?? 'Pending',
+                'file_bebas_lab'       => $r['file_bebas_lab'] ?? '',
+                'status_file_bebas_lab'=> $r['status_file_bebas_lab'] ?? 'Pending',
                 'files' => (function() use ($r, $resolve_pdf_url) {
                     $ci =& get_instance();
                     $ci->load->model('AdminLayanan_model');

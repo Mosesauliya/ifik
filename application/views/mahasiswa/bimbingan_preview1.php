@@ -128,6 +128,9 @@
 </head>
 <body class="bg-gradient-to-br from-amber-50/40 via-orange-50/25 to-slate-100 min-h-screen text-slate-800 antialiased flex flex-col justify-between selection:bg-orange-500 selection:text-white">
 
+    <!-- Auto Role-Aware Curved Animated Sidebar -->
+    <?php $this->load->view('components/curved_sidebar'); ?>
+
     <?php $this->load->view('partials/mahasiswa_navbar'); ?>
 
     <!-- Main Content -->
@@ -344,8 +347,8 @@
 
         <!-- Milestone Stepper Workflow / Tab Switcher -->
         <?php
-            $is_p1_app = true; // Unlocked for direct access & testing
-            $is_p2_app = true; // Unlocked for direct access & testing
+            $is_p1_app = ($latest_p1 && $latest_p1['status_pembimbing'] === 'Approved');
+            $is_p2_app = ($latest_p2 && $latest_p2['status_pembimbing'] === 'Approved');
             $is_p3_app = ($latest_p3 && $latest_p3['status_pembimbing'] === 'Approved');
             
             // Determine active step
@@ -857,6 +860,8 @@
                                 </div>
                                 <span id="fileNameP3" class="truncate font-mono">draft.pdf</span>
                             </div>
+                            <span id="fileSizeP3" class="text-xs text-emerald-800 font-bold shrink-0 ml-3 bg-white px-3 py-1 rounded-xl border border-emerald-200">2.4 MB</span>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wider mb-2.5">Catatan Kelayakan Pra-Sidang</label>
