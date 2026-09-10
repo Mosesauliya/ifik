@@ -231,11 +231,12 @@
         transform: translateY(-50%);
         display: flex;
         flex-direction: column;
-        align-items: center;
+        align-items: flex-end;
         justify-content: center;
         gap: 12px;
         z-index: 20;
         width: 56px;
+        padding-right: 4px;
     }
 
     .news-arrow-btn {
@@ -283,6 +284,7 @@
         flex-direction: column;
         gap: 8px;
         align-items: center;
+        align-self: center;
         margin: 4px 0;
         transition: opacity 0.3s ease;
     }
@@ -326,6 +328,7 @@
         color: #94a3b8;
         font-weight: 600;
         text-align: center;
+        align-self: center;
         line-height: 1.3;
     }
 
@@ -436,39 +439,79 @@
 
     /* ===== RESPONSIVE ===== */
     /* ===== VIEW ALL BUTTON ===== */
+    /* ===== EXPANDING CIRCULAR VIEW ALL BUTTON ===== */
     .news-view-all-btn {
         position: relative;
-        margin-top: 8px;
+        right: auto;
         bottom: auto;
-        left: auto;
-        transform: none;
+        margin-top: 4px;
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        padding: 9px 24px;
-        border-radius: 50px;
+        justify-content: flex-start;
+        height: 48px;
+        width: 48px;
+        padding: 0;
+        border-radius: 9999px;
         border: 2px solid #ea580c;
-        background: transparent;
+        background: #ffffff;
         color: #ea580c;
-        font-size: 0.85rem;
+        font-size: 0.84rem;
         font-weight: 700;
         cursor: pointer;
-        letter-spacing: 0.5px;
-        transition: all 0.3s ease;
+        transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                    background-color 0.3s ease,
+                    border-color 0.3s ease,
+                    box-shadow 0.3s ease,
+                    transform 0.25s ease;
         z-index: 25;
         white-space: nowrap;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(234, 88, 12, 0.08);
+        flex-shrink: 0;
     }
-    .news-view-all-btn:hover {
-        background: #fff7ed;
-        color: #ea580c;
-        border-color: #f97316;
-        box-shadow: 0 0 22px rgba(234, 88, 12, 0.4), 0 6px 18px rgba(234, 88, 12, 0.2);
+    .news-view-all-btn .btn-icon-wrapper {
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .news-view-all-btn .btn-text-label {
+        max-width: 0;
+        opacity: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                    opacity 0.25s ease,
+                    padding 0.35s ease;
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+    }
+    .news-view-all-btn:hover,
+    .news-view-all-btn:focus-visible {
+        width: 155px;
+        background: #ea580c;
+        color: #ffffff;
+        border-color: #ea580c;
+        box-shadow: 0 8px 25px rgba(234, 88, 12, 0.4);
         transform: translateY(-2px);
+    }
+    .news-view-all-btn:hover .btn-text-label,
+    .news-view-all-btn:focus-visible .btn-text-label {
+        max-width: 100px;
+        opacity: 1;
+        padding-right: 14px;
     }
     .news-view-all-btn svg {
         width: 16px;
         height: 16px;
         flex-shrink: 0;
+        transition: transform 0.3s ease;
+    }
+    .news-view-all-btn:hover svg {
+        transform: rotate(90deg);
     }
 
     /* ===== MODAL OVERLAY (LIGHT THEME) ===== */
@@ -974,6 +1017,13 @@
             height: 8px;
             border-radius: 99px;
         }
+        .news-view-all-btn {
+            position: relative;
+            right: auto;
+            bottom: auto;
+            margin-top: 12px;
+            margin-bottom: 6px;
+        }
         .news-dot-fill {
             top: 0;
             left: 0;
@@ -1083,16 +1133,18 @@
             <div class="news-dots" id="newsDots"></div>
             <span class="news-page-info" id="newsPageInfo"></span>
             <button class="news-arrow-btn" id="newsNextBtn" title="Halaman Berikutnya">&#8595;</button>
+            
+            <!-- Tombol View All (Circular Expanding Button) -->
+            <button class="news-view-all-btn" id="newsViewAllBtn" title="Buka Semua Berita" aria-label="Lihat Semua Berita">
+                <span class="btn-icon-wrapper">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                        <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+                    </svg>
+                </span>
+                <span class="btn-text-label">Semua Berita</span>
+            </button>
         </div>
-
-        <!-- Tombol View All -->
-        <button class="news-view-all-btn" id="newsViewAllBtn">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
-            </svg>
-            Lihat Semua Berita
-        </button>
 
     </div>
 </div>
