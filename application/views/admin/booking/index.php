@@ -2246,7 +2246,7 @@
                             <th style="width: 85px; text-align: center; padding-right: 14px;">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="adminBookingTableBody">
                         <?php if (empty($peminjaman)): ?>
                             <tr>
                                 <td colspan="7" style="text-align: center; padding: 40px; color: #94a3b8;">
@@ -3292,9 +3292,304 @@
             filterTable();
         }
 
+        window.adminBookingsMap = {};
+
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function buildAdminRowHtml(p, isChecked) {
+            window.adminBookingsMap[p.id] = p;
+            const s = p.status || 'Pending';
+            const isPending = (s === 'Pending');
+            let statusCategory = 'pending';
+            let dot = '#f59e0b';
+            let bg = '#fffbeb';
+            let color = '#b45309';
+            let label = 'Menunggu Persetujuan';
+
+            if (isPending) {
+                dot = '#f59e0b'; bg = '#fffbeb'; color = '#b45309'; label = 'Menunggu Persetujuan'; statusCategory = 'pending';
+            } else if (s.toLowerCase().includes('ka. ur') || s.toLowerCase().includes('kaur')) {
+                dot = '#22c55e'; bg = '#f0fdf4'; color = '#166534'; label = 'Disetujui Ka. Ur'; statusCategory = 'kaur';
+            } else if (s.toLowerCase().includes('laboran')) {
+                dot = '#3b82f6'; bg = '#eff6ff'; color = '#1d4ed8'; label = 'Disetujui Laboran'; statusCategory = 'laboran';
+            } else if (s.toLowerCase().includes('admin') || s.toLowerCase().includes('disetujui')) {
+                dot = '#8b5cf6'; bg = '#f5f3ff'; color = '#6d28d9'; label = s; statusCategory = 'admin';
+            } else if (s === 'Ditolak') {
+                dot = '#ef4444'; bg = '#fef2f2'; color = '#991b1b'; label = 'Ditolak'; statusCategory = 'rejected';
+            } else {
+                dot = '#8b5cf6'; bg = '#f5f3ff'; color = '#6d28d9'; label = s; statusCategory = 'admin';
+            }
+
+            const dateFormatted = p.tanggal_formatted || p.tanggal_mulai || '-';
+            const timeFormatted = p.waktu_formatted || `${(p.jam_mulai||'').substring(0,5)} - ${(p.jam_selesai||'').substring(0,5)}`;
+
+            const namaLengkap = p.nama_lengkap || '-';
+            const kodeRuangan = p.kode_ruangan || '-';
+            const namaRuangan = p.nama_ruangan || '-';
+            const namaKategori = p.nama_kategori || 'Ruangan';
+            const keterangan = p.keterangan || '-';
+
+            const searchAttr = `${namaLengkap} ${kodeRuangan} ${namaRuangan} ${keterangan} ${s} ${dateFormatted}`.toLowerCase();
+            const namaAttr = namaLengkap.toLowerCase();
+            const ruanganAttr = `${kodeRuangan} ${namaRuangan} ${namaKategori}`.toLowerCase();
+            const tanggalAttr = `${dateFormatted} ${p.tanggal_mulai || ''} ${p.tanggal_selesai || ''}`.toLowerCase();
+            const ketAttr = keterangan.toLowerCase();
+            const statusAttr = `${s} ${label}`.toLowerCase();
+
+            let tooltipMeta = '';
+            if (p.lokasi || p.kapasitas) {
+                tooltipMeta = `<div class="rht-meta">`;
+                if (p.lokasi) tooltipMeta += `<span>📍 ${escapeHtml(p.lokasi)}</span>`;
+                if (p.kapasitas) tooltipMeta += `<span>👥 ${escapeHtml(p.kapasitas)} Orang</span>`;
+                tooltipMeta += `</div>`;
+            }
+
+            let alasanHtml = '';
+            if (p.status === 'Ditolak' && p.alasan_penolakan) {
+                alasanHtml = `
+                    <div style="font-size: 0.75rem; color: #dc2626; margin-top: 4px;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Alasan: ${escapeHtml(p.alasan_penolakan)}
+                    </div>
+                `;
+            }
+
+            let actionButtons = '';
+            if (isPending) {
+                actionButtons += `
+                    <button type="button" class="action-dropdown-item item-acc" onclick="singleApprove(${p.id})">
+                        <i class="fa-solid fa-check"></i> Setujui (Laboran)
+                    </button>
+                    <button type="button" class="action-dropdown-item item-rej" onclick="openSingleRejectModal(${p.id})">
+                        <i class="fa-solid fa-ban"></i> Tolak Peminjaman
+                    </button>
+                `;
+            }
+            if (statusCategory === 'laboran' || statusCategory === 'kaur' || statusCategory === 'admin') {
+                actionButtons += `
+                    <button type="button" class="action-dropdown-item item-qr" onclick="openSuratModal(${p.id})">
+                        <i class="fa-solid fa-qrcode"></i> Cetak Surat QR
+                    </button>
+                `;
+            }
+            actionButtons += `
+                <button type="button" class="action-dropdown-item" onclick="openDetailModal(window.adminBookingsMap[${p.id}])">
+                    <i class="fa-solid fa-eye text-blue-500"></i> Detail Permohonan
+                </button>
+                <div class="action-dropdown-divider"></div>
+                <button type="button" class="action-dropdown-item item-del" onclick="deleteBooking(${p.id})">
+                    <i class="fa-solid fa-trash-can"></i> Hapus Data
+                </button>
+            `;
+
+            return `
+                <tr class="booking-row" 
+                    data-id="${p.id}" 
+                    data-status-category="${statusCategory}" 
+                    data-nama="${escapeHtml(namaAttr)}"
+                    data-ruangan="${escapeHtml(ruanganAttr)}"
+                    data-tanggal="${escapeHtml(tanggalAttr)}"
+                    data-tanggal-mulai="${escapeHtml(p.tanggal_mulai || '')}"
+                    data-tanggal-selesai="${escapeHtml(p.tanggal_selesai || '')}"
+                    data-keterangan="${escapeHtml(ketAttr)}"
+                    data-status="${escapeHtml(statusAttr)}"
+                    data-search="${escapeHtml(searchAttr)}">
+                    <td style="text-align: center;">
+                        <input type="checkbox" class="custom-checkbox row-checkbox" data-id="${p.id}" data-status="${escapeHtml(p.status || '')}" data-status-category="${statusCategory}" onchange="updateBatchBar()" ${isChecked ? 'checked' : ''}>
+                    </td>
+                    <td>
+                        <div class="tr-room-col">
+                            <div class="tr-room-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1e293b" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                            </div>
+                            <div class="tr-room-info" title="${escapeHtml(namaRuangan + ' (' + kodeRuangan + ')') }">
+                                <div class="tr-room-code">${escapeHtml(kodeRuangan)}</div>
+                                <div class="tr-room-name">${escapeHtml(namaRuangan)}</div>
+                            </div>
+
+                            <!-- Floating Room Detail Tooltip on Hover -->
+                            <div class="room-hover-tooltip">
+                                <div class="rht-header">
+                                    <span class="rht-code">${escapeHtml(kodeRuangan)}</span>
+                                    <span class="rht-cat">${escapeHtml(namaKategori)}</span>
+                                </div>
+                                <div class="rht-title">${escapeHtml(namaRuangan)}</div>
+                                ${tooltipMeta}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="tr-user-time-col">
+                            <div class="tr-pill-user" title="${escapeHtml(namaLengkap)}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1e293b" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                <span>${escapeHtml(namaLengkap)}</span>
+                            </div>
+                            <div class="tr-pill-time" title="${escapeHtml(timeFormatted)}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                <span>${escapeHtml(timeFormatted)}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="tr-date-col">
+                            ${escapeHtml(dateFormatted)}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="tr-desc-col" title="${escapeHtml(keterangan)}">
+                            <span class="tr-desc-text">${escapeHtml(keterangan)}</span>
+
+                            <!-- Floating Keterangan Detail Tooltip on Hover -->
+                            <div class="desc-hover-tooltip">
+                                <span class="dht-badge">📝 Keterangan / Keperluan</span>
+                                <div class="dht-content">${escapeHtml(keterangan)}</div>
+                            </div>
+                            ${alasanHtml}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-badge" style="background: ${bg}; color: ${color};" title="${escapeHtml(label)}">
+                            <span class="status-dot" style="background: ${dot};"></span>
+                            <span class="status-text">${escapeHtml(label)}</span>
+                        </span>
+                    </td>
+                    <td style="width: 85px; text-align: center; overflow: visible; position: relative; padding-right: 14px;">
+                        <div class="action-dropdown-wrap">
+                            <button type="button" class="btn-action-dots" onclick="toggleActionDropdown(${p.id}, event)" title="Menu Aksi">
+                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                                <span>Aksi</span>
+                            </button>
+                            <div class="action-dropdown-menu" id="actionMenu_${p.id}">
+                                ${actionButtons}
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        let lastLiveAdminHash = '';
+        let initialAdminLoadDone = false;
+        let isAdminPolling = false;
+
+        function syncLiveAdminBookings() {
+            if (isAdminPolling) return;
+            isAdminPolling = true;
+
+            $.ajax({
+                url: BASE_URL + 'kelolabooking/live-data',
+                type: 'GET',
+                dataType: 'json',
+                cache: false,
+                success: function(resp) {
+                    if (resp && resp.status === 'success' && Array.isArray(resp.data)) {
+                        const newHash = JSON.stringify({
+                            total: resp.totalCount,
+                            pending: resp.pendingCount,
+                            laboran: resp.laboranCount,
+                            kaur: resp.kaurCount,
+                            admin: resp.adminCount,
+                            rejected: resp.rejectedCount,
+                            ids: resp.data.map(d => `${d.id}_${d.status}_${d.updated_at || ''}`)
+                        });
+
+                        if (newHash !== lastLiveAdminHash) {
+                            const isNewIncoming = initialAdminLoadDone && (
+                                (resp.totalCount > (parseInt($('#statTotalCount').text()) || 0)) ||
+                                (resp.pendingCount > (parseInt($('#statPendingCount').text()) || 0))
+                            );
+
+                            lastLiveAdminHash = newHash;
+
+                            // 1. Update Stat Highlight Counters
+                            $('#statTotalCount').text(resp.totalCount);
+                            $('#statPendingCount').text(resp.pendingCount);
+                            $('#statLaboranCount').text(resp.laboranCount);
+                            $('#statKaurCount').text(resp.kaurCount);
+                            $('#statRejectedCount').text(resp.rejectedCount);
+                            $('#toolbarTotalCount').text(resp.totalCount);
+
+                            // 2. Update Filter Pill Badges
+                            $('#pill-count-all').text(resp.totalCount);
+                            $('#pill-count-pending').text(resp.pendingCount);
+                            $('#pill-count-laboran').text(resp.laboranCount);
+                            $('#pill-count-kaur').text(resp.kaurCount);
+                            $('#pill-count-admin').text(resp.adminCount);
+                            $('#pill-count-rejected').text(resp.rejectedCount);
+
+                            // 3. Preserve selected checkboxes
+                            const selectedIds = getSelectedIds();
+
+                            // 4. Rebuild tbody
+                            const tbody = document.getElementById('adminBookingTableBody');
+                            if (tbody) {
+                                if (resp.data.length === 0) {
+                                    tbody.innerHTML = `
+                                        <tr>
+                                            <td colspan="7" style="text-align: center; padding: 40px; color: #94a3b8;">
+                                                <i class="fa-solid fa-inbox" style="font-size: 2rem; margin-bottom: 8px; display: block;"></i>
+                                                Belum ada data peminjaman ruangan.
+                                            </td>
+                                        </tr>
+                                    `;
+                                } else {
+                                    let html = '';
+                                    resp.data.forEach(item => {
+                                        const isChecked = selectedIds.includes(String(item.id));
+                                        html += buildAdminRowHtml(item, isChecked);
+                                    });
+                                    tbody.innerHTML = html;
+                                }
+                            }
+
+                            // 5. Re-apply client-side filter and pagination
+                            filterTable();
+
+                            // 6. Trigger Toast if new items
+                            if (isNewIncoming) {
+                                const Toast = Swal.mixin({
+                                    toast: true,
+                                    position: 'top-end',
+                                    showConfirmButton: false,
+                                    timer: 3500,
+                                    timerProgressBar: true,
+                                    background: '#0f172a',
+                                    color: '#ffffff',
+                                    iconColor: '#38bdf8'
+                                });
+                                Toast.fire({
+                                    icon: 'info',
+                                    title: 'Data Baru Masuk!',
+                                    text: 'Tabel telah otomatis diperbarui secara realtime.'
+                                });
+                            }
+                        }
+                    }
+                    initialAdminLoadDone = true;
+                },
+                complete: function() {
+                    isAdminPolling = false;
+                    setTimeout(syncLiveAdminBookings, 3000);
+                }
+            });
+        }
+
+        function triggerLiveAdminSync() {
+            lastLiveAdminHash = '';
+            syncLiveAdminBookings();
+        }
+
         // Initialize table on load
         $(document).ready(function() {
             filterTable();
+            setTimeout(syncLiveAdminBookings, 1500);
         });
 
         // Backward compatibility
@@ -3364,6 +3659,8 @@
                 if (res.isConfirmed) {
                     $.post(BASE_URL + 'kelolabooking/approve/' + id, function(resp) {
                         if (resp.status === 'success') {
+                            triggerLiveAdminSync();
+                            deselectAll();
                             Swal.fire({ 
                                 title: 'Disetujui!', 
                                 text: resp.message, 
@@ -3376,8 +3673,6 @@
                             }).then((r) => {
                                 if (r.isConfirmed) {
                                     openSuratModal(id);
-                                } else {
-                                    location.reload();
                                 }
                             });
                         } else {
@@ -3430,6 +3725,7 @@
             document.getElementById('rejectTargetIds').value = JSON.stringify([id]);
             document.getElementById('rejectIsBatch').value = '0';
             document.getElementById('alasanPenolakanTextarea').value = '';
+            closeAllActionDropdowns();
             document.getElementById('rejectModal').classList.add('active');
         }
 
@@ -3453,8 +3749,9 @@
                 if (res.isConfirmed) {
                     $.post(BASE_URL + 'kelolabooking/batch_approve', { ids: ids }, function(resp) {
                         if (resp.status === 'success') {
-                            Swal.fire({ title: 'Berhasil!', text: resp.message, icon: 'success', confirmButtonColor: '#16a34a' })
-                            .then(() => location.reload());
+                            triggerLiveAdminSync();
+                            deselectAll();
+                            Swal.fire({ title: 'Berhasil!', text: resp.message, icon: 'success', confirmButtonColor: '#16a34a' });
                         } else {
                             Swal.fire('Gagal', resp.message, 'error');
                         }
@@ -3496,8 +3793,9 @@
                 $.post(BASE_URL + 'kelolabooking/batch_reject', { ids: ids, alasan_penolakan: alasan }, function(resp) {
                     if (resp.status === 'success') {
                         closeRejectModal();
-                        Swal.fire({ title: 'Ditolak!', text: resp.message, icon: 'success', confirmButtonColor: '#dc2626' })
-                        .then(() => location.reload());
+                        triggerLiveAdminSync();
+                        deselectAll();
+                        Swal.fire({ title: 'Ditolak!', text: resp.message, icon: 'success', confirmButtonColor: '#dc2626' });
                     } else {
                         Swal.fire('Gagal', resp.message, 'error');
                     }
@@ -3507,8 +3805,9 @@
                 $.post(BASE_URL + 'kelolabooking/reject/' + singleId, { alasan_penolakan: alasan }, function(resp) {
                     if (resp.status === 'success') {
                         closeRejectModal();
-                        Swal.fire({ title: 'Ditolak!', text: resp.message, icon: 'success', confirmButtonColor: '#dc2626' })
-                        .then(() => location.reload());
+                        triggerLiveAdminSync();
+                        deselectAll();
+                        Swal.fire({ title: 'Ditolak!', text: resp.message, icon: 'success', confirmButtonColor: '#dc2626' });
                     } else {
                         Swal.fire('Gagal', resp.message, 'error');
                     }
@@ -3567,6 +3866,7 @@
         // DELETE BOOKING
         // ==========================================
         function deleteBooking(id) {
+            closeAllActionDropdowns();
             Swal.fire({
                 title: 'Hapus Data Peminjaman?',
                 text: 'Data yang dihapus tidak dapat dikembalikan.',
@@ -3580,8 +3880,9 @@
                 if (res.isConfirmed) {
                     $.post(BASE_URL + 'kelolabooking/delete/' + id, function(resp) {
                         if (resp.status === 'success') {
-                            Swal.fire({ title: 'Terhapus!', text: resp.message, icon: 'success', confirmButtonColor: '#ea580c' })
-                            .then(() => location.reload());
+                            triggerLiveAdminSync();
+                            deselectAll();
+                            Swal.fire({ title: 'Terhapus!', text: resp.message, icon: 'success', confirmButtonColor: '#ea580c' });
                         } else {
                             Swal.fire('Gagal', resp.message, 'error');
                         }
@@ -3678,8 +3979,10 @@
                 success: function(resp) {
                     if (resp.status === 'success') {
                         closeAdminBookingModal();
-                        Swal.fire({ title: 'Berhasil!', text: resp.message, icon: 'success', confirmButtonColor: '#16a34a' })
-                        .then(() => location.reload());
+                        $('#formBooking')[0].reset();
+                        triggerLiveAdminSync();
+                        deselectAll();
+                        Swal.fire({ title: 'Berhasil!', text: resp.message, icon: 'success', confirmButtonColor: '#16a34a' });
                     } else {
                         Swal.fire('Gagal', resp.message, 'error');
                     }

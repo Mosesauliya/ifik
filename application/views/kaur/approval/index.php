@@ -2214,7 +2214,7 @@
                             <th style="width: 85px; text-align: center; padding-right: 14px;">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="kaurBookingTableBody">
                         <?php if (empty($peminjaman)): ?>
                             <tr>
                                 <td colspan="7" style="text-align: center; padding: 40px; color: #94a3b8;">
@@ -3158,9 +3158,278 @@
             filterTable();
         }
 
+        window.kaurBookingsMap = {};
+
+        function buildKaurRowHtml(p, isChecked) {
+            window.kaurBookingsMap[p.id] = p;
+            const s = p.status || 'Pending';
+            const isApprovedKaur = (s.toLowerCase().includes('ka. ur') || s.toLowerCase().includes('kaur'));
+            const isLaboranAcc = (s.toLowerCase().includes('laboran'));
+            const isPending = (s === 'Pending');
+            const isRejected = (s === 'Ditolak');
+
+            let statusCategory = 'other';
+            let dot = '#8b5cf6';
+            let bg = '#f5f3ff';
+            let color = '#6d28d9';
+            let label = s;
+
+            if (isApprovedKaur) {
+                statusCategory = 'kaur';
+                dot = '#22c55e'; bg = '#f0fdf4'; color = '#166534'; label = 'Disetujui Ka. Ur';
+            } else if (isLaboranAcc) {
+                statusCategory = 'laboran';
+                dot = '#3b82f6'; bg = '#eff6ff'; color = '#1d4ed8'; label = 'Disetujui Laboran';
+            } else if (isPending) {
+                statusCategory = 'pending';
+                dot = '#f59e0b'; bg = '#fffbeb'; color = '#b45309'; label = 'Menunggu Persetujuan';
+            } else if (isRejected) {
+                statusCategory = 'rejected';
+                dot = '#ef4444'; bg = '#fef2f2'; color = '#991b1b'; label = 'Ditolak';
+            }
+
+            const dateFormatted = p.tanggal_formatted || p.tanggal_mulai || '-';
+            const timeFormatted = p.waktu_formatted || `${(p.jam_mulai||'').substring(0,5)} - ${(p.jam_selesai||'').substring(0,5)}`;
+
+            const namaLengkap = p.nama_lengkap || '-';
+            const kodeRuangan = p.kode_ruangan || '-';
+            const namaRuangan = p.nama_ruangan || '-';
+            const namaKategori = p.nama_kategori || 'Ruangan';
+            const keterangan = p.keterangan || '-';
+
+            const searchAttr = `${namaLengkap} ${kodeRuangan} ${namaRuangan} ${keterangan} ${s} ${dateFormatted}`.toLowerCase();
+            const namaAttr = namaLengkap.toLowerCase();
+            const ruanganAttr = `${kodeRuangan} ${namaRuangan} ${namaKategori}`.toLowerCase();
+            const tanggalAttr = `${dateFormatted} ${p.tanggal_mulai || ''} ${p.tanggal_selesai || ''}`.toLowerCase();
+            const ketAttr = keterangan.toLowerCase();
+            const statusAttr = `${s} ${label}`.toLowerCase();
+
+            let tooltipMeta = '';
+            if (p.lokasi || p.kapasitas) {
+                tooltipMeta = `<div class="rht-meta">`;
+                if (p.lokasi) tooltipMeta += `<span>📍 ${escapeHtml(p.lokasi)}</span>`;
+                if (p.kapasitas) tooltipMeta += `<span>👥 ${escapeHtml(p.kapasitas)} Orang</span>`;
+                tooltipMeta += `</div>`;
+            }
+
+            let alasanHtml = '';
+            if (isRejected && p.alasan_penolakan) {
+                alasanHtml = `
+                    <div style="font-size: 0.75rem; color: #dc2626; margin-top: 4px;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> ${escapeHtml(p.alasan_penolakan)}
+                    </div>
+                `;
+            }
+
+            let actionButtons = '';
+            if (isPending || isLaboranAcc) {
+                actionButtons += `
+                    <button type="button" class="action-dropdown-item item-acc" onclick="kaurApprove(${p.id})">
+                        <i class="fa-solid fa-check"></i> Setujui (Ka. Ur)
+                    </button>
+                    <button type="button" class="action-dropdown-item item-rej" onclick="openKaurRejectModal(${p.id})">
+                        <i class="fa-solid fa-ban"></i> Tolak Permohonan
+                    </button>
+                `;
+            }
+            if (isApprovedKaur || isLaboranAcc || s.toLowerCase().includes('disetujui') || s.toLowerCase().includes('approved')) {
+                actionButtons += `
+                    <button type="button" class="action-dropdown-item item-qr" onclick="openSuratModal(${p.id})">
+                        <i class="fa-solid fa-qrcode"></i> Cetak Surat QR
+                    </button>
+                `;
+            }
+            actionButtons += `
+                <button type="button" class="action-dropdown-item" onclick="openDetailModal(window.kaurBookingsMap[${p.id}])">
+                    <i class="fa-solid fa-eye" style="color:#3b82f6;"></i> Detail Permohonan
+                </button>
+                <div class="action-dropdown-divider"></div>
+                <button type="button" class="action-dropdown-item item-del" onclick="deleteBooking(${p.id})">
+                    <i class="fa-solid fa-trash-can"></i> Hapus Data
+                </button>
+            `;
+
+            return `
+                <tr class="kaur-row" 
+                    data-id="${p.id}" 
+                    data-status-category="${statusCategory}" 
+                    data-nama="${escapeHtml(namaAttr)}"
+                    data-ruangan="${escapeHtml(ruanganAttr)}"
+                    data-tanggal="${escapeHtml(tanggalAttr)}"
+                    data-tanggal-mulai="${escapeHtml(p.tanggal_mulai || '')}"
+                    data-tanggal-selesai="${escapeHtml(p.tanggal_selesai || '')}"
+                    data-keterangan="${escapeHtml(ketAttr)}"
+                    data-status="${escapeHtml(statusAttr)}"
+                    data-search="${escapeHtml(searchAttr)}">
+                    <td style="text-align: center; padding: 11px 6px;">
+                        <input type="checkbox" class="custom-checkbox row-checkbox" data-id="${p.id}" data-status="${escapeHtml(p.status || '')}" data-status-category="${statusCategory}" onchange="updateBatchBar()" ${isChecked ? 'checked' : ''}>
+                    </td>
+                    <td>
+                        <div class="tr-room-col">
+                            <div class="tr-room-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1e293b" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                            </div>
+                            <div class="tr-room-info" title="${escapeHtml(namaRuangan + ' (' + kodeRuangan + ')') }">
+                                <div class="tr-room-code">${escapeHtml(kodeRuangan)}</div>
+                                <div class="tr-room-name">${escapeHtml(namaRuangan)}</div>
+                            </div>
+
+                            <!-- Floating Room Detail Tooltip on Hover -->
+                            <div class="room-hover-tooltip">
+                                <div class="rht-header">
+                                    <span class="rht-code">${escapeHtml(kodeRuangan)}</span>
+                                    <span class="rht-cat">${escapeHtml(namaKategori)}</span>
+                                </div>
+                                <div class="rht-title">${escapeHtml(namaRuangan)}</div>
+                                ${tooltipMeta}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="tr-user-time-col">
+                            <div class="tr-pill-user" title="${escapeHtml(namaLengkap)}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1e293b" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                <span>${escapeHtml(namaLengkap)}</span>
+                            </div>
+                            <div class="tr-pill-time" title="${escapeHtml(timeFormatted)}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                <span>${escapeHtml(timeFormatted)}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="tr-date-col">
+                            ${escapeHtml(dateFormatted)}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="tr-desc-col" title="${escapeHtml(keterangan)}">
+                            <span class="tr-desc-text">${escapeHtml(keterangan)}</span>
+
+                            <!-- Floating Keterangan Detail Tooltip on Hover -->
+                            <div class="desc-hover-tooltip">
+                                <span class="dht-badge">📝 Keterangan / Keperluan</span>
+                                <div class="dht-content">${escapeHtml(keterangan)}</div>
+                            </div>
+                            ${alasanHtml}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-badge" style="background: ${bg}; color: ${color};" title="${escapeHtml(label)}">
+                            <span class="status-dot" style="background: ${dot};"></span>
+                            <span class="status-text">${escapeHtml(label)}</span>
+                        </span>
+                    </td>
+                    <td style="width: 85px; text-align: center; overflow: visible; position: relative; padding-right: 14px;">
+                        <div class="action-dropdown-wrap">
+                            <button type="button" class="btn-action-dots" onclick="toggleActionDropdown(${p.id}, event)" title="Menu Aksi">
+                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                                <span>Aksi</span>
+                            </button>
+                            <div class="action-dropdown-menu" id="actionMenu_${p.id}">
+                                ${actionButtons}
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        let lastLiveKaurHash = '';
+        let initialKaurLoadDone = false;
+        let isKaurPolling = false;
+
+        function syncLiveKaurBookings() {
+            if (isKaurPolling) return;
+            isKaurPolling = true;
+
+            $.ajax({
+                url: BASE_URL + 'kaur/live-data',
+                type: 'GET',
+                dataType: 'json',
+                cache: false,
+                success: function(resp) {
+                    if (resp && resp.status === 'success' && Array.isArray(resp.data)) {
+                        const newHash = JSON.stringify({
+                            total: resp.totalCount,
+                            pending: resp.pendingCount,
+                            laboran: resp.laboranCount,
+                            kaur: resp.kaurCount,
+                            admin: resp.adminCount,
+                            rejected: resp.rejectedCount,
+                            ids: resp.data.map(d => `${d.id}_${d.status}_${d.updated_at || ''}`)
+                        });
+
+                        if (newHash !== lastLiveKaurHash) {
+                            const isNewIncoming = initialKaurLoadDone && (
+                                (resp.totalCount > (parseInt($('#statTotalVal').text()) || 0)) ||
+                                ((resp.laboranCount + resp.pendingCount) > (parseInt($('#statReadyVal').text()) || 0))
+                            );
+
+                            lastLiveKaurHash = newHash;
+
+                            // 1. Preserve selected checkboxes
+                            const selectedIds = getSelectedIds();
+
+                            // 2. Rebuild tbody
+                            const tbody = document.getElementById('kaurBookingTableBody');
+                            if (tbody) {
+                                if (resp.data.length === 0) {
+                                    tbody.innerHTML = `
+                                        <tr>
+                                            <td colspan="7" style="text-align: center; padding: 40px; color: #94a3b8;">
+                                                <i class="fa-solid fa-inbox" style="font-size: 2rem; margin-bottom: 8px; display: block;"></i>
+                                                Belum ada permohonan peminjaman ruangan.
+                                            </td>
+                                        </tr>
+                                    `;
+                                } else {
+                                    let html = '';
+                                    resp.data.forEach(item => {
+                                        const isChecked = selectedIds.includes(String(item.id));
+                                        html += buildKaurRowHtml(item, isChecked);
+                                    });
+                                    tbody.innerHTML = html;
+                                }
+                            }
+
+                            // 3. Recalculate stats and filter table
+                            recalculateKaurStats();
+                            filterTable();
+
+                            // 4. Trigger Toast if new items
+                            if (isNewIncoming) {
+                                const Toast = Swal.mixin({
+                                    toast: true,
+                                    position: 'top-end',
+                                    showConfirmButton: false,
+                                    timer: 3500,
+                                    timerProgressBar: true,
+                                    background: '#0f172a',
+                                    color: '#ffffff',
+                                    iconColor: '#38bdf8'
+                                });
+                                Toast.fire({
+                                    icon: 'info',
+                                    title: 'Data Baru Masuk!',
+                                    text: 'Tabel permohonan telah diperbarui secara realtime.'
+                                });
+                            }
+                        }
+                    }
+                    initialKaurLoadDone = true;
+                },
+                complete: function() {
+                    isKaurPolling = false;
+                    setTimeout(syncLiveKaurBookings, 3000);
+                }
+            });
+        }
+
         // Initialize table on load
         $(document).ready(function() {
             filterTable();
+            setTimeout(syncLiveKaurBookings, 1500);
         });
 
         // Backward compatibility
