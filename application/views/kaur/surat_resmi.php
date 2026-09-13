@@ -29,8 +29,8 @@
             body { background: #fff; padding: 0; }
             .paper { width: 100%; min-height: 100%; box-shadow: none; padding: 15mm; margin: 0; }
             .no-print { display: none !important; }
-            .qr-box { border: 1.5px solid #000 !important; box-shadow: none !important; }
-            #qrcode { width: 105px !important; height: 105px !important; }
+            .qr-box { border: none !important; box-shadow: none !important; background: transparent !important; }
+            #qrcode { width: 100px !important; height: 100px !important; }
         }
 
         /* Kop Surat */
@@ -72,24 +72,37 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
         }
 
         .qr-box {
-            display: inline-flex;
+            display: flex;
             align-items: center;
             justify-content: center;
-            padding: 8px;
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
+            padding: 0 !important;
+            background: transparent !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            width: 100px !important;
+            height: 100px !important;
+            max-width: 100px !important;
+            max-height: 100px !important;
+            box-sizing: border-box;
+            overflow: hidden;
         }
 
         #qrcode {
-            width: 105px;
-            height: 105px;
+            width: 100px !important;
+            height: 100px !important;
+            max-width: 100px !important;
+            max-height: 100px !important;
             margin: 0 auto;
             background: #ffffff;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         #qrcode canvas {
@@ -97,8 +110,10 @@
         }
 
         #qrcode img {
-            width: 100% !important;
-            height: 100% !important;
+            width: 100px !important;
+            height: 100px !important;
+            max-width: 100px !important;
+            max-height: 100px !important;
             display: block !important;
             margin: 0 auto;
             image-rendering: -webkit-optimize-contrast;
@@ -391,18 +406,18 @@
             const tempDiv = document.createElement('div');
             new QRCode(tempDiv, {
                 text: qrText,
-                width: 260,
-                height: 260,
+                width: 320,
+                height: 320,
                 colorDark: "#000000",
                 colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.M
+                correctLevel: QRCode.CorrectLevel.H
             });
 
             function renderQRWithQuietZone(attempts) {
                 if (attempts <= 0) return;
                 const srcCanvas = tempDiv.querySelector('canvas');
                 if (srcCanvas && srcCanvas.width > 0) {
-                    const margin = 24; // 4-module quiet zone in px
+                    const margin = 16; // clean quiet zone in px
                     const outCanvas = document.createElement('canvas');
                     outCanvas.width = srcCanvas.width + (margin * 2);
                     outCanvas.height = srcCanvas.height + (margin * 2);
@@ -415,7 +430,7 @@
                     const img = document.createElement('img');
                     img.src = outCanvas.toDataURL('image/png');
                     img.alt = 'QR Code';
-                    img.style.cssText = 'width: 100%; height: 100%; display: block; image-rendering: pixelated;';
+                    img.style.cssText = 'width: 100px; height: 100px; display: block; image-rendering: pixelated; margin: 0 auto;';
                     qrContainer.innerHTML = '';
                     qrContainer.appendChild(img);
                 } else {
@@ -423,7 +438,7 @@
                 }
             }
 
-            renderQRWithQuietZone(20);
+            renderQRWithQuietZone(25);
         })();
     </script>
 </body>
