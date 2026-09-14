@@ -1380,14 +1380,6 @@
             body {
                 padding: 16px 14px 110px 14px;
             }
-            .table-responsive {
-                overflow-x: auto !important;
-                -webkit-overflow-scrolling: touch;
-            }
-            table.booking-table {
-                min-width: 820px;
-                table-layout: auto;
-            }
             .page-header {
                 flex-direction: column;
                 align-items: flex-start;
@@ -1543,6 +1535,376 @@
                 border-radius: 12px !important;
                 flex-shrink: 0 !important;
             }
+
+            /* =========================================================
+               RESPONSIVE TABLE TO MOBILE CARDS TRANSFORMATION (<900px)
+               ========================================================= */
+            .table-card {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+            }
+
+            .table-responsive {
+                overflow: visible !important;
+            }
+
+            table.laboran-table {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
+                border: none !important;
+            }
+
+            table.laboran-table colgroup,
+            table.laboran-table thead {
+                display: none !important;
+            }
+
+            table.laboran-table tbody {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 12px !important;
+                width: 100% !important;
+                min-width: 0 !important;
+            }
+
+            .booking-row {
+                display: flex !important;
+                flex-direction: column !important;
+                background: #ffffff !important;
+                border: 1.5px solid #e2e8f0 !important;
+                border-radius: 16px !important;
+                padding: 14px 14px 14px 14px !important;
+                box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04) !important;
+                gap: 10px !important;
+                position: relative !important;
+                box-sizing: border-box !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
+                transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s !important;
+            }
+
+            .booking-row[style*="display: none"] {
+                display: none !important;
+            }
+
+            .booking-row:hover {
+                border-color: #cbd5e1 !important;
+                box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08) !important;
+            }
+
+            .booking-row:has(.row-checkbox:checked) {
+                border-color: #fdba74 !important;
+                background: #fffbf7 !important;
+                box-shadow: 0 4px 16px rgba(234, 88, 12, 0.09) !important;
+            }
+
+            .booking-row td {
+                display: block !important;
+                padding: 0 !important;
+                border: none !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
+                box-sizing: border-box !important;
+            }
+
+            /* TD 1: Checkbox (Top Left Absolute) */
+            .booking-row td:nth-child(1) {
+                position: absolute !important;
+                top: 14px !important;
+                left: 14px !important;
+                width: auto !important;
+                z-index: 2 !important;
+            }
+
+            .booking-row td:nth-child(1) .custom-checkbox {
+                margin: 0 !important;
+                width: 20px !important;
+                height: 20px !important;
+            }
+
+            /* TD 6: Status Badge (Top Bar, Next to Checkbox) */
+            .booking-row td:nth-child(6) {
+                order: 1 !important;
+                display: flex !important;
+                align-items: center !important;
+                padding-left: 30px !important;
+                padding-right: 80px !important;
+                min-height: 28px !important;
+            }
+
+            .booking-row .status-badge {
+                width: auto !important;
+                max-width: 100% !important;
+                height: 26px !important;
+                padding: 2px 10px !important;
+                font-size: 0.72rem !important;
+                justify-content: flex-start !important;
+            }
+
+            /* TD 7: Aksi (Top Right Absolute) */
+            .booking-row td:nth-child(7) {
+                position: absolute !important;
+                top: 12px !important;
+                right: 12px !important;
+                width: auto !important;
+                z-index: 20 !important;
+                padding: 0 !important;
+            }
+
+            .booking-row .btn-action-dots {
+                height: 30px !important;
+                padding: 4px 10px !important;
+                font-size: 0.76rem !important;
+                border-radius: 8px !important;
+            }
+
+            .booking-row .action-dropdown-menu {
+                right: 0 !important;
+                left: auto !important;
+                top: calc(100% + 4px) !important;
+            }
+
+            /* TD 2: Ruangan (Order 2) */
+            .booking-row td:nth-child(2) {
+                order: 2 !important;
+                margin-top: 4px !important;
+            }
+
+            .booking-row .tr-room-col {
+                display: flex !important;
+                align-items: center !important;
+                gap: 10px !important;
+                width: 100% !important;
+            }
+
+            .booking-row .tr-room-icon {
+                width: 38px !important;
+                height: 38px !important;
+                border-radius: 10px !important;
+                flex-shrink: 0 !important;
+            }
+
+            .booking-row .tr-room-info {
+                flex: 1 !important;
+                min-width: 0 !important;
+            }
+
+            .booking-row .tr-room-code {
+                font-size: 0.92rem !important;
+                font-weight: 800 !important;
+                white-space: normal !important;
+                word-break: break-word !important;
+                line-height: 1.3 !important;
+            }
+
+            .booking-row .tr-room-name {
+                font-size: 0.78rem !important;
+                font-weight: 500 !important;
+                color: #64748b !important;
+                white-space: normal !important;
+                line-height: 1.3 !important;
+            }
+
+            /* TD 3: Peminjam & Waktu (Order 3) */
+            .booking-row td:nth-child(3) {
+                order: 3 !important;
+            }
+
+            .booking-row .tr-user-time-col {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: wrap !important;
+                align-items: center !important;
+                gap: 8px !important;
+                width: 100% !important;
+            }
+
+            .booking-row .tr-pill-user,
+            .booking-row .tr-pill-time {
+                flex: 1 1 calc(50% - 4px) !important;
+                min-width: 120px !important;
+                width: auto !important;
+                height: 28px !important;
+                font-size: 0.76rem !important;
+                padding: 3px 10px !important;
+                box-sizing: border-box !important;
+            }
+
+            /* TD 4: Tanggal (Order 4) */
+            .booking-row td:nth-child(4) {
+                order: 4 !important;
+            }
+
+            .booking-row .tr-date-col {
+                display: flex !important;
+                align-items: center !important;
+                gap: 6px !important;
+                font-size: 0.78rem !important;
+                font-weight: 700 !important;
+                color: #334155 !important;
+                background: #f8fafc !important;
+                border: 1px solid #e2e8f0 !important;
+                border-radius: 10px !important;
+                padding: 6px 12px !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            .booking-row .tr-date-col::before {
+                content: '📅';
+                font-size: 0.85rem;
+                flex-shrink: 0;
+            }
+
+            /* TD 5: Keterangan (Order 5) */
+            .booking-row td:nth-child(5) {
+                order: 5 !important;
+            }
+
+            .booking-row .tr-desc-col {
+                display: block !important;
+                width: 100% !important;
+                background: #f8fafc !important;
+                border-left: 3.5px solid #ea580c !important;
+                border-radius: 0 10px 10px 0 !important;
+                padding: 8px 12px !important;
+                box-sizing: border-box !important;
+            }
+
+            .booking-row .tr-desc-text {
+                white-space: normal !important;
+                font-size: 0.78rem !important;
+                color: #334155 !important;
+                line-height: 1.4 !important;
+                word-break: break-word !important;
+            }
+
+            /* Floating Batch Bar Mobile */
+            .floating-batch-bar {
+                width: calc(100% - 24px) !important;
+                max-width: calc(100% - 24px) !important;
+                left: 12px !important;
+                bottom: 16px !important;
+                transform: translateX(0) translateY(120px) !important;
+                padding: 10px 14px !important;
+                border-radius: 16px !important;
+                gap: 10px !important;
+                box-sizing: border-box !important;
+                justify-content: space-between !important;
+                flex-wrap: wrap !important;
+            }
+            .floating-batch-bar.show {
+                transform: translateX(0) translateY(0) !important;
+            }
+            .floating-batch-bar .batch-count-badge {
+                font-size: 0.76rem !important;
+            }
+            .floating-batch-bar .btn-batch-acc,
+            .floating-batch-bar .btn-batch-rej,
+            .floating-batch-bar .btn-batch-del {
+                padding: 6px 12px !important;
+                font-size: 0.75rem !important;
+            }
+
+            /* Pagination Bar Mobile */
+            .pagination-bar {
+                flex-direction: column !important;
+                gap: 10px !important;
+                align-items: center !important;
+                padding: 14px 12px !important;
+                background: #ffffff !important;
+                border: 1px solid #e2e8f0 !important;
+                border-radius: 14px !important;
+                margin-top: 12px !important;
+            }
+
+            /* Surat Resmi Modal Responsive Mobile */
+            .surat-modal-card {
+                width: 95% !important;
+                max-width: 95% !important;
+                height: 92vh !important;
+                max-height: 94vh !important;
+                border-radius: 16px !important;
+                margin: 0 auto !important;
+            }
+
+            .surat-modal-card .modal-header {
+                padding: 10px 12px !important;
+                gap: 8px !important;
+            }
+
+            .surat-header-left {
+                display: flex !important;
+                align-items: center !important;
+                gap: 8px !important;
+                min-width: 0 !important;
+                flex: 1 !important;
+            }
+
+            .surat-header-icon {
+                width: 32px !important;
+                height: 32px !important;
+                border-radius: 8px !important;
+                background: #ecfdf5 !important;
+                color: #16a34a !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                font-size: 0.95rem !important;
+                flex-shrink: 0 !important;
+            }
+
+            .surat-header-title {
+                font-size: 0.86rem !important;
+                font-weight: 800 !important;
+                color: #0f172a !important;
+                margin: 0 !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+            }
+
+            .surat-header-desc {
+                display: none !important;
+            }
+
+            .surat-header-actions {
+                display: flex !important;
+                align-items: center !important;
+                gap: 6px !important;
+                flex-shrink: 0 !important;
+            }
+
+            .btn-surat-print {
+                padding: 6px 10px !important;
+                background: linear-gradient(135deg, #16a34a, #15803d) !important;
+                color: #ffffff !important;
+                border: none !important;
+                border-radius: 8px !important;
+                font-weight: 700 !important;
+                font-size: 0.74rem !important;
+                cursor: pointer !important;
+                display: flex !important;
+                align-items: center !important;
+                gap: 5px !important;
+                box-shadow: 0 2px 6px rgba(22, 163, 74, 0.2) !important;
+                white-space: nowrap !important;
+            }
+
+            .btn-surat-icon {
+                width: 30px !important;
+                height: 30px !important;
+                border-radius: 8px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                flex-shrink: 0 !important;
+            }
         }
 
         @media (max-width: 600px) {
@@ -1599,7 +1961,7 @@
                 <div class="stat-card-top">
                     <div class="stat-card-meta">
                         <div class="stat-card-label">Total Pengajuan</div>
-                        <div class="stat-card-val" id="statTotalCount"><?= $totalCount ?></div>
+                        <div class="stat-card-val"><span id="statTotalCount"><?= $totalCount ?></span></div>
                         <div class="stat-card-desc">Semua permohonan masuk</div>
                     </div>
                     <div class="stat-card-3d-icon">
@@ -1620,9 +1982,6 @@
                         <div class="stat-card-label">Menunggu (Pending)</div>
                         <div class="stat-card-val">
                             <span id="statPendingCount"><?= $pendingCount ?></span>
-                            <?php if ($totalCount > 0): ?>
-                                <span class="stat-card-percent">(<?= round(($pendingCount / $totalCount) * 100) ?>%)</span>
-                            <?php endif; ?>
                         </div>
                         <div class="stat-card-desc">Perlu review Laboran</div>
                     </div>
@@ -1643,10 +2002,7 @@
                     <div class="stat-card-meta">
                         <div class="stat-card-label">Disetujui Laboran</div>
                         <div class="stat-card-val">
-                            <?= $approvedLaboranCount ?>
-                            <?php if ($totalCount > 0): ?>
-                                <span class="stat-card-percent">(<?= round(($approvedLaboranCount / $totalCount) * 100) ?>%)</span>
-                            <?php endif; ?>
+                            <span id="statLaboranCount"><?= $approvedLaboranCount ?></span>
                         </div>
                         <div class="stat-card-desc">Menunggu validasi Ka. Ur</div>
                     </div>
@@ -1667,10 +2023,7 @@
                     <div class="stat-card-meta">
                         <div class="stat-card-label">Disetujui Ka. Ur</div>
                         <div class="stat-card-val">
-                            <?= $approvedKaurCount ?>
-                            <?php if ($totalCount > 0): ?>
-                                <span class="stat-card-percent">(<?= round(($approvedKaurCount / $totalCount) * 100) ?>%)</span>
-                            <?php endif; ?>
+                            <span id="statKaurCount"><?= $approvedKaurCount ?></span>
                         </div>
                         <div class="stat-card-desc">Surat QR resmi terbit</div>
                     </div>
@@ -1691,10 +2044,7 @@
                     <div class="stat-card-meta">
                         <div class="stat-card-label">Ditolak</div>
                         <div class="stat-card-val">
-                            <?= $rejectedCount ?>
-                            <?php if ($totalCount > 0): ?>
-                                <span class="stat-card-percent">(<?= round(($rejectedCount / $totalCount) * 100) ?>%)</span>
-                            <?php endif; ?>
+                            <span id="statRejectedCount"><?= $rejectedCount ?></span>
                         </div>
                         <div class="stat-card-desc">Permohonan tidak disetujui</div>
                     </div>
@@ -1717,27 +2067,27 @@
             <div class="filter-pills-wrap" id="filterPillsWrap">
                 <button type="button" class="filter-pill active" data-status="all" onclick="setFilterStatus('all')">
                     <span>Semua</span>
-                    <span class="pill-count"><?= $totalCount ?></span>
+                    <span class="pill-count" id="pill-count-all"><?= $totalCount ?></span>
                 </button>
                 <button type="button" class="filter-pill" data-status="pending" onclick="setFilterStatus('pending')">
                     <span>⏳ Menunggu ACC</span>
-                    <span class="pill-count"><?= $pendingCount ?></span>
+                    <span class="pill-count" id="pill-count-pending"><?= $pendingCount ?></span>
                 </button>
                 <button type="button" class="filter-pill" data-status="laboran" onclick="setFilterStatus('laboran')">
                     <span>🔵 Disetujui Laboran</span>
-                    <span class="pill-count"><?= $approvedLaboranCount ?></span>
+                    <span class="pill-count" id="pill-count-laboran"><?= $approvedLaboranCount ?></span>
                 </button>
                 <button type="button" class="filter-pill" data-status="kaur" onclick="setFilterStatus('kaur')">
                     <span>🟢 Disetujui Ka. Ur</span>
-                    <span class="pill-count"><?= $approvedKaurCount ?></span>
+                    <span class="pill-count" id="pill-count-kaur"><?= $approvedKaurCount ?></span>
                 </button>
                 <button type="button" class="filter-pill" data-status="admin" onclick="setFilterStatus('admin')">
                     <span>🟣 Disetujui Admin</span>
-                    <span class="pill-count"><?= $approvedAdminCount ?></span>
+                    <span class="pill-count" id="pill-count-admin"><?= $approvedAdminCount ?></span>
                 </button>
                 <button type="button" class="filter-pill" data-status="rejected" onclick="setFilterStatus('rejected')">
                     <span>🔴 Ditolak</span>
-                    <span class="pill-count"><?= $rejectedCount ?></span>
+                    <span class="pill-count" id="pill-count-rejected"><?= $rejectedCount ?></span>
                 </button>
             </div>
 
@@ -1771,7 +2121,7 @@
                         <!-- MODE 1: Text Search (default) -->
                         <div id="modeText" style="flex:1;display:flex;align-items:center;min-width:0;">
                             <i class="fa-solid fa-magnifying-glass" style="color: #94a3b8; font-size: 0.85rem; margin-right: 10px; flex-shrink:0;"></i>
-                            <input type="text" id="mainSearchInput" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); filterTable(); }" placeholder="Ketik kata kunci lalu tekan Enter atau klik Cari..." style="width: 100%; font-size: 0.85rem; font-weight: 500; background: transparent; border: none; outline: none; color: #1e293b;">
+                            <input type="text" id="mainSearchInput" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); filterTable(); }" placeholder="Cari kata kunci..." style="width: 100%; font-size: 0.85rem; font-weight: 500; background: transparent; border: none; outline: none; color: #1e293b;">
                         </div>
                         <!-- MODE 2: Date Range Picker (single input, range mode) -->
                         <div id="modeTanggal" style="flex:1;display:none;align-items:center;min-width:0;gap:8px;">
@@ -1818,7 +2168,7 @@
 
 
                     <!-- Tombol Cari -->
-                    <button type="button" onclick="filterTable()" class="btn-search-cari" style="padding: 7px 18px; background: linear-gradient(135deg, #ea580c, #f97316); color: #fff; font-size: 0.82rem; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 7px; flex-shrink: 0; box-shadow: 0 2px 8px rgba(234,88,12,0.25);">
+                    <button type="button" onclick="filterTable()" class="btn-search-cari" style="margin-left: 8px; padding: 7px 18px; background: linear-gradient(135deg, #ea580c, #f97316); color: #fff; font-size: 0.82rem; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 7px; flex-shrink: 0; box-shadow: 0 2px 8px rgba(234,88,12,0.25);">
                         <i class="fa-solid fa-magnifying-glass text-xs"></i> Cari
                     </button>
                 </div>
@@ -1900,7 +2250,7 @@
                             <th style="width: 85px; text-align: center; padding-right: 14px;">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="bookingTableBody">
                         <?php if (empty($peminjaman)): ?>
                             <tr>
                                 <td colspan="7" style="text-align: center; padding: 40px; color: #94a3b8;">
@@ -2194,28 +2544,34 @@
          ========================================================= -->
     <div class="modal-overlay" id="suratModal" style="z-index: 100050;">
         <div class="modal-card surat-modal-card" style="max-width: 860px; width: 95%; height: 90vh; display: flex; flex-direction: column; border-radius: 18px; overflow: hidden; box-shadow: 0 25px 60px rgba(15, 23, 42, 0.35);">
-            <div class="modal-header" style="padding: 14px 20px; background: #ffffff; border-bottom: 1.5px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <div style="width: 36px; height: 36px; border-radius: 10px; background: #ecfdf5; color: #16a34a; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+            <div class="modal-header" style="padding: 14px 20px; background: #ffffff; border-bottom: 1.5px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                <div class="surat-header-left">
+                    <div class="surat-header-icon">
                         <i class="fa-solid fa-file-circle-check"></i>
                     </div>
-                    <div>
-                        <h3 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin: 0;">Surat Resmi Ber-QR Code</h3>
-                        <p style="font-size: 0.75rem; color: #64748b; margin: 0;">Pratinjau dokumen legalitas peminjaman laboratorium</p>
+                    <div style="min-width: 0; flex: 1;">
+                        <h3 class="surat-header-title" style="font-size: 1rem; font-weight: 800; color: #0f172a; margin: 0;">Surat Resmi Ber-QR Code</h3>
+                        <p class="surat-header-desc" style="font-size: 0.75rem; color: #64748b; margin: 0;">Pratinjau dokumen legalitas peminjaman laboratorium</p>
                     </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <button type="button" onclick="printSuratIframe()" style="padding: 7px 14px; background: linear-gradient(135deg, #16a34a, #15803d); color: #ffffff; border: none; border-radius: 10px; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);">
-                        <i class="fa-solid fa-print"></i> Cetak / Simpan PDF
+                <div class="surat-header-actions">
+                    <button type="button" class="btn-surat-print" onclick="printSuratIframe()">
+                        <i class="fa-solid fa-print"></i> <span>Cetak / PDF</span>
                     </button>
-                    <a id="suratNewTabBtn" href="#" target="_blank" title="Buka di Tab Baru" style="width: 34px; height: 34px; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; color: #475569; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+                    <a id="suratNewTabBtn" href="#" target="_blank" title="Buka di Tab Baru" class="btn-surat-icon" style="width: 34px; height: 34px; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; color: #475569; display: flex; align-items: center; justify-content: center; text-decoration: none;">
                         <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.75rem;"></i>
                     </a>
-                    <button type="button" onclick="closeSuratModal()" style="width: 34px; height: 34px; border-radius: 8px; border: none; background: #f1f5f9; color: #64748b; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+                    <button type="button" onclick="closeSuratModal()" class="btn-surat-icon" style="width: 34px; height: 34px; border-radius: 8px; border: none; background: #f1f5f9; color: #64748b; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
                 </div>
             </div>
             <div class="modal-body" style="flex: 1; padding: 0; background: #525659; position: relative; overflow: hidden;">
-                <iframe id="suratIframe" src="about:blank" style="width: 100%; height: 100%; border: none; display: block;" onload="hideSuratLoader()"></iframe>
+                <script>
+                    function hideSuratLoader() {
+                        const loader = document.getElementById('suratLoader');
+                        if (loader) loader.style.display = 'none';
+                    }
+                </script>
+                <iframe id="suratIframe" src="about:blank" style="width: 100%; height: 100%; border: none; display: block;" onload="if(typeof hideSuratLoader==='function')hideSuratLoader();"></iframe>
                 <div id="suratLoader" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #f8fafc; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; z-index: 10;">
                     <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: #16a34a;"></i>
                     <span style="font-size: 0.85rem; font-weight: 600; color: #475569;">Memuat Surat Resmi...</span>
@@ -2836,6 +3192,23 @@
                 row.style.display = '';
             });
 
+            let noDataRow = document.getElementById('noDataFilterRow');
+            if (totalItems === 0 && allRows.length > 0) {
+                if (!noDataRow) {
+                    const tbody = document.querySelector('#laboranBookingTable tbody') || document.querySelector('table.laboran-table tbody');
+                    if (tbody) {
+                        noDataRow = document.createElement('tr');
+                        noDataRow.id = 'noDataFilterRow';
+                        noDataRow.innerHTML = `<td colspan="7" style="text-align: center; padding: 36px 16px; color: #94a3b8; background: #ffffff; border-radius: 16px; border: 1.5px solid #e2e8f0; display: block; width: 100%; box-sizing: border-box;"><i class="fa-solid fa-magnifying-glass" style="font-size: 1.8rem; margin-bottom: 8px; display: block; color: #cbd5e1;"></i>Tidak ada data peminjaman yang sesuai dengan filter pencarian.</td>`;
+                        tbody.appendChild(noDataRow);
+                    }
+                } else {
+                    noDataRow.style.display = '';
+                }
+            } else if (noDataRow) {
+                noDataRow.style.display = 'none';
+            }
+
             // 3. Update Toolbar and Pagination Info Counters
             const toolbarCount = document.getElementById('toolbarTotalCount');
             if (toolbarCount) toolbarCount.innerText = totalItems;
@@ -2910,9 +3283,299 @@
             filterTable();
         }
 
+        window.laboranBookingsMap = {};
+
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function buildLaboranRowHtml(p, isChecked) {
+            window.laboranBookingsMap[p.id] = p;
+            const s = p.status || 'Pending';
+            const isPending = (s === 'Pending');
+            let statusCategory = 'pending';
+            let dot = '#f59e0b';
+            let bg = '#fffbeb';
+            let color = '#b45309';
+            let label = 'Menunggu Persetujuan';
+
+            if (isPending) {
+                dot = '#f59e0b'; bg = '#fffbeb'; color = '#b45309'; label = 'Menunggu Persetujuan'; statusCategory = 'pending';
+            } else if (s.toLowerCase().includes('ka. ur') || s.toLowerCase().includes('kaur')) {
+                dot = '#22c55e'; bg = '#f0fdf4'; color = '#166534'; label = 'Disetujui Ka. Ur'; statusCategory = 'kaur';
+            } else if (s.toLowerCase().includes('laboran')) {
+                dot = '#3b82f6'; bg = '#eff6ff'; color = '#1d4ed8'; label = 'Disetujui Laboran'; statusCategory = 'laboran';
+            } else if (s.toLowerCase().includes('admin') || s.toLowerCase().includes('disetujui')) {
+                dot = '#8b5cf6'; bg = '#f5f3ff'; color = '#6d28d9'; label = s; statusCategory = 'admin';
+            } else if (s === 'Ditolak') {
+                dot = '#ef4444'; bg = '#fef2f2'; color = '#991b1b'; label = 'Ditolak'; statusCategory = 'rejected';
+            } else {
+                dot = '#8b5cf6'; bg = '#f5f3ff'; color = '#6d28d9'; label = s; statusCategory = 'admin';
+            }
+
+            const dateFormatted = p.tanggal_formatted || p.tanggal_mulai || '-';
+            const timeFormatted = p.waktu_formatted || `${(p.jam_mulai||'').substring(0,5)} - ${(p.jam_selesai||'').substring(0,5)}`;
+
+            const namaLengkap = p.nama_lengkap || '-';
+            const kodeRuangan = p.kode_ruangan || '-';
+            const namaRuangan = p.nama_ruangan || '-';
+            const namaKategori = p.nama_kategori || 'Ruangan';
+            const keterangan = p.keterangan || '-';
+
+            const searchAttr = `${namaLengkap} ${kodeRuangan} ${namaRuangan} ${keterangan} ${s} ${dateFormatted}`.toLowerCase();
+            const namaAttr = namaLengkap.toLowerCase();
+            const ruanganAttr = `${kodeRuangan} ${namaRuangan} ${namaKategori}`.toLowerCase();
+            const tanggalAttr = `${dateFormatted} ${p.tanggal_mulai || ''} ${p.tanggal_selesai || ''}`.toLowerCase();
+            const ketAttr = keterangan.toLowerCase();
+            const statusAttr = `${s} ${label}`.toLowerCase();
+
+            let tooltipMeta = '';
+            if (p.lokasi || p.kapasitas) {
+                tooltipMeta = `<div class="rht-meta">`;
+                if (p.lokasi) tooltipMeta += `<span>📍 ${escapeHtml(p.lokasi)}</span>`;
+                if (p.kapasitas) tooltipMeta += `<span>👥 ${escapeHtml(p.kapasitas)} Orang</span>`;
+                tooltipMeta += `</div>`;
+            }
+
+            let alasanHtml = '';
+            if (p.status === 'Ditolak' && p.alasan_penolakan) {
+                alasanHtml = `
+                    <div style="font-size: 0.75rem; color: #dc2626; margin-top: 4px;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Alasan: ${escapeHtml(p.alasan_penolakan)}
+                    </div>
+                `;
+            }
+
+            let actionButtons = '';
+            if (isPending) {
+                actionButtons += `
+                    <button type="button" class="action-dropdown-item item-acc" onclick="singleApprove(${p.id})">
+                        <i class="fa-solid fa-check"></i> Setujui (Laboran)
+                    </button>
+                    <button type="button" class="action-dropdown-item item-rej" onclick="openSingleRejectModal(${p.id})">
+                        <i class="fa-solid fa-ban"></i> Tolak Peminjaman
+                    </button>
+                `;
+            }
+            if (statusCategory === 'laboran' || statusCategory === 'kaur' || statusCategory === 'admin') {
+                actionButtons += `
+                    <button type="button" class="action-dropdown-item item-qr" onclick="openSuratModal(${p.id})">
+                        <i class="fa-solid fa-qrcode"></i> Cetak Surat QR
+                    </button>
+                `;
+            }
+            actionButtons += `
+                <button type="button" class="action-dropdown-item" onclick="openDetailModal(window.laboranBookingsMap[${p.id}])">
+                    <i class="fa-solid fa-eye text-blue-500"></i> Detail Permohonan
+                </button>
+                <div class="action-dropdown-divider"></div>
+                <button type="button" class="action-dropdown-item item-del" onclick="deleteBooking(${p.id})">
+                    <i class="fa-solid fa-trash-can"></i> Hapus Data
+                </button>
+            `;
+
+            return `
+                <tr class="booking-row" 
+                    data-id="${p.id}" 
+                    data-status-category="${statusCategory}" 
+                    data-nama="${escapeHtml(namaAttr)}"
+                    data-ruangan="${escapeHtml(ruanganAttr)}"
+                    data-tanggal="${escapeHtml(tanggalAttr)}"
+                    data-tanggal-mulai="${escapeHtml(p.tanggal_mulai || '')}"
+                    data-tanggal-selesai="${escapeHtml(p.tanggal_selesai || '')}"
+                    data-keterangan="${escapeHtml(ketAttr)}"
+                    data-status="${escapeHtml(statusAttr)}"
+                    data-search="${escapeHtml(searchAttr)}">
+                    <td style="text-align: center;">
+                        <input type="checkbox" class="custom-checkbox row-checkbox" data-id="${p.id}" data-status="${escapeHtml(p.status || '')}" data-status-category="${statusCategory}" onchange="updateBatchBar()" ${isChecked ? 'checked' : ''}>
+                    </td>
+                    <td>
+                        <div class="tr-room-col">
+                            <div class="tr-room-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1e293b" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                            </div>
+                            <div class="tr-room-info" title="${escapeHtml(namaRuangan + ' (' + kodeRuangan + ')') }">
+                                <div class="tr-room-code">${escapeHtml(kodeRuangan)}</div>
+                                <div class="tr-room-name">${escapeHtml(namaRuangan)}</div>
+                            </div>
+
+                            <!-- Floating Room Detail Tooltip on Hover -->
+                            <div class="room-hover-tooltip">
+                                <div class="rht-header">
+                                    <span class="rht-code">${escapeHtml(kodeRuangan)}</span>
+                                    <span class="rht-cat">${escapeHtml(namaKategori)}</span>
+                                </div>
+                                <div class="rht-title">${escapeHtml(namaRuangan)}</div>
+                                ${tooltipMeta}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="tr-user-time-col">
+                            <div class="tr-pill-user" title="${escapeHtml(namaLengkap)}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1e293b" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                <span>${escapeHtml(namaLengkap)}</span>
+                            </div>
+                            <div class="tr-pill-time" title="${escapeHtml(timeFormatted)}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                <span>${escapeHtml(timeFormatted)}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="tr-date-col">
+                            ${escapeHtml(dateFormatted)}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="tr-desc-col" title="${escapeHtml(keterangan)}">
+                            <span class="tr-desc-text">${escapeHtml(keterangan)}</span>
+
+                            <!-- Floating Keterangan Detail Tooltip on Hover -->
+                            <div class="desc-hover-tooltip">
+                                <span class="dht-badge">📝 Keterangan / Keperluan</span>
+                                <div class="dht-content">${escapeHtml(keterangan)}</div>
+                            </div>
+                            ${alasanHtml}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-badge" style="background: ${bg}; color: ${color};" title="${escapeHtml(label)}">
+                            <span class="status-dot" style="background: ${dot};"></span>
+                            <span class="status-text">${escapeHtml(label)}</span>
+                        </span>
+                    </td>
+                    <td style="width: 85px; text-align: center; overflow: visible; position: relative; padding-right: 14px;">
+                        <div class="action-dropdown-wrap">
+                            <button type="button" class="btn-action-dots" onclick="toggleActionDropdown(${p.id}, event)" title="Menu Aksi">
+                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                                <span>Aksi</span>
+                            </button>
+                            <div class="action-dropdown-menu" id="actionMenu_${p.id}">
+                                ${actionButtons}
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        let lastLiveBookingHash = '';
+        let initialLoadDone = false;
+        let isPolling = false;
+
+        function syncLiveLaboranBookings() {
+            if (isPolling) return;
+            isPolling = true;
+
+            $.ajax({
+                url: BASE_URL + 'laboran/live-data',
+                type: 'GET',
+                dataType: 'json',
+                cache: false,
+                success: function(resp) {
+                    if (resp && resp.status === 'success' && Array.isArray(resp.data)) {
+                        const newHash = JSON.stringify({
+                            total: resp.totalCount,
+                            pending: resp.pendingCount,
+                            laboran: resp.laboranCount,
+                            kaur: resp.kaurCount,
+                            admin: resp.adminCount,
+                            rejected: resp.rejectedCount,
+                            ids: resp.data.map(d => `${d.id}_${d.status}_${d.updated_at || ''}`)
+                        });
+
+                        if (newHash !== lastLiveBookingHash) {
+                            const isNewIncoming = initialLoadDone && (
+                                (resp.totalCount > (parseInt($('#statTotalCount').text()) || 0)) ||
+                                (resp.pendingCount > (parseInt($('#statPendingCount').text()) || 0))
+                            );
+
+                            lastLiveBookingHash = newHash;
+
+                            // 1. Update Stat Highlight Counters
+                            $('#statTotalCount').text(resp.totalCount);
+                            $('#statPendingCount').text(resp.pendingCount);
+                            $('#statLaboranCount').text(resp.laboranCount);
+                            $('#statKaurCount').text(resp.kaurCount);
+                            $('#statRejectedCount').text(resp.rejectedCount);
+                            $('#toolbarTotalCount').text(resp.totalCount);
+
+                            // 2. Update Filter Pill Badges
+                            $('#pill-count-all').text(resp.totalCount);
+                            $('#pill-count-pending').text(resp.pendingCount);
+                            $('#pill-count-laboran').text(resp.laboranCount);
+                            $('#pill-count-kaur').text(resp.kaurCount);
+                            $('#pill-count-admin').text(resp.adminCount);
+                            $('#pill-count-rejected').text(resp.rejectedCount);
+
+                            // 3. Preserve selected checkboxes
+                            const selectedIds = getSelectedIds();
+
+                            // 4. Rebuild tbody
+                            const tbody = document.getElementById('bookingTableBody');
+                            if (tbody) {
+                                if (resp.data.length === 0) {
+                                    tbody.innerHTML = `
+                                        <tr>
+                                            <td colspan="7" style="text-align: center; padding: 40px; color: #94a3b8;">
+                                                <i class="fa-solid fa-inbox" style="font-size: 2rem; margin-bottom: 8px; display: block;"></i>
+                                                Belum ada data peminjaman ruangan.
+                                            </td>
+                                        </tr>
+                                    `;
+                                } else {
+                                    let html = '';
+                                    resp.data.forEach(item => {
+                                        const isChecked = selectedIds.includes(String(item.id));
+                                        html += buildLaboranRowHtml(item, isChecked);
+                                    });
+                                    tbody.innerHTML = html;
+                                }
+                            }
+
+                            // 5. Re-apply client-side filter and pagination
+                            filterTable();
+
+                            // 6. If new items arrived from user submission, trigger toast alert
+                            if (isNewIncoming) {
+                                const Toast = Swal.mixin({
+                                    toast: true,
+                                    position: 'top-end',
+                                    showConfirmButton: false,
+                                    timer: 3500,
+                                    timerProgressBar: true,
+                                    background: '#0f172a',
+                                    color: '#ffffff',
+                                    iconColor: '#38bdf8'
+                                });
+                                Toast.fire({
+                                    icon: 'info',
+                                    title: 'Data Baru Masuk!',
+                                    text: 'Tabel telah otomatis diperbarui secara realtime.'
+                                });
+                            }
+                        }
+                    }
+                    initialLoadDone = true;
+                },
+                complete: function() {
+                    isPolling = false;
+                    setTimeout(syncLiveLaboranBookings, 3000);
+                }
+            });
+        }
+
         // Initialize table on load
         $(document).ready(function() {
             filterTable();
+            setTimeout(syncLiveLaboranBookings, 1500);
         });
 
         // Backward compatibility
@@ -2985,6 +3648,11 @@
             }
         }
 
+        function triggerLiveLaboranSync() {
+            lastLiveBookingHash = '';
+            syncLiveLaboranBookings();
+        }
+
         // ==========================================
         // SINGLE APPROVE & REJECT ACTIONS
         // ==========================================
@@ -3003,6 +3671,8 @@
                 if (res.isConfirmed) {
                     $.post(BASE_URL + 'laboran/approve/' + id, function(resp) {
                         if (resp.status === 'success') {
+                            triggerLiveLaboranSync();
+                            deselectAll();
                             Swal.fire({ 
                                 title: 'Disetujui!', 
                                 text: resp.message, 
@@ -3015,8 +3685,6 @@
                             }).then((r) => {
                                 if (r.isConfirmed) {
                                     openSuratModal(id);
-                                } else {
-                                    location.reload();
                                 }
                             });
                         } else {
@@ -3117,8 +3785,9 @@
                 if (res.isConfirmed) {
                     $.post(BASE_URL + 'laboran/batch_approve', { ids: pendingIds }, function(resp) {
                         if (resp.status === 'success') {
-                            Swal.fire({ title: 'Berhasil!', text: resp.message, icon: 'success', confirmButtonColor: '#16a34a' })
-                            .then(() => location.reload());
+                            triggerLiveLaboranSync();
+                            deselectAll();
+                            Swal.fire({ title: 'Berhasil!', text: resp.message, icon: 'success', confirmButtonColor: '#16a34a' });
                         } else {
                             Swal.fire('Gagal', resp.message, 'error');
                         }
@@ -3144,8 +3813,9 @@
                 if (res.isConfirmed) {
                     $.post(BASE_URL + 'laboran/batch_delete', { ids: ids }, function(resp) {
                         if (resp.status === 'success') {
-                            Swal.fire({ title: 'Terhapus!', text: resp.message, icon: 'success', confirmButtonColor: '#ea580c' })
-                            .then(() => location.reload());
+                            triggerLiveLaboranSync();
+                            deselectAll();
+                            Swal.fire({ title: 'Terhapus!', text: resp.message, icon: 'success', confirmButtonColor: '#ea580c' });
                         } else {
                             Swal.fire('Gagal', resp.message, 'error');
                         }
@@ -3224,8 +3894,9 @@
                         $.post(BASE_URL + 'laboran/batch_reject', { ids: ids, alasan_penolakan: alasan }, function(resp) {
                             if (resp.status === 'success') {
                                 closeRejectModal();
-                                Swal.fire({ title: 'Ditolak!', text: resp.message, icon: 'success', confirmButtonColor: '#dc2626' })
-                                .then(() => location.reload());
+                                triggerLiveLaboranSync();
+                                deselectAll();
+                                Swal.fire({ title: 'Ditolak!', text: resp.message, icon: 'success', confirmButtonColor: '#dc2626' });
                             } else {
                                 Swal.fire('Gagal', resp.message, 'error');
                             }
@@ -3235,8 +3906,9 @@
                         $.post(BASE_URL + 'laboran/reject/' + singleId, { alasan_penolakan: alasan }, function(resp) {
                             if (resp.status === 'success') {
                                 closeRejectModal();
-                                Swal.fire({ title: 'Ditolak!', text: resp.message, icon: 'success', confirmButtonColor: '#dc2626' })
-                                .then(() => location.reload());
+                                triggerLiveLaboranSync();
+                                deselectAll();
+                                Swal.fire({ title: 'Ditolak!', text: resp.message, icon: 'success', confirmButtonColor: '#dc2626' });
                             } else {
                                 Swal.fire('Gagal', resp.message, 'error');
                             }
@@ -3297,6 +3969,7 @@
         // DELETE BOOKING
         // ==========================================
         function deleteBooking(id) {
+            closeAllActionDropdowns();
             Swal.fire({
                 title: 'Hapus Data Peminjaman?',
                 text: 'Data yang dihapus tidak dapat dikembalikan.',
@@ -3310,8 +3983,9 @@
                 if (res.isConfirmed) {
                     $.post(BASE_URL + 'laboran/delete/' + id, function(resp) {
                         if (resp.status === 'success') {
-                            Swal.fire({ title: 'Terhapus!', text: resp.message, icon: 'success', confirmButtonColor: '#ea580c' })
-                            .then(() => location.reload());
+                            triggerLiveLaboranSync();
+                            deselectAll();
+                            Swal.fire({ title: 'Terhapus!', text: resp.message, icon: 'success', confirmButtonColor: '#ea580c' });
                         } else {
                             Swal.fire('Gagal', resp.message, 'error');
                         }
@@ -3418,8 +4092,10 @@
                 success: function(resp) {
                     if (resp.status === 'success') {
                         closeAdminBookingModal();
-                        Swal.fire({ title: 'Berhasil!', text: resp.message, icon: 'success', confirmButtonColor: '#16a34a' })
-                        .then(() => location.reload());
+                        $('#formBooking')[0].reset();
+                        triggerLiveLaboranSync();
+                        deselectAll();
+                        Swal.fire({ title: 'Berhasil!', text: resp.message, icon: 'success', confirmButtonColor: '#16a34a' });
                     } else {
                         Swal.fire('Gagal', resp.message, 'error');
                     }

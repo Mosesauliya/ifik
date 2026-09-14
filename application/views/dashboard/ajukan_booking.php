@@ -313,10 +313,16 @@
                 <h1 class="page-title">Ajukan Peminjaman Ruangan</h1>
                 <p class="page-subtitle">Silakan lengkapi form berikut untuk mengajukan peminjaman ruangan.</p>
             </div>
-            <a href="<?= base_url('kalender') ?>" class="btn-back">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-                Kembali
-            </a>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <a href="<?= site_url('riwayat-booking') ?>" class="btn-back" style="background: #fff7ed; color: #ea580c; border-color: rgba(234,88,12,0.3);">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    Riwayat Saya
+                </a>
+                <a href="<?= base_url('kalender') ?>" class="btn-back">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    Kembali
+                </a>
+            </div>
         </div>
 
         <form id="formAjukanBooking" onsubmit="submitBooking(event)">
@@ -542,8 +548,24 @@
                 dataType: "json",
                 success: function(data) {
                     if (data.status === 'success') {
-                        Swal.fire({ title: 'Berhasil!', text: data.message, icon: 'success', confirmButtonColor: '#ea580c', confirmButtonText: 'Lihat Kalender' })
-                        .then(function() { window.location.href = "<?= base_url('kalender') ?>"; });
+                        Swal.fire({
+                            title: 'Pengajuan Berhasil!',
+                            text: data.message,
+                            icon: 'success',
+                            showCancelButton: true,
+                            confirmButtonColor: '#ea580c',
+                            cancelButtonColor: '#64748b',
+                            confirmButtonText: '<i class="fa-solid fa-list-check"></i> Lihat Riwayat Saya',
+                            cancelButtonText: 'Lihat Kalender',
+                            reverseButtons: true,
+                            borderRadius: '16px'
+                        }).then(function(result) {
+                            if (result.isConfirmed) {
+                                window.location.href = "<?= site_url('riwayat-booking') ?>";
+                            } else {
+                                window.location.href = "<?= base_url('kalender') ?>";
+                            }
+                        });
                     } else {
                         Swal.fire({ title: 'Pengajuan Gagal', text: data.message, icon: 'error', confirmButtonColor: '#ea580c' });
                         $btn.prop('disabled', false).html('<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Kirim Pengajuan Peminjaman');

@@ -59,7 +59,8 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['category' => 'Operasional Laboratorium'],
                 ['heading' => 'Approval Peminjaman', 'href' => site_url('laboran/booking'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
                 ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
-                ['heading' => 'Tanda Tangan Digital', 'href' => site_url('laboran/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+                ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
+                ['heading' => 'Tanda Tangan Digital', 'href' => site_url('laboran/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
                 ['heading' => 'Import Email & Token', 'href' => site_url('laboran/import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
 
                 ['category' => 'Layanan Ticketing', 'has_divider' => true],
@@ -79,17 +80,18 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['category' => 'Persetujuan Resmi & Lab'],
                 ['heading' => 'Approval Peminjaman', 'href' => site_url('kaur/approval'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
                 ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
+                ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
 
                 ['category' => 'Portal Akademik & Dosen', 'has_divider' => true],
                 ['heading' => 'Dosen Pembimbing', 'href' => site_url('dosen/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
                 ['heading' => 'Dosen Penguji', 'href' => site_url('dosen/penguji'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
-                ['heading' => 'Dosen Wali', 'href' => site_url('dosen/wali'), 'icon_3d' => 'assets/images/icons_3d/home.png'],
-                ['heading' => 'Tanda Tangan Digital', 'href' => site_url('dosen/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+                ['heading' => 'Dosen Wali', 'href' => site_url('dosen/wali'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Tanda Tangan Digital', 'href' => site_url('dosen/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
 
-                ['category' => 'Layanan Ticketing', 'has_divider' => true],
+                ['category' => 'Layanan & Bantuan', 'has_divider' => true],
                 ['heading' => 'Respon Ticketing', 'href' => site_url('dosen/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
-                ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
-                ['heading' => 'Riwayat Tiket Saya', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+                ['heading' => 'Input Ticketing', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
+                ['heading' => 'Riwayat Ticketing', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
 
                 ['category' => 'Informasi & Jadwal', 'has_divider' => true],
                 ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
@@ -103,15 +105,16 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['heading' => 'Dosen Pembimbing', 'href' => site_url('dosen/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
                 ['heading' => 'Dosen Penguji', 'href' => site_url('dosen/penguji'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
                 ['heading' => 'Dosen Wali', 'href' => site_url('dosen/wali'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
-                ['heading' => 'Tanda Tangan Digital', 'href' => site_url('dosen/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+                ['heading' => 'Tanda Tangan Digital', 'href' => site_url('dosen/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
 
-                ['category' => 'Layanan Ticketing', 'has_divider' => true],
+                ['category' => 'Layanan & Bantuan', 'has_divider' => true],
                 ['heading' => 'Respon Ticketing', 'href' => site_url('dosen/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
-                ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
-                ['heading' => 'Riwayat Tiket Saya', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+                ['heading' => 'Input Ticketing', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
+                ['heading' => 'Riwayat Ticketing', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
 
                 ['category' => 'Fasilitas & Jadwal', 'has_divider' => true],
                 ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
+                ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
                 ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
                 ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
             ];
@@ -123,6 +126,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['heading' => 'Dashboard Control', 'href' => site_url('admin'), 'icon_3d' => 'assets/images/icons_3d/home.png'],
                 ['heading' => 'Approval Peminjaman', 'href' => site_url('kelolabooking'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
                 ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
+                ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
 
                 ['category' => 'Manajemen Sistem', 'has_divider' => true],
                 ['heading' => 'Import Email & Token', 'href' => site_url('admin/import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
@@ -146,6 +150,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
 
                 ['category' => 'Fasilitas & Jadwal', 'has_divider' => true],
                 ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
+                ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
                 ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
                 ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
             ];
@@ -171,6 +176,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['category' => 'Menu Utama'],
                 ['heading' => 'Dashboard Utama', 'href' => site_url('dashboard'), 'icon_3d' => 'assets/images/icons_3d/home.png'],
                 ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
+                ['heading' => 'Riwayat Peminjaman Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
                 ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
                 ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
             ];
@@ -256,10 +262,59 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
         background: rgba(245, 158, 11, 0.12) !important;
         backdrop-filter: blur(8px) !important;
     }
+
+    /* User Profile Card inside Sidebar */
+    .curved-sidebar-user-card {
+        margin: 12px 0 10px 0;
+        padding: 10px 12px;
+        background: rgba(255, 255, 255, 0.65);
+        border-radius: 14px;
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    }
+    .curved-sidebar-user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+        color: #ffffff;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+        flex-shrink: 0;
+        box-shadow: 0 2px 6px rgba(234, 88, 12, 0.25);
+    }
+    .curved-sidebar-user-info {
+        flex: 1;
+        min-width: 0;
+    }
+    .curved-sidebar-user-name {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #0f172a;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.2;
+    }
+    .curved-sidebar-user-role {
+        font-size: 0.68rem;
+        color: #64748b;
+        font-weight: 600;
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 </style>
 
 <!-- Floating Trigger Button (Top Left) -->
-<button type="button" id="curvedSidebarToggle" class="curved-sidebar-toggle-btn" aria-label="Toggle Sidebar Menu" title="Buka Menu Navigasi">
+<button type="button" id="curvedSidebarToggle" class="curved-sidebar-toggle-btn is-active" aria-expanded="true" aria-label="Toggle Sidebar Menu" title="Buka Menu Navigasi">
     <div class="curved-sidebar-burger">
         <span></span>
         <span></span>
@@ -271,7 +326,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
 <div id="curvedSidebarBackdrop" class="curved-sidebar-backdrop"></div>
 
 <!-- Sliding Sidebar Panel with Morphing Curved SVG (Left Side) -->
-<aside id="curvedSidebarPanel" class="curved-sidebar-panel" aria-label="Sidebar Navigasi">
+<aside id="curvedSidebarPanel" class="curved-sidebar-panel is-active" aria-label="Sidebar Navigasi">
     <div class="curved-sidebar-inner">
         <!-- Top Section: Header & Nav Links -->
         <div>
@@ -331,12 +386,29 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
         </div>
 
         <!-- Bottom Section: Portal Info & Version -->
-        <div class="curved-sidebar-footer">
-            <div class="curved-sidebar-footer-brand">
-                <i class="fa-solid fa-graduation-cap text-orange-500"></i>
-                <span>Portal Tugas Akhir • IFIK</span>
+        <div>
+            <!-- User Profile Summary Card -->
+            <div class="curved-sidebar-user-card">
+                <div class="curved-sidebar-user-avatar">
+                    <?= strtoupper(substr($this->session->userdata('name') ?: ($this->session->userdata('username') ?: 'U'), 0, 1)) ?>
+                </div>
+                <div class="curved-sidebar-user-info">
+                    <div class="curved-sidebar-user-name" title="<?= htmlspecialchars($this->session->userdata('name') ?: 'Pengguna') ?>">
+                        <?= htmlspecialchars($this->session->userdata('name') ?: ($this->session->userdata('username') ?: 'Pengguna')) ?>
+                    </div>
+                    <div class="curved-sidebar-user-role">
+                        <?= htmlspecialchars($this->session->userdata('nidn_nim') ?: '') ?><?= !empty($this->session->userdata('nidn_nim')) ? ' • ' : '' ?><?= htmlspecialchars($activeRoleBadge) ?>
+                    </div>
+                </div>
             </div>
-            <span class="curved-sidebar-footer-version">v2.0</span>
+
+            <div class="curved-sidebar-footer">
+                <div class="curved-sidebar-footer-brand">
+                    <i class="fa-solid fa-graduation-cap text-orange-500"></i>
+                    <span>Portal Tugas Akhir • IFIK</span>
+                </div>
+                <span class="curved-sidebar-footer-version">v2.0</span>
+            </div>
         </div>
     </div>
 
