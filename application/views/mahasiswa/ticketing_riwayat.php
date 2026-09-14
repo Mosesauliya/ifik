@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $title ?? 'Riwayat Tiket Kendala — Panel Laboran'; ?> - IFIK</title>
+    <title><?= $title ?? 'Riwayat Tiket Kendala — Mahasiswa IFIK'; ?> - IFIK</title>
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -43,7 +43,7 @@
 </head>
 <body class="bg-gradient-to-br from-slate-50 via-orange-50/20 to-slate-100 min-h-screen text-slate-800 antialiased">
 
-    <!-- Include Curved Sidebar (Panel Laboran) -->
+    <!-- Include Curved Sidebar (Panel Mahasiswa) -->
     <?php $this->load->view('components/curved_sidebar'); ?>
 
     <!-- Main Content Container with Left Padding for Sidebar Burger -->
@@ -52,7 +52,7 @@
         <!-- Header & Breadcrumb -->
         <div class="mb-8">
             <div class="flex items-center gap-2 text-xs font-semibold text-slate-400 mb-2">
-                <a href="<?= site_url('laboran') ?>" class="hover:text-orange-600 transition-colors">Panel Laboran</a>
+                <a href="<?= site_url('mahasiswa') ?>" class="hover:text-orange-600 transition-colors">Portal Mahasiswa</a>
                 <i class="bi bi-chevron-right text-[10px]"></i>
                 <span class="text-slate-600">Layanan Ticketing</span>
                 <i class="bi bi-chevron-right text-[10px]"></i>
@@ -65,20 +65,15 @@
                         <span class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-orange-600 to-amber-500 text-white flex items-center justify-center shadow-lg shadow-orange-500/25">
                             <i class="bi bi-clock-history text-xl"></i>
                         </span>
-                        Riwayat & Status Tiket Laboran
+                        Riwayat & Status Tiket Mahasiswa
                     </h1>
                     <p class="text-sm text-slate-500 mt-1.5 max-w-2xl">
-                        Pantau status penanganan tiket kendala yang diajukan oleh laboran ke berbagai unit kerja terkait.
+                        Pantau progres respon dan tindak lanjut atas kendala yang telah Anda ajukan ke berbagai unit kerja kampus.
                     </p>
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <a href="<?= site_url('laboran/respon-ticketing') ?>" 
-                       class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:text-orange-600 hover:border-orange-200 hover:bg-orange-50/50 text-sm font-bold shadow-xs transition-all">
-                        <i class="bi bi-inbox-fill text-base text-orange-600"></i>
-                        <span>Inbox Respon Lab</span>
-                    </a>
-                    <a href="<?= site_url('laboran/ticketing/input') ?>" 
+                    <a href="<?= site_url('mahasiswa/ticketing/input') ?>" 
                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-700 hover:to-amber-600 text-white text-sm font-bold shadow-lg shadow-orange-500/25 transition-all">
                         <i class="bi bi-plus-lg text-base"></i>
                         <span>Buat Tiket Baru</span>
@@ -212,9 +207,9 @@
                                     </div>
                                     <p class="font-bold text-slate-700">Belum Ada Tiket yang Diajukan</p>
                                     <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-                                        Jika laboratorium Anda membutuhkan bantuan fasilitas, perizinan, atau koordinasi antar unit, silakan ajukan tiket baru.
+                                        Jika Anda memiliki kendala akademik, fasilitas lab, atau administrasi, silakan ajukan tiket baru.
                                     </p>
-                                    <a href="<?= site_url('laboran/ticketing/input') ?>" 
+                                    <a href="<?= site_url('mahasiswa/ticketing/input') ?>" 
                                        class="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold shadow-xs transition-colors">
                                         <i class="bi bi-plus-lg"></i>
                                         <span>Buat Tiket Sekarang</span>
@@ -248,60 +243,60 @@
                                     
                                     <!-- Kode & Tanggal -->
                                     <td class="py-4 px-6">
-                                        <span class="font-mono font-bold text-xs text-orange-600 bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-100/60 block w-fit">
+                                        <span class="font-mono font-bold text-xs text-orange-600 block">
                                             <?= htmlspecialchars($t->kode_tiket); ?>
                                         </span>
-                                        <span class="text-[11px] text-slate-400 mt-1 block">
-                                            <i class="bi bi-clock mr-1"></i><?= date('d M Y, H:i', strtotime($t->created_at)); ?> WIB
+                                        <span class="text-[11px] text-slate-400">
+                                            <?= date('d M Y, H:i', strtotime($t->created_at)); ?>
                                         </span>
                                     </td>
 
                                     <!-- Tujuan & Kategori -->
                                     <td class="py-4 px-6">
-                                        <?php if (!empty($t->unit_tujuan)): ?>
-                                            <span class="inline-flex items-center gap-1 text-[11px] font-bold text-orange-700 bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200/60 mb-1">
-                                                <i class="bi bi-building"></i> <?= htmlspecialchars($t->unit_tujuan); ?>
-                                            </span>
-                                        <?php endif; ?>
-                                        <p class="font-semibold text-xs text-slate-700">
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="w-2 h-2 rounded-full bg-orange-500 shrink-0"></span>
+                                            <span class="text-xs font-bold text-slate-800"><?= htmlspecialchars($t->unit_tujuan ?: 'Layanan IFIK'); ?></span>
+                                        </div>
+                                        <div class="text-[11px] text-slate-500 mt-0.5 truncate max-w-xs pl-3.5">
                                             <?= htmlspecialchars($t->kategori); ?>
-                                        </p>
+                                        </div>
                                     </td>
 
-                                    <!-- Subjek -->
-                                    <td class="py-4 px-6 max-w-xs">
-                                        <?php
-                                            $deskripsiSnippet = trim(strip_tags(str_ireplace(['&nbsp;', '&amp;nbsp;'], ' ', $t->deskripsi ?? '')));
-                                            $deskripsiSnippet = preg_replace('/\s+/u', ' ', html_entity_decode($deskripsiSnippet, ENT_QUOTES, 'UTF-8'));
-                                            $tanggapanSnippet = trim(strip_tags(str_ireplace(['&nbsp;', '&amp;nbsp;'], ' ', $t->tanggapan ?? '')));
-                                            $tanggapanSnippet = preg_replace('/\s+/u', ' ', html_entity_decode($tanggapanSnippet, ENT_QUOTES, 'UTF-8'));
+                                    <!-- Subjek Kendala -->
+                                    <td class="py-4 px-6">
+                                        <span class="font-bold text-slate-800 block text-xs truncate max-w-xs" title="<?= htmlspecialchars($t->subjek); ?>">
+                                            <?= htmlspecialchars($t->subjek); ?>
+                                        </span>
+                                        <?php 
+                                            // Cuplikan teks bersih tanpa tag HTML dan entitas &nbsp;
+                                            $cleanSnippet = trim(html_entity_decode(strip_tags($t->deskripsi), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+                                            $cleanSnippet = preg_replace('/\s+/', ' ', $cleanSnippet);
                                         ?>
-                                        <p class="font-bold text-slate-800 text-sm truncate"><?= htmlspecialchars($t->subjek); ?></p>
-                                        <p class="text-xs text-slate-400 truncate mt-0.5"><?= htmlspecialchars(mb_substr($deskripsiSnippet, 0, 70)); ?>...</p>
+                                        <p class="text-[11px] text-slate-400 line-clamp-1 max-w-xs mt-0.5">
+                                            <?= htmlspecialchars($cleanSnippet); ?>
+                                        </p>
                                     </td>
 
                                     <!-- Prioritas -->
                                     <td class="py-4 px-6 text-center">
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border <?= $prioColor; ?>">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border <?= $prioColor; ?>">
                                             <?= htmlspecialchars($t->prioritas); ?>
                                         </span>
                                     </td>
 
-                                    <!-- Status (WhatsApp Ticks & Stepper Hover) -->
-                                    <td class="py-4 px-6 text-center">
-                                        <div class="relative inline-flex items-center cursor-help status-stepper-trigger select-none"
-                                             data-kode="<?= htmlspecialchars($t->kode_tiket); ?>"
-                                             data-status="<?= htmlspecialchars($t->status); ?>"
-                                             data-unit="<?= htmlspecialchars($t->unit_tujuan); ?>"
-                                             data-subjek="<?= htmlspecialchars($t->subjek); ?>"
-                                             data-created="<?= date('d M Y, H:i', strtotime($t->created_at)) . ' WIB'; ?>"
-                                             data-updated="<?= !empty($t->updated_at) ? date('d M Y, H:i', strtotime($t->updated_at)) . ' WIB' : ''; ?>"
-                                             data-tgl-tanggapan="<?= !empty($t->tgl_tanggapan) ? date('d M Y, H:i', strtotime($t->tgl_tanggapan)) . ' WIB' : (!empty($t->updated_at) && $t->status !== 'Menunggu' ? date('d M Y, H:i', strtotime($t->updated_at)) . ' WIB' : ''); ?>"
-                                             data-tanggapan="<?= htmlspecialchars($tanggapanSnippet); ?>">
-                                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition-all hover:scale-105 hover:shadow-xs <?= $statusColor; ?>">
+                                    <!-- Status (Interactive Popover Tracking) -->
+                                    <td class="py-4 px-6 text-center relative">
+                                        <div class="inline-block relative">
+                                            <span class="status-badge-trigger inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold border cursor-pointer select-none transition-transform active:scale-95 <?= $statusColor; ?>"
+                                                  data-kode="<?= htmlspecialchars($t->kode_tiket); ?>"
+                                                  data-status="<?= htmlspecialchars($t->status); ?>"
+                                                  data-unit="<?= htmlspecialchars($t->unit_tujuan); ?>"
+                                                  data-created="<?= date('d M Y, H:i', strtotime($t->created_at)); ?>"
+                                                  data-updated="<?= !empty($t->updated_at) ? date('d M Y, H:i', strtotime($t->updated_at)) : '-'; ?>"
+                                                  data-tgl-tanggapan="<?= !empty($t->tgl_tanggapan) ? date('d M Y, H:i', strtotime($t->tgl_tanggapan)) : ''; ?>"
+                                                  data-tanggapan="<?= htmlspecialchars($t->tanggapan ?? ''); ?>">
                                                 <?= $waTickIcon; ?>
                                                 <span><?= htmlspecialchars($t->status); ?></span>
-                                                <i class="bi bi-info-circle-fill text-[10px] opacity-40 hover:opacity-100 transition-opacity ml-0.5"></i>
                                             </span>
                                         </div>
                                     </td>
@@ -309,8 +304,9 @@
                                     <!-- Aksi -->
                                     <td class="py-4 px-6 text-center">
                                         <button type="button" onclick="showTicketDetail('<?= $t->kode_tiket; ?>')"
-                                                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-orange-100 text-slate-700 hover:text-orange-700 text-xs font-bold transition-all shadow-2xs">
-                                            <i class="bi bi-eye"></i>
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-bold transition-colors cursor-pointer"
+                                                title="Lihat Detail & Jawaban">
+                                            <i class="bi bi-eye-fill"></i>
                                             <span>Detail</span>
                                         </button>
                                     </td>
@@ -326,179 +322,117 @@
 
     </main>
 
-    <!-- Floating Popover Status Stepper Tracking ala WhatsApp & Mahasiswa Workflow -->
-    <div id="statusTrackingPopover"
-         style="width: 340px;"
-         class="fixed z-50 hidden transition-all duration-200 opacity-0 transform -translate-y-2 max-w-[90vw] bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200/90 p-4 text-left pointer-events-auto">
-        
-        <!-- Header -->
-        <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 mb-3">
-            <div class="flex items-center gap-2">
-                <div class="w-6 h-6 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold">
-                    <i class="bi bi-signpost-split-fill"></i>
-                </div>
-                <div>
-                    <h4 class="text-xs font-black text-slate-800 tracking-tight">Status Progres Kendala</h4>
-                    <p class="text-[10px] text-slate-400 font-mono" id="popKode">TIK-XXXXXXXX</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-2">
-                <div id="popWaBadge" class="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border">
-                    <!-- WA Icon + Status -->
-                </div>
-                <button type="button" onclick="hidePopover()" class="w-5 h-5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer" title="Tutup Popup">
-                    <i class="bi bi-x-lg text-[10px]"></i>
-                </button>
-            </div>
+    <!-- Floating Tracking Popover Tooltip -->
+    <div id="statusTrackingPopover" class="fixed z-50 hidden opacity-0 transition-all duration-200 pointer-events-none w-80 bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-4">
+        <div class="flex items-center justify-between pb-2 mb-3 border-b border-slate-100">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Tracking Status</span>
+            <span id="popWaBadge" class="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border"></span>
         </div>
 
-        <!-- 4-Step Stepper Flow: 1. Tiket Terkirim, 2. Sedang Diproses, 3. Tanggapan & Solusi, 4. Ditutup -->
-        <div class="relative pl-7 space-y-3.5 text-xs">
-            <!-- Vertical Stepper Track Line -->
+        <div class="relative pl-6 space-y-4 text-left text-xs">
             <div id="stepperLine" class="absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-slate-200"></div>
 
-            <!-- Step 1: Tiket Terkirim -->
+            <!-- Step 1: Terkirim -->
             <div class="relative">
-                <span id="step1Icon" class="absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-emerald-500 text-white shadow-xs">
-                    <i class="bi bi-check-lg"></i>
-                </span>
-                <div class="flex items-center justify-between gap-2">
-                    <span class="font-bold text-slate-800 text-[11px]">1. Tiket Terkirim</span>
-                    <span id="step1Time" class="text-[10px] font-mono text-emerald-600 font-bold whitespace-nowrap">-</span>
+                <div class="absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-500 text-white shadow-xs">
+                    <i class="bi bi-check"></i>
                 </div>
-                <p class="text-[10px] text-slate-400 leading-snug mt-0.5">
-                    Laporan kendala masuk ke sistem & antrean unit <span id="step1Unit" class="font-semibold text-slate-600"></span>.
-                </p>
+                <div class="font-bold text-[11px] text-slate-800">Tiket Terkirim</div>
+                <div class="text-[10px] font-mono text-slate-500" id="step1Time">-</div>
+                <div class="text-[11px] text-slate-500 mt-0.5">Terkirim ke unit <span id="step1Unit" class="font-semibold text-slate-700"></span>.</div>
             </div>
 
-            <!-- Step 2: Sedang Diproses -->
+            <!-- Step 2: Diterima & Diproses -->
             <div class="relative">
-                <span id="step2Icon" class="absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border">
-                    <!-- Dynamic Icon -->
-                </span>
-                <div class="flex items-center justify-between gap-2">
-                    <span id="step2Title" class="font-bold text-[11px]">2. Sedang Diproses</span>
-                    <span id="step2Time" class="text-[10px] font-mono font-bold whitespace-nowrap">-</span>
+                <div id="step2Icon" class="absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-200 text-slate-500">
+                    <i class="bi bi-arrow-repeat"></i>
                 </div>
-                <p id="step2Desc" class="text-[10px] text-slate-400 leading-snug mt-0.5">
-                    -
-                </p>
+                <div id="step2Title" class="font-bold text-[11px] text-slate-600">Diproses Unit</div>
+                <div id="step2Time" class="text-[10px] font-mono text-slate-400">-</div>
+                <div id="step2Desc" class="text-[11px] text-slate-500 mt-0.5">Staf unit sedang meninjau kendala.</div>
             </div>
 
-            <!-- Step 3: Tanggapan & Solusi -->
+            <!-- Step 3: Ditanggapi & Selesai -->
             <div class="relative">
-                <span id="step3Icon" class="absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border">
-                    <!-- Dynamic Icon -->
-                </span>
-                <div class="flex items-center justify-between gap-2">
-                    <span id="step3Title" class="font-bold text-[11px]">3. Tanggapan & Solusi</span>
-                    <span id="step3Time" class="text-[10px] font-mono font-bold whitespace-nowrap">-</span>
+                <div id="step3Icon" class="absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-200 text-slate-500">
+                    <i class="bi bi-check-all"></i>
                 </div>
-                <p id="step3Desc" class="text-[10px] text-slate-400 leading-snug mt-0.5">
-                    -
-                </p>
-
-                <!-- Cuplikan Balasan Tanggapan (Jika sudah ada tanggapan) -->
-                <div id="step3TanggapanBox" class="hidden mt-1.5 p-2 rounded-xl bg-sky-50 border border-sky-200/80 text-[10px] text-slate-700 leading-relaxed">
-                    <div class="text-[9px] font-bold text-sky-800 uppercase flex items-center gap-1 mb-0.5">
-                        <i class="bi bi-chat-quote-fill text-sky-600"></i>
-                        <span>Respon Resmi Unit:</span>
-                    </div>
-                    <div id="step3TanggapanText" class="italic line-clamp-2 text-slate-600"></div>
+                <div id="step3Title" class="font-bold text-[11px] text-slate-600">Selesai & Solusi Diberikan</div>
+                <div id="step3Time" class="text-[10px] font-mono text-slate-400">-</div>
+                <div id="step3Desc" class="text-[11px] text-slate-500 mt-0.5">Solusi atau tanggapan telah diberikan.</div>
+                <div id="step3TanggapanBox" class="hidden mt-2 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-900 leading-snug">
+                    <span class="font-bold block text-emerald-800 mb-0.5">Tanggapan Unit:</span>
+                    <span id="step3TanggapanText" class="italic line-clamp-3"></span>
                 </div>
             </div>
 
-            <!-- Step 4: Ditutup -->
+            <!-- Step 4: Ditutup Tuntas -->
             <div class="relative">
-                <span id="step4Icon" class="absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border">
-                    <!-- Dynamic Icon -->
-                </span>
-                <div class="flex items-center justify-between gap-2">
-                    <span id="step4Title" class="font-bold text-[11px]">4. Ditutup</span>
-                    <span id="step4Time" class="text-[10px] font-mono font-bold whitespace-nowrap">-</span>
+                <div id="step4Icon" class="absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-200 text-slate-500">
+                    <i class="bi bi-patch-check-fill"></i>
                 </div>
-                <p id="step4Desc" class="text-[10px] text-slate-400 leading-snug mt-0.5">
-                    -
-                </p>
+                <div id="step4Title" class="font-bold text-[11px] text-slate-600">Tiket Ditutup Tuntas</div>
+                <div id="step4Time" class="text-[10px] font-mono text-slate-400">-</div>
+                <div id="step4Desc" class="text-[11px] text-slate-500 mt-0.5">Kendala dianggap tuntas.</div>
             </div>
-
         </div>
 
-        <!-- Popover Footer -->
         <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
-            <span class="flex items-center gap-1 text-slate-500 font-medium">
-                <i class="bi bi-info-circle text-orange-500 text-[10px]"></i> Klik tombol Detail untuk info lengkap
-            </span>
-            <button type="button" onclick="hidePopover()" class="text-[10px] font-bold text-slate-400 hover:text-slate-600 hover:underline cursor-pointer">
-                Tutup
-            </button>
+            <span>Kode: <strong id="popKode" class="font-mono text-orange-600"></strong></span>
+            <span>Klik tombol Detail untuk info lengkap</span>
         </div>
-
     </div>
 
     <!-- Modal Detail Tiket -->
-    <div id="detailModal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden transform transition-all">
+    <div id="detailModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 hidden">
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
             
             <!-- Modal Header -->
-            <div class="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-orange-50/40 to-white flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-lg">
-                        <i class="bi bi-ticket-perforated"></i>
-                    </div>
-                    <div>
-                        <span id="modalKode" class="font-mono font-bold text-xs text-orange-600 bg-orange-50 px-2 py-0.5 rounded border border-orange-200">TIK-XXXX</span>
-                        <h3 id="modalSubjek" class="text-base font-extrabold text-slate-800 mt-1">Subjek Kendala</h3>
-                    </div>
+            <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-orange-50/40 to-transparent">
+                <div>
+                    <span id="modalKode" class="text-xs font-mono font-bold text-orange-600 uppercase tracking-wider block">TIK-XXXXXXXX-XXXX</span>
+                    <h3 id="modalSubjek" class="text-base font-extrabold text-slate-800 mt-0.5 line-clamp-1">Subjek Kendala</h3>
                 </div>
-                <button type="button" onclick="closeModal()" class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center transition-colors">
-                    <i class="bi bi-x-lg text-sm"></i>
+                <button type="button" onclick="closeModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors">
+                    <i class="bi bi-x-lg text-xs"></i>
                 </button>
             </div>
 
-            <!-- Modal Body -->
-            <div class="p-6 max-h-[70vh] overflow-y-auto space-y-5">
+            <!-- Modal Body (Scrollable) -->
+            <div class="p-6 space-y-5 overflow-y-auto text-sm">
                 
                 <!-- Info Grid -->
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-100 text-xs">
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100 text-xs">
                     <div>
-                        <span class="text-slate-400 block font-semibold">Pelapor</span>
-                        <span id="modalPelapor" class="font-bold text-slate-800">-</span>
+                        <span class="text-slate-400 block mb-0.5">Pelapor:</span>
+                        <strong id="modalPelapor" class="text-slate-700 font-semibold block">-</strong>
                     </div>
                     <div>
-                        <span class="text-slate-400 block font-semibold">Unit yang Dituju</span>
-                        <span id="modalUnit" class="font-bold text-orange-600">-</span>
+                        <span class="text-slate-400 block mb-0.5">Unit Tujuan:</span>
+                        <strong id="modalUnit" class="text-slate-700 font-semibold block">-</strong>
                     </div>
                     <div>
-                        <span class="text-slate-400 block font-semibold">Kategori</span>
-                        <span id="modalKategori" class="font-bold text-slate-800">-</span>
+                        <span class="text-slate-400 block mb-0.5">Kategori:</span>
+                        <strong id="modalKategori" class="text-slate-700 font-semibold block">-</strong>
                     </div>
                     <div>
-                        <span class="text-slate-400 block font-semibold">Prioritas</span>
-                        <span id="modalPrioritas" class="font-bold text-slate-800">-</span>
+                        <span class="text-slate-400 block mb-0.5">Prioritas:</span>
+                        <strong id="modalPrioritas" class="text-slate-700 font-semibold block">-</strong>
                     </div>
                     <div>
-                        <span class="text-slate-400 block font-semibold">Status</span>
-                        <span id="modalStatus" class="font-bold text-slate-800">-</span>
+                        <span class="text-slate-400 block mb-0.5">Status:</span>
+                        <strong id="modalStatus" class="text-slate-700 font-semibold block">-</strong>
                     </div>
                     <div>
-                        <span class="text-slate-400 block font-semibold">Tanggal Diajukan</span>
-                        <span id="modalWaktu" class="font-bold text-slate-800">-</span>
+                        <span class="text-slate-400 block mb-0.5">Diajukan Pada:</span>
+                        <strong id="modalWaktu" class="text-slate-700 font-semibold block">-</strong>
                     </div>
                 </div>
 
-                <!-- Deskripsi Lengkap (Rich Text) -->
+                <!-- Deskripsi Lengkap -->
                 <div>
                     <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Deskripsi Kendala</h4>
-                    <div id="modalDeskripsi" class="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-xs text-slate-700 leading-relaxed overflow-x-auto space-y-2">
-                        -
-                    </div>
-                </div>
-
-                <!-- Informasi Tambahan Tiket (Field Dinamis) -->
-                <div id="modalCustomFieldsSection" class="hidden">
-                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Informasi Tambahan Tiket</h4>
-                    <div id="modalCustomFieldsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3 rounded-2xl bg-orange-50/40 border border-orange-100">
+                    <div id="modalDeskripsi" class="p-4 rounded-2xl bg-slate-50/70 border border-slate-100 text-slate-700 text-xs leading-relaxed space-y-2 max-h-56 overflow-y-auto">
                     </div>
                 </div>
 
@@ -537,44 +471,20 @@
     <!-- Client-side Scripts for Filtering & Modal -->
     <script>
         function showTicketDetail(kodeTiket) {
-            fetch('<?= site_url("laboran/ticketing/detail/") ?>' + encodeURIComponent(kodeTiket))
+            fetch('<?= site_url("mahasiswa/ticketing/detail/") ?>' + encodeURIComponent(kodeTiket))
                 .then(response => response.json())
                 .then(result => {
                     if (result.status === 'success' || result.status === true) {
                         const d = result.data;
                         document.getElementById('modalKode').textContent = d.kode_tiket;
                         document.getElementById('modalSubjek').textContent = d.subjek;
-                        document.getElementById('modalPelapor').textContent = d.nama_dosen + (d.nidn ? ' (' + d.nidn + ')' : '');
+                        document.getElementById('modalPelapor').textContent = d.nama_dosen + (d.nidn ? ' (NIM: ' + d.nidn + ')' : '');
                         document.getElementById('modalUnit').textContent = d.unit_tujuan || 'Unit Terkait';
                         document.getElementById('modalKategori').textContent = d.kategori;
                         document.getElementById('modalPrioritas').textContent = d.prioritas;
                         document.getElementById('modalStatus').textContent = d.status;
                         document.getElementById('modalWaktu').textContent = d.created_at || '-';
                         document.getElementById('modalDeskripsi').innerHTML = d.deskripsi;
-
-                        // Custom Fields
-                        const cfSec = document.getElementById('modalCustomFieldsSection');
-                        const cfCont = document.getElementById('modalCustomFieldsContainer');
-                        if (d.custom_fields && Array.isArray(d.custom_fields) && d.custom_fields.length > 0) {
-                            cfCont.innerHTML = '';
-                            d.custom_fields.forEach(f => {
-                                const fCol = document.createElement('div');
-                                fCol.className = 'p-2.5 rounded-xl bg-white border border-orange-100/80 shadow-2xs';
-                                const fLbl = document.createElement('span');
-                                fLbl.className = 'text-[10px] font-bold text-orange-600 block uppercase tracking-wider';
-                                fLbl.textContent = f.label || f.name;
-                                const fVal = document.createElement('span');
-                                fVal.className = 'text-xs font-semibold text-slate-800 mt-0.5 block whitespace-pre-wrap';
-                                fVal.textContent = f.value || '-';
-                                fCol.appendChild(fLbl);
-                                fCol.appendChild(fVal);
-                                cfCont.appendChild(fCol);
-                            });
-                            cfSec.classList.remove('hidden');
-                        } else {
-                            cfSec.classList.add('hidden');
-                            cfCont.innerHTML = '';
-                        }
 
                         // Lampiran
                         const lampSection = document.getElementById('modalLampiranSection');
@@ -603,7 +513,6 @@
                     }
                 })
                 .catch(err => {
-                    console.error(err);
                     alert('Gagal menghubungi server.');
                 });
         }
@@ -628,10 +537,12 @@
             event.target.classList.remove('text-slate-500', 'hover:bg-slate-100');
 
             const rows = document.querySelectorAll('.ticket-row');
+            let visibleCount = 0;
             rows.forEach(row => {
                 const rowStatus = row.getAttribute('data-status');
                 if (status === 'all' || rowStatus === status) {
                     row.style.display = '';
+                    visibleCount++;
                 } else {
                     row.style.display = 'none';
                 }
@@ -648,7 +559,7 @@
             });
         }
 
-        // Floating Popover Status Stepper ala WhatsApp & Workflow Mahasiswa
+        // Status Stepper Popover Handling
         const popover = document.getElementById('statusTrackingPopover');
         let popoverTimeout = null;
 
@@ -664,13 +575,7 @@
             }, 200);
         }
 
-        // Keep popover open while mouse is hovering it, close when mouse leaves
-        if (popover) {
-            popover.addEventListener('mouseenter', () => clearTimeout(popoverTimeout));
-            popover.addEventListener('mouseleave', () => hidePopover());
-        }
-
-        document.querySelectorAll('.status-stepper-trigger').forEach(trigger => {
+        document.querySelectorAll('.status-badge-trigger').forEach(trigger => {
             trigger.addEventListener('mouseenter', function(e) {
                 clearTimeout(popoverTimeout);
 
@@ -683,18 +588,15 @@
                 const tanggapan = this.getAttribute('data-tanggapan');
 
                 document.getElementById('popKode').textContent = kode;
-                document.getElementById('step1Time').innerHTML = '<i class="bi bi-clock-fill text-[9px] mr-1"></i>' + created;
+                document.getElementById('step1Time').textContent = created;
                 document.getElementById('step1Unit').textContent = unit || 'terkait';
 
                 const popWaBadge = document.getElementById('popWaBadge');
-
-                // Step 2 elements
                 const step2Icon = document.getElementById('step2Icon');
                 const step2Title = document.getElementById('step2Title');
                 const step2Time = document.getElementById('step2Time');
                 const step2Desc = document.getElementById('step2Desc');
 
-                // Step 3 elements
                 const step3Icon = document.getElementById('step3Icon');
                 const step3Title = document.getElementById('step3Title');
                 const step3Time = document.getElementById('step3Time');
@@ -702,7 +604,6 @@
                 const step3Box = document.getElementById('step3TanggapanBox');
                 const step3Text = document.getElementById('step3TanggapanText');
 
-                // Step 4 elements
                 const step4Icon = document.getElementById('step4Icon');
                 const step4Title = document.getElementById('step4Title');
                 const step4Time = document.getElementById('step4Time');
@@ -718,29 +619,23 @@
                     popWaBadge.className = 'inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border bg-amber-50 text-amber-700 border-amber-200';
                     popWaBadge.innerHTML = '<i class="bi bi-check text-slate-400 font-black text-sm"></i> Menunggu';
 
-                    // Step 2: Waiting
                     step2Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-amber-100 text-amber-600 border border-amber-300';
                     step2Icon.innerHTML = '<i class="bi bi-hourglass-split animate-pulse"></i>';
                     step2Title.className = 'font-bold text-[11px] text-amber-800';
-                    step2Time.className = 'text-[10px] font-semibold text-amber-600 flex items-center whitespace-nowrap';
-                    step2Time.innerHTML = '<i class="bi bi-hourglass-split mr-1 text-[9px]"></i> Menunggu Antrean';
-                    step2Desc.textContent = 'Menunggu giliran peninjauan oleh staf ' + (unit || 'terkait') + '.';
+                    step2Time.textContent = 'Dalam Antrean';
+                    step2Desc.textContent = 'Menunggu staf ' + (unit || 'unit') + ' membuka dan merespon laporan.';
 
-                    // Step 3: Pending
                     step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200';
-                    step3Icon.innerHTML = '<i class="bi bi-circle text-[8px]"></i>';
+                    step3Icon.innerHTML = '<i class="bi bi-dash"></i>';
                     step3Title.className = 'font-bold text-[11px] text-slate-400';
-                    step3Time.className = 'text-[10px] font-normal text-slate-400 flex items-center whitespace-nowrap';
-                    step3Time.innerHTML = '<i class="bi bi-dash mr-1 text-[10px]"></i> Belum Ada Solusi';
-                    step3Desc.textContent = 'Solusi akan disampaikan setelah kendala dianalisis.';
+                    step3Time.textContent = '-';
+                    step3Desc.textContent = 'Solusi belum tersedia.';
 
-                    // Step 4: Pending
                     step4Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200';
                     step4Icon.innerHTML = '<i class="bi bi-lock text-[10px]"></i>';
                     step4Title.className = 'font-bold text-[11px] text-slate-400';
-                    step4Time.className = 'text-[10px] font-normal text-slate-400 flex items-center whitespace-nowrap';
-                    step4Time.innerHTML = '<i class="bi bi-dash mr-1 text-[10px]"></i> Belum Ditutup';
-                    step4Desc.textContent = 'Tiket masih berstatus aktif dalam antrean.';
+                    step4Time.textContent = '-';
+                    step4Desc.textContent = 'Tiket masih aktif.';
 
                     stepperLine.className = 'absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-slate-200';
 
@@ -748,40 +643,33 @@
                     popWaBadge.className = 'inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-200';
                     popWaBadge.innerHTML = '<i class="bi bi-check-all text-slate-500 font-black text-base"></i> Diproses';
 
-                    // Step 2: Processing (Active)
                     step2Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-blue-600 text-white shadow-xs';
                     step2Icon.innerHTML = '<i class="bi bi-check-all text-sm font-bold"></i>';
                     step2Title.className = 'font-bold text-[11px] text-blue-800';
-                    step2Time.className = 'text-[10px] font-mono font-bold text-blue-600 flex items-center whitespace-nowrap';
-                    step2Time.innerHTML = '<i class="bi bi-clock-history mr-1 text-[9px]"></i>' + (updated || created);
+                    step2Time.textContent = updated || created;
                     step2Desc.textContent = 'Staf ' + (unit || 'unit') + ' sedang aktif menangani kendala Anda.';
 
-                    // Step 3: Preparing or with notes
                     if (tanggapan && tanggapan.trim()) {
                         step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-blue-100 text-blue-600 border border-blue-300';
                         step3Icon.innerHTML = '<i class="bi bi-chat-dots-fill text-[9px]"></i>';
                         step3Title.className = 'font-bold text-[11px] text-blue-800';
-                        step3Time.className = 'text-[10px] font-mono font-bold text-blue-600 flex items-center whitespace-nowrap';
-                        step3Time.innerHTML = '<i class="bi bi-clock mr-1 text-[9px]"></i>' + (tglTanggapan || updated);
-                        step3Desc.textContent = 'Staf telah memberikan catatan tanggapan.';
+                        step3Time.textContent = tglTanggapan || updated;
+                        step3Desc.textContent = 'Staf telah memberikan tanggapan awal.';
                         step3Box.classList.remove('hidden');
                         step3Text.textContent = '"' + tanggapan.trim() + '"';
                     } else {
                         step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200';
                         step3Icon.innerHTML = '<i class="bi bi-hourglass-split animate-pulse"></i>';
                         step3Title.className = 'font-bold text-[11px] text-slate-600';
-                        step3Time.className = 'text-[10px] font-semibold text-amber-600 flex items-center whitespace-nowrap';
-                        step3Time.innerHTML = '<i class="bi bi-hourglass mr-1 text-[9px]"></i> Sedang Disiapkan';
-                        step3Desc.textContent = 'Solusi dan jawaban sedang dirumuskan oleh staf.';
+                        step3Time.textContent = 'Sedang Disiapkan';
+                        step3Desc.textContent = 'Solusi atau jawaban sedang dirumuskan staf.';
                     }
 
-                    // Step 4: Pending
                     step4Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200';
                     step4Icon.innerHTML = '<i class="bi bi-lock text-[10px]"></i>';
                     step4Title.className = 'font-bold text-[11px] text-slate-400';
-                    step4Time.className = 'text-[10px] font-normal text-slate-400 flex items-center whitespace-nowrap';
-                    step4Time.innerHTML = '<i class="bi bi-dash mr-1 text-[10px]"></i> Belum Ditutup';
-                    step4Desc.textContent = 'Tiket masih dalam proses penyelesaian.';
+                    step4Time.textContent = '-';
+                    step4Desc.textContent = 'Tiket masih dalam penanganan.';
 
                     stepperLine.className = 'absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-blue-300';
 
@@ -789,104 +677,83 @@
                     popWaBadge.className = 'inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200';
                     popWaBadge.innerHTML = '<i class="bi bi-check-all text-sky-500 font-black text-base"></i> Selesai';
 
-                    // Step 2: Complete
                     step2Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-blue-500 text-white shadow-xs';
                     step2Icon.innerHTML = '<i class="bi bi-check-lg"></i>';
                     step2Title.className = 'font-bold text-[11px] text-slate-700';
-                    step2Time.className = 'text-[10px] font-mono font-bold text-slate-500 flex items-center whitespace-nowrap';
-                    step2Time.innerHTML = '<i class="bi bi-clock-history mr-1 text-[9px]"></i>' + (updated || created);
-                    step2Desc.textContent = 'Kendala telah ditelaah dan diproses oleh staf.';
+                    step2Time.textContent = updated;
+                    step2Desc.textContent = 'Telah ditinjau dan ditindaklanjuti.';
 
-                    // Step 3: Complete with WhatsApp Blue Double Check & Solusi
-                    step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-black bg-sky-500 text-white shadow-xs ring-2 ring-sky-200';
-                    step3Icon.innerHTML = '<i class="bi bi-check-all"></i>';
-                    step3Title.className = 'font-bold text-[11px] text-sky-900';
-                    step3Time.className = 'text-[10px] font-mono font-bold text-sky-700 flex items-center whitespace-nowrap';
-                    step3Time.innerHTML = '<i class="bi bi-clock-fill mr-1 text-[9px]"></i>' + (tglTanggapan || updated);
-                    step3Desc.textContent = 'Solusi resmi telah diberikan oleh staf unit.';
-
+                    step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-emerald-600 text-white shadow-xs';
+                    step3Icon.innerHTML = '<i class="bi bi-check2-all text-xs"></i>';
+                    step3Title.className = 'font-bold text-[11px] text-emerald-800';
+                    step3Time.textContent = tglTanggapan || updated;
+                    step3Desc.textContent = 'Solusi telah diberikan oleh unit terkait.';
                     if (tanggapan && tanggapan.trim()) {
                         step3Box.classList.remove('hidden');
                         step3Text.textContent = '"' + tanggapan.trim() + '"';
                     }
 
-                    // Step 4: Ready to close
-                    step4Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-300';
-                    step4Icon.innerHTML = '<i class="bi bi-hourglass-split"></i>';
-                    step4Title.className = 'font-bold text-[11px] text-amber-800';
-                    step4Time.className = 'text-[10px] font-semibold text-amber-600 flex items-center whitespace-nowrap';
-                    step4Time.innerHTML = '<i class="bi bi-check-circle mr-1 text-[9px]"></i> Siap Ditutup';
-                    step4Desc.textContent = 'Solusi telah terkirim, menunggu konfirmasi penutupan.';
+                    step4Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200';
+                    step4Icon.innerHTML = '<i class="bi bi-clock text-[10px]"></i>';
+                    step4Title.className = 'font-bold text-[11px] text-slate-400';
+                    step4Time.textContent = 'Menunggu Konfirmasi Penutupan';
+                    step4Desc.textContent = 'Masalah telah diselesaikan.';
 
-                    stepperLine.className = 'absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-sky-400';
+                    stepperLine.className = 'absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-emerald-400';
 
-                } else {
-                    // Status Ditutup
-                    popWaBadge.className = 'inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-700 border-slate-300';
+                } else if (status === 'Ditutup') {
+                    popWaBadge.className = 'inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border bg-purple-50 text-purple-800 border-purple-200';
                     popWaBadge.innerHTML = '<i class="bi bi-patch-check-fill text-purple-600 text-xs"></i> Ditutup';
 
-                    // Step 2: Complete
                     step2Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-blue-500 text-white shadow-xs';
                     step2Icon.innerHTML = '<i class="bi bi-check-lg"></i>';
                     step2Title.className = 'font-bold text-[11px] text-slate-700';
-                    step2Time.className = 'text-[10px] font-mono font-bold text-slate-500 flex items-center whitespace-nowrap';
-                    step2Time.innerHTML = '<i class="bi bi-clock-history mr-1 text-[9px]"></i>' + (updated || created);
-                    step2Desc.textContent = 'Kendala telah selesai diproses.';
+                    step2Time.textContent = updated;
+                    step2Desc.textContent = 'Proses penanganan selesai.';
 
-                    // Step 3: Complete with Solusi
-                    step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-black bg-sky-500 text-white shadow-xs';
-                    step3Icon.innerHTML = '<i class="bi bi-check-all"></i>';
-                    step3Title.className = 'font-bold text-[11px] text-sky-900';
-                    step3Time.className = 'text-[10px] font-mono font-bold text-sky-700 flex items-center whitespace-nowrap';
-                    step3Time.innerHTML = '<i class="bi bi-clock-fill mr-1 text-[9px]"></i>' + (tglTanggapan || updated);
-                    step3Desc.textContent = 'Solusi resmi telah diterima pelapor.';
-
+                    step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-emerald-600 text-white shadow-xs';
+                    step3Icon.innerHTML = '<i class="bi bi-check2-all text-xs"></i>';
+                    step3Title.className = 'font-bold text-[11px] text-emerald-800';
+                    step3Time.textContent = tglTanggapan || updated;
+                    step3Desc.textContent = 'Solusi telah diterima.';
                     if (tanggapan && tanggapan.trim()) {
                         step3Box.classList.remove('hidden');
                         step3Text.textContent = '"' + tanggapan.trim() + '"';
                     }
 
-                    // Step 4: Closed
-                    step4Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-purple-600 text-white shadow-sm ring-2 ring-purple-200';
-                    step4Icon.innerHTML = '<i class="bi bi-check-lg font-black"></i>';
-                    step4Title.className = 'font-bold text-[11px] text-purple-900';
-                    step4Time.className = 'text-[10px] font-mono font-bold text-purple-700 flex items-center whitespace-nowrap';
-                    step4Time.innerHTML = '<i class="bi bi-patch-check-fill mr-1 text-[10px]"></i>' + (updated || tglTanggapan || created);
-                    step4Desc.textContent = 'Kendala telah tuntas diselesaikan dan tiket resmi ditutup.';
+                    step4Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-purple-600 text-white shadow-xs';
+                    step4Icon.innerHTML = '<i class="bi bi-check-lg text-xs"></i>';
+                    step4Title.className = 'font-bold text-[11px] text-purple-800';
+                    step4Time.textContent = updated;
+                    step4Desc.textContent = 'Tiket telah ditutup tuntas.';
 
-                    stepperLine.className = 'absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-purple-500';
+                    stepperLine.className = 'absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-purple-400';
                 }
 
-                // Show & Positioning
-                popover.classList.remove('hidden');
+                // Position Popover
                 const rect = this.getBoundingClientRect();
-                const actualWidth = popover.offsetWidth || 340;
-                const actualHeight = popover.offsetHeight || 320;
+                const popoverHeight = 360;
+                const popoverWidth = 320;
 
-                let top = rect.top - actualHeight - 12;
-                if (top < 10) {
-                    top = rect.bottom + 12;
+                let top = rect.bottom + 8;
+                let left = rect.left + (rect.width / 2) - (popoverWidth / 2);
+
+                if (top + popoverHeight > window.innerHeight) {
+                    top = rect.top - popoverHeight - 8;
                 }
-
-                // Center precisely over the status badge
-                let left = (rect.left + rect.right) / 2 - (actualWidth / 2);
-
-                // Boundary check to keep within screen bounds
-                const maxLeft = window.innerWidth - actualWidth - 20;
-                if (left > maxLeft) {
-                    left = maxLeft;
-                }
-                if (left < 16) {
-                    left = 16;
+                if (left < 10) left = 10;
+                if (left + popoverWidth > window.innerWidth - 10) {
+                    left = window.innerWidth - popoverWidth - 10;
                 }
 
                 popover.style.top = top + 'px';
                 popover.style.left = left + 'px';
 
-                requestAnimationFrame(() => {
+                popover.classList.remove('hidden');
+                setTimeout(() => {
                     popover.classList.remove('opacity-0', '-translate-y-2');
                     popover.classList.add('opacity-100', 'translate-y-0');
-                });
+                }, 10);
             });
 
             trigger.addEventListener('mouseleave', function() {

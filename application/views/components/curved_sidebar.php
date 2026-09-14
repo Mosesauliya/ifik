@@ -67,6 +67,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['heading' => 'Respon Ticketing Lab', 'href' => site_url('laboran/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
                 ['heading' => 'Buat Tiket Kendala', 'href' => site_url('laboran/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
                 ['heading' => 'Riwayat Tiket Saya', 'href' => site_url('laboran/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+                ['heading' => 'Pengaturan Input Tiket', 'href' => site_url('laboran/ticketing/fields'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
 
                 ['category' => 'Informasi & Jadwal', 'has_divider' => true],
                 ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
@@ -155,9 +156,24 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
             ];
             break;
 
-        default: // Mahasiswa (5) / Publik
+        case 5: // Mahasiswa
             $defaultNavItems = [
                 ['category' => 'Menu Mahasiswa'],
+                ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
+                ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+
+                ['category' => 'Layanan Ticketing', 'has_divider' => true],
+                ['heading' => 'Buat Tiket Kendala', 'href' => site_url('mahasiswa/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
+                ['heading' => 'Riwayat Tiket Saya', 'href' => site_url('mahasiswa/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+
+                ['category' => 'Akun', 'has_divider' => true],
+                ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
+            ];
+            break;
+
+        default: // Publik
+            $defaultNavItems = [
+                ['category' => 'Menu Utama'],
                 ['heading' => 'Dashboard Utama', 'href' => site_url('dashboard'), 'icon_3d' => 'assets/images/icons_3d/home.png'],
                 ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
                 ['heading' => 'Riwayat Peminjaman Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
@@ -342,7 +358,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                     $cleanHref = trim(str_replace([site_url(), base_url()], '', $item['href']), '/');
                     $cleanHrefUri = strtok($cleanHref, '#');
                     $isCurrent = (!empty($cleanHrefUri) && ($curr_uri === $cleanHrefUri));
-                    if (!$isCurrent && !empty($cleanHrefUri) && !in_array($cleanHrefUri, ['dashboard', 'admin', 'laboran', 'kaur', 'dosen', 'koordinatorta'])) {
+                    if (!$isCurrent && !empty($cleanHrefUri) && !in_array($cleanHrefUri, ['dashboard', 'admin', 'laboran', 'kaur', 'dosen', 'koordinatorta', 'mahasiswa'])) {
                         $isCurrent = (strpos($curr_uri, $cleanHrefUri) === 0);
                     }
                 ?>

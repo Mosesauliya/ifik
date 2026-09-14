@@ -90,6 +90,10 @@ $route['mahasiswa/dosen_penguji'] = 'Mahasiswa/dosen_penguji';
 // Dosen Wali Routes
 $route['dosen/wali'] = 'DosenWali';
 $route['dosen/wali/detail_mahasiswa/(:any)'] = 'DosenWali/detail_mahasiswa/$1';
+$route['dosen/wali/log_review_ajax'] = 'DosenWali/log_review_ajax';
+$route['dosenwali/log_review_ajax'] = 'DosenWali/log_review_ajax';
+$route['dosen/wali/update_file_approval_ajax'] = 'DosenWali/update_file_approval_ajax';
+$route['dosenwali/update_file_approval_ajax'] = 'DosenWali/update_file_approval_ajax';
 $route['dosen/wali/(:any)'] = 'DosenWali/$1';
 $route['dosen/wali/(:any)/(:any)'] = 'DosenWali/$1/$2';
 
@@ -240,6 +244,27 @@ $route['laboran/ticketing/input'] = 'LaboranTicketing/input';
 $route['laboran/ticketing/simpan'] = 'LaboranTicketing/simpan';
 $route['laboran/ticketing/riwayat'] = 'LaboranTicketing/riwayat';
 $route['laboran/ticketing/detail/(:any)'] = 'LaboranTicketing/riwayat_detail/$1';
+
+// Laboran Dynamic Custom Fields & Dropdowns Routes (Khusus Role Laboran)
+$route['laboran/ticketing/fields'] = 'LaboranTicketing/custom_fields';
+$route['laboran/ticketing/fields/save'] = 'LaboranTicketing/custom_fields_save';
+$route['laboran/ticketing/fields/delete/(:num)'] = 'LaboranTicketing/custom_fields_delete/$1';
+$route['laboran/ticketing/fields/toggle/(:num)'] = 'LaboranTicketing/custom_fields_toggle/$1';
+
+$route['laboran/ticketing/unit_save'] = 'LaboranTicketing/unit_save';
+$route['laboran/ticketing/unit_toggle/(:num)'] = 'LaboranTicketing/unit_toggle/$1';
+$route['laboran/ticketing/unit_delete/(:num)'] = 'LaboranTicketing/unit_delete/$1';
+
+$route['laboran/ticketing/kategori_save'] = 'LaboranTicketing/kategori_save';
+$route['laboran/ticketing/kategori_toggle/(:num)'] = 'LaboranTicketing/kategori_toggle/$1';
+$route['laboran/ticketing/kategori_delete/(:num)'] = 'LaboranTicketing/kategori_delete/$1';
+
+// Mahasiswa Ticketing Routes
+$route['mahasiswa/ticketing'] = 'Mahasiswa/ticketing_input';
+$route['mahasiswa/ticketing/input'] = 'Mahasiswa/ticketing_input';
+$route['mahasiswa/ticketing/simpan'] = 'Mahasiswa/ticketing_simpan';
+$route['mahasiswa/ticketing/riwayat'] = 'Mahasiswa/ticketing_riwayat';
+$route['mahasiswa/ticketing/detail/(:any)'] = 'Mahasiswa/ticketing_detail/$1';
 
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;

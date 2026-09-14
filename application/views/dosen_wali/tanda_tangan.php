@@ -72,6 +72,10 @@
             background-size: 14px 14px;
             background-position: 0 0, 0 7px, 7px -7px, -7px 0px;
         }
+        /* Custom Pen Cursor for Signature Pad */
+        .cursor-pen, #signaturePadCanvas, #canvasBox {
+            cursor: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj48cGF0aCBkPSJNMTcgM2EyLjg1IDIuODMgMCAxIDEgNCA0TDcuNSAyMC41IDIgMjJsMS41LTUuNVoiIGZpbGw9IiMxZTI5M2IiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTcgM2EyLjg1IDIuODMgMCAxIDEgNCA0TDcuNSAyMC41IDIgMjJsMS41LTUuNVoiIGZpbGw9IiMxZTI5M2IiLz48cG9seWdvbiBwb2ludHM9IjIsMjIgMy4yLDE3LjYgNi40LDIwLjgiIGZpbGw9IiNlYTU4MGMiLz48cGF0aCBkPSJtMTUgNSA0IDQiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIxLjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxjaXJjbGUgY3g9IjIiIGN5PSIyMiIgcj0iMC43NSIgZmlsbD0iIzBmMTcyYSIvPjwvc3ZnPg==") 2 22, crosshair !important;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 via-orange-50/20 to-slate-100 min-h-screen text-slate-800 antialiased">
@@ -298,7 +302,7 @@
 
                     <!-- Canvas Area with Transparent Checkerboard BG -->
                     <div class="canvas-container checkerboard-bg shadow-inner" id="canvasBox">
-                        <canvas id="signaturePadCanvas" class="w-full h-full cursor-crosshair"></canvas>
+                        <canvas id="signaturePadCanvas" class="w-full h-full cursor-pen"></canvas>
                         <div class="canvas-baseline"></div>
                         <span class="absolute bottom-2 right-3 text-[10px] font-semibold text-slate-300 pointer-events-none uppercase tracking-wider">
                             Goreskan Tanda Tangan di Sini (Hasil Transparan)

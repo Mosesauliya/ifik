@@ -9,7 +9,7 @@ class DosenWali extends CI_Controller {
         $this->load->helper(array('form', 'url'));
 
         // Normalisasi URL: Jika diakses lewat /dosenwali via browser (bukan AJAX), arahkan ke /dosen/wali
-        if ($this->uri->segment(1) === 'dosenwali' && !$this->input->is_ajax_request()) {
+        if ($this->uri->segment(1) === 'dosenwali' && !$this->input->is_ajax_request() && strpos($this->uri->uri_string(), '_ajax') === false) {
             $segments = $this->uri->segment_array();
             array_shift($segments);
             $subPath = !empty($segments) ? '/' . implode('/', $segments) : '';
@@ -38,8 +38,8 @@ class DosenWali extends CI_Controller {
         $detail = $this->DosenWali_model->get_detail_pendaftaran_mahasiswa($nim);
         if (!$detail) return false;
         $current_stage = $detail['current_stage'] ?? 'Dosen Wali';
-        $status_wali = $detail['status_approval_wali'] ?? 'Pending';
-        return ($status_wali === 'Approved' || in_array($current_stage, ['Admin Layanan', 'Koordinator TA', 'Ketua KK', 'Selesai Approval']));
+        // Hanya kunci jika berkas sudah diproses lebih lanjut oleh Koordinator TA ke atas
+        return in_array($current_stage, ['Koordinator TA', 'Ketua KK', 'Selesai Approval']);
     }
 
     // Detail Mahasiswa Bimbingan & Approval
@@ -142,11 +142,30 @@ class DosenWali extends CI_Controller {
 
     // AJAX Endpoint: Log ketika Dosen Wali membuka/melihat PDF berkas
     public function log_review_ajax() {
-        $nim = $this->input->post('nim');
-        $file_type = $this->input->post('file_type');
+        $nim = $this->input->post('nim') ?: $this->input->get('nim');
+        $file_type = $this->input->post('file_type') ?: $this->input->get('file_type');
 
         if (!$nim || !$file_type) {
             echo json_encode(array('success' => false, 'message' => 'Parameter tidak lengkap.'));
+            return;
+        }
+
+        // Support array atau comma-separated berkas (batch logging)
+        if (is_string($file_type) && strpos($file_type, ',') !== false) {
+            $file_type = explode(',', $file_type);
+        }
+
+        if (is_array($file_type)) {
+            foreach ($file_type as $ft) {
+                $ft = trim($ft);
+                if (!empty($ft)) {
+                    $this->DosenWali_model->log_file_review($nim, $ft);
+                }
+            }
+            echo json_encode(array(
+                'success' => true,
+                'message' => 'Semua berkas telah ditinjau/direview.'
+            ));
             return;
         }
 

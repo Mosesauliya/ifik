@@ -276,7 +276,7 @@
                                              data-created="<?= date('d M Y, H:i', strtotime($t->created_at)) . ' WIB'; ?>"
                                              data-updated="<?= !empty($t->updated_at) ? date('d M Y, H:i', strtotime($t->updated_at)) . ' WIB' : ''; ?>"
                                              data-tgl-tanggapan="<?= !empty($t->tgl_tanggapan) ? date('d M Y, H:i', strtotime($t->tgl_tanggapan)) . ' WIB' : (!empty($t->updated_at) && $t->status !== 'Menunggu' ? date('d M Y, H:i', strtotime($t->updated_at)) . ' WIB' : ''); ?>"
-                                             data-tanggapan="<?= htmlspecialchars(strip_tags($t->tanggapan ?? '')); ?>">
+                                             data-tanggapan="<?= htmlspecialchars(preg_replace('/\s+/u', ' ', html_entity_decode(trim(strip_tags(str_ireplace(['&nbsp;', '&amp;nbsp;'], ' ', $t->tanggapan ?? ''))), ENT_QUOTES, 'UTF-8'))); ?>">
                                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition-all hover:scale-105 hover:shadow-xs <?= $statusColor; ?>">
                                                 <?= $waTickIcon; ?>
                                                 <span><?= htmlspecialchars($t->status); ?></span>
@@ -483,7 +483,14 @@
 
                     <div>
                         <span class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block mb-1">Deskripsi Lengkap</span>
-                        <div class="p-3.5 bg-slate-50/70 border border-slate-200 rounded-2xl text-xs text-slate-700 leading-relaxed whitespace-pre-wrap font-medium" id="modalDeskripsi">-</div>
+                        <div class="p-3.5 bg-slate-50/70 border border-slate-200 rounded-2xl text-xs text-slate-700 leading-relaxed font-medium overflow-x-auto space-y-1.5" id="modalDeskripsi">-</div>
+                    </div>
+
+                    <!-- Informasi Tambahan Tiket (Field Dinamis) -->
+                    <div id="modalCustomFieldsSection" class="hidden">
+                        <span class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block mb-1.5">Informasi Tambahan Tiket</span>
+                        <div id="modalCustomFieldsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3 rounded-2xl bg-orange-50/40 border border-orange-100">
+                        </div>
                     </div>
 
                     <!-- Lampiran File/Foto -->
@@ -557,7 +564,9 @@
             document.getElementById('modalKategori').innerText = '-';
             document.getElementById('modalPrioritas').innerText = '-';
             document.getElementById('modalSubjek').innerText = '-';
-            document.getElementById('modalDeskripsi').innerText = '-';
+            document.getElementById('modalDeskripsi').innerHTML = '-';
+            document.getElementById('modalCustomFieldsSection').classList.add('hidden');
+            document.getElementById('modalCustomFieldsContainer').innerHTML = '';
             document.getElementById('modalLampiranSection').classList.add('hidden');
             document.getElementById('modalRiwayatTanggapanSection').classList.add('hidden');
             document.getElementById('formTanggapanText').value = '';
@@ -577,7 +586,30 @@
                         document.getElementById('modalKategori').innerText = d.kategori;
                         document.getElementById('modalPrioritas').innerText = d.prioritas;
                         document.getElementById('modalSubjek').innerText = d.subjek;
-                        document.getElementById('modalDeskripsi').innerText = d.deskripsi;
+                        document.getElementById('modalDeskripsi').innerHTML = d.deskripsi || '-';
+
+                        // Custom Fields
+                        const cfSec = document.getElementById('modalCustomFieldsSection');
+                        const cfCont = document.getElementById('modalCustomFieldsContainer');
+                        if (d.custom_fields && Array.isArray(d.custom_fields) && d.custom_fields.length > 0) {
+                            cfCont.innerHTML = '';
+                            d.custom_fields.forEach(f => {
+                                const fCol = document.createElement('div');
+                                fCol.className = 'p-2.5 rounded-xl bg-white border border-orange-100/80 shadow-2xs';
+                                const fLbl = document.createElement('span');
+                                fLbl.className = 'text-[10px] font-bold text-orange-600 block uppercase tracking-wider';
+                                fLbl.textContent = f.label || f.name;
+                                const fVal = document.createElement('span');
+                                fVal.className = 'text-xs font-semibold text-slate-800 mt-0.5 block whitespace-pre-wrap';
+                                fVal.textContent = f.value || '-';
+                                fCol.appendChild(fLbl);
+                                fCol.appendChild(fVal);
+                                cfCont.appendChild(fCol);
+                            });
+                            cfSec.classList.remove('hidden');
+                        } else {
+                            cfSec.classList.add('hidden');
+                        }
 
                         // Set status select value
                         const stSelect = document.getElementById('formStatusSelect');

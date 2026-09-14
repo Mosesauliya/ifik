@@ -25,12 +25,15 @@
         </button>
     </div>
 
+    <!-- Auto Role-Aware Curved Animated Sidebar -->
+    <?php $this->load->view('components/curved_sidebar'); ?>
+
     <!-- Header Glass Navbar (Clean White Glass - Identical to Dashboard) -->
     <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-2xl border-b border-orange-100/80 shadow-xs mb-6">
         <div class="w-full px-4 sm:px-6 lg:px-10">
             <div class="flex items-center justify-between h-16 sm:h-18">
                 <!-- Brand -->
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 pl-11 sm:pl-12">
                     <div class="w-9 h-9 bg-gradient-to-tr from-orange-600 to-amber-500 text-white rounded-xl font-bold text-lg flex items-center justify-center box-3d">
                         I
                     </div>

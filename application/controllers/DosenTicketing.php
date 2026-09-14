@@ -33,49 +33,39 @@ class DosenTicketing extends CI_Controller {
         $nama = $this->session->userdata('name');
         $email = $this->session->userdata('email');
 
-        $unit_kategori_map = [
-            'LAA (Layanan Akademik & Administrasi)' => [
-                'Validasi Berkas Pendaftaran TA',
-                'Transkrip Nilai & KSM',
-                'Surat Keterangan / Pengantar Akademik',
-                'Administrasi Kelulusan & Wisuda',
-                'Lain-lain (LAA)'
-            ],
-            'Koordinator Tugas Akhir (Koor TA)' => [
-                'Pengajuan / Perubahan Topik TA',
-                'Penjadwalan Seminar & Sidang TA',
-                'Alokasi Pembimbing & Penguji',
-                'Nilai Akhir & Berita Acara Sidang',
-                'Kuota & Batas Waktu Bimbingan TA',
-                'Lain-lain (Koordinator TA)'
-            ],
-            'Ketua Kelompok Keahlian (Ketua KK)' => [
-                'Kesesuaian Topik TA dengan KK',
-                'Rekomendasi Usulan TA Mahasiswa',
-                'Kuota Bimbingan Dosen Kelompok Keahlian',
-                'Lain-lain (Ketua KK)'
-            ],
-            'Laboratorium & Sarana Prasarana (Lab/Sarpras)' => [
-                'Peminjaman Ruangan Lab / Studio',
-                'Pengurusan Surat Bebas Laboratorium',
-                'Kendala Perangkat Hardware & PC Lab',
-                'Lisensi Software & Aplikasi Komputer Lab',
-                'Lain-lain (Lab & Sarpras)'
-            ],
-            'IT Support & Pusat Sistem Informasi' => [
-                'Akun, Password & Hak Akses Portal',
-                'Bug / Error Teknis Sistem Web IFIK',
-                'Sinkronisasi Data & Riwayat Log Approval',
-                'Usulan Fitur Baru / Perbaikan Fitur',
-                'Lain-lain (IT Support)'
-            ],
-            'Dosen Wali & Akademik' => [
-                'Bimbingan Akademik Mahasiswa Wali',
-                'Dispensasi & Masalah Studi Mahasiswa',
-                'Perwalian & Rencana Studi Semester',
-                'Lain-lain (Dosen Wali)'
-            ]
-        ];
+        // Ambil data Unit dan Kategori dinamis dari database (yang bisa diatur oleh Laboran)
+        $units = $this->db
+            ->where('is_active', 1)
+            ->order_by('sort_order', 'ASC')
+            ->order_by('id', 'ASC')
+            ->get('ticketing_units')
+            ->result_array();
+
+        $unit_kategori_map = [];
+        foreach ($units as $u) {
+            $categories = $this->db
+                ->where('unit_id', $u['id'])
+                ->where('is_active', 1)
+                ->order_by("(CASE WHEN nama_kategori LIKE 'Lain-lain%' OR nama_kategori LIKE 'Lainnya%' THEN 1 ELSE 0 END)", 'ASC', FALSE)
+                ->order_by('sort_order', 'ASC')
+                ->order_by('id', 'ASC')
+                ->get('ticketing_kategori')
+                ->result_array();
+
+            $catList = array_column($categories, 'nama_kategori');
+            if (empty($catList)) {
+                $catList = ['Lain-lain (' . $u['nama_unit'] . ')'];
+            }
+            $unit_kategori_map[$u['nama_unit']] = $catList;
+        }
+
+        // Load active dynamic custom fields for ticketing
+        $custom_fields = $this->db
+            ->where('is_active', 1)
+            ->order_by('sort_order', 'ASC')
+            ->order_by('id', 'ASC')
+            ->get('laboran_ticketing_fields')
+            ->result_array();
 
         $data = [
             'title'             => 'Input Tiket Kendala Dosen',
@@ -86,6 +76,7 @@ class DosenTicketing extends CI_Controller {
                 'nama'  => $nama,
                 'email' => $email
             ],
+            'custom_fields'     => $custom_fields,
             'unit_kategori_map' => $unit_kategori_map,
             'prioritas_list'    => [
                 'Rendah'  => ['label' => 'Rendah', 'color' => 'slate', 'desc' => 'Pertanyaan umum / kendala minor'],
@@ -176,6 +167,37 @@ class DosenTicketing extends CI_Controller {
             }
         }
 
+        // Process Dynamic Custom Fields if any extra fields exist
+        $coreFieldNames = ['nama_lengkap', 'unit_tujuan', 'kategori', 'prioritas', 'subjek', 'deskripsi', 'lampiran'];
+        $activeCustomFields = $this->db
+            ->where('is_active', 1)
+            ->where_not_in('field_name', $coreFieldNames)
+            ->order_by('sort_order', 'ASC')
+            ->order_by('id', 'ASC')
+            ->get('laboran_ticketing_fields')
+            ->result_array();
+
+        $rawCustomFieldsPost = $this->input->post('custom_fields') ?: [];
+        $submittedCustomData = [];
+
+        foreach ($activeCustomFields as $f) {
+            $fName = $f['field_name'];
+            $fVal = isset($rawCustomFieldsPost[$fName]) ? trim($rawCustomFieldsPost[$fName]) : '';
+            if ($f['is_required'] && empty($fVal)) {
+                $this->session->set_flashdata('error', 'Field "' . htmlspecialchars($f['field_label']) . '" wajib diisi.');
+                redirect('dosen/ticketing/input');
+                return;
+            }
+            if ($fVal !== '') {
+                $submittedCustomData[] = [
+                    'label' => $f['field_label'],
+                    'name'  => $f['field_name'],
+                    'type'  => $f['field_type'],
+                    'value' => $fVal
+                ];
+            }
+        }
+
         // Generate Kode Tiket
         $kodeTiket = $this->DosenTicketing_model->generate_kode();
 
@@ -189,6 +211,7 @@ class DosenTicketing extends CI_Controller {
             'prioritas'   => $prioritas,
             'subjek'      => $subjek,
             'deskripsi'   => $deskripsi,
+            'custom_fields_data' => !empty($submittedCustomData) ? json_encode($submittedCustomData, JSON_UNESCAPED_UNICODE) : null,
             'lampiran'    => $lampiranFile,
             'status'      => 'Menunggu'
         ];

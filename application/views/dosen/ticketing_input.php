@@ -207,13 +207,13 @@
                     </p>
                 </div>
 
-                <!-- 4. Grid: Prioritas & Subjek -->
+                <!-- 4 & 5. Grid: Prioritas & Subjek (Berurutan No 4 & 5) -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                     
-                    <!-- Tingkat Prioritas -->
+                    <!-- 4. Tingkat Prioritas -->
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2">
-                            Tingkat Prioritas <span class="text-rose-500">*</span>
+                            4. Tingkat Prioritas <span class="text-rose-500">*</span>
                         </label>
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5" id="prioritasGroup">
                             
@@ -253,10 +253,10 @@
                         <p class="text-xs text-slate-400 mt-1.5">Tingkat urgensi penanganan kendala ini.</p>
                     </div>
 
-                    <!-- Subjek / Judul Kendala -->
+                    <!-- 5. Subjek / Judul Kendala -->
                     <div>
                         <label for="subjek" class="block text-sm font-bold text-slate-700 mb-2">
-                            Subjek / Ringkasan Kendala <span class="text-rose-500">*</span>
+                            5. Subjek / Ringkasan Kendala <span class="text-rose-500">*</span>
                         </label>
                         <div class="relative">
                             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
@@ -271,10 +271,10 @@
 
                 </div>
 
-                <!-- 5. Deskripsi Rinci (TinyMCE) -->
+                <!-- 6. Deskripsi Rinci (TinyMCE) -->
                 <div class="pt-2">
                     <label for="deskripsi" class="block text-sm font-bold text-slate-700 mb-2">
-                        4. Deskripsi Kendala Rinci <span class="text-rose-500">*</span>
+                        6. Deskripsi Kendala Rinci <span class="text-rose-500">*</span>
                         <span class="text-xs font-normal text-slate-400 ml-1">(Dilengkapi Rich Text Editor)</span>
                     </label>
                     <textarea id="deskripsi" name="deskripsi" rows="6"
@@ -284,10 +284,89 @@
                     </p>
                 </div>
 
-                <!-- 6. Upload Lampiran Berkas / Screenshot -->
+                <!-- Kolom Tambahan Dinamis Khusus (Nomor 8 dst jika ada inputan kustom dari Laboran) -->
+                <?php 
+                    $coreFieldNames = ['nama_lengkap', 'unit_tujuan', 'kategori', 'prioritas', 'subjek', 'deskripsi', 'lampiran'];
+                    $extraFields = !empty($custom_fields) ? array_values(array_filter($custom_fields, function($cf) use ($coreFieldNames) {
+                        return !in_array($cf['field_name'], $coreFieldNames) && $cf['is_active'] == 1;
+                    })) : [];
+                ?>
+                <?php if (!empty($extraFields)): ?>
+                    <div class="pt-2 border-t border-slate-100">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            <?php foreach ($extraFields as $idx => $cf): ?>
+                                <?php 
+                                    $nomorUrut = 8 + $idx;
+                                    $isTextarea = ($cf['field_type'] === 'textarea');
+                                    $colSpan = $isTextarea ? 'sm:col-span-2' : '';
+                                ?>
+                                <div class="<?= $colSpan; ?>">
+                                    <label for="cf_<?= $cf['id']; ?>" class="block text-sm font-bold text-slate-700 mb-2 flex items-center justify-between">
+                                        <span>
+                                            <?= $nomorUrut; ?>. <?= htmlspecialchars($cf['field_label']); ?>
+                                            <?php if ($cf['is_required']): ?>
+                                                <span class="text-rose-500 font-bold">*</span>
+                                            <?php endif; ?>
+                                        </span>
+                                        <?php if (!$cf['is_required']): ?>
+                                            <span class="text-[11px] text-slate-400 font-normal">Opsional</span>
+                                        <?php endif; ?>
+                                    </label>
+
+                                    <?php if ($cf['field_type'] === 'select'): ?>
+                                        <div class="relative">
+                                            <select id="cf_<?= $cf['id']; ?>" 
+                                                    name="custom_fields[<?= htmlspecialchars($cf['field_name']); ?>]" 
+                                                    <?= $cf['is_required'] ? 'required' : ''; ?>
+                                                    class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 text-sm font-semibold text-slate-800 transition-all outline-hidden appearance-none cursor-pointer">
+                                                <option value="">-- Pilih <?= htmlspecialchars($cf['field_label']); ?> --</option>
+                                                <?php 
+                                                    $opts = array_filter(array_map('trim', explode(',', $cf['field_options'] ?? '')));
+                                                    foreach ($opts as $opt):
+                                                ?>
+                                                    <option value="<?= htmlspecialchars($opt); ?>"><?= htmlspecialchars($opt); ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+                                        </div>
+                                    <?php elseif ($cf['field_type'] === 'textarea'): ?>
+                                        <textarea id="cf_<?= $cf['id']; ?>" 
+                                                  name="custom_fields[<?= htmlspecialchars($cf['field_name']); ?>]" 
+                                                  rows="3"
+                                                  placeholder="<?= htmlspecialchars($cf['placeholder'] ?: 'Tuliskan rincian...'); ?>"
+                                                  <?= $cf['is_required'] ? 'required' : ''; ?>
+                                                  class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 text-sm font-medium text-slate-800 transition-all outline-hidden"></textarea>
+                                    <?php elseif ($cf['field_type'] === 'date'): ?>
+                                        <input type="date" 
+                                               id="cf_<?= $cf['id']; ?>" 
+                                               name="custom_fields[<?= htmlspecialchars($cf['field_name']); ?>]" 
+                                               <?= $cf['is_required'] ? 'required' : ''; ?>
+                                               class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 text-sm font-semibold text-slate-800 transition-all outline-hidden">
+                                    <?php elseif ($cf['field_type'] === 'number'): ?>
+                                        <input type="number" 
+                                               id="cf_<?= $cf['id']; ?>" 
+                                               name="custom_fields[<?= htmlspecialchars($cf['field_name']); ?>]" 
+                                               placeholder="<?= htmlspecialchars($cf['placeholder'] ?: '0'); ?>"
+                                               <?= $cf['is_required'] ? 'required' : ''; ?>
+                                               class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 text-sm font-semibold text-slate-800 transition-all outline-hidden">
+                                    <?php else: ?>
+                                        <input type="text" 
+                                               id="cf_<?= $cf['id']; ?>" 
+                                               name="custom_fields[<?= htmlspecialchars($cf['field_name']); ?>]" 
+                                               placeholder="<?= htmlspecialchars($cf['placeholder'] ?: 'Masukkan ' . $cf['field_label'] . '...'); ?>"
+                                               <?= $cf['is_required'] ? 'required' : ''; ?>
+                                               class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 text-sm font-semibold text-slate-800 transition-all outline-hidden">
+                                    <?php endif; ?>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <!-- 7. Upload Lampiran Berkas / Screenshot -->
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-2">
-                        Lampiran Berkas / Screenshot <span class="text-xs font-normal text-slate-400">(Opsional)</span>
+                        7. Lampiran Berkas / Screenshot <span class="text-xs font-normal text-slate-400">(Opsional)</span>
                     </label>
                     <div class="relative border-2 border-dashed border-slate-200 hover:border-orange-400 bg-slate-50/60 rounded-2xl p-6 transition-all group text-center cursor-pointer"
                          onclick="document.getElementById('lampiran').click()">

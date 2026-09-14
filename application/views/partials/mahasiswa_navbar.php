@@ -23,7 +23,7 @@ $active_pendaftaran = (strpos(uri_string(), 'pendaftaran') !== false);
     <div class="w-full px-4 sm:px-6 lg:px-10">
         <div class="flex items-center justify-between h-16 sm:h-18">
             <!-- Brand -->
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 pl-11 sm:pl-12">
                 <div class="w-9 h-9 bg-gradient-to-tr from-orange-600 to-amber-500 text-white rounded-xl font-bold text-lg flex items-center justify-center box-3d">
                     I
                 </div>
