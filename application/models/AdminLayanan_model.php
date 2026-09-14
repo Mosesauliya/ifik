@@ -13,7 +13,7 @@ class AdminLayanan_model extends CI_Model {
      */
     private function _ensure_tables() {
         if (!$this->db->table_exists('syarat_berkas_ta')) {
-            $this->db->query("CREATE TABLE `syarat_berkas_ta` (
+            $this->db->query("CREATE TABLE IF NOT EXISTS `syarat_berkas_ta` (
                 `id` INT AUTO_INCREMENT PRIMARY KEY,
                 `kode_berkas` VARCHAR(50) NOT NULL UNIQUE,
                 `nama_berkas` VARCHAR(150) NOT NULL,
@@ -36,7 +36,7 @@ class AdminLayanan_model extends CI_Model {
         }
 
         if (!$this->db->table_exists('pendaftaran_berkas')) {
-            $this->db->query("CREATE TABLE `pendaftaran_berkas` (
+            $this->db->query("CREATE TABLE IF NOT EXISTS `pendaftaran_berkas` (
                 `id` INT AUTO_INCREMENT PRIMARY KEY,
                 `nim` VARCHAR(30) NOT NULL,
                 `kode_berkas` VARCHAR(50) NOT NULL,
@@ -63,17 +63,30 @@ class AdminLayanan_model extends CI_Model {
             }
         }
 
-        if ($this->db->table_exists('pendaftaran_berkas') && $this->db->table_exists('pendaftaran_ta')) {
-            $this->db->query("UPDATE `pendaftaran_berkas` pb 
-                              JOIN `pendaftaran_ta` pt ON pt.nim = pb.nim 
-                              SET pb.status_verifikasi = 'Pending' 
-                              WHERE pt.status_approval_admin = 'Pending'");
-        }
-
+        // Remove automatic reset of status_verifikasi in _ensure_tables
         if ($this->db->table_exists('pendaftaran_ta')) {
             if (!$this->db->field_exists('is_submitted', 'pendaftaran_ta')) {
                 $this->db->query("ALTER TABLE `pendaftaran_ta` ADD COLUMN `is_submitted` TINYINT(1) NOT NULL DEFAULT 1;");
             }
+        }
+
+        if (!$this->db->table_exists('ticketing_laa')) {
+            $this->db->query("CREATE TABLE IF NOT EXISTS `ticketing_laa` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `ticket_number` VARCHAR(50) NOT NULL,
+                `nim_nip` VARCHAR(30) NOT NULL,
+                `nama` VARCHAR(150) NOT NULL,
+                `email` VARCHAR(150) NULL,
+                `kategori` VARCHAR(100) NOT NULL,
+                `perihal` VARCHAR(255) NOT NULL,
+                `deskripsi` TEXT NULL,
+                `prioritas` ENUM('Normal', 'Tinggi', 'Urgent') DEFAULT 'Normal',
+                `status` ENUM('Inputted', 'Pending', 'Approved', 'Rejected', 'Selesai') DEFAULT 'Pending',
+                `catatan` TEXT NULL,
+                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY `uniq_ticket` (`ticket_number`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
         }
     }
 
@@ -220,6 +233,11 @@ class AdminLayanan_model extends CI_Model {
             $data['kode_berkas'] = $kode_berkas;
             $data['created_at']  = date('Y-m-d H:i:s');
             $res = $this->db->insert('pendaftaran_berkas', $data);
+        }
+
+        // Sync legacy status columns in pendaftaran_ta if applicable
+        if (in_array($kode_berkas, array('ksm', 'transkrip', 'pernyataan', 'bebas_lab')) && $this->db->table_exists('pendaftaran_ta')) {
+            $this->db->where('nim', $nim)->update('pendaftaran_ta', array('status_' . $kode_berkas => $status));
         }
 
         // Fail-safe sync: If a berkas is uploaded/set to Pending, ensure pendaftaran_ta's status_approval_admin resets to Pending
@@ -792,4 +810,219 @@ class AdminLayanan_model extends CI_Model {
 
         return $summaries;
     }
+
+    // ==========================================
+    // TICKETING MODULE METHODS
+    // ==========================================
+
+    public function get_tickets($type = 'all', $search = '') {
+        $this->_ensure_tables();
+        if (!$this->db->table_exists('ticketing_laa')) return array();
+
+        $this->db->select('*');
+        $this->db->from('ticketing_laa');
+
+        if ($type === 'approval') {
+            $this->db->where_in('status', ['Inputted', 'Pending']);
+        } elseif ($type === 'riwayat') {
+            $this->db->where_in('status', ['Approved', 'Rejected', 'Selesai']);
+        }
+
+        if (!empty($search)) {
+            $this->db->group_start();
+            $this->db->like('ticket_number', $search);
+            $this->db->or_like('nim_nip', $search);
+            $this->db->or_like('nama', $search);
+            $this->db->or_like('perihal', $search);
+            $this->db->group_end();
+        }
+
+        $this->db->order_by('created_at', 'DESC');
+        return $this->db->get()->result_array();
+    }
+
+    public function save_ticket($data) {
+        $this->_ensure_tables();
+        if (empty($data['ticket_number'])) {
+            $data['ticket_number'] = 'TICK-' . date('Ymd') . '-' . rand(1000, 9999);
+        }
+        if (empty($data['status'])) {
+            $data['status'] = 'Pending';
+        }
+        $data['created_at'] = date('Y-m-d H:i:s');
+        $data['updated_at'] = date('Y-m-d H:i:s');
+        $this->db->insert('ticketing_laa', $data);
+        return $this->db->insert_id();
+    }
+
+    public function update_ticket_status($id, $status, $catatan = '') {
+        $this->_ensure_tables();
+        $this->db->where('id', $id);
+        return $this->db->update('ticketing_laa', [
+            'status'     => $status,
+            'catatan'    => $catatan,
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+    }
+
+    // ==========================================
+    // STATUS PESERTA TA & LULUS SIDANG METHODS
+    // ==========================================
+
+    public function get_students_lulus_sidang($search = '', $cat = 'query') {
+        if (!$this->db->table_exists('pendaftaran_ta')) return array();
+
+        $this->db->select('p.*, COALESCE(CONCAT(m.nama_depan, " ", COALESCE(m.nama_belakang, "")), "Mahasiswa") as nama_lengkap, m.prodi, m.konsentrasi_dkv');
+        $this->db->from('pendaftaran_ta p');
+        $this->db->join('mahasiswa m', 'm.nim = p.nim', 'left');
+        
+        $this->db->group_start();
+        $this->db->like('p.current_stage', 'Lulus');
+        $this->db->or_like('p.current_stage', 'Selesai');
+        $this->db->or_like('p.current_stage', 'Sidang');
+        $this->db->or_like('p.status_approval_admin', 'Lulus');
+        $this->db->group_end();
+
+        if (!empty($search)) {
+            $this->db->group_start();
+            if ($cat === 'nama') {
+                $this->db->like('m.nama_depan', $search);
+                $this->db->or_like('m.nama_belakang', $search);
+            } elseif ($cat === 'nim') {
+                $this->db->like('p.nim', $search);
+            } elseif ($cat === 'judul') {
+                $this->db->like('p.judul_1', $search);
+            } elseif ($cat === 'prodi') {
+                $this->db->like('m.prodi', $search);
+                $this->db->or_like('m.konsentrasi_dkv', $search);
+            } else {
+                $this->db->like('p.nim', $search);
+                $this->db->or_like('m.nama_depan', $search);
+                $this->db->or_like('m.nama_belakang', $search);
+                $this->db->or_like('p.judul_1', $search);
+                $this->db->or_like('m.prodi', $search);
+                $this->db->or_like('m.konsentrasi_dkv', $search);
+            }
+            $this->db->group_end();
+        }
+
+        $this->db->order_by('p.updated_at', 'DESC');
+        return $this->db->get()->result_array();
+    }
+
+    public function get_status_peserta_ta($search = '', $filter_stage = 'all', $cat = 'query') {
+        if (!$this->db->table_exists('pendaftaran_ta')) return array();
+
+        $has_mhs = $this->db->table_exists('mahasiswa');
+        $has_dos = $this->db->table_exists('dosen');
+
+        $select = 'p.*';
+        if ($has_mhs) {
+            $select .= ', COALESCE(CONCAT(m.nama_depan, " ", COALESCE(m.nama_belakang, "")), "Mahasiswa") as nama_lengkap, m.prodi, m.konsentrasi_dkv, m.no_hp, m.email';
+        }
+        if ($has_dos && $this->db->field_exists('id_dosen_wali', 'pendaftaran_ta')) {
+            $select .= ', d.nama_dosen as nama_dosen_wali, d.kode_dosen as kode_dosen_wali';
+        }
+
+        $this->db->select($select);
+        $this->db->from('pendaftaran_ta p');
+        if ($has_mhs) $this->db->join('mahasiswa m', 'm.nim = p.nim', 'left');
+        if ($has_dos && $this->db->field_exists('id_dosen_wali', 'pendaftaran_ta')) {
+            $this->db->join('dosen d', 'd.id = p.id_dosen_wali', 'left');
+        }
+
+        if (!empty($search)) {
+            $this->db->group_start();
+            if ($cat === 'nama' && $has_mhs) {
+                $this->db->like('m.nama_depan', $search);
+                $this->db->or_like('m.nama_belakang', $search);
+            } elseif ($cat === 'nim') {
+                $this->db->like('p.nim', $search);
+            } elseif ($cat === 'judul') {
+                $this->db->like('p.judul_1', $search);
+            } elseif ($cat === 'prodi' && $has_mhs) {
+                $this->db->like('m.prodi', $search);
+                $this->db->or_like('m.konsentrasi_dkv', $search);
+            } elseif ($cat === 'dosen' && $has_dos) {
+                $this->db->like('d.nama_dosen', $search);
+                $this->db->or_like('d.kode_dosen', $search);
+            } else {
+                $this->db->like('p.nim', $search);
+                if ($has_mhs) {
+                    $this->db->or_like('m.nama_depan', $search);
+                    $this->db->or_like('m.nama_belakang', $search);
+                    $this->db->or_like('m.prodi', $search);
+                }
+                $this->db->or_like('p.judul_1', $search);
+                if ($has_dos) {
+                    $this->db->or_like('d.nama_dosen', $search);
+                }
+            }
+            $this->db->group_end();
+        }
+
+        if ($filter_stage && $filter_stage !== 'all') {
+            $this->db->like('p.current_stage', $filter_stage);
+        }
+
+        $this->db->order_by('p.updated_at', 'DESC');
+        $rows = $this->db->get()->result_array();
+
+        $active_syarat = $this->get_active_syarat_berkas();
+        $berkas_summaries = $this->get_batch_student_berkas_summaries($rows, $active_syarat);
+
+        foreach ($rows as &$r) {
+            $nim = $r['nim'];
+            
+            // Map stage name to display tag
+            $stg = strtolower($r['current_stage'] ?? '');
+            if (strpos($stg, 'preview 3') !== false || strpos($stg, 'preview3') !== false || strpos($stg, 'pra-sidang') !== false) {
+                $r['tahapan_display'] = 'preview3';
+            } elseif (strpos($stg, 'preview 2') !== false || strpos($stg, 'preview2') !== false) {
+                $r['tahapan_display'] = 'preview2';
+            } elseif (strpos($stg, 'preview 1') !== false || strpos($stg, 'preview1') !== false) {
+                $r['tahapan_display'] = 'preview1';
+            } elseif (strpos($stg, 'sidang') !== false) {
+                $r['tahapan_display'] = 'Pendaftaran Sidang';
+            } elseif (strpos($stg, 'lulus') !== false || strpos($stg, 'selesai') !== false) {
+                $r['tahapan_display'] = 'Lulus Sidang';
+            } else {
+                $r['tahapan_display'] = !empty($r['current_stage']) ? $r['current_stage'] : 'preview1';
+            }
+
+            // Dosen wali display
+            if (empty($r['nama_dosen_wali'])) {
+                $r['nama_dosen_wali'] = $r['dosen_wali'] ?? 'Dosen Wali LAA';
+            }
+
+            // Status bimbingan
+            $r['status_bimbingan_display'] = ($r['status_approval_wali'] === 'Approved') ? 'Disetujui wali' : (($r['status_approval_wali'] === 'Rejected') ? 'Ditolak wali' : 'Pending');
+            
+            // File TA summary map
+            $r['file_summary'] = $berkas_summaries[$nim] ?? null;
+        }
+        unset($r);
+
+        return $rows;
+    }
+
+    public function revert_to_preview3($nim) {
+        if (!$this->db->table_exists('pendaftaran_ta')) return false;
+
+        $this->db->where('nim', $nim);
+        $res = $this->db->update('pendaftaran_ta', [
+            'current_stage' => 'Pra-Sidang (Preview 3)',
+            'updated_at'    => date('Y-m-d H:i:s')
+        ]);
+
+        if ($this->db->table_exists('bimbingan_preview')) {
+            $this->db->where(['nim' => $nim, 'tahap_preview' => 'Preview 3']);
+            $this->db->update('bimbingan_preview', [
+                'status_pembimbing' => 'Pending'
+            ]);
+        }
+
+        return $res;
+    }
 }
+

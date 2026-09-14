@@ -62,6 +62,9 @@
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased pb-16">
 
+    <!-- Dedicated Admin LAA Sidebar Component -->
+    <?php $this->load->view('admin_layanan/sidebar'); ?>
+
     <!-- Header Navbar Partial -->
     <?php $this->load->view('partials/app_navbar', [
         'user_role_label'   => 'Admin Layanan (LAA)',
@@ -70,15 +73,15 @@
     ]); ?>
 
     <!-- Sub Navigation Page Title Bar -->
-    <div class="glass-header px-6 py-4 mb-8">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-4">
-                <a href="<?= site_url('adminlayanan'); ?>" class="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 text-brand-600 flex items-center justify-center font-bold text-lg hover:bg-orange-100 transition">
+    <div class="glass-header px-4 sm:px-6 py-4 mb-8">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div class="flex items-start sm:items-center gap-3.5">
+                <a href="<?= site_url('adminlayanan'); ?>" class="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 text-brand-600 flex items-center justify-center font-bold text-lg hover:bg-orange-100 transition shrink-0 mt-0.5 sm:mt-0">
                     <i class="fa-solid fa-arrow-left"></i>
                 </a>
                 <div>
-                    <div class="flex items-center gap-2">
-                        <h1 class="text-xl font-bold text-slate-900 tracking-tight">Pengaturan Persyaratan Berkas TA (Dinamis)</h1>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h1 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">Pengaturan Persyaratan Berkas TA (Dinamis)</h1>
                         <span class="bg-orange-100 text-brand-700 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border border-orange-200 uppercase tracking-wider">LAA System</span>
                     </div>
                     <p class="text-xs text-slate-500 mt-0.5">Kelola jenis, jumlah, status wajib, dan keaktifan berkas pendaftaran Tugas Akhir secara fleksibel tanpa hardcode.</p>
@@ -86,7 +89,7 @@
             </div>
 
             <!-- Header Action Button -->
-            <button onclick="openModalAdd()" class="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-brand-600 hover:from-orange-600 hover:to-brand-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md transition transform hover:-translate-y-0.5">
+            <button onclick="openModalAdd()" class="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-brand-600 hover:from-orange-600 hover:to-brand-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md transition transform hover:-translate-y-0.5 shrink-0">
                 <i class="fa-solid fa-plus"></i>
                 <span>Tambah Syarat Berkas Baru</span>
             </button>
@@ -122,19 +125,20 @@
         <?php endif; ?>
 
         <!-- List Syarat Berkas Table Card -->
-        <div class="card-custom p-6">
+        <div class="card-custom p-4 sm:p-6">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                 <div>
                     <h2 class="text-base font-bold text-slate-900">Daftar Persyaratan Berkas Pendaftaran TA</h2>
                     <p class="text-xs text-slate-500">Berkas yang aktif akan secara otomatis dipersyaratkan pada form mahasiswa dan terhubung ke logika approval verifikasi LAA.</p>
                 </div>
-                <span class="text-xs font-bold bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg border border-slate-200">
+                <span class="text-xs font-bold bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg border border-slate-200 shrink-0">
                     Total Berkas: <?= count($syarat_berkas); ?>
                 </span>
             </div>
 
-            <div class="overflow-x-auto rounded-xl border border-slate-200">
-                <table class="w-full text-left text-xs text-slate-700">
+            <!-- 1. Desktop View (>= 768px) -->
+            <div class="hidden md:block overflow-x-auto rounded-xl border border-slate-200">
+                <table class="w-full min-w-[750px] text-left text-xs text-slate-700">
                     <thead class="bg-slate-100/80 text-slate-700 font-bold border-b border-slate-200 uppercase tracking-wider text-[11px]">
                         <tr>
                             <th class="py-3.5 px-4 text-center w-12">Urutan</th>
@@ -217,6 +221,82 @@
                         <?php endif; ?>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- 2. Mobile Card View (< 768px) - Zero Horizontal Scrolling -->
+            <div class="block md:hidden space-y-3" id="mobileCardsContainer">
+                <?php if(!empty($syarat_berkas)): ?>
+                    <?php foreach($syarat_berkas as $sb): ?>
+                        <div class="card-custom p-3.5 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-2.5">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <div class="w-8 h-8 rounded-xl bg-orange-100 border border-orange-200 text-brand-600 font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                                        <?= $sb['urutan']; ?>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="font-bold text-slate-900 text-xs truncate"><?= htmlspecialchars($sb['nama_berkas']); ?></div>
+                                        <div class="font-mono text-[10px] text-slate-400">Kode: <span class="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600"><?= htmlspecialchars($sb['kode_berkas']); ?></span></div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1 shrink-0">
+                                    <?php if($sb['is_required'] == 1): ?>
+                                        <span class="inline-flex items-center gap-1 bg-rose-50 text-rose-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-rose-200">
+                                            Wajib
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="inline-flex items-center gap-1 bg-sky-50 text-sky-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-sky-200">
+                                            Opsional
+                                        </span>
+                                    <?php endif; ?>
+
+                                    <?php if($sb['is_active'] == 1): ?>
+                                        <span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200">
+                                            Aktif
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="inline-flex items-center gap-1 bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-300">
+                                            Off
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <?php if (!empty($sb['deskripsi'])): ?>
+                                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 text-[11px] text-slate-600 leading-relaxed">
+                                    <?= htmlspecialchars($sb['deskripsi']); ?>
+                                </div>
+                            <?php endif; ?>
+                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                                <span class="text-slate-400 text-[10px]">Aksi Pengaturan:</span>
+                                <div class="flex items-center gap-1.5">
+                                    <a href="<?= site_url('adminlayanan/toggle_syarat_berkas/' . $sb['id']); ?>" 
+                                       title="<?= $sb['is_active'] == 1 ? 'Non-aktifkan Berkas' : 'Aktifkan Berkas'; ?>"
+                                       class="px-2.5 py-1 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 font-bold text-[11px] transition inline-flex items-center gap-1">
+                                        <i class="fa-solid <?= $sb['is_active'] == 1 ? 'fa-toggle-on text-emerald-600' : 'fa-toggle-off text-slate-400'; ?>"></i>
+                                        <span><?= $sb['is_active'] == 1 ? 'Nonaktifkan' : 'Aktifkan'; ?></span>
+                                    </a>
+
+                                    <button onclick='openModalEdit(<?= json_encode($sb); ?>)' 
+                                            title="Edit Syarat Berkas"
+                                            class="px-2.5 py-1 rounded-lg border border-slate-200 text-slate-600 hover:bg-orange-50 hover:text-brand-600 hover:border-orange-200 font-bold text-[11px] transition inline-flex items-center gap-1">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                        <span>Edit</span>
+                                    </button>
+
+                                    <a href="<?= site_url('adminlayanan/hapus_syarat_berkas/' . $sb['id']); ?>" 
+                                       onclick="return confirm('Apakah Anda yakin ingin menghapus persyaratan berkas ini?');"
+                                       title="Hapus Syarat Berkas"
+                                       class="px-2 py-1 rounded-lg border border-slate-200 text-rose-500 hover:bg-rose-50 hover:border-rose-200 font-bold text-[11px] transition inline-flex items-center gap-1">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="py-8 text-center text-slate-400 font-medium text-xs">
+                        Belum ada data persyaratan berkas.
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </main>

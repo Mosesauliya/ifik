@@ -7,6 +7,7 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -80,6 +81,9 @@
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col selection:bg-orange-600 selection:text-white">
+
+    <!-- Dedicated Admin LAA Sidebar Component -->
+    <?php $this->load->view('admin_layanan/sidebar'); ?>
 
     <!-- Header Navbar Partial -->
     <?php $this->load->view('partials/app_navbar', [
@@ -194,7 +198,7 @@
                             </div>
 
                             <button type="button" onclick="markAllValid()" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer">
-                                <i class="bi bi-check2-all"></i> Tandai Semua Valid
+                                <i class="bi bi-check2-all"></i> Tandai Semua Disetujui (ACC)
                             </button>
                         </div>
                     </div>
@@ -315,7 +319,7 @@
                                         
                                         <!-- Document Status Badge -->
                                         <span class="doc-badge px-2.5 py-1 rounded-lg text-xs font-bold <?= $is_valid ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : ($is_invalid ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-100 text-slate-600 border border-slate-200'); ?>">
-                                            <?= $is_valid ? 'Valid' : ($is_invalid ? 'Kurang/Revisi' : 'Belum Dicek'); ?>
+                                            <?= $is_valid ? 'Setujui' : ($is_invalid ? 'Kurang/Revisi' : 'Belum Dicek'); ?>
                                         </span>
                                     </div>
 
@@ -351,7 +355,7 @@
                                                         </button>
                                                     </div>
                                                 </div>
-                                                <div class="w-full h-[450px] relative bg-slate-200">
+                                                <div class="w-full h-[380px] sm:h-[450px] relative bg-slate-200 overflow-hidden flex flex-col justify-center items-center" id="pdfContainer_<?= $b['key']; ?>">
                                                     <iframe id="inlinePdfFrame_<?= $b['key']; ?>" src="about:blank" class="w-full h-full border-none" loading="lazy"></iframe>
                                                 </div>
                                             </div>
@@ -373,7 +377,7 @@
                                                     <?= $is_valid ? 'checked' : ''; ?>
                                                     onchange="handleValidCheck(this)"
                                                     class="w-3.5 h-3.5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer">
-                                             <span class="text-[11px] text-emerald-700 font-medium">Valid</span>
+                                             <span class="text-[11px] text-emerald-700 font-medium">Setujui</span>
                                          </label>
 
                                          <!-- Checkbox Kurang -->
@@ -501,7 +505,7 @@
                         <i class="bi bi-exclamation-circle"></i> Tandai Kurang / Revisi
                     </button>
                     <button type="button" id="modalBtnValid" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all active:scale-95 flex items-center gap-1.5">
-                        <i class="bi bi-check2-circle"></i> Tandai Valid &amp; Lolos
+                        <i class="bi bi-check2-circle"></i> Tandai Setujui &amp; ACC
                     </button>
                 </div>
             </div>
@@ -526,27 +530,83 @@
         let currentModalKey = '';
         let currentModalFileUrl = '';
 
+        function renderPdfToDetailContainer(containerId, pdfUrl) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            if (window.pdfjsLib) {
+                try {
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+                } catch(e){}
+
+                container.innerHTML = `
+                    <div id="loadingPdf_${containerId}" class="w-full h-full flex flex-col items-center justify-center p-4 text-slate-400 bg-slate-100">
+                        <i class="bi bi-arrow-repeat text-2xl text-orange-500 mb-2 animate-spin"></i>
+                        <span class="text-xs font-semibold text-slate-600">Memuat Dokumen PDF...</span>
+                    </div>
+                    <div id="canvasWrapper_${containerId}" class="w-full h-full overflow-y-auto hidden flex-col items-center p-2.5 gap-3 bg-slate-200/90 pointer-events-auto touch-pan-y scroll-smooth"></div>
+                `;
+
+                const loadingEl = document.getElementById(`loadingPdf_${containerId}`);
+                const canvasWrapper = document.getElementById(`canvasWrapper_${containerId}`);
+
+                pdfjsLib.getDocument(pdfUrl).promise.then(pdf => {
+                    if (loadingEl) loadingEl.remove();
+                    if (canvasWrapper) {
+                        canvasWrapper.classList.remove('hidden');
+                        canvasWrapper.classList.add('flex');
+                    }
+
+                    const numPages = Math.min(pdf.numPages, 20);
+                    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+                        pdf.getPage(pageNum).then(page => {
+                            const canvas = document.createElement('canvas');
+                            canvas.className = 'max-w-full shadow-md rounded-lg mb-2 bg-white pointer-events-none shrink-0';
+                            canvasWrapper.appendChild(canvas);
+
+                            const isMobile = window.innerWidth < 640;
+                            const unscaledViewport = page.getViewport({ scale: 1 });
+                            const targetWidth = isMobile ? Math.min(window.innerWidth * 0.82, 340) : Math.min(container.clientWidth || 450, 480);
+                            const scale = targetWidth / unscaledViewport.width;
+                            const viewport = page.getViewport({ scale });
+
+                            const context = canvas.getContext('2d');
+                            canvas.height = viewport.height;
+                            canvas.width = viewport.width;
+
+                            const renderContext = {
+                                canvasContext: context,
+                                viewport: viewport
+                            };
+                            page.render(renderContext);
+                        });
+                    }
+                }).catch(err => {
+                    console.warn('PDF.js render fallback to iframe:', err);
+                    container.innerHTML = `<iframe src="${pdfUrl}#toolbar=0&navpanes=0" class="w-full h-full border-0" title="Pratinjau Dokumen PDF"></iframe>`;
+                });
+            } else {
+                container.innerHTML = `<iframe src="${pdfUrl}#toolbar=0&navpanes=0" class="w-full h-full border-0" title="Pratinjau Dokumen PDF"></iframe>`;
+            }
+        }
+
         function toggleInlinePdfPreview(key, fileUrl) {
             const wrapper = document.getElementById('inlinePdfWrapper_' + key);
             const icon = document.getElementById('iconPdf_' + key);
-            const iframe = document.getElementById('inlinePdfFrame_' + key);
             const btn = document.getElementById('btnTogglePdf_' + key);
 
             if (!wrapper) return;
 
             const defaultSamplePdf = '<?= base_url("uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf"); ?>';
-            const targetUrl = (fileUrl && fileUrl.trim() !== '') ? fileUrl : defaultSamplePdf;
+            let targetUrl = (fileUrl && fileUrl.trim() !== '') ? fileUrl : defaultSamplePdf;
+            if (targetUrl.includes('_test_') || targetUrl.includes('test_dokumen') || targetUrl.includes('test_formulir') || targetUrl.includes('test_invoice')) {
+                targetUrl = defaultSamplePdf;
+            }
 
             const isOpen = wrapper.classList.contains('is-preview-open');
 
             if (!isOpen) {
-                if (iframe && (iframe.src === 'about:blank' || !iframe.src)) {
-                    if (targetUrl.match(/\.(docx|doc)$/i)) {
-                        iframe.src = 'https://docs.google.com/gview?url=' + encodeURIComponent(targetUrl) + '&embedded=true';
-                    } else {
-                        iframe.src = targetUrl + (targetUrl.includes('#') ? '' : '#view=FitH&zoom=100');
-                    }
-                }
+                renderPdfToDetailContainer('pdfContainer_' + key, targetUrl);
 
                 wrapper.classList.add('is-preview-open');
                 wrapper.classList.remove('opacity-0');
@@ -908,7 +968,8 @@
                 if (cbKurang) cbKurang.checked = false;
                 updateCardState(card);
             });
-            showToast('Semua 4 berkas berhasil ditandai Valid!');
+            const total = document.querySelectorAll('.doc-card').length;
+            showToast(`Semua ${total} berkas berhasil ditandai Setujui (ACC)!`);
         }
 
         function appendNote(text) {
@@ -1004,9 +1065,10 @@
                 return false;
             }
 
+            const totalCards = document.querySelectorAll('.doc-card').length;
             const checkedValid = document.querySelectorAll('input[name="berkas_valid[]"]:checked').length;
-            if (checkedValid < 4) {
-                const setAll = confirm('Informasi: Baru ' + checkedValid + ' dari 4 berkas yang dicentang Valid.\n\nApakah Anda ingin otomatis menandai SELURUH 4 berkas sebagai VALID dan menyetujui pengajuan ini ke Koordinator TA?');
+            if (checkedValid < totalCards) {
+                const setAll = confirm('Informasi: Baru ' + checkedValid + ' dari ' + totalCards + ' berkas yang dicentang Valid/Setujui.\n\nApakah Anda ingin otomatis menandai SELURUH ' + totalCards + ' berkas sebagai SETUJUI dan meneruskan pengajuan ini ke Koordinator TA?');
                 if (setAll) {
                     markAllValid();
                     return true;
@@ -1014,7 +1076,7 @@
                 return false;
             }
 
-            return confirm('Yakin seluruh 4 berkas mahasiswa ini telah lengkap dan valid? Pengajuan akan diteruskan ke Koordinator TA.');
+            return confirm('Yakin seluruh ' + totalCards + ' berkas mahasiswa ini telah lengkap dan valid? Pengajuan akan diteruskan ke Koordinator TA.');
         }
 
 

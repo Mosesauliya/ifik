@@ -68,6 +68,9 @@
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased pb-16">
 
+    <!-- Dedicated Admin LAA Sidebar Component -->
+    <?php $this->load->view('admin_layanan/sidebar'); ?>
+
     <!-- Header Navbar Partial -->
     <?php $this->load->view('partials/app_navbar', [
         'user_role_label'   => 'Admin Layanan (LAA)',
@@ -76,15 +79,15 @@
     ]); ?>
 
     <!-- Sub Navigation Page Title Bar -->
-    <div class="glass-header px-6 py-4 mb-8">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-4">
-                <a href="<?= site_url('adminlayanan'); ?>" class="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 text-brand-600 flex items-center justify-center font-bold text-lg hover:bg-orange-100 transition">
+    <div class="glass-header px-4 sm:px-6 py-4 mb-8">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div class="flex items-start sm:items-center gap-3.5">
+                <a href="<?= site_url('adminlayanan'); ?>" class="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 text-brand-600 flex items-center justify-center font-bold text-lg hover:bg-orange-100 transition shrink-0 mt-0.5 sm:mt-0">
                     <i class="fa-solid fa-arrow-left"></i>
                 </a>
                 <div>
-                    <div class="flex items-center gap-2">
-                        <h1 class="text-xl font-bold text-slate-900 tracking-tight">Pengaturan Jalur Sidang &amp; Non-Sidang (Tab Dinamis)</h1>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h1 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">Pengaturan Jalur Sidang &amp; Non-Sidang (Tab Dinamis)</h1>
                         <span class="bg-orange-100 text-brand-700 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border border-orange-200 uppercase tracking-wider">Admin Panel</span>
                     </div>
                     <p class="text-xs text-slate-500 mt-0.5">Tambah tab kategori utama baru, edit sub-jalur, dan atur form persyaratannya secara dinamis.</p>
@@ -97,12 +100,12 @@
     <main class="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
 
         <!-- Navigation Section Tabs (Dynamic Tabs Bar) -->
-        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-4">
-            <div class="flex items-center gap-3 flex-wrap" id="dynamicTabsList">
-                <button onclick="switchAdminTab('main')" id="tabBtn_main" class="px-5 py-2.5 rounded-xl font-extrabold text-xs tracking-wider uppercase transition tab-btn-active">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
+            <div class="flex items-center gap-2 sm:gap-3 flex-wrap w-full" id="dynamicTabsList">
+                <button onclick="switchAdminTab('main')" id="tabBtn_main" class="px-3.5 sm:px-5 py-2.5 rounded-xl font-extrabold text-[11px] sm:text-xs tracking-wider uppercase transition tab-btn-active">
                     <i class="bi bi-grid-1x2-fill mr-1.5"></i> 1. Kategori Utama (Pop-Up 1 Choices)
                 </button>
-                <button onclick="switchAdminTab('non_sidang')" id="tabBtn_non_sidang" class="px-5 py-2.5 rounded-xl font-extrabold text-xs tracking-wider uppercase bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">
+                <button onclick="switchAdminTab('non_sidang')" id="tabBtn_non_sidang" class="px-3.5 sm:px-5 py-2.5 rounded-xl font-extrabold text-[11px] sm:text-xs tracking-wider uppercase bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">
                     <i class="bi bi-diagram-3-fill mr-1.5"></i> 2. Sub-Jalur Non-Sidang &amp; Form Fields
                 </button>
 
@@ -134,7 +137,7 @@
                 ?>
 
                 <?php foreach ($custom_categories as $ckey => $cinfo): ?>
-                <button onclick="switchAdminTab('<?= $ckey ?>')" id="tabBtn_<?= $ckey ?>" class="px-5 py-2.5 rounded-xl font-extrabold text-xs tracking-wider uppercase bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">
+                <button onclick="switchAdminTab('<?= $ckey ?>')" id="tabBtn_<?= $ckey ?>" class="px-3.5 sm:px-5 py-2.5 rounded-xl font-extrabold text-[11px] sm:text-xs tracking-wider uppercase bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">
                     <i class="bi <?= $cinfo['icon'] ?> mr-1.5"></i> <?= htmlspecialchars(strtoupper($cinfo['title'])) ?>
                 </button>
                 <?php endforeach; ?>
@@ -146,19 +149,19 @@
 
         <!-- TAB 1: KATEGORI UTAMA (POP-UP 1 CHOICES) -->
         <div id="sectionTab_main" class="space-y-6 tab-section-panel">
-            <div class="p-5 rounded-2xl bg-orange-50 border border-orange-200 text-orange-950 flex items-start justify-between gap-4 shadow-sm">
-                <div class="flex items-start gap-4">
+            <div class="p-4 sm:p-5 rounded-2xl bg-orange-50 border border-orange-200 text-orange-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+                <div class="flex items-start gap-3 sm:gap-4 min-w-0">
                     <div class="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center text-xl shrink-0 font-bold">
                         <i class="bi bi-mortarboard-fill"></i>
                     </div>
-                    <div class="text-xs sm:text-sm leading-relaxed space-y-1">
+                    <div class="text-xs sm:text-sm leading-relaxed space-y-1 min-w-0">
                         <h4 class="font-extrabold text-orange-900 text-base">Pilihan Utama Pop-Up 1</h4>
                         <p class="text-orange-800">
                             Kartu pilihan utama ini langsung tampil saat Dosen/Mahasiswa menekan tombol rekomendasi di Pop-up 1.
                         </p>
                     </div>
                 </div>
-                <button onclick="openFormAddItemInTab('main')" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-xl shadow-sm transition shrink-0">
+                <button onclick="openFormAddItemInTab('main')" class="w-full sm:w-auto px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-xl shadow-sm transition shrink-0">
                     <i class="bi bi-plus-lg mr-1"></i> Tambah Card Pilihan Utama
                 </button>
             </div>
@@ -169,25 +172,25 @@
                 if(!empty($main_items)):
                     foreach($main_items as $opt): 
                 ?>
-                <div class="card-custom p-6 space-y-4 border-2 border-orange-200/60 hover:border-orange-400 transition">
+                <div class="card-custom p-4 sm:p-6 space-y-4 border-2 border-orange-200/60 hover:border-orange-400 transition">
                     <div class="flex items-start justify-between">
                         <div class="flex items-center gap-3.5">
-                            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white flex items-center justify-center font-bold text-3xl shadow-md shadow-orange-500/20">
+                            <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white flex items-center justify-center font-bold text-2xl sm:text-3xl shadow-md shadow-orange-500/20 shrink-0">
                                 <i class="bi <?= $opt['icon_class'] ?? 'bi-mortarboard-fill'; ?>"></i>
                             </div>
                             <div>
                                 <span class="bg-orange-100 text-orange-800 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">Kategori Utama</span>
-                                <h3 class="font-extrabold text-xl text-slate-900 mt-1"><?= htmlspecialchars($opt['title']); ?></h3>
+                                <h3 class="font-extrabold text-lg sm:text-xl text-slate-900 mt-1"><?= htmlspecialchars($opt['title']); ?></h3>
                                 <p class="text-xs text-slate-500 font-medium mt-0.5"><?= htmlspecialchars($opt['description'] ?? 'Pilihan utama'); ?></p>
                             </div>
                         </div>
                     </div>
 
                     <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
-                        <button onclick='openEditJalurModal(<?= json_encode($opt); ?>)' class="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold rounded-xl border border-amber-300 transition">
+                        <button onclick='openEditJalurModal(<?= json_encode($opt); ?>)' class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold rounded-xl border border-amber-300 transition">
                             <i class="bi bi-pencil-square"></i> Edit Card
                         </button>
-                        <button onclick="deleteOptionAdmin(<?= $opt['id']; ?>)" class="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 transition">
+                        <button onclick="deleteOptionAdmin(<?= $opt['id']; ?>)" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 transition">
                             <i class="bi bi-trash-fill"></i> Hapus
                         </button>
                     </div>
@@ -198,19 +201,19 @@
 
         <!-- TAB 2: SUB-JALUR NON-SIDANG & FORM FIELDS -->
         <div id="sectionTab_non_sidang" class="hidden space-y-6 tab-section-panel">
-            <div class="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 flex items-start justify-between gap-4 shadow-sm">
-                <div class="flex items-start gap-4">
+            <div class="p-4 sm:p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+                <div class="flex items-start gap-3 sm:gap-4 min-w-0">
                     <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xl shrink-0 font-bold">
                         <i class="bi bi-diagram-3-fill"></i>
                     </div>
-                    <div class="text-xs sm:text-sm leading-relaxed space-y-1">
+                    <div class="text-xs sm:text-sm leading-relaxed space-y-1 min-w-0">
                         <h4 class="font-extrabold text-emerald-900 text-base">Sub-Jalur Non-Sidang &amp; Form Fields</h4>
                         <p class="text-emerald-800">
                             Sub-jalur ini tampil saat Dosen memilih **"NON SIDANG"** pada Pop-up 3.
                         </p>
                     </div>
                 </div>
-                <button onclick="openFormAddItemInTab('non_sidang')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition shrink-0">
+                <button onclick="openFormAddItemInTab('non_sidang')" class="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition shrink-0">
                     <i class="bi bi-plus-lg mr-1"></i> Tambah Sub-Jalur
                 </button>
             </div>
@@ -221,10 +224,10 @@
                 if(!empty($sub_items)):
                     foreach($sub_items as $opt): 
                 ?>
-                <div class="card-custom p-6 space-y-4 border-2 border-emerald-100">
+                <div class="card-custom p-4 sm:p-6 space-y-4 border-2 border-emerald-100">
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-100 pb-4 gap-3">
                         <div class="flex items-center gap-3.5">
-                            <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-2xl border border-emerald-200">
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-2xl border border-emerald-200 shrink-0">
                                 <i class="bi <?= $opt['icon_class'] ?? 'bi-award-fill'; ?>"></i>
                             </div>
                             <div>
