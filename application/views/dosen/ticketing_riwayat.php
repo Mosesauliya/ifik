@@ -258,8 +258,14 @@
 
                                     <!-- Subjek -->
                                     <td class="py-4 px-6 max-w-xs">
+                                        <?php
+                                            $deskripsiSnippet = trim(strip_tags(str_ireplace(['&nbsp;', '&amp;nbsp;'], ' ', $t->deskripsi ?? '')));
+                                            $deskripsiSnippet = preg_replace('/\s+/u', ' ', html_entity_decode($deskripsiSnippet, ENT_QUOTES, 'UTF-8'));
+                                            $tanggapanSnippet = trim(strip_tags(str_ireplace(['&nbsp;', '&amp;nbsp;'], ' ', $t->tanggapan ?? '')));
+                                            $tanggapanSnippet = preg_replace('/\s+/u', ' ', html_entity_decode($tanggapanSnippet, ENT_QUOTES, 'UTF-8'));
+                                        ?>
                                         <p class="font-bold text-slate-800 text-sm truncate"><?= htmlspecialchars($t->subjek); ?></p>
-                                        <p class="text-xs text-slate-400 truncate mt-0.5"><?= htmlspecialchars(mb_substr(strip_tags($t->deskripsi), 0, 70)); ?>...</p>
+                                        <p class="text-xs text-slate-400 truncate mt-0.5"><?= htmlspecialchars(mb_substr($deskripsiSnippet, 0, 70)); ?>...</p>
                                     </td>
 
                                     <!-- Prioritas -->
@@ -279,7 +285,7 @@
                                              data-created="<?= date('d M Y, H:i', strtotime($t->created_at)) . ' WIB'; ?>"
                                              data-updated="<?= !empty($t->updated_at) ? date('d M Y, H:i', strtotime($t->updated_at)) . ' WIB' : ''; ?>"
                                              data-tgl-tanggapan="<?= !empty($t->tgl_tanggapan) ? date('d M Y, H:i', strtotime($t->tgl_tanggapan)) . ' WIB' : (!empty($t->updated_at) && $t->status !== 'Menunggu' ? date('d M Y, H:i', strtotime($t->updated_at)) . ' WIB' : ''); ?>"
-                                             data-tanggapan="<?= htmlspecialchars(strip_tags($t->tanggapan ?? '')); ?>">
+                                             data-tanggapan="<?= htmlspecialchars($tanggapanSnippet); ?>">
                                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition-all hover:scale-105 hover:shadow-xs <?= $statusColor; ?>">
                                                 <?= $waTickIcon; ?>
                                                 <span><?= htmlspecialchars($t->status); ?></span>

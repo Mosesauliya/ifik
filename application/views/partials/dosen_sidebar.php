@@ -169,7 +169,7 @@ $active_ticketing_riwayat = (strpos($current_uri, 'ticketing/riwayat') !== false
         <!-- Top Section: Header & Nav Links -->
         <div>
             <div class="curved-sidebar-header">
-                <p>Navigation</p>
+                <p>Navigasi</p>
                 <div class="curved-header-role-badge">
                     <span><?= ($role_id === 3) ? 'Kaur / Ka Lab' : 'Portal Dosen' ?></span>
                 </div>

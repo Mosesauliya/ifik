@@ -269,8 +269,12 @@
 
                                     <!-- Subjek -->
                                     <td class="py-4 px-5 max-w-xs">
+                                        <?php
+                                            $deskripsiSnippet = trim(strip_tags(str_ireplace(['&nbsp;', '&amp;nbsp;'], ' ', $t->deskripsi ?? '')));
+                                            $deskripsiSnippet = preg_replace('/\s+/u', ' ', html_entity_decode($deskripsiSnippet, ENT_QUOTES, 'UTF-8'));
+                                        ?>
                                         <p class="font-bold text-slate-800 text-xs truncate"><?= htmlspecialchars($t->subjek); ?></p>
-                                        <p class="text-[11px] text-slate-400 truncate mt-0.5"><?= htmlspecialchars(mb_substr(strip_tags($t->deskripsi), 0, 65)); ?>...</p>
+                                        <p class="text-[11px] text-slate-400 truncate mt-0.5"><?= htmlspecialchars(mb_substr($deskripsiSnippet, 0, 65)); ?>...</p>
                                     </td>
 
                                     <!-- Prioritas -->

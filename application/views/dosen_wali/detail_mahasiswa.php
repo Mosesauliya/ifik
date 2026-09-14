@@ -10,7 +10,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- PDF.js library for high-compatibility, touch-scrollable in-app document preview -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
     <style>
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: #f8fafc;
@@ -79,11 +90,11 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col selection:bg-orange-600 selection:text-white">
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col selection:bg-orange-600 selection:text-white overflow-x-hidden w-full">
 
     <!-- Header Navbar (Detail Page with Back Button & without Beranda Utama) -->
     <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
             <div class="flex items-center justify-between h-16 sm:h-18">
                 
                 <!-- Brand & Tombol Back -->
@@ -136,7 +147,7 @@
     </header>
 
     <!-- Main Container -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full space-y-6">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-20 flex-grow w-full space-y-6 min-w-0">
 
         <!-- Flash Messages -->
         <?php if($this->session->flashdata('error')): ?>
@@ -166,7 +177,7 @@
         <?php
             $current_stage = $detail['current_stage'] ?? 'Dosen Wali';
             $status_wali = $detail['status_approval_wali'] ?? 'Pending';
-            $isLocked = ($status_wali === 'Approved' || in_array($current_stage, array('Admin Layanan', 'Koordinator TA', 'Ketua KK', 'Selesai Approval')));
+            $isLocked = in_array($current_stage, array('Koordinator TA', 'Ketua KK', 'Selesai Approval'));
         ?>
 
         <?php if($isLocked): ?>
@@ -366,25 +377,8 @@
             
             <div class="space-y-6">
 
-                <!-- 4 Document Cards Grid -->
+                <!-- Document Cards Grid & Actions -->
                 <div>
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-                        <div>
-                            <h2 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-                                <i class="bi bi-files text-orange-600"></i> Pemeriksaan 4 Dokumen Persyaratan
-                            </h2>
-                            <span class="text-xs text-slate-500">Periksa dan validasi dokumen pendaftaran mahasiswa secara teliti.</span>
-                        </div>
-                        
-                        <?php if(!$isLocked): ?>
-                        <div class="flex items-center gap-2">
-                            <button type="button" onclick="markAllValid()" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer">
-                                <i class="bi bi-check2-all"></i> Tandai Semua Valid
-                            </button>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-
                     <?php
                         $resolve_pdf_url = function($filename) {
                             if (empty($filename)) {
@@ -435,6 +429,7 @@
                                 'label'   => $sb_idx . '. ' . $sb['nama_berkas'],
                                 'desc'    => $sb['deskripsi'] ?: ('Dokumen persyaratan ' . $sb['nama_berkas']),
                                 'file'    => $file_val,
+                                'url'     => $resolve_pdf_url($file_val),
                                 'status'  => $st_val,
                                 'reviewed'=> $is_reviewed,
                                 'icon'    => $icon_map[$k] ?? 'bi-file-earmark-pdf',
@@ -448,6 +443,36 @@
                             $reviewed_map[$b['key']] = !empty($b['reviewed']);
                         }
                     ?>
+
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
+                        <div>
+                            <h2 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                                <i class="bi bi-files text-orange-600"></i> Pemeriksaan <?= $total_berkas_count; ?> Dokumen Persyaratan
+                            </h2>
+                            <span class="text-xs text-slate-500">Periksa dan validasi dokumen pendaftaran mahasiswa secara teliti (tersedia tampilan multi &amp; langsung).</span>
+                        </div>
+                        
+                        <div class="flex flex-wrap items-center gap-2">
+                            <!-- Button Multi-Document Fullscreen Viewer -->
+                            <button type="button" onclick="openMultiDocModal()" class="px-3.5 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs font-extrabold shadow-sm shadow-orange-600/25 flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer">
+                                <i class="bi bi-layer-group text-sm"></i>
+                                <span>Pratinjau Semua Dokumen (Multi-View)</span>
+                            </button>
+
+                            <!-- Button Toggle All Inline Previews Directly on Page -->
+                            <button type="button" id="btnToggleInlineAll" onclick="toggleAllInlinePreviews()" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer">
+                                <i class="bi bi-layout-split text-orange-600" id="iconToggleInlineAll"></i>
+                                <span id="textToggleInlineAll">Buka Semua di Halaman</span>
+                            </button>
+
+                            <?php if(!$isLocked): ?>
+                            <button type="button" onclick="markAllValid()" class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold shadow-2xs flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer">
+                                <i class="bi bi-check2-all text-sm"></i>
+                                <span>Tandai Semua Valid</span>
+                            </button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
 
                     <div id="docGridContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                         <?php foreach($berkas_items as $b): ?>
@@ -476,15 +501,23 @@
                                     </div>
                                     <p class="text-xs text-slate-500 leading-relaxed mb-3 font-medium"><?= $b['desc']; ?></p>
 
-                                    <!-- Document Action Buttons (Modal Preview & New Tab) -->
+                                    <!-- Document Action Buttons (Modal Preview, Inline Toggle, & Download) -->
                                     <div class="flex flex-wrap items-center gap-2 pt-1">
-                                        <button type="button" id="btnPreview_<?= $b['key']; ?>" onclick="openPdfModal('<?= addslashes($b['label']); ?>', '<?= htmlspecialchars($b['file']); ?>', '<?= $b['key']; ?>', '<?= $resolve_pdf_url($b['file']); ?>')" 
-                                                class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs flex items-center gap-2 shadow-xs cursor-pointer transition-all">
+                                        <button type="button" id="btnPreview_<?= $b['key']; ?>" onclick="openPdfModal('<?= addslashes($b['label']); ?>', '<?= htmlspecialchars($b['file']); ?>', '<?= $b['key']; ?>', '<?= $b['url']; ?>')" 
+                                                class="px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-all">
                                             <i class="bi bi-file-earmark-pdf text-rose-400 text-sm"></i>
                                             <span>Pratinjau Dokumen</span>
                                         </button>
-                                        <a href="<?= $resolve_pdf_url($b['file']); ?>" target="_blank" onclick="markDocAsReviewed('<?= $b['key']; ?>')" 
-                                           class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all">
+                                        
+                                        <!-- Toggle Inline Single Preview Button -->
+                                        <button type="button" onclick="toggleSingleInlinePreview('<?= $b['key']; ?>')" 
+                                                class="px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer">
+                                            <i class="bi bi-eye text-orange-600" id="iconInlineSingle_<?= $b['key']; ?>"></i>
+                                            <span id="textInlineSingle_<?= $b['key']; ?>">Buka di Halaman</span>
+                                        </button>
+
+                                        <a href="<?= $b['url']; ?>" target="_blank" onclick="markDocAsReviewed('<?= $b['key']; ?>')" 
+                                           class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all">
                                             <i class="bi bi-box-arrow-up-right"></i> Unduh
                                         </a>
 
@@ -493,6 +526,29 @@
                                             <i class="bi <?= $b['reviewed'] ? 'bi-check-circle-fill text-emerald-500' : 'bi-eye-slash text-amber-500'; ?>"></i>
                                             <span class="badge-text"><?= $b['reviewed'] ? 'Sudah Dilihat' : 'Belum Dilihat'; ?></span>
                                         </span>
+                                    </div>
+
+                                    <!-- Inline Embedded Document Preview -->
+                                    <div id="inlineBox_<?= $b['key']; ?>" class="inline-doc-container hidden mt-3 pt-3 border-t border-slate-200/80 transition-all duration-300">
+                                        <div class="flex items-center justify-between bg-slate-900 text-white px-3.5 py-2 rounded-t-xl text-[11px] font-semibold">
+                                            <span class="flex items-center gap-2 truncate">
+                                                <i class="bi <?= $b['icon']; ?> text-orange-400"></i>
+                                                <span class="truncate font-bold"><?= htmlspecialchars($b['label']); ?></span>
+                                                <span class="hidden sm:inline font-mono text-slate-400 text-[10px]">(<?= htmlspecialchars($b['file']); ?>)</span>
+                                            </span>
+                                            <div class="flex items-center gap-2 shrink-0">
+                                                <a href="<?= $b['url']; ?>" target="_blank" onclick="markDocAsReviewed('<?= $b['key']; ?>')" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded text-[10px] flex items-center gap-1">
+                                                    <i class="bi bi-box-arrow-up-right"></i> Tab Baru
+                                                </a>
+                                                <button type="button" onclick="toggleSingleInlinePreview('<?= $b['key']; ?>')" class="text-slate-400 hover:text-white cursor-pointer px-1 text-sm font-bold">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="w-full max-h-96 overflow-y-auto bg-slate-200/90 rounded-b-xl border border-slate-300 shadow-inner p-2 flex flex-col items-center" style="-webkit-overflow-scrolling: touch;">
+                                            <div id="inlineCanvas_<?= $b['key']; ?>" class="w-full flex flex-col items-center space-y-4 max-w-2xl mx-auto"></div>
+                                            <iframe id="inlineIframe_<?= $b['key']; ?>" data-src="<?= $b['url']; ?>" src="about:blank" class="w-full h-80 sm:h-96 border-0 inline-pdf-frame hidden"></iframe>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -639,9 +695,10 @@
                 </div>
             </div>
 
-            <!-- Live PDF Viewer Iframe Body -->
-            <div class="flex-grow bg-slate-200 relative w-full h-full overflow-hidden">
-                <iframe id="pdfIframeViewer" src="" class="w-full h-full border-0"></iframe>
+            <!-- Live PDF Viewer Body (Canvas / Touch Scroll with Iframe Fallback) -->
+            <div id="singlePdfViewerContainer" class="flex-grow bg-slate-200/90 relative w-full h-full overflow-y-auto p-2 sm:p-4 flex flex-col items-center" style="-webkit-overflow-scrolling: touch; overscroll-behavior: contain;">
+                <div id="singlePdfCanvasWrapper" class="w-full flex flex-col items-center space-y-4 max-w-4xl mx-auto"></div>
+                <iframe id="pdfIframeViewer" src="" class="w-full h-full border-0 hidden"></iframe>
             </div>
 
             <!-- Modal Action Footer -->
@@ -663,6 +720,205 @@
         </div>
     </div>
 
+    <!-- Multi-Document Fullscreen Viewer Modal (Multi-View) -->
+    <div id="multiDocModal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs hidden items-center justify-center p-2 sm:p-4 overflow-hidden" style="overscroll-behavior: contain;">
+        <div id="multiDocDialog" class="bg-white rounded-2xl sm:rounded-3xl max-w-7xl w-full h-[95vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200 transition-all duration-200" style="touch-action: auto;">
+            
+            <!-- Modal Header -->
+            <div class="py-2.5 px-4 sm:px-5 bg-slate-900 text-white flex flex-col md:flex-row items-center justify-between gap-3 shrink-0">
+                <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-xl bg-orange-600/30 border border-orange-500/50 text-orange-400 flex items-center justify-center font-bold text-sm shadow-2xs">
+                            <i class="bi bi-layer-group"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h4 class="font-extrabold text-sm leading-tight text-white">Pratinjau Multi-Dokumen Persyaratan</h4>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-orange-500/20 text-orange-400 border border-orange-500/30"><?= count($berkas_items); ?> Dokumen</span>
+                            </div>
+                            <?php 
+                                $mhs_full_name = trim(($detail['nama_depan'] ?? ($detail['nama'] ?? 'Mahasiswa')) . ' ' . ($detail['nama_belakang'] ?? ''));
+                            ?>
+                            <span class="text-[11px] text-slate-400"><?= htmlspecialchars($mhs_full_name); ?> &bull; <span class="font-mono text-slate-300"><?= $detail['nim']; ?></span></span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="closeMultiDocModal()" class="md:hidden w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-lg flex items-center justify-center transition-colors cursor-pointer">&times;</button>
+                </div>
+
+                <!-- Mode Selector Switch: Tab Cepat vs Gulir Semua -->
+                <div class="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
+                    <div class="flex items-center bg-slate-800 p-1 rounded-xl border border-slate-700 text-xs">
+                        <button type="button" id="btnModeTab" onclick="switchMultiDocMode('tab')" class="px-3 py-1 rounded-lg font-bold text-xs transition-all bg-orange-600 text-white shadow-xs cursor-pointer">
+                            <i class="bi bi-folder2-open mr-1"></i> Mode Tab Cepat
+                        </button>
+                        <button type="button" id="btnModeScroll" onclick="switchMultiDocMode('scroll')" class="px-3 py-1 rounded-lg font-bold text-xs text-slate-300 hover:text-white transition-all cursor-pointer">
+                            <i class="bi bi-view-stacked mr-1"></i> Tampil Semua Berjejer
+                        </button>
+                    </div>
+
+                    <!-- Maximize / Fullscreen Toggle -->
+                    <button type="button" onclick="toggleMultiDocFullscreen()" id="btnMultiDocFullscreen" title="Layar Penuh" class="hidden md:flex w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white items-center justify-center transition-colors cursor-pointer text-xs">
+                        <i class="bi bi-arrows-fullscreen"></i>
+                    </button>
+
+                    <button type="button" onclick="closeMultiDocModal()" class="hidden md:flex w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-lg items-center justify-center transition-colors cursor-pointer">&times;</button>
+                </div>
+            </div>
+
+            <!-- Mode Tab: Interactive Top Document Navigation Pills Bar -->
+            <div id="multiTabNavWrapper" class="px-4 py-2 bg-slate-800/95 border-b border-slate-700/80 flex items-center gap-2 overflow-x-auto shrink-0 scrollbar-thin">
+                <?php foreach($berkas_items as $idx => $b): ?>
+                    <button type="button" onclick="goToMultiDocIndex(<?= $idx; ?>)" id="multiDocTab_<?= $idx; ?>" 
+                            class="multi-doc-pill px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 cursor-pointer border <?= $idx === 0 ? 'bg-white text-slate-900 border-white shadow-xs' : 'bg-slate-700/60 hover:bg-slate-700 text-slate-300 border-slate-600/60'; ?>">
+                        <i class="bi <?= $b['icon']; ?> text-xs"></i>
+                        <span><?= htmlspecialchars($b['label']); ?></span>
+                        <span id="multiTabBadge_<?= $b['key']; ?>" class="multi-tab-badge text-[10px] px-1.5 py-0.2 rounded font-bold <?= $b['status'] === 'Approved' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : ($b['status'] === 'Rejected' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-slate-500/20 text-slate-400 border border-slate-500/30'); ?>">
+                            <?= $b['status'] === 'Approved' ? 'Valid' : ($b['status'] === 'Rejected' ? 'Revisi' : 'Belum'); ?>
+                        </span>
+                    </button>
+                <?php endforeach; ?>
+            </div>
+
+            <!-- Middle Body 1: Tab Mode (Viewer with doc controller) -->
+            <div id="multiTabView" class="flex-1 flex flex-col min-h-0 overflow-hidden bg-slate-100" style="-webkit-overflow-scrolling: touch;">
+                <!-- Active Doc Action & Validation Control Bar (Compact on mobile) -->
+                <div class="py-1.5 px-3 sm:py-2 sm:px-5 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 shrink-0">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span id="multiDocActiveTitle" class="font-extrabold text-xs sm:text-sm text-slate-900 truncate max-w-[140px] sm:max-w-none">
+                            <?= htmlspecialchars($berkas_items[0]['label'] ?? 'Dokumen'); ?>
+                        </span>
+                        <a id="multiDocActiveDownload" href="<?= $berkas_items[0]['url'] ?? '#'; ?>" target="_blank" class="text-[10px] sm:text-xs text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1 shrink-0">
+                            <i class="bi bi-box-arrow-up-right"></i> <span class="hidden sm:inline">Unduh / Tab Baru</span>
+                        </a>
+                    </div>
+
+                    <!-- Navigation, Zoom, and Quick Validate in Modal -->
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <!-- Zoom Buttons (Mobile & Tablet only) -->
+                        <div class="flex lg:hidden items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                            <button type="button" onclick="adjustPdfZoom(-0.2)" title="Perkecil Tampilan" class="w-6 h-6 sm:w-7 sm:h-7 rounded-md text-xs font-bold text-slate-700 hover:bg-white transition flex items-center justify-center cursor-pointer">
+                                <i class="bi bi-zoom-out"></i>
+                            </button>
+                            <button type="button" onclick="resetPdfZoom()" title="Reset Ukuran" class="px-1.5 h-6 sm:h-7 text-[10px] font-mono font-bold text-slate-600 hover:bg-white rounded-md transition flex items-center justify-center cursor-pointer">
+                                <span id="pdfZoomLevelText">100%</span>
+                            </button>
+                            <button type="button" onclick="adjustPdfZoom(0.2)" title="Perbesar Tampilan" class="w-6 h-6 sm:w-7 sm:h-7 rounded-md text-xs font-bold text-slate-700 hover:bg-white transition flex items-center justify-center cursor-pointer">
+                                <i class="bi bi-zoom-in"></i>
+                            </button>
+                        </div>
+
+                        <!-- Navigation in Modal -->
+                        <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                            <button type="button" id="btnMultiDocPrev" onclick="prevMultiDoc()" class="px-2 py-1 rounded-md text-xs font-bold text-slate-700 hover:bg-white transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+                                <i class="bi bi-chevron-left"></i> <span class="hidden sm:inline">Sblmnya</span>
+                            </button>
+                            <span id="multiDocCounterText" class="px-2 text-xs font-bold text-slate-500 font-mono">1 / <?= count($berkas_items); ?></span>
+                            <button type="button" id="btnMultiDocNext" onclick="nextMultiDoc()" class="px-2 py-1 rounded-md text-xs font-bold text-slate-700 hover:bg-white transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+                                <span class="hidden sm:inline">Slnjutnya</span> <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+
+                        <?php if(!$isLocked): ?>
+                        <!-- Quick Toggle Valid / Revisi for this doc in modal -->
+                        <div class="flex items-center gap-1">
+                            <button type="button" id="btnModalValidNow" onclick="setMultiDocStatus('valid')" 
+                                    class="px-2 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 cursor-pointer">
+                                <i class="bi bi-check2-circle text-emerald-600"></i> Valid
+                            </button>
+                            <button type="button" id="btnModalKurangNow" onclick="setMultiDocStatus('kurang')" 
+                                    class="px-2 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 border border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100 cursor-pointer">
+                                <i class="bi bi-exclamation-circle text-rose-600"></i> Revisi
+                            </button>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Modal Tab Mode Revisi Note Expandable Drawer (if doc marked Kurang) -->
+                <div id="multiDocNoteDrawer" class="hidden p-3 px-5 bg-rose-50/70 border-b border-rose-200 shrink-0">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 justify-between mb-1.5">
+                        <span class="text-xs font-bold text-rose-800 flex items-center gap-1.5">
+                            <i class="bi bi-pencil-square"></i> Catatan Revisi Berkas:
+                        </span>
+                        <!-- Quick Presets in Drawer -->
+                        <div id="multiDocPresetsContainer" class="flex flex-wrap items-center gap-1"></div>
+                    </div>
+                    <input type="text" id="multiDocDrawerNoteInput" oninput="syncMultiDocNoteToForm(this.value)" placeholder="Tuliskan alasan revisi berkas ini..." 
+                           class="w-full px-3 py-1.5 bg-white border border-rose-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20">
+                </div>
+
+                <!-- Document Viewer Body (Scrollable Canvas Container with Native Touch + Fallback Iframe) -->
+                <div id="multiDocViewerContainer" class="flex-1 w-full bg-slate-200/90 relative min-h-0 overflow-y-auto p-2 sm:p-4 flex flex-col items-center" style="-webkit-overflow-scrolling: touch; overscroll-behavior: contain;">
+                    <div id="multiDocCanvasWrapper" class="w-full flex flex-col items-center space-y-4 max-w-4xl mx-auto"></div>
+                    <iframe id="multiDocIframeViewer" src="about:blank" class="w-full flex-1 border-0 hidden" style="min-height: 480px; height: 100%;"></iframe>
+                </div>
+            </div>
+
+            <!-- Middle Body 2: Scroll All Mode (Stacked View of all documents) -->
+            <div id="multiScrollView" class="hidden flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 bg-slate-100/90" style="-webkit-overflow-scrolling: touch; overscroll-behavior: contain;">
+                <?php foreach($berkas_items as $s_idx => $sb): ?>
+                    <div class="clean-card rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs">
+                        <!-- Sticky Header for Each Document -->
+                        <div class="p-3 px-4 bg-slate-800 text-white flex flex-wrap items-center justify-between gap-3 sticky top-0 z-10">
+                            <div class="flex items-center gap-2.5">
+                                <span class="w-6 h-6 rounded-lg bg-orange-500/20 text-orange-400 font-extrabold text-xs flex items-center justify-center">
+                                    <?= $s_idx + 1; ?>
+                                </span>
+                                <div>
+                                    <h5 class="font-bold text-xs text-white leading-tight"><?= htmlspecialchars($sb['label']); ?></h5>
+                                    <span class="font-mono text-[10px] text-slate-400"><?= htmlspecialchars($sb['file']); ?></span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <a href="<?= $sb['url']; ?>" target="_blank" onclick="markDocAsReviewed('<?= $sb['key']; ?>')" class="px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-xs font-medium flex items-center gap-1">
+                                <i class="bi bi-box-arrow-up-right"></i> Unduh / Tab Baru
+                                </a>
+                                
+                                <?php if(!$isLocked): ?>
+                                <!-- Direct Quick Action in Stacked View -->
+                                <button type="button" onclick="setDocStatusDirect('<?= $sb['key']; ?>', false)" class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 cursor-pointer">
+                                    <i class="bi bi-check-lg mr-0.5"></i> Valid
+                                </button>
+                                <button type="button" onclick="setDocStatusDirect('<?= $sb['key']; ?>', true)" class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/40 cursor-pointer">
+                                    <i class="bi bi-exclamation mr-0.5"></i> Kurang
+                                </button>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <!-- Document Canvas Container / Iframe Fallback -->
+                        <div class="w-full bg-slate-200/90 p-2 sm:p-4 flex flex-col items-center min-h-[350px]">
+                            <div id="stackedCanvas_<?= $sb['key']; ?>" class="w-full flex flex-col items-center space-y-4 max-w-4xl mx-auto"></div>
+                            <iframe id="stackedIframe_<?= $sb['key']; ?>" data-src="<?= $sb['url']; ?>" src="about:blank" class="w-full h-[520px] border-0 hidden"></iframe>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-3.5 px-5 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 shrink-0">
+                <div class="flex items-center gap-2">
+                    <?php if(!$isLocked): ?>
+                    <button type="button" onclick="markAllValid(); refreshMultiModalUI();" class="px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer shadow-2xs">
+                        <i class="bi bi-check2-all"></i> Tandai Semua Dokumen Valid
+                    </button>
+                    <?php endif; ?>
+                    <span id="multiModalStatusSummary" class="text-xs font-semibold text-slate-600 hidden sm:inline">
+                        Status: <?= count($berkas_items); ?> berkas siap diperiksa
+                    </span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="closeMultiDocModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors cursor-pointer">
+                        Selesai &amp; Tutup Pratinjau
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
     <!-- Floating Interactive Toast Notification -->
     <div id="toastNotice" class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs border border-slate-700">
         <div class="w-6 h-6 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold text-xs">
@@ -671,19 +927,574 @@
         <span id="toastMsg" class="font-medium">Pemberitahuan</span>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-white border-t border-slate-200 py-4 mt-8 text-center text-xs text-slate-500">
-        &copy; <?= date('Y'); ?> Fakultas Industri Kreatif - Telkom University. Modul Dosen Wali Akademik.
-    </footer>
+
 
     <!-- Interactive Scripts -->
     <script>
         let currentModalKey = '';
         let currentModalFileUrl = '';
         window.reviewedDocs = <?= json_encode($reviewed_map ?? []); ?>;
+        // Merge dari localStorage agar status 'Sudah Dilihat' langsung persisten seketika saat refresh
+        try {
+            const storageKey = 'ifik_reviewed_' + '<?= $detail['nim']; ?>';
+            let stored = JSON.parse(localStorage.getItem(storageKey) || '{}');
+            for (let k in stored) {
+                if (stored[k]) {
+                    window.reviewedDocs[k] = true;
+                }
+            }
+        } catch(e) {}
+        window.docList = <?= json_encode(array_values(array_map(function($b) {
+            return [
+                'key'     => $b['key'],
+                'label'   => $b['label'],
+                'file'    => $b['file'],
+                'url'     => $b['url'],
+                'status'  => $b['status'],
+                'presets' => $b['presets']
+            ];
+        }, $berkas_items))); ?>;
+
+        let allInlineOpen = false;
+        let currentMultiDocIndex = 0;
+        let currentMultiDocMode = 'tab'; // 'tab' or 'scroll'
+        let currentPdfZoom = 1.0;
+        let pdfRenderToken = 0;
+
+        function adjustPdfZoom(delta) {
+            currentPdfZoom = Math.max(0.6, Math.min(2.5, currentPdfZoom + delta));
+            const textEl = document.getElementById('pdfZoomLevelText');
+            if (textEl) textEl.textContent = Math.round(currentPdfZoom * 100) + '%';
+            renderMultiDocActiveTab();
+        }
+
+        function resetPdfZoom() {
+            currentPdfZoom = 1.0;
+            const textEl = document.getElementById('pdfZoomLevelText');
+            if (textEl) textEl.textContent = '100%';
+            renderMultiDocActiveTab();
+        }
+
+        async function loadDocumentToViewer(containerEl, iframeEl, url, filename) {
+            if (!containerEl && !iframeEl) return;
+            const isMobile = window.innerWidth < 1024;
+            const isImg = Boolean(url && url.match(/\.(png|jpe?g|webp|gif)$/i));
+            
+            // VERSI DESKTOP (>= 1024px): Tetap gunakan iframe native bawaan desktop seutuhnya
+            if (!isMobile && !isImg) {
+                if (containerEl) {
+                    containerEl.innerHTML = '';
+                    containerEl.classList.add('hidden');
+                }
+                if (iframeEl) {
+                    iframeEl.classList.remove('hidden');
+                    if (iframeEl.src !== url) iframeEl.src = url;
+                }
+                return;
+            }
+
+            // Jika berkas adalah gambar
+            if (isImg) {
+                if (iframeEl) iframeEl.classList.add('hidden');
+                if (containerEl) {
+                    containerEl.classList.remove('hidden');
+                    containerEl.innerHTML = `
+                        <div class="w-full flex justify-center py-2">
+                            <div class="bg-white rounded-xl shadow-lg p-2 max-w-3xl overflow-hidden border border-slate-200">
+                                <img src="${url}" alt="${filename || 'Berkas'}" class="max-w-full h-auto rounded-lg mx-auto object-contain">
+                            </div>
+                        </div>
+                    `;
+                }
+                return;
+            }
+
+            // VERSI RESPONSIVE / MOBILE (< 1024px): Render canvas via PDF.js untuk touch swipe & responsive scrolling
+            if (isMobile && typeof pdfjsLib !== 'undefined') {
+                if (iframeEl) iframeEl.classList.add('hidden');
+                if (containerEl) {
+                    containerEl.classList.remove('hidden');
+                    containerEl.innerHTML = `
+                        <div class="flex flex-col items-center justify-center py-16 text-slate-400 space-y-3">
+                            <div class="w-9 h-9 border-3 border-orange-500/20 border-t-orange-500 rounded-full animate-spin"></div>
+                            <span class="text-xs font-semibold text-slate-500">Menyiapkan pratinjau dokumen...</span>
+                        </div>
+                    `;
+
+                    // Token spesifik per kontainer (bukan global) agar tidak saling batalkan saat multi-dokumen dibuka bersamaan
+                    const thisToken = (containerEl._renderToken = (containerEl._renderToken || 0) + 1);
+
+                    try {
+                        const loadingTask = pdfjsLib.getDocument({
+                            url: url,
+                            isEvalSupported: false
+                        });
+
+                        // Timeout 4 detik: jika PDF.js lambat atau terkendala jaringan, langsung fallback ke iframe
+                        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('PDF.js render timeout')), 4000));
+                        const pdf = await Promise.race([loadingTask.promise, timeoutPromise]);
+                        
+                        if (thisToken !== containerEl._renderToken) return;
+
+                        containerEl.innerHTML = '';
+
+                        for (let p = 1; p <= pdf.numPages; p++) {
+                            if (thisToken !== containerEl._renderToken) return;
+                            const page = await pdf.getPage(p);
+                            const initialVp = page.getViewport({ scale: 1.0 });
+
+                            // Sesuaikan lebar dokumen ke lebar layar HP / kontainer
+                            const parentWidth = containerEl.parentElement ? containerEl.parentElement.clientWidth : containerEl.clientWidth;
+                            const availWidth = Math.max(Math.min(parentWidth || (window.innerWidth - 32), 850) - 16, 260);
+                            const baseScale = Math.max(availWidth / initialVp.width, 0.55);
+                            const finalScale = baseScale * currentPdfZoom;
+                            const vp = page.getViewport({ scale: finalScale });
+
+                            const card = document.createElement('div');
+                            card.className = 'w-full max-w-3xl bg-white rounded-xl shadow-md overflow-hidden border border-slate-200/80 mb-4 mx-auto';
+
+                            if (pdf.numPages > 1) {
+                                const hdr = document.createElement('div');
+                                hdr.className = 'px-3 py-1 bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 flex items-center justify-between select-none';
+                                hdr.innerHTML = `<span><i class="bi bi-file-earmark-text text-orange-500 mr-1"></i> Halaman ${p} dari ${pdf.numPages}</span><span class="font-mono text-[9px] text-slate-400">${filename || ''}</span>`;
+                                card.appendChild(hdr);
+                            }
+
+                            const canvas = document.createElement('canvas');
+                            canvas.className = 'block mx-auto max-w-full h-auto';
+                            canvas.width = vp.width;
+                            canvas.height = vp.height;
+
+                            card.appendChild(canvas);
+                            containerEl.appendChild(card);
+
+                            const ctx = canvas.getContext('2d');
+                            await page.render({ canvasContext: ctx, viewport: vp }).promise;
+                        }
+                        return;
+                    } catch (e) {
+                        console.warn('PDF.js render error / timeout, fallback to iframe:', e);
+                        // Fallback seketika ke iframe jika terjadi kendala
+                        containerEl.innerHTML = '';
+                        containerEl.classList.add('hidden');
+                        if (iframeEl) {
+                            iframeEl.classList.remove('hidden');
+                            if (iframeEl.src !== url) iframeEl.src = url;
+                        }
+                        return;
+                    }
+                }
+            }
+
+            // Fallback default: kembali ke iframe jika offline atau error
+            if (containerEl) {
+                containerEl.innerHTML = '';
+                containerEl.classList.add('hidden');
+            }
+            if (iframeEl) {
+                iframeEl.classList.remove('hidden');
+                if (iframeEl.src !== url) iframeEl.src = url;
+            }
+        }
+
+        // Auto-detect peralihan layar Desktop (>= 1024px) vs Mobile (< 1024px) saat resize
+        let lastIsMobileView = (window.innerWidth < 1024);
+        window.addEventListener('resize', () => {
+            const currentIsMobile = (window.innerWidth < 1024);
+            if (currentIsMobile !== lastIsMobileView) {
+                lastIsMobileView = currentIsMobile;
+                const modal = document.getElementById('multiDocModal');
+                if (modal && !modal.classList.contains('hidden')) {
+                    if (currentMultiDocMode === 'tab') {
+                        renderMultiDocActiveTab();
+                    } else {
+                        switchMultiDocMode('scroll');
+                    }
+                }
+            }
+        });
 
         function isDocReviewed(key) {
             return Boolean(window.reviewedDocs && window.reviewedDocs[key]);
+        }
+
+        function markAllDocsReviewed() {
+            if (!window.docList || window.docList.length === 0) return;
+            const allKeys = window.docList.map(item => item.key);
+            
+            allKeys.forEach(k => {
+                if (!window.reviewedDocs) window.reviewedDocs = {};
+                window.reviewedDocs[k] = true;
+                const badge = document.getElementById('reviewBadge_' + k);
+                if (badge) {
+                    badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all bg-emerald-50 text-emerald-700 border border-emerald-200';
+                    badge.innerHTML = '<i class="bi bi-check-circle-fill text-emerald-500"></i> <span class="badge-text">Sudah Dilihat</span>';
+                }
+            });
+
+            // Simpan ke localStorage agar seketika persisten saat refresh
+            try {
+                const storageKey = 'ifik_reviewed_' + '<?= $detail['nim']; ?>';
+                let stored = JSON.parse(localStorage.getItem(storageKey) || '{}');
+                allKeys.forEach(k => stored[k] = true);
+                localStorage.setItem(storageKey, JSON.stringify(stored));
+            } catch(e) {}
+
+            // Kirim batch AJAX request ke server
+            try {
+                const fd = new FormData();
+                fd.append('nim', '<?= $detail['nim']; ?>');
+                fd.append('file_type', allKeys.join(','));
+                fetch('<?= site_url("dosen/wali/log_review_ajax"); ?>', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: fd
+                }).catch(e => {});
+            } catch(e) {}
+        }
+
+        function toggleSingleInlinePreview(key) {
+            const box = document.getElementById('inlineBox_' + key);
+            const textEl = document.getElementById('textInlineSingle_' + key);
+            const iconEl = document.getElementById('iconInlineSingle_' + key);
+            const iframe = document.getElementById('inlineIframe_' + key);
+
+            if (!box) return;
+
+            if (box.classList.contains('hidden')) {
+                box.classList.remove('hidden');
+                const canvasWrapper = document.getElementById('inlineCanvas_' + key);
+                if (canvasWrapper && (!canvasWrapper.dataset.loaded || canvasWrapper.children.length === 0)) {
+                    canvasWrapper.dataset.loaded = 'true';
+                    const targetUrl = iframe ? iframe.getAttribute('data-src') : '';
+                    loadDocumentToViewer(canvasWrapper, iframe, targetUrl, key);
+                }
+                if (textEl) textEl.textContent = 'Tutup';
+                if (iconEl) iconEl.className = 'bi bi-eye-slash text-slate-500';
+                markDocAsReviewed(key);
+            } else {
+                box.classList.add('hidden');
+                if (textEl) textEl.textContent = 'Buka di Halaman';
+                if (iconEl) iconEl.className = 'bi bi-eye text-orange-600';
+            }
+        }
+
+        function toggleAllInlinePreviews() {
+            const boxes = document.querySelectorAll('.inline-doc-container');
+            const textAll = document.getElementById('textToggleInlineAll');
+            const iconAll = document.getElementById('iconToggleInlineAll');
+            
+            allInlineOpen = !allInlineOpen;
+
+            boxes.forEach(box => {
+                const id = box.id.replace('inlineBox_', '');
+                const iframe = document.getElementById('inlineIframe_' + id);
+                const textEl = document.getElementById('textInlineSingle_' + id);
+                const iconEl = document.getElementById('iconInlineSingle_' + id);
+
+                if (allInlineOpen) {
+                    box.classList.remove('hidden');
+                    const canvasWrapper = document.getElementById('inlineCanvas_' + id);
+                    if (canvasWrapper && (!canvasWrapper.dataset.loaded || canvasWrapper.children.length === 0)) {
+                        canvasWrapper.dataset.loaded = 'true';
+                        const targetUrl = iframe ? iframe.getAttribute('data-src') : '';
+                        loadDocumentToViewer(canvasWrapper, iframe, targetUrl, id);
+                    }
+                    if (textEl) textEl.textContent = 'Tutup';
+                    if (iconEl) iconEl.className = 'bi bi-eye-slash text-slate-500';
+                } else {
+                    box.classList.add('hidden');
+                    if (textEl) textEl.textContent = 'Buka di Halaman';
+                    if (iconEl) iconEl.className = 'bi bi-eye text-orange-600';
+                }
+            });
+
+            if (allInlineOpen) {
+                markAllDocsReviewed();
+                if (textAll) textAll.textContent = 'Sembunyikan di Halaman';
+                if (iconAll) iconAll.className = 'bi bi-eye-slash text-slate-600';
+                showToast('Seluruh dokumen dibuka langsung di halaman!');
+            } else {
+                if (textAll) textAll.textContent = 'Buka Semua di Halaman';
+                if (iconAll) iconAll.className = 'bi bi-layout-split text-orange-600';
+                showToast('Pratinjau dokumen di halaman ditutup.');
+            }
+        }
+
+        function openMultiDocModal() {
+            markAllDocsReviewed();
+
+            const modal = document.getElementById('multiDocModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+
+            // Lock body scroll so page doesn't scroll behind modal
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+
+            renderMultiDocActiveTab();
+            refreshMultiModalUI();
+        }
+
+        function closeMultiDocModal() {
+            const modal = document.getElementById('multiDocModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+
+            // Restore body scroll
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+        }
+
+        let isMultiDocFullscreen = false;
+        function toggleMultiDocFullscreen() {
+            const dialog = document.getElementById('multiDocDialog');
+            const btn = document.getElementById('btnMultiDocFullscreen');
+            if (!dialog) return;
+
+            isMultiDocFullscreen = !isMultiDocFullscreen;
+            if (isMultiDocFullscreen) {
+                dialog.classList.remove('max-w-7xl', 'h-[95vh]', 'rounded-2xl', 'sm:rounded-3xl');
+                dialog.classList.add('w-full', 'h-full', 'max-w-none', 'rounded-none');
+                if (btn) btn.innerHTML = '<i class="bi bi-fullscreen-exit"></i>';
+            } else {
+                dialog.classList.remove('w-full', 'h-full', 'max-w-none', 'rounded-none');
+                dialog.classList.add('max-w-7xl', 'h-[95vh]', 'rounded-2xl', 'sm:rounded-3xl');
+                if (btn) btn.innerHTML = '<i class="bi bi-arrows-fullscreen"></i>';
+            }
+        }
+
+        function switchMultiDocMode(mode) {
+            currentMultiDocMode = mode;
+            const tabWrapper = document.getElementById('multiTabNavWrapper');
+            const tabView = document.getElementById('multiTabView');
+            const scrollView = document.getElementById('multiScrollView');
+            const btnTab = document.getElementById('btnModeTab');
+            const btnScroll = document.getElementById('btnModeScroll');
+
+            if (mode === 'tab') {
+                if (tabWrapper) tabWrapper.classList.remove('hidden');
+                if (tabView) tabView.classList.remove('hidden');
+                if (scrollView) scrollView.classList.add('hidden');
+
+                if (btnTab) {
+                    btnTab.className = 'px-3 py-1 rounded-lg font-bold text-xs transition-all bg-orange-600 text-white shadow-xs cursor-pointer';
+                }
+                if (btnScroll) {
+                    btnScroll.className = 'px-3 py-1 rounded-lg font-bold text-xs text-slate-300 hover:text-white transition-all cursor-pointer';
+                }
+                renderMultiDocActiveTab();
+            } else {
+                if (tabWrapper) tabWrapper.classList.add('hidden');
+                if (tabView) tabView.classList.add('hidden');
+                if (scrollView) scrollView.classList.remove('hidden');
+
+                if (btnTab) {
+                    btnTab.className = 'px-3 py-1 rounded-lg font-bold text-xs text-slate-300 hover:text-white transition-all cursor-pointer';
+                }
+                if (btnScroll) {
+                    btnScroll.className = 'px-3 py-1 rounded-lg font-bold text-xs transition-all bg-orange-600 text-white shadow-xs cursor-pointer';
+                }
+
+                // Load all stacked documents using loadDocumentToViewer
+                if (window.docList) {
+                    window.docList.forEach(item => {
+                        const canvasWrapper = document.getElementById('stackedCanvas_' + item.key);
+                        const iframe = document.getElementById('stackedIframe_' + item.key);
+                        if (canvasWrapper && (!canvasWrapper.dataset.loaded || canvasWrapper.children.length === 0)) {
+                            canvasWrapper.dataset.loaded = 'true';
+                            const targetUrl = item.url || (iframe ? iframe.getAttribute('data-src') : '');
+                            loadDocumentToViewer(canvasWrapper, iframe, targetUrl, item.file || item.label);
+                        }
+                    });
+                }
+            }
+            refreshMultiModalUI();
+        }
+
+        function goToMultiDocIndex(idx) {
+            if (!window.docList || idx < 0 || idx >= window.docList.length) return;
+            currentMultiDocIndex = idx;
+            renderMultiDocActiveTab();
+        }
+
+        function prevMultiDoc() {
+            if (currentMultiDocIndex > 0) {
+                currentMultiDocIndex--;
+                renderMultiDocActiveTab();
+            }
+        }
+
+        function nextMultiDoc() {
+            if (window.docList && currentMultiDocIndex < window.docList.length - 1) {
+                currentMultiDocIndex++;
+                renderMultiDocActiveTab();
+            }
+        }
+
+        function renderMultiDocActiveTab() {
+            if (!window.docList || window.docList.length === 0) return;
+            const doc = window.docList[currentMultiDocIndex];
+            if (!doc) return;
+
+            document.querySelectorAll('.multi-doc-pill').forEach((pill, i) => {
+                if (i === currentMultiDocIndex) {
+                    pill.className = 'multi-doc-pill px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 cursor-pointer border bg-white text-slate-900 border-white shadow-xs';
+                } else {
+                    pill.className = 'multi-doc-pill px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 cursor-pointer border bg-slate-700/60 hover:bg-slate-700 text-slate-300 border-slate-600/60';
+                }
+            });
+
+            const titleEl = document.getElementById('multiDocActiveTitle');
+            const fileEl = document.getElementById('multiDocActiveFilename');
+            const dlEl = document.getElementById('multiDocActiveDownload');
+            const counterEl = document.getElementById('multiDocCounterText');
+            const prevBtn = document.getElementById('btnMultiDocPrev');
+            const nextBtn = document.getElementById('btnMultiDocNext');
+            const iframe = document.getElementById('multiDocIframeViewer');
+
+            if (titleEl) titleEl.textContent = doc.label;
+            if (fileEl) fileEl.textContent = doc.file;
+            if (dlEl) dlEl.href = doc.url;
+            if (counterEl) counterEl.textContent = (currentMultiDocIndex + 1) + ' / ' + window.docList.length;
+
+            if (prevBtn) prevBtn.disabled = (currentMultiDocIndex === 0);
+            if (nextBtn) nextBtn.disabled = (currentMultiDocIndex === window.docList.length - 1);
+
+            const canvasWrapper = document.getElementById('multiDocCanvasWrapper');
+            const defaultSamplePdf = '<?= base_url("uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf"); ?>';
+            const targetUrl = (doc.url && doc.url.match(/\.(pdf|png|jpg|jpeg)$/i)) ? doc.url : defaultSamplePdf;
+            loadDocumentToViewer(canvasWrapper, iframe, targetUrl, doc.file || doc.label);
+
+            updateMultiDocDrawerForActive();
+            refreshMultiModalUI();
+        }
+
+        function updateMultiDocDrawerForActive() {
+            if (!window.docList) return;
+            const doc = window.docList[currentMultiDocIndex];
+            if (!doc) return;
+
+            const drawer = document.getElementById('multiDocNoteDrawer');
+            const noteInput = document.getElementById('multiDocDrawerNoteInput');
+            const presetsContainer = document.getElementById('multiDocPresetsContainer');
+
+            const card = document.querySelector('.doc-card[data-key="' + doc.key + '"]');
+            const cbKurang = card ? card.querySelector('input[name="berkas_kurang[]"]') : null;
+            const cardNoteInput = card ? card.querySelector('.catatan-doc-box input') : null;
+
+            if (cbKurang && cbKurang.checked) {
+                if (drawer) drawer.classList.remove('hidden');
+                if (noteInput && cardNoteInput) {
+                    noteInput.value = cardNoteInput.value;
+                }
+            } else {
+                if (drawer) drawer.classList.add('hidden');
+            }
+
+            if (presetsContainer && doc.presets) {
+                presetsContainer.innerHTML = '';
+                doc.presets.forEach(ps => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'px-2 py-0.5 rounded bg-rose-100 hover:bg-rose-200 text-rose-800 text-[10px] font-medium border border-rose-200 cursor-pointer transition-colors';
+                    btn.textContent = '+ ' + ps;
+                    btn.onclick = () => {
+                        setDocNote(doc.key, ps);
+                        if (noteInput && cardNoteInput) noteInput.value = cardNoteInput.value;
+                        updateMultiDocDrawerForActive();
+                        refreshMultiModalUI();
+                    };
+                    presetsContainer.appendChild(btn);
+                });
+            }
+        }
+
+        function syncMultiDocNoteToForm(val) {
+            if (!window.docList) return;
+            const doc = window.docList[currentMultiDocIndex];
+            if (!doc) return;
+            const card = document.querySelector('.doc-card[data-key="' + doc.key + '"]');
+            const cardNoteInput = card ? card.querySelector('.catatan-doc-box input') : null;
+            if (cardNoteInput) {
+                cardNoteInput.value = val;
+                handleDocNoteInput(doc.key);
+            }
+        }
+
+        function setMultiDocStatus(status) {
+            if (!window.docList) return;
+            const doc = window.docList[currentMultiDocIndex];
+            if (!doc) return;
+            setDocStatusDirect(doc.key, status === 'kurang');
+
+            updateMultiDocDrawerForActive();
+            refreshMultiModalUI();
+
+            if (status === 'valid' && currentMultiDocIndex < window.docList.length - 1) {
+                setTimeout(() => {
+                    nextMultiDoc();
+                }, 300);
+            }
+        }
+
+        function setDocStatusDirect(key, isKurang) {
+            const card = document.querySelector('.doc-card[data-key="' + key + '"]');
+            if (!card) return;
+
+            const cbValid = card.querySelector('input[name="berkas_valid[]"]');
+            const cbKurang = card.querySelector('input[name="berkas_kurang[]"]');
+
+            if (isKurang) {
+                if (cbValid) cbValid.checked = false;
+                if (cbKurang) cbKurang.checked = true;
+            } else {
+                if (cbValid) cbValid.checked = true;
+                if (cbKurang) cbKurang.checked = false;
+            }
+            updateCardState(card);
+            refreshMultiModalUI();
+        }
+
+        function refreshMultiModalUI() {
+            if (!window.docList) return;
+            let validCount = 0;
+            let kurangCount = 0;
+            let belumCount = 0;
+
+            window.docList.forEach((item) => {
+                const card = document.querySelector('.doc-card[data-key="' + item.key + '"]');
+                const cbValid = card ? card.querySelector('input[name="berkas_valid[]"]') : null;
+                const cbKurang = card ? card.querySelector('input[name="berkas_kurang[]"]') : null;
+
+                const badge = document.getElementById('multiTabBadge_' + item.key);
+                if (badge) {
+                    if (cbValid && cbValid.checked) {
+                        badge.className = 'multi-tab-badge text-[10px] px-1.5 py-0.2 rounded font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+                        badge.textContent = 'Valid';
+                        validCount++;
+                    } else if (cbKurang && cbKurang.checked) {
+                        badge.className = 'multi-tab-badge text-[10px] px-1.5 py-0.2 rounded font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30';
+                        badge.textContent = 'Revisi';
+                        kurangCount++;
+                    } else {
+                        badge.className = 'multi-tab-badge text-[10px] px-1.5 py-0.2 rounded font-bold bg-slate-500/20 text-slate-400 border border-slate-500/30';
+                        badge.textContent = 'Belum';
+                        belumCount++;
+                    }
+                }
+            });
+
+            const summaryEl = document.getElementById('multiModalStatusSummary');
+            if (summaryEl) {
+                summaryEl.innerHTML = `Status Verifikasi: <span class="text-emerald-600 font-bold">${validCount} Valid</span>, <span class="text-rose-600 font-bold">${kurangCount} Revisi</span>, <span class="text-slate-500 font-medium">${belumCount} Belum Dicek</span>`;
+            }
         }
 
         function markDocAsReviewed(key) {
@@ -706,13 +1517,22 @@
                 btn.classList.remove('ring-4', 'ring-amber-400', 'animate-pulse');
             }
 
+            // Simpan ke localStorage agar seketika persisten saat refresh
+            try {
+                const storageKey = 'ifik_reviewed_' + '<?= $detail['nim']; ?>';
+                let stored = JSON.parse(localStorage.getItem(storageKey) || '{}');
+                stored[key] = true;
+                localStorage.setItem(storageKey, JSON.stringify(stored));
+            } catch(e) {}
+
             // Send AJAX to server to log review timestamp
             try {
                 const fd = new FormData();
                 fd.append('nim', '<?= $detail['nim']; ?>');
                 fd.append('file_type', key);
-                fetch('<?= site_url("dosenwali/log_review_ajax"); ?>', {
+                fetch('<?= site_url("dosen/wali/log_review_ajax"); ?>', {
                     method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
                     body: fd
                 }).then(res => res.json()).then(data => {
                     // Review logged successfully
@@ -750,11 +1570,12 @@
             document.getElementById('pdfModalTitle').textContent = title;
             document.getElementById('pdfModalFilename').textContent = filename;
 
+            const canvasWrapper = document.getElementById('singlePdfCanvasWrapper');
             const iframe = document.getElementById('pdfIframeViewer');
             const defaultSamplePdf = '<?= base_url("uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf"); ?>';
 
             const targetUrl = (fileUrl && fileUrl.match(/\.(pdf|png|jpg|jpeg)$/i)) ? fileUrl : defaultSamplePdf;
-            iframe.src = targetUrl;
+            loadDocumentToViewer(canvasWrapper, iframe, targetUrl, filename || title);
 
             // Wire up modal buttons
             document.getElementById('modalBtnKurang').onclick = function() {
@@ -769,6 +1590,11 @@
                 showToast(title + ' ditandai Valid');
             };
 
+            // Lock body scroll
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+
             document.getElementById('pdfModal').classList.remove('hidden');
             document.getElementById('pdfModal').classList.add('flex');
         }
@@ -776,8 +1602,15 @@
         function closePdfModal() {
             const iframe = document.getElementById('pdfIframeViewer');
             if (iframe) iframe.src = 'about:blank';
+            const canvasWrapper = document.getElementById('singlePdfCanvasWrapper');
+            if (canvasWrapper) canvasWrapper.innerHTML = '';
             document.getElementById('pdfModal').classList.add('hidden');
             document.getElementById('pdfModal').classList.remove('flex');
+
+            // Restore body scroll
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
         }
 
         // Close pdfModal when clicking dark backdrop outside content box
@@ -1242,6 +2075,7 @@
                 if (cbKurang) cbKurang.checked = false;
                 updateCardState(card);
             });
+            refreshMultiModalUI();
             showToast('Semua berkas beserta Judul & Skema TA berhasil ditandai Valid!');
         }
 
@@ -1418,10 +2252,34 @@
             return false;
         }
 
-        // Keyboard ESC shortcut to close pdfModal
+        // Close multiDocModal when clicking backdrop
+        document.addEventListener('DOMContentLoaded', () => {
+            const multiModal = document.getElementById('multiDocModal');
+            if (multiModal) {
+                multiModal.addEventListener('click', (e) => {
+                    if (e.target === multiModal) {
+                        closeMultiDocModal();
+                    }
+                });
+            // Sync all reviewed badges on load
+            if (window.reviewedDocs) {
+                for (let k in window.reviewedDocs) {
+                    if (window.reviewedDocs[k]) {
+                        const badge = document.getElementById('reviewBadge_' + k);
+                        if (badge) {
+                            badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all bg-emerald-50 text-emerald-700 border border-emerald-200';
+                            badge.innerHTML = '<i class="bi bi-check-circle-fill text-emerald-500"></i> <span class="badge-text">Sudah Dilihat</span>';
+                        }
+                    }
+                }
+            }
+        });
+
+        // Keyboard ESC shortcut to close modals
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closePdfModal();
+                closeMultiDocModal();
             }
         });
     </script>

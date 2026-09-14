@@ -98,6 +98,240 @@
         #wrapperDaftarMhs::-webkit-scrollbar-track {
             background: transparent;
         }
+
+        /* ========================================================
+           RESPONSIVE CARD VIEW (MOBILE < 1024px) UNTUK TABEL MAHASISWA
+           ======================================================== */
+        @media (max-width: 1023px) {
+            .responsive-dw-table thead {
+                display: none !important;
+            }
+            .responsive-dw-table,
+            .responsive-dw-table tbody {
+                display: block !important;
+                width: 100% !important;
+                border: none !important;
+            }
+            .responsive-dw-table tbody {
+                padding: 12px 14px !important;
+                background: transparent !important;
+            }
+            .responsive-dw-table .mhs-row {
+                display: grid !important;
+                grid-template-columns: auto 1fr auto !important;
+                grid-template-areas:
+                    "check student status"
+                    "judul judul judul"
+                    "berkas berkas berkas"
+                    "tahap tahap tahap"
+                    "aksi aksi aksi" !important;
+                gap: 12px 14px !important;
+                padding: 16px 18px !important;
+                margin-bottom: 16px !important;
+                background: #ffffff !important;
+                border-radius: 22px !important;
+                border: 1px solid rgba(226, 232, 240, 0.95) !important;
+                box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03) !important;
+                transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease !important;
+            }
+            .responsive-dw-table .mhs-row:hover {
+                transform: translateY(-2px) !important;
+                box-shadow: 0 10px 25px -4px rgba(249, 115, 22, 0.12), 0 4px 10px -2px rgba(15, 23, 42, 0.04) !important;
+            }
+            .responsive-dw-table .mhs-row > td {
+                display: block !important;
+                padding: 0 !important;
+                border: none !important;
+                background: transparent !important;
+                white-space: normal !important;
+            }
+            /* 1. Checkbox */
+            .responsive-dw-table .mhs-row > td:nth-child(1) {
+                grid-area: check !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding-right: 4px !important;
+            }
+            .responsive-dw-table .mhs-row > td:nth-child(1) input {
+                width: 20px !important;
+                height: 20px !important;
+                border-radius: 6px !important;
+            }
+            /* 2. Mahasiswa Info */
+            .responsive-dw-table .mhs-row > td:nth-child(2) {
+                grid-area: student !important;
+                min-width: 0 !important;
+            }
+            .responsive-dw-table .mhs-row > td:nth-child(2) .w-7 {
+                width: 2.5rem !important;
+                height: 2.5rem !important;
+                border-radius: 12px !important;
+                font-size: 14px !important;
+                font-weight: 800 !important;
+                background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%) !important;
+                border: 1px solid #fdba74 !important;
+                color: #c2410c !important;
+                box-shadow: 0 2px 6px rgba(249, 115, 22, 0.15) !important;
+            }
+            .responsive-dw-table .mhs-row > td:nth-child(2) .mhs-nama {
+                font-size: 13.5px !important;
+                font-weight: 800 !important;
+                color: #0f172a !important;
+                letter-spacing: -0.01em !important;
+            }
+            /* 5. Status Dosen Wali (Pill anti-stretch) */
+            .responsive-dw-table .mhs-row > td:nth-child(5) {
+                grid-area: status !important;
+                align-self: start !important;
+                display: flex !important;
+                justify-content: flex-end !important;
+            }
+            .responsive-dw-table .mhs-row > td:nth-child(5) span {
+                white-space: nowrap !important;
+                padding: 4px 12px !important;
+                font-size: 11px !important;
+                font-weight: 800 !important;
+                border-radius: 9999px !important;
+                height: auto !important;
+                max-height: 28px !important;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+            }
+            /* 3. Judul TA (Modern Quote Highlight Card - No dashed border!) */
+            .responsive-dw-table .mhs-row > td:nth-child(3) {
+                grid-area: judul !important;
+                background: #f8fafc !important;
+                border: 1px solid #f1f5f9 !important;
+                border-left: 3.5px solid #f97316 !important;
+                border-radius: 4px 14px 14px 4px !important;
+                padding: 10px 14px !important;
+                max-width: 100% !important;
+            }
+            .responsive-dw-table .mhs-row > td:nth-child(3)::before {
+                content: "📌 Judul Rencana Tugas Akhir";
+                display: block;
+                font-size: 9.5px;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: #ea580c;
+                margin-bottom: 4px;
+            }
+            .responsive-dw-table .mhs-row > td:nth-child(3) .line-clamp-2 {
+                font-size: 12px !important;
+                font-weight: 600 !important;
+                color: #334155 !important;
+                line-height: 1.5 !important;
+                -webkit-line-clamp: 3 !important;
+            }
+            /* 4. Status Berkas (Clean Section) */
+            .responsive-dw-table .mhs-row > td:nth-child(4) {
+                grid-area: berkas !important;
+                background: #fcfcfd !important;
+                border: 1px solid #f1f5f9 !important;
+                border-radius: 14px !important;
+                padding: 10px 14px !important;
+            }
+            .responsive-dw-table .mhs-row > td:nth-child(4)::before {
+                content: "Status Berkas Persyaratan";
+                display: block;
+                font-size: 9.5px;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: #64748b;
+                margin-bottom: 8px;
+            }
+            .responsive-dw-table .mhs-row > td:nth-child(4) > div {
+                flex-direction: row !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                flex-wrap: wrap !important;
+                gap: 8px !important;
+            }
+            /* 6. Tahap Saat Ini */
+            .responsive-dw-table .mhs-row > td:nth-child(6) {
+                grid-area: tahap !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                padding: 7px 12px !important;
+                background: #f8fafc !important;
+                border: 1px solid #f1f5f9 !important;
+                border-radius: 12px !important;
+                font-size: 11px !important;
+            }
+            .responsive-dw-table .mhs-row > td:nth-child(6)::before {
+                content: "Tahap Saat Ini:";
+                font-weight: 800;
+                color: #64748b;
+                font-size: 10px;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+            /* 7. Tombol Aksi */
+            .responsive-dw-table .mhs-row > td:nth-child(7) {
+                grid-area: aksi !important;
+                display: flex !important;
+                width: 100% !important;
+                margin-top: 4px !important;
+                padding-top: 12px !important;
+                border-top: 1px solid #f1f5f9 !important;
+            }
+            .responsive-dw-table .mhs-row > td:nth-child(7) > div {
+                display: flex !important;
+                width: 100% !important;
+                gap: 10px !important;
+            }
+            .responsive-dw-table .mhs-row > td:nth-child(7) a {
+                flex: 1 !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 6px !important;
+                padding: 11px 14px !important;
+                background: linear-gradient(135deg, #ea580c 0%, #f97316 100%) !important;
+                color: #ffffff !important;
+                border-radius: 14px !important;
+                font-size: 12px !important;
+                font-weight: 800 !important;
+                box-shadow: 0 4px 14px rgba(234, 88, 12, 0.28) !important;
+                transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+            }
+            .responsive-dw-table .mhs-row > td:nth-child(7) a:active {
+                transform: scale(0.97) !important;
+            }
+            .responsive-dw-table .mhs-row > td:nth-child(7) button {
+                flex: 1 !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 6px !important;
+                padding: 11px 14px !important;
+                background: #fff7ed !important;
+                color: #c2410c !important;
+                border: 1.5px solid #fed7aa !important;
+                border-radius: 14px !important;
+                font-size: 12px !important;
+                font-weight: 800 !important;
+                box-shadow: 0 2px 6px rgba(249, 115, 22, 0.06) !important;
+                transition: transform 0.15s ease, background-color 0.15s ease !important;
+            }
+            .responsive-dw-table .mhs-row > td:nth-child(7) button:active {
+                transform: scale(0.97) !important;
+                background: #ffedd5 !important;
+            }
+            /* Empty state handling */
+            .responsive-dw-table tr:not(.mhs-row) {
+                display: block !important;
+                width: 100% !important;
+            }
+            .responsive-dw-table tr:not(.mhs-row) > td {
+                display: block !important;
+                width: 100% !important;
+                padding: 2.5rem 1rem !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-amber-100/80 via-orange-50 to-amber-100/90 text-slate-900 font-sans antialiased min-h-screen flex flex-col selection:bg-orange-500 selection:text-white relative">
@@ -108,9 +342,9 @@
     <main class="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-grow">
 
         <!-- Welcome Banner & Page Title -->
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between mb-8 gap-4">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between mb-8 gap-4 pl-12 lg:pl-0">
             <div>
-                <span class="text-[10px] font-bold uppercase tracking-wider text-orange-600 block mb-1">OVERVIEW BIMBINGAN</span>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-orange-600 block mb-1">RINGKASAN BIMBINGAN</span>
                 <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Dashboard Dosen Wali</h1>
                 <p class="text-slate-600 text-xs mt-1 font-normal">Kelola persetujuan pendaftaran Tugas Akhir mahasiswa bimbingan Anda secara praktis.</p>
             </div>
@@ -121,7 +355,7 @@
                 </div>
                 <div class="px-4 py-2 bg-white/90 rounded-xl border border-orange-200 shadow-xs text-xs font-semibold text-slate-700 flex items-center gap-2 w-fit">
                     <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span>Approval System Active</span>
+                    <span>Sistem Persetujuan Aktif</span>
                 </div>
             </div>
         </div>
@@ -212,7 +446,7 @@
                     <!-- Content -->
                     <div class="relative z-10 flex items-start justify-between gap-2.5">
                         <div class="flex-1 min-w-0">
-                            <p class="text-[10px] xl:text-[11px] font-bold uppercase tracking-normal xl:tracking-wider text-slate-400 group-hover:text-cyan-600 transition-colors truncate" title="Menunggu Approval">Menunggu Approval</p>
+                            <p class="text-[10px] xl:text-[11px] font-bold uppercase tracking-normal xl:tracking-wider text-slate-400 group-hover:text-cyan-600 transition-colors truncate" title="Menunggu Persetujuan">Menunggu Persetujuan</p>
                             <h3 class="text-2xl font-black text-slate-900 mt-1 tracking-tight" id="statPendingMhs"><?= $pendingCount; ?> <span class="text-xs font-semibold text-cyan-600 font-normal">(<?= $totalMhs > 0 ? round(($pendingCount/$totalMhs)*100) : 0; ?>%)</span></h3>
                             <p class="text-xs font-medium text-slate-500 mt-1 truncate">Perlu Ditolak / Disetujui</p>
                         </div>
@@ -338,9 +572,9 @@
             <div class="p-5 border-b border-orange-200/60 flex flex-col md:flex-row md:items-start justify-between gap-4">
                 <div>
                     <h2 class="text-base font-bold text-slate-900 flex items-center gap-2.5 tracking-tight">
-                        <i class="bi bi-people-fill text-orange-500 text-lg"></i> Daftar Mahasiswa Bimbingan [LIVE UPDATED]
+                        <i class="bi bi-people-fill text-orange-500 text-lg"></i> Daftar Mahasiswa Bimbingan
                     </h2>
-                    <p class="text-xs text-slate-500 font-normal mt-0.5">Pilih mahasiswa untuk meninjau berkas dan melakukan persetujuan massal. [READY]</p>
+                    <p class="text-xs text-slate-500 font-normal mt-0.5">Pilih mahasiswa untuk meninjau berkas dan melakukan persetujuan massal.</p>
                 </div>
                 <!-- Controls -->
                 <div class="flex flex-wrap items-center gap-2 shrink-0">
@@ -353,7 +587,7 @@
                             <option value="25">25</option>
                             <option value="50">50</option>
                         </select>
-                        <span>records / hal</span>
+                        <span>data / hal</span>
                     </div>
                     <button id="btnAddFilter" class="btn-3d-orange flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white">
                         <i class="bi bi-plus-lg"></i> Tambah Filter
@@ -369,14 +603,14 @@
             <div id="filterPanel" class="border-b border-orange-200/60 bg-orange-50/40 px-5 py-4">
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-orange-700 flex items-center gap-1.5">
-                        <i class="bi bi-funnel-fill"></i> Dynamic Multi-Filter (Maksimal 4 Kriteria)
+                        <i class="bi bi-funnel-fill"></i> Filter Multi-Kriteria (Maksimal 4 Kriteria)
                     </span>
                     <div class="flex items-center gap-1.5 text-[11px] font-semibold">
                         <span class="text-slate-500 mr-1">Pintas Status:</span>
                         <button class="btn-pintas px-3 py-1 rounded-full bg-slate-800 text-white transition" data-status="all">Semua</button>
-                        <button class="btn-pintas px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-orange-50 transition" data-status="Pending">Pending</button>
-                        <button class="btn-pintas px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-orange-50 transition" data-status="Approved">Approved</button>
-                        <button class="btn-pintas px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-orange-50 transition" data-status="Rejected">Rejected</button>
+                        <button class="btn-pintas px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-orange-50 transition" data-status="Pending">Menunggu</button>
+                        <button class="btn-pintas px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-orange-50 transition" data-status="Approved">Disetujui</button>
+                        <button class="btn-pintas px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-orange-50 transition" data-status="Rejected">Ditolak</button>
                     </div>
                 </div>
                 <div id="filterRows" class="space-y-2"></div>
@@ -385,8 +619,20 @@
 
             
             <!-- Table View -->
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs">
+            <!-- Mobile Master Checkbox Bar -->
+            <div class="lg:hidden flex items-center justify-between px-4 py-3 bg-gradient-to-r from-white via-orange-50/70 to-white border-b border-orange-200/70">
+                <label class="flex items-center gap-2.5 cursor-pointer select-none">
+                    <input type="checkbox" id="checkAllStudentsMobile" onchange="toggleAllCheckboxesDW(this)" class="w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer">
+                    <span class="text-xs font-black text-slate-800 tracking-tight">Pilih Semua Mahasiswa</span>
+                </label>
+                <div class="flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-full border border-orange-200 shadow-2xs">
+                    <i class="fa-solid fa-id-card text-orange-600 text-[11px]"></i>
+                    <span class="text-[10px] text-orange-700 font-extrabold uppercase tracking-wider">Mode Kartu</span>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto lg:overflow-x-visible">
+                <table class="w-full text-left border-collapse text-xs responsive-dw-table">
                     <thead>
                         <tr class="bg-slate-900 text-white uppercase tracking-wider text-[10px] sm:text-[11px] font-black border-b border-slate-800">
                             <th class="py-3 px-2 text-center w-8">
@@ -406,6 +652,9 @@
                                 <?php 
                                      $st = $mhs['status_approval_wali'] ?? 'Pending';
                                      $badgeStyle = ($st === 'Approved') ? 'bg-emerald-100 text-emerald-700 border-emerald-300' : (($st === 'Rejected') ? 'bg-rose-100 text-rose-700 border-rose-300' : 'bg-amber-100 text-amber-700 border-amber-300');
+                                     $stLabel = ($st === 'Approved') ? 'Disetujui' : (($st === 'Rejected') ? 'Ditolak' : 'Menunggu');
+                                     $rawStage = $mhs['current_stage'] ?? 'Draft';
+                                     $stageLabel = (strtolower($rawStage) === 'draft') ? 'Draf' : $rawStage;
                                      $full_name = trim($mhs['nama_depan'] . ' ' . $mhs['nama_belakang']);
                                      if(empty($full_name)) $full_name = 'Mahasiswa ' . $mhs['nim'];
                                      
@@ -414,7 +663,7 @@
                                      $prn_st = $mhs['status_file_pernyataan'] ?? 'Pending';
                                      $lab_st = $mhs['status_file_bebas_lab'] ?? 'Pending';
                                  ?>
-                                <tr class="hover:bg-orange-50/50 transition-all duration-150 mhs-row" data-status="<?= $st; ?>" data-nim="<?= strtolower($mhs['nim']); ?>" data-nama="<?= strtolower($full_name); ?>" data-judul="<?= strtolower($mhs['judul_1'] ?? ''); ?>" data-stage="<?= strtolower($mhs['current_stage'] ?? 'draft'); ?>">
+                                <tr class="hover:bg-orange-50/50 transition-all duration-150 mhs-row" data-status="<?= $st; ?>" data-status-label="<?= strtolower($stLabel); ?>" data-nim="<?= strtolower($mhs['nim']); ?>" data-nama="<?= strtolower($full_name); ?>" data-judul="<?= strtolower($mhs['judul_1'] ?? ''); ?>" data-stage="<?= strtolower($rawStage); ?>" data-stage-label="<?= strtolower($stageLabel); ?>">
                                     <!-- Checkbox Column -->
                                     <td class="py-3 px-2 text-center whitespace-nowrap">
                                         <input type="checkbox" name="batch_select[]" value="<?= $mhs['nim']; ?>" 
@@ -549,12 +798,12 @@
 
                                     <!-- Status Approval Dosen Wali -->
                                     <td class="py-3 px-3 text-center whitespace-nowrap">
-                                        <span class="px-2.5 py-0.5 font-semibold text-[11px] rounded-full border shadow-xs inline-block <?= $badgeStyle; ?>"><?= $st; ?></span>
+                                        <span class="px-2.5 py-0.5 font-semibold text-[11px] rounded-full border shadow-xs inline-block <?= $badgeStyle; ?>"><?= $stLabel; ?></span>
                                     </td>
 
                                     <!-- Tahap Saat Ini -->
                                     <td class="py-3 px-3 text-center whitespace-nowrap">
-                                        <span class="px-2.5 py-0.5 font-semibold text-[11px] rounded-full bg-slate-100 text-slate-700 border border-slate-200 shadow-xs inline-block"><?= $mhs['current_stage'] ?? 'Draft'; ?></span>
+                                        <span class="px-2.5 py-0.5 font-semibold text-[11px] rounded-full bg-slate-100 text-slate-700 border border-slate-200 shadow-xs inline-block"><?= $stageLabel; ?></span>
                                     </td>
 
                                     <!-- Aksi -->
@@ -562,16 +811,17 @@
                                         <div class="inline-flex items-center gap-1.5">
                                             <a href="<?= site_url('dosen/wali/detail_mahasiswa/' . $mhs['nim']); ?>" 
                                                class="btn-3d-orange inline-flex items-center gap-1 text-white font-bold px-2.5 py-1.5 rounded-xl text-xs"
-                                               title="Detail & Approval Mahasiswa">
+                                               title="Detail & Persetujuan Mahasiswa">
                                                 <i class="bi bi-search text-xs"></i> Detail
                                             </a>
                                             <button type="button" 
-                                                    onclick="toggleLihatBerkasPanel('<?= $mhs['nim']; ?>')" 
-                                                    id="btn_lihat_berkas_<?= $mhs['nim']; ?>"
-                                                    class="inline-flex items-center justify-center w-7 h-7 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-700 border border-orange-200 font-bold text-xs transition cursor-pointer shadow-2xs"
-                                                    title="Lihat Berkas">
-                                                <i class="fa-solid fa-folder-open text-xs"></i>
-                                            </button>
+                                                     onclick="toggleLihatBerkasPanel('<?= $mhs['nim']; ?>')" 
+                                                     id="btn_lihat_berkas_<?= $mhs['nim']; ?>"
+                                                     class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-orange-50 to-amber-50 hover:from-orange-500 hover:to-amber-500 text-orange-700 hover:text-white border border-orange-300 hover:border-orange-500 font-bold text-xs transition-all duration-200 cursor-pointer shadow-2xs hover:shadow-xs active:scale-95 group"
+                                                     title="Lihat Berkas Mahasiswa">
+                                                 <i class="fa-solid fa-folder-open text-xs text-orange-500 group-hover:text-white transition-colors"></i>
+                                                 <span>Lihat Berkas</span>
+                                             </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -604,28 +854,28 @@
     </main>
 
     <!-- Floating Batch Action Bar -->
-    <div id="batchActionBar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 text-white px-5 py-3 rounded-2xl shadow-2xl backdrop-blur-md border border-slate-700 hidden items-center gap-3.5 transition-all duration-300 whitespace-nowrap max-w-[95vw]">
-        <div class="flex items-center gap-2.5 shrink-0">
-            <span class="w-7 h-7 rounded-lg bg-orange-500 text-white font-black text-xs flex items-center justify-center shadow-xs" id="selectedCountBadge">0</span>
-            <span class="text-xs font-bold tracking-tight text-slate-200">Mahasiswa Terpilih</span>
+    <div id="batchActionBar" class="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 text-white px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-2xl shadow-2xl backdrop-blur-md border border-slate-700 hidden items-center flex-wrap sm:flex-nowrap justify-center gap-2 sm:gap-3.5 transition-all duration-300 max-w-[96vw] w-max">
+        <div class="flex items-center gap-2 shrink-0">
+            <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-orange-500 text-white font-black text-xs flex items-center justify-center shadow-xs" id="selectedCountBadge">0</span>
+            <span class="text-[11px] sm:text-xs font-bold tracking-tight text-slate-200">Terpilih</span>
         </div>
         
-        <div class="h-5 w-px bg-slate-700 shrink-0"></div>
+        <div class="hidden sm:block h-5 w-px bg-slate-700 shrink-0"></div>
 
-        <div class="flex items-center gap-2 shrink-0">
+        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-wrap justify-center">
             <!-- Button 1: Popup Batch Review -->
-            <button type="button" onclick="openBatchModalDW()" class="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-md flex items-center gap-2 transition-all active:scale-95 cursor-pointer whitespace-nowrap">
-                <i class="fa-solid fa-layer-group text-sm"></i> CEK DOKUMEN MASSAL (POPUP)
+            <button type="button" onclick="openBatchModalDW()" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider shadow-md flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer whitespace-nowrap">
+                <i class="fa-solid fa-layer-group text-xs sm:text-sm"></i> <span>CEK MASSAL</span>
             </button>
 
             <!-- Button 2: Direct Batch Approve -->
-            <button type="button" onclick="submitDirectBatchApproveDW()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-md flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer whitespace-nowrap">
-                <i class="fa-solid fa-check-double"></i> SETUJUI MASSAL (APPROVE)
+            <button type="button" onclick="submitDirectBatchApproveDW()" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider shadow-md flex items-center gap-1 transition-all active:scale-95 cursor-pointer whitespace-nowrap">
+                <i class="fa-solid fa-check-double text-xs"></i> <span>SETUJUI</span>
             </button>
 
             <!-- Button 3: Uncheck All -->
-            <button type="button" onclick="unselectAllStudentsDW()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap">
-                <i class="fa-solid fa-xmark"></i> BATAL
+            <button type="button" onclick="unselectAllStudentsDW()" class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-[11px] sm:text-xs font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap" title="Batal Pilih Semua">
+                <i class="fa-solid fa-xmark text-xs"></i>
             </button>
         </div>
     </div>
@@ -670,7 +920,7 @@
             <!-- Modal Footer Actions Bar -->
             <div class="p-4 px-6 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 shrink-0">
                 <button type="button" onclick="markAllBatchDWApproved()" class="px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-2xs">
-                    <i class="fa-solid fa-check-double"></i> TANDAI SEMUA VALID (APPROVE ALL)
+                    <i class="fa-solid fa-check-double"></i> TANDAI SEMUA VALID
                 </button>
                 <div class="flex items-center gap-3">
                     <button type="button" onclick="closeBatchModalDW()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer">
@@ -824,10 +1074,10 @@
     </div>
 
     <!-- Floating Non-Blocking Container: Lihat & Pratinjau Berkas (Layar Luar Tetap Bebas Diklik) -->
-    <div id="lihatBerkasContainer" class="fixed inset-0 pointer-events-none z-[60] flex items-center justify-center p-3 sm:p-5 gap-4 sm:gap-5 overflow-x-auto" style="display: none;">
+    <div id="lihatBerkasContainer" class="fixed inset-0 pointer-events-none z-[60] flex items-center justify-center p-3 sm:p-5 gap-4 sm:gap-5 overflow-x-auto" style="display: none;" onclick="if(event.target === this && window.innerWidth < 1024) closeLihatBerkasPanel()">
         
         <!-- Wrapper Kartu Mahasiswa (Kanan-Kiri saat tanpa preview, Atas-Bawah di Kiri Ujung saat preview aktif) -->
-        <div id="wrapperDaftarMhs" class="flex flex-row items-center gap-4 shrink-0 max-h-[92vh] overflow-y-auto">
+        <div id="wrapperDaftarMhs" class="flex flex-row items-center gap-4 shrink-0 max-h-[92vh] overflow-y-auto" onclick="event.stopPropagation()">
             <!-- Kartu mahasiswa dirender dinamis di sini -->
         </div>
 
@@ -964,8 +1214,14 @@
                         row.dataset.nama || '',
                         row.dataset.judul || '',
                         row.dataset.status || '',
-                        row.dataset.stage || ''
+                        row.dataset.statusLabel || '',
+                        row.dataset.stage || '',
+                        row.dataset.stageLabel || ''
                     ].join(' ');
+                } else if (f.col === 'status') {
+                    h = (row.dataset.status || '') + ' ' + (row.dataset.statusLabel || '');
+                } else if (f.col === 'stage') {
+                    h = (row.dataset.stage || '') + ' ' + (row.dataset.stageLabel || '');
                 } else {
                     h = row.dataset[f.col] || '';
                 }
@@ -1071,17 +1327,25 @@
 
         function syncCheckAllStatus() {
             const checkAll = document.getElementById('checkAllStudents');
-            if (!checkAll) return;
+            const checkAllMobile = document.getElementById('checkAllStudentsMobile');
+            if (!checkAll && !checkAllMobile) return;
             const visibleCbs = Array.from(document.querySelectorAll('.student-cb')).filter(cb => {
                 const tr = cb.closest('.mhs-row');
                 return tr && tr.style.display !== 'none' && !cb.disabled;
             });
             const checkedCount = visibleCbs.filter(c => c.checked).length;
-            checkAll.checked = (visibleCbs.length > 0 && checkedCount === visibleCbs.length);
+            const isAllChecked = (visibleCbs.length > 0 && checkedCount === visibleCbs.length);
+            if (checkAll) checkAll.checked = isAllChecked;
+            if (checkAllMobile) checkAllMobile.checked = isAllChecked;
         }
 
         function toggleAllCheckboxes(masterCb) {
             const isChecked = masterCb ? masterCb.checked : false;
+            const checkAll = document.getElementById('checkAllStudents');
+            const checkAllMobile = document.getElementById('checkAllStudentsMobile');
+            if (checkAll) checkAll.checked = isChecked;
+            if (checkAllMobile) checkAllMobile.checked = isChecked;
+
             const studentCbs = document.querySelectorAll('.student-cb');
             studentCbs.forEach(cb => {
                 const tr = cb.closest('.mhs-row');
@@ -1122,7 +1386,9 @@
         function unselectAllStudents() {
             document.querySelectorAll('.student-cb').forEach(cb => cb.checked = false);
             const checkAll = document.getElementById('checkAllStudents');
+            const checkAllMobile = document.getElementById('checkAllStudentsMobile');
             if (checkAll) checkAll.checked = false;
+            if (checkAllMobile) checkAllMobile.checked = false;
             updateBatchBar();
         }
         window.unselectAllStudents = unselectAllStudents;
@@ -1130,7 +1396,7 @@
 
         // Global Event Delegation untuk Checkbox
         document.addEventListener('change', (e) => {
-            if (e.target && e.target.id === 'checkAllStudents') {
+            if (e.target && (e.target.id === 'checkAllStudents' || e.target.id === 'checkAllStudentsMobile')) {
                 toggleAllCheckboxes(e.target);
             } else if (e.target && e.target.classList.contains('student-cb')) {
                 syncCheckAllStatus();
@@ -1188,6 +1454,9 @@
                         const badgeStyle = (st === 'Approved') 
                             ? 'bg-emerald-100 text-emerald-700 border-emerald-300' 
                             : ((st === 'Rejected') ? 'bg-rose-100 text-rose-700 border-rose-300' : 'bg-amber-100 text-amber-700 border-amber-300');
+                        const stLabel = (st === 'Approved') ? 'Disetujui' : ((st === 'Rejected') ? 'Ditolak' : 'Menunggu');
+                        const rawStage = mhs.current_stage || 'Draft';
+                        const stageLabel = (rawStage.toLowerCase() === 'draft') ? 'Draf' : rawStage;
                         const judulShort = mhs.judul 
                             ? (mhs.judul.length > 50 ? mhs.judul.substring(0, 50) + '...' : mhs.judul)
                             : '<span class="text-slate-400 italic font-normal">Belum Mendaftar</span>';
@@ -1237,7 +1506,7 @@
                         const prodiHtml = mhs.konsentrasi ? `<span>•</span><span class="text-orange-600 font-medium">${mhs.konsentrasi}</span>` : '';
 
                         return `
-                            <tr class="hover:bg-orange-50/50 transition-all duration-150 mhs-row" data-status="${st}" data-nim="${(mhs.nim || '').toLowerCase()}" data-nama="${(mhs.nama || '').toLowerCase()}" data-judul="${(mhs.judul || '').toLowerCase()}" data-stage="${(mhs.current_stage || 'draft').toLowerCase()}">
+                            <tr class="hover:bg-orange-50/50 transition-all duration-150 mhs-row" data-status="${st}" data-status-label="${stLabel.toLowerCase()}" data-nim="${(mhs.nim || '').toLowerCase()}" data-nama="${(mhs.nama || '').toLowerCase()}" data-judul="${(mhs.judul || '').toLowerCase()}" data-stage="${rawStage.toLowerCase()}" data-stage-label="${stageLabel.toLowerCase()}">
                                 <td class="py-3 px-2 text-center whitespace-nowrap">
                                     <input type="checkbox" name="batch_select[]" value="${mhs.nim}" data-name="${mhs.nama}" ${isChecked} onchange="updateBatchBarDW()" class="student-cb w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer">
                                 </td>
@@ -1271,24 +1540,25 @@
                                     </div>
                                 </td>
                                 <td class="py-3 px-3 text-center whitespace-nowrap">
-                                    <span class="px-2.5 py-0.5 font-semibold text-[11px] rounded-full border shadow-xs inline-block ${badgeStyle}">${st}</span>
+                                    <span class="px-2.5 py-0.5 font-semibold text-[11px] rounded-full border shadow-xs inline-block ${badgeStyle}">${stLabel}</span>
                                 </td>
                                 <td class="py-3 px-3 text-center whitespace-nowrap">
-                                    <span class="px-2.5 py-0.5 font-semibold text-[11px] rounded-full bg-slate-100 text-slate-700 border border-slate-200 shadow-xs inline-block">${mhs.current_stage || 'Draft'}</span>
+                                    <span class="px-2.5 py-0.5 font-semibold text-[11px] rounded-full bg-slate-100 text-slate-700 border border-slate-200 shadow-xs inline-block">${stageLabel}</span>
                                 </td>
                                 <td class="py-3 px-3 pr-4 text-right whitespace-nowrap">
                                     <div class="inline-flex items-center gap-1.5">
                                         <a href="${mhs.detail_url}" 
                                            class="btn-3d-orange inline-flex items-center gap-1 text-white font-bold px-2.5 py-1.5 rounded-xl text-xs"
-                                           title="Detail & Approval Mahasiswa">
+                                           title="Detail & Persetujuan Mahasiswa">
                                             <i class="bi bi-search text-xs"></i> Detail
                                         </a>
                                         <button type="button" 
                                                 onclick="toggleLihatBerkasPanel('${mhs.nim}')" 
                                                 id="btn_lihat_berkas_${mhs.nim}"
-                                                class="inline-flex items-center justify-center w-7 h-7 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-700 border border-orange-200 font-bold text-xs transition cursor-pointer shadow-2xs"
-                                                title="Lihat Berkas">
-                                            <i class="fa-solid fa-folder-open text-xs"></i>
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-orange-50 to-amber-50 hover:from-orange-500 hover:to-amber-500 text-orange-700 hover:text-white border border-orange-300 hover:border-orange-500 font-bold text-xs transition-all duration-200 cursor-pointer shadow-2xs hover:shadow-xs active:scale-95 group"
+                                                title="Lihat Berkas Mahasiswa">
+                                            <i class="fa-solid fa-folder-open text-xs text-orange-500 group-hover:text-white transition-colors"></i>
+                                            <span>Lihat Berkas</span>
                                         </button>
                                     </div>
                                 </td>
@@ -2706,23 +2976,37 @@
 
     function toggleLihatBerkasPanel(nim) {
         if (!nim) return;
+        nim = String(nim).trim();
 
-        // Jika mahasiswa sudah aktif, toggle off (tutup)
-        const idx = window.activeLihatBerkasNims.indexOf(nim);
-        if (idx > -1) {
-            removeStudentFromLihatBerkas(nim);
-            return;
-        }
+        if (!window.activeLihatBerkasNims) window.activeLihatBerkasNims = [];
 
-        // Jika belum aktif, tambahkan (maksimal 4 mahasiswa)
-        if (window.activeLihatBerkasNims.length >= 4) {
-            window.activeLihatBerkasNims.shift();
-            window.activeLihatBerkasNims.push(nim);
-            if (typeof showDWToast === 'function') {
-                showDWToast(`Maksimal 4 mahasiswa. Menampilkan 4 mahasiswa terbaru.`, true);
+        // ON MOBILE (< 1024px): Buka 1 mahasiswa saja per saat agar tidak tumpang tindih / terpotong di layar HP
+        if (window.innerWidth < 1024) {
+            const idx = window.activeLihatBerkasNims.indexOf(nim);
+            if (idx > -1) {
+                closeLihatBerkasPanel();
+                return;
             }
+            window.activeLihatBerkasNims = [nim];
+            window.activePreviews = [];
         } else {
-            window.activeLihatBerkasNims.push(nim);
+            // DESKTOP:
+            const idx = window.activeLihatBerkasNims.indexOf(nim);
+            if (idx > -1) {
+                removeStudentFromLihatBerkas(nim);
+                return;
+            }
+
+            // Jika belum aktif, tambahkan (maksimal 4 mahasiswa)
+            if (window.activeLihatBerkasNims.length >= 4) {
+                window.activeLihatBerkasNims.shift();
+                window.activeLihatBerkasNims.push(nim);
+                if (typeof showDWToast === 'function') {
+                    showDWToast(`Maksimal 4 mahasiswa. Menampilkan 4 mahasiswa terbaru.`, true);
+                }
+            } else {
+                window.activeLihatBerkasNims.push(nim);
+            }
         }
 
         // Pastikan detail data mahasiswa sudah ada di window.mhsDataMap
@@ -2761,6 +3045,13 @@
             container.style.display = 'flex';
             container.classList.remove('hidden');
             container.classList.add('flex');
+            if (window.innerWidth < 1024) {
+                container.classList.add('bg-slate-900/60', 'backdrop-blur-xs', 'pointer-events-auto');
+                container.classList.remove('pointer-events-none');
+            } else {
+                container.classList.remove('bg-slate-900/60', 'backdrop-blur-xs', 'pointer-events-auto');
+                container.classList.add('pointer-events-none');
+            }
         }
     }
 
@@ -2769,9 +3060,14 @@
         const wrapper = document.getElementById('wrapperDaftarMhs');
         if (!container || !wrapper) return;
 
+        const isMobile = window.innerWidth < 1024;
         const isPreviewActive = window.activePreviews && window.activePreviews.length > 0;
 
-        if (isPreviewActive) {
+        if (isMobile) {
+            container.classList.remove('justify-start');
+            container.classList.add('justify-center');
+            wrapper.className = 'flex flex-col items-center justify-center w-full max-w-[94vw] sm:max-w-md max-h-[90vh] overflow-y-auto shrink-0';
+        } else if (isPreviewActive) {
             // Mode Preview: Geser ke KIRI UJUNG dan susun ATAS-BAWAH (flex-col)
             container.classList.remove('justify-center');
             container.classList.add('justify-start');
@@ -2835,8 +3131,8 @@
         const mhs = window.mhsDataMap ? window.mhsDataMap[nim] : null;
         if (!mhs) return false;
         const stage = mhs.current_stage || '';
-        const stWali = mhs.status_approval_wali || '';
-        return (stWali === 'Approved' || ['Admin Layanan', 'Koordinator TA', 'Ketua KK', 'Selesai Approval'].includes(stage));
+        // Hanya kunci jika berkas sudah diproses lebih lanjut oleh Koordinator TA ke atas
+        return ['Koordinator TA', 'Ketua KK', 'Selesai Approval'].includes(stage);
     }
 
     function getMhsValidDocCount(nim, docList) {
@@ -2855,7 +3151,7 @@
         } else if (status === 'Rejected') {
             return `<span class="px-2 py-1 rounded-lg bg-rose-100 text-rose-800 border border-rose-300 text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-circle-exclamation text-rose-600"></i> Revisi</span>`;
         } else {
-            return `<span class="px-2 py-1 rounded-lg bg-slate-100 text-slate-600 border border-slate-300 text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-clock text-slate-400"></i> Pending</span>`;
+            return `<span class="px-2 py-1 rounded-lg bg-slate-100 text-slate-600 border border-slate-300 text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-clock text-slate-400"></i> Menunggu</span>`;
         }
     }
 
@@ -2868,9 +3164,12 @@
             return;
         }
 
+        const isMobile = window.innerWidth < 1024;
         const totalActive = window.activeLihatBerkasNims.length;
         const isPreviewActive = window.activePreviews && window.activePreviews.length > 0;
-        const cardWidthClass = isPreviewActive ? 'w-full' : (totalActive > 1 ? 'w-[350px] sm:w-[370px]' : 'w-[390px] sm:w-[410px]');
+        const cardWidthClass = isMobile 
+            ? 'w-full max-w-[94vw] sm:max-w-md' 
+            : (isPreviewActive ? 'w-full' : (totalActive > 1 ? 'w-[350px] sm:w-[370px]' : 'w-[390px] sm:w-[410px]'));
 
         const docList = getDocList();
 
@@ -2911,7 +3210,7 @@
                 } else if (status === 'Rejected') {
                     statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Revisi</span>';
                 } else {
-                    statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-slate-100 text-slate-500 border border-slate-200">Pending</span>';
+                    statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-slate-100 text-slate-500 border border-slate-200">Menunggu</span>';
                 }
 
                 const activeCardBorder = isCurrentlyPreviewed 
@@ -2924,9 +3223,9 @@
                     : 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200 shadow-2xs';
 
                 return `
-                    <div class="p-2 px-2.5 rounded-xl border shadow-2xs hover:shadow-xs transition-all flex items-center justify-between gap-2 ${activeCardBorder}">
+                    <div class="p-2.5 px-3 rounded-xl border shadow-2xs hover:shadow-xs transition-all flex items-center justify-between gap-2 ${activeCardBorder}">
                         <div class="min-w-0 flex-1">
-                            <div class="flex items-center gap-1.5">
+                            <div class="flex items-center gap-1.5 flex-wrap">
                                 <i class="${doc.icon} text-orange-500 text-xs shrink-0"></i>
                                 <span class="font-bold text-slate-800 text-[11px] truncate">${doc.title}</span>
                                 <span id="cardDocBadge_${nim}_${doc.key}">${statusBadge}</span>
@@ -2935,49 +3234,74 @@
                                 <i class="fa-solid fa-file-pdf text-rose-500 mr-1 text-[9px]"></i>${rawFilename}
                             </p>
                         </div>
-                        <div class="flex items-center gap-1 shrink-0">
-                            <button type="button" 
-                                    onclick="previewBerkasItem('${nim}', '${doc.key}')" 
-                                    class="w-7 h-7 rounded-lg border text-xs font-bold transition flex items-center justify-center cursor-pointer active:scale-95 ${previewBtnStyle}" 
-                                    title="${isCurrentlyPreviewed ? 'Tutup Pratinjau Ini' : 'Pratinjau Berkas'}">
-                                <i class="fa-solid fa-eye text-xs"></i>
-                            </button>
-                            <a href="${pdfUrl}" 
-                               download="${rawFilename}" 
-                               target="_blank" 
-                               class="w-7 h-7 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold transition flex items-center justify-center cursor-pointer shadow-2xs active:scale-95" 
-                               title="Unduh Berkas">
-                                <i class="fa-solid fa-download text-xs"></i>
-                            </a>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <!-- Tombol Lihat / Mata -->
+                            <div class="flex flex-col items-center group/btn">
+                                <button type="button" 
+                                        onclick="previewBerkasItem('${nim}', '${doc.key}')" 
+                                        class="w-7 h-7 rounded-lg border text-xs font-bold transition flex items-center justify-center cursor-pointer active:scale-95 ${previewBtnStyle}" 
+                                        title="${isCurrentlyPreviewed ? 'Tutup Pratinjau Ini' : 'Pratinjau Berkas'}">
+                                    <i class="fa-solid fa-eye text-xs"></i>
+                                </button>
+                                <span onclick="previewBerkasItem('${nim}', '${doc.key}')" class="text-[9px] font-bold ${isCurrentlyPreviewed ? 'text-orange-600' : 'text-slate-500 group-hover/btn:text-orange-600'} mt-0.5 leading-tight select-none cursor-pointer transition-colors">
+                                    ${isCurrentlyPreviewed ? 'Tutup' : 'Lihat'}
+                                </span>
+                            </div>
+
+                            <!-- Tombol Unduh -->
+                            <div class="flex flex-col items-center group/btn">
+                                <a href="${pdfUrl}" 
+                                   download="${rawFilename}" 
+                                   target="_blank" 
+                                   class="w-7 h-7 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold transition flex items-center justify-center cursor-pointer shadow-2xs active:scale-95" 
+                                   title="Unduh Berkas">
+                                    <i class="fa-solid fa-download text-xs"></i>
+                                </a>
+                                <a href="${pdfUrl}" 
+                                   download="${rawFilename}" 
+                                   target="_blank" 
+                                   class="text-[9px] font-bold text-slate-500 group-hover/btn:text-slate-800 mt-0.5 leading-tight select-none cursor-pointer transition-colors">
+                                    Unduh
+                                </a>
+                            </div>
                         </div>
                     </div>
                 `;
             }).join('');
 
             return `
-                <div id="cardMhs_${nim}" class="student-card-item pointer-events-auto ${cardWidthClass} bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200/90 overflow-hidden flex flex-col shrink-0">
+                <div id="cardMhs_${nim}" class="student-card-item pointer-events-auto ${cardWidthClass} bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden flex flex-col shrink-0">
                     <!-- Header -->
-                    <div class="p-2.5 px-3.5 bg-slate-900 text-white flex items-center justify-between gap-2 shrink-0 border-b border-slate-800">
-                        <div class="flex items-center gap-2 min-w-0">
+                    <div class="p-3 px-4 bg-slate-900 text-white flex items-center justify-between gap-2 shrink-0 border-b border-slate-800">
+                        <div class="flex items-center gap-2.5 min-w-0">
                             <div class="w-6 h-6 rounded-lg bg-orange-600/30 border border-orange-500/50 text-orange-400 flex items-center justify-center font-bold text-[11px] shrink-0 shadow-2xs">
                                 ${cardNum}
                             </div>
                             <div class="min-w-0 flex items-center gap-2">
-                                <h4 class="text-xs font-bold text-white truncate max-w-[140px] sm:max-w-[170px]">${fullName}</h4>
-                                <span class="px-1.5 py-0.2 rounded bg-white/10 text-orange-300 font-mono text-[10px] font-bold">${nim}</span>
+                                <h4 class="text-xs font-bold text-white truncate max-w-[150px] sm:max-w-[180px]">${fullName}</h4>
+                                <span class="px-2 py-0.5 rounded bg-white/10 text-orange-300 font-mono text-[10px] font-bold">${nim}</span>
                             </div>
                         </div>
                         <div class="flex items-center gap-1.5 shrink-0">
-                            <span class="px-1.5 py-0.5 text-[9px] font-bold bg-white/10 text-slate-300 rounded uppercase tracking-wider hidden sm:inline-block">Daftar Berkas</span>
-                            <button type="button" onclick="removeStudentFromLihatBerkas('${nim}')" class="w-6 h-6 rounded-md bg-white/10 hover:bg-rose-600/80 text-slate-300 hover:text-white flex items-center justify-center text-[11px] font-bold transition-colors cursor-pointer" title="Tutup Mahasiswa Ini">
+                            <button type="button" onclick="removeStudentFromLihatBerkas('${nim}')" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-rose-600 text-slate-300 hover:text-white flex items-center justify-center text-xs font-bold transition-colors cursor-pointer" title="Tutup">
                                 <i class="fa-solid fa-xmark"></i>
                             </button>
                         </div>
                     </div>
 
                     <!-- List of Berkas -->
-                    <div class="p-2.5 space-y-1.5 bg-slate-50/50 overflow-y-auto max-h-[50vh] sm:max-h-[55vh]">
+                    <div class="p-3 space-y-2 bg-slate-50/50 overflow-y-auto max-h-[55vh] sm:max-h-[60vh]">
                         ${itemsHtml}
+                    </div>
+
+                    <!-- Footer Info & Close for Mobile -->
+                    <div class="p-2.5 px-4 bg-white border-t border-slate-200 flex items-center justify-between gap-2 shrink-0">
+                        <span class="text-[11px] text-slate-500 font-medium">
+                            <strong class="text-slate-800">${validCount}/${totalDocs}</strong> Berkas Disetujui
+                        </span>
+                        <button type="button" onclick="removeStudentFromLihatBerkas('${nim}')" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer">
+                            Tutup
+                        </button>
                     </div>
                 </div>
             `;
@@ -2987,9 +3311,21 @@
     }
 
     function previewBerkasItem(nim, docKey) {
-        const mhs = window.mhsDataMap[nim];
+        const mhs = window.mhsDataMap ? window.mhsDataMap[nim] : null;
         if (!mhs) return;
 
+        // ON MOBILE (< 1024px): Buka langsung modal pratinjau PDF layar penuh (pdfModalDW) agar rapi
+        if (window.innerWidth < 1024) {
+            const docList = getDocList();
+            const docInfo = docList.find(d => d.key === docKey) || { title: docKey };
+            const rawFilename = mhs[docInfo.fileField] || `${docKey}_${nim}.pdf`;
+            const pdfUrl = resolveDocPdfUrl(rawFilename);
+            const fullName = (mhs.nama_depan ? (mhs.nama_depan + ' ' + (mhs.nama_belakang || '')) : (mhs.nama || 'Mahasiswa ' + nim)).trim();
+            openPdfPreviewDW(pdfUrl, docInfo.title || docKey, `${fullName} (${nim}) • ${rawFilename}`);
+            return;
+        }
+
+        // DESKTOP:
         // Cek apakah berkas ini sudah sedang dibuka di salah satu slot pratinjau
         const existingIdx = window.activePreviews.findIndex(p => p.nim === nim && p.docKey === docKey);
         if (existingIdx > -1) {
@@ -3703,11 +4039,13 @@
             const nim = String(btn.id.replace('btn_lihat_berkas_', '')).trim();
             const isActive = activeNims.includes(nim);
             if (isActive) {
-                btn.className = 'inline-flex items-center justify-center w-8 h-8 rounded-xl bg-orange-600 text-white font-bold text-xs transition cursor-pointer shadow-md ring-2 ring-orange-400 scale-105';
-                btn.title = 'Sedang Melihat Berkas';
+                btn.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-600 text-white font-bold text-xs transition-all duration-200 cursor-pointer shadow-md ring-2 ring-orange-400 scale-[1.02]';
+                btn.title = 'Klik untuk menutup berkas';
+                btn.innerHTML = '<i class="fa-solid fa-folder-open text-xs text-white"></i> <span>Tutup Berkas</span>';
             } else {
-                btn.className = 'inline-flex items-center justify-center w-8 h-8 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-700 border border-orange-200 font-bold text-xs transition cursor-pointer shadow-2xs';
-                btn.title = 'Lihat Berkas';
+                btn.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-orange-50 to-amber-50 hover:from-orange-500 hover:to-amber-500 text-orange-700 hover:text-white border border-orange-300 hover:border-orange-500 font-bold text-xs transition-all duration-200 cursor-pointer shadow-2xs hover:shadow-xs active:scale-95 group';
+                btn.title = 'Lihat Berkas Mahasiswa';
+                btn.innerHTML = '<i class="fa-solid fa-folder-open text-xs text-orange-500 group-hover:text-white transition-colors"></i> <span>Lihat Berkas</span>';
             }
         });
     }

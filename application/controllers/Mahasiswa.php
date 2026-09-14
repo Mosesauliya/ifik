@@ -642,6 +642,23 @@ class Mahasiswa extends CI_Controller {
         $data['pembimbing_1'] = !empty($pembimbing_penguji['pembimbing_1']) ? $pembimbing_penguji['pembimbing_1'] : '';
         $data['pembimbing_2'] = !empty($pembimbing_penguji['pembimbing_2']) ? $pembimbing_penguji['pembimbing_2'] : '';
         $data['penguji_ta'] = !empty($pembimbing_penguji['penguji_1']) ? $pembimbing_penguji['penguji_1'] : '';
+        $data['penguji_1'] = !empty($pembimbing_penguji['penguji_1']) ? $pembimbing_penguji['penguji_1'] : '';
+        $data['penguji_2'] = !empty($pembimbing_penguji['penguji_2']) ? $pembimbing_penguji['penguji_2'] : '';
+
+        // Parsing data rincian rubrik penilaian sidang (jika ada dan valid JSON)
+        $detail_penilaian = null;
+        if (!empty($data['pendaftaran']['detail_penilaian_sidang'])) {
+            $raw_detail = $data['pendaftaran']['detail_penilaian_sidang'];
+            if (is_array($raw_detail)) {
+                $detail_penilaian = $raw_detail;
+            } elseif (is_string($raw_detail)) {
+                $dec = json_decode($raw_detail, true);
+                if (is_array($dec)) {
+                    $detail_penilaian = $dec;
+                }
+            }
+        }
+        $data['detail_penilaian'] = $detail_penilaian;
 
         // Cek apakah minimal pembimbing 1 dan 2 sudah di-assign
         $data['is_pembimbing_assigned'] = (!empty($data['pembimbing_1']) && !empty($data['pembimbing_2']));
@@ -1673,6 +1690,270 @@ class Mahasiswa extends CI_Controller {
         }
         echo json_encode(['status' => 'error', 'message' => 'ID field tidak ditemukan']);
         exit;
+    }
+
+    // =========================================================================
+    // LAYANAN TICKETING MAHASISWA (TERHUBUNG OTOMATIS KE PENGATURAN DINAMIS)
+    // =========================================================================
+
+    /**
+     * Helper: Mendapatkan mapping Unit dan Kategori dinamis dari database (dikelola oleh Laboran)
+     */
+    private function _get_dynamic_unit_kategori_map() {
+        $units = $this->db
+            ->where('is_active', 1)
+            ->order_by('sort_order', 'ASC')
+            ->order_by('id', 'ASC')
+            ->get('ticketing_units')
+            ->result_array();
+
+        $map = [];
+        foreach ($units as $u) {
+            $categories = $this->db
+                ->where('unit_id', $u['id'])
+                ->where('is_active', 1)
+                ->order_by("(CASE WHEN nama_kategori LIKE 'Lain-lain%' OR nama_kategori LIKE 'Lainnya%' THEN 1 ELSE 0 END)", 'ASC', FALSE)
+                ->order_by('sort_order', 'ASC')
+                ->order_by('id', 'ASC')
+                ->get('ticketing_kategori')
+                ->result_array();
+
+            $catList = array_column($categories, 'nama_kategori');
+            if (empty($catList)) {
+                $catList = ['Lain-lain (' . $u['nama_unit'] . ')'];
+            }
+            $map[$u['nama_unit']] = $catList;
+        }
+        return $map;
+    }
+
+    /**
+     * Formulir Buat Tiket Kendala Baru untuk Mahasiswa
+     */
+    public function ticketing_input() {
+        $nim = $this->_get_current_nim();
+        $mhs = $this->Mahasiswa_model->get_mahasiswa($nim);
+        
+        $userId = $this->session->userdata('user_id');
+        $nama = !empty($mhs['nama_depan']) ? trim($mhs['nama_depan'] . ' ' . ($mhs['nama_belakang'] ?? '')) : ($this->session->userdata('name') ?: 'Mahasiswa');
+        $email = $this->session->userdata('email');
+
+        $unit_kategori_map = $this->_get_dynamic_unit_kategori_map();
+
+        // Load active dynamic custom fields for ticketing jika ada
+        $custom_fields = $this->db
+            ->where('is_active', 1)
+            ->order_by('sort_order', 'ASC')
+            ->order_by('id', 'ASC')
+            ->get('laboran_ticketing_fields')
+            ->result_array();
+
+        $data = [
+            'title'             => 'Buat Tiket Kendala Mahasiswa — IFIK Portal',
+            'active_menu'       => 'ticketing_input',
+            'user'              => [
+                'id'    => $userId,
+                'nim'   => $nim,
+                'nama'  => $nama,
+                'email' => $email
+            ],
+            'mahasiswa'         => $mhs,
+            'custom_fields'     => $custom_fields,
+            'unit_kategori_map' => $unit_kategori_map,
+            'prioritas_list'    => [
+                'Rendah'  => ['label' => 'Rendah', 'color' => 'slate', 'desc' => 'Pertanyaan umum / kendala minor'],
+                'Sedang'  => ['label' => 'Sedang', 'color' => 'blue', 'desc' => 'Kendala kerja rutin tanpa hambatan fatal'],
+                'Tinggi'  => ['label' => 'Tinggi', 'color' => 'amber', 'desc' => 'Proses tertunda, butuh respon cepat'],
+                'Darurat' => ['label' => 'Darurat', 'color' => 'rose', 'desc' => 'Sistem kritis / jadwal mendesak hari ini']
+            ],
+            'form_action'       => site_url('mahasiswa/ticketing/simpan')
+        ];
+
+        $this->load->view('mahasiswa/ticketing_input', $data);
+    }
+
+    /**
+     * Proses Simpan Tiket Kendala yang diajukan oleh Mahasiswa
+     */
+    public function ticketing_simpan() {
+        $nim = $this->_get_current_nim();
+        $mhs = $this->Mahasiswa_model->get_mahasiswa($nim);
+
+        $userId      = $this->session->userdata('user_id');
+        $namaDefault = !empty($mhs['nama_depan']) ? trim($mhs['nama_depan'] . ' ' . ($mhs['nama_belakang'] ?? '')) : ($this->session->userdata('name') ?: 'Mahasiswa');
+        $namaLengkap = trim($this->input->post('nama_lengkap', true)) ?: $namaDefault;
+
+        $unit_tujuan      = trim($this->input->post('unit_tujuan', true));
+        $kategori         = trim($this->input->post('kategori', true));
+        $kategori_lainnya = trim($this->input->post('kategori_lainnya', true));
+        $prioritas        = trim($this->input->post('prioritas', true));
+        $subjek           = trim($this->input->post('subjek', true));
+        $deskripsi        = $this->input->post('deskripsi'); // Rich text TinyMCE
+
+        $textOnly = trim(strip_tags($deskripsi));
+        if (empty($namaLengkap) || empty($unit_tujuan) || empty($kategori) || empty($subjek) || empty($textOnly)) {
+            $this->session->set_flashdata('error', 'Semua field bertanda bintang (*) wajib diisi.');
+            redirect('mahasiswa/ticketing/input');
+            return;
+        }
+
+        // Anti-Duplicate check (mencegah submit ganda akibat double-click)
+        $this->db->where('nidn', $nim);
+        $this->db->where('subjek', $subjek);
+        $this->db->where('unit_tujuan', $unit_tujuan);
+        $this->db->where('created_at >=', date('Y-m-d H:i:s', strtotime('-5 seconds')));
+        $recentTicket = $this->db->get('dosen_ticketing')->row();
+
+        if ($recentTicket) {
+            $this->session->set_flashdata('success', "Tiket Anda berhasil diajukan dengan Kode: <b>{$recentTicket->kode_tiket}</b> ke unit <b>" . htmlspecialchars($unit_tujuan) . "</b>.");
+            redirect('mahasiswa/ticketing/riwayat');
+            return;
+        }
+
+        // Cek jika kategori berupa 'Lainnya' / 'Lain-lain'
+        if (preg_match('/lain/i', $kategori)) {
+            if (!empty($kategori_lainnya)) {
+                $kategori = $kategori . ': ' . $kategori_lainnya;
+            } else {
+                $this->session->set_flashdata('error', 'Silakan tulis rincian topik kendala pada input "Detail Kategori Lainnya".');
+                redirect('mahasiswa/ticketing/input');
+                return;
+            }
+        }
+
+        // Upload lampiran jika ada
+        $lampiran_name = null;
+        if (!empty($_FILES['lampiran']['name'])) {
+            $uploadPath = FCPATH . 'uploads/ticketing/';
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+
+            $config['upload_path']   = $uploadPath;
+            $config['allowed_types'] = 'jpg|jpeg|png|pdf|doc|docx|zip|rar';
+            $config['max_size']      = 5120; // 5MB
+            $config['encrypt_name']  = TRUE;
+
+            $this->load->library('upload', $config);
+            if ($this->upload->do_upload('lampiran')) {
+                $uploadData = $this->upload->data();
+                $lampiran_name = $uploadData['file_name'];
+            } else {
+                $uploadError = $this->upload->display_errors('', '');
+                $this->session->set_flashdata('error', 'Gagal mengunggah lampiran: ' . $uploadError);
+                redirect('mahasiswa/ticketing/input');
+                return;
+            }
+        }
+
+        $this->load->model('DosenTicketing_model');
+        $kodeTiket = $this->DosenTicketing_model->generate_kode();
+
+        $ticketData = [
+            'kode_tiket'  => $kodeTiket,
+            'id_user'     => $userId,
+            'nama_dosen'  => $namaLengkap, // Disimpan di field nama_dosen agar kompatibel dengan tabel utama
+            'nidn'        => $nim,         // Disimpan di field nidn agar query get_tickets($user_id, $nim) berfungsi optimal
+            'unit_tujuan' => $unit_tujuan,
+            'kategori'    => $kategori,
+            'prioritas'   => in_array($prioritas, ['Rendah', 'Sedang', 'Tinggi', 'Darurat']) ? $prioritas : 'Sedang',
+            'subjek'      => $subjek,
+            'deskripsi'   => $deskripsi,
+            'lampiran'    => $lampiran_name,
+            'status'      => 'Menunggu'
+        ];
+
+        $insertedId = $this->DosenTicketing_model->insert($ticketData);
+
+        if ($insertedId) {
+            $this->session->set_flashdata('success', "Tiket kendala berhasil diajukan dengan Kode: <b>{$kodeTiket}</b> ke unit <b>" . htmlspecialchars($unit_tujuan) . "</b>. Mohon pantau status respon secara berkala.");
+            redirect('mahasiswa/ticketing/riwayat');
+        } else {
+            $this->session->set_flashdata('error', 'Terjadi kesalahan sistem saat menyimpan tiket. Silakan coba beberapa saat lagi.');
+            redirect('mahasiswa/ticketing/input');
+        }
+    }
+
+    /**
+     * Riwayat Tiket Kendala Mahasiswa
+     */
+    public function ticketing_riwayat() {
+        $nim = $this->_get_current_nim();
+        $userId = $this->session->userdata('user_id');
+
+        $this->load->model('DosenTicketing_model');
+        $tickets = $this->DosenTicketing_model->get_tickets($userId, $nim);
+        $stats   = $this->DosenTicketing_model->get_stats($userId, $nim);
+
+        $data = [
+            'title'       => 'Riwayat Tiket Kendala Saya — Mahasiswa IFIK',
+            'active_menu' => 'ticketing_riwayat',
+            'tickets'     => $tickets,
+            'stats'       => $stats,
+            'nim'         => $nim
+        ];
+
+        $this->load->view('mahasiswa/ticketing_riwayat', $data);
+    }
+
+    /**
+     * AJAX Endpoint: Detail Tiket untuk Riwayat Mahasiswa
+     */
+    public function ticketing_detail($id_or_kode) {
+        $this->load->model('DosenTicketing_model');
+        $ticket = $this->DosenTicketing_model->get_by_id($id_or_kode);
+
+        if (!$ticket) {
+            return $this->output
+                ->set_content_type('application/json')
+                ->set_status_header(404)
+                ->set_output(json_encode([
+                    'status'  => 'error',
+                    'message' => 'Tiket tidak ditemukan.'
+                ]));
+        }
+
+        $userId = $this->session->userdata('user_id');
+        $nim   = $this->_get_current_nim();
+        $roleId = (int)$this->session->userdata('role_id');
+
+        // Access check: Superadmin (1) or Owner
+        if ($roleId !== 1 && $ticket->id_user != $userId && $ticket->nidn != $nim) {
+            return $this->output
+                ->set_content_type('application/json')
+                ->set_status_header(403)
+                ->set_output(json_encode([
+                    'status'  => 'error',
+                    'message' => 'Anda tidak memiliki hak akses untuk melihat tiket ini.'
+                ]));
+        }
+
+        $isHtml = (strpos($ticket->deskripsi, '<') !== false && strpos($ticket->deskripsi, '>') !== false);
+        $deskripsiFormatted = $isHtml ? $ticket->deskripsi : nl2br(htmlspecialchars($ticket->deskripsi));
+
+        return $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode([
+                'status'  => 'success',
+                'data'    => [
+                    'id'            => $ticket->id,
+                    'kode_tiket'    => $ticket->kode_tiket,
+                    'nama_dosen'    => $ticket->nama_dosen,
+                    'nidn'          => $ticket->nidn,
+                    'unit_tujuan'   => $ticket->unit_tujuan ?: 'Layanan IFIK',
+                    'kategori'      => $ticket->kategori,
+                    'prioritas'     => $ticket->prioritas,
+                    'subjek'        => $ticket->subjek,
+                    'deskripsi'     => $deskripsiFormatted,
+                    'lampiran'      => $ticket->lampiran,
+                    'lampiran_url'  => $ticket->lampiran ? base_url('uploads/ticketing/' . $ticket->lampiran) : null,
+                    'status'        => $ticket->status,
+                    'tanggapan'     => $ticket->tanggapan ? nl2br(htmlspecialchars($ticket->tanggapan)) : null,
+                    'tgl_tanggapan' => $ticket->tgl_tanggapan ? date('d M Y H:i', strtotime($ticket->tgl_tanggapan)) : null,
+                    'created_at'    => date('d M Y H:i', strtotime($ticket->created_at)),
+                    'updated_at'    => date('d M Y H:i', strtotime($ticket->updated_at))
+                ]
+            ]));
     }
 }
 

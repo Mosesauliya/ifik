@@ -5,6 +5,10 @@ class Dashboard extends CI_Controller {
 
 	public function index()
 	{
+        // Cegah Chrome meng-cache halaman landing page saat status login berubah
+        $this->output->set_header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        $this->output->set_header('Pragma: no-cache');
+
         // Load the URL helper if it's not loaded globally, since we need base_url()
         $this->load->helper('url');
         $this->load->model('Booking_model');

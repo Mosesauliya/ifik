@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $title ?? 'Buat Tiket Kendala Baru — Panel Laboran'; ?> - IFIK</title>
+    <title><?= $title ?? 'Buat Tiket Kendala — Mahasiswa IFIK'; ?> - IFIK</title>
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -57,7 +57,7 @@
 </head>
 <body class="bg-gradient-to-br from-slate-50 via-orange-50/20 to-slate-100 min-h-screen text-slate-800 antialiased">
 
-    <!-- Include Curved Sidebar (Panel Laboran) -->
+    <!-- Include Curved Sidebar (Panel Mahasiswa) -->
     <?php $this->load->view('components/curved_sidebar'); ?>
 
     <!-- Main Content -->
@@ -66,7 +66,7 @@
         <!-- Header & Breadcrumb -->
         <div class="mb-8">
             <div class="flex items-center gap-2 text-xs font-semibold text-slate-400 mb-2">
-                <a href="<?= site_url('laboran') ?>" class="hover:text-orange-600 transition-colors">Panel Laboran</a>
+                <a href="<?= site_url('mahasiswa') ?>" class="hover:text-orange-600 transition-colors">Portal Mahasiswa</a>
                 <i class="bi bi-chevron-right text-[10px]"></i>
                 <span class="text-slate-600">Layanan Ticketing</span>
                 <i class="bi bi-chevron-right text-[10px]"></i>
@@ -79,14 +79,14 @@
                         <span class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-orange-600 to-amber-500 text-white flex items-center justify-center shadow-lg shadow-orange-500/25">
                             <i class="bi bi-ticket-detailed-fill text-xl"></i>
                         </span>
-                        Buat Tiket Kendala Laboran
+                        Buat Tiket Kendala Mahasiswa
                     </h1>
                     <p class="text-sm text-slate-500 mt-1.5 max-w-2xl">
-                        Sampaikan kendala fasilitas lab, kebutuhan pengadaan, izin perbaikan, atau permohonan ke unit kerja terkait.
+                        Sampaikan kendala akademik, fasilitas laboratorium, permohonan ke LAA, atau pengajuan bantuan ke unit kerja terkait.
                     </p>
                 </div>
 
-                <a href="<?= site_url('laboran/ticketing/riwayat') ?>" 
+                <a href="<?= site_url('mahasiswa/ticketing/riwayat') ?>" 
                    class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:text-orange-600 hover:border-orange-200 hover:bg-orange-50/50 text-sm font-bold shadow-xs transition-all">
                     <i class="bi bi-clock-history text-base"></i>
                     <span>Riwayat Tiket Saya</span>
@@ -116,13 +116,15 @@
             <div class="px-6 sm:px-8 py-5 border-b border-slate-100 bg-gradient-to-r from-orange-50/40 via-amber-50/20 to-transparent flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center font-bold">
-                        <i class="bi bi-person-badge"></i>
+                        <i class="bi bi-mortarboard-fill"></i>
                     </div>
                     <div>
                         <div class="text-xs font-semibold text-slate-400">Akun Pelapor:</div>
                         <div class="text-sm font-bold text-slate-800">
-                            <?= htmlspecialchars($user['nama'] ?: 'Laboran'); ?> 
-                            <span class="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200 ml-1.5">Panel Laboran</span>
+                            <?= htmlspecialchars($user['nama'] ?: 'Mahasiswa'); ?> 
+                            <span class="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 ml-1.5">
+                                NIM: <?= htmlspecialchars($user['nim'] ?: '-'); ?>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -132,7 +134,7 @@
             </div>
 
             <!-- Form -->
-            <form id="ticketingForm" action="<?= site_url('laboran/ticketing/simpan') ?>" method="POST" enctype="multipart/form-data" class="p-6 sm:p-8 space-y-6">
+            <form id="ticketingForm" action="<?= site_url('mahasiswa/ticketing/simpan') ?>" method="POST" enctype="multipart/form-data" class="p-6 sm:p-8 space-y-6">
                 
                 <!-- 1. Nama Lengkap -->
                 <div>
@@ -144,14 +146,14 @@
                             <i class="bi bi-person-fill text-base"></i>
                         </span>
                         <input type="text" id="nama_lengkap" name="nama_lengkap" required
-                               value="<?= htmlspecialchars($user['nama'] ?: 'Laboran'); ?>"
-                               placeholder="Masukkan nama lengkap Anda..."
+                               value="<?= htmlspecialchars($user['nama'] ?: ''); ?>"
+                               placeholder="Masukkan nama lengkap..."
                                class="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 text-sm font-semibold text-slate-800 transition-all outline-hidden">
                     </div>
-                    <p class="text-xs text-slate-400 mt-1.5">Nama petugas laboran yang mengajukan tiket kendala ini.</p>
+                    <p class="text-xs text-slate-400 mt-1.5">Nama mahasiswa yang mengajukan tiket kendala ini.</p>
                 </div>
 
-                <!-- 2. Unit yang Dituju (Dropdown) -->
+                <!-- 2. Unit yang Dituju (Dropdown Dinamis) -->
                 <div>
                     <label for="unit_tujuan" class="block text-sm font-bold text-slate-700 mb-2">
                         2. Unit yang Dituju <span class="text-rose-500">*</span>
@@ -169,10 +171,10 @@
                         </select>
                         <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
                     </div>
-                    <p class="text-xs text-slate-400 mt-1.5">Pilih unit kerja atau departemen tujuan kendala (contoh: LAA, IT Support, Koor TA).</p>
+                    <p class="text-xs text-slate-400 mt-1.5">Pilih unit kerja tujuan kendala (misal: Layanan Akademik / LAA, Laboratorium, Sarpras, IT Support).</p>
                 </div>
 
-                <!-- 3. Kategori Kendala (Dropdown Dinamis) -->
+                <!-- 3. Kategori Kendala (Dropdown Dinamis Berdasarkan Unit) -->
                 <div>
                     <label for="kategori" class="block text-sm font-bold text-slate-700 mb-2">
                         3. Kategori Kendala <span class="text-rose-500">*</span>
@@ -208,7 +210,7 @@
                     </div>
                 </div>
 
-                <!-- 4 & 5. Grid: Prioritas & Subjek (Berurutan No 4 & 5) -->
+                <!-- 4 & 5. Grid: Prioritas & Subjek -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                     
                     <!-- 4. Tingkat Prioritas -->
@@ -251,165 +253,85 @@
                             </label>
 
                         </div>
+                        <p class="text-xs text-slate-400 mt-2">Pilih tingkat urgensi penanganan kendala yang dialami.</p>
                     </div>
 
-                    <!-- 5. Subjek Kendala -->
+                    <!-- 5. Subjek / Judul Kendala -->
                     <div>
                         <label for="subjek" class="block text-sm font-bold text-slate-700 mb-2">
                             5. Subjek / Ringkasan Kendala <span class="text-rose-500">*</span>
                         </label>
                         <div class="relative">
                             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                                <i class="bi bi-chat-square-text-fill text-base"></i>
+                                <i class="bi bi-chat-left-dots-fill text-base"></i>
                             </span>
-                            <input type="text" id="subjek" name="subjek" required
-                                   placeholder="Contoh: Kendala verifikasi berkas mahasiswa 1302204..."
+                            <input type="text" id="subjek" name="subjek" required maxlength="150"
+                                   placeholder="Contoh: Terkendala saat verifikasi berkas sidang TA..."
                                    class="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 text-sm font-semibold text-slate-800 placeholder-slate-400 transition-all outline-hidden">
                         </div>
-                        <p class="text-xs text-slate-400 mt-1.5">Ringkasan singkat kendala yang dialami.</p>
+                        <p class="text-xs text-slate-400 mt-1.5">Tuliskan ringkasan inti persoalan secara singkat & jelas.</p>
                     </div>
 
                 </div>
 
-                <!-- 6. Deskripsi Rinci (TinyMCE) -->
+                <!-- 6. Deskripsi Masalah (TinyMCE Rich Text Editor) -->
                 <div class="pt-2">
                     <label for="deskripsi" class="block text-sm font-bold text-slate-700 mb-2">
-                        6. Deskripsi Kendala Rinci <span class="text-rose-500">*</span>
+                        6. Deskripsi Kendala Lengkap <span class="text-rose-500">*</span>
                     </label>
                     <textarea id="deskripsi" name="deskripsi" rows="6"
-                              placeholder="Tuliskan rincian kendala Anda di sini..."></textarea>
+                              placeholder="Jelaskan detail kendala Anda selengkap mungkin..."></textarea>
+                    <p class="text-xs text-slate-400 mt-2">
+                        Jelaskan kronologi kendala, pesan error yang muncul, atau langkah yang sudah dicoba.
+                    </p>
                 </div>
 
-                <!-- Kolom Tambahan Dinamis Khusus (Nomor 8 dst jika ada inputan kustom dari Laboran) -->
-                <?php 
-                    $coreFieldNames = ['nama_lengkap', 'unit_tujuan', 'kategori', 'prioritas', 'subjek', 'deskripsi', 'lampiran'];
-                    $extraFields = !empty($custom_fields) ? array_values(array_filter($custom_fields, function($cf) use ($coreFieldNames) {
-                        return !in_array($cf['field_name'], $coreFieldNames) && $cf['is_active'] == 1;
-                    })) : [];
-                ?>
-                <?php if (!empty($extraFields)): ?>
-                    <div class="pt-2 border-t border-slate-100">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                            <?php foreach ($extraFields as $idx => $cf): ?>
-                                <?php 
-                                    $nomorUrut = 8 + $idx;
-                                    $isTextarea = ($cf['field_type'] === 'textarea');
-                                    $colSpan = $isTextarea ? 'sm:col-span-2' : '';
-                                ?>
-                                <div class="<?= $colSpan; ?>">
-                                    <label for="cf_<?= $cf['id']; ?>" class="block text-sm font-bold text-slate-700 mb-2 flex items-center justify-between">
-                                        <span>
-                                            <?= $nomorUrut; ?>. <?= htmlspecialchars($cf['field_label']); ?>
-                                            <?php if ($cf['is_required']): ?>
-                                                <span class="text-rose-500 font-bold">*</span>
-                                            <?php endif; ?>
-                                        </span>
-                                        <?php if (!$cf['is_required']): ?>
-                                            <span class="text-[11px] text-slate-400 font-normal">Opsional</span>
-                                        <?php endif; ?>
-                                    </label>
-
-                                    <?php if ($cf['field_type'] === 'select'): ?>
-                                        <div class="relative">
-                                            <select id="cf_<?= $cf['id']; ?>" 
-                                                    name="custom_fields[<?= htmlspecialchars($cf['field_name']); ?>]" 
-                                                    <?= $cf['is_required'] ? 'required' : ''; ?>
-                                                    class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 text-sm font-semibold text-slate-800 transition-all outline-hidden appearance-none cursor-pointer">
-                                                <option value="">-- Pilih <?= htmlspecialchars($cf['field_label']); ?> --</option>
-                                                <?php 
-                                                    $opts = array_filter(array_map('trim', explode(',', $cf['field_options'] ?? '')));
-                                                    foreach ($opts as $opt):
-                                                ?>
-                                                    <option value="<?= htmlspecialchars($opt); ?>"><?= htmlspecialchars($opt); ?></option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                            <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
-                                        </div>
-                                    <?php elseif ($cf['field_type'] === 'textarea'): ?>
-                                        <textarea id="cf_<?= $cf['id']; ?>" 
-                                                  name="custom_fields[<?= htmlspecialchars($cf['field_name']); ?>]" 
-                                                  rows="3"
-                                                  placeholder="<?= htmlspecialchars($cf['placeholder'] ?: 'Tuliskan rincian...'); ?>"
-                                                  <?= $cf['is_required'] ? 'required' : ''; ?>
-                                                  class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 text-sm font-medium text-slate-800 transition-all outline-hidden"></textarea>
-                                    <?php elseif ($cf['field_type'] === 'date'): ?>
-                                        <input type="date" 
-                                               id="cf_<?= $cf['id']; ?>" 
-                                               name="custom_fields[<?= htmlspecialchars($cf['field_name']); ?>]" 
-                                               <?= $cf['is_required'] ? 'required' : ''; ?>
-                                               class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 text-sm font-semibold text-slate-800 transition-all outline-hidden">
-                                    <?php elseif ($cf['field_type'] === 'number'): ?>
-                                        <input type="number" 
-                                               id="cf_<?= $cf['id']; ?>" 
-                                               name="custom_fields[<?= htmlspecialchars($cf['field_name']); ?>]" 
-                                               placeholder="<?= htmlspecialchars($cf['placeholder'] ?: '0'); ?>"
-                                               <?= $cf['is_required'] ? 'required' : ''; ?>
-                                               class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 text-sm font-semibold text-slate-800 transition-all outline-hidden">
-                                    <?php else: ?>
-                                        <input type="text" 
-                                               id="cf_<?= $cf['id']; ?>" 
-                                               name="custom_fields[<?= htmlspecialchars($cf['field_name']); ?>]" 
-                                               placeholder="<?= htmlspecialchars($cf['placeholder'] ?: 'Masukkan ' . $cf['field_label'] . '...'); ?>"
-                                               <?= $cf['is_required'] ? 'required' : ''; ?>
-                                               class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 text-sm font-semibold text-slate-800 transition-all outline-hidden">
-                                    <?php endif; ?>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                <?php endif; ?>
-
-                <!-- 7. Upload Lampiran -->
-                <div>
+                <!-- 7. Lampiran Berkas / Tangkapan Layar -->
+                <div class="pt-2">
                     <label class="block text-sm font-bold text-slate-700 mb-2">
-                        7. Lampiran Berkas / Screenshot <span class="text-xs font-normal text-slate-400">(Opsional)</span>
+                        7. Lampiran Pendukung (Opsional)
                     </label>
-                    <div class="relative border-2 border-dashed border-slate-200 hover:border-orange-400 bg-slate-50/60 rounded-2xl p-6 transition-all group text-center cursor-pointer"
-                         onclick="document.getElementById('lampiran').click()">
-                        <input type="file" id="lampiran" name="lampiran" class="hidden"
-                               accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
-                               onchange="handleFileSelected(this)">
+                    <div class="relative border-2 border-dashed border-slate-200 hover:border-orange-400 rounded-2xl p-6 transition-all bg-slate-50/50 hover:bg-orange-50/20 text-center">
+                        <input type="file" id="lampiran" name="lampiran" 
+                               accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.zip,.rar"
+                               onchange="handleFileSelected(this)"
+                               class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
                         
-                        <div id="upload-placeholder" class="flex flex-col items-center justify-center pointer-events-none">
-                            <div class="w-12 h-12 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                <i class="bi bi-cloud-arrow-up-fill text-2xl"></i>
+                        <div id="upload-placeholder" class="space-y-2">
+                            <div class="w-12 h-12 mx-auto rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center text-xl shadow-xs">
+                                <i class="bi bi-cloud-arrow-up-fill"></i>
                             </div>
-                            <p class="text-sm font-bold text-slate-700">
-                                Klik untuk mengunggah foto kendala atau dokumen pendukung
+                            <p class="text-xs font-bold text-slate-700">
+                                Klik atau seret file tangkapan layar / dokumen ke sini
                             </p>
-                            <p class="text-xs text-slate-400 mt-1">
-                                Format: JPG, PNG, PDF, DOCX (Maksimal 5 MB)
+                            <p class="text-[11px] text-slate-400">
+                                Format: JPG, PNG, PDF, DOC, DOCX, ZIP (Maksimal 5 MB)
                             </p>
                         </div>
 
-                        <!-- Selected File Preview -->
-                        <div id="file-preview" class="hidden flex items-center justify-between p-3 bg-white rounded-xl border border-orange-200 shadow-xs max-w-md mx-auto text-left">
-                            <div class="flex items-center gap-3 overflow-hidden">
-                                <div class="w-9 h-9 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
-                                    <i class="bi bi-file-earmark-check text-lg"></i>
-                                </div>
-                                <div class="overflow-hidden">
-                                    <p id="file-name" class="text-xs font-bold text-slate-800 truncate">filename.pdf</p>
-                                    <p id="file-size" class="text-[11px] text-slate-400">0 KB</p>
-                                </div>
+                        <div id="file-preview" class="hidden flex items-center justify-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center text-lg">
+                                <i class="bi bi-file-earmark-check-fill"></i>
                             </div>
-                            <button type="button" onclick="event.stopPropagation(); clearSelectedFile();" 
-                                    class="text-slate-400 hover:text-rose-500 p-1.5 transition-colors">
+                            <div class="text-left">
+                                <span id="file-name" class="block text-xs font-bold text-slate-800 truncate max-w-xs"></span>
+                                <span id="file-size" class="block text-[10px] text-slate-400 font-mono"></span>
+                            </div>
+                            <button type="button" onclick="clearSelectedFile()" class="p-1 text-rose-500 hover:text-rose-700 relative z-20">
                                 <i class="bi bi-x-circle-fill text-lg"></i>
                             </button>
                         </div>
-
                     </div>
                 </div>
 
-                <!-- Submit Button -->
-                <div class="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-end gap-3">
-                    <a href="<?= site_url('laboran/ticketing/riwayat') ?>" 
-                       class="w-full sm:w-auto px-5 py-3 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-bold text-center transition-colors">
+                <!-- Submit Button Container -->
+                <div class="pt-6 border-t border-slate-100 flex flex-col-reverse sm:flex-row items-center justify-end gap-3">
+                    <a href="<?= site_url('mahasiswa') ?>" 
+                       class="w-full sm:w-auto px-6 py-3 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs font-bold text-center transition-all">
                         Batal
                     </a>
                     <button type="submit" id="btnSubmitTicket"
-                            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3 rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-700 hover:to-amber-600 text-white text-sm font-bold shadow-lg shadow-orange-500/25 hover:shadow-orange-500/35 transition-all">
+                            class="w-full sm:w-auto px-8 py-3 rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-700 hover:to-amber-600 text-white text-xs font-bold shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer">
                         <i class="bi bi-send-fill text-sm"></i>
                         <span>Kirim Tiket Kendala</span>
                     </button>
@@ -421,32 +343,37 @@
 
     </main>
 
-    <!-- Scripts -->
+    <!-- Client-side Logic (Dinamis Unit & Kategori) -->
     <script>
         const unitKategoriMap = <?= json_encode($unit_kategori_map); ?>;
 
         function handleUnitChange(selectedUnit) {
             const kategoriSelect = document.getElementById('kategori');
             const kategoriHint = document.getElementById('kategori-hint');
-            
-            handleKategoriChange('');
+            const containerLainnya = document.getElementById('container_kategori_lainnya');
+            const inputLainnya = document.getElementById('kategori_lainnya');
+
             kategoriSelect.innerHTML = '';
+            containerLainnya.classList.add('hidden');
+            if (inputLainnya) {
+                inputLainnya.required = false;
+                inputLainnya.value = '';
+            }
 
             if (!selectedUnit || !unitKategoriMap[selectedUnit]) {
                 kategoriSelect.disabled = true;
-                kategoriSelect.classList.add('cursor-not-allowed', 'bg-slate-100');
-                kategoriSelect.classList.remove('cursor-pointer', 'bg-slate-50');
-                const defaultOpt = document.createElement('option');
-                defaultOpt.value = '';
-                defaultOpt.textContent = '-- Silakan pilih Unit yang Dituju terlebih dahulu --';
-                kategoriSelect.appendChild(defaultOpt);
+                kategoriSelect.className = 'w-full pl-11 pr-10 py-3 rounded-xl bg-slate-100 border border-slate-200 focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 text-sm font-semibold text-slate-800 transition-all outline-hidden appearance-none cursor-not-allowed disabled:opacity-75';
+                
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = '-- Silakan pilih Unit yang Dituju terlebih dahulu --';
+                kategoriSelect.appendChild(opt);
                 kategoriHint.textContent = 'Kategori akan otomatis disesuaikan dengan unit yang dipilih di atas.';
                 return;
             }
 
             kategoriSelect.disabled = false;
-            kategoriSelect.classList.remove('cursor-not-allowed', 'bg-slate-100');
-            kategoriSelect.classList.add('cursor-pointer', 'bg-slate-50');
+            kategoriSelect.className = 'w-full pl-11 pr-10 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 text-sm font-semibold text-slate-800 transition-all outline-hidden appearance-none cursor-pointer';
 
             const defaultOpt = document.createElement('option');
             defaultOpt.value = '';
@@ -461,7 +388,7 @@
                 kategoriSelect.appendChild(opt);
             });
 
-            kategoriHint.innerHTML = '<span class="text-emerald-600 font-semibold"><i class="bi bi-check-circle-fill mr-1"></i>Menampilkan ' + categories.length + ' kategori spesifik untuk ' + selectedUnit + '</span>';
+            kategoriHint.innerHTML = '<span class="text-emerald-600 font-semibold"><i class="bi bi-check-circle-fill mr-1"></i>Menampilkan ' + categories.length + ' pilihan kategori aktif untuk ' + selectedUnit + '</span>';
         }
 
         function handleKategoriChange(val) {
