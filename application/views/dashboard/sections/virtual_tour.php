@@ -7,9 +7,10 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        padding: 20px 40px;
+        padding: 40px 40px 50px;
         position: relative;
-        overflow: visible !important;
+        z-index: 5;
+        overflow: hidden !important; /* Mencegah canvas 3D & card tembus ke Berita */
         box-sizing: border-box;
         height: 100vh;
     }
@@ -58,7 +59,7 @@
         gap: 36px;
         width: 100%;
         max-width: 1040px;
-        z-index: 1;
+        z-index: 10;
         margin-top: 45px;
     }
 
@@ -80,6 +81,7 @@
         transition: transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275),
                     box-shadow 0.45s ease,
                     border-color 0.45s ease;
+        z-index: 10;
     }
     .vt-card:hover {
         transform: translateY(-8px) scale(1.02);
@@ -108,14 +110,14 @@
         width: 100%;
         height: 275px;
         z-index: 10;
-        pointer-events: none;
+        pointer-events: none; /* Di-disable agar tidak menghalangi klik pada tombol atau berita */
     }
     .vt-card-3d model-viewer {
         width: 100%;
         height: 100%;
         background-color: transparent;
         --poster-color: transparent;
-        pointer-events: auto;
+        pointer-events: none; /* Nonaktifkan penangkapan pointer pada canvas 3D */
         transform: scale(1.22);
         transform-origin: bottom center;
         transition: transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -155,7 +157,7 @@
         gap: 6px;
         border-radius: 0 0 25px 25px;
         position: relative;
-        z-index: 2;
+        z-index: 20;
         box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.3);
     }
 
@@ -197,6 +199,9 @@
         text-decoration: none;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
         transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+        z-index: 25;
+        pointer-events: auto;
     }
     .vt-card-btn:hover {
         background: transparent;
@@ -205,30 +210,170 @@
         transform: translateY(-3px);
     }
 
-    /* Responsive */
+    /* Responsive - Tetap 2 Kolom Horizontal di Semua Ukuran Layar */
     @media (max-height: 820px) {
-        #section-virtual-tour { padding: 40px 60px 35px; gap: 15px; }
-        .vt-grid { margin-top: 75px; }
-        .vt-card { height: 440px; }
-        .vt-card-bg-top { height: 230px; }
-        .vt-card-3d { top: -85px; height: 340px; }
-        .vt-card-content { height: 210px; padding: 20px 26px 24px; }
-    }
-    @media (max-width: 900px) {
-        .vt-grid { grid-template-columns: 1fr; max-width: 480px; margin-top: 80px; }
-        #section-virtual-tour { padding: 40px 24px; }
+        #section-virtual-tour {
+            height: auto !important;
+            min-height: 100vh;
+            padding: 40px 30px 60px;
+        }
+        .vt-grid { margin-top: 50px; }
+        .vt-card { height: 360px; }
+        .vt-card-bg-top { height: 180px; }
+        .vt-card-3d { top: -45px; height: 250px; }
+        .vt-card-content { height: 180px; padding: 16px 20px; }
     }
 
-    .vt-footer {
-        position: absolute;
-        bottom: 12px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 0.8rem;
-        color: #94a3b8;
-        font-weight: 500;
-        z-index: 2;
-        white-space: nowrap;
+    @media (max-width: 900px) {
+        #section-virtual-tour {
+            height: auto !important;
+            min-height: 100vh;
+            padding: 35px 20px 50px;
+        }
+        .vt-grid {
+            grid-template-columns: 1fr 1fr !important; /* Tetap 2 card sejajar horizontal */
+            max-width: 100%;
+            margin-top: 45px;
+            gap: 16px;
+        }
+        .vt-card {
+            height: 330px;
+            border-radius: 22px;
+        }
+        .vt-card-bg-top {
+            height: 165px;
+            border-radius: 19px 19px 0 0;
+        }
+        .vt-card-3d {
+            top: -40px;
+            height: 220px;
+        }
+        .vt-card-content {
+            height: 165px;
+            padding: 12px 14px 16px;
+            border-radius: 0 0 19px 19px;
+            gap: 4px;
+        }
+        .vt-card-title {
+            font-size: 1.25rem;
+            letter-spacing: 1px;
+        }
+        .vt-card-desc {
+            font-size: 0.78rem;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .vt-card-btn {
+            padding: 8px 22px;
+            font-size: 0.74rem;
+            margin-top: 4px;
+        }
+    }
+
+    @media (max-width: 540px) {
+        #section-virtual-tour {
+            padding: 30px 12px 45px;
+        }
+        .vt-header h2 {
+            font-size: 1.45rem;
+        }
+        .vt-header-label {
+            font-size: 0.65rem;
+        }
+        .vt-grid {
+            grid-template-columns: 1fr 1fr !important; /* Tetap horizontal di HP */
+            gap: 10px;
+            margin-top: 35px;
+        }
+        .vt-card {
+            height: 290px;
+            border-radius: 18px;
+        }
+        .vt-card-bg-top {
+            height: 140px;
+            border-radius: 15px 15px 0 0;
+        }
+        .vt-card-3d {
+            top: -30px;
+            height: 180px;
+        }
+        .vt-card-content {
+            height: 150px;
+            padding: 10px 10px 14px;
+            border-radius: 0 0 15px 15px;
+            gap: 3px;
+        }
+        .vt-card-title {
+            font-size: 1.05rem;
+            letter-spacing: 0.8px;
+        }
+        .vt-card-desc {
+            font-size: 0.72rem;
+            line-height: 1.35;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .vt-card-btn {
+            padding: 6px 14px;
+            font-size: 0.68rem;
+            letter-spacing: 0.8px;
+            margin-top: 4px;
+        }
+        .vt-footer {
+            position: relative;
+            bottom: auto;
+            left: auto;
+            transform: none;
+            margin-top: 25px;
+            text-align: center;
+            font-size: 0.72rem;
+        }
+    }
+
+    @media (max-width: 360px) {
+        #section-virtual-tour {
+            padding: 24px 8px 36px;
+        }
+        .vt-header h2 {
+            font-size: 1.25rem;
+        }
+        .vt-grid {
+            gap: 6px;
+            margin-top: 28px;
+        }
+        .vt-card {
+            height: 265px;
+            border-radius: 14px;
+        }
+        .vt-card-bg-top {
+            height: 125px;
+            border-radius: 12px 12px 0 0;
+        }
+        .vt-card-3d {
+            top: -25px;
+            height: 160px;
+        }
+        .vt-card-content {
+            height: 140px;
+            padding: 8px 6px 10px;
+            border-radius: 0 0 12px 12px;
+        }
+        .vt-card-title {
+            font-size: 0.92rem;
+        }
+        .vt-card-desc {
+            font-size: 0.66rem;
+            line-height: 1.3;
+        }
+        .vt-card-btn {
+            padding: 5px 10px;
+            font-size: 0.62rem;
+        }
     }
 </style>
 
