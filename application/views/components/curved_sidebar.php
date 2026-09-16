@@ -159,7 +159,12 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
 
         case 5: // Mahasiswa
             $defaultNavItems = [
-                ['category' => 'Menu Mahasiswa'],
+                ['category' => 'Menu Utama', 'mobile_only' => true],
+                ['heading' => 'Dashboard', 'href' => site_url('mahasiswa'), 'icon_3d' => 'assets/images/icons_3d/home.png', 'mobile_only' => true],
+                ['heading' => 'Pendaftaran TA', 'href' => site_url('mahasiswa/pendaftaran_ta'), 'icon_3d' => 'assets/images/icons_3d/daftar.png', 'mobile_only' => true],
+                ['heading' => 'Bimbingan TA', 'href' => site_url('mahasiswa/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/sidang.png', 'mobile_only' => true],
+
+                ['category' => 'Menu Mahasiswa', 'has_divider_mobile' => true],
                 ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
                 ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
 
@@ -205,6 +210,20 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
         border-top: 1px solid rgba(245, 158, 11, 0.2);
         margin-top: 8px;
         padding-top: 10px;
+    }
+
+    /* Mobile only nav items in sidebar (hidden on desktop screens >= 768px, matching Tailwind md breakpoint) */
+    @media (min-width: 768px) {
+        .curved-nav-mobile-only {
+            display: none !important;
+        }
+    }
+    @media (max-width: 767.98px) {
+        .curved-nav-category.has-divider-mobile {
+            border-top: 1px solid rgba(245, 158, 11, 0.2);
+            margin-top: 8px;
+            padding-top: 10px;
+        }
     }
 
     .curved-header-role-badge {
@@ -343,9 +362,10 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 $curr_uri = trim(uri_string(), '/');
                 $navCount = 1;
                 foreach ($defaultNavItems as $idx => $item): 
+                    $isMobileOnly = !empty($item['mobile_only']);
                     if (isset($item['category'])):
                 ?>
-                    <div class="curved-nav-category <?= !empty($item['has_divider']) ? 'has-divider' : '' ?>">
+                    <div class="curved-nav-category <?= !empty($item['has_divider']) ? 'has-divider' : '' ?> <?= !empty($item['has_divider_mobile']) ? 'has-divider-mobile' : '' ?> <?= $isMobileOnly ? 'curved-nav-mobile-only' : '' ?>">
                         <?= htmlspecialchars($item['category']); ?>
                     </div>
                 <?php 
@@ -362,8 +382,17 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                     if (!$isCurrent && !empty($cleanHrefUri) && !in_array($cleanHrefUri, ['dashboard', 'admin', 'laboran', 'kaur', 'dosen', 'koordinatorta', 'mahasiswa'])) {
                         $isCurrent = (strpos($curr_uri, $cleanHrefUri) === 0);
                     }
+                    if (!$isCurrent) {
+                        if ($cleanHrefUri === 'mahasiswa' && ($curr_uri === 'mahasiswa' || $curr_uri === 'mahasiswa/index')) {
+                            $isCurrent = true;
+                        } elseif ($cleanHrefUri === 'mahasiswa/pendaftaran_ta' && strpos($curr_uri, 'pendaftaran') !== false) {
+                            $isCurrent = true;
+                        } elseif ($cleanHrefUri === 'mahasiswa/bimbingan' && strpos($curr_uri, 'bimbingan') !== false) {
+                            $isCurrent = true;
+                        }
+                    }
                 ?>
-                    <a href="<?= htmlspecialchars($item['href']); ?>" class="curved-nav-item <?= $isCurrent ? 'is-current' : '' ?>">
+                    <a href="<?= htmlspecialchars($item['href']); ?>" class="curved-nav-item <?= $isCurrent ? 'is-current' : '' ?> <?= $isMobileOnly ? 'curved-nav-mobile-only' : '' ?>">
                         <div class="curved-nav-content">
                             <?php if (!empty($icon3d)): ?>
                                 <div class="curved-nav-3d-wrap">

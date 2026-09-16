@@ -10,11 +10,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- PDF.js library for high-compatibility, touch-scrollable in-app document preview -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- PDF.js library for high-compatibility, touch-scrollable in-app document preview (Local Asset) -->
+    <script src="<?= base_url('assets/js/pdfjs/pdf.min.js'); ?>"></script>
     <script>
         if (typeof pdfjsLib !== 'undefined') {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            pdfjsLib.GlobalWorkerOptions.workerSrc = '<?= base_url("assets/js/pdfjs/pdf.worker.min.js"); ?>';
         }
     </script>
     <style>
@@ -674,8 +674,8 @@
     </main>
 
     <!-- Live PDF / Document Viewer Modal -->
-    <div id="pdfModal" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs hidden items-center justify-center p-3 sm:p-5">
-        <div class="bg-white rounded-2xl max-w-5xl w-full h-[88vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
+    <div id="pdfModal" class="fixed inset-0 z-[100] bg-slate-900/70 backdrop-blur-xs hidden items-center justify-center p-2 sm:p-5">
+        <div class="bg-white rounded-2xl max-w-5xl w-full h-[90dvh] sm:h-[88vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
             <!-- Modal Header -->
             <div class="p-3.5 px-5 bg-slate-900 text-white flex items-center justify-between flex-shrink-0">
                 <div class="flex items-center gap-3">
@@ -721,8 +721,8 @@
     </div>
 
     <!-- Multi-Document Fullscreen Viewer Modal (Multi-View) -->
-    <div id="multiDocModal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs hidden items-center justify-center p-2 sm:p-4 overflow-hidden" style="overscroll-behavior: contain;">
-        <div id="multiDocDialog" class="bg-white rounded-2xl sm:rounded-3xl max-w-7xl w-full h-[95vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200 transition-all duration-200" style="touch-action: auto;">
+    <div id="multiDocModal" class="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-xs hidden items-center justify-center p-2 sm:p-4 overflow-hidden" style="overscroll-behavior: contain;">
+        <div id="multiDocDialog" class="bg-white rounded-2xl sm:rounded-3xl max-w-7xl w-full h-[95dvh] sm:h-[95vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200 transition-all duration-200" style="touch-action: auto;">
             
             <!-- Modal Header -->
             <div class="py-2.5 px-4 sm:px-5 bg-slate-900 text-white flex flex-col md:flex-row items-center justify-between gap-3 shrink-0">
@@ -1015,32 +1015,48 @@
                 if (containerEl) {
                     containerEl.classList.remove('hidden');
                     containerEl.innerHTML = `
-                        <div class="flex flex-col items-center justify-center py-16 text-slate-400 space-y-3">
-                            <div class="w-9 h-9 border-3 border-orange-500/20 border-t-orange-500 rounded-full animate-spin"></div>
-                            <span class="text-xs font-semibold text-slate-500">Menyiapkan pratinjau dokumen...</span>
+                        <div class="flex flex-col items-center justify-center py-12 text-slate-400 space-y-3">
+                            <div class="w-8 h-8 border-3 border-orange-500/20 border-t-orange-500 rounded-full animate-spin"></div>
+                            <span class="text-xs font-semibold text-slate-500">Memuat pratinjau dokumen...</span>
                         </div>
                     `;
 
-                    // Token spesifik per kontainer (bukan global) agar tidak saling batalkan saat multi-dokumen dibuka bersamaan
+                    // Token spesifik per kontainer agar tidak saling batalkan
                     const thisToken = (containerEl._renderToken = (containerEl._renderToken || 0) + 1);
 
                     try {
-                        const loadingTask = pdfjsLib.getDocument({
-                            url: url,
-                            isEvalSupported: false
-                        });
-
-                        // Timeout 4 detik: jika PDF.js lambat atau terkendala jaringan, langsung fallback ke iframe
-                        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('PDF.js render timeout')), 4000));
-                        const pdf = await Promise.race([loadingTask.promise, timeoutPromise]);
+                        let pdfDoc = null;
                         
-                        if (thisToken !== containerEl._renderToken) return;
+                        // 1. Prioritaskan fetch ArrayBuffer langsung di window utama (same-origin, 100% bebas hambatan worker CORS)
+                        try {
+                            const resp = await fetch(url);
+                            if (resp.ok) {
+                                const pdfData = await resp.arrayBuffer();
+                                const loadingTask = pdfjsLib.getDocument({ data: pdfData, isEvalSupported: false });
+                                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('PDF.js render timeout')), 15000));
+                                pdfDoc = await Promise.race([loadingTask.promise, timeoutPromise]);
+                            }
+                        } catch(directErr) {
+                            console.warn('Fetch ArrayBuffer langsung gagal, mencoba lewat URL:', directErr);
+                        }
+
+                        // 2. Fallback: jika fetch utama gagal, coba via URL
+                        if (!pdfDoc) {
+                            const loadingTask = pdfjsLib.getDocument({ url: url, isEvalSupported: false });
+                            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('PDF.js render timeout')), 15000));
+                            pdfDoc = await Promise.race([loadingTask.promise, timeoutPromise]);
+                        }
+
+                        if (thisToken !== containerEl._renderToken || !pdfDoc) return;
 
                         containerEl.innerHTML = '';
 
-                        for (let p = 1; p <= pdf.numPages; p++) {
+                        // Render halaman (batasi maksimal 10 halaman awal untuk performa memori mobile)
+                        const maxPages = Math.min(pdfDoc.numPages, 10);
+
+                        for (let p = 1; p <= maxPages; p++) {
                             if (thisToken !== containerEl._renderToken) return;
-                            const page = await pdf.getPage(p);
+                            const page = await pdfDoc.getPage(p);
                             const initialVp = page.getViewport({ scale: 1.0 });
 
                             // Sesuaikan lebar dokumen ke lebar layar HP / kontainer
@@ -1053,17 +1069,17 @@
                             const card = document.createElement('div');
                             card.className = 'w-full max-w-3xl bg-white rounded-xl shadow-md overflow-hidden border border-slate-200/80 mb-4 mx-auto';
 
-                            if (pdf.numPages > 1) {
+                            if (pdfDoc.numPages > 1) {
                                 const hdr = document.createElement('div');
                                 hdr.className = 'px-3 py-1 bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 flex items-center justify-between select-none';
-                                hdr.innerHTML = `<span><i class="bi bi-file-earmark-text text-orange-500 mr-1"></i> Halaman ${p} dari ${pdf.numPages}</span><span class="font-mono text-[9px] text-slate-400">${filename || ''}</span>`;
+                                hdr.innerHTML = `<span><i class="bi bi-file-earmark-text text-orange-500 mr-1"></i> Halaman ${p} dari ${pdfDoc.numPages}</span><span class="font-mono text-[9px] text-slate-400">${filename || ''}</span>`;
                                 card.appendChild(hdr);
                             }
 
                             const canvas = document.createElement('canvas');
                             canvas.className = 'block mx-auto max-w-full h-auto';
-                            canvas.width = vp.width;
-                            canvas.height = vp.height;
+                            canvas.width = Math.floor(vp.width);
+                            canvas.height = Math.floor(vp.height);
 
                             card.appendChild(canvas);
                             containerEl.appendChild(card);
@@ -1071,22 +1087,39 @@
                             const ctx = canvas.getContext('2d');
                             await page.render({ canvasContext: ctx, viewport: vp }).promise;
                         }
+
+                        if (pdfDoc.numPages > maxPages) {
+                            const infoMore = document.createElement('div');
+                            infoMore.className = 'py-3 text-center text-xs text-slate-500';
+                            infoMore.innerHTML = `<span>Menampilkan ${maxPages} dari ${pdfDoc.numPages} halaman. </span><a href="${url}" target="_blank" class="font-bold text-orange-600 hover:underline">Buka Berkas Lengkap</a>`;
+                            containerEl.appendChild(infoMore);
+                        }
                         return;
                     } catch (e) {
-                        console.warn('PDF.js render error / timeout, fallback to iframe:', e);
-                        // Fallback seketika ke iframe jika terjadi kendala
-                        containerEl.innerHTML = '';
-                        containerEl.classList.add('hidden');
-                        if (iframeEl) {
-                            iframeEl.classList.remove('hidden');
-                            if (iframeEl.src !== url) iframeEl.src = url;
-                        }
+                        console.warn('PDF.js render error / timeout, fallback to mobile UI:', e);
+                        // Fallback mobile: Tampilkan card pratinjau yang ramah touch & tombol buka tab baru
+                        containerEl.innerHTML = `
+                            <div class="w-full max-w-md mx-auto my-4 p-5 bg-white border border-slate-200 rounded-2xl shadow-xs text-center flex flex-col items-center">
+                                <div class="w-11 h-11 rounded-2xl bg-orange-50 border border-orange-200 text-orange-600 flex items-center justify-center text-xl mb-3 shadow-2xs">
+                                    <i class="bi bi-file-earmark-pdf"></i>
+                                </div>
+                                <h4 class="text-xs font-bold text-slate-800 mb-1 leading-snug">${filename || 'Dokumen Persyaratan'}</h4>
+                                <p class="text-[11px] text-slate-500 mb-4">Pratinjau internal perangkat memerlukan akses langsung. Silakan buka dokumen di tab baru atau unduh.</p>
+                                <div class="flex flex-wrap items-center justify-center gap-2">
+                                    <a href="${url}" target="_blank" class="px-3.5 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-all">
+                                        <i class="bi bi-box-arrow-up-right"></i> Buka Dokumen di Tab Baru
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                        containerEl.classList.remove('hidden');
+                        if (iframeEl) iframeEl.classList.add('hidden');
                         return;
                     }
                 }
             }
 
-            // Fallback default: kembali ke iframe jika offline atau error
+            // Fallback default
             if (containerEl) {
                 containerEl.innerHTML = '';
                 containerEl.classList.add('hidden');
@@ -1232,8 +1265,6 @@
 
             // Lock body scroll so page doesn't scroll behind modal
             document.body.style.overflow = 'hidden';
-            document.body.style.position = 'fixed';
-            document.body.style.width = '100%';
 
             renderMultiDocActiveTab();
             refreshMultiModalUI();
@@ -1248,8 +1279,6 @@
 
             // Restore body scroll
             document.body.style.overflow = '';
-            document.body.style.position = '';
-            document.body.style.width = '';
         }
 
         let isMultiDocFullscreen = false;
@@ -1592,8 +1621,6 @@
 
             // Lock body scroll
             document.body.style.overflow = 'hidden';
-            document.body.style.position = 'fixed';
-            document.body.style.width = '100%';
 
             document.getElementById('pdfModal').classList.remove('hidden');
             document.getElementById('pdfModal').classList.add('flex');
@@ -1609,8 +1636,6 @@
 
             // Restore body scroll
             document.body.style.overflow = '';
-            document.body.style.position = '';
-            document.body.style.width = '';
         }
 
         // Close pdfModal when clicking dark backdrop outside content box
@@ -2261,6 +2286,7 @@
                         closeMultiDocModal();
                     }
                 });
+            }
             // Sync all reviewed badges on load
             if (window.reviewedDocs) {
                 for (let k in window.reviewedDocs) {

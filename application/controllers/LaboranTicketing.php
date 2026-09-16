@@ -245,6 +245,10 @@ class LaboranTicketing extends CI_Controller {
 
         $textOnly = trim(strip_tags($deskripsi));
         if (empty($namaLengkap) || empty($unit_tujuan) || empty($kategori) || empty($subjek) || empty($textOnly)) {
+            if ($this->input->is_ajax_request()) {
+                echo json_encode(['status' => 'error', 'message' => 'Semua field bertanda bintang wajib diisi.']);
+                return;
+            }
             $this->session->set_flashdata('error', 'Semua field bertanda bintang wajib diisi.');
             redirect('laboran/ticketing/input');
             return;
@@ -265,7 +269,12 @@ class LaboranTicketing extends CI_Controller {
             $fName = $f['field_name'];
             $fVal = isset($rawCustomFieldsPost[$fName]) ? trim($rawCustomFieldsPost[$fName]) : '';
             if ($f['is_required'] && empty($fVal)) {
-                $this->session->set_flashdata('error', 'Field "' . htmlspecialchars($f['field_label']) . '" wajib diisi.');
+                $err = 'Field "' . htmlspecialchars($f['field_label']) . '" wajib diisi.';
+                if ($this->input->is_ajax_request()) {
+                    echo json_encode(['status' => 'error', 'message' => $err]);
+                    return;
+                }
+                $this->session->set_flashdata('error', $err);
                 redirect('laboran/ticketing/input');
                 return;
             }
@@ -295,7 +304,17 @@ class LaboranTicketing extends CI_Controller {
             $recentTicket = $this->db->get($this->table)->row();
 
             if ($recentTicket) {
-                $this->session->set_flashdata('success', "Tiket kendala berhasil diajukan dengan Kode: <b>{$recentTicket->kode_tiket}</b> ke unit <b>" . htmlspecialchars($unit_tujuan) . "</b>.");
+                $msg = "Tiket kendala berhasil diajukan dengan Kode: <b>{$recentTicket->kode_tiket}</b> ke unit <b>" . htmlspecialchars($unit_tujuan) . "</b>.";
+                $this->session->set_flashdata('success', $msg);
+                if ($this->input->is_ajax_request()) {
+                    echo json_encode([
+                        'status'       => 'success',
+                        'kode_tiket'   => $recentTicket->kode_tiket,
+                        'message'      => $msg,
+                        'redirect_url' => site_url('laboran/ticketing/riwayat')
+                    ]);
+                    return;
+                }
                 redirect('laboran/ticketing/riwayat');
                 return;
             }
@@ -337,8 +356,19 @@ class LaboranTicketing extends CI_Controller {
 
         $insertedId = $this->DosenTicketing_model->insert($ticketData);
         $createdTicket = $this->DosenTicketing_model->get_by_id($insertedId);
+        $kodeTiket = $createdTicket ? $createdTicket->kode_tiket : '';
 
-        $this->session->set_flashdata('success', "Tiket Anda berhasil diajukan dengan Kode: <b>{$createdTicket->kode_tiket}</b> ke unit <b>" . htmlspecialchars($unit_tujuan) . "</b>.");
+        $msg = "Tiket Anda berhasil diajukan dengan Kode: <b>{$kodeTiket}</b> ke unit <b>" . htmlspecialchars($unit_tujuan) . "</b>.";
+        $this->session->set_flashdata('success', $msg);
+        if ($this->input->is_ajax_request()) {
+            echo json_encode([
+                'status'       => 'success',
+                'kode_tiket'   => $kodeTiket,
+                'message'      => $msg,
+                'redirect_url' => site_url('laboran/ticketing/riwayat')
+            ]);
+            return;
+        }
         redirect('laboran/ticketing/riwayat');
     }
 

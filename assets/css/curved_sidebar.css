@@ -394,3 +394,17 @@ body.curved-sidebar-open {
     border: 1px solid rgba(226, 232, 240, 0.8);
     letter-spacing: 0.05em;
 }
+
+/* Mobile only nav items in sidebar (hidden on desktop screens >= 768px, matching Tailwind md breakpoint) */
+@media (min-width: 768px) {
+    .curved-nav-mobile-only {
+        display: none !important;
+    }
+}
+@media (max-width: 767.98px) {
+    .curved-nav-category.has-divider-mobile {
+        border-top: 1px solid rgba(245, 158, 11, 0.2);
+        margin-top: 8px;
+        padding-top: 10px;
+    }
+}

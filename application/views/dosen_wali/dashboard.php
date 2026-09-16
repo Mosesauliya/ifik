@@ -936,7 +936,7 @@
     </div>
 
     <!-- Document PDF Preview Modal -->
-    <div id="pdfModalDW" style="display: none;" onclick="if(event.target === this) closePdfModalDW()" class="fixed inset-0 z-[70] bg-slate-900/80 backdrop-blur-xs hidden items-center justify-center p-3 sm:p-5">
+    <div id="pdfModalDW" style="display: none; z-index: 99999;" onclick="if(event.target === this) closePdfModalDW()" class="fixed inset-0 bg-slate-900/80 backdrop-blur-xs hidden items-center justify-center p-3 sm:p-5">
         <div class="bg-white rounded-3xl max-w-5xl w-full h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200" onclick="event.stopPropagation()">
             <!-- Modal Header -->
             <div class="p-4 px-6 bg-slate-900 text-white flex items-center justify-between shrink-0">
@@ -952,7 +952,7 @@
                 <div class="flex items-center gap-2 shrink-0">
                     <a id="pdfModalOpenTabDW" href="#" target="_blank" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer" title="Buka berkas di tab baru">
                         <i class="fa-solid fa-arrow-up-right-from-square text-[11px]"></i>
-                        <span class="hidden sm:inline">Buka Tab Baru</span>
+                        <span>Buka Tab Baru</span>
                     </a>
                     <button type="button" onclick="closePdfModalDW()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-sm transition-colors cursor-pointer" title="Tutup (ESC)">
                         <i class="fa-solid fa-xmark"></i>
@@ -2489,7 +2489,7 @@
     }
 
     // PDF Preview Modal Handler
-    function previewDocPdfDW(url, title) {
+    function previewDocPdfDW(url, title, subtitle) {
         if (!url || url === '#' || url === 'about:blank') {
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
@@ -2513,7 +2513,7 @@
         if (!modal || !frame) return;
 
         titleEl.textContent = title || 'Pratinjau Dokumen Persyaratan';
-        const cleanName = url.split('/').pop() || 'Dokumen PDF';
+        const cleanName = subtitle || (url.split('/').pop() || 'Dokumen PDF');
         if (subtitleEl) subtitleEl.textContent = cleanName;
         if (openTabBtn) openTabBtn.href = url;
         frame.src = url;
@@ -2522,6 +2522,10 @@
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         document.body.style.overflow = 'hidden'; // Kunci scroll halaman luar
+    }
+
+    function openPdfPreviewDW(url, title, subtitle) {
+        previewDocPdfDW(url, title, subtitle);
     }
 
     function closePdfModalDW() {
@@ -2534,9 +2538,12 @@
         }
         if (frame) frame.src = 'about:blank';
 
-        // Jika modal batch review masih aktif, jangan kembalikan overflow body
+        // Jika modal batch review atau panel lihat berkas masih aktif, jangan kembalikan overflow body
         const batchModal = document.getElementById('batchReviewModalDW');
-        if (!batchModal || batchModal.style.display === 'none' || batchModal.classList.contains('hidden')) {
+        const lihatContainer = document.getElementById('lihatBerkasContainer');
+        const hasActivePanel = (batchModal && batchModal.style.display !== 'none' && !batchModal.classList.contains('hidden')) ||
+                               (lihatContainer && lihatContainer.style.display !== 'none' && !lihatContainer.classList.contains('hidden'));
+        if (!hasActivePanel) {
             document.body.style.overflow = '';
         }
     }
@@ -2546,6 +2553,7 @@
     window.submitDirectBatchApproveDW = submitDirectBatchApproveDW;
     window.closeBatchModalDW = closeBatchModalDW;
     window.previewDocPdfDW = previewDocPdfDW;
+    window.openPdfPreviewDW = openPdfPreviewDW;
     window.closePdfModalDW = closePdfModalDW;
     window.markAllBatchDWApproved = markAllBatchDWApproved;
     window.submitFinalBatchApprovalDW = submitFinalBatchApprovalDW;
@@ -3058,26 +3066,35 @@
     function updateLihatBerkasLayout() {
         const container = document.getElementById('lihatBerkasContainer');
         const wrapper = document.getElementById('wrapperDaftarMhs');
+        const previewWrapper = document.getElementById('wrapperPreviewBerkas');
         if (!container || !wrapper) return;
 
         const isMobile = window.innerWidth < 1024;
         const isPreviewActive = window.activePreviews && window.activePreviews.length > 0;
 
         if (isMobile) {
-            container.classList.remove('justify-start');
-            container.classList.add('justify-center');
-            wrapper.className = 'flex flex-col items-center justify-center w-full max-w-[94vw] sm:max-w-md max-h-[90vh] overflow-y-auto shrink-0';
+            if (isPreviewActive) {
+                // Mode Preview Mobile: Card mahasiswa di ATAS, preview di BAWAH
+                container.className = 'fixed inset-0 pointer-events-none z-[60] flex flex-col items-center justify-start p-2.5 sm:p-4 gap-3 overflow-y-auto bg-slate-900/60 backdrop-blur-xs pointer-events-auto';
+                wrapper.className = 'flex flex-col items-center gap-2.5 w-full max-w-[94vw] sm:max-w-md shrink-0';
+                if (previewWrapper) {
+                    previewWrapper.className = 'flex flex-row items-start gap-3 w-full max-w-[94vw] sm:max-w-md overflow-x-auto p-1 shrink-0 scroll-smooth pb-8';
+                }
+            } else {
+                // Mode Standar Mobile (tanpa preview): Card mahasiswa di tengah
+                container.className = 'fixed inset-0 pointer-events-none z-[60] flex items-center justify-center p-3 sm:p-5 gap-4 overflow-y-auto bg-slate-900/60 backdrop-blur-xs pointer-events-auto';
+                wrapper.className = 'flex flex-col items-center justify-center w-full max-w-[94vw] sm:max-w-md max-h-[90vh] overflow-y-auto shrink-0 my-auto';
+            }
         } else if (isPreviewActive) {
-            // Mode Preview: Geser ke KIRI UJUNG dan susun ATAS-BAWAH (flex-col)
-            container.classList.remove('justify-center');
-            container.classList.add('justify-start');
-
+            // Mode Preview Desktop: Geser ke KIRI UJUNG dan susun ATAS-BAWAH (flex-col)
+            container.className = 'fixed inset-0 pointer-events-none z-[60] flex flex-row items-center justify-start p-3 sm:p-5 gap-4 sm:gap-5 overflow-x-auto';
             wrapper.className = 'flex flex-col gap-3 max-h-[92vh] overflow-y-auto pr-1.5 shrink-0 w-[330px] sm:w-[350px]';
+            if (previewWrapper) {
+                previewWrapper.className = 'flex items-center gap-3 shrink-0 max-w-[65vw] sm:max-w-[70vw] overflow-x-auto p-1.5 scroll-smooth';
+            }
         } else {
-            // Mode Standar (2 orang tetap KANAN-KIRI): Tampil di TENGAH (flex-row)
-            container.classList.remove('justify-start');
-            container.classList.add('justify-center');
-
+            // Mode Standar Desktop (tanpa preview): Tampil di TENGAH (flex-row)
+            container.className = 'fixed inset-0 pointer-events-none z-[60] flex flex-row items-center justify-center p-3 sm:p-5 gap-4 sm:gap-5 overflow-x-auto';
             wrapper.className = 'flex flex-row items-center gap-4 max-h-[92vh] overflow-x-auto p-1 shrink-0';
         }
     }
@@ -3290,7 +3307,7 @@
                     </div>
 
                     <!-- List of Berkas -->
-                    <div class="p-3 space-y-2 bg-slate-50/50 overflow-y-auto max-h-[55vh] sm:max-h-[60vh]">
+                    <div class="p-3 space-y-2 bg-slate-50/50 overflow-y-auto ${isMobile && isPreviewActive ? 'max-h-[165px] sm:max-h-[220px]' : 'max-h-[55vh] sm:max-h-[60vh]'}">
                         ${itemsHtml}
                     </div>
 
@@ -3314,18 +3331,8 @@
         const mhs = window.mhsDataMap ? window.mhsDataMap[nim] : null;
         if (!mhs) return;
 
-        // ON MOBILE (< 1024px): Buka langsung modal pratinjau PDF layar penuh (pdfModalDW) agar rapi
-        if (window.innerWidth < 1024) {
-            const docList = getDocList();
-            const docInfo = docList.find(d => d.key === docKey) || { title: docKey };
-            const rawFilename = mhs[docInfo.fileField] || `${docKey}_${nim}.pdf`;
-            const pdfUrl = resolveDocPdfUrl(rawFilename);
-            const fullName = (mhs.nama_depan ? (mhs.nama_depan + ' ' + (mhs.nama_belakang || '')) : (mhs.nama || 'Mahasiswa ' + nim)).trim();
-            openPdfPreviewDW(pdfUrl, docInfo.title || docKey, `${fullName} (${nim}) • ${rawFilename}`);
-            return;
-        }
+        if (!window.activePreviews) window.activePreviews = [];
 
-        // DESKTOP:
         // Cek apakah berkas ini sudah sedang dibuka di salah satu slot pratinjau
         const existingIdx = window.activePreviews.findIndex(p => p.nim === nim && p.docKey === docKey);
         if (existingIdx > -1) {
@@ -3334,7 +3341,7 @@
             return;
         }
 
-        // Tambahkan ke slot (maksimal 5 pratinjau berdampingan seperti Admin LAA)
+        // Tambahkan ke slot (maksimal 5 pratinjau berdampingan)
         if (window.activePreviews.length >= 5) {
             window.activePreviews.shift();
             window.activePreviews.push({ nim, docKey });
@@ -3351,8 +3358,11 @@
             const previewWrapper = document.getElementById('wrapperPreviewBerkas');
             if (previewWrapper) {
                 previewWrapper.scrollLeft = previewWrapper.scrollWidth;
+                if (window.innerWidth < 1024) {
+                    previewWrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
             }
-        }, 100);
+        }, 120);
     }
 
     async function openStudentBerkasPreview(nim, docKey) {
@@ -3462,10 +3472,17 @@
         }
 
         wrapper.classList.remove('hidden');
-        wrapper.className = 'flex items-center gap-3 shrink-0 max-w-[65vw] sm:max-w-[70vw] overflow-x-auto p-1.5 scroll-smooth';
+        const isMobile = window.innerWidth < 1024;
+        if (isMobile) {
+            wrapper.className = 'flex flex-row items-start gap-3 w-full max-w-[94vw] sm:max-w-md overflow-x-auto p-1 shrink-0 scroll-smooth pb-8';
+        } else {
+            wrapper.className = 'flex items-center gap-3 shrink-0 max-w-[65vw] sm:max-w-[70vw] overflow-x-auto p-1.5 scroll-smooth';
+        }
 
         const totalPreviews = window.activePreviews.length;
-        const panelWidthClass = totalPreviews >= 3 ? 'w-[340px] sm:w-[370px] lg:w-[400px] shrink-0' : (totalPreviews > 1 ? 'w-[400px] sm:w-[440px] lg:w-[470px] shrink-0' : 'w-[500px] sm:w-[540px] shrink-0');
+        const panelWidthClass = isMobile 
+            ? 'w-[90vw] sm:w-[390px] shrink-0' 
+            : (totalPreviews >= 3 ? 'w-[340px] sm:w-[370px] lg:w-[400px] shrink-0' : (totalPreviews > 1 ? 'w-[400px] sm:w-[440px] lg:w-[470px] shrink-0' : 'w-[500px] sm:w-[540px] shrink-0'));
 
         const docList = getDocList();
 
@@ -3543,7 +3560,7 @@
                     </div>
 
                     <!-- Body Frame Pratinjau PDF -->
-                    <div class="h-[390px] sm:h-[430px] md:h-[450px] bg-slate-200 relative border-b border-slate-200 overflow-hidden cursor-default select-none">
+                    <div class="${isMobile ? 'h-[310px] sm:h-[360px]' : 'h-[390px] sm:h-[430px] md:h-[450px]'} bg-slate-200 relative border-b border-slate-200 overflow-hidden cursor-default select-none">
                         <iframe id="iframePreviewBerkas_${p.nim}_${p.docKey}" src="${pdfUrl}#toolbar=0&navpanes=0" class="w-full h-full border-0 pointer-events-none" title="Pratinjau Dokumen PDF"></iframe>
                     </div>
 

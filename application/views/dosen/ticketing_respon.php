@@ -59,27 +59,27 @@
     <?php $this->load->view('partials/dosen_sidebar'); ?>
 
     <!-- Header Navigation -->
-    <header class="glass-header sticky top-0 z-30 px-6 py-4 pl-16">
-        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-3.5">
-                <div class="w-11 h-11 rounded-2xl bg-orange-100 text-brand-600 flex items-center justify-center font-bold text-xl shadow-xs border border-orange-200/50">
+    <header class="glass-header sticky top-0 z-30 px-4 sm:px-6 py-3.5 sm:py-4 pl-16 sm:pl-20">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+            <div class="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0">
+                <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-orange-100 text-brand-600 flex items-center justify-center font-bold text-lg sm:text-xl shadow-xs border border-orange-200/50 shrink-0 mt-0.5 sm:mt-0">
                     <i class="bi bi-chat-left-text-fill"></i>
                 </div>
-                <div>
-                    <div class="flex items-center gap-2">
-                        <h1 class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">Inbox Respon Tiket Dosen</h1>
-                        <span class="px-2.5 py-0.5 rounded-md bg-orange-100 text-orange-800 text-[10px] font-extrabold tracking-wider uppercase border border-orange-200">Panel Dosen</span>
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                        <h1 class="text-sm sm:text-xl font-extrabold text-slate-900 tracking-tight leading-snug">Inbox Respon Tiket Dosen</h1>
+                        <span class="px-2.5 py-0.5 rounded-md bg-orange-100 text-orange-800 text-[10px] font-extrabold tracking-wider uppercase border border-orange-200 shrink-0">Panel Dosen</span>
                     </div>
-                    <p class="text-xs text-slate-500 mt-0.5">Tinjau dan respon laporan kendala terkait Dosen Wali, Bimbingan & Akademik.</p>
+                    <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5 line-clamp-1 sm:line-clamp-none">Tinjau dan respon laporan kendala terkait Dosen Wali, Bimbingan & Akademik.</p>
                 </div>
             </div>
 
             <!-- Quick Action Links -->
-            <div class="flex items-center gap-2.5">
-                <a href="<?= site_url('dosen/ticketing/input'); ?>" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold shadow-xs transition-all">
+            <div class="flex items-center gap-2 w-full sm:w-auto flex-wrap sm:flex-nowrap">
+                <a href="<?= site_url('dosen/ticketing/input'); ?>" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold shadow-xs transition-all">
                     <i class="bi bi-plus-circle-fill"></i> Buat Tiket Baru
                 </a>
-                <a href="<?= site_url('dosen/ticketing/riwayat'); ?>" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all border border-slate-200">
+                <a href="<?= site_url('dosen/ticketing/riwayat'); ?>" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all border border-slate-200">
                     <i class="bi bi-clock-history"></i> Riwayat Tiket Saya
                 </a>
             </div>
@@ -159,8 +159,8 @@
         </div>
 
         <!-- Filter & Search Toolbar -->
-        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs mb-6 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+            <div class="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-none" style="-webkit-overflow-scrolling: touch;">
                 <?php
                 $statusPills = [
                     'all'      => 'Semua Tiket',
@@ -173,7 +173,7 @@
                     $isActive = ($filterStatus === $stKey);
                 ?>
                     <a href="<?= site_url('dosen/respon-ticketing?status=' . $stKey . ($search ? '&q=' . urlencode($search) : '')); ?>" 
-                       class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all <?= $isActive ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-600' ?>">
+                       class="shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all <?= $isActive ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-600' ?>">
                         <?= $stLabel; ?>
                     </a>
                 <?php endforeach; ?>
@@ -197,9 +197,10 @@
             </form>
         </div>
 
-        <!-- Table of Incoming Dosen Tickets -->
+        <!-- Table & Mobile Cards of Incoming Dosen Tickets -->
         <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-            <div class="overflow-x-auto">
+            <!-- Desktop Table (md:block) -->
+            <div class="overflow-x-auto hidden md:block">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-extrabold uppercase text-slate-500 tracking-wider">
@@ -315,6 +316,100 @@
                         <?php endif; ?>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Mobile Card View (block md:hidden) -->
+            <div class="block md:hidden p-3.5 space-y-3 bg-slate-50/50">
+                <?php if (!empty($tickets)): ?>
+                    <?php foreach ($tickets as $t): ?>
+                        <?php
+                            $statusColor = 'bg-amber-50 text-amber-800 border-amber-200';
+                            $waTickIcon = '<i class="bi bi-check text-slate-400 font-bold text-sm"></i>';
+
+                            if ($t->status === 'Diproses') {
+                                $statusColor = 'bg-blue-50 text-blue-800 border-blue-200';
+                                $waTickIcon = '<i class="bi bi-check-all text-slate-500 font-bold text-base -mr-0.5"></i>';
+                            } elseif ($t->status === 'Selesai') {
+                                $statusColor = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+                                $waTickIcon = '<i class="bi bi-check-all text-sky-500 font-bold text-base -mr-0.5"></i>';
+                            } elseif ($t->status === 'Ditutup') {
+                                $statusColor = 'bg-slate-100 text-slate-700 border-slate-300';
+                                $waTickIcon = '<i class="bi bi-patch-check-fill text-purple-600 text-xs mr-0.5"></i>';
+                            }
+
+                            $prioClass = 'text-slate-600 bg-slate-50 border-slate-200';
+                            if ($t->prioritas === 'Sedang') $prioClass = 'text-blue-700 bg-blue-50 border-blue-200';
+                            elseif ($t->prioritas === 'Tinggi') $prioClass = 'text-amber-700 bg-amber-50 border-amber-200';
+                            elseif ($t->prioritas === 'Darurat') $prioClass = 'text-rose-700 bg-rose-50 border-rose-200 font-bold';
+                        ?>
+                        <div class="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs space-y-2.5">
+                            <!-- Top: Kode Tiket, Prioritas & Status Badge -->
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="font-mono font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md text-[11px] border border-slate-200">
+                                        <?= htmlspecialchars($t->kode_tiket); ?>
+                                    </span>
+                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold border <?= $prioClass; ?>">
+                                        <?= $t->prioritas; ?>
+                                    </span>
+                                </div>
+                                <div class="relative inline-flex items-center cursor-pointer status-stepper-trigger select-none shrink-0"
+                                     data-kode="<?= htmlspecialchars($t->kode_tiket); ?>"
+                                     data-status="<?= htmlspecialchars($t->status); ?>"
+                                     data-unit="<?= htmlspecialchars($t->unit_tujuan); ?>"
+                                     data-subjek="<?= htmlspecialchars($t->subjek); ?>"
+                                     data-created="<?= date('d M Y, H:i', strtotime($t->created_at)) . ' WIB'; ?>"
+                                     data-updated="<?= !empty($t->updated_at) ? date('d M Y, H:i', strtotime($t->updated_at)) . ' WIB' : ''; ?>"
+                                     data-tgl-tanggapan="<?= !empty($t->tgl_tanggapan) ? date('d M Y, H:i', strtotime($t->tgl_tanggapan)) . ' WIB' : (!empty($t->updated_at) && $t->status !== 'Menunggu' ? date('d M Y, H:i', strtotime($t->updated_at)) . ' WIB' : ''); ?>"
+                                     data-tanggapan="<?= htmlspecialchars(preg_replace('/\s+/u', ' ', html_entity_decode(trim(strip_tags(str_ireplace(['&nbsp;', '&amp;nbsp;'], ' ', $t->tanggapan ?? ''))), ENT_QUOTES, 'UTF-8'))); ?>">
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border <?= $statusColor; ?>">
+                                        <?= $waTickIcon; ?>
+                                        <span><?= htmlspecialchars($t->status); ?></span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Pengirim -->
+                            <div class="flex items-center gap-2 p-2 rounded-xl bg-slate-50/80 border border-slate-100 text-xs">
+                                <div class="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-xs shrink-0">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="font-bold text-slate-800 truncate"><?= htmlspecialchars($t->nama_dosen); ?></p>
+                                    <p class="text-[10px] text-slate-400 font-mono">NIDN/ID: <?= htmlspecialchars($t->nidn ?: '-'); ?></p>
+                                </div>
+                            </div>
+
+                            <!-- Kendala & Kategori -->
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-sm leading-snug"><?= htmlspecialchars($t->subjek); ?></h4>
+                                <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md mt-1.5">
+                                    <i class="bi bi-tag text-orange-500"></i> <?= htmlspecialchars($t->kategori); ?>
+                                </span>
+                            </div>
+
+                            <!-- Footer: Waktu Masuk & Tombol Tanggapi -->
+                            <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2">
+                                <span class="text-[11px] text-slate-400 font-medium flex items-center gap-1">
+                                    <i class="bi bi-clock"></i> <?= date('d M Y, H:i', strtotime($t->created_at)); ?> WIB
+                                </span>
+                                <button type="button" onclick="bukaModalRespon('<?= $t->kode_tiket; ?>')" 
+                                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer">
+                                    <i class="bi bi-reply-fill"></i>
+                                    <span>Tanggapi</span>
+                                </button>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="py-10 px-4 text-center bg-white rounded-2xl border border-slate-200">
+                        <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3 text-xl">
+                            <i class="bi bi-inbox"></i>
+                        </div>
+                        <div class="text-sm font-bold text-slate-700">Tidak ada tiket masuk untuk Dosen</div>
+                        <p class="text-xs text-slate-400 mt-1">Saat ini belum ada laporan kendala yang ditujukan ke unit Dosen / Dosen Wali atau filter yang dipilih tidak memiliki data.</p>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </main>
@@ -646,221 +741,234 @@
             popover.addEventListener('mouseleave', () => hidePopover());
         }
 
-        document.querySelectorAll('.status-stepper-trigger').forEach(trigger => {
-            trigger.addEventListener('mouseenter', function(e) {
-                clearTimeout(popoverTimeout);
+        function showPopoverForTrigger(el) {
+            clearTimeout(popoverTimeout);
 
-                const kode = this.getAttribute('data-kode');
-                const status = this.getAttribute('data-status');
-                const unit = this.getAttribute('data-unit');
-                const created = this.getAttribute('data-created');
-                const updated = this.getAttribute('data-updated');
-                const tglTanggapan = this.getAttribute('data-tgl-tanggapan');
-                const tanggapan = this.getAttribute('data-tanggapan');
+            const kode = el.getAttribute('data-kode');
+            const status = el.getAttribute('data-status');
+            const unit = el.getAttribute('data-unit');
+            const created = el.getAttribute('data-created');
+            const updated = el.getAttribute('data-updated');
+            const tglTanggapan = el.getAttribute('data-tgl-tanggapan');
+            const tanggapan = el.getAttribute('data-tanggapan');
 
-                document.getElementById('popKode').textContent = kode;
-                document.getElementById('step1Time').innerHTML = '<i class="bi bi-clock-fill text-[9px] mr-1"></i>' + created;
-                document.getElementById('step1Unit').textContent = unit || 'terkait';
+            document.getElementById('popKode').textContent = kode;
+            document.getElementById('step1Time').innerHTML = '<i class="bi bi-clock-fill text-[9px] mr-1"></i>' + created;
+            document.getElementById('step1Unit').textContent = unit || 'terkait';
 
-                const popWaBadge = document.getElementById('popWaBadge');
+            const popWaBadge = document.getElementById('popWaBadge');
 
-                // Step 2 elements
-                const step2Icon = document.getElementById('step2Icon');
-                const step2Title = document.getElementById('step2Title');
-                const step2Time = document.getElementById('step2Time');
-                const step2Desc = document.getElementById('step2Desc');
+            // Step 2 elements
+            const step2Icon = document.getElementById('step2Icon');
+            const step2Title = document.getElementById('step2Title');
+            const step2Time = document.getElementById('step2Time');
+            const step2Desc = document.getElementById('step2Desc');
 
-                // Step 3 elements
-                const step3Icon = document.getElementById('step3Icon');
-                const step3Title = document.getElementById('step3Title');
-                const step3Time = document.getElementById('step3Time');
-                const step3Desc = document.getElementById('step3Desc');
-                const step3Box = document.getElementById('step3TanggapanBox');
-                const step3Text = document.getElementById('step3TanggapanText');
+            // Step 3 elements
+            const step3Icon = document.getElementById('step3Icon');
+            const step3Title = document.getElementById('step3Title');
+            const step3Time = document.getElementById('step3Time');
+            const step3Desc = document.getElementById('step3Desc');
+            const step3Box = document.getElementById('step3TanggapanBox');
+            const step3Text = document.getElementById('step3TanggapanText');
 
-                // Step 4 elements
-                const step4Icon = document.getElementById('step4Icon');
-                const step4Title = document.getElementById('step4Title');
-                const step4Time = document.getElementById('step4Time');
-                const step4Desc = document.getElementById('step4Desc');
+            // Step 4 elements
+            const step4Icon = document.getElementById('step4Icon');
+            const step4Title = document.getElementById('step4Title');
+            const step4Time = document.getElementById('step4Time');
+            const step4Desc = document.getElementById('step4Desc');
 
-                const stepperLine = document.getElementById('stepperLine');
+            const stepperLine = document.getElementById('stepperLine');
 
-                // Reset step 3 quote
-                step3Box.classList.add('hidden');
-                step3Text.textContent = '';
+            // Reset step 3 quote
+            step3Box.classList.add('hidden');
+            step3Text.textContent = '';
 
-                if (status === 'Menunggu') {
-                    popWaBadge.className = 'inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border bg-amber-50 text-amber-700 border-amber-200';
-                    popWaBadge.innerHTML = '<i class="bi bi-check text-slate-400 font-black text-sm"></i> Menunggu';
+            if (status === 'Menunggu') {
+                popWaBadge.className = 'inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border bg-amber-50 text-amber-700 border-amber-200';
+                popWaBadge.innerHTML = '<i class="bi bi-check text-slate-400 font-black text-sm"></i> Menunggu';
 
-                    // Step 2: Waiting
-                    step2Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-amber-100 text-amber-600 border border-amber-300';
-                    step2Icon.innerHTML = '<i class="bi bi-hourglass-split animate-pulse"></i>';
-                    step2Title.className = 'font-bold text-[11px] text-amber-800';
-                    step2Time.className = 'text-[10px] font-semibold text-amber-600 flex items-center whitespace-nowrap';
-                    step2Time.innerHTML = '<i class="bi bi-hourglass-split mr-1 text-[9px]"></i> Menunggu Antrean';
-                    step2Desc.textContent = 'Menunggu giliran peninjauan oleh Dosen / unit ' + (unit || 'terkait') + '.';
+                // Step 2: Waiting
+                step2Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-amber-100 text-amber-600 border border-amber-300';
+                step2Icon.innerHTML = '<i class="bi bi-hourglass-split animate-pulse"></i>';
+                step2Title.className = 'font-bold text-[11px] text-amber-800';
+                step2Time.className = 'text-[10px] font-semibold text-amber-600 flex items-center whitespace-nowrap';
+                step2Time.innerHTML = '<i class="bi bi-hourglass-split mr-1 text-[9px]"></i> Menunggu Antrean';
+                step2Desc.textContent = 'Menunggu giliran peninjauan oleh Dosen / unit ' + (unit || 'terkait') + '.';
 
-                    // Step 3: Pending
-                    step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200';
-                    step3Icon.innerHTML = '<i class="bi bi-circle text-[8px]"></i>';
-                    step3Title.className = 'font-bold text-[11px] text-slate-400';
-                    step3Time.className = 'text-[10px] font-normal text-slate-400 flex items-center whitespace-nowrap';
-                    step3Time.innerHTML = '<i class="bi bi-dash mr-1 text-[10px]"></i> Belum Ada Solusi';
-                    step3Desc.textContent = 'Solusi akan disampaikan setelah kendala dianalisis.';
+                // Step 3: Pending
+                step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200';
+                step3Icon.innerHTML = '<i class="bi bi-circle text-[8px]"></i>';
+                step3Title.className = 'font-bold text-[11px] text-slate-400';
+                step3Time.className = 'text-[10px] font-normal text-slate-400 flex items-center whitespace-nowrap';
+                step3Time.innerHTML = '<i class="bi bi-dash mr-1 text-[10px]"></i> Belum Ada Solusi';
+                step3Desc.textContent = 'Solusi akan disampaikan setelah kendala dianalisis.';
 
-                    // Step 4: Pending
-                    step4Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200';
-                    step4Icon.innerHTML = '<i class="bi bi-lock text-[10px]"></i>';
-                    step4Title.className = 'font-bold text-[11px] text-slate-400';
-                    step4Time.className = 'text-[10px] font-normal text-slate-400 flex items-center whitespace-nowrap';
-                    step4Time.innerHTML = '<i class="bi bi-dash mr-1 text-[10px]"></i> Belum Ditutup';
-                    step4Desc.textContent = 'Tiket masih berstatus aktif dalam antrean.';
+                // Step 4: Pending
+                step4Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200';
+                step4Icon.innerHTML = '<i class="bi bi-lock text-[10px]"></i>';
+                step4Title.className = 'font-bold text-[11px] text-slate-400';
+                step4Time.className = 'text-[10px] font-normal text-slate-400 flex items-center whitespace-nowrap';
+                step4Time.innerHTML = '<i class="bi bi-dash mr-1 text-[10px]"></i> Belum Ditutup';
+                step4Desc.textContent = 'Tiket masih berstatus aktif dalam antrean.';
 
-                    stepperLine.className = 'absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-slate-200';
+                stepperLine.className = 'absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-slate-200';
 
-                } else if (status === 'Diproses') {
-                    popWaBadge.className = 'inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-200';
-                    popWaBadge.innerHTML = '<i class="bi bi-check-all text-slate-500 font-black text-base"></i> Diproses';
+            } else if (status === 'Diproses') {
+                popWaBadge.className = 'inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-200';
+                popWaBadge.innerHTML = '<i class="bi bi-check-all text-slate-500 font-black text-base"></i> Diproses';
 
-                    // Step 2: Processing (Active)
-                    step2Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-blue-600 text-white shadow-xs';
-                    step2Icon.innerHTML = '<i class="bi bi-check-all text-sm font-bold"></i>';
-                    step2Title.className = 'font-bold text-[11px] text-blue-800';
-                    step2Time.className = 'text-[10px] font-mono font-bold text-blue-600 flex items-center whitespace-nowrap';
-                    step2Time.innerHTML = '<i class="bi bi-clock-history mr-1 text-[9px]"></i>' + (updated || created);
-                    step2Desc.textContent = 'Dosen sedang aktif meninjau dan menangani kendala ini.';
+                // Step 2: Processing (Active)
+                step2Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-blue-600 text-white shadow-xs';
+                step2Icon.innerHTML = '<i class="bi bi-check-all text-sm font-bold"></i>';
+                step2Title.className = 'font-bold text-[11px] text-blue-800';
+                step2Time.className = 'text-[10px] font-mono font-bold text-blue-600 flex items-center whitespace-nowrap';
+                step2Time.innerHTML = '<i class="bi bi-clock-history mr-1 text-[9px]"></i>' + (updated || created);
+                step2Desc.textContent = 'Dosen sedang aktif meninjau dan menangani kendala ini.';
 
-                    // Step 3: Preparing or with notes
-                    if (tanggapan && tanggapan.trim()) {
-                        step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-blue-100 text-blue-600 border border-blue-300';
-                        step3Icon.innerHTML = '<i class="bi bi-chat-dots-fill text-[9px]"></i>';
-                        step3Title.className = 'font-bold text-[11px] text-blue-800';
-                        step3Time.className = 'text-[10px] font-mono font-bold text-blue-600 flex items-center whitespace-nowrap';
-                        step3Time.innerHTML = '<i class="bi bi-clock mr-1 text-[9px]"></i>' + (tglTanggapan || updated);
-                        step3Desc.textContent = 'Dosen telah memberikan catatan tanggapan.';
-                        step3Box.classList.remove('hidden');
-                        step3Text.textContent = '"' + tanggapan.trim() + '"';
-                    } else {
-                        step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200';
-                        step3Icon.innerHTML = '<i class="bi bi-hourglass-split animate-pulse"></i>';
-                        step3Title.className = 'font-bold text-[11px] text-slate-600';
-                        step3Time.className = 'text-[10px] font-semibold text-amber-600 flex items-center whitespace-nowrap';
-                        step3Time.innerHTML = '<i class="bi bi-hourglass mr-1 text-[9px]"></i> Sedang Disiapkan';
-                        step3Desc.textContent = 'Solusi dan jawaban sedang dirumuskan oleh Dosen.';
-                    }
-
-                    // Step 4: Pending
-                    step4Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200';
-                    step4Icon.innerHTML = '<i class="bi bi-lock text-[10px]"></i>';
-                    step4Title.className = 'font-bold text-[11px] text-slate-400';
-                    step4Time.className = 'text-[10px] font-normal text-slate-400 flex items-center whitespace-nowrap';
-                    step4Time.innerHTML = '<i class="bi bi-dash mr-1 text-[10px]"></i> Belum Ditutup';
-                    step4Desc.textContent = 'Tiket masih dalam proses penanganan.';
-
-                    stepperLine.className = 'absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-blue-300';
-
-                } else if (status === 'Selesai') {
-                    popWaBadge.className = 'inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200';
-                    popWaBadge.innerHTML = '<i class="bi bi-check-all text-sky-500 font-black text-base"></i> Selesai';
-
-                    // Step 2: Complete
-                    step2Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-blue-500 text-white shadow-xs';
-                    step2Icon.innerHTML = '<i class="bi bi-check-lg"></i>';
-                    step2Title.className = 'font-bold text-[11px] text-slate-700';
-                    step2Time.className = 'text-[10px] font-mono font-bold text-slate-500 flex items-center whitespace-nowrap';
-                    step2Time.innerHTML = '<i class="bi bi-clock-history mr-1 text-[9px]"></i>' + (updated || created);
-                    step2Desc.textContent = 'Kendala telah ditelaah dan diproses oleh Dosen.';
-
-                    // Step 3: Complete with WhatsApp Blue Double Check & Solusi
-                    step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-black bg-sky-500 text-white shadow-xs ring-2 ring-sky-200';
-                    step3Icon.innerHTML = '<i class="bi bi-check-all"></i>';
-                    step3Title.className = 'font-bold text-[11px] text-sky-900';
-                    step3Time.className = 'text-[10px] font-mono font-bold text-sky-700 flex items-center whitespace-nowrap';
-                    step3Time.innerHTML = '<i class="bi bi-clock-fill mr-1 text-[9px]"></i>' + (tglTanggapan || updated);
-                    step3Desc.textContent = 'Solusi resmi telah diberikan oleh Dosen.';
-
-                    if (tanggapan && tanggapan.trim()) {
-                        step3Box.classList.remove('hidden');
-                        step3Text.textContent = '"' + tanggapan.trim() + '"';
-                    }
-
-                    // Step 4: Ready to close
-                    step4Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-300';
-                    step4Icon.innerHTML = '<i class="bi bi-hourglass-split"></i>';
-                    step4Title.className = 'font-bold text-[11px] text-amber-800';
-                    step4Time.className = 'text-[10px] font-semibold text-amber-600 flex items-center whitespace-nowrap';
-                    step4Time.innerHTML = '<i class="bi bi-check-circle mr-1 text-[9px]"></i> Siap Ditutup';
-                    step4Desc.textContent = 'Solusi telah terkirim, menunggu konfirmasi penutupan.';
-
-                    stepperLine.className = 'absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-sky-400';
-
+                // Step 3: Preparing or with notes
+                if (tanggapan && tanggapan.trim()) {
+                    step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-blue-100 text-blue-600 border border-blue-300';
+                    step3Icon.innerHTML = '<i class="bi bi-chat-dots-fill text-[9px]"></i>';
+                    step3Title.className = 'font-bold text-[11px] text-blue-800';
+                    step3Time.className = 'text-[10px] font-mono font-bold text-blue-600 flex items-center whitespace-nowrap';
+                    step3Time.innerHTML = '<i class="bi bi-clock mr-1 text-[9px]"></i>' + (tglTanggapan || updated);
+                    step3Desc.textContent = 'Dosen telah memberikan catatan tanggapan.';
+                    step3Box.classList.remove('hidden');
+                    step3Text.textContent = '"' + tanggapan.trim() + '"';
                 } else {
-                    // Status Ditutup
-                    popWaBadge.className = 'inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-700 border-slate-300';
-                    popWaBadge.innerHTML = '<i class="bi bi-patch-check-fill text-purple-600 text-xs"></i> Ditutup';
-
-                    // Step 2: Complete
-                    step2Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-blue-500 text-white shadow-xs';
-                    step2Icon.innerHTML = '<i class="bi bi-check-lg"></i>';
-                    step2Title.className = 'font-bold text-[11px] text-slate-700';
-                    step2Time.className = 'text-[10px] font-mono font-bold text-slate-500 flex items-center whitespace-nowrap';
-                    step2Time.innerHTML = '<i class="bi bi-clock-history mr-1 text-[9px]"></i>' + (updated || created);
-                    step2Desc.textContent = 'Kendala telah selesai diproses.';
-
-                    // Step 3: Complete with Solusi
-                    step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-black bg-sky-500 text-white shadow-xs';
-                    step3Icon.innerHTML = '<i class="bi bi-check-all"></i>';
-                    step3Title.className = 'font-bold text-[11px] text-sky-900';
-                    step3Time.className = 'text-[10px] font-mono font-bold text-sky-700 flex items-center whitespace-nowrap';
-                    step3Time.innerHTML = '<i class="bi bi-clock-fill mr-1 text-[9px]"></i>' + (tglTanggapan || updated);
-                    step3Desc.textContent = 'Solusi resmi telah diterima pelapor.';
-
-                    if (tanggapan && tanggapan.trim()) {
-                        step3Box.classList.remove('hidden');
-                        step3Text.textContent = '"' + tanggapan.trim() + '"';
-                    }
-
-                    // Step 4: Closed
-                    step4Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-purple-600 text-white shadow-sm ring-2 ring-purple-200';
-                    step4Icon.innerHTML = '<i class="bi bi-check-lg font-black"></i>';
-                    step4Title.className = 'font-bold text-[11px] text-purple-900';
-                    step4Time.className = 'text-[10px] font-mono font-bold text-purple-700 flex items-center whitespace-nowrap';
-                    step4Time.innerHTML = '<i class="bi bi-patch-check-fill mr-1 text-[10px]"></i>' + (updated || tglTanggapan || created);
-                    step4Desc.textContent = 'Kendala telah tuntas diselesaikan dan tiket resmi ditutup.';
-
-                    stepperLine.className = 'absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-purple-500';
+                    step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200';
+                    step3Icon.innerHTML = '<i class="bi bi-hourglass-split animate-pulse"></i>';
+                    step3Title.className = 'font-bold text-[11px] text-slate-600';
+                    step3Time.className = 'text-[10px] font-semibold text-amber-600 flex items-center whitespace-nowrap';
+                    step3Time.innerHTML = '<i class="bi bi-hourglass mr-1 text-[9px]"></i> Sedang Disiapkan';
+                    step3Desc.textContent = 'Solusi dan jawaban sedang dirumuskan oleh Dosen.';
                 }
 
-                // Show & Positioning
-                popover.classList.remove('hidden');
-                const rect = this.getBoundingClientRect();
-                const actualWidth = popover.offsetWidth || 340;
-                const actualHeight = popover.offsetHeight || 320;
+                // Step 4: Pending
+                step4Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200';
+                step4Icon.innerHTML = '<i class="bi bi-lock text-[10px]"></i>';
+                step4Title.className = 'font-bold text-[11px] text-slate-400';
+                step4Time.className = 'text-[10px] font-normal text-slate-400 flex items-center whitespace-nowrap';
+                step4Time.innerHTML = '<i class="bi bi-dash mr-1 text-[10px]"></i> Belum Ditutup';
+                step4Desc.textContent = 'Tiket masih dalam proses penanganan.';
 
-                let top = rect.top - actualHeight - 12;
-                if (top < 10) {
-                    top = rect.bottom + 12;
+                stepperLine.className = 'absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-blue-300';
+
+            } else if (status === 'Selesai') {
+                popWaBadge.className = 'inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200';
+                popWaBadge.innerHTML = '<i class="bi bi-check-all text-sky-500 font-black text-base"></i> Selesai';
+
+                // Step 2: Complete
+                step2Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-blue-500 text-white shadow-xs';
+                step2Icon.innerHTML = '<i class="bi bi-check-lg"></i>';
+                step2Title.className = 'font-bold text-[11px] text-slate-700';
+                step2Time.className = 'text-[10px] font-mono font-bold text-slate-500 flex items-center whitespace-nowrap';
+                step2Time.innerHTML = '<i class="bi bi-clock-history mr-1 text-[9px]"></i>' + (updated || created);
+                step2Desc.textContent = 'Kendala telah ditelaah dan diproses oleh Dosen.';
+
+                // Step 3: Complete with WhatsApp Blue Double Check & Solusi
+                step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-black bg-sky-500 text-white shadow-xs ring-2 ring-sky-200';
+                step3Icon.innerHTML = '<i class="bi bi-check-all"></i>';
+                step3Title.className = 'font-bold text-[11px] text-sky-900';
+                step3Time.className = 'text-[10px] font-mono font-bold text-sky-700 flex items-center whitespace-nowrap';
+                step3Time.innerHTML = '<i class="bi bi-clock-fill mr-1 text-[9px]"></i>' + (tglTanggapan || updated);
+                step3Desc.textContent = 'Solusi resmi telah diberikan oleh Dosen.';
+
+                if (tanggapan && tanggapan.trim()) {
+                    step3Box.classList.remove('hidden');
+                    step3Text.textContent = '"' + tanggapan.trim() + '"';
                 }
 
-                let left = (rect.left + rect.right) / 2 - (actualWidth / 2);
+                // Step 4: Ready to close
+                step4Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-300';
+                step4Icon.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+                step4Title.className = 'font-bold text-[11px] text-amber-800';
+                step4Time.className = 'text-[10px] font-semibold text-amber-600 flex items-center whitespace-nowrap';
+                step4Time.innerHTML = '<i class="bi bi-check-circle mr-1 text-[9px]"></i> Siap Ditutup';
+                step4Desc.textContent = 'Solusi telah terkirim, menunggu konfirmasi penutupan.';
 
-                const maxLeft = window.innerWidth - actualWidth - 20;
-                if (left > maxLeft) {
-                    left = maxLeft;
+                stepperLine.className = 'absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-sky-400';
+
+            } else {
+                // Status Ditutup
+                popWaBadge.className = 'inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-700 border-slate-300';
+                popWaBadge.innerHTML = '<i class="bi bi-patch-check-fill text-purple-600 text-xs"></i> Ditutup';
+
+                // Step 2: Complete
+                step2Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-blue-500 text-white shadow-xs';
+                step2Icon.innerHTML = '<i class="bi bi-check-lg"></i>';
+                step2Title.className = 'font-bold text-[11px] text-slate-700';
+                step2Time.className = 'text-[10px] font-mono font-bold text-slate-500 flex items-center whitespace-nowrap';
+                step2Time.innerHTML = '<i class="bi bi-clock-history mr-1 text-[9px]"></i>' + (updated || created);
+                step2Desc.textContent = 'Kendala telah selesai diproses.';
+
+                // Step 3: Complete with Solusi
+                step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-black bg-sky-500 text-white shadow-xs';
+                step3Icon.innerHTML = '<i class="bi bi-check-all"></i>';
+                step3Title.className = 'font-bold text-[11px] text-sky-900';
+                step3Time.className = 'text-[10px] font-mono font-bold text-sky-700 flex items-center whitespace-nowrap';
+                step3Time.innerHTML = '<i class="bi bi-clock-fill mr-1 text-[9px]"></i>' + (tglTanggapan || updated);
+                step3Desc.textContent = 'Solusi resmi telah diterima pelapor.';
+
+                if (tanggapan && tanggapan.trim()) {
+                    step3Box.classList.remove('hidden');
+                    step3Text.textContent = '"' + tanggapan.trim() + '"';
                 }
-                if (left < 16) {
-                    left = 16;
+
+                // Step 4: Closed
+                step4Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-purple-600 text-white shadow-sm ring-2 ring-purple-200';
+                step4Icon.innerHTML = '<i class="bi bi-check-lg font-black"></i>';
+                step4Title.className = 'font-bold text-[11px] text-purple-900';
+                step4Time.className = 'text-[10px] font-mono font-bold text-purple-700 flex items-center whitespace-nowrap';
+                step4Time.innerHTML = '<i class="bi bi-patch-check-fill mr-1 text-[10px]"></i>' + (updated || tglTanggapan || created);
+                step4Desc.textContent = 'Kendala telah tuntas diselesaikan dan tiket resmi ditutup.';
+
+                stepperLine.className = 'absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-purple-500';
+            }
+
+            // Show & Positioning
+            popover.classList.remove('hidden');
+            const rect = el.getBoundingClientRect();
+            const actualWidth = popover.offsetWidth || 340;
+            const actualHeight = popover.offsetHeight || 320;
+
+            let top = rect.top - actualHeight - 12;
+            if (top < 10) {
+                top = rect.bottom + 12;
+            }
+
+            let left = (rect.left + rect.right) / 2 - (actualWidth / 2);
+
+            const maxLeft = window.innerWidth - actualWidth - 20;
+            if (left > maxLeft) {
+                left = maxLeft;
+            }
+            if (left < 16) {
+                left = 16;
+            }
+
+            popover.style.top = top + 'px';
+            popover.style.left = left + 'px';
+
+            requestAnimationFrame(() => {
+                popover.classList.remove('opacity-0', '-translate-y-2');
+                popover.classList.add('opacity-100', 'translate-y-0');
+            });
+        }
+
+        document.querySelectorAll('.status-stepper-trigger').forEach(trigger => {
+            trigger.addEventListener('mouseenter', function() {
+                showPopoverForTrigger(this);
+            });
+
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (popover && !popover.classList.contains('hidden') && popover.classList.contains('opacity-100')) {
+                    hidePopover();
+                } else {
+                    showPopoverForTrigger(this);
                 }
-
-                popover.style.top = top + 'px';
-                popover.style.left = left + 'px';
-
-                requestAnimationFrame(() => {
-                    popover.classList.remove('opacity-0', '-translate-y-2');
-                    popover.classList.add('opacity-100', 'translate-y-0');
-                });
             });
 
             trigger.addEventListener('mouseleave', function() {
@@ -868,6 +976,13 @@
                     hidePopover();
                 }, 150);
             });
+        });
+
+        // Close popover when clicked outside
+        document.addEventListener('click', function(e) {
+            if (popover && !popover.contains(e.target) && !e.target.closest('.status-stepper-trigger')) {
+                hidePopover();
+            }
         });
     </script>
 </body>

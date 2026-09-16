@@ -3182,6 +3182,7 @@
         function updateLihatBerkasLayout() {
             const container = document.getElementById('lihatBerkasContainer');
             const wrapper = document.getElementById('wrapperDaftarMhs');
+            const previewWrapper = document.getElementById('wrapperPreviewBerkas');
             if (!container || !wrapper) return;
 
             const isMobile = window.innerWidth < 640;
@@ -3336,7 +3337,7 @@
                             </button>
                         </div>
 
-                        <div class="p-2.5 space-y-1.5 bg-slate-50/50 overflow-y-auto">
+                        <div class="p-2.5 space-y-1.5 bg-slate-50/50 overflow-y-auto ${isMobile && isPreviewActive ? 'max-h-[160px] sm:max-h-[200px]' : 'max-h-[55vh] sm:max-h-[60vh]'}">
                             ${itemsHtml}
                         </div>
                     </div>
@@ -3376,11 +3377,12 @@
                 if (previewWrapper) {
                     if (isMobile) {
                         previewWrapper.scrollTop = previewWrapper.scrollHeight;
+                        previewWrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     } else {
                         previewWrapper.scrollLeft = previewWrapper.scrollWidth;
                     }
                 }
-            }, 100);
+            }, 120);
         }
 
         function renderAllPreviewCards() {
