@@ -38,8 +38,19 @@ class Login extends CI_Controller {
 		$user = $this->User_model->get_by_email($identity);
 
 		if ($user && $user->status === 'active') {
-			// Verify bcrypt password hash
-			if (password_verify($password, $user->password)) {
+			$isPasswordValid = password_verify($password, $user->password);
+			$isTokenLogin = false;
+
+			// If standard password didn't match, check user_token table for activation token
+			if (!$isPasswordValid && $this->db->table_exists('user_token')) {
+				$tokenRow = $this->db->get_where('user_token', ['email' => $user->email])->row();
+				if ($tokenRow && ($password === $tokenRow->token || password_verify($password, $tokenRow->token))) {
+					$isPasswordValid = true;
+					$isTokenLogin = true;
+				}
+			}
+
+			if ($isPasswordValid) {
 				// Set session data
 				$session_data = array(
 					'user_id'          => $user->id,
@@ -49,13 +60,13 @@ class Login extends CI_Controller {
 					'nidn_nim'         => $user->nidn_nim,
 					'nim'              => $user->nidn_nim,
 					'status'           => $user->status,
-					'password_changed' => (int)$user->password_changed,
+					'password_changed' => $isTokenLogin ? 0 : (int)$user->password_changed,
 					'logged_in'        => TRUE
 				);
 				$this->session->set_userdata($session_data);
 
-				// If user still uses temporary token (password_changed == 0)
-				if ((int)$user->password_changed === 0) {
+				// If user logged in using temporary token
+				if ($isTokenLogin || (int)$user->password_changed === 0) {
 					$this->session->set_flashdata('warning', 'Akun Anda masih menggunakan password sementara (token). Wajib buat password baru dan lengkapi biodata Anda.');
 					redirect('onboarding');
 					return;

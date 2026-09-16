@@ -197,17 +197,22 @@ class User_model extends CI_Model {
     }
 
     /**
-     * Get all users joined with roles table
+     * Get all users joined with roles table and user_token table
      * @return array
      */
     public function get_all_users_with_roles()
     {
         $roleField = $this->db->field_exists('role', $this->tbl_role) ? 'role' : 'name';
         $roleDisplayField = $this->db->field_exists('display_name', $this->tbl_role) ? 'display_name' : $roleField;
+        $hasTokenTable = $this->db->table_exists('user_token');
+        $tokenSelect = $hasTokenTable ? ", ut.token as token_hash, ut.date_created as token_created_at" : "";
 
-        $this->db->select("u.*, r.{$roleField} as role_slug, r.{$roleDisplayField} as role_display_name");
+        $this->db->select("u.*, r.{$roleField} as role_slug, r.{$roleDisplayField} as role_display_name {$tokenSelect}");
         $this->db->from("{$this->tbl_user} u");
         $this->db->join("{$this->tbl_role} r", "u.role_id = r.id", 'left');
+        if ($hasTokenTable) {
+            $this->db->join("user_token ut", "u.email = ut.email", 'left');
+        }
         $this->db->order_by('u.id', 'DESC');
         $results = $this->db->get()->result_array();
 
@@ -216,8 +221,12 @@ class User_model extends CI_Model {
             if (empty($row['nidn_nim'])) {
                 $row['nidn_nim'] = !empty($row['nim']) ? $row['nim'] : (!empty($row['nip']) ? $row['nip'] : '-');
             }
+            if (empty($row['token']) && !empty($row['token_hash'])) {
+                $row['token'] = $row['token_hash'];
+            }
             if (!isset($row['password_changed'])) {
-                $row['password_changed'] = 1;
+                // If token exists in user_token, password is not changed yet (0)
+                $row['password_changed'] = !empty($row['token']) ? 0 : 1;
             }
             if (empty($row['role_display_name']) && !empty($row['role_slug'])) {
                 $row['role_display_name'] = $row['role_slug'];
@@ -445,8 +454,8 @@ class User_model extends CI_Model {
     }
 
     /**
-     * Bulk update tokens for multiple users in a single transaction
-     * @param array $updates [['id' => 1, 'token' => '...'], ...]
+     * Bulk update tokens for multiple users strictly in user_token table
+     * @param array $updates [['id' => 'usr_...', 'token' => '...'], ...]
      * @return int
      */
     public function update_user_tokens_bulk($updates)
@@ -455,34 +464,34 @@ class User_model extends CI_Model {
         @set_time_limit(300);
         $this->db->trans_start();
         $count = 0;
-        $now = date('Y-m-d H:i:s');
+        $now = time();
         foreach ($updates as $item) {
             $id = (string)$item['id'];
             $token = $item['token'];
-            $this->db->where('id', (string)$id);
-            if ($this->db->field_exists('password_changed', $this->tbl_user)) {
-                $this->db->where('password_changed', 0);
-            }
-            $upData = [
-                'password' => password_hash($token, PASSWORD_DEFAULT, ['cost' => 8])
-            ];
-            if ($this->db->field_exists('token', $this->tbl_user)) $upData['token'] = $token;
-            if ($this->db->field_exists('updated_at', $this->tbl_user)) $upData['updated_at'] = $now;
 
-            $this->db->update($this->tbl_user, $upData);
-            if ($this->db->affected_rows() > 0) {
-                $count++;
-                // Sync user_token table
+            $user = $this->get_by_id($id);
+            if ($user && !empty($user->email)) {
+                // 1. Save strictly to user_token table
                 if ($this->db->table_exists('user_token')) {
-                    $uRow = $this->db->get_where($this->tbl_user, ['id' => $id])->row();
-                    if ($uRow && !empty($uRow->email)) {
-                        $this->db->replace('user_token', [
-                            'email' => $uRow->email,
-                            'token' => $token,
-                            'date_created' => time()
-                        ]);
-                    }
+                    $this->db->replace('user_token', [
+                        'email' => $user->email,
+                        'token' => $token,
+                        'date_created' => $now
+                    ]);
                 }
+
+                // 2. Keep token column in sync if exists, but DO NOT touch user.password!
+                $userUpdates = [];
+                if ($this->db->field_exists('token', $this->tbl_user)) {
+                    $userUpdates['token'] = $token;
+                }
+                if ($this->db->field_exists('updated_at', $this->tbl_user)) {
+                    $userUpdates['updated_at'] = date('Y-m-d H:i:s');
+                }
+                if (!empty($userUpdates)) {
+                    $this->db->where('id', (string)$id)->update($this->tbl_user, $userUpdates);
+                }
+                $count++;
             }
         }
         $this->db->trans_complete();
@@ -490,7 +499,7 @@ class User_model extends CI_Model {
     }
 
     /**
-     * Update user token and password hash
+     * Update user token strictly in user_token table
      * @param mixed $id
      * @param string $token
      * @return bool
@@ -498,20 +507,11 @@ class User_model extends CI_Model {
     public function update_user_token($id, $token)
     {
         $user = $this->get_by_id($id);
-        if (!$user || !empty($user->password_changed)) {
+        if (!$user || empty($user->email)) {
             return false;
         }
 
-        $updateData = [
-            'password' => password_hash($token, PASSWORD_DEFAULT, ['cost' => 8])
-        ];
-        if ($this->db->field_exists('token', $this->tbl_user)) $updateData['token'] = $token;
-        if ($this->db->field_exists('updated_at', $this->tbl_user)) $updateData['updated_at'] = date('Y-m-d H:i:s');
-
-        $this->db->where('id', $id);
-        $res = $this->db->update($this->tbl_user, $updateData);
-
-        if ($this->db->table_exists('user_token') && !empty($user->email)) {
+        if ($this->db->table_exists('user_token')) {
             $this->db->replace('user_token', [
                 'email' => $user->email,
                 'token' => $token,
@@ -519,7 +519,14 @@ class User_model extends CI_Model {
             ]);
         }
 
-        return $res;
+        if ($this->db->field_exists('token', $this->tbl_user)) {
+            $this->db->where('id', (string)$id)->update($this->tbl_user, [
+                'token' => $token,
+                'updated_at' => date('Y-m-d H:i:s')
+            ]);
+        }
+
+        return true;
     }
 
     /**
