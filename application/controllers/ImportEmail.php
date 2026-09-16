@@ -400,6 +400,8 @@ class ImportEmail extends CI_Controller {
                 'role' => $roleDisplay,
                 'nim_nip' => !empty($u['nidn_nim']) ? $u['nidn_nim'] : '-',
                 'token' => !empty($u['token']) ? $u['token'] : '',
+                'token_display' => !empty($u['token']) ? (strlen($u['token']) > 12 ? substr($u['token'], 0, 8) . '...' . substr($u['token'], -4) : $u['token']) : '',
+                'token_masked' => !empty($u['token']) ? substr($u['token'], 0, 4) . '••••••••' : '',
                 'token_status' => $tokenStatus,
                 'password_changed' => $isPasswordChanged,
                 'email_status' => !empty($u['email_status']) ? $u['email_status'] : 'belum',
@@ -529,27 +531,14 @@ class ImportEmail extends CI_Controller {
     }
 
     /**
-     * Private helper: Generate 8-character mixed token
+     * Private helper: Generate secure 32-character base64/hex token (matches user_token photo format)
      */
     private function _generate_8char_token() {
-        $uppers = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-        $lowers = 'abcdefghijkmnpqrstuvwxyz';
-        $numbers = '23456789';
-        $symbols = '!@#$%^&*_-';
-
-        $token = [
-            $uppers[rand(0, strlen($uppers) - 1)],
-            $lowers[rand(0, strlen($lowers) - 1)],
-            $numbers[rand(0, strlen($numbers) - 1)],
-            $symbols[rand(0, strlen($symbols) - 1)]
-        ];
-
-        $all = $uppers . $lowers . $numbers . $symbols;
-        for ($i = 0; $i < 4; $i++) {
-            $token[] = $all[rand(0, strlen($all) - 1)];
+        // Generates secure base64 token format e.g. 7gZJPu2tKzJ/q0kA7...
+        try {
+            return base64_encode(random_bytes(24));
+        } catch (Exception $e) {
+            return bin2hex(openssl_random_pseudo_bytes(16));
         }
-
-        shuffle($token);
-        return implode('', $token);
     }
 }
