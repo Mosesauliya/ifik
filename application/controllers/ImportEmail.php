@@ -449,10 +449,10 @@ class ImportEmail extends CI_Controller {
     }
 
     /**
-     * Helper: Build branded responsive HTML email template
+     * Helper: Build branded responsive HTML email template (1-Click Direct Activation)
      */
     private function _build_html_email($user, $token, $subject, $bodyTemplate = '') {
-        $portalUrl = site_url('login');
+        $activationUrl = site_url('login/activate?email=' . urlencode($user->email) . '&token=' . urlencode($token));
         $name = htmlspecialchars($user->name);
         $email = htmlspecialchars($user->email);
         $nim = !empty($user->nidn_nim) ? htmlspecialchars($user->nidn_nim) : '-';
@@ -465,7 +465,7 @@ class ImportEmail extends CI_Controller {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Token Akses Akun Portal IFIK</title>
+    <title>Aktivasi Akun Portal IFIK Telkom University</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; color: #334155;">
     <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; padding: 35px 12px;">
@@ -483,15 +483,8 @@ class ImportEmail extends CI_Controller {
                     <tr>
                         <td style="padding: 36px 30px 30px 30px; line-height: 1.6;">
                             <p style="margin: 0 0 14px 0; font-size: 16px; font-weight: 700; color: #0f172a;">Halo, ' . $name . ' 👋</p>
-                            <p style="margin: 0 0 20px 0; font-size: 14px; color: #475569;">Akun Anda telah berhasil didaftarkan ke dalam sistem Portal Layanan IFIK Telkom University sebagai <strong style="color: #ea580c;">' . $role . '</strong>.</p>
-                            <p style="margin: 0 0 18px 0; font-size: 14px; color: #475569;">Berikut adalah <strong>Kode Token Akses 8-Karakter</strong> unik untuk aktivasi awal akun Anda:</p>
+                            <p style="margin: 0 0 18px 0; font-size: 14px; color: #475569;">Akun Anda telah berhasil didaftarkan ke dalam sistem Portal Layanan IFIK Telkom University sebagai <strong style="color: #ea580c;">' . $role . '</strong>.</p>
                             
-                            <!-- Highlight Token Box -->
-                            <div style="background-color: #fff7ed; border: 2px dashed #fb923c; border-radius: 12px; padding: 20px; text-align: center; margin: 24px 0;">
-                                <span style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #9a3412; letter-spacing: 1.5px; margin-bottom: 8px;">KODE TOKEN AKSES ANDA</span>
-                                <span style="font-family: Consolas, Monaco, monospace; font-size: 28px; font-weight: 900; color: #ea580c; letter-spacing: 4px; display: inline-block; background-color: #ffffff; padding: 6px 20px; border-radius: 8px; border: 1px solid #fed7aa;">' . $token . '</span>
-                            </div>
-
                             <!-- Account Details Table -->
                             <table width="100%" style="background-color: #f8fafc; border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; font-size: 13px; border: 1px solid #e2e8f0;" cellpadding="0" cellspacing="0">
                                 <tr><td style="color: #64748b; padding: 5px 0; width: 35%;">NIM / NIP:</td><td style="color: #0f172a; font-weight: 600;">' . $nim . '</td></tr>
@@ -499,12 +492,14 @@ class ImportEmail extends CI_Controller {
                                 <tr><td style="color: #64748b; padding: 5px 0;">Peran (Role):</td><td style="color: #0f172a; font-weight: 600;">' . $role . '</td></tr>
                             </table>
 
-                            <p style="margin: 0 0 24px 0; font-size: 13px; color: #64748b; line-height: 1.5;">Gunakan email resmi Anda dan <strong>Kode Token</strong> di atas sebagai password awal saat pertama kali login. Setelah berhasil masuk, Anda akan diarahkan untuk melengkapi biodata dan membuat kata sandi baru.</p>
+                            <p style="margin: 0 0 24px 0; font-size: 14px; color: #475569; line-height: 1.5;">Untuk mengaktifkan akun dan membuat kata sandi baru Anda, silakan klik tombol aktivasi langsung di bawah ini tanpa perlu memasukkan token manual:</p>
 
-                            <!-- CTA Button -->
-                            <div style="text-align: center; margin: 30px 0 10px 0;">
-                                <a href="' . $portalUrl . '" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%); color: #ffffff; text-decoration: none; font-weight: 700; font-size: 14px; padding: 13px 34px; border-radius: 10px; box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35);">Masuk & Aktivasi Akun &rarr;</a>
+                            <!-- 1-Click CTA Button -->
+                            <div style="text-align: center; margin: 32px 0 20px 0;">
+                                <a href="' . $activationUrl . '" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%); color: #ffffff; text-decoration: none; font-weight: 700; font-size: 15px; padding: 14px 38px; border-radius: 12px; box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35);">Aktifkan & Masuk ke Akun Saya &rarr;</a>
                             </div>
+
+                            <p style="margin: 20px 0 0 0; font-size: 12px; color: #94a3b8; text-align: center;">Tautan ini bersifat rahasia dan berlaku khusus untuk aktivasi akun Anda.</p>
                         </td>
                     </tr>
                     <!-- Footer -->

@@ -83,6 +83,67 @@ class Login extends CI_Controller {
 		redirect('login');
 	}
 
+	/**
+	 * 1-Click Direct Login / Activation Link from Email
+	 */
+	public function activate()
+	{
+		$email = strtolower(trim($this->input->get('email', true)));
+		$token = trim($this->input->get('token', true));
+
+		if (empty($email) || empty($token)) {
+			$this->session->set_flashdata('error', 'Tautan aktivasi tidak valid atau telah kedaluwarsa.');
+			redirect('login');
+			return;
+		}
+
+		$user = $this->User_model->get_by_email($email);
+		if (!$user) {
+			$this->session->set_flashdata('error', 'Akun pengguna tidak ditemukan.');
+			redirect('login');
+			return;
+		}
+
+		// Verify token against user_token table or user.token
+		$isValidToken = false;
+		if ($this->db->table_exists('user_token')) {
+			$tokenRow = $this->db->get_where('user_token', ['email' => $email])->row();
+			if ($tokenRow) {
+				if ($token === $tokenRow->token || password_verify($token, $tokenRow->token)) {
+					$isValidToken = true;
+				}
+			}
+		}
+		if (!$isValidToken && !empty($user->token)) {
+			if ($token === $user->token || password_verify($token, $user->token)) {
+				$isValidToken = true;
+			}
+		}
+
+		if (!$isValidToken) {
+			$this->session->set_flashdata('error', 'Tautan aktivasi sudah tidak berlaku.');
+			redirect('login');
+			return;
+		}
+
+		// Direct 1-Click Login: set active session!
+		$session_data = array(
+			'user_id'          => $user->id,
+			'role_id'          => $user->role_id,
+			'name'             => $user->name,
+			'email'            => $user->email,
+			'nidn_nim'         => $user->nidn_nim,
+			'nim'              => $user->nidn_nim,
+			'status'           => $user->status,
+			'password_changed' => 0, // Directs to onboarding to setup password
+			'logged_in'        => TRUE
+		);
+		$this->session->set_userdata($session_data);
+
+		$this->session->set_flashdata('success', 'Aktivasi berhasil! Selamat datang, ' . htmlspecialchars($user->name) . '. Silakan buat password baru dan lengkapi biodata Anda.');
+		redirect('onboarding');
+	}
+
 	public function logout()
 	{
 		$this->session->unset_userdata(array('user_id', 'role_id', 'name', 'email', 'nidn_nim', 'status', 'logged_in'));
