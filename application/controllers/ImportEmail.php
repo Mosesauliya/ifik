@@ -377,12 +377,10 @@ class ImportEmail extends CI_Controller {
         $formatted = [];
 
         foreach ($rawUsers as $u) {
-            $roleDisplay = isset($u['role_display_name']) && !empty($u['role_display_name']) ? $u['role_display_name'] : 'Mahasiswa';
-            if ($u['role_slug'] === 'admin' || $u['role_id'] == 1) $roleDisplay = 'Admin';
-            elseif ($u['role_slug'] === 'dosen' || $u['role_id'] == 4) $roleDisplay = 'Dosen';
-            elseif ($u['role_slug'] === 'laboran' || $u['role_id'] == 2) $roleDisplay = 'Laboran';
-            elseif ($u['role_slug'] === 'kaur' || $u['role_id'] == 3) $roleDisplay = 'Ka. Ur';
-            elseif ($u['role_slug'] === 'koordinatorta' || $u['role_id'] == 6) $roleDisplay = 'Koordinator TA';
+            $roleDisplay = !empty($u['role_display_name']) ? $u['role_display_name'] : (!empty($u['role_slug']) ? $u['role_slug'] : '');
+            if (empty($roleDisplay)) {
+                $roleDisplay = $this->_get_role_name_by_id($u['role_id']);
+            }
 
             $isPasswordChanged = (bool)($u['password_changed'] == 1);
 
@@ -394,7 +392,7 @@ class ImportEmail extends CI_Controller {
             }
 
             $formatted[] = [
-                'id' => (int)$u['id'],
+                'id' => (string)$u['id'],
                 'name' => $u['name'],
                 'email' => $u['email'],
                 'role' => $roleDisplay,
@@ -418,6 +416,23 @@ class ImportEmail extends CI_Controller {
      * Helper: Get role display name by role_id
      */
     private function _get_role_name_by_id($roleId) {
+        $roleId = (int)$roleId;
+        if ($this->db->table_exists('user_role')) {
+            $r = $this->db->get_where('user_role', ['id' => $roleId])->row();
+            if ($r && !empty($r->role)) return $r->role;
+            $roles = [
+                1 => 'Admin',
+                2 => 'Kepala Urusan',
+                3 => 'Dosen',
+                4 => 'Mahasiswa',
+                5 => 'Admin LAA',
+                6 => 'Koordinator TA',
+                7 => 'PIC KK',
+                9 => 'Ketua KK'
+            ];
+            return $roles[$roleId] ?? 'Mahasiswa';
+        }
+
         $roles = [
             1 => 'Admin',
             2 => 'Laboran',
@@ -426,7 +441,7 @@ class ImportEmail extends CI_Controller {
             5 => 'Mahasiswa',
             6 => 'Koordinator TA'
         ];
-        return isset($roles[(int)$roleId]) ? $roles[(int)$roleId] : 'Mahasiswa';
+        return isset($roles[$roleId]) ? $roles[$roleId] : 'Mahasiswa';
     }
 
     /**
