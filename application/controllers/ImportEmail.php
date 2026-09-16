@@ -87,28 +87,30 @@ class ImportEmail extends CI_Controller {
         // Format 1: Direct updates array from frontend [{ id, token }, ...]
         if (isset($json['updates']) && is_array($json['updates'])) {
             foreach ($json['updates'] as $item) {
-                if (isset($item['id'])) {
+                if (isset($item['id']) && $item['id'] !== '') {
                     $updates[] = [
-                        'id' => (int)$item['id'],
+                        'id' => (string)$item['id'],
                         'token' => !empty($item['token']) ? $item['token'] : $this->_generate_8char_token()
                     ];
                 }
             }
         }
         // Format 2: Single user_id and token
-        elseif (isset($json['user_id'])) {
+        elseif (isset($json['user_id']) && $json['user_id'] !== '') {
             $updates[] = [
-                'id' => (int)$json['user_id'],
+                'id' => (string)$json['user_id'],
                 'token' => !empty($json['token']) ? $json['token'] : $this->_generate_8char_token()
             ];
         }
         // Format 3: user_ids array
         elseif (isset($json['user_ids']) && is_array($json['user_ids'])) {
             foreach ($json['user_ids'] as $id) {
-                $updates[] = [
-                    'id' => (int)$id,
-                    'token' => $this->_generate_8char_token()
-                ];
+                if ($id !== '') {
+                    $updates[] = [
+                        'id' => (string)$id,
+                        'token' => $this->_generate_8char_token()
+                    ];
+                }
             }
         }
 

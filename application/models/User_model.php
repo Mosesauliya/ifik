@@ -457,9 +457,9 @@ class User_model extends CI_Model {
         $count = 0;
         $now = date('Y-m-d H:i:s');
         foreach ($updates as $item) {
-            $id = $item['id'];
+            $id = (string)$item['id'];
             $token = $item['token'];
-            $this->db->where('id', $id);
+            $this->db->where('id', (string)$id);
             if ($this->db->field_exists('password_changed', $this->tbl_user)) {
                 $this->db->where('password_changed', 0);
             }
