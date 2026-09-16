@@ -421,26 +421,35 @@ class User_model extends CI_Model {
             if ($this->db->field_exists('nim', $this->tbl_user)) $updateData['nim'] = isset($data['nidn_nim']) ? $data['nidn_nim'] : ($existing->nim ?? '');
             if ($this->db->field_exists('updated_at', $this->tbl_user)) $updateData['updated_at'] = date('Y-m-d H:i:s');
 
-            if (isset($data['token']) && empty($existing->password_changed)) {
-                if ($this->db->field_exists('token', $this->tbl_user)) $updateData['token'] = $data['token'];
-                $updateData['password'] = password_hash($data['token'], PASSWORD_DEFAULT, ['cost' => 8]);
+            if (!empty($data['token']) && empty($existing->password_changed)) {
+                if ($this->db->table_exists('user_token')) {
+                    $tokenHash = password_hash($data['token'], PASSWORD_DEFAULT, ['cost' => 8]);
+                    $this->db->replace('user_token', [
+                        'email' => $email,
+                        'token' => $tokenHash,
+                        'date_created' => time()
+                    ]);
+                } else if ($this->db->field_exists('token', $this->tbl_user)) {
+                    $updateData['token'] = $data['token'];
+                    $updateData['password'] = password_hash($data['token'], PASSWORD_DEFAULT, ['cost' => 8]);
+                }
             }
             $this->db->where('id', $existing->id);
             $this->db->update($this->tbl_user, $updateData);
             return $existing->id;
         } else {
+            $rawToken = !empty($data['token']) ? $data['token'] : null;
             $insertData = [
                 'id' => uniqid('usr_'),
                 'username' => !empty($data['nidn_nim']) ? $data['nidn_nim'] : explode('@', $email)[0],
                 'role_id' => isset($data['role_id']) ? $data['role_id'] : (($this->tbl_role === 'user_role') ? 4 : 5),
                 'name' => $data['name'],
                 'email' => $email,
-                'password' => password_hash(isset($data['token']) ? $data['token'] : 'Telkom#123', PASSWORD_DEFAULT, ['cost' => 8]),
+                'password' => password_hash('Telkom#123', PASSWORD_DEFAULT, ['cost' => 8]),
                 'status' => 'active'
             ];
             if ($this->db->field_exists('nidn_nim', $this->tbl_user)) $insertData['nidn_nim'] = isset($data['nidn_nim']) ? $data['nidn_nim'] : '';
             if ($this->db->field_exists('nim', $this->tbl_user)) $insertData['nim'] = isset($data['nidn_nim']) ? $data['nidn_nim'] : '';
-            if ($this->db->field_exists('token', $this->tbl_user)) $insertData['token'] = isset($data['token']) ? $data['token'] : null;
             if ($this->db->field_exists('password_changed', $this->tbl_user)) $insertData['password_changed'] = 0;
             if ($this->db->field_exists('email_status', $this->tbl_user)) $insertData['email_status'] = isset($data['email_status']) ? $data['email_status'] : 'belum';
             if ($this->db->field_exists('is_active', $this->tbl_user)) $insertData['is_active'] = 1;
@@ -448,8 +457,26 @@ class User_model extends CI_Model {
             if ($this->db->field_exists('created_at', $this->tbl_user)) $insertData['created_at'] = date('Y-m-d H:i:s');
             if ($this->db->field_exists('updated_at', $this->tbl_user)) $insertData['updated_at'] = date('Y-m-d H:i:s');
 
+            if ($this->tbl_user === 'users' && $this->db->field_exists('token', 'users')) {
+                $insertData['token'] = $rawToken;
+                if ($rawToken) {
+                    $insertData['password'] = password_hash($rawToken, PASSWORD_DEFAULT, ['cost' => 8]);
+                }
+            }
+
             $this->db->insert($this->tbl_user, $insertData);
-            return $this->db->insert_id() ?: $insertData['id'];
+            $newId = $insertData['id'];
+
+            if ($rawToken && $this->db->table_exists('user_token')) {
+                $tokenHash = password_hash($rawToken, PASSWORD_DEFAULT, ['cost' => 8]);
+                $this->db->replace('user_token', [
+                    'email' => $email,
+                    'token' => $tokenHash,
+                    'date_created' => time()
+                ]);
+            }
+
+            return $newId;
         }
     }
 

@@ -1378,16 +1378,6 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Token Access (8 Karakter: Besar, Kecil, Angka, Simbol)</label>
-                    <div class="flex items-center gap-2">
-                        <input type="text" id="acc-token" maxlength="8" placeholder="Otomatis / Isi manual" class="flex-1 px-3 py-2 text-xs font-mono bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                        <button type="button" onclick="generateTokenForInput()" class="px-3 py-2 text-xs font-semibold text-brand-600 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100">
-                            Generate 8-Char
-                        </button>
-                    </div>
-                </div>
-
                 <div class="pt-2 flex justify-end gap-2">
                     <button type="button" onclick="closeAccountModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Batal</button>
                     <button type="submit" class="px-4 py-2 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-lg">Simpan Akun</button>
@@ -4040,7 +4030,6 @@
             document.getElementById('modal-account-title').innerText = 'Tambah Akun Manual';
             document.getElementById('account-id').value = '';
             document.getElementById('account-form').reset();
-            document.getElementById('acc-token').value = generate8CharToken();
             document.getElementById('modal-account').classList.remove('hidden');
         }
 
@@ -4054,25 +4043,12 @@
             document.getElementById('acc-email').value = acc.email;
             document.getElementById('acc-role').value = acc.role;
             document.getElementById('acc-nim-nip').value = acc.nim_nip || '';
-            
-            const tokenInput = document.getElementById('acc-token');
-            tokenInput.value = acc.password_changed ? '••• Custom Password (Protected) •••' : (acc.token || '');
-            tokenInput.disabled = acc.password_changed;
-            if (acc.password_changed) {
-                tokenInput.classList.add('bg-indigo-50', 'text-indigo-600', 'cursor-not-allowed');
-            } else {
-                tokenInput.classList.remove('bg-indigo-50', 'text-indigo-600', 'cursor-not-allowed');
-            }
 
             document.getElementById('modal-account').classList.remove('hidden');
         }
 
         function closeAccountModal() {
             document.getElementById('modal-account').classList.add('hidden');
-        }
-
-        function generateTokenForInput() {
-            document.getElementById('acc-token').value = generate8CharToken();
         }
 
         function saveAccountForm(e) {
@@ -4082,7 +4058,6 @@
             const email = emailInput.value.trim();
             const role = document.getElementById('acc-role').value;
             const nim_nip = document.getElementById('acc-nim-nip').value.trim();
-            const token = document.getElementById('acc-token').value.trim();
 
             if (!isValidTelkomEmail(email)) {
                 emailInput.focus();
@@ -4102,7 +4077,7 @@
             fetch('<?= site_url("import-email/save_user") ?>', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, role, nim_nip, token })
+                body: JSON.stringify({ name, email, role, nim_nip })
             })
             .then(res => res.json())
             .then(res => {
