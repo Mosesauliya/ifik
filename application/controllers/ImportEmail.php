@@ -7,7 +7,57 @@ class ImportEmail extends CI_Controller {
         parent::__construct();
         date_default_timezone_set('Asia/Jakarta');
         $this->load->helper(array('url', 'form', 'html'));
+        $this->load->library('session');
         $this->load->model('User_model');
+        $this->_check_auth();
+    }
+
+    /**
+     * Strict Authentication & Role Check
+     * Allowed Roles: Admin (1), Kepala Urusan (2), Admin LAA (5), Admin Prodi (16)
+     */
+    private function _check_auth() {
+        if (!$this->session->userdata('logged_in')) {
+            $isAjax = $this->input->is_ajax_request() || 
+                      (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
+            if ($isAjax) {
+                $this->output
+                    ->set_content_type('application/json')
+                    ->set_status_header(401)
+                    ->set_output(json_encode([
+                        'status' => 'error',
+                        'message' => 'Sesi login telah berakhir. Silakan login kembali.'
+                    ]))
+                    ->_display();
+                exit;
+            }
+            $this->session->set_flashdata('error', 'Silakan login terlebih dahulu untuk mengakses menu Import Email & Dispatcher.');
+            redirect('login');
+            exit;
+        }
+
+        $roleId = (int)$this->session->userdata('role_id');
+        // Allowed: 1 = Admin, 2 = Kepala Urusan, 5 = Admin LAA, 16 = Admin Prodi
+        $allowedRoles = [1, 2, 5, 16];
+
+        if (!in_array($roleId, $allowedRoles)) {
+            $isAjax = $this->input->is_ajax_request() || 
+                      (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
+            if ($isAjax) {
+                $this->output
+                    ->set_content_type('application/json')
+                    ->set_status_header(403)
+                    ->set_output(json_encode([
+                        'status' => 'error',
+                        'message' => 'Akses ditolak. Anda tidak memiliki izin untuk mengelola data akun.'
+                    ]))
+                    ->_display();
+                exit;
+            }
+            $this->session->set_flashdata('error', 'Akses ditolak! Halaman ini hanya dapat diakses oleh Administrator & Admin LAA.');
+            redirect('dashboard');
+            exit;
+        }
     }
 
     /**
