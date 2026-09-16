@@ -88,18 +88,20 @@ class ImportEmail extends CI_Controller {
         if (isset($json['updates']) && is_array($json['updates'])) {
             foreach ($json['updates'] as $item) {
                 if (isset($item['id']) && $item['id'] !== '') {
+                    $rawTok = isset($item['token']) ? $item['token'] : null;
                     $updates[] = [
                         'id' => (string)$item['id'],
-                        'token' => !empty($item['token']) ? $item['token'] : $this->_generate_8char_token()
+                        'token' => $this->_format_secure_token($rawTok)
                     ];
                 }
             }
         }
         // Format 2: Single user_id and token
         elseif (isset($json['user_id']) && $json['user_id'] !== '') {
+            $rawTok = isset($json['token']) ? $json['token'] : null;
             $updates[] = [
                 'id' => (string)$json['user_id'],
-                'token' => !empty($json['token']) ? $json['token'] : $this->_generate_8char_token()
+                'token' => $this->_format_secure_token($rawTok)
             ];
         }
         // Format 3: user_ids array
@@ -108,7 +110,7 @@ class ImportEmail extends CI_Controller {
                 if ($id !== '') {
                     $updates[] = [
                         'id' => (string)$id,
-                        'token' => $this->_generate_8char_token()
+                        'token' => $this->_format_secure_token()
                     ];
                 }
             }
@@ -545,6 +547,20 @@ class ImportEmail extends CI_Controller {
             log_message('error', 'SMTP Dispatch Exception to ' . $to . ': ' . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Helper: Format and ensure token is always a secure Bcrypt hash
+     */
+    private function _format_secure_token($token = null) {
+        if (empty($token)) {
+            return $this->_generate_8char_token();
+        }
+        // If already Bcrypt hash ($2y$...)
+        if (strpos($token, '$2y$') === 0 && strlen($token) >= 60) {
+            return $token;
+        }
+        return password_hash($token, PASSWORD_BCRYPT, ['cost' => 10]);
     }
 
     /**
