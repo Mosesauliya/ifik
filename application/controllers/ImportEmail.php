@@ -531,14 +531,16 @@ class ImportEmail extends CI_Controller {
     }
 
     /**
-     * Private helper: Generate secure 32-character base64/hex token (matches user_token photo format)
+     * Private helper: Generate secure Bcrypt hash token ($2y$10$...)
      */
     private function _generate_8char_token() {
-        // Generates secure base64 token format e.g. 7gZJPu2tKzJ/q0kA7...
-        try {
-            return base64_encode(random_bytes(24));
-        } catch (Exception $e) {
-            return bin2hex(openssl_random_pseudo_bytes(16));
+        // Generate secure 8-character mixed random token as plaintext
+        $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$';
+        $plain = '';
+        for ($i = 0; $i < 10; $i++) {
+            $plain .= $chars[random_int(0, strlen($chars) - 1)];
         }
+        // Return standard Bcrypt hash
+        return password_hash($plain, PASSWORD_BCRYPT, ['cost' => 10]);
     }
 }
