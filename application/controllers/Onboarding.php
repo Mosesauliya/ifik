@@ -206,8 +206,8 @@ class Onboarding extends CI_Controller {
 
         $fullName = trim($cleanDepan . ' ' . $cleanBelakang);
 
-        // 3. Hash New Password
-        $hashedPassword = password_hash($passwordBaru, PASSWORD_DEFAULT);
+        // 3. Hash New Password with Bcrypt
+        $hashedPassword = password_hash($passwordBaru, PASSWORD_DEFAULT, ['cost' => 10]);
 
         // 4. Update users Table
         $userUpdate = [
@@ -220,9 +220,15 @@ class Onboarding extends CI_Controller {
 
         if (!empty($nim)) {
             $userUpdate['nidn_nim'] = $nim;
+            $userUpdate['nim'] = $nim;
         }
 
         $this->User_model->update($userId, $userUpdate);
+
+        // Delete temporary activation token so it cannot be reused
+        if ($this->db->table_exists('user_token') && !empty($user->email)) {
+            $this->db->delete('user_token', ['email' => $user->email]);
+        }
 
         // 5. Update / Insert to mahasiswa Table (if applicable)
         if ($this->db->table_exists('mahasiswa') && !empty($nim)) {

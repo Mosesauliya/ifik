@@ -83,6 +83,7 @@ class User_model extends CI_Model {
      */
     public function get_by_id($id)
     {
+        $id = (string)$id;
         $user = $this->db->get_where($this->tbl_user, ['id' => $id])->row();
         return $this->_normalize_user($user);
     }
@@ -95,8 +96,17 @@ class User_model extends CI_Model {
      */
     public function update($id, $data)
     {
+        $id = (string)$id;
+        $fields = $this->db->list_fields($this->tbl_user);
+        $cleanData = [];
+        foreach ($data as $k => $v) {
+            if (in_array($k, $fields)) {
+                $cleanData[$k] = $v;
+            }
+        }
+        if (empty($cleanData)) return false;
         $this->db->where('id', $id);
-        return $this->db->update($this->tbl_user, $data);
+        return $this->db->update($this->tbl_user, $cleanData);
     }
 
     /**
