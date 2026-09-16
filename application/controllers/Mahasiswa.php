@@ -1930,6 +1930,10 @@ class Mahasiswa extends CI_Controller {
 
         $textOnly = trim(strip_tags($deskripsi));
         if (empty($namaLengkap) || empty($unit_tujuan) || empty($kategori) || empty($subjek) || empty($textOnly)) {
+            if ($this->input->is_ajax_request()) {
+                echo json_encode(['status' => 'error', 'message' => 'Semua field bertanda bintang (*) wajib diisi.']);
+                return;
+            }
             $this->session->set_flashdata('error', 'Semua field bertanda bintang (*) wajib diisi.');
             redirect('mahasiswa/ticketing/input');
             return;
@@ -1943,7 +1947,17 @@ class Mahasiswa extends CI_Controller {
         $recentTicket = $this->db->get('dosen_ticketing')->row();
 
         if ($recentTicket) {
-            $this->session->set_flashdata('success', "Tiket Anda berhasil diajukan dengan Kode: <b>{$recentTicket->kode_tiket}</b> ke unit <b>" . htmlspecialchars($unit_tujuan) . "</b>.");
+            $msg = "Tiket Anda berhasil diajukan dengan Kode: <b>{$recentTicket->kode_tiket}</b> ke unit <b>" . htmlspecialchars($unit_tujuan) . "</b>.";
+            $this->session->set_flashdata('success', $msg);
+            if ($this->input->is_ajax_request()) {
+                echo json_encode([
+                    'status'       => 'success',
+                    'kode_tiket'   => $recentTicket->kode_tiket,
+                    'message'      => $msg,
+                    'redirect_url' => site_url('mahasiswa/ticketing/riwayat')
+                ]);
+                return;
+            }
             redirect('mahasiswa/ticketing/riwayat');
             return;
         }
@@ -1953,7 +1967,12 @@ class Mahasiswa extends CI_Controller {
             if (!empty($kategori_lainnya)) {
                 $kategori = $kategori . ': ' . $kategori_lainnya;
             } else {
-                $this->session->set_flashdata('error', 'Silakan tulis rincian topik kendala pada input "Detail Kategori Lainnya".');
+                $err = 'Silakan tulis rincian topik kendala pada input "Detail Kategori Lainnya".';
+                if ($this->input->is_ajax_request()) {
+                    echo json_encode(['status' => 'error', 'message' => $err]);
+                    return;
+                }
+                $this->session->set_flashdata('error', $err);
                 redirect('mahasiswa/ticketing/input');
                 return;
             }
@@ -1978,7 +1997,12 @@ class Mahasiswa extends CI_Controller {
                 $lampiran_name = $uploadData['file_name'];
             } else {
                 $uploadError = $this->upload->display_errors('', '');
-                $this->session->set_flashdata('error', 'Gagal mengunggah lampiran: ' . $uploadError);
+                $err = 'Gagal mengunggah lampiran: ' . $uploadError;
+                if ($this->input->is_ajax_request()) {
+                    echo json_encode(['status' => 'error', 'message' => $err]);
+                    return;
+                }
+                $this->session->set_flashdata('error', $err);
                 redirect('mahasiswa/ticketing/input');
                 return;
             }
@@ -2004,10 +2028,25 @@ class Mahasiswa extends CI_Controller {
         $insertedId = $this->DosenTicketing_model->insert($ticketData);
 
         if ($insertedId) {
-            $this->session->set_flashdata('success', "Tiket kendala berhasil diajukan dengan Kode: <b>{$kodeTiket}</b> ke unit <b>" . htmlspecialchars($unit_tujuan) . "</b>. Mohon pantau status respon secara berkala.");
+            $msg = "Tiket kendala berhasil diajukan dengan Kode: <b>{$kodeTiket}</b> ke unit <b>" . htmlspecialchars($unit_tujuan) . "</b>. Mohon pantau status respon secara berkala.";
+            $this->session->set_flashdata('success', $msg);
+            if ($this->input->is_ajax_request()) {
+                echo json_encode([
+                    'status'       => 'success',
+                    'kode_tiket'   => $kodeTiket,
+                    'message'      => $msg,
+                    'redirect_url' => site_url('mahasiswa/ticketing/riwayat')
+                ]);
+                return;
+            }
             redirect('mahasiswa/ticketing/riwayat');
         } else {
-            $this->session->set_flashdata('error', 'Terjadi kesalahan sistem saat menyimpan tiket. Silakan coba beberapa saat lagi.');
+            $err = 'Terjadi kesalahan sistem saat menyimpan tiket. Silakan coba beberapa saat lagi.';
+            if ($this->input->is_ajax_request()) {
+                echo json_encode(['status' => 'error', 'message' => $err]);
+                return;
+            }
+            $this->session->set_flashdata('error', $err);
             redirect('mahasiswa/ticketing/input');
         }
     }

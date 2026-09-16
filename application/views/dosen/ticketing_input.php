@@ -425,6 +425,79 @@
 
     </main>
 
+    <!-- MODAL: Progress Bar Pengiriman Tiket Kendala -->
+    <div id="modalTicketingProgress" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300">
+        <div id="modalTicketingCard" class="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-md w-full p-6 sm:p-7 text-center relative overflow-hidden transform transition-all scale-95 opacity-0 duration-300">
+            
+            <!-- Top Gradient Accent -->
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600"></div>
+
+            <!-- Icon Header State (Animated Pulse / Success Check) -->
+            <div id="progressIconContainer" class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center text-2xl shadow-inner relative">
+                <i id="progressIcon" class="bi bi-send-fill animate-pulse"></i>
+                <div id="progressPing" class="absolute inset-0 rounded-2xl bg-orange-400/20 animate-ping pointer-events-none"></div>
+            </div>
+
+            <!-- Title & Status -->
+            <h3 id="progressTitle" class="text-lg font-extrabold text-slate-800 tracking-tight mb-1">
+                Mengirimkan Tiket Kendala...
+            </h3>
+            <p id="progressStatusText" class="text-xs font-semibold text-slate-500 mb-5 min-h-[18px]">
+                Menyiapkan data formulir & berkas lampiran...
+            </p>
+
+            <!-- Progress Bar Box -->
+            <div class="w-full bg-slate-100 rounded-full h-3.5 relative overflow-hidden p-0.5 shadow-inner mb-2 border border-slate-200/60">
+                <div id="ticketProgressBar" 
+                     class="h-full rounded-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 transition-all duration-200 ease-out shadow-xs w-0 relative">
+                    <!-- Shimmer reflection light -->
+                    <div class="absolute inset-0 bg-white/25 rounded-full animate-pulse"></div>
+                </div>
+            </div>
+
+            <!-- Percentage and Speed / Info -->
+            <div class="flex items-center justify-between text-xs text-slate-400 font-medium px-1 mb-5">
+                <span id="progressSubDetail" class="text-[11px] text-slate-400 truncate max-w-[240px]">
+                    <i class="bi bi-shield-lock-fill text-orange-500 mr-1"></i>Koneksi aman terenkripsi
+                </span>
+                <span id="ticketProgressPercent" class="font-extrabold text-sm text-orange-600 font-mono">0%</span>
+            </div>
+
+            <!-- Stepper Indicators -->
+            <div class="grid grid-cols-3 gap-2 py-3 px-3 bg-slate-50 rounded-2xl border border-slate-100 mb-3 text-left">
+                <div id="step-1" class="flex flex-col items-center text-center">
+                    <span class="step-icon w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-[10px] font-bold mb-1 shadow-2xs">
+                        <i class="bi bi-check-lg"></i>
+                    </span>
+                    <span class="text-[10px] font-bold text-slate-700 leading-tight">1. Validasi</span>
+                </div>
+                <div id="step-2" class="flex flex-col items-center text-center">
+                    <span class="step-icon w-6 h-6 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-[10px] font-bold mb-1">
+                        2
+                    </span>
+                    <span class="text-[10px] font-semibold text-slate-400 leading-tight">2. Unggah</span>
+                </div>
+                <div id="step-3" class="flex flex-col items-center text-center">
+                    <span class="step-icon w-6 h-6 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-[10px] font-bold mb-1">
+                        3
+                    </span>
+                    <span class="text-[10px] font-semibold text-slate-400 leading-tight">3. Registrasi</span>
+                </div>
+            </div>
+
+            <!-- Error Action (Hidden by default, shown if request failed) -->
+            <div id="progressErrorContainer" class="hidden pt-2">
+                <p id="progressErrorMessage" class="text-xs text-rose-600 font-medium mb-3 bg-rose-50 p-2.5 rounded-xl border border-rose-200">
+                    Terjadi kendala saat mengirimkan tiket.
+                </p>
+                <button type="button" onclick="closeProgressModal()" class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition shadow-xs cursor-pointer">
+                    Tutup & Periksa Form
+                </button>
+            </div>
+
+        </div>
+    </div>
+
     <!-- Client-side Logic for Dynamic Kategori & TinyMCE -->
     <script>
         // Data Kategori per Unit
@@ -660,7 +733,82 @@
                 return false;
             }
 
-            // Lock submit & show loading state to prevent double clicks
+            // Progress Bar Modal Helpers
+            function openProgressModal() {
+                const modal = document.getElementById('modalTicketingProgress');
+                const card = document.getElementById('modalTicketingCard');
+                if (!modal || !card) return;
+
+                document.getElementById('ticketProgressBar').style.width = '0%';
+                document.getElementById('ticketProgressPercent').textContent = '0%';
+                document.getElementById('progressTitle').textContent = 'Mengirimkan Tiket Kendala...';
+                document.getElementById('progressStatusText').textContent = 'Menyiapkan data formulir...';
+                document.getElementById('progressIconContainer').className = 'w-16 h-16 mx-auto mb-4 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center text-2xl shadow-inner relative';
+                document.getElementById('progressIcon').className = 'bi bi-send-fill animate-pulse';
+                document.getElementById('progressPing').classList.remove('hidden');
+                document.getElementById('progressErrorContainer').classList.add('hidden');
+                setStepActive(1);
+
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    card.classList.remove('scale-95', 'opacity-0');
+                    card.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            }
+
+            function setStepActive(stepNum) {
+                for (let i = 1; i <= 3; i++) {
+                    const stepEl = document.getElementById('step-' + i);
+                    if (!stepEl) continue;
+                    const icon = stepEl.querySelector('.step-icon');
+                    const label = stepEl.querySelector('span:last-child');
+                    if (i < stepNum) {
+                        icon.className = 'step-icon w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] font-bold mb-1 shadow-2xs';
+                        icon.innerHTML = '<i class="bi bi-check-lg"></i>';
+                        label.className = 'text-[10px] font-bold text-emerald-600 leading-tight';
+                    } else if (i === stepNum) {
+                        icon.className = 'step-icon w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-[10px] font-bold mb-1 ring-2 ring-orange-400/30 animate-pulse';
+                        icon.textContent = i;
+                        label.className = 'text-[10px] font-bold text-orange-600 leading-tight';
+                    } else {
+                        icon.className = 'step-icon w-6 h-6 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-[10px] font-bold mb-1';
+                        icon.textContent = i;
+                        label.className = 'text-[10px] font-semibold text-slate-400 leading-tight';
+                    }
+                }
+            }
+
+            function updateProgress(pct, statusText, subDetail) {
+                const bar = document.getElementById('ticketProgressBar');
+                const num = document.getElementById('ticketProgressPercent');
+                const txt = document.getElementById('progressStatusText');
+                const sub = document.getElementById('progressSubDetail');
+                if (bar) bar.style.width = pct + '%';
+                if (num) num.textContent = Math.round(pct) + '%';
+                if (statusText && txt) txt.textContent = statusText;
+                if (subDetail && sub) sub.innerHTML = subDetail;
+            }
+
+            window.closeProgressModal = function() {
+                const modal = document.getElementById('modalTicketingProgress');
+                const card = document.getElementById('modalTicketingCard');
+                if (!modal || !card) return;
+                card.classList.remove('scale-100', 'opacity-100');
+                card.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    isSubmittingTicket = false;
+                    const btn = document.getElementById('btnSubmitTicket');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.classList.remove('opacity-75', 'cursor-not-allowed');
+                        btn.innerHTML = '<i class="bi bi-send-fill text-sm"></i><span>Kirim Tiket Kendala</span>';
+                    }
+                }, 200);
+            };
+
+            // Intercept form submission with XHR & Progress Bar
+            e.preventDefault();
             isSubmittingTicket = true;
             const btn = document.getElementById('btnSubmitTicket');
             if (btn) {
@@ -668,6 +816,100 @@
                 btn.classList.add('opacity-75', 'cursor-not-allowed');
                 btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin text-base"></i><span>Mengirim Tiket...</span>';
             }
+
+            openProgressModal();
+            updateProgress(15, 'Memvalidasi data formulir...', '<i class="bi bi-file-earmark-check text-orange-500 mr-1"></i>Formulir siap diunggah');
+            setStepActive(1);
+
+            const form = this;
+            const formData = new FormData(form);
+
+            const fileInput = document.getElementById('lampiran');
+            let fileInfoText = '<i class="bi bi-cloud-arrow-up text-orange-500 mr-1"></i>Mengirim data formulir...';
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                const f = fileInput.files[0];
+                const sizeKb = (f.size / 1024).toFixed(0);
+                fileInfoText = `<i class="bi bi-paperclip text-orange-500 mr-1"></i>${f.name} (${sizeKb} KB)`;
+            }
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', form.action, true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+            xhr.upload.addEventListener('progress', function(ev) {
+                if (ev.lengthComputable) {
+                    setStepActive(2);
+                    const uploadPercent = ev.loaded / ev.total;
+                    const currentPercent = 20 + Math.round(uploadPercent * 60);
+                    updateProgress(
+                        currentPercent, 
+                        'Mengunggah berkas & formulir (' + Math.round(uploadPercent * 100) + '%)...',
+                        fileInfoText
+                    );
+                }
+            });
+
+            xhr.upload.addEventListener('load', function() {
+                setStepActive(3);
+                updateProgress(88, 'Mendaftarkan tiket ke sistem...', '<i class="bi bi-cpu-fill text-amber-500 mr-1"></i>Memproses ID Tiket');
+            });
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            const res = JSON.parse(xhr.responseText);
+                            if (res.status === 'success') {
+                                setStepActive(3);
+                                updateProgress(100, 'Tiket berhasil didaftarkan!', `<span class="text-emerald-600 font-bold"><i class="bi bi-check-circle-fill mr-1"></i>Kode: ${res.kode_tiket || ''}</span>`);
+                                
+                                const iconBox = document.getElementById('progressIconContainer');
+                                const icon = document.getElementById('progressIcon');
+                                const ping = document.getElementById('progressPing');
+                                const title = document.getElementById('progressTitle');
+                                
+                                if (iconBox) iconBox.className = 'w-16 h-16 mx-auto mb-4 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl shadow-inner relative';
+                                if (icon) icon.className = 'bi bi-check-circle-fill';
+                                if (ping) ping.className = 'absolute inset-0 rounded-2xl bg-emerald-400/20 animate-ping pointer-events-none';
+                                if (title) title.innerHTML = '<span class="text-emerald-600">Tiket Berhasil Diajukan!</span>';
+
+                                setTimeout(function() {
+                                    window.location.href = res.redirect_url || '<?= site_url("dosen/ticketing/riwayat") ?>';
+                                }, 1100);
+                                return;
+                            } else {
+                                throw new Error(res.message || 'Terjadi kesalahan saat memproses tiket.');
+                            }
+                        } catch (err) {
+                            showUploadError(err.message || 'Respon dari server tidak valid.');
+                        }
+                    } else {
+                        showUploadError('Gagal terhubung ke server (HTTP ' + xhr.status + '). Silakan periksa koneksi Anda.');
+                    }
+                }
+            };
+
+            xhr.onerror = function() {
+                showUploadError('Koneksi jaringan terputus saat mengunggah tiket.');
+            };
+
+            function showUploadError(msg) {
+                const iconBox = document.getElementById('progressIconContainer');
+                const icon = document.getElementById('progressIcon');
+                const ping = document.getElementById('progressPing');
+                const title = document.getElementById('progressTitle');
+                const errBox = document.getElementById('progressErrorContainer');
+                const errMsg = document.getElementById('progressErrorMessage');
+
+                if (iconBox) iconBox.className = 'w-16 h-16 mx-auto mb-4 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-3xl shadow-inner relative';
+                if (icon) icon.className = 'bi bi-exclamation-triangle-fill';
+                if (ping) ping.classList.add('hidden');
+                if (title) title.textContent = 'Gagal Mengirimkan Tiket';
+                if (errMsg) errMsg.innerHTML = msg;
+                if (errBox) errBox.classList.remove('hidden');
+            }
+
+            xhr.send(formData);
         });
 
         // File Uploader Feedback

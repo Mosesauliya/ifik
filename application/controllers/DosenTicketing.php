@@ -106,6 +106,10 @@ class DosenTicketing extends CI_Controller {
         // Validasi input
         $textOnly = trim(strip_tags($deskripsi));
         if (empty($namaLengkap) || empty($unitTujuan) || empty($kategori) || empty($subjek) || empty($textOnly)) {
+            if ($this->input->is_ajax_request()) {
+                echo json_encode(['status' => 'error', 'message' => 'Harap lengkapi semua kolom wajib (Nama Lengkap, Unit yang Dituju, Kategori, Subjek, dan Deskripsi).']);
+                return;
+            }
             $this->session->set_flashdata('error', 'Harap lengkapi semua kolom wajib (Nama Lengkap, Unit yang Dituju, Kategori, Subjek, dan Deskripsi).');
             redirect('dosen/ticketing/input');
             return;
@@ -114,6 +118,10 @@ class DosenTicketing extends CI_Controller {
         // Cek jika kategori berupa 'Lainnya' / 'Lain-lain'
         if (preg_match('/lain/i', $kategori)) {
             if (empty($kategoriLainnya)) {
+                if ($this->input->is_ajax_request()) {
+                    echo json_encode(['status' => 'error', 'message' => 'Harap sebutkan rincian kendala pada kolom Kategori Lainnya.']);
+                    return;
+                }
                 $this->session->set_flashdata('error', 'Harap sebutkan rincian kendala pada kolom Kategori Lainnya.');
                 redirect('dosen/ticketing/input');
                 return;
@@ -133,7 +141,17 @@ class DosenTicketing extends CI_Controller {
         $recentTicket = $this->db->get('dosen_ticketing')->row();
 
         if ($recentTicket) {
-            $this->session->set_flashdata('success', "Tiket kendala berhasil dikirim dengan kode: <strong>{$recentTicket->kode_tiket}</strong> ke unit <strong>" . htmlspecialchars($unitTujuan) . "</strong>.");
+            $msg = "Tiket kendala berhasil dikirim dengan kode: <strong>{$recentTicket->kode_tiket}</strong> ke unit <strong>" . htmlspecialchars($unitTujuan) . "</strong>.";
+            $this->session->set_flashdata('success', $msg);
+            if ($this->input->is_ajax_request()) {
+                echo json_encode([
+                    'status'       => 'success',
+                    'kode_tiket'   => $recentTicket->kode_tiket,
+                    'message'      => $msg,
+                    'redirect_url' => site_url('dosen/ticketing/riwayat')
+                ]);
+                return;
+            }
             redirect('dosen/ticketing/riwayat');
             return;
         }
@@ -219,10 +237,25 @@ class DosenTicketing extends CI_Controller {
         $insertId = $this->DosenTicketing_model->insert($ticketData);
 
         if ($insertId) {
-            $this->session->set_flashdata('success', "Tiket kendala berhasil dikirim dengan kode: <strong>{$kodeTiket}</strong> ke unit <strong>" . htmlspecialchars($unitTujuan) . "</strong>. Tim terkait akan segera meninjau laporan Anda.");
+            $msg = "Tiket kendala berhasil dikirim dengan kode: <strong>{$kodeTiket}</strong> ke unit <strong>" . htmlspecialchars($unitTujuan) . "</strong>. Tim terkait akan segera meninjau laporan Anda.";
+            $this->session->set_flashdata('success', $msg);
+            if ($this->input->is_ajax_request()) {
+                echo json_encode([
+                    'status'       => 'success',
+                    'kode_tiket'   => $kodeTiket,
+                    'message'      => $msg,
+                    'redirect_url' => site_url('dosen/ticketing/riwayat')
+                ]);
+                return;
+            }
             redirect('dosen/ticketing/riwayat');
         } else {
-            $this->session->set_flashdata('error', 'Terjadi kesalahan sistem saat menyimpan tiket. Silakan coba beberapa saat lagi.');
+            $err = 'Terjadi kesalahan sistem saat menyimpan tiket. Silakan coba beberapa saat lagi.';
+            if ($this->input->is_ajax_request()) {
+                echo json_encode(['status' => 'error', 'message' => $err]);
+                return;
+            }
+            $this->session->set_flashdata('error', $err);
             redirect('dosen/ticketing/input');
         }
     }
