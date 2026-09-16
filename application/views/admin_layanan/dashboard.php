@@ -8,9 +8,10 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- FontAwesome 6 & Bootstrap Icons -->
+    <!-- FontAwesome 6, Bootstrap Icons & PDF.js CDN for Universal Mobile PDF Rendering -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     
     <!-- TailwindCSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -94,22 +95,114 @@
         .unified-search-pill {
             display: flex;
             align-items: center;
-            background: #ffffff;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
             border: 1.5px solid #e2e8f0;
-            border-radius: 14px;
-            padding: 2px 14px;
-            height: 44px;
-            transition: all 0.2s ease;
+            border-radius: 16px;
+            padding: 3px 14px;
+            height: 46px;
+            transition: border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                        box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                        background-color 0.25s ease, 
+                        transform 0.2s ease;
             position: relative;
         }
         .unified-search-pill:focus-within, .unified-search-pill.active {
             border-color: #ea580c !important;
-            box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12) !important;
+            background: #ffffff !important;
+            box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.14), 0 10px 25px -5px rgba(234, 88, 12, 0.12) !important;
         }
 
         .autocomplete-box {
-            max-height: 280px;
+            max-height: 340px;
             overflow-y: auto;
+            border-radius: 18px;
+            box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.2), 0 8px 24px -4px rgba(234, 88, 12, 0.15);
+            transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .autocomplete-item-row {
+            padding: 10px 16px;
+            transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+        }
+        .autocomplete-item-row:hover, .autocomplete-item-row.active-nav {
+            background-color: #fff7ed;
+            color: #ea580c;
+        }
+        .autocomplete-item-row mark {
+            background: #ffedd5;
+            color: #ea580c;
+            font-weight: 800;
+            border-radius: 4px;
+            padding: 0 3px;
+        }
+
+        .btn-standalone-add {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #fff7ed;
+            border: 1.5px solid #ffedd5;
+            border-radius: 16px;
+            padding: 6px 14px;
+            height: 46px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #ea580c;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(234, 88, 12, 0.06);
+        }
+        .btn-standalone-add:hover {
+            background: #ffedd5;
+            border-color: #fdba74;
+            transform: scale(1.02);
+        }
+
+        .badge-standalone-count {
+            background: #ea580c;
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 1.5px 8px;
+            border-radius: 99px;
+        }
+
+        .btn-remove-row {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            background: #fff1f2;
+            border: 1.5px solid #fecdd3;
+            border-radius: 14px;
+            color: #e11d48;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        .btn-remove-row:hover {
+            background: #ffe4e6;
+            border-color: #fda4af;
+            color: #be123c;
+            transform: scale(1.05);
+        }
+
+        .extra-rows-card {
+            display: none;
+            position: relative;
+            margin-top: 12px;
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 14px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .extra-rows-card.open {
+            display: block !important;
         }
 
         /* 3D KINETIC INTERACTIVE BUTTON */
@@ -170,6 +263,9 @@
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased pb-16">
 
+    <!-- Dedicated Admin LAA Sidebar Component -->
+    <?php $this->load->view('admin_layanan/sidebar'); ?>
+
     <!-- Header Navbar Partial -->
     <?php $this->load->view('partials/app_navbar', [
         'user_role_label'   => 'Admin Layanan (LAA)',
@@ -178,42 +274,42 @@
     ]); ?>
 
     <!-- Sub Navigation Page Title Bar -->
-    <div class="glass-header px-6 py-4 mb-8">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-4">
-                <div class="w-10 h-10 rounded-xl bg-orange-100 text-brand-600 flex items-center justify-center font-bold text-lg shadow-sm">
+    <div class="glass-header px-4 sm:px-6 py-4 mb-8">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div class="flex items-start sm:items-center gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-orange-100 text-brand-600 flex items-center justify-center font-bold text-lg shadow-sm shrink-0 mt-0.5 sm:mt-0">
                     <i class="fa-solid fa-file-signature"></i>
                 </div>
                 <div>
-                    <div class="flex items-center gap-2">
-                        <h1 class="text-xl font-bold text-slate-900 tracking-tight">Portal Admin Layanan Akademik (LAA)</h1>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h1 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">Portal Admin Layanan Akademik (LAA)</h1>
                     </div>
-                    <p class="text-xs text-slate-500 mt-0.5">Verifikasi 4 berkas kelengkapan pendaftaran Tugas Akhir mahasiswa IFIK.</p>
+                    <p class="text-xs text-slate-500 mt-0.5">Verifikasi berkas kelengkapan pendaftaran Tugas Akhir mahasiswa IFIK.</p>
                 </div>
             </div>
 
-            <!-- Profile Badge Right -->
-            <div class="flex items-center gap-3">
-                <a href="<?= site_url('adminlayanan/pengaturan_jalur'); ?>" class="btn-3d-kinetic inline-flex items-center gap-2">
+            <!-- Profile Badge & Quick Action Buttons Right -->
+            <div class="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full md:w-auto justify-start md:justify-end">
+                <a href="<?= site_url('adminlayanan/pengaturan_jalur'); ?>" class="btn-3d-kinetic inline-flex items-center gap-2 shrink-0">
                     <span class="bg"></span>
                     <span class="wrap">
                         <i class="bi bi-sliders text-white text-xs mr-1.5"></i>
-                        <span class="char">Pengaturan Jalur Sidang/Non-Sidang</span>
+                        <span class="char">Pengaturan Jalur</span>
                     </span>
                 </a>
-                <a href="<?= site_url('adminlayanan/pengaturan_berkas'); ?>" class="btn-3d-kinetic inline-flex items-center gap-2">
+                <a href="<?= site_url('adminlayanan/pengaturan_berkas'); ?>" class="btn-3d-kinetic inline-flex items-center gap-2 shrink-0">
                     <span class="bg"></span>
                     <span class="wrap">
                         <i class="bi bi-gear-fill text-white text-xs mr-1.5"></i>
-                        <span class="char">Pengaturan Berkas TA</span>
+                        <span class="char">Pengaturan Berkas</span>
                     </span>
                 </a>
 
-                <div class="hidden sm:flex flex-col text-right">
+                <div class="hidden lg:flex flex-col text-right ml-2">
                     <span class="text-xs font-bold text-slate-800 leading-tight">Admin Layanan LAA</span>
                     <span class="text-[10px] font-semibold text-slate-500">Layanan Akademik FIK</span>
                 </div>
-                <div class="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 text-brand-600 flex items-center justify-center font-bold text-base shadow-xs">
+                <div class="hidden sm:flex w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 text-brand-600 items-center justify-center font-bold text-base shadow-xs shrink-0">
                     <i class="fa-solid fa-user-check"></i>
                 </div>
             </div>
@@ -251,7 +347,7 @@
         <!-- Stats Overview Cards Grid (Exact Design from Koor TA) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
             <!-- 1. Total Pengajuan -->
-            <a href="<?= site_url('adminlayanan?status=all&per_page=' . $per_page); ?>" class="group cursor-pointer transform transition-all duration-500 hover:scale-[1.03] hover:-translate-y-1 block">
+            <button type="button" onclick="switchLAATab('all')" class="group cursor-pointer transform transition-all duration-500 hover:scale-[1.03] hover:-translate-y-1 block text-left w-full border-0 bg-transparent p-0">
                 <div class="rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-orange-50/20 to-white shadow-xl relative backdrop-blur-xl overflow-hidden hover:border-brand-500/40 hover:shadow-2xl hover:shadow-brand-500/10 p-5">
                     <div class="relative z-10 flex items-start justify-between gap-3">
                         <div class="flex-1">
@@ -272,10 +368,10 @@
                         </div>
                     </div>
                 </div>
-            </a>
+            </button>
 
             <!-- 2. Menunggu Cek (Cyan) -->
-            <a href="<?= site_url('adminlayanan?status=Pending&per_page=' . $per_page); ?>" class="group cursor-pointer transform transition-all duration-500 hover:scale-[1.03] hover:-translate-y-1 block">
+            <button type="button" onclick="switchLAATab('Pending')" class="group cursor-pointer transform transition-all duration-500 hover:scale-[1.03] hover:-translate-y-1 block text-left w-full border-0 bg-transparent p-0">
                 <div class="rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-cyan-50/20 to-white shadow-xl relative backdrop-blur-xl overflow-hidden hover:border-cyan-500/40 hover:shadow-2xl hover:shadow-cyan-500/10 p-5">
                     <div class="relative z-10 flex items-start justify-between gap-3">
                         <div class="flex-1">
@@ -296,16 +392,16 @@
                         </div>
                     </div>
                 </div>
-            </a>
+            </button>
 
             <!-- 3. Disetujui (Emerald) -->
-            <a href="<?= site_url('adminlayanan?status=Approved&per_page=' . $per_page); ?>" class="group cursor-pointer transform transition-all duration-500 hover:scale-[1.03] hover:-translate-y-1 block">
+            <button type="button" onclick="switchLAATab('Approved')" class="group cursor-pointer transform transition-all duration-500 hover:scale-[1.03] hover:-translate-y-1 block text-left w-full border-0 bg-transparent p-0">
                 <div class="rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-emerald-50/20 to-white shadow-xl relative backdrop-blur-xl overflow-hidden hover:border-emerald-500/40 hover:shadow-2xl hover:shadow-emerald-500/10 p-5">
                     <div class="relative z-10 flex items-start justify-between gap-3">
                         <div class="flex-1">
                             <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-emerald-600 transition-colors">Disetujui LAA</p>
                             <h3 class="text-2xl font-black text-slate-900 mt-1 tracking-tight"><?= $stats['approved']; ?></h3>
-                            <p class="text-xs font-medium text-slate-500 mt-1 line-clamp-1">4 Berkas Valid</p>
+                            <p class="text-xs font-medium text-slate-500 mt-1 line-clamp-1">4 Berkas Disetujui</p>
                         </div>
                         <div class="relative shrink-0">
                             <div class="p-3.5 rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50 to-emerald-100/70 shadow-md text-emerald-600 transform group-hover:rotate-6 group-hover:scale-110 transition-all duration-500">
@@ -320,10 +416,10 @@
                         </div>
                     </div>
                 </div>
-            </a>
+            </button>
 
             <!-- 4. Dikembalikan (Rose) -->
-            <a href="<?= site_url('adminlayanan?status=Rejected&per_page=' . $per_page); ?>" class="group cursor-pointer transform transition-all duration-500 hover:scale-[1.03] hover:-translate-y-1 block">
+            <button type="button" onclick="switchLAATab('Rejected')" class="group cursor-pointer transform transition-all duration-500 hover:scale-[1.03] hover:-translate-y-1 block text-left w-full border-0 bg-transparent p-0">
                 <div class="rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-rose-50/20 to-white shadow-xl relative backdrop-blur-xl overflow-hidden hover:border-rose-500/40 hover:shadow-2xl hover:shadow-rose-500/10 p-5">
                     <div class="relative z-10 flex items-start justify-between gap-3">
                         <div class="flex-1">
@@ -344,7 +440,7 @@
                         </div>
                     </div>
                 </div>
-            </a>
+            </button>
         </div>
 
         <!-- Filter Tab Group for LAA -->
@@ -377,14 +473,14 @@
                 <input type="hidden" name="status" value="<?= htmlspecialchars($filter_status); ?>">
                 <input type="hidden" name="cat" id="mainCategorySelectLAA" value="<?= htmlspecialchars($cat ?? 'query'); ?>">
                 
-                <div class="flex items-center gap-2.5">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
                     <!-- Main Search Pill -->
-                    <div class="unified-search-pill flex-1 flex items-center justify-between gap-1">
+                    <div class="unified-search-pill flex-1 flex items-center justify-between gap-1 min-w-0">
                         <!-- Main Category Selector Dropdown -->
                         <div class="relative custom-dropdown-container shrink-0">
-                            <button type="button" onclick="toggleLAACustomDropdown('main-cat', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-1 hover:text-brand-600 focus:outline-none">
-                                <span id="label-filter-main-cat" class="truncate max-w-[130px]">Cari Kata Kunci</span>
-                                <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-main-cat"></i>
+                            <button type="button" onclick="toggleLAACustomDropdown('main-cat', event)" class="flex items-center gap-1 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-brand-600 focus:outline-none">
+                                <span id="label-filter-main-cat" class="truncate max-w-[75px] xs:max-w-[100px] sm:max-w-[130px]">Cari Kata Kunci</span>
+                                <i class="fa-solid fa-chevron-down text-[9px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-main-cat"></i>
                             </button>
                             <div id="menu-filter-main-cat" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
                                 <div onclick="selectLAAMainCategory('query', '🔍 Kata Kunci (Semua)', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium active bg-orange-50 text-brand-600"><span>🔍 Kata Kunci (Semua)</span></div>
@@ -395,28 +491,29 @@
                             </div>
                         </div>
 
-                        <div class="unified-divider"></div>
+                        <div class="unified-divider shrink-0"></div>
 
                         <!-- Input Text Container -->
-                        <div id="mainValueContainer" class="flex-1 flex items-center min-w-0">
-                            <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs mr-2 shrink-0"></i>
+                        <div id="mainValueContainer" class="flex-1 flex items-center min-w-0 px-1">
+                            <i id="searchIconLAA" class="fa-solid fa-magnifying-glass text-slate-400 text-xs mr-1.5 shrink-0 transition-transform duration-200"></i>
                             <input type="text" name="q" id="inputSearchLAA" autocomplete="off" value="<?= htmlspecialchars($search ?? ''); ?>" 
-                                   placeholder="Ketik kata kunci lalu tekan Enter atau klik Cari..." 
-                                   class="w-full text-xs font-medium bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400">
+                                   placeholder="Ketik kata kunci..." 
+                                   class="w-full text-xs font-semibold bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400 placeholder:font-normal min-w-0">
                             
-                            <button type="button" id="btnClearSearchLAA" onclick="clearLAASearch()" class="<?= empty($search) ? 'hidden' : ''; ?> text-slate-400 hover:text-rose-600 text-xs font-bold px-1 cursor-pointer shrink-0">
-                                <i class="fa-solid fa-circle-xmark"></i>
+                            <button type="button" id="btnClearSearchLAA" onclick="clearLAASearch()" class="<?= empty($search) ? 'opacity-0 scale-75 pointer-events-none' : 'opacity-100 scale-100'; ?> text-slate-400 hover:text-rose-600 text-xs font-bold px-1 py-1 cursor-pointer shrink-0 transition-all duration-200 transform" title="Hapus pencarian">
+                                <i class="fa-solid fa-circle-xmark text-sm"></i>
                             </button>
                         </div>
 
                         <!-- Tombol Cari -->
-                        <button type="submit" id="btnSubmitSearchLAA" class="px-3.5 py-1.5 bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-500 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer active:scale-95 shrink-0 ml-1.5" title="Klik untuk melakukan pencarian">
-                            <i class="fa-solid fa-magnifying-glass text-[11px]"></i> Cari
+                        <button type="submit" id="btnSubmitSearchLAA" class="px-3 py-1.5 bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-500 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1 transition cursor-pointer active:scale-95 shrink-0 ml-1" title="Klik untuk melakukan pencarian">
+                            <i class="fa-solid fa-magnifying-glass text-[11px]"></i>
+                            <span class="hidden xs:inline">Cari</span>
                         </button>
                     </div>
 
                     <!-- Standalone Add Filter Button (+ 1/4) -->
-                    <button type="button" id="standaloneAddBtn" onclick="toggleLAAMultiFilter(event)" class="btn-standalone-add shrink-0" title="Buka / Tutup / Tambah Filter Baru (Maks 4)">
+                    <button type="button" id="standaloneAddBtn" onclick="toggleLAAMultiFilter(event)" class="btn-standalone-add shrink-0 justify-center w-full sm:w-auto" title="Buka / Tutup / Tambah Filter Baru (Maks 4)">
                         <i class="fa-solid fa-plus text-xs"></i>
                         <span id="filterCountBadge" class="badge-standalone-count">1/4</span>
                     </button>
@@ -426,13 +523,28 @@
                 <div id="autocompleteDropdownLAA" class="hidden absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 autocomplete-box overflow-hidden">
                     <div id="autocompleteResultsLAA" class="divide-y divide-slate-100 text-xs"></div>
                 </div>
+
+                <!-- Extra Filter Rows Card Popover -->
+                <div id="extraRowsCard" class="extra-rows-card space-y-2.5">
+                    <div id="additionalFilterRowsContainer" class="space-y-2.5">
+                        <!-- Extra filter rows injected dynamically -->
+                    </div>
+                    
+                    <div class="flex items-center justify-between border-t border-slate-100 pt-2.5 mt-2 text-xs">
+                        <span class="text-slate-400 text-[11px]">Gunakan kombinasi kriteria untuk mempersempit pencarian data.</span>
+                        <button type="button" onclick="resetLAAMultiSearch()" class="text-rose-600 hover:text-rose-700 font-bold transition-colors cursor-pointer">
+                            Reset All Filters
+                        </button>
+                    </div>
+                </div>
             </form>
         </div>
 
-        <!-- Table Card -->
+        <!-- Table Card Container (Responsive Desktop Table + Mobile Card View) -->
         <div class="card-custom overflow-hidden">
-            <div class="overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                <table class="w-full text-left text-xs">
+            <!-- 1. Desktop View (>= 768px) -->
+            <div class="hidden md:block overflow-x-auto rounded-xl border border-slate-200/80">
+                <table class="w-full min-w-[880px] text-left text-xs">
                     <thead>
                         <tr class="bg-slate-900 text-white uppercase tracking-wider text-[10px] font-bold">
                             <th class="py-3.5 px-3 text-center w-8">
@@ -622,6 +734,105 @@
                 </table>
             </div>
 
+            <!-- 2. Mobile Card View (< 768px) - Zero Horizontal Scrolling -->
+            <div class="block md:hidden space-y-3 p-3 bg-slate-50/50 border-b border-slate-200" id="mobileCardsContainer">
+                <?php if(empty($list_pengajuan)): ?>
+                    <div class="py-10 text-center text-slate-400 text-xs">
+                        <i class="fa-solid fa-inbox text-3xl text-slate-300 mb-2 block"></i>
+                        Tidak ada data pengajuan berkas ditemukan.
+                    </div>
+                <?php else: ?>
+                    <?php foreach($list_pengajuan as $row): 
+                        $is_wali_app = (($row['status_approval_wali'] ?? '') === 'Approved');
+                        $laa_status  = $row['status_approval_admin'] ?? 'Pending';
+                        $full_name = trim(($row['nama_depan'] ?? '') . ' ' . ($row['nama_belakang'] ?? ''));
+                        if (empty($full_name)) $full_name = 'Mahasiswa ' . ($row['nim'] ?? '');
+
+                        $b_summary = $berkas_summaries[$row['nim']] ?? null;
+                        if (!$b_summary) {
+                            $b_summary = $this->AdminLayanan_model->get_student_berkas_summary($row['nim'], $syarat_berkas, $row);
+                        }
+                        $b_items = $b_summary['items'];
+                    ?>
+                        <div class="card-custom p-3.5 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-2.5">
+                            <!-- Header: Checkbox + Avatar & Name + Admin LAA Status Badge -->
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <input type="checkbox" name="batch_select[]" value="<?= $row['nim']; ?>" 
+                                           data-name="<?= htmlspecialchars($full_name); ?>" 
+                                           data-prereq="<?= $is_wali_app ? '1' : '0'; ?>"
+                                           <?= !$is_wali_app ? 'disabled title="Belum disetujui Dosen Wali"' : ''; ?> 
+                                           class="student-cb w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500 cursor-pointer shrink-0">
+                                    <div class="w-9 h-9 rounded-xl bg-orange-100 border border-orange-200 text-brand-600 font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                                        <?= strtoupper(substr($row['nama_depan'] ?? 'M', 0, 1)); ?>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="font-bold text-slate-900 text-xs truncate"><?= htmlspecialchars($full_name); ?></div>
+                                        <div class="text-[10px] text-slate-400 font-mono"><?= htmlspecialchars($row['nim'] ?? ''); ?></div>
+                                    </div>
+                                </div>
+                                <div class="shrink-0">
+                                    <?php if($laa_status === 'Approved'): ?>
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                            <i class="fa-solid fa-check-double text-emerald-600"></i> Approved
+                                        </span>
+                                    <?php elseif($laa_status === 'Rejected'): ?>
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                            <i class="fa-solid fa-arrow-rotate-left text-rose-600"></i> Dikembalikan
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                            <i class="fa-solid fa-clock text-amber-600"></i> Menunggu Cek
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+
+                            <!-- Body: Prodi, KK & Judul -->
+                            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 space-y-1">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="font-bold text-slate-800 text-[11px]"><?= htmlspecialchars($row['prodi'] ?? 'DKV'); ?></span>
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.2 bg-orange-50 text-brand-700 rounded text-[9px] font-bold border border-orange-200">
+                                        <i class="fa-solid fa-diagram-project text-[8px]"></i>
+                                        <span><?= htmlspecialchars($row['kode_kk'] ?? 'KK-VCM'); ?></span>
+                                    </span>
+                                </div>
+                                <?php if (!empty($row['judul_1'])): ?>
+                                    <p class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed" title="<?= htmlspecialchars($row['judul_1']); ?>">
+                                        <i class="fa-solid fa-book-open text-orange-500 mr-1 text-[9px]"></i><?= htmlspecialchars($row['judul_1']); ?>
+                                    </p>
+                                <?php endif; ?>
+                            </div>
+
+                            <!-- Footer: 4 Berkas Status Pills + Action Button -->
+                            <div class="flex items-center justify-between gap-2 pt-1">
+                                <div class="inline-flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg border border-slate-200 text-[9px] font-mono flex-wrap">
+                                    <?php foreach ($b_items as $s_idx => $item): ?>
+                                        <?php 
+                                            $st = $item['status'];
+                                            $color = ($st === 'Valid' || $st === 'Approved') ? 'text-emerald-600 font-extrabold' : (($st === 'Invalid' || $st === 'Rejected') ? 'text-rose-600 font-extrabold' : 'text-slate-400');
+                                        ?>
+                                        <?php if($s_idx > 0): ?><span class="text-slate-300">·</span><?php endif; ?>
+                                        <button type="button" onclick="openQuickDocReview('<?= $row['nim']; ?>', '<?= $item['kode']; ?>')" class="<?= $color; ?> cursor-pointer border-0 bg-transparent p-0"><?= htmlspecialchars($item['short']); ?></button>
+                                    <?php endforeach; ?>
+                                </div>
+                                <div class="shrink-0">
+                                    <?php if($is_wali_app): ?>
+                                        <a href="<?= site_url('adminlayanan/detail_berkas/' . $row['nim']); ?>" class="px-3.5 py-1.5 bg-gradient-to-r from-orange-500 to-brand-600 hover:from-orange-600 hover:to-brand-700 text-white font-bold text-xs rounded-xl shadow-2xs inline-flex items-center gap-1">
+                                            <i class="fa-solid fa-magnifying-glass text-[10px]"></i> Periksa
+                                        </a>
+                                    <?php else: ?>
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 text-slate-400 border border-slate-200 rounded-xl text-[10px] font-semibold cursor-not-allowed">
+                                            <i class="fa-solid fa-lock text-[10px]"></i> Locked
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+
             <!-- PAGINATION / PAGING FOOTER BAR -->
             <div class="px-5 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
                 <div class="flex items-center gap-3 text-slate-600">
@@ -748,7 +959,9 @@
                         if (tabRejected) tabRejected.textContent = `Dikembalikan (${res.stats.rejected || 0})`;
                     }
 
-                    // 2. Render Rows
+                    // 2. Render Rows & Mobile Cards
+                    const mobileContainer = document.getElementById('mobileCardsContainer');
+
                     if (!res.list || res.list.length === 0) {
                         tbody.innerHTML = `
                             <tr>
@@ -758,8 +971,17 @@
                                 </td>
                             </tr>
                         `;
+                        if (mobileContainer) {
+                            mobileContainer.innerHTML = `
+                                <div class="py-10 text-center text-slate-400 text-xs">
+                                    <i class="fa-solid fa-inbox text-3xl text-slate-300 mb-2 block"></i>
+                                    Tidak ada data pengajuan berkas ditemukan.
+                                </div>
+                            `;
+                        }
                     } else {
                         let html = '';
+                        let mobileHtml = '';
                         res.list.forEach((row, idx) => {
                             if (row && row.nim) {
                                 if (!window.mhsDataMap) window.mhsDataMap = {};
@@ -776,7 +998,7 @@
                                 let pCnt = bSummary.pending_count || 0;
                                 let items = bSummary.items || [];
 
-                                 let badgesHTML = '';
+                                let badgesHTML = '';
                                 if (vCnt > 0) {
                                     badgesHTML += `<button type="button" onclick="openQuickDocReview('${row.nim}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${vCnt} Berkas Disetujui/Valid — Klik untuk Lihat Multi Card"><i class="fa-solid fa-circle-check text-emerald-500 text-[9px]"></i> <span>${vCnt} Valid</span></button>`;
                                 }
@@ -889,8 +1111,56 @@
                                     <td class="py-3.5 px-3 text-center whitespace-nowrap">${actionBtn}</td>
                                 </tr>
                             `;
+
+                            mobileHtml += `
+                                <div class="card-custom p-3.5 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-2.5">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <div class="flex items-center gap-2.5 min-w-0">
+                                            <input type="checkbox" name="batch_select[]" value="${row.nim}" 
+                                                   data-name="${row.full_name}" 
+                                                   data-prereq="${row.is_wali_app ? '1' : '0'}"
+                                                   ${!row.is_wali_app ? 'disabled title="Belum disetujui Dosen Wali"' : ''} 
+                                                   class="student-cb w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500 cursor-pointer shrink-0">
+                                            <div class="w-9 h-9 rounded-xl bg-orange-100 border border-orange-200 text-brand-600 font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                                                ${row.first_char}
+                                            </div>
+                                            <div class="min-w-0">
+                                                <div class="font-bold text-slate-900 text-xs truncate">${row.full_name}</div>
+                                                <div class="text-[10px] text-slate-400 font-mono">${row.nim}</div>
+                                            </div>
+                                        </div>
+                                        <div class="shrink-0">
+                                            ${adminBadge}
+                                        </div>
+                                    </div>
+                                    <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 space-y-1">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="font-bold text-slate-800 text-[11px]">${row.prodi}</span>
+                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.2 bg-orange-50 text-brand-700 rounded text-[9px] font-bold border border-orange-200">
+                                                <i class="fa-solid fa-diagram-project text-[8px]"></i>
+                                                <span>${row.kode_kk}</span>
+                                            </span>
+                                        </div>
+                                        ${row.judul_1 ? `<p class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed" title="${row.judul_1}">${row.judul_1}</p>` : ''}
+                                    </div>
+                                    <div class="space-y-1">
+                                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status Berkas Persyaratan</div>
+                                        ${summaryHTML}
+                                    </div>
+                                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                                        <div class="flex items-center gap-1.5 text-xs">
+                                            <span class="text-slate-400 text-[11px]">Wali:</span>
+                                            ${waliBadge}
+                                        </div>
+                                        <div>
+                                            ${actionBtn}
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
                         });
                         tbody.innerHTML = html;
+                        if (mobileContainer) mobileContainer.innerHTML = mobileHtml;
                         rebindStudentCheckboxes();
                         if (window.activeLihatBerkasNims && window.activeLihatBerkasNims.length > 0) {
                             refreshLihatBerkasView();
@@ -1005,9 +1275,223 @@
         function clearLAASearch() {
             const input = document.getElementById('inputSearchLAA');
             const btnClear = document.getElementById('btnClearSearchLAA');
-            if (input) input.value = '';
-            if (btnClear) btnClear.classList.add('hidden');
+            const autoDropdown = document.getElementById('autocompleteDropdownLAA');
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+            if (btnClear) {
+                btnClear.classList.remove('opacity-100', 'scale-100');
+                btnClear.classList.add('opacity-0', 'scale-75', 'pointer-events-none');
+            }
+            if (autoDropdown) {
+                autoDropdown.classList.add('hidden');
+            }
 
+            currentLAAState.search = '';
+            currentLAAState.page = 1;
+            refreshLAATable();
+        }
+
+        function toggleLAACustomDropdown(id, e) {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById('menu-filter-' + id);
+            const arrow = document.getElementById('arrow-filter-' + id);
+            if (!menu) return;
+
+            const isHidden = menu.classList.contains('hidden');
+            document.querySelectorAll('.custom-dropdown-menu').forEach(m => m.classList.add('hidden'));
+            document.querySelectorAll('.dropdown-arrow').forEach(a => a.classList.remove('rotate-180'));
+
+            if (isHidden) {
+                menu.classList.remove('hidden');
+                if (arrow) arrow.classList.add('rotate-180');
+            }
+        }
+
+        function selectLAAMainCategory(catKey, catLabel, el) {
+            const hiddenCat = document.getElementById('mainCategorySelectLAA');
+            const labelEl = document.getElementById('label-filter-main-cat');
+            if (hiddenCat) hiddenCat.value = catKey;
+            if (labelEl) labelEl.textContent = catLabel;
+
+            document.querySelectorAll('#menu-filter-main-cat .dropdown-item').forEach(i => {
+                i.classList.remove('bg-orange-50', 'text-brand-600', 'font-bold');
+                i.classList.add('text-slate-700');
+            });
+            if (el) {
+                el.classList.add('bg-orange-50', 'text-brand-600', 'font-bold');
+                el.classList.remove('text-slate-700');
+            }
+
+            document.querySelectorAll('.custom-dropdown-menu').forEach(m => m.classList.add('hidden'));
+            document.querySelectorAll('.dropdown-arrow').forEach(a => a.classList.remove('rotate-180'));
+
+            const inputSearch = document.getElementById('inputSearchLAA');
+            if (inputSearch) inputSearch.focus();
+
+            currentLAAState.cat = catKey;
+            currentLAAState.page = 1;
+            refreshLAATable();
+        }
+
+        let laaExtraRowCounter = 0;
+
+        function updateLAAFilterBadge() {
+            const totalRows = document.querySelectorAll('.extra-filter-row').length + 1;
+            const badge = document.getElementById('filterCountBadge');
+            if (badge) badge.innerText = `${totalRows}/4`;
+        }
+
+        function toggleLAAMultiFilter(e) {
+            if (e) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+
+            const extraCard = document.getElementById('extraRowsCard');
+            const extraRowsCount = document.querySelectorAll('.extra-filter-row').length;
+
+            if (extraRowsCount >= 3) {
+                if (extraCard) {
+                    if (extraCard.classList.contains('open')) {
+                        extraCard.classList.remove('open');
+                    } else {
+                        extraCard.classList.add('open');
+                    }
+                }
+                return;
+            }
+
+            addLAAFilterRow(e);
+        }
+
+        function addLAAFilterRow(e) {
+            if (e) e.stopPropagation();
+            const container = document.getElementById('additionalFilterRowsContainer');
+            const extraCard = document.getElementById('extraRowsCard');
+            const currentRows = document.querySelectorAll('.extra-filter-row').length;
+
+            if (currentRows >= 3) return;
+
+            laaExtraRowCounter++;
+            const rowId = 'extra-row-' + laaExtraRowCounter;
+
+            const catOptions = [
+                { key: 'nama', label: '🏷️ Nama Mahasiswa', placeholder: 'Ketik nama mahasiswa lalu tekan Enter...' },
+                { key: 'nim', label: '🆔 NIM Mahasiswa', placeholder: 'Ketik NIM mahasiswa...' },
+                { key: 'judul', label: '📖 Judul Tugas Akhir', placeholder: 'Ketik topik/judul TA...' },
+                { key: 'prodi', label: '🎯 Program Studi & KK', placeholder: 'Ketik prodi/kode KK...' }
+            ];
+
+            const selectedCat = catOptions[currentRows % catOptions.length];
+
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'extra-filter-row flex items-center gap-2 relative';
+            rowDiv.id = rowId;
+
+            rowDiv.innerHTML = `
+                <div class="unified-search-pill flex-1 flex items-center justify-between gap-1">
+                    <div class="relative custom-dropdown-container shrink-0">
+                        <button type="button" onclick="toggleLAACustomDropdown('${rowId}', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-1 hover:text-brand-600 focus:outline-none">
+                            <span id="label-filter-${rowId}" class="truncate max-w-[130px]">${selectedCat.label}</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-${rowId}"></i>
+                        </button>
+                        <div id="menu-filter-${rowId}" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
+                            <div onclick="selectLAAExtraCategory('${rowId}', 'nama', '🏷️ Nama Mahasiswa', 'Ketik nama mahasiswa...', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span>🏷️ Nama Mahasiswa</span></div>
+                            <div onclick="selectLAAExtraCategory('${rowId}', 'nim', '🆔 NIM Mahasiswa', 'Ketik NIM mahasiswa...', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span>🆔 NIM Mahasiswa</span></div>
+                            <div onclick="selectLAAExtraCategory('${rowId}', 'judul', '📖 Judul Tugas Akhir', 'Ketik topik/judul TA...', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span>📖 Judul Tugas Akhir</span></div>
+                            <div onclick="selectLAAExtraCategory('${rowId}', 'prodi', '🎯 Program Studi & KK', 'Ketik prodi/kode KK...', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span>🎯 Program Studi & KK</span></div>
+                        </div>
+                    </div>
+                    <div class="unified-divider"></div>
+                    <div class="flex-1 flex items-center min-w-0 px-1">
+                        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs mr-2 shrink-0"></i>
+                        <input type="text" data-cat="${selectedCat.key}" placeholder="${selectedCat.placeholder}" oninput="onLAAExtraInput(this)" class="extra-row-input w-full text-xs font-semibold bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400">
+                    </div>
+                </div>
+                <button type="button" onclick="removeLAAFilterRow(this)" class="btn-remove-row shrink-0" title="Hapus Filter Ini">
+                    <i class="fa-solid fa-trash-can text-sm"></i>
+                </button>
+            `;
+
+            container.appendChild(rowDiv);
+            if (extraCard) extraCard.classList.add('open');
+            updateLAAFilterBadge();
+
+            const newInput = rowDiv.querySelector('input');
+            if (newInput) newInput.focus();
+        }
+
+        function removeLAAFilterRow(btn) {
+            const row = btn.closest('.extra-filter-row');
+            if (row) row.remove();
+
+            const extraCard = document.getElementById('extraRowsCard');
+            const remainingRows = document.querySelectorAll('.extra-filter-row').length;
+            if (remainingRows === 0 && extraCard) {
+                extraCard.classList.remove('open');
+            }
+
+            updateLAAFilterBadge();
+            combineLAAMultiFiltersAndSearch();
+        }
+
+        function selectLAAExtraCategory(rowId, catKey, catLabel, placeholder, el) {
+            const labelEl = document.getElementById('label-filter-' + rowId);
+            const inputEl = document.querySelector(`#${rowId} input.extra-row-input`);
+            if (labelEl) labelEl.textContent = catLabel;
+            if (inputEl) {
+                inputEl.setAttribute('data-cat', catKey);
+                inputEl.placeholder = placeholder;
+                inputEl.focus();
+            }
+            document.querySelectorAll('.custom-dropdown-menu').forEach(m => m.classList.add('hidden'));
+            document.querySelectorAll('.dropdown-arrow').forEach(a => a.classList.remove('rotate-180'));
+            combineLAAMultiFiltersAndSearch();
+        }
+
+        let extraInputTimer = null;
+        function onLAAExtraInput(input) {
+            clearTimeout(extraInputTimer);
+            extraInputTimer = setTimeout(() => {
+                combineLAAMultiFiltersAndSearch();
+            }, 300);
+        }
+
+        function combineLAAMultiFiltersAndSearch() {
+            const mainInput = document.getElementById('inputSearchLAA');
+            const mainQuery = mainInput ? mainInput.value.trim() : '';
+
+            let combinedTerms = [];
+            if (mainQuery) combinedTerms.push(mainQuery);
+
+            document.querySelectorAll('.extra-row-input').forEach(inp => {
+                const val = inp.value.trim();
+                if (val) combinedTerms.push(val);
+            });
+
+            currentLAAState.search = combinedTerms.join(' ');
+            currentLAAState.page = 1;
+            refreshLAATable();
+        }
+
+        function resetLAAMultiSearch() {
+            const container = document.getElementById('additionalFilterRowsContainer');
+            const extraCard = document.getElementById('extraRowsCard');
+            if (container) container.innerHTML = '';
+            if (extraCard) extraCard.classList.remove('open');
+
+            const mainInput = document.getElementById('inputSearchLAA');
+            if (mainInput) mainInput.value = '';
+
+            const btnClear = document.getElementById('btnClearSearchLAA');
+            if (btnClear) {
+                btnClear.classList.remove('opacity-100', 'scale-100');
+                btnClear.classList.add('opacity-0', 'scale-75', 'pointer-events-none');
+            }
+
+            updateLAAFilterBadge();
             currentLAAState.search = '';
             currentLAAState.page = 1;
             refreshLAATable();
@@ -1017,7 +1501,6 @@
             const checkAll = document.getElementById('checkAllStudents');
             const studentCbs = document.querySelectorAll('.student-cb');
 
-            // Re-apply checked state from selectedLAANims
             studentCbs.forEach(cb => {
                 if (window.selectedLAANims.has(cb.value)) {
                     cb.checked = true;
@@ -1058,59 +1541,153 @@
             updateBatchBar();
         }
 
-        function toggleLAACustomDropdown(id, e) {
-            if (e) e.stopPropagation();
-            const menu = document.getElementById('menu-filter-' + id);
-            const arrow = document.getElementById('arrow-filter-' + id);
-            if (!menu) return;
-
-            const isHidden = menu.classList.contains('hidden');
-            document.querySelectorAll('.custom-dropdown-menu').forEach(m => m.classList.add('hidden'));
-
-            if (isHidden) {
-                menu.classList.remove('hidden');
-                if (arrow) arrow.classList.add('rotate-180');
-            } else {
-                if (arrow) arrow.classList.remove('rotate-180');
-            }
-        }
-
-        function selectLAAMainCategory(catKey, catLabel, el) {
-            const hiddenCat = document.getElementById('mainCategorySelectLAA');
-            const labelEl = document.getElementById('label-filter-main-cat');
-            if (hiddenCat) hiddenCat.value = catKey;
-            if (labelEl) labelEl.textContent = catLabel;
-
-            document.querySelectorAll('#menu-filter-main-cat .dropdown-item').forEach(i => {
-                i.classList.remove('bg-orange-50', 'text-orange-600');
-                i.classList.add('text-slate-700');
-            });
-            if (el) {
-                el.classList.add('bg-orange-50', 'text-orange-600');
-                el.classList.remove('text-slate-700');
-            }
-
-            document.querySelectorAll('.custom-dropdown-menu').forEach(m => m.classList.add('hidden'));
-        }
-
-        document.addEventListener('click', () => {
-            document.querySelectorAll('.custom-dropdown-menu').forEach(m => m.classList.add('hidden'));
-        });
-
         document.addEventListener('DOMContentLoaded', () => {
             const inputSearch = document.getElementById('inputSearchLAA');
             const btnClear = document.getElementById('btnClearSearchLAA');
             const formSearch = document.getElementById('formSearchLAA');
+            const autoDropdown = document.getElementById('autocompleteDropdownLAA');
+            const autoResults = document.getElementById('autocompleteResultsLAA');
+            const searchIcon = document.getElementById('searchIconLAA');
+
+            let autoDebounceTimer = null;
+            let currentFocusIdx = -1;
 
             if (inputSearch) {
                 inputSearch.addEventListener('input', function() {
                     const q = this.value.trim();
                     if (btnClear) {
-                        if (q.length > 0) btnClear.classList.remove('hidden');
-                        else btnClear.classList.add('hidden');
+                        if (q.length > 0) {
+                            btnClear.classList.remove('opacity-0', 'scale-75', 'pointer-events-none');
+                            btnClear.classList.add('opacity-100', 'scale-100');
+                        } else {
+                            btnClear.classList.remove('opacity-100', 'scale-100');
+                            btnClear.classList.add('opacity-0', 'scale-75', 'pointer-events-none');
+                        }
+                    }
+
+                    // Tampilkan spinner halus saat mengetik
+                    if (searchIcon) {
+                        searchIcon.className = 'fa-solid fa-spinner fa-spin text-orange-500 text-xs mr-2 shrink-0 transition-transform duration-200';
+                    }
+
+                    clearTimeout(autoDebounceTimer);
+                    autoDebounceTimer = setTimeout(() => {
+                        if (searchIcon) {
+                            searchIcon.className = 'fa-solid fa-magnifying-glass text-slate-400 text-xs mr-2 shrink-0 transition-transform duration-200';
+                        }
+                        
+                        // Update live search di tabel
+                        currentLAAState.search = q;
+                        currentLAAState.page = 1;
+                        refreshLAATable();
+
+                        // Jalankan Autocomplete Dropdown jika ada query
+                        if (q.length >= 2 && autoDropdown && autoResults) {
+                            fetch(`<?= site_url('adminlayanan/autocomplete'); ?>?q=${encodeURIComponent(q)}`)
+                                .then(res => res.json())
+                                .then(data => {
+                                    if (data && data.length > 0) {
+                                        let html = '';
+                                        data.forEach((item, idx) => {
+                                            const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                                            const highlightedNama = item.nama.replace(regex, '<mark>$1</mark>');
+                                            const highlightedNim = item.nim.replace(regex, '<mark>$1</mark>');
+                                            const highlightedJudul = item.judul ? item.judul.replace(regex, '<mark>$1</mark>') : '';
+
+                                            html += `
+                                                <div class="autocomplete-item-row px-4 py-2.5 hover:bg-orange-50/80 cursor-pointer flex items-center justify-between gap-3 transition-colors border-b border-slate-100 last:border-0" data-nim="${item.nim}" data-nama="${item.nama}">
+                                                    <div class="flex items-center gap-2.5 min-w-0">
+                                                        <span class="w-7 h-7 rounded-lg bg-orange-100 text-orange-600 font-bold text-xs flex items-center justify-center shrink-0">
+                                                            <i class="fa-solid fa-user-graduate text-[11px]"></i>
+                                                        </span>
+                                                        <div class="min-w-0">
+                                                            <div class="text-xs font-bold text-slate-800 truncate">${highlightedNama} <span class="text-[11px] font-semibold text-orange-600 ml-1">(${highlightedNim})</span></div>
+                                                            ${highlightedJudul ? `<div class="text-[11px] text-slate-500 truncate max-w-md">${highlightedJudul}</div>` : ''}
+                                                        </div>
+                                                    </div>
+                                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${item.is_prereq_ok ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-amber-50 text-amber-600 border border-amber-200'} shrink-0">
+                                                        ${item.is_prereq_ok ? 'Siap LAA' : 'Pending Wali'}
+                                                    </span>
+                                                </div>
+                                            `;
+                                        });
+                                        autoResults.innerHTML = html;
+                                        autoDropdown.classList.remove('hidden');
+                                        currentFocusIdx = -1;
+
+                                        // Click item handler
+                                        autoResults.querySelectorAll('.autocomplete-item-row').forEach(row => {
+                                            row.onclick = function() {
+                                                const selectedNim = this.getAttribute('data-nim');
+                                                const selectedNama = this.getAttribute('data-nama');
+                                                inputSearch.value = selectedNim || selectedNama;
+                                                currentLAAState.search = inputSearch.value;
+                                                currentLAAState.page = 1;
+                                                autoDropdown.classList.add('hidden');
+                                                refreshLAATable();
+                                            };
+                                        });
+                                    } else {
+                                        autoResults.innerHTML = `
+                                            <div class="px-4 py-3 text-xs text-slate-500 italic text-center">
+                                                Tidak ada hasil untuk "<strong class="text-slate-700">${htmlspecialchars(q)}</strong>"
+                                            </div>`;
+                                        autoDropdown.classList.remove('hidden');
+                                    }
+                                })
+                                .catch(() => {
+                                    if (autoDropdown) autoDropdown.classList.add('hidden');
+                                });
+                        } else {
+                            if (autoDropdown) autoDropdown.classList.add('hidden');
+                        }
+                    }, 280);
+                });
+
+                // Keyboard Navigation (Up, Down, Enter, Escape) untuk Autocomplete
+                inputSearch.addEventListener('keydown', function(e) {
+                    if (!autoDropdown || autoDropdown.classList.contains('hidden')) return;
+                    const items = autoResults.querySelectorAll('.autocomplete-item-row');
+                    if (!items || items.length === 0) return;
+
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        currentFocusIdx++;
+                        if (currentFocusIdx >= items.length) currentFocusIdx = 0;
+                        highlightAutoItem(items, currentFocusIdx);
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        currentFocusIdx--;
+                        if (currentFocusIdx < 0) currentFocusIdx = items.length - 1;
+                        highlightAutoItem(items, currentFocusIdx);
+                    } else if (e.key === 'Enter') {
+                        if (currentFocusIdx >= 0 && items[currentFocusIdx]) {
+                            e.preventDefault();
+                            items[currentFocusIdx].click();
+                        }
+                    } else if (e.key === 'Escape') {
+                        autoDropdown.classList.add('hidden');
                     }
                 });
+
+                function highlightAutoItem(items, index) {
+                    items.forEach((item, i) => {
+                        if (i === index) {
+                            item.classList.add('active-nav');
+                            item.scrollIntoView({ block: 'nearest' });
+                        } else {
+                            item.classList.remove('active-nav');
+                        }
+                    });
+                }
             }
+
+            // Close autocomplete when clicking outside
+            document.addEventListener('click', (e) => {
+                if (autoDropdown && !e.target.closest('#formSearchLAA')) {
+                    autoDropdown.classList.add('hidden');
+                }
+            });
 
             if (formSearch) {
                 formSearch.addEventListener('submit', function(e) {
@@ -1120,6 +1697,7 @@
                     currentLAAState.search = q;
                     currentLAAState.cat = catEl ? catEl.value : 'query';
                     currentLAAState.page = 1;
+                    if (autoDropdown) autoDropdown.classList.add('hidden');
                     refreshLAATable();
                 });
             }
@@ -2380,14 +2958,81 @@
 
         function resolveDocPdfUrl(filename, existingUrl) {
             const fallbackPdf = '<?= base_url("uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf"); ?>';
-            if (existingUrl && (existingUrl.startsWith('http://') || existingUrl.startsWith('https://'))) {
-                return existingUrl;
-            }
             if (!filename) return fallbackPdf;
             filename = String(filename).trim();
+
+            // Automatic fallback for dummy seed data filenames (e.g. 01_test_..., 02_test_..., 03_test_...) 
+            // where physical files do not exist on disk, preventing 404 broken document errors in iframe
+            if (filename.toLowerCase().includes('test_') || filename.toLowerCase().includes('_test') || filename.toLowerCase().includes('sample') || filename.toLowerCase().includes('dummy')) {
+                return fallbackPdf;
+            }
+
+            if (existingUrl && (existingUrl.startsWith('http://') || existingUrl.startsWith('https://')) && !existingUrl.toLowerCase().includes('test_')) {
+                return existingUrl;
+            }
             if (filename.startsWith('http://') || filename.startsWith('https://')) return filename;
             if (filename.startsWith('uploads/')) return '<?= base_url(); ?>' + filename;
             return '<?= base_url("uploads/persyaratan_ta/"); ?>' + filename;
+        }
+
+        function renderPdfToContainer(containerId, pdfUrl) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            if (window.pdfjsLib) {
+                try {
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+                } catch(e){}
+
+                container.innerHTML = `
+                    <div id="loadingPdf_${containerId}" class="w-full h-full flex flex-col items-center justify-center p-4 text-slate-400 bg-slate-100">
+                        <i class="fa-solid fa-circle-notch fa-spin text-2xl text-orange-500 mb-2"></i>
+                        <span class="text-xs font-semibold text-slate-600">Memuat Dokumen PDF...</span>
+                    </div>
+                    <div id="canvasWrapper_${containerId}" class="w-full h-full overflow-y-auto hidden flex-col items-center p-2.5 gap-3 bg-slate-200/90 pointer-events-auto touch-pan-y scroll-smooth"></div>
+                `;
+
+                const loadingEl = document.getElementById(`loadingPdf_${containerId}`);
+                const canvasWrapper = document.getElementById(`canvasWrapper_${containerId}`);
+
+                pdfjsLib.getDocument(pdfUrl).promise.then(pdf => {
+                    if (loadingEl) loadingEl.remove();
+                    if (canvasWrapper) {
+                        canvasWrapper.classList.remove('hidden');
+                        canvasWrapper.classList.add('flex');
+                    }
+
+                    const numPages = Math.min(pdf.numPages, 20);
+                    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+                        pdf.getPage(pageNum).then(page => {
+                            const canvas = document.createElement('canvas');
+                            canvas.className = 'max-w-full shadow-md rounded-lg mb-2 bg-white pointer-events-none shrink-0';
+                            canvasWrapper.appendChild(canvas);
+
+                            const isMobile = window.innerWidth < 640;
+                            const unscaledViewport = page.getViewport({ scale: 1 });
+                            const targetWidth = isMobile ? Math.min(window.innerWidth * 0.82, 340) : Math.min(container.clientWidth || 450, 480);
+                            const scale = targetWidth / unscaledViewport.width;
+                            const viewport = page.getViewport({ scale });
+
+                            const context = canvas.getContext('2d');
+                            canvas.height = viewport.height;
+                            canvas.width = viewport.width;
+
+                            const renderContext = {
+                                canvasContext: context,
+                                viewport: viewport
+                            };
+                            page.render(renderContext);
+                        });
+                    }
+                }).catch(err => {
+                    console.warn('PDF.js render fallback to iframe:', err);
+                    container.innerHTML = `<iframe src="${pdfUrl}#toolbar=0&navpanes=0" class="w-full h-full border-0" title="Pratinjau Dokumen PDF"></iframe>`;
+                });
+            } else {
+                container.innerHTML = `<iframe src="${pdfUrl}#toolbar=0&navpanes=0" class="w-full h-full border-0" title="Pratinjau Dokumen PDF"></iframe>`;
+            }
         }
 
         function refreshLihatBerkasView() {
@@ -2524,6 +3169,13 @@
                 container.style.display = 'flex';
                 container.classList.remove('hidden');
                 container.classList.add('flex');
+                
+                // Tap backdrop to close floating preview panel on mobile
+                container.onclick = function(e) {
+                    if (e.target === container && window.innerWidth < 640) {
+                        closeLihatBerkasPanel();
+                    }
+                };
             }
         }
 
@@ -2532,14 +3184,23 @@
             const wrapper = document.getElementById('wrapperDaftarMhs');
             if (!container || !wrapper) return;
 
-            container.classList.remove('justify-center', 'justify-start');
-            container.classList.add('justify-end');
-
+            const isMobile = window.innerWidth < 640;
             const isPreviewActive = window.activePreviews && window.activePreviews.length > 0;
-            if (isPreviewActive) {
-                wrapper.className = 'flex flex-col gap-3 max-h-[92vh] overflow-y-auto pr-1.5 shrink-0 w-[280px] sm:w-[320px]';
+
+            if (isMobile) {
+                container.className = 'fixed inset-0 z-[100000] flex flex-col items-center justify-start p-2 pb-3 gap-2 bg-slate-900/65 backdrop-blur-xs overflow-y-auto pointer-events-auto';
+                if (isPreviewActive) {
+                    wrapper.className = 'flex flex-col gap-2 max-h-[26vh] overflow-y-auto w-full shrink-0';
+                } else {
+                    wrapper.className = 'flex flex-row items-center gap-2.5 max-h-[85vh] overflow-x-auto snap-x snap-mandatory p-1 w-full shrink-0 scroll-smooth';
+                }
             } else {
-                wrapper.className = 'flex flex-row items-center gap-3 max-h-[92vh] overflow-x-auto p-1 shrink-0';
+                container.className = 'fixed inset-0 pointer-events-none z-[100000] flex items-center justify-end p-3 sm:p-5 gap-4 sm:gap-5 overflow-x-auto';
+                if (isPreviewActive) {
+                    wrapper.className = 'flex flex-col gap-3 max-h-[92vh] overflow-y-auto pr-1.5 shrink-0 w-[280px] sm:w-[320px]';
+                } else {
+                    wrapper.className = 'flex flex-row items-center gap-3 max-h-[92vh] overflow-x-auto p-1 shrink-0';
+                }
             }
         }
 
@@ -2554,7 +3215,9 @@
 
             const totalActive = window.activeLihatBerkasNims.length;
             const isPreviewActive = window.activePreviews && window.activePreviews.length > 0;
-            const cardWidthClass = isPreviewActive ? 'w-full' : (totalActive > 1 ? 'w-[350px] sm:w-[370px]' : 'w-[390px] sm:w-[410px]');
+            const isMobile = window.innerWidth < 640;
+
+            const cardWidthClass = isMobile ? (isPreviewActive ? 'w-full' : (totalActive > 1 ? 'w-[86vw] shrink-0 snap-center' : 'w-full')) : (isPreviewActive ? 'w-full' : (totalActive > 1 ? 'w-[350px] sm:w-[370px]' : 'w-[390px] sm:w-[410px]'));
 
             const docList = (window.SYARAT_BERKAS && window.SYARAT_BERKAS.length > 0)
                 ? window.SYARAT_BERKAS.map((sb, i) => {
@@ -2608,7 +3271,7 @@
 
                     let statusBadge = '';
                     if (status === 'Valid' || status === 'Approved') {
-                        statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Valid</span>';
+                        statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Setujui</span>';
                     } else if (status === 'Invalid' || status === 'Rejected') {
                         statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Revisi</span>';
                     } else {
@@ -2635,19 +3298,21 @@
                                     <i class="fa-solid fa-file-pdf text-rose-500 mr-1 text-[9px]"></i>${rawFilename}
                                 </p>
                             </div>
-                            <div class="flex items-center gap-1 shrink-0">
+                            <div class="flex items-center gap-1.5 shrink-0">
                                 <button type="button" 
                                         onclick="previewBerkasItem('${nimStr}', '${doc.key}')" 
-                                        class="w-7 h-7 rounded-lg border text-xs font-bold transition flex items-center justify-center cursor-pointer active:scale-95 ${previewBtnStyle}" 
+                                        class="px-2.5 py-1 rounded-lg border text-[11px] font-bold transition inline-flex items-center gap-1 cursor-pointer active:scale-95 shadow-2xs ${previewBtnStyle}" 
                                         title="${isCurrentlyPreviewed ? 'Tutup Pratinjau Ini' : 'Pratinjau Berkas'}">
-                                    <i class="fa-solid fa-eye text-xs"></i>
+                                    <i class="fa-solid fa-eye text-[10px]"></i>
+                                    <span>${isCurrentlyPreviewed ? 'Tutup' : 'Lihat'}</span>
                                 </button>
                                 <a href="${pdfUrl}" 
                                    download="${rawFilename}" 
                                    target="_blank" 
-                                   class="w-7 h-7 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold transition flex items-center justify-center cursor-pointer shadow-2xs active:scale-95" 
+                                   class="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-[11px] font-bold transition inline-flex items-center gap-1 cursor-pointer shadow-2xs active:scale-95" 
                                    title="Unduh Berkas">
-                                    <i class="fa-solid fa-download text-xs"></i>
+                                    <i class="fa-solid fa-download text-[10px]"></i>
+                                    <span>Unduh</span>
                                 </a>
                             </div>
                         </div>
@@ -2691,6 +3356,8 @@
 
             if (!window.activePreviews) window.activePreviews = [];
 
+            const isMobile = window.innerWidth < 640;
+
             const existingIdx = window.activePreviews.findIndex(p => String(p.nim).trim() === nim && String(p.docKey).trim() === docKey);
             if (existingIdx > -1) {
                 closeSinglePreview(existingIdx);
@@ -2707,7 +3374,11 @@
             setTimeout(() => {
                 const previewWrapper = document.getElementById('wrapperPreviewBerkas');
                 if (previewWrapper) {
-                    previewWrapper.scrollLeft = previewWrapper.scrollWidth;
+                    if (isMobile) {
+                        previewWrapper.scrollTop = previewWrapper.scrollHeight;
+                    } else {
+                        previewWrapper.scrollLeft = previewWrapper.scrollWidth;
+                    }
                 }
             }, 100);
         }
@@ -2723,10 +3394,17 @@
             }
 
             wrapper.classList.remove('hidden');
-            wrapper.className = 'flex items-center gap-3 shrink-0 max-w-[65vw] sm:max-w-[70vw] overflow-x-auto p-1.5 scroll-smooth';
+            const isMobile = window.innerWidth < 640;
+            if (isMobile) {
+                wrapper.className = 'flex flex-col gap-3 w-full shrink-0 max-h-[62vh] overflow-y-auto p-1 border-t border-slate-700/40 pt-2 scroll-smooth';
+            } else {
+                wrapper.className = 'flex items-center gap-3 shrink-0 max-w-[65vw] sm:max-w-[70vw] overflow-x-auto p-1.5 scroll-smooth';
+            }
 
             const totalPreviews = window.activePreviews.length;
-            const panelWidthClass = totalPreviews >= 3 ? 'w-[340px] sm:w-[370px] lg:w-[400px] shrink-0' : (totalPreviews > 1 ? 'w-[390px] sm:w-[430px] shrink-0' : 'w-[460px] sm:w-[500px] shrink-0');
+            const panelWidthClass = isMobile 
+                ? 'w-full shrink-0' 
+                : (totalPreviews >= 3 ? 'w-[340px] sm:w-[370px] lg:w-[400px] shrink-0' : (totalPreviews > 1 ? 'w-[390px] sm:w-[430px] shrink-0' : 'w-[460px] sm:w-[500px] shrink-0'));
 
             const docList = (window.SYARAT_BERKAS && window.SYARAT_BERKAS.length > 0)
                 ? window.SYARAT_BERKAS.map((sb, i) => ({
@@ -2799,8 +3477,7 @@
                             </div>
                         </div>
 
-                        <div class="h-[410px] sm:h-[470px] bg-slate-200 relative border-b border-slate-200 overflow-hidden cursor-default select-none">
-                            <iframe id="iframePreviewBerkas_${pNim}_${pDocKey}" src="${pdfUrl}#toolbar=0&navpanes=0" class="w-full h-full border-0 pointer-events-none" title="Pratinjau Dokumen PDF"></iframe>
+                        <div class="h-[260px] sm:h-[470px] bg-slate-200 relative border-b border-slate-200 overflow-hidden cursor-default select-none flex flex-col justify-center items-center" id="pdfContainer_${pNim}_${pDocKey}">
                         </div>
 
                         <div class="p-2.5 px-3 bg-slate-50 border-t border-slate-200 flex flex-col gap-2 shrink-0">
@@ -2851,6 +3528,7 @@
                         </div>
                     `;
                     wrapper.appendChild(div);
+                    renderPdfToContainer(`pdfContainer_${pNim}_${pDocKey}`, pdfUrl);
                     div.animate([
                         { opacity: 0, transform: 'translateX(35px) scale(0.97)' },
                         { opacity: 1, transform: 'translateX(0) scale(1)' }

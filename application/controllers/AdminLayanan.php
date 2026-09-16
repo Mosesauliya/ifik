@@ -191,9 +191,14 @@ class AdminLayanan extends CI_Controller {
         }
 
         // Standardize status ('Valid', 'Invalid', or 'Pending')
-        if ($status === 'Approved') $status = 'Valid';
-        if ($status === 'Rejected') $status = 'Invalid';
-        if ($status !== 'Valid' && $status !== 'Invalid') $status = 'Pending';
+        $sLower = strtolower($status);
+        if ($status === 'Valid' || $status === 'Approved' || $sLower === 'setujui' || $sLower === 'acc') {
+            $status = 'Valid';
+        } else if ($status === 'Invalid' || $status === 'Rejected' || $sLower === 'revisi' || $sLower === 'kurang') {
+            $status = 'Invalid';
+        } else {
+            $status = 'Pending';
+        }
 
 
         // Get file name
@@ -603,4 +608,111 @@ class AdminLayanan extends CI_Controller {
 
         redirect('adminlayanan');
     }
+
+    // ==========================================
+    // TICKETING MODULE ENDPOINTS
+    // ==========================================
+
+    public function ticketing_input() {
+        redirect('adminlayanan/ticketing');
+    }
+
+    public function ticketing_approval() {
+        redirect('adminlayanan/ticketing');
+    }
+
+    public function ticketing_riwayat() {
+        redirect('adminlayanan/ticketing');
+    }
+
+    public function simpan_ticket() {
+        $nim_nip   = trim($this->input->post('nim_nip') ?? '');
+        $nama      = trim($this->input->post('nama') ?? '');
+        $email     = trim($this->input->post('email') ?? '');
+        $kategori  = trim($this->input->post('kategori') ?? 'Layanan Umum');
+        $perihal   = trim($this->input->post('perihal') ?? '');
+        $deskripsi = trim($this->input->post('deskripsi') ?? '');
+        $prioritas = trim($this->input->post('prioritas') ?? 'Normal');
+
+        if (empty($nim_nip) || empty($nama) || empty($perihal)) {
+            $this->session->set_flashdata('error', 'NIM/NIP, Nama, dan Perihal tiket wajib diisi!');
+            redirect('adminlayanan/ticketing_input');
+            return;
+        }
+
+        $ticket_data = [
+            'ticket_number' => 'TICK-' . date('Ymd') . '-' . rand(1000, 9999),
+            'nim_nip'       => $nim_nip,
+            'nama'          => $nama,
+            'email'         => $email,
+            'kategori'      => $kategori,
+            'perihal'       => $perihal,
+            'deskripsi'     => $deskripsi,
+            'prioritas'     => $prioritas,
+            'status'        => 'Inputted'
+        ];
+
+        $this->AdminLayanan_model->save_ticket($ticket_data);
+        $this->session->set_flashdata('success', 'Tiket baru ' . $ticket_data['ticket_number'] . ' berhasil dibuat!');
+        redirect('adminlayanan/ticketing_riwayat');
+    }
+
+    public function update_ticket_status() {
+        $id      = (int)$this->input->post('id');
+        $status  = trim($this->input->post('status') ?? 'Approved');
+        $catatan = trim($this->input->post('catatan') ?? '');
+
+        if ($id <= 0) {
+            $this->session->set_flashdata('error', 'ID Tiket tidak valid!');
+            redirect('adminlayanan/ticketing_approval');
+            return;
+        }
+
+        $this->AdminLayanan_model->update_ticket_status($id, $status, $catatan);
+        $this->session->set_flashdata('success', 'Status tiket berhasil diperbarui menjadi ' . $status . '!');
+        redirect('adminlayanan/ticketing_approval');
+    }
+
+    // ==========================================
+    // TA MANAGEMENT ENDPOINTS
+    // ==========================================
+
+    public function lulus_sidang() {
+        $data['title']   = 'Mahasiswa Sudah Lulus Sidang - Admin Layanan';
+        $data['search']  = trim($this->input->get('q') ?? '');
+        $data['cat']     = trim($this->input->get('cat') ?? 'query');
+        $data['list']    = $this->AdminLayanan_model->get_students_lulus_sidang($data['search'], $data['cat']);
+        $this->load->view('admin_layanan/lulus_sidang', $data);
+    }
+
+    public function status_peserta_ta() {
+        $data['title']        = 'Status Peserta TA - Admin Layanan';
+        $data['search']       = trim($this->input->get('q') ?? '');
+        $data['cat']          = trim($this->input->get('cat') ?? 'query');
+        $data['filter_stage'] = trim($this->input->get('stage') ?? 'all');
+        $data['active_tab']   = trim($this->input->get('tab') ?? 'bimbingan'); // 'bimbingan' or 'file_ta'
+
+        $data['syarat_berkas'] = $this->AdminLayanan_model->get_active_syarat_berkas();
+        $data['list_peserta']  = $this->AdminLayanan_model->get_status_peserta_ta($data['search'], $data['filter_stage'], $data['cat']);
+
+        $this->load->view('admin_layanan/status_peserta_ta', $data);
+    }
+
+    public function kembalikan_ke_preview3($nim) {
+        if (empty($nim)) {
+            $this->session->set_flashdata('error', 'NIM Mahasiswa tidak valid!');
+            redirect('adminlayanan/status_peserta_ta');
+            return;
+        }
+
+        $res = $this->AdminLayanan_model->revert_to_preview3($nim);
+        if ($res) {
+            $this->session->set_flashdata('success', 'Tahapan pendaftaran mahasiswa NIM ' . $nim . ' berhasil dikembalikan ke Preview 3!');
+        } else {
+            $this->session->set_flashdata('error', 'Gagal mengembalikan tahapan mahasiswa NIM ' . $nim . '.');
+        }
+
+        redirect('adminlayanan/status_peserta_ta');
+    }
 }
+
