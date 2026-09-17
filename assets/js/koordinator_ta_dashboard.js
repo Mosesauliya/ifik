@@ -817,6 +817,9 @@
             state.quickBatchStudents.push({
                 nim: st.nim,
                 name: st.name || `${currentMhs.nama_depan || ''} ${currentMhs.nama_belakang || ''}`.trim() || ('Mahasiswa ' + st.nim),
+                judul: st.judul || currentMhs.judul_1 || currentMhs.judul_ta || currentMhs.judul || '',
+                judul_2: currentMhs.judul_2 || '',
+                judul_3: currentMhs.judul_3 || '',
                 stage: st.stage || currentMhs.current_stage || 'Koordinator TA',
                 old_pembimbing_1: currentMhs.pembimbing_1 || '',
                 old_pembimbing_2: currentMhs.pembimbing_2 || '',
@@ -933,6 +936,12 @@
                         <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
                             <span class="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">Usulan Judul TA (Utama):</span>
                             <p class="text-xs font-semibold text-slate-800 leading-relaxed">${escapeHtml(st.judul || 'Belum ada judul tugas akhir')}</p>
+                            ${st.judul_2 ? `
+                                <div class="mt-2 pt-2 border-t border-slate-200/60">
+                                    <span class="text-[9px] font-bold text-slate-500 uppercase block mb-0.5">Judul Alternatif 2:</span>
+                                    <p class="text-[11px] text-slate-600 font-medium">${escapeHtml(st.judul_2)}</p>
+                                </div>
+                            ` : ''}
                         </div>
 
                         <!-- Dropdowns Dosen Pembimbing 1 & 2 -->
