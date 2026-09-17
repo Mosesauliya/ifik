@@ -409,28 +409,34 @@ class KoordinatorTA_model extends CI_Model {
     /**
      * Eksekusi batch approval dan plotting pembimbing massal
      */
-    public function execute_batch_approval_ajax($batchData, $defaultStatus = 'Approved') {
-        if (empty($batchData) || !is_array($batchData)) {
+        /**
+     * Eksekusi batch approval dan plotting pembimbing massal
+     */
+    public function batch_approval_koor_ajax($nims, $status = 'Approved', $catatan = '', $pembimbing_1 = null, $pembimbing_2 = null, $penguji_1 = null, $penguji_2 = null, $plottings = array()) {
+        if (empty($nims) || !is_array($nims)) {
             return array('status' => false, 'message' => 'Tidak ada data mahasiswa yang dikirim.');
+        }
+
+        $plottingMap = array();
+        if (!empty($plottings) && is_array($plottings)) {
+            foreach ($plottings as $p) {
+                if (!empty($p['nim'])) {
+                    $plottingMap[$p['nim']] = $p;
+                }
+            }
         }
 
         $successCount = 0;
         $failCount = 0;
         $errors = array();
 
-        foreach ($batchData as $item) {
-            $nim     = $item['nim'] ?? '';
-            $status  = $item['status'] ?? $defaultStatus;
-            $catatan = $item['catatan'] ?? '';
-            $p1      = $item['pembimbing_1'] ?? null;
-            $p2      = $item['pembimbing_2'] ?? null;
+        foreach ($nims as $nim) {
+            $pData = $plottingMap[$nim] ?? array();
+            $p1 = $pData['pembimbing_1'] ?? $pembimbing_1;
+            $p2 = $pData['pembimbing_2'] ?? $pembimbing_2;
+            $c  = $pData['catatan_koor'] ?? ($pData['catatan'] ?? $catatan);
 
-            if (empty($nim)) {
-                $failCount++;
-                continue;
-            }
-
-            $res = $this->update_approval_koor_ajax($nim, $status, $catatan, $p1, $p2);
+            $res = $this->update_approval_koor_ajax($nim, $status, $c, $p1, $p2);
             if ($res['status']) {
                 $successCount++;
             } else {
@@ -440,12 +446,19 @@ class KoordinatorTA_model extends CI_Model {
         }
 
         return array(
-            'status'  => ($successCount > 0),
+            'status'        => ($successCount > 0),
             'success_count' => $successCount,
             'fail_count'    => $failCount,
             'errors'        => $errors,
-            'message' => "Proses batch selesai. Berhasil: {$successCount}, Gagal: {$failCount}."
+            'message'       => ($successCount > 0)
+                ? "Plotting Dosen Pembimbing untuk {$successCount} mahasiswa berhasil disimpan!"
+                : "Gagal memproses plotting: " . implode(', ', $errors)
         );
+    }
+
+    public function execute_batch_approval_ajax($batchData, $defaultStatus = 'Approved') {
+        $nims = array_column($batchData, 'nim');
+        return $this->batch_approval_koor_ajax($nims, $defaultStatus, '', null, null, null, null, $batchData);
     }
 
     /**
@@ -629,29 +642,50 @@ class KoordinatorTA_model extends CI_Model {
     /**
      * Batch update dosen penguji & jadwal preview 2
      */
-    public function batch_update_preview2_penguji($batchData) {
-        if (empty($batchData) || !is_array($batchData)) {
-            return array('status' => false, 'message' => 'Tidak ada data plotting penguji yang dikirim.');
+        /**
+     * Batch update dosen penguji & jadwal preview 2
+     */
+    public function batch_penguji_preview2_ajax($nims, $penguji_1 = null, $penguji_2 = null, $tgl_sidang = null, $jam_mulai = null, $jam_selesai = null, $ruangan = null, $plottings = array()) {
+        if (empty($nims) || !is_array($nims)) {
+            return array('status' => false, 'message' => 'Tidak ada data mahasiswa yang dikirim.');
+        }
+
+        $plottingMap = array();
+        if (!empty($plottings) && is_array($plottings)) {
+            foreach ($plottings as $p) {
+                if (!empty($p['nim'])) {
+                    $plottingMap[$p['nim']] = $p;
+                }
+            }
         }
 
         $success = 0;
-        foreach ($batchData as $row) {
-            $nim      = $row['nim'] ?? '';
-            $pj1      = $row['penguji_1'] ?? '';
-            $pj2      = $row['penguji_2'] ?? '';
-            $tgl      = $row['tgl_sidang'] ?? null;
-            $mulai    = $row['jam_mulai'] ?? null;
-            $selesai  = $row['jam_selesai'] ?? null;
-            $ruang    = $row['ruangan'] ?? null;
-            $cat      = $row['catatan'] ?? '';
+        foreach ($nims as $nim) {
+            $pData = $plottingMap[$nim] ?? array();
+            $pj1   = $pData['penguji_1'] ?? $penguji_1;
+            $pj2   = $pData['penguji_2'] ?? $penguji_2;
+            $tgl   = $pData['tgl_sidang'] ?? $tgl_sidang;
+            $mulai = $pData['jam_mulai'] ?? $jam_mulai;
+            $sel   = $pData['jam_selesai'] ?? $jam_selesai;
+            $ruang = $pData['ruangan'] ?? $ruangan;
+            $cat   = $pData['catatan'] ?? ($pData['catatan_koor'] ?? '');
 
             if (!empty($nim)) {
-                $r = $this->update_penguji_jadwal_preview2($nim, $pj1, $pj2, $tgl, $mulai, $selesai, $ruang, $cat);
+                $r = $this->update_penguji_jadwal_preview2($nim, $pj1, $pj2, $tgl, $mulai, $sel, $ruang, $cat);
                 if ($r['status']) $success++;
             }
         }
 
-        return array('status' => true, 'success_count' => $success, 'message' => "Plotting Penguji Massal berhasil disimpan ({$success} data).");
+        return array(
+            'status'        => ($success > 0),
+            'success_count' => $success,
+            'message'       => "Plotting Penguji Massal berhasil disimpan ({$success} data)."
+        );
+    }
+
+    public function batch_update_preview2_penguji($batchData) {
+        $nims = array_column($batchData, 'nim');
+        return $this->batch_penguji_preview2_ajax($nims, null, null, null, null, null, null, $batchData);
     }
 
     /**
@@ -781,17 +815,20 @@ class KoordinatorTA_model extends CI_Model {
     /**
      * Batch update jadwal sidang TA
      */
-    public function batch_update_jadwal_sidang($batchData) {
-        if (empty($batchData) || !is_array($batchData)) {
-            return array('status' => false, 'message' => 'Tidak ada data yang dikirim.');
+        /**
+     * Batch update jadwal sidang TA
+     */
+    public function batch_jadwal_sidang_per_mhs_ajax($schedules) {
+        if (empty($schedules) || !is_array($schedules)) {
+            return array('status' => false, 'message' => 'Tidak ada data jadwal yang dikirim.');
         }
 
         $success = 0;
-        foreach ($batchData as $row) {
+        foreach ($schedules as $row) {
             $nim     = $row['nim'] ?? '';
-            $tgl     = $row['tanggal_sidang'] ?? null;
-            $waktu   = $row['waktu_sidang'] ?? null;
-            $ruang   = $row['ruang_sidang'] ?? null;
+            $tgl     = $row['tgl_sidang'] ?? ($row['tanggal_sidang'] ?? null);
+            $waktu   = $row['jam_mulai_sidang'] ?? ($row['waktu_sidang'] ?? null);
+            $ruang   = $row['ruangan_sidang'] ?? ($row['ruang_sidang'] ?? null);
             $link    = $row['link_sidang'] ?? '';
 
             if (!empty($nim)) {
@@ -800,7 +837,15 @@ class KoordinatorTA_model extends CI_Model {
             }
         }
 
-        return array('status' => true, 'success_count' => $success, 'message' => "Penjadwalan Sidang Massal berhasil disimpan ({$success} data).");
+        return array(
+            'status'        => ($success > 0),
+            'success_count' => $success,
+            'message'       => "Penjadwalan Sidang Massal berhasil disimpan ({$success} data)."
+        );
+    }
+
+    public function batch_update_jadwal_sidang($batchData) {
+        return $this->batch_jadwal_sidang_per_mhs_ajax($batchData);
     }
 
     /**
