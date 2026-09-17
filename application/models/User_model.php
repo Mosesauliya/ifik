@@ -13,24 +13,6 @@ class User_model extends CI_Model {
         $this->load->database();
         $this->tbl_user = $this->db->table_exists('user') ? 'user' : 'users';
         $this->tbl_role = $this->db->table_exists('user_role') ? 'user_role' : 'roles';
-        $this->_ensure_columns();
-    }
-
-    private function _ensure_columns()
-    {
-        if (!$this->db->table_exists($this->tbl_user)) return;
-        $fields = $this->db->list_fields($this->tbl_user);
-        $user_cols = array(
-            'password_changed' => "TINYINT(1) NOT NULL DEFAULT 1",
-            'token'            => "VARCHAR(255) NULL",
-            'email_status'     => "VARCHAR(20) DEFAULT 'belum'",
-            'email_sent_at'    => "DATETIME NULL"
-        );
-        foreach ($user_cols as $col => $def) {
-            if (!in_array($col, $fields)) {
-                $this->db->query("ALTER TABLE `{$this->tbl_user}` ADD COLUMN `{$col}` {$def}");
-            }
-        }
     }
 
     /**

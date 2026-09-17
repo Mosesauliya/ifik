@@ -50,7 +50,9 @@ class Booking_model extends CI_Model {
                 (4, 3, 'AUD-FIK', 'Auditorium FIK', 150, 'Gedung Sebatik Lt. 3', 'Tersedia')");
         } else {
             // Auto-migrasi: pastikan kolom kode_ruangan dapat menampung multi-ruangan (VARCHAR 255)
-            $this->db->query("ALTER TABLE `ruangan` MODIFY COLUMN `kode_ruangan` VARCHAR(255) NOT NULL DEFAULT ''");
+            if ($this->db->field_exists('kode_ruangan', 'ruangan')) {
+                $this->db->query("ALTER TABLE `ruangan` MODIFY COLUMN `kode_ruangan` VARCHAR(255) NOT NULL DEFAULT ''");
+            }
 
             // Auto-migrasi: pastikan seluruh kolom lengkap jika tabel dibuat dengan skema lama
             $fields = $this->db->list_fields('ruangan');
