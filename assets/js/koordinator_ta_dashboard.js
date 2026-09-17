@@ -870,6 +870,12 @@
         updateFloatingBar();
     };
 
+    window.setQuickBatchCatatan = function (idx, val) {
+        if (state.quickBatchStudents && state.quickBatchStudents[idx]) {
+            state.quickBatchStudents[idx].catatan_koor = val;
+        }
+    };
+
     function renderQuickBatchCards() {
         const listEl = document.getElementById('modalSelectedList');
         if (!listEl) return;
@@ -918,35 +924,28 @@
                             <button type="button" onclick="removeStudentFromBatch('${st.nim}')" class="w-7 h-7 rounded-lg bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-600 flex items-center justify-center transition border border-slate-200 cursor-pointer" title="Hapus mahasiswa ini dari pilihan">
                                 <i class="fa-solid fa-xmark text-xs"></i>
                             </button>
-
-                            <button type="button" onclick="toggleQuickStudentCard(${idx})" class="w-7 h-7 rounded-lg bg-white hover:bg-slate-200 text-slate-500 flex items-center justify-center transition border border-slate-200 cursor-pointer">
-                                <i class="fa-solid ${st.isExpanded ? 'fa-chevron-up' : 'fa-chevron-down'} text-xs"></i>
-                            </button>
                         </div>
                     </div>
 
-                    <!-- Student Body: Dosen Pembimbing 1 & 2 Combobox -->
-                    <div id="quick_card_body_${idx}" class="${st.isExpanded ? '' : 'hidden'} p-4 bg-white border-t border-slate-100 rounded-b-2xl space-y-3.5">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <!-- Slot 1 -->
-                            <div class="relative z-30" id="q_wrapper_${idx}_1">
-                                <label class="text-xs font-bold text-slate-700 block mb-1.5">
-                                    Pembimbing 1 (Utama) <span class="text-rose-500">*</span>
+                    <!-- Expandable Details Section -->
+                    <div id="quick_body_${idx}" class="p-4 sm:p-5 border-t border-slate-100 space-y-4 ${st.isExpanded ? 'block' : 'hidden'}">
+                        <!-- Judul TA -->
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                            <span class="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">Usulan Judul TA (Utama):</span>
+                            <p class="text-xs font-semibold text-slate-800 leading-relaxed">${escapeHtml(st.judul || 'Belum ada judul tugas akhir')}</p>
+                        </div>
+
+                        <!-- Dropdowns Dosen Pembimbing 1 & 2 -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <!-- Slot Pembimbing 1 -->
+                            <div class="relative">
+                                <label class="block text-[11px] font-bold text-slate-700 mb-1 flex items-center justify-between">
+                                    <span>Pembimbing 1 (Utama): <span class="text-rose-500">*</span></span>
+                                    <span id="q_badge_${idx}_1" class="${st.pembimbing_1 ? 'block' : 'hidden'} text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">Terpilih</span>
                                 </label>
-
-                                <!-- Chip -->
-                                <div id="q_chip_${idx}_1" class="${p1 ? '' : 'hidden'} p-2.5 bg-orange-50 border border-orange-300 rounded-xl flex items-center justify-between shadow-2xs">
-                                    <div class="flex items-center gap-2 min-w-0">
-                                        <div class="w-6 h-6 rounded-lg bg-orange-600 text-white flex items-center justify-center font-bold text-[10px] shrink-0">1</div>
-                                        <span id="q_chip_name_${idx}_1" class="text-xs sm:text-sm font-bold text-orange-950 truncate">${p1 ? escapeHtml(p1.nama_dosen + ' (' + p1.nip + ')') : ''}</span>
-                                    </div>
-                                    <button type="button" onclick="changeQuickDosen(${idx}, 1)" class="text-xs text-orange-600 font-bold hover:underline cursor-pointer ml-2 shrink-0">Ganti</button>
-                                </div>
-
-                                <!-- Search Input -->
-                                <div id="q_search_container_${idx}_1" class="${p1 ? 'hidden' : ''} relative">
-                                    <div class="flex items-center border border-slate-300 rounded-xl px-3.5 py-2.5 bg-white focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20 shadow-2xs">
-                                        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs mr-2 shrink-0"></i>
+                                <div class="relative">
+                                    <div class="flex items-center px-3 py-2 bg-white border ${st.pembimbing_1 ? 'border-orange-300 ring-1 ring-orange-100' : 'border-slate-300'} rounded-xl transition shadow-2xs focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20">
+                                        <i class="fa-solid fa-user-tie text-slate-400 text-xs mr-2 shrink-0"></i>
                                         <input type="text" id="q_search_${idx}_1" onfocus="openQuickDosenDropdown(${idx}, 1)" onclick="openQuickDosenDropdown(${idx}, 1)" oninput="filterQuickDosen(${idx}, 1)" placeholder="Cari nama / NIP pembimbing 1..." class="w-full text-xs sm:text-sm font-semibold bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400" autocomplete="off">
                                         <button type="button" id="q_clear_${idx}_1" onclick="clearQuickDosen(${idx}, 1)" class="hidden text-slate-400 hover:text-slate-600 text-xs ml-1 shrink-0"><i class="fa-solid fa-circle-xmark"></i></button>
                                     </div>
@@ -954,25 +953,15 @@
                                 </div>
                             </div>
 
-                            <!-- Slot 2 -->
-                            <div class="relative z-20" id="q_wrapper_${idx}_2">
-                                <label class="text-xs font-bold text-slate-700 block mb-1.5">
-                                    Pembimbing 2 (Pendamping) <span class="text-rose-500">*</span>
+                            <!-- Slot Pembimbing 2 -->
+                            <div class="relative">
+                                <label class="block text-[11px] font-bold text-slate-700 mb-1 flex items-center justify-between">
+                                    <span>Pembimbing 2 (Pendamping): <span class="text-rose-500">*</span></span>
+                                    <span id="q_badge_${idx}_2" class="${st.pembimbing_2 ? 'block' : 'hidden'} text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">Terpilih</span>
                                 </label>
-
-                                <!-- Chip -->
-                                <div id="q_chip_${idx}_2" class="${p2 ? '' : 'hidden'} p-2.5 bg-orange-50 border border-orange-300 rounded-xl flex items-center justify-between shadow-2xs">
-                                    <div class="flex items-center gap-2 min-w-0">
-                                        <div class="w-6 h-6 rounded-lg bg-orange-600 text-white flex items-center justify-center font-bold text-[10px] shrink-0">2</div>
-                                        <span id="q_chip_name_${idx}_2" class="text-xs sm:text-sm font-bold text-orange-950 truncate">${p2 ? escapeHtml(p2.nama_dosen + ' (' + p2.nip + ')') : ''}</span>
-                                    </div>
-                                    <button type="button" onclick="changeQuickDosen(${idx}, 2)" class="text-xs text-orange-600 font-bold hover:underline cursor-pointer ml-2 shrink-0">Ganti</button>
-                                </div>
-
-                                <!-- Search Input -->
-                                <div id="q_search_container_${idx}_2" class="${p2 ? 'hidden' : ''} relative">
-                                    <div class="flex items-center border border-slate-300 rounded-xl px-3.5 py-2.5 bg-white focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20 shadow-2xs">
-                                        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs mr-2 shrink-0"></i>
+                                <div class="relative">
+                                    <div class="flex items-center px-3 py-2 bg-white border ${st.pembimbing_2 ? 'border-orange-300 ring-1 ring-orange-100' : 'border-slate-300'} rounded-xl transition shadow-2xs focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20">
+                                        <i class="fa-solid fa-user-tie text-slate-400 text-xs mr-2 shrink-0"></i>
                                         <input type="text" id="q_search_${idx}_2" onfocus="openQuickDosenDropdown(${idx}, 2)" onclick="openQuickDosenDropdown(${idx}, 2)" oninput="filterQuickDosen(${idx}, 2)" placeholder="Cari nama / NIP pembimbing 2..." class="w-full text-xs sm:text-sm font-semibold bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400" autocomplete="off">
                                         <button type="button" id="q_clear_${idx}_2" onclick="clearQuickDosen(${idx}, 2)" class="hidden text-slate-400 hover:text-slate-600 text-xs ml-1 shrink-0"><i class="fa-solid fa-circle-xmark"></i></button>
                                     </div>
@@ -984,7 +973,7 @@
                         <div>
                             <input type="text" 
                                    value="${escapeHtml(st.catatan_koor || '')}" 
-                                   oninput="state.quickBatchStudents[${idx}].catatan_koor = this.value"
+                                   oninput="setQuickBatchCatatan(${idx}, this.value)"
                                    placeholder="Catatan khusus untuk ${escapeHtml((st.name || '').split(' ')[0])} (opsional)..." 
                                    class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 shadow-2xs font-medium">
                         </div>

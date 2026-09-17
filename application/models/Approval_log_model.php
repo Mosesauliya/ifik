@@ -10,22 +10,8 @@ class Approval_log_model extends CI_Model {
 
     /**
      * Catat log persetujuan / penolakan baru
-     * 
-     * @param array $data 
-     *   - modul (string, misal: 'Dosen Wali', 'Admin Layanan', 'Koordinator TA', 'Ketua KK', 'Peminjaman Ruangan')
-     *   - ref_id (string, misal: NIM mahasiswa atau ID booking)
-     *   - target_name (string, opsional, nama mahasiswa atau nama peminjam/ruangan)
-     *   - action (string, misal: 'Approved', 'Rejected', 'Reset', 'Approve All')
-     *   - actor_id (int, opsional)
-     *   - actor_name (string, opsional)
-     *   - actor_role (string, opsional)
-     *   - actor_nip_nim (string, opsional)
-     *   - catatan (string, opsional)
-     * @return bool
      */
     public function log($data) {
-        $this->_ensure_table();
-
         $modul       = $data['modul'] ?? 'Umum';
         $ref_id      = $data['ref_id'] ?? '';
         $target_name = $data['target_name'] ?? NULL;
@@ -75,8 +61,6 @@ class Approval_log_model extends CI_Model {
      * Ambil semua data log history dengan pagination dan filter
      */
     public function get_all_logs($filter_modul = null, $filter_action = null, $search = null, $limit = 20, $offset = 0) {
-        $this->_ensure_table();
-
         if (!empty($filter_modul) && $filter_modul !== 'all') {
             $this->db->where('modul', $filter_modul);
         }
@@ -108,8 +92,6 @@ class Approval_log_model extends CI_Model {
      * Hitung total data log untuk pagination
      */
     public function count_logs($filter_modul = null, $filter_action = null, $search = null) {
-        $this->_ensure_table();
-
         if (!empty($filter_modul) && $filter_modul !== 'all') {
             $this->db->where('modul', $filter_modul);
         }
@@ -136,8 +118,6 @@ class Approval_log_model extends CI_Model {
      * Ambil riwayat log spesifik berdasarkan referensi (misal NIM mahasiswa atau ID Booking)
      */
     public function get_logs_by_ref($ref_id, $modul = null) {
-        $this->_ensure_table();
-
         $this->db->where('ref_id', (string)$ref_id);
         if (!empty($modul)) {
             $this->db->where('modul', $modul);
@@ -150,7 +130,6 @@ class Approval_log_model extends CI_Model {
      * Autocomplete search untuk Log History Approval
      */
     public function autocomplete_search($term) {
-        $this->_ensure_table();
         if (empty($term)) return array();
 
         $this->db->group_start();
@@ -171,8 +150,6 @@ class Approval_log_model extends CI_Model {
      * Hitung metrik statistik ringkas untuk Log History
      */
     public function get_log_stats() {
-        $this->_ensure_table();
-        
         $total    = $this->db->count_all_results('log_approval_history');
         $approved = $this->db->where('action', 'Approved')->count_all_results('log_approval_history');
         $rejected = $this->db->where('action', 'Rejected')->count_all_results('log_approval_history');
