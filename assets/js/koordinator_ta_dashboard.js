@@ -954,7 +954,7 @@
                         <!-- Dropdowns Dosen Pembimbing 1 & 2 -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                             <!-- Slot Pembimbing 1 -->
-                            <div class="relative">
+                            <div id="q_wrapper_${idx}_1" class="relative">
                                 <label class="block text-[11px] font-bold text-slate-700 mb-1 flex items-center justify-between">
                                     <span>Pembimbing 1 (Utama): <span class="text-rose-500">*</span></span>
                                     <span id="q_badge_${idx}_1" class="${st.pembimbing_1 ? 'block' : 'hidden'} text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">Terpilih</span>
@@ -962,15 +962,15 @@
                                 <div class="relative">
                                     <div class="flex items-center px-3 py-2 bg-white border ${st.pembimbing_1 ? 'border-orange-300 ring-1 ring-orange-100' : 'border-slate-300'} rounded-xl transition shadow-2xs focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20">
                                         <i class="fa-solid fa-user-tie text-slate-400 text-xs mr-2 shrink-0"></i>
-                                        <input type="text" id="q_search_${idx}_1" onfocus="openQuickDosenDropdown(${idx}, 1)" onclick="openQuickDosenDropdown(${idx}, 1)" oninput="filterQuickDosen(${idx}, 1)" placeholder="Cari nama / NIP pembimbing 1..." class="w-full text-xs sm:text-sm font-semibold bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400" autocomplete="off">
-                                        <button type="button" id="q_clear_${idx}_1" onclick="clearQuickDosen(${idx}, 1)" class="hidden text-slate-400 hover:text-slate-600 text-xs ml-1 shrink-0"><i class="fa-solid fa-circle-xmark"></i></button>
+                                        <input type="text" id="q_search_${idx}_1" value="${p1 ? escapeHtml(p1.nama_dosen) : ''}" onfocus="openQuickDosenDropdown(${idx}, 1)" onclick="openQuickDosenDropdown(${idx}, 1)" oninput="filterQuickDosen(${idx}, 1)" placeholder="Cari nama / NIP pembimbing 1..." class="w-full text-xs sm:text-sm font-semibold bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400" autocomplete="off">
+                                        <button type="button" id="q_clear_${idx}_1" onclick="clearQuickDosen(${idx}, 1)" class="${p1 ? '' : 'hidden'} text-slate-400 hover:text-slate-600 text-xs ml-1 shrink-0"><i class="fa-solid fa-circle-xmark"></i></button>
                                     </div>
                                     <div id="q_dropdown_${idx}_1" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-2xl z-[150] max-h-56 overflow-y-auto custom-scrollbar p-1.5 divide-y divide-slate-100"></div>
                                 </div>
                             </div>
 
                             <!-- Slot Pembimbing 2 -->
-                            <div class="relative">
+                            <div id="q_wrapper_${idx}_2" class="relative">
                                 <label class="block text-[11px] font-bold text-slate-700 mb-1 flex items-center justify-between">
                                     <span>Pembimbing 2 (Pendamping): <span class="text-rose-500">*</span></span>
                                     <span id="q_badge_${idx}_2" class="${st.pembimbing_2 ? 'block' : 'hidden'} text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">Terpilih</span>
@@ -978,8 +978,8 @@
                                 <div class="relative">
                                     <div class="flex items-center px-3 py-2 bg-white border ${st.pembimbing_2 ? 'border-orange-300 ring-1 ring-orange-100' : 'border-slate-300'} rounded-xl transition shadow-2xs focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20">
                                         <i class="fa-solid fa-user-tie text-slate-400 text-xs mr-2 shrink-0"></i>
-                                        <input type="text" id="q_search_${idx}_2" onfocus="openQuickDosenDropdown(${idx}, 2)" onclick="openQuickDosenDropdown(${idx}, 2)" oninput="filterQuickDosen(${idx}, 2)" placeholder="Cari nama / NIP pembimbing 2..." class="w-full text-xs sm:text-sm font-semibold bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400" autocomplete="off">
-                                        <button type="button" id="q_clear_${idx}_2" onclick="clearQuickDosen(${idx}, 2)" class="hidden text-slate-400 hover:text-slate-600 text-xs ml-1 shrink-0"><i class="fa-solid fa-circle-xmark"></i></button>
+                                        <input type="text" id="q_search_${idx}_2" value="${p2 ? escapeHtml(p2.nama_dosen) : ''}" onfocus="openQuickDosenDropdown(${idx}, 2)" onclick="openQuickDosenDropdown(${idx}, 2)" oninput="filterQuickDosen(${idx}, 2)" placeholder="Cari nama / NIP pembimbing 2..." class="w-full text-xs sm:text-sm font-semibold bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400" autocomplete="off">
+                                        <button type="button" id="q_clear_${idx}_2" onclick="clearQuickDosen(${idx}, 2)" class="${p2 ? '' : 'hidden'} text-slate-400 hover:text-slate-600 text-xs ml-1 shrink-0"><i class="fa-solid fa-circle-xmark"></i></button>
                                     </div>
                                     <div id="q_dropdown_${idx}_2" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-2xl z-[150] max-h-56 overflow-y-auto custom-scrollbar p-1.5 divide-y divide-slate-100"></div>
                                 </div>
@@ -1115,24 +1115,32 @@
         if (wrapper1) wrapper1.style.zIndex = (slotNum === 1) ? '100' : '20';
         if (wrapper2) wrapper2.style.zIndex = (slotNum === 2) ? '100' : '20';
 
+        const input = document.getElementById(`q_search_${stIdx}_${slotNum}`);
+        const kw = input ? input.value : '';
         const drop = document.getElementById(`q_dropdown_${stIdx}_${slotNum}`);
         if (!drop) return;
-        renderQuickDosenDropdown(stIdx, slotNum, '');
+        renderQuickDosenDropdown(stIdx, slotNum, kw);
         drop.classList.remove('hidden');
     };
 
     window.filterQuickDosen = function (stIdx, slotNum) {
         const input = document.getElementById(`q_search_${stIdx}_${slotNum}`);
         const clearBtn = document.getElementById(`q_clear_${stIdx}_${slotNum}`);
+        const drop = document.getElementById(`q_dropdown_${stIdx}_${slotNum}`);
         const kw = input ? input.value : '';
         if (clearBtn) {
             if (kw) clearBtn.classList.remove('hidden');
             else clearBtn.classList.add('hidden');
         }
         renderQuickDosenDropdown(stIdx, slotNum, kw);
+        if (drop) drop.classList.remove('hidden');
     };
 
     window.clearQuickDosen = function (stIdx, slotNum) {
+        if (state.quickBatchStudents && state.quickBatchStudents[stIdx]) {
+            if (slotNum === 1) state.quickBatchStudents[stIdx].pembimbing_1 = '';
+            else state.quickBatchStudents[stIdx].pembimbing_2 = '';
+        }
         const input = document.getElementById(`q_search_${stIdx}_${slotNum}`);
         const clearBtn = document.getElementById(`q_clear_${stIdx}_${slotNum}`);
         if (input) {
@@ -1141,6 +1149,11 @@
         }
         if (clearBtn) clearBtn.classList.add('hidden');
         renderQuickDosenDropdown(stIdx, slotNum, '');
+        const drop = document.getElementById(`q_dropdown_${stIdx}_${slotNum}`);
+        if (drop) drop.classList.remove('hidden');
+        
+        const badge = document.getElementById(`q_badge_${stIdx}_${slotNum}`);
+        if (badge) badge.className = 'hidden text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold';
     };
 
     function renderQuickDosenDropdown(stIdx, slotNum, kw) {
