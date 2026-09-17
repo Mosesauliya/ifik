@@ -5,10 +5,11 @@ class DosenWali_model extends CI_Model {
 
     public function __construct() {
         parent::__construct();
-        $this->_ensure_columns_exist();
+        // $this->_ensure_columns_exist(); // Disabled auto alter table
     }
 
     private function _ensure_columns_exist() {
+        return; // Disabled auto alter table
         if (!$this->db->table_exists('pendaftaran_ta')) return;
         $fields = $this->db->list_fields('pendaftaran_ta');
         $new_cols = array(
@@ -214,7 +215,7 @@ class DosenWali_model extends CI_Model {
         $col_name = 'review_file_' . $file_type;
         $fields = $this->db->list_fields('pendaftaran_ta');
         if (!in_array($col_name, $fields)) {
-            $this->db->query("ALTER TABLE `pendaftaran_ta` ADD COLUMN `{$col_name}` TINYINT(1) DEFAULT 0");
+            return false;
         }
 
         $data = array(
@@ -235,21 +236,10 @@ class DosenWali_model extends CI_Model {
         $col_catatan = 'catatan_file_' . $file_type;
 
         $fields = $this->db->list_fields('pendaftaran_ta');
-        if (!in_array($col_status, $fields)) {
-            $this->db->query("ALTER TABLE `pendaftaran_ta` ADD COLUMN `{$col_status}` VARCHAR(20) DEFAULT 'Pending'");
-        }
-        if (!in_array($col_review, $fields)) {
-            $this->db->query("ALTER TABLE `pendaftaran_ta` ADD COLUMN `{$col_review}` TINYINT(1) DEFAULT 0");
-        }
-        if (!in_array($col_catatan, $fields)) {
-            $this->db->query("ALTER TABLE `pendaftaran_ta` ADD COLUMN `{$col_catatan}` TEXT NULL");
-        }
-
-        $data = array(
-            $col_status  => $status,
-            $col_catatan => $comment,
-            'updated_at' => date('Y-m-d H:i:s')
-        );
+        $data = array('updated_at' => date('Y-m-d H:i:s'));
+        if (in_array($col_status, $fields)) $data[$col_status] = $status;
+        if (in_array($col_catatan, $fields)) $data[$col_catatan] = $comment;
+        if (in_array($col_review, $fields) && $status !== 'Pending') $data[$col_review] = 1;
 
         if ($status !== 'Pending') {
             $data[$col_review] = 1;
@@ -587,24 +577,9 @@ class DosenWali_model extends CI_Model {
 
                 $col_status  = 'status_file_' . $fk;
                 $col_review  = 'review_file_' . $fk;
-                $col_catatan = 'catatan_file_' . $fk;
-
-                if (!in_array($col_status, $fields)) {
-                    $this->db->query("ALTER TABLE `pendaftaran_ta` ADD COLUMN `{$col_status}` VARCHAR(20) DEFAULT 'Pending'");
-                    $fields[] = $col_status;
-                }
-                if (!in_array($col_review, $fields)) {
-                    $this->db->query("ALTER TABLE `pendaftaran_ta` ADD COLUMN `{$col_review}` TINYINT(1) DEFAULT 0");
-                    $fields[] = $col_review;
-                }
-                if (!in_array($col_catatan, $fields)) {
-                    $this->db->query("ALTER TABLE `pendaftaran_ta` ADD COLUMN `{$col_catatan}` TEXT NULL");
-                    $fields[] = $col_catatan;
-                }
-
-                $updateData[$col_status]  = $fStatus;
-                $updateData[$col_catatan] = $fNote;
-                $updateData[$col_review]  = 1;
+                if (in_array($col_status, $fields))  $updateData[$col_status]  = $fStatus;
+                if (in_array($col_catatan, $fields)) $updateData[$col_catatan] = $fNote;
+                if (in_array($col_review, $fields))  $updateData[$col_review]  = 1;
 
                 if ($this->db->table_exists('pendaftaran_berkas')) {
                     $ver = ($fStatus === 'Approved') ? 'Valid' : 'Invalid';

@@ -2,8 +2,8 @@
 /* Partial: Shared Portal Navbar — used by both Mahasiswa and Dosen views.
    Expects either $mahasiswa array (student views) or falls back to session data (dosen views). */
 
-$role_id   = $this->session->userdata('role_id');
-$is_dosen  = ($role_id == 4);
+$role_id   = (int)$this->session->userdata('role_id');
+$is_dosen  = ($role_id == 3);
 
 // Resolve display name & identifier
 if (!empty($mahasiswa['nama_depan'])) {
