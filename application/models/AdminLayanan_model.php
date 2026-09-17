@@ -5,70 +5,7 @@ class AdminLayanan_model extends CI_Model {
 
     public function __construct() {
         parent::__construct();
-        $this->_ensure_tables();
     }
-
-    /**
-     * Memastikan tabel syarat_berkas_ta dan pendaftaran_berkas tersedia
-     */
-    private function _ensure_tables() {
-        if (!$this->db->table_exists('syarat_berkas_ta')) {
-            $this->db->query("CREATE TABLE IF NOT EXISTS `syarat_berkas_ta` (
-                `id` INT AUTO_INCREMENT PRIMARY KEY,
-                `kode_berkas` VARCHAR(50) NOT NULL UNIQUE,
-                `nama_berkas` VARCHAR(150) NOT NULL,
-                `deskripsi` TEXT NULL,
-                `is_required` TINYINT(1) DEFAULT 1,
-                `is_active` TINYINT(1) DEFAULT 1,
-                `urutan` INT DEFAULT 1,
-                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-                `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-
-            // Seed default requirement items
-            $default_items = [
-                ['kode_berkas' => 'ksm', 'nama_berkas' => 'KSM (Kartu Studi Mahasiswa)', 'deskripsi' => 'Kartu Studi Mahasiswa semester aktif (PDF)', 'is_required' => 1, 'is_active' => 1, 'urutan' => 1],
-                ['kode_berkas' => 'transkrip', 'nama_berkas' => 'Transkrip Nilai', 'deskripsi' => 'Transkrip nilai Kumulatif sampai semester terakhir (PDF)', 'is_required' => 1, 'is_active' => 1, 'urutan' => 2],
-                ['kode_berkas' => 'pernyataan', 'nama_berkas' => 'Surat Pernyataan', 'deskripsi' => 'Surat Pernyataan Keaslian & Orisinalitas (PDF)', 'is_required' => 1, 'is_active' => 1, 'urutan' => 3],
-                ['kode_berkas' => 'bebas_lab', 'nama_berkas' => 'Surat Bebas Lab', 'deskripsi' => 'Surat Bebas Tanggungan Laboratorium (PDF)', 'is_required' => 1, 'is_active' => 1, 'urutan' => 4]
-            ];
-            $this->db->insert_batch('syarat_berkas_ta', $default_items);
-        }
-
-        if (!$this->db->table_exists('pendaftaran_berkas')) {
-            $this->db->query("CREATE TABLE IF NOT EXISTS `pendaftaran_berkas` (
-                `id` INT AUTO_INCREMENT PRIMARY KEY,
-                `nim` VARCHAR(30) NOT NULL,
-                `kode_berkas` VARCHAR(50) NOT NULL,
-                `nama_berkas` VARCHAR(150) NULL,
-                `file_name` VARCHAR(255) NOT NULL,
-                `status_verifikasi` ENUM('Pending','Valid','Invalid') DEFAULT 'Pending',
-                `catatan` TEXT NULL,
-                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-                `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                UNIQUE KEY `nim_kode` (`nim`, `kode_berkas`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-        } else {
-            if (!$this->db->field_exists('nama_berkas', 'pendaftaran_berkas')) {
-                $this->db->query("ALTER TABLE `pendaftaran_berkas` ADD COLUMN `nama_berkas` VARCHAR(150) NULL AFTER `kode_berkas`;");
-            }
-            if (!$this->db->field_exists('catatan', 'pendaftaran_berkas')) {
-                $this->db->query("ALTER TABLE `pendaftaran_berkas` ADD COLUMN `catatan` TEXT NULL AFTER `status_verifikasi`;");
-            }
-            if ($this->db->table_exists('syarat_berkas_ta')) {
-                $this->db->query("UPDATE `pendaftaran_berkas` pb 
-                                  JOIN `syarat_berkas_ta` sb ON pb.kode_berkas = sb.kode_berkas 
-                                  SET pb.nama_berkas = sb.nama_berkas 
-                                  WHERE pb.nama_berkas IS NULL OR pb.nama_berkas = ''");
-            }
-        }
-
-        // Remove automatic reset of status_verifikasi in _ensure_tables
-        if ($this->db->table_exists('pendaftaran_ta')) {
-            if (!$this->db->field_exists('is_submitted', 'pendaftaran_ta')) {
-                $this->db->query("ALTER TABLE `pendaftaran_ta` ADD COLUMN `is_submitted` TINYINT(1) NOT NULL DEFAULT 1;");
-            }
-        }
 
         if (!$this->db->table_exists('ticketing_laa')) {
             $this->db->query("CREATE TABLE IF NOT EXISTS `ticketing_laa` (
