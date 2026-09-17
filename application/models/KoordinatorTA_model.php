@@ -149,7 +149,7 @@ class KoordinatorTA_model extends CI_Model {
         $this->db->join('user u_p2', 'u_p2.nip = tl.dosen_pembimbing2 OR u_p2.id = tl.dosen_pembimbing2', 'left');
         $this->db->join('user u_pj1', 'u_pj1.nip = tl.dosen_penguji1 OR u_pj1.id = tl.dosen_penguji1', 'left');
         $this->db->join('user u_pj2', 'u_pj2.nip = tl.dosen_penguji2 OR u_pj2.id = tl.dosen_penguji2', 'left');
-        $this->db->order_by('g.id', 'DESC');
+        $this->db->order_by('u.nim', 'ASC');
         $query = $this->db->get();
 
         if (!$query || $query->num_rows() === 0) {
@@ -452,9 +452,9 @@ class KoordinatorTA_model extends CI_Model {
      * Ambil daftar ruangan yang tersedia dari tabel ruangan
      */
     public function get_available_ruangan() {
-        $this->db->select('id, nama_ruangan, kapasitas, status, fasilitas, created_at as tanggal_dibuat');
+        $this->db->select('id, ruangan as nama_ruangan, kapasitas, akses as status, spesifikasi_fasilitas as fasilitas, date as tanggal_dibuat');
         $this->db->from('ruangan');
-        $this->db->order_by('nama_ruangan', 'ASC');
+        $this->db->order_by('ruangan', 'ASC');
         $query = $this->db->get();
 
         if ($query && $query->num_rows() > 0) {
@@ -462,8 +462,8 @@ class KoordinatorTA_model extends CI_Model {
         }
 
         return array(
-            array('id' => 1, 'nama_ruangan' => 'AULA Utama', 'kapasitas' => 94, 'status' => 'Tersedia', 'fasilitas' => 'Proyektor, AC, Sound System'),
-            array('id' => 2, 'nama_ruangan' => 'KU1.01.01', 'kapasitas' => 45, 'status' => 'Tersedia', 'fasilitas' => 'Proyektor, AC')
+            array('id' => 'LK.01.01', 'nama_ruangan' => 'AULA Utama', 'kapasitas' => 94, 'status' => 'Tersedia', 'fasilitas' => 'Proyektor, AC, Sound System'),
+            array('id' => 'LK.01.02', 'nama_ruangan' => 'green screen', 'kapasitas' => 100, 'status' => 'Tersedia', 'fasilitas' => 'Proyektor, AC')
         );
     }
 
@@ -472,11 +472,13 @@ class KoordinatorTA_model extends CI_Model {
      */
     public function tambah_ruangan_ajax($nama_ruangan, $kapasitas, $fasilitas = '', $status = 'Tersedia') {
         $data = array(
-            'nama_ruangan' => trim($nama_ruangan),
-            'kapasitas'    => (int)$kapasitas,
-            'fasilitas'    => trim($fasilitas),
-            'status'       => $status,
-            'created_at'   => date('Y-m-d H:i:s')
+            'id'                    => 'R_' . uniqid(),
+            'ruangan'               => trim($nama_ruangan),
+            'kapasitas'             => (int)$kapasitas,
+            'spesifikasi_fasilitas' => trim($fasilitas),
+            'akses'                 => $status,
+            'id_kategori'           => '1',
+            'date'                  => date('Y-m-d H:i:s')
         );
         $this->db->insert('ruangan', $data);
         return array('status' => true, 'message' => 'Ruangan baru berhasil ditambahkan.');
