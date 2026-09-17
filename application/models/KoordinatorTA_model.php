@@ -100,7 +100,7 @@ class KoordinatorTA_model extends CI_Model {
     }
 
     /**
-     * Ambil semua mahasiswa yang TELAH mengajukan TA (ada di tabel guidance)
+     * Ambil semua mahasiswa yang TELAH mengajukan TA (Tab 1: Pendaftaran TA)
      */
     public function get_all_mahasiswa_ta() {
         $this->db->select('
@@ -155,7 +155,6 @@ class KoordinatorTA_model extends CI_Model {
 
         if (empty($raw)) return array();
 
-        // Kumpulkan ID Mahasiswa untuk mengambil file_pendaftaran
         $id_list = array();
         foreach ($raw as $r) {
             if (!empty($r['user_id'])) $id_list[] = $r['user_id'];
@@ -171,7 +170,6 @@ class KoordinatorTA_model extends CI_Model {
             $nim = $row['nim'] ?: $uId;
             $fData = $files_map[$uId] ?? ($files_map[$nim] ?? ($files_map[$row['id_mhs']] ?? array()));
 
-            // Pecah nama menjadi nama_depan dan nama_belakang
             $nameParts = explode(' ', trim($row['name'] ?? 'Mahasiswa'));
             $nama_depan = array_shift($nameParts);
             $nama_belakang = !empty($nameParts) ? implode(' ', $nameParts) : $nim;
@@ -181,7 +179,6 @@ class KoordinatorTA_model extends CI_Model {
             $status_koor  = !empty($row['status_approval_koor']) ? $row['status_approval_koor'] : 'Pending';
             $status_kk    = !empty($row['status_plotting']) ? $row['status_plotting'] : 'Pending';
 
-            // Tentukan stage
             $stage = 'Dosen Wali';
             if ($status_wali === 'Approved') {
                 $stage = 'Admin Layanan';
@@ -272,7 +269,6 @@ class KoordinatorTA_model extends CI_Model {
      * Update Approval / Reject oleh Koordinator TA serta Plotting Pembimbing 1 & 2
      */
     public function update_approval_koor_ajax($nim, $status, $catatan = '', $pembimbing_1 = null, $pembimbing_2 = null) {
-        // Cari user mahasiswa
         $this->db->where('nim', $nim);
         $this->db->or_where('id', $nim);
         $mhs = $this->db->get('user')->row_array();
@@ -306,7 +302,6 @@ class KoordinatorTA_model extends CI_Model {
             );
         }
 
-        // Cari atau buat record di guidance
         $this->db->where('id_mhs', $userId);
         $this->db->or_where('id_mhs', $mhs['nim']);
         $guidance = $this->db->get('guidance')->row_array();
@@ -507,24 +502,30 @@ class KoordinatorTA_model extends CI_Model {
     }
 
     /**
-     * Ambil Data Mahasiswa untuk Tahap Preview 2
+     * Ambil Data Mahasiswa untuk Tahap Preview 2 (Tab 2: Mahasiswa Lolos Plotting Pembimbing)
      */
     public function get_all_mahasiswa_preview2() {
         $all = $this->get_all_mahasiswa_ta();
         $result = array();
 
         foreach ($all as $item) {
-            $guidanceId = $item['guidance_id'];
-            $this->db->where('id', $guidanceId);
-            $gRow = $this->db->get('guidance')->row_array();
+            $isApproved = (strcasecmp($item['status_approval_koor'] ?? '', 'Approved') === 0);
+            $hasPembimbing = (!empty($item['pembimbing_1']) && !empty($item['pembimbing_2']));
 
-            $item['tgl_sidang']         = $gRow['tanggal_presentasi'] ?? null;
-            $item['jam_mulai_sidang']   = $gRow['waktu_presentasi'] ?? null;
-            $item['jam_selesai_sidang'] = null;
-            $item['ruangan_sidang']     = $gRow['ruang_sidang'] ?? null;
-            $item['status_preview']     = $gRow['status_preview'] ?? 'preview2';
+            // Filter: Mahasiswa yang siap diplot penguji / masuk tahap preview
+            if ($isApproved && $hasPembimbing) {
+                $guidanceId = $item['guidance_id'];
+                $this->db->where('id', $guidanceId);
+                $gRow = $this->db->get('guidance')->row_array();
 
-            $result[] = $item;
+                $item['tgl_sidang']         = $gRow['tanggal_presentasi'] ?? null;
+                $item['jam_mulai_sidang']   = $gRow['waktu_presentasi'] ?? null;
+                $item['jam_selesai_sidang'] = null;
+                $item['ruangan_sidang']     = $gRow['ruang_sidang'] ?? null;
+                $item['status_preview']     = $gRow['status_preview'] ?? 'preview2';
+
+                $result[] = $item;
+            }
         }
 
         return $result;
@@ -542,7 +543,6 @@ class KoordinatorTA_model extends CI_Model {
             return array('status' => false, 'message' => 'Mahasiswa tidak ditemukan.');
         }
 
-        // Cari guidance
         $this->db->where('id_mhs', $mhs['id']);
         $this->db->or_where('id_mhs', $mhs['nim']);
         $g = $this->db->get('guidance')->row_array();
@@ -553,7 +553,6 @@ class KoordinatorTA_model extends CI_Model {
 
         $gId = $g['id'];
 
-        // Update jadwal di guidance
         $gUpdate = array(
             'tanggal_presentasi' => $tgl_sidang,
             'waktu_presentasi'   => $jam_mulai,
@@ -563,7 +562,6 @@ class KoordinatorTA_model extends CI_Model {
         $this->db->where('id', $gId);
         $this->db->update('guidance', $gUpdate);
 
-        // Update penguji di thesis_lecturers
         $this->db->where('id_guidance', $gId);
         $tl = $this->db->get('thesis_lecturers')->row_array();
 
@@ -633,7 +631,7 @@ class KoordinatorTA_model extends CI_Model {
     }
 
     /**
-     * Ambil Data Mahasiswa Sidang TA
+     * Ambil Data Mahasiswa Sidang TA (Tab 3: Mahasiswa yang Siap / Terjadwal Sidang)
      */
     public function get_all_mahasiswa_sidang() {
         $all = $this->get_all_mahasiswa_ta();
@@ -644,39 +642,45 @@ class KoordinatorTA_model extends CI_Model {
             $this->db->where('id', $guidanceId);
             $gRow = $this->db->get('guidance')->row_array();
 
-            $item['tgl_sidang']              = $gRow['tanggal_sidang'] ?? null;
-            $item['jam_mulai_sidang']        = $gRow['waktu_sidang'] ?? null;
-            $item['jam_selesai_sidang']      = null;
-            $item['ruangan_sidang']          = $gRow['ruang_sidang'] ?? null;
-            $item['link_sidang']             = $gRow['link_sidang'] ?? null;
-            $item['status_sidang']           = !empty($gRow['tanggal_sidang']) ? 'Terjadwal' : 'Belum Dijadwalkan';
-            $item['nilaisidang_pembimbing1'] = $gRow['nilaisidang_pembimbing1'] ?? null;
-            $item['nilaisidang_pembimbing2'] = $gRow['nilaisidang_pembimbing2'] ?? null;
-            $item['nilaisidang_penguji1']    = $gRow['nilaisidang_penguji1'] ?? null;
-            $item['nilaisidang_penguji2']    = $gRow['nilaisidang_penguji2'] ?? null;
-            $item['bap']                     = $gRow['bap'] ?? null;
-            $item['status_bap']              = $gRow['status_bap'] ?? 'Pending';
-            
-            // Hitung nilai akhir jika ada
-            $scores = array_filter(array(
-                $item['nilaisidang_pembimbing1'],
-                $item['nilaisidang_pembimbing2'],
-                $item['nilaisidang_penguji1'],
-                $item['nilaisidang_penguji2']
-            ), function($v) { return is_numeric($v); });
+            $isApproved = (strcasecmp($item['status_approval_koor'] ?? '', 'Approved') === 0);
+            $hasPenguji = (!empty($item['penguji_1']) && !empty($item['penguji_2']));
+            $hasSidangDate = !empty($gRow['tanggal_sidang']);
 
-            if (!empty($scores)) {
-                $avg = array_sum($scores) / count($scores);
-                $item['nilai_akhir_sidang'] = round($avg, 2);
-                $item['grade_sidang'] = ($avg >= 80) ? 'A' : (($avg >= 70) ? 'AB' : (($avg >= 65) ? 'B' : (($avg >= 60) ? 'BC' : 'C')));
-                $item['status_kelulusan_sidang'] = ($avg >= 60) ? 'Lulus' : 'Tidak Lulus';
-            } else {
-                $item['nilai_akhir_sidang'] = null;
-                $item['grade_sidang'] = null;
-                $item['status_kelulusan_sidang'] = 'Belum Dinilai';
+            // Filter: Hanya mahasiswa yang sudah diplot penguji atau sudah terjadwal sidang
+            if ($isApproved && ($hasPenguji || $hasSidangDate)) {
+                $item['tgl_sidang']              = $gRow['tanggal_sidang'] ?? null;
+                $item['jam_mulai_sidang']        = $gRow['waktu_sidang'] ?? null;
+                $item['jam_selesai_sidang']      = null;
+                $item['ruangan_sidang']          = $gRow['ruang_sidang'] ?? null;
+                $item['link_sidang']             = $gRow['link_sidang'] ?? null;
+                $item['status_sidang']           = !empty($gRow['tanggal_sidang']) ? 'Terjadwal' : 'Belum Dijadwalkan';
+                $item['nilaisidang_pembimbing1'] = $gRow['nilaisidang_pembimbing1'] ?? null;
+                $item['nilaisidang_pembimbing2'] = $gRow['nilaisidang_pembimbing2'] ?? null;
+                $item['nilaisidang_penguji1']    = $gRow['nilaisidang_penguji1'] ?? null;
+                $item['nilaisidang_penguji2']    = $gRow['nilaisidang_penguji2'] ?? null;
+                $item['bap']                     = $gRow['bap'] ?? null;
+                $item['status_bap']              = $gRow['status_bap'] ?? 'Pending';
+                
+                $scores = array_filter(array(
+                    $item['nilaisidang_pembimbing1'],
+                    $item['nilaisidang_pembimbing2'],
+                    $item['nilaisidang_penguji1'],
+                    $item['nilaisidang_penguji2']
+                ), function($v) { return is_numeric($v); });
+
+                if (!empty($scores)) {
+                    $avg = array_sum($scores) / count($scores);
+                    $item['nilai_akhir_sidang'] = round($avg, 2);
+                    $item['grade_sidang'] = ($avg >= 80) ? 'A' : (($avg >= 70) ? 'AB' : (($avg >= 65) ? 'B' : (($avg >= 60) ? 'BC' : 'C')));
+                    $item['status_kelulusan_sidang'] = ($avg >= 60) ? 'Lulus' : 'Tidak Lulus';
+                } else {
+                    $item['nilai_akhir_sidang'] = null;
+                    $item['grade_sidang'] = null;
+                    $item['status_kelulusan_sidang'] = 'Belum Dinilai';
+                }
+
+                $result[] = $item;
             }
-
-            $result[] = $item;
         }
 
         return $result;
