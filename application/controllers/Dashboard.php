@@ -233,7 +233,7 @@ class Dashboard extends CI_Controller {
         }
 
         // Cek duplikasi ruangan fisik (1 ruangan fisik = 1 fasilitas)
-        $this->db->select('id, nama_ruangan, kode_ruangan');
+        $this->db->select('id, ruangan, ruangan AS nama_ruangan, id AS kode_ruangan');
         $existing_ruangan = $this->db->get('ruangan')->result();
         $canonicalize = function($str) {
             return strtoupper(preg_replace('/[^a-zA-Z0-9]/', '', (string)$str));
@@ -245,8 +245,9 @@ class Dashboard extends CI_Controller {
             if (empty($target_clean)) continue;
 
             foreach ($existing_ruangan as $row) {
-                if (empty($row->kode_ruangan)) continue;
-                $row_rooms = array_filter(array_map('trim', explode(',', $row->kode_ruangan)));
+                $rowCode = $row->kode_ruangan ?: $row->id;
+                if (empty($rowCode)) continue;
+                $row_rooms = array_filter(array_map('trim', explode(',', $rowCode)));
                 foreach ($row_rooms as $r) {
                     $r_clean = strtoupper(trim($r));
                     $r_canon = $canonicalize($r);
@@ -261,14 +262,16 @@ class Dashboard extends CI_Controller {
             }
         }
 
-        $data_ruangan = array(
-            'nama_ruangan' => $nama_ruangan,
-            'kode_ruangan' => $clean_kode_ruangan,
-            'id_kategori'  => $id_kategori,
-            'kapasitas'    => $kapasitas ? $kapasitas : 30,
-            'lokasi'       => $lokasi ? $lokasi : 'Gedung Sebatik (FIK)',
-            'status'       => $status ? $status : 'Tersedia'
-        );
+        $fields = $this->db->list_fields('ruangan');
+        $data_ruangan = array();
+        if (in_array('id', $fields)) $data_ruangan['id'] = $clean_kode_ruangan;
+        if (in_array('ruangan', $fields)) $data_ruangan['ruangan'] = $nama_ruangan;
+        if (in_array('nama_ruangan', $fields)) $data_ruangan['nama_ruangan'] = $nama_ruangan;
+        if (in_array('kode_ruangan', $fields)) $data_ruangan['kode_ruangan'] = $clean_kode_ruangan;
+        if (in_array('id_kategori', $fields)) $data_ruangan['id_kategori'] = $id_kategori;
+        if (in_array('kapasitas', $fields)) $data_ruangan['kapasitas'] = $kapasitas ? $kapasitas : 30;
+        if (in_array('lokasi', $fields)) $data_ruangan['lokasi'] = $lokasi ? $lokasi : 'Gedung Sebatik (FIK)';
+        if (in_array('status', $fields)) $data_ruangan['status'] = $status ? $status : 'Tersedia';
 
         $insert = $this->db->insert('ruangan', $data_ruangan);
 
