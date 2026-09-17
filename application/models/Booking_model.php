@@ -309,8 +309,7 @@ class Booking_model extends CI_Model {
     public function get_approved_bookings()
     {
         $this->_base_booking_query();
-        $this->db->order_by('booking.date', 'ASC');
-        $this->db->order_by('COALESCE(SUBSTRING_INDEX(booking.time, " - ", 1), "08:00:00")', 'ASC');
+        $this->db->order_by('booking.date ASC, SUBSTRING_INDEX(booking.time, " - ", 1) ASC', '', FALSE);
         return $this->db->get()->result();
     }
 
