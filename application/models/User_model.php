@@ -360,6 +360,7 @@ class User_model extends CI_Model {
             } else {
                 // Queue for bulk insert
                 $rawPwd = $token ? $token : 'Telkom#123';
+                $salt = bin2hex(random_bytes(16));
                 $insertRow = [
                     'id' => uniqid('usr_'),
                     'username' => !empty($nimNip) ? $nimNip : explode('@', $email)[0],
@@ -369,6 +370,7 @@ class User_model extends CI_Model {
                     'password' => password_hash($rawPwd, PASSWORD_DEFAULT, ['cost' => 8]),
                     'status' => 'active'
                 ];
+                if ($this->db->field_exists('salt', $this->tbl_user)) $insertRow['salt'] = $salt;
                 if ($this->db->field_exists('nidn_nim', $this->tbl_user)) $insertRow['nidn_nim'] = $nimNip;
                 if ($this->db->field_exists('nim', $this->tbl_user)) $insertRow['nim'] = $nimNip;
                 if ($this->db->field_exists('token', $this->tbl_user)) $insertRow['token'] = $token;
@@ -432,6 +434,8 @@ class User_model extends CI_Model {
             if ($this->db->field_exists('updated_at', $this->tbl_user)) $updateData['updated_at'] = date('Y-m-d H:i:s');
 
             if (!empty($data['token']) && empty($existing->password_changed)) {
+                $salt = bin2hex(random_bytes(16));
+                if ($this->db->field_exists('salt', $this->tbl_user)) $updateData['salt'] = $salt;
                 if ($this->db->table_exists('user_token')) {
                     $tokenHash = password_hash($data['token'], PASSWORD_DEFAULT, ['cost' => 8]);
                     $this->db->replace('user_token', [
@@ -449,6 +453,7 @@ class User_model extends CI_Model {
             return $existing->id;
         } else {
             $rawToken = !empty($data['token']) ? $data['token'] : null;
+            $salt = bin2hex(random_bytes(16));
             $insertData = [
                 'id' => uniqid('usr_'),
                 'username' => !empty($data['nidn_nim']) ? $data['nidn_nim'] : explode('@', $email)[0],
@@ -456,8 +461,10 @@ class User_model extends CI_Model {
                 'name' => $data['name'],
                 'email' => $email,
                 'password' => password_hash('Telkom#123', PASSWORD_DEFAULT, ['cost' => 8]),
+                'salt' => $salt,
                 'status' => 'active'
             ];
+            if ($this->db->field_exists('salt', $this->tbl_user)) $insertData['salt'] = $salt;
             if ($this->db->field_exists('nidn_nim', $this->tbl_user)) $insertData['nidn_nim'] = isset($data['nidn_nim']) ? $data['nidn_nim'] : '';
             if ($this->db->field_exists('nim', $this->tbl_user)) $insertData['nim'] = isset($data['nidn_nim']) ? $data['nidn_nim'] : '';
             if ($this->db->field_exists('password_changed', $this->tbl_user)) $insertData['password_changed'] = 0;
