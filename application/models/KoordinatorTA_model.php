@@ -691,7 +691,7 @@ class KoordinatorTA_model extends CI_Model {
     }
 
     /**
-     * TAHAP 3: Ambil mahasiswa untuk Jadwal Sidang TA & Penilaian Sidang
+     * TAHAP 3: Ambil mahasiswa untuk Jadwal Sidang TA & Rekapitulasi Penilaian Sidang
      */
     public function get_all_mahasiswa_sidang() {
         $all = $this->get_all_mahasiswa_preview2();
@@ -710,6 +710,14 @@ class KoordinatorTA_model extends CI_Model {
             nilaisidang_pembimbing2,
             nilaisidang_penguji1,
             nilaisidang_penguji2,
+            penilaiansidang_pembimbing1,
+            penilaiansidang_pembimbing2,
+            penilaiansidang_penguji1,
+            penilaiansidang_penguji2,
+            evaluasi_pembimbing1,
+            evaluasi_pembimbing2,
+            evaluasi_penguji1,
+            evaluasi_penguji2,
             bap,
             status_bap
         ');
@@ -721,6 +729,35 @@ class KoordinatorTA_model extends CI_Model {
         if ($gQuery && $gQuery->num_rows() > 0) {
             foreach ($gQuery->result_array() as $gr) {
                 $gMap[$gr['id']] = $gr;
+            }
+        }
+
+        // Ambil riwayat log publikasi nilai terbaru per NIM dari log_approval_history
+        $publishMap = array();
+        if ($this->db->table_exists('log_approval_history')) {
+            $allNims = array_unique(array_filter(array_column($all, 'nim')));
+            if (!empty($allNims)) {
+                $this->db->from('log_approval_history');
+                $this->db->where('modul', 'Publish Nilai Sidang');
+                $this->db->where_in('ref_id', $allNims);
+                $this->db->order_by('id', 'DESC');
+                $pubLogs = $this->db->get()->result_array();
+
+                foreach ($pubLogs as $pl) {
+                    $nimKey = (string)$pl['ref_id'];
+                    if (!isset($publishMap[$nimKey])) {
+                        $parsed = array();
+                        if (!empty($pl['catatan']) && $pl['catatan'][0] === '{') {
+                            $parsed = json_decode($pl['catatan'], true) ?: array();
+                        }
+                        $publishMap[$nimKey] = array(
+                            'action'      => $pl['action'],
+                            'status'      => $parsed['status_publish'] ?? $pl['action'],
+                            'tgl_publish' => $parsed['tgl_publish'] ?? null,
+                            'created_at'  => $pl['created_at']
+                        );
+                    }
+                }
             }
         }
 
@@ -741,13 +778,67 @@ class KoordinatorTA_model extends CI_Model {
             $np1 = (float)($gRow['nilaisidang_penguji1'] ?? 0);
             $np2 = (float)($gRow['nilaisidang_penguji2'] ?? 0);
 
-            $validScores = array_filter(array($n1, $n2, $np1, $np2), fn($v) => $v > 0);
-            $avgScore = count($validScores) > 0 ? round(array_sum($validScores) / count($validScores), 2) : 0;
+            // Validasi kelengkapan 4 komponen nilai: Semua harus > 0 (bukan nol/kosong)
+            $isNilaiLengkap = ($n1 > 0 && $n2 > 0 && $np1 > 0 && $np2 > 0);
+
+            $komponenBelumTerisi = array();
+            if ($n1 <= 0) $komponenBelumTerisi[] = 'Dosen Pembimbing 1';
+            if ($n2 <= 0) $komponenBelumTerisi[] = 'Dosen Pembimbing 2';
+            if ($np1 <= 0) $komponenBelumTerisi[] = 'Dosen Penguji 1';
+            if ($np2 <= 0) $komponenBelumTerisi[] = 'Dosen Penguji 2';
+
+            $komponenTerisiCount = 4 - count($komponenBelumTerisi);
+
+            $avgScore = 0;
+            $grade = '-';
+            $statusKelulusan = 'Belum Dinilai';
+
+            if ($isNilaiLengkap) {
+                $avgScore = round(($n1 + $n2 + $np1 + $np2) / 4, 2);
+                
+                // Konversi Grade Mutu
+                if ($avgScore >= 85) $grade = 'A';
+                elseif ($avgScore >= 77.5) $grade = 'AB';
+                elseif ($avgScore >= 70) $grade = 'B';
+                elseif ($avgScore >= 62.5) $grade = 'BC';
+                elseif ($avgScore >= 55) $grade = 'C';
+                elseif ($avgScore >= 45) $grade = 'D';
+                else $grade = 'E';
+
+                if ($avgScore >= 70) $statusKelulusan = 'Lulus';
+                elseif ($avgScore >= 55) $statusKelulusan = 'Lulus dengan Revisi';
+                else $statusKelulusan = 'Tidak Lulus';
+            } elseif ($komponenTerisiCount > 0) {
+                $validScores = array_filter(array($n1, $n2, $np1, $np2), fn($v) => $v > 0);
+                $partialAvg = count($validScores) > 0 ? round(array_sum($validScores) / count($validScores), 2) : 0;
+                $avgScore = $partialAvg;
+                $statusKelulusan = 'Belum Lengkap';
+            }
 
             $tglSidang = !empty($gRow['tanggal_sidang']) ? $gRow['tanggal_sidang'] : null;
             $waktuSidang = !empty($gRow['waktu_sidang']) ? $gRow['waktu_sidang'] : null;
             $ruangSidang = !empty($gRow['ruang_sidang']) ? trim($gRow['ruang_sidang']) : null;
             $isScheduled = !empty($tglSidang);
+
+            // Status publikasi
+            $nimKey = (string)$item['nim'];
+            $pubInfo = $publishMap[$nimKey] ?? null;
+            $statusPublish = 'Draft';
+            $tglPublish = null;
+
+            if ($pubInfo) {
+                if ($pubInfo['action'] === 'Published' || $pubInfo['status'] === 'Published') {
+                    $statusPublish = 'Published';
+                    $tglPublish = $pubInfo['tgl_publish'] ?: $pubInfo['created_at'];
+                } elseif ($pubInfo['action'] === 'Scheduled' || $pubInfo['status'] === 'Scheduled') {
+                    $statusPublish = 'Scheduled';
+                    $tglPublish = $pubInfo['tgl_publish'];
+                }
+            }
+
+            if (!$isNilaiLengkap) {
+                $statusPublish = 'Belum Lengkap';
+            }
 
             $item['tgl_sidang']               = $tglSidang;
             $item['tanggal_sidang']           = $tglSidang;
@@ -758,13 +849,26 @@ class KoordinatorTA_model extends CI_Model {
             $item['ruangan_sidang_final']     = $ruangSidang;
             $item['status_sidang']            = $isScheduled ? 'Terjadwal' : 'Belum Dijadwalkan';
             $item['link_sidang']              = $gRow['link_sidang'] ?? null;
+            
+            // Komponen Skor Evaluator
             $item['nilaisidang_pembimbing1']  = $n1;
             $item['nilaisidang_pembimbing2']  = $n2;
             $item['nilaisidang_penguji1']     = $np1;
             $item['nilaisidang_penguji2']     = $np2;
+            $item['penilaiansidang_pembimbing1'] = $gRow['penilaiansidang_pembimbing1'] ?? ($gRow['evaluasi_pembimbing1'] ?? '');
+            $item['penilaiansidang_pembimbing2'] = $gRow['penilaiansidang_pembimbing2'] ?? ($gRow['evaluasi_pembimbing2'] ?? '');
+            $item['penilaiansidang_penguji1']    = $gRow['penilaiansidang_penguji1'] ?? ($gRow['evaluasi_penguji1'] ?? '');
+            $item['penilaiansidang_penguji2']    = $gRow['penilaiansidang_penguji2'] ?? ($gRow['evaluasi_penguji2'] ?? '');
+
+            // Indikator Kelengkapan Nilai & Status Publish
+            $item['is_nilai_lengkap']         = $isNilaiLengkap;
+            $item['komponen_terisi_count']    = $komponenTerisiCount;
+            $item['komponen_belum_terisi']    = $komponenBelumTerisi;
             $item['nilai_akhir_sidang']       = $avgScore;
-            $item['grade_sidang']             = ($avgScore >= 80) ? 'A' : (($avgScore >= 70) ? 'B' : (($avgScore >= 60) ? 'C' : 'E'));
-            $item['status_kelulusan_sidang']  = ($avgScore >= 60) ? 'Lulus' : ($avgScore > 0 ? 'Tidak Lulus' : 'Belum Dinilai');
+            $item['grade_sidang']             = $grade;
+            $item['status_kelulusan_sidang']  = $statusKelulusan;
+            $item['status_publish_sidang']    = $statusPublish;
+            $item['tgl_publish_sidang']       = $tglPublish;
             $item['file_bap']                 = $gRow['bap'] ?? null;
             $item['status_bap']               = $gRow['status_bap'] ?? 'Pending';
 
@@ -933,7 +1037,7 @@ class KoordinatorTA_model extends CI_Model {
         if (!empty($nim)) {
             $this->db->where('ref_id', $nim);
         }
-        $this->db->where_in('modul', array('Koordinator TA', 'Plotting Pembimbing', 'Plotting Penguji', 'Sidang TA'));
+        $this->db->where_in('modul', array('Koordinator TA', 'Plotting Pembimbing', 'Plotting Penguji', 'Sidang TA', 'Publish Nilai Sidang'));
         $this->db->order_by('created_at', 'DESC');
         $this->db->limit($limit);
         $query = $this->db->get();
@@ -954,32 +1058,114 @@ class KoordinatorTA_model extends CI_Model {
                     $parsedCatatan = json_decode($rawCatatan, true) ?: array();
                 }
 
-                $cat = $parsedCatatan['kategori'] ?? 'Pembimbing';
-                if (!empty($kategori) && $kategori !== 'All' && strcasecmp($cat, $kategori) !== 0) {
-                    continue;
+                $modul = $row['modul'];
+                $cat = $parsedCatatan['kategori'] ?? '';
+                if (empty($cat)) {
+                    if ($modul === 'Plotting Penguji') $cat = 'Penguji';
+                    elseif ($modul === 'Sidang TA' || $modul === 'Publish Nilai Sidang') $cat = 'Sidang TA';
+                    else $cat = 'Pembimbing';
                 }
 
-                $p1 = $parsedCatatan['pembimbing_1'] ?? ($parsedCatatan['penguji_1'] ?? '');
-                $p2 = $parsedCatatan['pembimbing_2'] ?? ($parsedCatatan['penguji_2'] ?? '');
+                if (!empty($kategori) && $kategori !== 'All') {
+                    if ($kategori === 'Sidang' || $kategori === 'Sidang TA') {
+                        if ($cat !== 'Sidang TA' && $cat !== 'Sidang') continue;
+                    } elseif (strcasecmp($cat, $kategori) !== 0) {
+                        continue;
+                    }
+                }
+
+                $d1_label = 'Dosen Pembimbing 1';
+                $d2_label = 'Dosen Pembimbing 2';
+                $d1_baru = '-';
+                $d2_baru = '-';
+                $d1_lama = '-';
+                $d2_lama = '-';
+                $aksi = $row['action'];
+                $catatan_text = $parsedCatatan['catatan_koor'] ?? ($row['catatan'] ?? '');
+
+                if ($modul === 'Publish Nilai Sidang') {
+                    $cat = 'Sidang TA';
+                    if ($row['action'] === 'Published') {
+                        $aksi = 'Publikasi Nilai (Live)';
+                        $d1_label = 'Nilai Akhir & Grade';
+                        $d1_baru = number_format((float)($parsedCatatan['nilai_akhir'] ?? 0), 2) . ' (Grade ' . ($parsedCatatan['grade'] ?? '-') . ')';
+                        $d2_label = 'Status Kelulusan';
+                        $d2_baru = $parsedCatatan['status_kelulusan'] ?? 'Lulus';
+                        $catatan_text = $parsedCatatan['catatan_koor'] ?? '';
+                    } elseif ($row['action'] === 'Scheduled') {
+                        $aksi = 'Publikasi Terjadwal';
+                        $d1_label = 'Nilai Akhir & Grade';
+                        $d1_baru = number_format((float)($parsedCatatan['nilai_akhir'] ?? 0), 2) . ' (Grade ' . ($parsedCatatan['grade'] ?? '-') . ')';
+                        $d2_label = 'Jadwal Publikasi';
+                        $tglP = $parsedCatatan['tgl_publish'] ?? $row['created_at'];
+                        $d2_baru = date('d M Y, H:i', strtotime($tglP)) . ' WIB';
+                        $catatan_text = $parsedCatatan['catatan_koor'] ?? '';
+                    } elseif ($row['action'] === 'Publish Blocked') {
+                        $aksi = 'Publikasi Ditolak (Belum Lengkap)';
+                        $d1_label = 'Kelengkapan Nilai';
+                        $d1_baru = ($parsedCatatan['komponen_terisi_count'] ?? 0) . ' / 4 Nilai Terisi';
+                        $d2_label = 'Komponen Belum Terisi';
+                        $d2_baru = !empty($parsedCatatan['komponen_belum_terisi']) ? implode(', ', $parsedCatatan['komponen_belum_terisi']) : 'Belum Lengkap';
+                        $catatan_text = $parsedCatatan['alasan'] ?? 'Percobaan publikasi diblokir sistem karena nilai belum lengkap.';
+                    } else {
+                        $aksi = 'Draft (Batal Publikasi)';
+                        $d1_label = 'Nilai Akhir';
+                        $d1_baru = number_format((float)($parsedCatatan['nilai_akhir'] ?? 0), 2);
+                        $d2_label = 'Status Publikasi';
+                        $d2_baru = 'Draft (Privat)';
+                    }
+                } elseif ($modul === 'Sidang TA' || $cat === 'Sidang TA' || $cat === 'Sidang') {
+                    $cat = 'Sidang TA';
+                    $aksi = 'Penjadwalan Sidang';
+                    $d1_label = 'Detail Jadwal Sidang';
+                    $tgl = $parsedCatatan['tanggal_sidang'] ?? '-';
+                    $jam = $parsedCatatan['waktu_sidang'] ?? ($parsedCatatan['jam_sidang'] ?? '-');
+                    $d1_baru = ($tgl !== '-' ? date('d M Y', strtotime($tgl)) : '-') . ' (Pukul ' . $jam . ' WIB)';
+                    $d2_label = 'Ruangan Sidang';
+                    $d2_baru = $parsedCatatan['ruang_sidang'] ?? '-';
+                    $catatan_text = $parsedCatatan['catatan_koor'] ?? '';
+                } elseif ($cat === 'Penguji') {
+                    $aksi = ($row['action'] === 'Approved' || $row['action'] === 'Scheduled') ? 'Penetapan Penguji' : ($row['action'] === 'Rejected' ? 'Penolakan Penguji' : 'Perubahan Penguji');
+                    $d1_label = 'Dosen Penguji 1';
+                    $d2_label = 'Dosen Penguji 2';
+                    $p1 = $parsedCatatan['penguji_1'] ?? ($parsedCatatan['dosen_penguji1'] ?? '');
+                    $p2 = $parsedCatatan['penguji_2'] ?? ($parsedCatatan['dosen_penguji2'] ?? '');
+                    $d1_baru = $dosenMap[$p1] ?? ($p1 ?: '-');
+                    $d2_baru = $dosenMap[$p2] ?? ($p2 ?: '-');
+                    $d1_lama = $dosenMap[$parsedCatatan['pj1_lama'] ?? ''] ?? ($parsedCatatan['pj1_lama'] ?? '-');
+                    $d2_lama = $dosenMap[$parsedCatatan['pj2_lama'] ?? ''] ?? ($parsedCatatan['pj2_lama'] ?? '-');
+                } else {
+                    $aksi = ($row['action'] === 'Approved') ? 'Penetapan Pembimbing' : ($row['action'] === 'Rejected' ? 'Penolakan Pembimbing' : 'Perubahan Pembimbing');
+                    $d1_label = 'Dosen Pembimbing 1';
+                    $d2_label = 'Dosen Pembimbing 2';
+                    $p1 = $parsedCatatan['pembimbing_1'] ?? ($parsedCatatan['dosen_pembimbing1'] ?? '');
+                    $p2 = $parsedCatatan['pembimbing_2'] ?? ($parsedCatatan['dosen_pembimbing2'] ?? '');
+                    $d1_baru = $dosenMap[$p1] ?? ($p1 ?: '-');
+                    $d2_baru = $dosenMap[$p2] ?? ($p2 ?: '-');
+                    $d1_lama = $dosenMap[$parsedCatatan['p1_lama'] ?? ''] ?? ($parsedCatatan['p1_lama'] ?? '-');
+                    $d2_lama = $dosenMap[$parsedCatatan['p2_lama'] ?? ''] ?? ($parsedCatatan['p2_lama'] ?? '-');
+                }
 
                 $results[] = array(
                     'id'                 => $row['id'],
                     'nim'                => $row['ref_id'],
                     'nama_mahasiswa'     => $row['target_name'] ?: ('Mahasiswa NIM ' . $row['ref_id']),
                     'kategori'           => $cat,
-                    'aksi'               => ($row['action'] === 'Approved') ? ('Penetapan ' . $cat) : 'Penolakan / Revisi',
+                    'aksi'               => $aksi,
                     'status'             => $row['action'],
-                    'dosen_1_baru'       => $p1,
-                    'nama_dosen_1_baru'  => $dosenMap[$p1] ?? ($p1 ?: '-'),
-                    'dosen_2_baru'       => $p2,
-                    'nama_dosen_2_baru'  => $dosenMap[$p2] ?? ($p2 ?: '-'),
-                    'dosen_1_lama'       => $parsedCatatan['p1_lama'] ?? ($parsedCatatan['pj1_lama'] ?? '-'),
-                    'nama_dosen_1_lama'  => $dosenMap[$parsedCatatan['p1_lama'] ?? ($parsedCatatan['pj1_lama'] ?? '')] ?? ($parsedCatatan['p1_lama'] ?? ($parsedCatatan['pj1_lama'] ?? '-')),
-                    'dosen_2_lama'       => $parsedCatatan['p2_lama'] ?? ($parsedCatatan['pj2_lama'] ?? '-'),
-                    'nama_dosen_2_lama'  => $dosenMap[$parsedCatatan['p2_lama'] ?? ($parsedCatatan['pj2_lama'] ?? '')] ?? ($parsedCatatan['p2_lama'] ?? ($parsedCatatan['pj2_lama'] ?? '-')),
+                    'd1_label'           => $d1_label,
+                    'd2_label'           => $d2_label,
+                    'dosen_1_baru'       => $d1_baru,
+                    'nama_dosen_1_baru'  => $d1_baru,
+                    'dosen_2_baru'       => $d2_baru,
+                    'nama_dosen_2_baru'  => $d2_baru,
+                    'dosen_1_lama'       => $d1_lama,
+                    'nama_dosen_1_lama'  => $d1_lama,
+                    'dosen_2_lama'       => $d2_lama,
+                    'nama_dosen_2_lama'  => $d2_lama,
                     'actor_name'         => $row['actor_name'] ?: 'Koordinator TA',
                     'actor_role'         => $row['actor_role'] ?: 'Koordinator TA',
-                    'catatan'            => $parsedCatatan['catatan_koor'] ?? ($row['catatan'] ?? ''),
+                    'catatan'            => $catatan_text,
                     'created_at'         => $row['created_at'],
                     'waktu'              => date('d M Y, H:i', strtotime($row['created_at']))
                 );
@@ -993,29 +1179,290 @@ class KoordinatorTA_model extends CI_Model {
         return $this->get_history_ta('Penguji', $nim, $limit);
     }
 
+    /**
+     * Ambil histori log publikasi & penilaian sidang mahasiswa
+     */
     public function get_history_penilaian_sidang($nim) {
-        return $this->get_history_ta('Sidang TA', $nim, 50);
+        if (!$this->db->table_exists('log_approval_history')) {
+            return array();
+        }
+
+        $this->db->from('log_approval_history');
+        if (!empty($nim)) {
+            $this->db->where('ref_id', $nim);
+        }
+        $this->db->where_in('modul', array('Publish Nilai Sidang', 'Sidang TA'));
+        $this->db->order_by('created_at', 'DESC');
+        $this->db->limit(50);
+        $query = $this->db->get();
+
+        $results = array();
+        if ($query && $query->num_rows() > 0) {
+            foreach ($query->result_array() as $row) {
+                $parsedCatatan = array();
+                $rawCatatan = $row['catatan'];
+                if (!empty($rawCatatan) && $rawCatatan[0] === '{') {
+                    $parsedCatatan = json_decode($rawCatatan, true) ?: array();
+                }
+
+                $results[] = array(
+                    'id'               => $row['id'],
+                    'nim'              => $row['ref_id'],
+                    'nama_mahasiswa'   => $row['target_name'] ?: ('Mahasiswa NIM ' . $row['ref_id']),
+                    'modul'            => $row['modul'],
+                    'aksi'             => $row['action'],
+                    'status_publish'   => $parsedCatatan['status_publish'] ?? $row['action'],
+                    'tgl_publish'      => $parsedCatatan['tgl_publish'] ?? null,
+                    'nilai_akhir'      => $parsedCatatan['nilai_akhir'] ?? null,
+                    'grade'            => $parsedCatatan['grade'] ?? null,
+                    'status_kelulusan' => $parsedCatatan['status_kelulusan'] ?? null,
+                    'alasan_blokir'    => $parsedCatatan['alasan'] ?? null,
+                    'komponen_belum'   => $parsedCatatan['komponen_belum_terisi'] ?? null,
+                    'actor_name'       => $row['actor_name'] ?: 'Koordinator TA',
+                    'actor_role'       => $row['actor_role'] ?: 'Koordinator TA',
+                    'catatan'          => $parsedCatatan['catatan_koor'] ?? ($row['catatan'] ?? ''),
+                    'created_at'       => $row['created_at'],
+                    'waktu'            => date('d M Y, H:i', strtotime($row['created_at']))
+                );
+            }
+        }
+
+        return $results;
     }
 
+    /**
+     * Publikasi Nilai Sidang Mahasiswa Tunggal dengan Validasi Kelengkapan Nilai
+     */
     public function publish_penilaian_sidang_ajax($nim, $status_publish = 'Published', $tgl_publish = null, $catatan = '') {
-        return array('status' => true, 'message' => 'Status publikasi nilai sidang berhasil diperbarui.');
-    }
+        $allSidang = $this->get_all_mahasiswa_sidang();
+        $student = null;
+        foreach ($allSidang as $s) {
+            if ($s['nim'] == $nim || $s['user_id'] == $nim) {
+                $student = $s;
+                break;
+            }
+        }
 
-    public function get_detail_penilaian_sidang($nim) {
-        $mhs = $this->get_detail_pendaftaran_mahasiswa($nim);
-        if (!$mhs) return null;
+        if (!$student) {
+            return array('status' => false, 'message' => "Data mahasiswa dengan NIM {$nim} tidak ditemukan dalam daftar sidang.");
+        }
+
+        $namaMhs = $student['nama'] ?? $student['nama_lengkap'] ?? "Mahasiswa {$nim}";
+
+        // VALIDASI ATURAN: Hanya nilai yang terisi LENGKAP (seluruh komponen bukan nol) yang boleh dipublish
+        if (!$student['is_nilai_lengkap']) {
+            $belumTerisiStr = !empty($student['komponen_belum_terisi']) ? implode(', ', $student['komponen_belum_terisi']) : 'Komponen nilai belum lengkap';
+            
+            // Catat log percobaan publish yang diblokir ke tabel log_approval_history
+            $this->_log_history(array(
+                'modul'       => 'Publish Nilai Sidang',
+                'ref_id'      => $nim,
+                'target_name' => $namaMhs,
+                'action'      => 'Publish Blocked',
+                'catatan'     => json_encode(array(
+                    'alasan'                => 'Percobaan publikasi nilai ditolak sistem karena komponen nilai belum terisi lengkap.',
+                    'komponen_belum_terisi' => $student['komponen_belum_terisi'],
+                    'komponen_terisi_count' => $student['komponen_terisi_count'],
+                    'catatan_koor'          => $catatan
+                ))
+            ));
+
+            return array(
+                'status'  => false,
+                'message' => "Publikasi nilai untuk mahasiswa {$namaMhs} ({$nim}) DITOLAK! Komponen nilai belum lengkap ({$belumTerisiStr} belum mengisi). Aksi ini telah dicatat ke audit log."
+            );
+        }
+
+        // Catat log publikasi sukses ke log_approval_history
+        $finalPublishDate = ($status_publish === 'Scheduled' && !empty($tgl_publish)) ? $tgl_publish : date('Y-m-d H:i:s');
+        
+        $this->_log_history(array(
+            'modul'       => 'Publish Nilai Sidang',
+            'ref_id'      => $nim,
+            'target_name' => $namaMhs,
+            'action'      => $status_publish,
+            'catatan'     => json_encode(array(
+                'status_publish'   => $status_publish,
+                'tgl_publish'      => $finalPublishDate,
+                'nilai_akhir'      => $student['nilai_akhir_sidang'],
+                'grade'            => $student['grade_sidang'],
+                'status_kelulusan' => $student['status_kelulusan_sidang'],
+                'catatan_koor'     => $catatan
+            ))
+        ));
+
+        $msg = ($status_publish === 'Published')
+            ? "Nilai akhir sidang {$namaMhs} ({$nim}) berhasil dipublikasikan secara langsung ke mahasiswa!"
+            : "Publikasi nilai {$namaMhs} ({$nim}) berhasil dijadwalkan pada " . date('d M Y, H:i', strtotime($finalPublishDate)) . " WIB.";
 
         return array(
-            'nim'              => $mhs['nim'],
-            'nama_mahasiswa'   => $mhs['nama'],
-            'prodi'            => $mhs['prodi'],
-            'peminatan'        => $mhs['peminatan'],
-            'nilai_akhir'      => $mhs['nilai_akhir_sidang'] ?? 85,
-            'grade'            => $mhs['grade_sidang'] ?? 'A',
-            'status_kelulusan' => $mhs['status_kelulusan_sidang'] ?? 'Lulus',
-            'status_publish'   => 'Published',
-            'tgl_publish'      => date('Y-m-d H:i:s'),
-            'catatan'          => ''
+            'status'         => true,
+            'message'        => $msg,
+            'status_publish' => $status_publish,
+            'tgl_publish'    => $finalPublishDate,
+            'nim'            => $nim
+        );
+    }
+
+    /**
+     * Batch / Publikasi Nilai Massal untuk Mahasiswa Terpilih
+     */
+    public function batch_publish_nilai_ajax($nims, $status_publish = 'Published', $tgl_publish = null, $catatan = '') {
+        if (empty($nims) || !is_array($nims)) {
+            return array('status' => false, 'message' => 'Pilih setidaknya satu mahasiswa untuk dipublikasikan nilainya.');
+        }
+
+        $allSidang = $this->get_all_mahasiswa_sidang();
+        $studentMap = array();
+        foreach ($allSidang as $s) {
+            $studentMap[$s['nim']] = $s;
+            $studentMap[$s['user_id']] = $s;
+        }
+
+        $successList = array();
+        $blockedList = array();
+        $finalPublishDate = ($status_publish === 'Scheduled' && !empty($tgl_publish)) ? $tgl_publish : date('Y-m-d H:i:s');
+
+        foreach ($nims as $nim) {
+            $student = $studentMap[$nim] ?? null;
+            if (!$student) continue;
+
+            $namaMhs = $student['nama'] ?? $student['nama_lengkap'] ?? "Mahasiswa {$nim}";
+
+            if ($student['is_nilai_lengkap']) {
+                $this->_log_history(array(
+                    'modul'       => 'Publish Nilai Sidang',
+                    'ref_id'      => $nim,
+                    'target_name' => $namaMhs,
+                    'action'      => $status_publish,
+                    'catatan'     => json_encode(array(
+                        'status_publish'   => $status_publish,
+                        'tgl_publish'      => $finalPublishDate,
+                        'nilai_akhir'      => $student['nilai_akhir_sidang'],
+                        'grade'            => $student['grade_sidang'],
+                        'status_kelulusan' => $student['status_kelulusan_sidang'],
+                        'catatan_koor'     => $catatan
+                    ))
+                ));
+                $successList[] = "{$namaMhs} ({$nim})";
+            } else {
+                $belumTerisi = !empty($student['komponen_belum_terisi']) ? implode(', ', $student['komponen_belum_terisi']) : 'Nilai belum lengkap';
+                $this->_log_history(array(
+                    'modul'       => 'Publish Nilai Sidang',
+                    'ref_id'      => $nim,
+                    'target_name' => $namaMhs,
+                    'action'      => 'Publish Blocked',
+                    'catatan'     => json_encode(array(
+                        'alasan'                => 'Percobaan publikasi massal ditolak karena nilai belum lengkap.',
+                        'komponen_belum_terisi' => $student['komponen_belum_terisi'],
+                        'catatan_koor'          => $catatan
+                    ))
+                ));
+                $blockedList[] = "{$namaMhs} ({$nim}) - [{$belumTerisi}]";
+            }
+        }
+
+        $successCount = count($successList);
+        $blockedCount = count($blockedList);
+
+        if ($successCount > 0) {
+            $msg = "Publikasi nilai berhasil diproses untuk {$successCount} mahasiswa!";
+            if ($blockedCount > 0) {
+                $msg .= " ({$blockedCount} mahasiswa dilewati karena komponen nilai belum lengkap).";
+            }
+            return array(
+                'status'         => true,
+                'success_count'  => $successCount,
+                'blocked_count'  => $blockedCount,
+                'success_list'   => $successList,
+                'blocked_list'   => $blockedList,
+                'message'        => $msg,
+                'status_publish' => $status_publish,
+                'tgl_publish'    => $finalPublishDate
+            );
+        } else {
+            return array(
+                'status'        => false,
+                'success_count' => 0,
+                'blocked_count' => $blockedCount,
+                'blocked_list'  => $blockedList,
+                'message'       => "Tidak ada mahasiswa terpilih yang memiliki nilai lengkap! Seluruh {$blockedCount} mahasiswa yang dipilih belum melengkapi 4 komponen nilai sidang."
+            );
+        }
+    }
+
+    /**
+     * Ambil detail rekapitulasi nilai sidang mahasiswa (View Only)
+     */
+    public function get_detail_penilaian_sidang($nim) {
+        $all = $this->get_all_mahasiswa_sidang();
+        $student = null;
+        foreach ($all as $s) {
+            if ($s['nim'] == $nim || $s['user_id'] == $nim) {
+                $student = $s;
+                break;
+            }
+        }
+
+        if (!$student) return null;
+
+        $history = $this->get_history_penilaian_sidang($nim);
+
+        return array(
+            'nim'                       => $student['nim'],
+            'nama_mahasiswa'            => $student['nama'] ?? ($student['nama_lengkap'] ?? $student['nim']),
+            'prodi'                     => $student['prodi'] ?? 'Informatika',
+            'peminatan'                 => $student['peminatan'] ?? 'Informatika',
+            'judul_1'                   => $student['judul_1'] ?? '-',
+            'tanggal_sidang'            => $student['tanggal_sidang'] ?? null,
+            'waktu_sidang'              => $student['waktu_sidang'] ?? null,
+            'ruang_sidang'              => $student['ruang_sidang'] ?? null,
+            
+            // Dosen Pembimbing & Penguji
+            'pembimbing_1'              => $student['pembimbing_1'] ?? '',
+            'nama_pembimbing_1'         => $student['nama_pembimbing_1'] ?? ($student['pembimbing_1'] ?? '-'),
+            'pembimbing_2'              => $student['pembimbing_2'] ?? '',
+            'nama_pembimbing_2'         => $student['nama_pembimbing_2'] ?? ($student['pembimbing_2'] ?? '-'),
+            'penguji_1'                 => $student['penguji_1'] ?? '',
+            'nama_penguji_1'            => $student['nama_penguji_1'] ?? ($student['penguji_1'] ?? '-'),
+            'penguji_2'                 => $student['penguji_2'] ?? '',
+            'nama_penguji_2'            => $student['nama_penguji_2'] ?? ($student['penguji_2'] ?? '-'),
+
+            // Nilai dari 4 Evaluator
+            'nilaisidang_pembimbing1'   => $student['nilaisidang_pembimbing1'] ?? 0,
+            'nilaisidang_pembimbing2'   => $student['nilaisidang_pembimbing2'] ?? 0,
+            'nilaisidang_penguji1'      => $student['nilaisidang_penguji1'] ?? 0,
+            'nilaisidang_penguji2'      => $student['nilaisidang_penguji2'] ?? 0,
+            'nilai_sidang_pembimbing_1' => $student['nilaisidang_pembimbing1'] ?? 0,
+            'nilai_sidang_pembimbing_2' => $student['nilaisidang_pembimbing2'] ?? 0,
+            'nilai_sidang_penguji_1'    => $student['nilaisidang_penguji1'] ?? 0,
+            'nilai_sidang_penguji_2'    => $student['nilaisidang_penguji2'] ?? 0,
+            
+            'evaluasi_pembimbing1'      => $student['penilaiansidang_pembimbing1'] ?? ($student['evaluasi_pembimbing1'] ?? ''),
+            'evaluasi_pembimbing2'      => $student['penilaiansidang_pembimbing2'] ?? ($student['evaluasi_pembimbing2'] ?? ''),
+            'evaluasi_penguji1'         => $student['penilaiansidang_penguji1'] ?? ($student['evaluasi_penguji1'] ?? ''),
+            'evaluasi_penguji2'         => $student['penilaiansidang_penguji2'] ?? ($student['evaluasi_penguji2'] ?? ''),
+            'catatan_pembimbing_1'      => $student['penilaiansidang_pembimbing1'] ?? ($student['evaluasi_pembimbing1'] ?? ''),
+            'catatan_pembimbing_2'      => $student['penilaiansidang_pembimbing2'] ?? ($student['evaluasi_pembimbing2'] ?? ''),
+            'catatan_penguji_1'         => $student['penilaiansidang_penguji1'] ?? ($student['evaluasi_penguji1'] ?? ''),
+            'catatan_penguji_2'         => $student['penilaiansidang_penguji2'] ?? ($student['evaluasi_penguji2'] ?? ''),
+
+            // Rekap Nilai Akhir
+            'is_nilai_lengkap'          => $student['is_nilai_lengkap'] ?? false,
+            'komponen_terisi_count'     => $student['komponen_terisi_count'] ?? 0,
+            'komponen_belum_terisi'     => $student['komponen_belum_terisi'] ?? array(),
+            'nilai_akhir'               => $student['nilai_akhir_sidang'] ?? 0,
+            'nilai_akhir_sidang'        => $student['nilai_akhir_sidang'] ?? 0,
+            'skor_akhir_sidang'         => $student['nilai_akhir_sidang'] ?? 0,
+            'grade'                     => $student['grade_sidang'] ?? '-',
+            'grade_sidang'              => $student['grade_sidang'] ?? '-',
+            'status_kelulusan'          => $student['status_kelulusan_sidang'] ?? 'Belum Dinilai',
+            'status_kelulusan_sidang'   => $student['status_kelulusan_sidang'] ?? 'Belum Dinilai',
+            'status_publish'            => $student['status_publish_sidang'] ?? 'Draft',
+            'status_publish_sidang'     => $student['status_publish_sidang'] ?? 'Draft',
+            'tgl_publish'               => $student['tgl_publish_sidang'] ?? null,
+            'tgl_publish_sidang'        => $student['tgl_publish_sidang'] ?? null,
+            'history'                   => $history
         );
     }
 

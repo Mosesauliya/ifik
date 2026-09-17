@@ -671,6 +671,26 @@ class KoordinatorTA extends CI_Controller {
         echo json_encode($res);
     }
 
+    // AJAX Endpoint: Batch / Publikasi Nilai Massal Mahasiswa Terpilih
+    public function ajax_batch_publish_nilai() {
+        header('Content-Type: application/json');
+
+        $nims_raw       = $this->input->post('nims');
+        $status_publish = $this->input->post('status_publish') ?: 'Published';
+        $tgl_publish    = $this->input->post('tgl_publish') ?: null;
+        $catatan        = $this->input->post('catatan') ?: '';
+
+        $nims = is_array($nims_raw) ? $nims_raw : json_decode($nims_raw, true);
+
+        if (empty($nims) || !is_array($nims)) {
+            echo json_encode(array('status' => false, 'message' => 'Pilih setidaknya satu mahasiswa untuk dipublikasikan nilainya.'));
+            return;
+        }
+
+        $res = $this->KoordinatorTA_model->batch_publish_nilai_ajax($nims, $status_publish, $tgl_publish, $catatan);
+        echo json_encode($res);
+    }
+
     // AJAX Endpoint: Ambil Riwayat Log Versi Penilaian Mahasiswa
     public function ajax_get_history_penilaian_sidang() {
         header('Content-Type: application/json');

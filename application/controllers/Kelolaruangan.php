@@ -30,18 +30,18 @@ class Kelolaruangan extends CI_Controller {
         }
         
         $role_id = (int)$this->session->userdata('role_id');
-        if ($role_id !== 1 && $role_id !== 2) {
+        if ($role_id !== 1 && $role_id !== 2 && $role_id !== 21) {
             if ($is_ajax) {
                 if (ob_get_length()) ob_clean();
                 header('Content-Type: application/json');
                 http_response_code(403);
                 echo json_encode([
                     'status'  => 'error', 
-                    'message' => 'Hanya Admin System dan Laboran yang memiliki hak akses untuk mengelola data ruangan.'
+                    'message' => 'Hanya Admin System, Ka. Ur, dan Laboran yang memiliki hak akses untuk mengelola data ruangan.'
                 ]);
                 exit;
             }
-            $this->session->set_flashdata('error', 'Hanya Admin System dan Laboran yang dapat mengakses halaman Kelola Ruangan.');
+            $this->session->set_flashdata('error', 'Hanya Admin System, Ka. Ur, dan Laboran yang dapat mengakses halaman Kelola Ruangan.');
             redirect('dashboard');
         }
     }

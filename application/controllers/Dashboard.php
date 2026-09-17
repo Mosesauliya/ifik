@@ -17,7 +17,7 @@ class Dashboard extends CI_Controller {
         $data['jadwal_peminjaman'] = $this->Booking_model->get_approved_bookings();
         $data['kategori'] = $this->Booking_model->get_all_kategori();
         
-        $this->db->where('status', 'Tersedia');
+        $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan');
         $data['ruangan'] = $this->db->get('ruangan')->result();
 
         $data['header_settings'] = $this->Header_model->get_settings();
@@ -32,6 +32,7 @@ class Dashboard extends CI_Controller {
         $data['lab_key'] = strtolower($id);
 
         // Load all ruangan data from DB to sync details
+        $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan');
         $data['all_ruangan'] = $this->db->get('ruangan')->result();
 
         $this->load->view('dashboard/lab_detail', $data);
@@ -43,7 +44,7 @@ class Dashboard extends CI_Controller {
         $this->load->model('Booking_model');
         $data['jadwal_peminjaman'] = $this->Booking_model->get_approved_bookings();
         $data['kategori'] = $this->Booking_model->get_all_kategori();
-        $this->db->where('status', 'Tersedia');
+        $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan');
         $data['ruangan'] = $this->db->get('ruangan')->result();
         $this->load->view('dashboard/kalender', $data);
     }
@@ -60,7 +61,7 @@ class Dashboard extends CI_Controller {
 
         $this->load->model('Booking_model');
         $data['kategori'] = $this->Booking_model->get_all_kategori();
-        $this->db->where('status', 'Tersedia');
+        $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan');
         $data['ruangan'] = $this->db->get('ruangan')->result();
 
         $this->load->view('dashboard/ajukan_booking', $data);
@@ -138,14 +139,14 @@ class Dashboard extends CI_Controller {
         $this->load->model('Booking_model');
         $role_id = $this->session->userdata('role_id');
 
-        if (!in_array($role_id, [1, 2, 3])) {
+        if (!in_array($role_id, [1, 2, 21])) {
             echo json_encode(['status' => 'error', 'message' => 'Anda tidak memiliki hak akses untuk menyetujui peminjaman ini.']);
             return;
         }
 
-        if ($role_id == 3) {
+        if ($role_id == 2) {
             $status = 'Disetujui Ka. Ur';
-        } elseif ($role_id == 2) {
+        } elseif ($role_id == 21) {
             $status = 'Disetujui Laboran';
         } else {
             $status = 'Disetujui Admin';
@@ -163,9 +164,9 @@ class Dashboard extends CI_Controller {
     {
         header('Content-Type: application/json');
         $this->load->model('Booking_model');
-        $role_id = $this->session->userdata('role_id');
+        $role_id = (int)$this->session->userdata('role_id');
 
-        if (!in_array($role_id, [1, 2, 3])) {
+        if (!in_array($role_id, [1, 2, 21])) {
             echo json_encode(['status' => 'error', 'message' => 'Anda tidak memiliki hak akses untuk menolak peminjaman ini.']);
             return;
         }
@@ -183,9 +184,9 @@ class Dashboard extends CI_Controller {
     {
         header('Content-Type: application/json');
         $this->load->model('Booking_model');
-        $role_id = $this->session->userdata('role_id');
+        $role_id = (int)$this->session->userdata('role_id');
 
-        if (!in_array($role_id, [1, 2, 3])) {
+        if (!in_array($role_id, [1, 2, 21])) {
             echo json_encode(['status' => 'error', 'message' => 'Anda tidak memiliki hak akses untuk menghapus jadwal ini.']);
             return;
         }
