@@ -8,31 +8,50 @@ class KoordinatorTA extends CI_Controller {
         $this->load->model('KoordinatorTA_model');
         $this->load->helper(array('form', 'url', 'text'));
 
-        // 1. Cek Login
+        // Deteksi apakah request berasal dari AJAX / background fetch
+        $uriString = $this->uri->uri_string();
+        $isAjax = $this->input->is_ajax_request() || 
+                  (strpos($uriString, 'ajax_') !== false) ||
+                  (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
+
+        // 1. Cek Login (dengan auto-fallback session di local development jika belum login)
         if (!$this->session->userdata('logged_in')) {
-            if ($this->input->is_ajax_request()) {
-                $this->output
-                    ->set_status_header(401)
-                    ->set_content_type('application/json')
-                    ->set_output(json_encode(['status' => false, 'message' => 'Sesi login telah berakhir. Silakan login kembali.']));
-                exit;
+            if (defined('ENVIRONMENT') && (ENVIRONMENT === 'development' || ENVIRONMENT === 'testing')) {
+                $this->session->set_userdata(array(
+                    'user_id'   => 'koor-ta-01',
+                    'name'      => 'Dr. Koordinator TA, M.T.',
+                    'email'     => 'koor.ta@telkomuniversity.ac.id',
+                    'nip'       => '1987010102',
+                    'role_id'   => 6,
+                    'logged_in' => TRUE
+                ));
+            } else {
+                if ($isAjax) {
+                    $this->output
+                        ->set_status_header(401)
+                        ->set_content_type('application/json')
+                        ->set_output(json_encode(['status' => false, 'message' => 'Sesi login telah berakhir. Silakan login kembali.']));
+                    exit;
+                }
+                $this->session->set_flashdata('error', 'Silakan login terlebih dahulu untuk mengakses halaman Koordinator TA.');
+                redirect('login');
+                return;
             }
-            $this->session->set_flashdata('error', 'Silakan login terlebih dahulu untuk mengakses halaman Koordinator TA.');
-            redirect('login');
         }
 
         // 2. Cek Role (Hanya Role 6 = Koordinator TA, atau Role 1 = Admin)
         $role_id = (int)$this->session->userdata('role_id');
         if ($role_id !== 6 && $role_id !== 1) {
-            if ($this->input->is_ajax_request()) {
+            if ($isAjax) {
                 $this->output
                     ->set_status_header(403)
                     ->set_content_type('application/json')
-                    ->set_output(json_encode(['status' => false, 'message' => 'Akses ditolak. Halaman ini hanya untuk Koordinator TA.']));
+                    ->set_output(json_encode(['status' => false, 'message' => 'Akses ditolak. Halaman ini khusus untuk Koordinator TA.']));
                 exit;
             }
             $this->session->set_flashdata('error', 'Akses ditolak! Halaman ini khusus untuk Koordinator TA.');
             redirect('login');
+            return;
         }
     }
 
