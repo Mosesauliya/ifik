@@ -45,7 +45,11 @@ class Booking_model extends CI_Model {
             booking.id_peminjam AS id_user,
             booking.id_peminjam,
             booking.id_ruangan,
-            COALESCE(u.name, booking.id_peminjam, 'Peminjam') AS nama_lengkap,
+            COALESCE(
+                NULLIF(TRIM(u.name), ''),
+                NULLIF(TRIM(CONCAT(m.nama_depan, ' ', COALESCE(m.nama_belakang, ''))), ''),
+                'Mahasiswa / Civitas IFIK'
+            ) AS nama_lengkap,
             COALESCE(ruangan.ruangan, booking.id_ruangan) AS nama_ruangan,
             ruangan.id AS kode_ruangan,
             'Gedung Sebatik (FIK)' AS lokasi,
@@ -69,9 +73,10 @@ class Booking_model extends CI_Model {
             booking.date_declined
         ", FALSE);
         $this->db->from('booking');
-        $this->db->join('user u', '(u.id = booking.id_peminjam OR u.nim = booking.id_peminjam)', 'left');
-        $this->db->join('ruangan', 'ruangan.id = booking.id_ruangan', 'left');
-        $this->db->join('kategori_ruangan', 'kategori_ruangan.id = ruangan.id_kategori', 'left');
+        $this->db->join('user u', '(u.id COLLATE utf8mb4_general_ci = booking.id_peminjam COLLATE utf8mb4_general_ci OR u.nim COLLATE utf8mb4_general_ci = booking.id_peminjam COLLATE utf8mb4_general_ci OR (u.nidn_nim IS NOT NULL AND u.nidn_nim != "" AND u.nidn_nim COLLATE utf8mb4_general_ci = booking.id_peminjam COLLATE utf8mb4_general_ci))', 'left');
+        $this->db->join('mahasiswa m', 'm.nim COLLATE utf8mb4_general_ci = booking.id_peminjam COLLATE utf8mb4_general_ci', 'left');
+        $this->db->join('ruangan', 'ruangan.id COLLATE utf8mb4_general_ci = booking.id_ruangan COLLATE utf8mb4_general_ci', 'left');
+        $this->db->join('kategori_ruangan', 'kategori_ruangan.id COLLATE utf8mb4_general_ci = ruangan.id_kategori COLLATE utf8mb4_general_ci', 'left');
     }
 
     public function get_all_peminjaman()
