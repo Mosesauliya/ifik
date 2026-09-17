@@ -42,10 +42,10 @@ class Booking_model extends CI_Model {
     {
         $this->db->select("
             booking.id,
-            COALESCE(booking.id_user, booking.id_peminjam) AS id_user,
-            COALESCE(booking.id_peminjam, booking.id_user) AS id_peminjam,
+            booking.id_peminjam AS id_user,
+            booking.id_peminjam,
             booking.id_ruangan,
-            COALESCE(booking.nama_lengkap, u.name, booking.id_peminjam, 'Peminjam') AS nama_lengkap,
+            COALESCE(u.name, booking.id_peminjam, 'Peminjam') AS nama_lengkap,
             COALESCE(ruangan.ruangan, booking.id_ruangan) AS nama_ruangan,
             ruangan.id AS kode_ruangan,
             'Gedung Sebatik (FIK)' AS lokasi,
@@ -53,23 +53,23 @@ class Booking_model extends CI_Model {
             ruangan.foto,
             COALESCE(kategori_ruangan.nama_kategori, 'Ruangan') AS nama_kategori,
             booking.keterangan,
-            COALESCE(booking.tanggal_mulai, booking.date) AS tanggal_mulai,
-            COALESCE(booking.tanggal_selesai, booking.date) AS tanggal_selesai,
-            COALESCE(booking.date, booking.tanggal_mulai) AS date,
-            COALESCE(booking.jam_mulai, SUBSTRING_INDEX(booking.time, ' - ', 1), '08:00:00') AS jam_mulai,
-            COALESCE(booking.jam_selesai, SUBSTRING_INDEX(booking.time, ' - ', -1), '12:00:00') AS jam_selesai,
-            COALESCE(booking.time, CONCAT(COALESCE(booking.jam_mulai, '08:00'), ' - ', COALESCE(booking.jam_selesai, '12:00'))) AS time,
+            booking.date AS tanggal_mulai,
+            booking.date AS tanggal_selesai,
+            booking.date,
+            COALESCE(SUBSTRING_INDEX(booking.time, ' - ', 1), '08:00:00') AS jam_mulai,
+            COALESCE(SUBSTRING_INDEX(booking.time, ' - ', -1), '12:00:00') AS jam_selesai,
+            booking.time,
             booking.status,
-            COALESCE(booking.alasan_penolakan, booking.komentar, '') AS alasan_penolakan,
-            COALESCE(booking.komentar, booking.alasan_penolakan, '') AS komentar,
-            COALESCE(booking.created_at, booking.date_created, NOW()) AS created_at,
-            COALESCE(booking.date_created, booking.created_at, NOW()) AS date_created,
+            COALESCE(booking.komentar, '') AS alasan_penolakan,
+            COALESCE(booking.komentar, '') AS komentar,
+            COALESCE(booking.date_created, NOW()) AS created_at,
+            COALESCE(booking.date_created, NOW()) AS date_created,
             booking.laboran,
             booking.tanggal_accepted,
             booking.date_declined
         ", FALSE);
         $this->db->from('booking');
-        $this->db->join('user u', '(u.id = booking.id_peminjam OR u.nim = booking.id_peminjam OR u.id = booking.id_user)', 'left');
+        $this->db->join('user u', '(u.id = booking.id_peminjam OR u.nim = booking.id_peminjam)', 'left');
         $this->db->join('ruangan', 'ruangan.id = booking.id_ruangan', 'left');
         $this->db->join('kategori_ruangan', 'kategori_ruangan.id = ruangan.id_kategori', 'left');
     }
@@ -77,7 +77,7 @@ class Booking_model extends CI_Model {
     public function get_all_peminjaman()
     {
         $this->_base_booking_query();
-        $this->db->order_by('COALESCE(booking.created_at, booking.date_created)', 'DESC');
+        $this->db->order_by('booking.date_created', 'DESC');
         return $this->db->get()->result();
     }
 
@@ -126,22 +126,19 @@ class Booking_model extends CI_Model {
 
         $this->db->group_start();
         if (!empty($user_id)) {
-            $this->db->where('booking.id_peminjam', $user_id);
-            $this->db->or_where('booking.id_user', $user_id);
+            $this->db->where('booking.id_peminjam', (string)$user_id);
         }
         if (!empty($nama_lengkap)) {
             $cleanName = strtolower(trim($nama_lengkap));
             if (!empty($user_id)) {
-                $this->db->or_where('LOWER(TRIM(booking.nama_lengkap))', $cleanName);
                 $this->db->or_where('LOWER(TRIM(u.name))', $cleanName);
             } else {
-                $this->db->where('LOWER(TRIM(booking.nama_lengkap))', $cleanName);
-                $this->db->or_where('LOWER(TRIM(u.name))', $cleanName);
+                $this->db->where('LOWER(TRIM(u.name))', $cleanName);
             }
         }
         $this->db->group_end();
 
-        $this->db->order_by('COALESCE(booking.created_at, booking.date_created)', 'DESC');
+        $this->db->order_by('booking.date_created', 'DESC');
         return $this->db->get()->result();
     }
 
@@ -153,21 +150,8 @@ class Booking_model extends CI_Model {
         $this->db->or_where('status', 'Menunggu Persetujuan');
         $this->db->group_end();
 
-        if (!empty($user_id) || !empty($nama_lengkap)) {
-            $this->db->group_start();
-            if (!empty($user_id)) {
-                $this->db->where('id_peminjam', $user_id);
-                $this->db->or_where('id_user', $user_id);
-            }
-            if (!empty($nama_lengkap)) {
-                $cleanName = strtolower(trim($nama_lengkap));
-                if (!empty($user_id)) {
-                    $this->db->or_where('LOWER(TRIM(nama_lengkap))', $cleanName);
-                } else {
-                    $this->db->where('LOWER(TRIM(nama_lengkap))', $cleanName);
-                }
-            }
-            $this->db->group_end();
+        if (!empty($user_id)) {
+            $this->db->where('id_peminjam', (string)$user_id);
         }
 
         $res = $this->db->delete('booking');
@@ -185,7 +169,7 @@ class Booking_model extends CI_Model {
         $this->db->trans_start();
 
         $bookingId = $data['id'] ?? ('bkg_' . uniqid());
-        $userId    = $data['id_user'] ?? ($data['id_peminjam'] ?? $this->session->userdata('user_id'));
+        $userId    = $data['id_user'] ?? ($data['id_peminjam'] ?? $this->session->userdata('nim') ?? $this->session->userdata('id'));
         $nama      = $data['nama_lengkap'] ?? $this->session->userdata('name');
         $ruangId   = $data['id_ruangan'] ?? '';
         $ket       = $data['keterangan'] ?? '';
@@ -198,23 +182,18 @@ class Booking_model extends CI_Model {
         $created   = $data['created_at'] ?? ($data['date_created'] ?? date('Y-m-d H:i:s'));
 
         $bookingData = array(
-            'id'               => $bookingId,
+            'id'               => (string)$bookingId,
             'id_peminjam'      => (string)$userId,
-            'id_user'          => (string)$userId,
-            'nama_lengkap'     => $nama,
             'id_ruangan'       => (string)$ruangId,
             'date'             => $tglM,
-            'tanggal_mulai'    => $tglM,
-            'tanggal_selesai'  => $tglS,
+            'date_declined'    => null,
             'time'             => $timeStr,
-            'jam_mulai'        => $jM,
-            'jam_selesai'      => $jS,
             'keterangan'       => $ket,
             'status'           => $status,
             'date_created'     => $created,
-            'created_at'       => $created,
-            'alasan_penolakan' => $data['alasan_penolakan'] ?? null,
-            'komentar'         => $data['komentar'] ?? null
+            'laboran'          => null,
+            'komentar'         => $data['komentar'] ?? ($data['alasan_penolakan'] ?? null),
+            'tanggal_accepted' => null
         );
 
         $this->db->insert('booking', $bookingData);
@@ -230,7 +209,7 @@ class Booking_model extends CI_Model {
                 'jam_mulai'        => $jM,
                 'jam_selesai'      => $jS,
                 'status'           => $status,
-                'alasan_penolakan' => $data['alasan_penolakan'] ?? null,
+                'alasan_penolakan' => $data['alasan_penolakan'] ?? ($data['komentar'] ?? null),
                 'created_at'       => $created
             );
             $this->db->insert('peminjaman', $peminjamanData);
@@ -244,8 +223,7 @@ class Booking_model extends CI_Model {
     {
         $data = array('status' => $status);
         if ($alasan !== null) {
-            $data['alasan_penolakan'] = $alasan;
-            $data['komentar']         = $alasan;
+            $data['komentar'] = $alasan;
         }
 
         $adminName = $laboran ?: ($this->session->userdata('name') ?: 'Petugas Laboran');
@@ -276,8 +254,7 @@ class Booking_model extends CI_Model {
 
         $data = array('status' => $status);
         if ($alasan !== null) {
-            $data['alasan_penolakan'] = $alasan;
-            $data['komentar']         = $alasan;
+            $data['komentar'] = $alasan;
         }
 
         $adminName = $this->session->userdata('name') ?: 'Petugas Laboran';
@@ -332,8 +309,8 @@ class Booking_model extends CI_Model {
     public function get_approved_bookings()
     {
         $this->_base_booking_query();
-        $this->db->order_by('COALESCE(booking.tanggal_mulai, booking.date)', 'ASC');
-        $this->db->order_by('COALESCE(booking.jam_mulai, SUBSTRING_INDEX(booking.time, " - ", 1))', 'ASC');
+        $this->db->order_by('booking.date', 'ASC');
+        $this->db->order_by('COALESCE(SUBSTRING_INDEX(booking.time, " - ", 1), "08:00:00")', 'ASC');
         return $this->db->get()->result();
     }
 
@@ -352,12 +329,12 @@ class Booking_model extends CI_Model {
         $this->db->where("booking.status NOT LIKE '%Dibatalkan%'", NULL, FALSE);
 
         // Check date range overlap
-        $this->db->where('COALESCE(booking.tanggal_mulai, booking.date) <=', $tanggal_selesai);
-        $this->db->where('COALESCE(booking.tanggal_selesai, booking.date) >=', $tanggal_mulai);
+        $this->db->where('booking.date <=', $tanggal_selesai);
+        $this->db->where('booking.date >=', $tanggal_mulai);
 
         // Check time range overlap (strict overlap: start < existing_end AND end > existing_start)
-        $this->db->where('COALESCE(booking.jam_mulai, SUBSTRING_INDEX(booking.time, " - ", 1)) <', $jam_selesai);
-        $this->db->where('COALESCE(booking.jam_selesai, SUBSTRING_INDEX(booking.time, " - ", -1)) >', $jam_mulai);
+        $this->db->where('COALESCE(SUBSTRING_INDEX(booking.time, " - ", 1), "08:00:00") <', $jam_selesai);
+        $this->db->where('COALESCE(SUBSTRING_INDEX(booking.time, " - ", -1), "12:00:00") >', $jam_mulai);
 
         if ($ignore_id !== null) {
             $this->db->where('booking.id !=', $ignore_id);
