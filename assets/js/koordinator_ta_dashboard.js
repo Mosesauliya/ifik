@@ -818,6 +818,7 @@
                 nim: st.nim,
                 name: st.name || `${currentMhs.nama_depan || ''} ${currentMhs.nama_belakang || ''}`.trim() || ('Mahasiswa ' + st.nim),
                 judul: st.judul || currentMhs.judul_1 || currentMhs.judul_ta || currentMhs.judul || '',
+                judul_en: currentMhs.judul_en || '',
                 judul_2: currentMhs.judul_2 || '',
                 judul_3: currentMhs.judul_3 || '',
                 stage: st.stage || currentMhs.current_stage || 'Koordinator TA',
@@ -936,8 +937,14 @@
                         <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
                             <span class="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">Usulan Judul TA (Utama):</span>
                             <p class="text-xs font-semibold text-slate-800 leading-relaxed">${escapeHtml(st.judul || 'Belum ada judul tugas akhir')}</p>
+                            ${st.judul_en ? `
+                                <div class="mt-1.5 pt-1.5 border-t border-slate-200/60">
+                                    <span class="text-[9px] font-bold text-indigo-600 uppercase block mb-0.5"><i class="fa-solid fa-language mr-1"></i> Judul (Bahasa Inggris):</span>
+                                    <p class="text-[11px] text-slate-600 font-medium italic">"${escapeHtml(st.judul_en)}"</p>
+                                </div>
+                            ` : ''}
                             ${st.judul_2 ? `
-                                <div class="mt-2 pt-2 border-t border-slate-200/60">
+                                <div class="mt-1.5 pt-1.5 border-t border-slate-200/60">
                                     <span class="text-[9px] font-bold text-slate-500 uppercase block mb-0.5">Judul Alternatif 2:</span>
                                     <p class="text-[11px] text-slate-600 font-medium">${escapeHtml(st.judul_2)}</p>
                                 </div>
