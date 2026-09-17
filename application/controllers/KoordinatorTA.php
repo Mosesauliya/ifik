@@ -7,11 +7,38 @@ class KoordinatorTA extends CI_Controller {
         parent::__construct();
         $this->load->model('KoordinatorTA_model');
         $this->load->helper(array('form', 'url', 'text'));
+
+        // 1. Cek Login
+        if (!$this->session->userdata('logged_in')) {
+            if ($this->input->is_ajax_request()) {
+                $this->output
+                    ->set_status_header(401)
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode(['status' => false, 'message' => 'Sesi login telah berakhir. Silakan login kembali.']));
+                exit;
+            }
+            $this->session->set_flashdata('error', 'Silakan login terlebih dahulu untuk mengakses halaman Koordinator TA.');
+            redirect('login');
+        }
+
+        // 2. Cek Role (Hanya Role 6 = Koordinator TA, atau Role 1 = Admin)
+        $role_id = (int)$this->session->userdata('role_id');
+        if ($role_id !== 6 && $role_id !== 1) {
+            if ($this->input->is_ajax_request()) {
+                $this->output
+                    ->set_status_header(403)
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode(['status' => false, 'message' => 'Akses ditolak. Halaman ini hanya untuk Koordinator TA.']));
+                exit;
+            }
+            $this->session->set_flashdata('error', 'Akses ditolak! Halaman ini khusus untuk Koordinator TA.');
+            redirect('login');
+        }
     }
 
     // Dashboard Koordinator TA: Daftar Mahasiswa Mendaftar Tugas Akhir, Plotting Preview 2, & Penjadwalan Sidang
     public function index() {
-        $nip_koor = $this->session->userdata('nip') ? $this->session->userdata('nip') : '19800202002'; // Mock NIP Koordinator TA
+        $nip_koor = $this->session->userdata('nip') ?: ($this->session->userdata('username') ?: '1987010102');
         $data['title'] = 'Dashboard Koordinator TA';
         $data['nip_koor'] = $nip_koor;
         $data['list_mahasiswa'] = $this->KoordinatorTA_model->get_all_mahasiswa_ta();
