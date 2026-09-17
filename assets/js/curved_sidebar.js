@@ -151,6 +151,9 @@
                             if (targetUrl.pathname === window.location.pathname && targetUrl.hash) {
                                 e.preventDefault();
                                 const hashKey = targetUrl.hash.replace(/^#/, '');
+                                if (typeof window.switchDashboardTab === 'function') {
+                                    window.switchDashboardTab(hashKey);
+                                }
                                 if (typeof window.scrollToSection === 'function') {
                                     window.scrollToSection(hashKey);
                                 } else {
@@ -262,6 +265,42 @@
         if (document.getElementById('curvedSidebarPanel') && !window.curvedSidebarInstance) {
             window.curvedSidebarInstance = new CurvedSidebar();
         }
+
+        // Handle initial hash or hashchange for tabs/sections and update active state
+        const updateSidebarActiveTab = () => {
+            const currentHash = window.location.hash || '';
+            const panel = document.getElementById('curvedSidebarPanel');
+            if (!panel) return;
+            const navItems = panel.querySelectorAll('.curved-nav-item');
+            const isKoordinatorPage = window.location.pathname.includes('koordinatorta');
+            const targetHash = currentHash || (isKoordinatorPage ? '#pendaftaran' : '');
+
+            if (targetHash) {
+                navItems.forEach(item => {
+                    const href = item.getAttribute('href') || '';
+                    if (href.includes('#')) {
+                        if (href.endsWith(targetHash)) {
+                            item.classList.add('is-current');
+                        } else {
+                            item.classList.remove('is-current');
+                        }
+                    }
+                });
+            }
+        };
+
+        const checkHash = () => {
+            if (window.location.hash) {
+                const hashKey = window.location.hash.replace(/^#/, '');
+                if (typeof window.switchDashboardTab === 'function') {
+                    window.switchDashboardTab(hashKey);
+                }
+            }
+            updateSidebarActiveTab();
+        };
+
+        window.addEventListener('hashchange', checkHash);
+        setTimeout(checkHash, 150);
     }
 
     if (document.readyState === 'loading') {

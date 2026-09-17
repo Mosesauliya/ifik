@@ -817,6 +817,10 @@
             state.quickBatchStudents.push({
                 nim: st.nim,
                 name: st.name || `${currentMhs.nama_depan || ''} ${currentMhs.nama_belakang || ''}`.trim() || ('Mahasiswa ' + st.nim),
+                judul: st.judul || currentMhs.judul_1 || currentMhs.judul_ta || currentMhs.judul || '',
+                judul_en: currentMhs.judul_en || '',
+                judul_2: currentMhs.judul_2 || '',
+                judul_3: currentMhs.judul_3 || '',
                 stage: st.stage || currentMhs.current_stage || 'Koordinator TA',
                 old_pembimbing_1: currentMhs.pembimbing_1 || '',
                 old_pembimbing_2: currentMhs.pembimbing_2 || '',
@@ -870,6 +874,12 @@
         updateFloatingBar();
     };
 
+    window.setQuickBatchCatatan = function (idx, val) {
+        if (state.quickBatchStudents && state.quickBatchStudents[idx]) {
+            state.quickBatchStudents[idx].catatan_koor = val;
+        }
+    };
+
     function renderQuickBatchCards() {
         const listEl = document.getElementById('modalSelectedList');
         if (!listEl) return;
@@ -918,63 +928,58 @@
                             <button type="button" onclick="removeStudentFromBatch('${st.nim}')" class="w-7 h-7 rounded-lg bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-600 flex items-center justify-center transition border border-slate-200 cursor-pointer" title="Hapus mahasiswa ini dari pilihan">
                                 <i class="fa-solid fa-xmark text-xs"></i>
                             </button>
-
-                            <button type="button" onclick="toggleQuickStudentCard(${idx})" class="w-7 h-7 rounded-lg bg-white hover:bg-slate-200 text-slate-500 flex items-center justify-center transition border border-slate-200 cursor-pointer">
-                                <i class="fa-solid ${st.isExpanded ? 'fa-chevron-up' : 'fa-chevron-down'} text-xs"></i>
-                            </button>
                         </div>
                     </div>
 
-                    <!-- Student Body: Dosen Pembimbing 1 & 2 Combobox -->
-                    <div id="quick_card_body_${idx}" class="${st.isExpanded ? '' : 'hidden'} p-4 bg-white border-t border-slate-100 rounded-b-2xl space-y-3.5">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <!-- Slot 1 -->
-                            <div class="relative z-30" id="q_wrapper_${idx}_1">
-                                <label class="text-xs font-bold text-slate-700 block mb-1.5">
-                                    Pembimbing 1 (Utama) <span class="text-rose-500">*</span>
-                                </label>
-
-                                <!-- Chip -->
-                                <div id="q_chip_${idx}_1" class="${p1 ? '' : 'hidden'} p-2.5 bg-orange-50 border border-orange-300 rounded-xl flex items-center justify-between shadow-2xs">
-                                    <div class="flex items-center gap-2 min-w-0">
-                                        <div class="w-6 h-6 rounded-lg bg-orange-600 text-white flex items-center justify-center font-bold text-[10px] shrink-0">1</div>
-                                        <span id="q_chip_name_${idx}_1" class="text-xs sm:text-sm font-bold text-orange-950 truncate">${p1 ? escapeHtml(p1.nama_dosen + ' (' + p1.nip + ')') : ''}</span>
-                                    </div>
-                                    <button type="button" onclick="changeQuickDosen(${idx}, 1)" class="text-xs text-orange-600 font-bold hover:underline cursor-pointer ml-2 shrink-0">Ganti</button>
+                    <!-- Expandable Details Section -->
+                    <div id="quick_body_${idx}" class="p-4 sm:p-5 border-t border-slate-100 space-y-4 ${st.isExpanded ? 'block' : 'hidden'}">
+                        <!-- Judul TA -->
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                            <span class="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">Usulan Judul TA (Utama):</span>
+                            <p class="text-xs font-semibold text-slate-800 leading-relaxed">${escapeHtml(st.judul || 'Belum ada judul tugas akhir')}</p>
+                            ${st.judul_en ? `
+                                <div class="mt-1.5 pt-1.5 border-t border-slate-200/60">
+                                    <span class="text-[9px] font-bold text-indigo-600 uppercase block mb-0.5"><i class="fa-solid fa-language mr-1"></i> Judul (Bahasa Inggris):</span>
+                                    <p class="text-[11px] text-slate-600 font-medium italic">"${escapeHtml(st.judul_en)}"</p>
                                 </div>
+                            ` : ''}
+                            ${st.judul_2 ? `
+                                <div class="mt-1.5 pt-1.5 border-t border-slate-200/60">
+                                    <span class="text-[9px] font-bold text-slate-500 uppercase block mb-0.5">Judul Alternatif 2:</span>
+                                    <p class="text-[11px] text-slate-600 font-medium">${escapeHtml(st.judul_2)}</p>
+                                </div>
+                            ` : ''}
+                        </div>
 
-                                <!-- Search Input -->
-                                <div id="q_search_container_${idx}_1" class="${p1 ? 'hidden' : ''} relative">
-                                    <div class="flex items-center border border-slate-300 rounded-xl px-3.5 py-2.5 bg-white focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20 shadow-2xs">
-                                        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs mr-2 shrink-0"></i>
-                                        <input type="text" id="q_search_${idx}_1" onfocus="openQuickDosenDropdown(${idx}, 1)" onclick="openQuickDosenDropdown(${idx}, 1)" oninput="filterQuickDosen(${idx}, 1)" placeholder="Cari nama / NIP pembimbing 1..." class="w-full text-xs sm:text-sm font-semibold bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400" autocomplete="off">
-                                        <button type="button" id="q_clear_${idx}_1" onclick="clearQuickDosen(${idx}, 1)" class="hidden text-slate-400 hover:text-slate-600 text-xs ml-1 shrink-0"><i class="fa-solid fa-circle-xmark"></i></button>
+                        <!-- Dropdowns Dosen Pembimbing 1 & 2 -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <!-- Slot Pembimbing 1 -->
+                            <div id="q_wrapper_${idx}_1" class="relative">
+                                <label class="block text-[11px] font-bold text-slate-700 mb-1 flex items-center justify-between">
+                                    <span>Pembimbing 1 (Utama): <span class="text-rose-500">*</span></span>
+                                    <span id="q_badge_${idx}_1" class="${st.pembimbing_1 ? 'block' : 'hidden'} text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">Terpilih</span>
+                                </label>
+                                <div class="relative">
+                                    <div class="flex items-center px-3 py-2 bg-white border ${st.pembimbing_1 ? 'border-orange-300 ring-1 ring-orange-100' : 'border-slate-300'} rounded-xl transition shadow-2xs focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20">
+                                        <i class="fa-solid fa-user-tie text-slate-400 text-xs mr-2 shrink-0"></i>
+                                        <input type="text" id="q_search_${idx}_1" value="${p1 ? escapeHtml(p1.nama_dosen) : ''}" onfocus="openQuickDosenDropdown(${idx}, 1)" onclick="openQuickDosenDropdown(${idx}, 1)" oninput="filterQuickDosen(${idx}, 1)" placeholder="Cari nama / NIP pembimbing 1..." class="w-full text-xs sm:text-sm font-semibold bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400" autocomplete="off">
+                                        <button type="button" id="q_clear_${idx}_1" onclick="clearQuickDosen(${idx}, 1)" class="${p1 ? '' : 'hidden'} text-slate-400 hover:text-slate-600 text-xs ml-1 shrink-0"><i class="fa-solid fa-circle-xmark"></i></button>
                                     </div>
                                     <div id="q_dropdown_${idx}_1" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-2xl z-[150] max-h-56 overflow-y-auto custom-scrollbar p-1.5 divide-y divide-slate-100"></div>
                                 </div>
                             </div>
 
-                            <!-- Slot 2 -->
-                            <div class="relative z-20" id="q_wrapper_${idx}_2">
-                                <label class="text-xs font-bold text-slate-700 block mb-1.5">
-                                    Pembimbing 2 (Pendamping) <span class="text-rose-500">*</span>
+                            <!-- Slot Pembimbing 2 -->
+                            <div id="q_wrapper_${idx}_2" class="relative">
+                                <label class="block text-[11px] font-bold text-slate-700 mb-1 flex items-center justify-between">
+                                    <span>Pembimbing 2 (Pendamping): <span class="text-rose-500">*</span></span>
+                                    <span id="q_badge_${idx}_2" class="${st.pembimbing_2 ? 'block' : 'hidden'} text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">Terpilih</span>
                                 </label>
-
-                                <!-- Chip -->
-                                <div id="q_chip_${idx}_2" class="${p2 ? '' : 'hidden'} p-2.5 bg-orange-50 border border-orange-300 rounded-xl flex items-center justify-between shadow-2xs">
-                                    <div class="flex items-center gap-2 min-w-0">
-                                        <div class="w-6 h-6 rounded-lg bg-orange-600 text-white flex items-center justify-center font-bold text-[10px] shrink-0">2</div>
-                                        <span id="q_chip_name_${idx}_2" class="text-xs sm:text-sm font-bold text-orange-950 truncate">${p2 ? escapeHtml(p2.nama_dosen + ' (' + p2.nip + ')') : ''}</span>
-                                    </div>
-                                    <button type="button" onclick="changeQuickDosen(${idx}, 2)" class="text-xs text-orange-600 font-bold hover:underline cursor-pointer ml-2 shrink-0">Ganti</button>
-                                </div>
-
-                                <!-- Search Input -->
-                                <div id="q_search_container_${idx}_2" class="${p2 ? 'hidden' : ''} relative">
-                                    <div class="flex items-center border border-slate-300 rounded-xl px-3.5 py-2.5 bg-white focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20 shadow-2xs">
-                                        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs mr-2 shrink-0"></i>
-                                        <input type="text" id="q_search_${idx}_2" onfocus="openQuickDosenDropdown(${idx}, 2)" onclick="openQuickDosenDropdown(${idx}, 2)" oninput="filterQuickDosen(${idx}, 2)" placeholder="Cari nama / NIP pembimbing 2..." class="w-full text-xs sm:text-sm font-semibold bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400" autocomplete="off">
-                                        <button type="button" id="q_clear_${idx}_2" onclick="clearQuickDosen(${idx}, 2)" class="hidden text-slate-400 hover:text-slate-600 text-xs ml-1 shrink-0"><i class="fa-solid fa-circle-xmark"></i></button>
+                                <div class="relative">
+                                    <div class="flex items-center px-3 py-2 bg-white border ${st.pembimbing_2 ? 'border-orange-300 ring-1 ring-orange-100' : 'border-slate-300'} rounded-xl transition shadow-2xs focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20">
+                                        <i class="fa-solid fa-user-tie text-slate-400 text-xs mr-2 shrink-0"></i>
+                                        <input type="text" id="q_search_${idx}_2" value="${p2 ? escapeHtml(p2.nama_dosen) : ''}" onfocus="openQuickDosenDropdown(${idx}, 2)" onclick="openQuickDosenDropdown(${idx}, 2)" oninput="filterQuickDosen(${idx}, 2)" placeholder="Cari nama / NIP pembimbing 2..." class="w-full text-xs sm:text-sm font-semibold bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400" autocomplete="off">
+                                        <button type="button" id="q_clear_${idx}_2" onclick="clearQuickDosen(${idx}, 2)" class="${p2 ? '' : 'hidden'} text-slate-400 hover:text-slate-600 text-xs ml-1 shrink-0"><i class="fa-solid fa-circle-xmark"></i></button>
                                     </div>
                                     <div id="q_dropdown_${idx}_2" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-2xl z-[150] max-h-56 overflow-y-auto custom-scrollbar p-1.5 divide-y divide-slate-100"></div>
                                 </div>
@@ -984,7 +989,7 @@
                         <div>
                             <input type="text" 
                                    value="${escapeHtml(st.catatan_koor || '')}" 
-                                   oninput="state.quickBatchStudents[${idx}].catatan_koor = this.value"
+                                   oninput="setQuickBatchCatatan(${idx}, this.value)"
                                    placeholder="Catatan khusus untuk ${escapeHtml((st.name || '').split(' ')[0])} (opsional)..." 
                                    class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 shadow-2xs font-medium">
                         </div>
@@ -1110,24 +1115,32 @@
         if (wrapper1) wrapper1.style.zIndex = (slotNum === 1) ? '100' : '20';
         if (wrapper2) wrapper2.style.zIndex = (slotNum === 2) ? '100' : '20';
 
+        const input = document.getElementById(`q_search_${stIdx}_${slotNum}`);
+        const kw = input ? input.value : '';
         const drop = document.getElementById(`q_dropdown_${stIdx}_${slotNum}`);
         if (!drop) return;
-        renderQuickDosenDropdown(stIdx, slotNum, '');
+        renderQuickDosenDropdown(stIdx, slotNum, kw);
         drop.classList.remove('hidden');
     };
 
     window.filterQuickDosen = function (stIdx, slotNum) {
         const input = document.getElementById(`q_search_${stIdx}_${slotNum}`);
         const clearBtn = document.getElementById(`q_clear_${stIdx}_${slotNum}`);
+        const drop = document.getElementById(`q_dropdown_${stIdx}_${slotNum}`);
         const kw = input ? input.value : '';
         if (clearBtn) {
             if (kw) clearBtn.classList.remove('hidden');
             else clearBtn.classList.add('hidden');
         }
         renderQuickDosenDropdown(stIdx, slotNum, kw);
+        if (drop) drop.classList.remove('hidden');
     };
 
     window.clearQuickDosen = function (stIdx, slotNum) {
+        if (state.quickBatchStudents && state.quickBatchStudents[stIdx]) {
+            if (slotNum === 1) state.quickBatchStudents[stIdx].pembimbing_1 = '';
+            else state.quickBatchStudents[stIdx].pembimbing_2 = '';
+        }
         const input = document.getElementById(`q_search_${stIdx}_${slotNum}`);
         const clearBtn = document.getElementById(`q_clear_${stIdx}_${slotNum}`);
         if (input) {
@@ -1136,6 +1149,11 @@
         }
         if (clearBtn) clearBtn.classList.add('hidden');
         renderQuickDosenDropdown(stIdx, slotNum, '');
+        const drop = document.getElementById(`q_dropdown_${stIdx}_${slotNum}`);
+        if (drop) drop.classList.remove('hidden');
+        
+        const badge = document.getElementById(`q_badge_${stIdx}_${slotNum}`);
+        if (badge) badge.className = 'hidden text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold';
     };
 
     function renderQuickDosenDropdown(stIdx, slotNum, kw) {
@@ -5304,27 +5322,59 @@
         logs.forEach(log => {
             const isSidang = (log.kategori === 'Sidang TA' || log.kategori === 'Sidang');
             const isPembimbing = (log.kategori === 'Pembimbing');
+            const isPenguji = (log.kategori === 'Penguji');
 
             let katBadgeClass = 'bg-indigo-100 text-indigo-800 border-indigo-200';
-            let katIcon = 'fa-chalkboard-user';
+            let katIcon = 'fa-solid fa-chalkboard-user';
             let katLabel = 'Dosen Penguji';
+
+            let aksiBadgeClass = 'bg-slate-100 text-slate-800 border-slate-300';
+            let aksiIcon = 'fa-solid fa-pen-to-square';
+
+            const aksiText = log.aksi || log.action || 'Perubahan Data';
 
             if (isPembimbing) {
                 katBadgeClass = 'bg-orange-100 text-orange-800 border-orange-200';
-                katIcon = 'fa-user-tie';
+                katIcon = 'fa-solid fa-user-tie';
                 katLabel = 'Dosen Pembimbing';
+                aksiBadgeClass = aksiText.toLowerCase().includes('penetapan') ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-100 text-slate-800 border-slate-300';
+                aksiIcon = aksiText.toLowerCase().includes('penetapan') ? 'fa-solid fa-check' : 'fa-solid fa-pen-to-square';
+            } else if (isPenguji) {
+                katBadgeClass = 'bg-indigo-100 text-indigo-800 border-indigo-200';
+                katIcon = 'fa-solid fa-chalkboard-user';
+                katLabel = 'Dosen Penguji';
+                aksiBadgeClass = aksiText.toLowerCase().includes('penetapan') ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-100 text-slate-800 border-slate-300';
+                aksiIcon = aksiText.toLowerCase().includes('penetapan') ? 'fa-solid fa-check' : 'fa-solid fa-pen-to-square';
             } else if (isSidang) {
-                katBadgeClass = 'bg-amber-100 text-amber-900 border-amber-300';
-                katIcon = 'fa-calendar-check';
-                katLabel = 'Sidang TA & Nilai';
+                if (aksiText.includes('Live') || aksiText.includes('Published')) {
+                    katBadgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                    katIcon = 'fa-solid fa-globe';
+                    katLabel = 'Publikasi Nilai';
+                    aksiBadgeClass = 'bg-emerald-50 text-emerald-800 border-emerald-300';
+                    aksiIcon = 'fa-solid fa-check-double';
+                } else if (aksiText.includes('Terjadwal') || aksiText.includes('Scheduled')) {
+                    katBadgeClass = 'bg-sky-100 text-sky-800 border-sky-300';
+                    katIcon = 'fa-solid fa-clock';
+                    katLabel = 'Publikasi Nilai';
+                    aksiBadgeClass = 'bg-sky-50 text-sky-800 border-sky-300';
+                    aksiIcon = 'fa-solid fa-calendar-day';
+                } else if (aksiText.includes('Ditolak') || aksiText.includes('Blocked')) {
+                    katBadgeClass = 'bg-rose-100 text-rose-800 border-rose-300';
+                    katIcon = 'fa-solid fa-ban';
+                    katLabel = 'Publikasi Nilai';
+                    aksiBadgeClass = 'bg-rose-50 text-rose-800 border-rose-300';
+                    aksiIcon = 'fa-solid fa-shield-halved';
+                } else {
+                    katBadgeClass = 'bg-amber-100 text-amber-900 border-amber-300';
+                    katIcon = 'fa-solid fa-calendar-check';
+                    katLabel = 'Sidang TA';
+                    aksiBadgeClass = 'bg-amber-50 text-amber-800 border-amber-200';
+                    aksiIcon = 'fa-solid fa-calendar-day';
+                }
             }
 
-            const d1Label = isPembimbing ? 'Dosen Pembimbing 1' : (isSidang ? 'Detail Jadwal / Nilai' : 'Dosen Penguji 1');
-            const d2Label = isPembimbing ? 'Dosen Pembimbing 2' : (isSidang ? 'Ruangan / Status' : 'Dosen Penguji 2');
-
-            const isInitial = (log.aksi && log.aksi.toLowerCase().includes('awal')) || (!log.dosen_1_lama && !log.dosen_2_lama);
-            const aksiBadgeClass = isInitial ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-100 text-slate-800 border-slate-300';
-            const aksiIcon = isInitial ? 'fa-plus' : 'fa-pen-to-square';
+            const d1Label = log.d1_label || (isPembimbing ? 'Dosen Pembimbing 1' : (isSidang ? 'Detail Jadwal Sidang' : 'Dosen Penguji 1'));
+            const d2Label = log.d2_label || (isPembimbing ? 'Dosen Pembimbing 2' : (isSidang ? 'Ruangan Sidang' : 'Dosen Penguji 2'));
 
             const d1Lama = log.nama_dosen_1_lama || log.dosen_1_lama || log.nama_penguji_1_lama || log.penguji_1_lama;
             const d2Lama = log.nama_dosen_2_lama || log.dosen_2_lama || log.nama_penguji_2_lama || log.penguji_2_lama;
@@ -5333,6 +5383,24 @@
 
             const isD1Changed = Boolean(d1Lama && String(d1Lama) !== String(d1Baru) && d1Lama !== '-');
             const isD2Changed = Boolean(d2Lama && String(d2Lama) !== String(d2Baru) && d2Lama !== '-');
+
+            let slot1Badge = `<span class="w-5 h-5 rounded ${isSidang ? 'bg-amber-100 text-amber-700' : (isPembimbing ? 'bg-orange-100 text-orange-700' : 'bg-indigo-100 text-indigo-700')} flex items-center justify-center text-[10px] font-black shrink-0">${isPembimbing ? 'P1' : (isPenguji ? 'U1' : '1')}</span>`;
+            let slot2Badge = `<span class="w-5 h-5 rounded ${isSidang ? 'bg-amber-100 text-amber-700' : (isPembimbing ? 'bg-orange-100 text-orange-700' : 'bg-indigo-100 text-indigo-700')} flex items-center justify-center text-[10px] font-black shrink-0">${isPembimbing ? 'P2' : (isPenguji ? 'U2' : '2')}</span>`;
+
+            if (isSidang) {
+                if (aksiText.includes('Live') || aksiText.includes('Terjadwal') || aksiText.includes('Published') || aksiText.includes('Scheduled')) {
+                    slot1Badge = `<span class="w-5 h-5 rounded bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] shrink-0"><i class="fa-solid fa-award"></i></span>`;
+                    slot2Badge = `<span class="w-5 h-5 rounded bg-sky-100 text-sky-700 flex items-center justify-center text-[10px] shrink-0"><i class="fa-solid fa-calendar-check"></i></span>`;
+                } else if (aksiText.includes('Ditolak') || aksiText.includes('Blocked')) {
+                    slot1Badge = `<span class="w-5 h-5 rounded bg-rose-100 text-rose-700 flex items-center justify-center text-[10px] shrink-0"><i class="fa-solid fa-list-check"></i></span>`;
+                    slot2Badge = `<span class="w-5 h-5 rounded bg-rose-100 text-rose-700 flex items-center justify-center text-[10px] shrink-0"><i class="fa-solid fa-triangle-exclamation"></i></span>`;
+                } else {
+                    slot1Badge = `<span class="w-5 h-5 rounded bg-amber-100 text-amber-700 flex items-center justify-center text-[10px] shrink-0"><i class="fa-solid fa-calendar-day"></i></span>`;
+                    slot2Badge = `<span class="w-5 h-5 rounded bg-cyan-100 text-cyan-700 flex items-center justify-center text-[10px] shrink-0"><i class="fa-solid fa-door-open"></i></span>`;
+                }
+            }
+
+            const noteContent = log.catatan || log.keterangan || '';
 
             html += `
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs p-4 transition-all hover:shadow-md hover:border-amber-300 space-y-3 text-left">
@@ -5348,19 +5416,19 @@
                         </div>
 
                         <div class="flex flex-col items-end gap-1">
-                            <div class="flex items-center gap-1.5">
+                            <div class="flex items-center gap-1.5 flex-wrap justify-end">
                                 <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10px] font-bold ${katBadgeClass}">
-                                    <i class="fa-solid ${katIcon} text-[9px]"></i>
+                                    <i class="${katIcon} text-[9px]"></i>
                                     <span>${katLabel}</span>
                                 </span>
                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold ${aksiBadgeClass}">
-                                    <i class="fa-solid ${aksiIcon} text-[9px]"></i>
-                                    <span>${escapeHtml(log.aksi || 'Perubahan Data')}</span>
+                                    <i class="${aksiIcon} text-[9px]"></i>
+                                    <span>${escapeHtml(aksiText)}</span>
                                 </span>
                             </div>
                             <span class="text-[10px] text-slate-400 font-medium flex items-center gap-1">
                                 <i class="fa-solid fa-calendar-day text-[9px]"></i>
-                                ${escapeHtml(log.created_at || '-')}
+                                ${escapeHtml(log.waktu || log.created_at || '-')}
                             </span>
                         </div>
                     </div>
@@ -5368,13 +5436,13 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                         <!-- Slot 1 -->
                         <div class="p-2.5 bg-slate-50/80 rounded-xl border border-slate-100 space-y-1">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${d1Label}:</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(d1Label)}:</span>
                             <div class="font-bold text-slate-900 flex items-center gap-1.5">
-                                <span class="w-4 h-4 rounded ${isSidang ? 'bg-amber-100 text-amber-700' : (isPembimbing ? 'bg-orange-100 text-orange-700' : 'bg-indigo-100 text-indigo-700')} flex items-center justify-center text-[9px] font-bold shrink-0">1</span>
+                                ${slot1Badge}
                                 <span class="truncate">${escapeHtml(d1Baru || '-')}</span>
                             </div>
                             ${isD1Changed ? `
-                                <div class="text-[10px] text-rose-600 line-through truncate pl-5.5">
+                                <div class="text-[10px] text-rose-600 line-through truncate pl-6">
                                     Semula: ${escapeHtml(d1Lama)}
                                 </div>
                             ` : ''}
@@ -5382,24 +5450,24 @@
 
                         <!-- Slot 2 -->
                         <div class="p-2.5 bg-slate-50/80 rounded-xl border border-slate-100 space-y-1">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${d2Label}:</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(d2Label)}:</span>
                             <div class="font-bold text-slate-900 flex items-center gap-1.5">
-                                <span class="w-4 h-4 rounded ${isSidang ? 'bg-amber-100 text-amber-700' : (isPembimbing ? 'bg-orange-100 text-orange-700' : 'bg-indigo-100 text-indigo-700')} flex items-center justify-center text-[9px] font-bold shrink-0">2</span>
+                                ${slot2Badge}
                                 <span class="truncate">${escapeHtml(d2Baru || '-')}</span>
                             </div>
                             ${isD2Changed ? `
-                                <div class="text-[10px] text-rose-600 line-through truncate pl-5.5">
+                                <div class="text-[10px] text-rose-600 line-through truncate pl-6">
                                     Semula: ${escapeHtml(d2Lama)}
                                 </div>
                             ` : ''}
                         </div>
                     </div>
 
-                    ${log.keterangan ? `
+                    ${noteContent ? `
                         <div class="text-[11px] text-slate-600 bg-amber-50/80 border border-amber-200/80 p-2.5 rounded-xl flex items-start gap-2">
                             <i class="fa-solid fa-note-sticky text-amber-600 mt-0.5 shrink-0 text-xs"></i>
                             <div>
-                                <strong>Catatan:</strong> ${escapeHtml(log.keterangan)}
+                                <strong>Catatan:</strong> ${escapeHtml(noteContent)}
                             </div>
                         </div>
                     ` : ''}
@@ -6008,27 +6076,31 @@
 
         let html = '';
         let mobileHtml = '';
-        let allPageSelected = pageItems.length > 0;
-        let anyPageSelected = false;
+        let eligibleCountOnPage = 0;
+        let selectedEligibleOnPage = 0;
 
         pageItems.forEach((row, idx) => {
-            const isChecked = state.sidangSelectedStudents.has(row.nim);
-            if (isChecked) anyPageSelected = true;
-            else allPageSelected = false;
+            const isNilaiLengkap = Boolean(row.is_nilai_lengkap);
+            if (isNilaiLengkap) eligibleCountOnPage++;
 
-            const isTerjadwal = (row.status_sidang === 'Terjadwal');
+            const isChecked = state.sidangSelectedStudents.has(row.nim);
+            if (isChecked && isNilaiLengkap) selectedEligibleOnPage++;
+
+            const isTerjadwal = (row.status_sidang === 'Terjadwal' || Boolean(row.tgl_sidang || row.tanggal_sidang));
             const statusBadge = isTerjadwal
                 ? '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 font-bold text-[10px] rounded-full border border-emerald-300 bg-emerald-50 text-emerald-700 shadow-2xs whitespace-nowrap"><i class="fa-solid fa-circle-check text-[10px]"></i> Terjadwal</span>'
                 : '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 font-bold text-[10px] rounded-full border border-rose-300 bg-rose-50 text-rose-700 shadow-2xs whitespace-nowrap"><i class="fa-solid fa-clock text-[10px]"></i> Belum Dijadwalkan</span>';
 
-            const waktuDisplay = isTerjadwal && row.tgl_sidang
+            const tglVal = row.tgl_sidang || row.tanggal_sidang;
+            const jamVal = row.jam_mulai_sidang || row.waktu_sidang;
+            const waktuDisplay = isTerjadwal && tglVal
                 ? `<div class="space-y-0.5 text-slate-800 text-[10.5px] leading-tight">
-                    <div class="flex items-center gap-1 font-bold text-slate-900 whitespace-nowrap"><i class="fa-solid fa-calendar-day text-amber-500 text-[10px] shrink-0"></i> <span>${escapeHtml(formatIndonesianDate(row.tgl_sidang))}</span></div>
-                    <div class="flex items-center gap-1 text-[9.5px] text-slate-500 font-medium whitespace-nowrap"><i class="fa-solid fa-clock text-slate-400 text-[8.5px] shrink-0"></i> <span>${escapeHtml(row.jam_mulai_sidang ? row.jam_mulai_sidang.substring(0, 5) : '')} ${row.jam_selesai_sidang ? '- ' + escapeHtml(row.jam_selesai_sidang.substring(0, 5)) : ''} WIB</span></div>
+                    <div class="flex items-center gap-1 font-bold text-slate-900 whitespace-nowrap"><i class="fa-solid fa-calendar-day text-amber-500 text-[10px] shrink-0"></i> <span>${escapeHtml(formatIndonesianDate(tglVal))}</span></div>
+                    <div class="flex items-center gap-1 text-[9.5px] text-slate-500 font-medium whitespace-nowrap"><i class="fa-solid fa-clock text-slate-400 text-[8.5px] shrink-0"></i> <span>${escapeHtml(jamVal ? jamVal.substring(0, 5) : '')} ${row.jam_selesai_sidang ? '- ' + escapeHtml(row.jam_selesai_sidang.substring(0, 5)) : ''} WIB</span></div>
                    </div>`
                 : '<span class="text-slate-400 italic text-[10.5px]">Belum diatur</span>';
 
-            const roomText = row.detail_nama_ruangan || row.ruangan_sidang;
+            const roomText = row.detail_nama_ruangan || row.ruangan_sidang || row.ruang_sidang || row.ruangan_sidang_final;
             const ruanganDisplay = isTerjadwal && roomText
                 ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-cyan-50 text-cyan-800 border border-cyan-200 shadow-2xs whitespace-nowrap max-w-[105px] truncate" title="${escapeHtml(roomText)}">
                     <i class="fa-solid fa-door-open text-cyan-600 text-[9.5px] shrink-0"></i> <span class="truncate">${escapeHtml(roomText)}</span>
@@ -6069,37 +6141,55 @@
             const iconClass = isTerjadwal ? 'fa-pen-to-square' : 'fa-arrow-right';
             const btnTitle = isTerjadwal ? 'Ubah Jadwal & Ruangan Sidang' : 'Jadwalkan Sidang TA';
 
-            const hasNilai = Boolean(row.nilai_akhir_sidang && parseFloat(row.nilai_akhir_sidang) > 0);
             const peminatanBadge = row.peminatan
                 ? `<span class="inline-flex items-center px-1.5 py-0.2 rounded text-[8.5px] font-extrabold uppercase tracking-wider bg-violet-50 text-violet-700 border border-violet-200 mt-0.5 block max-w-fit">${escapeHtml(row.peminatan)}</span>`
                 : '';
 
-            let publishBadge = '';
-            if (hasNilai) {
+            // Badge Nilai & Publish Status
+            let nilaiBadge = '';
+            if (isNilaiLengkap) {
                 const pubStatus = row.status_publish_sidang || 'Draft';
+                let pubBadge = '';
                 if (pubStatus === 'Published') {
-                    publishBadge = `<span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[8.5px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 mt-0.5 shadow-2xs" title="Nilai Terpublikasi (${escapeHtml(row.tgl_publish_sidang || 'Live')})"><i class="fa-solid fa-globe text-[8px]"></i> Terbit</span>`;
+                    pubBadge = `<span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[8.5px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs" title="Nilai Terpublikasi (${escapeHtml(row.tgl_publish_sidang || 'Live')})"><i class="fa-solid fa-globe text-[8px]"></i> Terbit</span>`;
                 } else if (pubStatus === 'Scheduled') {
-                    publishBadge = `<span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[8.5px] font-extrabold bg-sky-100 text-sky-800 border border-sky-300 mt-0.5 shadow-2xs" title="Terjadwal Rilis: ${escapeHtml(row.tgl_publish_sidang || '')}"><i class="fa-solid fa-clock text-[8px]"></i> Terjadwal</span>`;
+                    pubBadge = `<span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[8.5px] font-extrabold bg-sky-100 text-sky-800 border border-sky-300 shadow-2xs" title="Terjadwal Rilis: ${escapeHtml(row.tgl_publish_sidang || '')}"><i class="fa-solid fa-clock text-[8px]"></i> Terjadwal</span>`;
                 } else {
-                    publishBadge = `<span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[8.5px] font-extrabold bg-slate-100 text-slate-600 border border-slate-300 mt-0.5 shadow-2xs" title="Nilai Masih Draft (Privat)"><i class="fa-solid fa-eye-slash text-[8px]"></i> Draft</span>`;
+                    pubBadge = `<span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[8.5px] font-extrabold bg-slate-100 text-slate-600 border border-slate-300 shadow-2xs" title="Nilai Masih Draft (Privat)"><i class="fa-solid fa-eye-slash text-[8px]"></i> Draft</span>`;
                 }
+
+                nilaiBadge = `
+                    <div class="flex items-center gap-1 flex-wrap mt-0.5">
+                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs" title="Skor Rata-rata 4 Evaluator: ${escapeHtml(row.nilai_akhir_sidang)} | Status: ${escapeHtml(row.status_kelulusan_sidang || 'Lulus')}">
+                            <i class="fa-solid fa-award text-emerald-600 text-[9px]"></i> ${escapeHtml(row.nilai_akhir_sidang)} (${escapeHtml(row.grade_sidang || 'A')})
+                        </span>
+                        ${pubBadge}
+                    </div>
+                `;
+            } else {
+                const terisiCount = row.komponen_terisi_count || 0;
+                const belumStr = (row.komponen_belum_terisi && Array.isArray(row.komponen_belum_terisi)) ? row.komponen_belum_terisi.join(', ') : 'Belum lengkap';
+                nilaiBadge = `
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs mt-0.5 whitespace-nowrap cursor-help" title="Komponen belum lengkap (${terisiCount}/4 terisi). Menunggu: ${escapeHtml(belumStr)}">
+                        <i class="fa-solid fa-clock-rotate-left text-amber-600 text-[8.5px]"></i> Nilai Belum Lengkap (${terisiCount}/4)
+                    </span>
+                `;
             }
 
-            const nilaiBadge = hasNilai
-                ? `<div class="flex items-center gap-1 flex-wrap mt-0.5">
-                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs" title="Status: ${escapeHtml(row.status_kelulusan_sidang || 'Lulus')}"><i class="fa-solid fa-award text-emerald-600 text-[9px]"></i> ${escapeHtml(row.nilai_akhir_sidang)} (${escapeHtml(row.grade_sidang || 'A')})</span>
-                    ${publishBadge}
-                   </div>`
-                : `<span class="text-[9.5px] text-slate-400 italic block mt-0.5">Belum dinilai</span>`;
+            // Aturan Centang Checkbox: Hanya aktif jika isNilaiLengkap
+            const checkboxDisabledAttr = !isNilaiLengkap ? 'disabled cursor-not-allowed opacity-40' : 'cursor-pointer';
+            const checkboxTitle = !isNilaiLengkap 
+                ? `Centang dinonaktifkan: Nilai belum lengkap (${row.komponen_terisi_count || 0}/4 terisi). Publikasi hanya diizinkan jika seluruh 4 evaluator telah mengisi nilai.` 
+                : `Pilih mahasiswa NIM ${row.nim} untuk aksi publikasi massal`;
 
             html += `
                 <tr class="table-row-animate ${rowHighlight} transition-colors" style="--row-index: ${idx};">
-                    <td class="w-8 py-2.5 px-2 text-center">
+                    <td class="w-8 py-2.5 px-2 text-center" title="${escapeHtml(checkboxTitle)}">
                         <input type="checkbox" 
-                            class="row-select-sidang w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 cursor-pointer" 
+                            class="row-select-sidang w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 ${checkboxDisabledAttr}" 
                             value="${row.nim}" 
-                            ${isChecked ? 'checked' : ''}
+                            ${isChecked && isNilaiLengkap ? 'checked' : ''}
+                            ${!isNilaiLengkap ? 'disabled' : ''}
                             onchange="toggleRowSelectSidang(this)">
                     </td>
                     <td class="w-24 py-2.5 px-2 font-bold font-mono text-[11px] text-slate-900 truncate">${row.nim}</td>
@@ -6136,8 +6226,8 @@
                             <button type="button" onclick="openHistorySidangModal('${escapeHtml(row.nim)}')" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-slate-600 border border-slate-200 flex items-center justify-center text-xs transition cursor-pointer shadow-2xs shrink-0" title="Lihat Riwayat Histori Sidang Mahasiswa Ini">
                                 <i class="fa-solid fa-clock-rotate-left text-[11px]"></i>
                             </button>
-                            <button type="button" onclick="openModalPenilaianSidang('${escapeHtml(row.nim)}')" class="w-7 h-7 rounded-lg ${hasNilai ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300' : 'bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-slate-600 border border-slate-200'} flex items-center justify-center text-xs transition cursor-pointer shadow-2xs shrink-0" title="${hasNilai ? 'Lihat / Edit Penilaian Akhir Sidang' : 'Input Penilaian Akhir Sidang TA'}">
-                                <i class="fa-solid ${hasNilai ? 'fa-award text-xs' : 'fa-clipboard-check text-xs'}"></i>
+                            <button type="button" onclick="openModalPenilaianSidang('${escapeHtml(row.nim)}')" class="w-7 h-7 rounded-lg ${isNilaiLengkap ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300' : 'bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200'} flex items-center justify-center text-xs transition cursor-pointer shadow-2xs shrink-0" title="Tinjau Rekapitulasi Nilai Sidang (View Only)">
+                                <i class="fa-solid fa-award text-xs"></i>
                             </button>
                             <button type="button" onclick="openModalSingleSidang('${escapeHtml(row.nim)}')" class="btn-3d-kinetic ${btnColor} btn-compact cursor-pointer shrink-0" title="${btnTitle}">
                                 <div class="bg"></div>
@@ -6174,15 +6264,16 @@
 
             // Mobile Card Markup
             mobileHtml += `
-                <div class="mobile-sidang-card bg-white rounded-2xl border ${isChecked ? 'border-amber-500 ring-2 ring-amber-400 bg-amber-50/20' : 'border-slate-200/90'} p-4 shadow-sm space-y-3 transition-all">
+                <div class="mobile-sidang-card bg-white rounded-2xl border ${isChecked && isNilaiLengkap ? 'border-amber-500 ring-2 ring-amber-400 bg-amber-50/20' : 'border-slate-200/90'} p-4 shadow-sm space-y-3 transition-all">
                     <!-- Top Bar: Selection Checkbox + NIM & Name + Status Badge -->
                     <div class="flex items-start justify-between gap-2.5">
                         <div class="flex items-start gap-2.5 min-w-0 flex-1">
-                            <div class="pt-0.5 shrink-0">
+                            <div class="pt-0.5 shrink-0" title="${escapeHtml(checkboxTitle)}">
                                 <input type="checkbox" 
-                                    class="row-select-sidang w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 cursor-pointer" 
+                                    class="row-select-sidang w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 ${checkboxDisabledAttr}" 
                                     value="${row.nim}" 
-                                    ${isChecked ? 'checked' : ''}
+                                    ${isChecked && isNilaiLengkap ? 'checked' : ''}
+                                    ${!isNilaiLengkap ? 'disabled' : ''}
                                     onchange="toggleRowSelectSidang(this)">
                             </div>
                             <div class="min-w-0 flex-1">
@@ -6245,9 +6336,9 @@
                         <button type="button" onclick="openHistorySidangModal('${escapeHtml(row.nim)}')" class="h-9 px-2.5 rounded-xl bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-slate-600 border border-slate-200 flex items-center justify-center gap-1 text-xs font-bold transition cursor-pointer shrink-0" title="Histori Sidang">
                             <i class="fa-solid fa-clock-rotate-left text-xs"></i>
                         </button>
-                        <button type="button" onclick="openModalPenilaianSidang('${escapeHtml(row.nim)}')" class="h-9 px-3 rounded-xl ${hasNilai ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300' : 'bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-slate-700 border border-slate-200'} flex items-center justify-center gap-1.5 text-xs font-bold transition cursor-pointer shrink-0" title="Penilaian Sidang">
-                            <i class="fa-solid ${hasNilai ? 'fa-award text-xs text-emerald-600' : 'fa-clipboard-check text-xs'}"></i>
-                            <span>${hasNilai ? 'Nilai (' + escapeHtml(row.grade_sidang || 'A') + ')' : 'Nilai'}</span>
+                        <button type="button" onclick="openModalPenilaianSidang('${escapeHtml(row.nim)}')" class="h-9 px-3 rounded-xl ${isNilaiLengkap ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300' : 'bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200'} flex items-center justify-center gap-1.5 text-xs font-bold transition cursor-pointer shrink-0" title="Tinjau Rekap Nilai Sidang (View Only)">
+                            <i class="fa-solid fa-award text-xs"></i>
+                            <span>Rekap Nilai</span>
                         </button>
                         <button type="button" onclick="openModalSingleSidang('${escapeHtml(row.nim)}')" class="flex-1 h-9 px-3 ${isTerjadwal ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700' : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700'} text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition cursor-pointer">
                             <span>${isTerjadwal ? 'Ubah Jadwal' : 'Jadwalkan'}</span>
@@ -6262,8 +6353,8 @@
         if (mobileContainer) mobileContainer.innerHTML = mobileHtml;
 
         if (selectAllCheckbox) {
-            selectAllCheckbox.checked = allPageSelected && pageItems.length > 0;
-            selectAllCheckbox.indeterminate = !allPageSelected && anyPageSelected;
+            selectAllCheckbox.checked = (eligibleCountOnPage > 0 && selectedEligibleOnPage === eligibleCountOnPage);
+            selectAllCheckbox.indeterminate = (selectedEligibleOnPage > 0 && selectedEligibleOnPage < eligibleCountOnPage);
         }
 
         const endIdx = Math.min(startIdx + state.sidangPageSize, totalItems);
@@ -9263,146 +9354,251 @@
     };
 
     // =========================================================
-    // MODAL FORM PENILAIAN INDIVIDUAL (MENYESUAIKAN DENGAN MASTER RUBRIK & SNAPSHOT)
+    // MODAL REKAPITULASI NILAI SIDANG (VIEW ONLY & PUBLISH CONTROL)
     // =========================================================
-    window.openModalPenilaianSidang = function (nim) {
+    window.openModalPenilaianSidang = window.openModalRekapNilaiSidang = function (nim) {
         const student = (state.sidangList || []).find(s => String(s.nim) === String(nim));
         if (!student) return;
 
         const modal = document.getElementById('modalPenilaianSidang');
-        const inputNim = document.getElementById('penilaianNim');
-        const namaMhsEl = document.getElementById('penilaianNamaMhs');
-        const nimMhsEl = document.getElementById('penilaianNimMhs');
-        const judulEl = document.getElementById('penilaianJudulTa');
-        const tglTextEl = document.getElementById('penilaianTglText');
-        const ruanganTextEl = document.getElementById('penilaianRuanganText');
-        const pb1El = document.getElementById('penilaianPembimbing1');
-        const pb2El = document.getElementById('penilaianPembimbing2');
-        const pg1El = document.getElementById('penilaianPenguji1');
-        const pg2El = document.getElementById('penilaianPenguji2');
-        const prodiSelect = document.getElementById('penilaianProdiSelect');
-        const prodiBadge = document.getElementById('penilaianProdiBadge');
-        const catatanEl = document.getElementById('penilaianCatatan');
-        const statusKelulusanEl = document.getElementById('penilaianStatusKelulusan');
-        const versiBadgeEl = document.getElementById('penilaianVersiBadge');
-        const tahunAkademikEl = document.getElementById('penilaianTahunAkademik');
+        const inputNim = document.getElementById('rekapNilaiNim') || document.getElementById('penilaianNim');
+        const namaMhsEl = document.getElementById('rekapNilaiNamaMhs');
+        const nimMhsEl = document.getElementById('rekapNilaiNimMhs');
+        const judulEl = document.getElementById('rekapNilaiJudulTa');
+        const prodiBadge = document.getElementById('rekapNilaiProdiBadge');
+        const tglTextEl = document.getElementById('rekapNilaiTglText');
+        const ruanganTextEl = document.getElementById('rekapNilaiRuanganText');
+
+        // Scorecard elements
+        const totalScoreEl = document.getElementById('rekapNilaiTotalScore');
+        const gradeBadgeEl = document.getElementById('rekapNilaiGradeBadge');
+        const statusKelulusanBadgeEl = document.getElementById('rekapNilaiStatusKelulusanBadge');
+        const kelengkapanContainer = document.getElementById('rekapNilaiKelengkapanBadgeContainer');
+
+        // Evaluator cards
+        const namaP1El = document.getElementById('rekapNamaP1');
+        const badgeP1El = document.getElementById('rekapBadgeP1');
+        const scoreP1El = document.getElementById('rekapScoreP1');
+        const catatanP1Wrap = document.getElementById('rekapCatatanP1Container');
+        const catatanP1Text = document.getElementById('rekapCatatanP1Text');
+
+        const namaP2El = document.getElementById('rekapNamaP2');
+        const badgeP2El = document.getElementById('rekapBadgeP2');
+        const scoreP2El = document.getElementById('rekapScoreP2');
+        const catatanP2Wrap = document.getElementById('rekapCatatanP2Container');
+        const catatanP2Text = document.getElementById('rekapCatatanP2Text');
+
+        const namaPg1El = document.getElementById('rekapNamaPenguji1');
+        const badgePg1El = document.getElementById('rekapBadgePenguji1');
+        const scorePg1El = document.getElementById('rekapScorePenguji1');
+        const catatanPg1Wrap = document.getElementById('rekapCatatanPenguji1Container');
+        const catatanPg1Text = document.getElementById('rekapCatatanPenguji1Text');
+
+        const namaPg2El = document.getElementById('rekapNamaPenguji2');
+        const badgePg2El = document.getElementById('rekapBadgePenguji2');
+        const scorePg2El = document.getElementById('rekapScorePenguji2');
+        const catatanPg2Wrap = document.getElementById('rekapCatatanPenguji2Container');
+        const catatanPg2Text = document.getElementById('rekapCatatanPenguji2Text');
+
+        // Publish controls
+        const currentPubPill = document.getElementById('rekapCurrentPublishStatusPill');
+        const blockedWarn = document.getElementById('rekapPublishBlockedWarning');
+        const blockedReason = document.getElementById('rekapPublishBlockedReason');
+        const formSection = document.getElementById('rekapPublishFormSection');
+        const btnSubmit = document.getElementById('btnSubmitRekapPublish');
+        const radioInstant = document.getElementById('rekapRadioInstant');
+        const radioSched = document.getElementById('rekapRadioScheduled');
+        const dateInput = document.getElementById('rekapTglPublish');
+        const catatanPublishInput = document.getElementById('rekapCatatanPublish');
 
         if (inputNim) inputNim.value = student.nim;
         if (namaMhsEl) namaMhsEl.textContent = student.nama_lengkap || student.nama || `Mahasiswa ${student.nim}`;
         if (nimMhsEl) nimMhsEl.textContent = `NIM: ${student.nim}`;
-        if (judulEl) judulEl.textContent = student.judul_1 || '-';
-        if (versiBadgeEl) versiBadgeEl.textContent = `v${student.versi_penilaian || 1}`;
+        if (judulEl) judulEl.textContent = student.judul_1 || student.judul || '-';
+        if (prodiBadge) prodiBadge.textContent = student.prodi || 'Informatika';
+
         if (tglTextEl) {
-            tglTextEl.textContent = student.tgl_sidang ? `${student.tgl_sidang} (${(student.jam_mulai_sidang || '').substring(0,5)} WIB)` : 'Belum Ada Jadwal';
+            tglTextEl.textContent = student.tgl_sidang ? `${student.tgl_sidang} (${(student.jam_mulai_sidang || '').substring(0, 5)} WIB)` : 'Belum Ada Jadwal';
         }
         if (ruanganTextEl) {
             ruanganTextEl.textContent = student.detail_nama_ruangan || student.ruangan_sidang || 'Belum Ditentukan';
         }
 
-        const pb1 = student.nama_pembimbing_1 || (student.pembimbing_1 ? 'NIP: ' + student.pembimbing_1 : '-');
-        const pb2 = student.nama_pembimbing_2 || (student.pembimbing_2 ? 'NIP: ' + student.pembimbing_2 : '-');
-        const pg1 = student.nama_penguji_1 || (student.penguji_1 ? 'NIP: ' + student.penguji_1 : '-');
-        const pg2 = student.nama_penguji_2 || (student.penguji_2 ? 'NIP: ' + student.penguji_2 : '-');
+        // Apply helper to fill card
+        function renderEvaluatorCard(namaEl, badgeEl, scoreEl, wrapCatatan, textCatatan, namaDosen, scoreVal, catatanVal) {
+            if (namaEl) namaEl.textContent = namaDosen || '-';
+            const numScore = parseFloat(scoreVal);
+            const hasScore = !isNaN(numScore) && numScore > 0;
 
-        if (pb1El) pb1El.textContent = `Pembimbing 1: ${pb1}`;
-        if (pb2El) pb2El.textContent = `Pembimbing 2: ${pb2}`;
-        if (pg1El) pg1El.textContent = `Penguji 1: ${pg1}`;
-        if (pg2El) pg2El.textContent = `Penguji 2: ${pg2}`;
-
-        const prodiKey = detectProdiKey(student.prodi || student.konsentrasi_dkv);
-        if (prodiSelect) prodiSelect.value = prodiKey;
-        if (prodiBadge) prodiBadge.textContent = prodiKey;
-
-        // Reset publication radio & input
-        const currentPub = student.status_publish_sidang || 'Draft';
-        if (currentPub === 'Published') {
-            const rad = document.getElementById('publishRadioInstant');
-            if (rad) rad.checked = true;
-            onPublishModeChange('Published');
-        } else if (currentPub === 'Scheduled') {
-            const rad = document.getElementById('publishRadioScheduled');
-            if (rad) rad.checked = true;
-            onPublishModeChange('Scheduled');
-            const dateInp = document.getElementById('penilaianTglPublish');
-            if (dateInp && student.tgl_publish_sidang) {
-                dateInp.value = student.tgl_publish_sidang.replace(' ', 'T').substring(0, 16);
+            if (scoreEl) {
+                scoreEl.textContent = hasScore ? numScore.toFixed(2) : '-';
+                scoreEl.className = hasScore ? 'text-base font-black text-slate-900 font-mono' : 'text-base font-bold text-slate-400 font-mono';
             }
-        } else {
-            const rad = document.getElementById('publishRadioDraft');
-            if (rad) rad.checked = true;
-            onPublishModeChange('Draft');
+
+            if (badgeEl) {
+                if (hasScore) {
+                    badgeEl.innerHTML = `<span class="px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs"><i class="fa-solid fa-check text-[9px] mr-1"></i> Sudah Menilai</span>`;
+                } else {
+                    badgeEl.innerHTML = `<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200"><i class="fa-solid fa-clock text-[9px] mr-1"></i> Belum Mengisi</span>`;
+                }
+            }
+
+            if (wrapCatatan && textCatatan) {
+                if (catatanVal && String(catatanVal).trim() !== '') {
+                    textCatatan.textContent = `"${catatanVal}"`;
+                    wrapCatatan.classList.remove('hidden');
+                } else {
+                    wrapCatatan.classList.add('hidden');
+                }
+            }
         }
 
-        // Setup dynamic Tahun Akademik options
-        setupTahunAkademikOptions(student.tahun_akademik);
+        // Helper to update Scorecard & Publish Section UI
+        function updateRekapModalState(data) {
+            const finalScore = parseFloat(data.nilai_akhir !== undefined ? data.nilai_akhir : (data.nilai_akhir_sidang !== undefined ? data.nilai_akhir_sidang : (data.skor_akhir_sidang || 0)));
+            const grade = data.grade || data.grade_sidang || '-';
+            const statusLulus = data.status_kelulusan || data.status_kelulusan_sidang || '-';
+            const isLengkap = !!data.is_nilai_lengkap;
+            const countTerisi = data.komponen_terisi_count || 0;
+            const missingList = data.komponen_belum_terisi || [];
 
-        // Ensure master rubrik is fresh
-        if (!state.masterRubrikList || state.masterRubrikList.length === 0) {
-            fetchMasterRubrikList(() => {
-                proceedLoadPenilaianDetail();
-            });
-        } else {
-            proceedLoadPenilaianDetail();
-        }
+            // 1. Scorecard
+            if (totalScoreEl) totalScoreEl.textContent = (isLengkap || finalScore > 0) ? finalScore.toFixed(2) : '0.00';
 
-        function proceedLoadPenilaianDetail() {
-            const getDetailUrl = cfg.ajaxGetDetailPenilaianSidangUrl || 
-                                 window.DASHBOARD_CONFIG?.ajaxGetDetailPenilaianSidangUrl || 
-                                 'ajax_get_detail_penilaian_sidang';
+            if (gradeBadgeEl) {
+                gradeBadgeEl.textContent = grade;
+                let gradeClass = 'bg-slate-100 text-slate-600 border-slate-200';
+                if (grade === 'A' || grade === 'AB') gradeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                else if (grade === 'B' || grade === 'BC') gradeClass = 'bg-amber-100 text-amber-800 border-amber-300';
+                else if (grade === 'C' || grade === 'D' || grade === 'E') gradeClass = 'bg-rose-100 text-rose-800 border-rose-300';
+                gradeBadgeEl.className = `px-3.5 py-1 rounded-xl text-lg font-black border shadow-2xs ${gradeClass}`;
+            }
 
-            if (getDetailUrl) {
-                fetch(`${getDetailUrl}?nim=${encodeURIComponent(student.nim)}`)
-                    .then(r => r.json())
-                    .then(res => {
-                        if (res && res.status && res.data) {
-                            const d = res.data;
-                            if (d.catatan_koor && catatanEl) catatanEl.value = d.catatan_koor;
-                            if (d.status_kelulusan_sidang && statusKelulusanEl) statusKelulusanEl.value = d.status_kelulusan_sidang;
-                            if (d.versi_penilaian && versiBadgeEl) versiBadgeEl.textContent = `v${d.versi_penilaian}`;
-                            if (d.tahun_akademik) {
-                                setupTahunAkademikOptions(d.tahun_akademik);
-                            }
+            if (statusKelulusanBadgeEl) {
+                statusKelulusanBadgeEl.textContent = statusLulus !== '-' ? statusLulus : (isLengkap ? 'Lulus' : 'Belum Dinilai Lengkap');
+                if (statusLulus === 'Lulus') {
+                    statusKelulusanBadgeEl.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs';
+                } else if (statusLulus === 'Lulus dengan Revisi') {
+                    statusKelulusanBadgeEl.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-amber-100 text-amber-800 border border-amber-300 shadow-2xs';
+                } else if (statusLulus === 'Tidak Lulus') {
+                    statusKelulusanBadgeEl.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-rose-100 text-rose-800 border border-rose-300 shadow-2xs';
+                } else {
+                    statusKelulusanBadgeEl.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-slate-100 text-slate-700 border border-slate-300 shadow-2xs';
+                }
+            }
 
-                            // Update publish state from server
-                            if (d.status_publish_sidang) {
-                                if (d.status_publish_sidang === 'Published') {
-                                    const rad = document.getElementById('publishRadioInstant');
-                                    if (rad) rad.checked = true;
-                                    onPublishModeChange('Published');
-                                } else if (d.status_publish_sidang === 'Scheduled') {
-                                    const rad = document.getElementById('publishRadioScheduled');
-                                    if (rad) rad.checked = true;
-                                    onPublishModeChange('Scheduled');
-                                    const dateInp = document.getElementById('penilaianTglPublish');
-                                    if (dateInp && d.tgl_publish_sidang) {
-                                        dateInp.value = d.tgl_publish_sidang.replace(' ', 'T').substring(0, 16);
-                                    }
-                                } else {
-                                    const rad = document.getElementById('publishRadioDraft');
-                                    if (rad) rad.checked = true;
-                                    onPublishModeChange('Draft');
-                                }
-                            }
+            if (kelengkapanContainer) {
+                if (isLengkap) {
+                    kelengkapanContainer.innerHTML = `
+                        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-xl text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs">
+                            <i class="fa-solid fa-circle-check text-emerald-600"></i> Lengkap (4/4 Terisi)
+                        </span>
+                    `;
+                } else {
+                    kelengkapanContainer.innerHTML = `
+                        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-xl text-[11px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300 shadow-2xs" title="Belum mengisi: ${escapeHtml(missingList.join(', '))}">
+                            <i class="fa-solid fa-circle-exclamation text-rose-600"></i> Belum Lengkap (${countTerisi}/4)
+                        </span>
+                    `;
+                }
+            }
 
-                            setupPenilaianPeminatanOptions(prodiKey, d.peminatan || student.peminatan);
-                            renderPenilaianRubrik(d.detail_penilaian_parsed);
-                            calculatePenilaianScore();
-                        } else {
-                            setupPenilaianPeminatanOptions(prodiKey, student.peminatan);
-                            renderPenilaianRubrik(null);
-                            calculatePenilaianScore();
-                        }
-                    })
-                    .catch(() => {
-                        setupPenilaianPeminatanOptions(prodiKey, student.peminatan);
-                        renderPenilaianRubrik(null);
-                        calculatePenilaianScore();
-                    });
+            // 2. Evaluator Cards
+            const pb1Name = data.nama_pembimbing_1 || (data.pembimbing_1 ? `NIP: ${data.pembimbing_1}` : '-');
+            const pb2Name = data.nama_pembimbing_2 || (data.pembimbing_2 ? `NIP: ${data.pembimbing_2}` : '-');
+            const pg1Name = data.nama_penguji_1 || (data.penguji_1 ? `NIP: ${data.penguji_1}` : '-');
+            const pg2Name = data.nama_penguji_2 || (data.penguji_2 ? `NIP: ${data.penguji_2}` : '-');
+
+            const scoreP1 = data.nilaisidang_pembimbing1 !== undefined ? data.nilaisidang_pembimbing1 : data.nilai_sidang_pembimbing_1;
+            const catP1 = data.evaluasi_pembimbing1 || data.penilaiansidang_pembimbing1 || data.catatan_pembimbing_1;
+
+            const scoreP2 = data.nilaisidang_pembimbing2 !== undefined ? data.nilaisidang_pembimbing2 : data.nilai_sidang_pembimbing_2;
+            const catP2 = data.evaluasi_pembimbing2 || data.penilaiansidang_pembimbing2 || data.catatan_pembimbing_2;
+
+            const scorePg1 = data.nilaisidang_penguji1 !== undefined ? data.nilaisidang_penguji1 : data.nilai_sidang_penguji_1;
+            const catPg1 = data.evaluasi_penguji1 || data.penilaiansidang_penguji1 || data.catatan_penguji_1;
+
+            const scorePg2 = data.nilaisidang_penguji2 !== undefined ? data.nilaisidang_penguji2 : data.nilai_sidang_penguji_2;
+            const catPg2 = data.evaluasi_penguji2 || data.penilaiansidang_penguji2 || data.catatan_penguji_2;
+
+            renderEvaluatorCard(namaP1El, badgeP1El, scoreP1El, catatanP1Wrap, catatanP1Text, pb1Name, scoreP1, catP1);
+            renderEvaluatorCard(namaP2El, badgeP2El, scoreP2El, catatanP2Wrap, catatanP2Text, pb2Name, scoreP2, catP2);
+            renderEvaluatorCard(namaPg1El, badgePg1El, scorePg1El, catatanPg1Wrap, catatanPg1Text, pg1Name, scorePg1, catPg1);
+            renderEvaluatorCard(namaPg2El, badgePg2El, scorePg2El, catatanPg2Wrap, catatanPg2Text, pg2Name, scorePg2, catPg2);
+
+            // 3. Publish Control Section
+            const pubStatus = data.status_publish_sidang || data.status_publish || 'Draft';
+            if (currentPubPill) {
+                if (pubStatus === 'Published') {
+                    currentPubPill.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300';
+                    currentPubPill.innerHTML = '<i class="fa-solid fa-globe mr-1"></i> Live (Terpublikasi)';
+                } else if (pubStatus === 'Scheduled') {
+                    currentPubPill.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-100 text-sky-800 border border-sky-300';
+                    currentPubPill.innerHTML = `<i class="fa-solid fa-clock mr-1"></i> Terjadwal: ${escapeHtml(data.tgl_publish_sidang || '')}`;
+                } else {
+                    currentPubPill.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-200';
+                    currentPubPill.innerHTML = '<i class="fa-solid fa-eye-slash mr-1"></i> Draft (Privat)';
+                }
+            }
+
+            if (!isLengkap) {
+                if (blockedWarn) {
+                    blockedWarn.classList.remove('hidden');
+                    if (blockedReason) {
+                        blockedReason.textContent = `Nilai akhir belum dapat dipublikasikan karena ${missingList.length} evaluator belum mengisi nilai (${missingList.join(', ')}).`;
+                    }
+                }
+                if (formSection) formSection.classList.add('hidden');
+                if (btnSubmit) {
+                    btnSubmit.disabled = true;
+                    btnSubmit.classList.add('opacity-50', 'cursor-not-allowed');
+                }
             } else {
-                setupPenilaianPeminatanOptions(prodiKey, student.peminatan);
-                renderPenilaianRubrik(null);
-                calculatePenilaianScore();
+                if (blockedWarn) blockedWarn.classList.add('hidden');
+                if (formSection) formSection.classList.remove('hidden');
+                if (btnSubmit) {
+                    btnSubmit.disabled = false;
+                    btnSubmit.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+
+                if (pubStatus === 'Scheduled') {
+                    if (radioSched) radioSched.checked = true;
+                    onRekapPublishModeChange('Scheduled');
+                    if (dateInput && data.tgl_publish_sidang) {
+                        dateInput.value = data.tgl_publish_sidang.replace(' ', 'T').substring(0, 16);
+                    }
+                } else {
+                    if (radioInstant) radioInstant.checked = true;
+                    onRekapPublishModeChange('Published');
+                }
             }
+
+            if (catatanPublishInput && data.catatan_publish_sidang) {
+                catatanPublishInput.value = data.catatan_publish_sidang;
+            }
+        }
+
+        // Initial render from local state
+        updateRekapModalState(student);
+
+        // Fetch fresh detail from server
+        const getDetailUrl = cfg.ajaxGetDetailPenilaianSidangUrl || 
+                             window.DASHBOARD_CONFIG?.ajaxGetDetailPenilaianSidangUrl || 
+                             'ajax_get_detail_penilaian_sidang';
+
+        if (getDetailUrl) {
+            fetch(`${getDetailUrl}?nim=${encodeURIComponent(student.nim)}`)
+                .then(r => r.json())
+                .then(res => {
+                    if (res && res.status && res.data) {
+                        // Merge fresh server data into student object
+                        Object.assign(student, res.data);
+                        updateRekapModalState(res.data);
+                    }
+                })
+                .catch(err => {
+                    console.warn('Could not fetch latest detail penilaian:', err);
+                });
         }
 
         if (modal) {
@@ -9423,389 +9619,386 @@
         }
     };
 
-    function setupTahunAkademikOptions(selectedYear) {
-        const input = document.getElementById('penilaianTahunAkademik');
-        const datalist = document.getElementById('listTahunAkademik');
-        if (!input) return;
+    window.onRekapPublishModeChange = function (mode) {
+        const dateInput = document.getElementById('rekapTglPublish');
+        const hint = document.getElementById('rekapTglPublishHint');
+        if (!dateInput) return;
 
-        const now = new Date();
-        const curYear = now.getFullYear();
-        const curMonth = now.getMonth() + 1;
-        const defaultActive = (curMonth >= 8) ? `${curYear}/${curYear + 1}` : `${curYear - 1}/${curYear}`;
-        const activeTarget = selectedYear || defaultActive;
-
-        input.value = activeTarget;
-
-        if (datalist) {
-            const yearList = [];
-            for (let y = curYear + 3; y >= curYear - 5; y--) {
-                yearList.push(`${y}/${y + 1}`);
+        if (mode === 'Scheduled') {
+            dateInput.disabled = false;
+            dateInput.classList.remove('bg-slate-100', 'text-slate-400');
+            dateInput.classList.add('bg-white', 'text-slate-800');
+            if (!dateInput.value) {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                tomorrow.setHours(8, 0, 0, 0);
+                dateInput.value = tomorrow.toISOString().substring(0, 16);
             }
-
-            if (activeTarget && !yearList.includes(activeTarget)) {
-                yearList.unshift(activeTarget);
-            }
-
-            let html = '';
-            yearList.forEach(ta => {
-                const isCur = (ta === defaultActive) ? ' (Aktif)' : '';
-                html += `<option value="${escapeHtml(ta)}">${escapeHtml(ta)}${isCur}</option>`;
-            });
-            datalist.innerHTML = html;
-        }
-    }
-
-    function setupPenilaianPeminatanOptions(prodiKey, selectedPeminatan) {
-        const peminatanSelect = document.getElementById('penilaianPeminatanSelect');
-        if (!peminatanSelect) return;
-
-        let peminatanList = [];
-        (state.masterRubrikList || []).forEach(m => {
-            if (m.prodi === prodiKey && m.peminatan && !peminatanList.includes(m.peminatan)) {
-                peminatanList.push(m.peminatan);
-            }
-        });
-
-        if (peminatanList.length === 0) {
-            const prodiData = RUBRIK_PENILAIAN_PRODI[prodiKey] || RUBRIK_PENILAIAN_PRODI['DKV'];
-            peminatanList = Object.keys(prodiData.peminatan || {});
-        }
-
-        let html = '';
-        peminatanList.forEach(p => {
-            const isSel = (p === selectedPeminatan) || (!selectedPeminatan && p === peminatanList[0]);
-            html += `<option value="${escapeHtml(p)}" ${isSel ? 'selected' : ''}>${escapeHtml(p)}</option>`;
-        });
-
-        peminatanSelect.innerHTML = html;
-    }
-
-    window.onPenilaianProdiChange = function (prodiVal) {
-        const prodiKey = detectProdiKey(prodiVal);
-        const prodiBadge = document.getElementById('penilaianProdiBadge');
-        if (prodiBadge) prodiBadge.textContent = prodiKey;
-
-        setupPenilaianPeminatanOptions(prodiKey, null);
-        renderPenilaianRubrik(null);
-        calculatePenilaianScore();
-    };
-
-    window.onPenilaianPeminatanChange = function () {
-        renderPenilaianRubrik(null);
-        calculatePenilaianScore();
-    };
-
-    window.renderPenilaianRubrik = function (existingParsed) {
-        const container = document.getElementById('penilaianRubrikContainer');
-        const prodiSelect = document.getElementById('penilaianProdiSelect');
-        const peminatanSelect = document.getElementById('penilaianPeminatanSelect');
-        const totalBobotLabel = document.getElementById('penilaianTotalBobotLabel');
-        if (!container) return;
-
-        const prodiKey = detectProdiKey(prodiSelect ? prodiSelect.value : 'DKV');
-        const peminatanKey = peminatanSelect ? peminatanSelect.value : '';
-
-        let criteriaList = [];
-
-        // SELF-CONTAINED SNAPSHOT CHECK:
-        // If existingParsed has its own snapshot criteria, use it directly!
-        // This ensures deleting a criterion in the master rubric NEVER breaks existing student evaluations.
-        if (existingParsed && existingParsed.criteria && Array.isArray(existingParsed.criteria) && existingParsed.criteria.length > 0) {
-            criteriaList = existingParsed.criteria;
-        } else if (existingParsed && Array.isArray(existingParsed) && existingParsed.length > 0 && (existingParsed[0].kriteria || existingParsed[0].title)) {
-            criteriaList = existingParsed;
+            dateInput.focus();
+            if (hint) hint.textContent = 'Tentukan tanggal dan jam publikasi nilai.';
         } else {
-            // Load from Master Rubrik
-            const masterItem = (state.masterRubrikList || []).find(m => m.prodi === prodiKey && m.peminatan === peminatanKey);
-            if (masterItem && Array.isArray(masterItem.kriteria) && masterItem.kriteria.length > 0) {
-                criteriaList = masterItem.kriteria;
-            } else {
-                const prodiData = RUBRIK_PENILAIAN_PRODI[prodiKey] || RUBRIK_PENILAIAN_PRODI['DKV'];
-                criteriaList = prodiData.peminatan[peminatanKey] || prodiData.peminatan[Object.keys(prodiData.peminatan)[0]] || [];
-            }
+            dateInput.disabled = true;
+            dateInput.classList.add('bg-slate-100', 'text-slate-400');
+            dateInput.classList.remove('bg-white', 'text-slate-800');
+            if (hint) hint.textContent = 'Nilai akan langsung dapat diakses oleh mahasiswa seketika.';
         }
-
-        let totalCalculatedBobot = 0;
-        let html = '';
-
-        criteriaList.forEach((crit, idx) => {
-            let existingScore = '';
-            const critId = crit.id || `k${idx + 1}`;
-            const critTitle = crit.title || crit.kriteria || `Penilaian ${idx + 1}`;
-            const critDesc = crit.desc || crit.deskripsi || 'Indikator penilaian kompetensi karya sidang tugas akhir.';
-            const critBobot = parseFloat(crit.bobot) || 25;
-            totalCalculatedBobot += critBobot;
-
-            if (typeof crit.nilai !== 'undefined' && crit.nilai !== null && crit.nilai !== '') {
-                existingScore = crit.nilai;
-            } else if (existingParsed && existingParsed.scores && typeof existingParsed.scores[critId] !== 'undefined') {
-                existingScore = existingParsed.scores[critId];
-            } else if (existingParsed && Array.isArray(existingParsed)) {
-                const found = existingParsed.find(ep => ep.id === critId || (ep.kriteria && ep.kriteria === critTitle));
-                if (found && typeof found.nilai !== 'undefined') {
-                    existingScore = found.nilai;
-                } else if (existingParsed[idx] && typeof existingParsed[idx].nilai !== 'undefined') {
-                    existingScore = existingParsed[idx].nilai;
-                }
-            }
-
-            html += `
-                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-2xs hover:border-amber-400 hover:shadow-md transition-all space-y-2.5">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div class="flex items-start gap-3">
-                            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-md shadow-amber-500/20 mt-0.5">
-                                ${idx + 1}
-                            </div>
-                            <div>
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-800 border border-amber-200">
-                                        Kriteria #${idx + 1}
-                                    </span>
-                                    <h5 class="text-xs sm:text-sm font-extrabold text-slate-900">${escapeHtml(critTitle)}</h5>
-                                </div>
-                                <p class="text-[11px] text-slate-500 leading-relaxed mt-1">${escapeHtml(critDesc)}</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-3 shrink-0 self-end sm:self-center">
-                            <span class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200">
-                                Bobot: <strong class="text-amber-700">${critBobot}%</strong>
-                            </span>
-                            <div class="w-28">
-                                <input type="number" 
-                                       min="0" 
-                                       max="100" 
-                                       step="0.5" 
-                                       id="penilaian_score_${critId}" 
-                                       data-bobot="${critBobot}" 
-                                       data-crit-id="${critId}"
-                                       data-crit-title="${escapeHtml(critTitle)}"
-                                       data-crit-desc="${escapeHtml(critDesc)}"
-                                       value="${existingScore !== '' ? escapeHtml(existingScore) : ''}" 
-                                       placeholder="Nilai (0-100)" 
-                                       oninput="calculatePenilaianScore()" 
-                                       class="rubrik-score-input w-full px-3 py-2 bg-slate-50 border border-slate-300 focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 rounded-xl text-center text-sm font-black text-slate-900 outline-none transition" 
-                                       required>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-
-        if (totalBobotLabel) {
-            totalBobotLabel.textContent = `${totalCalculatedBobot}%`;
-            totalBobotLabel.className = (totalCalculatedBobot === 100) ? 'text-slate-700 font-extrabold' : 'text-rose-600 font-extrabold';
-        }
-
-        container.innerHTML = html;
     };
 
-    window.calculatePenilaianScore = function () {
-        const inputs = document.querySelectorAll('.rubrik-score-input');
-        const totalScoreEl = document.getElementById('penilaianTotalScore');
-        const gradeBadgeEl = document.getElementById('penilaianGradeBadge');
-        const statusKelulusanEl = document.getElementById('penilaianStatusKelulusan');
+    window.submitSingleRekapPublish = function () {
+        const nim = document.getElementById('rekapNilaiNim')?.value || document.getElementById('penilaianNim')?.value;
+        const student = (state.sidangList || []).find(s => String(s.nim) === String(nim));
 
-        let totalWeighted = 0;
-        let totalBobot = 0;
-        let hasAnyInput = false;
-
-        inputs.forEach(inp => {
-            const val = parseFloat(inp.value);
-            const bobot = parseFloat(inp.getAttribute('data-bobot')) || 0;
-            if (!isNaN(val)) {
-                totalWeighted += (val * bobot) / 100;
-                hasAnyInput = true;
-            }
-            totalBobot += bobot;
-        });
-
-        const finalScore = hasAnyInput ? totalWeighted : 0;
-        if (totalScoreEl) totalScoreEl.textContent = finalScore.toFixed(2);
-
-        // Grade Mapping: A (>=85), AB (>=77.5), B (>=70), BC (>=62.5), C (>=55), D (>=45), E (<45)
-        let grade = '-';
-        let gradeClass = 'bg-slate-100 text-slate-600 border-slate-200';
-
-        if (hasAnyInput) {
-            if (finalScore >= 85) {
-                grade = 'A';
-                gradeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
-            } else if (finalScore >= 77.5) {
-                grade = 'AB';
-                gradeClass = 'bg-teal-100 text-teal-800 border-teal-300';
-            } else if (finalScore >= 70) {
-                grade = 'B';
-                gradeClass = 'bg-cyan-100 text-cyan-800 border-cyan-300';
-            } else if (finalScore >= 62.5) {
-                grade = 'BC';
-                gradeClass = 'bg-amber-100 text-amber-800 border-amber-300';
-            } else if (finalScore >= 55) {
-                grade = 'C';
-                gradeClass = 'bg-yellow-100 text-yellow-800 border-yellow-300';
-            } else if (finalScore >= 45) {
-                grade = 'D';
-                gradeClass = 'bg-rose-100 text-rose-800 border-rose-300';
-            } else {
-                grade = 'E';
-                gradeClass = 'bg-rose-200 text-rose-900 border-rose-400';
-            }
-        }
-
-        if (gradeBadgeEl) {
-            gradeBadgeEl.textContent = grade;
-            gradeBadgeEl.className = `px-4 py-1 rounded-xl text-lg font-black border shadow-2xs ${gradeClass}`;
-        }
-
-        if (statusKelulusanEl && hasAnyInput) {
-            if (finalScore >= 70) {
-                statusKelulusanEl.value = 'Lulus';
-            } else if (finalScore >= 55) {
-                statusKelulusanEl.value = 'Lulus dengan Revisi';
-            } else {
-                statusKelulusanEl.value = 'Tidak Lulus';
-            }
-        }
-
-        return { score: finalScore, grade: grade };
-    };
-
-    window.submitPenilaianSidang = function (e) {
-        e.preventDefault();
-
-        const nim = document.getElementById('penilaianNim')?.value;
-        const prodi = document.getElementById('penilaianProdiSelect')?.value;
-        const peminatan = document.getElementById('penilaianPeminatanSelect')?.value;
-        const tahunAkademik = document.getElementById('penilaianTahunAkademik')?.value || '2026/2027';
-        const statusKelulusan = document.getElementById('penilaianStatusKelulusan')?.value;
-        const catatan = document.getElementById('penilaianCatatan')?.value;
-        const calc = calculatePenilaianScore();
-
-        // Publish Mode & Start Date
-        const statusPublish = document.querySelector('input[name="status_publish"]:checked')?.value || 'Draft';
-        const tglPublishInp = document.getElementById('penilaianTglPublish')?.value || '';
-
-        if (!nim) {
-            Swal.fire({ icon: 'error', title: 'Error', text: 'NIM mahasiswa tidak valid.' });
+        if (!student) {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Data mahasiswa tidak ditemukan.' });
             return;
         }
 
-        const scoreInputs = document.querySelectorAll('.rubrik-score-input');
-        const details = [];
-        let allValid = true;
-
-        scoreInputs.forEach(inp => {
-            const val = parseFloat(inp.value);
-            if (isNaN(val) || val < 0 || val > 100) {
-                allValid = false;
-            }
-            details.push({
-                id: inp.getAttribute('data-crit-id'),
-                title: inp.getAttribute('data-crit-title'),
-                desc: inp.getAttribute('data-crit-desc') || '',
-                bobot: parseFloat(inp.getAttribute('data-bobot')),
-                nilai: isNaN(val) ? 0 : val
-            });
-        });
-
-        if (!allValid) {
+        if (!student.is_nilai_lengkap) {
             Swal.fire({
                 icon: 'warning',
                 title: 'Nilai Belum Lengkap',
-                text: 'Pastikan seluruh kolom nilai kriteria terisi dengan rentang angka 0 hingga 100.'
+                html: `Tidak dapat mempublikasikan nilai karena masih ada komponen nilai yang belum terisi.<br><span class="text-xs text-slate-500 mt-1 block">Komponen belum diisi: <strong>${(student.komponen_belum_terisi || []).join(', ')}</strong></span>`
             });
             return;
         }
+
+        const modeRadio = document.querySelector('input[name="rekap_status_publish"]:checked');
+        const statusPublish = modeRadio ? modeRadio.value : 'Published';
+        const tglPublishInp = document.getElementById('rekapTglPublish')?.value || '';
+        const catatanPublish = document.getElementById('rekapCatatanPublish')?.value || '';
+
+        if (statusPublish === 'Scheduled' && !tglPublishInp) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Jadwal Publikasi Belum Ditentukan',
+                text: 'Silakan pilih tanggal dan jam mulai rilis publikasi nilai.'
+            });
+            return;
+        }
+
+        const promptTitle = statusPublish === 'Published' ? 'Publikasikan Nilai Sekarang?' : 'Jadwalkan Publikasi Nilai?';
+        const promptText = statusPublish === 'Published'
+            ? `Nilai akhir mahasiswa ${student.nama_lengkap || student.nama} (${student.nim}) akan langsung terbit dan dapat dilihat oleh mahasiswa.`
+            : `Nilai akhir akan dijadwalkan terbit pada ${tglPublishInp.replace('T', ' ')}.`;
+
+        Swal.fire({
+            title: promptTitle,
+            text: promptText,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#059669',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Ya, Konfirmasi',
+            cancelButtonText: 'Batal'
+        }).then(result => {
+            if (!result.isConfirmed) return;
+
+            const btn = document.getElementById('btnSubmitRekapPublish');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i> Memproses Publikasi...';
+            }
+
+            const formData = new FormData();
+            formData.append('nim', nim);
+            formData.append('status_publish', statusPublish);
+            formData.append('tgl_publish', tglPublishInp.replace('T', ' '));
+            formData.append('catatan', catatanPublish);
+
+            const targetUrl = cfg.ajaxPublishPenilaianSidangUrl || 
+                              window.DASHBOARD_CONFIG?.ajaxPublishPenilaianSidangUrl || 
+                              'ajax_publish_penilaian_sidang';
+
+            fetch(targetUrl, {
+                method: 'POST',
+                body: formData
+            })
+            .then(async r => {
+                const text = await r.text();
+                try {
+                    return JSON.parse(text);
+                } catch (err) {
+                    console.error('Server non-JSON response:', text);
+                    throw new Error('Server mengembalikan respon tidak valid: ' + text.substring(0, 150));
+                }
+            })
+            .then(res => {
+                if (res && res.status) {
+                    // Update local state
+                    student.status_publish_sidang = statusPublish;
+                    student.tgl_publish_sidang = tglPublishInp ? tglPublishInp.replace('T', ' ') : null;
+                    student.catatan_publish_sidang = catatanPublish;
+
+                    closeModalPenilaianSidang();
+                    renderSidangTable();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: res.message || 'Status publikasi nilai berhasil diperbarui.',
+                        confirmButtonColor: '#059669'
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Mempublikasikan',
+                        text: (res && res.message) ? res.message : 'Terjadi kesalahan saat memproses publikasi nilai.'
+                    });
+                }
+            })
+            .catch(err => {
+                console.error('Error publish penilaian:', err);
+                Swal.fire({ icon: 'error', title: 'Error', text: err.message || 'Gagal terhubung ke server.' });
+            })
+            .finally(() => {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-bullhorn text-xs sm:text-sm"></i> Publikasikan Nilai';
+                }
+            });
+        });
+    };
+
+    // =========================================================
+    // MODAL BATCH PUBLISH NILAI MAHASISWA TERPILIH
+    // =========================================================
+    window.openModalBatchPublishNilai = function () {
+        const selectedNims = state.sidangSelectedStudents || [];
+        if (selectedNims.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Tidak Ada Mahasiswa Terpilih',
+                text: 'Silakan pilih minimal 1 mahasiswa dari tabel sidang tugas akhir.'
+            });
+            return;
+        }
+
+        const allStudents = state.sidangList || [];
+        const selectedObjs = allStudents.filter(s => selectedNims.includes(String(s.nim)));
+
+        const validStudents = selectedObjs.filter(s => !!s.is_nilai_lengkap);
+        const invalidStudents = selectedObjs.filter(s => !s.is_nilai_lengkap);
+
+        if (validStudents.length === 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Nilai Belum Lengkap',
+                html: `Seluruh (${selectedObjs.length}) mahasiswa terpilih belum memiliki nilai lengkap dari 4 evaluator.<br><span class="text-xs text-slate-500 mt-1 block">Publikasi hanya dapat dilakukan setelah seluruh komponen nilai (P1, P2, Penguji 1, Penguji 2) terisi.</span>`
+            });
+            return;
+        }
+
+        const modal = document.getElementById('modalBatchPublishNilai');
+        const badgeCount = document.getElementById('batchPublishValidCountBadge');
+        const listContainer = document.getElementById('batchPublishStudentsListContainer');
+        const radioInstant = document.getElementById('batchPublishRadioInstant');
+        const radioSched = document.getElementById('batchPublishRadioScheduled');
+        const dateWrap = document.getElementById('batchPublishDateWrap');
+        const dateInput = document.getElementById('batchPublishDatetimeInput');
+        const catatanInput = document.getElementById('batchPublishCatatanInput');
+
+        if (badgeCount) {
+            badgeCount.textContent = `${validStudents.length} Mahasiswa Siap Rilis`;
+            if (invalidStudents.length > 0) {
+                badgeCount.innerHTML = `<span class="text-emerald-700">${validStudents.length} Siap</span> &bull; <span class="text-rose-600">${invalidStudents.length} Belum Lengkap (Dilewati)</span>`;
+            }
+        }
+
+        if (listContainer) {
+            let html = '';
+            validStudents.forEach(st => {
+                html += `
+                    <div class="flex items-center justify-between p-2 rounded-xl bg-emerald-50/60 border border-emerald-200/80 text-xs">
+                        <div class="flex items-center gap-2 truncate">
+                            <i class="fa-solid fa-circle-check text-emerald-600 text-xs shrink-0"></i>
+                            <span class="font-bold text-slate-800 truncate">${escapeHtml(st.nama_lengkap || st.nama || st.nim)}</span>
+                            <span class="text-slate-400 font-mono text-[11px]">(${escapeHtml(st.nim)})</span>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-md font-mono font-bold text-[11px] bg-white text-emerald-800 border border-emerald-200 shrink-0">
+                            Skor: ${st.skor_akhir_sidang || st.nilai_akhir_sidang || '0.00'} (${st.grade_sidang || '-'})
+                        </span>
+                    </div>
+                `;
+            });
+
+            if (invalidStudents.length > 0) {
+                invalidStudents.forEach(st => {
+                    html += `
+                        <div class="flex items-center justify-between p-2 rounded-xl bg-rose-50/60 border border-rose-200/70 text-xs opacity-75">
+                            <div class="flex items-center gap-2 truncate">
+                                <i class="fa-solid fa-triangle-exclamation text-rose-500 text-xs shrink-0"></i>
+                                <span class="font-bold text-slate-700 truncate">${escapeHtml(st.nama_lengkap || st.nama || st.nim)}</span>
+                                <span class="text-slate-400 font-mono text-[11px]">(${escapeHtml(st.nim)})</span>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200 shrink-0">
+                                Nilai Belum Lengkap (${st.komponen_terisi_count || 0}/4)
+                            </span>
+                        </div>
+                    `;
+                });
+            }
+
+            listContainer.innerHTML = html;
+        }
+
+        // Reset radio and datetime
+        if (radioInstant) radioInstant.checked = true;
+        if (dateWrap) dateWrap.classList.add('hidden');
+        if (dateInput) {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(8, 0, 0, 0);
+            dateInput.value = tomorrow.toISOString().substring(0, 16);
+        }
+        if (catatanInput) catatanInput.value = '';
+
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            modal.style.display = 'flex';
+            document.body.classList.add('overflow-hidden');
+        }
+    };
+
+    window.closeModalBatchPublishNilai = function () {
+        const modal = document.getElementById('modalBatchPublishNilai');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            modal.style.display = 'none';
+            document.body.classList.remove('overflow-hidden');
+        }
+    };
+
+    window.onBatchPublishModeChange = function (mode) {
+        const dateWrap = document.getElementById('batchPublishDateWrap');
+        const dateInput = document.getElementById('batchPublishDatetimeInput');
+        if (!dateWrap) return;
+
+        if (mode === 'Scheduled') {
+            dateWrap.classList.remove('hidden');
+            if (dateInput) dateInput.focus();
+        } else {
+            dateWrap.classList.add('hidden');
+        }
+    };
+
+    window.submitBatchPublishNilai = function () {
+        const selectedNims = state.sidangSelectedStudents || [];
+        const allStudents = state.sidangList || [];
+        const validStudents = allStudents.filter(s => selectedNims.includes(String(s.nim)) && !!s.is_nilai_lengkap);
+
+        if (validStudents.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Tidak Ada Mahasiswa yang Siap Dipublish',
+                text: 'Pastikan mahasiswa yang dipilih telah memiliki nilai lengkap dari 4 evaluator.'
+            });
+            return;
+        }
+
+        const modeRadio = document.querySelector('input[name="batch_publish_mode"]:checked');
+        const statusPublish = modeRadio ? modeRadio.value : 'Published';
+        const tglPublishInp = document.getElementById('batchPublishDatetimeInput')?.value || '';
+        const catatanPublish = document.getElementById('batchPublishCatatanInput')?.value || '';
 
         if (statusPublish === 'Scheduled' && !tglPublishInp) {
             Swal.fire({
                 icon: 'warning',
                 title: 'Jadwal Publikasi Belum Dipilih',
-                text: 'Silakan tentukan tanggal dan jam mulai rilis publikasi nilai.'
+                text: 'Silakan tentukan tanggal dan jam publikasi serentak.'
             });
             return;
         }
 
-        const btn = document.getElementById('btnSubmitPenilaianSidang');
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i> Menyimpan & Mengunci Versi...';
-        }
+        const promptTitle = statusPublish === 'Published' ? 'Publikasikan Nilai Massal Sekarang?' : 'Jadwalkan Publikasi Nilai Massal?';
+        const promptText = statusPublish === 'Published'
+            ? `Sebanyak ${validStudents.length} mahasiswa akan langsung dipublikasikan nilainya ke akun mahasiswa masing-masing.`
+            : `Sebanyak ${validStudents.length} mahasiswa akan dijadwalkan terbit pada ${tglPublishInp.replace('T', ' ')}.`;
 
-        const formData = new FormData();
-        formData.append('nim', nim);
-        formData.append('prodi', prodi);
-        formData.append('peminatan', peminatan);
-        formData.append('tahun_akademik', tahunAkademik);
-        formData.append('nilai_akhir', calc.score.toFixed(2));
-        formData.append('grade', calc.grade);
-        formData.append('status_kelulusan', statusKelulusan);
-        formData.append('detail_penilaian', JSON.stringify(details));
-        formData.append('status_publish', statusPublish);
-        formData.append('tgl_publish', tglPublishInp.replace('T', ' '));
-        formData.append('catatan', catatan || '');
+        Swal.fire({
+            title: promptTitle,
+            text: promptText,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#059669',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Ya, Publikasikan Sekarang',
+            cancelButtonText: 'Batal'
+        }).then(result => {
+            if (!result.isConfirmed) return;
 
-        const targetUrl = cfg.ajaxSimpanPenilaianSidangUrl || 
-                          window.DASHBOARD_CONFIG?.ajaxSimpanPenilaianSidangUrl || 
-                          'ajax_simpan_penilaian_sidang';
-
-        fetch(targetUrl, {
-            method: 'POST',
-            body: formData
-        })
-        .then(async r => {
-            const text = await r.text();
-            try {
-                return JSON.parse(text);
-            } catch (err) {
-                console.error('Server non-JSON response:', text);
-                throw new Error('Server mengembalikan respon tidak valid: ' + text.substring(0, 150));
-            }
-        })
-        .then(res => {
-            if (res && res.status) {
-                // Update local state
-                const mhs = (state.sidangList || []).find(s => String(s.nim) === String(nim));
-                if (mhs) {
-                    mhs.peminatan = peminatan;
-                    mhs.nilai_akhir_sidang = calc.score.toFixed(2);
-                    mhs.grade_sidang = calc.grade;
-                    mhs.status_kelulusan_sidang = statusKelulusan;
-                    mhs.status_publish_sidang = statusPublish;
-                    mhs.tgl_publish_sidang = tglPublishInp ? tglPublishInp.replace('T', ' ') : null;
-                    mhs.versi_penilaian = res.versi_penilaian || ((mhs.versi_penilaian || 1) + 1);
-                }
-
-                closeModalPenilaianSidang();
-                renderSidangTable();
-
-                const pubText = statusPublish === 'Published' 
-                    ? 'Nilai langsung dipublikasikan ke mahasiswa.' 
-                    : (statusPublish === 'Scheduled' ? `Nilai dijadwalkan terbit pada ${tglPublishInp.replace('T', ' ')}.` : 'Nilai disimpan sebagai draft privat.');
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Penilaian Berhasil Disimpan!',
-                    html: `<strong>${escapeHtml(res.message || 'Data penilaian tersimpan dengan aman.')}</strong><br><span class="text-xs text-slate-500 mt-1 block">${pubText}</span>`,
-                    confirmButtonColor: '#d97706'
-                });
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal Menyimpan',
-                    text: (res && res.message) ? res.message : 'Terjadi kesalahan saat menyimpan penilaian.'
-                });
-            }
-        })
-        .catch(err => {
-            console.error('Error simpan penilaian:', err);
-            Swal.fire({ icon: 'error', title: 'Error', text: err.message || 'Gagal terhubung ke server.' });
-        })
-        .finally(() => {
+            const btn = document.getElementById('btnSubmitBatchPublish');
             if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-floppy-disk text-xs sm:text-sm"></i> Simpan Penilaian Sidang TA';
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i> Memproses Publikasi Massal...';
             }
+
+            const formData = new FormData();
+            validStudents.forEach(st => formData.append('nims[]', st.nim));
+            formData.append('status_publish', statusPublish);
+            formData.append('tgl_publish', tglPublishInp.replace('T', ' '));
+            formData.append('catatan', catatanPublish);
+
+            const targetUrl = cfg.ajaxBatchPublishNilaiUrl || 
+                              window.DASHBOARD_CONFIG?.ajaxBatchPublishNilaiUrl || 
+                              'ajax_batch_publish_nilai';
+
+            fetch(targetUrl, {
+                method: 'POST',
+                body: formData
+            })
+            .then(async r => {
+                const text = await r.text();
+                try {
+                    return JSON.parse(text);
+                } catch (err) {
+                    console.error('Server non-JSON response:', text);
+                    throw new Error('Server mengembalikan respon tidak valid: ' + text.substring(0, 150));
+                }
+            })
+            .then(res => {
+                if (res && res.status) {
+                    const validNimStrings = validStudents.map(st => String(st.nim));
+                    allStudents.forEach(st => {
+                        if (validNimStrings.includes(String(st.nim))) {
+                            st.status_publish_sidang = statusPublish;
+                            st.tgl_publish_sidang = tglPublishInp ? tglPublishInp.replace('T', ' ') : null;
+                            st.catatan_publish_sidang = catatanPublish;
+                        }
+                    });
+
+                    // Clear selection
+                    state.sidangSelectedStudents = [];
+                    updateSidangBatchBar();
+
+                    closeModalBatchPublishNilai();
+                    renderSidangTable();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Publikasi Massal Berhasil!',
+                        text: res.message || `${validStudents.length} mahasiswa berhasil dipublikasikan nilainya.`,
+                        confirmButtonColor: '#059669'
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Mempublikasikan Massal',
+                        text: (res && res.message) ? res.message : 'Terjadi kesalahan pada server saat proses batch publish.'
+                    });
+                }
+            })
+            .catch(err => {
+                console.error('Error batch publish:', err);
+                Swal.fire({ icon: 'error', title: 'Error', text: err.message || 'Gagal terhubung ke server.' });
+            })
+            .finally(() => {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-bullhorn text-xs"></i> Konfirmasi Publikasikan Massal';
+                }
+            });
         });
     };
 
@@ -9813,7 +10006,7 @@
     // MODAL AUDIT LOG & RIWAYAT VERSI PENILAIAN SIDANG
     // =========================================================
     window.openHistoryPenilaianModal = function (nimArg) {
-        const nim = nimArg || document.getElementById('penilaianNim')?.value;
+        const nim = nimArg || document.getElementById('rekapNilaiNim')?.value || document.getElementById('penilaianNim')?.value;
         if (!nim) {
             Swal.fire({ icon: 'warning', title: 'Pilih Mahasiswa', text: 'NIM mahasiswa tidak ditemukan.' });
             return;
@@ -9825,14 +10018,14 @@
         const student = (state.sidangList || []).find(s => String(s.nim) === String(nim));
 
         if (subTitle && student) {
-            subTitle.innerHTML = `Mahasiswa: <strong>${escapeHtml(student.nama_lengkap || student.nama || student.nim)}</strong> (${escapeHtml(student.nim)}) &bull; Prodi ${escapeHtml(student.prodi || 'DKV')}`;
+            subTitle.innerHTML = `Mahasiswa: <strong>${escapeHtml(student.nama_lengkap || student.nama || student.nim)}</strong> (${escapeHtml(student.nim)}) &bull; Prodi ${escapeHtml(student.prodi || 'Informatika')}`;
         }
 
         if (container) {
             container.innerHTML = `
                 <div class="py-12 text-center text-slate-400 space-y-2">
                     <i class="fa-solid fa-spinner fa-spin text-2xl text-indigo-600"></i>
-                    <p class="text-xs font-semibold">Memuat riwayat versi penilaian...</p>
+                    <p class="text-xs font-semibold">Memuat riwayat log publikasi nilai...</p>
                 </div>
             `;
         }
@@ -9856,78 +10049,63 @@
                     container.innerHTML = `
                         <div class="py-12 text-center text-slate-400 space-y-2">
                             <i class="fa-solid fa-folder-open text-3xl text-slate-300"></i>
-                            <p class="text-xs font-semibold text-slate-500">Belum ada riwayat penilaian tersimpan untuk mahasiswa ini.</p>
+                            <p class="text-xs font-semibold text-slate-500">Belum ada riwayat publikasi nilai untuk mahasiswa ini.</p>
                         </div>
                     `;
                     return;
                 }
 
                 let html = '';
-                res.data.forEach((ver, vIdx) => {
-                    const parsed = ver.detail_penilaian_parsed || {};
-                    const criteria = parsed.criteria || [];
-                    const pubStatus = ver.status_publish || 'Draft';
+                res.data.forEach((logItem, idx) => {
+                    const actionTitle = logItem.aksi || logItem.action_type || logItem.modul || `Log #${res.data.length - idx}`;
+                    const createdAt = logItem.waktu || logItem.created_at || '-';
+                    const actor = logItem.actor_name || logItem.dinilai_oleh || 'Koordinator TA';
+                    const notes = logItem.catatan || logItem.notes || logItem.alasan_blokir || '';
+                    const pubStatus = logItem.status_publish || '';
+                    const tglPub = logItem.tgl_publish || '';
 
-                    let pubBadge = '';
-                    if (pubStatus === 'Published') {
-                        pubBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="fa-solid fa-globe mr-1"></i> Live</span>`;
-                    } else if (pubStatus === 'Scheduled') {
-                        pubBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-sky-100 text-sky-800 border border-sky-300"><i class="fa-solid fa-clock mr-1"></i> Jadwal: ${escapeHtml(ver.tgl_publish || '')}</span>`;
-                    } else {
-                        pubBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-600 border border-slate-300"><i class="fa-solid fa-eye-slash mr-1"></i> Draft</span>`;
-                    }
+                    let badgeColor = 'bg-indigo-100 text-indigo-800 border-indigo-200';
+                    let icon = 'fa-solid fa-bullhorn';
 
-                    let criteriaRows = '';
-                    if (Array.isArray(criteria) && criteria.length > 0) {
-                        criteria.forEach((c, cIdx) => {
-                            criteriaRows += `
-                                <div class="flex items-center justify-between py-1 px-2.5 rounded-lg bg-slate-50 border border-slate-200/70 text-[11px]">
-                                    <div class="truncate max-w-[70%]">
-                                        <span class="font-bold text-slate-700">${cIdx + 1}. ${escapeHtml(c.title || c.kriteria || 'Kriteria')}</span>
-                                        <span class="text-[10px] text-slate-400 ml-1">(${c.bobot || 0}%)</span>
-                                    </div>
-                                    <span class="font-mono font-black text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200">${c.nilai || 0}</span>
-                                </div>
-                            `;
-                        });
+                    if (pubStatus === 'Published' || actionTitle.includes('Live') || actionTitle.includes('Published')) {
+                        badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                        icon = 'fa-solid fa-globe';
+                    } else if (pubStatus === 'Scheduled' || actionTitle.includes('Jadwal') || actionTitle.includes('Scheduled')) {
+                        badgeColor = 'bg-sky-100 text-sky-800 border-sky-300';
+                        icon = 'fa-solid fa-clock';
+                    } else if (actionTitle.includes('Blokir') || actionTitle.includes('Blocked') || actionTitle.includes('Tolak')) {
+                        badgeColor = 'bg-rose-100 text-rose-800 border-rose-300';
+                        icon = 'fa-solid fa-lock';
                     }
 
                     html += `
                         <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs hover:border-indigo-300 hover:shadow-md transition-all space-y-3">
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
                                 <div class="flex items-center gap-2.5 flex-wrap">
-                                    <span class="px-2.5 py-1 rounded-xl text-xs font-black bg-indigo-600 text-white shadow-xs">
-                                        Versi #${ver.versi || (res.data.length - vIdx)}
+                                    <span class="px-2.5 py-1 rounded-xl text-xs font-black border flex items-center gap-1.5 ${badgeColor}">
+                                        <i class="${icon} text-[10px]"></i> ${escapeHtml(actionTitle)}
                                     </span>
-                                    <span class="text-xs font-bold text-slate-800">T.A: ${escapeHtml(ver.tahun_akademik || '2026/2027')}</span>
-                                    <span class="text-[11px] text-slate-500 font-medium"><i class="fa-solid fa-calendar-check text-slate-400 mr-1"></i> ${escapeHtml(ver.created_at || '-')}</span>
-                                    ${pubBadge}
+                                    ${pubStatus ? `<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">Status: ${escapeHtml(pubStatus)}</span>` : ''}
+                                    <span class="text-[11px] text-slate-500 font-medium">
+                                        <i class="fa-solid fa-calendar-check text-slate-400 mr-1"></i> ${escapeHtml(createdAt)}
+                                    </span>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs font-bold text-slate-500">Nilai Akhir:</span>
-                                    <span class="text-base font-black text-slate-900 font-mono">${escapeHtml(ver.nilai_akhir || '0')}</span>
-                                    <span class="px-2 py-0.5 rounded-lg text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300">${escapeHtml(ver.grade || '-')}</span>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                                <div>
-                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Status &amp; Penilai:</span>
-                                    <p class="font-semibold text-slate-700">Status: <strong class="text-slate-900">${escapeHtml(ver.status_kelulusan || 'Lulus')}</strong></p>
-                                    <p class="text-[11px] text-slate-500 mt-0.5">Penilai: ${escapeHtml(ver.dinilai_oleh || 'Koordinator TA')}</p>
-                                </div>
-                                <div>
-                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Catatan / Revisi:</span>
-                                    <p class="text-[11px] text-slate-600 italic leading-relaxed bg-slate-50 p-2 rounded-xl border border-slate-200/60">${escapeHtml(ver.catatan || 'Tidak ada catatan khusus.')}</p>
+                                <div class="text-[11px] font-bold text-slate-600">
+                                    Oleh: <strong class="text-slate-900">${escapeHtml(actor)}</strong>
                                 </div>
                             </div>
 
-                            ${criteriaRows ? `
-                                <div class="pt-2 border-t border-slate-100">
-                                    <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1.5">Snapshot Kriteria &amp; Nilai Versi Ini:</span>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        ${criteriaRows}
-                                    </div>
+                            ${tglPub ? `
+                                <div class="text-xs">
+                                    <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-0.5">Jadwal Rilis Publikasi:</span>
+                                    <span class="px-2.5 py-1 rounded-lg bg-sky-50 text-sky-800 font-bold border border-sky-200 inline-block text-[11px]"><i class="fa-solid fa-calendar-day mr-1"></i> ${escapeHtml(tglPub)}</span>
+                                </div>
+                            ` : ''}
+
+                            ${notes ? `
+                                <div class="text-xs">
+                                    <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1">Catatan / Keterangan:</span>
+                                    <p class="text-[11px] text-slate-600 italic bg-slate-50 p-2.5 rounded-xl border border-slate-200/60 leading-relaxed">${escapeHtml(notes)}</p>
                                 </div>
                             ` : ''}
                         </div>
@@ -9941,7 +10119,7 @@
                     container.innerHTML = `
                         <div class="py-10 text-center text-rose-500 space-y-2">
                             <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
-                            <p class="text-xs font-bold">Gagal memuat riwayat: ${escapeHtml(err.message || 'Error koneksi')}</p>
+                            <p class="text-xs font-bold">Gagal memuat riwayat log: ${escapeHtml(err.message || 'Error koneksi')}</p>
                         </div>
                     `;
                 }

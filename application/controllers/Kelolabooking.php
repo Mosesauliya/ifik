@@ -191,12 +191,12 @@ class Kelolabooking extends CI_Controller {
 
     public function approve($id)
     {
-        $role_id = $this->session->userdata('role_id');
+        $role_id = (int)$this->session->userdata('role_id');
 
         // Status disesuaikan per role, sesuai ENUM di DB
-        if ($role_id == 3) {
+        if ($role_id == 2) {
             $status = 'Disetujui Ka. Ur';
-        } elseif ($role_id == 2) {
+        } elseif ($role_id == 21) {
             $status = 'Disetujui Laboran';
         } else {
             $status = 'Disetujui Admin';
@@ -216,21 +216,18 @@ class Kelolabooking extends CI_Controller {
 
     public function surat($id)
     {
-        // Get booking detail with room and category info
-        $this->db->select('peminjaman.*, ruangan.nama_ruangan, ruangan.kode_ruangan, ruangan.lokasi, ruangan.kapasitas, kategori_ruangan.nama_kategori');
-        $this->db->from('peminjaman');
-        $this->db->join('ruangan', 'ruangan.id = peminjaman.id_ruangan', 'left');
-        $this->db->join('kategori_ruangan', 'kategori_ruangan.id = ruangan.id_kategori', 'left');
-        $this->db->where('peminjaman.id', $id);
-        $data['booking'] = $this->db->get()->row();
+        $data['booking'] = $this->Booking_model->get_booking_by_id($id);
 
         if (!$data['booking']) {
             show_404();
             return;
         }
 
+        $cleanId = preg_replace('/[^0-9]/', '', (string)$data['booking']->id);
+        if (empty($cleanId)) $cleanId = '0001';
+
         $data['title'] = 'Surat Resmi Peminjaman Ruangan - ' . ($data['booking']->kode_ruangan ?? 'IFIK');
-        $data['nomor_surat'] = 'SURAT/LAB-IFIK/' . date('Y', strtotime($data['booking']->created_at)) . '/' . sprintf('%04d', $data['booking']->id);
+        $data['nomor_surat'] = 'SURAT/LAB-IFIK/' . date('Y', strtotime($data['booking']->created_at)) . '/' . sprintf('%04d', (int)$cleanId);
         $data['qr_data'] = site_url('verifikasi/surat/' . $id);
         $data['penandatangan'] = $this->Booking_model->get_penandatangan($data['booking']->status);
 
@@ -261,13 +258,13 @@ class Kelolabooking extends CI_Controller {
             return;
         }
 
-        $role_id = $this->session->userdata('role_id');
-        if ($role_id == 3) {
+        $role_id = (int)$this->session->userdata('role_id');
+        if ($role_id == 2) {
             $status = 'Disetujui Ka. Ur';
-        } elseif ($role_id == 2) {
+        } elseif ($role_id == 21) {
             $status = 'Disetujui Laboran';
         } else {
-            $status = 'Disetujui Laboran';
+            $status = 'Disetujui Admin';
         }
 
         $update = $this->Booking_model->batch_update_status($ids, $status);

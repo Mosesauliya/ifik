@@ -699,58 +699,7 @@
 <body class="bg-slate-50 text-slate-800 antialiased pb-24">
 
     <!-- Include Curved Animated Sidebar Component -->
-    <?php $this->load->view('components/curved_sidebar', [
-        'navItems' => [
-            [
-                'heading' => 'Dashboard Utama',
-                'href' => site_url('dashboard'),
-                'subheading' => 'Beranda Utama & Denah 3D',
-                'icon_3d' => 'assets/images/icons_3d/home.png',
-                'icon' => 'fa-solid fa-house',
-                'index' => 1
-            ],
-            [
-                'heading' => 'Pendaftaran TA',
-                'href' => 'javascript:switchDashboardTab("pendaftaran")',
-                'subheading' => 'Tab 1: Plotting Dosen Pembimbing',
-                'icon_3d' => 'assets/images/icons_3d/daftar.png',
-                'icon' => 'fa-solid fa-file-signature',
-                'index' => 2
-            ],
-            [
-                'heading' => 'Tahap Preview 2',
-                'href' => 'javascript:switchDashboardTab("preview2")',
-                'subheading' => 'Tab 2: Plotting Dosen Penguji',
-                'icon_3d' => 'assets/images/icons_3d/preview.png',
-                'icon' => 'fa-solid fa-chalkboard-user',
-                'index' => 3
-            ],
-            [
-                'heading' => 'Jadwal Sidang TA',
-                'href' => 'javascript:switchDashboardTab("sidang")',
-                'subheading' => 'Tab 3: Penjadwalan Sidang & Ruangan',
-                'icon_3d' => 'assets/images/icons_3d/sidang.png',
-                'icon' => 'fa-solid fa-calendar-check',
-                'index' => 4
-            ],
-            [
-                'heading' => 'Ajukan Peminjaman Ruangan',
-                'href' => site_url('ajukan-booking'),
-                'subheading' => 'Peminjaman Ruang Sidang & Lab',
-                'icon_3d' => 'assets/images/icons_3d/ruangan.png',
-                'icon' => 'fa-solid fa-door-open',
-                'index' => 5
-            ],
-            [
-                'heading' => 'Keluar / Logout',
-                'href' => site_url('login/logout'),
-                'subheading' => 'Akhiri Sesi Portal Koordinator',
-                'icon_3d' => 'assets/images/icons_3d/logout.png',
-                'icon' => 'fa-solid fa-arrow-right-from-bracket',
-                'index' => 6
-            ],
-        ]
-    ]); ?>
+    <?php $this->load->view('components/curved_sidebar'); ?>
 
     <!-- Top Navigation Header -->
     <header class="sticky top-0 z-40 glass-header px-4 sm:px-8 py-3 sm:py-4 mb-6 sm:mb-8">
@@ -1385,9 +1334,9 @@
                 <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div>
                         <h2 class="text-base font-bold text-slate-900 flex items-center gap-2.5 tracking-tight">
-                            <i class="fa-solid fa-chalkboard-user text-indigo-600 text-lg"></i> Daftar Plotting Penguji & Jadwal Sidang Preview 2
+                            <i class="fa-solid fa-chalkboard-user text-indigo-600 text-lg"></i> Daftar Plotting Dosen Penguji Preview 2
                         </h2>
-                        <p class="text-xs text-slate-500 font-normal mt-0.5">Tetapkan Dosen Penguji 1 & 2 serta jadwalkan ruangan sidang preview 2 untuk mahasiswa.</p>
+                        <p class="text-xs text-slate-500 font-normal mt-0.5">Tetapkan Dosen Penguji 1 & 2 untuk mahasiswa pada tahap Preview 2.</p>
                     </div>
 
                     <!-- Tombol Riwayat Histori Penguji -->
@@ -1414,7 +1363,7 @@
                                 <div onclick="selectP2MainCategory('judul', '📖 Judul Tugas Akhir', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-600"><span>📖 Judul Tugas Akhir</span></div>
                                 <div onclick="selectP2MainCategory('pembimbing', '👔 Dosen Pembimbing', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-600"><span>👔 Dosen Pembimbing</span></div>
                                 <div onclick="selectP2MainCategory('penguji', '👨‍🏫 Dosen Penguji', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-600"><span>👨‍🏫 Dosen Penguji</span></div>
-                                <div onclick="selectP2MainCategory('ruangan', '🏛️ Ruangan Sidang', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-600"><span>🏛️ Ruangan Sidang</span></div>
+                                <div onclick="selectP2MainCategory('ruangan', '🏛️ Ruangan Presentasi', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-600"><span>🏛️ Ruangan Presentasi</span></div>
                                 <div onclick="selectP2MainCategory('status', '⚡ Status Plotting', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-600"><span>⚡ Status Plotting</span></div>
                             </div>
                         </div>
@@ -1470,7 +1419,7 @@
                 <!-- Row 2: Page Size & Records Count -->
                 <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
                     <div class="text-xs text-slate-500 font-medium">
-                        <span>Kelola jadwal dan plotting dosen penguji preview 2 mahasiswa secara terstruktur.</span>
+                        <span>Kelola plotting dosen penguji preview 2 mahasiswa secara terstruktur.</span>
                     </div>
 
                     <!-- Page Size & Counter Right -->
@@ -1916,7 +1865,11 @@
                         </button>
                     </div>
                     <div class="hidden sm:block h-5 w-px bg-slate-700"></div>
-                    <div class="grid grid-cols-1 sm:flex sm:items-center gap-2">
+                    <div class="grid grid-cols-1 sm:flex sm:items-center gap-2 flex-wrap">
+                        <button type="button" onclick="openModalBatchPublishNilai()" class="h-9 sm:h-10 px-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition cursor-pointer flex items-center justify-center gap-2 active:scale-95">
+                            <i class="fa-solid fa-bullhorn text-xs"></i>
+                            <span>Publikasikan Nilai Terpilih</span>
+                        </button>
                         <button type="button" onclick="openBatchTerapkanRubrikModal()" class="h-9 sm:h-10 px-3.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl shadow-md shadow-violet-600/20 transition cursor-pointer flex items-center justify-center gap-2 active:scale-95">
                             <i class="fa-solid fa-list-check text-xs"></i>
                             <span>Terapkan Rubrik Massal</span>
@@ -2424,280 +2377,400 @@
     </div>
 
     <!-- ========================================================= -->
-    <!-- MODAL 4: PENILAIAN AKHIR SIDANG TA (BERBASIS PRODI & PEMINATAN) -->
+    <!-- MODAL 4: REKAPITULASI NILAI AKHIR SIDANG TA (VIEW ONLY & PUBLISH CONTROL) -->
     <!-- ========================================================= -->
-    <div id="modalPenilaianSidang" class="hidden fixed inset-0 z-[100000] flex items-center justify-center p-4 sm:p-6 modal-backdrop overflow-hidden">
+    <div id="modalPenilaianSidang" class="hidden fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-6 modal-backdrop overflow-hidden">
         <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs" onclick="closeModalPenilaianSidang()"></div>
 
-        <div class="relative z-10 bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden">
+        <div class="relative z-10 bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <!-- Header -->
-            <div class="p-5 sm:p-6 px-7 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-amber-50/90 via-orange-50/40 to-white shrink-0">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white flex items-center justify-center font-bold text-xl shadow-md shadow-amber-500/25 shrink-0">
-                        <i class="fa-solid fa-clipboard-check"></i>
+            <div class="p-3.5 sm:p-5 px-4 sm:px-6 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-amber-50/90 via-orange-50/40 to-white shrink-0">
+                <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
+                    <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white flex items-center justify-center font-bold text-base sm:text-lg shadow-md shadow-amber-500/25 shrink-0">
+                        <i class="fa-solid fa-award"></i>
                     </div>
-                    <div>
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <h3 class="text-base sm:text-lg font-extrabold text-slate-900">Form Penilaian Akhir Sidang Tugas Akhir</h3>
-                            <span id="penilaianProdiBadge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">DKV</span>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                            <h3 class="text-xs sm:text-base font-extrabold text-slate-900 truncate">Rekapitulasi Nilai Akhir Sidang</h3>
+                            <span class="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-300 inline-flex items-center gap-1 shadow-2xs shrink-0 whitespace-nowrap">
+                                <i class="fa-solid fa-eye text-slate-500 text-[8px] sm:text-[9px]"></i> View Only
+                            </span>
                         </div>
-                        <p class="text-xs font-medium text-slate-500 mt-0.5">Penilaian resmi oleh Koordinator TA disesuaikan dengan kriteria Program Studi &amp; Peminatan.</p>
+                        <p class="text-[10px] sm:text-xs font-medium text-slate-500 mt-0.5 line-clamp-1 sm:line-clamp-none">Pemantauan rekap nilai Dosen Pembimbing &amp; Penguji serta publikasi nilai.</p>
                     </div>
                 </div>
-                <button type="button" onclick="closeModalPenilaianSidang()" class="w-9 h-9 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer">
-                    <i class="fa-solid fa-xmark text-base"></i>
+                <button type="button" onclick="closeModalPenilaianSidang()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer shrink-0 ml-1">
+                    <i class="fa-solid fa-xmark text-sm sm:text-base"></i>
                 </button>
             </div>
 
-            <!-- Form Body -->
-            <form id="formPenilaianSidang" onsubmit="submitPenilaianSidang(event)" class="p-6 sm:p-8 space-y-6 overflow-y-auto custom-scrollbar flex-1">
-                <input type="hidden" name="nim" id="penilaianNim">
+            <!-- Body Container -->
+            <div class="p-3.5 sm:p-6 sm:px-7 space-y-4 sm:space-y-5 overflow-y-auto custom-scrollbar flex-1 bg-slate-50/40">
+                <input type="hidden" id="rekapNilaiNim" value="">
 
-                <!-- 1. Student & Schedule Info Card -->
-                <div class="bg-slate-50/80 rounded-2xl p-4 sm:p-5 border border-slate-200/80 space-y-3">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 pb-3">
-                        <div class="flex items-center gap-3">
-                            <div>
-                                <div class="flex items-center gap-2">
-                                    <h4 id="penilaianNamaMhs" class="text-sm font-extrabold text-slate-900">-</h4>
-                                    <span id="penilaianVersiBadge" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-100 text-indigo-800 border border-indigo-200">v1</span>
-                                </div>
-                                <p class="text-xs font-mono font-bold text-slate-500" id="penilaianNimMhs">-</p>
+                <!-- 1. Header Mahasiswa, Judul TA & Jadwal Sidang Card -->
+                <div class="bg-white rounded-2xl p-3.5 sm:p-5 border border-slate-200/80 shadow-xs space-y-2.5 sm:space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5 sm:pb-3">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h4 id="rekapNilaiNamaMhs" class="text-xs sm:text-base font-extrabold text-slate-900 truncate">-</h4>
+                                <span id="rekapNilaiProdiBadge" class="px-2 py-0.5 rounded-full text-[9.5px] sm:text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200 shrink-0">Informatika</span>
                             </div>
+                            <p class="text-[11px] sm:text-xs font-mono font-bold text-slate-500 mt-0.5" id="rekapNilaiNimMhs">NIM: -</p>
                         </div>
-                        <div class="flex items-center gap-2 flex-wrap text-[11px]">
-                            <button type="button" onclick="openHistoryPenilaianModal()" class="px-3 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 font-bold flex items-center gap-1.5 shadow-2xs transition cursor-pointer">
-                                <i class="fa-solid fa-clock-rotate-left text-indigo-600"></i> Riwayat Versi Nilai
+                        <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap text-[10px] sm:text-[11px]">
+                            <button type="button" onclick="openHistoryPenilaianModal()" class="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 font-bold flex items-center gap-1.5 shadow-2xs transition cursor-pointer shrink-0">
+                                <i class="fa-solid fa-clock-rotate-left text-indigo-600"></i> Log
                             </button>
-                            <span id="penilaianJadwalPill" class="px-3 py-1 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold flex items-center gap-1.5 shadow-2xs">
-                                <i class="fa-solid fa-calendar-day text-amber-500"></i> <span id="penilaianTglText">Belum Ada Jadwal</span>
+                            <span class="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 font-semibold flex items-center gap-1.5 shadow-2xs shrink-0" id="rekapNilaiJadwalPill">
+                                <i class="fa-solid fa-calendar-day text-amber-500"></i> <span id="rekapNilaiTglText" class="truncate max-w-[150px] sm:max-w-none">Belum Ada Jadwal</span>
                             </span>
-                            <span id="penilaianRuanganPill" class="px-3 py-1 rounded-xl bg-cyan-50 border border-cyan-200 text-cyan-800 font-bold flex items-center gap-1.5 shadow-2xs">
-                                <i class="fa-solid fa-door-open text-cyan-600"></i> <span id="penilaianRuanganText">-</span>
+                            <span class="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-cyan-50 border border-cyan-200 text-cyan-800 font-bold flex items-center gap-1.5 shadow-2xs shrink-0" id="rekapNilaiRuanganPill">
+                                <i class="fa-solid fa-door-open text-cyan-600"></i> <span id="rekapNilaiRuanganText" class="truncate max-w-[100px] sm:max-w-none">-</span>
                             </span>
                         </div>
                     </div>
 
-                    <!-- Judul TA -->
+                    <!-- Judul Tugas Akhir -->
                     <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Judul Tugas Akhir:</p>
-                        <p id="penilaianJudulTa" class="text-xs font-medium text-slate-800 mt-0.5 leading-relaxed">-</p>
-                    </div>
-
-                    <!-- Dosen Penguji & Pembimbing -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-[11px]">
-                        <div class="p-2.5 rounded-xl bg-white border border-slate-200/70 space-y-1">
-                            <span class="font-bold text-orange-800 block text-[10px] uppercase tracking-wider"><i class="fa-solid fa-user-tie text-orange-600 mr-1"></i> Dosen Pembimbing</span>
-                            <p class="text-slate-700 truncate" id="penilaianPembimbing1">Pembimbing 1: -</p>
-                            <p class="text-slate-700 truncate" id="penilaianPembimbing2">Pembimbing 2: -</p>
-                        </div>
-                        <div class="p-2.5 rounded-xl bg-white border border-slate-200/70 space-y-1">
-                            <span class="font-bold text-indigo-800 block text-[10px] uppercase tracking-wider"><i class="fa-solid fa-chalkboard-user text-indigo-600 mr-1"></i> Dewan Penguji</span>
-                            <p class="text-slate-700 truncate" id="penilaianPenguji1">Penguji 1: -</p>
-                            <p class="text-slate-700 truncate" id="penilaianPenguji2">Penguji 2: -</p>
-                        </div>
+                        <span class="text-[9.5px] sm:text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Judul Tugas Akhir:</span>
+                        <p id="rekapNilaiJudulTa" class="text-[11px] sm:text-xs font-semibold text-slate-800 mt-0.5 leading-relaxed">-</p>
                     </div>
                 </div>
 
-                <!-- 2. Prodi, Peminatan & Tahun Akademik Selector -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                        <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 block mb-1.5">
-                            Program Studi (Prodi) <span class="text-rose-500">*</span>
-                        </label>
-                        <select name="prodi" id="penilaianProdiSelect" onchange="onPenilaianProdiChange(this.value)" class="w-full px-3.5 py-3 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none shadow-2xs cursor-pointer">
-                            <option value="DKV">DKV - Desain Komunikasi Visual</option>
-                            <option value="DI">DI - Desain Interior</option>
-                            <option value="DIB">DIB - Desain Interior Bisnis</option>
-                            <option value="DP">DP - Desain Produk</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 block mb-1.5">
-                            Peminatan / Konsentrasi <span class="text-rose-500">*</span>
-                        </label>
-                        <select name="peminatan" id="penilaianPeminatanSelect" onchange="onPenilaianPeminatanChange(this.value)" class="w-full px-3.5 py-3 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none shadow-2xs cursor-pointer">
-                            <!-- Injected dynamically via JS based on selected prodi -->
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 block mb-1.5">
-                            Tahun Akademik <span class="text-rose-500">*</span>
-                        </label>
-                        <?php
-                            $cYear = (int)date('Y');
-                            $cMonth = (int)date('n');
-                            $defaultActiveTa = ($cMonth >= 8) ? "{$cYear}/" . ($cYear + 1) : ($cYear - 1) . "/{$cYear}";
-                        ?>
-                        <div class="relative">
-                            <input type="text" 
-                                   name="tahun_akademik" 
-                                   id="penilaianTahunAkademik" 
-                                   list="listTahunAkademik" 
-                                   value="<?= $defaultActiveTa; ?>" 
-                                   placeholder="Contoh: 2026/2027" 
-                                   class="w-full px-3.5 py-3 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none shadow-2xs"
-                                   required>
-                            <datalist id="listTahunAkademik">
-                                <?php for ($y = $cYear + 3; $y >= $cYear - 5; $y--): 
-                                     $optTa = "{$y}/" . ($y + 1);
-                                ?>
-                                    <option value="<?= $optTa; ?>"><?= $optTa; ?><?= ($optTa === $defaultActiveTa) ? ' (Aktif)' : ''; ?></option>
-                                <?php endfor; ?>
-                            </datalist>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 3. Dynamic Rubrik & Soal Penilaian List -->
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between flex-wrap gap-2">
-                        <label class="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                            <i class="fa-solid fa-list-check text-amber-600"></i> Rubrik Soal &amp; Kriteria Penilaian:
-                        </label>
-                        <div class="flex items-center gap-2">
-                            <button type="button" id="btnSyncTemplateRubrik" onclick="syncWithMasterRubrikPrompt()" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 transition cursor-pointer flex items-center gap-1 shadow-2xs" title="Terapkan ulang kriteria dari Master Rubrik terbaru">
-                                <i class="fa-solid fa-arrows-rotate text-amber-600"></i> Sinkron Master Rubrik
-                            </button>
-                            <span class="text-[11px] font-semibold text-slate-400">Total Bobot: <strong class="text-slate-700" id="penilaianTotalBobotLabel">100%</strong></span>
-                        </div>
-                    </div>
-
-                    <div id="penilaianRubrikContainer" class="space-y-3">
-                        <!-- Injected dynamically based on Prodi & Peminatan / Saved Snapshot -->
-                    </div>
-                </div>
-
-                <!-- 4. Result Calculation Card (Live Calculated Total, Grade & Status Kelulusan) -->
-                <div class="bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-white rounded-2xl p-5 border border-amber-300/80 shadow-xs">
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
-                        <!-- Nilai Akhir Angka -->
-                        <div class="text-center sm:text-left">
-                            <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">Nilai Akhir Sidang</span>
-                            <div class="flex items-baseline gap-1.5 justify-center sm:justify-start mt-0.5">
-                                <span id="penilaianTotalScore" class="text-3xl font-black text-slate-900">0.00</span>
-                                <span class="text-xs font-bold text-slate-400">/ 100</span>
+                <!-- 2. Ringkasan Kelayakan & Nilai Rata-rata Akhir (Scorecard) -->
+                <div class="bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-white rounded-2xl p-3 sm:p-5 border border-amber-300/80 shadow-xs">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 items-center">
+                        <!-- Nilai Rata-Rata Akhir -->
+                        <div class="bg-white/70 sm:bg-transparent p-2.5 sm:p-0 rounded-xl border border-amber-200/50 sm:border-0 text-center sm:text-left">
+                            <span class="text-[9px] sm:text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">Nilai Akhir</span>
+                            <div class="flex items-baseline gap-1 justify-center sm:justify-start mt-0.5">
+                                <span id="rekapNilaiTotalScore" class="text-2xl sm:text-3xl font-black text-slate-900">0.00</span>
+                                <span class="text-[10px] sm:text-xs font-bold text-slate-400">/ 100</span>
                             </div>
                         </div>
 
                         <!-- Nilai Mutu / Grade -->
-                        <div class="text-center">
-                            <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">Grade Mutu</span>
-                            <div class="mt-1 flex items-center justify-center">
-                                <span id="penilaianGradeBadge" class="px-4 py-1 rounded-xl text-lg font-black bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs">
+                        <div class="bg-white/70 sm:bg-transparent p-2.5 sm:p-0 rounded-xl border border-amber-200/50 sm:border-0 text-center">
+                            <span class="text-[9px] sm:text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">Grade</span>
+                            <div class="mt-0.5 flex items-center justify-center">
+                                <span id="rekapNilaiGradeBadge" class="px-3 py-0.5 sm:py-1 rounded-xl text-base sm:text-lg font-black bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs">
                                     -
                                 </span>
                             </div>
                         </div>
 
                         <!-- Status Kelulusan -->
-                        <div>
-                            <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block mb-1">Status Kelulusan</span>
-                            <select name="status_kelulusan" id="penilaianStatusKelulusan" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-extrabold text-slate-800 focus:ring-2 focus:ring-amber-500 outline-none cursor-pointer">
-                                <option value="Lulus">✅ Lulus</option>
-                                <option value="Lulus dengan Revisi">⚠️ Lulus dengan Revisi</option>
-                                <option value="Tidak Lulus">❌ Tidak Lulus (Sidang Ulang)</option>
-                            </select>
+                        <div class="bg-white/70 sm:bg-transparent p-2.5 sm:p-0 rounded-xl border border-amber-200/50 sm:border-0 text-center sm:text-left flex flex-col items-center sm:items-start justify-center">
+                            <span class="text-[9px] sm:text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block mb-0.5">Kelulusan</span>
+                            <span id="rekapNilaiStatusKelulusanBadge" class="inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black bg-slate-100 text-slate-700 border border-slate-300 shadow-2xs truncate">
+                                Belum Dinilai
+                            </span>
+                        </div>
+
+                        <!-- Kelengkapan Komponen (Status 4 Nilai) -->
+                        <div class="bg-white/70 sm:bg-transparent p-2.5 sm:p-0 rounded-xl border border-amber-200/50 sm:border-0 text-center sm:text-right flex flex-col items-center sm:items-end justify-center">
+                            <span class="text-[9px] sm:text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block mb-0.5">Status Nilai</span>
+                            <div id="rekapNilaiKelengkapanBadgeContainer">
+                                <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg sm:rounded-xl text-[10px] sm:text-[11px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300 shadow-2xs whitespace-nowrap">
+                                    <i class="fa-solid fa-circle-exclamation text-rose-600 text-[9px]"></i> Belum Lengkap (0/4)
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 5. Publication Controls (Mekanisme Publish / Republish & Start Date) -->
-                <div class="bg-gradient-to-br from-indigo-50/50 via-slate-50 to-white rounded-2xl p-5 border border-indigo-100 shadow-xs space-y-4">
-                    <div class="flex items-center justify-between border-b border-indigo-100/80 pb-3">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-bullhorn text-indigo-600"></i>
-                            <h4 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Pengaturan Publikasi Nilai (Publish &amp; Republish)</h4>
+                <!-- 3. Rincian Nilai Individu dari 4 Evaluator (Pembimbing 1 & 2, Penguji 1 & 2) -->
+                <div>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2.5">
+                        <label class="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                            <i class="fa-solid fa-users-viewfinder text-amber-600"></i> Rincian Penilaian Evaluator:
+                        </label>
+                        <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium">Bobot rata-rata proporsional (25% per evaluator)</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5">
+                        <!-- Card 1: Pembimbing 1 -->
+                        <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs space-y-2 hover:border-orange-300 transition">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex items-center gap-2 min-w-0 flex-1">
+                                    <span class="w-6 h-6 rounded-lg bg-orange-100 text-orange-700 font-black text-xs flex items-center justify-center shrink-0">P1</span>
+                                    <div class="min-w-0 flex-1">
+                                        <span class="text-[9.5px] sm:text-[10px] font-extrabold uppercase tracking-wider text-orange-800 block truncate">Dosen Pembimbing 1</span>
+                                        <h5 id="rekapNamaP1" class="text-xs font-bold text-slate-800 truncate" title="-">-</h5>
+                                    </div>
+                                </div>
+                                <div id="rekapBadgeP1" class="shrink-0">
+                                    <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">Belum Mengisi</span>
+                                </div>
+                            </div>
+                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+                                <span class="text-[11px] text-slate-500 font-medium">Nilai Sidang P1:</span>
+                                <span id="rekapScoreP1" class="text-base font-black text-slate-900 font-mono">-</span>
+                            </div>
+                            <div id="rekapCatatanP1Container" class="hidden text-[10.5px] p-2 bg-slate-50 rounded-xl text-slate-600 italic border border-slate-100">
+                                <span id="rekapCatatanP1Text"></span>
+                            </div>
                         </div>
-                        <span id="currentPublishStatusPill" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-200">
+
+                        <!-- Card 2: Pembimbing 2 -->
+                        <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs space-y-2 hover:border-orange-300 transition">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex items-center gap-2 min-w-0 flex-1">
+                                    <span class="w-6 h-6 rounded-lg bg-orange-100 text-orange-700 font-black text-xs flex items-center justify-center shrink-0">P2</span>
+                                    <div class="min-w-0 flex-1">
+                                        <span class="text-[9.5px] sm:text-[10px] font-extrabold uppercase tracking-wider text-orange-800 block truncate">Dosen Pembimbing 2</span>
+                                        <h5 id="rekapNamaP2" class="text-xs font-bold text-slate-800 truncate" title="-">-</h5>
+                                    </div>
+                                </div>
+                                <div id="rekapBadgeP2" class="shrink-0">
+                                    <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">Belum Mengisi</span>
+                                </div>
+                            </div>
+                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+                                <span class="text-[11px] text-slate-500 font-medium">Nilai Sidang P2:</span>
+                                <span id="rekapScoreP2" class="text-base font-black text-slate-900 font-mono">-</span>
+                            </div>
+                            <div id="rekapCatatanP2Container" class="hidden text-[10.5px] p-2 bg-slate-50 rounded-xl text-slate-600 italic border border-slate-100">
+                                <span id="rekapCatatanP2Text"></span>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Penguji 1 -->
+                        <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs space-y-2 hover:border-indigo-300 transition">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex items-center gap-2 min-w-0 flex-1">
+                                    <span class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 font-black text-xs flex items-center justify-center shrink-0">U1</span>
+                                    <div class="min-w-0 flex-1">
+                                        <span class="text-[9.5px] sm:text-[10px] font-extrabold uppercase tracking-wider text-indigo-800 block truncate">Dosen Penguji 1</span>
+                                        <h5 id="rekapNamaPenguji1" class="text-xs font-bold text-slate-800 truncate" title="-">-</h5>
+                                    </div>
+                                </div>
+                                <div id="rekapBadgePenguji1" class="shrink-0">
+                                    <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">Belum Mengisi</span>
+                                </div>
+                            </div>
+                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+                                <span class="text-[11px] text-slate-500 font-medium">Nilai Sidang Penguji 1:</span>
+                                <span id="rekapScorePenguji1" class="text-base font-black text-slate-900 font-mono">-</span>
+                            </div>
+                            <div id="rekapCatatanPenguji1Container" class="hidden text-[10.5px] p-2 bg-slate-50 rounded-xl text-slate-600 italic border border-slate-100">
+                                <span id="rekapCatatanPenguji1Text"></span>
+                            </div>
+                        </div>
+
+                        <!-- Card 4: Penguji 2 -->
+                        <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs space-y-2 hover:border-indigo-300 transition">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex items-center gap-2 min-w-0 flex-1">
+                                    <span class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 font-black text-xs flex items-center justify-center shrink-0">U2</span>
+                                    <div class="min-w-0 flex-1">
+                                        <span class="text-[9.5px] sm:text-[10px] font-extrabold uppercase tracking-wider text-indigo-800 block truncate">Dosen Penguji 2</span>
+                                        <h5 id="rekapNamaPenguji2" class="text-xs font-bold text-slate-800 truncate" title="-">-</h5>
+                                    </div>
+                                </div>
+                                <div id="rekapBadgePenguji2" class="shrink-0">
+                                    <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">Belum Mengisi</span>
+                                </div>
+                            </div>
+                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+                                <span class="text-[11px] text-slate-500 font-medium">Nilai Sidang Penguji 2:</span>
+                                <span id="rekapScorePenguji2" class="text-base font-black text-slate-900 font-mono">-</span>
+                            </div>
+                            <div id="rekapCatatanPenguji2Container" class="hidden text-[10.5px] p-2 bg-slate-50 rounded-xl text-slate-600 italic border border-slate-100">
+                                <span id="rekapCatatanPenguji2Text"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Penjelasan Hak Wewenang Koordinator TA -->
+                <div class="p-3 sm:p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 text-[10.5px] sm:text-[11px] text-amber-900 flex items-start gap-2 sm:gap-2.5">
+                    <i class="fa-solid fa-circle-info text-amber-600 text-sm mt-0.5 shrink-0"></i>
+                    <div class="leading-relaxed">
+                        <strong>Peraturan Wewenang Koordinator TA:</strong> Koordinator TA berwenang mengatur kriteria rubrik sistem dan mengelola publikasi nilai akhir. Pengisian angka nilai dilakukan secara mandiri oleh Dosen Pembimbing &amp; Dewan Penguji. Koordinator TA tidak mengubah nilai individu secara manual.
+                    </div>
+                </div>
+
+                <!-- 5. Panel Wewenang Publikasi Nilai (Publish Controls) -->
+                <div id="rekapPublishControlPanel" class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-3.5 sm:space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 sm:pb-3">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-bullhorn text-indigo-600 text-xs sm:text-sm"></i>
+                            <h4 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Pengaturan Publikasi Nilai Akhir</h4>
+                        </div>
+                        <span id="rekapCurrentPublishStatusPill" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap shrink-0">
                             Draft (Privat)
                         </span>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <!-- Mode Publish -->
-                        <div>
-                            <label class="text-[11px] font-extrabold text-slate-700 block mb-1.5 uppercase tracking-wider">
-                                Status Publikasi <span class="text-rose-500">*</span>
-                            </label>
-                            <div class="space-y-2">
-                                <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 cursor-pointer transition text-xs font-semibold text-slate-800">
-                                    <input type="radio" name="status_publish" value="Draft" id="publishRadioDraft" checked onchange="onPublishModeChange('Draft')" class="text-indigo-600 focus:ring-indigo-500">
-                                    <div>
-                                        <span class="font-bold text-slate-900 block">Simpan sebagai Draft</span>
-                                        <span class="text-[10px] text-slate-500 font-normal">Hanya terlihat oleh Koordinator TA, belum dibagikan ke mahasiswa.</span>
-                                    </div>
-                                </label>
-
-                                <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-emerald-200 bg-emerald-50/30 hover:bg-emerald-50/60 cursor-pointer transition text-xs font-semibold text-slate-800">
-                                    <input type="radio" name="status_publish" value="Published" id="publishRadioInstant" onchange="onPublishModeChange('Published')" class="text-emerald-600 focus:ring-emerald-500">
-                                    <div>
-                                        <span class="font-bold text-emerald-900 block">Publikasikan Sekarang (Live)</span>
-                                        <span class="text-[10px] text-emerald-700 font-normal">Nilai langsung dapat dilihat oleh mahasiswa &amp; dosen.</span>
-                                    </div>
-                                </label>
-
-                                <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-sky-200 bg-sky-50/30 hover:bg-sky-50/60 cursor-pointer transition text-xs font-semibold text-slate-800">
-                                    <input type="radio" name="status_publish" value="Scheduled" id="publishRadioScheduled" onchange="onPublishModeChange('Scheduled')" class="text-sky-600 focus:ring-sky-500">
-                                    <div>
-                                        <span class="font-bold text-sky-900 block">Jadwalkan Publikasi (Start Date)</span>
-                                        <span class="text-[10px] text-sky-700 font-normal">Nilai baru akan terbuka otomatis setelah tanggal &amp; waktu yang ditentukan.</span>
-                                    </div>
-                                </label>
-                            </div>
+                    <!-- If Incomplete: Incomplete Warning -->
+                    <div id="rekapPublishBlockedWarning" class="hidden p-3.5 sm:p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 space-y-1">
+                        <div class="flex items-center gap-2 font-bold text-xs">
+                            <i class="fa-solid fa-lock text-rose-600"></i>
+                            <span>Publikasi Nilai Dinonaktifkan (Nilai Belum Lengkap)</span>
                         </div>
+                        <p class="text-[10.5px] sm:text-[11px] text-rose-700 leading-relaxed" id="rekapPublishBlockedReason">
+                            Nilai akhir tidak dapat dipublikasikan ke mahasiswa karena ada komponen nilai yang belum diisi oleh evaluator.
+                        </p>
+                    </div>
 
-                        <!-- Start Date Input (Flatpickr) -->
-                        <div class="space-y-3">
+                    <!-- If Complete: Publish Form -->
+                    <div id="rekapPublishFormSection" class="space-y-3.5 sm:space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+                            <!-- Mode Publish -->
                             <div>
-                                <label class="text-[11px] font-extrabold text-slate-700 block mb-1.5 uppercase tracking-wider">
-                                    Tanggal &amp; Jam Mulai Rilis (Start Date)
+                                <label class="text-[10.5px] sm:text-[11px] font-extrabold text-slate-700 block mb-1.5 uppercase tracking-wider">
+                                    Pilih Mekanisme Publikasi <span class="text-rose-500">*</span>
                                 </label>
-                                <div class="relative">
-                                    <input type="datetime-local" name="tgl_publish" id="penilaianTglPublish" class="w-full px-3.5 py-3 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none shadow-2xs">
+                                <div class="space-y-2">
+                                    <label class="flex items-start gap-2.5 p-2.5 rounded-xl border border-emerald-200 bg-emerald-50/40 hover:bg-emerald-50/80 cursor-pointer transition text-xs font-semibold text-slate-800">
+                                        <input type="radio" name="rekap_status_publish" value="Published" id="rekapRadioInstant" checked onchange="onRekapPublishModeChange('Published')" class="text-emerald-600 focus:ring-emerald-500 mt-0.5 shrink-0">
+                                        <div>
+                                            <span class="font-bold text-emerald-900 block">Publikasikan Sekarang (Live)</span>
+                                            <span class="text-[10px] text-emerald-700 font-normal">Nilai akhir langsung dapat diakses dan dilihat oleh mahasiswa.</span>
+                                        </div>
+                                    </label>
+
+                                    <label class="flex items-start gap-2.5 p-2.5 rounded-xl border border-sky-200 bg-sky-50/40 hover:bg-sky-50/80 cursor-pointer transition text-xs font-semibold text-slate-800">
+                                        <input type="radio" name="rekap_status_publish" value="Scheduled" id="rekapRadioScheduled" onchange="onRekapPublishModeChange('Scheduled')" class="text-sky-600 focus:ring-sky-500 mt-0.5 shrink-0">
+                                        <div>
+                                            <span class="font-bold text-sky-900 block">Jadwalkan Publikasi (Rilis Terjadwal)</span>
+                                            <span class="text-[10px] text-sky-700 font-normal">Tentukan tanggal dan jam kapan nilai boleh dibuka ke mahasiswa.</span>
+                                        </div>
+                                    </label>
                                 </div>
-                                <p class="text-[10px] text-slate-500 mt-1" id="publishDateHint">Hanya aktif saat mode "Jadwalkan Publikasi" dipilih.</p>
                             </div>
 
-                            <div class="p-3 rounded-xl bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-900">
-                                <div class="flex items-start gap-2">
-                                    <i class="fa-solid fa-shield-halved text-amber-600 mt-0.5 shrink-0"></i>
-                                    <span class="font-medium leading-relaxed">
-                                        <strong>Proteksi Snapshot Riwayat:</strong> Setiap kali nilai disimpan/diterbitkan, sistem mencatat versi riwayat baru. Format penilaian mahasiswa ini diisolasi sehingga aman dari perubahan/penghapusan master kriteria di masa mendatang.
-                                    </span>
+                            <!-- Start Date & Catatan -->
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="text-[10.5px] sm:text-[11px] font-extrabold text-slate-700 block mb-1.5 uppercase tracking-wider">
+                                        Tanggal &amp; Jam Rilis Publikasi
+                                    </label>
+                                    <input type="datetime-local" id="rekapTglPublish" class="w-full px-3 sm:px-3.5 py-2 sm:py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none shadow-2xs" disabled>
+                                    <p class="text-[9.5px] sm:text-[10px] text-slate-500 mt-1" id="rekapTglPublishHint">Hanya aktif jika memilih mode "Jadwalkan Publikasi".</p>
+                                </div>
+
+                                <div>
+                                    <label class="text-[10.5px] sm:text-[11px] font-extrabold text-slate-700 block mb-1.5 uppercase tracking-wider">
+                                        Catatan / Pengumuman Publikasi (Opsional)
+                                    </label>
+                                    <textarea id="rekapCatatanPublish" rows="2" placeholder="Catatan pengumuman untuk mahasiswa..." class="w-full text-xs p-2.5 border border-slate-300 rounded-xl bg-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none shadow-2xs"></textarea>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 6. Catatan / Rekomendasi Dewan Penguji & Koordinator -->
-                <div>
-                    <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 block mb-1.5">
-                        Catatan Revisi / Berita Acara Dewan Penguji &amp; Koordinator (Opsional)
-                    </label>
-                    <textarea name="catatan_sidang" id="penilaianCatatan" rows="2" placeholder="Masukkan poin-poin revisi naskah/karya atau catatan berita acara sidang..." class="w-full text-xs p-3 border border-slate-300 rounded-xl bg-white focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 resize-none shadow-2xs"></textarea>
-                </div>
+            </div>
 
-                <!-- Footer Actions -->
-                <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-3 flex-wrap">
-                    <button type="button" onclick="closeModalPenilaianSidang()" class="px-5 py-3 bg-white border border-slate-300 text-slate-700 font-bold text-xs sm:text-sm rounded-2xl hover:bg-slate-50 transition cursor-pointer">
-                        Batal
+            <!-- Footer Actions -->
+            <div class="p-3 sm:p-4 px-4 sm:px-6 bg-white border-t border-slate-100 flex items-center justify-between gap-2.5 sm:gap-3 shrink-0">
+                <button type="button" onclick="closeModalPenilaianSidang()" class="px-4 sm:px-5 py-2 sm:py-2.5 bg-white border border-slate-300 text-slate-700 font-bold text-xs sm:text-sm rounded-xl hover:bg-slate-50 transition cursor-pointer">
+                    Tutup
+                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="btnSubmitRekapPublish" onclick="submitSingleRekapPublish()" class="px-4 sm:px-6 py-2 sm:py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md shadow-emerald-600/20 transition flex items-center gap-1.5 sm:gap-2 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fa-solid fa-bullhorn text-xs sm:text-sm"></i> <span>Publikasikan Nilai</span>
                     </button>
-                    <div class="flex items-center gap-2">
-                        <button type="submit" id="btnSubmitPenilaianSidang" class="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-md shadow-amber-500/20 transition flex items-center gap-2 cursor-pointer active:scale-95">
-                            <i class="fa-solid fa-floppy-disk text-xs sm:text-sm"></i> Simpan Penilaian Sidang TA
-                        </button>
-                    </div>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
     <!-- ========================================================= -->
-    <!-- MODAL 4B: RIWAYAT VERSI PENILAIAN SIDANG TA (HISTORY) -->
+    <!-- MODAL 4B: BATCH / PUBLIKASI MASSAL NILAI MAHASISWA -->
+    <!-- ========================================================= -->
+    <div id="modalBatchPublishNilai" class="hidden fixed inset-0 z-[100005] flex items-center justify-center p-3 sm:p-6 modal-backdrop overflow-hidden">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs" onclick="closeModalBatchPublishNilai()"></div>
+
+        <div class="relative z-10 bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <!-- Header -->
+            <div class="p-4 sm:p-5 px-6 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-emerald-50 via-teal-50/50 to-white shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-emerald-600/25 shrink-0">
+                        <i class="fa-solid fa-bullhorn"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm sm:text-base font-extrabold text-slate-900">Publikasi Nilai Sidang Massal</h3>
+                        <p class="text-xs text-slate-500 font-medium">Rilis nilai akhir mahasiswa terpilih yang telah terisi lengkap secara serentak.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModalBatchPublishNilai()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-5 sm:p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1 bg-slate-50/50">
+                <!-- Summary Selection Card -->
+                <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-700">Daftar Mahasiswa Terpilih:</span>
+                        <span id="batchPublishValidCountBadge" class="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                            0 Mahasiswa Siap Rilis
+                        </span>
+                    </div>
+                    <div id="batchPublishStudentsListContainer" class="max-h-36 overflow-y-auto custom-scrollbar space-y-1 text-xs">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Mode Publish -->
+                <div class="space-y-2">
+                    <label class="text-[11px] font-extrabold text-slate-700 block uppercase tracking-wider">
+                        Pilihan Jadwal Rilis Publikasi <span class="text-rose-500">*</span>
+                    </label>
+
+                    <label class="flex items-center gap-2.5 p-3 rounded-xl border border-emerald-200 bg-white hover:bg-emerald-50/40 cursor-pointer transition text-xs font-semibold text-slate-800">
+                        <input type="radio" name="batch_publish_mode" value="Published" id="batchPublishRadioInstant" checked onchange="onBatchPublishModeChange('Published')" class="text-emerald-600 focus:ring-emerald-500">
+                        <div>
+                            <span class="font-bold text-emerald-900 block">Publikasikan Sekarang (Live)</span>
+                            <span class="text-[10px] text-emerald-700 font-normal">Seluruh nilai mahasiswa terpilih langsung dapat diakses seketika.</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-center gap-2.5 p-3 rounded-xl border border-sky-200 bg-white hover:bg-sky-50/40 cursor-pointer transition text-xs font-semibold text-slate-800">
+                        <input type="radio" name="batch_publish_mode" value="Scheduled" id="batchPublishRadioScheduled" onchange="onBatchPublishModeChange('Scheduled')" class="text-sky-600 focus:ring-sky-500">
+                        <div>
+                            <span class="font-bold text-sky-900 block">Jadwalkan Publikasi (Terjadwal)</span>
+                            <span class="text-[10px] text-sky-700 font-normal">Pilih tanggal dan jam kapan sistem akan otomatis membuka nilai.</span>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Date Input -->
+                <div id="batchPublishDateWrap" class="hidden space-y-1.5">
+                    <label class="text-[11px] font-extrabold text-slate-700 block uppercase tracking-wider">
+                        Tanggal &amp; Waktu Rilis Serentak <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="datetime-local" id="batchPublishDatetimeInput" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none shadow-2xs">
+                </div>
+
+                <!-- Catatan -->
+                <div>
+                    <label class="text-[11px] font-extrabold text-slate-700 block mb-1.5 uppercase tracking-wider">
+                        Catatan Pengumuman Publikasi (Opsional)
+                    </label>
+                    <textarea id="batchPublishCatatanInput" rows="2" placeholder="Pesan atau catatan kelulusan massal..." class="w-full text-xs p-2.5 border border-slate-300 rounded-xl bg-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 resize-none shadow-2xs"></textarea>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-4 px-6 bg-white border-t border-slate-100 flex items-center justify-end gap-3 shrink-0">
+                <button type="button" onclick="closeModalBatchPublishNilai()" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-50 transition cursor-pointer">
+                    Batal
+                </button>
+                <button type="button" id="btnSubmitBatchPublish" onclick="submitBatchPublishNilai()" class="px-5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/20 transition cursor-pointer active:scale-95">
+                    <i class="fa-solid fa-bullhorn text-xs"></i> Konfirmasi Publikasikan Massal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MODAL 4C: RIWAYAT AUDIT LOG PUBLIKASI & PENILAIAN SIDANG TA -->
     <!-- ========================================================= -->
     <div id="modalHistoryPenilaianSidang" class="hidden fixed inset-0 z-[100000] flex items-center justify-center p-4 sm:p-6 modal-backdrop overflow-hidden">
         <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs" onclick="closeModalHistoryPenilaian()"></div>
@@ -2710,8 +2783,8 @@
                         <i class="fa-solid fa-clock-rotate-left"></i>
                     </div>
                     <div>
-                        <h3 class="text-base font-extrabold text-slate-900">Riwayat Versi Penilaian Sidang</h3>
-                        <p class="text-xs text-slate-500 mt-0.5" id="historyStudentSubtitle">Arsip log perubahan nilai mahasiswa lintas tahun &amp; versi.</p>
+                        <h3 class="text-base font-extrabold text-slate-900">Riwayat Audit Log Publikasi Nilai Sidang</h3>
+                        <p class="text-xs text-slate-500 mt-0.5" id="historyStudentSubtitle">Arsip log perubahan status publish nilai mahasiswa dan catatan audit.</p>
                     </div>
                 </div>
                 <button type="button" onclick="closeModalHistoryPenilaian()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer">
@@ -3110,6 +3183,7 @@
             ajaxGetRuanganUrl: "<?= site_url('koordinatorta/ajax_get_ruangan_list'); ?>",
             ajaxSimpanPenilaianSidangUrl: "<?= site_url('koordinatorta/ajax_simpan_penilaian_sidang'); ?>",
             ajaxPublishPenilaianSidangUrl: "<?= site_url('koordinatorta/ajax_publish_penilaian_sidang'); ?>",
+            ajaxBatchPublishNilaiUrl: "<?= site_url('koordinatorta/ajax_batch_publish_nilai'); ?>",
             ajaxGetDetailPenilaianSidangUrl: "<?= site_url('koordinatorta/ajax_get_detail_penilaian_sidang'); ?>",
             ajaxGetHistoryPenilaianSidangUrl: "<?= site_url('koordinatorta/ajax_get_history_penilaian_sidang'); ?>",
             ajaxGetAllMasterRubrikUrl: "<?= site_url('koordinatorta/ajax_get_all_master_rubrik'); ?>",

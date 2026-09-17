@@ -28,7 +28,7 @@ class Admin extends CI_Controller {
         $data['total_news']  = $this->db->table_exists('berita') ? $this->db->count_all_results('berita') : 0;
         
         // Metrik Booking
-        $data['total_booking'] = $this->db->table_exists('peminjaman') ? $this->db->count_all_results('peminjaman') : 0;
+        $data['total_booking'] = $this->db->table_exists('booking') ? $this->db->count_all_results('booking') : ($this->db->table_exists('peminjaman') ? $this->db->count_all_results('peminjaman') : 0);
         $data['total_ruangan'] = $this->db->table_exists('ruangan') ? $this->db->count_all_results('ruangan') : 0;
         
         // Metrik Mahasiswa TA

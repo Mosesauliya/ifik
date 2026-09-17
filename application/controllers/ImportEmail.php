@@ -37,8 +37,8 @@ class ImportEmail extends CI_Controller {
         }
 
         $roleId = (int)$this->session->userdata('role_id');
-        // Allowed: 1 = Admin, 2 = Kepala Urusan, 5 = Admin LAA, 16 = Admin Prodi
-        $allowedRoles = [1, 2, 5, 16];
+        // Allowed: 1 = Admin, 2 = Kepala Urusan, 5 = Admin LAA, 16 = Admin Prodi, 21 = Laboran
+        $allowedRoles = [1, 2, 5, 16, 21];
 
         if (!in_array($roleId, $allowedRoles)) {
             $isAjax = $this->input->is_ajax_request() || 
@@ -58,6 +58,8 @@ class ImportEmail extends CI_Controller {
             redirect('dashboard');
             exit;
         }
+
+        return true;
     }
 
     /**
@@ -482,18 +484,22 @@ class ImportEmail extends CI_Controller {
                 5 => 'Admin LAA',
                 6 => 'Koordinator TA',
                 7 => 'PIC KK',
-                9 => 'Ketua KK'
+                9 => 'Ketua KK',
+                21 => 'Laboran'
             ];
             return $roles[$roleId] ?? 'Mahasiswa';
         }
 
         $roles = [
             1 => 'Admin',
-            2 => 'Laboran',
-            3 => 'Ka. Ur',
-            4 => 'Dosen',
-            5 => 'Mahasiswa',
-            6 => 'Koordinator TA'
+            2 => 'Kepala Urusan',
+            3 => 'Dosen',
+            4 => 'Mahasiswa',
+            5 => 'Admin LAA',
+            6 => 'Koordinator TA',
+            7 => 'PIC KK',
+            9 => 'Ketua KK',
+            21 => 'Laboran'
         ];
         return isset($roles[$roleId]) ? $roles[$roleId] : 'Mahasiswa';
     }

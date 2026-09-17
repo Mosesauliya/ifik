@@ -30,18 +30,18 @@ class Kelolaruangan extends CI_Controller {
         }
         
         $role_id = (int)$this->session->userdata('role_id');
-        if ($role_id !== 1 && $role_id !== 2) {
+        if ($role_id !== 1 && $role_id !== 2 && $role_id !== 21) {
             if ($is_ajax) {
                 if (ob_get_length()) ob_clean();
                 header('Content-Type: application/json');
                 http_response_code(403);
                 echo json_encode([
                     'status'  => 'error', 
-                    'message' => 'Hanya Admin System dan Laboran yang memiliki hak akses untuk mengelola data ruangan.'
+                    'message' => 'Hanya Admin System, Ka. Ur, dan Laboran yang memiliki hak akses untuk mengelola data ruangan.'
                 ]);
                 exit;
             }
-            $this->session->set_flashdata('error', 'Hanya Admin System dan Laboran yang dapat mengakses halaman Kelola Ruangan.');
+            $this->session->set_flashdata('error', 'Hanya Admin System, Ka. Ur, dan Laboran yang dapat mengakses halaman Kelola Ruangan.');
             redirect('dashboard');
         }
     }
@@ -166,25 +166,27 @@ class Kelolaruangan extends CI_Controller {
         $foto_path     = $this->_upload_file('foto', 'uploads/ruangan/foto/', 'jpg|jpeg|png|webp|gif');
         $model_3d_path = $this->_upload_file('model_3d', 'uploads/ruangan/models/', 'glb|fbx|gltf|obj|bin');
 
-        $data_ruangan = array(
-            'nama_ruangan'          => $nama_ruangan,
-            'kode_ruangan'          => $clean_kode_ruangan,
-            'id_kategori'           => $id_kategori,
-            'kapasitas'             => $kapasitas ? $kapasitas : 30,
-            'lokasi'                => $lokasi ? $lokasi : 'Gedung Sebatik (FIK)',
-            'status'                => $status ? $status : 'Tersedia',
-            'tagline'               => $tagline,
-            'jumlah_unit'          => $jumlah_unit,
-            'jam_operasional'       => $jam_operasional,
-            'deskripsi'             => $deskripsi,
-            'spesifikasi_fasilitas' => $spesifikasi_fasilitas,
-            'tata_tertib'           => $tata_tertib
-        );
+        $fields = $this->db->list_fields('ruangan');
+        $data_ruangan = array();
+        if (in_array('id', $fields)) $data_ruangan['id'] = $clean_kode_ruangan;
+        if (in_array('ruangan', $fields)) $data_ruangan['ruangan'] = $nama_ruangan;
+        if (in_array('nama_ruangan', $fields)) $data_ruangan['nama_ruangan'] = $nama_ruangan;
+        if (in_array('kode_ruangan', $fields)) $data_ruangan['kode_ruangan'] = $clean_kode_ruangan;
+        if (in_array('id_kategori', $fields)) $data_ruangan['id_kategori'] = $id_kategori;
+        if (in_array('kapasitas', $fields)) $data_ruangan['kapasitas'] = $kapasitas ? $kapasitas : 30;
+        if (in_array('lokasi', $fields)) $data_ruangan['lokasi'] = $lokasi ? $lokasi : 'Gedung Sebatik (FIK)';
+        if (in_array('status', $fields)) $data_ruangan['status'] = $status ? $status : 'Tersedia';
+        if (in_array('tagline', $fields)) $data_ruangan['tagline'] = $tagline;
+        if (in_array('jumlah_unit', $fields)) $data_ruangan['jumlah_unit'] = $jumlah_unit;
+        if (in_array('jam_operasional', $fields)) $data_ruangan['jam_operasional'] = $jam_operasional;
+        if (in_array('deskripsi', $fields)) $data_ruangan['deskripsi'] = $deskripsi;
+        if (in_array('spesifikasi_fasilitas', $fields)) $data_ruangan['spesifikasi_fasilitas'] = $spesifikasi_fasilitas;
+        if (in_array('tata_tertib', $fields)) $data_ruangan['tata_tertib'] = $tata_tertib;
 
-        if ($foto_path) {
+        if ($foto_path && in_array('foto', $fields)) {
             $data_ruangan['foto'] = $foto_path;
         }
-        if ($model_3d_path) {
+        if ($model_3d_path && in_array('model_3d', $fields)) {
             $data_ruangan['model_3d'] = $model_3d_path;
         }
 
@@ -238,25 +240,26 @@ class Kelolaruangan extends CI_Controller {
         $foto_path     = $this->_upload_file('foto', 'uploads/ruangan/foto/', 'jpg|jpeg|png|webp|gif');
         $model_3d_path = $this->_upload_file('model_3d', 'uploads/ruangan/models/', 'glb|fbx|gltf|obj|bin');
 
-        $data_ruangan = array(
-            'nama_ruangan'          => $nama_ruangan,
-            'kode_ruangan'          => $clean_kode_ruangan,
-            'id_kategori'           => $id_kategori,
-            'kapasitas'             => $kapasitas,
-            'lokasi'                => $lokasi,
-            'status'                => $status,
-            'tagline'               => $tagline,
-            'jumlah_unit'          => $jumlah_unit,
-            'jam_operasional'       => $jam_operasional,
-            'deskripsi'             => $deskripsi,
-            'spesifikasi_fasilitas' => $spesifikasi_fasilitas,
-            'tata_tertib'           => $tata_tertib
-        );
+        $fields = $this->db->list_fields('ruangan');
+        $data_ruangan = array();
+        if (in_array('ruangan', $fields)) $data_ruangan['ruangan'] = $nama_ruangan;
+        if (in_array('nama_ruangan', $fields)) $data_ruangan['nama_ruangan'] = $nama_ruangan;
+        if (in_array('kode_ruangan', $fields)) $data_ruangan['kode_ruangan'] = $clean_kode_ruangan;
+        if (in_array('id_kategori', $fields)) $data_ruangan['id_kategori'] = $id_kategori;
+        if (in_array('kapasitas', $fields)) $data_ruangan['kapasitas'] = $kapasitas;
+        if (in_array('lokasi', $fields)) $data_ruangan['lokasi'] = $lokasi;
+        if (in_array('status', $fields)) $data_ruangan['status'] = $status;
+        if (in_array('tagline', $fields)) $data_ruangan['tagline'] = $tagline;
+        if (in_array('jumlah_unit', $fields)) $data_ruangan['jumlah_unit'] = $jumlah_unit;
+        if (in_array('jam_operasional', $fields)) $data_ruangan['jam_operasional'] = $jam_operasional;
+        if (in_array('deskripsi', $fields)) $data_ruangan['deskripsi'] = $deskripsi;
+        if (in_array('spesifikasi_fasilitas', $fields)) $data_ruangan['spesifikasi_fasilitas'] = $spesifikasi_fasilitas;
+        if (in_array('tata_tertib', $fields)) $data_ruangan['tata_tertib'] = $tata_tertib;
 
-        if ($foto_path) {
+        if ($foto_path && in_array('foto', $fields)) {
             $data_ruangan['foto'] = $foto_path;
         }
-        if ($model_3d_path) {
+        if ($model_3d_path && in_array('model_3d', $fields)) {
             $data_ruangan['model_3d'] = $model_3d_path;
         }
 
