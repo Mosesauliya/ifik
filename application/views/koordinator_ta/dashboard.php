@@ -1385,9 +1385,9 @@
                 <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div>
                         <h2 class="text-base font-bold text-slate-900 flex items-center gap-2.5 tracking-tight">
-                            <i class="fa-solid fa-chalkboard-user text-indigo-600 text-lg"></i> Daftar Plotting Penguji & Jadwal Sidang Preview 2
+                            <i class="fa-solid fa-chalkboard-user text-indigo-600 text-lg"></i> Daftar Plotting Dosen Penguji Preview 2
                         </h2>
-                        <p class="text-xs text-slate-500 font-normal mt-0.5">Tetapkan Dosen Penguji 1 & 2 serta jadwalkan ruangan sidang preview 2 untuk mahasiswa.</p>
+                        <p class="text-xs text-slate-500 font-normal mt-0.5">Tetapkan Dosen Penguji 1 & 2 untuk mahasiswa pada tahap Preview 2.</p>
                     </div>
 
                     <!-- Tombol Riwayat Histori Penguji -->
@@ -1414,7 +1414,7 @@
                                 <div onclick="selectP2MainCategory('judul', '📖 Judul Tugas Akhir', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-600"><span>📖 Judul Tugas Akhir</span></div>
                                 <div onclick="selectP2MainCategory('pembimbing', '👔 Dosen Pembimbing', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-600"><span>👔 Dosen Pembimbing</span></div>
                                 <div onclick="selectP2MainCategory('penguji', '👨‍🏫 Dosen Penguji', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-600"><span>👨‍🏫 Dosen Penguji</span></div>
-                                <div onclick="selectP2MainCategory('ruangan', '🏛️ Ruangan Sidang', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-600"><span>🏛️ Ruangan Sidang</span></div>
+                                <div onclick="selectP2MainCategory('ruangan', '🏛️ Ruangan Presentasi', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-600"><span>🏛️ Ruangan Presentasi</span></div>
                                 <div onclick="selectP2MainCategory('status', '⚡ Status Plotting', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-600"><span>⚡ Status Plotting</span></div>
                             </div>
                         </div>
@@ -1470,7 +1470,7 @@
                 <!-- Row 2: Page Size & Records Count -->
                 <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
                     <div class="text-xs text-slate-500 font-medium">
-                        <span>Kelola jadwal dan plotting dosen penguji preview 2 mahasiswa secara terstruktur.</span>
+                        <span>Kelola plotting dosen penguji preview 2 mahasiswa secara terstruktur.</span>
                     </div>
 
                     <!-- Page Size & Counter Right -->
