@@ -478,7 +478,7 @@ class KoordinatorTA extends CI_Controller {
             return;
         }
 
-        $res = $this->KoordinatorTA_model->update_jadwal_sidang_ajax($nim, $tgl_sidang, $jam_mulai, $jam_selesai, $ruangan);
+        $res = $this->KoordinatorTA_model->update_jadwal_sidang_ajax($nim, $tgl_sidang, $jam_mulai, $ruangan, '', $jam_selesai);
         echo json_encode($res);
     }
 

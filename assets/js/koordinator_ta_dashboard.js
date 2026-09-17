@@ -6034,19 +6034,21 @@
             if (isChecked) anyPageSelected = true;
             else allPageSelected = false;
 
-            const isTerjadwal = (row.status_sidang === 'Terjadwal');
+            const isTerjadwal = (row.status_sidang === 'Terjadwal' || Boolean(row.tgl_sidang || row.tanggal_sidang));
             const statusBadge = isTerjadwal
                 ? '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 font-bold text-[10px] rounded-full border border-emerald-300 bg-emerald-50 text-emerald-700 shadow-2xs whitespace-nowrap"><i class="fa-solid fa-circle-check text-[10px]"></i> Terjadwal</span>'
                 : '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 font-bold text-[10px] rounded-full border border-rose-300 bg-rose-50 text-rose-700 shadow-2xs whitespace-nowrap"><i class="fa-solid fa-clock text-[10px]"></i> Belum Dijadwalkan</span>';
 
-            const waktuDisplay = isTerjadwal && row.tgl_sidang
+            const tglVal = row.tgl_sidang || row.tanggal_sidang;
+            const jamVal = row.jam_mulai_sidang || row.waktu_sidang;
+            const waktuDisplay = isTerjadwal && tglVal
                 ? `<div class="space-y-0.5 text-slate-800 text-[10.5px] leading-tight">
-                    <div class="flex items-center gap-1 font-bold text-slate-900 whitespace-nowrap"><i class="fa-solid fa-calendar-day text-amber-500 text-[10px] shrink-0"></i> <span>${escapeHtml(formatIndonesianDate(row.tgl_sidang))}</span></div>
-                    <div class="flex items-center gap-1 text-[9.5px] text-slate-500 font-medium whitespace-nowrap"><i class="fa-solid fa-clock text-slate-400 text-[8.5px] shrink-0"></i> <span>${escapeHtml(row.jam_mulai_sidang ? row.jam_mulai_sidang.substring(0, 5) : '')} ${row.jam_selesai_sidang ? '- ' + escapeHtml(row.jam_selesai_sidang.substring(0, 5)) : ''} WIB</span></div>
+                    <div class="flex items-center gap-1 font-bold text-slate-900 whitespace-nowrap"><i class="fa-solid fa-calendar-day text-amber-500 text-[10px] shrink-0"></i> <span>${escapeHtml(formatIndonesianDate(tglVal))}</span></div>
+                    <div class="flex items-center gap-1 text-[9.5px] text-slate-500 font-medium whitespace-nowrap"><i class="fa-solid fa-clock text-slate-400 text-[8.5px] shrink-0"></i> <span>${escapeHtml(jamVal ? jamVal.substring(0, 5) : '')} ${row.jam_selesai_sidang ? '- ' + escapeHtml(row.jam_selesai_sidang.substring(0, 5)) : ''} WIB</span></div>
                    </div>`
                 : '<span class="text-slate-400 italic text-[10.5px]">Belum diatur</span>';
 
-            const roomText = row.detail_nama_ruangan || row.ruangan_sidang;
+            const roomText = row.detail_nama_ruangan || row.ruangan_sidang || row.ruang_sidang || row.ruangan_sidang_final;
             const ruanganDisplay = isTerjadwal && roomText
                 ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-cyan-50 text-cyan-800 border border-cyan-200 shadow-2xs whitespace-nowrap max-w-[105px] truncate" title="${escapeHtml(roomText)}">
                     <i class="fa-solid fa-door-open text-cyan-600 text-[9.5px] shrink-0"></i> <span class="truncate">${escapeHtml(roomText)}</span>

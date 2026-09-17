@@ -695,73 +695,80 @@ class KoordinatorTA_model extends CI_Model {
      */
     public function get_all_mahasiswa_sidang() {
         $all = $this->get_all_mahasiswa_preview2();
-        $filtered = array();
+        if (empty($all)) {
+            return array();
+        }
 
-        foreach ($all as $item) {
-            // Mahasiswa masuk ke Tab Sidang jika sudah memiliki Dosen Penguji atau sudah dijadwalkan sidang
-            $hasPenguji = !empty($item['penguji_1']) && !empty($item['penguji_2']);
-            $hasJadwal = !empty($item['tgl_sidang']);
+        $guidanceIds = array_column($all, 'guidance_id');
+        $this->db->select('
+            id,
+            tanggal_sidang,
+            waktu_sidang,
+            ruang_sidang,
+            link_sidang,
+            nilaisidang_pembimbing1,
+            nilaisidang_pembimbing2,
+            nilaisidang_penguji1,
+            nilaisidang_penguji2,
+            bap,
+            status_bap
+        ');
+        $this->db->from('guidance');
+        $this->db->where_in('id', $guidanceIds);
+        $gQuery = $this->db->get();
 
-            if ($hasPenguji || $hasJadwal) {
-                $filtered[] = $item;
+        $gMap = array();
+        if ($gQuery && $gQuery->num_rows() > 0) {
+            foreach ($gQuery->result_array() as $gr) {
+                $gMap[$gr['id']] = $gr;
             }
         }
 
         $result = array();
-        if (!empty($filtered)) {
-            $guidanceIds = array_column($filtered, 'guidance_id');
-            $this->db->select('
-                id,
-                tanggal_sidang,
-                waktu_sidang,
-                ruang_sidang,
-                link_sidang,
-                nilaisidang_pembimbing1,
-                nilaisidang_pembimbing2,
-                nilaisidang_penguji1,
-                nilaisidang_penguji2,
-                bap,
-                status_bap
-            ');
-            $this->db->from('guidance');
-            $this->db->where_in('id', $guidanceIds);
-            $gQuery = $this->db->get();
+        foreach ($all as $item) {
+            $gId = $item['guidance_id'];
+            $gRow = $gMap[$gId] ?? array();
 
-            $gMap = array();
-            if ($gQuery && $gQuery->num_rows() > 0) {
-                foreach ($gQuery->result_array() as $gr) {
-                    $gMap[$gr['id']] = $gr;
-                }
+            $hasPenguji = !empty($item['penguji_1']) && !empty($item['penguji_2']);
+            $hasJadwalSidang = !empty($gRow['tanggal_sidang']);
+
+            if (!$hasPenguji && !$hasJadwalSidang) {
+                continue;
             }
 
-            foreach ($filtered as $item) {
-                $gId = $item['guidance_id'];
-                $gRow = $gMap[$gId] ?? array();
+            $n1 = (float)($gRow['nilaisidang_pembimbing1'] ?? 0);
+            $n2 = (float)($gRow['nilaisidang_pembimbing2'] ?? 0);
+            $np1 = (float)($gRow['nilaisidang_penguji1'] ?? 0);
+            $np2 = (float)($gRow['nilaisidang_penguji2'] ?? 0);
 
-                $n1 = (float)($gRow['nilaisidang_pembimbing1'] ?? 0);
-                $n2 = (float)($gRow['nilaisidang_pembimbing2'] ?? 0);
-                $np1 = (float)($gRow['nilaisidang_penguji1'] ?? 0);
-                $np2 = (float)($gRow['nilaisidang_penguji2'] ?? 0);
+            $validScores = array_filter(array($n1, $n2, $np1, $np2), fn($v) => $v > 0);
+            $avgScore = count($validScores) > 0 ? round(array_sum($validScores) / count($validScores), 2) : 0;
 
-                $validScores = array_filter(array($n1, $n2, $np1, $np2), fn($v) => $v > 0);
-                $avgScore = count($validScores) > 0 ? round(array_sum($validScores) / count($validScores), 2) : 0;
+            $tglSidang = !empty($gRow['tanggal_sidang']) ? $gRow['tanggal_sidang'] : null;
+            $waktuSidang = !empty($gRow['waktu_sidang']) ? $gRow['waktu_sidang'] : null;
+            $ruangSidang = !empty($gRow['ruang_sidang']) ? trim($gRow['ruang_sidang']) : null;
+            $isScheduled = !empty($tglSidang);
 
-                $item['tanggal_sidang']           = $gRow['tanggal_sidang'] ?? ($item['tgl_sidang'] ?? null);
-                $item['waktu_sidang']             = $gRow['waktu_sidang'] ?? ($item['jam_mulai_sidang'] ?? null);
-                $item['ruangan_sidang_final']     = $gRow['ruang_sidang'] ?? ($item['ruangan_sidang'] ?? null);
-                $item['link_sidang']              = $gRow['link_sidang'] ?? null;
-                $item['nilaisidang_pembimbing1']  = $n1;
-                $item['nilaisidang_pembimbing2']  = $n2;
-                $item['nilaisidang_penguji1']     = $np1;
-                $item['nilaisidang_penguji2']     = $np2;
-                $item['nilai_akhir_sidang']       = $avgScore;
-                $item['grade_sidang']             = ($avgScore >= 80) ? 'A' : (($avgScore >= 70) ? 'B' : (($avgScore >= 60) ? 'C' : 'E'));
-                $item['status_kelulusan_sidang']  = ($avgScore >= 60) ? 'Lulus' : ($avgScore > 0 ? 'Tidak Lulus' : 'Belum Dinilai');
-                $item['file_bap']                 = $gRow['bap'] ?? null;
-                $item['status_bap']               = $gRow['status_bap'] ?? 'Pending';
+            $item['tgl_sidang']               = $tglSidang;
+            $item['tanggal_sidang']           = $tglSidang;
+            $item['jam_mulai_sidang']         = $waktuSidang;
+            $item['waktu_sidang']             = $waktuSidang;
+            $item['ruangan_sidang']           = $ruangSidang;
+            $item['ruang_sidang']             = $ruangSidang;
+            $item['ruangan_sidang_final']     = $ruangSidang;
+            $item['status_sidang']            = $isScheduled ? 'Terjadwal' : 'Belum Dijadwalkan';
+            $item['link_sidang']              = $gRow['link_sidang'] ?? null;
+            $item['nilaisidang_pembimbing1']  = $n1;
+            $item['nilaisidang_pembimbing2']  = $n2;
+            $item['nilaisidang_penguji1']     = $np1;
+            $item['nilaisidang_penguji2']     = $np2;
+            $item['nilai_akhir_sidang']       = $avgScore;
+            $item['grade_sidang']             = ($avgScore >= 80) ? 'A' : (($avgScore >= 70) ? 'B' : (($avgScore >= 60) ? 'C' : 'E'));
+            $item['status_kelulusan_sidang']  = ($avgScore >= 60) ? 'Lulus' : ($avgScore > 0 ? 'Tidak Lulus' : 'Belum Dinilai');
+            $item['file_bap']                 = $gRow['bap'] ?? null;
+            $item['status_bap']               = $gRow['status_bap'] ?? 'Pending';
 
-                $result[] = $item;
-            }
+            $result[] = $item;
         }
 
         return $result;
@@ -770,7 +777,7 @@ class KoordinatorTA_model extends CI_Model {
     /**
      * Update Jadwal Sidang TA Single Mahasiswa
      */
-    public function update_jadwal_sidang_ajax($nim, $tanggal_sidang, $waktu_sidang, $ruang_sidang, $link_sidang = '') {
+    public function update_jadwal_sidang_ajax($nim, $tanggal_sidang, $waktu_sidang, $ruang_sidang, $link_sidang = '', $jam_selesai = null) {
         $this->db->where('nim', $nim);
         $this->db->or_where('id', $nim);
         $mhs = $this->db->get('user')->row_array();
