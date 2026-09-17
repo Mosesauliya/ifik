@@ -6,29 +6,6 @@ class Approval_log_model extends CI_Model {
     public function __construct() {
         parent::__construct();
         date_default_timezone_set('Asia/Jakarta');
-        $this->_ensure_table();
-    }
-
-    /**
-     * Pastikan tabel log_approval_history ada di database
-     */
-    private function _ensure_table() {
-        if (!$this->db->table_exists('log_approval_history')) {
-            $sql = "CREATE TABLE IF NOT EXISTS `log_approval_history` (
-                `id` INT AUTO_INCREMENT PRIMARY KEY,
-                `modul` VARCHAR(100) NOT NULL,
-                `ref_id` VARCHAR(100) NOT NULL,
-                `target_name` VARCHAR(255) NULL,
-                `action` VARCHAR(50) NOT NULL,
-                `actor_id` INT NULL,
-                `actor_name` VARCHAR(150) NOT NULL,
-                `actor_role` VARCHAR(100) NOT NULL,
-                `actor_nip_nim` VARCHAR(50) NULL,
-                `catatan` TEXT NULL,
-                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
-            $this->db->query($sql);
-        }
     }
 
     /**
