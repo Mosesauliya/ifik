@@ -7,26 +7,6 @@ class AdminLayanan_model extends CI_Model {
         parent::__construct();
     }
 
-        if (!$this->db->table_exists('ticketing_laa')) {
-            $this->db->query("CREATE TABLE IF NOT EXISTS `ticketing_laa` (
-                `id` INT AUTO_INCREMENT PRIMARY KEY,
-                `ticket_number` VARCHAR(50) NOT NULL,
-                `nim_nip` VARCHAR(30) NOT NULL,
-                `nama` VARCHAR(150) NOT NULL,
-                `email` VARCHAR(150) NULL,
-                `kategori` VARCHAR(100) NOT NULL,
-                `perihal` VARCHAR(255) NOT NULL,
-                `deskripsi` TEXT NULL,
-                `prioritas` ENUM('Normal', 'Tinggi', 'Urgent') DEFAULT 'Normal',
-                `status` ENUM('Inputted', 'Pending', 'Approved', 'Rejected', 'Selesai') DEFAULT 'Pending',
-                `catatan` TEXT NULL,
-                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-                `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                UNIQUE KEY `uniq_ticket` (`ticket_number`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-        }
-    }
-
     public function get_short_berkas_label($nama_berkas, $kode_berkas = '') {
         $known = [
             'ksm'        => 'KSM',
@@ -71,31 +51,31 @@ class AdminLayanan_model extends CI_Model {
     }
 
     public function get_all_syarat_berkas() {
-        $this->_ensure_tables();
+        if (!$this->db->table_exists('syarat_berkas_ta')) return array();
         $this->db->order_by('urutan', 'ASC');
         return $this->db->get('syarat_berkas_ta')->result_array();
     }
 
     public function get_active_syarat_berkas() {
-        $this->_ensure_tables();
+        if (!$this->db->table_exists('syarat_berkas_ta')) return array();
         $this->db->where('is_active', 1);
         $this->db->order_by('urutan', 'ASC');
         return $this->db->get('syarat_berkas_ta')->result_array();
     }
 
     public function save_syarat_berkas($data) {
-        $this->_ensure_tables();
+        if (!$this->db->table_exists('syarat_berkas_ta')) return false;
         return $this->db->insert('syarat_berkas_ta', $data);
     }
 
     public function update_syarat_berkas($id, $data) {
-        $this->_ensure_tables();
+        if (!$this->db->table_exists('syarat_berkas_ta')) return false;
         $this->db->where('id', $id);
         return $this->db->update('syarat_berkas_ta', $data);
     }
 
     public function toggle_syarat_berkas($id) {
-        $this->_ensure_tables();
+        if (!$this->db->table_exists('syarat_berkas_ta')) return false;
         $row = $this->db->get_where('syarat_berkas_ta', ['id' => $id])->row_array();
         if (!$row) return false;
 
@@ -105,13 +85,13 @@ class AdminLayanan_model extends CI_Model {
     }
 
     public function delete_syarat_berkas($id) {
-        $this->_ensure_tables();
+        if (!$this->db->table_exists('syarat_berkas_ta')) return false;
         $this->db->where('id', $id);
         return $this->db->delete('syarat_berkas_ta');
     }
 
     public function get_student_berkas_map($nim) {
-        $this->_ensure_tables();
+        if (!$this->db->table_exists('pendaftaran_berkas')) return array();
         $rows = $this->db->get_where('pendaftaran_berkas', ['nim' => $nim])->result_array();
         $map = [];
         foreach ($rows as $r) {
@@ -121,7 +101,7 @@ class AdminLayanan_model extends CI_Model {
     }
 
     public function save_student_berkas($nim, $kode_berkas, $file_name, $status = 'Pending', $arg5 = null, $arg6 = null) {
-        $this->_ensure_tables();
+        if (!$this->db->table_exists('pendaftaran_berkas')) return false;
 
         $nama_berkas = null;
         $catatan     = null;
@@ -651,7 +631,10 @@ class AdminLayanan_model extends CI_Model {
             return array();
         }
 
-        $this->_ensure_tables();
+        if (!$this->db->table_exists('pendaftaran_berkas')) {
+            return array();
+        }
+
         $this->db->where_in('nim', $nims);
         $rows = $this->db->get('pendaftaran_berkas')->result_array();
 
@@ -753,7 +736,6 @@ class AdminLayanan_model extends CI_Model {
     // ==========================================
 
     public function get_tickets($type = 'all', $search = '') {
-        $this->_ensure_tables();
         if (!$this->db->table_exists('ticketing_laa')) return array();
 
         $this->db->select('*');
@@ -779,7 +761,7 @@ class AdminLayanan_model extends CI_Model {
     }
 
     public function save_ticket($data) {
-        $this->_ensure_tables();
+        if (!$this->db->table_exists('ticketing_laa')) return false;
         if (empty($data['ticket_number'])) {
             $data['ticket_number'] = 'TICK-' . date('Ymd') . '-' . rand(1000, 9999);
         }
@@ -793,7 +775,7 @@ class AdminLayanan_model extends CI_Model {
     }
 
     public function update_ticket_status($id, $status, $catatan = '') {
-        $this->_ensure_tables();
+        if (!$this->db->table_exists('ticketing_laa')) return false;
         $this->db->where('id', $id);
         return $this->db->update('ticketing_laa', [
             'status'     => $status,
