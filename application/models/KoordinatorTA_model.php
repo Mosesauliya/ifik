@@ -100,19 +100,19 @@ class KoordinatorTA_model extends CI_Model {
     }
 
     /**
-     * Ambil semua mahasiswa mendaftar TA untuk Dashboard Koordinator TA
+     * Ambil semua mahasiswa yang TELAH mengajukan TA (ada di tabel guidance)
      */
     public function get_all_mahasiswa_ta() {
-        // Query mahasiswa dari tabel user (role_id = 4)
         $this->db->select('
             u.id as user_id,
-            u.nim,
-            u.name,
+            COALESCE(u.nim, g.id_mhs) as nim,
+            COALESCE(u.name, "Mahasiswa") as name,
             u.email,
             u.no_telp as no_hp,
             u.dosen_wali,
             u.prodi as user_prodi,
             g.id as guidance_id,
+            g.id_mhs,
             g.judul_1,
             g.judul_2,
             g.judul_3,
@@ -140,16 +140,15 @@ class KoordinatorTA_model extends CI_Model {
             p2.name as nama_penguji_2,
             dw.name as nama_dosen_wali_resolved
         ');
-        $this->db->from('user u');
-        $this->db->join('guidance g', 'g.id_mhs = u.id OR g.id_mhs = u.nim', 'left');
+        $this->db->from('guidance g');
+        $this->db->join('user u', 'u.id = g.id_mhs OR u.nim = g.id_mhs', 'left');
         $this->db->join('thesis_lecturers tl', 'tl.id_guidance = g.id', 'left');
         $this->db->join('user d1', 'd1.nip = tl.dosen_pembimbing1 OR d1.id = tl.dosen_pembimbing1 OR d1.kode_dosen = tl.dosen_pembimbing1', 'left');
         $this->db->join('user d2', 'd2.nip = tl.dosen_pembimbing2 OR d2.id = tl.dosen_pembimbing2 OR d2.kode_dosen = tl.dosen_pembimbing2', 'left');
         $this->db->join('user p1', 'p1.nip = tl.dosen_penguji1 OR p1.id = tl.dosen_penguji1 OR p1.kode_dosen = tl.dosen_penguji1', 'left');
         $this->db->join('user p2', 'p2.nip = tl.dosen_penguji2 OR p2.id = tl.dosen_penguji2 OR p2.kode_dosen = tl.dosen_penguji2', 'left');
         $this->db->join('user dw', 'dw.nip = u.dosen_wali OR dw.name = u.dosen_wali OR dw.id = u.dosen_wali', 'left');
-        $this->db->where('u.role_id', 4);
-        $this->db->order_by('u.name', 'ASC');
+        $this->db->order_by('g.date', 'DESC');
 
         $query = $this->db->get();
         $raw = $query ? $query->result_array() : array();
@@ -160,6 +159,7 @@ class KoordinatorTA_model extends CI_Model {
         $id_list = array();
         foreach ($raw as $r) {
             if (!empty($r['user_id'])) $id_list[] = $r['user_id'];
+            if (!empty($r['id_mhs'])) $id_list[] = $r['id_mhs'];
             if (!empty($r['nim'])) $id_list[] = $r['nim'];
         }
         $id_list = array_unique($id_list);
@@ -167,9 +167,9 @@ class KoordinatorTA_model extends CI_Model {
 
         $result = array();
         foreach ($raw as $row) {
-            $uId = $row['user_id'];
-            $nim = $row['nim'] ?? $uId;
-            $fData = $files_map[$uId] ?? ($files_map[$nim] ?? array());
+            $uId = $row['user_id'] ?: $row['id_mhs'];
+            $nim = $row['nim'] ?: $uId;
+            $fData = $files_map[$uId] ?? ($files_map[$nim] ?? ($files_map[$row['id_mhs']] ?? array()));
 
             // Pecah nama menjadi nama_depan dan nama_belakang
             $nameParts = explode(' ', trim($row['name'] ?? 'Mahasiswa'));
