@@ -55,6 +55,13 @@
     <!-- Dedicated Admin Layanan (LAA) Curved Sidebar -->
     <?php $this->load->view('admin_layanan/sidebar'); ?>
 
+    <!-- Top App Navbar Partial -->
+    <?php $this->load->view('partials/app_navbar', [
+        'user_role_label'   => 'Admin Layanan (LAA)',
+        'user_display_name' => 'Admin Layanan FIK',
+        'user_display_sub'  => 'Unit Layanan Ticketing & Akademik'
+    ]); ?>
+
     <!-- Main Content Container (Balanced padding on mobile & desktop) -->
     <main class="min-h-screen p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto">
 

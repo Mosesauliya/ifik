@@ -216,78 +216,82 @@
             </div>
         <?php endif; ?>
 
-        <!-- Stats Overview Cards -->
+        <!-- Stats Overview Cards: Preview 1, Preview 2, Preview 3, Tahap Sidang -->
         <?php
-            $totalPeserta = count($list_peserta ?? []);
-            $approvedCount = 0;
-            $pendingCount = 0;
-            $sidangCount = 0;
+            $countPreview1 = 0;
+            $countPreview2 = 0;
+            $countPreview3 = 0;
+            $countSidang   = 0;
             if (!empty($list_peserta)) {
                 foreach ($list_peserta as $r) {
-                    if ($active_tab === 'bimbingan') {
-                        if (($r['status_approval_wali'] ?? '') === 'Approved') $approvedCount++;
-                        elseif (($r['status_approval_wali'] ?? '') === 'Pending') $pendingCount++;
+                    $stg = strtolower($r['tahapan_display'] ?? ($r['current_stage'] ?? ''));
+                    if (strpos($stg, 'preview 3') !== false || strpos($stg, 'preview3') !== false || strpos($stg, 'pra-sidang') !== false) {
+                        $countPreview3++;
+                    } elseif (strpos($stg, 'preview 2') !== false || strpos($stg, 'preview2') !== false) {
+                        $countPreview2++;
+                    } elseif (strpos($stg, 'preview 1') !== false || strpos($stg, 'preview1') !== false) {
+                        $countPreview1++;
+                    } elseif (strpos($stg, 'sidang') !== false || strpos($stg, 'lulus') !== false || strpos($stg, 'selesai') !== false) {
+                        $countSidang++;
                     } else {
-                        if (($r['status_approval_admin'] ?? '') === 'Approved') $approvedCount++;
-                        elseif (($r['status_approval_admin'] ?? '') === 'Pending') $pendingCount++;
-                    }
-                    if (strpos(strtolower($r['tahapan_display'] ?? ''), 'sidang') !== false) {
-                        $sidangCount++;
+                        $countPreview1++;
                     }
                 }
             }
         ?>
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
 
-            <!-- Total -->
-            <div class="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs sm:shadow-sm flex items-center justify-between">
+            <!-- Card 1: Preview 1 -->
+            <a href="<?= site_url('adminlayanan/status_peserta_ta?stage=preview1' . ($search ? '&q='.urlencode($search) : '') . ($cat ? '&cat='.$cat : '')); ?>" 
+               class="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 hover:border-orange-300 shadow-xs sm:shadow-sm hover:shadow-md transition-all flex items-center justify-between group">
                 <div class="min-w-0">
-                    <span class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider block truncate">Total Peserta</span>
-                    <span class="text-xl sm:text-3xl font-extrabold text-slate-800 mt-0.5 sm:mt-1 block"><?= $totalPeserta; ?></span>
-                    <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate block">Mahasiswa Terdaftar</span>
+                    <span class="text-[10px] sm:text-xs font-bold text-orange-500 uppercase tracking-wider block truncate">Preview 1</span>
+                    <span class="text-xl sm:text-3xl font-extrabold text-slate-800 mt-0.5 sm:mt-1 block group-hover:text-orange-600 transition-colors"><?= $countPreview1; ?></span>
+                    <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate block">Tahap Proposal TA</span>
                 </div>
-                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center text-lg sm:text-xl shrink-0 ml-2">
-                    <i class="bi bi-people-fill"></i>
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center text-lg sm:text-xl shrink-0 ml-2 group-hover:scale-110 transition-transform">
+                    <i class="bi bi-journal-text"></i>
                 </div>
-            </div>
+            </a>
 
-            <!-- Disetujui -->
-            <div class="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs sm:shadow-sm flex items-center justify-between">
+            <!-- Card 2: Preview 2 -->
+            <a href="<?= site_url('adminlayanan/status_peserta_ta?stage=preview2' . ($search ? '&q='.urlencode($search) : '') . ($cat ? '&cat='.$cat : '')); ?>" 
+               class="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 hover:border-amber-300 shadow-xs sm:shadow-sm hover:shadow-md transition-all flex items-center justify-between group">
                 <div class="min-w-0">
-                    <span class="text-[10px] sm:text-xs font-bold text-emerald-500 uppercase tracking-wider block truncate">
-                        <?= $active_tab === 'bimbingan' ? 'Disetujui Wali' : 'Berkas Disetujui'; ?>
-                    </span>
-                    <span class="text-xl sm:text-3xl font-extrabold text-emerald-600 mt-0.5 sm:mt-1 block"><?= $approvedCount; ?></span>
-                    <span class="text-[10px] sm:text-[11px] text-emerald-500/80 font-medium truncate block">Status Approved</span>
+                    <span class="text-[10px] sm:text-xs font-bold text-amber-500 uppercase tracking-wider block truncate">Preview 2</span>
+                    <span class="text-xl sm:text-3xl font-extrabold text-slate-800 mt-0.5 sm:mt-1 block group-hover:text-amber-600 transition-colors"><?= $countPreview2; ?></span>
+                    <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate block">Tahap Progres 50%</span>
                 </div>
-                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg sm:text-xl shrink-0 ml-2">
-                    <i class="bi bi-check2-circle"></i>
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg sm:text-xl shrink-0 ml-2 group-hover:scale-110 transition-transform">
+                    <i class="bi bi-bar-chart-steps"></i>
                 </div>
-            </div>
+            </a>
 
-            <!-- Menunggu / Pending -->
-            <div class="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs sm:shadow-sm flex items-center justify-between">
+            <!-- Card 3: Preview 3 -->
+            <a href="<?= site_url('adminlayanan/status_peserta_ta?stage=preview3' . ($search ? '&q='.urlencode($search) : '') . ($cat ? '&cat='.$cat : '')); ?>" 
+               class="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 hover:border-indigo-300 shadow-xs sm:shadow-sm hover:shadow-md transition-all flex items-center justify-between group">
                 <div class="min-w-0">
-                    <span class="text-[10px] sm:text-xs font-bold text-amber-500 uppercase tracking-wider block truncate">Menunggu</span>
-                    <span class="text-xl sm:text-3xl font-extrabold text-amber-600 mt-0.5 sm:mt-1 block"><?= $pendingCount; ?></span>
-                    <span class="text-[10px] sm:text-[11px] text-amber-500/80 font-medium truncate block">Pending Verifikasi</span>
+                    <span class="text-[10px] sm:text-xs font-bold text-indigo-500 uppercase tracking-wider block truncate">Preview 3</span>
+                    <span class="text-xl sm:text-3xl font-extrabold text-slate-800 mt-0.5 sm:mt-1 block group-hover:text-indigo-600 transition-colors"><?= $countPreview3; ?></span>
+                    <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate block">Tahap Pra-Sidang</span>
                 </div>
-                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg sm:text-xl shrink-0 ml-2">
-                    <i class="bi bi-hourglass-split"></i>
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg sm:text-xl shrink-0 ml-2 group-hover:scale-110 transition-transform">
+                    <i class="bi bi-shield-check"></i>
                 </div>
-            </div>
+            </a>
 
-            <!-- Tahap Sidang -->
-            <div class="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs sm:shadow-sm flex items-center justify-between">
+            <!-- Card 4: Tahap Sidang -->
+            <a href="<?= site_url('adminlayanan/status_peserta_ta?stage=sidang' . ($search ? '&q='.urlencode($search) : '') . ($cat ? '&cat='.$cat : '')); ?>" 
+               class="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 hover:border-emerald-300 shadow-xs sm:shadow-sm hover:shadow-md transition-all flex items-center justify-between group">
                 <div class="min-w-0">
-                    <span class="text-[10px] sm:text-xs font-bold text-blue-500 uppercase tracking-wider block truncate">Tahap Sidang</span>
-                    <span class="text-xl sm:text-3xl font-extrabold text-blue-600 mt-0.5 sm:mt-1 block"><?= $sidangCount; ?></span>
-                    <span class="text-[10px] sm:text-[11px] text-blue-500/80 font-medium truncate block">Siap / Daftar Sidang</span>
+                    <span class="text-[10px] sm:text-xs font-bold text-emerald-500 uppercase tracking-wider block truncate">Tahap Sidang</span>
+                    <span class="text-xl sm:text-3xl font-extrabold text-slate-800 mt-0.5 sm:mt-1 block group-hover:text-emerald-600 transition-colors"><?= $countSidang; ?></span>
+                    <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate block">Siap / Daftar Sidang</span>
                 </div>
-                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg sm:text-xl shrink-0 ml-2">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg sm:text-xl shrink-0 ml-2 group-hover:scale-110 transition-transform">
                     <i class="bi bi-mortarboard-fill"></i>
                 </div>
-            </div>
+            </a>
 
         </div>
 
@@ -309,7 +313,7 @@
                             <option value="preview1" <?= $filter_stage === 'preview1' ? 'selected' : ''; ?>>Preview 1</option>
                             <option value="preview2" <?= $filter_stage === 'preview2' ? 'selected' : ''; ?>>Preview 2</option>
                             <option value="preview3" <?= $filter_stage === 'preview3' ? 'selected' : ''; ?>>Preview 3</option>
-                            <option value="sidang" <?= $filter_stage === 'sidang' ? 'selected' : ''; ?>>Pendaftaran Sidang</option>
+                            <option value="sidang" <?= $filter_stage === 'sidang' ? 'selected' : ''; ?>>Tahap Sidang</option>
                         </select>
                     </div>
 

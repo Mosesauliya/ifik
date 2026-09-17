@@ -5,311 +5,6 @@ class AdminLayanan_model extends CI_Model {
 
     public function __construct() {
         parent::__construct();
-        $this->_ensure_tables();
-    }
-
-    /**
-     * Memastikan seluruh tabel yang dibutuhkan Admin Layanan tersedia
-     */
-    private function _ensure_tables() {
-        // 1. Tabel Kelompok Keahlian
-        if (!$this->db->table_exists('kelompok_keahlian')) {
-            $this->db->query("CREATE TABLE IF NOT EXISTS `kelompok_keahlian` (
-                `id` INT AUTO_INCREMENT PRIMARY KEY,
-                `nama_kk` VARCHAR(150) NOT NULL,
-                `kode_kk` VARCHAR(50) NOT NULL,
-                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-
-            $default_kk = [
-                ['id' => 1, 'nama_kk' => 'Creative Design & Visual Communication', 'kode_kk' => 'DKV'],
-                ['id' => 2, 'nama_kk' => 'Digital Media & Interactive Tech', 'kode_kk' => 'DMI'],
-                ['id' => 3, 'nama_kk' => 'Craft & Product Innovation', 'kode_kk' => 'CPI']
-            ];
-            $this->db->insert_batch('kelompok_keahlian', $default_kk);
-        }
-
-        // 2. Tabel Syarat Berkas TA
-        if (!$this->db->table_exists('syarat_berkas_ta')) {
-            $this->db->query("CREATE TABLE IF NOT EXISTS `syarat_berkas_ta` (
-                `id` INT AUTO_INCREMENT PRIMARY KEY,
-                `kode_berkas` VARCHAR(50) NOT NULL UNIQUE,
-                `nama_berkas` VARCHAR(150) NOT NULL,
-                `deskripsi` TEXT NULL,
-                `is_required` TINYINT(1) DEFAULT 1,
-                `is_active` TINYINT(1) DEFAULT 1,
-                `urutan` INT DEFAULT 1,
-                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-                `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-
-            $default_items = [
-                ['kode_berkas' => 'ksm', 'nama_berkas' => 'KSM (Kartu Studi Mahasiswa)', 'deskripsi' => 'Kartu Studi Mahasiswa semester aktif (PDF)', 'is_required' => 1, 'is_active' => 1, 'urutan' => 1],
-                ['kode_berkas' => 'transkrip', 'nama_berkas' => 'Transkrip Nilai', 'deskripsi' => 'Transkrip nilai Kumulatif sampai semester terakhir (PDF)', 'is_required' => 1, 'is_active' => 1, 'urutan' => 2],
-                ['kode_berkas' => 'pernyataan', 'nama_berkas' => 'Surat Pernyataan', 'deskripsi' => 'Surat Pernyataan Keaslian & Orisinalitas (PDF)', 'is_required' => 1, 'is_active' => 1, 'urutan' => 3],
-                ['kode_berkas' => 'bebas_lab', 'nama_berkas' => 'Surat Bebas Lab', 'deskripsi' => 'Surat Bebas Tanggungan Laboratorium (PDF)', 'is_required' => 1, 'is_active' => 1, 'urutan' => 4]
-            ];
-            $this->db->insert_batch('syarat_berkas_ta', $default_items);
-        }
-
-        // 3. Tabel Mahasiswa
-        if (!$this->db->table_exists('mahasiswa')) {
-            $this->db->query("CREATE TABLE IF NOT EXISTS `mahasiswa` (
-                `id` INT AUTO_INCREMENT PRIMARY KEY,
-                `nim` VARCHAR(30) NOT NULL UNIQUE,
-                `nama_depan` VARCHAR(100) NOT NULL,
-                `nama_belakang` VARCHAR(100) NULL,
-                `prodi` VARCHAR(100) DEFAULT 'Desain Komunikasi Visual',
-                `konsentrasi_dkv` VARCHAR(100) NULL,
-                `email` VARCHAR(150) NULL,
-                `no_hp` VARCHAR(30) NULL,
-                `alamat` TEXT NULL,
-                `kota` VARCHAR(100) NULL,
-                `provinsi` VARCHAR(100) NULL,
-                `latitude` VARCHAR(50) NULL,
-                `longitude` VARCHAR(50) NULL,
-                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-
-            $default_mhs = [
-                ['nim' => '1401210001', 'nama_depan' => 'Rivan', 'nama_belakang' => 'Arshavin', 'prodi' => 'Desain Komunikasi Visual', 'konsentrasi_dkv' => 'Desain Grafis', 'email' => 'rivan@telkomuniversity.ac.id', 'no_hp' => '081234567890', 'alamat' => 'Jl. Telekomunikasi No. 1, Bandung'],
-                ['nim' => '1401210002', 'nama_depan' => 'Moses', 'nama_belakang' => 'Auliya', 'prodi' => 'Desain Komunikasi Visual', 'konsentrasi_dkv' => 'Multimedia', 'email' => 'moses@telkomuniversity.ac.id', 'no_hp' => '081234567891', 'alamat' => 'Jl. Sukabirus No. 12, Bandung'],
-                ['nim' => '1401210003', 'nama_depan' => 'Alif', 'nama_belakang' => 'Muzakki', 'prodi' => 'Desain Komunikasi Visual', 'konsentrasi_dkv' => 'Desain Grafis', 'email' => 'alif@telkomuniversity.ac.id', 'no_hp' => '081234567892', 'alamat' => 'Jl. Radio Palasari No. 5, Bandung'],
-                ['nim' => '1401210004', 'nama_depan' => 'Fajar', 'nama_belakang' => 'Nugraha', 'prodi' => 'Desain Komunikasi Visual', 'konsentrasi_dkv' => 'Animasi', 'email' => 'fajar@telkomuniversity.ac.id', 'no_hp' => '081234567893', 'alamat' => 'Jl. PGA No. 44, Bandung'],
-                ['nim' => '1401210005', 'nama_depan' => 'Salsabila', 'nama_belakang' => 'Putri', 'prodi' => 'Desain Komunikasi Visual', 'konsentrasi_dkv' => 'Multimedia', 'email' => 'salsabila@telkomuniversity.ac.id', 'no_hp' => '081234567894', 'alamat' => 'Jl. Adhyaksa No. 10, Bandung']
-            ];
-            $this->db->insert_batch('mahasiswa', $default_mhs);
-        }
-
-        // 4. Tabel Pendaftaran TA
-        if (!$this->db->table_exists('pendaftaran_ta')) {
-            $this->db->query("CREATE TABLE IF NOT EXISTS `pendaftaran_ta` (
-                `id` INT AUTO_INCREMENT PRIMARY KEY,
-                `nim` VARCHAR(30) NOT NULL,
-                `id_kk` INT NULL DEFAULT 1,
-                `id_dosen_wali` INT NULL,
-                `judul_1` TEXT NULL,
-                `judul_2` TEXT NULL,
-                `status_approval_wali` ENUM('Pending','Approved','Rejected') DEFAULT 'Approved',
-                `catatan_wali` TEXT NULL,
-                `status_approval_admin` ENUM('Pending','Approved','Rejected') DEFAULT 'Pending',
-                `catatan_admin` TEXT NULL,
-                `berkas_kurang` TEXT NULL,
-                `status_approval_koor` ENUM('Pending','Approved','Rejected') DEFAULT 'Pending',
-                `catatan_koor` TEXT NULL,
-                `status_approval_kk` ENUM('Pending','Approved','Rejected') DEFAULT 'Pending',
-                `catatan_kk` TEXT NULL,
-                `current_stage` VARCHAR(50) DEFAULT 'Admin Layanan',
-                `is_submitted` TINYINT(1) DEFAULT 1,
-                `status_ksm` ENUM('Pending','Valid','Invalid') DEFAULT 'Pending',
-                `status_transkrip` ENUM('Pending','Valid','Invalid') DEFAULT 'Pending',
-                `status_pernyataan` ENUM('Pending','Valid','Invalid') DEFAULT 'Pending',
-                `status_bebas_lab` ENUM('Pending','Valid','Invalid') DEFAULT 'Pending',
-                `file_ksm` VARCHAR(255) NULL,
-                `file_transkrip` VARCHAR(255) NULL,
-                `file_pernyataan` VARCHAR(255) NULL,
-                `file_bebas_lab` VARCHAR(255) NULL,
-                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-                `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                UNIQUE KEY `uniq_mhs_ta` (`nim`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-
-            $default_ta = [
-                [
-                    'nim' => '1401210001',
-                    'id_kk' => 1,
-                    'judul_1' => 'Perancangan Visual Identity dan Kemasan Produk Kopi Lokal Jawa Barat Berbasis Kearifan Budaya Sunda',
-                    'status_approval_wali' => 'Approved',
-                    'status_approval_admin' => 'Pending',
-                    'current_stage' => 'Admin Layanan',
-                    'is_submitted' => 1,
-                    'status_ksm' => 'Pending', 'status_transkrip' => 'Pending', 'status_pernyataan' => 'Pending', 'status_bebas_lab' => 'Pending',
-                    'file_ksm' => 'Sertifikat_Massal_2026-07-07_(2).pdf', 'file_transkrip' => 'Sertifikat_Massal_2026-07-07_(2).pdf', 'file_pernyataan' => 'Sertifikat_Massal_2026-07-07_(2).pdf', 'file_bebas_lab' => 'Sertifikat_Massal_2026-07-07_(2).pdf'
-                ],
-                [
-                    'nim' => '1401210002',
-                    'id_kk' => 2,
-                    'judul_1' => 'Pengembangan Sistem Desain Antarmuka Mobile Game Edukasi Sejarah Berbasis Gamifikasi Interaktif',
-                    'status_approval_wali' => 'Approved',
-                    'status_approval_admin' => 'Approved',
-                    'current_stage' => 'Koordinator TA',
-                    'is_submitted' => 1,
-                    'status_ksm' => 'Valid', 'status_transkrip' => 'Valid', 'status_pernyataan' => 'Valid', 'status_bebas_lab' => 'Valid',
-                    'file_ksm' => 'Sertifikat_Massal_2026-07-07_(2).pdf', 'file_transkrip' => 'Sertifikat_Massal_2026-07-07_(2).pdf', 'file_pernyataan' => 'Sertifikat_Massal_2026-07-07_(2).pdf', 'file_bebas_lab' => 'Sertifikat_Massal_2026-07-07_(2).pdf'
-                ],
-                [
-                    'nim' => '1401210003',
-                    'id_kk' => 1,
-                    'judul_1' => 'Perancangan Buku Ilustrasi Cerita Rakyat Interaktif Augmented Reality untuk Anak Usia Dini',
-                    'status_approval_wali' => 'Approved',
-                    'status_approval_admin' => 'Rejected',
-                    'catatan_admin' => 'Transkrip nilai belum ada cap/stempel resmi dari bagian akademik.',
-                    'berkas_kurang' => 'Transkrip Nilai (Tidak Sesuai / Invalid)',
-                    'current_stage' => 'Admin Layanan',
-                    'is_submitted' => 1,
-                    'status_ksm' => 'Valid', 'status_transkrip' => 'Invalid', 'status_pernyataan' => 'Valid', 'status_bebas_lab' => 'Valid',
-                    'file_ksm' => 'Sertifikat_Massal_2026-07-07_(2).pdf', 'file_transkrip' => 'Sertifikat_Massal_2026-07-07_(2).pdf', 'file_pernyataan' => 'Sertifikat_Massal_2026-07-07_(2).pdf', 'file_bebas_lab' => 'Sertifikat_Massal_2026-07-07_(2).pdf'
-                ],
-                [
-                    'nim' => '1401210004',
-                    'id_kk' => 2,
-                    'judul_1' => 'Kajian Tipografi Digital dan Karakter Visual pada Media Komik Webtoon Kontemporer',
-                    'status_approval_wali' => 'Approved',
-                    'status_approval_admin' => 'Pending',
-                    'current_stage' => 'Admin Layanan',
-                    'is_submitted' => 1,
-                    'status_ksm' => 'Valid', 'status_transkrip' => 'Pending', 'status_pernyataan' => 'Pending', 'status_bebas_lab' => 'Pending',
-                    'file_ksm' => 'Sertifikat_Massal_2026-07-07_(2).pdf', 'file_transkrip' => 'Sertifikat_Massal_2026-07-07_(2).pdf', 'file_pernyataan' => 'Sertifikat_Massal_2026-07-07_(2).pdf', 'file_bebas_lab' => 'Sertifikat_Massal_2026-07-07_(2).pdf'
-                ],
-                [
-                    'nim' => '1401210005',
-                    'id_kk' => 3,
-                    'judul_1' => 'Perancangan Media Promosi Budaya Tradisional Menggunakan Instalasi Seni Multimedia Interaktif',
-                    'status_approval_wali' => 'Approved',
-                    'status_approval_admin' => 'Approved',
-                    'current_stage' => 'Pra-Sidang (Preview 3)',
-                    'is_submitted' => 1,
-                    'status_ksm' => 'Valid', 'status_transkrip' => 'Valid', 'status_pernyataan' => 'Valid', 'status_bebas_lab' => 'Valid',
-                    'file_ksm' => 'Sertifikat_Massal_2026-07-07_(2).pdf', 'file_transkrip' => 'Sertifikat_Massal_2026-07-07_(2).pdf', 'file_pernyataan' => 'Sertifikat_Massal_2026-07-07_(2).pdf', 'file_bebas_lab' => 'Sertifikat_Massal_2026-07-07_(2).pdf'
-                ]
-            ];
-            $this->db->insert_batch('pendaftaran_ta', $default_ta);
-        }
-
-        // 5. Tabel Pendaftaran Berkas
-        if (!$this->db->table_exists('pendaftaran_berkas')) {
-            $this->db->query("CREATE TABLE IF NOT EXISTS `pendaftaran_berkas` (
-                `id` INT AUTO_INCREMENT PRIMARY KEY,
-                `nim` VARCHAR(30) NOT NULL,
-                `kode_berkas` VARCHAR(50) NOT NULL,
-                `nama_berkas` VARCHAR(150) NULL,
-                `file_name` VARCHAR(255) NOT NULL,
-                `status_verifikasi` ENUM('Pending','Valid','Invalid') DEFAULT 'Pending',
-                `catatan` TEXT NULL,
-                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-                `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                UNIQUE KEY `nim_kode` (`nim`, `kode_berkas`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-
-            // Seed file berkas dummy
-            $syarats = ['ksm' => 'KSM (Kartu Studi Mahasiswa)', 'transkrip' => 'Transkrip Nilai', 'pernyataan' => 'Surat Pernyataan', 'bebas_lab' => 'Surat Bebas Lab'];
-            $sample_nims = ['1401210001', '1401210002', '1401210003', '1401210004', '1401210005'];
-            $berkas_batch = [];
-
-            foreach ($sample_nims as $snim) {
-                foreach ($syarats as $code => $lbl) {
-                    $st = 'Pending';
-                    if ($snim === '1401210002' || $snim === '1401210005') {
-                        $st = 'Valid';
-                    } elseif ($snim === '1401210003') {
-                        $st = ($code === 'transkrip') ? 'Invalid' : 'Valid';
-                    } elseif ($snim === '1401210004') {
-                        $st = ($code === 'ksm') ? 'Valid' : 'Pending';
-                    }
-                    $berkas_batch[] = [
-                        'nim' => $snim,
-                        'kode_berkas' => $code,
-                        'nama_berkas' => $lbl,
-                        'file_name' => 'Sertifikat_Massal_2026-07-07_(2).pdf',
-                        'status_verifikasi' => $st,
-                        'catatan' => ($st === 'Invalid') ? 'Perlu legalisir ulang' : null
-                    ];
-                }
-            }
-            $this->db->insert_batch('pendaftaran_berkas', $berkas_batch);
-        }
-
-        // 6. Tabel Ticketing LAA
-        if (!$this->db->table_exists('ticketing_laa')) {
-            $this->db->query("CREATE TABLE IF NOT EXISTS `ticketing_laa` (
-                `id` INT AUTO_INCREMENT PRIMARY KEY,
-                `ticket_number` VARCHAR(50) NOT NULL,
-                `nim_nip` VARCHAR(30) NOT NULL,
-                `nama` VARCHAR(150) NOT NULL,
-                `email` VARCHAR(150) NULL,
-                `kategori` VARCHAR(100) NOT NULL,
-                `perihal` VARCHAR(255) NOT NULL,
-                `deskripsi` TEXT NULL,
-                `prioritas` ENUM('Normal', 'Tinggi', 'Urgent') DEFAULT 'Normal',
-                `status` ENUM('Inputted', 'Pending', 'Approved', 'Rejected', 'Selesai') DEFAULT 'Pending',
-                `catatan` TEXT NULL,
-                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-                `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                UNIQUE KEY `uniq_ticket` (`ticket_number`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-
-            $default_tickets = [
-                [
-                    'ticket_number' => 'TICK-' . date('Ymd') . '-1001',
-                    'nim_nip'       => '1401210001',
-                    'nama'          => 'Rivan Arshavin',
-                    'email'         => 'rivan@telkomuniversity.ac.id',
-                    'kategori'      => 'Pengajuan Berkas TA',
-                    'perihal'       => 'Permohonan Validasi Surat Bebas Lab',
-                    'deskripsi'     => 'Surat bebas lab dari lab multimedia telah terbit, mohon divalidasi berkasnya.',
-                    'prioritas'     => 'Normal',
-                    'status'        => 'Pending'
-                ],
-                [
-                    'ticket_number' => 'TICK-' . date('Ymd') . '-1002',
-                    'nim_nip'       => '1401210003',
-                    'nama'          => 'Alif Muzakki',
-                    'email'         => 'alif@telkomuniversity.ac.id',
-                    'kategori'      => 'Reset Tahapan Preview',
-                    'perihal'       => 'Permohonan Re-upload Transkrip Nilai',
-                    'deskripsi'     => 'Transkrip nilai yang lama salah unggah, mohon reset verifikasi berkas.',
-                    'prioritas'     => 'Tinggi',
-                    'status'        => 'Approved',
-                    'catatan'       => 'Status berkas telah direset untuk perbaikan.'
-                ],
-                [
-                    'ticket_number' => 'TICK-' . date('Ymd') . '-1003',
-                    'nim_nip'       => '1401210004',
-                    'nama'          => 'Fajar Nugraha',
-                    'email'         => 'fajar@telkomuniversity.ac.id',
-                    'kategori'      => 'Surat Keterangan LAA',
-                    'perihal'       => 'Surat Keterangan Pendaftaran Sidang',
-                    'deskripsi'     => 'Mohon penerbitan surat pengantar sidang TA gelombang 1.',
-                    'prioritas'     => 'Urgent',
-                    'status'        => 'Pending'
-                ]
-            ];
-            $this->db->insert_batch('ticketing_laa', $default_tickets);
-        }
-
-        // 7. Tabel Dosen Ticketing
-        if (!$this->db->table_exists('dosen_ticketing')) {
-            $this->db->query("CREATE TABLE IF NOT EXISTS `dosen_ticketing` (
-                `id` INT AUTO_INCREMENT PRIMARY KEY,
-                `kode_tiket` VARCHAR(50) NOT NULL UNIQUE,
-                `nip_dosen` VARCHAR(50) NULL,
-                `nama_dosen` VARCHAR(150) NOT NULL,
-                `unit_tujuan` VARCHAR(100) NOT NULL DEFAULT 'LAA',
-                `kategori` VARCHAR(100) NOT NULL,
-                `subjek` VARCHAR(255) NOT NULL,
-                `deskripsi` TEXT NULL,
-                `lampiran` VARCHAR(255) NULL,
-                `status` ENUM('Menunggu','Diproses','Selesai','Ditutup') DEFAULT 'Menunggu',
-                `tanggapan` TEXT NULL,
-                `petugas_tanggapan` VARCHAR(150) NULL,
-                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-                `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-
-            $default_dt = [
-                [
-                    'kode_tiket' => 'TIK-DOS-2026-001',
-                    'nip_dosen'  => '198501012010121001',
-                    'nama_dosen' => 'Dr. Hendra Gunawan, S.Ds., M.Ds.',
-                    'unit_tujuan'=> 'LAA',
-                    'kategori'   => 'Akademik TA',
-                    'subjek'     => 'Konfirmasi Jadwal Sidang Mahasiswa Bimbingan',
-                    'deskripsi'  => 'Mohon informasi jadwal sidang mahasiswa bimbingan TA semester ganjil.',
-                    'status'     => 'Menunggu'
-                ]
-            ];
-            $this->db->insert_batch('dosen_ticketing', $default_dt);
-        }
     }
 
     public function get_short_berkas_label($nama_berkas, $kode_berkas = '') {
@@ -356,31 +51,31 @@ class AdminLayanan_model extends CI_Model {
     }
 
     public function get_all_syarat_berkas() {
-        $this->_ensure_tables();
+        if (!$this->db->table_exists('syarat_berkas_ta')) return array();
         $this->db->order_by('urutan', 'ASC');
         return $this->db->get('syarat_berkas_ta')->result_array();
     }
 
     public function get_active_syarat_berkas() {
-        $this->_ensure_tables();
+        if (!$this->db->table_exists('syarat_berkas_ta')) return array();
         $this->db->where('is_active', 1);
         $this->db->order_by('urutan', 'ASC');
         return $this->db->get('syarat_berkas_ta')->result_array();
     }
 
     public function save_syarat_berkas($data) {
-        $this->_ensure_tables();
+        if (!$this->db->table_exists('syarat_berkas_ta')) return false;
         return $this->db->insert('syarat_berkas_ta', $data);
     }
 
     public function update_syarat_berkas($id, $data) {
-        $this->_ensure_tables();
+        if (!$this->db->table_exists('syarat_berkas_ta')) return false;
         $this->db->where('id', $id);
         return $this->db->update('syarat_berkas_ta', $data);
     }
 
     public function toggle_syarat_berkas($id) {
-        $this->_ensure_tables();
+        if (!$this->db->table_exists('syarat_berkas_ta')) return false;
         $row = $this->db->get_where('syarat_berkas_ta', ['id' => $id])->row_array();
         if (!$row) return false;
 
@@ -390,13 +85,13 @@ class AdminLayanan_model extends CI_Model {
     }
 
     public function delete_syarat_berkas($id) {
-        $this->_ensure_tables();
+        if (!$this->db->table_exists('syarat_berkas_ta')) return false;
         $this->db->where('id', $id);
         return $this->db->delete('syarat_berkas_ta');
     }
 
     public function get_student_berkas_map($nim) {
-        $this->_ensure_tables();
+        if (!$this->db->table_exists('pendaftaran_berkas')) return array();
         $rows = $this->db->get_where('pendaftaran_berkas', ['nim' => $nim])->result_array();
         $map = [];
         foreach ($rows as $r) {
@@ -406,7 +101,7 @@ class AdminLayanan_model extends CI_Model {
     }
 
     public function save_student_berkas($nim, $kode_berkas, $file_name, $status = 'Pending', $arg5 = null, $arg6 = null) {
-        $this->_ensure_tables();
+        if (!$this->db->table_exists('pendaftaran_berkas')) return false;
 
         $nama_berkas = null;
         $catatan     = null;
@@ -936,7 +631,10 @@ class AdminLayanan_model extends CI_Model {
             return array();
         }
 
-        $this->_ensure_tables();
+        if (!$this->db->table_exists('pendaftaran_berkas')) {
+            return array();
+        }
+
         $this->db->where_in('nim', $nims);
         $rows = $this->db->get('pendaftaran_berkas')->result_array();
 
@@ -1038,7 +736,6 @@ class AdminLayanan_model extends CI_Model {
     // ==========================================
 
     public function get_tickets($type = 'all', $search = '') {
-        $this->_ensure_tables();
         if (!$this->db->table_exists('ticketing_laa')) return array();
 
         $this->db->select('*');
@@ -1064,7 +761,7 @@ class AdminLayanan_model extends CI_Model {
     }
 
     public function save_ticket($data) {
-        $this->_ensure_tables();
+        if (!$this->db->table_exists('ticketing_laa')) return false;
         if (empty($data['ticket_number'])) {
             $data['ticket_number'] = 'TICK-' . date('Ymd') . '-' . rand(1000, 9999);
         }
@@ -1078,7 +775,7 @@ class AdminLayanan_model extends CI_Model {
     }
 
     public function update_ticket_status($id, $status, $catatan = '') {
-        $this->_ensure_tables();
+        if (!$this->db->table_exists('ticketing_laa')) return false;
         $this->db->where('id', $id);
         return $this->db->update('ticketing_laa', [
             'status'     => $status,

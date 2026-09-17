@@ -24,37 +24,50 @@ class AdminLayananTicketing extends CI_Controller {
         $filterStatus = $this->input->get('status', true) ?: 'all';
         $search = trim($this->input->get('q', true) ?? '');
 
-        // Query Tiket Masuk Khusus Unit LAA
-        $this->db->from($this->table);
-        $this->db->group_start();
-        $this->db->like('unit_tujuan', 'LAA');
-        $this->db->or_like('unit_tujuan', 'Layanan Akademik');
-        $this->db->group_end();
-
-        if (!empty($filterStatus) && $filterStatus !== 'all') {
-            $this->db->where('status', $filterStatus);
-        }
-
-        if (!empty($search)) {
-            $this->db->group_start();
-            $this->db->like('kode_tiket', $search);
-            $this->db->or_like('nama_dosen', $search);
-            $this->db->or_like('subjek', $search);
-            $this->db->or_like('kategori', $search);
-            $this->db->group_end();
-        }
-
-        $this->db->order_by('created_at', 'DESC');
-        $tickets = $this->db->get()->result();
-
-        // Hitung Statistik Khusus LAA
+        $tickets = [];
         $stats = [
-            'total'    => $this->count_tickets_by_status('all'),
-            'menunggu' => $this->count_tickets_by_status('Menunggu'),
-            'diproses' => $this->count_tickets_by_status('Diproses'),
-            'selesai'  => $this->count_tickets_by_status('Selesai'),
-            'ditutup'  => $this->count_tickets_by_status('Ditutup')
+            'total'    => 0,
+            'menunggu' => 0,
+            'diproses' => 0,
+            'selesai'  => 0,
+            'ditutup'  => 0
         ];
+
+        if ($this->db->table_exists($this->table)) {
+            // Query Tiket Masuk Khusus Unit LAA
+            $this->db->from($this->table);
+            if ($this->db->field_exists('unit_tujuan', $this->table)) {
+                $this->db->group_start();
+                $this->db->like('unit_tujuan', 'LAA');
+                $this->db->or_like('unit_tujuan', 'Layanan Akademik');
+                $this->db->group_end();
+            }
+
+            if (!empty($filterStatus) && $filterStatus !== 'all') {
+                $this->db->where('status', $filterStatus);
+            }
+
+            if (!empty($search)) {
+                $this->db->group_start();
+                if ($this->db->field_exists('kode_tiket', $this->table)) $this->db->like('kode_tiket', $search);
+                if ($this->db->field_exists('nama_dosen', $this->table)) $this->db->or_like('nama_dosen', $search);
+                if ($this->db->field_exists('subjek', $this->table)) $this->db->or_like('subjek', $search);
+                if ($this->db->field_exists('kategori', $this->table)) $this->db->or_like('kategori', $search);
+                $this->db->group_end();
+            }
+
+            $this->db->order_by('created_at', 'DESC');
+            $tickets = $this->db->get()->result();
+
+            // Hitung Statistik Khusus LAA
+            $stats = [
+                'total'    => $this->count_tickets_by_status('all'),
+                'menunggu' => $this->count_tickets_by_status('Menunggu'),
+                'diproses' => $this->count_tickets_by_status('Diproses'),
+                'selesai'  => $this->count_tickets_by_status('Selesai'),
+                'ditutup'  => $this->count_tickets_by_status('Ditutup')
+            ];
+        }
 
         $data = [
             'title'        => 'Kelola Tiket Dosen — Admin Layanan (LAA)',
@@ -71,6 +84,13 @@ class AdminLayananTicketing extends CI_Controller {
      * AJAX Endpoint Detail Tiket untuk Modal
      */
     public function detail($id_or_kode) {
+        if (!$this->db->table_exists($this->table)) {
+            return $this->output
+                ->set_content_type('application/json')
+                ->set_status_header(404)
+                ->set_output(json_encode(['status' => false, 'message' => 'Tabel tiket belum tersedia di database.']));
+        }
+
         $this->db->from($this->table);
         if (is_numeric($id_or_kode)) {
             $this->db->where('id', (int)$id_or_kode);
@@ -90,20 +110,20 @@ class AdminLayananTicketing extends CI_Controller {
             'status' => true,
             'data'   => [
                 'id'             => $ticket->id,
-                'kode_tiket'     => $ticket->kode_tiket,
-                'nama_dosen'     => $ticket->nama_dosen,
-                'nidn'           => $ticket->nidn ?: '-',
-                'unit_tujuan'    => $ticket->unit_tujuan,
-                'kategori'       => $ticket->kategori,
-                'prioritas'      => $ticket->prioritas,
-                'subjek'         => $ticket->subjek,
-                'deskripsi'      => $ticket->deskripsi,
-                'lampiran'       => $ticket->lampiran,
-                'lampiran_url'   => $ticket->lampiran ? base_url('uploads/ticketing/' . $ticket->lampiran) : null,
-                'status'         => $ticket->status,
-                'tanggapan'      => $ticket->tanggapan,
-                'tgl_tanggapan'  => $ticket->tgl_tanggapan ? date('d M Y H:i', strtotime($ticket->tgl_tanggapan)) : null,
-                'created_at'     => date('d M Y H:i', strtotime($ticket->created_at))
+                'kode_tiket'     => $ticket->kode_tiket ?? '-',
+                'nama_dosen'     => $ticket->nama_dosen ?? '-',
+                'nidn'           => $ticket->nidn ?? '-',
+                'unit_tujuan'    => $ticket->unit_tujuan ?? 'LAA',
+                'kategori'       => $ticket->kategori ?? '-',
+                'prioritas'      => $ticket->prioritas ?? 'Normal',
+                'subjek'         => $ticket->subjek ?? '-',
+                'deskripsi'      => $ticket->deskripsi ?? '',
+                'lampiran'       => $ticket->lampiran ?? null,
+                'lampiran_url'   => !empty($ticket->lampiran) ? base_url('uploads/ticketing/' . $ticket->lampiran) : null,
+                'status'         => $ticket->status ?? 'Menunggu',
+                'tanggapan'      => $ticket->tanggapan ?? null,
+                'tgl_tanggapan'  => !empty($ticket->tgl_tanggapan) ? date('d M Y H:i', strtotime($ticket->tgl_tanggapan)) : null,
+                'created_at'     => !empty($ticket->created_at) ? date('d M Y H:i', strtotime($ticket->created_at)) : '-'
             ]
         ];
 
@@ -116,6 +136,12 @@ class AdminLayananTicketing extends CI_Controller {
      * Simpan Tanggapan & Perubahan Status oleh Admin LAA
      */
     public function simpan_tanggapan() {
+        if (!$this->db->table_exists($this->table)) {
+            $this->session->set_flashdata('error', 'Tabel tiket belum tersedia di database.');
+            redirect('adminlayanan/ticketing');
+            return;
+        }
+
         $idTiket   = (int)$this->input->post('id_tiket');
         $status    = trim($this->input->post('status', true));
         $tanggapan = trim($this->input->post('tanggapan'));
@@ -145,11 +171,15 @@ class AdminLayananTicketing extends CI_Controller {
     }
 
     private function count_tickets_by_status($status) {
+        if (!$this->db->table_exists($this->table)) return 0;
+
         $this->db->from($this->table);
-        $this->db->group_start();
-        $this->db->like('unit_tujuan', 'LAA');
-        $this->db->or_like('unit_tujuan', 'Layanan Akademik');
-        $this->db->group_end();
+        if ($this->db->field_exists('unit_tujuan', $this->table)) {
+            $this->db->group_start();
+            $this->db->like('unit_tujuan', 'LAA');
+            $this->db->or_like('unit_tujuan', 'Layanan Akademik');
+            $this->db->group_end();
+        }
 
         if ($status !== 'all') {
             $this->db->where('status', $status);
