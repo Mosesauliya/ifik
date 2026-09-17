@@ -98,15 +98,6 @@ class KoordinatorTA extends CI_Controller {
 
             $res = $this->KoordinatorTA_model->update_approval_koor_ajax($nim, $status, $catatan, $pembimbing_1, $pembimbing_2);
             if ($res['status']) {
-                $this->load->model('Approval_log_model');
-                $mhs_name = trim(($data['detail']['nama_depan'] ?? '') . ' ' . ($data['detail']['nama_belakang'] ?? ''));
-                $this->Approval_log_model->log(array(
-                    'modul'       => 'Koordinator TA',
-                    'ref_id'      => $nim,
-                    'target_name' => $mhs_name,
-                    'action'      => ($status === 'Approved') ? 'Approved' : 'Rejected',
-                    'catatan'     => $catatan
-                ));
                 $this->session->set_flashdata('success', $res['message']);
             } else {
                 $this->session->set_flashdata('error', $res['message']);
@@ -137,18 +128,6 @@ class KoordinatorTA extends CI_Controller {
         }
 
         $result = $this->KoordinatorTA_model->update_approval_koor_ajax($nim, $status, $catatan, $pembimbing_1, $pembimbing_2);
-        if ($result['status']) {
-            $this->load->model('Approval_log_model');
-            $detail = $this->KoordinatorTA_model->get_detail_pendaftaran_mahasiswa($nim);
-            $mhs_name = trim(($detail['nama_depan'] ?? '') . ' ' . ($detail['nama_belakang'] ?? ''));
-            $this->Approval_log_model->log(array(
-                'modul'       => 'Koordinator TA',
-                'ref_id'      => $nim,
-                'target_name' => $mhs_name,
-                'action'      => ($status === 'Approved') ? 'Approved' : 'Rejected',
-                'catatan'     => $catatan
-            ));
-        }
         echo json_encode($result);
     }
 
@@ -248,20 +227,6 @@ class KoordinatorTA extends CI_Controller {
         }
 
         $result = $this->KoordinatorTA_model->batch_approval_koor_ajax($nims, $status, $catatan, $pembimbing_1, $pembimbing_2, $penguji_1, $penguji_2, $plottings);
-        if ($result['status']) {
-            $this->load->model('Approval_log_model');
-            foreach ($nims as $n) {
-                $detail = $this->KoordinatorTA_model->get_detail_pendaftaran_mahasiswa($n);
-                $mhs_name = trim(($detail['nama_depan'] ?? '') . ' ' . ($detail['nama_belakang'] ?? ''));
-                $this->Approval_log_model->log(array(
-                    'modul'       => 'Koordinator TA',
-                    'ref_id'      => $n,
-                    'target_name' => $mhs_name,
-                    'action'      => ($status === 'Approved') ? 'Approved' : 'Rejected',
-                    'catatan'     => $catatan
-                ));
-            }
-        }
         echo json_encode($result);
     }
 
