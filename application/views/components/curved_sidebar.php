@@ -111,21 +111,11 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
         case 6: // Koordinator TA
             $defaultNavItems = [
                 ['category' => 'Pengelolaan Tugas Akhir'],
-                ['heading' => 'Dashboard Utama', 'href' => site_url('koordinatorta'), 'icon_3d' => 'assets/images/icons_3d/home.png'],
                 ['heading' => 'Pendaftaran TA', 'href' => site_url('koordinatorta#pendaftaran'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
-                ['heading' => 'Tahap Preview 1', 'href' => site_url('bimbingan'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
-                ['heading' => 'Tahap Preview 2', 'href' => site_url('koordinatorta#preview2'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+                ['heading' => 'Tahap Preview 2', 'href' => site_url('koordinatorta#preview2'), 'icon_3d' => 'assets/images/icons_3d/preview2.png'],
                 ['heading' => 'Jadwal Sidang TA', 'href' => site_url('koordinatorta#sidang'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
-                ['heading' => 'Pengaturan Jalur TA', 'href' => site_url('koordinatorta/pengaturan_jalur'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
-
-                ['category' => 'Portal Akademik & Bimbingan', 'has_divider' => true],
-                ['heading' => 'Dosen Pembimbing', 'href' => site_url('dosen/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
-                ['heading' => 'Dosen Penguji', 'href' => site_url('dosen/penguji'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
-                ['heading' => 'Dosen Wali', 'href' => site_url('dosen/wali'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
-                ['heading' => 'Tanda Tangan Digital', 'href' => site_url('dosen/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
 
                 ['category' => 'Layanan Ticketing & Bantuan', 'has_divider' => true],
-                ['heading' => 'Respon Ticketing', 'href' => site_url('dosen/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
                 ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
                 ['heading' => 'Riwayat Tiket Saya', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
 
@@ -444,18 +434,25 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                     $icon3d = isset($item['icon_3d']) ? $item['icon_3d'] : null;
 
                     $cleanHref = trim(str_replace([site_url(), base_url()], '', $item['href']), '/');
+                    $hasHash = (strpos($cleanHref, '#') !== false);
                     $cleanHrefUri = strtok($cleanHref, '#');
-                    $isCurrent = (!empty($cleanHrefUri) && ($curr_uri === $cleanHrefUri));
-                    if (!$isCurrent && !empty($cleanHrefUri) && !in_array($cleanHrefUri, ['dashboard', 'admin', 'laboran', 'kaur', 'dosen', 'koordinatorta', 'mahasiswa'])) {
-                        $isCurrent = (strpos($curr_uri, $cleanHrefUri) === 0);
-                    }
-                    if (!$isCurrent) {
-                        if ($cleanHrefUri === 'mahasiswa' && ($curr_uri === 'mahasiswa' || $curr_uri === 'mahasiswa/index')) {
-                            $isCurrent = true;
-                        } elseif ($cleanHrefUri === 'mahasiswa/pendaftaran_ta' && strpos($curr_uri, 'pendaftaran') !== false) {
-                            $isCurrent = true;
-                        } elseif ($cleanHrefUri === 'mahasiswa/bimbingan' && strpos($curr_uri, 'bimbingan') !== false) {
-                            $isCurrent = true;
+
+                    if ($hasHash) {
+                        // Links with # hashes are client-side tabs, will be activated dynamically via JS
+                        $isCurrent = false;
+                    } else {
+                        $isCurrent = (!empty($cleanHrefUri) && ($curr_uri === $cleanHrefUri));
+                        if (!$isCurrent && !empty($cleanHrefUri) && !in_array($cleanHrefUri, ['dashboard', 'admin', 'laboran', 'kaur', 'dosen', 'koordinatorta', 'mahasiswa'])) {
+                            $isCurrent = (strpos($curr_uri, $cleanHrefUri) === 0);
+                        }
+                        if (!$isCurrent) {
+                            if ($cleanHrefUri === 'mahasiswa' && ($curr_uri === 'mahasiswa' || $curr_uri === 'mahasiswa/index')) {
+                                $isCurrent = true;
+                            } elseif ($cleanHrefUri === 'mahasiswa/pendaftaran_ta' && strpos($curr_uri, 'pendaftaran') !== false) {
+                                $isCurrent = true;
+                            } elseif ($cleanHrefUri === 'mahasiswa/bimbingan' && strpos($curr_uri, 'bimbingan') !== false) {
+                                $isCurrent = true;
+                            }
                         }
                     }
                 ?>

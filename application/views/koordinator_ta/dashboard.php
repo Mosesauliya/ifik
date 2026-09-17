@@ -699,58 +699,7 @@
 <body class="bg-slate-50 text-slate-800 antialiased pb-24">
 
     <!-- Include Curved Animated Sidebar Component -->
-    <?php $this->load->view('components/curved_sidebar', [
-        'navItems' => [
-            [
-                'heading' => 'Dashboard Utama',
-                'href' => site_url('dashboard'),
-                'subheading' => 'Beranda Utama & Denah 3D',
-                'icon_3d' => 'assets/images/icons_3d/home.png',
-                'icon' => 'fa-solid fa-house',
-                'index' => 1
-            ],
-            [
-                'heading' => 'Pendaftaran TA',
-                'href' => 'javascript:switchDashboardTab("pendaftaran")',
-                'subheading' => 'Tab 1: Plotting Dosen Pembimbing',
-                'icon_3d' => 'assets/images/icons_3d/daftar.png',
-                'icon' => 'fa-solid fa-file-signature',
-                'index' => 2
-            ],
-            [
-                'heading' => 'Tahap Preview 2',
-                'href' => 'javascript:switchDashboardTab("preview2")',
-                'subheading' => 'Tab 2: Plotting Dosen Penguji',
-                'icon_3d' => 'assets/images/icons_3d/preview.png',
-                'icon' => 'fa-solid fa-chalkboard-user',
-                'index' => 3
-            ],
-            [
-                'heading' => 'Jadwal Sidang TA',
-                'href' => 'javascript:switchDashboardTab("sidang")',
-                'subheading' => 'Tab 3: Penjadwalan Sidang & Ruangan',
-                'icon_3d' => 'assets/images/icons_3d/sidang.png',
-                'icon' => 'fa-solid fa-calendar-check',
-                'index' => 4
-            ],
-            [
-                'heading' => 'Ajukan Peminjaman Ruangan',
-                'href' => site_url('ajukan-booking'),
-                'subheading' => 'Peminjaman Ruang Sidang & Lab',
-                'icon_3d' => 'assets/images/icons_3d/ruangan.png',
-                'icon' => 'fa-solid fa-door-open',
-                'index' => 5
-            ],
-            [
-                'heading' => 'Keluar / Logout',
-                'href' => site_url('login/logout'),
-                'subheading' => 'Akhiri Sesi Portal Koordinator',
-                'icon_3d' => 'assets/images/icons_3d/logout.png',
-                'icon' => 'fa-solid fa-arrow-right-from-bracket',
-                'index' => 6
-            ],
-        ]
-    ]); ?>
+    <?php $this->load->view('components/curved_sidebar'); ?>
 
     <!-- Top Navigation Header -->
     <header class="sticky top-0 z-40 glass-header px-4 sm:px-8 py-3 sm:py-4 mb-6 sm:mb-8">
