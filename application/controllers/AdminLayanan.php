@@ -613,16 +613,37 @@ class AdminLayanan extends CI_Controller {
     // TICKETING MODULE ENDPOINTS
     // ==========================================
 
+    public function ticketing() {
+        $tab = $this->input->get('tab') ?: 'input';
+        $data['title']      = 'Manajemen Ticketing LAA';
+        $data['active_tab'] = $tab;
+        $data['search']     = trim($this->input->get('q') ?? '');
+        $data['tickets']    = $this->AdminLayanan_model->get_tickets($tab, $data['search']);
+        $this->load->view('admin_layanan/ticketing', $data);
+    }
+
     public function ticketing_input() {
-        redirect('adminlayanan/ticketing');
+        $data['title']      = 'Input Ticketing LAA';
+        $data['active_tab'] = 'input';
+        $data['search']     = '';
+        $data['tickets']    = [];
+        $this->load->view('admin_layanan/ticketing', $data);
     }
 
     public function ticketing_approval() {
-        redirect('adminlayanan/ticketing');
+        $data['title']      = 'Approval Ticketing LAA';
+        $data['active_tab'] = 'approval';
+        $data['search']     = trim($this->input->get('q') ?? '');
+        $data['tickets']    = $this->AdminLayanan_model->get_tickets('approval', $data['search']);
+        $this->load->view('admin_layanan/ticketing', $data);
     }
 
     public function ticketing_riwayat() {
-        redirect('adminlayanan/ticketing');
+        $data['title']      = 'Riwayat Ticketing LAA';
+        $data['active_tab'] = 'riwayat';
+        $data['search']     = trim($this->input->get('q') ?? '');
+        $data['tickets']    = $this->AdminLayanan_model->get_tickets('riwayat', $data['search']);
+        $this->load->view('admin_layanan/ticketing', $data);
     }
 
     public function simpan_ticket() {
