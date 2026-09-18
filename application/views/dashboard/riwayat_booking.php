@@ -679,6 +679,8 @@
             overflow-x: auto;
             border-radius: 16px;
             border: 1px solid #f1f5f9;
+            min-height: 280px;
+            padding-bottom: 40px;
         }
 
         .riwayat-table {
@@ -705,6 +707,7 @@
             border-bottom: 1px solid #f1f5f9;
             vertical-align: middle;
             color: #334155;
+            position: relative;
         }
 
         .riwayat-table tr:hover td {
@@ -863,7 +866,12 @@
             animation: dropdownFadeIn 0.15s ease;
         }
         .action-menu-popup.show {
-            display: flex;
+            display: flex !important;
+        }
+
+        @keyframes dropdownFadeIn {
+            from { opacity: 0; transform: translateY(-6px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .action-menu-item {
             display: flex;
@@ -2098,13 +2106,13 @@
                                                 <span>Detail Peminjaman</span>
                                             </button>
                                             <?php if ($statusClass === 'disetujui'): ?>
-                                                <button type="button" class="action-menu-item" onclick="openSuratModal(<?= $row['id'] ?>)">
+                                                <button type="button" class="action-menu-item" onclick="openSuratModal('<?= $row['id'] ?>')">
                                                     <i class="fa-solid fa-qrcode" style="color: #059669;"></i>
                                                     <span>Surat QR Resmi</span>
                                                 </button>
                                             <?php endif; ?>
                                             <?php if ($statusClass === 'menunggu'): ?>
-                                                <button type="button" class="action-menu-item item-danger" onclick="cancelMyBooking(<?= $row['id'] ?>)">
+                                                <button type="button" class="action-menu-item item-danger" onclick="cancelMyBooking('<?= $row['id'] ?>')">
                                                     <i class="fa-solid fa-ban" style="color: #e11d48;"></i>
                                                     <span>Batalkan Pengajuan</span>
                                                 </button>
@@ -2773,9 +2781,9 @@
             if (e) { e.stopPropagation(); e.preventDefault(); }
             const menu = $('#rowActionMenu_' + id);
             const isVisible = menu.hasClass('show');
-            $('.action-menu-popup').removeClass('show').hide();
+            $('.action-menu-popup').removeClass('show');
             if (!isVisible) {
-                menu.addClass('show').show();
+                menu.addClass('show');
             }
         }
 
@@ -2799,7 +2807,7 @@
             let selectedPending = [];
 
             $('.booking-checkbox:checked').each(function() {
-                const id = parseInt($(this).val(), 10);
+                const id = String($(this).val());
                 const status = $(this).data('status');
                 const ruangan = $(this).data('ruangan');
                 const agenda = $(this).data('agenda');
@@ -2867,7 +2875,7 @@
             let pendingIds = [];
             $('.booking-checkbox:checked').each(function() {
                 if ($(this).data('status') === 'menunggu') {
-                    pendingIds.push(parseInt($(this).val(), 10));
+                    pendingIds.push(String($(this).val()));
                 }
             });
 
@@ -3223,7 +3231,7 @@
             let cancelBtn = '';
             if (statusClass === 'menunggu') {
                 cancelBtn = `
-                    <button type="button" class="action-menu-item item-danger" onclick="cancelMyBooking(${row.id})">
+                    <button type="button" class="action-menu-item item-danger" onclick="cancelMyBooking('${row.id}')">
                         <i class="fa-solid fa-ban" style="color: #e11d48;"></i>
                         <span>Batalkan Pengajuan</span>
                     </button>
@@ -3233,7 +3241,7 @@
             let suratBtn = '';
             if (statusClass === 'disetujui') {
                 suratBtn = `
-                    <button type="button" class="action-menu-item" onclick="openSuratModal(${row.id})">
+                    <button type="button" class="action-menu-item" onclick="openSuratModal('${row.id}')">
                         <i class="fa-solid fa-qrcode" style="color: #059669;"></i>
                         <span>Surat QR Resmi</span>
                     </button>
@@ -3242,7 +3250,7 @@
 
             let createdDate = row.created_at ? 'Diajukan: ' + new Date(row.created_at).toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'}).replace(/\./g, ':') : '';
 
-            let isChecked = selectedBookingIds.includes(parseInt(row.id, 10)) ? 'checked' : '';
+            let isChecked = selectedBookingIds.includes(String(row.id)) ? 'checked' : '';
 
             return `
                 <tr class="booking-row ${isChecked ? 'row-selected' : ''}" 
@@ -3492,7 +3500,7 @@
             // Close dropdowns & popover when clicking outside
             $(document).on('click', function(e) {
                 if (!$(e.target).closest('.action-dropdown-wrap').length) {
-                    $('.action-menu-popup').removeClass('show').hide();
+                    $('.action-menu-popup').removeClass('show');
                 }
                 if (!$(e.target).closest('.custom-dropdown-container').length) {
                     $('.custom-dropdown-menu').hide();

@@ -18,37 +18,41 @@ $sessionRoleId = (int)$this->session->userdata('role_id');
 $sessionEmail  = (string)$this->session->userdata('email');
 $currentUri = trim(uri_string(), '/');
 
+// Tentukan active role ID (utamakan rute modul aktif jika berada di portal spesifik, atau session role)
+$activeRoleId = $sessionRoleId;
+
 // Jika role 2 tapi mengakses modul laboran / akun laboran, arahkan ke role 21 (Laboran)
 if ($sessionRoleId === 2 && (strpos($currentUri, 'laboran') === 0 || strpos($sessionEmail, 'laboran') !== false)) {
-    $sessionRoleId = 21;
+    $activeRoleId = 21;
 }
 
-// Fallback cerdas jika role belum ada di session (misal saat direct link/preview)
-if ($sessionRoleId === 0) {
-    if (strpos($currentUri, 'laboran') === 0) {
-        $sessionRoleId = 21; // Laboran
-    } elseif (strpos($currentUri, 'kaur') === 0) {
-        $sessionRoleId = 2; // Kaur / Ka Lab
-    } elseif (strpos($currentUri, 'dosen') === 0 || strpos($currentUri, 'dosenwali') === 0) {
-        $sessionRoleId = 3; // Dosen
-    } elseif (strpos($currentUri, 'koordinatorta') === 0 || strpos($currentUri, 'koordinator') === 0) {
-        $sessionRoleId = 6; // Koordinator TA
-    } elseif (strpos($currentUri, 'adminlayanan') === 0) {
-        $sessionRoleId = 5; // Admin LAA
-    } elseif (strpos($currentUri, 'ketuakk') === 0) {
-        $sessionRoleId = 9; // Ketua KK
-    } elseif (strpos($currentUri, 'mahasiswa') === 0) {
-        $sessionRoleId = 4; // Mahasiswa
-    } elseif (strpos($currentUri, 'admin') === 0 || strpos($currentUri, 'kelolabooking') === 0) {
-        $sessionRoleId = 1; // Admin
-    } elseif (strpos($currentUri, 'importemail') === 0 || strpos($currentUri, 'import-email') === 0) {
-        $ref = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
-        if (strpos($ref, 'admin') !== false) {
-            $sessionRoleId = 1; // Admin
-        } else {
-            $sessionRoleId = 21; // Laboran
-        }
+if (strpos($currentUri, 'laboran') === 0) {
+    $activeRoleId = 21; // Laboran
+} elseif (strpos($currentUri, 'kaur') === 0) {
+    $activeRoleId = 2; // Kaur / Ka Lab
+} elseif (strpos($currentUri, 'dosen') === 0 || strpos($currentUri, 'dosenwali') === 0) {
+    $activeRoleId = 3; // Dosen
+} elseif (strpos($currentUri, 'koordinatorta') === 0 || strpos($currentUri, 'koordinator') === 0) {
+    $activeRoleId = 6; // Koordinator TA
+} elseif (strpos($currentUri, 'adminlayanan') === 0) {
+    $activeRoleId = 5; // Admin LAA
+} elseif (strpos($currentUri, 'ketuakk') === 0) {
+    $activeRoleId = 9; // Ketua KK
+} elseif (strpos($currentUri, 'mahasiswa') === 0) {
+    $activeRoleId = 4; // Mahasiswa
+} elseif (strpos($currentUri, 'admin') === 0 || strpos($currentUri, 'kelolabooking') === 0) {
+    $activeRoleId = 1; // Admin
+} elseif (strpos($currentUri, 'importemail') === 0 || strpos($currentUri, 'import-email') === 0) {
+    $ref = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
+    if (strpos($ref, 'admin') !== false) {
+        $activeRoleId = 1; // Admin
+    } else {
+        $activeRoleId = 21; // Laboran
     }
+}
+
+if ($activeRoleId === 0) {
+    $activeRoleId = 4; // Fallback ke Mahasiswa
 }
 
 $roleBadgeMap = [
@@ -62,12 +66,12 @@ $roleBadgeMap = [
     9 => 'Ketua KK',
     21 => 'Laboran'
 ];
-$activeRoleBadge = $roleBadgeMap[$sessionRoleId] ?? 'Portal IFIK';
+$activeRoleBadge = $roleBadgeMap[$activeRoleId] ?? 'Portal IFIK';
 
 if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
     $defaultNavItems = $navItems;
 } else {
-    switch ($sessionRoleId) {
+    switch ($activeRoleId) {
         case 21: // Laboran (Staff Operasional Laboratorium)
             $defaultNavItems = [
                 ['category' => 'Operasional Laboratorium'],
@@ -261,19 +265,19 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
 <style>
     /* Category Section Headers / Tagline */
     .curved-nav-category {
-        font-size: 0.68rem;
+        font-size: 0.62rem;
         font-weight: 800;
         color: #78350f;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        padding: 8px 10px 4px 10px;
-        margin-top: 4px;
+        padding: 6px 8px 3px 8px;
+        margin-top: 3px;
         user-select: none;
     }
     .curved-nav-category.has-divider {
         border-top: 1px solid rgba(245, 158, 11, 0.2);
-        margin-top: 8px;
-        padding-top: 10px;
+        margin-top: 6px;
+        padding-top: 8px;
     }
 
     /* Mobile only nav items in sidebar (hidden on desktop screens >= 768px, matching Tailwind md breakpoint) */
@@ -285,19 +289,19 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
     @media (max-width: 767.98px) {
         .curved-nav-category.has-divider-mobile {
             border-top: 1px solid rgba(245, 158, 11, 0.2);
-            margin-top: 8px;
-            padding-top: 10px;
+            margin-top: 6px;
+            padding-top: 8px;
         }
     }
 
     .curved-header-role-badge {
         display: inline-flex;
         align-items: center;
-        padding: 2px 8px;
+        padding: 1px 7px;
         background: rgba(245, 158, 11, 0.22);
         border: 1px solid rgba(245, 158, 11, 0.38);
         border-radius: 9999px;
-        font-size: 0.65rem;
+        font-size: 0.60rem;
         font-weight: 800;
         color: #78350f;
         letter-spacing: 0.02em;
@@ -309,7 +313,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
         backdrop-filter: blur(20px) saturate(160%) !important;
         -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
         border-right: 1.5px solid rgba(255, 255, 255, 0.85) !important;
-        border-radius: 0 24px 24px 0 !important;
+        border-radius: 0 20px 20px 0 !important;
         box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.9), 0 20px 45px rgba(15, 23, 42, 0.08), 8px 0 25px rgba(0, 0, 0, 0.04) !important;
     }
 
@@ -349,27 +353,27 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
 
     /* User Profile Card inside Sidebar */
     .curved-sidebar-user-card {
-        margin: 12px 0 10px 0;
-        padding: 10px 12px;
+        margin: 8px 0 6px 0;
+        padding: 7px 9px;
         background: rgba(255, 255, 255, 0.65);
-        border-radius: 14px;
+        border-radius: 10px;
         border: 1px solid rgba(226, 232, 240, 0.9);
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
     }
     .curved-sidebar-user-avatar {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
         background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
         color: #ffffff;
         font-weight: 800;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.95rem;
+        font-size: 0.8rem;
         flex-shrink: 0;
         box-shadow: 0 2px 6px rgba(234, 88, 12, 0.25);
     }
@@ -378,7 +382,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
         min-width: 0;
     }
     .curved-sidebar-user-name {
-        font-size: 0.82rem;
+        font-size: 0.78rem;
         font-weight: 700;
         color: #0f172a;
         white-space: nowrap;
@@ -387,10 +391,10 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
         line-height: 1.2;
     }
     .curved-sidebar-user-role {
-        font-size: 0.68rem;
+        font-size: 0.62rem;
         color: #64748b;
         font-weight: 600;
-        margin-top: 2px;
+        margin-top: 1px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;

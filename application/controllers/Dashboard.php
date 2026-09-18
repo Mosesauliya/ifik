@@ -348,7 +348,7 @@ class Dashboard extends CI_Controller {
             $roomName = $p->nama_ruangan ?: ($p->kode_ruangan ?: 'Ruangan Lab');
 
             $peminjaman[] = array(
-                'id' => (int)$p->id,
+                'id' => (string)$p->id,
                 'id_ruangan' => $p->id_ruangan,
                 'nama_lengkap' => $p->nama_lengkap,
                 'ruangan' => $roomName,
@@ -511,7 +511,7 @@ class Dashboard extends CI_Controller {
             }
 
             $formatted[] = array(
-                'id' => (int)$p->id,
+                'id' => (string)$p->id,
                 'id_ruangan' => $p->id_ruangan,
                 'nama_lengkap' => $p->nama_lengkap,
                 'nama_ruangan' => $p->nama_ruangan,

@@ -2976,7 +2976,8 @@
             const peng1 = (mhs.nama_penguji_1 || mhs.penguji_1 || '').toLowerCase();
             const peng2 = (mhs.nama_penguji_2 || mhs.penguji_2 || '').toLowerCase();
             const ruang = (mhs.ruangan_sidang || mhs.detail_nama_ruangan || '').toLowerCase();
-            const status = (mhs.status_preview2 || 'Belum Diplot').toLowerCase();
+            const isPlotted = Boolean((peng1 && peng2) || mhs.status_preview2 === 'Penguji Ditetapkan' || mhs.status_preview2 === 'Terjadwal' || mhs.status_preview2 === 'Penguji Siap');
+            const status = isPlotted ? (mhs.status_preview2 === 'Terjadwal' ? 'terjadwal' : 'penguji ditetapkan') : (mhs.status_preview2 || 'belum diplot').toLowerCase();
 
             for (let filter of activeFilters) {
                 const valLower = filter.val.toLowerCase();
@@ -2989,7 +2990,8 @@
                                   peng1.includes(valLower) ||
                                   peng2.includes(valLower) ||
                                   ruang.includes(valLower) ||
-                                  status.includes(valLower);
+                                  status.includes(valLower) ||
+                                  (isPlotted && (valLower.includes('penguji') || valLower.includes('siap') || valLower.includes('ditetapkan')));
                     if (!match) return false;
                 } else if (filter.type === 'nama') {
                     if (!nama.includes(valLower)) return false;
@@ -3004,7 +3006,10 @@
                 } else if (filter.type === 'ruangan') {
                     if (!ruang.includes(valLower)) return false;
                 } else if (filter.type === 'status') {
-                    if (valLower !== '' && status !== valLower) return false;
+                    if (valLower !== '') {
+                        if (valLower.includes('belum') && isPlotted) return false;
+                        if ((valLower.includes('penguji') || valLower.includes('siap') || valLower.includes('ditetapkan') || valLower.includes('terjadwal')) && !isPlotted) return false;
+                    }
                 }
             }
 
@@ -3066,11 +3071,12 @@
             const pemb2 = mhs.nama_pembimbing_2 || mhs.pembimbing_2 || '-';
             const peng1 = mhs.nama_penguji_1 || mhs.penguji_1 || '';
             const peng2 = mhs.nama_penguji_2 || mhs.penguji_2 || '';
-            const statusP2 = mhs.status_preview2 || 'Belum Diplot';
+            const isPengujiPlotted = Boolean((peng1 && peng2) || mhs.status_preview2 === 'Penguji Ditetapkan' || mhs.status_preview2 === 'Terjadwal' || mhs.status_preview2 === 'Penguji Siap');
+            const statusP2 = isPengujiPlotted ? (mhs.status_preview2 === 'Terjadwal' ? 'Terjadwal' : 'Penguji Ditetapkan') : (mhs.status_preview2 || 'Belum Diplot');
             const isSelected = state.p2SelectedStudents.has(mhs.nim);
 
             let statusBadge = '';
-            if (statusP2 === 'Terjadwal' || statusP2 === 'Penguji Ditetapkan') {
+            if (isPengujiPlotted) {
                 statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 font-bold text-[10px] rounded-full border border-emerald-300 bg-emerald-50 text-emerald-700 shadow-2xs whitespace-nowrap"><i class="fa-solid fa-user-check text-[10px]"></i> Penguji Siap</span>`;
             } else {
                 statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 font-bold text-[10px] rounded-full border border-amber-300 bg-amber-50 text-amber-700 shadow-2xs whitespace-nowrap"><i class="fa-solid fa-clock text-[10px]"></i> Belum Diplot</span>`;

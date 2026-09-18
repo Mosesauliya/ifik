@@ -720,38 +720,119 @@
                 display: none !important;
             }
         }
+
+        /* ============================================================
+           TOOLBAR ROW 2 RESPONSIVENESS (Sidebar Open vs Collapsed)
+           ============================================================ */
+        @media (min-width: 641px) {
+            .table-toolbar-row2 {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 10px !important;
+                width: 100% !important;
+            }
+            .table-toolbar-row2 .batch-actions-grid {
+                display: grid !important;
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 10px !important;
+                width: 100% !important;
+            }
+            .table-toolbar-row2 .batch-actions-grid button {
+                width: 100% !important;
+                justify-content: center !important;
+                white-space: nowrap !important;
+            }
+            .table-toolbar-row2 .toolbar-right-group {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                width: 100% !important;
+                gap: 10px !important;
+            }
+            .table-toolbar-row2 .toolbar-right-group .tools-grid-mobile {
+                display: flex !important;
+                align-items: center !important;
+                gap: 10px !important;
+            }
+        }
+
+        /* When screen is extra wide (>= 1536px / 2xl), single horizontal row */
+        @media (min-width: 1536px) {
+            .table-toolbar-row2 {
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+            }
+            .table-toolbar-row2 .batch-actions-grid {
+                display: flex !important;
+                flex-direction: row !important;
+                width: auto !important;
+                gap: 10px !important;
+            }
+            .table-toolbar-row2 .batch-actions-grid button {
+                width: auto !important;
+            }
+            .table-toolbar-row2 .toolbar-right-group {
+                width: auto !important;
+                justify-content: flex-end !important;
+            }
+        }
+
+        /* When sidebar is COLLAPSED / HIDDEN on desktop (>= 1200px), single horizontal row fits cleanly */
+        @media (min-width: 1200px) {
+            body.curved-sidebar-desktop-collapsed .table-toolbar-row2 {
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+            }
+            body.curved-sidebar-desktop-collapsed .table-toolbar-row2 .batch-actions-grid {
+                display: flex !important;
+                flex-direction: row !important;
+                width: auto !important;
+                gap: 10px !important;
+            }
+            body.curved-sidebar-desktop-collapsed .table-toolbar-row2 .batch-actions-grid button {
+                width: auto !important;
+            }
+            body.curved-sidebar-desktop-collapsed .table-toolbar-row2 .toolbar-right-group {
+                width: auto !important;
+                justify-content: flex-end !important;
+            }
+        }
     </style>
 <body class="bg-slate-50 text-slate-800 antialiased pb-16">
 
     <!-- Auto Role-Aware Curved Animated Sidebar -->
     <?php $this->load->view('components/curved_sidebar'); ?>
 
-    <!-- Top Navigation Header -->
-    <header class="sticky top-0 z-40 glass-header px-4 sm:px-8 py-3.5 sm:py-4 mb-6 sm:mb-8">
-        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 pl-12 sm:pl-14">
-            <div class="flex items-center gap-4 w-full sm:w-auto">
-                <div class="header-title-block flex flex-col w-full">
-                    <div class="flex items-center gap-2">
-                        <h1 class="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-tight">Import Email & Dispatcher Token</h1>
+    <!-- Main Page Content Wrapper (Smoothly shifts when sidebar is open) -->
+    <div id="mainPageContent" class="page-wrapper-for-sidebar min-h-screen flex flex-col">
+        <!-- Top Navigation Header -->
+        <header class="sticky top-0 z-40 glass-header px-4 sm:px-8 py-3.5 sm:py-4 mb-6 sm:mb-8">
+            <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 pl-12 sm:pl-14 header-title-shift">
+                <div class="flex items-center gap-4 w-full sm:w-auto">
+                    <div class="header-title-block flex flex-col w-full">
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-tight">Import Email & Dispatcher Token</h1>
+                        </div>
+                        <p class="text-[11px] sm:text-xs text-slate-500 mt-1 leading-normal">Kelola impor Excel (XLSX), generate token 8 karakter, dan kirim email pemberitahuan.</p>
                     </div>
-                    <p class="text-[11px] sm:text-xs text-slate-500 mt-1 leading-normal">Kelola impor Excel (XLSX), generate token 8 karakter, dan kirim email pemberitahuan.</p>
+                </div>
+
+                <div class="header-buttons-block grid grid-cols-2 sm:flex items-center gap-2.5 w-full sm:w-auto mt-2 sm:mt-0">
+                    <button onclick="downloadSampleTemplate('xlsx')" class="btn-gradient-base btn-gradient-slate-light h-10 px-3 sm:px-4 text-xs font-bold flex items-center gap-2 justify-center">
+                        <i class="fa-solid fa-file-excel text-emerald-600 text-sm"></i>
+                        <span>Template XLSX</span>
+                    </button>
+                    <button onclick="openEmailTemplateModal()" class="btn-gradient-base btn-gradient-dark-obsidian h-10 px-3 sm:px-4 text-xs font-bold flex items-center gap-2 justify-center">
+                        <i class="fa-solid fa-sliders text-amber-400 text-sm"></i>
+                        <span>Template Email</span>
+                    </button>
                 </div>
             </div>
+        </header>
 
-            <div class="header-buttons-block grid grid-cols-2 sm:flex items-center gap-2.5 w-full sm:w-auto mt-2 sm:mt-0">
-                <button onclick="downloadSampleTemplate('xlsx')" class="btn-gradient-base btn-gradient-slate-light h-10 px-3 sm:px-4 text-xs font-bold flex items-center gap-2 justify-center">
-                    <i class="fa-solid fa-file-excel text-emerald-600 text-sm"></i>
-                    <span>Template XLSX</span>
-                </button>
-                <button onclick="openEmailTemplateModal()" class="btn-gradient-base btn-gradient-dark-obsidian h-10 px-3 sm:px-4 text-xs font-bold flex items-center gap-2 justify-center">
-                    <i class="fa-solid fa-sliders text-amber-400 text-sm"></i>
-                    <span>Template Email</span>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <main class="max-w-7xl mx-auto px-4 sm:px-6">
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 flex-1 w-full">
 
         <!-- Stats Overview Cards (Highlight Card Design & Mobile Snap Slider) -->
         <div class="relative mb-6 sm:mb-8">
@@ -1080,25 +1161,25 @@
             </div>
 
             <!-- Row 2: Batch Actions, Page Size & Tools -->
-            <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="table-toolbar-row2 pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <!-- Batch Actions Left -->
                 <div class="batch-actions-grid sm:flex sm:flex-wrap sm:items-center sm:gap-2.5">
                     <button onclick="bulkGenerateTokenSelected()" class="btn-gradient-base btn-gradient-orange-solid h-9 px-3.5 text-xs flex items-center gap-2">
                         <i class="fa-solid fa-bolt text-xs"></i>
-                        <span>Generate Token (Selected)</span>
+                        <span>Generate Token</span><span class="opacity-85 text-[11px] hidden xl:inline">&nbsp;(Selected)</span>
                     </button>
                     <button onclick="bulkGenerateTokenAll()" class="btn-gradient-base btn-gradient-orange-soft h-9 px-3.5 text-xs flex items-center gap-2">
                         <i class="fa-solid fa-key text-brand-600 text-xs"></i>
-                        <span>Generate All (Kosong)</span>
+                        <span>Generate All</span><span class="opacity-85 text-[11px] hidden xl:inline">&nbsp;(Kosong)</span>
                     </button>
                     <button onclick="bulkSendEmailSelected()" class="btn-gradient-base btn-gradient-emerald-solid btn-full-mobile h-9 px-3.5 text-xs flex items-center gap-2">
                         <i class="fa-solid fa-paper-plane text-xs"></i>
-                        <span>Kirim Email (Selected)</span>
+                        <span>Kirim Email</span><span class="opacity-85 text-[11px] hidden xl:inline">&nbsp;(Selected)</span>
                     </button>
                 </div>
 
                 <!-- Page Size & Tools Right -->
-                <div class="flex flex-col sm:flex-row sm:items-center gap-2.5 w-full sm:w-auto">
+                <div class="toolbar-right-group flex flex-col sm:flex-row sm:items-center gap-2.5 w-full sm:w-auto">
                     <!-- Page Size Selector Top -->
                     <div class="page-size-wrap-mobile flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 border border-slate-200 px-3 h-9 rounded-xl shadow-2xs">
                         <div class="flex items-center gap-1.5">
@@ -1211,6 +1292,7 @@
         </div>
 
     </main>
+    </div>
 
     <!-- MODAL: Email Template Editor & Visual Preview -->
     <div id="modal-template" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">

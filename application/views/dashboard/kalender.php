@@ -1856,9 +1856,9 @@
             flex-shrink: 0;
         }
         .sb-chip {
-            padding: 5px 10px;
+            padding: 4px 8px;
             border-radius: 999px;
-            font-size: 0.72rem;
+            font-size: 0.68rem;
             font-weight: 700;
             border: 1px solid #e2e8f0;
             background: #ffffff;
@@ -1882,19 +1882,19 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 6px;
             width: 100%;
-            padding: 8px 12px;
+            padding: 6px 10px;
             background: #ffffff;
             border: 1.5px solid #e2e8f0;
-            border-radius: 12px;
+            border-radius: 10px;
             color: #334155;
-            font-size: 0.78rem;
+            font-size: 0.72rem;
             font-weight: 700;
             text-decoration: none;
             transition: all 0.2s ease;
             box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             box-sizing: border-box;
         }
         .btn-sidebar-kembali:hover {
@@ -1907,10 +1907,10 @@
 
         /* SIDEBAR CALENDAR NAV CONTROLS */
         .sb-btn-today {
-            padding: 3px 10px;
-            font-size: 0.74rem;
+            padding: 2px 8px;
+            font-size: 0.70rem;
             font-weight: 700;
-            border-radius: 8px;
+            border-radius: 7px;
             border: 1.5px solid #e2e8f0;
             background: #ffffff;
             color: #334155;
@@ -1925,12 +1925,12 @@
         }
 
         .sb-nav-arrow {
-            width: 30px;
-            height: 30px;
+            width: 26px;
+            height: 26px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 8px;
+            border-radius: 7px;
             border: 1.5px solid #e2e8f0;
             background: #ffffff;
             color: #475569;
@@ -1946,42 +1946,80 @@
         .sb-month-year-btn {
             background: #ffffff !important;
             border: 1.5px solid #e2e8f0 !important;
-            border-radius: 9px !important;
-            padding: 4px 8px !important;
+            border-radius: 8px !important;
+            padding: 3px 6px !important;
         }
         .sb-month-year-btn:hover {
             border-color: #ea580c !important;
             background: #fff7ed !important;
         }
 
-        /* Category Section Headers & Role Badge in Sidebar */
+        /* Category Section Headers / Tagline */
         .curved-nav-category {
-            font-size: 0.68rem;
+            font-size: 0.62rem;
             font-weight: 800;
             color: #78350f;
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            padding: 8px 10px 4px 10px;
-            margin-top: 4px;
+            padding: 6px 8px 3px 8px;
+            margin-top: 3px;
             user-select: none;
         }
         .curved-nav-category.has-divider {
             border-top: 1px solid rgba(245, 158, 11, 0.2);
-            margin-top: 8px;
-            padding-top: 10px;
+            margin-top: 6px;
+            padding-top: 8px;
+        }
+
+        /* Mobile only nav items in sidebar (hidden on desktop screens >= 768px, matching Tailwind md breakpoint) */
+        @media (min-width: 768px) {
+            .curved-nav-mobile-only {
+                display: none !important;
+            }
+        }
+        @media (max-width: 767.98px) {
+            .curved-nav-category.has-divider-mobile {
+                border-top: 1px solid rgba(245, 158, 11, 0.2);
+                margin-top: 6px;
+                padding-top: 8px;
+            }
         }
 
         .curved-header-role-badge {
             display: inline-flex;
             align-items: center;
-            padding: 2px 8px;
+            padding: 1px 7px;
             background: rgba(245, 158, 11, 0.22);
             border: 1px solid rgba(245, 158, 11, 0.38);
             border-radius: 9999px;
-            font-size: 0.65rem;
+            font-size: 0.60rem;
             font-weight: 800;
             color: #78350f;
             letter-spacing: 0.02em;
+        }
+
+        /* Premium Frosted Glass Layout with Smooth Curved Edge */
+        .curved-sidebar-panel {
+            background: rgba(255, 255, 255, 0.85) !important;
+            backdrop-filter: blur(20px) saturate(160%) !important;
+            -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+            border-right: 1.5px solid rgba(255, 255, 255, 0.85) !important;
+            border-radius: 0 20px 20px 0 !important;
+            box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.9), 0 20px 45px rgba(15, 23, 42, 0.08), 8px 0 25px rgba(0, 0, 0, 0.04) !important;
+        }
+
+        .curved-sidebar-svg {
+            fill: rgba(255, 255, 255, 0.85) !important;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .curved-sidebar-toggle-btn {
+            background: rgba(255, 255, 255, 0.9) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            border: 1.5px solid rgba(255, 255, 255, 0.9) !important;
         }
 
         .curved-nav-item.is-current {
@@ -1998,6 +2036,60 @@
             transform: translateY(-1px) scale(1.08);
             filter: drop-shadow(0 4px 8px rgba(234, 88, 12, 0.22));
         }
+
+        .curved-nav-item:hover {
+            background: rgba(245, 158, 11, 0.12) !important;
+            backdrop-filter: blur(8px) !important;
+        }
+
+        /* User Profile Card inside Sidebar */
+        .curved-sidebar-user-card {
+            margin: 8px 0 6px 0;
+            padding: 7px 9px;
+            background: rgba(255, 255, 255, 0.65);
+            border-radius: 10px;
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        }
+        .curved-sidebar-user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+            color: #ffffff;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(234, 88, 12, 0.25);
+        }
+        .curved-sidebar-user-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .curved-sidebar-user-name {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
+        }
+        .curved-sidebar-user-role {
+            font-size: 0.62rem;
+            color: #64748b;
+            font-weight: 600;
+            margin-top: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
 </head>
 <body>
@@ -2009,70 +2101,296 @@
 
     <?php
     $sessionRoleId = (int)$this->session->userdata('role_id');
+    $currentUri = trim(uri_string(), '/');
     $isLoggedIn = $this->session->userdata('logged_in');
 
-    switch ($sessionRoleId) {
-        case 2: // Laboran
+    // Tentukan active role ID (utamakan rute modul aktif jika berada di portal spesifik, atau session role)
+    $activeRoleId = $sessionRoleId;
+
+    if ($sessionRoleId === 2 && (strpos($currentUri, 'laboran') === 0 || strpos((string)$this->session->userdata('email'), 'laboran') !== false)) {
+        $activeRoleId = 21;
+    }
+
+    if (strpos($currentUri, 'laboran') === 0) {
+        $activeRoleId = 21; // Laboran
+    } elseif (strpos($currentUri, 'kaur') === 0) {
+        $activeRoleId = 2; // Kaur / Ka Lab
+    } elseif (strpos($currentUri, 'dosen') === 0 || strpos($currentUri, 'dosenwali') === 0) {
+        $activeRoleId = 3; // Dosen
+    } elseif (strpos($currentUri, 'koordinatorta') === 0 || strpos($currentUri, 'koordinator') === 0) {
+        $activeRoleId = 6; // Koordinator TA
+    } elseif (strpos($currentUri, 'adminlayanan') === 0) {
+        $activeRoleId = 5; // Admin LAA
+    } elseif (strpos($currentUri, 'ketuakk') === 0) {
+        $activeRoleId = 9; // Ketua KK
+    } elseif (strpos($currentUri, 'mahasiswa') === 0) {
+        $activeRoleId = 4; // Mahasiswa
+    } elseif (strpos($currentUri, 'admin') === 0 || strpos($currentUri, 'kelolabooking') === 0) {
+        $activeRoleId = 1; // Admin
+    } elseif (strpos($currentUri, 'importemail') === 0 || strpos($currentUri, 'import-email') === 0) {
+        $ref = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
+        if (strpos($ref, 'admin') !== false) {
+            $activeRoleId = 1; // Admin
+        } else {
+            $activeRoleId = 21; // Laboran
+        }
+    }
+
+    if ($activeRoleId === 0) {
+        $activeRoleId = 4; // Fallback ke Mahasiswa
+    }
+
+    $roleBadgeMap = [
+        1 => 'Admin Panel',
+        2 => 'Ka. Ur / Ka Lab',
+        3 => 'Portal Dosen',
+        4 => 'Mahasiswa',
+        5 => 'Admin Layanan',
+        6 => 'Koordinator TA',
+        7 => 'PIC KK',
+        9 => 'Ketua KK',
+        21 => 'Laboran'
+    ];
+    $activeRoleBadge = $roleBadgeMap[$activeRoleId] ?? 'Portal IFIK';
+
+    switch ($activeRoleId) {
+        case 21: // Laboran (Staff Operasional Laboratorium)
             $backUrl = site_url('laboran/booking');
-            $backLabel = 'Dashboard Laboran';
+            $backLabel = 'Portal Laboran';
+            $defaultNavItems = [
+                ['category' => 'Operasional Laboratorium'],
+                ['heading' => 'Approval Peminjaman', 'href' => site_url('laboran/booking'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
+                ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
+                ['heading' => 'Tanda Tangan Digital', 'href' => site_url('laboran/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
+                ['heading' => 'Import Email & Token', 'href' => site_url('laboran/import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
+
+                ['category' => 'Layanan Ticketing & Bantuan', 'has_divider' => true],
+                ['heading' => 'Bantuan & Live Chat Lab', 'href' => site_url('laboran/help'), 'icon_3d' => 'assets/images/icons_3d/help_chat.png'],
+                ['heading' => 'Respon Ticketing Lab', 'href' => site_url('laboran/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
+                ['heading' => 'Buat Tiket Kendala', 'href' => site_url('laboran/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
+                ['heading' => 'Riwayat Tiket Saya', 'href' => site_url('laboran/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+                ['heading' => 'Pengaturan Input Tiket', 'href' => site_url('laboran/ticketing/fields'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
+
+                ['category' => 'Informasi & Jadwal', 'has_divider' => true],
+                ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+                ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
+            ];
             break;
-        case 1: // Admin
-            $backUrl = site_url('admin');
-            $backLabel = 'Dashboard Admin';
+
+        case 2: // Kaur / Ka Lab (Kepala Urusan / Kepala Lab & Dosen)
+            $backUrl = site_url('kaur/approval');
+            $backLabel = 'Portal Ka. Ur / Ka Lab';
+            $defaultNavItems = [
+                ['category' => 'Persetujuan Resmi & Lab'],
+                ['heading' => 'Approval Peminjaman', 'href' => site_url('kaur/approval'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
+                ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
+                ['heading' => 'Tanda Tangan Digital', 'href' => site_url('kaur/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
+
+                ['category' => 'Portal Akademik & Dosen', 'has_divider' => true],
+                ['heading' => 'Dosen Pembimbing', 'href' => site_url('dosen/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
+                ['heading' => 'Dosen Penguji', 'href' => site_url('dosen/penguji'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
+                ['heading' => 'Dosen Wali', 'href' => site_url('dosen/wali'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+
+                ['category' => 'Layanan & Bantuan', 'has_divider' => true],
+                ['heading' => 'Respon Ticketing', 'href' => site_url('dosen/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
+                ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
+                ['heading' => 'Riwayat Ticketing', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+
+                ['category' => 'Informasi & Jadwal', 'has_divider' => true],
+                ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+                ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
+            ];
             break;
-        case 3: // Dosen
-            $backUrl = site_url('dosen/bimbingan');
-            $backLabel = 'Menu Dosen Pembimbing';
-            break;
-        case 4: // Mahasiswa
-        case 5: // Mahasiswa
-            $backUrl = site_url('mahasiswa');
-            $backLabel = 'Portal Mahasiswa';
-            break;
+
+>>>>>>> upstream/refactor-backend-v2
         case 6: // Koordinator TA
             $backUrl = site_url('koordinatorta');
-            $backLabel = 'Dashboard Koordinator TA';
+            $backLabel = 'Portal Koordinator TA';
+            $defaultNavItems = [
+                ['category' => 'Pengelolaan Tugas Akhir'],
+                ['heading' => 'Pendaftaran TA', 'href' => site_url('koordinatorta#pendaftaran'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
+                ['heading' => 'Tahap Preview 2', 'href' => site_url('koordinatorta#preview2'), 'icon_3d' => 'assets/images/icons_3d/preview2.png'],
+                ['heading' => 'Jadwal Sidang TA', 'href' => site_url('koordinatorta#sidang'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
+
+                ['category' => 'Layanan Ticketing & Bantuan', 'has_divider' => true],
+                ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
+                ['heading' => 'Riwayat Tiket Saya', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+
+                ['category' => 'Fasilitas & Jadwal', 'has_divider' => true],
+                ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
+                ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
+                ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+                ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
+            ];
             break;
-        default: // Mahasiswa / Guest
+
+        case 3: // Dosen
+            $backUrl = site_url('dosen/bimbingan');
+            $backLabel = 'Portal Dosen';
+            $defaultNavItems = [
+                ['category' => 'Bimbingan & Pengujian'],
+                ['heading' => 'Dosen Pembimbing', 'href' => site_url('dosen/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
+                ['heading' => 'Dosen Penguji', 'href' => site_url('dosen/penguji'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
+                ['heading' => 'Dosen Wali', 'href' => site_url('dosen/wali'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Tanda Tangan Digital', 'href' => site_url('dosen/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
+
+                ['category' => 'Layanan & Bantuan', 'has_divider' => true],
+                ['heading' => 'Respon Ticketing', 'href' => site_url('dosen/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
+                ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
+                ['heading' => 'Riwayat Ticketing', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+
+                ['category' => 'Fasilitas & Jadwal', 'has_divider' => true],
+                ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
+                ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
+                ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+                ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
+            ];
+            break;
+
+        case 1: // Admin System
+            $backUrl = site_url('admin');
+            $backLabel = 'Dashboard Admin';
+            $defaultNavItems = [
+                ['category' => 'Pusat Kendali'],
+                ['heading' => 'Dashboard Control', 'href' => site_url('admin'), 'icon_3d' => 'assets/images/icons_3d/home.png'],
+                ['heading' => 'Approval Peminjaman', 'href' => site_url('kelolabooking'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
+                ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
+
+                ['category' => 'Manajemen Sistem', 'has_divider' => true],
+                ['heading' => 'Import Email & Token', 'href' => site_url('admin/import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
+                ['heading' => 'Pengaturan Unit Ticketing', 'href' => site_url('admin#unit-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
+                ['heading' => 'Respon Ticketing Lab', 'href' => site_url('laboran/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
+                ['heading' => 'Riwayat Log History', 'href' => site_url('admin/log_history'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+
+                ['category' => 'Informasi & Jadwal', 'has_divider' => true],
+                ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+                ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
+            ];
+            break;
+
+        case 5: // Admin LAA
+            $backUrl = site_url('adminlayanan');
+            $backLabel = 'Portal Admin Layanan';
+            $defaultNavItems = [
+                ['category' => 'Layanan Akademik'],
+                ['heading' => 'Verifikasi Berkas', 'href' => site_url('adminlayanan'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Pengaturan Syarat Berkas', 'href' => site_url('adminlayanan/pengaturan_berkas'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
+                ['heading' => 'Pengaturan Jalur TA', 'href' => site_url('adminlayanan/pengaturan_jalur'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
+
+                ['category' => 'Layanan Ticketing & Bantuan', 'has_divider' => true],
+                ['heading' => 'Respon Ticketing LAA', 'href' => site_url('adminlayanan/ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
+                ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
+                ['heading' => 'Riwayat Tiket Saya', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+
+                ['category' => 'Fasilitas & Jadwal', 'has_divider' => true],
+                ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
+                ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
+                ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+                ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
+            ];
+            break;
+
+        case 7: // PIC KK
+        case 9: // Ketua KK
+            $backUrl = site_url('ketuakk');
+            $backLabel = 'Portal Ketua KK';
+            $defaultNavItems = [
+                ['category' => 'Kelompok Keahlian'],
+                ['heading' => 'Approval Usulan TA', 'href' => site_url('ketuakk'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+
+                ['category' => 'Portal Dosen & Pembimbing', 'has_divider' => true],
+                ['heading' => 'Dosen Pembimbing', 'href' => site_url('dosen/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
+                ['heading' => 'Dosen Penguji', 'href' => site_url('dosen/penguji'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
+                ['heading' => 'Dosen Wali', 'href' => site_url('dosen/wali'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Tanda Tangan Digital', 'href' => site_url('dosen/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
+
+                ['category' => 'Layanan & Bantuan', 'has_divider' => true],
+                ['heading' => 'Respon Ticketing', 'href' => site_url('dosen/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
+                ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
+                ['heading' => 'Riwayat Ticketing', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+
+                ['category' => 'Fasilitas & Jadwal', 'has_divider' => true],
+                ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
+                ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
+                ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+                ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
+            ];
+            break;
+
+        case 4: // Mahasiswa
+            $backUrl = site_url('mahasiswa');
+            $backLabel = 'Portal Mahasiswa';
+            $defaultNavItems = [
+                ['category' => 'Menu Utama', 'mobile_only' => true],
+                ['heading' => 'Dashboard', 'href' => site_url('mahasiswa'), 'icon_3d' => 'assets/images/icons_3d/home.png', 'mobile_only' => true],
+                ['heading' => 'Pendaftaran TA', 'href' => site_url('mahasiswa/pendaftaran_ta'), 'icon_3d' => 'assets/images/icons_3d/daftar.png', 'mobile_only' => true],
+                ['heading' => 'Bimbingan TA', 'href' => site_url('mahasiswa/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/sidang.png', 'mobile_only' => true],
+
+                ['category' => 'Menu Mahasiswa', 'has_divider_mobile' => true],
+                ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
+                ['heading' => 'Riwayat Peminjaman Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
+                ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+
+                ['category' => 'Layanan Ticketing', 'has_divider' => true],
+                ['heading' => 'Buat Tiket Kendala', 'href' => site_url('mahasiswa/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
+                ['heading' => 'Riwayat Tiket Saya', 'href' => site_url('mahasiswa/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+
+                ['category' => 'Akun', 'has_divider' => true],
+                ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
+            ];
+            break;
+
+        default: // Tamu / Publik
             $backUrl = site_url('dashboard');
-            $backLabel = 'Beranda Utama';
+            $backLabel = 'Dashboard Utama';
+            $defaultNavItems = [
+                ['category' => 'Menu Utama'],
+                ['heading' => 'Dashboard Utama', 'href' => site_url('dashboard'), 'icon_3d' => 'assets/images/icons_3d/home.png'],
+                ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
+                ['heading' => 'Riwayat Peminjaman Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
+                ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+                ['heading' => $isLoggedIn ? 'Keluar' : 'Masuk', 'href' => site_url($isLoggedIn ? 'login/logout' : 'login'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
+            ];
             break;
     }
     ?>
 
     <!-- Sliding Sidebar Panel with Morphing Curved SVG (Left Side) -->
-    <aside id="curvedSidebarPanel" class="curved-sidebar-panel is-active" aria-label="Sidebar Navigasi & Kontrol" style="width: 320px;">
-        <div class="curved-sidebar-inner" style="padding-top: 55px; gap: 14px;">
+    <aside id="curvedSidebarPanel" class="curved-sidebar-panel is-active" aria-label="Sidebar Navigasi & Kontrol">
+        <div class="curved-sidebar-inner">
             
             <div>
                 <!-- 1. Header Control with Close (X) Button -->
-                <div class="curved-sidebar-header" style="justify-content: flex-start; gap: 10px;">
+                <div class="curved-sidebar-header" style="justify-content: flex-start; gap: 8px; margin-bottom: 8px;">
                     <button type="button" class="curved-sidebar-close-btn" id="curvedSidebarCloseBtn" aria-label="Tutup Sidebar" title="Tutup Sidebar (Esc)">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
-                    <p style="margin: 0;"><i class="fa-solid fa-sliders" style="color: #ea580c;"></i> Kontrol & Navigasi</p>
+                    <p style="margin: 0; font-size: 0.82rem;"><i class="fa-solid fa-sliders" style="color: #ea580c;"></i> Kontrol & Navigasi</p>
                 </div>
 
-                <!-- Tombol Kembali Cepat ke Dashboard (Auto-scroll ke Informasi Ruangan) -->
-                <a href="<?= site_url('dashboard#info_ruangan'); ?>" class="btn-sidebar-kembali" title="Kembali ke Dashboard - Informasi Ruangan">
+                <!-- Tombol Kembali Cepat ke Dashboard / Portal Asal -->
+                <a href="<?= $backUrl; ?>" class="btn-sidebar-kembali" title="Kembali ke <?= htmlspecialchars($backLabel); ?>">
                     <i class="fa-solid fa-arrow-left"></i>
-                    <span>Kembali ke Dashboard</span>
+                    <span>Kembali ke <?= htmlspecialchars($backLabel); ?></span>
                 </a>
                 
                 <!-- 2. Mode Tampilan Switcher -->
-                <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 4px; display: flex; gap: 4px; margin-bottom: 14px;">
-                    <button type="button" id="sbViewCalBtn" class="btn-sb-mode" onclick="switchViewMode('calendar', event)" style="flex: 1; padding: 7px 10px; border-radius: 8px; border: none; font-size: 0.76rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s; background: #0f172a; color: #fff;">
+                <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 3px; display: flex; gap: 3px; margin-bottom: 10px;">
+                    <button type="button" id="sbViewCalBtn" class="btn-sb-mode" onclick="switchViewMode('calendar', event)" style="flex: 1; padding: 5px 8px; border-radius: 7px; border: none; font-size: 0.72rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: all 0.2s; background: #0f172a; color: #fff;">
                         <i class="fa-solid fa-calendar-days"></i> Kalender
                     </button>
-                    <button type="button" id="sbViewTblBtn" class="btn-sb-mode" onclick="switchViewMode('table', event)" style="flex: 1; padding: 7px 10px; border-radius: 8px; border: none; font-size: 0.76rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s; background: transparent; color: #64748b;">
+                    <button type="button" id="sbViewTblBtn" class="btn-sb-mode" onclick="switchViewMode('table', event)" style="flex: 1; padding: 5px 8px; border-radius: 7px; border: none; font-size: 0.72rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: all 0.2s; background: transparent; color: #64748b;">
                         <i class="fa-solid fa-table-list"></i> Tabel
                     </button>
                 </div>
 
                 <!-- 3. Navigasi Jadwal Kalender (Tampil Hanya Saat Mode Kalender) -->
-                <div id="sbCalendarNavSection" style="margin-bottom: 14px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 10px 12px;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                        <label style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px; margin: 0;">
+                <div id="sbCalendarNavSection" style="margin-bottom: 10px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 8px 10px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                        <label style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 5px; margin: 0;">
                             <i class="fa-solid fa-calendar-week" style="color: #ea580c;"></i> Navigasi Kalender
                         </label>
                         <button type="button" onclick="goToToday()" class="sb-btn-today" title="Lompat ke Hari Ini">
@@ -2080,34 +2398,34 @@
                         </button>
                     </div>
 
-                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; position: relative;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; position: relative;">
                         <!-- Navigasi Panah < > -->
-                        <div style="display: flex; gap: 4px; flex-shrink: 0;">
+                        <div style="display: flex; gap: 3px; flex-shrink: 0;">
                             <button type="button" onclick="prevWeek()" class="sb-nav-arrow" title="Minggu Sebelumnya">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
                             </button>
                             <button type="button" onclick="nextWeek()" class="sb-nav-arrow" title="Minggu Berikutnya">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                             </button>
                         </div>
 
                         <!-- Month Year Picker Trigger in Sidebar -->
                         <div class="month-year-picker-wrap" id="sbMonthYearPickerWrap" style="position: relative; flex: 1; display: flex; justify-content: flex-end;">
                             <button type="button" class="month-year-btn sb-month-year-btn" id="sbMonthYearBtn" onclick="toggleMonthYearPicker(event, 'sb')" title="Pilih Bulan & Tahun">
-                                <span id="sbMonthTitle" style="font-size: 0.86rem; font-weight: 800; color: #0f172a; white-space: nowrap;">-</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                <span id="sbMonthTitle" style="font-size: 0.78rem; font-weight: 800; color: #0f172a; white-space: nowrap;">-</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
                             </button>
 
                             <!-- Sidebar Month-Year Popover Dropdown -->
-                            <div class="month-year-popover sb-month-popover" id="sbMonthYearPopover" style="right: 0; left: auto; width: 250px;">
+                            <div class="month-year-popover sb-month-popover" id="sbMonthYearPopover" style="right: 0; left: auto; width: 230px;">
                                 <!-- Year Navigation Header -->
                                 <div class="my-year-nav">
                                     <button type="button" onclick="changePickerYear(-1, event, 'sb')" title="Tahun Sebelumnya">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
                                     </button>
-                                    <span id="sbPickerYearDisplay" style="font-size: 1rem; font-weight: 800; color: #0f172a;">2026</span>
+                                    <span id="sbPickerYearDisplay" style="font-size: 0.92rem; font-weight: 800; color: #0f172a;">2026</span>
                                     <button type="button" onclick="changePickerYear(1, event, 'sb')" title="Tahun Selanjutnya">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                                     </button>
                                 </div>
 
@@ -2121,63 +2439,63 @@
                 </div>
 
                 <!-- 3B. Kontrol Filter & Urutan Tabel (Tampil Khusus Mode Tabel) -->
-                <div id="sbTableControlsSection" style="display: none; margin-bottom: 14px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 12px; flex-direction: column; gap: 10px;">
+                <div id="sbTableControlsSection" style="display: none; margin-bottom: 10px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 10px; flex-direction: column; gap: 8px;">
                     <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <label style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px; margin: 0;">
+                        <label style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 5px; margin: 0;">
                             <i class="fa-solid fa-chart-pie" style="color: #ea580c;"></i> Ringkasan & Filter Status
                         </label>
                     </div>
 
                     <!-- Quick Status Filter Pills in Sidebar -->
-                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                        <div class="stat-pill stat-pill-total active" id="statPillTotal" onclick="filterByStatPill('all')" title="Klik untuk menampilkan semua data" style="flex: 1 1 calc(50% - 3px); justify-content: center; padding: 5px 8px; font-size: 0.76rem;">
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                        <div class="stat-pill stat-pill-total active" id="statPillTotal" onclick="filterByStatPill('all')" title="Klik untuk menampilkan semua data" style="flex: 1 1 calc(50% - 3px); justify-content: center; padding: 4px 6px; font-size: 0.72rem;">
                             <span class="stat-label" style="color: #64748b;">Total:</span>
                             <span class="stat-val" id="tableStatTotal" style="color: #0f172a;">0</span>
                         </div>
 
-                        <div class="stat-pill stat-pill-pending" id="statPillPending" onclick="filterByStatPill('pending')" title="Klik untuk memfilter status Menunggu" style="flex: 1 1 calc(50% - 3px); justify-content: center; padding: 5px 8px; font-size: 0.76rem;">
-                            <span class="stat-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #f59e0b; display: inline-block;"></span>
+                        <div class="stat-pill stat-pill-pending" id="statPillPending" onclick="filterByStatPill('pending')" title="Klik untuk memfilter status Menunggu" style="flex: 1 1 calc(50% - 3px); justify-content: center; padding: 4px 6px; font-size: 0.72rem;">
+                            <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #f59e0b; display: inline-block;"></span>
                             <span class="stat-label">Menunggu:</span>
                             <span class="stat-val" id="tableStatPending">0</span>
                         </div>
 
                         <!-- Disetujui with interactive dropdown options -->
                         <div class="stat-pill-approved-wrap" style="position: relative; width: 100%;">
-                            <div class="stat-pill stat-pill-approved" id="statPillApproved" onclick="toggleApprovedSubMenu(event)" title="Klik untuk memilih filter status Disetujui" style="width: 100%; justify-content: space-between; padding: 6px 10px; font-size: 0.76rem; box-sizing: border-box;">
-                                <div style="display: flex; align-items: center; gap: 6px;">
-                                    <span class="stat-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+                            <div class="stat-pill stat-pill-approved" id="statPillApproved" onclick="toggleApprovedSubMenu(event)" title="Klik untuk memilih filter status Disetujui" style="width: 100%; justify-content: space-between; padding: 5px 8px; font-size: 0.72rem; box-sizing: border-box;">
+                                <div style="display: flex; align-items: center; gap: 5px;">
+                                    <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
                                     <span class="stat-label" id="approvedStatLabel">Disetujui:</span>
                                     <span class="stat-val" id="tableStatApproved">0</span>
                                 </div>
-                                <svg id="approvedStatChevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left: 2px; transition: transform 0.2s ease;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                <svg id="approvedStatChevron" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left: 2px; transition: transform 0.2s ease;"><polyline points="6 9 12 15 18 9"></polyline></svg>
                             </div>
 
                             <!-- Dropdown Sub-Menu Disetujui -->
                             <div class="approved-sub-menu" id="approvedSubMenu" style="width: 100%; top: calc(100% + 4px); z-index: 100050; box-sizing: border-box;">
                                 <div class="approved-sub-item active" id="subOptAllApproved" onclick="selectApprovedSub('all_approved', event)">
-                                    <div style="display: flex; align-items: center; gap: 6px;">
-                                        <span class="stat-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #10b981;"></span>
+                                    <div style="display: flex; align-items: center; gap: 5px;">
+                                        <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
                                         <span>Semua Disetujui</span>
                                     </div>
                                     <span class="sub-count" id="subCountAllApproved">0</span>
                                 </div>
                                 <div class="approved-sub-item" id="subOptLaboran" onclick="selectApprovedSub('laboran', event)">
-                                    <div style="display: flex; align-items: center; gap: 6px;">
-                                        <span class="stat-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #3b82f6;"></span>
+                                    <div style="display: flex; align-items: center; gap: 5px;">
+                                        <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #3b82f6;"></span>
                                         <span>Disetujui Laboran</span>
                                     </div>
                                     <span class="sub-count" id="subCountLaboran">0</span>
                                 </div>
                                 <div class="approved-sub-item" id="subOptKaur" onclick="selectApprovedSub('kaur', event)">
-                                    <div style="display: flex; align-items: center; gap: 6px;">
-                                        <span class="stat-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #22c55e;"></span>
+                                    <div style="display: flex; align-items: center; gap: 5px;">
+                                        <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #22c55e;"></span>
                                         <span>Disetujui Ka. Ur</span>
                                     </div>
                                     <span class="sub-count" id="subCountKaur">0</span>
                                 </div>
                                 <div class="approved-sub-item" id="subOptAdmin" onclick="selectApprovedSub('admin', event)">
-                                    <div style="display: flex; align-items: center; gap: 6px;">
-                                        <span class="stat-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #8b5cf6;"></span>
+                                    <div style="display: flex; align-items: center; gap: 5px;">
+                                        <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #8b5cf6;"></span>
                                         <span>Disetujui Admin</span>
                                     </div>
                                     <span class="sub-count" id="subCountAdmin">0</span>
@@ -2186,9 +2504,9 @@
                         </div>
 
                         <!-- Ditolak Stat Pill -->
-                        <div class="stat-pill stat-pill-rejected" id="statPillRejected" onclick="filterByStatPill('rejected')" title="Klik untuk memfilter status Ditolak" style="width: 100%; justify-content: space-between; padding: 6px 10px; font-size: 0.76rem; box-sizing: border-box;">
-                            <div style="display: flex; align-items: center; gap: 6px;">
-                                <span class="stat-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #ef4444; display: inline-block;"></span>
+                        <div class="stat-pill stat-pill-rejected" id="statPillRejected" onclick="filterByStatPill('rejected')" title="Klik untuk memfilter status Ditolak" style="width: 100%; justify-content: space-between; padding: 5px 8px; font-size: 0.72rem; box-sizing: border-box;">
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #ef4444; display: inline-block;"></span>
                                 <span class="stat-label">Ditolak:</span>
                             </div>
                             <span class="stat-val" id="tableStatRejected">0</span>
@@ -2196,10 +2514,10 @@
                     </div>
 
                     <!-- Tampilkan & Urutkan Selects -->
-                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px; border-top: 1px solid #e2e8f0; padding-top: 8px;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                            <label for="tablePageSizeSelect" style="font-size: 0.74rem; font-weight: 700; color: #64748b; white-space: nowrap;">Tampilkan:</label>
-                            <select id="tablePageSizeSelect" class="custom-table-select" onchange="changeTablePageSize(this.value)" style="flex: 1; padding: 4px 26px 4px 10px; font-size: 0.76rem;">
+                    <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 3px; border-top: 1px solid #e2e8f0; padding-top: 6px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                            <label for="tablePageSizeSelect" style="font-size: 0.70rem; font-weight: 700; color: #64748b; white-space: nowrap;">Tampilkan:</label>
+                            <select id="tablePageSizeSelect" class="custom-table-select" onchange="changeTablePageSize(this.value)" style="flex: 1; padding: 3px 22px 3px 8px; font-size: 0.72rem;">
                                 <option value="10">10 baris</option>
                                 <option value="20" selected>20 baris</option>
                                 <option value="50">50 baris</option>
@@ -2207,9 +2525,9 @@
                             </select>
                         </div>
 
-                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                            <label for="tableSortSelect" style="font-size: 0.74rem; font-weight: 700; color: #64748b; white-space: nowrap;">Urutkan:</label>
-                            <select id="tableSortSelect" class="custom-table-select" onchange="renderTableView()" style="flex: 1; padding: 4px 26px 4px 10px; font-size: 0.76rem;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                            <label for="tableSortSelect" style="font-size: 0.70rem; font-weight: 700; color: #64748b; white-space: nowrap;">Urutkan:</label>
+                            <select id="tableSortSelect" class="custom-table-select" onchange="renderTableView()" style="flex: 1; padding: 3px 22px 3px 8px; font-size: 0.72rem;">
                                 <option value="date_desc">Tanggal (Terbaru)</option>
                                 <option value="date_asc">Tanggal (Terlama)</option>
                                 <option value="room_asc">Nama Ruangan (A-Z)</option>
@@ -2220,146 +2538,8 @@
                 </div>
 
                 <!-- 4. Quick Navigasi Halaman Sistem (Matching 3D Icons, Categories & Role System) -->
-                <?php
-                $sessionRoleId = (int)$this->session->userdata('role_id');
-                $isLoggedIn = $this->session->userdata('logged_in');
-
-                // Fallback cerdas jika role belum ada di session (misal saat direct link/preview)
-                $currentUri = trim(uri_string(), '/');
-                if ($sessionRoleId === 0) {
-                    if (strpos($currentUri, 'laboran') === 0) {
-                        $sessionRoleId = 2; // Laboran
-                    } elseif (strpos($currentUri, 'kaur') === 0) {
-                        $sessionRoleId = 3; // Kaur / Ka Lab
-                    } elseif (strpos($currentUri, 'dosen') === 0 || strpos($currentUri, 'dosenwali') === 0) {
-                        $sessionRoleId = 4; // Dosen
-                    } elseif (strpos($currentUri, 'koordinatorta') === 0 || strpos($currentUri, 'koordinator') === 0) {
-                        $sessionRoleId = 6; // Koordinator TA
-                    } elseif (strpos($currentUri, 'admin') === 0 || strpos($currentUri, 'kelolabooking') === 0) {
-                        $sessionRoleId = 1; // Admin
-                    }
-                }
-
-                $roleBadgeMap = [
-                    1 => 'Admin Panel',
-                    2 => 'Laboran',
-                    3 => 'Ka. Ur / Ka Lab',
-                    4 => 'Portal Dosen',
-                    5 => 'Mahasiswa',
-                    6 => 'Koordinator TA',
-                    7 => 'Ketua KK'
-                ];
-                $activeRoleBadge = $roleBadgeMap[$sessionRoleId] ?? 'Portal IFIK';
-
-                switch ($sessionRoleId) {
-                    case 2: // Laboran (Staff Operasional Laboratorium)
-                        $defaultNavItems = [
-                            ['category' => 'Operasional Laboratorium'],
-                            ['heading' => 'Approval Peminjaman', 'href' => site_url('laboran/booking'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
-                            ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
-                            ['heading' => 'Tanda Tangan Digital', 'href' => site_url('laboran/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
-                            ['heading' => 'Import Email & Token', 'href' => site_url('laboran/import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
-
-                            ['category' => 'Layanan Ticketing', 'has_divider' => true],
-                            ['heading' => 'Respon Ticketing Lab', 'href' => site_url('laboran/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
-                            ['heading' => 'Buat Tiket Kendala', 'href' => site_url('laboran/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
-                            ['heading' => 'Riwayat Tiket Saya', 'href' => site_url('laboran/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
-
-                            ['category' => 'Informasi & Jadwal', 'has_divider' => true],
-                            ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
-                            ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
-                        ];
-                        break;
-
-                    case 3: // Dosen
-                        $defaultNavItems = [
-                            ['category' => 'Bimbingan & Pengujian'],
-                            ['heading' => 'Dosen Pembimbing', 'href' => site_url('dosen/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
-                            ['heading' => 'Dosen Penguji', 'href' => site_url('dosen/penguji'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
-                            ['heading' => 'Dosen Wali', 'href' => site_url('dosen/wali'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
-                            ['heading' => 'Tanda Tangan Digital', 'href' => site_url('dosen/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
-
-                            ['category' => 'Layanan Ticketing', 'has_divider' => true],
-                            ['heading' => 'Respon Ticketing', 'href' => site_url('dosen/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
-                            ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
-                            ['heading' => 'Riwayat Tiket Saya', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
-
-                            ['category' => 'Fasilitas & Jadwal', 'has_divider' => true],
-                            ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
-                            ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
-                            ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
-                        ];
-                        break;
-
-                    case 1: // Admin System
-                        $defaultNavItems = [
-                            ['category' => 'Pusat Kendali'],
-                            ['heading' => 'Dashboard Control', 'href' => site_url('admin'), 'icon_3d' => 'assets/images/icons_3d/home.png'],
-                            ['heading' => 'Approval Peminjaman', 'href' => site_url('kelolabooking'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
-                            ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
-
-                            ['category' => 'Manajemen Sistem', 'has_divider' => true],
-                            ['heading' => 'Import Email & Token', 'href' => site_url('admin/import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
-                            ['heading' => 'Pengaturan Unit Ticketing', 'href' => site_url('admin#unit-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
-                            ['heading' => 'Respon Ticketing Lab', 'href' => site_url('laboran/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
-                            ['heading' => 'Riwayat Log History', 'href' => site_url('admin/log_history'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
-
-                            ['category' => 'Informasi & Jadwal', 'has_divider' => true],
-                            ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
-                            ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
-                        ];
-                        break;
-
-                    case 6: // Koordinator TA
-                        $defaultNavItems = [
-                            ['category' => 'Pengelolaan Tugas Akhir'],
-                            ['heading' => 'Dashboard Utama', 'href' => site_url('koordinatorta'), 'icon_3d' => 'assets/images/icons_3d/home.png'],
-                            ['heading' => 'Pendaftaran TA', 'href' => site_url('koordinatorta#pendaftaran'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
-                            ['heading' => 'Tahap Preview 2', 'href' => site_url('koordinatorta#preview2'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
-                            ['heading' => 'Jadwal Sidang TA', 'href' => site_url('koordinatorta#sidang'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
-
-                            ['category' => 'Fasilitas & Jadwal', 'has_divider' => true],
-                            ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
-                            ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
-                            ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
-                        ];
-                        break;
-
-                    case 4: // Mahasiswa
-                    case 5: // Mahasiswa
-                        $defaultNavItems = [
-                            ['category' => 'Menu Utama', 'mobile_only' => true],
-                            ['heading' => 'Dashboard', 'href' => site_url('mahasiswa'), 'icon_3d' => 'assets/images/icons_3d/home.png', 'mobile_only' => true],
-                            ['heading' => 'Pendaftaran TA', 'href' => site_url('mahasiswa/pendaftaran_ta'), 'icon_3d' => 'assets/images/icons_3d/daftar.png', 'mobile_only' => true],
-                            ['heading' => 'Bimbingan TA', 'href' => site_url('mahasiswa/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/sidang.png', 'mobile_only' => true],
-
-                            ['category' => 'Menu Mahasiswa', 'has_divider_mobile' => true],
-                            ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
-                            ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
-
-                            ['category' => 'Layanan Ticketing', 'has_divider' => true],
-                            ['heading' => 'Buat Tiket Kendala', 'href' => site_url('mahasiswa/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
-                            ['heading' => 'Riwayat Tiket Saya', 'href' => site_url('mahasiswa/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
-
-                            ['category' => 'Akun', 'has_divider' => true],
-                            ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
-                        ];
-                        break;
-
-                    default: // Tamu / Publik
-                        $defaultNavItems = [
-                            ['category' => 'Menu Utama'],
-                            ['heading' => 'Dashboard Utama', 'href' => site_url('dashboard'), 'icon_3d' => 'assets/images/icons_3d/home.png'],
-                            ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
-                            ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
-                            ['heading' => $isLoggedIn ? 'Keluar' : 'Masuk', 'href' => site_url($isLoggedIn ? 'login/logout' : 'login'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
-                        ];
-                        break;
-                }
-                ?>
-
-                <div class="curved-sidebar-header" style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between;">
-                    <p style="margin: 0;">Navigation</p>
+                <div class="curved-sidebar-header" style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between;">
+                    <p style="margin: 0; font-size: 0.82rem;">Navigation</p>
                     <div class="curved-header-role-badge">
                         <span><?= htmlspecialchars($activeRoleBadge); ?></span>
                     </div>
@@ -2384,18 +2564,24 @@
                         $icon3d = isset($item['icon_3d']) ? $item['icon_3d'] : null;
 
                         $cleanHref = trim(str_replace([site_url(), base_url()], '', $item['href']), '/');
+                        $hasHash = (strpos($cleanHref, '#') !== false);
                         $cleanHrefUri = strtok($cleanHref, '#');
-                        $isCurrent = (!empty($cleanHrefUri) && ($curr_uri === $cleanHrefUri));
-                        if (!$isCurrent && !empty($cleanHrefUri) && !in_array($cleanHrefUri, ['dashboard', 'admin', 'laboran', 'kaur', 'dosen', 'koordinatorta', 'mahasiswa'])) {
-                            $isCurrent = (strpos($curr_uri, $cleanHrefUri) === 0);
-                        }
-                        if (!$isCurrent) {
-                            if ($cleanHrefUri === 'mahasiswa' && ($curr_uri === 'mahasiswa' || $curr_uri === 'mahasiswa/index')) {
-                                $isCurrent = true;
-                            } elseif ($cleanHrefUri === 'mahasiswa/pendaftaran_ta' && strpos($curr_uri, 'pendaftaran') !== false) {
-                                $isCurrent = true;
-                            } elseif ($cleanHrefUri === 'mahasiswa/bimbingan' && strpos($curr_uri, 'bimbingan') !== false) {
-                                $isCurrent = true;
+
+                        if ($hasHash) {
+                            $isCurrent = false;
+                        } else {
+                            $isCurrent = (!empty($cleanHrefUri) && ($curr_uri === $cleanHrefUri));
+                            if (!$isCurrent && !empty($cleanHrefUri) && !in_array($cleanHrefUri, ['dashboard', 'admin', 'laboran', 'kaur', 'dosen', 'koordinatorta', 'mahasiswa'])) {
+                                $isCurrent = (strpos($curr_uri, $cleanHrefUri) === 0);
+                            }
+                            if (!$isCurrent) {
+                                if ($cleanHrefUri === 'mahasiswa' && ($curr_uri === 'mahasiswa' || $curr_uri === 'mahasiswa/index')) {
+                                    $isCurrent = true;
+                                } elseif ($cleanHrefUri === 'mahasiswa/pendaftaran_ta' && strpos($curr_uri, 'pendaftaran') !== false) {
+                                    $isCurrent = true;
+                                } elseif ($cleanHrefUri === 'mahasiswa/bimbingan' && strpos($curr_uri, 'bimbingan') !== false) {
+                                    $isCurrent = true;
+                                }
                             }
                         }
                     ?>
@@ -2422,17 +2608,34 @@
                 </nav>
             </div>
 
-            <!-- Footer -->
-            <div class="curved-sidebar-footer" style="padding-top: 10px; border-top: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
-                <div class="curved-sidebar-footer-brand" style="display: flex; align-items: center; gap: 6px;">
-                    <i class="fa-solid fa-graduation-cap text-orange-500"></i>
-                    <span><?= htmlspecialchars($this->session->userdata('name') ?: 'Portal Tugas Akhir • IFIK') ?></span>
+            <!-- Bottom Section: Portal Info & Version -->
+            <div>
+                <!-- User Profile Summary Card -->
+                <div class="curved-sidebar-user-card">
+                    <div class="curved-sidebar-user-avatar">
+                        <?= strtoupper(substr($this->session->userdata('name') ?: ($this->session->userdata('username') ?: 'U'), 0, 1)) ?>
+                    </div>
+                    <div class="curved-sidebar-user-info">
+                        <div class="curved-sidebar-user-name" title="<?= htmlspecialchars($this->session->userdata('name') ?: 'Pengguna') ?>">
+                            <?= htmlspecialchars($this->session->userdata('name') ?: ($this->session->userdata('username') ?: 'Pengguna')) ?>
+                        </div>
+                        <div class="curved-sidebar-user-role">
+                            <?= htmlspecialchars($this->session->userdata('nidn_nim') ?: '') ?><?= !empty($this->session->userdata('nidn_nim')) ? ' • ' : '' ?><?= htmlspecialchars($activeRoleBadge) ?>
+                        </div>
+                    </div>
                 </div>
-                <span class="curved-sidebar-footer-version" style="background: rgba(234, 88, 12, 0.1); color: #ea580c; padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 0.72rem;"><?= htmlspecialchars($activeRoleBadge) ?></span>
+
+                <div class="curved-sidebar-footer">
+                    <div class="curved-sidebar-footer-brand">
+                        <i class="fa-solid fa-graduation-cap text-orange-500"></i>
+                        <span>Portal Tugas Akhir • IFIK</span>
+                    </div>
+                    <span class="curved-sidebar-footer-version">v2.0</span>
+                </div>
             </div>
         </div>
 
-        <!-- Morphing Bezier Curve SVG -->
+        <!-- Morphing Bezier Curve SVG (Right Edge of Left Sidebar) -->
         <svg id="curvedSidebarSvg" class="curved-sidebar-svg">
             <path id="curvedSidebarPath" />
         </svg>

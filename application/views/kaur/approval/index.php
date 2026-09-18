@@ -2363,21 +2363,21 @@
                                 </td>
                                 <td style="width: 85px; text-align: center; overflow: visible; position: relative; padding-right: 14px;">
                                     <div class="action-dropdown-wrap">
-                                        <button type="button" class="btn-action-dots" onclick="toggleActionDropdown(<?= $p->id ?>, event)" title="Menu Aksi">
+                                        <button type="button" class="btn-action-dots" onclick="toggleActionDropdown('<?= $p->id ?>', event)" title="Menu Aksi">
                                             <i class="fa-solid fa-ellipsis-vertical"></i>
                                             <span>Aksi</span>
                                         </button>
                                         <div class="action-dropdown-menu" id="actionMenu_<?= $p->id ?>">
                                             <?php if ($isPending || $isLaboranAcc): ?>
-                                                <button type="button" class="action-dropdown-item item-acc" onclick="kaurApprove(<?= $p->id ?>)">
+                                                <button type="button" class="action-dropdown-item item-acc" onclick="kaurApprove('<?= $p->id ?>')">
                                                     <i class="fa-solid fa-check"></i> Setujui (Ka. Ur)
                                                 </button>
-                                                <button type="button" class="action-dropdown-item item-rej" onclick="openKaurRejectModal(<?= $p->id ?>)">
+                                                <button type="button" class="action-dropdown-item item-rej" onclick="openKaurRejectModal('<?= $p->id ?>')">
                                                     <i class="fa-solid fa-ban"></i> Tolak Permohonan
                                                 </button>
                                             <?php endif; ?>
                                             <?php if ($isApprovedKaur || $isLaboranAcc || stripos($s, 'Disetujui') !== false || stripos($s, 'Approved') !== false): ?>
-                                                <button type="button" class="action-dropdown-item item-qr" onclick="openSuratModal(<?= $p->id ?>)">
+                                                <button type="button" class="action-dropdown-item item-qr" onclick="openSuratModal('<?= $p->id ?>')">
                                                     <i class="fa-solid fa-qrcode"></i> Cetak Surat QR
                                                 </button>
                                             <?php endif; ?>
@@ -2385,7 +2385,7 @@
                                                 <i class="fa-solid fa-eye" style="color:#3b82f6;"></i> Detail Permohonan
                                             </button>
                                             <div class="action-dropdown-divider"></div>
-                                            <button type="button" class="action-dropdown-item item-del" onclick="deleteBooking(<?= $p->id ?>)">
+                                            <button type="button" class="action-dropdown-item item-del" onclick="deleteBooking('<?= $p->id ?>')">
                                                 <i class="fa-solid fa-trash-can"></i> Hapus Data
                                             </button>
                                         </div>
@@ -3224,27 +3224,27 @@
             let actionButtons = '';
             if (isPending || isLaboranAcc) {
                 actionButtons += `
-                    <button type="button" class="action-dropdown-item item-acc" onclick="kaurApprove(${p.id})">
+                    <button type="button" class="action-dropdown-item item-acc" onclick="kaurApprove('${p.id}')">
                         <i class="fa-solid fa-check"></i> Setujui (Ka. Ur)
                     </button>
-                    <button type="button" class="action-dropdown-item item-rej" onclick="openKaurRejectModal(${p.id})">
+                    <button type="button" class="action-dropdown-item item-rej" onclick="openKaurRejectModal('${p.id}')">
                         <i class="fa-solid fa-ban"></i> Tolak Permohonan
                     </button>
                 `;
             }
             if (isApprovedKaur || isLaboranAcc || s.toLowerCase().includes('disetujui') || s.toLowerCase().includes('approved')) {
                 actionButtons += `
-                    <button type="button" class="action-dropdown-item item-qr" onclick="openSuratModal(${p.id})">
+                    <button type="button" class="action-dropdown-item item-qr" onclick="openSuratModal('${p.id}')">
                         <i class="fa-solid fa-qrcode"></i> Cetak Surat QR
                     </button>
                 `;
             }
             actionButtons += `
-                <button type="button" class="action-dropdown-item" onclick="openDetailModal(window.kaurBookingsMap[${p.id}])">
+                <button type="button" class="action-dropdown-item" onclick="openDetailModal(window.kaurBookingsMap['${p.id}'])">
                     <i class="fa-solid fa-eye" style="color:#3b82f6;"></i> Detail Permohonan
                 </button>
                 <div class="action-dropdown-divider"></div>
-                <button type="button" class="action-dropdown-item item-del" onclick="deleteBooking(${p.id})">
+                <button type="button" class="action-dropdown-item item-del" onclick="deleteBooking('${p.id}')">
                     <i class="fa-solid fa-trash-can"></i> Hapus Data
                 </button>
             `;
@@ -3322,7 +3322,7 @@
                     </td>
                     <td style="width: 85px; text-align: center; overflow: visible; position: relative; padding-right: 14px;">
                         <div class="action-dropdown-wrap">
-                            <button type="button" class="btn-action-dots" onclick="toggleActionDropdown(${p.id}, event)" title="Menu Aksi">
+                            <button type="button" class="btn-action-dots" onclick="toggleActionDropdown('${p.id}', event)" title="Menu Aksi">
                                 <i class="fa-solid fa-ellipsis-vertical"></i>
                                 <span>Aksi</span>
                             </button>

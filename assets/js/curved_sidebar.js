@@ -26,7 +26,7 @@
             this.svgId = options.svgId || 'curvedSidebarSvg';
             
             this.isDesktop = window.innerWidth >= 1024;
-            this.isOpen = typeof options.defaultOpen !== 'undefined' ? options.defaultOpen : true; // Always default open (never hidden)
+            this.isOpen = typeof options.defaultOpen !== 'undefined' ? options.defaultOpen : (this.isDesktop ? true : false);
             this.animFrameId = null;
             this.animDuration = 750; // ms
 
@@ -44,17 +44,28 @@
                 return;
             }
 
-            // Set initial open/collapsed state (Always default OPEN / not hidden)
+            // Set initial open/collapsed state (Desktop defaults to OPEN with content shifted)
             if (this.isOpen) {
                 this.panel.classList.add('is-active');
                 this.toggleBtn.classList.add('is-active');
                 this.toggleBtn.setAttribute('aria-expanded', 'true');
+                if (this.isDesktop) {
+                    document.body.classList.remove('curved-sidebar-desktop-collapsed');
+                    document.body.classList.add('curved-sidebar-desktop-open');
+                } else {
+                    if (this.backdrop) this.backdrop.classList.add('is-active');
+                    document.body.classList.add('curved-sidebar-open');
+                }
                 this.setPath(0);
                 if (this.svg) this.svg.style.opacity = '0';
             } else {
                 this.panel.classList.remove('is-active');
                 this.toggleBtn.classList.remove('is-active');
                 this.toggleBtn.setAttribute('aria-expanded', 'false');
+                if (this.isDesktop) {
+                    document.body.classList.remove('curved-sidebar-desktop-open');
+                    document.body.classList.add('curved-sidebar-desktop-collapsed');
+                }
                 if (this.backdrop) {
                     this.backdrop.classList.remove('is-active');
                 }
@@ -89,6 +100,27 @@
             });
 
             window.addEventListener('resize', () => {
+                const wasDesktop = this.isDesktop;
+                this.isDesktop = window.innerWidth >= 1024;
+                if (wasDesktop !== this.isDesktop) {
+                    if (this.isDesktop) {
+                        if (this.backdrop) this.backdrop.classList.remove('is-active');
+                        document.body.classList.remove('curved-sidebar-open');
+                        if (this.isOpen) {
+                            document.body.classList.remove('curved-sidebar-desktop-collapsed');
+                            document.body.classList.add('curved-sidebar-desktop-open');
+                        } else {
+                            document.body.classList.remove('curved-sidebar-desktop-open');
+                            document.body.classList.add('curved-sidebar-desktop-collapsed');
+                        }
+                    } else {
+                        document.body.classList.remove('curved-sidebar-desktop-collapsed', 'curved-sidebar-desktop-open');
+                        if (this.isOpen) {
+                            if (this.backdrop) this.backdrop.classList.add('is-active');
+                            document.body.classList.add('curved-sidebar-open');
+                        }
+                    }
+                }
                 this.updateSvgDimensions();
                 if (this.isOpen) {
                     this.setPath(0);
@@ -219,14 +251,18 @@
         open() {
             if (this.isOpen) return;
             this.isOpen = true;
+            this.isDesktop = window.innerWidth >= 1024;
 
             // Update DOM classes
             this.toggleBtn.classList.add('is-active');
             this.toggleBtn.setAttribute('aria-expanded', 'true');
-            if (this.backdrop && window.innerWidth < 1024) {
-                this.backdrop.classList.add('is-active');
-            }
-            if (window.innerWidth < 1024) {
+            if (this.isDesktop) {
+                document.body.classList.remove('curved-sidebar-desktop-collapsed');
+                document.body.classList.add('curved-sidebar-desktop-open');
+                if (this.backdrop) this.backdrop.classList.remove('is-active');
+                document.body.classList.remove('curved-sidebar-open');
+            } else {
+                if (this.backdrop) this.backdrop.classList.add('is-active');
                 document.body.classList.add('curved-sidebar-open');
             }
             this.panel.classList.add('is-active');
@@ -237,7 +273,7 @@
 
             if (this.svg) this.svg.style.opacity = '1';
             // Morph curve from bulging (70) to flat (0)
-            this.animateSvgCurve(70, 0, 800, () => {
+            this.animateSvgCurve(70, 0, 750, () => {
                 if (this.svg) this.svg.style.opacity = '0';
             });
         }
@@ -245,17 +281,22 @@
         close() {
             if (!this.isOpen) return;
             this.isOpen = false;
+            this.isDesktop = window.innerWidth >= 1024;
 
             // Update DOM classes
             this.toggleBtn.classList.remove('is-active');
             this.toggleBtn.setAttribute('aria-expanded', 'false');
+            if (this.isDesktop) {
+                document.body.classList.remove('curved-sidebar-desktop-open');
+                document.body.classList.add('curved-sidebar-desktop-collapsed');
+            }
             if (this.backdrop) this.backdrop.classList.remove('is-active');
             document.body.classList.remove('curved-sidebar-open');
             this.panel.classList.remove('is-active');
 
             if (this.svg) this.svg.style.opacity = '1';
             // Morph curve from flat (0) back to bulging (70)
-            this.animateSvgCurve(0, 70, 700, () => {
+            this.animateSvgCurve(0, 70, 750, () => {
                 if (this.svg) this.svg.style.opacity = '0';
             });
         }
