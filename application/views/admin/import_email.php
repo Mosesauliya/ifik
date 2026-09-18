@@ -720,6 +720,85 @@
                 display: none !important;
             }
         }
+
+        /* ============================================================
+           TOOLBAR ROW 2 RESPONSIVENESS (Sidebar Open vs Collapsed)
+           ============================================================ */
+        @media (min-width: 641px) {
+            .table-toolbar-row2 {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 10px !important;
+                width: 100% !important;
+            }
+            .table-toolbar-row2 .batch-actions-grid {
+                display: grid !important;
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 10px !important;
+                width: 100% !important;
+            }
+            .table-toolbar-row2 .batch-actions-grid button {
+                width: 100% !important;
+                justify-content: center !important;
+                white-space: nowrap !important;
+            }
+            .table-toolbar-row2 .toolbar-right-group {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                width: 100% !important;
+                gap: 10px !important;
+            }
+            .table-toolbar-row2 .toolbar-right-group .tools-grid-mobile {
+                display: flex !important;
+                align-items: center !important;
+                gap: 10px !important;
+            }
+        }
+
+        /* When screen is extra wide (>= 1536px / 2xl), single horizontal row */
+        @media (min-width: 1536px) {
+            .table-toolbar-row2 {
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+            }
+            .table-toolbar-row2 .batch-actions-grid {
+                display: flex !important;
+                flex-direction: row !important;
+                width: auto !important;
+                gap: 10px !important;
+            }
+            .table-toolbar-row2 .batch-actions-grid button {
+                width: auto !important;
+            }
+            .table-toolbar-row2 .toolbar-right-group {
+                width: auto !important;
+                justify-content: flex-end !important;
+            }
+        }
+
+        /* When sidebar is COLLAPSED / HIDDEN on desktop (>= 1200px), single horizontal row fits cleanly */
+        @media (min-width: 1200px) {
+            body.curved-sidebar-desktop-collapsed .table-toolbar-row2 {
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+            }
+            body.curved-sidebar-desktop-collapsed .table-toolbar-row2 .batch-actions-grid {
+                display: flex !important;
+                flex-direction: row !important;
+                width: auto !important;
+                gap: 10px !important;
+            }
+            body.curved-sidebar-desktop-collapsed .table-toolbar-row2 .batch-actions-grid button {
+                width: auto !important;
+            }
+            body.curved-sidebar-desktop-collapsed .table-toolbar-row2 .toolbar-right-group {
+                width: auto !important;
+                justify-content: flex-end !important;
+            }
+        }
     </style>
 <body class="bg-slate-50 text-slate-800 antialiased pb-16">
 
@@ -1082,51 +1161,54 @@
             </div>
 
             <!-- Row 2: Batch Actions, Page Size & Tools -->
-            <div class="pt-3 border-t border-slate-100 flex flex-col 2xl:flex-row 2xl:items-center 2xl:justify-between gap-3">
+            <div class="table-toolbar-row2 pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <!-- Batch Actions Left -->
-                <div class="flex flex-wrap sm:flex-nowrap items-center gap-2">
-                    <button onclick="bulkGenerateTokenSelected()" class="btn-gradient-base btn-gradient-orange-solid h-9 px-3 text-xs flex items-center gap-1.5 whitespace-nowrap cursor-pointer" title="Generate Token 8 Karakter untuk akun terpilih">
+                <div class="batch-actions-grid sm:flex sm:flex-wrap sm:items-center sm:gap-2.5">
+                    <button onclick="bulkGenerateTokenSelected()" class="btn-gradient-base btn-gradient-orange-solid h-9 px-3.5 text-xs flex items-center gap-2">
                         <i class="fa-solid fa-bolt text-xs"></i>
-                        <span>Generate Token</span>
+                        <span>Generate Token</span><span class="opacity-85 text-[11px] hidden xl:inline">&nbsp;(Selected)</span>
                     </button>
-                    <button onclick="bulkGenerateTokenAll()" class="btn-gradient-base btn-gradient-orange-soft h-9 px-3 text-xs flex items-center gap-1.5 whitespace-nowrap cursor-pointer" title="Generate Token untuk semua akun yang masih kosong">
+                    <button onclick="bulkGenerateTokenAll()" class="btn-gradient-base btn-gradient-orange-soft h-9 px-3.5 text-xs flex items-center gap-2">
                         <i class="fa-solid fa-key text-brand-600 text-xs"></i>
-                        <span>Generate All</span>
+                        <span>Generate All</span><span class="opacity-85 text-[11px] hidden xl:inline">&nbsp;(Kosong)</span>
                     </button>
-                    <button onclick="bulkSendEmailSelected()" class="btn-gradient-base btn-gradient-emerald-solid h-9 px-3 text-xs flex items-center gap-1.5 whitespace-nowrap cursor-pointer" title="Kirim Email Tautan Aktivasi ke akun terpilih">
+                    <button onclick="bulkSendEmailSelected()" class="btn-gradient-base btn-gradient-emerald-solid btn-full-mobile h-9 px-3.5 text-xs flex items-center gap-2">
                         <i class="fa-solid fa-paper-plane text-xs"></i>
-                        <span>Kirim Email</span>
+                        <span>Kirim Email</span><span class="opacity-85 text-[11px] hidden xl:inline">&nbsp;(Selected)</span>
                     </button>
                 </div>
 
                 <!-- Page Size & Tools Right -->
-                <div class="flex flex-wrap items-center justify-between sm:justify-end gap-2.5 w-full 2xl:w-auto">
+                <div class="toolbar-right-group flex flex-col sm:flex-row sm:items-center gap-2.5 w-full sm:w-auto">
                     <!-- Page Size Selector Top -->
-                    <div class="flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 border border-slate-200 px-3 h-9 rounded-xl shadow-2xs whitespace-nowrap">
+                    <div class="page-size-wrap-mobile flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 border border-slate-200 px-3 h-9 rounded-xl shadow-2xs">
                         <div class="flex items-center gap-1.5">
-                            <span class="font-medium text-slate-500">Tampilkan</span>
+                            <span class="font-medium">Tampilkan</span>
                             <select onchange="changePageSize(this.value)" class="page-size-select h-6 px-1.5 text-xs font-bold bg-white border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer">
                                 <option value="10">10</option>
                                 <option value="25">25</option>
                                 <option value="50">50</option>
                                 <option value="100">100</option>
                             </select>
-                            <span class="font-medium text-slate-500">data/hal</span>
+                            <span class="font-medium">data/hal</span>
                         </div>
-                        <div class="flex items-center gap-1.5 ml-1 pl-2 border-l border-slate-200">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-slate-300">|</span>
                             <span>Total: <strong class="total-rows-count text-slate-900 font-bold">0</strong></span>
                             <span class="selected-rows-count hidden text-brand-600 font-bold ml-1">(0 terpilih)</span>
                         </div>
                     </div>
 
+                    <div class="h-6 w-px bg-slate-200 mx-0.5 hidden sm:block"></div>
+
                     <!-- Tools Right -->
-                    <div class="flex items-center gap-2 shrink-0">
-                        <button onclick="exportData('xlsx')" class="btn-gradient-base btn-gradient-emerald-soft h-9 px-3 text-xs flex items-center gap-1.5 whitespace-nowrap cursor-pointer" title="Export to Excel XLSX">
-                            <i class="fa-solid fa-file-excel text-emerald-600 text-xs"></i>
+                    <div class="tools-grid-mobile sm:flex sm:items-center sm:gap-2.5">
+                        <button onclick="exportData('xlsx')" class="btn-gradient-base btn-gradient-emerald-soft h-9 px-3.5 text-xs flex items-center gap-2" title="Export to Excel XLSX">
+                            <i class="fa-solid fa-file-excel text-emerald-600 text-sm"></i>
                             <span>Export Excel</span>
                         </button>
-                        <button onclick="bulkDeleteSelected()" class="btn-gradient-base btn-gradient-rose-soft h-9 px-3 text-xs flex items-center gap-1.5 whitespace-nowrap cursor-pointer" title="Hapus Akun Terpilih">
-                            <i class="fa-solid fa-trash-can text-xs text-rose-600"></i>
+                        <button onclick="bulkDeleteSelected()" class="btn-gradient-base btn-gradient-rose-soft h-9 px-3.5 text-xs flex items-center gap-2" title="Hapus Selected">
+                            <i class="fa-solid fa-trash-can text-sm text-rose-600"></i>
                             <span>Hapus</span>
                         </button>
                     </div>
