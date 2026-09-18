@@ -1856,9 +1856,9 @@
             flex-shrink: 0;
         }
         .sb-chip {
-            padding: 5px 10px;
+            padding: 4px 8px;
             border-radius: 999px;
-            font-size: 0.72rem;
+            font-size: 0.68rem;
             font-weight: 700;
             border: 1px solid #e2e8f0;
             background: #ffffff;
@@ -1882,19 +1882,19 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 6px;
             width: 100%;
-            padding: 8px 12px;
+            padding: 6px 10px;
             background: #ffffff;
             border: 1.5px solid #e2e8f0;
-            border-radius: 12px;
+            border-radius: 10px;
             color: #334155;
-            font-size: 0.78rem;
+            font-size: 0.72rem;
             font-weight: 700;
             text-decoration: none;
             transition: all 0.2s ease;
             box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             box-sizing: border-box;
         }
         .btn-sidebar-kembali:hover {
@@ -1907,10 +1907,10 @@
 
         /* SIDEBAR CALENDAR NAV CONTROLS */
         .sb-btn-today {
-            padding: 3px 10px;
-            font-size: 0.74rem;
+            padding: 2px 8px;
+            font-size: 0.70rem;
             font-weight: 700;
-            border-radius: 8px;
+            border-radius: 7px;
             border: 1.5px solid #e2e8f0;
             background: #ffffff;
             color: #334155;
@@ -1925,12 +1925,12 @@
         }
 
         .sb-nav-arrow {
-            width: 30px;
-            height: 30px;
+            width: 26px;
+            height: 26px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 8px;
+            border-radius: 7px;
             border: 1.5px solid #e2e8f0;
             background: #ffffff;
             color: #475569;
@@ -1946,8 +1946,8 @@
         .sb-month-year-btn {
             background: #ffffff !important;
             border: 1.5px solid #e2e8f0 !important;
-            border-radius: 9px !important;
-            padding: 4px 8px !important;
+            border-radius: 8px !important;
+            padding: 3px 6px !important;
         }
         .sb-month-year-btn:hover {
             border-color: #ea580c !important;
@@ -1956,19 +1956,19 @@
 
         /* Category Section Headers / Tagline */
         .curved-nav-category {
-            font-size: 0.68rem;
+            font-size: 0.62rem;
             font-weight: 800;
             color: #78350f;
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            padding: 8px 10px 4px 10px;
-            margin-top: 4px;
+            padding: 6px 8px 3px 8px;
+            margin-top: 3px;
             user-select: none;
         }
         .curved-nav-category.has-divider {
             border-top: 1px solid rgba(245, 158, 11, 0.2);
-            margin-top: 8px;
-            padding-top: 10px;
+            margin-top: 6px;
+            padding-top: 8px;
         }
 
         /* Mobile only nav items in sidebar (hidden on desktop screens >= 768px, matching Tailwind md breakpoint) */
@@ -1980,19 +1980,19 @@
         @media (max-width: 767.98px) {
             .curved-nav-category.has-divider-mobile {
                 border-top: 1px solid rgba(245, 158, 11, 0.2);
-                margin-top: 8px;
-                padding-top: 10px;
+                margin-top: 6px;
+                padding-top: 8px;
             }
         }
 
         .curved-header-role-badge {
             display: inline-flex;
             align-items: center;
-            padding: 2px 8px;
+            padding: 1px 7px;
             background: rgba(245, 158, 11, 0.22);
             border: 1px solid rgba(245, 158, 11, 0.38);
             border-radius: 9999px;
-            font-size: 0.65rem;
+            font-size: 0.60rem;
             font-weight: 800;
             color: #78350f;
             letter-spacing: 0.02em;
@@ -2004,7 +2004,7 @@
             backdrop-filter: blur(20px) saturate(160%) !important;
             -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
             border-right: 1.5px solid rgba(255, 255, 255, 0.85) !important;
-            border-radius: 0 24px 24px 0 !important;
+            border-radius: 0 20px 20px 0 !important;
             box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.9), 0 20px 45px rgba(15, 23, 42, 0.08), 8px 0 25px rgba(0, 0, 0, 0.04) !important;
         }
 
@@ -2044,27 +2044,27 @@
 
         /* User Profile Card inside Sidebar */
         .curved-sidebar-user-card {
-            margin: 12px 0 10px 0;
-            padding: 10px 12px;
+            margin: 8px 0 6px 0;
+            padding: 7px 9px;
             background: rgba(255, 255, 255, 0.65);
-            border-radius: 14px;
+            border-radius: 10px;
             border: 1px solid rgba(226, 232, 240, 0.9);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
         }
         .curved-sidebar-user-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
             background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
             color: #ffffff;
             font-weight: 800;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.95rem;
+            font-size: 0.8rem;
             flex-shrink: 0;
             box-shadow: 0 2px 6px rgba(234, 88, 12, 0.25);
         }
@@ -2073,7 +2073,7 @@
             min-width: 0;
         }
         .curved-sidebar-user-name {
-            font-size: 0.82rem;
+            font-size: 0.78rem;
             font-weight: 700;
             color: #0f172a;
             white-space: nowrap;
@@ -2082,10 +2082,10 @@
             line-height: 1.2;
         }
         .curved-sidebar-user-role {
-            font-size: 0.68rem;
+            font-size: 0.62rem;
             color: #64748b;
             font-weight: 600;
-            margin-top: 2px;
+            margin-top: 1px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -2359,11 +2359,11 @@
             
             <div>
                 <!-- 1. Header Control with Close (X) Button -->
-                <div class="curved-sidebar-header" style="justify-content: flex-start; gap: 10px;">
+                <div class="curved-sidebar-header" style="justify-content: flex-start; gap: 8px; margin-bottom: 8px;">
                     <button type="button" class="curved-sidebar-close-btn" id="curvedSidebarCloseBtn" aria-label="Tutup Sidebar" title="Tutup Sidebar (Esc)">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
-                    <p style="margin: 0;"><i class="fa-solid fa-sliders" style="color: #ea580c;"></i> Kontrol & Navigasi</p>
+                    <p style="margin: 0; font-size: 0.82rem;"><i class="fa-solid fa-sliders" style="color: #ea580c;"></i> Kontrol & Navigasi</p>
                 </div>
 
                 <!-- Tombol Kembali Cepat ke Dashboard / Portal Asal -->
@@ -2373,19 +2373,19 @@
                 </a>
                 
                 <!-- 2. Mode Tampilan Switcher -->
-                <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 4px; display: flex; gap: 4px; margin-bottom: 14px;">
-                    <button type="button" id="sbViewCalBtn" class="btn-sb-mode" onclick="switchViewMode('calendar', event)" style="flex: 1; padding: 7px 10px; border-radius: 8px; border: none; font-size: 0.76rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s; background: #0f172a; color: #fff;">
+                <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 3px; display: flex; gap: 3px; margin-bottom: 10px;">
+                    <button type="button" id="sbViewCalBtn" class="btn-sb-mode" onclick="switchViewMode('calendar', event)" style="flex: 1; padding: 5px 8px; border-radius: 7px; border: none; font-size: 0.72rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: all 0.2s; background: #0f172a; color: #fff;">
                         <i class="fa-solid fa-calendar-days"></i> Kalender
                     </button>
-                    <button type="button" id="sbViewTblBtn" class="btn-sb-mode" onclick="switchViewMode('table', event)" style="flex: 1; padding: 7px 10px; border-radius: 8px; border: none; font-size: 0.76rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s; background: transparent; color: #64748b;">
+                    <button type="button" id="sbViewTblBtn" class="btn-sb-mode" onclick="switchViewMode('table', event)" style="flex: 1; padding: 5px 8px; border-radius: 7px; border: none; font-size: 0.72rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: all 0.2s; background: transparent; color: #64748b;">
                         <i class="fa-solid fa-table-list"></i> Tabel
                     </button>
                 </div>
 
                 <!-- 3. Navigasi Jadwal Kalender (Tampil Hanya Saat Mode Kalender) -->
-                <div id="sbCalendarNavSection" style="margin-bottom: 14px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 10px 12px;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                        <label style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px; margin: 0;">
+                <div id="sbCalendarNavSection" style="margin-bottom: 10px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 8px 10px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                        <label style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 5px; margin: 0;">
                             <i class="fa-solid fa-calendar-week" style="color: #ea580c;"></i> Navigasi Kalender
                         </label>
                         <button type="button" onclick="goToToday()" class="sb-btn-today" title="Lompat ke Hari Ini">
@@ -2393,34 +2393,34 @@
                         </button>
                     </div>
 
-                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; position: relative;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; position: relative;">
                         <!-- Navigasi Panah < > -->
-                        <div style="display: flex; gap: 4px; flex-shrink: 0;">
+                        <div style="display: flex; gap: 3px; flex-shrink: 0;">
                             <button type="button" onclick="prevWeek()" class="sb-nav-arrow" title="Minggu Sebelumnya">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
                             </button>
                             <button type="button" onclick="nextWeek()" class="sb-nav-arrow" title="Minggu Berikutnya">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                             </button>
                         </div>
 
                         <!-- Month Year Picker Trigger in Sidebar -->
                         <div class="month-year-picker-wrap" id="sbMonthYearPickerWrap" style="position: relative; flex: 1; display: flex; justify-content: flex-end;">
                             <button type="button" class="month-year-btn sb-month-year-btn" id="sbMonthYearBtn" onclick="toggleMonthYearPicker(event, 'sb')" title="Pilih Bulan & Tahun">
-                                <span id="sbMonthTitle" style="font-size: 0.86rem; font-weight: 800; color: #0f172a; white-space: nowrap;">-</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                <span id="sbMonthTitle" style="font-size: 0.78rem; font-weight: 800; color: #0f172a; white-space: nowrap;">-</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
                             </button>
 
                             <!-- Sidebar Month-Year Popover Dropdown -->
-                            <div class="month-year-popover sb-month-popover" id="sbMonthYearPopover" style="right: 0; left: auto; width: 250px;">
+                            <div class="month-year-popover sb-month-popover" id="sbMonthYearPopover" style="right: 0; left: auto; width: 230px;">
                                 <!-- Year Navigation Header -->
                                 <div class="my-year-nav">
                                     <button type="button" onclick="changePickerYear(-1, event, 'sb')" title="Tahun Sebelumnya">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
                                     </button>
-                                    <span id="sbPickerYearDisplay" style="font-size: 1rem; font-weight: 800; color: #0f172a;">2026</span>
+                                    <span id="sbPickerYearDisplay" style="font-size: 0.92rem; font-weight: 800; color: #0f172a;">2026</span>
                                     <button type="button" onclick="changePickerYear(1, event, 'sb')" title="Tahun Selanjutnya">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                                     </button>
                                 </div>
 
@@ -2434,63 +2434,63 @@
                 </div>
 
                 <!-- 3B. Kontrol Filter & Urutan Tabel (Tampil Khusus Mode Tabel) -->
-                <div id="sbTableControlsSection" style="display: none; margin-bottom: 14px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 12px; flex-direction: column; gap: 10px;">
+                <div id="sbTableControlsSection" style="display: none; margin-bottom: 10px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 10px; flex-direction: column; gap: 8px;">
                     <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <label style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px; margin: 0;">
+                        <label style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 5px; margin: 0;">
                             <i class="fa-solid fa-chart-pie" style="color: #ea580c;"></i> Ringkasan & Filter Status
                         </label>
                     </div>
 
                     <!-- Quick Status Filter Pills in Sidebar -->
-                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                        <div class="stat-pill stat-pill-total active" id="statPillTotal" onclick="filterByStatPill('all')" title="Klik untuk menampilkan semua data" style="flex: 1 1 calc(50% - 3px); justify-content: center; padding: 5px 8px; font-size: 0.76rem;">
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                        <div class="stat-pill stat-pill-total active" id="statPillTotal" onclick="filterByStatPill('all')" title="Klik untuk menampilkan semua data" style="flex: 1 1 calc(50% - 3px); justify-content: center; padding: 4px 6px; font-size: 0.72rem;">
                             <span class="stat-label" style="color: #64748b;">Total:</span>
                             <span class="stat-val" id="tableStatTotal" style="color: #0f172a;">0</span>
                         </div>
 
-                        <div class="stat-pill stat-pill-pending" id="statPillPending" onclick="filterByStatPill('pending')" title="Klik untuk memfilter status Menunggu" style="flex: 1 1 calc(50% - 3px); justify-content: center; padding: 5px 8px; font-size: 0.76rem;">
-                            <span class="stat-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #f59e0b; display: inline-block;"></span>
+                        <div class="stat-pill stat-pill-pending" id="statPillPending" onclick="filterByStatPill('pending')" title="Klik untuk memfilter status Menunggu" style="flex: 1 1 calc(50% - 3px); justify-content: center; padding: 4px 6px; font-size: 0.72rem;">
+                            <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #f59e0b; display: inline-block;"></span>
                             <span class="stat-label">Menunggu:</span>
                             <span class="stat-val" id="tableStatPending">0</span>
                         </div>
 
                         <!-- Disetujui with interactive dropdown options -->
                         <div class="stat-pill-approved-wrap" style="position: relative; width: 100%;">
-                            <div class="stat-pill stat-pill-approved" id="statPillApproved" onclick="toggleApprovedSubMenu(event)" title="Klik untuk memilih filter status Disetujui" style="width: 100%; justify-content: space-between; padding: 6px 10px; font-size: 0.76rem; box-sizing: border-box;">
-                                <div style="display: flex; align-items: center; gap: 6px;">
-                                    <span class="stat-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+                            <div class="stat-pill stat-pill-approved" id="statPillApproved" onclick="toggleApprovedSubMenu(event)" title="Klik untuk memilih filter status Disetujui" style="width: 100%; justify-content: space-between; padding: 5px 8px; font-size: 0.72rem; box-sizing: border-box;">
+                                <div style="display: flex; align-items: center; gap: 5px;">
+                                    <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
                                     <span class="stat-label" id="approvedStatLabel">Disetujui:</span>
                                     <span class="stat-val" id="tableStatApproved">0</span>
                                 </div>
-                                <svg id="approvedStatChevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left: 2px; transition: transform 0.2s ease;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                <svg id="approvedStatChevron" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left: 2px; transition: transform 0.2s ease;"><polyline points="6 9 12 15 18 9"></polyline></svg>
                             </div>
 
                             <!-- Dropdown Sub-Menu Disetujui -->
                             <div class="approved-sub-menu" id="approvedSubMenu" style="width: 100%; top: calc(100% + 4px); z-index: 100050; box-sizing: border-box;">
                                 <div class="approved-sub-item active" id="subOptAllApproved" onclick="selectApprovedSub('all_approved', event)">
-                                    <div style="display: flex; align-items: center; gap: 6px;">
-                                        <span class="stat-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #10b981;"></span>
+                                    <div style="display: flex; align-items: center; gap: 5px;">
+                                        <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
                                         <span>Semua Disetujui</span>
                                     </div>
                                     <span class="sub-count" id="subCountAllApproved">0</span>
                                 </div>
                                 <div class="approved-sub-item" id="subOptLaboran" onclick="selectApprovedSub('laboran', event)">
-                                    <div style="display: flex; align-items: center; gap: 6px;">
-                                        <span class="stat-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #3b82f6;"></span>
+                                    <div style="display: flex; align-items: center; gap: 5px;">
+                                        <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #3b82f6;"></span>
                                         <span>Disetujui Laboran</span>
                                     </div>
                                     <span class="sub-count" id="subCountLaboran">0</span>
                                 </div>
                                 <div class="approved-sub-item" id="subOptKaur" onclick="selectApprovedSub('kaur', event)">
-                                    <div style="display: flex; align-items: center; gap: 6px;">
-                                        <span class="stat-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #22c55e;"></span>
+                                    <div style="display: flex; align-items: center; gap: 5px;">
+                                        <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #22c55e;"></span>
                                         <span>Disetujui Ka. Ur</span>
                                     </div>
                                     <span class="sub-count" id="subCountKaur">0</span>
                                 </div>
                                 <div class="approved-sub-item" id="subOptAdmin" onclick="selectApprovedSub('admin', event)">
-                                    <div style="display: flex; align-items: center; gap: 6px;">
-                                        <span class="stat-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #8b5cf6;"></span>
+                                    <div style="display: flex; align-items: center; gap: 5px;">
+                                        <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #8b5cf6;"></span>
                                         <span>Disetujui Admin</span>
                                     </div>
                                     <span class="sub-count" id="subCountAdmin">0</span>
@@ -2499,9 +2499,9 @@
                         </div>
 
                         <!-- Ditolak Stat Pill -->
-                        <div class="stat-pill stat-pill-rejected" id="statPillRejected" onclick="filterByStatPill('rejected')" title="Klik untuk memfilter status Ditolak" style="width: 100%; justify-content: space-between; padding: 6px 10px; font-size: 0.76rem; box-sizing: border-box;">
-                            <div style="display: flex; align-items: center; gap: 6px;">
-                                <span class="stat-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #ef4444; display: inline-block;"></span>
+                        <div class="stat-pill stat-pill-rejected" id="statPillRejected" onclick="filterByStatPill('rejected')" title="Klik untuk memfilter status Ditolak" style="width: 100%; justify-content: space-between; padding: 5px 8px; font-size: 0.72rem; box-sizing: border-box;">
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #ef4444; display: inline-block;"></span>
                                 <span class="stat-label">Ditolak:</span>
                             </div>
                             <span class="stat-val" id="tableStatRejected">0</span>
@@ -2509,10 +2509,10 @@
                     </div>
 
                     <!-- Tampilkan & Urutkan Selects -->
-                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px; border-top: 1px solid #e2e8f0; padding-top: 8px;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                            <label for="tablePageSizeSelect" style="font-size: 0.74rem; font-weight: 700; color: #64748b; white-space: nowrap;">Tampilkan:</label>
-                            <select id="tablePageSizeSelect" class="custom-table-select" onchange="changeTablePageSize(this.value)" style="flex: 1; padding: 4px 26px 4px 10px; font-size: 0.76rem;">
+                    <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 3px; border-top: 1px solid #e2e8f0; padding-top: 6px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                            <label for="tablePageSizeSelect" style="font-size: 0.70rem; font-weight: 700; color: #64748b; white-space: nowrap;">Tampilkan:</label>
+                            <select id="tablePageSizeSelect" class="custom-table-select" onchange="changeTablePageSize(this.value)" style="flex: 1; padding: 3px 22px 3px 8px; font-size: 0.72rem;">
                                 <option value="10">10 baris</option>
                                 <option value="20" selected>20 baris</option>
                                 <option value="50">50 baris</option>
@@ -2520,9 +2520,9 @@
                             </select>
                         </div>
 
-                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                            <label for="tableSortSelect" style="font-size: 0.74rem; font-weight: 700; color: #64748b; white-space: nowrap;">Urutkan:</label>
-                            <select id="tableSortSelect" class="custom-table-select" onchange="renderTableView()" style="flex: 1; padding: 4px 26px 4px 10px; font-size: 0.76rem;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                            <label for="tableSortSelect" style="font-size: 0.70rem; font-weight: 700; color: #64748b; white-space: nowrap;">Urutkan:</label>
+                            <select id="tableSortSelect" class="custom-table-select" onchange="renderTableView()" style="flex: 1; padding: 3px 22px 3px 8px; font-size: 0.72rem;">
                                 <option value="date_desc">Tanggal (Terbaru)</option>
                                 <option value="date_asc">Tanggal (Terlama)</option>
                                 <option value="room_asc">Nama Ruangan (A-Z)</option>
@@ -2533,8 +2533,8 @@
                 </div>
 
                 <!-- 4. Quick Navigasi Halaman Sistem (Matching 3D Icons, Categories & Role System) -->
-                <div class="curved-sidebar-header" style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between;">
-                    <p style="margin: 0;">Navigation</p>
+                <div class="curved-sidebar-header" style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between;">
+                    <p style="margin: 0; font-size: 0.82rem;">Navigation</p>
                     <div class="curved-header-role-badge">
                         <span><?= htmlspecialchars($activeRoleBadge); ?></span>
                     </div>
