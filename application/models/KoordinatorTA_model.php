@@ -549,6 +549,17 @@ class KoordinatorTA_model extends CI_Model {
                 $item['ruangan_sidang']     = $gRow['ruang_sidang'] ?? null;
                 $item['status_preview']     = $gRow['status_preview'] ?? 'preview2';
 
+                $hasPenguji = (!empty($item['penguji_1']) && !empty($item['penguji_2']));
+                $hasJadwal  = (!empty($item['tgl_sidang']) && !empty($item['jam_mulai_sidang']));
+
+                if ($hasPenguji && $hasJadwal) {
+                    $item['status_preview2'] = 'Terjadwal';
+                } elseif ($hasPenguji) {
+                    $item['status_preview2'] = 'Penguji Ditetapkan';
+                } else {
+                    $item['status_preview2'] = 'Belum Diplot';
+                }
+
                 $result[] = $item;
             }
         }
