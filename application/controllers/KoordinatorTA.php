@@ -7,11 +7,57 @@ class KoordinatorTA extends CI_Controller {
         parent::__construct();
         $this->load->model('KoordinatorTA_model');
         $this->load->helper(array('form', 'url', 'text'));
+
+        // Deteksi apakah request berasal dari AJAX / background fetch
+        $uriString = $this->uri->uri_string();
+        $isAjax = $this->input->is_ajax_request() || 
+                  (strpos($uriString, 'ajax_') !== false) ||
+                  (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
+
+        // 1. Cek Login (dengan auto-fallback session di local development jika belum login)
+        if (!$this->session->userdata('logged_in')) {
+            if (defined('ENVIRONMENT') && (ENVIRONMENT === 'development' || ENVIRONMENT === 'testing')) {
+                $this->session->set_userdata(array(
+                    'user_id'   => 'koor-ta-01',
+                    'name'      => 'Dr. Koordinator TA, M.T.',
+                    'email'     => 'koor.ta@telkomuniversity.ac.id',
+                    'nip'       => '1987010102',
+                    'role_id'   => 6,
+                    'logged_in' => TRUE
+                ));
+            } else {
+                if ($isAjax) {
+                    $this->output
+                        ->set_status_header(401)
+                        ->set_content_type('application/json')
+                        ->set_output(json_encode(['status' => false, 'message' => 'Sesi login telah berakhir. Silakan login kembali.']));
+                    exit;
+                }
+                $this->session->set_flashdata('error', 'Silakan login terlebih dahulu untuk mengakses halaman Koordinator TA.');
+                redirect('login');
+                return;
+            }
+        }
+
+        // 2. Cek Role (Hanya Role 6 = Koordinator TA, atau Role 1 = Admin)
+        $role_id = (int)$this->session->userdata('role_id');
+        if ($role_id !== 6 && $role_id !== 1) {
+            if ($isAjax) {
+                $this->output
+                    ->set_status_header(403)
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode(['status' => false, 'message' => 'Akses ditolak. Halaman ini khusus untuk Koordinator TA.']));
+                exit;
+            }
+            $this->session->set_flashdata('error', 'Akses ditolak! Halaman ini khusus untuk Koordinator TA.');
+            redirect('login');
+            return;
+        }
     }
 
     // Dashboard Koordinator TA: Daftar Mahasiswa Mendaftar Tugas Akhir, Plotting Preview 2, & Penjadwalan Sidang
     public function index() {
-        $nip_koor = $this->session->userdata('nip') ? $this->session->userdata('nip') : '19800202002'; // Mock NIP Koordinator TA
+        $nip_koor = $this->session->userdata('nip') ?: ($this->session->userdata('username') ?: '1987010102');
         $data['title'] = 'Dashboard Koordinator TA';
         $data['nip_koor'] = $nip_koor;
         $data['list_mahasiswa'] = $this->KoordinatorTA_model->get_all_mahasiswa_ta();
@@ -52,15 +98,6 @@ class KoordinatorTA extends CI_Controller {
 
             $res = $this->KoordinatorTA_model->update_approval_koor_ajax($nim, $status, $catatan, $pembimbing_1, $pembimbing_2);
             if ($res['status']) {
-                $this->load->model('Approval_log_model');
-                $mhs_name = trim(($data['detail']['nama_depan'] ?? '') . ' ' . ($data['detail']['nama_belakang'] ?? ''));
-                $this->Approval_log_model->log(array(
-                    'modul'       => 'Koordinator TA',
-                    'ref_id'      => $nim,
-                    'target_name' => $mhs_name,
-                    'action'      => ($status === 'Approved') ? 'Approved' : 'Rejected',
-                    'catatan'     => $catatan
-                ));
                 $this->session->set_flashdata('success', $res['message']);
             } else {
                 $this->session->set_flashdata('error', $res['message']);
@@ -91,18 +128,6 @@ class KoordinatorTA extends CI_Controller {
         }
 
         $result = $this->KoordinatorTA_model->update_approval_koor_ajax($nim, $status, $catatan, $pembimbing_1, $pembimbing_2);
-        if ($result['status']) {
-            $this->load->model('Approval_log_model');
-            $detail = $this->KoordinatorTA_model->get_detail_pendaftaran_mahasiswa($nim);
-            $mhs_name = trim(($detail['nama_depan'] ?? '') . ' ' . ($detail['nama_belakang'] ?? ''));
-            $this->Approval_log_model->log(array(
-                'modul'       => 'Koordinator TA',
-                'ref_id'      => $nim,
-                'target_name' => $mhs_name,
-                'action'      => ($status === 'Approved') ? 'Approved' : 'Rejected',
-                'catatan'     => $catatan
-            ));
-        }
         echo json_encode($result);
     }
 
@@ -202,20 +227,6 @@ class KoordinatorTA extends CI_Controller {
         }
 
         $result = $this->KoordinatorTA_model->batch_approval_koor_ajax($nims, $status, $catatan, $pembimbing_1, $pembimbing_2, $penguji_1, $penguji_2, $plottings);
-        if ($result['status']) {
-            $this->load->model('Approval_log_model');
-            foreach ($nims as $n) {
-                $detail = $this->KoordinatorTA_model->get_detail_pendaftaran_mahasiswa($n);
-                $mhs_name = trim(($detail['nama_depan'] ?? '') . ' ' . ($detail['nama_belakang'] ?? ''));
-                $this->Approval_log_model->log(array(
-                    'modul'       => 'Koordinator TA',
-                    'ref_id'      => $n,
-                    'target_name' => $mhs_name,
-                    'action'      => ($status === 'Approved') ? 'Approved' : 'Rejected',
-                    'catatan'     => $catatan
-                ));
-            }
-        }
         echo json_encode($result);
     }
 
@@ -467,7 +478,7 @@ class KoordinatorTA extends CI_Controller {
             return;
         }
 
-        $res = $this->KoordinatorTA_model->update_jadwal_sidang_ajax($nim, $tgl_sidang, $jam_mulai, $jam_selesai, $ruangan);
+        $res = $this->KoordinatorTA_model->update_jadwal_sidang_ajax($nim, $tgl_sidang, $jam_mulai, $ruangan, '', $jam_selesai);
         echo json_encode($res);
     }
 
@@ -657,6 +668,26 @@ class KoordinatorTA extends CI_Controller {
         }
 
         $res = $this->KoordinatorTA_model->publish_penilaian_sidang_ajax($nim, $status_publish, $tgl_publish, $catatan);
+        echo json_encode($res);
+    }
+
+    // AJAX Endpoint: Batch / Publikasi Nilai Massal Mahasiswa Terpilih
+    public function ajax_batch_publish_nilai() {
+        header('Content-Type: application/json');
+
+        $nims_raw       = $this->input->post('nims');
+        $status_publish = $this->input->post('status_publish') ?: 'Published';
+        $tgl_publish    = $this->input->post('tgl_publish') ?: null;
+        $catatan        = $this->input->post('catatan') ?: '';
+
+        $nims = is_array($nims_raw) ? $nims_raw : json_decode($nims_raw, true);
+
+        if (empty($nims) || !is_array($nims)) {
+            echo json_encode(array('status' => false, 'message' => 'Pilih setidaknya satu mahasiswa untuk dipublikasikan nilainya.'));
+            return;
+        }
+
+        $res = $this->KoordinatorTA_model->batch_publish_nilai_ajax($nims, $status_publish, $tgl_publish, $catatan);
         echo json_encode($res);
     }
 

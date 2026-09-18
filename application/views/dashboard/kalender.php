@@ -3765,7 +3765,7 @@
                 const roomCodesBadge = (b.kode_ruangan || '').split(',').map(c => c.trim()).filter(Boolean).map(c => `<span style="display:inline-block; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; padding:1px 6px; font-size:0.68rem; font-weight:700; color:#334155; margin-right:3px;">${c}</span>`).join('');
 
                 html += `
-                    <div class="table-row-card" onclick="openDetailBookingModal(${b.id})" title="Klik untuk melihat detail peminjaman">
+                    <div class="table-row-card" onclick="openDetailBookingModal('${b.id}')" title="Klik untuk melihat detail peminjaman">
                         <div class="tr-room-col">
                             <div class="tr-room-icon">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1e293b" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -4006,7 +4006,7 @@
                         const timeLabel = `${sHour}:${sMin.toString().padStart(2,'0')} - ${eHour}:${eMin.toString().padStart(2,'0')}`;
 
                         dayColsHTML += `
-                            <div class="gcal-event" onclick="openDetailBookingModal(${booking.id})" style="top:${topPx}px; height:${heightPx}px; background:${st.bg}; border-left:3px solid ${st.border}; cursor:pointer;"
+                            <div class="gcal-event" onclick="openDetailBookingModal('${booking.id}')" style="top:${topPx}px; height:${heightPx}px; background:${st.bg}; border-left:3px solid ${st.border}; cursor:pointer;"
                                  title="${booking.nama_ruangan} — ${booking.nama_lengkap} (${st.label})">
                                 <div class="gcal-event-title">${booking.nama_ruangan}</div>
                                 <div class="gcal-event-time">${timeLabel}</div>
@@ -4051,7 +4051,7 @@
 
         function openDetailBookingModal(id) {
             if (typeof bookingData === 'undefined' || !bookingData) return;
-            const booking = bookingData.find(b => parseInt(b.id) === parseInt(id));
+            const booking = bookingData.find(b => String(b.id) === String(id));
             if (!booking) return;
 
             // Target date from the clicked booking
@@ -4106,13 +4106,13 @@
 
             let html = '';
             list.forEach(b => {
-                const isActive = parseInt(b.id) === parseInt(activeId);
+                const isActive = String(b.id) === String(activeId);
                 const st = getStatusStyle(b.status);
                 const jMulai = b.jam_mulai ? b.jam_mulai.substring(0, 5) : '00:00';
                 const jSelesai = b.jam_selesai ? b.jam_selesai.substring(0, 5) : '00:00';
 
                 html += `
-                    <div class="modal-daily-item ${isActive ? 'active' : ''}" onclick="selectBookingInDailyModal(${b.id})">
+                    <div class="modal-daily-item ${isActive ? 'active' : ''}" onclick="selectBookingInDailyModal('${b.id}')">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; gap: 6px;">
                             <span style="font-size: 0.72rem; font-weight: 700; color: #7c3aed; background: #ede9fe; padding: 2px 7px; border-radius: 6px;">
                                 ${b.kode_ruangan || '-'}
@@ -4161,14 +4161,14 @@
         }
 
         function selectBookingInDailyModal(id) {
-            selectedDailyBookingId = parseInt(id);
-            const booking = bookingData.find(b => parseInt(b.id) === selectedDailyBookingId);
+            selectedDailyBookingId = id;
+            const booking = bookingData.find(b => String(b.id) === String(selectedDailyBookingId));
             if (!booking) return;
 
             // Highlight in list
             const items = document.querySelectorAll('.modal-daily-item');
             items.forEach(item => {
-                if (item.getAttribute('onclick') && item.getAttribute('onclick').includes(`(${id})`)) {
+                if (item.getAttribute('onclick') && item.getAttribute('onclick').includes(`('${id}')`)) {
                     item.classList.add('active');
                 } else {
                     item.classList.remove('active');

@@ -41,18 +41,18 @@ class Kelolaruangan extends CI_Controller {
         }
         
         $role_id = (int)$this->session->userdata('role_id');
-        if ($role_id !== 1 && $role_id !== 2) {
+        if ($role_id !== 1 && $role_id !== 2 && $role_id !== 21) {
             if ($is_ajax) {
                 if (ob_get_length()) ob_clean();
                 header('Content-Type: application/json');
                 http_response_code(403);
                 echo json_encode([
                     'status'  => 'error', 
-                    'message' => 'Hanya Admin System dan Laboran yang memiliki hak akses untuk mengelola data ruangan.'
+                    'message' => 'Hanya Admin System, Ka. Ur, dan Laboran yang memiliki hak akses untuk mengelola data ruangan.'
                 ]);
                 exit;
             }
-            $this->session->set_flashdata('error', 'Hanya Admin System dan Laboran yang dapat mengakses halaman Kelola Ruangan.');
+            $this->session->set_flashdata('error', 'Hanya Admin System, Ka. Ur, dan Laboran yang dapat mengakses halaman Kelola Ruangan.');
             redirect('dashboard');
         }
     }
@@ -184,56 +184,36 @@ class Kelolaruangan extends CI_Controller {
         $model_3d_path = $this->_upload_file('model_3d', 'uploads/ruangan/models/', 'glb|fbx|gltf|obj|bin');
 
         $fields = $this->db->list_fields('ruangan');
-        if (in_array('nama_ruangan', $fields)) {
-            $data_ruangan = array(
-                'nama_ruangan'          => $nama_ruangan,
-                'kode_ruangan'          => $clean_kode_ruangan,
-                'id_kategori'           => $id_kategori,
-                'kapasitas'             => $kapasitas ? $kapasitas : 30,
-                'lokasi'                => $lokasi ? $lokasi : 'Gedung Sebatik (FIK)',
-                'status'                => $status ? $status : 'Tersedia',
-                'tagline'               => $tagline,
-                'jumlah_unit'           => $jumlah_unit,
-                'jam_operasional'       => $jam_operasional,
-                'deskripsi'             => $deskripsi,
-                'spesifikasi_fasilitas' => $spesifikasi_fasilitas,
-                'tata_tertib'           => $tata_tertib
-            );
-            if ($foto_path) $data_ruangan['foto'] = $foto_path;
-            if ($model_3d_path) $data_ruangan['model_3d'] = $model_3d_path;
+        $data_ruangan = array();
+        if (in_array('id', $fields)) $data_ruangan['id'] = $clean_kode_ruangan;
+        if (in_array('ruangan', $fields)) $data_ruangan['ruangan'] = $nama_ruangan;
+        if (in_array('nama_ruangan', $fields)) $data_ruangan['nama_ruangan'] = $nama_ruangan;
+        if (in_array('kode_ruangan', $fields)) $data_ruangan['kode_ruangan'] = $clean_kode_ruangan;
+        if (in_array('id_kategori', $fields)) $data_ruangan['id_kategori'] = $id_kategori;
+        if (in_array('kapasitas', $fields)) $data_ruangan['kapasitas'] = $kapasitas ? $kapasitas : 30;
+        if (in_array('lokasi', $fields)) $data_ruangan['lokasi'] = $lokasi ? $lokasi : 'Gedung Sebatik (FIK)';
+        if (in_array('status', $fields)) $data_ruangan['status'] = $status ? $status : 'Tersedia';
+        if (in_array('akses', $fields)) $data_ruangan['akses'] = $status ? $status : 'Tersedia';
+        if (in_array('tagline', $fields)) $data_ruangan['tagline'] = $tagline;
+        if (in_array('jumlah_unit', $fields)) $data_ruangan['jumlah_unit'] = $jumlah_unit;
+        if (in_array('jam_operasional', $fields)) $data_ruangan['jam_operasional'] = $jam_operasional;
+        if (in_array('deskripsi', $fields)) $data_ruangan['deskripsi'] = $deskripsi;
+        if (in_array('spesifikasi_fasilitas', $fields)) $data_ruangan['spesifikasi_fasilitas'] = $spesifikasi_fasilitas;
+        if (in_array('tata_tertib', $fields)) $data_ruangan['tata_tertib'] = $tata_tertib;
+        if (in_array('date', $fields)) $data_ruangan['date'] = date('Y-m-d H:i:s');
+
+        // Handle gambar/images (support kolom foto & model_3d atau kolom images kombinasi)
+        if (in_array('images', $fields)) {
+            $combined = '';
+            if ($foto_path && $model_3d_path) $combined = $foto_path . '|' . $model_3d_path;
+            elseif ($foto_path) $combined = $foto_path;
+            elseif ($model_3d_path) $combined = '|' . $model_3d_path;
+            if ($combined) $data_ruangan['images'] = $combined;
         } else {
-            // Skema db_ifik_baru (id, id_kategori, ruangan, akses, kapasitas, images, date)
-            $new_id = !empty($clean_kode_ruangan) ? $clean_kode_ruangan : 'R-' . time();
-            if (strlen($new_id) > 64) {
-                $new_id = substr($new_id, 0, 64);
-            }
-            $cek = $this->db->get_where('ruangan', ['id' => $new_id])->row();
-            if ($cek) {
-                $new_id .= '-' . rand(10, 99);
-                if (strlen($new_id) > 64) {
-                    $new_id = substr($new_id, 0, 64);
-                }
-            }
-
-            $combined_images = '';
-            if ($foto_path && $model_3d_path) {
-                $combined_images = $foto_path . '|' . $model_3d_path;
-            } elseif ($foto_path) {
-                $combined_images = $foto_path;
-            } elseif ($model_3d_path) {
-                $combined_images = '|' . $model_3d_path;
-            }
-
-            $data_ruangan = array(
-                'id'          => $new_id,
-                'id_kategori' => $id_kategori,
-                'ruangan'     => $nama_ruangan,
-                'akses'       => $status ? $status : 'Tersedia',
-                'kapasitas'   => $kapasitas ? (int)$kapasitas : 30,
-                'images'      => $combined_images,
-                'date'        => date('Y-m-d H:i:s')
-            );
+            if ($foto_path && in_array('foto', $fields)) $data_ruangan['foto'] = $foto_path;
+            if ($model_3d_path && in_array('model_3d', $fields)) $data_ruangan['model_3d'] = $model_3d_path;
         }
+
 
         $insert = $this->db->insert('ruangan', $data_ruangan);
 
@@ -290,67 +270,48 @@ class Kelolaruangan extends CI_Controller {
         $model_3d_path = $this->_upload_file('model_3d', 'uploads/ruangan/models/', 'glb|fbx|gltf|obj|bin');
 
         $fields = $this->db->list_fields('ruangan');
-        if (in_array('nama_ruangan', $fields)) {
-            $data_ruangan = array(
-                'nama_ruangan'          => $nama_ruangan,
-                'kode_ruangan'          => $clean_kode_ruangan,
-                'id_kategori'           => $id_kategori,
-                'kapasitas'             => $kapasitas,
-                'lokasi'                => $lokasi,
-                'status'                => $status,
-                'tagline'               => $tagline,
-                'jumlah_unit'           => $jumlah_unit,
-                'jam_operasional'       => $jam_operasional,
-                'deskripsi'             => $deskripsi,
-                'spesifikasi_fasilitas' => $spesifikasi_fasilitas,
-                'tata_tertib'           => $tata_tertib
-            );
-            if ($foto_path) $data_ruangan['foto'] = $foto_path;
-            if ($model_3d_path) $data_ruangan['model_3d'] = $model_3d_path;
-        } else {
-            // Skema db_ifik_baru
-            $new_id = !empty($clean_kode_ruangan) ? $clean_kode_ruangan : $id;
-            if (strlen($new_id) > 64) {
-                $new_id = substr($new_id, 0, 64);
-            }
+        $data_ruangan = array();
+        if (in_array('ruangan', $fields)) $data_ruangan['ruangan'] = $nama_ruangan;
+        if (in_array('nama_ruangan', $fields)) $data_ruangan['nama_ruangan'] = $nama_ruangan;
+        if (in_array('kode_ruangan', $fields)) $data_ruangan['kode_ruangan'] = $clean_kode_ruangan;
+        if (in_array('id_kategori', $fields)) $data_ruangan['id_kategori'] = $id_kategori;
+        if (in_array('kapasitas', $fields)) $data_ruangan['kapasitas'] = $kapasitas;
+        if (in_array('lokasi', $fields)) $data_ruangan['lokasi'] = $lokasi;
+        if (in_array('status', $fields)) $data_ruangan['status'] = $status;
+        if (in_array('akses', $fields)) $data_ruangan['akses'] = $status ? $status : 'Tersedia';
+        if (in_array('tagline', $fields)) $data_ruangan['tagline'] = $tagline;
+        if (in_array('jumlah_unit', $fields)) $data_ruangan['jumlah_unit'] = $jumlah_unit;
+        if (in_array('jam_operasional', $fields)) $data_ruangan['jam_operasional'] = $jam_operasional;
+        if (in_array('deskripsi', $fields)) $data_ruangan['deskripsi'] = $deskripsi;
+        if (in_array('spesifikasi_fasilitas', $fields)) $data_ruangan['spesifikasi_fasilitas'] = $spesifikasi_fasilitas;
+        if (in_array('tata_tertib', $fields)) $data_ruangan['tata_tertib'] = $tata_tertib;
 
-            // Ambil data ruangan lama untuk mempertahankan foto/model jika tidak diupload baru
+        // Handle gambar/images: support kolom foto & model_3d atau kolom images kombinasi
+        if (in_array('images', $fields)) {
+            // Pertahankan foto/model lama jika tidak diupload ulang
             $old_room = $this->db->get_where('ruangan', ['id' => $id])->row();
             $old_images = $old_room ? (string)$old_room->images : '';
-            $old_foto = '';
-            $old_model = '';
+            $old_foto = ''; $old_model = '';
             if (strpos($old_images, '|') !== false) {
                 list($old_foto, $old_model) = explode('|', $old_images, 2);
             } else {
                 $ext = strtolower(pathinfo($old_images, PATHINFO_EXTENSION));
-                if (in_array($ext, ['glb', 'gltf', 'fbx', 'obj'])) {
-                    $old_model = $old_images;
-                } else {
-                    $old_foto = $old_images;
-                }
+                if (in_array($ext, ['glb', 'gltf', 'fbx', 'obj'])) { $old_model = $old_images; }
+                else { $old_foto = $old_images; }
             }
-
             $final_foto = $foto_path ? $foto_path : $old_foto;
             $final_model = $model_3d_path ? $model_3d_path : $old_model;
-
-            $combined_images = '';
-            if ($final_foto && $final_model) {
-                $combined_images = $final_foto . '|' . $final_model;
-            } elseif ($final_foto) {
-                $combined_images = $final_foto;
-            } elseif ($final_model) {
-                $combined_images = '|' . $final_model;
-            }
-
-            $data_ruangan = array(
-                'id'          => $new_id,
-                'ruangan'     => $nama_ruangan,
-                'id_kategori' => $id_kategori,
-                'akses'       => $status ? $status : 'Tersedia',
-                'kapasitas'   => $kapasitas ? (int)$kapasitas : 30,
-                'images'      => $combined_images
-            );
+            $combined = '';
+            if ($final_foto && $final_model) $combined = $final_foto . '|' . $final_model;
+            elseif ($final_foto) $combined = $final_foto;
+            elseif ($final_model) $combined = '|' . $final_model;
+            $data_ruangan['images'] = $combined;
+        } else {
+            if ($foto_path && in_array('foto', $fields)) $data_ruangan['foto'] = $foto_path;
+            if ($model_3d_path && in_array('model_3d', $fields)) $data_ruangan['model_3d'] = $model_3d_path;
         }
+
+
 
         $this->db->where('id', $id);
         $update = $this->db->update('ruangan', $data_ruangan);

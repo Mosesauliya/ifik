@@ -427,27 +427,33 @@
     </li>
 
     <?php
-        $role_id       = $this->session->userdata('role_id');
+        $role_id       = (int)$this->session->userdata('role_id');
         $user_email    = $this->session->userdata('email') ?? '';
         $user_name_top = $this->session->userdata('name') ?? '';
-        $is_mahasiswa  = ($role_id == 5 || strpos($user_email, '@student.') !== false);
+        $is_mahasiswa  = ($role_id == 4 || strpos($user_email, '@student.') !== false);
 
         // ====== Tentukan label & URL panel berdasarkan role ======
         $panel_label = 'Panel Admin';
         $panel_url   = base_url('admin');
 
         if ($role_id == 2) {
-            $panel_label = 'Panel Laboran';
-            $panel_url   = base_url('laboran');
-        } elseif ($role_id == 3) {
             $panel_label = 'Panel Kaur';
             $panel_url   = base_url('kaur');
-        } elseif ($role_id == 4) {
+        } elseif ($role_id == 3) {
             $panel_label = 'Panel Dosen';
-            $panel_url   = base_url('dosenwali');
+            $panel_url   = base_url('dosen/bimbingan');
+        } elseif ($role_id == 5) {
+            $panel_label = 'Panel Admin Layanan';
+            $panel_url   = base_url('adminlayanan');
         } elseif ($role_id == 6) {
             $panel_label = 'Panel Koordinator TA';
             $panel_url   = base_url('koordinatorta');
+        } elseif ($role_id == 7 || $role_id == 9) {
+            $panel_label = 'Panel Ketua KK';
+            $panel_url   = base_url('ketuakk');
+        } elseif ($role_id == 21) {
+            $panel_label = 'Panel Laboran';
+            $panel_url   = base_url('laboran');
         }
     ?>
 
@@ -455,7 +461,7 @@
         <li class="nav-item">
             <a href="<?= site_url('mahasiswa') ?>" class="nav-link"><span>Portal Mahasiswa</span></a>
         </li>
-    <?php elseif ($this->session->userdata('logged_in') && $role_id != 5): ?>
+    <?php elseif ($this->session->userdata('logged_in') && $role_id != 4): ?>
         <li class="nav-item">
             <a href="<?= $panel_url ?>" class="nav-link"><span><?= $panel_label ?></span></a>
             <?php if ($role_id == 1): ?>

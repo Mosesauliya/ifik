@@ -1378,16 +1378,6 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Token Access (8 Karakter: Besar, Kecil, Angka, Simbol)</label>
-                    <div class="flex items-center gap-2">
-                        <input type="text" id="acc-token" maxlength="8" placeholder="Otomatis / Isi manual" class="flex-1 px-3 py-2 text-xs font-mono bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                        <button type="button" onclick="generateTokenForInput()" class="px-3 py-2 text-xs font-semibold text-brand-600 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100">
-                            Generate 8-Char
-                        </button>
-                    </div>
-                </div>
-
                 <div class="pt-2 flex justify-end gap-2">
                     <button type="button" onclick="closeAccountModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Batal</button>
                     <button type="submit" class="px-4 py-2 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-lg">Simpan Akun</button>
@@ -3760,9 +3750,9 @@
 
         // 8. EMAIL DISPATCH SYSTEM
         function triggerMailtoEmail(acc) {
-            const token = acc.token || 'TOKEN_AKAN_DIGENERATE';
-            const subject = `[IFIK Telkom University] Token Akses Portal Akun Anda: ${token}`;
-            const body = `Halo ${acc.name},\n\nAkun Anda telah didaftarkan ke Portal IFIK Telkom University sebagai ${acc.role}.\n\nBerikut adalah Token Akses untuk login pertama kali:\nToken: ${token}\n\nSilakan masuk dan lakukan penggantian password mandiri.\n\nTerima kasih,\nTim Layanan IFIK Telkom University`;
+            const subject = `[IFIK Telkom University] Tautan Aktivasi Akun Portal Anda`;
+            const activationUrl = `<?= site_url('login/activate?email=') ?>` + encodeURIComponent(acc.email) + `&token=` + encodeURIComponent(acc.token || '');
+            const body = `Halo ${acc.name},\n\nAkun Anda telah didaftarkan ke Portal IFIK Telkom University sebagai ${acc.role}.\n\nSilakan klik tautan aktivasi berikut untuk mengaktifkan akun dan membuat kata sandi baru Anda:\n${activationUrl}\n\nTerima kasih,\nTim Layanan IFIK Telkom University`;
             const mailtoUrl = `mailto:${encodeURIComponent(acc.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
             window.location.href = mailtoUrl;
         }
@@ -3780,7 +3770,7 @@
                 Swal.fire({
                     icon: 'warning',
                     title: 'Token Belum Di-generate!',
-                    html: `Akun <b>${acc.name}</b> belum memiliki kode token akses.<br><br>Silakan klik tombol <b>Generate</b> pada baris akun ini terlebih dahulu.`,
+                    html: `Akun <b>${acc.name}</b> belum memiliki kode token aktivasi.<br><br>Silakan klik tombol <b>Generate</b> pada baris akun ini terlebih dahulu.`,
                     confirmButtonColor: '#ea580c',
                     confirmButtonText: 'Oke, Paham'
                 });
@@ -3791,11 +3781,10 @@
                 title: 'Konfirmasi Pengiriman Email',
                 html: `
                     <div class="text-left text-xs space-y-2 bg-slate-50 p-3.5 rounded-xl border border-slate-200 mt-2">
-                        <p class="text-slate-700">Kirim email berisi token akses resmi ke akun pengguna:</p>
+                        <p class="text-slate-700">Kirim email aktivasi akun resmi ke pengguna:</p>
                         <div class="p-2.5 bg-white rounded-lg border border-slate-200 space-y-1">
                             <div class="font-bold text-slate-900 text-sm">${acc.name} <span class="text-[11px] font-semibold text-brand-600">(${acc.role})</span></div>
                             <div class="text-slate-500 font-mono text-xs flex items-center gap-1.5"><i class="fa-regular fa-envelope text-slate-400"></i> ${acc.email}</div>
-                            <div class="text-emerald-700 font-mono text-xs flex items-center gap-1.5"><i class="fa-solid fa-key text-emerald-500"></i> Token: <span class="font-bold">${acc.token}</span></div>
                         </div>
                     </div>
                 `,
@@ -3870,10 +3859,10 @@
                 title: 'Konfirmasi Kirim Email Massal',
                 html: `
                     <div class="text-left text-xs space-y-2 bg-slate-50 p-3.5 rounded-xl border border-slate-200 mt-2">
-                        <p class="text-slate-700">Apakah Anda yakin ingin mengirimkan email token akses ke <b>${readyToSend.length} akun</b> yang dipilih?</p>
+                        <p class="text-slate-700">Apakah Anda yakin ingin mengirimkan email tautan aktivasi ke <b>${readyToSend.length} akun</b> yang dipilih?</p>
                         <div class="p-2.5 bg-white rounded-lg border border-slate-200 text-slate-600 space-y-1">
                             <div>• Jumlah Akun: <b class="text-slate-900">${readyToSend.length} pengguna</b></div>
-                            <div>• Token Status: <b class="text-emerald-600">Ready (Siap Kirim)</b></div>
+                            <div>• Status: <b class="text-emerald-600">Siap Kirim</b></div>
                             <div>• Pengirim: <span class="font-mono text-[11px] text-slate-500">layanan-ta@telkomuniversity.ac.id</span></div>
                         </div>
                     </div>
@@ -3955,7 +3944,7 @@
                             <span class="text-slate-500">[${new Date().toLocaleTimeString()}]</span>
                             <span class="text-cyan-400">EMAIL DISPATCHED</span> -> 
                             <strong class="text-white">${acc.email}</strong> 
-                            <span class="text-amber-300">[Token: ${acc.token || 'AUTOGEN'}]</span>
+                            <span class="text-emerald-400 font-medium">[1-Click Link Sent]</span>
                         </div>
                     `;
                     terminalLog.scrollTop = terminalLog.scrollHeight;
@@ -4041,7 +4030,6 @@
             document.getElementById('modal-account-title').innerText = 'Tambah Akun Manual';
             document.getElementById('account-id').value = '';
             document.getElementById('account-form').reset();
-            document.getElementById('acc-token').value = generate8CharToken();
             document.getElementById('modal-account').classList.remove('hidden');
         }
 
@@ -4055,25 +4043,12 @@
             document.getElementById('acc-email').value = acc.email;
             document.getElementById('acc-role').value = acc.role;
             document.getElementById('acc-nim-nip').value = acc.nim_nip || '';
-            
-            const tokenInput = document.getElementById('acc-token');
-            tokenInput.value = acc.password_changed ? '••• Custom Password (Protected) •••' : (acc.token || '');
-            tokenInput.disabled = acc.password_changed;
-            if (acc.password_changed) {
-                tokenInput.classList.add('bg-indigo-50', 'text-indigo-600', 'cursor-not-allowed');
-            } else {
-                tokenInput.classList.remove('bg-indigo-50', 'text-indigo-600', 'cursor-not-allowed');
-            }
 
             document.getElementById('modal-account').classList.remove('hidden');
         }
 
         function closeAccountModal() {
             document.getElementById('modal-account').classList.add('hidden');
-        }
-
-        function generateTokenForInput() {
-            document.getElementById('acc-token').value = generate8CharToken();
         }
 
         function saveAccountForm(e) {
@@ -4083,7 +4058,6 @@
             const email = emailInput.value.trim();
             const role = document.getElementById('acc-role').value;
             const nim_nip = document.getElementById('acc-nim-nip').value.trim();
-            const token = document.getElementById('acc-token').value.trim();
 
             if (!isValidTelkomEmail(email)) {
                 emailInput.focus();
@@ -4103,7 +4077,7 @@
             fetch('<?= site_url("import-email/save_user") ?>', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, role, nim_nip, token })
+                body: JSON.stringify({ name, email, role, nim_nip })
             })
             .then(res => res.json())
             .then(res => {

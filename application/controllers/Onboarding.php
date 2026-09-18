@@ -38,13 +38,28 @@ class Onboarding extends CI_Controller {
             return;
         }
 
-        $isDosen = ((int)$user->role_id === 4);
+        $roleId = (int)$user->role_id;
+        // In db_ifik_baru: role_id 3 is Dosen, role_id 4 is Mahasiswa
+        // In legacy db: role_id 4 is Dosen, role_id 5 is Mahasiswa
+        $isDosen = ($roleId === 3);
+        if ($this->db->table_exists('user_role')) {
+            $r = $this->db->get_where('user_role', ['id' => $roleId])->row();
+            if ($r) {
+                $isDosen = (strpos(strtolower($r->role), 'dosen') !== false);
+            }
+        } else if ($this->db->table_exists('roles')) {
+            $r = $this->db->get_where('roles', ['id' => $roleId])->row();
+            if ($r) {
+                $isDosen = (strpos(strtolower($r->role ?? $r->name ?? ''), 'dosen') !== false);
+            }
+        }
+
         $data['title'] = 'Aktivasi Akun & Lengkapi Biodata — IK Labs Portal';
         $data['user'] = $user;
-        $data['role_id'] = (int)$user->role_id;
+        $data['role_id'] = $roleId;
         $data['is_dosen'] = $isDosen;
         $data['role_name'] = $isDosen ? 'dosen' : 'mahasiswa';
-        $data['nim'] = !empty($user->nidn_nim) ? $user->nidn_nim : '';
+        $data['nim'] = !empty($user->nidn_nim) ? $user->nidn_nim : (!empty($user->nim) ? $user->nim : (!empty($user->nip) ? $user->nip : ''));
 
         // Split existing name into nama_depan and nama_belakang if available
         $nameParts = explode(' ', trim($user->name), 2);
@@ -192,7 +207,20 @@ class Onboarding extends CI_Controller {
         }
 
         // 4. Strict Validation for Academic Info
-        $isDosen = ((int)$user->role_id === 4);
+        $roleId = (int)$user->role_id;
+        $isDosen = ($roleId === 3);
+        if ($this->db->table_exists('user_role')) {
+            $r = $this->db->get_where('user_role', ['id' => $roleId])->row();
+            if ($r) {
+                $isDosen = (strpos(strtolower($r->role), 'dosen') !== false);
+            }
+        } else if ($this->db->table_exists('roles')) {
+            $r = $this->db->get_where('roles', ['id' => $roleId])->row();
+            if ($r) {
+                $isDosen = (strpos(strtolower($r->role ?? $r->name ?? ''), 'dosen') !== false);
+            }
+        }
+
         if (!$isDosen && empty($dosenWali)) {
             $msg = 'Dosen wali akademik pembimbing wajib dipilih!';
             if ($isAjax) {
@@ -206,23 +234,43 @@ class Onboarding extends CI_Controller {
 
         $fullName = trim($cleanDepan . ' ' . $cleanBelakang);
 
-        // 3. Hash New Password
-        $hashedPassword = password_hash($passwordBaru, PASSWORD_DEFAULT);
+        // 3. Hash New Password with Bcrypt and Generate Salt
+        $salt = bin2hex(random_bytes(16));
+        $hashedPassword = password_hash($passwordBaru, PASSWORD_DEFAULT, ['cost' => 10]);
 
-        // 4. Update users Table
+        // 4. Update user / users Table with password, salt, and biodata
         $userUpdate = [
             'name'             => $fullName,
             'password'         => $hashedPassword,
+            'salt'             => $salt,
             'password_changed' => 1,
             'token'            => null,
+            'alamat'           => $alamat,
+            'tempatlahir'      => $tempatLahir,
+            'tanggal_lahir'    => $tanggalLahir,
+            'prodi'            => $konsentrasi,
             'updated_at'       => date('Y-m-d H:i:s')
         ];
+
+        if ($isDosen) {
+            $userUpdate['nip'] = $nim;
+        } else {
+            $userUpdate['nim'] = $nim;
+            if (!empty($dosenWali)) {
+                $userUpdate['dosen_wali'] = $dosenWali;
+            }
+        }
 
         if (!empty($nim)) {
             $userUpdate['nidn_nim'] = $nim;
         }
 
         $this->User_model->update($userId, $userUpdate);
+
+        // Delete temporary activation token so it cannot be reused
+        if ($this->db->table_exists('user_token') && !empty($user->email)) {
+            $this->db->delete('user_token', ['email' => $user->email]);
+        }
 
         // 5. Update / Insert to mahasiswa Table (if applicable)
         if ($this->db->table_exists('mahasiswa') && !empty($nim)) {

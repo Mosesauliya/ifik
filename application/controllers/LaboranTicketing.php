@@ -412,8 +412,8 @@ class LaboranTicketing extends CI_Controller {
         $nidn   = $this->session->userdata('nidn_nim') ?: $this->session->userdata('nim');
         $roleId = (int)$this->session->userdata('role_id');
 
-        // Access check: Superadmin (1), Laboran (2), or Owner
-        if ($roleId !== 1 && $roleId !== 2 && $ticket->id_user != $userId && $ticket->nidn != $nidn) {
+        // Access check: Superadmin (1), Kaur (2), Laboran (21), or Owner
+        if ($roleId !== 1 && $roleId !== 2 && $roleId !== 21 && $ticket->id_user != $userId && $ticket->nidn != $nidn) {
             return $this->output
                 ->set_content_type('application/json')
                 ->set_status_header(403)
@@ -463,8 +463,8 @@ class LaboranTicketing extends CI_Controller {
         }
 
         $roleId = (int)$this->session->userdata('role_id');
-        // Hanya Admin (1) atau Laboran (2) yang diizinkan
-        if ($roleId !== 1 && $roleId !== 2) {
+        // Hanya Admin (1), Kaur (2), atau Laboran (21) yang diizinkan
+        if ($roleId !== 1 && $roleId !== 2 && $roleId !== 21) {
             $this->session->set_flashdata('error', 'Akses ditolak: Menu ini hanya untuk staf Laboran.');
             redirect('dashboard');
             exit;

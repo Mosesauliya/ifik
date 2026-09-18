@@ -7,7 +7,59 @@ class ImportEmail extends CI_Controller {
         parent::__construct();
         date_default_timezone_set('Asia/Jakarta');
         $this->load->helper(array('url', 'form', 'html'));
+        $this->load->library('session');
         $this->load->model('User_model');
+        $this->_check_auth();
+    }
+
+    /**
+     * Strict Authentication & Role Check
+     * Allowed Roles: Admin (1), Kepala Urusan (2), Admin LAA (5), Admin Prodi (16)
+     */
+    private function _check_auth() {
+        if (!$this->session->userdata('logged_in')) {
+            $isAjax = $this->input->is_ajax_request() || 
+                      (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
+            if ($isAjax) {
+                $this->output
+                    ->set_content_type('application/json')
+                    ->set_status_header(401)
+                    ->set_output(json_encode([
+                        'status' => 'error',
+                        'message' => 'Sesi login telah berakhir. Silakan login kembali.'
+                    ]))
+                    ->_display();
+                exit;
+            }
+            $this->session->set_flashdata('error', 'Silakan login terlebih dahulu untuk mengakses menu Import Email & Dispatcher.');
+            redirect('login');
+            exit;
+        }
+
+        $roleId = (int)$this->session->userdata('role_id');
+        // Allowed: 1 = Admin, 2 = Kepala Urusan, 5 = Admin LAA, 16 = Admin Prodi, 21 = Laboran
+        $allowedRoles = [1, 2, 5, 16, 21];
+
+        if (!in_array($roleId, $allowedRoles)) {
+            $isAjax = $this->input->is_ajax_request() || 
+                      (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
+            if ($isAjax) {
+                $this->output
+                    ->set_content_type('application/json')
+                    ->set_status_header(403)
+                    ->set_output(json_encode([
+                        'status' => 'error',
+                        'message' => 'Akses ditolak. Anda tidak memiliki izin untuk mengelola data akun.'
+                    ]))
+                    ->_display();
+                exit;
+            }
+            $this->session->set_flashdata('error', 'Akses ditolak! Halaman ini hanya dapat diakses oleh Administrator & Admin LAA.');
+            redirect('dashboard');
+            exit;
+        }
+
+        return true;
     }
 
     /**
@@ -87,28 +139,32 @@ class ImportEmail extends CI_Controller {
         // Format 1: Direct updates array from frontend [{ id, token }, ...]
         if (isset($json['updates']) && is_array($json['updates'])) {
             foreach ($json['updates'] as $item) {
-                if (isset($item['id'])) {
+                if (isset($item['id']) && $item['id'] !== '') {
+                    $rawTok = isset($item['token']) ? $item['token'] : null;
                     $updates[] = [
-                        'id' => (int)$item['id'],
-                        'token' => !empty($item['token']) ? $item['token'] : $this->_generate_8char_token()
+                        'id' => (string)$item['id'],
+                        'token' => $this->_format_secure_token($rawTok)
                     ];
                 }
             }
         }
         // Format 2: Single user_id and token
-        elseif (isset($json['user_id'])) {
+        elseif (isset($json['user_id']) && $json['user_id'] !== '') {
+            $rawTok = isset($json['token']) ? $json['token'] : null;
             $updates[] = [
-                'id' => (int)$json['user_id'],
-                'token' => !empty($json['token']) ? $json['token'] : $this->_generate_8char_token()
+                'id' => (string)$json['user_id'],
+                'token' => $this->_format_secure_token($rawTok)
             ];
         }
         // Format 3: user_ids array
         elseif (isset($json['user_ids']) && is_array($json['user_ids'])) {
             foreach ($json['user_ids'] as $id) {
-                $updates[] = [
-                    'id' => (int)$id,
-                    'token' => $this->_generate_8char_token()
-                ];
+                if ($id !== '') {
+                    $updates[] = [
+                        'id' => (string)$id,
+                        'token' => $this->_format_secure_token()
+                    ];
+                }
             }
         }
 
@@ -377,12 +433,10 @@ class ImportEmail extends CI_Controller {
         $formatted = [];
 
         foreach ($rawUsers as $u) {
-            $roleDisplay = isset($u['role_display_name']) && !empty($u['role_display_name']) ? $u['role_display_name'] : 'Mahasiswa';
-            if ($u['role_slug'] === 'admin' || $u['role_id'] == 1) $roleDisplay = 'Admin';
-            elseif ($u['role_slug'] === 'dosen' || $u['role_id'] == 4) $roleDisplay = 'Dosen';
-            elseif ($u['role_slug'] === 'laboran' || $u['role_id'] == 2) $roleDisplay = 'Laboran';
-            elseif ($u['role_slug'] === 'kaur' || $u['role_id'] == 3) $roleDisplay = 'Ka. Ur';
-            elseif ($u['role_slug'] === 'koordinatorta' || $u['role_id'] == 6) $roleDisplay = 'Koordinator TA';
+            $roleDisplay = !empty($u['role_display_name']) ? $u['role_display_name'] : (!empty($u['role_slug']) ? $u['role_slug'] : '');
+            if (empty($roleDisplay)) {
+                $roleDisplay = $this->_get_role_name_by_id($u['role_id']);
+            }
 
             $isPasswordChanged = (bool)($u['password_changed'] == 1);
 
@@ -394,12 +448,14 @@ class ImportEmail extends CI_Controller {
             }
 
             $formatted[] = [
-                'id' => (int)$u['id'],
+                'id' => (string)$u['id'],
                 'name' => $u['name'],
                 'email' => $u['email'],
                 'role' => $roleDisplay,
                 'nim_nip' => !empty($u['nidn_nim']) ? $u['nidn_nim'] : '-',
                 'token' => !empty($u['token']) ? $u['token'] : '',
+                'token_display' => !empty($u['token']) ? (strlen($u['token']) > 12 ? substr($u['token'], 0, 8) . '...' . substr($u['token'], -4) : $u['token']) : '',
+                'token_masked' => !empty($u['token']) ? substr($u['token'], 0, 4) . '••••••••' : '',
                 'token_status' => $tokenStatus,
                 'password_changed' => $isPasswordChanged,
                 'email_status' => !empty($u['email_status']) ? $u['email_status'] : 'belum',
@@ -416,22 +472,43 @@ class ImportEmail extends CI_Controller {
      * Helper: Get role display name by role_id
      */
     private function _get_role_name_by_id($roleId) {
+        $roleId = (int)$roleId;
+        if ($this->db->table_exists('user_role')) {
+            $r = $this->db->get_where('user_role', ['id' => $roleId])->row();
+            if ($r && !empty($r->role)) return $r->role;
+            $roles = [
+                1 => 'Admin',
+                2 => 'Kepala Urusan',
+                3 => 'Dosen',
+                4 => 'Mahasiswa',
+                5 => 'Admin LAA',
+                6 => 'Koordinator TA',
+                7 => 'PIC KK',
+                9 => 'Ketua KK',
+                21 => 'Laboran'
+            ];
+            return $roles[$roleId] ?? 'Mahasiswa';
+        }
+
         $roles = [
             1 => 'Admin',
-            2 => 'Laboran',
-            3 => 'Ka. Ur',
-            4 => 'Dosen',
-            5 => 'Mahasiswa',
-            6 => 'Koordinator TA'
+            2 => 'Kepala Urusan',
+            3 => 'Dosen',
+            4 => 'Mahasiswa',
+            5 => 'Admin LAA',
+            6 => 'Koordinator TA',
+            7 => 'PIC KK',
+            9 => 'Ketua KK',
+            21 => 'Laboran'
         ];
-        return isset($roles[(int)$roleId]) ? $roles[(int)$roleId] : 'Mahasiswa';
+        return isset($roles[$roleId]) ? $roles[$roleId] : 'Mahasiswa';
     }
 
     /**
-     * Helper: Build branded responsive HTML email template
+     * Helper: Build branded responsive HTML email template (1-Click Direct Activation)
      */
     private function _build_html_email($user, $token, $subject, $bodyTemplate = '') {
-        $portalUrl = site_url('login');
+        $activationUrl = site_url('login/activate?email=' . urlencode($user->email) . '&token=' . urlencode($token));
         $name = htmlspecialchars($user->name);
         $email = htmlspecialchars($user->email);
         $nim = !empty($user->nidn_nim) ? htmlspecialchars($user->nidn_nim) : '-';
@@ -444,7 +521,7 @@ class ImportEmail extends CI_Controller {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Token Akses Akun Portal IFIK</title>
+    <title>Aktivasi Akun Portal IFIK Telkom University</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; color: #334155;">
     <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; padding: 35px 12px;">
@@ -462,15 +539,8 @@ class ImportEmail extends CI_Controller {
                     <tr>
                         <td style="padding: 36px 30px 30px 30px; line-height: 1.6;">
                             <p style="margin: 0 0 14px 0; font-size: 16px; font-weight: 700; color: #0f172a;">Halo, ' . $name . ' 👋</p>
-                            <p style="margin: 0 0 20px 0; font-size: 14px; color: #475569;">Akun Anda telah berhasil didaftarkan ke dalam sistem Portal Layanan IFIK Telkom University sebagai <strong style="color: #ea580c;">' . $role . '</strong>.</p>
-                            <p style="margin: 0 0 18px 0; font-size: 14px; color: #475569;">Berikut adalah <strong>Kode Token Akses 8-Karakter</strong> unik untuk aktivasi awal akun Anda:</p>
+                            <p style="margin: 0 0 18px 0; font-size: 14px; color: #475569;">Akun Anda telah berhasil didaftarkan ke dalam sistem Portal Layanan IFIK Telkom University sebagai <strong style="color: #ea580c;">' . $role . '</strong>.</p>
                             
-                            <!-- Highlight Token Box -->
-                            <div style="background-color: #fff7ed; border: 2px dashed #fb923c; border-radius: 12px; padding: 20px; text-align: center; margin: 24px 0;">
-                                <span style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #9a3412; letter-spacing: 1.5px; margin-bottom: 8px;">KODE TOKEN AKSES ANDA</span>
-                                <span style="font-family: Consolas, Monaco, monospace; font-size: 28px; font-weight: 900; color: #ea580c; letter-spacing: 4px; display: inline-block; background-color: #ffffff; padding: 6px 20px; border-radius: 8px; border: 1px solid #fed7aa;">' . $token . '</span>
-                            </div>
-
                             <!-- Account Details Table -->
                             <table width="100%" style="background-color: #f8fafc; border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; font-size: 13px; border: 1px solid #e2e8f0;" cellpadding="0" cellspacing="0">
                                 <tr><td style="color: #64748b; padding: 5px 0; width: 35%;">NIM / NIP:</td><td style="color: #0f172a; font-weight: 600;">' . $nim . '</td></tr>
@@ -478,12 +548,14 @@ class ImportEmail extends CI_Controller {
                                 <tr><td style="color: #64748b; padding: 5px 0;">Peran (Role):</td><td style="color: #0f172a; font-weight: 600;">' . $role . '</td></tr>
                             </table>
 
-                            <p style="margin: 0 0 24px 0; font-size: 13px; color: #64748b; line-height: 1.5;">Gunakan email resmi Anda dan <strong>Kode Token</strong> di atas sebagai password awal saat pertama kali login. Setelah berhasil masuk, Anda akan diarahkan untuk melengkapi biodata dan membuat kata sandi baru.</p>
+                            <p style="margin: 0 0 24px 0; font-size: 14px; color: #475569; line-height: 1.5;">Untuk mengaktifkan akun dan membuat kata sandi baru Anda, silakan klik tombol aktivasi langsung di bawah ini tanpa perlu memasukkan token manual:</p>
 
-                            <!-- CTA Button -->
-                            <div style="text-align: center; margin: 30px 0 10px 0;">
-                                <a href="' . $portalUrl . '" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%); color: #ffffff; text-decoration: none; font-weight: 700; font-size: 14px; padding: 13px 34px; border-radius: 10px; box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35);">Masuk & Aktivasi Akun &rarr;</a>
+                            <!-- 1-Click CTA Button -->
+                            <div style="text-align: center; margin: 32px 0 20px 0;">
+                                <a href="' . $activationUrl . '" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%); color: #ffffff; text-decoration: none; font-weight: 700; font-size: 15px; padding: 14px 38px; border-radius: 12px; box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35);">Aktifkan & Masuk ke Akun Saya &rarr;</a>
                             </div>
+
+                            <p style="margin: 20px 0 0 0; font-size: 12px; color: #94a3b8; text-align: center;">Tautan ini bersifat rahasia dan berlaku khusus untuk aktivasi akun Anda.</p>
                         </td>
                     </tr>
                     <!-- Footer -->
@@ -529,27 +601,30 @@ class ImportEmail extends CI_Controller {
     }
 
     /**
-     * Private helper: Generate 8-character mixed token
+     * Helper: Format and ensure token is always a secure Bcrypt hash
+     */
+    private function _format_secure_token($token = null) {
+        if (empty($token)) {
+            return $this->_generate_8char_token();
+        }
+        // If already Bcrypt hash ($2y$...)
+        if (strpos($token, '$2y$') === 0 && strlen($token) >= 60) {
+            return $token;
+        }
+        return password_hash($token, PASSWORD_BCRYPT, ['cost' => 10]);
+    }
+
+    /**
+     * Private helper: Generate secure Bcrypt hash token ($2y$10$...)
      */
     private function _generate_8char_token() {
-        $uppers = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-        $lowers = 'abcdefghijkmnpqrstuvwxyz';
-        $numbers = '23456789';
-        $symbols = '!@#$%^&*_-';
-
-        $token = [
-            $uppers[rand(0, strlen($uppers) - 1)],
-            $lowers[rand(0, strlen($lowers) - 1)],
-            $numbers[rand(0, strlen($numbers) - 1)],
-            $symbols[rand(0, strlen($symbols) - 1)]
-        ];
-
-        $all = $uppers . $lowers . $numbers . $symbols;
-        for ($i = 0; $i < 4; $i++) {
-            $token[] = $all[rand(0, strlen($all) - 1)];
+        // Generate secure 8-character mixed random token as plaintext
+        $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$';
+        $plain = '';
+        for ($i = 0; $i < 10; $i++) {
+            $plain .= $chars[random_int(0, strlen($chars) - 1)];
         }
-
-        shuffle($token);
-        return implode('', $token);
+        // Return standard Bcrypt hash
+        return password_hash($plain, PASSWORD_BCRYPT, ['cost' => 10]);
     }
 }

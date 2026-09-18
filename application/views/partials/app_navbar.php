@@ -4,15 +4,18 @@
     $logged_in = (bool)$this->session->userdata('logged_in');
 
     $role_names = [
-        1 => 'Super Admin System',
-        2 => 'Dosen',
-        3 => 'Admin Layanan (LAA)',
-        4 => 'Koordinator Tugas Akhir',
-        5 => 'Ketua Kelompok Keahlian',
-        6 => 'Mahasiswa'
+        1  => 'Super Admin System',
+        2  => 'Kepala Urusan (Ka Lab)',
+        3  => 'Dosen',
+        4  => 'Mahasiswa',
+        5  => 'Admin Layanan (LAA)',
+        6  => 'Koordinator Tugas Akhir',
+        7  => 'PIC Kelompok Keahlian',
+        9  => 'Ketua Kelompok Keahlian',
+        21 => 'Laboran'
     ];
 
-    $user_role_label = $role_names[$role_id] ?? ($current_uri === 'adminlayanan' ? 'Admin Layanan (LAA)' : ($current_uri === 'ketuakk' ? 'Ketua Kelompok Keahlian' : ($current_uri === 'koordinatorta' ? 'Koordinator Tugas Akhir' : 'Pusat Kendali Admin')));
+    $user_role_label = $role_names[$role_id] ?? ($current_uri === 'adminlayanan' ? 'Admin Layanan (LAA)' : ($current_uri === 'ketuakk' ? 'Ketua Kelompok Keahlian' : ($current_uri === 'koordinatorta' ? 'Koordinator Tugas Akhir' : ($current_uri === 'laboran' ? 'Laboran' : ($current_uri === 'kaur' ? 'Kepala Urusan (Ka Lab)' : 'Pusat Kendali Admin')))));
     $user_display_name = $this->session->userdata('name') ?: 'Unit Layanan FIK';
     $user_email = $this->session->userdata('email') ?: 'admin@telkomuniversity.ac.id';
 ?>
@@ -41,8 +44,8 @@
                     <span>Beranda Utama</span>
                 </a>
 
-                <!-- Dosen - Role 1 or 2 -->
-                <?php if (in_array($role_id, [1, 2])): ?>
+                <!-- Dosen & Bimbingan - Role 1, 2, 3, 6, 7, 9 -->
+                <?php if (in_array($role_id, [1, 2, 3, 6, 7, 9])): ?>
                 <?php 
                     $is_active_dosen = in_array($current_uri, ['dosen', 'dosenwali']) || ($this->uri->segment(1) === 'dosen') || ($this->uri->segment(1) === 'dosenwali');
                 ?>
@@ -53,17 +56,64 @@
                 </a>
                 <?php endif; ?>
 
-                <!-- Admin Layanan (LAA) - Role 1 or 3 -->
-                <?php if (in_array($role_id, [1, 3])): ?>
-                <a href="<?= site_url('adminlayanan'); ?>" 
-                   class="whitespace-nowrap text-xs font-semibold flex items-center gap-1.5 transition-colors py-1 <?= $current_uri === 'adminlayanan' ? 'text-orange-600 font-bold border-b-2 border-orange-600' : 'text-slate-600 hover:text-orange-600'; ?>">
-                    <i class="bi bi-file-earmark-check-fill <?= $current_uri === 'adminlayanan' ? 'text-orange-600' : 'text-slate-400'; ?>"></i>
-                    <span>Admin LAA</span>
+                <!-- Laboran - Role 1 or 21 -->
+                <?php if (in_array($role_id, [1, 21])): ?>
+                <a href="<?= site_url('laboran/booking'); ?>" 
+                   class="whitespace-nowrap text-xs font-semibold flex items-center gap-1.5 transition-colors py-1 <?= $current_uri === 'laboran' || $this->uri->segment(1) === 'laboran' ? 'text-orange-600 font-bold border-b-2 border-orange-600' : 'text-slate-600 hover:text-orange-600'; ?>">
+                    <i class="bi bi-building-gear <?= $current_uri === 'laboran' || $this->uri->segment(1) === 'laboran' ? 'text-orange-600' : 'text-slate-400'; ?>"></i>
+                    <span>Laboran</span>
                 </a>
                 <?php endif; ?>
 
-                <!-- Ketua KK - Role 1 or 7 -->
-                <?php if (in_array($role_id, [1, 7])): ?>
+                <!-- Kaur / Ka Lab - Role 1 or 2 -->
+                <?php if (in_array($role_id, [1, 2])): ?>
+                <a href="<?= site_url('kaur/approval'); ?>" 
+                   class="whitespace-nowrap text-xs font-semibold flex items-center gap-1.5 transition-colors py-1 <?= $current_uri === 'kaur' || $this->uri->segment(1) === 'kaur' ? 'text-orange-600 font-bold border-b-2 border-orange-600' : 'text-slate-600 hover:text-orange-600'; ?>">
+                    <i class="bi bi-patch-check-fill <?= $current_uri === 'kaur' || $this->uri->segment(1) === 'kaur' ? 'text-orange-600' : 'text-slate-400'; ?>"></i>
+                    <span>Ka. Ur</span>
+                </a>
+                <?php endif; ?>
+
+                <!-- Admin Layanan (LAA) - Role 1 or 5 with Dropdown -->
+                <?php if (in_array($role_id, [1, 5])): ?>
+                <?php 
+                    $sub_seg = $this->uri->segment(2);
+                    $is_laa_active = ($current_uri === 'adminlayanan' || $current_uri === 'adminlayananticketing');
+                ?>
+                <div class="relative group">
+                    <button type="button" class="whitespace-nowrap text-xs font-semibold flex items-center gap-1.5 transition-colors py-1.5 px-2 rounded-xl <?= $is_laa_active ? 'text-orange-600 font-bold bg-orange-50/80 border border-orange-200' : 'text-slate-600 hover:text-orange-600 hover:bg-slate-50'; ?>">
+                        <i class="bi bi-file-earmark-check-fill <?= $is_laa_active ? 'text-orange-600' : 'text-slate-400'; ?>"></i>
+                        <span>Admin LAA</span>
+                        <i class="bi bi-chevron-down text-[10px] text-slate-400 group-hover:text-orange-600 transition-transform duration-200 group-hover:rotate-180"></i>
+                    </button>
+                    <!-- Dropdown Menu -->
+                    <div class="absolute left-0 top-full mt-1 w-60 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 hidden group-hover:block transition-all z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                        <div class="px-3 py-1.5 border-b border-slate-100 mb-1">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Modul Layanan LAA</span>
+                        </div>
+                        <a href="<?= site_url('adminlayanan'); ?>" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-slate-700 hover:text-orange-600 hover:bg-orange-50 transition-colors <?= (empty($sub_seg) || $sub_seg === 'index' || $sub_seg === 'detail_berkas') ? 'text-orange-600 font-bold bg-orange-50/60' : '' ?>">
+                            <i class="bi bi-file-earmark-text text-orange-500"></i>
+                            <span>Pendaftaran TA</span>
+                        </a>
+                        <a href="<?= site_url('adminlayanan/lulus_sidang'); ?>" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-slate-700 hover:text-orange-600 hover:bg-orange-50 transition-colors <?= $sub_seg === 'lulus_sidang' ? 'text-orange-600 font-bold bg-orange-50/60' : '' ?>">
+                            <i class="bi bi-mortarboard text-emerald-500"></i>
+                            <span>Sudah Lulus Sidang</span>
+                        </a>
+                        <a href="<?= site_url('adminlayanan/status_peserta_ta'); ?>" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-slate-700 hover:text-orange-600 hover:bg-orange-50 transition-colors <?= $sub_seg === 'status_peserta_ta' ? 'text-orange-600 font-bold bg-orange-50/60' : '' ?>">
+                            <i class="bi bi-person-lines-fill text-blue-500"></i>
+                            <span>Status Peserta TA</span>
+                        </a>
+                        <div class="my-1 border-t border-slate-100"></div>
+                        <a href="<?= site_url('adminlayanan/ticketing'); ?>" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-slate-700 hover:text-orange-600 hover:bg-orange-50 transition-colors <?= in_array($sub_seg, ['ticketing', 'ticketing_input', 'ticketing_approval', 'ticketing_riwayat']) ? 'text-orange-600 font-bold bg-orange-50/60' : '' ?>">
+                            <i class="bi bi-ticket-perforated text-purple-500"></i>
+                            <span>Kelola Tiket LAA</span>
+                        </a>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <!-- Ketua KK / PIC KK - Role 1, 7, 9 -->
+                <?php if (in_array($role_id, [1, 7, 9])): ?>
                 <a href="<?= site_url('ketuakk'); ?>" 
                    class="whitespace-nowrap text-xs font-semibold flex items-center gap-1.5 transition-colors py-1 <?= $current_uri === 'ketuakk' ? 'text-orange-600 font-bold border-b-2 border-orange-600' : 'text-slate-600 hover:text-orange-600'; ?>">
                     <i class="bi bi-diagram-3-fill <?= $current_uri === 'ketuakk' ? 'text-orange-600' : 'text-slate-400'; ?>"></i>
@@ -80,8 +130,8 @@
                 </a>
                 <?php endif; ?>
 
-                <!-- Kelola Berita - Role 1 or 3 -->
-                <?php if (in_array($role_id, [1, 3])): ?>
+                <!-- Kelola Berita - Role 1 or 5 -->
+                <?php if (in_array($role_id, [1, 5])): ?>
                 <a href="<?= site_url('news/newsroom'); ?>" 
                    class="whitespace-nowrap text-xs font-semibold flex items-center gap-1.5 transition-colors py-1 <?= $current_uri === 'news' ? 'text-orange-600 font-bold border-b-2 border-orange-600' : 'text-slate-600 hover:text-orange-600'; ?>">
                     <i class="bi bi-newspaper <?= $current_uri === 'news' ? 'text-orange-600' : 'text-slate-400'; ?>"></i>
@@ -90,7 +140,7 @@
                 <?php endif; ?>
 
                 <!-- Riwayat Log Approval - Global Access for Admin & Staff -->
-                <?php if (in_array($role_id, [1, 2, 3, 4, 6, 7])): ?>
+                <?php if (in_array($role_id, [1, 2, 3, 5, 6, 7, 9, 21])): ?>
                 <a href="<?= site_url('admin/log_history'); ?>" 
                    class="whitespace-nowrap text-xs font-semibold flex items-center gap-1.5 transition-colors py-1 <?= $current_uri === 'log_history' || $this->uri->segment(2) === 'log_history' ? 'text-orange-600 font-bold border-b-2 border-orange-600' : 'text-slate-600 hover:text-orange-600'; ?>" title="Audit Trail & Riwayat Log Approval System (Seluruh Modul)">
                     <i class="bi bi-clock-history <?= $current_uri === 'log_history' || $this->uri->segment(2) === 'log_history' ? 'text-orange-600' : 'text-slate-400'; ?>"></i>
@@ -132,4 +182,3 @@
         </div>
     </div>
 </header>
-

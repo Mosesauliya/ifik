@@ -219,7 +219,7 @@
                 const timeLabel = `${startHour}:${startMin.toString().padStart(2,'0')} - ${endHour}:${endMin.toString().padStart(2,'0')}`;
 
                 eventsHTML += `
-                    <div class="gcal-event" onclick="openDetailBookingModal(${booking.id})" style="top:${topPx}px; height:${heightPx}px; background:${st.bg}; border-left:3px solid ${st.border}; cursor:pointer;"
+                    <div class="gcal-event" onclick="openDetailBookingModal('${booking.id}')" style="top:${topPx}px; height:${heightPx}px; background:${st.bg}; border-left:3px solid ${st.border}; cursor:pointer;"
                          title="${booking.nama_ruangan} — ${booking.nama_lengkap} (${st.label})">
                         <div class="gcal-event-title">${booking.nama_ruangan}</div>
                         <div class="gcal-event-time">${timeLabel}</div>
@@ -257,7 +257,7 @@
     function openDetailBookingModal(id) {
 
         const bList = window.bookingData || (typeof bookingData !== 'undefined' ? bookingData : []);
-        const booking = bList.find(b => parseInt(b.id) === parseInt(id));
+        const booking = bList.find(b => String(b.id) === String(id));
         if (!booking) return;
 
         document.getElementById('detailBookingId').value = booking.id;
@@ -542,7 +542,7 @@
         }
 
         return `
-            <div class="room-item" onclick="openDetailBookingModal(${j.id})" style="cursor: pointer;">
+            <div class="room-item" onclick="openDetailBookingModal('${j.id}')" style="cursor: pointer;">
                 <div class="room-item-left">
                     <div class="room-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>

@@ -3,7 +3,7 @@
    Expects either $mahasiswa array (student views) or falls back to session data (dosen views). */
 
 $role_id   = (int)$this->session->userdata('role_id');
-$is_dosen  = ($role_id == 3);
+$is_dosen  = in_array($role_id, [2, 3, 6, 7, 9]);
 
 // Resolve display name & identifier
 if (!empty($mahasiswa['nama_depan'])) {

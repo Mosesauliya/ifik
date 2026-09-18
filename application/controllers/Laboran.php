@@ -148,8 +148,8 @@ class Laboran extends CI_Controller {
         $tanggal_mulai = $tgl_arr[0];
         $tanggal_selesai = isset($tgl_arr[1]) ? $tgl_arr[1] : $tgl_arr[0];
 
-        $role_id = $this->session->userdata('role_id');
-        if ($role_id != 1 && $role_id != 2) {
+        $role_id = (int)$this->session->userdata('role_id');
+        if ($role_id != 1 && $role_id != 21 && $role_id != 2) {
             $tanggal_selesai = $tanggal_mulai;
         }
 
@@ -207,21 +207,18 @@ class Laboran extends CI_Controller {
 
     public function surat($id)
     {
-        // Get booking detail with room and category info
-        $this->db->select('peminjaman.*, ruangan.nama_ruangan, ruangan.kode_ruangan, ruangan.lokasi, ruangan.kapasitas, kategori_ruangan.nama_kategori');
-        $this->db->from('peminjaman');
-        $this->db->join('ruangan', 'ruangan.id = peminjaman.id_ruangan', 'left');
-        $this->db->join('kategori_ruangan', 'kategori_ruangan.id = ruangan.id_kategori', 'left');
-        $this->db->where('peminjaman.id', $id);
-        $data['booking'] = $this->db->get()->row();
+        $data['booking'] = $this->Booking_model->get_booking_by_id($id);
 
         if (!$data['booking']) {
             show_404();
             return;
         }
 
+        $cleanId = preg_replace('/[^0-9]/', '', (string)$data['booking']->id);
+        if (empty($cleanId)) $cleanId = '0001';
+
         $data['title'] = 'Surat Resmi Peminjaman Ruangan - ' . ($data['booking']->kode_ruangan ?? 'IFIK');
-        $data['nomor_surat'] = 'SURAT/LAB-IFIK/' . date('Y', strtotime($data['booking']->created_at)) . '/' . sprintf('%04d', $data['booking']->id);
+        $data['nomor_surat'] = 'SURAT/LAB-IFIK/' . date('Y', strtotime($data['booking']->created_at)) . '/' . sprintf('%04d', (int)$cleanId);
         $data['qr_data'] = site_url('verifikasi/surat/' . $id);
         $data['penandatangan'] = $this->Booking_model->get_penandatangan($data['booking']->status);
 
