@@ -8,29 +8,29 @@
    page content to the right so nothing is covered.
    ========================================================= */
 
-/* Transition for all push-able page wrappers */
-.laa-page-content {
+/* Transition for the auto-injected push wrapper */
+#laaMainContentWrapper {
+    margin-left: 0;
     transition: margin-left 0.75s cubic-bezier(0.76, 0, 0.24, 1);
     will-change: margin-left;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
 }
 
 /* Desktop: push content when sidebar is open (sidebar is 320px wide) */
 @media (min-width: 1024px) {
-    body.laa-sidebar-pushed .laa-page-content {
+    body.laa-sidebar-pushed #laaMainContentWrapper {
         margin-left: 320px;
-    }
-    /* Also push the sticky navbar header */
-    body.laa-sidebar-pushed > header {
-        margin-left: 320px;
-        transition: margin-left 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+        width: calc(100% - 320px);
     }
 }
 
 /* Mobile: sidebar overlays — no push */
 @media (max-width: 1023px) {
-    body.laa-sidebar-pushed .laa-page-content,
-    body.laa-sidebar-pushed > header {
+    body.laa-sidebar-pushed #laaMainContentWrapper {
         margin-left: 0 !important;
+        width: 100% !important;
     }
 }
 

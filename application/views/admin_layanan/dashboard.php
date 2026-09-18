@@ -274,7 +274,7 @@
     ]); ?>
 
     <!-- Sub Navigation Page Title Bar -->
-    <div class="glass-header px-4 sm:px-6 py-4 mb-8 laa-page-content">
+    <div class="glass-header px-4 sm:px-6 py-4 mb-8">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div class="flex items-start sm:items-center gap-3.5">
                 <div class="w-10 h-10 rounded-xl bg-orange-100 text-brand-600 flex items-center justify-center font-bold text-lg shadow-sm shrink-0 mt-0.5 sm:mt-0">
@@ -317,7 +317,7 @@
     </div>
 
     <!-- Main Container -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 laa-page-content">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6">
 
         <!-- Flash Messages -->
         <?php if($this->session->flashdata('success')): ?>
@@ -3834,3 +3834,4 @@
 
 </body>
 </html>
+

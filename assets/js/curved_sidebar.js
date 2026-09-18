@@ -105,6 +105,9 @@
             // Prepare letter spans for staggered kinetic wave
             this.initLetterSplit();
 
+            // Inject content push wrapper (wraps all content below the navbar)
+            this.setupContentWrapper();
+
             // Initial SVG path state
             this.updateSvgDimensions();
             this.setPath(this.isOpen ? 0 : 70);
@@ -269,6 +272,38 @@
             this.animateSvgCurve(0, 70, 700, () => {
                 if (this.svg) this.svg.style.opacity = '0';
             });
+        }
+
+        setupContentWrapper() {
+            // Skip if wrapper already exists
+            if (document.getElementById('laaMainContentWrapper')) return;
+
+            // IDs/tags to keep directly in body (not wrapped)
+            const skipIds = new Set([
+                'curvedSidebarPanel',
+                'curvedSidebarBackdrop',
+                'curvedSidebarToggle',
+                'laaMainContentWrapper'
+            ]);
+            // Keep <header> (sticky navbar) at body level — don't push it
+            const skipTags = new Set(['HEADER']);
+
+            // Find all body children that should go into the wrapper
+            const toWrap = Array.from(document.body.children).filter(el =>
+                !skipIds.has(el.id) && !skipTags.has(el.tagName)
+            );
+
+            if (toWrap.length === 0) return;
+
+            // Create wrapper div (plain full-width div, NO mx-auto)
+            const wrapper = document.createElement('div');
+            wrapper.id = 'laaMainContentWrapper';
+
+            // Insert wrapper before the first element to be wrapped
+            document.body.insertBefore(wrapper, toWrap[0]);
+
+            // Move elements into wrapper
+            toWrap.forEach(el => wrapper.appendChild(el));
         }
     }
 

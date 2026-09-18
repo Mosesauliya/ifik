@@ -160,7 +160,7 @@
     <?php $this->load->view('admin_layanan/sidebar'); ?>
 
     <!-- Main Content Container (Balanced padding on mobile & desktop) -->
-    <main class="min-h-screen p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto laa-page-content">
+    <main class="min-h-screen p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto">
 
         <!-- Header & Breadcrumb -->
         <div class="mb-6 sm:mb-8">
