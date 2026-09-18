@@ -12,13 +12,26 @@ class Mahasiswa_model extends CI_Model {
         $session_name = $this->session->userdata('name');
         $session_nim  = $this->session->userdata('nim') ?: $this->session->userdata('nidn_nim');
         
-        // Ambil data dari tabel users jika tersedia
+        // Ambil data dari tabel user jika tersedia
         $user_row = null;
         if (!empty($nim)) {
-            $user_row = $this->db->get_where('users', array('nidn_nim' => $nim))->row_array();
+            $user_row = $this->db
+                ->select('id, name, username, email')
+                ->group_start()
+                    ->where('nim', $nim)
+                    ->or_where('username', $nim)
+                ->group_end()
+                ->limit(1)
+                ->get('user')
+                ->row_array();
         }
         if (!$user_row && $this->session->userdata('user_id')) {
-            $user_row = $this->db->get_where('users', array('id' => $this->session->userdata('user_id')))->row_array();
+            $user_row = $this->db
+                ->select('id, name, username, email')
+                ->where('id', $this->session->userdata('user_id'))
+                ->limit(1)
+                ->get('user')
+                ->row_array();
         }
 
         $full_name = !empty($user_row['name']) ? $user_row['name'] : ($session_name ?: 'Mahasiswa');
@@ -107,8 +120,12 @@ class Mahasiswa_model extends CI_Model {
 
     // Update Ganti Password Mahasiswa
     public function update_password($nim, $hashed_password) {
-        $this->db->where('nim', $nim);
-        return $this->db->update('users', array('password' => $hashed_password));
+        $user_table = $this->db->table_exists('user') ? 'user' : 'users';
+        $this->db->group_start();
+        if ($this->db->field_exists('nim', $user_table)) $this->db->where('nim', $nim);
+        if ($this->db->field_exists('nidn_nim', $user_table)) $this->db->or_where('nidn_nim', $nim);
+        $this->db->group_end();
+        return $this->db->update($user_table, array('password' => $hashed_password));
     }
 
     // Reset atau Hapus Pendaftaran TA
@@ -216,8 +233,13 @@ class Mahasiswa_model extends CI_Model {
 
     private function _get_dosen_name($nip) {
         if (empty($nip)) return '';
-        if ($this->db->table_exists('users')) {
-            $u = $this->db->get_where('users', ['nidn_nim' => $nip])->row_array();
+        $user_table = $this->db->table_exists('user') ? 'user' : 'users';
+        if ($this->db->table_exists($user_table)) {
+            $this->db->group_start();
+            if ($this->db->field_exists('nidn_nim', $user_table)) $this->db->where('nidn_nim', $nip);
+            if ($this->db->field_exists('nip', $user_table)) $this->db->or_where('nip', $nip);
+            $this->db->group_end();
+            $u = $this->db->get($user_table)->row_array();
             if ($u && !empty($u['name'])) return $u['name'];
         }
         if ($this->db->table_exists('dosen_wali')) {
@@ -233,10 +255,11 @@ class Mahasiswa_model extends CI_Model {
         
         $nip_dosen = '';
         $name_dosen = '';
-        if ($this->db->table_exists('users')) {
-            $u = $this->db->get_where('users', ['id' => $dosen_id])->row_array();
+        $user_table = $this->db->table_exists('user') ? 'user' : 'users';
+        if ($this->db->table_exists($user_table)) {
+            $u = $this->db->get_where($user_table, ['id' => $dosen_id])->row_array();
             if ($u) {
-                $nip_dosen  = $u['nidn_nim'] ?? '';
+                $nip_dosen  = $u['nidn_nim'] ?? ($u['nip'] ?? '');
                 $name_dosen = $u['name'] ?? '';
             }
         }
@@ -247,9 +270,12 @@ class Mahasiswa_model extends CI_Model {
             $select .= ', pt.konsentrasi_dkv';
         }
         
+        $nim_col = $this->db->field_exists('nidn_nim', $user_table) ? 'nidn_nim' : 'nim';
         $this->db->select($select);
         $this->db->from('pendaftaran_ta pt');
-        $this->db->join('users u', 'u.nidn_nim = pt.nim', 'left');
+        if ($this->db->table_exists($user_table)) {
+            $this->db->join("{$user_table} u", "u.{$nim_col} = pt.nim", 'left');
+        }
         
         if (!empty($nip_dosen) || !empty($name_dosen)) {
             $this->db->group_start();
@@ -277,7 +303,9 @@ class Mahasiswa_model extends CI_Model {
         if (empty($results) && in_array($posisi, [1, 2])) {
             $this->db->select($select);
             $this->db->from('pendaftaran_ta pt');
-            $this->db->join('users u', 'u.nidn_nim = pt.nim', 'left');
+            if ($this->db->table_exists($user_table)) {
+                $this->db->join("{$user_table} u", "u.{$nim_col} = pt.nim", 'left');
+            }
             $results = $this->db->get()->result_array();
         }
 

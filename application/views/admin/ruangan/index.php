@@ -1002,7 +1002,7 @@
                                     <button class="btn-action btn-edit" title="Edit Ruangan" onclick='openModalEdit(<?= json_encode($r) ?>)'>
                                         ✏️
                                     </button>
-                                    <button class="btn-action btn-delete" title="Hapus Ruangan" onclick="confirmDeleteRuangan(<?= $r->id ?>, '<?= htmlspecialchars($r->nama_ruangan) ?>')">
+                                    <button class="btn-action btn-delete" title="Hapus Ruangan" onclick="confirmDeleteRuangan('<?= htmlspecialchars($r->id) ?>', '<?= htmlspecialchars(addslashes($r->nama_ruangan ?? '')) ?>')">
                                         🗑️
                                     </button>
                                 </div>
@@ -1912,8 +1912,7 @@
 
             const form = document.getElementById('formRuangan');
             const formData = new FormData(form);
-            const id = document.getElementById('ruanganId').value;
-            const targetUrl = isEditMode ? `<?= base_url('kelolaruangan/update/') ?>${id}` : '<?= base_url('kelolaruangan/tambah') ?>';
+            const targetUrl = isEditMode ? '<?= base_url('kelolaruangan/update') ?>' : '<?= base_url('kelolaruangan/tambah') ?>';
 
             Swal.fire({
                 title: 'Menyimpan Data...',
@@ -1967,7 +1966,13 @@
                 cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    fetch(`<?= base_url('kelolaruangan/delete/') ?>${id}`, { method: 'POST' })
+                    const delData = new FormData();
+                    delData.append('id', id);
+                    fetch('<?= base_url('kelolaruangan/delete') ?>', {
+                        method: 'POST',
+                        body: delData,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
                     .then(res => res.json())
                     .then(data => {
                         if (data.status === 'success') {

@@ -472,9 +472,46 @@ class LaboranTicketing extends CI_Controller {
     }
 
     /**
+     * Fallback konfigurasi standar sistem Unit & Kategori Kendala
+     */
+    private function _get_fallback_unit_kategori_map() {
+        return [
+            'Laboran (Fasilitas & Lab)' => [
+                'Fasilitas Ruangan / AC / Proyektor',
+                'Perangkat Komputer / Hardware',
+                'Koneksi Jaringan / Internet Lab',
+                'Software / Lisensi Praktikum',
+                'Lain-lain (Laboran)'
+            ],
+            'Layanan Akademik (LAA)' => [
+                'Surat Keterangan / Pengantar',
+                'Administrasi Nilai & Transkrip',
+                'Jadwal Kuliah / Ujian',
+                'Lain-lain (LAA)'
+            ],
+            'Koordinator TA' => [
+                'Bimbingan & Penguji Tugas Akhir',
+                'Jadwal Preview / Sidang TA',
+                'Rubrik Penilaian TA',
+                'Lain-lain (Koordinator TA)'
+            ],
+            'Dosen Wali' => [
+                'Konsultasi Akademik / Perwalian',
+                'Persetujuan / Tanda Tangan Dokumen',
+                'Kendala Perkuliahan & Nilai',
+                'Bimbingan Akademik',
+                'Lain-lain (Dosen Wali)'
+            ]
+        ];
+    }
+
+    /**
      * Pastikan setiap unit tujuan selalu memiliki kategori 'Lain-lain' (Wajib Ada)
      */
     private function _ensure_default_lain_lain_categories() {
+        if (!$this->db->table_exists('ticketing_units') || !$this->db->table_exists('ticketing_kategori')) {
+            return;
+        }
         $units = $this->db->get('ticketing_units')->result_array();
         $now = date('Y-m-d H:i:s');
         foreach ($units as $u) {
@@ -504,6 +541,10 @@ class LaboranTicketing extends CI_Controller {
      * Mengambil peta relasi Unit Tujuan dan Kategori Kendala secara dinamis dari database
      */
     public function get_dynamic_unit_kategori_map() {
+        if (!$this->db->table_exists('ticketing_units')) {
+            return $this->_get_fallback_unit_kategori_map();
+        }
+
         $this->_ensure_default_lain_lain_categories();
 
         $units = $this->db
@@ -515,14 +556,17 @@ class LaboranTicketing extends CI_Controller {
 
         $map = [];
         foreach ($units as $u) {
-            $categories = $this->db
-                ->where('unit_id', $u['id'])
-                ->where('is_active', 1)
-                ->order_by("(CASE WHEN nama_kategori LIKE 'Lain-lain%' OR nama_kategori LIKE 'Lainnya%' THEN 1 ELSE 0 END)", 'ASC', FALSE)
-                ->order_by('sort_order', 'ASC')
-                ->order_by('id', 'ASC')
-                ->get('ticketing_kategori')
-                ->result_array();
+            $categories = [];
+            if ($this->db->table_exists('ticketing_kategori')) {
+                $categories = $this->db
+                    ->where('unit_id', $u['id'])
+                    ->where('is_active', 1)
+                    ->order_by("(CASE WHEN nama_kategori LIKE 'Lain-lain%' OR nama_kategori LIKE 'Lainnya%' THEN 1 ELSE 0 END)", 'ASC', FALSE)
+                    ->order_by('sort_order', 'ASC')
+                    ->order_by('id', 'ASC')
+                    ->get('ticketing_kategori')
+                    ->result_array();
+            }
 
             $catList = array_column($categories, 'nama_kategori');
             if (empty($catList)) {
@@ -530,7 +574,7 @@ class LaboranTicketing extends CI_Controller {
             }
             $map[$u['nama_unit']] = $catList;
         }
-        return $map;
+        return !empty($map) ? $map : $this->_get_fallback_unit_kategori_map();
     }
 
     /**
@@ -538,6 +582,60 @@ class LaboranTicketing extends CI_Controller {
      */
     public function custom_fields() {
         $this->_ensure_laboran();
+
+        if (!$this->db->table_exists('ticketing_units')) {
+            $defaultMap = $this->_get_fallback_unit_kategori_map();
+            $units = [];
+            $kategori = [];
+            $uId = 1;
+            $kId = 1;
+            foreach ($defaultMap as $uName => $kList) {
+                $unitKat = [];
+                foreach ($kList as $kName) {
+                    $kItem = [
+                        'id'            => $kId++,
+                        'unit_id'       => $uId,
+                        'nama_unit'     => $uName,
+                        'nama_kategori' => $kName,
+                        'deskripsi'     => 'Kategori standar sistem',
+                        'sort_order'    => $kId,
+                        'is_active'     => 1
+                    ];
+                    $unitKat[] = $kItem;
+                    $kategori[] = $kItem;
+                }
+                $units[] = [
+                    'id'             => $uId,
+                    'nama_unit'      => $uName,
+                    'deskripsi'      => 'Unit layanan standar sistem',
+                    'sort_order'     => $uId,
+                    'is_active'      => 1,
+                    'total_kategori' => count($kList),
+                    'kategori'       => $unitKat
+                ];
+                $uId++;
+            }
+
+            $stats = [
+                'total_units'     => count($units),
+                'active_units'    => count($units),
+                'total_kategori'  => count($kategori),
+                'active_kategori' => count($kategori)
+            ];
+
+            $data = [
+                'title'            => 'Pengaturan Dropdown & Input Tiket Dinamis — Panel Laboran',
+                'active_menu'      => 'ticketing_fields',
+                'units'            => $units,
+                'kategori'         => $kategori,
+                'selected_unit_id' => 0,
+                'stats'            => $stats
+            ];
+
+            $this->load->view('laboran/ticketing_fields', $data);
+            return;
+        }
+
         $this->_ensure_default_lain_lain_categories();
 
         // 1. Data Unit Tujuan beserta jumlah kategori di dalamnya
@@ -606,6 +704,12 @@ class LaboranTicketing extends CI_Controller {
      */
     public function unit_save() {
         $this->_ensure_laboran();
+
+        if (!$this->db->table_exists('ticketing_units')) {
+            $this->session->set_flashdata('error', 'Konfigurasi unit saat ini menggunakan standar sistem bawaan kode. Tabel database ticketing_units dinonaktifkan.');
+            redirect('laboran/ticketing/fields');
+            return;
+        }
 
         $id         = (int)$this->input->post('id');
         $nama_unit  = trim($this->input->post('nama_unit', true));
@@ -699,6 +803,12 @@ class LaboranTicketing extends CI_Controller {
     public function unit_toggle($id) {
         $this->_ensure_laboran();
 
+        if (!$this->db->table_exists('ticketing_units')) {
+            $this->session->set_flashdata('error', 'Konfigurasi unit saat ini menggunakan standar sistem.');
+            redirect('laboran/ticketing/fields');
+            return;
+        }
+
         $unit = $this->db->get_where('ticketing_units', ['id' => (int)$id])->row();
         if (!$unit) {
             $this->session->set_flashdata('error', 'Unit tidak ditemukan.');
@@ -723,6 +833,12 @@ class LaboranTicketing extends CI_Controller {
     public function unit_delete($id) {
         $this->_ensure_laboran();
 
+        if (!$this->db->table_exists('ticketing_units')) {
+            $this->session->set_flashdata('error', 'Konfigurasi unit saat ini menggunakan standar sistem.');
+            redirect('laboran/ticketing/fields');
+            return;
+        }
+
         $unit = $this->db->get_where('ticketing_units', ['id' => (int)$id])->row();
         if ($unit) {
             $this->db->where('id', $unit->id)->delete('ticketing_units');
@@ -740,6 +856,12 @@ class LaboranTicketing extends CI_Controller {
      */
     public function kategori_save() {
         $this->_ensure_laboran();
+
+        if (!$this->db->table_exists('ticketing_kategori')) {
+            $this->session->set_flashdata('error', 'Konfigurasi kategori saat ini menggunakan standar sistem bawaan kode.');
+            redirect('laboran/ticketing/fields');
+            return;
+        }
 
         $id             = (int)$this->input->post('id');
         $unit_id        = (int)$this->input->post('unit_id');
@@ -827,6 +949,12 @@ class LaboranTicketing extends CI_Controller {
     public function kategori_toggle($id) {
         $this->_ensure_laboran();
 
+        if (!$this->db->table_exists('ticketing_kategori')) {
+            $this->session->set_flashdata('error', 'Konfigurasi kategori saat ini menggunakan standar sistem bawaan kode.');
+            redirect('laboran/ticketing/fields');
+            return;
+        }
+
         $kat = $this->db->get_where('ticketing_kategori', ['id' => (int)$id])->row();
         if (!$kat) {
             $this->session->set_flashdata('error', 'Kategori tidak ditemukan.');
@@ -850,6 +978,12 @@ class LaboranTicketing extends CI_Controller {
      */
     public function kategori_delete($id) {
         $this->_ensure_laboran();
+
+        if (!$this->db->table_exists('ticketing_kategori')) {
+            $this->session->set_flashdata('error', 'Konfigurasi kategori saat ini menggunakan standar sistem bawaan kode.');
+            redirect('laboran/ticketing/fields');
+            return;
+        }
 
         $kat = $this->db->get_where('ticketing_kategori', ['id' => (int)$id])->row();
         if ($kat) {

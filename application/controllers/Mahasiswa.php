@@ -911,8 +911,8 @@ class Mahasiswa extends CI_Controller {
     // Endpoint for Dosen to submit review
     public function review_preview() {
         $role_id = (int) $this->session->userdata('role_id');
-        // Izinkan role_id 1 (Admin) dan 4 (Dosen)
-        if ($role_id != 4 && $role_id != 1) {
+        // Izinkan role_id 1 (Admin) dan role_id 3 (Dosen)
+        if ($role_id != 3 && $role_id != 4 && $role_id != 1) {
             redirect('mahasiswa/bimbingan');
             return;
         }
@@ -1838,30 +1838,68 @@ class Mahasiswa extends CI_Controller {
      * Helper: Mendapatkan mapping Unit dan Kategori dinamis dari database (dikelola oleh Laboran)
      */
     private function _get_dynamic_unit_kategori_map() {
-        $units = $this->db
-            ->where('is_active', 1)
-            ->order_by('sort_order', 'ASC')
-            ->order_by('id', 'ASC')
-            ->get('ticketing_units')
-            ->result_array();
-
         $map = [];
-        foreach ($units as $u) {
-            $categories = $this->db
-                ->where('unit_id', $u['id'])
+        if ($this->db->table_exists('ticketing_units')) {
+            $units = $this->db
                 ->where('is_active', 1)
-                ->order_by("(CASE WHEN nama_kategori LIKE 'Lain-lain%' OR nama_kategori LIKE 'Lainnya%' THEN 1 ELSE 0 END)", 'ASC', FALSE)
                 ->order_by('sort_order', 'ASC')
                 ->order_by('id', 'ASC')
-                ->get('ticketing_kategori')
+                ->get('ticketing_units')
                 ->result_array();
 
-            $catList = array_column($categories, 'nama_kategori');
-            if (empty($catList)) {
-                $catList = ['Lain-lain (' . $u['nama_unit'] . ')'];
+            foreach ($units as $u) {
+                $categories = [];
+                if ($this->db->table_exists('ticketing_kategori')) {
+                    $categories = $this->db
+                        ->where('unit_id', $u['id'])
+                        ->where('is_active', 1)
+                        ->order_by("(CASE WHEN nama_kategori LIKE 'Lain-lain%' OR nama_kategori LIKE 'Lainnya%' THEN 1 ELSE 0 END)", 'ASC', FALSE)
+                        ->order_by('sort_order', 'ASC')
+                        ->order_by('id', 'ASC')
+                        ->get('ticketing_kategori')
+                        ->result_array();
+                }
+
+                $catList = array_column($categories, 'nama_kategori');
+                if (empty($catList)) {
+                    $catList = ['Lain-lain (' . $u['nama_unit'] . ')'];
+                }
+                $map[$u['nama_unit']] = $catList;
             }
-            $map[$u['nama_unit']] = $catList;
         }
+
+        // Fallback default unit & kategori jika tabel konfigurasi tidak ada atau kosong
+        if (empty($map)) {
+            $map = [
+                'Laboran (Fasilitas & Lab)' => [
+                    'Fasilitas Ruangan / AC / Proyektor',
+                    'Perangkat Komputer / Hardware',
+                    'Koneksi Jaringan / Internet Lab',
+                    'Software / Lisensi Praktikum',
+                    'Lain-lain (Laboran)'
+                ],
+                'Layanan Akademik (LAA)' => [
+                    'Surat Keterangan / Pengantar',
+                    'Administrasi Nilai & Transkrip',
+                    'Jadwal Kuliah / Ujian',
+                    'Lain-lain (LAA)'
+                ],
+                'Koordinator TA' => [
+                    'Bimbingan & Penguji Tugas Akhir',
+                    'Jadwal Preview / Sidang TA',
+                    'Rubrik Penilaian TA',
+                    'Lain-lain (Koordinator TA)'
+                ],
+                'Dosen Wali' => [
+                    'Konsultasi Akademik / Perwalian',
+                    'Persetujuan / Tanda Tangan Dokumen',
+                    'Kendala Perkuliahan & Nilai',
+                    'Bimbingan Akademik',
+                    'Lain-lain (Dosen Wali)'
+                ]
+            ];
+        }
+
         return $map;
     }
 
@@ -1879,12 +1917,15 @@ class Mahasiswa extends CI_Controller {
         $unit_kategori_map = $this->_get_dynamic_unit_kategori_map();
 
         // Load active dynamic custom fields for ticketing jika ada
-        $custom_fields = $this->db
-            ->where('is_active', 1)
-            ->order_by('sort_order', 'ASC')
-            ->order_by('id', 'ASC')
-            ->get('laboran_ticketing_fields')
-            ->result_array();
+        $custom_fields = [];
+        if ($this->db->table_exists('laboran_ticketing_fields')) {
+            $custom_fields = $this->db
+                ->where('is_active', 1)
+                ->order_by('sort_order', 'ASC')
+                ->order_by('id', 'ASC')
+                ->get('laboran_ticketing_fields')
+                ->result_array();
+        }
 
         $data = [
             'title'             => 'Buat Tiket Kendala Mahasiswa — IFIK Portal',
@@ -1920,6 +1961,7 @@ class Mahasiswa extends CI_Controller {
         $userId      = $this->session->userdata('user_id');
         $namaDefault = !empty($mhs['nama_depan']) ? trim($mhs['nama_depan'] . ' ' . ($mhs['nama_belakang'] ?? '')) : ($this->session->userdata('name') ?: 'Mahasiswa');
         $namaLengkap = trim($this->input->post('nama_lengkap', true)) ?: $namaDefault;
+        $email       = $this->session->userdata('email') ?: ($mhs['email'] ?? '');
 
         $unit_tujuan      = trim($this->input->post('unit_tujuan', true));
         $kategori         = trim($this->input->post('kategori', true));
@@ -1940,11 +1982,15 @@ class Mahasiswa extends CI_Controller {
         }
 
         // Anti-Duplicate check (mencegah submit ganda akibat double-click)
-        $this->db->where('nidn', $nim);
-        $this->db->where('subjek', $subjek);
-        $this->db->where('unit_tujuan', $unit_tujuan);
-        $this->db->where('created_at >=', date('Y-m-d H:i:s', strtotime('-5 seconds')));
-        $recentTicket = $this->db->get('dosen_ticketing')->row();
+        $this->load->model('DosenTicketing_model');
+        $recentTickets = $this->DosenTicketing_model->get_tickets($userId, $nim);
+        $recentTicket = null;
+        if (!empty($recentTickets)) {
+            $latest = $recentTickets[0];
+            if ($latest->subjek === $subjek && (time() - strtotime($latest->created_at)) <= 5) {
+                $recentTicket = $latest;
+            }
+        }
 
         if ($recentTicket) {
             $msg = "Tiket Anda berhasil diajukan dengan Kode: <b>{$recentTicket->kode_tiket}</b> ke unit <b>" . htmlspecialchars($unit_tujuan) . "</b>.";
@@ -2013,8 +2059,10 @@ class Mahasiswa extends CI_Controller {
 
         $ticketData = [
             'kode_tiket'  => $kodeTiket,
-            'id_user'     => $userId,
-            'nama_dosen'  => $namaLengkap, // Disimpan di field nama_dosen agar kompatibel dengan tabel utama
+            'id_user'     => $userId ?: $nim,
+            'nama_dosen'  => $namaLengkap, // Disimpan di field nama_dosen/nama agar kompatibel dengan tabel utama
+            'nama'        => $namaLengkap,
+            'email'       => $email,
             'nidn'        => $nim,         // Disimpan di field nidn agar query get_tickets($user_id, $nim) berfungsi optimal
             'unit_tujuan' => $unit_tujuan,
             'kategori'    => $kategori,

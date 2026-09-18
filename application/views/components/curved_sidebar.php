@@ -214,6 +214,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
             break;
 
         case 4: // Mahasiswa
+        case 5: // Mahasiswa (fallback)
             $defaultNavItems = [
                 ['category' => 'Menu Utama', 'mobile_only' => true],
                 ['heading' => 'Dashboard', 'href' => site_url('mahasiswa'), 'icon_3d' => 'assets/images/icons_3d/home.png', 'mobile_only' => true],

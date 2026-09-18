@@ -33,39 +33,79 @@ class DosenTicketing extends CI_Controller {
         $nama = $this->session->userdata('name');
         $email = $this->session->userdata('email');
 
-        // Ambil data Unit dan Kategori dinamis dari database (yang bisa diatur oleh Laboran)
-        $units = $this->db
-            ->where('is_active', 1)
-            ->order_by('sort_order', 'ASC')
-            ->order_by('id', 'ASC')
-            ->get('ticketing_units')
-            ->result_array();
-
+        // Ambil data Unit dan Kategori dinamis dari database (dengan fallback aman)
         $unit_kategori_map = [];
-        foreach ($units as $u) {
-            $categories = $this->db
-                ->where('unit_id', $u['id'])
+        if ($this->db->table_exists('ticketing_units')) {
+            $units = $this->db
                 ->where('is_active', 1)
-                ->order_by("(CASE WHEN nama_kategori LIKE 'Lain-lain%' OR nama_kategori LIKE 'Lainnya%' THEN 1 ELSE 0 END)", 'ASC', FALSE)
                 ->order_by('sort_order', 'ASC')
                 ->order_by('id', 'ASC')
-                ->get('ticketing_kategori')
+                ->get('ticketing_units')
                 ->result_array();
 
-            $catList = array_column($categories, 'nama_kategori');
-            if (empty($catList)) {
-                $catList = ['Lain-lain (' . $u['nama_unit'] . ')'];
+            foreach ($units as $u) {
+                $categories = [];
+                if ($this->db->table_exists('ticketing_kategori')) {
+                    $categories = $this->db
+                        ->where('unit_id', $u['id'])
+                        ->where('is_active', 1)
+                        ->order_by("(CASE WHEN nama_kategori LIKE 'Lain-lain%' OR nama_kategori LIKE 'Lainnya%' THEN 1 ELSE 0 END)", 'ASC', FALSE)
+                        ->order_by('sort_order', 'ASC')
+                        ->order_by('id', 'ASC')
+                        ->get('ticketing_kategori')
+                        ->result_array();
+                }
+
+                $catList = array_column($categories, 'nama_kategori');
+                if (empty($catList)) {
+                    $catList = ['Lain-lain (' . $u['nama_unit'] . ')'];
+                }
+                $unit_kategori_map[$u['nama_unit']] = $catList;
             }
-            $unit_kategori_map[$u['nama_unit']] = $catList;
         }
 
-        // Load active dynamic custom fields for ticketing
-        $custom_fields = $this->db
-            ->where('is_active', 1)
-            ->order_by('sort_order', 'ASC')
-            ->order_by('id', 'ASC')
-            ->get('laboran_ticketing_fields')
-            ->result_array();
+        // Fallback default unit & kategori jika tabel konfigurasi tidak ada
+        if (empty($unit_kategori_map)) {
+            $unit_kategori_map = [
+                'Laboran (Fasilitas & Lab)' => [
+                    'Fasilitas Ruangan / AC / Proyektor',
+                    'Perangkat Komputer / Hardware',
+                    'Koneksi Jaringan / Internet Lab',
+                    'Software / Lisensi Praktikum',
+                    'Lain-lain (Laboran)'
+                ],
+                'Layanan Akademik (LAA)' => [
+                    'Surat Keterangan / Pengantar',
+                    'Administrasi Nilai & Transkrip',
+                    'Jadwal Kuliah / Ujian',
+                    'Lain-lain (LAA)'
+                ],
+                'Koordinator TA' => [
+                    'Bimbingan & Penguji Tugas Akhir',
+                    'Jadwal Preview / Sidang TA',
+                    'Rubrik Penilaian TA',
+                    'Lain-lain (Koordinator TA)'
+                ],
+                'Dosen Wali' => [
+                    'Konsultasi Akademik / Perwalian',
+                    'Persetujuan / Tanda Tangan Dokumen',
+                    'Kendala Perkuliahan & Nilai',
+                    'Bimbingan Akademik',
+                    'Lain-lain (Dosen Wali)'
+                ]
+            ];
+        }
+
+        // Load active dynamic custom fields for ticketing (jika tabel ada)
+        $custom_fields = [];
+        if ($this->db->table_exists('laboran_ticketing_fields')) {
+            $custom_fields = $this->db
+                ->where('is_active', 1)
+                ->order_by('sort_order', 'ASC')
+                ->order_by('id', 'ASC')
+                ->get('laboran_ticketing_fields')
+                ->result_array();
+        }
 
         $data = [
             'title'             => 'Input Tiket Kendala Dosen',
@@ -134,11 +174,14 @@ class DosenTicketing extends CI_Controller {
         }
 
         // Anti-Duplicate / Debounce Check (Mencegah submit ganda akibat double-click)
-        $this->db->where('id_user', $userId);
-        $this->db->where('subjek', $subjek);
-        $this->db->where('unit_tujuan', $unitTujuan);
-        $this->db->where('created_at >=', date('Y-m-d H:i:s', strtotime('-5 seconds')));
-        $recentTicket = $this->db->get('dosen_ticketing')->row();
+        $recentTickets = $this->DosenTicketing_model->get_tickets($userId, $nidn);
+        $recentTicket = null;
+        if (!empty($recentTickets)) {
+            $latest = $recentTickets[0];
+            if ($latest->subjek === $subjek && (time() - strtotime($latest->created_at)) <= 5) {
+                $recentTicket = $latest;
+            }
+        }
 
         if ($recentTicket) {
             $msg = "Tiket kendala berhasil dikirim dengan kode: <strong>{$recentTicket->kode_tiket}</strong> ke unit <strong>" . htmlspecialchars($unitTujuan) . "</strong>.";
@@ -187,13 +230,16 @@ class DosenTicketing extends CI_Controller {
 
         // Process Dynamic Custom Fields if any extra fields exist
         $coreFieldNames = ['nama_lengkap', 'unit_tujuan', 'kategori', 'prioritas', 'subjek', 'deskripsi', 'lampiran'];
-        $activeCustomFields = $this->db
-            ->where('is_active', 1)
-            ->where_not_in('field_name', $coreFieldNames)
-            ->order_by('sort_order', 'ASC')
-            ->order_by('id', 'ASC')
-            ->get('laboran_ticketing_fields')
-            ->result_array();
+        $activeCustomFields = [];
+        if ($this->db->table_exists('laboran_ticketing_fields')) {
+            $activeCustomFields = $this->db
+                ->where('is_active', 1)
+                ->where_not_in('field_name', $coreFieldNames)
+                ->order_by('sort_order', 'ASC')
+                ->order_by('id', 'ASC')
+                ->get('laboran_ticketing_fields')
+                ->result_array();
+        }
 
         $rawCustomFieldsPost = $this->input->post('custom_fields') ?: [];
         $submittedCustomData = [];
@@ -348,51 +394,22 @@ class DosenTicketing extends CI_Controller {
     }
 
     /**
-     * Filter query khusus untuk tiket yang ditujukan ke Dosen / Dosen Wali / Koordinator TA / Ketua KK
-     */
-    private function _apply_dosen_unit_filter() {
-        $this->db->group_start();
-        $this->db->like('unit_tujuan', 'Dosen');
-        $this->db->or_like('unit_tujuan', 'Wali');
-        $this->db->or_like('unit_tujuan', 'Koordinator');
-        $this->db->or_like('unit_tujuan', 'Ketua KK');
-        $this->db->group_end();
-    }
-
-    /**
      * Halaman Inbox Respon Ticketing khusus Role Dosen
      */
     public function respon_index() {
         $filterStatus = $this->input->get('status', true) ?: 'all';
         $search = trim($this->input->get('q', true) ?? '');
 
-        // 1. Query Tiket Masuk Khusus Dosen
-        $this->db->from('dosen_ticketing');
-        $this->_apply_dosen_unit_filter();
-
-        if (!empty($filterStatus) && $filterStatus !== 'all') {
-            $this->db->where('status', $filterStatus);
-        }
-
-        if (!empty($search)) {
-            $this->db->group_start();
-            $this->db->like('kode_tiket', $search);
-            $this->db->or_like('nama_dosen', $search);
-            $this->db->or_like('subjek', $search);
-            $this->db->or_like('kategori', $search);
-            $this->db->group_end();
-        }
-
-        $this->db->order_by('created_at', 'DESC');
-        $tickets = $this->db->get()->result();
+        // 1. Query Tiket Masuk Khusus Dosen dari Model
+        $tickets = $this->DosenTicketing_model->get_respon_tickets($filterStatus, $search);
 
         // 2. Hitung Statistik Khusus Unit Dosen
         $stats = [
-            'total'    => $this->count_dosen_tickets_by_status('all'),
-            'menunggu' => $this->count_dosen_tickets_by_status('Menunggu'),
-            'diproses' => $this->count_dosen_tickets_by_status('Diproses'),
-            'selesai'  => $this->count_dosen_tickets_by_status('Selesai'),
-            'ditutup'  => $this->count_dosen_tickets_by_status('Ditutup')
+            'total'    => $this->DosenTicketing_model->count_respon_tickets('all'),
+            'menunggu' => $this->DosenTicketing_model->count_respon_tickets('Menunggu'),
+            'diproses' => $this->DosenTicketing_model->count_respon_tickets('Diproses'),
+            'selesai'  => $this->DosenTicketing_model->count_respon_tickets('Selesai'),
+            'ditutup'  => $this->DosenTicketing_model->count_respon_tickets('Ditutup')
         ];
 
         $data = [
@@ -407,29 +424,10 @@ class DosenTicketing extends CI_Controller {
     }
 
     /**
-     * Hitung total tiket per status khusus Dosen
-     */
-    private function count_dosen_tickets_by_status($status = 'all') {
-        $this->db->from('dosen_ticketing');
-        $this->_apply_dosen_unit_filter();
-        if ($status !== 'all') {
-            $this->db->where('status', $status);
-        }
-        return (int)$this->db->count_all_results();
-    }
-
-    /**
      * AJAX Endpoint: Detail Tiket untuk Modal Respon Dosen
      */
     public function respon_detail($id_or_kode) {
-        $this->db->from('dosen_ticketing');
-        $this->_apply_dosen_unit_filter();
-        if (is_numeric($id_or_kode)) {
-            $this->db->where('id', (int)$id_or_kode);
-        } else {
-            $this->db->where('kode_tiket', $id_or_kode);
-        }
-        $ticket = $this->db->get()->row();
+        $ticket = $this->DosenTicketing_model->get_by_id($id_or_kode);
 
         if (!$ticket) {
             return $this->output
@@ -437,7 +435,7 @@ class DosenTicketing extends CI_Controller {
                 ->set_status_header(404)
                 ->set_output(json_encode([
                     'status'  => false,
-                    'message' => 'Tiket kendala tidak ditemukan atau bukan ditujukan untuk unit Dosen.'
+                    'message' => 'Tiket kendala tidak ditemukan.'
                 ]));
         }
 
@@ -474,11 +472,11 @@ class DosenTicketing extends CI_Controller {
      * Simpan Tanggapan & Perubahan Status oleh Dosen
      */
     public function respon_simpan_tanggapan() {
-        $idTiket   = (int)($this->input->post('id_tiket') ?: $this->input->post('ticket_id'));
+        $idTiket   = trim($this->input->post('id_tiket') ?: $this->input->post('ticket_id'));
         $status    = trim($this->input->post('status', true));
         $tanggapan = trim($this->input->post('tanggapan') ?? '');
 
-        if (!$idTiket) {
+        if (empty($idTiket)) {
             $this->session->set_flashdata('error', 'ID Tiket tidak valid.');
             redirect('dosen/respon-ticketing');
             return;
@@ -488,23 +486,7 @@ class DosenTicketing extends CI_Controller {
             $status = 'Diproses';
         }
 
-        $updateData = [
-            'status'     => $status,
-            'updated_at' => date('Y-m-d H:i:s')
-        ];
-
-        // Jika dosen memberikan respon teks, simpan tanggapan dan waktu respon
-        if ($tanggapan !== '') {
-            $updateData['tanggapan'] = $tanggapan;
-            $updateData['tgl_tanggapan'] = date('Y-m-d H:i:s');
-        } elseif ($status === 'Menunggu') {
-            // Jika dikembalikan ke status Menunggu dan teks tanggapan kosong
-            $updateData['tanggapan'] = null;
-            $updateData['tgl_tanggapan'] = null;
-        }
-
-        $this->db->where('id', $idTiket);
-        $this->db->update('dosen_ticketing', $updateData);
+        $this->DosenTicketing_model->update_respon($idTiket, $status, $tanggapan);
 
         $msg = ($tanggapan !== '')
             ? "Tanggapan berhasil disimpan! Status tiket kini diperbarui menjadi <strong>{$status}</strong>."
