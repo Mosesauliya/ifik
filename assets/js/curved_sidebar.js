@@ -51,6 +51,10 @@
                 this.toggleBtn.setAttribute('aria-expanded', 'true');
                 this.setPath(0);
                 if (this.svg) this.svg.style.opacity = '0';
+                // Push content on initial load (desktop only)
+                if (window.innerWidth >= 1024) {
+                    document.body.classList.add('laa-sidebar-pushed');
+                }
             } else {
                 this.panel.classList.remove('is-active');
                 this.toggleBtn.classList.remove('is-active');
@@ -59,6 +63,7 @@
                     this.backdrop.classList.remove('is-active');
                 }
                 document.body.classList.remove('curved-sidebar-open');
+                document.body.classList.remove('laa-sidebar-pushed');
                 this.setPath(70);
                 if (this.svg) this.svg.style.opacity = '0';
             }
@@ -231,6 +236,11 @@
             }
             this.panel.classList.add('is-active');
 
+            // Push page content to the right on desktop
+            if (window.innerWidth >= 1024) {
+                document.body.classList.add('laa-sidebar-pushed');
+            }
+
             // Scroll inner menu to top
             const inner = this.panel ? this.panel.querySelector('.curved-sidebar-inner') : null;
             if (inner) inner.scrollTop = 0;
@@ -251,6 +261,7 @@
             this.toggleBtn.setAttribute('aria-expanded', 'false');
             if (this.backdrop) this.backdrop.classList.remove('is-active');
             document.body.classList.remove('curved-sidebar-open');
+            document.body.classList.remove('laa-sidebar-pushed');
             this.panel.classList.remove('is-active');
 
             if (this.svg) this.svg.style.opacity = '1';
