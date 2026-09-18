@@ -88,7 +88,7 @@ if ($is_nas) {
 		'dsn'	=> '',
 		'hostname' => 'localhost',
 		'username' => 'root',
-		'password' => 'k@t1d3s9aaka',
+		'password' => 'K@t1d3s9aaka',
 		'database' => 'ifik',
 		'dbdriver' => 'mysqli',
 		'dbprefix' => '',
