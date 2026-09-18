@@ -15,7 +15,13 @@
  */
 
 $sessionRoleId = (int)$this->session->userdata('role_id');
+$sessionEmail  = (string)$this->session->userdata('email');
 $currentUri = trim(uri_string(), '/');
+
+// Jika role 2 tapi mengakses modul laboran / akun laboran, arahkan ke role 21 (Laboran)
+if ($sessionRoleId === 2 && (strpos($currentUri, 'laboran') === 0 || strpos($sessionEmail, 'laboran') !== false)) {
+    $sessionRoleId = 21;
+}
 
 // Fallback cerdas jika role belum ada di session (misal saat direct link/preview)
 if ($sessionRoleId === 0) {
