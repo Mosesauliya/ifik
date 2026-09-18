@@ -1082,30 +1082,27 @@
             </div>
 
             <!-- Row 2: Batch Actions, Page Size & Tools -->
-            <div class="pt-3 border-t border-slate-100 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3">
+            <div class="pt-3 border-t border-slate-100 flex flex-col 2xl:flex-row 2xl:items-center 2xl:justify-between gap-3">
                 <!-- Batch Actions Left -->
-                <div class="batch-actions-grid flex flex-wrap items-center gap-2">
-                    <button onclick="bulkGenerateTokenSelected()" class="btn-gradient-base btn-gradient-orange-solid h-9 px-3 text-xs flex items-center gap-1.5 whitespace-nowrap" title="Generate Token 8 Karakter untuk akun terpilih">
+                <div class="flex flex-wrap sm:flex-nowrap items-center gap-2">
+                    <button onclick="bulkGenerateTokenSelected()" class="btn-gradient-base btn-gradient-orange-solid h-9 px-3 text-xs flex items-center gap-1.5 whitespace-nowrap cursor-pointer" title="Generate Token 8 Karakter untuk akun terpilih">
                         <i class="fa-solid fa-bolt text-xs"></i>
                         <span>Generate Token</span>
-                        <span class="text-[10px] font-normal text-white/90 hidden sm:inline">(Selected)</span>
                     </button>
-                    <button onclick="bulkGenerateTokenAll()" class="btn-gradient-base btn-gradient-orange-soft h-9 px-3 text-xs flex items-center gap-1.5 whitespace-nowrap" title="Generate Token untuk semua akun yang masih kosong">
+                    <button onclick="bulkGenerateTokenAll()" class="btn-gradient-base btn-gradient-orange-soft h-9 px-3 text-xs flex items-center gap-1.5 whitespace-nowrap cursor-pointer" title="Generate Token untuk semua akun yang masih kosong">
                         <i class="fa-solid fa-key text-brand-600 text-xs"></i>
                         <span>Generate All</span>
-                        <span class="text-[10px] font-normal text-brand-700/80 hidden sm:inline">(Kosong)</span>
                     </button>
-                    <button onclick="bulkSendEmailSelected()" class="btn-gradient-base btn-gradient-emerald-solid h-9 px-3 text-xs flex items-center gap-1.5 whitespace-nowrap" title="Kirim Email Tautan Aktivasi ke akun terpilih">
+                    <button onclick="bulkSendEmailSelected()" class="btn-gradient-base btn-gradient-emerald-solid h-9 px-3 text-xs flex items-center gap-1.5 whitespace-nowrap cursor-pointer" title="Kirim Email Tautan Aktivasi ke akun terpilih">
                         <i class="fa-solid fa-paper-plane text-xs"></i>
                         <span>Kirim Email</span>
-                        <span class="text-[10px] font-normal text-white/90 hidden sm:inline">(Selected)</span>
                     </button>
                 </div>
 
                 <!-- Page Size & Tools Right -->
-                <div class="flex flex-wrap items-center justify-between sm:justify-end gap-2.5 w-full xl:w-auto">
+                <div class="flex flex-wrap items-center justify-between sm:justify-end gap-2.5 w-full 2xl:w-auto">
                     <!-- Page Size Selector Top -->
-                    <div class="page-size-wrap-mobile flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 border border-slate-200 px-3 h-9 rounded-xl shadow-2xs whitespace-nowrap">
+                    <div class="flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 border border-slate-200 px-3 h-9 rounded-xl shadow-2xs whitespace-nowrap">
                         <div class="flex items-center gap-1.5">
                             <span class="font-medium text-slate-500">Tampilkan</span>
                             <select onchange="changePageSize(this.value)" class="page-size-select h-6 px-1.5 text-xs font-bold bg-white border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer">
@@ -1123,12 +1120,12 @@
                     </div>
 
                     <!-- Tools Right -->
-                    <div class="tools-grid-mobile flex items-center gap-2 shrink-0">
-                        <button onclick="exportData('xlsx')" class="btn-gradient-base btn-gradient-emerald-soft h-9 px-3 text-xs flex items-center gap-1.5 whitespace-nowrap" title="Export to Excel XLSX">
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button onclick="exportData('xlsx')" class="btn-gradient-base btn-gradient-emerald-soft h-9 px-3 text-xs flex items-center gap-1.5 whitespace-nowrap cursor-pointer" title="Export to Excel XLSX">
                             <i class="fa-solid fa-file-excel text-emerald-600 text-xs"></i>
                             <span>Export Excel</span>
                         </button>
-                        <button onclick="bulkDeleteSelected()" class="btn-gradient-base btn-gradient-rose-soft h-9 px-3 text-xs flex items-center gap-1.5 whitespace-nowrap" title="Hapus Akun Terpilih">
+                        <button onclick="bulkDeleteSelected()" class="btn-gradient-base btn-gradient-rose-soft h-9 px-3 text-xs flex items-center gap-1.5 whitespace-nowrap cursor-pointer" title="Hapus Akun Terpilih">
                             <i class="fa-solid fa-trash-can text-xs text-rose-600"></i>
                             <span>Hapus</span>
                         </button>
