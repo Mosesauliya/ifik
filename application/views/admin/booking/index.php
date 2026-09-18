@@ -2361,21 +2361,21 @@
                                 </td>
                                 <td style="width: 85px; text-align: center; overflow: visible; position: relative; padding-right: 14px;">
                                     <div class="action-dropdown-wrap">
-                                        <button type="button" class="btn-action-dots" onclick="toggleActionDropdown(<?= $p->id ?>, event)" title="Menu Aksi">
+                                        <button type="button" class="btn-action-dots" onclick="toggleActionDropdown('<?= $p->id ?>', event)" title="Menu Aksi">
                                             <i class="fa-solid fa-ellipsis-vertical"></i>
                                             <span>Aksi</span>
                                         </button>
                                         <div class="action-dropdown-menu" id="actionMenu_<?= $p->id ?>">
                                             <?php if ($isPending): ?>
-                                                <button type="button" class="action-dropdown-item item-acc" onclick="singleApprove(<?= $p->id ?>)">
+                                                <button type="button" class="action-dropdown-item item-acc" onclick="singleApprove('<?= $p->id ?>')">
                                                     <i class="fa-solid fa-check"></i> Setujui Permohonan
                                                 </button>
-                                                <button type="button" class="action-dropdown-item item-rej" onclick="openSingleRejectModal(<?= $p->id ?>)">
+                                                <button type="button" class="action-dropdown-item item-rej" onclick="openSingleRejectModal('<?= $p->id ?>')">
                                                     <i class="fa-solid fa-ban"></i> Tolak Permohonan
                                                 </button>
                                             <?php endif; ?>
                                             <?php if ($statusCategory === 'laboran' || $statusCategory === 'kaur' || $statusCategory === 'admin'): ?>
-                                                <button type="button" class="action-dropdown-item item-qr" onclick="openSuratModal(<?= $p->id ?>)">
+                                                <button type="button" class="action-dropdown-item item-qr" onclick="openSuratModal('<?= $p->id ?>')">
                                                     <i class="fa-solid fa-qrcode"></i> Cetak Surat QR
                                                 </button>
                                             <?php endif; ?>
@@ -2383,7 +2383,7 @@
                                                 <i class="fa-solid fa-eye text-blue-500"></i> Detail Permohonan
                                             </button>
                                             <div class="action-dropdown-divider"></div>
-                                            <button type="button" class="action-dropdown-item item-del" onclick="deleteBooking(<?= $p->id ?>)">
+                                            <button type="button" class="action-dropdown-item item-del" onclick="deleteBooking('<?= $p->id ?>')">
                                                 <i class="fa-solid fa-trash-can"></i> Hapus Data
                                             </button>
                                         </div>
@@ -3364,27 +3364,27 @@
             let actionButtons = '';
             if (isPending) {
                 actionButtons += `
-                    <button type="button" class="action-dropdown-item item-acc" onclick="singleApprove(${p.id})">
+                    <button type="button" class="action-dropdown-item item-acc" onclick="singleApprove('${p.id}')">
                         <i class="fa-solid fa-check"></i> Setujui (Laboran)
                     </button>
-                    <button type="button" class="action-dropdown-item item-rej" onclick="openSingleRejectModal(${p.id})">
+                    <button type="button" class="action-dropdown-item item-rej" onclick="openSingleRejectModal('${p.id}')">
                         <i class="fa-solid fa-ban"></i> Tolak Peminjaman
                     </button>
                 `;
             }
             if (statusCategory === 'laboran' || statusCategory === 'kaur' || statusCategory === 'admin') {
                 actionButtons += `
-                    <button type="button" class="action-dropdown-item item-qr" onclick="openSuratModal(${p.id})">
+                    <button type="button" class="action-dropdown-item item-qr" onclick="openSuratModal('${p.id}')">
                         <i class="fa-solid fa-qrcode"></i> Cetak Surat QR
                     </button>
                 `;
             }
             actionButtons += `
-                <button type="button" class="action-dropdown-item" onclick="openDetailModal(window.adminBookingsMap[${p.id}])">
+                <button type="button" class="action-dropdown-item" onclick="openDetailModal(window.adminBookingsMap['${p.id}'])">
                     <i class="fa-solid fa-eye text-blue-500"></i> Detail Permohonan
                 </button>
                 <div class="action-dropdown-divider"></div>
-                <button type="button" class="action-dropdown-item item-del" onclick="deleteBooking(${p.id})">
+                <button type="button" class="action-dropdown-item item-del" onclick="deleteBooking('${p.id}')">
                     <i class="fa-solid fa-trash-can"></i> Hapus Data
                 </button>
             `;
@@ -3462,7 +3462,7 @@
                     </td>
                     <td style="width: 85px; text-align: center; overflow: visible; position: relative; padding-right: 14px;">
                         <div class="action-dropdown-wrap">
-                            <button type="button" class="btn-action-dots" onclick="toggleActionDropdown(${p.id}, event)" title="Menu Aksi">
+                            <button type="button" class="btn-action-dots" onclick="toggleActionDropdown('${p.id}', event)" title="Menu Aksi">
                                 <i class="fa-solid fa-ellipsis-vertical"></i>
                                 <span>Aksi</span>
                             </button>

@@ -76,9 +76,9 @@ class Kelolabooking extends CI_Controller {
             $waktuFormatted = substr($row->jam_mulai, 0, 5) . ' - ' . substr($row->jam_selesai, 0, 5);
 
             $formatted[] = [
-                'id' => (int)$row->id,
-                'id_user' => $row->id_user ? (int)$row->id_user : null,
-                'id_ruangan' => (int)$row->id_ruangan,
+                'id' => (string)$row->id,
+                'id_user' => (string)($row->id_user ?? ''),
+                'id_ruangan' => (string)($row->id_ruangan ?? ''),
                 'nama_lengkap' => $row->nama_lengkap,
                 'nama_ruangan' => $row->nama_ruangan,
                 'kode_ruangan' => $row->kode_ruangan,
