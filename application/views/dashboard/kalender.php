@@ -2225,33 +2225,36 @@
 
                 // Fallback cerdas jika role belum ada di session (misal saat direct link/preview)
                 $currentUri = trim(uri_string(), '/');
+                $activeRoleId = $sessionRoleId;
                 if ($sessionRoleId === 0) {
                     if (strpos($currentUri, 'laboran') === 0) {
-                        $sessionRoleId = 2; // Laboran
+                        $activeRoleId = 21; // Laboran
                     } elseif (strpos($currentUri, 'kaur') === 0) {
-                        $sessionRoleId = 3; // Kaur / Ka Lab
+                        $activeRoleId = 2; // Kaur / Ka Lab
                     } elseif (strpos($currentUri, 'dosen') === 0 || strpos($currentUri, 'dosenwali') === 0) {
-                        $sessionRoleId = 4; // Dosen
+                        $activeRoleId = 3; // Dosen
                     } elseif (strpos($currentUri, 'koordinatorta') === 0 || strpos($currentUri, 'koordinator') === 0) {
-                        $sessionRoleId = 6; // Koordinator TA
+                        $activeRoleId = 6; // Koordinator TA
                     } elseif (strpos($currentUri, 'admin') === 0 || strpos($currentUri, 'kelolabooking') === 0) {
-                        $sessionRoleId = 1; // Admin
+                        $activeRoleId = 1; // Admin
                     }
                 }
 
                 $roleBadgeMap = [
                     1 => 'Admin Panel',
-                    2 => 'Laboran',
-                    3 => 'Ka. Ur / Ka Lab',
-                    4 => 'Portal Dosen',
-                    5 => 'Mahasiswa',
+                    2 => 'Ka. Ur / Ka Lab',
+                    3 => 'Portal Dosen',
+                    4 => 'Mahasiswa',
+                    5 => 'Admin Layanan',
                     6 => 'Koordinator TA',
-                    7 => 'Ketua KK'
+                    7 => 'PIC KK',
+                    9 => 'Ketua KK',
+                    21 => 'Laboran'
                 ];
-                $activeRoleBadge = $roleBadgeMap[$sessionRoleId] ?? 'Portal IFIK';
+                $activeRoleBadge = $roleBadgeMap[$activeRoleId] ?? 'Portal IFIK';
 
-                switch ($sessionRoleId) {
-                    case 2: // Laboran (Staff Operasional Laboratorium)
+                switch ($activeRoleId) {
+                    case 21: // Laboran (Staff Operasional Laboratorium)
                         $defaultNavItems = [
                             ['category' => 'Operasional Laboratorium'],
                             ['heading' => 'Approval Peminjaman', 'href' => site_url('laboran/booking'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
@@ -2270,7 +2273,7 @@
                         ];
                         break;
 
-                    case 3: // Kaur / Ka Lab (Kepala Urusan / Kepala Lab & Dosen)
+                    case 2: // Kaur / Ka Lab (Kepala Urusan / Kepala Lab & Dosen)
                         $defaultNavItems = [
                             ['category' => 'Persetujuan Resmi & Lab'],
                             ['heading' => 'Approval Peminjaman', 'href' => site_url('kaur/approval'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
@@ -2293,7 +2296,7 @@
                         ];
                         break;
 
-                    case 4: // Dosen
+                    case 3: // Dosen
                         $defaultNavItems = [
                             ['category' => 'Bimbingan & Pengujian'],
                             ['heading' => 'Dosen Pembimbing', 'href' => site_url('dosen/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
@@ -2347,7 +2350,7 @@
                         ];
                         break;
 
-                    case 5: // Mahasiswa
+                    case 4: // Mahasiswa
                         $defaultNavItems = [
                             ['category' => 'Menu Utama', 'mobile_only' => true],
                             ['heading' => 'Dashboard', 'href' => site_url('mahasiswa'), 'icon_3d' => 'assets/images/icons_3d/home.png', 'mobile_only' => true],

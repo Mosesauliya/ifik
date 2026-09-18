@@ -28,11 +28,12 @@ class Approval_log_model extends CI_Model {
             $role_id = $this->session->userdata('role_id');
             switch ($role_id) {
                 case 1: $actor_role = 'Admin Panel'; break;
-                case 2: $actor_role = 'Laboran'; break;
-                case 3: $actor_role = 'Ka. Ur'; break;
-                case 4: $actor_role = 'Dosen'; break;
-                case 5: $actor_role = 'Mahasiswa'; break;
+                case 2: $actor_role = 'Ka. Ur'; break;
+                case 3: $actor_role = 'Dosen'; break;
+                case 4: $actor_role = 'Mahasiswa'; break;
+                case 5: $actor_role = 'Admin LAA'; break;
                 case 6: $actor_role = 'Koordinator TA'; break;
+                case 21: $actor_role = 'Laboran'; break;
                 default: $actor_role = $modul; break;
             }
         }
