@@ -31,7 +31,15 @@ class User_model extends CI_Model {
             $user->status = (!empty($user->is_active) && $user->is_active == 1) ? 'active' : 'inactive';
         }
         if (!isset($user->password_changed)) {
-            $user->password_changed = 1;
+            $user->password_changed = (!empty($user->is_active) && $user->is_active == 1) ? 1 : 0;
+        } else {
+            $user->password_changed = (int)$user->password_changed;
+        }
+        if (empty($user->token) && !empty($user->email) && $this->db->table_exists('user_token')) {
+            $tokRow = $this->db->get_where('user_token', ['email' => $user->email])->row();
+            if ($tokRow && !empty($tokRow->token)) {
+                $user->token = $tokRow->token;
+            }
         }
         return $user;
     }
@@ -205,8 +213,26 @@ class User_model extends CI_Model {
         if ($hasTokenTable) {
             $this->db->join("user_token ut", "u.email = ut.email", 'left');
         }
+        $this->db->order_by('u.date_created', 'DESC');
         $this->db->order_by('u.id', 'DESC');
         $results = $this->db->get()->result_array();
+
+        // Fetch latest email dispatch logs if log_approval_history exists
+        $emailLogs = [];
+        if ($this->db->table_exists('log_approval_history')) {
+            $logs = $this->db->query("
+                SELECT ref_id, action, created_at
+                FROM log_approval_history
+                WHERE modul = 'Import Email'
+                ORDER BY id ASC
+            ")->result_array();
+            foreach ($logs as $l) {
+                $emailLogs[strtolower(trim($l['ref_id']))] = [
+                    'status' => ($l['action'] === 'Email Sent') ? 'terkirim' : ($l['action'] === 'Email Failed' ? 'gagal' : 'belum'),
+                    'sent_at' => $l['created_at']
+                ];
+            }
+        }
 
         // Standardize output
         foreach ($results as &$row) {
@@ -216,12 +242,19 @@ class User_model extends CI_Model {
             if (empty($row['token']) && !empty($row['token_hash'])) {
                 $row['token'] = $row['token_hash'];
             }
-            if (!isset($row['password_changed'])) {
-                // If token exists in user_token, password is not changed yet (0)
-                $row['password_changed'] = !empty($row['token']) ? 0 : 1;
-            }
+            $isActive = isset($row['is_active']) ? (int)$row['is_active'] : 0;
+            $row['password_changed'] = ($isActive === 1) ? 1 : 0;
             if (empty($row['role_display_name']) && !empty($row['role_slug'])) {
                 $row['role_display_name'] = $row['role_slug'];
+            }
+
+            $userEmail = strtolower(trim($row['email'] ?? ''));
+            if (isset($emailLogs[$userEmail])) {
+                $row['email_status'] = $emailLogs[$userEmail]['status'];
+                $row['email_sent_at'] = $emailLogs[$userEmail]['sent_at'];
+            } else {
+                $row['email_status'] = !empty($row['email_status']) ? $row['email_status'] : 'belum';
+                $row['email_sent_at'] = !empty($row['email_sent_at']) ? $row['email_sent_at'] : '-';
             }
         }
         return $results;
@@ -358,7 +391,7 @@ class User_model extends CI_Model {
                 if ($this->db->field_exists('token', $this->tbl_user)) $insertRow['token'] = $token;
                 if ($this->db->field_exists('password_changed', $this->tbl_user)) $insertRow['password_changed'] = 0;
                 if ($this->db->field_exists('email_status', $this->tbl_user)) $insertRow['email_status'] = $emailStatus;
-                if ($this->db->field_exists('is_active', $this->tbl_user)) $insertRow['is_active'] = 1;
+                if ($this->db->field_exists('is_active', $this->tbl_user)) $insertRow['is_active'] = 0;
                 if ($this->db->field_exists('date_created', $this->tbl_user)) $insertRow['date_created'] = time();
                 if ($this->db->field_exists('created_at', $this->tbl_user)) $insertRow['created_at'] = $now;
                 if ($this->db->field_exists('updated_at', $this->tbl_user)) $insertRow['updated_at'] = $now;
@@ -451,7 +484,7 @@ class User_model extends CI_Model {
             if ($this->db->field_exists('nim', $this->tbl_user)) $insertData['nim'] = isset($data['nidn_nim']) ? $data['nidn_nim'] : '';
             if ($this->db->field_exists('password_changed', $this->tbl_user)) $insertData['password_changed'] = 0;
             if ($this->db->field_exists('email_status', $this->tbl_user)) $insertData['email_status'] = isset($data['email_status']) ? $data['email_status'] : 'belum';
-            if ($this->db->field_exists('is_active', $this->tbl_user)) $insertData['is_active'] = 1;
+            if ($this->db->field_exists('is_active', $this->tbl_user)) $insertData['is_active'] = 0;
             if ($this->db->field_exists('date_created', $this->tbl_user)) $insertData['date_created'] = time();
             if ($this->db->field_exists('created_at', $this->tbl_user)) $insertData['created_at'] = date('Y-m-d H:i:s');
             if ($this->db->field_exists('updated_at', $this->tbl_user)) $insertData['updated_at'] = date('Y-m-d H:i:s');
@@ -563,17 +596,44 @@ class User_model extends CI_Model {
      */
     public function update_email_status($id, $status)
     {
-        $data = [];
-        if ($this->db->field_exists('email_status', $this->tbl_user)) $data['email_status'] = $status;
-        if ($this->db->field_exists('updated_at', $this->tbl_user)) $data['updated_at'] = date('Y-m-d H:i:s');
-        if ($status === 'terkirim' && $this->db->field_exists('email_sent_at', $this->tbl_user)) {
-            $data['email_sent_at'] = date('Y-m-d H:i:s');
+        $user = $this->get_by_id($id);
+        if (!$user) return false;
+
+        $now = date('Y-m-d H:i:s');
+
+        // Log into log_approval_history table
+        if ($this->db->table_exists('log_approval_history')) {
+            $actorName = $this->session->userdata('name') ?? 'Administrator';
+            $actorRole = $this->session->userdata('role') ?? 'Admin';
+            $actorNipNim = $this->session->userdata('nim') ?? ($this->session->userdata('nip') ?? '-');
+
+            $this->db->insert('log_approval_history', [
+                'modul' => 'Import Email',
+                'ref_id' => (string)$user->email,
+                'target_name' => $user->name,
+                'action' => ($status === 'terkirim') ? 'Email Sent' : ($status === 'gagal' ? 'Email Failed' : 'Email Pending'),
+                'actor_id' => (int)$this->session->userdata('id'),
+                'actor_name' => $actorName,
+                'actor_role' => $actorRole,
+                'actor_nip_nim' => $actorNipNim,
+                'catatan' => json_encode(['status' => $status, 'email' => $user->email, 'sent_at' => $now]),
+                'created_at' => $now
+            ]);
         }
 
-        if (empty($data)) return true;
+        $data = [];
+        if ($this->db->field_exists('email_status', $this->tbl_user)) $data['email_status'] = $status;
+        if ($this->db->field_exists('updated_at', $this->tbl_user)) $data['updated_at'] = $now;
+        if ($status === 'terkirim' && $this->db->field_exists('email_sent_at', $this->tbl_user)) {
+            $data['email_sent_at'] = $now;
+        }
 
-        $this->db->where('id', $id);
-        return $this->db->update($this->tbl_user, $data);
+        if (!empty($data)) {
+            $this->db->where('id', (string)$id);
+            return $this->db->update($this->tbl_user, $data);
+        }
+
+        return true;
     }
 
     /**
@@ -595,6 +655,11 @@ class User_model extends CI_Model {
     public function reset_imported_users()
     {
         $this->db->where_not_in('id', ['admin-01', 'mhs-1301210001', 'dsn-wali-01', 'koor-ta-01', 'admin-laa-01']);
-        return $this->db->delete($this->tbl_user);
+        $res = $this->db->delete($this->tbl_user);
+
+        if ($this->db->table_exists('log_approval_history')) {
+            $this->db->where('modul', 'Import Email')->delete('log_approval_history');
+        }
+        return $res;
     }
 }

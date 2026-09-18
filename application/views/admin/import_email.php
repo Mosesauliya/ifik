@@ -726,32 +726,34 @@
     <!-- Auto Role-Aware Curved Animated Sidebar -->
     <?php $this->load->view('components/curved_sidebar'); ?>
 
-    <!-- Top Navigation Header -->
-    <header class="sticky top-0 z-40 glass-header px-4 sm:px-8 py-3.5 sm:py-4 mb-6 sm:mb-8">
-        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 pl-12 sm:pl-14">
-            <div class="flex items-center gap-4 w-full sm:w-auto">
-                <div class="header-title-block flex flex-col w-full">
-                    <div class="flex items-center gap-2">
-                        <h1 class="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-tight">Import Email & Dispatcher Token</h1>
+    <!-- Main Page Content Wrapper (Smoothly shifts when sidebar is open) -->
+    <div id="mainPageContent" class="page-wrapper-for-sidebar min-h-screen flex flex-col">
+        <!-- Top Navigation Header -->
+        <header class="sticky top-0 z-40 glass-header px-4 sm:px-8 py-3.5 sm:py-4 mb-6 sm:mb-8">
+            <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 pl-12 sm:pl-14 header-title-shift">
+                <div class="flex items-center gap-4 w-full sm:w-auto">
+                    <div class="header-title-block flex flex-col w-full">
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-tight">Import Email & Dispatcher Token</h1>
+                        </div>
+                        <p class="text-[11px] sm:text-xs text-slate-500 mt-1 leading-normal">Kelola impor Excel (XLSX), generate token 8 karakter, dan kirim email pemberitahuan.</p>
                     </div>
-                    <p class="text-[11px] sm:text-xs text-slate-500 mt-1 leading-normal">Kelola impor Excel (XLSX), generate token 8 karakter, dan kirim email pemberitahuan.</p>
+                </div>
+
+                <div class="header-buttons-block grid grid-cols-2 sm:flex items-center gap-2.5 w-full sm:w-auto mt-2 sm:mt-0">
+                    <button onclick="downloadSampleTemplate('xlsx')" class="btn-gradient-base btn-gradient-slate-light h-10 px-3 sm:px-4 text-xs font-bold flex items-center gap-2 justify-center">
+                        <i class="fa-solid fa-file-excel text-emerald-600 text-sm"></i>
+                        <span>Template XLSX</span>
+                    </button>
+                    <button onclick="openEmailTemplateModal()" class="btn-gradient-base btn-gradient-dark-obsidian h-10 px-3 sm:px-4 text-xs font-bold flex items-center gap-2 justify-center">
+                        <i class="fa-solid fa-sliders text-amber-400 text-sm"></i>
+                        <span>Template Email</span>
+                    </button>
                 </div>
             </div>
+        </header>
 
-            <div class="header-buttons-block grid grid-cols-2 sm:flex items-center gap-2.5 w-full sm:w-auto mt-2 sm:mt-0">
-                <button onclick="downloadSampleTemplate('xlsx')" class="btn-gradient-base btn-gradient-slate-light h-10 px-3 sm:px-4 text-xs font-bold flex items-center gap-2 justify-center">
-                    <i class="fa-solid fa-file-excel text-emerald-600 text-sm"></i>
-                    <span>Template XLSX</span>
-                </button>
-                <button onclick="openEmailTemplateModal()" class="btn-gradient-base btn-gradient-dark-obsidian h-10 px-3 sm:px-4 text-xs font-bold flex items-center gap-2 justify-center">
-                    <i class="fa-solid fa-sliders text-amber-400 text-sm"></i>
-                    <span>Template Email</span>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <main class="max-w-7xl mx-auto px-4 sm:px-6">
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 flex-1 w-full">
 
         <!-- Stats Overview Cards (Highlight Card Design & Mobile Snap Slider) -->
         <div class="relative mb-6 sm:mb-8">
@@ -1211,6 +1213,7 @@
         </div>
 
     </main>
+    </div>
 
     <!-- MODAL: Email Template Editor & Visual Preview -->
     <div id="modal-template" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">

@@ -408,3 +408,58 @@ body.curved-sidebar-open {
         padding-top: 10px;
     }
 }
+
+/* =========================================================
+   PAGE CONTENT SHIFT & RESPONSIVE LAYOUT ADJUSTMENT
+   ========================================================= */
+.page-wrapper-for-sidebar,
+.curved-page-container {
+    width: 100%;
+    min-width: 0;
+    transition: margin-left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+    box-sizing: border-box;
+}
+
+@media (min-width: 1024px) {
+    /* Default desktop behavior: sidebar is OPEN by default and content is shifted right */
+    .curved-sidebar-panel {
+        transform: translateX(0);
+    }
+    
+    .page-wrapper-for-sidebar,
+    .curved-page-container {
+        margin-left: 270px;
+        width: calc(100% - 270px);
+    }
+
+    /* When sidebar is explicitly collapsed by user on desktop */
+    body.curved-sidebar-desktop-collapsed .curved-sidebar-panel {
+        transform: translateX(calc(-100% - 90px)) !important;
+    }
+
+    body.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar,
+    body.curved-sidebar-desktop-collapsed .curved-page-container {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    /* Header title smooth glide when collapsed vs open */
+    .page-wrapper-for-sidebar header .header-title-shift,
+    .curved-page-container header .header-title-shift {
+        padding-left: 0;
+        transition: padding-left 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+    }
+
+    body.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar header .header-title-shift,
+    body.curved-sidebar-desktop-collapsed .curved-page-container header .header-title-shift {
+        padding-left: 3.25rem;
+    }
+}
+
+@media (max-width: 1023.98px) {
+    .page-wrapper-for-sidebar,
+    .curved-page-container {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+}

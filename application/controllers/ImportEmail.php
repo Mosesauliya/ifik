@@ -447,6 +447,14 @@ class ImportEmail extends CI_Controller {
                 $tokenStatus = 'ready';
             }
 
+            $dateImported = '-';
+            if (!empty($u['date_created'])) {
+                $ts = is_numeric($u['date_created']) ? (int)$u['date_created'] : strtotime($u['date_created']);
+                $dateImported = date('Y-m-d H:i', $ts);
+            } elseif (!empty($u['created_at'])) {
+                $dateImported = date('Y-m-d H:i', strtotime($u['created_at']));
+            }
+
             $formatted[] = [
                 'id' => (string)$u['id'],
                 'name' => $u['name'],
@@ -459,9 +467,9 @@ class ImportEmail extends CI_Controller {
                 'token_status' => $tokenStatus,
                 'password_changed' => $isPasswordChanged,
                 'email_status' => !empty($u['email_status']) ? $u['email_status'] : 'belum',
-                'email_sent_at' => !empty($u['email_sent_at']) ? date('Y-m-d H:i', strtotime($u['email_sent_at'])) : '-',
-                'date_imported' => !empty($u['created_at']) ? date('Y-m-d H:i', strtotime($u['created_at'])) : date('Y-m-d H:i'),
-                'created_at' => !empty($u['created_at']) ? date('Y-m-d H:i', strtotime($u['created_at'])) : date('Y-m-d H:i')
+                'email_sent_at' => (!empty($u['email_sent_at']) && $u['email_sent_at'] !== '-') ? date('Y-m-d H:i', strtotime($u['email_sent_at'])) : '-',
+                'date_imported' => $dateImported,
+                'created_at' => $dateImported
             ];
         }
 
