@@ -31,7 +31,11 @@ class User_model extends CI_Model {
             $user->status = (!empty($user->is_active) && $user->is_active == 1) ? 'active' : 'inactive';
         }
         if (!isset($user->password_changed)) {
-            $user->password_changed = (!empty($user->is_active) && $user->is_active == 1) ? 1 : 0;
+            if (!empty($user->token)) {
+                $user->password_changed = 0;
+            } else {
+                $user->password_changed = (!empty($user->is_active) && $user->is_active == 1) ? 1 : 0;
+            }
         } else {
             $user->password_changed = (int)$user->password_changed;
         }
@@ -243,7 +247,11 @@ class User_model extends CI_Model {
                 $row['token'] = $row['token_hash'];
             }
             $isActive = isset($row['is_active']) ? (int)$row['is_active'] : 0;
-            $row['password_changed'] = ($isActive === 1) ? 1 : 0;
+            if (!empty($row['token'])) {
+                $row['password_changed'] = 0;
+            } else {
+                $row['password_changed'] = ($isActive === 1) ? 1 : 0;
+            }
             if (empty($row['role_display_name']) && !empty($row['role_slug'])) {
                 $row['role_display_name'] = $row['role_slug'];
             }
