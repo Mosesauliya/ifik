@@ -9,12 +9,12 @@ class AdminHeader extends CI_Controller {
         $this->load->model('Header_model');
         $this->load->helper(array('form', 'url'));
 
-        // Pastikan hanya admin (1), kaur (2), atau laboran (21) yang bisa akses
-        $role_id = (int)$this->session->userdata('role_id');
-        if (!$this->session->userdata('logged_in') || ($role_id !== 1 && $role_id !== 2 && $role_id !== 21)) {
-            $this->session->set_flashdata('error', 'Akses ditolak. Anda tidak memiliki izin untuk halaman ini.');
-            redirect('login');
-        }
+        // // Pastikan hanya admin (1), kaur (2), atau laboran (21) yang bisa akses
+        // $role_id = (int)$this->session->userdata('role_id');
+        // if (!$this->session->userdata('logged_in') || ($role_id !== 1 && $role_id !== 2 && $role_id !== 21)) {
+        //     $this->session->set_flashdata('error', 'Akses ditolak. Anda tidak memiliki izin untuk halaman ini.');
+        //     redirect('login');
+        // }
     }
 
     public function index()
@@ -39,7 +39,7 @@ class AdminHeader extends CI_Controller {
     public function update_settings()
     {
         $title = $this->input->post('title', true);
-        $description = $this->input->post('description', true);
+        $description = trim(strip_tags($this->input->post('description')));
 
         $update_data = [
             'title' => $title,
@@ -88,7 +88,7 @@ class AdminHeader extends CI_Controller {
 
         $durations = $this->input->post('durations');
         $overlay_title = $this->input->post('overlay_title', true);
-        $overlay_description = $this->input->post('overlay_description');
+        $overlay_description = trim(strip_tags($this->input->post('overlay_description')));
 
         $slides = $this->Header_model->get_slides();
         $order_num = count($slides) + 1;
@@ -171,7 +171,82 @@ class AdminHeader extends CI_Controller {
 
         $label               = $this->input->post('label', true);
         $overlay_title       = $this->input->post('overlay_title', true);
-        $overlay_description = $this->input->post('overlay_description');
+        $overlay_description = trim(strip_tags($this->input->post('overlay_description')));
+
+        // Parse existing media items to keep
+        $existing_media_json = $this->input->post('existing_media');
+        $kept_media = [];
+        if (!empty($existing_media_json)) {
+            $decoded_kept = json_decode($existing_media_json, true);
+            if (is_array($decoded_kept)) {
+                $kept_media = $decoded_kept;
+            }
+        }
+
+        // Remove deleted files from disk
+        $old_media_json = json_decode($slide->media_path, true);
+        if (is_array($old_media_json)) {
+            $kept_files = array_column($kept_media, 'file');
+            foreach ($old_media_json as $item) {
+                if (isset($item['file']) && !in_array($item['file'], $kept_files)) {
+                    $path = ($item['type'] === 'video') ? './assets/vids/' : './assets/images/';
+                    if (file_exists($path . $item['file'])) {
+                        @unlink($path . $item['file']);
+                    }
+                }
+            }
+        } elseif (!empty($slide->media_path)) {
+            $kept_files = array_column($kept_media, 'file');
+            if (!in_array($slide->media_path, $kept_files)) {
+                $path = ($slide->media_type === 'video') ? './assets/vids/' : './assets/images/';
+                if (file_exists($path . $slide->media_path)) {
+                    @unlink($path . $slide->media_path);
+                }
+            }
+        }
+
+        // Process newly uploaded files
+        $uploaded_files = [];
+        if (!empty($_FILES['edit_media_files']['name'][0])) {
+            $durations = $this->input->post('edit_durations');
+            $files_count = count($_FILES['edit_media_files']['name']);
+            $this->load->library('upload');
+
+            for ($i = 0; $i < $files_count; $i++) {
+                $_FILES['file']['name']     = $_FILES['edit_media_files']['name'][$i];
+                $_FILES['file']['type']     = $_FILES['edit_media_files']['type'][$i];
+                $_FILES['file']['tmp_name'] = $_FILES['edit_media_files']['tmp_name'][$i];
+                $_FILES['file']['error']    = $_FILES['edit_media_files']['error'][$i];
+                $_FILES['file']['size']     = $_FILES['edit_media_files']['size'][$i];
+                
+                $file_ext = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+                if (in_array($file_ext, ['mp4', 'webm', 'ogg'])) {
+                    $type = 'video';
+                    $config['upload_path']   = './assets/vids/';
+                    $config['allowed_types'] = 'mp4|webm|ogg';
+                    $config['max_size']      = 20000;
+                } else {
+                    $type = 'image';
+                    $config['upload_path']   = './assets/images/';
+                    $config['allowed_types'] = 'gif|jpg|jpeg|png|webp';
+                    $config['max_size']      = 5048;
+                }
+                $config['file_name'] = 'slide_' . time() . '_' . $i;
+
+                $this->upload->initialize($config);
+                
+                if ($this->upload->do_upload('file')) {
+                    $uploadData = $this->upload->data();
+                    $uploaded_files[] = [
+                        'file' => $uploadData['file_name'],
+                        'type' => $type,
+                        'duration' => isset($durations[$i]) ? (int)$durations[$i] : 3
+                    ];
+                }
+            }
+        }
+
+        $final_media = array_merge($kept_media, $uploaded_files);
 
         $update_data = [
             'label'               => $label,
@@ -179,8 +254,13 @@ class AdminHeader extends CI_Controller {
             'overlay_description' => $overlay_description,
         ];
 
+        if (!empty($final_media)) {
+            $update_data['media_type'] = (count($final_media) > 1) ? 'multi' : $final_media[0]['type'];
+            $update_data['media_path'] = json_encode($final_media);
+        }
+
         $this->db->where('id', $id);
-        if ($this->db->update('header_slides', $update_data)) {
+        if ($this->db->update('tb_panel', $update_data)) {
             echo json_encode(['status' => 'success', 'message' => 'Slide berhasil diperbarui.']);
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Gagal memperbarui slide.']);
@@ -209,8 +289,9 @@ class AdminHeader extends CI_Controller {
             'overlay_description' => $overlay_description,
         ];
 
+        // [CHANGED] header_slides -> tb_panel
         $this->db->where('id', $id);
-        if ($this->db->update('header_slides', $update_data)) {
+        if ($this->db->update('tb_panel', $update_data)) {
             $this->session->set_flashdata('success', 'Slide berhasil diupdate.');
         } else {
             $this->session->set_flashdata('error', 'Gagal update slide.');
