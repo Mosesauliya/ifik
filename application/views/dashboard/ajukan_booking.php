@@ -32,13 +32,44 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             min-height: 100vh;
-            padding: 40px 20px;
             background-image:
                 radial-gradient(at 0% 0%, rgba(234, 88, 12, 0.08) 0px, transparent 50%),
                 radial-gradient(at 100% 100%, rgba(234, 88, 12, 0.08) 0px, transparent 50%);
             display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        .page-wrapper-for-sidebar {
+            width: 100%;
+            min-width: 0;
+            min-height: 100vh;
+            display: flex;
             justify-content: center;
             align-items: flex-start;
+            padding: 40px 20px;
+            transition: margin-left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+            box-sizing: border-box;
+        }
+
+        @media (min-width: 1024px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 270px;
+                width: calc(100% - 270px);
+            }
+
+            body.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 1023.98px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding-top: 56px;
+            }
         }
 
         .booking-page-container {
@@ -307,8 +338,10 @@
     <!-- Auto Role-Aware Curved Animated Sidebar -->
     <?php $this->load->view('components/curved_sidebar'); ?>
 
-    <div class="booking-page-container">
-        <div class="page-topbar">
+    <!-- Main Page Content Wrapper (Smoothly shifts when sidebar is open) -->
+    <div id="mainPageContent" class="page-wrapper-for-sidebar">
+        <div class="booking-page-container">
+            <div class="page-topbar">
             <div>
                 <h1 class="page-title">Ajukan Peminjaman Ruangan</h1>
                 <p class="page-subtitle">Silakan lengkapi form berikut untuk mengajukan peminjaman ruangan.</p>
@@ -471,7 +504,8 @@
                 </button>
             </div>
         </form>
-    </div>
+        </div> <!-- /booking-page-container -->
+    </div> <!-- /mainPageContent -->
 
     <!-- Timepicker Core Logic -->
     <script src="<?= base_url('assets/js/timepicker.js?v=' . filemtime(FCPATH . 'assets/js/timepicker.js')) ?>"></script>

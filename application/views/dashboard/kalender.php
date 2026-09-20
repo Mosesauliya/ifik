@@ -1847,14 +1847,7 @@
                 justify-content: center;
             }
         }
-            /* ===== CURVED ANIMATED SIDEBAR & CHIPS STYLING ===== */
-        .curved-sidebar-toggle-btn {
-            position: relative !important;
-            top: auto !important;
-            left: auto !important;
-            margin-right: 4px;
-            flex-shrink: 0;
-        }
+        /* ===== CURVED ANIMATED SIDEBAR & CHIPS STYLING ===== */
         .sb-chip {
             padding: 4px 8px;
             border-radius: 999px;
@@ -2090,12 +2083,68 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
+        /* =========================================================
+           PAGE CONTENT SHIFT & RESPONSIVE LAYOUT (KALENDER VIEW)
+           ========================================================= */
+        .page-wrapper-for-sidebar {
+            width: 100%;
+            min-width: 0;
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: margin-left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+            box-sizing: border-box;
+        }
+
+        .gcal-header-left {
+            padding-left: 0;
+            transition: padding-left 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+        }
+
+        @media (min-width: 1024px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 270px;
+                width: calc(100% - 270px);
+            }
+
+            body.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            body.curved-sidebar-desktop-collapsed .gcal-header-left {
+                padding-left: 3.25rem !important;
+            }
+        }
+
+        @media (max-width: 1023.98px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 0 !important;
+                width: 100% !important;
+            }
+
+            .gcal-header-left {
+                padding-left: 3.25rem !important;
+            }
+        }
     </style>
 </head>
 <body>
     <!-- =========================================================
          CURVED ANIMATED SIDEBAR (CONTROL & NAVIGATION CENTER)
          ========================================================= -->
+    <!-- Hamburger Trigger Button (Floating Fixed Top-Left) -->
+    <button type="button" id="curvedSidebarToggle" class="curved-sidebar-toggle-btn is-active" aria-expanded="true" aria-label="Toggle Sidebar Menu" title="Buka Menu Navigasi (Esc)">
+        <div class="curved-sidebar-burger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </button>
+
     <!-- Backdrop Blur Overlay -->
     <div id="curvedSidebarBackdrop" class="curved-sidebar-backdrop"></div>
 
@@ -2363,12 +2412,14 @@
         <div class="curved-sidebar-inner">
             
             <div>
-                <!-- 1. Header Control with Close (X) Button -->
-                <div class="curved-sidebar-header" style="justify-content: flex-start; gap: 8px; margin-bottom: 8px;">
-                    <button type="button" class="curved-sidebar-close-btn" id="curvedSidebarCloseBtn" aria-label="Tutup Sidebar" title="Tutup Sidebar (Esc)">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
-                    <p style="margin: 0; font-size: 0.82rem;"><i class="fa-solid fa-sliders" style="color: #ea580c;"></i> Kontrol & Navigasi</p>
+                <!-- 1. Header Control with Role Badge -->
+                <div class="curved-sidebar-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <p style="margin: 0; font-size: 0.82rem; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-sliders" style="color: #ea580c;"></i> Kontrol & Navigasi
+                    </p>
+                    <div class="curved-header-role-badge">
+                        <span><?= htmlspecialchars($activeRoleBadge); ?></span>
+                    </div>
                 </div>
 
                 <!-- Tombol Kembali Cepat ke Dashboard / Portal Asal -->
@@ -2641,218 +2692,185 @@
         </svg>
     </aside>
 
-    <!-- Header Kalender Full Page (Single Row Height 70px) -->
-    <div class="gcal-page-header">
-        <div class="gcal-header-left" style="display: flex; align-items: center; gap: 8px; position: relative;">
-            <!-- Curved Sidebar Burger Toggle Button -->
-            <button type="button" id="curvedSidebarToggle" class="curved-sidebar-toggle-btn is-active" aria-expanded="true" aria-label="Toggle Sidebar Menu" title="Buka Menu Navigasi & Kontrol">
-                <div class="curved-sidebar-burger">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-            </button>
-            <!-- Pane 1: Calendar Navigation (Dipindahkan ke Curved Sidebar sesuai permintaan pembimbing) -->
-            <!--
-            <div id="headerLeftCalendarNav" class="header-left-pane">
-                <button class="gcal-btn-today" onclick="goToToday()">Today</button>
-                <div class="gcal-nav-arrows" style="display: flex; gap: 4px;">
-                    <button onclick="prevWeek()"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
-                    <button onclick="nextWeek()"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
-                </div>
-
-                <div class="month-year-picker-wrap" id="monthYearPickerWrap" style="position: relative;">
-                    <button type="button" class="month-year-btn" id="monthYearBtn" onclick="toggleMonthYearPicker(event)" title="Klik untuk memilih bulan & tahun" style="padding: 4px 8px;">
-                        <span id="gcalMonthTitle" style="font-size: 0.96rem; font-weight: 800; color: #0f172a; white-space: nowrap;">-</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </button>
-
-                    <div class="month-year-popover" id="monthYearPopover">
-                        <div class="my-year-nav">
-                            <button type="button" onclick="changePickerYear(-1, event)" title="Tahun Sebelumnya">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                            </button>
-                            <span id="pickerYearDisplay" style="font-size: 1.05rem; font-weight: 800; color: #0f172a;">2026</span>
-                            <button type="button" onclick="changePickerYear(1, event)" title="Tahun Selanjutnya">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                            </button>
-                        </div>
-
-                        <div class="my-months-grid" id="pickerMonthsGrid">
-                        </div>
-                    </div>
+    <!-- Main Page Content Wrapper (Smoothly shifts when sidebar is open) -->
+    <div id="mainPageContent" class="page-wrapper-for-sidebar min-h-screen flex flex-col">
+        <!-- Header Kalender Full Page (Single Row Height 70px) -->
+        <div class="gcal-page-header">
+            <div class="gcal-header-left">
+                <!-- Pane 2: Table Title (Active on Table Mode) -->
+                <div id="headerLeftTableTitle" class="header-left-pane" style="display: none;">
+                    <span style="font-size: 1.05rem; font-weight: 800; color: #0f172a; white-space: nowrap; padding: 4px 6px;">Daftar Peminjaman</span>
                 </div>
             </div>
-            -->
 
-            <!-- Pane 2: Table Title (Active on Table Mode) -->
-            <div id="headerLeftTableTitle" class="header-left-pane" style="display: none;">
-                <span style="font-size: 1.05rem; font-weight: 800; color: #0f172a; white-space: nowrap; padding: 4px 6px;">Daftar Peminjaman</span>
-            </div>
-        </div>
-
-        <!-- UNIFIED SEARCH PILL & SEPARATE STANDALONE + BUTTON IN HEADER (CENTERED) -->
-        <div class="gcal-header-center">
-            <div class="search-filter-container">
-            
-            <!-- Main Row 1 Pill (Kategori + Key Text Search / Custom Status Select) -->
-            <div class="unified-search-pill" id="unifiedSearchPill">
+            <!-- UNIFIED SEARCH PILL & SEPARATE STANDALONE + BUTTON IN HEADER (CENTERED) -->
+            <div class="gcal-header-center">
+                <div class="search-filter-container">
                 
-                <!-- CUSTOM STYLED CATEGORY DROPDOWN -->
-                <div class="custom-cat-dropdown" id="mainCatWrap">
-                    <button type="button" class="custom-cat-trigger" onclick="toggleCatDropdown('main', event)">
-                        <span id="mainCatLabel">Key / Kata Kunci</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </button>
-
-                    <input type="hidden" id="mainCategorySelect" class="extra-cat-select" value="keyword">
-
-                    <div class="custom-cat-menu" id="mainCatMenu">
-                        <div class="cat-option active" data-val="keyword" onclick="selectCatOption('main', 'keyword', 'Key / Kata Kunci', '🔑')">
-                            <span>🔑</span> Key / Kata Kunci
-                        </div>
-                        <div class="cat-option" data-val="kategori" onclick="selectCatOption('main', 'kategori', 'Kategori Ruangan', '📁')">
-                            <span>📁</span> Kategori Ruangan
-                        </div>
-                        <div class="cat-option" data-val="ruangan" onclick="selectCatOption('main', 'ruangan', 'Pilih Ruangan', '🏢')">
-                            <span>🏢</span> Pilih Ruangan
-                        </div>
-                        <div class="cat-option" data-val="status" onclick="selectCatOption('main', 'status', 'Status Peminjaman', '⚡')">
-                            <span>⚡</span> Status Peminjaman
-                        </div>
-                        <div class="cat-option" data-val="tanggal" onclick="selectCatOption('main', 'tanggal', 'Lompat Tanggal', '📅')">
-                            <span>📅</span> Lompat Tanggal
-                        </div>
-                    </div>
-                </div>
-
-                <div class="unified-divider"></div>
-
-                <!-- Text Search Container -->
-                <div style="position: relative; flex: 1; display: flex; align-items: center;" id="mainValueContainer">
-                    <input type="text" id="mainSearchInput" placeholder="Ketik kata kunci lalu tekan Enter atau klik Cari..." 
-                           oninput="handleUnifiedMultiSearch(this)" 
-                           onkeydown="if(event.key === 'Enter') { triggerSearchSubmit(); }"
-                           onfocus="onMainInputFocused()"
-                           autocomplete="off" class="unified-input-key main-val-field">
-                    <button id="clearMainSearchBtn" onclick="clearMainSearch()" style="display: none; position: absolute; right: 78px; background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 1.1rem; line-height: 1;" title="Hapus pencarian">&times;</button>
-                    <button type="button" class="btn-submit-search-pill" onclick="triggerSearchSubmit()" title="Cari (Enter)">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        Cari
-                    </button>
-                </div>
-
-                <!-- Custom Styled Status Selector Dropdown (Shown when Status Peminjaman is selected) -->
-                <div class="custom-status-dropdown" id="mainStatusWrap" style="display: none; flex: 1;">
-                    <button type="button" class="custom-status-trigger" onclick="toggleStatusDropdown('main', event)">
-                        <span id="mainStatusLabel" style="display: flex; align-items: center; gap: 6px;">
-                            <span class="status-dot" style="background: #94a3b8;"></span> Semua Status
-                        </span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </button>
+                <!-- Main Row 1 Pill (Kategori + Key Text Search / Custom Status Select) -->
+                <div class="unified-search-pill" id="unifiedSearchPill">
                     
-                    <input type="hidden" id="mainStatusValue" class="extra-input-key main-val-field" value="">
+                    <!-- CUSTOM STYLED CATEGORY DROPDOWN -->
+                    <div class="custom-cat-dropdown" id="mainCatWrap">
+                        <button type="button" class="custom-cat-trigger" onclick="toggleCatDropdown('main', event)">
+                            <span id="mainCatLabel">Key / Kata Kunci</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
 
-                    <div class="custom-status-menu" id="mainStatusMenu">
-                        <div class="status-option active" data-val="" onclick="selectStatusOption('main', '', 'Semua Status', '#94a3b8')">
-                            <span class="status-dot" style="background: #94a3b8;"></span> Semua Status
+                        <input type="hidden" id="mainCategorySelect" class="extra-cat-select" value="keyword">
+
+                        <div class="custom-cat-menu" id="mainCatMenu">
+                            <div class="cat-option active" data-val="keyword" onclick="selectCatOption('main', 'keyword', 'Key / Kata Kunci', '🔑')">
+                                <span>🔑</span> Key / Kata Kunci
+                            </div>
+                            <div class="cat-option" data-val="kategori" onclick="selectCatOption('main', 'kategori', 'Kategori Ruangan', '📁')">
+                                <span>📁</span> Kategori Ruangan
+                            </div>
+                            <div class="cat-option" data-val="ruangan" onclick="selectCatOption('main', 'ruangan', 'Pilih Ruangan', '🏢')">
+                                <span>🏢</span> Pilih Ruangan
+                            </div>
+                            <div class="cat-option" data-val="status" onclick="selectCatOption('main', 'status', 'Status Peminjaman', '⚡')">
+                                <span>⚡</span> Status Peminjaman
+                            </div>
+                            <div class="cat-option" data-val="tanggal" onclick="selectCatOption('main', 'tanggal', 'Lompat Tanggal', '📅')">
+                                <span>📅</span> Lompat Tanggal
+                            </div>
                         </div>
-                        <div class="status-option" data-val="pending" onclick="selectStatusOption('main', 'pending', 'Menunggu Persetujuan', '#f59e0b')">
-                            <span class="status-dot" style="background: #f59e0b;"></span> Menunggu Persetujuan
+                    </div>
+
+                    <div class="unified-divider"></div>
+
+                    <!-- Text Search Container -->
+                    <div style="position: relative; flex: 1; display: flex; align-items: center;" id="mainValueContainer">
+                        <input type="text" id="mainSearchInput" placeholder="Ketik kata kunci lalu tekan Enter atau klik Cari..." 
+                               oninput="handleUnifiedMultiSearch(this)" 
+                               onkeydown="if(event.key === 'Enter') { triggerSearchSubmit(); }"
+                               onfocus="onMainInputFocused()"
+                               autocomplete="off" class="unified-input-key main-val-field">
+                        <button id="clearMainSearchBtn" onclick="clearMainSearch()" style="display: none; position: absolute; right: 78px; background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 1.1rem; line-height: 1;" title="Hapus pencarian">&times;</button>
+                        <button type="button" class="btn-submit-search-pill" onclick="triggerSearchSubmit()" title="Cari (Enter)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            Cari
+                        </button>
+                    </div>
+
+                    <!-- Custom Styled Status Selector Dropdown (Shown when Status Peminjaman is selected) -->
+                    <div class="custom-status-dropdown" id="mainStatusWrap" style="display: none; flex: 1; align-items: center; gap: 4px;">
+                        <button type="button" class="custom-status-trigger" onclick="toggleStatusDropdown('main', event)" style="flex: 1;">
+                            <span id="mainStatusLabel" style="display: flex; align-items: center; gap: 6px;">
+                                <span class="status-dot" style="background: #94a3b8;"></span> Semua Status
+                            </span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                        
+                        <input type="hidden" id="mainStatusValue" class="extra-input-key main-val-field" value="">
+
+                        <button type="button" class="btn-submit-search-pill" onclick="triggerSearchSubmit()" title="Cari (Enter)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            Cari
+                        </button>
+
+                        <div class="custom-status-menu" id="mainStatusMenu">
+                            <div class="status-option active" data-val="" onclick="selectStatusOption('main', '', 'Semua Status', '#94a3b8')">
+                                <span class="status-dot" style="background: #94a3b8;"></span> Semua Status
+                            </div>
+                            <div class="status-option" data-val="pending" onclick="selectStatusOption('main', 'pending', 'Menunggu Persetujuan', '#f59e0b')">
+                                <span class="status-dot" style="background: #f59e0b;"></span> Menunggu Persetujuan
+                            </div>
+                            <div class="status-option" data-val="disetujui" onclick="selectStatusOption('main', 'disetujui', 'Disetujui', '#10b981')">
+                                <span class="status-dot" style="background: #10b981;"></span> Disetujui
+                            </div>
+                            <div class="status-option" data-val="ditolak" onclick="selectStatusOption('main', 'ditolak', 'Ditolak', '#ef4444')">
+                                <span class="status-dot" style="background: #ef4444;"></span> Ditolak
+                            </div>
+                            <div class="status-option" data-val="selesai" onclick="selectStatusOption('main', 'selesai', 'Selesai', '#94a3b8')">
+                                <span class="status-dot" style="background: #94a3b8;"></span> Selesai
+                            </div>
                         </div>
-                        <div class="status-option" data-val="disetujui" onclick="selectStatusOption('main', 'disetujui', 'Disetujui', '#10b981')">
-                            <span class="status-dot" style="background: #10b981;"></span> Disetujui
-                        </div>
-                        <div class="status-option" data-val="ditolak" onclick="selectStatusOption('main', 'ditolak', 'Ditolak', '#ef4444')">
-                            <span class="status-dot" style="background: #ef4444;"></span> Ditolak
-                        </div>
-                        <div class="status-option" data-val="selesai" onclick="selectStatusOption('main', 'selesai', 'Selesai', '#94a3b8')">
-                            <span class="status-dot" style="background: #94a3b8;"></span> Selesai
+                    </div>
+
+                </div>
+
+                <!-- STANDALONE SEPARATE + 1/4 BUTTON -->
+                <button type="button" class="btn-standalone-add" id="standaloneAddBtn" onclick="toggleOrAddFilterRow(event)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <span id="filterCountBadge">1/4</span>
+                </button>
+
+                <!-- Clean Dedicated Autocomplete Dropdown List (ONLY Suggestions) -->
+                <div id="mainAutocompleteList"></div>
+
+                <!-- Extra Filter Rows Card (Contains Row 2, 3, 4) -->
+                <div id="extraRowsCard">
+                    <div id="additionalFilterRowsContainer">
+                        <!-- Additional rows appended via JS -->
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 10px; margin-top: 8px; gap: 8px;">
+                        <button type="button" id="cardAddRowBtn" onclick="addExtraFilterRow()" style="background: #fff7ed; border: 1.5px solid #ffedd5; color: #ea580c; border-radius: 8px; font-weight: 700; font-size: 0.76rem; padding: 6px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s ease;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            Tambah Baris
+                        </button>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button type="button" onclick="resetHeaderMultiSearch()" style="background: none; border: none; color: #dc2626; font-weight: 700; font-size: 0.76rem; cursor: pointer; padding: 6px 8px;">
+                                Reset
+                            </button>
+                            <button type="button" onclick="triggerSearchSubmit()" style="background: #ea580c; border: none; color: #ffffff; border-radius: 8px; font-weight: 700; font-size: 0.78rem; padding: 6px 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(234, 88, 12, 0.25); transition: all 0.15s ease;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                Cari Filter
+                            </button>
                         </div>
                     </div>
                 </div>
 
-            </div>
+            </div> <!-- end search-filter-container -->
+            </div> <!-- end gcal-header-center -->
 
-            <!-- STANDALONE SEPARATE + 1/4 BUTTON -->
-            <button type="button" class="btn-standalone-add" id="standaloneAddBtn" onclick="toggleOrAddFilterRow(event)">
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                <span id="filterCountBadge">1/4</span>
-            </button>
+            <!-- Right Placeholder to balance center alignment -->
+            <div class="gcal-header-right"></div>
+        </div>
 
-            <!-- Clean Dedicated Autocomplete Dropdown List (ONLY Suggestions) -->
-            <div id="mainAutocompleteList"></div>
-
-            <!-- Extra Filter Rows Card (Contains Row 2, 3, 4) -->
-            <div id="extraRowsCard">
-                <div id="additionalFilterRowsContainer">
-                    <!-- Additional rows appended via JS -->
+        <!-- Container Utama Grid Kalender (Full Height) -->
+        <div class="gcal-body" id="calendarViewContainer">
+            <div class="gcal-days-header-wrapper">
+                <div class="gcal-days-header" id="gcalDaysHeader">
+                    <!-- Digenerate via JS -->
                 </div>
-                
-                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 10px; margin-top: 8px; gap: 8px;">
-                    <button type="button" id="cardAddRowBtn" onclick="addExtraFilterRow()" style="background: #fff7ed; border: 1.5px solid #ffedd5; color: #ea580c; border-radius: 8px; font-weight: 700; font-size: 0.76rem; padding: 6px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s ease;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        Tambah Baris
-                    </button>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <button type="button" onclick="resetHeaderMultiSearch()" style="background: none; border: none; color: #dc2626; font-weight: 700; font-size: 0.76rem; cursor: pointer; padding: 6px 8px;">
-                            Reset
-                        </button>
-                        <button type="button" onclick="triggerSearchSubmit()" style="background: #ea580c; border: none; color: #ffffff; border-radius: 8px; font-weight: 700; font-size: 0.78rem; padding: 6px 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(234, 88, 12, 0.25); transition: all 0.15s ease;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                            Cari Filter
-                        </button>
+            </div>
+            <div class="gcal-grid-scroll" id="gcalGridScroll">
+                <div class="gcal-grid" id="gcalGrid">
+                    <!-- Digenerate via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Container Utama Tampilan Tabel (Fullscreen Modern) -->
+        <div class="table-view-container" id="tableViewContainer" style="display: none;">
+            <div class="table-view-inner">
+                <!-- Table Column Header -->
+                <div class="table-column-header">
+                    <div class="th-col th-room">Ruangan</div>
+                    <div class="th-col th-user-time">Peminjam & Waktu</div>
+                    <div class="th-col th-date">Tanggal</div>
+                    <div class="th-col th-desc">Keterangan</div>
+                    <div class="th-col th-status">Status</div>
+                </div>
+
+                <!-- Table Cards List (Scrollable) -->
+                <div class="table-cards-list" id="tableCardsList">
+                    <!-- Rendered dynamically via JS -->
+                </div>
+
+                <!-- Table Pagination -->
+                <div class="table-pagination-wrap" id="tablePaginationWrap">
+                    <span id="tablePaginationInfo" style="font-size: 0.82rem; font-weight: 600; color: #64748b;">Menampilkan 1-20 data</span>
+                    <div class="pagination-buttons" id="tablePaginationBtns">
+                        <!-- Pagination buttons rendered via JS -->
                     </div>
                 </div>
             </div>
-
-        </div> <!-- end search-filter-container -->
-        </div> <!-- end gcal-header-center -->
-
-        <!-- Right Placeholder to balance center alignment -->
-        <div class="gcal-header-right"></div>
-    </div>
-
-    <!-- Container Utama Grid Kalender (Full Height) -->
-    <div class="gcal-body" id="calendarViewContainer">
-        <div class="gcal-days-header-wrapper">
-            <div class="gcal-days-header" id="gcalDaysHeader">
-                <!-- Digenerate via JS -->
-            </div>
         </div>
-        <div class="gcal-grid-scroll" id="gcalGridScroll">
-            <div class="gcal-grid" id="gcalGrid">
-                <!-- Digenerate via JS -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Container Utama Tampilan Tabel (Fullscreen Modern) -->
-    <div class="table-view-container" id="tableViewContainer" style="display: none;">
-        <div class="table-view-inner">
-            <!-- Table Column Header -->
-            <div class="table-column-header">
-                <div class="th-col th-room">Ruangan</div>
-                <div class="th-col th-user-time">Peminjam & Waktu</div>
-                <div class="th-col th-date">Tanggal</div>
-                <div class="th-col th-desc">Keterangan / Keperluan</div>
-                <div class="th-col th-status">Status</div>
-            </div>
-
-            <!-- Table Cards List (Scrollable) -->
-            <div class="table-cards-list" id="tableCardsList">
-                <!-- Rendered dynamically via JS -->
-            </div>
-
-            <!-- Table Pagination -->
-            <div class="table-pagination-wrap" id="tablePaginationWrap">
-                <span id="tablePaginationInfo" style="font-size: 0.82rem; font-weight: 600; color: #64748b;">Menampilkan 1-20 data</span>
-                <div class="pagination-buttons" id="tablePaginationBtns">
-                    <!-- Pagination buttons rendered via JS -->
-                </div>
-            </div>
-        </div>
-    </div>
+    </div> <!-- end #mainPageContent -->
 
     <!-- Modal Detail & Approval Peminjaman (Master-Detail with Daily Search) -->
     <div class="modal-overlay" id="detailBookingModal">
@@ -3191,7 +3209,7 @@
 
             if (val === 'status') {
                 if (valContainer) valContainer.style.display = 'none';
-                if (statusWrap) statusWrap.style.display = 'block';
+                if (statusWrap) statusWrap.style.display = 'flex';
             } else {
                 if (valContainer) valContainer.style.display = 'flex';
                 if (statusWrap) statusWrap.style.display = 'none';
