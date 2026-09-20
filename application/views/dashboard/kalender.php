@@ -2750,8 +2750,8 @@
                     </div>
 
                     <!-- Custom Styled Status Selector Dropdown (Shown when Status Peminjaman is selected) -->
-                    <div class="custom-status-dropdown" id="mainStatusWrap" style="display: none; flex: 1;">
-                        <button type="button" class="custom-status-trigger" onclick="toggleStatusDropdown('main', event)">
+                    <div class="custom-status-dropdown" id="mainStatusWrap" style="display: none; flex: 1; align-items: center; gap: 4px;">
+                        <button type="button" class="custom-status-trigger" onclick="toggleStatusDropdown('main', event)" style="flex: 1;">
                             <span id="mainStatusLabel" style="display: flex; align-items: center; gap: 6px;">
                                 <span class="status-dot" style="background: #94a3b8;"></span> Semua Status
                             </span>
@@ -2759,6 +2759,11 @@
                         </button>
                         
                         <input type="hidden" id="mainStatusValue" class="extra-input-key main-val-field" value="">
+
+                        <button type="button" class="btn-submit-search-pill" onclick="triggerSearchSubmit()" title="Cari (Enter)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            Cari
+                        </button>
 
                         <div class="custom-status-menu" id="mainStatusMenu">
                             <div class="status-option active" data-val="" onclick="selectStatusOption('main', '', 'Semua Status', '#94a3b8')">
@@ -3199,7 +3204,7 @@
 
             if (val === 'status') {
                 if (valContainer) valContainer.style.display = 'none';
-                if (statusWrap) statusWrap.style.display = 'block';
+                if (statusWrap) statusWrap.style.display = 'flex';
             } else {
                 if (valContainer) valContainer.style.display = 'flex';
                 if (statusWrap) statusWrap.style.display = 'none';
