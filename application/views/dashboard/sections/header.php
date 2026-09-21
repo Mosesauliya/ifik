@@ -638,6 +638,7 @@
     <?php
         $all_rooms = [];
         $seen_keys = [];
+        $featured_keys = ['multimedia', 'aula', 'cintiq', 'greenscreen', 'incubator', 'mac'];
 
         if (!empty($ruangan)) {
             foreach ($ruangan as $r) {
@@ -661,7 +662,7 @@
             if ($posA !== false && $posB !== false) return $posA - $posB;
             if ($posA !== false) return -1;
             if ($posB !== false) return 1;
-            return $a->id - $b->id;
+            return strcmp((string)$a->id, (string)$b->id);
         });
         $total_slides_count = !empty($header_slides) && count($header_slides) >= 3 ? count($header_slides) : 3;
         $tabs_all = [

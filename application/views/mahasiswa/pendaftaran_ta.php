@@ -362,7 +362,7 @@
                                                     <span class="text-[9px] font-extrabold text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">Opsional</span>
                                                 <?php endif; ?>
                                             </div>
-                                            <p class="text-xs text-slate-500 mt-1 font-medium leading-normal"><?= htmlspecialchars($sb['deskripsi'] ?: 'Unggah berkas ' . $sb['nama_berkas']); ?></p>
+                                            <p class="text-xs text-slate-500 mt-1 font-medium leading-normal"><?= htmlspecialchars(($sb['deskripsi'] ?? '') ?: 'Unggah berkas ' . ($sb['nama_berkas'] ?? '')); ?></p>
                                         </div>
                                     </div>
 

@@ -349,10 +349,27 @@
                 <p class="text-slate-600 text-xs mt-1 font-normal">Kelola persetujuan pendaftaran Tugas Akhir mahasiswa bimbingan Anda secara praktis.</p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
-                <div class="flex items-center gap-2.5 px-3.5 py-2 bg-white/90 rounded-xl border border-orange-200 shadow-xs text-xs">
-                    <span class="px-2 py-0.5 bg-orange-100/90 text-orange-700 rounded-md border border-orange-200/80 font-bold text-[11px]"><?= $dosen_info['kode_dosen'] ?? 'DW-001'; ?></span>
-                    <span class="text-slate-600 font-semibold">Prodi: <strong class="text-slate-800"><?= $dosen_info['kejuruan'] ?? 'Informatika / DKV'; ?></strong></span>
-                </div>
+                <form action="<?= site_url('dosen/wali/pilih_prodi'); ?>" method="POST" class="inline-flex items-center m-0">
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-white/95 rounded-xl border border-orange-200/90 shadow-xs text-xs">
+                        <span class="px-2 py-0.5 bg-orange-100/90 text-orange-700 rounded-md border border-orange-200/80 font-bold text-[11px] tracking-wide"><?= htmlspecialchars($dosen_info['kode_dosen'] ?: 'DOSEN'); ?></span>
+                        <div class="flex items-center gap-1.5 text-slate-600 font-semibold">
+                            <span>Prodi:</span>
+                            <div class="relative inline-flex items-center">
+                                <?php 
+                                    $currentProdi = $dosen_info['prodi'] ?? ($dosen_info['kejuruan'] ?? 'Desain Komunikasi Visual');
+                                    $prodiOptions = ['Desain Komunikasi Visual', 'Informatika'];
+                                ?>
+                                <select name="prodi" onchange="this.form.submit()" 
+                                        class="appearance-none font-bold text-slate-800 bg-orange-50/70 hover:bg-orange-100/80 pl-2 pr-6 py-1 rounded-lg border border-orange-200/70 cursor-pointer text-xs outline-none transition-all hover:border-orange-400">
+                                    <?php foreach ($prodiOptions as $po): ?>
+                                        <option value="<?= $po; ?>" <?= ($currentProdi === $po) ? 'selected' : ''; ?>><?= $po; ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <i class="bi bi-chevron-down absolute right-2 text-[9px] text-orange-600 pointer-events-none"></i>
+                            </div>
+                        </div>
+                    </div>
+                </form>
                 <div class="px-4 py-2 bg-white/90 rounded-xl border border-orange-200 shadow-xs text-xs font-semibold text-slate-700 flex items-center gap-2 w-fit">
                     <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span>Sistem Persetujuan Aktif</span>

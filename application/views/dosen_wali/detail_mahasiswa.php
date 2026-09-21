@@ -125,7 +125,7 @@
                 <div class="flex items-center gap-3">
                     <div class="hidden sm:flex flex-col text-right">
                         <span class="text-xs font-bold text-slate-800 leading-tight">
-                            <?= htmlspecialchars($dosen_info['nama_dosen'] ?? $this->session->userdata('name') ?? 'Alif Dosen Wali'); ?>
+                            <?= htmlspecialchars($dosen_info['nama_dosen'] ?: ($this->session->userdata('name') ?: 'Dosen Wali')); ?>
                         </span>
                         <span class="text-[10px] font-medium text-slate-500">
                             <?= htmlspecialchars($this->session->userdata('email') ?? 'dosen@telkomuniversity.ac.id'); ?>

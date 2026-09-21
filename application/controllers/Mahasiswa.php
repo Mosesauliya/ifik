@@ -505,6 +505,36 @@ class Mahasiswa extends CI_Controller {
                             ]);
                         }
                     }
+
+                    // Sync juga ke file_pendaftaran
+                    if ($this->db->table_exists('file_pendaftaran') && !empty($f_name)) {
+                        $id_fp = 'fp_' . $nim . '_' . $f_code;
+                        $id_mhs_usr = 'usr_mhs_' . $nim;
+                        $ex_fp = $this->db->where('id', $id_fp)->or_where(['id_mhs' => $id_mhs_usr, 'nama' => $f_code])->get('file_pendaftaran')->row_array();
+                        $rel_path = 'uploads/persyaratan_ta/' . $f_name;
+                        if ($ex_fp) {
+                            $this->db->where('id', $ex_fp['id'])->update('file_pendaftaran', [
+                                'file'            => $rel_path,
+                                'status_doswal'   => 'Pending',
+                                'status_adminlaa' => 'Pending',
+                                'date_edit'       => date('Y-m-d H:i:s')
+                            ]);
+                        } else {
+                            $this->db->insert('file_pendaftaran', [
+                                'id'              => $id_fp,
+                                'id_mhs'          => $id_mhs_usr,
+                                'nama'            => $f_code,
+                                'file'            => $rel_path,
+                                'view_adminlaa'   => 0,
+                                'status_adminlaa' => 'Pending',
+                                'view_doswal'     => 0,
+                                'status_doswal'   => 'Pending',
+                                'komentar'        => '',
+                                'date'            => date('Y-m-d H:i:s'),
+                                'date_edit'       => date('Y-m-d H:i:s')
+                            ]);
+                        }
+                    }
                 }
             }
 
@@ -561,20 +591,22 @@ class Mahasiswa extends CI_Controller {
             return;
         }
 
-        // 1. Coba Google Translate API
+        // 1. Coba Google Translate API (Timeout cepat 2.5s)
         $url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=id&tl=en&dt=t&q=" . urlencode($text);
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 8);
-        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0');
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
         $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $err = curl_error($ch);
         curl_close($ch);
 
-        if (!$err && !empty($response)) {
+        if (!$err && $http_code === 200 && !empty($response)) {
             $data = json_decode($response, true);
             $translated_text = '';
             if (isset($data[0]) && is_array($data[0])) {
@@ -588,10 +620,18 @@ class Mahasiswa extends CI_Controller {
             }
         }
 
-        // 2. Fallback: MyMemory Translation API
+        // 2. Fallback: MyMemory Translation API (Timeout 3s via cURL)
         $url_fallback = "https://api.mymemory.translated.net/get?q=" . urlencode($text) . "&langpair=id|en";
-        $fallback_res = @file_get_contents($url_fallback);
-        if ($fallback_res) {
+        $ch2 = curl_init();
+        curl_setopt($ch2, CURLOPT_URL, $url_fallback);
+        curl_setopt($ch2, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch2, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch2, CURLOPT_CONNECTTIMEOUT, 2);
+        curl_setopt($ch2, CURLOPT_TIMEOUT, 3);
+        $fallback_res = curl_exec($ch2);
+        curl_close($ch2);
+
+        if (!empty($fallback_res)) {
             $json = json_decode($fallback_res, true);
             $translated = $json['responseData']['translatedText'] ?? '';
             if ($translated) {
@@ -1110,6 +1150,36 @@ class Mahasiswa extends CI_Controller {
                 }
             }
 
+            // Sync langsung ke file_pendaftaran jika tabel tersedia
+            if ($this->db->table_exists('file_pendaftaran')) {
+                $id_fp = 'fp_' . $nim . '_' . $kode_berkas;
+                $id_mhs_usr = 'usr_mhs_' . $nim;
+                $ex_fp = $this->db->where('id', $id_fp)->or_where(['id_mhs' => $id_mhs_usr, 'nama' => $kode_berkas])->get('file_pendaftaran')->row_array();
+                $rel_file_path = 'uploads/persyaratan_ta/' . $file_name;
+                if ($ex_fp) {
+                    $this->db->where('id', $ex_fp['id'])->update('file_pendaftaran', [
+                        'file'            => $rel_file_path,
+                        'status_doswal'   => 'Pending',
+                        'status_adminlaa' => 'Pending',
+                        'date_edit'       => date('Y-m-d H:i:s')
+                    ]);
+                } else {
+                    $this->db->insert('file_pendaftaran', [
+                        'id'              => $id_fp,
+                        'id_mhs'          => $id_mhs_usr,
+                        'nama'            => $kode_berkas,
+                        'file'            => $rel_file_path,
+                        'view_adminlaa'   => 0,
+                        'status_adminlaa' => 'Pending',
+                        'view_doswal'     => 0,
+                        'status_doswal'   => 'Pending',
+                        'komentar'        => '',
+                        'date'            => date('Y-m-d H:i:s'),
+                        'date_edit'       => date('Y-m-d H:i:s')
+                    ]);
+                }
+            }
+
             $this->output
                 ->set_content_type('application/json')
                 ->set_output(json_encode([
@@ -1213,22 +1283,27 @@ class Mahasiswa extends CI_Controller {
         $data_update['id_kk'] = $mhs_id_kk;
 
         $data_update['updated_at'] = date('Y-m-d H:i:s');
+        $db_saved = false;
 
-        $existing = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
-        if ($existing) {
-            $this->db->where('nim', $nim)->update('pendaftaran_ta', $data_update);
-        } else {
-            // Cegah membuat baris baru jika form masih kosong
-            if (!empty($jenis_ta) || !empty($judul_1)) {
-                $data_update['nim'] = $nim;
-                $data_update['created_at'] = date('Y-m-d H:i:s');
-                $data_update['is_submitted'] = 0;
-                $data_update['status_approval_wali'] = 'Draft';
-                $data_update['status_approval_admin'] = 'Pending';
-                $data_update['status_approval_koor'] = 'Pending';
-                $data_update['status_approval_kk'] = 'Pending';
-                $data_update['current_stage'] = 'Draft';
-                $this->db->insert('pendaftaran_ta', $data_update);
+        if ($this->db->table_exists('pendaftaran_ta')) {
+            $existing = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
+            if ($existing) {
+                $this->db->where('nim', $nim)->update('pendaftaran_ta', $data_update);
+                $db_saved = true;
+            } else {
+                // Cegah membuat baris baru jika form masih kosong
+                if (!empty($jenis_ta) || !empty($judul_1)) {
+                    $data_update['nim'] = $nim;
+                    $data_update['created_at'] = date('Y-m-d H:i:s');
+                    $data_update['is_submitted'] = 0;
+                    $data_update['status_approval_wali'] = 'Draft';
+                    $data_update['status_approval_admin'] = 'Pending';
+                    $data_update['status_approval_koor'] = 'Pending';
+                    $data_update['status_approval_kk'] = 'Pending';
+                    $data_update['current_stage'] = 'Draft';
+                    $this->db->insert('pendaftaran_ta', $data_update);
+                    $db_saved = true;
+                }
             }
         }
 

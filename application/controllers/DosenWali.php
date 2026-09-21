@@ -745,5 +745,21 @@ class DosenWali extends CI_Controller {
 
         force_download($downloadName, file_get_contents($filePath));
     }
+
+    /**
+     * Ubah / Pilih Jurusan (Prodi) Dosen Wali Secara Dinamis
+     */
+    public function pilih_prodi() {
+        $prodi = trim($this->input->post('prodi', true) ?? '');
+        if (!empty($prodi)) {
+            $this->session->set_userdata('selected_prodi', $prodi);
+            $userId = $this->session->userdata('user_id');
+            if ($userId && $this->db->table_exists('user')) {
+                $this->db->where('id', $userId)->update('user', ['prodi' => $prodi]);
+            }
+            $this->session->set_flashdata('success', "Jurusan berhasil diubah ke: <b>" . htmlspecialchars($prodi) . "</b>");
+        }
+        redirect('dosen/wali');
+    }
 }
 
