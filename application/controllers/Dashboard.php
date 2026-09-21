@@ -16,7 +16,9 @@ class Dashboard extends CI_Controller {
         
         $data['jadwal_peminjaman'] = $this->Booking_model->get_approved_bookings();
         $data['kategori'] = $this->Booking_model->get_all_kategori();
-        $data['ruangan']  = $this->Booking_model->get_all_ruangan();
+        
+        $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan');
+        $data['ruangan'] = $this->db->get('ruangan')->result();
 
         $data['header_settings'] = $this->Header_model->get_settings();
         $data['header_slides'] = $this->Header_model->get_slides();
@@ -24,26 +26,15 @@ class Dashboard extends CI_Controller {
         $this->load->view('dashboard/index', $data);
     }
 
-    public function lab_detail($id = null)
+    public function lab_detail($id = 'multimedia')
     {
         $this->load->helper('url');
-        $this->load->model('Booking_model');
-
-        // Load all ruangan data via Booking_model adapter
-        $data['all_ruangan'] = $this->Booking_model->get_all_ruangan();
-
-        if (empty($data['all_ruangan'])) {
-            $this->session->set_flashdata('error', 'Belum ada data fasilitas ruangan yang tersedia.');
-            redirect('dashboard');
-            return;
-        }
-
-        if (empty($id)) {
-            $first_room = $data['all_ruangan'][0];
-            $id = !empty($first_room->kode_ruangan) ? $first_room->kode_ruangan : $first_room->id;
-        }
-
         $data['lab_key'] = strtolower($id);
+
+        // Load all ruangan data from DB to sync details
+        $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan');
+        $data['all_ruangan'] = $this->db->get('ruangan')->result();
+
         $this->load->view('dashboard/lab_detail', $data);
     }
 
@@ -53,7 +44,8 @@ class Dashboard extends CI_Controller {
         $this->load->model('Booking_model');
         $data['jadwal_peminjaman'] = $this->Booking_model->get_approved_bookings();
         $data['kategori'] = $this->Booking_model->get_all_kategori();
-        $data['ruangan']  = $this->Booking_model->get_all_ruangan();
+        $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan');
+        $data['ruangan'] = $this->db->get('ruangan')->result();
         $this->load->view('dashboard/kalender', $data);
     }
 
@@ -69,11 +61,11 @@ class Dashboard extends CI_Controller {
 
         $this->load->model('Booking_model');
         $data['kategori'] = $this->Booking_model->get_all_kategori();
-        $data['ruangan']  = $this->Booking_model->get_all_ruangan();
+        $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan');
+        $data['ruangan'] = $this->db->get('ruangan')->result();
 
         $this->load->view('dashboard/ajukan_booking', $data);
     }
-
 
 
     public function ajukan_booking()
@@ -147,14 +139,14 @@ class Dashboard extends CI_Controller {
         $this->load->model('Booking_model');
         $role_id = $this->session->userdata('role_id');
 
-        if (!in_array($role_id, [1, 2, 3])) {
+        if (!in_array($role_id, [1, 2, 21])) {
             echo json_encode(['status' => 'error', 'message' => 'Anda tidak memiliki hak akses untuk menyetujui peminjaman ini.']);
             return;
         }
 
-        if ($role_id == 3) {
+        if ($role_id == 2) {
             $status = 'Disetujui Ka. Ur';
-        } elseif ($role_id == 2) {
+        } elseif ($role_id == 21) {
             $status = 'Disetujui Laboran';
         } else {
             $status = 'Disetujui Admin';
@@ -172,9 +164,9 @@ class Dashboard extends CI_Controller {
     {
         header('Content-Type: application/json');
         $this->load->model('Booking_model');
-        $role_id = $this->session->userdata('role_id');
+        $role_id = (int)$this->session->userdata('role_id');
 
-        if (!in_array($role_id, [1, 2, 3])) {
+        if (!in_array($role_id, [1, 2, 21])) {
             echo json_encode(['status' => 'error', 'message' => 'Anda tidak memiliki hak akses untuk menolak peminjaman ini.']);
             return;
         }
@@ -192,9 +184,9 @@ class Dashboard extends CI_Controller {
     {
         header('Content-Type: application/json');
         $this->load->model('Booking_model');
-        $role_id = $this->session->userdata('role_id');
+        $role_id = (int)$this->session->userdata('role_id');
 
-        if (!in_array($role_id, [1, 2, 3])) {
+        if (!in_array($role_id, [1, 2, 21])) {
             echo json_encode(['status' => 'error', 'message' => 'Anda tidak memiliki hak akses untuk menghapus jadwal ini.']);
             return;
         }
@@ -241,7 +233,7 @@ class Dashboard extends CI_Controller {
         }
 
         // Cek duplikasi ruangan fisik (1 ruangan fisik = 1 fasilitas)
-        $this->db->select('id, nama_ruangan, kode_ruangan');
+        $this->db->select('id, ruangan, ruangan AS nama_ruangan, id AS kode_ruangan');
         $existing_ruangan = $this->db->get('ruangan')->result();
         $canonicalize = function($str) {
             return strtoupper(preg_replace('/[^a-zA-Z0-9]/', '', (string)$str));
@@ -253,8 +245,9 @@ class Dashboard extends CI_Controller {
             if (empty($target_clean)) continue;
 
             foreach ($existing_ruangan as $row) {
-                if (empty($row->kode_ruangan)) continue;
-                $row_rooms = array_filter(array_map('trim', explode(',', $row->kode_ruangan)));
+                $rowCode = $row->kode_ruangan ?: $row->id;
+                if (empty($rowCode)) continue;
+                $row_rooms = array_filter(array_map('trim', explode(',', $rowCode)));
                 foreach ($row_rooms as $r) {
                     $r_clean = strtoupper(trim($r));
                     $r_canon = $canonicalize($r);
@@ -269,14 +262,16 @@ class Dashboard extends CI_Controller {
             }
         }
 
-        $data_ruangan = array(
-            'nama_ruangan' => $nama_ruangan,
-            'kode_ruangan' => $clean_kode_ruangan,
-            'id_kategori'  => $id_kategori,
-            'kapasitas'    => $kapasitas ? $kapasitas : 30,
-            'lokasi'       => $lokasi ? $lokasi : 'Gedung Sebatik (FIK)',
-            'status'       => $status ? $status : 'Tersedia'
-        );
+        $fields = $this->db->list_fields('ruangan');
+        $data_ruangan = array();
+        if (in_array('id', $fields)) $data_ruangan['id'] = $clean_kode_ruangan;
+        if (in_array('ruangan', $fields)) $data_ruangan['ruangan'] = $nama_ruangan;
+        if (in_array('nama_ruangan', $fields)) $data_ruangan['nama_ruangan'] = $nama_ruangan;
+        if (in_array('kode_ruangan', $fields)) $data_ruangan['kode_ruangan'] = $clean_kode_ruangan;
+        if (in_array('id_kategori', $fields)) $data_ruangan['id_kategori'] = $id_kategori;
+        if (in_array('kapasitas', $fields)) $data_ruangan['kapasitas'] = $kapasitas ? $kapasitas : 30;
+        if (in_array('lokasi', $fields)) $data_ruangan['lokasi'] = $lokasi ? $lokasi : 'Gedung Sebatik (FIK)';
+        if (in_array('status', $fields)) $data_ruangan['status'] = $status ? $status : 'Tersedia';
 
         $insert = $this->db->insert('ruangan', $data_ruangan);
 
