@@ -744,22 +744,32 @@ class AdminLayanan extends CI_Controller {
      * Halaman Reset File TA - reset file yang sudah diupload mahasiswa
      */
     public function reset_file_ta() {
-        $nim    = trim($this->input->get('nim') ?? '');
+        $search = trim($this->input->get('q') ?? '');
+        $cat    = trim($this->input->get('cat') ?? 'query');
         $detail = null;
         $berkas = [];
 
-        if (!empty($nim)) {
-            $detail = $this->AdminLayanan_model->get_detail_pengajuan($nim);
+        if (!empty($search)) {
+            // Try exact NIM first
+            $detail = $this->AdminLayanan_model->get_detail_pengajuan($search);
+            // If not found by NIM, search by name/query
+            if (!$detail) {
+                $matches = $this->AdminLayanan_model->get_all_pengajuan('all', $search, 1, 0, $cat);
+                if (!empty($matches)) {
+                    $detail = $this->AdminLayanan_model->get_detail_pengajuan($matches[0]['nim']);
+                }
+            }
             if ($detail) {
-                $syarat = $this->AdminLayanan_model->get_active_syarat_berkas();
-                $berkas = $this->AdminLayanan_model->get_student_berkas_map($nim);
+                $berkas = $this->AdminLayanan_model->get_student_berkas_map($detail['nim']);
             }
         }
 
-        $data['title']  = 'Reset File TA - Admin Layanan';
-        $data['nim']    = $nim;
-        $data['detail'] = $detail;
-        $data['berkas'] = $berkas;
+        $data['title']        = 'Reset File TA - Admin Layanan';
+        $data['search']       = $search;
+        $data['cat']          = $cat;
+        $data['detail']       = $detail;
+        $data['berkas']       = $berkas;
+        $data['allPengajuan'] = $this->AdminLayanan_model->get_all_pengajuan('all', '', 9999, 0, 'query');
 
         $this->load->view('admin_layanan/reset_file_ta', $data);
     }
