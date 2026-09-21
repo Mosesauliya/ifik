@@ -175,5 +175,8 @@ function toggleLaaSidebarDropdown(btn) {
 }
 </script>
 
-<!-- Curved Sidebar Core Script -->
-<script src="<?= base_url('assets/js/curved_sidebar.js?v=' . time()); ?>"></script>
+<!-- LAA Sidebar Standalone Styles -->
+<link rel="stylesheet" href="<?= base_url('assets/css/laa_sidebar.css?v=' . time()); ?>">
+
+<!-- LAA Sidebar Standalone Script -->
+<script src="<?= base_url('assets/js/laa_sidebar.js?v=' . time()); ?>"></script>
