@@ -72,10 +72,10 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     {
       id: 2,
-      title: isDosen ? "2. Identitas Dosen" : "2. Identitas Mahasiswa",
+      title: isDosen ? `2. Identitas ${initData.role_title || 'Dosen'}` : "2. Identitas Mahasiswa",
       date: "Langkah 2 dari 4",
       content: isDosen 
-        ? "Langkah 2: Verifikasi NIP / NIDN serta Nama Depan dan Belakang."
+        ? `Langkah 2: Verifikasi NIP / NIDN serta Nama Depan dan Belakang ${initData.role_title || 'Dosen'}.`
         : "Langkah 2: Verifikasi NIM serta Nama Depan dan Belakang.",
       category: "Identitas",
       status: "pending",
@@ -1611,7 +1611,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           });
 
-          const result = await response.json();
+          const rawText = await response.text();
+          let result;
+          try {
+            result = JSON.parse(rawText);
+          } catch (jsonErr) {
+            console.error('Non-JSON response received from server:', rawText);
+            throw new Error('Terjadi kesalahan pada server saat memproses data. Silakan coba lagi.');
+          }
 
           if (!response.ok || result.status !== 'success') {
             throw new Error(result.message || 'Gagal menyimpan data ke database.');
@@ -1620,7 +1627,7 @@ document.addEventListener('DOMContentLoaded', () => {
           node.status = 'completed';
           updateBadge(node.id, 'COMPLETE', 'badge-complete');
 
-          const roleTitle = isDosen ? 'Dosen' : 'Mahasiswa';
+          const roleTitle = initData.role_title || (isDosen ? 'Dosen' : 'Mahasiswa');
           const targetUrl = result.redirect || initData.dashboard_url || `${window.location.origin}/dashboard`;
 
           const dosenObj = daftarDosen.find(d => d.nip === formDataState.dosen_wali);

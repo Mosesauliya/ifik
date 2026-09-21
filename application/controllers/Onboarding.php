@@ -39,27 +39,35 @@ class Onboarding extends CI_Controller {
         }
 
         $roleId = (int)$user->role_id;
-        // In db_ifik_baru: role_id 3 is Dosen, role_id 4 is Mahasiswa
-        // In legacy db: role_id 4 is Dosen, role_id 5 is Mahasiswa
-        $isDosen = ($roleId === 3);
+        $roleName = 'mahasiswa';
+        $roleTitle = 'Mahasiswa';
         if ($this->db->table_exists('user_role')) {
             $r = $this->db->get_where('user_role', ['id' => $roleId])->row();
             if ($r) {
-                $isDosen = (strpos(strtolower($r->role), 'dosen') !== false);
+                $roleName = strtolower($r->role);
+                $roleTitle = $r->role;
             }
         } else if ($this->db->table_exists('roles')) {
             $r = $this->db->get_where('roles', ['id' => $roleId])->row();
             if ($r) {
-                $isDosen = (strpos(strtolower($r->role ?? $r->name ?? ''), 'dosen') !== false);
+                $roleName = strtolower($r->role ?? $r->name ?? '');
+                $roleTitle = $r->role ?? $r->name ?? 'User';
             }
         }
+
+        // Roles that are students: Mahasiswa, Mahasiswa KP, Mahasiswa S2, etc.
+        // All other roles (Dosen, Koordinator TA, Kaur, Admin, Laboran, Ketua KK, etc.) are staff/faculty
+        $isMahasiswa = (strpos($roleName, 'mahasiswa') !== false);
+        $isDosen = !$isMahasiswa;
 
         $data['title'] = 'Aktivasi Akun & Lengkapi Biodata — IK Labs Portal';
         $data['user'] = $user;
         $data['role_id'] = $roleId;
+        $data['role_title'] = $roleTitle;
         $data['is_dosen'] = $isDosen;
-        $data['role_name'] = $isDosen ? 'dosen' : 'mahasiswa';
-        $data['nim'] = !empty($user->nidn_nim) ? $user->nidn_nim : (!empty($user->nim) ? $user->nim : (!empty($user->nip) ? $user->nip : ''));
+        $data['is_mahasiswa'] = $isMahasiswa;
+        $data['role_name'] = $roleName;
+        $data['nim'] = !empty($user->nidn_nim) ? $user->nidn_nim : (!empty($user->nim) ? $user->nim : (!empty($user->nip) ? $user->nip : (!empty($user->username) ? $user->username : '')));
 
         // Split existing name into nama_depan and nama_belakang if available
         $nameParts = explode(' ', trim($user->name), 2);
@@ -208,20 +216,23 @@ class Onboarding extends CI_Controller {
 
         // 4. Strict Validation for Academic Info
         $roleId = (int)$user->role_id;
-        $isDosen = ($roleId === 3);
+        $roleName = 'mahasiswa';
         if ($this->db->table_exists('user_role')) {
             $r = $this->db->get_where('user_role', ['id' => $roleId])->row();
             if ($r) {
-                $isDosen = (strpos(strtolower($r->role), 'dosen') !== false);
+                $roleName = strtolower($r->role);
             }
         } else if ($this->db->table_exists('roles')) {
             $r = $this->db->get_where('roles', ['id' => $roleId])->row();
             if ($r) {
-                $isDosen = (strpos(strtolower($r->role ?? $r->name ?? ''), 'dosen') !== false);
+                $roleName = strtolower($r->role ?? $r->name ?? '');
             }
         }
 
-        if (!$isDosen && empty($dosenWali)) {
+        $isMahasiswa = (strpos($roleName, 'mahasiswa') !== false);
+        $isDosen = !$isMahasiswa;
+
+        if ($isMahasiswa && empty($dosenWali)) {
             $msg = 'Dosen wali akademik pembimbing wajib dipilih!';
             if ($isAjax) {
                 $this->output->set_content_type('application/json')->set_status_header(400)->set_output(json_encode(['status' => 'error', 'message' => $msg]));
@@ -253,6 +264,10 @@ class Onboarding extends CI_Controller {
             'updated_at'       => date('Y-m-d H:i:s')
         ];
 
+        if ($this->db->field_exists('password_changed', 'user')) {
+            $userUpdate['password_changed'] = 1;
+        }
+
         if ($isDosen) {
             $userUpdate['nip'] = $nim;
         } else {
@@ -273,24 +288,34 @@ class Onboarding extends CI_Controller {
             $this->db->delete('user_token', ['email' => $user->email]);
         }
 
-        // 5. Update / Insert to mahasiswa Table (if applicable)
-        if ($this->db->table_exists('mahasiswa') && !empty($nim)) {
-            $mhsData = [
+        // 5. Update / Insert to mahasiswa Table (ONLY for Mahasiswa role)
+        if ($isMahasiswa && $this->db->table_exists('mahasiswa') && !empty($nim)) {
+            $mhsFields = $this->db->list_fields('mahasiswa');
+            $candidateMhsData = [
                 'nim'             => $nim,
-                'nip_dosen_wali'  => !empty($dosenWali) ? $dosenWali : null,
                 'nama_depan'      => $cleanDepan,
                 'nama_belakang'   => $cleanBelakang,
+                'email'           => !empty($user->email) ? $user->email : null,
                 'alamat'          => $alamat,
                 'kota'            => $tempatLahir,
+                'prodi'           => $konsentrasi,
                 'konsentrasi_dkv' => $konsentrasi
             ];
+            $mhsData = [];
+            foreach ($candidateMhsData as $k => $v) {
+                if (in_array($k, $mhsFields)) {
+                    $mhsData[$k] = $v;
+                }
+            }
 
-            $existingMhs = $this->db->get_where('mahasiswa', ['nim' => $nim])->row();
-            if ($existingMhs) {
-                $this->db->where('nim', $nim);
-                $this->db->update('mahasiswa', $mhsData);
-            } else {
-                $this->db->insert('mahasiswa', $mhsData);
+            if (!empty($mhsData)) {
+                $existingMhs = $this->db->get_where('mahasiswa', ['nim' => $nim])->row();
+                if ($existingMhs) {
+                    $this->db->where('nim', $nim);
+                    $this->db->update('mahasiswa', $mhsData);
+                } else {
+                    $this->db->insert('mahasiswa', $mhsData);
+                }
             }
         }
 
@@ -304,19 +329,37 @@ class Onboarding extends CI_Controller {
 
         $this->session->set_flashdata('success', 'Aktivasi akun berhasil! Password Anda telah diperbarui dan profil telah tersimpan.');
 
+        // Determine target dashboard URL based on role
+        $targetRedirect = base_url('dashboard');
+        if ($roleId === 6 || strpos($roleName, 'koordinator') !== false) {
+            $targetRedirect = base_url('koordinatorta');
+        } elseif ($roleId === 3 || strpos($roleName, 'dosen') !== false) {
+            $targetRedirect = base_url('dosen');
+        } elseif ($roleId === 2 || strpos($roleName, 'kaur') !== false) {
+            $targetRedirect = base_url('kaur');
+        } elseif ($roleId === 21 || strpos($roleName, 'laboran') !== false) {
+            $targetRedirect = base_url('laboran');
+        } elseif ($roleId === 5 || strpos($roleName, 'laa') !== false) {
+            $targetRedirect = base_url('adminlayanan');
+        } elseif ($roleId === 9 || strpos($roleName, 'ketua kk') !== false) {
+            $targetRedirect = base_url('ketuakk');
+        } elseif ($roleId === 1 || strpos($roleName, 'admin') !== false) {
+            $targetRedirect = base_url('dashboard');
+        }
+
         if ($isAjax) {
             $this->output
                 ->set_content_type('application/json')
                 ->set_output(json_encode([
                     'status'   => 'success',
                     'message'  => 'Aktivasi akun berhasil! Password Anda telah diperbarui dan profil telah tersimpan.',
-                    'redirect' => base_url('dashboard')
+                    'redirect' => $targetRedirect
                 ]));
             return;
         }
 
         // 7. Redirect to dashboard
-        redirect('dashboard');
+        redirect($targetRedirect);
     }
 
     /**

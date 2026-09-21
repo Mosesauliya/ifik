@@ -568,35 +568,29 @@
             <?php $this->load->view('dashboard/sections/lab'); ?>
         </div>
 
-        <!-- Slide 3 -->
-        <div class="carousel-slide slide-3">
-            <div class="slide1-layout">
-                <div class="slide1-text-container">
-                    <div class="slide1-card">
-                        <h1 class="slide1-card-title">Prestasi &amp; Inovasi FIK</h1>
-                        <div class="slide1-card-desc">
-                            Fakultas Industri Kreatif secara konsisten mengukir berbagai prestasi baik di tingkat nasional maupun internasional. Melalui fasilitas laboratorium yang canggih dan bimbingan dosen berpengalaman, mahasiswa FIK terus melahirkan karya-karya inovatif di bidang desain, seni, media interaktif, dan teknologi kreatif.
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <img src="<?= base_url('assets/images/' . $dekanat_img) ?>" alt="Dekanat" class="dekanat-img-right">
-        </div>
-
         <!-- Custom Slides -->
-        <?php if (!empty($header_slides) && count($header_slides) > 3): ?>
-            <?php for ($i = 3; $i < count($header_slides); $i++): ?>
+<?php if (!empty($header_slides)): ?>
+    <?php foreach ($header_slides as $i => $s): ?>
                 <?php
-                    $s = $header_slides[$i];
+                    $slide_index = 2 + $i;
                     $media_json = json_decode($s->media_path, true);
-                    $is_multi = (is_array($media_json) && isset($media_json[0]['file']));
-                    $first_image = $is_multi ? $media_json[0]['file'] : $s->media_path;
-                    $multi_data = $is_multi ? htmlspecialchars(json_encode($media_json)) : '[]';
+                    $is_json = (json_last_error() === JSON_ERROR_NONE && is_array($media_json));
+                    if ($is_json && isset($media_json[0]['file'])) {
+                        $first_file = $media_json[0]['file'];
+                        $first_type = $media_json[0]['type'] ?? $s->media_type;
+                        $multi_count = count($media_json);
+                    } else {
+                        $first_file = $s->media_path;
+                        $first_type = $s->media_type;
+                        $multi_count = 1;
+                    }
+                    $is_multi = ($multi_count > 1);
+                    $multi_data = $is_json ? htmlspecialchars(json_encode($media_json)) : '[]';
                 ?>
-                <div class="carousel-slide slide-custom slide-<?= $i + 1 ?>" id="customSlide_<?= $i ?>" data-multi="<?= $multi_data ?>" style="position: relative; width: 100vw; height: 100%; <?= ($s->media_type === 'image' || $s->media_type === 'multi') && !empty($first_image) ? 'background-image: url(' . base_url('assets/images/' . $first_image) . '); background-size: cover; background-position: center;' : '' ?>">
-                    <?php if ($s->media_type === 'video' && !empty($s->media_path) && !$is_multi): ?>
+                <div class="carousel-slide slide-custom slide-<?= $slide_index + 1 ?>" id="customSlide_<?= $slide_index ?>" data-multi="<?= $multi_data ?>" style="position: relative; width: 100vw; height: 100%; <?= ($first_type === 'image' || $s->media_type === 'multi') && !empty($first_file) ? 'background-image: url(' . base_url('assets/images/' . $first_file) . '); background-size: cover; background-position: center;' : '' ?>">
+                    <?php if ($first_type === 'video' && !empty($first_file)): ?>
                         <video autoplay muted loop playsinline style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1;">
-                            <source src="<?= base_url('assets/vids/' . $s->media_path) ?>" type="video/mp4">
+                            <source src="<?= base_url('assets/vids/' . $first_file) ?>" type="video/mp4">
                         </video>
                     <?php endif; ?>
                     <div class="slide1-layout">
@@ -636,7 +630,7 @@
                     </div>
                     <img src="<?= base_url('assets/images/' . $dekanat_img) ?>" alt="Dekanat" class="dekanat-img-right">
                 </div>
-            <?php endfor; ?>
+            <?php endforeach; ?>
         <?php endif; ?>
     </div>
 
@@ -661,15 +655,25 @@
                 }
             }
         }
+        usort($all_rooms, function($a, $b) use ($featured_keys) {
+            $posA = array_search($a->mapped_key, $featured_keys);
+            $posB = array_search($b->mapped_key, $featured_keys);
+            if ($posA !== false && $posB !== false) return $posA - $posB;
+            if ($posA !== false) return -1;
+            if ($posB !== false) return 1;
+            return $a->id - $b->id;
+        });
         $total_slides_count = !empty($header_slides) && count($header_slides) >= 3 ? count($header_slides) : 3;
         $tabs_all = [
             ['type' => 'overview', 'index' => 0, 'id' => 'dotOverview', 'label' => 'Overview'],
-            ['type' => 'fasilitas_full', 'index' => 1, 'id' => 'dotFasilitas', 'label' => 'Fasilitas', 'rooms' => $all_rooms, 'has_play' => true, 'has_add' => true],
-            ['type' => 'prestasi', 'index' => 2, 'id' => 'dotPrestasi', 'label' => 'Prestasi']
+            ['type' => 'fasilitas_full', 'index' => 1, 'id' => 'dotFasilitas', 'label' => 'Fasilitas', 'rooms' => $all_rooms, 'has_play' => true, 'has_add' => true]
         ];
-        for ($i = 3; $i < $total_slides_count; $i++) {
-            $slide_label = $header_slides[$i]->label ?? ('Slide ' . ($i + 1));
-            $tabs_all[] = ['type' => 'custom_slide', 'index' => $i, 'id' => 'dotSlide' . $i, 'label' => $slide_label];
+        if (!empty($header_slides)) {
+            foreach ($header_slides as $i => $s) {
+                $slide_index = 2 + $i;
+                $slide_label = !empty($s->label) ? $s->label : ('Slide ' . ($slide_index + 1));
+                $tabs_all[] = ['type' => 'custom_slide', 'index' => $slide_index, 'id' => 'dotSlide' . $slide_index, 'label' => $slide_label];
+            }
         }
     ?>
     <div class="carousel-indicators" id="carouselDots">

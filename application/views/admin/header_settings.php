@@ -922,9 +922,76 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                 </h2>
 
                 <div class="flex flex-col gap-4">
+                    <!-- Card Slide 1 (Overview - Slide Utama Sistem) -->
+                    <div class="flex flex-col p-4 bg-orange-50/70 border border-orange-200 rounded-xl shadow-xs hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <img src="<?= base_url('assets/images/' . (!empty($settings->dekanat_image) ? $settings->dekanat_image : 'dekanat2.png')) ?>" class="w-16 h-12 object-contain rounded border border-orange-200 bg-white p-1 shadow-xs" alt="Dekanat Slide 1">
+                                <div>
+                                    <h4 class="font-bold text-gray-900"><?= htmlspecialchars($settings->title ?? 'Overview') ?></h4>
+                                    <p class="text-xs text-orange-600 font-semibold uppercase tracking-wide">
+                                        Slide 1 (Overview)
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" 
+                                        onclick="openModalEditSlide1()"
+                                        class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center hover:bg-orange-500 hover:text-white transition-colors" 
+                                        title="Edit Slide 1 Overview">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                </button>
+                                <span class="w-8 h-8 rounded-full bg-gray-100 text-gray-300 flex items-center justify-center cursor-not-allowed" title="Slide Bawaan Sistem (Tidak Dapat Dihapus)">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
                     <?php if(!empty($slides)): foreach($slides as $slide): ?>
                     <?php 
                         $is_fasilitas = (strtolower(trim($slide->label)) === 'fasilitas' || $slide->id == 2);
+                        $is_multi = false;
+                        $first_img = '';
+                        $media_type = $slide->media_type;
+                        $badge_label = 'Single Image';
+                        $is_video = false;
+                        
+                        if (!$is_fasilitas) {
+                            if (!empty($slide->media_path) && strpos($slide->media_path, '[') === 0) {
+                                $decoded = json_decode($slide->media_path, true);
+                                if (is_array($decoded) && count($decoded) > 0) {
+                                    $first_img = $decoded[0]['file'] ?? '';
+                                    $first_type = $decoded[0]['type'] ?? $media_type;
+                                    if (count($decoded) > 1) {
+                                        $is_multi = true;
+                                        $types = array_unique(array_column($decoded, 'type'));
+                                        if (count($types) === 1 && reset($types) === 'video') {
+                                            $badge_label = 'Multiple Video (' . count($decoded) . ' file)';
+                                        } elseif (count($types) === 1 && reset($types) === 'image') {
+                                            $badge_label = 'Multiple Image (' . count($decoded) . ' file)';
+                                        } else {
+                                            $badge_label = 'Multiple Media (' . count($decoded) . ' file)';
+                                        }
+                                    } else {
+                                        if ($first_type === 'video') {
+                                            $badge_label = 'Video (Single)';
+                                            $is_video = true;
+                                        } else {
+                                            $badge_label = 'Image (Single)';
+                                        }
+                                    }
+                                }
+                            } else {
+                                $first_img = $slide->media_path;
+                                if ($media_type === 'video') {
+                                    $badge_label = 'Video (Single)';
+                                    $is_video = true;
+                                } else {
+                                    $badge_label = 'Image (Single)';
+                                }
+                            }
+                        }
                     ?>
                     <div class="flex flex-col p-4 bg-white border border-gray-200 rounded-xl shadow-xs hover:shadow-md transition-shadow">
                         <div class="flex items-center justify-between">
@@ -936,30 +1003,15 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                         <p class="text-xs text-gray-400 uppercase tracking-wide"><?= count($ruangan ?? []) ?> RUANGAN</p>
                                     </div>
                                 <?php else: ?>
-                                    <?php 
-                                        $is_multi = false;
-                                        $first_img = '';
-                                        $media_type = $slide->media_type;
-                                        
-                                        if (!empty($slide->media_path) && strpos($slide->media_path, '[') === 0) {
-                                            $decoded = json_decode($slide->media_path, true);
-                                            if (is_array($decoded) && count($decoded) > 0) {
-                                                $is_multi = true;
-                                                $first_img = $decoded[0]['file'] ?? '';
-                                            }
-                                        } else {
-                                            $first_img = $slide->media_path;
-                                        }
-                                    ?>
-                                    <?php if($media_type == 'video'): ?>
-                                        <div class="w-16 h-12 bg-gray-900 rounded flex items-center justify-center text-white text-xs font-bold overflow-hidden">VIDEO</div>
+                                    <?php if($is_video): ?>
+                                        <div class="w-16 h-12 bg-gray-900 rounded flex items-center justify-center text-white text-[0.68rem] font-bold overflow-hidden shadow-xs">VIDEO</div>
                                     <?php else: ?>
-                                        <img src="<?= base_url('assets/images/' . $first_img) ?>" class="w-16 h-12 object-cover rounded border border-gray-100">
+                                        <img src="<?= base_url('assets/images/' . $first_img) ?>" class="w-16 h-12 object-cover rounded border border-gray-100 shadow-xs">
                                     <?php endif; ?>
                                     <div>
                                         <h4 class="font-bold text-gray-800"><?= htmlspecialchars($slide->label) ?></h4>
-                                        <p class="text-xs text-gray-400 uppercase tracking-wide">
-                                            <?= $is_multi ? 'Multi-Image' : $media_type ?>
+                                        <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide">
+                                            <?= $badge_label ?>
                                         </p>
                                     </div>
                                 <?php endif; ?>
@@ -980,6 +1032,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                             data-label="<?= htmlspecialchars($slide->label, ENT_QUOTES, 'UTF-8') ?>"
                                             data-overlay-title="<?= htmlspecialchars($slide->overlay_title ?? '', ENT_QUOTES, 'UTF-8') ?>"
                                             data-overlay-description="<?= htmlspecialchars($slide->overlay_description ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                                            data-media-path="<?= htmlspecialchars($slide->media_path ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                                            data-media-type="<?= htmlspecialchars($slide->media_type ?? '', ENT_QUOTES, 'UTF-8') ?>"
                                             title="Edit Slide">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                     </button>
@@ -991,7 +1045,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                         </div>
                     </div>
                     <?php endforeach; else: ?>
-                    <p class="text-gray-500 text-sm">Belum ada slide. Silakan tambahkan.</p>
+                    <p class="text-gray-500 text-sm">Belum ada slide tambahan.</p>
                     <?php endif; ?>
                 </div>
             </div>
@@ -1194,13 +1248,67 @@ defined('BASEPATH') OR exit('No direct script access allowed');
     </div>
   </div>
 
+  <!-- MODAL EDIT SLIDE 1 OVERVIEW -->
+  <div id="editSlide1Modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center opacity-0 transition-opacity duration-300">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto">
+          <div class="flex items-center justify-between mb-4 border-b pb-3">
+              <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <span class="w-7 h-7 bg-orange-500 text-white text-xs font-black rounded-full inline-flex items-center justify-center">1</span>
+                  Edit Slide 1 Overview
+              </h3>
+              <button type="button" onclick="closeEditSlide1Modal()" class="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
+          </div>
+          <form action="<?= base_url('adminheader/update_settings') ?>" method="POST" enctype="multipart/form-data" id="formEditSlide1">
+              <div class="mb-4">
+                  <label class="block text-sm font-bold text-orange-800 mb-2">Judul Utama Slide 1</label>
+                  <input type="text" name="title" class="form-input" value="<?= htmlspecialchars($settings->title ?? 'Fakultas Industri Kreatif', ENT_QUOTES, 'UTF-8') ?>" required>
+              </div>
+              <div class="mb-4">
+                  <label class="block text-sm font-bold text-orange-800 mb-2">Deskripsi Slide 1 Overview</label>
+                  <textarea id="editSlide1Description" name="description" class="form-input text-sm" rows="5" placeholder="Tulis deskripsi untuk slide 1..."><?= htmlspecialchars($settings->description ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+                  <p class="text-xs text-orange-600 mt-1">&#9998; Editor TinyMCE aktif.</p>
+              </div>
+
+              <!-- Upload Gambar Dekanat / Slide 1 -->
+              <div class="mb-6 p-4 bg-orange-50/60 rounded-xl border border-orange-200">
+                  <label class="block text-sm font-bold text-gray-800 mb-2">Gambar Slide 1 (Dekanat)</label>
+                  <?php if(!empty($settings->dekanat_image)): ?>
+                      <div class="mb-3 bg-white rounded-lg p-3 border border-orange-200 flex items-center gap-3">
+                          <img src="<?= base_url('assets/images/' . $settings->dekanat_image) ?>" class="h-14 object-contain rounded border border-gray-100" alt="Dekanat">
+                          <div>
+                              <p class="text-xs font-bold text-gray-800">Gambar Saat Ini:</p>
+                              <span class="text-xs text-gray-500 font-mono"><?= htmlspecialchars($settings->dekanat_image) ?></span>
+                          </div>
+                      </div>
+                  <?php endif; ?>
+                  <div class="dropzone" id="dropzoneDekanatModal">
+                      <input type="file" name="dekanat_image" id="dekanatImageModalInput" accept="image/*">
+                      <div class="preview-container text-gray-400" id="previewDekanatModal">
+                          <p class="font-semibold text-gray-700 text-xs">Tarik &amp; Lepas Gambar di Sini untuk Mengganti</p>
+                          <p class="text-[0.68rem] text-gray-400 mt-0.5">atau klik untuk memilih file (JPG, PNG, WEBP)</p>
+                      </div>
+                  </div>
+              </div>
+
+              <div class="flex justify-end gap-3">
+                  <button type="button" onclick="closeEditSlide1Modal()" class="btn-secondary px-5 py-2 rounded-xl font-bold">Batal</button>
+                  <button type="submit" class="btn-brand px-5 py-2 rounded-xl font-bold">Simpan Perubahan</button>
+              </div>
+          </form>
+      </div>
+  </div>
+
   <!-- MODAL EDIT SLIDE (dengan AJAX) -->
   <div id="editSlideModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center opacity-0 transition-opacity duration-300">
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 transform scale-95 transition-transform duration-300">
-          <h3 class="text-xl font-bold mb-4">Edit Slide</h3>
-          <form id="editSlideForm" action="" method="POST">
-              <!-- data-id akan diisi via JS -->
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-xl p-6 transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto">
+          <div class="flex items-center justify-between mb-4 border-b pb-3">
+              <h3 class="text-xl font-bold text-gray-900">Edit Slide</h3>
+              <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
+          </div>
+          <form id="editSlideForm" action="" method="POST" enctype="multipart/form-data">
               <input type="hidden" id="editSlideId" name="id">
+              <input type="hidden" id="existingMediaInput" name="existing_media">
+
               <div class="mb-4">
                   <label class="block text-sm font-bold text-gray-700 mb-2">Label Indikator</label>
                   <input type="text" id="editLabel" name="label" class="form-input" required>
@@ -1209,14 +1317,44 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                   <label class="block text-sm font-bold text-orange-800 mb-2">Judul Utama Slide</label>
                   <input type="text" id="editOverlayTitle" name="overlay_title" class="form-input" required>
               </div>
-              <div class="mb-6">
+              <div class="mb-4">
                   <label class="block text-sm font-bold text-orange-800 mb-2">Deskripsi Slide</label>
-                  <textarea id="editOverlayDescription" name="overlay_description" class="form-input text-sm" rows="5" placeholder="Tulis deskripsi untuk slide ini..."></textarea>
+                  <textarea id="editOverlayDescription" name="overlay_description" class="form-input text-sm" rows="4" placeholder="Tulis deskripsi untuk slide ini..."></textarea>
                   <p class="text-xs text-orange-600 mt-1">&#9998; Editor TinyMCE aktif.</p>
               </div>
+
+              <!-- Media Management (Existing + Add New) -->
+              <div class="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <label class="block text-sm font-bold text-gray-800 mb-2">File Media Slide</label>
+                  
+                  <!-- List File Media Saat Ini (dengan Tombol Hapus X) -->
+                  <div class="mb-4">
+                      <p class="text-xs font-semibold text-gray-600 mb-2">File Media Tersimpan:</p>
+                      <div id="editExistingMediaList" class="flex flex-wrap gap-3 min-h-[40px] items-center">
+                          <!-- Filled dynamically via JS -->
+                      </div>
+                  </div>
+
+                  <!-- Dropzone Upload File Baru -->
+                  <div class="mt-3">
+                      <p class="text-xs font-semibold text-gray-600 mb-1">Tambah / Upload File Baru (Opsional):</p>
+                      <div class="dropzone-multi" id="editDropzoneStaging">
+                          <input type="file" id="editStagedFile" accept="image/*,video/*" multiple>
+                          <div id="editDropzoneDefault" class="text-gray-400" style="pointer-events:none;">
+                              <svg class="w-8 h-8 mx-auto mb-1 text-brand opacity-50" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"></path></svg>
+                              <p class="font-semibold text-xs text-gray-700">Tarik &amp; Lepas File Baru di Sini</p>
+                              <p class="text-[0.68rem] mt-0.5">atau klik untuk memilih file (JPG, PNG, WEBP, Video)</p>
+                          </div>
+                          <div id="editMediaPreviewGrid" class="media-preview-grid hidden"></div>
+                      </div>
+                      <input type="file" name="edit_media_files[]" id="editFinalFiles" multiple style="display: none;">
+                      <div id="editHiddenDurationsContainer"></div>
+                  </div>
+              </div>
+
               <div class="flex justify-end gap-3">
                   <button type="button" onclick="closeEditModal()" class="btn-secondary px-5 py-2 rounded-xl font-bold">Batal</button>
-                  <button type="submit" class="btn-brand px-5 py-2 rounded-xl font-bold">Simpan</button>
+                  <button type="submit" class="btn-brand px-5 py-2 rounded-xl font-bold">Simpan Perubahan</button>
               </div>
           </form>
       </div>
@@ -1527,6 +1665,47 @@ defined('BASEPATH') OR exit('No direct script access allowed');
           document.getElementById('slideLabel').disabled = false;
       });
 
+      // ===== TINYMCE: Editor untuk Deskripsi Slide 1 Overview =====
+      tinymce.init({
+          selector: '#editSlide1Description',
+          plugins: 'lists link autolink',
+          toolbar: 'bold italic underline | bullist numlist | link | removeformat',
+          menubar: false,
+          height: 180,
+          skin: 'oxide',
+          branding: false,
+          setup: function(editor) {
+              editor.on('change', function() { editor.save(); });
+          }
+      });
+
+      const formEditSlide1 = document.getElementById('formEditSlide1');
+      if (formEditSlide1) {
+          formEditSlide1.addEventListener('submit', function() {
+              tinymce.triggerSave();
+          });
+      }
+
+      function openModalEditSlide1() {
+          const modal = document.getElementById('editSlide1Modal');
+          if (!modal) return;
+          modal.classList.remove('hidden');
+          setTimeout(() => {
+              modal.classList.remove('opacity-0');
+              modal.querySelector('.transform').classList.remove('scale-95');
+          }, 10);
+      }
+
+      function closeEditSlide1Modal() {
+          const modal = document.getElementById('editSlide1Modal');
+          if (!modal) return;
+          modal.classList.add('opacity-0');
+          modal.querySelector('.transform').classList.add('scale-95');
+          setTimeout(() => {
+              modal.classList.add('hidden');
+          }, 300);
+      }
+
       // ===== TINYMCE: Editor untuk Deskripsi Slide (modal Edit) =====
       tinymce.init({
           selector: '#editOverlayDescription',
@@ -1671,7 +1850,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
       dropzoneStaging.addEventListener('dragleave', e => { dropzoneStaging.classList.remove('dragover'); });
       dropzoneStaging.addEventListener('drop', e => {
           e.preventDefault(); dropzoneStaging.classList.remove('dragover');
-          if (e.dataTransfer.files.length) {
+          if (e.dataTransfer && e.dataTransfer.files.length) {
               addFilesToMedia(e.dataTransfer.files);
           }
       });
@@ -1697,6 +1876,26 @@ defined('BASEPATH') OR exit('No direct script access allowed');
           });
       }
 
+      function setupDropzoneDekanatModal() {
+          const dropzone = document.getElementById('dropzoneDekanatModal');
+          if (!dropzone) return;
+          const input = document.getElementById('dekanatImageModalInput');
+          const preview = document.getElementById('previewDekanatModal');
+
+          dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+          dropzone.addEventListener('dragleave', e => { dropzone.classList.remove('dragover'); });
+          dropzone.addEventListener('drop', e => {
+              e.preventDefault(); dropzone.classList.remove('dragover');
+              if (e.dataTransfer.files.length) {
+                  input.files = e.dataTransfer.files;
+                  handleDekanatPreview(input.files[0], preview);
+              }
+          });
+          input.addEventListener('change', () => {
+              if (input.files.length) handleDekanatPreview(input.files[0], preview);
+          });
+      }
+
       function handleDekanatPreview(file, container) {
           container.innerHTML = '';
           const img = document.createElement('img');
@@ -1707,38 +1906,189 @@ defined('BASEPATH') OR exit('No direct script access allowed');
           txt.innerText = file.name;
           container.appendChild(txt);
       }
+
+      document.addEventListener('DOMContentLoaded', () => {
+          setupDropzoneDekanat();
+          setupDropzoneDekanatModal();
+          setupEditMediaDropzone();
+      });
   </script>
 
   <script>
-      // ===== EDIT SLIDE MODAL (dengan AJAX) =====
-      function openEditSlideModal(id, label, overlayTitle, overlayDescription) {
+      // ===== EDIT SLIDE MODAL MANAGEMENT =====
+      let currentExistingMedia = [];
+      let editMediaFiles = [];
+
+      function stripHtmlTags(str) {
+          if (!str) return '';
+          const tmp = document.createElement('div');
+          tmp.innerHTML = str;
+          return (tmp.textContent || tmp.innerText || str).trim();
+      }
+
+      function openEditSlideModal(id, label, overlayTitle, overlayDescription, mediaPath, mediaType) {
           document.getElementById('editSlideId').value = id;
           document.getElementById('editLabel').value = label || '';
           document.getElementById('editOverlayTitle').value = overlayTitle || '';
 
-          // Isi konten deskripsi ke editor TinyMCE (bukan textarea langsung)
+          const cleanDesc = stripHtmlTags(overlayDescription);
           if (window.tinymce && tinymce.get('editOverlayDescription')) {
-              tinymce.get('editOverlayDescription').setContent(overlayDescription || '');
+              tinymce.get('editOverlayDescription').setContent(cleanDesc);
           } else {
-              document.getElementById('editOverlayDescription').value = overlayDescription || '';
+              document.getElementById('editOverlayDescription').value = cleanDesc;
           }
+
+          // Parse existing media items
+          currentExistingMedia = [];
+          if (mediaPath) {
+              const trimmed = mediaPath.trim();
+              if (trimmed.startsWith('[')) {
+                  try {
+                      const parsed = JSON.parse(trimmed);
+                      if (Array.isArray(parsed)) currentExistingMedia = parsed;
+                  } catch (e) {
+                      currentExistingMedia = [{ file: mediaPath, type: mediaType || 'image', duration: 3 }];
+                  }
+              } else {
+                  currentExistingMedia = [{ file: mediaPath, type: mediaType || 'image', duration: 3 }];
+              }
+          }
+
+          renderExistingMediaInEditModal();
+
+          // Reset new staged files for edit modal
+          editMediaFiles = [];
+          renderEditMediaPreviews();
 
           const modal = document.getElementById('editSlideModal');
           modal.classList.remove('hidden');
-          // setTimeout for transition
           setTimeout(() => {
               modal.classList.remove('opacity-0');
-              modal.querySelector('div').classList.remove('scale-95');
+              const card = modal.querySelector('.transform');
+              if (card) card.classList.remove('scale-95');
           }, 10);
       }
 
       function closeEditModal() {
           const modal = document.getElementById('editSlideModal');
           modal.classList.add('opacity-0');
-          modal.querySelector('div').classList.add('scale-95');
+          const card = modal.querySelector('.transform');
+          if (card) card.classList.add('scale-95');
           setTimeout(() => {
               modal.classList.add('hidden');
           }, 300);
+      }
+
+      function renderExistingMediaInEditModal() {
+          const container = document.getElementById('editExistingMediaList');
+          const hiddenInput = document.getElementById('existingMediaInput');
+          if (!container || !hiddenInput) return;
+
+          hiddenInput.value = JSON.stringify(currentExistingMedia);
+          container.innerHTML = '';
+
+          if (currentExistingMedia.length === 0) {
+              container.innerHTML = '<span class="text-xs text-gray-400 italic">Tidak ada file media tersimpan. Silakan upload file baru di bawah.</span>';
+              return;
+          }
+
+          currentExistingMedia.forEach((item, index) => {
+              const chip = document.createElement('div');
+              chip.className = 'flex items-center gap-2 p-1.5 pr-3 bg-white border border-gray-200 rounded-lg shadow-2xs';
+              
+              const isVid = (item.type === 'video');
+              const mediaThumb = isVid 
+                  ? `<div class="w-9 h-9 bg-gray-900 rounded flex items-center justify-center text-white text-[0.6rem] font-bold">VID</div>`
+                  : `<img src="<?= base_url('assets/images/') ?>${item.file}" class="w-9 h-9 object-cover rounded border border-gray-100">`;
+
+              chip.innerHTML = `
+                  ${mediaThumb}
+                  <span class="text-xs font-bold text-gray-700 max-w-[130px] truncate" title="${item.file}">${item.file}</span>
+                  <button type="button" class="w-5 h-5 rounded-full bg-red-100 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center font-bold text-xs transition-colors ml-1" title="Hapus file media ini">&times;</button>
+              `;
+
+              chip.querySelector('button').addEventListener('click', (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  currentExistingMedia.splice(index, 1);
+                  renderExistingMediaInEditModal();
+              });
+
+              container.appendChild(chip);
+          });
+      }
+
+      function setupEditMediaDropzone() {
+          const dropzone = document.getElementById('editDropzoneStaging');
+          const stagedInput = document.getElementById('editStagedFile');
+          if (!dropzone || !stagedInput) return;
+
+          dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+          dropzone.addEventListener('dragleave', e => { dropzone.classList.remove('dragover'); });
+          dropzone.addEventListener('drop', e => {
+              e.preventDefault();
+              dropzone.classList.remove('dragover');
+              if (e.dataTransfer.files.length) handleNewEditFiles(e.dataTransfer.files);
+          });
+          stagedInput.addEventListener('change', () => {
+              if (stagedInput.files.length) handleNewEditFiles(stagedInput.files);
+          });
+      }
+
+      function handleNewEditFiles(files) {
+          Array.from(files).forEach(file => {
+              if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
+                  editMediaFiles.push({
+                      file: file,
+                      url: URL.createObjectURL(file),
+                      isVideo: file.type.startsWith('video/')
+                  });
+              }
+          });
+          renderEditMediaPreviews();
+      }
+
+      function renderEditMediaPreviews() {
+          const grid = document.getElementById('editMediaPreviewGrid');
+          const defaultBox = document.getElementById('editDropzoneDefault');
+          const finalInput = document.getElementById('editFinalFiles');
+          if (!grid || !defaultBox || !finalInput) return;
+
+          const dt = new DataTransfer();
+          editMediaFiles.forEach(item => dt.items.add(item.file));
+          finalInput.files = dt.files;
+
+          if (editMediaFiles.length === 0) {
+              defaultBox.classList.remove('hidden');
+              grid.classList.add('hidden');
+              grid.innerHTML = '';
+              return;
+          }
+
+          defaultBox.classList.add('hidden');
+          grid.classList.remove('hidden');
+          grid.innerHTML = '';
+
+          editMediaFiles.forEach((item, index) => {
+              const box = document.createElement('div');
+              box.className = 'media-preview-item';
+              const mediaTag = item.isVideo
+                  ? `<video src="${item.url}" muted playsinline></video>`
+                  : `<img src="${item.url}" alt="${item.file.name}">`;
+
+              box.innerHTML = `
+                  ${mediaTag}
+                  <button type="button" class="media-remove-btn" title="Hapus file baru ini">&times;</button>
+                  <span class="media-file-name">${item.file.name}</span>
+              `;
+              box.querySelector('.media-remove-btn').addEventListener('click', (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  editMediaFiles.splice(index, 1);
+                  renderEditMediaPreviews();
+              });
+              grid.appendChild(box);
+          });
       }
 
       // Event listener untuk tombol edit slide (data-attributes)
@@ -1749,7 +2099,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                   const label = this.getAttribute('data-label');
                   const overlayTitle = this.getAttribute('data-overlay-title');
                   const overlayDescription = this.getAttribute('data-overlay-description');
-                  openEditSlideModal(id, label, overlayTitle, overlayDescription);
+                  const mediaPath = this.getAttribute('data-media-path');
+                  const mediaType = this.getAttribute('data-media-type');
+                  openEditSlideModal(id, label, overlayTitle, overlayDescription, mediaPath, mediaType);
               });
           });
       });
@@ -1758,7 +2110,6 @@ defined('BASEPATH') OR exit('No direct script access allowed');
       document.getElementById('editSlideForm').addEventListener('submit', function(e) {
           e.preventDefault();
 
-          // Sinkronkan isi editor TinyMCE ke textarea sebelum ambil FormData
           if (window.tinymce) {
               tinymce.triggerSave();
           }

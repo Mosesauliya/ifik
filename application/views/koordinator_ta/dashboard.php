@@ -63,6 +63,55 @@
             min-height: 100vh;
         }
 
+        /* Smooth Content Shifting for Curved Sidebar */
+        .page-wrapper-for-sidebar {
+            width: 100%;
+            min-width: 0;
+            min-height: 100vh;
+            transition: margin-left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+            box-sizing: border-box;
+        }
+
+        @media (min-width: 1024px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 270px;
+                width: calc(100% - 270px);
+            }
+
+            body.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .header-nav-container {
+                padding-left: 0.5rem !important;
+            }
+
+            body.curved-sidebar-desktop-collapsed .header-nav-container {
+                padding-left: 3.5rem !important;
+            }
+
+            #floatingBatchBar,
+            #floatingP2BatchBar,
+            #floatingSidangBatchBar {
+                left: calc(50% + 135px) !important;
+                transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), left 0.75s cubic-bezier(0.76, 0, 0.24, 1) !important;
+            }
+
+            body.curved-sidebar-desktop-collapsed #floatingBatchBar,
+            body.curved-sidebar-desktop-collapsed #floatingP2BatchBar,
+            body.curved-sidebar-desktop-collapsed #floatingSidangBatchBar {
+                left: 50% !important;
+            }
+        }
+
+        @media (max-width: 1023.98px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 0 !important;
+                width: 100% !important;
+            }
+        }
+
         .glass-header {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(16px);
@@ -526,17 +575,17 @@
         }
 
         .btn-3d-kinetic.btn-compact .wrap {
-            min-width: 114px;
-            height: 32px;
-            padding: 4px 10px;
+            min-width: 72px;
+            height: 25px;
+            padding: 2px 6px;
         }
 
         .btn-3d-kinetic.btn-compact .char {
-            font-size: 10.5px;
+            font-size: 9px;
         }
 
         .btn-3d-kinetic.btn-compact .icon-action {
-            font-size: 10px;
+            font-size: 8.5px;
         }
 
         .btn-3d-kinetic:active .bg {
@@ -701,9 +750,12 @@
     <!-- Include Curved Animated Sidebar Component -->
     <?php $this->load->view('components/curved_sidebar'); ?>
 
-    <!-- Top Navigation Header -->
-    <header class="sticky top-0 z-40 glass-header px-4 sm:px-8 py-3 sm:py-4 mb-6 sm:mb-8">
-        <div class="max-w-7xl mx-auto flex items-center justify-between gap-3 sm:gap-4 pl-12 sm:pl-14 md:pl-16">
+    <!-- Main Page Content Wrapper for Sidebar Shifting -->
+    <div id="mainPageContent" class="page-wrapper-for-sidebar">
+
+        <!-- Top Navigation Header -->
+        <header class="sticky top-0 z-40 glass-header px-4 sm:px-8 py-3 sm:py-4 mb-6 sm:mb-8">
+            <div class="max-w-7xl mx-auto flex items-center justify-between gap-3 sm:gap-4 pl-12 sm:pl-14 md:pl-16 header-nav-container">
             <div class="flex items-center gap-2.5 sm:gap-4 min-w-0">
                 <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-orange-100 text-brand-600 flex items-center justify-center font-bold text-base sm:text-lg shadow-sm shrink-0">
                     <i class="fa-solid fa-graduation-cap"></i>
@@ -729,7 +781,7 @@
         </div>
     </header>
 
-    <main class="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+    <main class="w-full max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6">
 
         <!-- Section Tab Switcher (Dipindahkan & Diintegrasikan ke Curved Animated Sidebar) -->
         <!--
@@ -1064,20 +1116,20 @@
         <!-- Table with Rotating Conic-Gradient Border (Exact Import Akun Style) -->
         <div class="table-rotating-border-wrap hidden sm:block">
             <span class="table-rotating-border-spin"></span>
-            <div class="table-rotating-border-inner overflow-x-auto no-scrollbar">
+            <div class="table-rotating-border-inner overflow-hidden">
                 <table class="table-custom-rounded text-left text-xs w-full">
                     <thead class="bg-white text-slate-700 font-semibold text-xs border-b border-slate-200/90">
                         <tr>
-                            <th class="w-10 py-3 px-3.5 pl-6 text-center whitespace-nowrap">
+                            <th class="w-8 py-3 px-2 text-center">
                                 <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)" class="w-4 h-4 rounded text-orange-600 focus:ring-orange-500 border-slate-300 cursor-pointer" title="Pilih Semua di Halaman Ini">
                             </th>
-                            <th class="py-3 px-3.5 font-bold whitespace-nowrap">NIM</th>
-                            <th class="py-3 px-3.5 whitespace-nowrap">Nama Mahasiswa</th>
-                            <th class="py-3 px-3.5 min-w-[200px]">Usulan Judul TA (Utama)</th>
-                            <th class="py-3 px-3.5 whitespace-nowrap">Dosen Pembimbing</th>
-                            <th class="py-3 px-3.5 text-center whitespace-nowrap">Status Approval</th>
-                            <th class="py-3 px-3.5 text-center whitespace-nowrap">Tahap Saat Ini</th>
-                            <th class="py-3 px-3.5 text-center whitespace-nowrap">Aksi</th>
+                            <th class="w-24 py-3 px-2 font-bold whitespace-nowrap">NIM</th>
+                            <th class="w-36 lg:w-44 py-3 px-2 font-semibold whitespace-nowrap">Nama Mahasiswa</th>
+                            <th class="py-3 px-2 min-w-0">Usulan Judul TA</th>
+                            <th class="w-40 lg:w-48 py-3 px-2 whitespace-nowrap">Dosen Pembimbing</th>
+                            <th class="w-28 py-3 px-2 text-center whitespace-nowrap">Status Approval</th>
+                            <th class="w-28 py-3 px-2 text-center whitespace-nowrap">Tahap Saat Ini</th>
+                            <th class="w-28 py-3 px-2 text-center whitespace-nowrap">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 font-medium bg-white" id="tableBodyMhs">
@@ -1816,18 +1868,17 @@
                     <table class="table-custom-rounded text-left text-xs w-full">
                         <thead class="bg-white text-slate-700 font-semibold text-xs border-b border-slate-200/90">
                             <tr>
-                                <th class="w-8 py-3.5 px-2 text-center">
-                                    <input type="checkbox" id="selectAllCheckboxSidang" onchange="toggleSelectAllSidang(this)" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 cursor-pointer" title="Pilih Semua di Halaman Ini">
+                                <th class="w-7 py-3 px-1 text-center">
+                                    <input type="checkbox" id="selectAllCheckboxSidang" onchange="toggleSelectAllSidang(this)" class="w-3.5 h-3.5 rounded text-amber-600 focus:ring-amber-500 border-slate-300 cursor-pointer" title="Pilih Semua di Halaman Ini">
                                 </th>
-                                <th class="w-24 py-3.5 px-2 font-bold">NIM</th>
-                                <th class="w-36 py-3.5 px-2 font-semibold">Nama Mahasiswa</th>
-                                <th class="py-3.5 px-2">Usulan Judul TA</th>
-                                <th class="w-32 py-3.5 px-2">Dosen Pembimbing</th>
-                                <th class="w-32 py-3.5 px-2">Dosen Penguji</th>
-                                <th class="w-36 py-3.5 px-2">Waktu Sidang</th>
-                                <th class="w-28 py-3.5 px-2">Ruangan</th>
-                                <th class="w-24 py-3.5 px-1 text-center">Status</th>
-                                <th class="w-36 py-3.5 px-2 text-center">Aksi</th>
+                                <th class="w-20 py-3 px-1.5 font-bold">NIM</th>
+                                <th class="w-28 lg:w-32 py-3 px-1.5 font-semibold">Nama Mahasiswa</th>
+                                <th class="py-3 px-2 min-w-0">Usulan Judul TA</th>
+                                <th class="w-28 lg:w-32 py-3 px-1.5">Pembimbing & Penguji</th>
+                                <th class="w-28 lg:w-32 py-3 px-1.5">Waktu Sidang</th>
+                                <th class="w-20 lg:w-24 py-3 px-1.5">Ruangan</th>
+                                <th class="w-20 py-3 px-1 text-center">Status</th>
+                                <th class="w-28 lg:w-32 py-3 px-1 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 font-medium bg-white" id="tbodySidang">
@@ -1888,6 +1939,8 @@
         </div> <!-- /#tabContentSidang -->
 
     </main>
+
+    </div> <!-- /#mainPageContent -->
 
     <!-- ========================================================= -->
     <!-- MODAL 1B: MANAJEMEN MASTER RUBRIK PENILAIAN DINAMIS       -->
