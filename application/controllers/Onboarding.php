@@ -74,7 +74,7 @@ class Onboarding extends CI_Controller {
         $data['nama_depan'] = isset($nameParts[0]) ? $nameParts[0] : '';
         $data['nama_belakang'] = isset($nameParts[1]) ? $nameParts[1] : '';
 
-        // Load Dosen Wali list directly from MySQL database `dosen_wali` table
+        // Load Dosen Wali list directly from MySQL database `dosen_wali` table or `user` table
         $dosenList = [];
         if ($this->db->table_exists('dosen_wali')) {
             $this->db->order_by('jurusan', 'ASC');
@@ -85,10 +85,29 @@ class Onboarding extends CI_Controller {
                     $dosenList[] = [
                         'nip'     => $dw['nip'],
                         'nama'    => $dw['nama_dosen'],
-                        'jurusan' => !empty($dw['jurusan']) ? $dw['jurusan'] : 'Fakultas Industri Kreatif',
+                        'jurusan' => !empty($dw['jurusan']) ? $dw['jurusan'] : 'Informatika',
                         'email'   => !empty($dw['email']) ? $dw['email'] : ''
                     ];
                 }
+            }
+        }
+
+        // Fetch all real lecturers directly from database `user` table
+        if (empty($dosenList)) {
+            $this->db->select('u.nip, u.name as nama, u.email, u.prodi as jurusan');
+            $this->db->from('user u');
+            $this->db->where_in('u.role_id', [3, 6, 9]);
+            $this->db->where('u.nip IS NOT NULL', null, false);
+            $this->db->where('u.nip !=', '');
+            $this->db->order_by('u.name', 'ASC');
+            $queryUsers = $this->db->get()->result_array();
+            foreach ($queryUsers as $du) {
+                $dosenList[] = [
+                    'nip'     => $du['nip'],
+                    'nama'    => $du['nama'],
+                    'jurusan' => !empty($du['jurusan']) ? $du['jurusan'] : 'Informatika',
+                    'email'   => !empty($du['email']) ? $du['email'] : ''
+                ];
             }
         }
 

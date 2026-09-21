@@ -25,35 +25,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const initData = window.ONBOARDING_INITIAL_DATA || {};
   const isDosen = !!initData.is_dosen;
 
-  // Master Daftar Dosen Wali Akademik (Dynamic from DB with fallback)
-  let daftarDosen = [
-    { nip: '1985010101', nama: 'Dr. Ir. Ahmad Yani, M.T.', bidang: 'Informatika' },
-    { nip: '1988020502', nama: 'Prof. Siti Aminah, Ph.D.', bidang: 'Informatika' },
-    { nip: '1990031203', nama: 'Hendra Kusuma, S.T., M.T.', bidang: 'Informatika' },
-    { nip: '1994110804', nama: 'Rian Pratama, S.Kom., M.T.', bidang: 'Informatika' },
-    { nip: '1987041505', nama: 'Dr. Budi Santoso, M.Sc.', bidang: 'Rekayasa Perangkat Lunak' },
-    { nip: '1991063006', nama: 'Fajar Nugraha, S.T., M.Kom.', bidang: 'Rekayasa Perangkat Lunak' },
-    { nip: '1995051907', nama: 'Dimas Aditya, S.Kom., M.Cs.', bidang: 'Rekayasa Perangkat Lunak' },
-    { nip: '1992072008', nama: 'Dra. Nurul Hidayah, M.Ds.', bidang: 'Desain Komunikasi Visual' },
-    { nip: '1986031409', nama: 'Dr. Raden Mas Bagus, M.Sn.', bidang: 'Desain Komunikasi Visual' },
-    { nip: '1993092810', nama: 'Annisa Larasati, S.Ds., M.Ds.', bidang: 'Desain Komunikasi Visual' },
-    { nip: '1990120511', nama: 'Yusuf Maulana, S.Sn., M.A.', bidang: 'Desain Komunikasi Visual' },
-    { nip: '1989092312', nama: 'Ratna Dewi, S.Sn., M.Ds.', bidang: 'Desain Produk' },
-    { nip: '1991021713', 'nama': 'Bambang Triyono, S.Ds., M.T.', bidang: 'Desain Produk' },
-    { nip: '1994071114', 'nama': 'Eka Wahyuni, S.Ds., M.Sc.', bidang: 'Desain Produk' },
-    { nip: '1993081415', 'nama': 'Maya Anggraini, S.Ds., M.A.', bidang: 'Desain Interior' },
-    { nip: '1987112016', 'nama': 'Ir. Gunawan Wibisono, M.Ars.', bidang: 'Desain Interior' },
-    { nip: '1992050917', 'nama': 'Citra Maharani, S.Ars., M.Ds.', bidang: 'Desain Interior' },
-    { nip: '1988100418', 'nama': 'Dra. Endang Lestari, M.Sn.', bidang: 'Kriya Tekstil & Fashion' },
-    { nip: '1993042219', 'nama': 'Rizky Fitriani, S.Ds., M.Ds.', bidang: 'Kriya Tekstil & Fashion' },
-    { nip: '1996011520', 'nama': 'Taufik Hidayat, S.Sn., M.A.', bidang: 'Kriya Tekstil & Fashion' }
-  ];
+  // Master Daftar Dosen Wali Akademik (Murni dari Database MySQL)
+  let daftarDosen = [];
 
   if (Array.isArray(initData.dosen_list) && initData.dosen_list.length > 0) {
     daftarDosen = initData.dosen_list.map(d => ({
       nip: d.nip,
       nama: d.nama,
-      bidang: d.jurusan || 'Fakultas Industri Kreatif'
+      bidang: d.jurusan || 'Informatika',
+      email: d.email || ''
     }));
   }
 
