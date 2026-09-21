@@ -58,20 +58,17 @@
     <!-- RIGHT — HANGING CARD WITH ROPE -->
     <div class="hang-root" id="hangRoot">
 
-      <!-- Rope extension going up off-screen -->
+      <!-- Tali & Cincin Logam (Di-comment sesuai instruksi) -->
+      <!--
       <div class="rope-extension"></div>
-
-      <!-- Rope Knot & Metallic Silver Ring SVG -->
       <div class="rope-ring-wrapper">
         <svg class="rope-ring-svg" viewBox="0 0 80 160" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <!-- Braided Rope Pattern -->
             <pattern id="ropePattern" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
               <rect width="4" height="8" fill="#8a5a36"/>
               <rect x="4" width="4" height="8" fill="#b88358"/>
             </pattern>
 
-            <!-- Chrome Silver Metallic Gradient -->
             <linearGradient id="chromeMetal" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stop-color="#444444"/>
               <stop offset="20%" stop-color="#c5c5c5"/>
@@ -85,20 +82,16 @@
             </filter>
           </defs>
 
-          <!-- Vertical Rope Strand -->
           <rect x="36" y="0" width="8" height="95" fill="url(#ropePattern)" filter="url(#shadow)"/>
           <line x1="38" y1="0" x2="38" y2="95" stroke="rgba(255,255,255,0.3)" stroke-width="1.2"/>
 
-          <!-- Rope Knot around top of the Ring -->
           <g filter="url(#shadow)">
             <ellipse cx="40" cy="93" rx="9" ry="5.5" fill="#8a5a36"/>
             <ellipse cx="40" cy="98" rx="11" ry="6" fill="#6d4228"/>
             <ellipse cx="40" cy="102" rx="9" ry="4.5" fill="#52301a"/>
           </g>
 
-          <!-- Teardrop Silver Ring / Loop (connected to card cap) -->
           <g filter="url(#shadow)">
-            <!-- Outer Loop Path -->
             <path d="M 40 98 
                      C 25 98, 23 118, 33 133 
                      C 37 140, 37 148, 37 158 
@@ -107,7 +100,6 @@
                      C 57 118, 55 98, 40 98 Z" 
                   fill="url(#chromeMetal)" />
             
-            <!-- Inner Cutout / Hole -->
             <path d="M 40 104 
                      C 30 104, 29 116, 37 127 
                      C 39 130, 39 144, 39 158 
@@ -116,11 +108,11 @@
                      C 51 116, 50 104, 40 104 Z" 
                   fill="#78350f" />
 
-            <!-- Metallic Highlight overlay -->
             <path d="M 40 99 C 27 99, 25 117, 34 132" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round"/>
           </g>
         </svg>
       </div>
+      -->
 
       <!-- THE HANGING CARD -->
       <div class="login-card-container" id="loginCard">
@@ -128,13 +120,16 @@
         <!-- Glowing Scanner Beam (Active during loading) -->
         <div class="scanner-beam" id="scannerBeam"></div>
 
-        <!-- Premium Metallic Top Cap (Horizontal Bar with Hole) -->
+        <!-- Premium Metallic Top Cap (Horizontal Bar) -->
         <div class="card-metallic-cap">
           <div class="cap-progress-bar" id="capProgressBar"></div>
           <div class="cap-reflection"></div>
+          <!-- Lubang Cincin (Di-comment) -->
+          <!--
           <div class="cap-hole-wrapper">
             <div class="cap-hole"></div>
           </div>
+          -->
         </div>
 
         <!-- Card Body Content -->

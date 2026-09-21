@@ -47,10 +47,9 @@
     <!-- RIGHT — HANGING CARD WITH ROPE -->
     <div class="hang-root" id="hangRoot">
 
-      <!-- Rope extension going up off-screen -->
+      <!-- Tali & Cincin Logam (Di-comment sesuai instruksi) -->
+      <!--
       <div class="rope-extension"></div>
-
-      <!-- Rope Knot & Metallic Silver Ring SVG -->
       <div class="rope-ring-wrapper">
         <svg class="rope-ring-svg" viewBox="0 0 80 160" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -88,18 +87,23 @@
           </g>
         </svg>
       </div>
+      -->
 
       <!-- THE HANGING CARD -->
       <div class="login-card-container" id="loginCard">
         
         <div class="scanner-beam" id="scannerBeam"></div>
 
+        <!-- Premium Metallic Top Cap (Horizontal Bar) -->
         <div class="card-metallic-cap">
           <div class="cap-progress-bar" id="capProgressBar"></div>
           <div class="cap-reflection"></div>
+          <!-- Lubang Cincin (Di-comment) -->
+          <!--
           <div class="cap-hole-wrapper">
             <div class="cap-hole"></div>
           </div>
+          -->
         </div>
 
         <!-- Card Body Content -->

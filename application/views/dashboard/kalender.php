@@ -2407,14 +2407,11 @@
         <div class="curved-sidebar-inner">
             
             <div>
-                <!-- 1. Header Control with Role Badge -->
-                <div class="curved-sidebar-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <!-- 1. Header Control -->
+                <div class="curved-sidebar-header" style="display: flex; align-items: center; margin-bottom: 8px;">
                     <p style="margin: 0; font-size: 0.82rem; display: flex; align-items: center; gap: 6px;">
                         <i class="fa-solid fa-sliders" style="color: #ea580c;"></i> Kontrol & Navigasi
                     </p>
-                    <div class="curved-header-role-badge">
-                        <span><?= htmlspecialchars($activeRoleBadge); ?></span>
-                    </div>
                 </div>
 
                 <!-- Tombol Kembali Cepat ke Dashboard / Portal Asal -->

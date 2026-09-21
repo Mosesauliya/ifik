@@ -230,7 +230,8 @@
     };
 
     function updateFilterBadge() {
-        const totalRows = document.querySelectorAll('.extra-filter-row').length + 1;
+        const container = document.getElementById('additionalFilterRowsContainer');
+        const totalRows = (container ? container.querySelectorAll('.extra-filter-row').length : 0) + 1;
         const badge = document.getElementById('filterCountBadge');
         if (badge) badge.innerText = `${totalRows}/4`;
     }
@@ -238,7 +239,7 @@
     window.toggleCustomDropdown = function (type, event) {
         if (event) {
             event.stopPropagation();
-            event.preventDefault();
+            e.preventDefault();
         }
         const menu = document.getElementById('menu-filter-' + type);
         const arrow = document.getElementById('arrow-filter-' + type);
@@ -273,24 +274,24 @@
 
         closeAllCustomDropdowns();
 
-        const extraRowsCount = document.querySelectorAll('.extra-filter-row').length;
+        const container = document.getElementById('additionalFilterRowsContainer');
+        const extraRowsCount = container ? container.querySelectorAll('.extra-filter-row').length : 0;
 
-        if (extraRowsCount > 0 && !isExtraCardVisible()) {
+        if (extraRowsCount === 0) {
+            addAdditionalFilterRow(e);
+            return;
+        }
+
+        if (!isExtraCardVisible()) {
             showExtraCard();
             return;
         }
 
-        if (extraRowsCount >= 3) {
-            const extraCard = document.getElementById('extraRowsCard');
-            if (extraCard && extraCard.style.display === 'block') {
-                hideExtraCard();
-            } else {
-                showExtraCard();
-            }
-            return;
+        if (extraRowsCount < 3) {
+            addAdditionalFilterRow(e);
+        } else {
+            hideExtraCard();
         }
-
-        addAdditionalFilterRow(e);
     };
 
     function isTextCategory(cat) {
@@ -311,7 +312,10 @@
             e.preventDefault();
         }
 
-        const extraRowsCount = document.querySelectorAll('.extra-filter-row').length;
+        const container = document.getElementById('additionalFilterRowsContainer');
+        if (!container) return;
+
+        const extraRowsCount = container.querySelectorAll('.extra-filter-row').length;
         if (extraRowsCount >= 3) {
             Swal.fire({
                 icon: 'info',
@@ -331,7 +335,7 @@
         const allCriteria = ['query', 'nama', 'nim', 'judul', 'konsentrasi', 'status', 'tahap'];
         const mainCat = document.getElementById('mainCategorySelect') ? document.getElementById('mainCategorySelect').value : 'query';
         const usedCriteria = [mainCat];
-        document.querySelectorAll('.extra-cat-select').forEach(el => usedCriteria.push(el.value));
+        container.querySelectorAll('.extra-cat-select').forEach(el => usedCriteria.push(el.value));
 
         const defaultCrit = allCriteria.find(c => !usedCriteria.includes(c)) || 'status';
 
@@ -343,7 +347,6 @@
         else if (defaultCrit === 'tahap') defaultLabel = '🔄 Tahap Saat Ini';
         else if (defaultCrit === 'query') defaultLabel = '🔍 Kata Kunci (Semua)';
 
-        const container = document.getElementById('additionalFilterRowsContainer');
         const rowDiv = document.createElement('div');
         rowDiv.className = 'extra-filter-row';
         rowDiv.id = `extraRow_${rowId}`;
@@ -406,7 +409,8 @@
         if (row) {
             row.remove();
             updateFilterBadge();
-            const count = document.querySelectorAll('.extra-filter-row').length;
+            const container = document.getElementById('additionalFilterRowsContainer');
+            const count = container ? container.querySelectorAll('.extra-filter-row').length : 0;
             if (count === 0) hideExtraCard();
             handleUnifiedMultiSearch();
         }
@@ -542,9 +546,11 @@
         closeAllCustomDropdowns();
     };
 
-    window.resetImportMultiSearch = function () {
-        document.getElementById('mainCategorySelect').value = 'query';
-        document.getElementById('label-filter-main-cat').innerText = 'Cari Kata Kunci';
+    window.resetMultiSearch = window.resetImportMultiSearch = function () {
+        const catSelect = document.getElementById('mainCategorySelect');
+        if (catSelect) catSelect.value = 'query';
+        const catLabel = document.getElementById('label-filter-main-cat');
+        if (catLabel) catLabel.innerText = 'Cari Kata Kunci';
         
         const mainInput = document.getElementById('mainSearchInput');
         if (mainInput) {
@@ -560,13 +566,15 @@
         }
         if (selectWrap) selectWrap.classList.add('hidden');
 
-        document.getElementById('mainCustomSelectVal').value = '';
+        const mainVal = document.getElementById('mainCustomSelectVal');
+        if (mainVal) mainVal.value = '';
 
         const container = document.getElementById('additionalFilterRowsContainer');
         if (container) container.innerHTML = '';
 
         hideExtraCard();
         updateFilterBadge();
+        closeAllCustomDropdowns();
 
         state.currentPage = 1;
         renderTable();
@@ -584,17 +592,20 @@
         }
         if (mainVal) criteria.push({ type: mainCat, val: mainVal });
 
-        document.querySelectorAll('.extra-filter-row').forEach(row => {
-            const rowId = row.id.replace('extraRow_', '');
-            const cat = document.getElementById('extraCatSelect_' + rowId) ? document.getElementById('extraCatSelect_' + rowId).value : 'query';
-            let val = '';
-            if (isTextCategory(cat)) {
-                val = document.getElementById('extraInput_' + rowId) ? document.getElementById('extraInput_' + rowId).value.trim() : '';
-            } else {
-                val = document.getElementById('extraValueVal_' + rowId) ? document.getElementById('extraValueVal_' + rowId).value : '';
-            }
-            if (val) criteria.push({ type: cat, val: val });
-        });
+        const container = document.getElementById('additionalFilterRowsContainer');
+        if (container) {
+            container.querySelectorAll('.extra-filter-row').forEach(row => {
+                const rowId = row.id.replace('extraRow_', '');
+                const cat = document.getElementById('extraCatSelect_' + rowId) ? document.getElementById('extraCatSelect_' + rowId).value : 'query';
+                let val = '';
+                if (isTextCategory(cat)) {
+                    val = document.getElementById('extraInput_' + rowId) ? document.getElementById('extraInput_' + rowId).value.trim() : '';
+                } else {
+                    val = document.getElementById('extraValueVal_' + rowId) ? document.getElementById('extraValueVal_' + rowId).value : '';
+                }
+                if (val) criteria.push({ type: cat, val: val });
+            });
+        }
 
         return criteria;
     }
@@ -2652,7 +2663,8 @@
     };
 
     function updateP2FilterBadge() {
-        const totalRows = document.querySelectorAll('.extra-filter-row-p2').length + 1;
+        const container = document.getElementById('additionalFilterRowsContainerP2');
+        const totalRows = (container ? container.querySelectorAll('.extra-filter-row-p2').length : 0) + 1;
         const badge = document.getElementById('filterCountBadgeP2');
         if (badge) badge.innerText = `${totalRows}/4`;
     }
@@ -2665,24 +2677,24 @@
 
         closeAllCustomDropdowns();
 
-        const extraRowsCount = document.querySelectorAll('.extra-filter-row-p2').length;
+        const container = document.getElementById('additionalFilterRowsContainerP2');
+        const extraRowsCount = container ? container.querySelectorAll('.extra-filter-row-p2').length : 0;
 
-        if (extraRowsCount > 0 && !isExtraCardP2Visible()) {
+        if (extraRowsCount === 0) {
+            addAdditionalP2FilterRow(e);
+            return;
+        }
+
+        if (!isExtraCardP2Visible()) {
             showExtraCardP2();
             return;
         }
 
-        if (extraRowsCount >= 3) {
-            const extraCard = document.getElementById('extraRowsCardP2');
-            if (extraCard && extraCard.style.display === 'block') {
-                hideExtraCardP2();
-            } else {
-                showExtraCardP2();
-            }
-            return;
+        if (extraRowsCount < 3) {
+            addAdditionalP2FilterRow(e);
+        } else {
+            hideExtraCardP2();
         }
-
-        addAdditionalP2FilterRow(e);
     };
 
     function isTextP2Category(cat) {
@@ -2705,7 +2717,10 @@
             e.preventDefault();
         }
 
-        const extraRowsCount = document.querySelectorAll('.extra-filter-row-p2').length;
+        const container = document.getElementById('additionalFilterRowsContainerP2');
+        if (!container) return;
+
+        const extraRowsCount = container.querySelectorAll('.extra-filter-row-p2').length;
         if (extraRowsCount >= 3) {
             Swal.fire({
                 icon: 'info',
@@ -2725,7 +2740,7 @@
         const allCriteria = ['query', 'nama', 'nim', 'judul', 'pembimbing', 'penguji', 'ruangan', 'status'];
         const mainCat = document.getElementById('p2MainCategorySelect') ? document.getElementById('p2MainCategorySelect').value : 'query';
         const usedCriteria = [mainCat];
-        document.querySelectorAll('.extra-p2-cat-select').forEach(el => usedCriteria.push(el.value));
+        container.querySelectorAll('.extra-p2-cat-select').forEach(el => usedCriteria.push(el.value));
 
         const defaultCrit = allCriteria.find(c => !usedCriteria.includes(c)) || 'status';
 
@@ -2738,9 +2753,8 @@
         else if (defaultCrit === 'ruangan') defaultLabel = '🏛️ Ruangan Sidang';
         else if (defaultCrit === 'query') defaultLabel = '🔍 Kata Kunci (Semua)';
 
-        const container = document.getElementById('additionalFilterRowsContainerP2');
         const rowDiv = document.createElement('div');
-        rowDiv.className = 'extra-filter-row extra-filter-row-p2';
+        rowDiv.className = 'extra-filter-row-p2';
         rowDiv.id = `extraP2Row_${rowId}`;
 
         rowDiv.innerHTML = `
@@ -2802,7 +2816,8 @@
         if (row) {
             row.remove();
             updateP2FilterBadge();
-            const count = document.querySelectorAll('.extra-filter-row-p2').length;
+            const container = document.getElementById('additionalFilterRowsContainerP2');
+            const count = container ? container.querySelectorAll('.extra-filter-row-p2').length : 0;
             if (count === 0) hideExtraCardP2();
             handleUnifiedMultiSearchP2();
         }
@@ -2976,17 +2991,20 @@
         }
         if (mainVal) criteria.push({ type: mainCat, val: mainVal });
 
-        document.querySelectorAll('.extra-filter-row-p2').forEach(row => {
-            const rowId = row.id.replace('extraP2Row_', '');
-            const cat = document.getElementById('extraP2CatSelect_' + rowId) ? document.getElementById('extraP2CatSelect_' + rowId).value : 'query';
-            let val = '';
-            if (isTextP2Category(cat)) {
-                val = document.getElementById('extraP2Input_' + rowId) ? document.getElementById('extraP2Input_' + rowId).value.trim() : '';
-            } else {
-                val = document.getElementById('extraP2ValueVal_' + rowId) ? document.getElementById('extraP2ValueVal_' + rowId).value : '';
-            }
-            if (val) criteria.push({ type: cat, val: val });
-        });
+        const container = document.getElementById('additionalFilterRowsContainerP2');
+        if (container) {
+            container.querySelectorAll('.extra-filter-row-p2').forEach(row => {
+                const rowId = row.id.replace('extraP2Row_', '');
+                const cat = document.getElementById('extraP2CatSelect_' + rowId) ? document.getElementById('extraP2CatSelect_' + rowId).value : 'query';
+                let val = '';
+                if (isTextP2Category(cat)) {
+                    val = document.getElementById('extraP2Input_' + rowId) ? document.getElementById('extraP2Input_' + rowId).value.trim() : '';
+                } else {
+                    val = document.getElementById('extraP2ValueVal_' + rowId) ? document.getElementById('extraP2ValueVal_' + rowId).value : '';
+                }
+                if (val) criteria.push({ type: cat, val: val });
+            });
+        }
 
         return criteria;
     }
@@ -5788,24 +5806,52 @@
         closeAllCustomDropdowns();
     };
 
-    window.toggleOrAddFilterRowSidang = function (e) {
-        if (e) e.stopPropagation();
-        const card = document.getElementById('extraRowsCardSidang');
-        if (!card) return;
+    function showExtraCardSidang() {
+        const extraCard = document.getElementById('extraRowsCardSidang');
+        if (extraCard) extraCard.style.display = 'block';
+    }
 
-        if (card.classList.contains('active')) {
-            card.classList.remove('active');
+    function hideExtraCardSidang() {
+        const extraCard = document.getElementById('extraRowsCardSidang');
+        if (extraCard) extraCard.style.display = 'none';
+    }
+
+    function isExtraCardSidangVisible() {
+        const extraCard = document.getElementById('extraRowsCardSidang');
+        return extraCard && (extraCard.style.display === 'block' || window.getComputedStyle(extraCard).display !== 'none');
+    }
+
+    window.toggleOrAddFilterRowSidang = function (e) {
+        if (e) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
+
+        closeAllCustomDropdowns();
+
+        const container = document.getElementById('additionalFilterRowsContainerSidang');
+        const extraRowsCount = container ? container.querySelectorAll('.extra-filter-row-sidang').length : 0;
+
+        if (extraRowsCount === 0) {
+            addNewFilterRowSidang(e);
+            return;
+        }
+
+        if (!isExtraCardSidangVisible()) {
+            showExtraCardSidang();
+            return;
+        }
+
+        if (extraRowsCount < 3) {
+            addNewFilterRowSidang(e);
         } else {
-            const container = document.getElementById('additionalFilterRowsContainerSidang');
-            if (container && container.children.length === 0) {
-                addNewFilterRowSidang();
-            }
-            card.classList.add('active');
+            hideExtraCardSidang();
         }
     };
 
     function updateSidangFilterBadge() {
-        const rows = document.querySelectorAll('.extra-filter-row-sidang');
+        const container = document.getElementById('additionalFilterRowsContainerSidang');
+        const rows = container ? container.querySelectorAll('.extra-filter-row-sidang') : [];
         const total = rows.length + 1;
         const badge = document.getElementById('filterCountBadgeSidang');
         if (badge) badge.innerText = `${total}/4`;
@@ -5817,7 +5863,12 @@
         }
     }
 
-    window.addNewFilterRowSidang = function () {
+    window.addNewFilterRowSidang = function (e) {
+        if (e) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
+
         const container = document.getElementById('additionalFilterRowsContainerSidang');
         if (!container) return;
 
@@ -5826,6 +5877,8 @@
             Swal.fire({ icon: 'info', title: 'Batas Filter Tercapai', text: 'Maksimal 4 kriteria filter pencarian dapat aktif sekaligus.', timer: 2000, showConfirmButton: false });
             return;
         }
+
+        showExtraCardSidang();
 
         const rowId = Date.now();
         const rowDiv = document.createElement('div');
@@ -5933,11 +5986,14 @@
         if (row) {
             row.remove();
             updateSidangFilterBadge();
+            const container = document.getElementById('additionalFilterRowsContainerSidang');
+            const count = container ? container.querySelectorAll('.extra-filter-row-sidang').length : 0;
+            if (count === 0) hideExtraCardSidang();
             handleUnifiedMultiSearchSidang();
         }
     };
 
-    window.resetSidangMultiSearch = function () {
+    window.resetSidangMultiSearch = window.resetImportMultiSearchSidang = function () {
         const catSelect = document.getElementById('sidangMainCategorySelect');
         if (catSelect) catSelect.value = 'query';
         const catLabel = document.getElementById('label-filter-sidang-main-cat');
@@ -5963,9 +6019,7 @@
         const container = document.getElementById('additionalFilterRowsContainerSidang');
         if (container) container.innerHTML = '';
 
-        const card = document.getElementById('extraRowsCardSidang');
-        if (card) card.classList.remove('active');
-
+        hideExtraCardSidang();
         updateSidangFilterBadge();
         closeAllCustomDropdowns();
         handleUnifiedMultiSearchSidang();
@@ -5983,17 +6037,20 @@
         }
         if (mainVal) criteria.push({ type: mainCat, val: mainVal });
 
-        document.querySelectorAll('.extra-filter-row-sidang').forEach(row => {
-            const rowId = row.id.replace('extraSidangRow_', '');
-            const cat = document.getElementById('extraSidangCatSelect_' + rowId) ? document.getElementById('extraSidangCatSelect_' + rowId).value : 'query';
-            let val = '';
-            if (isTextSidangCategory(cat)) {
-                val = document.getElementById('extraSidangInput_' + rowId) ? document.getElementById('extraSidangInput_' + rowId).value.trim() : '';
-            } else {
-                val = document.getElementById('extraSidangValueVal_' + rowId) ? document.getElementById('extraSidangValueVal_' + rowId).value : '';
-            }
-            if (val) criteria.push({ type: cat, val: val });
-        });
+        const container = document.getElementById('additionalFilterRowsContainerSidang');
+        if (container) {
+            container.querySelectorAll('.extra-filter-row-sidang').forEach(row => {
+                const rowId = row.id.replace('extraSidangRow_', '');
+                const cat = document.getElementById('extraSidangCatSelect_' + rowId) ? document.getElementById('extraSidangCatSelect_' + rowId).value : 'query';
+                let val = '';
+                if (isTextSidangCategory(cat)) {
+                    val = document.getElementById('extraSidangInput_' + rowId) ? document.getElementById('extraSidangInput_' + rowId).value.trim() : '';
+                } else {
+                    val = document.getElementById('extraSidangValueVal_' + rowId) ? document.getElementById('extraSidangValueVal_' + rowId).value : '';
+                }
+                if (val) criteria.push({ type: cat, val: val });
+            });
+        }
 
         return criteria;
     }
@@ -10514,8 +10571,25 @@
         });
     }
 
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('.custom-dropdown-container')) {
+            closeAllCustomDropdowns();
+        }
+        if (!e.target.closest('#extraRowsCard') && !e.target.closest('#standaloneAddBtn') && !e.target.closest('.custom-dropdown-menu')) {
+            hideExtraCard();
+        }
+        if (!e.target.closest('#extraRowsCardP2') && !e.target.closest('#standaloneAddBtnP2') && !e.target.closest('.custom-dropdown-menu')) {
+            hideExtraCardP2();
+        }
+        if (!e.target.closest('#extraRowsCardSidang') && !e.target.closest('#standaloneAddBtnSidang') && !e.target.closest('.custom-dropdown-menu')) {
+            hideExtraCardSidang();
+        }
+    });
+
     document.addEventListener('DOMContentLoaded', () => {
         updateFilterBadge();
+        updateP2FilterBadge();
+        updateSidangFilterBadge();
         renderTable();
         renderP2Table();
         populateRuanganDropdowns();

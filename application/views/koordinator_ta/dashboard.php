@@ -1080,8 +1080,8 @@
                     </div>
                     
                     <div class="flex items-center justify-between border-t border-slate-100 pt-2.5 mt-2 text-xs">
-                        <span class="text-slate-400 text-[11px]">Gunakan kombinasi kriteria untuk mempersempit pencarian data akun.</span>
-                        <button type="button" onclick="resetImportMultiSearch()" class="text-rose-600 hover:text-rose-700 font-bold transition-colors">
+                        <span class="text-slate-400 text-[11px]">Gunakan kombinasi kriteria untuk mempersempit pencarian data pengajuan tugas akhir.</span>
+                        <button type="button" onclick="resetMultiSearch()" class="text-rose-600 hover:text-rose-700 font-bold transition-colors cursor-pointer">
                             Reset All Filters
                         </button>
                     </div>

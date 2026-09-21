@@ -136,9 +136,9 @@ body {
   align-items: center;
   flex-shrink: 0;
   position: relative;
-  margin-top: 50px;
-  /* Pivot point high up on the rope for natural movement */
-  transform-origin: 50% -250px;
+  margin-top: 0;
+  /* Pivot point for smooth subtle hover/loading */
+  transform-origin: 50% 50%;
   transition: transform 0.3s ease;
 }
 
