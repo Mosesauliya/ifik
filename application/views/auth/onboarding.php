@@ -46,7 +46,7 @@
         <div class="step-nav-line"></div>
         <button type="button" class="step-nav-item" data-step="2">
           <span class="step-num">2</span>
-          <span class="step-text"><?= !empty($is_dosen) ? 'Identitas Dosen' : 'Identitas Mahasiswa'; ?></span>
+          <span class="step-text"><?= !empty($is_dosen) ? 'Identitas ' . (!empty($role_title) ? $role_title : 'Dosen') : 'Identitas Mahasiswa'; ?></span>
         </button>
         <div class="step-nav-line"></div>
         <button type="button" class="step-nav-item" data-step="3">
@@ -84,7 +84,7 @@
     <footer class="absolute bottom-6 left-0 right-0 flex items-center justify-between px-8 text-xs text-slate-500 pointer-events-none">
       <div class="flex items-center gap-2">
         <span class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
-        <span>Aktivasi Akun Mahasiswa Terproteksi</span>
+        <span>Aktivasi Akun <?= htmlspecialchars($role_title ?? (!empty($is_dosen) ? 'Dosen / Staf' : 'Mahasiswa')); ?> Terproteksi</span>
       </div>
       <div class="font-mono">Fakultas Industri Kreatif &bull; Telkom University</div>
     </footer>
@@ -98,6 +98,7 @@
       save_url: <?= json_encode(base_url('onboarding/process_biodata')); ?>,
       dashboard_url: <?= json_encode(base_url('dashboard')); ?>,
       is_dosen: <?= json_encode(!empty($is_dosen)); ?>,
+      role_title: <?= json_encode(!empty($role_title) ? $role_title : (!empty($is_dosen) ? 'Dosen' : 'Mahasiswa')); ?>,
       role_name: <?= json_encode(!empty($role_name) ? $role_name : 'mahasiswa'); ?>,
       nim: <?= json_encode(!empty($nim) ? $nim : '130210091'); ?>,
       nama_depan: <?= json_encode(!empty($nama_depan) ? $nama_depan : 'Indah'); ?>,

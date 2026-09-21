@@ -44,7 +44,38 @@
             background-image:
                 radial-gradient(at 0% 0%, rgba(234, 88, 12, 0.07) 0px, transparent 50%),
                 radial-gradient(at 100% 100%, rgba(234, 88, 12, 0.05) 0px, transparent 50%);
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        .page-wrapper-for-sidebar {
+            width: 100%;
+            min-width: 0;
+            min-height: 100vh;
             padding: 24px 20px 48px;
+            transition: margin-left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+            box-sizing: border-box;
+        }
+
+        @media (min-width: 1024px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 270px;
+                width: calc(100% - 270px);
+            }
+
+            body.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 1023.98px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding-top: 56px;
+            }
         }
 
         .main-wrapper {
@@ -673,37 +704,39 @@
             border-top-right-radius: 14px !important;
         }
 
-        /* Table & Cards styling */
+        /* Desktop riwayat-table structure & column widths */
         .table-responsive {
             width: 100%;
-            overflow-x: auto;
             border-radius: 16px;
             border: 1px solid #f1f5f9;
+            background: #ffffff;
             min-height: 280px;
-            padding-bottom: 40px;
+            padding-bottom: 20px;
+            box-sizing: border-box;
         }
 
         .riwayat-table {
             width: 100%;
             border-collapse: collapse;
             text-align: left;
-            font-size: 0.88rem;
+            font-size: 0.86rem;
+            table-layout: auto;
         }
 
         .riwayat-table th {
             background: #f8fafc;
-            padding: 14px 16px;
+            padding: 12px 14px;
             font-weight: 700;
             color: #475569;
-            font-size: 0.78rem;
+            font-size: 0.74rem;
             text-transform: uppercase;
-            letter-spacing: 0.06em;
+            letter-spacing: 0.05em;
             border-bottom: 2px solid #e2e8f0;
             white-space: nowrap;
         }
 
         .riwayat-table td {
-            padding: 16px;
+            padding: 12px 14px;
             border-bottom: 1px solid #f1f5f9;
             vertical-align: middle;
             color: #334155;
@@ -714,14 +747,27 @@
             background: #fffbf7;
         }
 
+        .riwayat-table th.booking-check-col, .riwayat-table td.booking-check-col {
+            width: 38px;
+            text-align: center !important;
+            padding-left: 12px !important;
+            padding-right: 6px !important;
+        }
+
+        .riwayat-table th.action-th, .riwayat-table td:last-child {
+            width: 90px;
+            text-align: right !important;
+            padding-right: 14px !important;
+        }
+
         /* Badge Status */
         .badge-status {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 5px 12px;
+            gap: 5px;
+            padding: 4px 10px;
             border-radius: 9999px;
-            font-size: 0.76rem;
+            font-size: 0.72rem;
             font-weight: 800;
             letter-spacing: 0.02em;
             text-transform: uppercase;
@@ -751,54 +797,58 @@
         .room-pill {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             font-weight: 700;
             color: #0f172a;
             background: #f8fafc;
             border: 1px solid #e2e8f0;
-            padding: 4px 10px;
+            padding: 4px 8px;
             border-radius: 8px;
-            font-size: 0.84rem;
+            font-size: 0.8rem;
+            max-width: 170px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .agenda-text {
             font-weight: 600;
             color: #1e293b;
-            max-width: 240px;
+            font-size: 0.84rem;
+            max-width: 200px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
         .agenda-sub {
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             color: #94a3b8;
             margin-top: 2px;
+            white-space: nowrap;
         }
 
         .time-badge {
             display: flex;
             flex-direction: column;
             gap: 2px;
+            white-space: nowrap;
         }
         .time-date {
             font-weight: 700;
             color: #1e293b;
+            font-size: 0.82rem;
+            white-space: nowrap;
         }
         .time-hours {
-            font-size: 0.78rem;
+            font-size: 0.74rem;
             color: #64748b;
+            white-space: nowrap;
         }
 
         /* Custom Checkbox & Selection */
-        .booking-check-col {
-            width: 44px;
-            text-align: center !important;
-            padding-left: 14px !important;
-            padding-right: 6px !important;
-        }
         .booking-checkbox, .custom-checkbox-all {
-            width: 18px;
-            height: 18px;
+            width: 17px;
+            height: 17px;
             border-radius: 5px;
             cursor: pointer;
             accent-color: #ea580c;
@@ -821,17 +871,17 @@
         .btn-action-dropdown {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 7px 14px;
-            border-radius: 10px;
-            font-size: 0.8rem;
+            gap: 6px;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 0.76rem;
             font-weight: 700;
             color: #334155;
             background: #ffffff;
             border: 1px solid #cbd5e1;
             cursor: pointer;
             transition: all 0.2s ease;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
             white-space: nowrap;
             outline: none;
         }
@@ -839,10 +889,10 @@
             background: #fff7ed;
             color: #ea580c;
             border-color: #fdba74;
-            box-shadow: 0 4px 10px rgba(234, 88, 12, 0.15);
+            box-shadow: 0 3px 8px rgba(234, 88, 12, 0.12);
         }
         .btn-action-dropdown i {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: #64748b;
             transition: transform 0.2s ease;
         }
@@ -1292,7 +1342,8 @@
             word-break: break-word;
         }
 
-        @media (max-width: 768px) {
+        /* Media Query for Mobile Layout (<640px) */
+        @media (max-width: 640px) {
             body {
                 padding: 16px 12px 40px;
             }
@@ -1377,17 +1428,16 @@
             .unified-search-pill {
                 width: 100% !important;
                 max-width: 100% !important;
-                height: 48px !important;
-                padding: 4px 6px 4px 12px !important;
-                border-radius: 14px !important;
                 box-sizing: border-box !important;
+                height: 44px !important;
+                padding: 2px 8px !important;
             }
 
-            #label-filter-main-cat, .extra-category-label {
-                max-width: 110px !important;
-                overflow: hidden !important;
-                text-overflow: ellipsis !important;
-                white-space: nowrap !important;
+            .category-text-label {
+                max-width: 100px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
                 font-size: 0.82rem !important;
             }
 
@@ -1453,7 +1503,7 @@
             }
 
             /* =========================================================
-               RESPONSIVE TABLE TO MOBILE CARDS TRANSFORMATION (<768px)
+               RESPONSIVE TABLE TO MOBILE CARDS TRANSFORMATION (<640px)
                ========================================================= */
             .table-responsive {
                 overflow: visible !important;
@@ -1732,10 +1782,12 @@
     <!-- Curved Sidebar Component -->
     <?php $this->load->view('components/curved_sidebar'); ?>
 
-    <div class="main-wrapper">
-        
-        <!-- Header Section -->
-        <div class="page-header-card">
+    <!-- Main Page Content Wrapper (Smoothly shifts when sidebar is open) -->
+    <div id="mainPageContent" class="page-wrapper-for-sidebar">
+        <div class="main-wrapper">
+            
+            <!-- Header Section -->
+            <div class="page-header-card">
             <div class="header-title-group">
                 <h1>
                     <span>📋</span>
@@ -2143,7 +2195,8 @@
             </div>
         </div>
 
-    </div>
+        </div> <!-- /main-wrapper -->
+    </div> <!-- /mainPageContent -->
 
     <!-- Modal Preview Surat Resmi QR -->
     <div class="modal-backdrop-custom" id="suratModal">

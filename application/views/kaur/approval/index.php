@@ -34,10 +34,51 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             min-height: 100vh;
-            padding: 24px 32px 100px 76px;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
         }
 
-        .main-container { max-width: 1440px; margin: 0 auto; }
+        .page-wrapper-for-sidebar {
+            width: 100%;
+            min-width: 0;
+            min-height: 100vh;
+            padding: 24px 32px 100px;
+            transition: margin-left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+            box-sizing: border-box;
+        }
+
+        @media (min-width: 1024px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 270px;
+                width: calc(100% - 270px);
+            }
+
+            body.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar {
+                margin-left: 0;
+                width: 100%;
+                padding-left: 76px;
+            }
+
+            .floating-batch-bar {
+                left: calc(50% + 135px) !important;
+                transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), left 0.75s cubic-bezier(0.76, 0, 0.24, 1) !important;
+            }
+
+            body.curved-sidebar-desktop-collapsed .floating-batch-bar {
+                left: 50% !important;
+            }
+        }
+
+        @media (max-width: 1023.98px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding: 56px 16px 80px 16px;
+            }
+        }
+
+        .main-container { max-width: 1440px; margin: 0 auto; width: 100%; }
 
         .page-header {
             display: flex;
@@ -89,17 +130,17 @@
            ========================================================= */
         .stat-cards-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 18px;
-            margin-bottom: 28px;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
         }
 
         .stat-card-highlight {
             position: relative;
             background: #ffffff;
             border: 1px solid rgba(226, 232, 240, 0.95);
-            border-radius: 20px;
-            padding: 20px 22px 16px 22px;
+            border-radius: 18px;
+            padding: 18px 20px 14px 20px;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
             backdrop-filter: blur(12px);
             overflow: hidden;
@@ -108,6 +149,7 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            min-width: 0;
         }
 
         .stat-card-highlight:hover {
@@ -307,11 +349,25 @@
             gap: 14px;
         }
 
-        .filter-pills-wrap { display: flex; gap: 8px; flex-wrap: wrap; }
+        .filter-pills-wrap {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding-bottom: 2px;
+            width: 100%;
+        }
+        .filter-pills-wrap::-webkit-scrollbar {
+            display: none;
+        }
+
         .filter-pill {
-            padding: 7px 14px;
+            padding: 6px 12px;
             border-radius: 999px;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             font-weight: 700;
             cursor: pointer;
             border: 1.5px solid var(--border-color);
@@ -320,7 +376,10 @@
             transition: all 0.2s ease;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            user-select: none;
         }
 
         .filter-pill:hover { border-color: #cbd5e1; background: #f8fafc; }
@@ -1913,7 +1972,9 @@
          ========================================================= -->
     <?php $this->load->view('components/curved_sidebar'); ?>
 
-    <div class="main-container">
+    <!-- Main Page Content Wrapper (Smoothly shifts when sidebar is open) -->
+    <div id="mainPageContent" class="page-wrapper-for-sidebar">
+        <div class="main-container">
         
         <!-- Header -->
         <div class="page-header">
@@ -2407,6 +2468,7 @@
         </div>
 
     </div>
+    </div> <!-- /#mainPageContent -->
 
     <!-- =========================================================
          FLOATING BATCH ACTION BAR (MULTIPLE SELECT ACC / TOLAK)

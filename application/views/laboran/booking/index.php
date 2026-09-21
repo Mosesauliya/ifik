@@ -41,12 +41,54 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             min-height: 100vh;
-            padding: 24px 32px 100px 76px; /* space for fixed left sidebar burger */
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .page-wrapper-for-sidebar {
+            width: 100%;
+            min-width: 0;
+            min-height: 100vh;
+            padding: 24px 32px 100px;
+            transition: margin-left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+            box-sizing: border-box;
+        }
+
+        @media (min-width: 1024px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 270px;
+                width: calc(100% - 270px);
+            }
+
+            body.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar {
+                margin-left: 0;
+                width: 100%;
+                padding-left: 76px;
+            }
+
+            .floating-batch-bar {
+                left: calc(50% + 135px) !important;
+                transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), left 0.75s cubic-bezier(0.76, 0, 0.24, 1) !important;
+            }
+
+            body.curved-sidebar-desktop-collapsed .floating-batch-bar {
+                left: 50% !important;
+            }
+        }
+
+        @media (max-width: 1023.98px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding: 56px 16px 80px 16px;
+            }
         }
 
         .main-container {
             max-width: 1440px;
             margin: 0 auto;
+            width: 100%;
         }
 
         /* Top Header */
@@ -141,17 +183,17 @@
            ========================================================= */
         .stat-cards-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-            gap: 18px;
-            margin-bottom: 28px;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
         }
 
         .stat-card-highlight {
             position: relative;
             background: #ffffff;
             border: 1px solid rgba(226, 232, 240, 0.95);
-            border-radius: 20px;
-            padding: 20px 22px 16px 22px;
+            border-radius: 18px;
+            padding: 16px 16px 14px 16px;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
             backdrop-filter: blur(12px);
             overflow: hidden;
@@ -160,6 +202,7 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            min-width: 0;
         }
 
         .stat-card-highlight:hover {
@@ -197,7 +240,7 @@
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
-            gap: 12px;
+            gap: 8px;
         }
 
         .stat-card-meta {
@@ -206,12 +249,15 @@
         }
 
         .stat-card-label {
-            font-size: 11px;
+            font-size: 10.5px;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 0.06em;
+            letter-spacing: 0.04em;
             color: #94a3b8;
             margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
             transition: color 0.2s ease;
         }
         .stat-card-highlight:hover .stat-card-label {
@@ -219,27 +265,27 @@
         }
 
         .stat-card-val {
-            font-size: 1.85rem;
+            font-size: 1.65rem;
             font-weight: 900;
             color: #0f172a;
             line-height: 1.1;
             letter-spacing: -0.02em;
             display: flex;
             align-items: baseline;
-            gap: 6px;
+            gap: 4px;
         }
 
         .stat-card-percent {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 700;
             color: var(--card-accent, #ea580c);
         }
 
         .stat-card-desc {
-            font-size: 0.76rem;
+            font-size: 0.72rem;
             font-weight: 500;
             color: #64748b;
-            margin-top: 5px;
+            margin-top: 4px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -249,13 +295,13 @@
         .stat-card-3d-icon {
             position: relative;
             flex-shrink: 0;
-            width: 48px;
-            height: 48px;
-            border-radius: 16px;
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             background: var(--card-icon-bg, linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%));
             border: 1px solid var(--card-icon-border, #fed7aa);
             color: var(--card-accent, #ea580c);
@@ -263,7 +309,7 @@
             transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease;
         }
         .stat-card-highlight:hover .stat-card-3d-icon {
-            transform: rotate(6deg) scale(1.1);
+            transform: rotate(6deg) scale(1.08);
         }
 
         /* Bottom Row Divider & Pulse Dots */
@@ -273,7 +319,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-top: 14px;
+            margin-top: 12px;
             padding-top: 8px;
             border-top: 1px solid rgba(241, 245, 249, 0.9);
         }
@@ -361,14 +407,23 @@
 
         .filter-pills-wrap {
             display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding-bottom: 2px;
+            width: 100%;
+        }
+        .filter-pills-wrap::-webkit-scrollbar {
+            display: none;
         }
 
         .filter-pill {
-            padding: 7px 14px;
+            padding: 6px 12px;
             border-radius: 999px;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             font-weight: 700;
             cursor: pointer;
             border: 1.5px solid var(--border-color);
@@ -377,7 +432,10 @@
             transition: all 0.2s ease;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            user-select: none;
         }
 
         .filter-pill:hover {
@@ -1921,7 +1979,9 @@
          ========================================================= -->
     <?php $this->load->view('components/curved_sidebar'); ?>
 
-    <div class="main-container">
+    <!-- Main Page Content Wrapper (Smoothly shifts when sidebar is open) -->
+    <div id="mainPageContent" class="page-wrapper-for-sidebar">
+        <div class="main-container">
         
         <!-- Page Header -->
         <div class="page-header">
@@ -2438,6 +2498,7 @@
         </div>
 
     </div>
+    </div> <!-- /#mainPageContent -->
 
     <!-- =========================================================
          FLOATING BATCH ACTION BAR (MULTIPLE SELECT ACC / TOLAK)
