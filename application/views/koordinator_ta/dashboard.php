@@ -311,14 +311,26 @@
             padding: 16px;
         }
 
-        .extra-filter-row {
+        .extra-filter-row,
+        .extra-filter-row-p2,
+        .extra-filter-row-sidang {
             position: relative;
             display: flex;
             align-items: center;
             gap: 8px;
             z-index: 10;
+            width: 100%;
         }
-        .extra-filter-row.open-dropdown {
+        .extra-filter-row .unified-search-pill,
+        .extra-filter-row-p2 .unified-search-pill,
+        .extra-filter-row-sidang .unified-search-pill {
+            flex: 1;
+            min-width: 0;
+            width: 100%;
+        }
+        .extra-filter-row.open-dropdown,
+        .extra-filter-row-p2.open-dropdown,
+        .extra-filter-row-sidang.open-dropdown {
             z-index: 120 !important;
         }
         .custom-dropdown-container.open {
@@ -1034,7 +1046,6 @@
                             <div onclick="selectMainCategory('nama', '🏷️ Nama Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span>🏷️ Nama Mahasiswa</span></div>
                             <div onclick="selectMainCategory('nim', '🆔 NIM Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span>🆔 NIM Mahasiswa</span></div>
                             <div onclick="selectMainCategory('judul', '📖 Judul Tugas Akhir', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span>📖 Judul Tugas Akhir</span></div>
-                            <div onclick="selectMainCategory('konsentrasi', '🎯 Bidang / Peminatan', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span>🎯 Bidang / Peminatan</span></div>
                             <div onclick="selectMainCategory('status', '⚡ Status Approval', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span>⚡ Status Approval</span></div>
                             <div onclick="selectMainCategory('tahap', '🔄 Tahap Saat Ini', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span>🔄 Tahap Saat Ini</span></div>
                         </div>
@@ -1415,7 +1426,6 @@
                                 <div onclick="selectP2MainCategory('judul', '📖 Judul Tugas Akhir', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-600"><span>📖 Judul Tugas Akhir</span></div>
                                 <div onclick="selectP2MainCategory('pembimbing', '👔 Dosen Pembimbing', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-600"><span>👔 Dosen Pembimbing</span></div>
                                 <div onclick="selectP2MainCategory('penguji', '👨‍🏫 Dosen Penguji', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-600"><span>👨‍🏫 Dosen Penguji</span></div>
-                                <div onclick="selectP2MainCategory('ruangan', '🏛️ Ruangan Presentasi', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-600"><span>🏛️ Ruangan Presentasi</span></div>
                                 <div onclick="selectP2MainCategory('status', '⚡ Status Plotting', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-600"><span>⚡ Status Plotting</span></div>
                             </div>
                         </div>
@@ -1945,7 +1955,7 @@
     <!-- ========================================================= -->
     <!-- MODAL 1B: MANAJEMEN MASTER RUBRIK PENILAIAN DINAMIS       -->
     <!-- ========================================================= -->
-    <div id="modalKelolaMasterRubrik" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 modal-backdrop overflow-hidden">
+    <div id="modalKelolaMasterRubrik" class="hidden fixed inset-0 z-[100000] flex items-center justify-center p-4 sm:p-6 modal-backdrop overflow-hidden">
         <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs" onclick="closeModalMasterRubrik()"></div>
 
         <div class="relative z-10 bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden">
@@ -3125,7 +3135,7 @@
     </div>
 
     <!-- DOCUMENT PDF PREVIEW MODAL -->
-    <div id="p1PdfModal" class="fixed inset-0 z-[60] bg-slate-900/80 backdrop-blur-xs hidden items-center justify-center p-0 sm:p-5" onclick="if(event.target===this)closeP1PdfModal()">
+    <div id="p1PdfModal" class="fixed inset-0 z-[100000] bg-slate-900/80 backdrop-blur-xs hidden items-center justify-center p-0 sm:p-5" onclick="if(event.target===this)closeP1PdfModal()">
         <div class="bg-white rounded-none sm:rounded-2xl max-w-5xl w-full h-full sm:h-[88vh] flex flex-col overflow-hidden shadow-2xl border-0 sm:border border-slate-200">
             <div class="p-3.5 px-4 sm:px-5 bg-slate-900 text-white flex items-center justify-between shrink-0">
                 <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
@@ -3148,7 +3158,7 @@
     </div>
 
     <!-- MODAL RIWAYAT HISTORI PLOTTING TERPADU (PEMBIMBING & PENGUJI) -->
-    <div id="modalHistoryPlotting" class="fixed inset-0 z-[60] bg-slate-900/80 backdrop-blur-xs hidden items-center justify-center p-3 sm:p-5">
+    <div id="modalHistoryPlotting" class="fixed inset-0 z-[100000] bg-slate-900/80 backdrop-blur-xs hidden items-center justify-center p-3 sm:p-5">
         <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
             <!-- Modal Header -->
             <div class="p-4 px-6 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-between shrink-0 border-b border-slate-700/60">

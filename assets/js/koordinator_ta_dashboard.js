@@ -238,8 +238,8 @@
 
     window.toggleCustomDropdown = function (type, event) {
         if (event) {
-            event.stopPropagation();
-            e.preventDefault();
+            if (typeof event.stopPropagation === 'function') event.stopPropagation();
+            if (typeof event.preventDefault === 'function') event.preventDefault();
         }
         const menu = document.getElementById('menu-filter-' + type);
         const arrow = document.getElementById('arrow-filter-' + type);
@@ -251,7 +251,7 @@
             menu.classList.remove('hidden');
             if (arrow) arrow.classList.add('rotate-180');
 
-            const parentRow = menu.closest('.extra-filter-row');
+            const parentRow = menu.closest('.extra-filter-row, .extra-filter-row-p2, .extra-filter-row-sidang');
             if (parentRow) parentRow.classList.add('open-dropdown');
 
             const parentContainer = menu.closest('.custom-dropdown-container');
@@ -262,7 +262,7 @@
     function closeAllCustomDropdowns() {
         document.querySelectorAll('.custom-dropdown-menu').forEach(m => m.classList.add('hidden'));
         document.querySelectorAll('.dropdown-arrow').forEach(a => a.classList.remove('rotate-180'));
-        document.querySelectorAll('.extra-filter-row').forEach(r => r.classList.remove('open-dropdown'));
+        document.querySelectorAll('.extra-filter-row, .extra-filter-row-p2, .extra-filter-row-sidang').forEach(r => r.classList.remove('open-dropdown'));
         document.querySelectorAll('.custom-dropdown-container').forEach(c => c.classList.remove('open'));
     }
 
@@ -332,7 +332,7 @@
         extraRowCounter++;
         const rowId = extraRowCounter;
 
-        const allCriteria = ['query', 'nama', 'nim', 'judul', 'konsentrasi', 'status', 'tahap'];
+        const allCriteria = ['query', 'nama', 'nim', 'judul', 'status', 'tahap'];
         const mainCat = document.getElementById('mainCategorySelect') ? document.getElementById('mainCategorySelect').value : 'query';
         const usedCriteria = [mainCat];
         container.querySelectorAll('.extra-cat-select').forEach(el => usedCriteria.push(el.value));
@@ -343,7 +343,6 @@
         if (defaultCrit === 'nama') defaultLabel = '🏷️ Nama Mahasiswa';
         else if (defaultCrit === 'nim') defaultLabel = '🆔 NIM Mahasiswa';
         else if (defaultCrit === 'judul') defaultLabel = '📖 Judul Tugas Akhir';
-        else if (defaultCrit === 'konsentrasi') defaultLabel = '🎯 Bidang / Peminatan';
         else if (defaultCrit === 'tahap') defaultLabel = '🔄 Tahap Saat Ini';
         else if (defaultCrit === 'query') defaultLabel = '🔍 Kata Kunci (Semua)';
 
@@ -365,7 +364,6 @@
                         <div onclick="selectExtraCategory(${rowId}, 'nama', '🏷️ Nama Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'nama' ? 'active bg-orange-50 text-brand-600' : 'text-slate-700 hover:bg-orange-50 hover:text-brand-600'}"><span>🏷️ Nama Mahasiswa</span></div>
                         <div onclick="selectExtraCategory(${rowId}, 'nim', '🆔 NIM Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'nim' ? 'active bg-orange-50 text-brand-600' : 'text-slate-700 hover:bg-orange-50 hover:text-brand-600'}"><span>🆔 NIM Mahasiswa</span></div>
                         <div onclick="selectExtraCategory(${rowId}, 'judul', '📖 Judul Tugas Akhir', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'judul' ? 'active bg-orange-50 text-brand-600' : 'text-slate-700 hover:bg-orange-50 hover:text-brand-600'}"><span>📖 Judul Tugas Akhir</span></div>
-                        <div onclick="selectExtraCategory(${rowId}, 'konsentrasi', '🎯 Bidang / Peminatan', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'konsentrasi' ? 'active bg-orange-50 text-brand-600' : 'text-slate-700 hover:bg-orange-50 hover:text-brand-600'}"><span>🎯 Bidang / Peminatan</span></div>
                         <div onclick="selectExtraCategory(${rowId}, 'status', '⚡ Status Approval', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'status' ? 'active bg-orange-50 text-brand-600' : 'text-slate-700 hover:bg-orange-50 hover:text-brand-600'}"><span>⚡ Status Approval</span></div>
                         <div onclick="selectExtraCategory(${rowId}, 'tahap', '🔄 Tahap Saat Ini', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'tahap' ? 'active bg-orange-50 text-brand-600' : 'text-slate-700 hover:bg-orange-50 hover:text-brand-600'}"><span>🔄 Tahap Saat Ini</span></div>
                     </div>
@@ -2737,7 +2735,7 @@
         extraP2RowCounter++;
         const rowId = extraP2RowCounter;
 
-        const allCriteria = ['query', 'nama', 'nim', 'judul', 'pembimbing', 'penguji', 'ruangan', 'status'];
+        const allCriteria = ['query', 'nama', 'nim', 'judul', 'pembimbing', 'penguji', 'status'];
         const mainCat = document.getElementById('p2MainCategorySelect') ? document.getElementById('p2MainCategorySelect').value : 'query';
         const usedCriteria = [mainCat];
         container.querySelectorAll('.extra-p2-cat-select').forEach(el => usedCriteria.push(el.value));
@@ -2750,11 +2748,10 @@
         else if (defaultCrit === 'judul') defaultLabel = '📖 Judul Tugas Akhir';
         else if (defaultCrit === 'pembimbing') defaultLabel = '👔 Dosen Pembimbing';
         else if (defaultCrit === 'penguji') defaultLabel = '👨‍🏫 Dosen Penguji';
-        else if (defaultCrit === 'ruangan') defaultLabel = '🏛️ Ruangan Sidang';
         else if (defaultCrit === 'query') defaultLabel = '🔍 Kata Kunci (Semua)';
 
         const rowDiv = document.createElement('div');
-        rowDiv.className = 'extra-filter-row-p2';
+        rowDiv.className = 'extra-filter-row extra-filter-row-p2';
         rowDiv.id = `extraP2Row_${rowId}`;
 
         rowDiv.innerHTML = `
@@ -2773,7 +2770,6 @@
                         <div onclick="selectP2ExtraCategory(${rowId}, 'judul', '📖 Judul Tugas Akhir', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'judul' ? 'active bg-indigo-50 text-indigo-600' : 'text-slate-700 hover:bg-indigo-50 hover:text-indigo-600'}"><span>📖 Judul Tugas Akhir</span></div>
                         <div onclick="selectP2ExtraCategory(${rowId}, 'pembimbing', '👔 Dosen Pembimbing', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'pembimbing' ? 'active bg-indigo-50 text-indigo-600' : 'text-slate-700 hover:bg-indigo-50 hover:text-indigo-600'}"><span>👔 Dosen Pembimbing</span></div>
                         <div onclick="selectP2ExtraCategory(${rowId}, 'penguji', '👨‍🏫 Dosen Penguji', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'penguji' ? 'active bg-indigo-50 text-indigo-600' : 'text-slate-700 hover:bg-indigo-50 hover:text-indigo-600'}"><span>👨‍🏫 Dosen Penguji</span></div>
-                        <div onclick="selectP2ExtraCategory(${rowId}, 'ruangan', '🏛️ Ruangan Sidang', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'ruangan' ? 'active bg-indigo-50 text-indigo-600' : 'text-slate-700 hover:bg-indigo-50 hover:text-indigo-600'}"><span>🏛️ Ruangan Sidang</span></div>
                         <div onclick="selectP2ExtraCategory(${rowId}, 'status', '⚡ Status Plotting', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'status' ? 'active bg-indigo-50 text-indigo-600' : 'text-slate-700 hover:bg-indigo-50 hover:text-indigo-600'}"><span>⚡ Status Plotting</span></div>
                     </div>
                 </div>
@@ -5728,23 +5724,21 @@
     // 7. TAHAP 3: PENJADWALAN SIDANG TA & MANAJEMEN RUANGAN
     // =========================================================
 
-    // =========================================================
-    // 7. TAHAP 3: PENJADWALAN SIDANG TA & MANAJEMEN RUANGAN
-    // =========================================================
+    let extraSidangRowCounter = 0;
 
     function isTextSidangCategory(cat) {
-        return ['query', 'nama', 'nim', 'judul', 'pembimbing', 'penguji', 'ruangan'].includes(cat);
+        return cat !== 'status';
     }
 
     function getPlaceholderForSidangCategory(cat) {
         switch (cat) {
-            case 'nama': return 'Ketik nama mahasiswa sidang...';
-            case 'nim': return 'Ketik NIM mahasiswa sidang...';
-            case 'judul': return 'Ketik kata kunci judul tugas akhir...';
-            case 'pembimbing': return 'Ketik nama dosen pembimbing...';
-            case 'penguji': return 'Ketik nama dosen penguji...';
-            case 'ruangan': return 'Ketik nama atau kode ruangan sidang...';
-            default: return 'Cari Nama, NIM, Judul TA, Pembimbing, Penguji, Ruangan...';
+            case 'nama': return 'Ketik nama mahasiswa lalu tekan Enter atau klik Cari...';
+            case 'nim': return 'Ketik NIM lalu tekan Enter atau klik Cari...';
+            case 'judul': return 'Ketik topik/judul TA lalu tekan Enter atau klik Cari...';
+            case 'pembimbing': return 'Ketik nama dosen pembimbing lalu tekan Enter atau klik Cari...';
+            case 'penguji': return 'Ketik nama dosen penguji lalu tekan Enter atau klik Cari...';
+            case 'ruangan': return 'Ketik nama atau ruangan sidang lalu tekan Enter atau klik Cari...';
+            default: return 'Ketik kata kunci lalu tekan Enter atau klik Cari...';
         }
     }
 
@@ -5761,7 +5755,7 @@
         if (isTextSidangCategory(cat)) {
             if (textWrap) {
                 textWrap.classList.remove('hidden');
-                textWrap.classList.add('flex-1', 'flex');
+                textWrap.classList.add('flex-1', 'flex', 'min-w-0');
             }
             if (selectWrap) selectWrap.classList.add('hidden');
             if (inputEl) {
@@ -5771,9 +5765,12 @@
         } else {
             if (textWrap) {
                 textWrap.classList.add('hidden');
-                textWrap.classList.remove('flex-1', 'flex');
+                textWrap.classList.remove('flex-1', 'flex', 'min-w-0');
             }
-            if (selectWrap) selectWrap.classList.remove('hidden');
+            if (selectWrap) {
+                selectWrap.classList.remove('hidden');
+                selectWrap.classList.add('min-w-0');
+            }
             updateSidangMainValueOptions(cat);
         }
 
@@ -5855,12 +5852,6 @@
         const total = rows.length + 1;
         const badge = document.getElementById('filterCountBadgeSidang');
         if (badge) badge.innerText = `${total}/4`;
-
-        const addBtn = document.getElementById('standaloneAddBtnSidang');
-        if (addBtn) {
-            if (total >= 4) addBtn.classList.add('opacity-50', 'pointer-events-none');
-            else addBtn.classList.remove('opacity-50', 'pointer-events-none');
-        }
     }
 
     window.addNewFilterRowSidang = function (e) {
@@ -5874,55 +5865,86 @@
 
         const currentRows = container.querySelectorAll('.extra-filter-row-sidang');
         if (currentRows.length >= 3) {
-            Swal.fire({ icon: 'info', title: 'Batas Filter Tercapai', text: 'Maksimal 4 kriteria filter pencarian dapat aktif sekaligus.', timer: 2000, showConfirmButton: false });
+            Swal.fire({ icon: 'info', title: 'Batas Filter', text: 'Maksimal 4 kriteria filter pencarian dapat aktif sekaligus.', timer: 2000, showConfirmButton: false });
             return;
         }
 
         showExtraCardSidang();
 
-        const rowId = Date.now();
+        extraSidangRowCounter++;
+        const rowId = extraSidangRowCounter;
+
+        const allCriteria = ['query', 'nama', 'nim', 'judul', 'pembimbing', 'penguji', 'ruangan', 'status'];
+        const mainCat = document.getElementById('sidangMainCategorySelect') ? document.getElementById('sidangMainCategorySelect').value : 'query';
+        const usedCriteria = [mainCat];
+        container.querySelectorAll('.extra-sidang-cat-select').forEach(el => usedCriteria.push(el.value));
+
+        const defaultCrit = allCriteria.find(c => !usedCriteria.includes(c)) || 'status';
+
+        let defaultLabel = '⚡ Status Sidang';
+        if (defaultCrit === 'nama') defaultLabel = '🏷️ Nama Mahasiswa';
+        else if (defaultCrit === 'nim') defaultLabel = '🆔 NIM Mahasiswa';
+        else if (defaultCrit === 'judul') defaultLabel = '📖 Judul Tugas Akhir';
+        else if (defaultCrit === 'pembimbing') defaultLabel = '👔 Dosen Pembimbing';
+        else if (defaultCrit === 'penguji') defaultLabel = '👨‍🏫 Dosen Penguji';
+        else if (defaultCrit === 'ruangan') defaultLabel = '🏛️ Ruangan Sidang';
+        else if (defaultCrit === 'query') defaultLabel = '🔍 Kata Kunci (Semua)';
+
         const rowDiv = document.createElement('div');
         rowDiv.id = `extraSidangRow_${rowId}`;
-        rowDiv.className = 'extra-filter-row extra-filter-row-sidang flex items-center gap-2 p-1.5 bg-slate-50 border border-slate-200 rounded-xl shadow-2xs text-xs animate-in fade-in duration-200';
+        rowDiv.className = 'extra-filter-row extra-filter-row-sidang';
 
         rowDiv.innerHTML = `
-            <div class="relative custom-dropdown-container">
-                <input type="hidden" id="extraSidangCatSelect_${rowId}" value="nama">
-                <button type="button" onclick="toggleCustomDropdown('extra-sidang-cat-${rowId}', event)" class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg py-1 px-2 text-xs font-bold text-slate-800 hover:border-amber-400 focus:outline-none shadow-2xs">
-                    <span id="label-filter-extra-sidang-cat-${rowId}" class="truncate max-w-[120px]">🏷️ Nama Mahasiswa</span>
-                    <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-extra-sidang-cat-${rowId}"></i>
-                </button>
-                <div id="menu-filter-extra-sidang-cat-${rowId}" class="custom-dropdown-menu hidden absolute top-full left-0 mt-1 w-48 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
-                    <div onclick="selectSidangExtraCategory(${rowId}, 'nama', '🏷️ Nama Mahasiswa', this)" class="dropdown-item px-3 py-1.5 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-amber-50 hover:text-amber-600"><span>🏷️ Nama Mahasiswa</span></div>
-                    <div onclick="selectSidangExtraCategory(${rowId}, 'nim', '🆔 NIM Mahasiswa', this)" class="dropdown-item px-3 py-1.5 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-amber-50 hover:text-amber-600"><span>🆔 NIM Mahasiswa</span></div>
-                    <div onclick="selectSidangExtraCategory(${rowId}, 'judul', '📖 Judul Tugas Akhir', this)" class="dropdown-item px-3 py-1.5 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-amber-50 hover:text-amber-600"><span>📖 Judul Tugas Akhir</span></div>
-                    <div onclick="selectSidangExtraCategory(${rowId}, 'pembimbing', '👔 Dosen Pembimbing', this)" class="dropdown-item px-3 py-1.5 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-amber-50 hover:text-amber-600"><span>👔 Dosen Pembimbing</span></div>
-                    <div onclick="selectSidangExtraCategory(${rowId}, 'penguji', '👨‍🏫 Dosen Penguji', this)" class="dropdown-item px-3 py-1.5 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-amber-50 hover:text-amber-600"><span>👨‍🏫 Dosen Penguji</span></div>
-                    <div onclick="selectSidangExtraCategory(${rowId}, 'ruangan', '🏛️ Ruangan Sidang', this)" class="dropdown-item px-3 py-1.5 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-amber-50 hover:text-amber-600"><span>🏛️ Ruangan Sidang</span></div>
-                    <div onclick="selectSidangExtraCategory(${rowId}, 'status', '⚡ Status Sidang', this)" class="dropdown-item px-3 py-1.5 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-amber-50 hover:text-amber-600"><span>⚡ Status Sidang</span></div>
+            <div class="unified-search-pill">
+                <!-- Extra Category Dropdown -->
+                <div class="relative custom-dropdown-container">
+                    <input type="hidden" id="extraSidangCatSelect_${rowId}" class="extra-sidang-cat-select" value="${defaultCrit}">
+                    <button type="button" onclick="toggleCustomDropdown('extra-sidang-cat-${rowId}', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-amber-600 focus:outline-none">
+                        <span id="label-filter-extra-sidang-cat-${rowId}" class="truncate max-w-[130px]">${defaultLabel}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-extra-sidang-cat-${rowId}"></i>
+                    </button>
+                    <div id="menu-filter-extra-sidang-cat-${rowId}" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
+                        <div onclick="selectSidangExtraCategory(${rowId}, 'query', '🔍 Kata Kunci (Semua)', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'query' ? 'active bg-amber-50 text-amber-600' : 'text-slate-700 hover:bg-amber-50 hover:text-amber-600'}"><span>🔍 Kata Kunci (Semua)</span></div>
+                        <div onclick="selectSidangExtraCategory(${rowId}, 'nama', '🏷️ Nama Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'nama' ? 'active bg-amber-50 text-amber-600' : 'text-slate-700 hover:bg-amber-50 hover:text-amber-600'}"><span>🏷️ Nama Mahasiswa</span></div>
+                        <div onclick="selectSidangExtraCategory(${rowId}, 'nim', '🆔 NIM Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'nim' ? 'active bg-amber-50 text-amber-600' : 'text-slate-700 hover:bg-amber-50 hover:text-amber-600'}"><span>🆔 NIM Mahasiswa</span></div>
+                        <div onclick="selectSidangExtraCategory(${rowId}, 'judul', '📖 Judul Tugas Akhir', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'judul' ? 'active bg-amber-50 text-amber-600' : 'text-slate-700 hover:bg-amber-50 hover:text-amber-600'}"><span>📖 Judul Tugas Akhir</span></div>
+                        <div onclick="selectSidangExtraCategory(${rowId}, 'pembimbing', '👔 Dosen Pembimbing', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'pembimbing' ? 'active bg-amber-50 text-amber-600' : 'text-slate-700 hover:bg-amber-50 hover:text-amber-600'}"><span>👔 Dosen Pembimbing</span></div>
+                        <div onclick="selectSidangExtraCategory(${rowId}, 'penguji', '👨‍🏫 Dosen Penguji', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'penguji' ? 'active bg-amber-50 text-amber-600' : 'text-slate-700 hover:bg-amber-50 hover:text-amber-600'}"><span>👨‍🏫 Dosen Penguji</span></div>
+                        <div onclick="selectSidangExtraCategory(${rowId}, 'ruangan', '🏛️ Ruangan Sidang', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'ruangan' ? 'active bg-amber-50 text-amber-600' : 'text-slate-700 hover:bg-amber-50 hover:text-amber-600'}"><span>🏛️ Ruangan Sidang</span></div>
+                        <div onclick="selectSidangExtraCategory(${rowId}, 'status', '⚡ Status Sidang', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'status' ? 'active bg-amber-50 text-amber-600' : 'text-slate-700 hover:bg-amber-50 hover:text-amber-600'}"><span>⚡ Status Sidang</span></div>
+                    </div>
+                </div>
+
+                <div class="unified-divider"></div>
+
+                <!-- Input Text Value Container -->
+                <div id="extraSidangValueContainer_${rowId}" class="${isTextSidangCategory(defaultCrit) ? 'flex-1 flex items-center min-w-0' : 'hidden'}">
+                    <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs mr-2 shrink-0"></i>
+                    <input type="text" id="extraSidangInput_${rowId}" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); handleUnifiedMultiSearchSidang(); }" placeholder="${getPlaceholderForSidangCategory(defaultCrit)}" class="w-full text-xs font-medium bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400">
+                </div>
+
+                <!-- Custom Dropdown Value Container -->
+                <div id="extraSidangCustomSelectWrap_${rowId}" class="${!isTextSidangCategory(defaultCrit) ? 'flex-1 relative custom-dropdown-container min-w-0' : 'hidden'}">
+                    <input type="hidden" id="extraSidangValueVal_${rowId}" class="extra-sidang-val-input" value="">
+                    <button type="button" onclick="toggleCustomDropdown('extra-sidang-val-${rowId}', event)" class="w-full py-1 text-xs font-semibold text-slate-800 flex items-center justify-between cursor-pointer focus:outline-none">
+                        <span id="label-filter-extra-sidang-val-${rowId}" class="flex items-center gap-1.5 truncate">Semua Status Sidang</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-extra-sidang-val-${rowId}"></i>
+                    </button>
+                    <div id="menu-filter-extra-sidang-val-${rowId}" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
+                    </div>
                 </div>
             </div>
 
-            <div id="extraSidangValueContainer_${rowId}" class="flex-1 flex items-center bg-white border border-slate-200 rounded-lg px-2 py-1 shadow-2xs">
-                <input type="text" id="extraSidangInput_${rowId}" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); handleUnifiedMultiSearchSidang(); }" placeholder="Ketik kata kunci lalu tekan Enter atau klik Cari..." class="w-full text-xs bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400">
-            </div>
-
-            <div id="extraSidangCustomSelectWrap_${rowId}" class="hidden flex-1 relative custom-dropdown-container">
-                <input type="hidden" id="extraSidangValueVal_${rowId}" value="">
-                <button type="button" onclick="toggleCustomDropdown('extra-sidang-val-${rowId}', event)" class="w-full bg-white border border-slate-200 rounded-lg py-1 px-2 text-xs font-semibold text-slate-800 flex items-center justify-between shadow-2xs">
-                    <span id="label-filter-extra-sidang-val-${rowId}" class="truncate">Semua Status</span>
-                    <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-extra-sidang-val-${rowId}"></i>
-                </button>
-                <div id="menu-filter-extra-sidang-val-${rowId}" class="custom-dropdown-menu hidden absolute top-full left-0 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
-                </div>
-            </div>
-
-            <button type="button" onclick="removeFilterRowSidang(${rowId})" class="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition cursor-pointer shrink-0" title="Hapus kriteria ini">
+            <!-- Remove Row Button -->
+            <button type="button" onclick="removeFilterRowSidang(${rowId})" class="btn-remove-row" title="Hapus Kriteria Ini">
                 <i class="fa-solid fa-trash-can text-xs"></i>
             </button>
         `;
 
         container.appendChild(rowDiv);
+        if (!isTextSidangCategory(defaultCrit)) {
+            updateSidangExtraValueOptions(rowId, defaultCrit);
+        }
         updateSidangFilterBadge();
     };
 
@@ -5939,16 +5961,22 @@
         if (isTextSidangCategory(cat)) {
             if (textWrap) {
                 textWrap.classList.remove('hidden');
-                textWrap.classList.add('flex-1', 'flex');
+                textWrap.classList.add('flex-1', 'flex', 'min-w-0');
             }
             if (selectWrap) selectWrap.classList.add('hidden');
-            if (inputEl) inputEl.placeholder = getPlaceholderForSidangCategory(cat);
+            if (inputEl) {
+                inputEl.placeholder = getPlaceholderForSidangCategory(cat);
+                inputEl.focus();
+            }
         } else {
             if (textWrap) {
                 textWrap.classList.add('hidden');
-                textWrap.classList.remove('flex-1', 'flex');
+                textWrap.classList.remove('flex-1', 'flex', 'min-w-0');
             }
-            if (selectWrap) selectWrap.classList.remove('hidden');
+            if (selectWrap) {
+                selectWrap.classList.remove('hidden');
+                selectWrap.classList.add('min-w-0');
+            }
             updateSidangExtraValueOptions(rowId, cat);
         }
 
@@ -6002,14 +6030,14 @@
         const mainInput = document.getElementById('sidangMainSearchInput');
         if (mainInput) {
             mainInput.value = '';
-            mainInput.placeholder = 'Cari Nama, NIM, Judul TA, Pembimbing, Penguji, Ruangan...';
+            mainInput.placeholder = 'Ketik kata kunci lalu tekan Enter atau klik Cari...';
         }
 
         const textWrap = document.getElementById('sidangMainValueContainer');
         const selectWrap = document.getElementById('sidangMainCustomSelectWrap');
         if (textWrap) {
             textWrap.classList.remove('hidden');
-            textWrap.classList.add('flex-1', 'flex');
+            textWrap.classList.add('flex-1', 'flex', 'min-w-0');
         }
         if (selectWrap) selectWrap.classList.add('hidden');
 

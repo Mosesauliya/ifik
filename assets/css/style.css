@@ -387,15 +387,28 @@ select option {
     padding: 16px;
 }
 
-.extra-filter-row {
+.extra-filter-row,
+.extra-filter-row-p2,
+.extra-filter-row-sidang {
     position: relative;
     display: flex;
     align-items: center;
     gap: 8px;
     z-index: 10;
+    width: 100%;
 }
 
-.extra-filter-row.open-dropdown {
+.extra-filter-row .unified-search-pill,
+.extra-filter-row-p2 .unified-search-pill,
+.extra-filter-row-sidang .unified-search-pill {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+}
+
+.extra-filter-row.open-dropdown,
+.extra-filter-row-p2.open-dropdown,
+.extra-filter-row-sidang.open-dropdown {
     z-index: 120 !important;
 }
 
