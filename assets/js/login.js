@@ -120,10 +120,10 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
 
       const emailVal = identityInput ? identityInput.value.trim() : '';
-      const isEmailValid = /^[^\s@]+@telkomuniversity\.ac\.id$/i.test(emailVal);
+      const isEmailValid = /^[^\s@]+@(student\.)?telkomuniversity\.ac\.id$/i.test(emailVal) || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal);
 
       if (!isEmailValid) {
-        setEmailState('error', 'Harus email @telkomuniversity.ac.id');
+        setEmailState('error', 'Harus email @telkomuniversity.ac.id atau @student.telkomuniversity.ac.id');
         triggerErrorShake();
         return;
       }
