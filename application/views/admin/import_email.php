@@ -722,13 +722,13 @@
         }
 
         /* ============================================================
-           TOOLBAR ROW 2 RESPONSIVENESS (Sidebar Open vs Collapsed)
+           TOOLBAR ROW 2 RESPONSIVENESS (Consistent 2-Row Structured Layout)
            ============================================================ */
         @media (min-width: 641px) {
             .table-toolbar-row2 {
                 display: flex !important;
                 flex-direction: column !important;
-                gap: 10px !important;
+                gap: 12px !important;
                 width: 100% !important;
             }
             .table-toolbar-row2 .batch-actions-grid {
@@ -753,50 +753,6 @@
                 display: flex !important;
                 align-items: center !important;
                 gap: 10px !important;
-            }
-        }
-
-        /* When screen is extra wide (>= 1536px / 2xl), single horizontal row */
-        @media (min-width: 1536px) {
-            .table-toolbar-row2 {
-                flex-direction: row !important;
-                align-items: center !important;
-                justify-content: space-between !important;
-            }
-            .table-toolbar-row2 .batch-actions-grid {
-                display: flex !important;
-                flex-direction: row !important;
-                width: auto !important;
-                gap: 10px !important;
-            }
-            .table-toolbar-row2 .batch-actions-grid button {
-                width: auto !important;
-            }
-            .table-toolbar-row2 .toolbar-right-group {
-                width: auto !important;
-                justify-content: flex-end !important;
-            }
-        }
-
-        /* When sidebar is COLLAPSED / HIDDEN on desktop (>= 1200px), single horizontal row fits cleanly */
-        @media (min-width: 1200px) {
-            body.curved-sidebar-desktop-collapsed .table-toolbar-row2 {
-                flex-direction: row !important;
-                align-items: center !important;
-                justify-content: space-between !important;
-            }
-            body.curved-sidebar-desktop-collapsed .table-toolbar-row2 .batch-actions-grid {
-                display: flex !important;
-                flex-direction: row !important;
-                width: auto !important;
-                gap: 10px !important;
-            }
-            body.curved-sidebar-desktop-collapsed .table-toolbar-row2 .batch-actions-grid button {
-                width: auto !important;
-            }
-            body.curved-sidebar-desktop-collapsed .table-toolbar-row2 .toolbar-right-group {
-                width: auto !important;
-                justify-content: flex-end !important;
             }
         }
     </style>
@@ -1160,27 +1116,27 @@
                 </div>
             </div>
 
-            <!-- Row 2: Batch Actions, Page Size & Tools -->
-            <div class="table-toolbar-row2 pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <!-- Batch Actions Left -->
-                <div class="batch-actions-grid sm:flex sm:flex-wrap sm:items-center sm:gap-2.5">
-                    <button onclick="bulkGenerateTokenSelected()" class="btn-gradient-base btn-gradient-orange-solid h-9 px-3.5 text-xs flex items-center gap-2">
+            <!-- Row 2: Batch Actions (Row 1) & Page Size / Tools (Row 2) -->
+            <div class="table-toolbar-row2 pt-3 border-t border-slate-100 flex flex-col gap-3">
+                <!-- Batch Actions (3 Grid Columns) -->
+                <div class="batch-actions-grid grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full">
+                    <button onclick="bulkGenerateTokenSelected()" class="btn-gradient-base btn-gradient-orange-solid h-9 px-3.5 text-xs flex items-center justify-center gap-2 w-full">
                         <i class="fa-solid fa-bolt text-xs"></i>
-                        <span>Generate Token</span><span class="opacity-85 text-[11px] hidden xl:inline">&nbsp;(Selected)</span>
+                        <span>Generate Token</span> <span class="opacity-85 text-[11px]">&nbsp;(Selected)</span>
                     </button>
-                    <button onclick="bulkGenerateTokenAll()" class="btn-gradient-base btn-gradient-orange-soft h-9 px-3.5 text-xs flex items-center gap-2">
+                    <button onclick="bulkGenerateTokenAll()" class="btn-gradient-base btn-gradient-orange-soft h-9 px-3.5 text-xs flex items-center justify-center gap-2 w-full">
                         <i class="fa-solid fa-key text-brand-600 text-xs"></i>
-                        <span>Generate All</span><span class="opacity-85 text-[11px] hidden xl:inline">&nbsp;(Kosong)</span>
+                        <span>Generate All</span> <span class="opacity-85 text-[11px]">&nbsp;(Kosong)</span>
                     </button>
-                    <button onclick="bulkSendEmailSelected()" class="btn-gradient-base btn-gradient-emerald-solid btn-full-mobile h-9 px-3.5 text-xs flex items-center gap-2">
+                    <button onclick="bulkSendEmailSelected()" class="btn-gradient-base btn-gradient-emerald-solid btn-full-mobile h-9 px-3.5 text-xs flex items-center justify-center gap-2 w-full">
                         <i class="fa-solid fa-paper-plane text-xs"></i>
-                        <span>Kirim Email</span><span class="opacity-85 text-[11px] hidden xl:inline">&nbsp;(Selected)</span>
+                        <span>Kirim Email</span> <span class="opacity-85 text-[11px]">&nbsp;(Selected)</span>
                     </button>
                 </div>
 
-                <!-- Page Size & Tools Right -->
-                <div class="toolbar-right-group flex flex-col sm:flex-row sm:items-center gap-2.5 w-full sm:w-auto">
-                    <!-- Page Size Selector Top -->
+                <!-- Page Size & Tools Row -->
+                <div class="toolbar-right-group flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 w-full">
+                    <!-- Page Size Selector Left -->
                     <div class="page-size-wrap-mobile flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 border border-slate-200 px-3 h-9 rounded-xl shadow-2xs">
                         <div class="flex items-center gap-1.5">
                             <span class="font-medium">Tampilkan</span>
@@ -1199,10 +1155,8 @@
                         </div>
                     </div>
 
-                    <div class="h-6 w-px bg-slate-200 mx-0.5 hidden sm:block"></div>
-
                     <!-- Tools Right -->
-                    <div class="tools-grid-mobile sm:flex sm:items-center sm:gap-2.5">
+                    <div class="tools-grid-mobile flex items-center gap-2.5">
                         <button onclick="exportData('xlsx')" class="btn-gradient-base btn-gradient-emerald-soft h-9 px-3.5 text-xs flex items-center gap-2" title="Export to Excel XLSX">
                             <i class="fa-solid fa-file-excel text-emerald-600 text-sm"></i>
                             <span>Export Excel</span>
