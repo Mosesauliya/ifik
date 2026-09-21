@@ -26,7 +26,7 @@
             this.svgId = options.svgId || 'curvedSidebarSvg';
             
             this.isDesktop = window.innerWidth >= 1024;
-            this.isOpen = typeof options.defaultOpen !== 'undefined' ? options.defaultOpen : (this.isDesktop ? true : false);
+            this.isOpen = typeof options.defaultOpen !== 'undefined' ? options.defaultOpen : true; // Always default open (never hidden)
             this.animFrameId = null;
             this.animDuration = 750; // ms
 
@@ -44,32 +44,26 @@
                 return;
             }
 
-            // Set initial open/collapsed state (Desktop defaults to OPEN with content shifted)
+            // Set initial open/collapsed state (Always default OPEN / not hidden)
             if (this.isOpen) {
                 this.panel.classList.add('is-active');
                 this.toggleBtn.classList.add('is-active');
                 this.toggleBtn.setAttribute('aria-expanded', 'true');
-                if (this.isDesktop) {
-                    document.body.classList.remove('curved-sidebar-desktop-collapsed');
-                    document.body.classList.add('curved-sidebar-desktop-open');
-                } else {
-                    if (this.backdrop) this.backdrop.classList.add('is-active');
-                    document.body.classList.add('curved-sidebar-open');
-                }
                 this.setPath(0);
                 if (this.svg) this.svg.style.opacity = '0';
+                // Push content on initial load (desktop only)
+                if (window.innerWidth >= 1024) {
+                    document.body.classList.add('laa-sidebar-pushed');
+                }
             } else {
                 this.panel.classList.remove('is-active');
                 this.toggleBtn.classList.remove('is-active');
                 this.toggleBtn.setAttribute('aria-expanded', 'false');
-                if (this.isDesktop) {
-                    document.body.classList.remove('curved-sidebar-desktop-open');
-                    document.body.classList.add('curved-sidebar-desktop-collapsed');
-                }
                 if (this.backdrop) {
                     this.backdrop.classList.remove('is-active');
                 }
                 document.body.classList.remove('curved-sidebar-open');
+                document.body.classList.remove('laa-sidebar-pushed');
                 this.setPath(70);
                 if (this.svg) this.svg.style.opacity = '0';
             }
@@ -100,27 +94,6 @@
             });
 
             window.addEventListener('resize', () => {
-                const wasDesktop = this.isDesktop;
-                this.isDesktop = window.innerWidth >= 1024;
-                if (wasDesktop !== this.isDesktop) {
-                    if (this.isDesktop) {
-                        if (this.backdrop) this.backdrop.classList.remove('is-active');
-                        document.body.classList.remove('curved-sidebar-open');
-                        if (this.isOpen) {
-                            document.body.classList.remove('curved-sidebar-desktop-collapsed');
-                            document.body.classList.add('curved-sidebar-desktop-open');
-                        } else {
-                            document.body.classList.remove('curved-sidebar-desktop-open');
-                            document.body.classList.add('curved-sidebar-desktop-collapsed');
-                        }
-                    } else {
-                        document.body.classList.remove('curved-sidebar-desktop-collapsed', 'curved-sidebar-desktop-open');
-                        if (this.isOpen) {
-                            if (this.backdrop) this.backdrop.classList.add('is-active');
-                            document.body.classList.add('curved-sidebar-open');
-                        }
-                    }
-                }
                 this.updateSvgDimensions();
                 if (this.isOpen) {
                     this.setPath(0);
@@ -131,6 +104,9 @@
 
             // Prepare letter spans for staggered kinetic wave
             this.initLetterSplit();
+
+            // Inject content push wrapper (wraps all content below the navbar)
+            this.setupContentWrapper();
 
             // Initial SVG path state
             this.updateSvgDimensions();
@@ -251,21 +227,22 @@
         open() {
             if (this.isOpen) return;
             this.isOpen = true;
-            this.isDesktop = window.innerWidth >= 1024;
 
             // Update DOM classes
             this.toggleBtn.classList.add('is-active');
             this.toggleBtn.setAttribute('aria-expanded', 'true');
-            if (this.isDesktop) {
-                document.body.classList.remove('curved-sidebar-desktop-collapsed');
-                document.body.classList.add('curved-sidebar-desktop-open');
-                if (this.backdrop) this.backdrop.classList.remove('is-active');
-                document.body.classList.remove('curved-sidebar-open');
-            } else {
-                if (this.backdrop) this.backdrop.classList.add('is-active');
+            if (this.backdrop && window.innerWidth < 1024) {
+                this.backdrop.classList.add('is-active');
+            }
+            if (window.innerWidth < 1024) {
                 document.body.classList.add('curved-sidebar-open');
             }
             this.panel.classList.add('is-active');
+
+            // Push page content to the right on desktop
+            if (window.innerWidth >= 1024) {
+                document.body.classList.add('laa-sidebar-pushed');
+            }
 
             // Scroll inner menu to top
             const inner = this.panel ? this.panel.querySelector('.curved-sidebar-inner') : null;
@@ -273,7 +250,7 @@
 
             if (this.svg) this.svg.style.opacity = '1';
             // Morph curve from bulging (70) to flat (0)
-            this.animateSvgCurve(70, 0, 750, () => {
+            this.animateSvgCurve(70, 0, 800, () => {
                 if (this.svg) this.svg.style.opacity = '0';
             });
         }
@@ -281,24 +258,52 @@
         close() {
             if (!this.isOpen) return;
             this.isOpen = false;
-            this.isDesktop = window.innerWidth >= 1024;
 
             // Update DOM classes
             this.toggleBtn.classList.remove('is-active');
             this.toggleBtn.setAttribute('aria-expanded', 'false');
-            if (this.isDesktop) {
-                document.body.classList.remove('curved-sidebar-desktop-open');
-                document.body.classList.add('curved-sidebar-desktop-collapsed');
-            }
             if (this.backdrop) this.backdrop.classList.remove('is-active');
             document.body.classList.remove('curved-sidebar-open');
+            document.body.classList.remove('laa-sidebar-pushed');
             this.panel.classList.remove('is-active');
 
             if (this.svg) this.svg.style.opacity = '1';
             // Morph curve from flat (0) back to bulging (70)
-            this.animateSvgCurve(0, 70, 750, () => {
+            this.animateSvgCurve(0, 70, 700, () => {
                 if (this.svg) this.svg.style.opacity = '0';
             });
+        }
+
+        setupContentWrapper() {
+            // Skip if wrapper already exists
+            if (document.getElementById('laaMainContentWrapper')) return;
+
+            // IDs/tags to keep directly in body (not wrapped)
+            const skipIds = new Set([
+                'curvedSidebarPanel',
+                'curvedSidebarBackdrop',
+                'curvedSidebarToggle',
+                'laaMainContentWrapper'
+            ]);
+            // Keep <header> (sticky navbar) at body level — don't push it
+            const skipTags = new Set(['HEADER']);
+
+            // Find all body children that should go into the wrapper
+            const toWrap = Array.from(document.body.children).filter(el =>
+                !skipIds.has(el.id) && !skipTags.has(el.tagName)
+            );
+
+            if (toWrap.length === 0) return;
+
+            // Create wrapper div (plain full-width div, NO mx-auto)
+            const wrapper = document.createElement('div');
+            wrapper.id = 'laaMainContentWrapper';
+
+            // Insert wrapper before the first element to be wrapped
+            document.body.insertBefore(wrapper, toWrap[0]);
+
+            // Move elements into wrapper
+            toWrap.forEach(el => wrapper.appendChild(el));
         }
     }
 

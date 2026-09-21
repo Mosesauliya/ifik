@@ -25,7 +25,7 @@
         <div class="flex items-center justify-between h-16 sm:h-18">
             
             <!-- Brand -->
-            <a href="<?= base_url('/'); ?>" class="flex items-center gap-3 group" title="Kembali ke Beranda Utama Website IFIK">
+            <a href="<?= base_url('/'); ?>" class="flex items-center gap-3 group shrink-0" title="Kembali ke Beranda Utama Website IFIK">
                 <div class="w-9 h-9 bg-gradient-to-tr from-orange-600 to-amber-500 text-white rounded-xl font-extrabold text-base flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
                     I
                 </div>
