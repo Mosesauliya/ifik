@@ -6085,7 +6085,7 @@
         if (totalItems === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="10" class="py-12 text-center text-slate-400">
+                    <td colspan="9" class="py-12 text-center text-slate-400">
                         <div class="flex flex-col items-center justify-center gap-2">
                             <i class="fa-solid fa-calendar-xmark text-4xl text-slate-300"></i>
                             <span class="text-xs font-semibold text-slate-500">Tidak ada data mahasiswa sidang yang sesuai filter</span>
@@ -6155,46 +6155,81 @@
             const pg1Name = row.nama_penguji_1 || (row.penguji_1 ? 'NIP: ' + row.penguji_1 : '-');
             const pg2Name = row.nama_penguji_2 || (row.penguji_2 ? 'NIP: ' + row.penguji_2 : '-');
 
+            const hasPenguji = Boolean(row.penguji_1 || row.nama_penguji_1 || row.penguji_2 || row.nama_penguji_2);
+
             const pembimbingHtml = `
-                <div class="space-y-0.5 text-slate-700 text-[10px] leading-tight max-w-[95px] xl:max-w-[110px] cursor-pointer group/dosen w-full"
-                    data-tooltip-type="pembimbing"
-                    data-pemb1="${escapeHtml(p1Name)}"
-                    data-pemb2="${escapeHtml(p2Name)}"
-                    onmouseenter="handleJudulTooltipEnter(this, event)"
-                    onmouseleave="handleJudulTooltipLeave(this)">
-                    <div class="flex items-center gap-1 w-full min-w-0">
-                        <span class="w-3.5 h-3.5 rounded bg-orange-100 text-orange-700 flex items-center justify-center text-[8px] font-bold shrink-0">1</span> 
-                        <span class="truncate block max-w-[78px] xl:max-w-[92px] font-medium group-hover/dosen:text-amber-600 transition-colors" title="${escapeHtml(p1Name)}">${escapeHtml(p1Name)}</span>
+                <div class="space-y-0.5 text-[10px] leading-tight">
+                    <div class="flex items-center gap-1 min-w-0">
+                        <span class="w-3.5 h-3.5 rounded bg-orange-100 text-orange-700 flex items-center justify-center text-[7.5px] font-bold shrink-0" title="Pembimbing 1">P1</span>
+                        <span class="truncate block max-w-full font-medium text-slate-700" title="${escapeHtml(p1Name)}">${escapeHtml(p1Name)}</span>
                     </div>
-                    <div class="flex items-center gap-1 w-full min-w-0">
-                        <span class="w-3.5 h-3.5 rounded bg-orange-100 text-orange-700 flex items-center justify-center text-[8px] font-bold shrink-0">2</span> 
-                        <span class="truncate block max-w-[78px] xl:max-w-[92px] font-medium group-hover/dosen:text-amber-600 transition-colors" title="${escapeHtml(p2Name)}">${escapeHtml(p2Name)}</span>
+                    <div class="flex items-center gap-1 min-w-0">
+                        <span class="w-3.5 h-3.5 rounded bg-orange-100 text-orange-700 flex items-center justify-center text-[7.5px] font-bold shrink-0" title="Pembimbing 2">P2</span>
+                        <span class="truncate block max-w-full font-medium text-slate-700" title="${escapeHtml(p2Name)}">${escapeHtml(p2Name)}</span>
                     </div>
                 </div>
             `;
 
             let pengujiHtml = '';
-            if (row.penguji_1 || row.nama_penguji_1 || row.penguji_2 || row.nama_penguji_2) {
+            if (hasPenguji) {
                 pengujiHtml = `
-                    <div class="space-y-0.5 text-slate-800 text-[10px] leading-tight max-w-[95px] xl:max-w-[110px] cursor-pointer group/dosen w-full"
-                        data-tooltip-type="penguji"
-                        data-peng1="${escapeHtml(pg1Name)}"
-                        data-peng2="${escapeHtml(pg2Name)}"
-                        onmouseenter="handleJudulTooltipEnter(this, event)"
-                        onmouseleave="handleJudulTooltipLeave(this)">
-                        <div class="flex items-center gap-1 w-full min-w-0">
-                            <span class="w-3.5 h-3.5 rounded bg-indigo-100 text-indigo-700 flex items-center justify-center text-[8px] font-bold shrink-0">1</span> 
-                            <span class="truncate block max-w-[78px] xl:max-w-[92px] font-semibold group-hover/dosen:text-indigo-600 transition-colors" title="${escapeHtml(pg1Name)}">${escapeHtml(pg1Name)}</span>
+                    <div class="space-y-0.5 text-[10px] leading-tight">
+                        <div class="flex items-center gap-1 min-w-0">
+                            <span class="w-3.5 h-3.5 rounded bg-indigo-100 text-indigo-700 flex items-center justify-center text-[7.5px] font-bold shrink-0" title="Penguji 1">U1</span>
+                            <span class="truncate block max-w-full font-semibold text-slate-800" title="${escapeHtml(pg1Name)}">${escapeHtml(pg1Name)}</span>
                         </div>
-                        <div class="flex items-center gap-1 w-full min-w-0">
-                            <span class="w-3.5 h-3.5 rounded bg-indigo-100 text-indigo-700 flex items-center justify-center text-[8px] font-bold shrink-0">2</span> 
-                            <span class="truncate block max-w-[78px] xl:max-w-[92px] font-semibold group-hover/dosen:text-indigo-600 transition-colors" title="${escapeHtml(pg2Name)}">${escapeHtml(pg2Name)}</span>
+                        <div class="flex items-center gap-1 min-w-0">
+                            <span class="w-3.5 h-3.5 rounded bg-indigo-100 text-indigo-700 flex items-center justify-center text-[7.5px] font-bold shrink-0" title="Penguji 2">U2</span>
+                            <span class="truncate block max-w-full font-semibold text-slate-800" title="${escapeHtml(pg2Name)}">${escapeHtml(pg2Name)}</span>
                         </div>
                     </div>
                 `;
             } else {
-                pengujiHtml = `<span class="text-slate-400 italic text-[10px]">Belum ditentukan</span>`;
+                pengujiHtml = `<span class="text-slate-400 italic text-[10px]">Belum diatur</span>`;
             }
+
+            const evaluatorHtml = `
+                <div class="space-y-1 text-[10px] leading-tight cursor-pointer group/dosen w-full min-w-0"
+                    data-tooltip-type="evaluator"
+                    data-pemb1="${escapeHtml(p1Name)}"
+                    data-pemb2="${escapeHtml(p2Name)}"
+                    data-peng1="${escapeHtml(pg1Name)}"
+                    data-peng2="${escapeHtml(pg2Name)}"
+                    onmouseenter="handleJudulTooltipEnter(this, event)"
+                    onmouseleave="handleJudulTooltipLeave(this)">
+                    
+                    <!-- Dosen Pembimbing (P1, P2) -->
+                    <div class="space-y-0.5">
+                        <div class="flex items-center gap-1 min-w-0">
+                            <span class="w-3.5 h-3.5 rounded bg-orange-100 text-orange-700 flex items-center justify-center text-[7.5px] font-bold shrink-0" title="Pembimbing 1">P1</span>
+                            <span class="truncate block max-w-[85px] lg:max-w-[105px] xl:max-w-[120px] font-medium text-slate-700 group-hover/dosen:text-amber-600 transition-colors" title="${escapeHtml(p1Name)}">${escapeHtml(p1Name)}</span>
+                        </div>
+                        <div class="flex items-center gap-1 min-w-0">
+                            <span class="w-3.5 h-3.5 rounded bg-orange-100 text-orange-700 flex items-center justify-center text-[7.5px] font-bold shrink-0" title="Pembimbing 2">P2</span>
+                            <span class="truncate block max-w-[85px] lg:max-w-[105px] xl:max-w-[120px] font-medium text-slate-700 group-hover/dosen:text-amber-600 transition-colors" title="${escapeHtml(p2Name)}">${escapeHtml(p2Name)}</span>
+                        </div>
+                    </div>
+
+                    <!-- Dosen Penguji (U1, U2) -->
+                    <div class="space-y-0.5 pt-0.5 border-t border-slate-100">
+                        ${hasPenguji ? `
+                            <div class="flex items-center gap-1 min-w-0">
+                                <span class="w-3.5 h-3.5 rounded bg-indigo-100 text-indigo-700 flex items-center justify-center text-[7.5px] font-bold shrink-0" title="Penguji 1">U1</span>
+                                <span class="truncate block max-w-[85px] lg:max-w-[105px] xl:max-w-[120px] font-semibold text-slate-800 group-hover/dosen:text-indigo-600 transition-colors" title="${escapeHtml(pg1Name)}">${escapeHtml(pg1Name)}</span>
+                            </div>
+                            <div class="flex items-center gap-1 min-w-0">
+                                <span class="w-3.5 h-3.5 rounded bg-indigo-100 text-indigo-700 flex items-center justify-center text-[7.5px] font-bold shrink-0" title="Penguji 2">U2</span>
+                                <span class="truncate block max-w-[85px] lg:max-w-[105px] xl:max-w-[120px] font-semibold text-slate-800 group-hover/dosen:text-indigo-600 transition-colors" title="${escapeHtml(pg2Name)}">${escapeHtml(pg2Name)}</span>
+                            </div>
+                        ` : `
+                            <div class="flex items-center gap-1 text-slate-400 italic text-[9.5px]">
+                                <span class="w-3.5 h-3.5 rounded bg-slate-100 text-slate-400 flex items-center justify-center text-[7.5px] font-bold shrink-0">U</span>
+                                <span>Penguji belum diatur</span>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
 
             const rowHighlight = isChecked ? 'bg-amber-50/70 border-l-4 border-l-amber-600' : 'hover:bg-slate-50/80';
             const fullName = row.nama_lengkap || row.nama || '-';
@@ -6214,30 +6249,49 @@
             let nilaiBadge = '';
             if (isNilaiLengkap) {
                 const pubStatus = row.status_publish_sidang || 'Draft';
-                let pubBadge = '';
+                let pubIcon = 'fa-eye-slash';
+                let pubText = 'Draft';
+                let pubTextColor = 'text-slate-500';
+
                 if (pubStatus === 'Published') {
-                    pubBadge = `<span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[8.5px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs" title="Nilai Terpublikasi (${escapeHtml(row.tgl_publish_sidang || 'Live')})"><i class="fa-solid fa-globe text-[8px]"></i> Terbit</span>`;
+                    pubIcon = 'fa-globe';
+                    pubText = 'Terbit';
+                    pubTextColor = 'text-emerald-700';
                 } else if (pubStatus === 'Scheduled') {
-                    pubBadge = `<span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[8.5px] font-extrabold bg-sky-100 text-sky-800 border border-sky-300 shadow-2xs" title="Terjadwal Rilis: ${escapeHtml(row.tgl_publish_sidang || '')}"><i class="fa-solid fa-clock text-[8px]"></i> Terjadwal</span>`;
-                } else {
-                    pubBadge = `<span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[8.5px] font-extrabold bg-slate-100 text-slate-600 border border-slate-300 shadow-2xs" title="Nilai Masih Draft (Privat)"><i class="fa-solid fa-eye-slash text-[8px]"></i> Draft</span>`;
+                    pubIcon = 'fa-clock';
+                    pubText = 'Rilis';
+                    pubTextColor = 'text-sky-700';
                 }
 
                 nilaiBadge = `
-                    <div class="flex items-center gap-1 flex-wrap mt-0.5">
-                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs" title="Skor Rata-rata 4 Evaluator: ${escapeHtml(row.nilai_akhir_sidang)} | Status: ${escapeHtml(row.status_kelulusan_sidang || 'Lulus')}">
-                            <i class="fa-solid fa-award text-emerald-600 text-[8.5px]"></i> ${escapeHtml(row.nilai_akhir_sidang)} (${escapeHtml(row.grade_sidang || 'A')})
+                    <div class="mt-0.5">
+                        <span class="w-full max-w-[125px] flex items-center justify-between px-1.5 py-0.5 rounded text-[8.5px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs whitespace-nowrap cursor-help" title="Skor Rata-rata: ${escapeHtml(row.nilai_akhir_sidang)} (${escapeHtml(row.grade_sidang || 'A')}) | Status: ${escapeHtml(row.status_kelulusan_sidang || 'Lulus')} | Publikasi: ${escapeHtml(pubStatus)}">
+                            <span class="flex items-center gap-1 font-bold">
+                                <i class="fa-solid fa-award text-emerald-600 text-[8px]"></i>
+                                <span>${escapeHtml(row.nilai_akhir_sidang)} (${escapeHtml(row.grade_sidang || 'A')})</span>
+                            </span>
+                            <span class="text-emerald-300">|</span>
+                            <span class="${pubTextColor} font-extrabold flex items-center gap-0.5">
+                                <i class="fa-solid ${pubIcon} text-[7.5px]"></i>
+                                <span>${pubText}</span>
+                            </span>
                         </span>
-                        ${pubBadge}
                     </div>
                 `;
             } else {
                 const terisiCount = row.komponen_terisi_count || 0;
                 const belumStr = (row.komponen_belum_terisi && Array.isArray(row.komponen_belum_terisi)) ? row.komponen_belum_terisi.join(', ') : 'Belum lengkap';
                 nilaiBadge = `
-                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8.5px] font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs mt-0.5 whitespace-nowrap cursor-help" title="Komponen belum lengkap (${terisiCount}/4 terisi). Menunggu: ${escapeHtml(belumStr)}">
-                        <i class="fa-solid fa-clock-rotate-left text-amber-600 text-[8px]"></i> Nilai (${terisiCount}/4)
-                    </span>
+                    <div class="mt-0.5">
+                        <span class="w-full max-w-[125px] flex items-center justify-between px-1.5 py-0.5 rounded text-[8.5px] font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs whitespace-nowrap cursor-help" title="Komponen belum lengkap (${terisiCount}/4 terisi). Menunggu: ${escapeHtml(belumStr)}">
+                            <span class="flex items-center gap-1 font-bold">
+                                <i class="fa-solid fa-clock-rotate-left text-amber-600 text-[8px]"></i>
+                                <span>Nilai</span>
+                            </span>
+                            <span class="text-amber-300">|</span>
+                            <span class="text-amber-800 font-extrabold">${terisiCount}/4</span>
+                        </span>
+                    </div>
                 `;
             }
 
@@ -6262,7 +6316,7 @@
                         <span class="truncate block max-w-full cursor-pointer hover:text-amber-600 transition font-bold text-[11px]" onclick="openModalSingleSidang('${escapeHtml(row.nim)}')" title="${escapeHtml(fullName)}">${escapeHtml(fullName)}</span>
                         ${nilaiBadge}
                     </td>
-                    <td class="py-2.5 px-1.5 text-slate-600 font-normal min-w-0">
+                    <td class="py-2.5 px-2 text-slate-600 font-normal min-w-0">
                         <div class="flex items-center gap-1 cursor-pointer group/title w-full"
                             data-tooltip-type="sidang"
                             data-nim="${escapeHtml(row.nim)}"
@@ -6281,8 +6335,7 @@
                             <i class="fa-solid fa-circle-info text-[9px] text-slate-400 group-hover/title:text-amber-500 shrink-0 opacity-0 group-hover/title:opacity-100 transition-opacity"></i>
                         </div>
                     </td>
-                    <td class="w-24 lg:w-28 py-2.5 px-1.5">${pembimbingHtml}</td>
-                    <td class="w-24 lg:w-28 py-2.5 px-1.5">${pengujiHtml}</td>
+                    <td class="w-28 lg:w-32 py-2.5 px-1.5">${evaluatorHtml}</td>
                     <td class="w-28 lg:w-32 py-2.5 px-1.5">${waktuDisplay}</td>
                     <td class="w-20 lg:w-24 py-2.5 px-1.5">${ruanganDisplay}</td>
                     <td class="w-20 py-2.5 px-1 text-center">${statusBadge}</td>
@@ -10231,7 +10284,60 @@
             const status = triggerEl.getAttribute('data-status') || '';
             const tooltipType = triggerEl.getAttribute('data-tooltip-type') || 'pendaftaran';
 
-            if (tooltipType === 'pembimbing') {
+            if (tooltipType === 'evaluator') {
+                tooltip.innerHTML = `
+                    <div class="space-y-2.5 min-w-[240px]">
+                        <div class="flex items-center gap-1.5 text-amber-400 font-bold text-[10px] uppercase tracking-wider border-b border-slate-800 pb-1.5">
+                            <i class="fa-solid fa-users-rectangle text-xs"></i>
+                            <span>Dewan Evaluator Sidang TA</span>
+                        </div>
+                        <!-- Section Pembimbing -->
+                        <div class="space-y-1.5">
+                            <span class="text-[9.5px] font-bold uppercase tracking-wider text-orange-400 flex items-center gap-1">
+                                <i class="fa-solid fa-chalkboard-user text-[9px]"></i> Dosen Pembimbing
+                            </span>
+                            <div class="space-y-1 text-xs pl-1">
+                                <div class="flex items-start gap-2">
+                                    <span class="w-4 h-4 rounded bg-orange-500/20 text-orange-300 flex items-center justify-center text-[8.5px] font-bold shrink-0 mt-0.5 border border-orange-500/30">P1</span>
+                                    <div>
+                                        <div class="font-semibold text-white leading-snug">${escapeHtml(pemb1 || '-')}</div>
+                                        <div class="text-[9.5px] text-slate-400">Pembimbing Utama</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-2 pt-1 border-t border-slate-800/60">
+                                    <span class="w-4 h-4 rounded bg-orange-500/20 text-orange-300 flex items-center justify-center text-[8.5px] font-bold shrink-0 mt-0.5 border border-orange-500/30">P2</span>
+                                    <div>
+                                        <div class="font-semibold text-white leading-snug">${escapeHtml(pemb2 || '-')}</div>
+                                        <div class="text-[9.5px] text-slate-400">Pembimbing Pendamping</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Section Penguji -->
+                        <div class="space-y-1.5 pt-2 border-t border-slate-800">
+                            <span class="text-[9.5px] font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-1">
+                                <i class="fa-solid fa-user-check text-[9px]"></i> Dosen Penguji
+                            </span>
+                            <div class="space-y-1 text-xs pl-1">
+                                <div class="flex items-start gap-2">
+                                    <span class="w-4 h-4 rounded bg-indigo-500/20 text-indigo-300 flex items-center justify-center text-[8.5px] font-bold shrink-0 mt-0.5 border border-indigo-500/30">U1</span>
+                                    <div>
+                                        <div class="font-semibold text-white leading-snug">${escapeHtml(peng1 || '-')}</div>
+                                        <div class="text-[9.5px] text-slate-400">Penguji 1</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-2 pt-1 border-t border-slate-800/60">
+                                    <span class="w-4 h-4 rounded bg-indigo-500/20 text-indigo-300 flex items-center justify-center text-[8.5px] font-bold shrink-0 mt-0.5 border border-indigo-500/30">U2</span>
+                                    <div>
+                                        <div class="font-semibold text-white leading-snug">${escapeHtml(peng2 || '-')}</div>
+                                        <div class="text-[9.5px] text-slate-400">Penguji 2</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (tooltipType === 'pembimbing') {
                 tooltip.innerHTML = `
                     <div class="space-y-2 min-w-[210px]">
                         <div class="flex items-center gap-1.5 text-amber-400 font-bold text-[10px] uppercase tracking-wider border-b border-slate-800 pb-1.5">

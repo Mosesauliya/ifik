@@ -1873,9 +1873,8 @@
                                 </th>
                                 <th class="w-20 py-3 px-1.5 font-bold">NIM</th>
                                 <th class="w-28 lg:w-32 py-3 px-1.5 font-semibold">Nama Mahasiswa</th>
-                                <th class="py-3 px-1.5 min-w-[100px]">Usulan Judul TA</th>
-                                <th class="w-24 lg:w-28 py-3 px-1.5">Dosen Pembimbing</th>
-                                <th class="w-24 lg:w-28 py-3 px-1.5">Dosen Penguji</th>
+                                <th class="py-3 px-2 min-w-0">Usulan Judul TA</th>
+                                <th class="w-28 lg:w-32 py-3 px-1.5">Pembimbing & Penguji</th>
                                 <th class="w-28 lg:w-32 py-3 px-1.5">Waktu Sidang</th>
                                 <th class="w-20 lg:w-24 py-3 px-1.5">Ruangan</th>
                                 <th class="w-20 py-3 px-1 text-center">Status</th>
