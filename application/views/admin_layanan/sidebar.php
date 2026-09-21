@@ -11,9 +11,10 @@ $laaNavItems = [
         'heading' => 'Pendaftaran TA',
         'icon_3d' => 'assets/images/icons_3d/daftar.png',
         'children' => [
-            ['heading' => 'Pendaftaran TA', 'href' => site_url('adminlayanan')],
-            ['heading' => 'Sudah Lulus Sidang', 'href' => site_url('adminlayanan/lulus_sidang')],
+            ['heading' => 'Pendaftaran TA',    'href' => site_url('adminlayanan')],
+            ['heading' => 'Sudah Lulus Sidang','href' => site_url('adminlayanan/lulus_sidang')],
             ['heading' => 'Status Peserta TA', 'href' => site_url('adminlayanan/status_peserta_ta')],
+            ['heading' => 'Reset File TA',     'href' => site_url('adminlayanan/reset_file_ta')],
         ]
     ],
     [

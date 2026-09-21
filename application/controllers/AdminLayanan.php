@@ -735,5 +735,97 @@ class AdminLayanan extends CI_Controller {
 
         redirect('adminlayanan/status_peserta_ta');
     }
+
+    // ==========================================
+    // RESET FILE TA
+    // ==========================================
+
+    /**
+     * Halaman Reset File TA - reset file yang sudah diupload mahasiswa
+     */
+    public function reset_file_ta() {
+        $nim    = trim($this->input->get('nim') ?? '');
+        $detail = null;
+        $berkas = [];
+
+        if (!empty($nim)) {
+            $detail = $this->AdminLayanan_model->get_detail_pengajuan($nim);
+            if ($detail) {
+                $syarat = $this->AdminLayanan_model->get_active_syarat_berkas();
+                $berkas = $this->AdminLayanan_model->get_student_berkas_map($nim);
+            }
+        }
+
+        $data['title']  = 'Reset File TA - Admin Layanan';
+        $data['nim']    = $nim;
+        $data['detail'] = $detail;
+        $data['berkas'] = $berkas;
+
+        $this->load->view('admin_layanan/reset_file_ta', $data);
+    }
+
+    /**
+     * AJAX: Reset semua atau satu file berkas TA mahasiswa
+     * POST: nim, kode_berkas (optional — kosong = reset semua)
+     */
+    public function ajax_reset_file_ta() {
+        $nim         = trim($this->input->post('nim') ?? '');
+        $kode_berkas = trim($this->input->post('kode_berkas') ?? ''); // kosong = reset semua
+
+        if (empty($nim)) {
+            $this->output->set_content_type('application/json')
+                         ->set_output(json_encode(['success' => false, 'message' => 'NIM tidak boleh kosong.']));
+            return;
+        }
+
+        $detail = $this->AdminLayanan_model->get_detail_pengajuan($nim);
+        if (!$detail) {
+            $this->output->set_content_type('application/json')
+                         ->set_output(json_encode(['success' => false, 'message' => 'Mahasiswa dengan NIM ' . $nim . ' tidak ditemukan.']));
+            return;
+        }
+
+        if (!empty($kode_berkas)) {
+            // Reset satu file
+            $this->db->where('nim', $nim)
+                     ->where('kode_berkas', $kode_berkas)
+                     ->delete('pendaftaran_berkas');
+
+            // Reset status legacy column jika ada
+            $legacy_cols = ['ksm', 'transkrip', 'pernyataan', 'bebas_lab'];
+            if (in_array($kode_berkas, $legacy_cols) && $this->db->field_exists('status_' . $kode_berkas, 'pendaftaran_ta')) {
+                $this->db->where('nim', $nim)->update('pendaftaran_ta', ['status_' . $kode_berkas => 'Pending']);
+            }
+
+            $msg = 'File ' . strtoupper($kode_berkas) . ' mahasiswa NIM ' . $nim . ' berhasil direset.';
+        } else {
+            // Reset semua file
+            $this->db->where('nim', $nim)->delete('pendaftaran_berkas');
+
+            // Reset status_approval_admin ke Pending
+            $this->db->where('nim', $nim)->update('pendaftaran_ta', [
+                'status_approval_admin' => 'Pending',
+                'berkas_kurang'         => null,
+                'catatan_admin'         => null,
+                'current_stage'         => 'Mahasiswa'
+            ]);
+
+            $msg = 'Semua file TA mahasiswa NIM ' . $nim . ' berhasil direset. Mahasiswa dapat mengupload ulang.';
+        }
+
+        // Log aksi
+        $this->load->model('Approval_log_model');
+        $mhs_name = trim(($detail['nama_depan'] ?? '') . ' ' . ($detail['nama_belakang'] ?? ''));
+        $this->Approval_log_model->log([
+            'modul'       => 'Admin Layanan',
+            'ref_id'      => $nim,
+            'target_name' => $mhs_name,
+            'action'      => !empty($kode_berkas) ? 'Reset File (' . strtoupper($kode_berkas) . ')' : 'Reset Semua File TA',
+            'catatan'     => 'Reset dilakukan oleh Admin LAA'
+        ]);
+
+        $this->output->set_content_type('application/json')
+                     ->set_output(json_encode(['success' => true, 'message' => $msg]));
+    }
 }
 
