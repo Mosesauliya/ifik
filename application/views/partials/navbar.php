@@ -428,23 +428,32 @@
 
     <?php
         $role_id       = (int)$this->session->userdata('role_id');
-        $user_email    = $this->session->userdata('email') ?? '';
+        $user_email    = (string)($this->session->userdata('email') ?? '');
         $user_name_top = $this->session->userdata('name') ?? '';
-        $is_mahasiswa  = ($role_id == 4 || $role_id == 5 || strpos($user_email, '@student.') !== false);
+        $is_mahasiswa  = ($role_id === 4 || strpos($user_email, '@student.') !== false);
 
         // ====== Tentukan label & URL panel berdasarkan role ======
         $panel_label = 'Panel Admin';
         $panel_url   = base_url('admin');
 
-        if ($role_id == 2) {
+        if ($role_id === 21 || ($role_id === 2 && strpos(strtolower($user_email), 'laboran') !== false)) {
             $panel_label = 'Panel Laboran';
-            $panel_url   = base_url('laboran');
-        } elseif ($role_id == 3) {
+            $panel_url   = base_url('laboran/booking');
+        } elseif ($role_id === 2) {
+            $panel_label = 'Panel Ka. Ur';
+            $panel_url   = base_url('kaur/approval');
+        } elseif ($role_id === 3) {
             $panel_label = 'Panel Dosen';
-            $panel_url   = base_url('dosenwali');
-        } elseif ($role_id == 6) {
+            $panel_url   = base_url('dosen/bimbingan');
+        } elseif ($role_id === 5) {
+            $panel_label = 'Admin Layanan (LAA)';
+            $panel_url   = base_url('adminlayanan');
+        } elseif ($role_id === 6) {
             $panel_label = 'Panel Koordinator TA';
             $panel_url   = base_url('koordinatorta');
+        } elseif ($role_id === 7 || $role_id === 9) {
+            $panel_label = 'Portal Ketua KK';
+            $panel_url   = base_url('ketuakk');
         }
     ?>
 

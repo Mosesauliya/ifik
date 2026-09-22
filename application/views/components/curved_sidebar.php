@@ -18,44 +18,46 @@ $sessionRoleId = (int)$this->session->userdata('role_id');
 $sessionEmail  = (string)$this->session->userdata('email');
 $currentUri = trim(uri_string(), '/');
 
-// Tentukan active role ID (utamakan rute modul aktif jika berada di portal spesifik, atau session role)
+// Tentukan active role ID (utamakan session role jika user sudah login)
 $activeRoleId = $sessionRoleId;
 
-// Jika role 2 tapi mengakses modul laboran / akun laboran, arahkan ke role 21 (Laboran)
-if ($sessionRoleId === 2 && (strpos($currentUri, 'laboran') === 0 || strpos($sessionEmail, 'laboran') !== false)) {
+// Jika role 2 tapi akun khusus laboran, arahkan ke role 21 (Laboran)
+if ($sessionRoleId === 2 && strpos(strtolower($sessionEmail), 'laboran') !== false) {
     $activeRoleId = 21;
 }
 
-if (strpos($currentUri, 'laboran') === 0) {
-    $activeRoleId = 21; // Laboran
-} elseif (strpos($currentUri, 'kaur') === 0) {
-    $activeRoleId = 2; // Kaur / Ka Lab
-} elseif (strpos($currentUri, 'dosen') === 0 || strpos($currentUri, 'dosenwali') === 0) {
-    $activeRoleId = 3; // Dosen
-} elseif (strpos($currentUri, 'koordinatorta') === 0 || strpos($currentUri, 'koordinator') === 0) {
-    $activeRoleId = 6; // Koordinator TA
-} elseif (strpos($currentUri, 'adminlayanan') === 0) {
-    $activeRoleId = 5; // Admin LAA
-} elseif (strpos($currentUri, 'ketuakk') === 0) {
-    $activeRoleId = 9; // Ketua KK
-} elseif (strpos($currentUri, 'mahasiswa') === 0) {
-    $activeRoleId = 4; // Mahasiswa
-} elseif (strpos($currentUri, 'admin') === 0 || strpos($currentUri, 'kelolabooking') === 0) {
-    $activeRoleId = 1; // Admin
-} elseif (strpos($currentUri, 'importemail') === 0 || strpos($currentUri, 'import-email') === 0) {
-    $ref = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
-    if (strpos($ref, 'admin') !== false) {
-        $activeRoleId = 1; // Admin
-    } else {
+// Fallback deteksi URI hanya jika user belum login ($sessionRoleId === 0)
+if ($activeRoleId === 0) {
+    if (strpos($currentUri, 'laboran') === 0) {
         $activeRoleId = 21; // Laboran
+    } elseif (strpos($currentUri, 'kaur') === 0) {
+        $activeRoleId = 2; // Kaur / Ka Lab
+    } elseif (strpos($currentUri, 'dosen') === 0 || strpos($currentUri, 'dosenwali') === 0) {
+        $activeRoleId = 3; // Dosen
+    } elseif (strpos($currentUri, 'koordinatorta') === 0 || strpos($currentUri, 'koordinator') === 0) {
+        $activeRoleId = 6; // Koordinator TA
+    } elseif (strpos($currentUri, 'adminlayanan') === 0) {
+        $activeRoleId = 5; // Admin LAA
+    } elseif (strpos($currentUri, 'ketuakk') === 0) {
+        $activeRoleId = 9; // Ketua KK
+    } elseif (strpos($currentUri, 'mahasiswa') === 0) {
+        $activeRoleId = 4; // Mahasiswa
+    } elseif (strpos($currentUri, 'admin') === 0 || strpos($currentUri, 'kelolabooking') === 0) {
+        $activeRoleId = 1; // Admin
+    } elseif (strpos($currentUri, 'importemail') === 0 || strpos($currentUri, 'import-email') === 0) {
+        $ref = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
+        if (strpos($ref, 'admin') !== false) {
+            $activeRoleId = 1; // Admin
+        } else {
+            $activeRoleId = 21; // Laboran
+        }
+    } else {
+        $activeRoleId = 0; // Publik
     }
 }
 
-if ($activeRoleId === 0) {
-    $activeRoleId = 4; // Fallback ke Mahasiswa
-}
-
 $roleBadgeMap = [
+    0 => 'Portal IFIK',
     1 => 'Admin Panel',
     2 => 'Ka. Ur / Ka Lab',
     3 => 'Portal Dosen',
