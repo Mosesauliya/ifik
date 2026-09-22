@@ -187,19 +187,28 @@ class Booking_model extends CI_Model {
         $created   = $data['created_at'] ?? ($data['date_created'] ?? date('Y-m-d H:i:s'));
 
         $bookingData = array(
-            'id'               => (string)$bookingId,
-            'id_peminjam'      => (string)$userId,
-            'id_ruangan'       => (string)$ruangId,
-            'date'             => $tglM,
-            'date_declined'    => null,
-            'time'             => $timeStr,
-            'keterangan'       => $ket,
-            'status'           => $status,
-            'date_created'     => $created,
-            'laboran'          => null,
-            'komentar'         => $data['komentar'] ?? ($data['alasan_penolakan'] ?? null),
-            'tanggal_accepted' => null
+            'id'           => (string)$bookingId,
+            'id_peminjam'  => (string)$userId,
+            'id_ruangan'   => (string)$ruangId,
+            'date'         => $tglM,
+            'time'         => $timeStr,
+            'keterangan'   => $ket,
+            'status'       => $status,
+            'date_created' => $created,
         );
+
+        if (!empty($data['laboran'])) {
+            $bookingData['laboran'] = $data['laboran'];
+        }
+        if (!empty($data['komentar']) || !empty($data['alasan_penolakan'])) {
+            $bookingData['komentar'] = $data['komentar'] ?? $data['alasan_penolakan'];
+        }
+        if (!empty($data['date_declined'])) {
+            $bookingData['date_declined'] = $data['date_declined'];
+        }
+        if (!empty($data['tanggal_accepted'])) {
+            $bookingData['tanggal_accepted'] = $data['tanggal_accepted'];
+        }
 
         $this->db->insert('booking', $bookingData);
 
@@ -207,16 +216,18 @@ class Booking_model extends CI_Model {
             $peminjamanData = array(
                 'id_user'          => is_numeric($userId) ? (int)$userId : null,
                 'id_ruangan'       => is_numeric($ruangId) ? (int)$ruangId : 1,
-                'nama_lengkap'     => $nama,
+                'nama_lengkap'     => $nama ?: '',
                 'keterangan'       => $ket,
                 'tanggal_mulai'    => $tglM,
                 'tanggal_selesai'  => $tglS,
                 'jam_mulai'        => $jM,
                 'jam_selesai'      => $jS,
                 'status'           => $status,
-                'alasan_penolakan' => $data['alasan_penolakan'] ?? ($data['komentar'] ?? null),
                 'created_at'       => $created
             );
+            if (!empty($data['alasan_penolakan']) || !empty($data['komentar'])) {
+                $peminjamanData['alasan_penolakan'] = $data['alasan_penolakan'] ?? $data['komentar'];
+            }
             $this->db->insert('peminjaman', $peminjamanData);
         }
 
