@@ -180,12 +180,12 @@
             </div>
         </div>
 
-        <!-- 7 Berkas Pendaftaran Sidang Table (Matching Photo 2) -->
+        <!-- Berkas Pendaftaran Sidang Table (Dinamis dari Master Syarat) -->
         <div class="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xl shadow-slate-200/40 overflow-hidden mb-6">
             
             <div class="p-4 sm:p-6 border-b border-slate-100 flex items-center justify-between">
                 <h3 class="text-xs sm:text-sm font-extrabold text-slate-800 flex items-center gap-2">
-                    <i class="bi bi-files text-orange-600"></i> Berkas Persyaratan Pendaftaran Sidang (7 Dokumen)
+                    <i class="bi bi-files text-orange-600"></i> Berkas Persyaratan Pendaftaran Sidang (<?= count($berkas); ?> Dokumen)
                 </h3>
             </div>
 

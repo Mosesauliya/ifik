@@ -1147,18 +1147,34 @@ class AdminLayanan_model extends CI_Model {
     }
 
     /**
-     * Ambil 7 berkas persyaratan pendaftaran sidang mahasiswa
+     * Ambil master berkas persyaratan pendaftaran sidang (Dinamis dari database syarat_berkas_sidang)
+     */
+    public function get_master_syarat_sidang() {
+        if ($this->db->table_exists('syarat_berkas_sidang')) {
+            $this->db->order_by('urutan', 'ASC');
+            $query = $this->db->get_where('syarat_berkas_sidang', ['is_active' => 1]);
+            if ($query && $query->num_rows() > 0) {
+                return $query->result_array();
+            }
+        }
+
+        // Fallback default 7 berkas jika tabel belum ada / kosong
+        return [
+            ['kode_berkas' => 'surat_izin_wali', 'nama_berkas' => 'Surat Izin Sidang yang Telah Ditandatangani Dosen Wali', 'is_required' => 1, 'urutan' => 1],
+            ['kode_berkas' => 'formulir_sidang', 'nama_berkas' => 'Formulir Pendaftaran Sidang',                             'is_required' => 1, 'urutan' => 2],
+            ['kode_berkas' => 'daftar_nilai',    'nama_berkas' => 'Daftar Nilai yang Telah Divalidasi oleh Ka Prodi',        'is_required' => 1, 'urutan' => 3],
+            ['kode_berkas' => 'sertifikat_eprt', 'nama_berkas' => 'Sertifikat EPRT',                                         'is_required' => 1, 'urutan' => 4],
+            ['kode_berkas' => 'sertifikat_tak',  'nama_berkas' => 'Sertifikat TAK',                                          'is_required' => 1, 'urutan' => 5],
+            ['kode_berkas' => 'bukti_bimbingan', 'nama_berkas' => 'Bukti Bimbingan (Logbook)',                               'is_required' => 1, 'urutan' => 6],
+            ['kode_berkas' => 'bukti_skpi',      'nama_berkas' => 'Bukti SKPI',                                              'is_required' => 1, 'urutan' => 7]
+        ];
+    }
+
+    /**
+     * Ambil berkas persyaratan pendaftaran sidang mahasiswa secara dinamis
      */
     public function get_berkas_pendaftaran_sidang($nim) {
-        $syarat_default = [
-            ['kode' => 'surat_izin_wali', 'nama' => 'Surat Izin Sidang yang Telah Ditandatangani Dosen Wali', 'file' => 'Form_izin_pendaftaran_sidang_TA.pdf'],
-            ['kode' => 'formulir_sidang', 'nama' => 'Formulir Pendaftaran Sidang',                             'file' => 'Form_pendaftaran_Sidang_TA_' . $nim . '.pdf'],
-            ['kode' => 'daftar_nilai',    'nama' => 'Daftar Nilai yang Telah Divalidasi oleh Ka Prodi',        'file' => 'Daftar_Nilai_' . $nim . '.pdf'],
-            ['kode' => 'sertifikat_eprt', 'nama' => 'Sertifikat EPRT',                                         'file' => 'EPRT_' . $nim . '.pdf'],
-            ['kode' => 'sertifikat_tak',  'nama' => 'Sertifikat TAK',                                          'file' => 'TAK_' . $nim . '.pdf'],
-            ['kode' => 'bukti_bimbingan', 'nama' => 'Bukti Bimbingan (Logbook)',                               'file' => 'LOGBOOK_' . $nim . '.pdf'],
-            ['kode' => 'bukti_skpi',      'nama' => 'Bukti SKPI',                                              'file' => 'SKPI_' . $nim . '.pdf']
-        ];
+        $master_syarat = $this->get_master_syarat_sidang();
 
         // Cek apakah ada record di file_pendaftaran atau pendaftaran_berkas
         $db_files = array();
@@ -1176,23 +1192,26 @@ class AdminLayanan_model extends CI_Model {
         }
 
         $berkas = array();
-        foreach ($syarat_default as $idx => $s) {
-            $kode = $s['kode'];
+        foreach ($master_syarat as $idx => $s) {
+            $kode = $s['kode_berkas'] ?? ($s['kode'] ?? 'berkas_' . ($idx + 1));
+            $nama = $s['nama_berkas'] ?? ($s['nama'] ?? 'Dokumen ' . ($idx + 1));
             $found = $db_files[$kode] ?? null;
 
-            $file_name = !empty($found['file_name']) ? $found['file_name'] : (!empty($found['file']) ? $found['file'] : $s['file']);
+            $file_name = !empty($found['file_name']) ? $found['file_name'] : (!empty($found['file']) ? $found['file'] : ($kode . '_' . $nim . '.pdf'));
             $status = !empty($found['status_verifikasi']) ? $found['status_verifikasi'] : (!empty($found['status_adminlaa']) ? $found['status_adminlaa'] : 'Disetujui Admin LAA');
             $catatan = !empty($found['catatan']) ? $found['catatan'] : (!empty($found['komentar']) ? $found['komentar'] : '');
 
             $berkas[] = array(
-                'no'        => $idx + 1,
-                'kode'      => $kode,
-                'nama_file' => $s['nama'],
-                'file_name' => $file_name,
-                'file_url'  => $this->resolve_pdf_url($file_name),
-                'status'    => $status,
-                'is_valid'  => (strpos(strtolower($status), 'setuju') !== false || strpos(strtolower($status), 'valid') !== false || strpos(strtolower($status), 'approved') !== false),
-                'catatan'   => $catatan
+                'no'          => $idx + 1,
+                'kode'        => $kode,
+                'nama_file'   => $nama,
+                'deskripsi'   => $s['deskripsi'] ?? '',
+                'file_name'   => $file_name,
+                'file_url'    => $this->resolve_pdf_url($file_name),
+                'status'      => $status,
+                'is_valid'    => (strpos(strtolower($status), 'setuju') !== false || strpos(strtolower($status), 'valid') !== false || strpos(strtolower($status), 'approved') !== false),
+                'catatan'     => $catatan,
+                'is_required' => $s['is_required'] ?? 1
             );
         }
 
