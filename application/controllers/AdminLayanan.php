@@ -1129,33 +1129,58 @@ class AdminLayanan extends CI_Controller {
     }
 
     /**
-     * AJAX / Modal Preview BAP Sidang Lengkap 2 Halaman
+     * Preview Dokumen 1: BAP IGrACIAS (Foto 4)
      */
-    public function preview_bap($nim = '') {
-        if (empty($nim)) {
-            $nim = '1601200295';
-        }
+    public function preview_bap_igracias($nim = '') {
+        if (empty($nim)) $nim = '1601200295';
         $bap = $this->AdminLayanan_model->get_detail_bap_sidang($nim);
-
-        if ($this->input->is_ajax_request()) {
-            $this->output->set_content_type('application/json')
-                         ->set_output(json_encode(['success' => true, 'bap' => $bap]));
-            return;
-        }
-
-        $data['title'] = 'Preview Dokumen BAP Sidang - ' . $bap['nama'];
+        $data['title'] = 'BAP IGrACIAS — ' . $bap['nama'];
         $data['bap']   = $bap;
-        $this->load->view('admin_layanan/template_bap_pdf', $data);
+        $this->load->view('admin_layanan/template_bap_igracias', $data);
     }
 
     /**
-     * Cetak BAP Sidang (Format Print-Ready 2 Halaman)
+     * Cetak Dokumen 1: BAP IGrACIAS (Foto 4)
      */
-    public function cetak_bap($nim = '') {
+    public function cetak_bap_igracias($nim = '') {
+        if (empty($nim)) $nim = '1601200295';
         $data['bap'] = $this->AdminLayanan_model->get_detail_bap_sidang($nim);
-        $data['title'] = 'Cetak BAP Sidang - ' . $data['bap']['nama'];
+        $data['title'] = 'Cetak BAP IGrACIAS — ' . $data['bap']['nama'];
         $data['auto_print'] = true;
-        $this->load->view('admin_layanan/template_bap_pdf', $data);
+        $this->load->view('admin_layanan/template_bap_igracias', $data);
+    }
+
+    /**
+     * Preview Dokumen 2: BAP Fakultas 2 Halaman (Foto 5 & 6)
+     */
+    public function preview_bap_fakultas($nim = '') {
+        if (empty($nim)) $nim = '1601200295';
+        $bap = $this->AdminLayanan_model->get_detail_bap_sidang($nim);
+        $data['title'] = 'BAP Fakultas — ' . $bap['nama'];
+        $data['bap']   = $bap;
+        $this->load->view('admin_layanan/template_bap_fakultas', $data);
+    }
+
+    /**
+     * Cetak Dokumen 2: BAP Fakultas 2 Halaman (Foto 5 & 6)
+     */
+    public function cetak_bap_fakultas($nim = '') {
+        if (empty($nim)) $nim = '1601200295';
+        $data['bap'] = $this->AdminLayanan_model->get_detail_bap_sidang($nim);
+        $data['title'] = 'Cetak BAP Fakultas — ' . $data['bap']['nama'];
+        $data['auto_print'] = true;
+        $this->load->view('admin_layanan/template_bap_fakultas', $data);
+    }
+
+    /**
+     * Alias default
+     */
+    public function preview_bap($nim = '') {
+        $this->preview_bap_fakultas($nim);
+    }
+
+    public function cetak_bap($nim = '') {
+        $this->cetak_bap_fakultas($nim);
     }
 }
 

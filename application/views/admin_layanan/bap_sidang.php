@@ -77,7 +77,7 @@
                         <span>Pengajuan BAP Sidang Tugas Akhir</span>
                     </h1>
                     <p class="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl">
-                        Kelola dokumen Berita Acara Penyelenggaraan Sidang Tugas Akhir / Proyek Akhir serta lembar penilaian komprehensif.
+                        Daftar dokumen BAP IGrACIAS dan Berita Acara Resmi Fakultas Industri Kreatif beserta nilai evaluasi sidang.
                     </p>
                 </div>
 
@@ -102,7 +102,7 @@
             </form>
         </div>
 
-        <!-- Table View: BAP Sidang (Matching Photo 3) -->
+        <!-- Table View: BAP Sidang (Matching Photo 3 & 4) -->
         <div class="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xl shadow-slate-200/40 overflow-hidden">
             
             <div class="p-4 sm:p-6 border-b border-slate-100 flex items-center justify-between">
@@ -175,10 +175,14 @@
                                     </td>
 
                                     <!-- Dokumen BAP -->
-                                    <td class="py-4 px-4 font-mono text-[11px] text-slate-500">
+                                    <td class="py-4 px-4 font-mono text-[11px] space-y-1">
                                         <div class="flex items-center gap-1.5 text-rose-600 font-bold">
                                             <i class="bi bi-file-earmark-pdf"></i>
                                             <span class="truncate max-w-[140px]"><?= htmlspecialchars($r['dokumen_bap']); ?></span>
+                                        </div>
+                                        <div class="flex items-center gap-1.5 text-blue-600 font-bold">
+                                            <i class="bi bi-file-earmark-check"></i>
+                                            <span class="truncate max-w-[140px]">BAP_Fakultas_<?= htmlspecialchars($r['nim']); ?>.pdf</span>
                                         </div>
                                     </td>
 
@@ -192,11 +196,18 @@
                                         </span>
                                     </td>
 
-                                    <!-- Action (Matching Photo 3 & 4) -->
-                                    <td class="py-4 px-4 text-center">
-                                        <button type="button" onclick="openBapPreview('<?= $r['nim']; ?>')"
-                                                class="px-3 py-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-[11px] shadow-xs hover:shadow-md transition flex items-center gap-1 mx-auto">
-                                            <i class="bi bi-file-earmark-pdf-fill"></i> Lihat Dokumen BAP
+                                    <!-- Action: 2 Distinct Buttons (Matching Photo 3 & 4) -->
+                                    <td class="py-4 px-4 text-center space-y-1.5">
+                                        <!-- Tombol Dokumen 1: BAP IGrACIAS (Foto 4) -->
+                                        <button type="button" onclick="openBapIgracias('<?= $r['nim']; ?>', '<?= htmlspecialchars($r['nama']); ?>')"
+                                                class="w-full px-3 py-1 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-bold text-[10.5px] shadow-2xs hover:shadow-xs transition flex items-center justify-center gap-1">
+                                            <i class="bi bi-file-earmark-text-fill"></i> BAP (IGRACIAS)
+                                        </button>
+
+                                        <!-- Tombol Dokumen 2: BAP FAKULTAS (Foto 5 & 6) -->
+                                        <button type="button" onclick="openBapFakultas('<?= $r['nim']; ?>', '<?= htmlspecialchars($r['nama']); ?>')"
+                                                class="w-full px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-900 text-white font-bold text-[10.5px] shadow-2xs hover:shadow-xs transition flex items-center justify-center gap-1">
+                                            <i class="bi bi-award-fill"></i> BAP FAKULTAS
                                         </button>
                                     </td>
                                 </tr>
@@ -210,7 +221,7 @@
 
     </main>
 
-    <!-- Modal Preview Dokumen BAP 2 Halaman (Matching Photo 4, 5, 6) -->
+    <!-- Modal Preview Dokumen BAP Interaktif -->
     <div id="bapModal" class="fixed inset-0 z-[99999] flex items-center justify-center hidden">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeBapModal()"></div>
         <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-4xl h-[90vh] mx-4 flex flex-col overflow-hidden z-10">
@@ -219,11 +230,11 @@
                     <i class="bi bi-file-earmark-pdf-fill text-rose-600 text-xl"></i>
                     <div>
                         <h3 class="font-bold text-slate-800 text-sm" id="bapModalTitle">Dokumen BAP Sidang</h3>
-                        <p class="text-[11px] text-slate-400">Berita Acara & Nilai Komprehensif Sidang Tugas Akhir</p>
+                        <p class="text-[11px] text-slate-400" id="bapModalSub">Pratinjau Dokumen Berita Acara Sidang</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <a id="btnCetakBap" href="#" target="_blank" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-orange-600 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5">
+                    <a id="btnCetakBap" href="#" target="_blank" class="px-3.5 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5">
                         <i class="bi bi-printer-fill"></i> Cetak / Simpan PDF
                     </a>
                     <button onclick="closeBapModal()" class="w-8 h-8 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-800 flex items-center justify-center transition">
@@ -239,10 +250,19 @@
     </div>
 
     <script>
-        function openBapPreview(nim) {
-            document.getElementById('bapModalTitle').textContent = 'Dokumen BAP Sidang — NIM: ' + nim;
-            document.getElementById('bapIframe').src = '<?= site_url('adminlayanan/preview_bap/'); ?>' + nim;
-            document.getElementById('btnCetakBap').href = '<?= site_url('adminlayanan/cetak_bap/'); ?>' + nim;
+        function openBapIgracias(nim, nama) {
+            document.getElementById('bapModalTitle').textContent = 'BAP IGrACIAS — ' + nama + ' (' + nim + ')';
+            document.getElementById('bapModalSub').textContent = 'Dokumen 1: Berita Acara Penyelenggaraan Sidang TA/PA (Sistem IGrACIAS)';
+            document.getElementById('bapIframe').src = '<?= site_url('adminlayanan/preview_bap_igracias/'); ?>' + nim;
+            document.getElementById('btnCetakBap').href = '<?= site_url('adminlayanan/cetak_bap_igracias/'); ?>' + nim;
+            document.getElementById('bapModal').classList.remove('hidden');
+        }
+
+        function openBapFakultas(nim, nama) {
+            document.getElementById('bapModalTitle').textContent = 'BAP Fakultas — ' + nama + ' (' + nim + ')';
+            document.getElementById('bapModalSub').textContent = 'Dokumen 2: Berita Acara & Lembar Nilai Komprehensif FIK Telkom University (2 Halaman)';
+            document.getElementById('bapIframe').src = '<?= site_url('adminlayanan/preview_bap_fakultas/'); ?>' + nim;
+            document.getElementById('btnCetakBap').href = '<?= site_url('adminlayanan/cetak_bap_fakultas/'); ?>' + nim;
             document.getElementById('bapModal').classList.remove('hidden');
         }
 
