@@ -20,27 +20,27 @@ $laaNavItems = [
     [
         'heading' => 'Pendaftaran Sidang',
         'href'    => site_url('adminlayanan/pendaftaran_sidang'),
-        'icon_3d' => 'assets/images/icons_3d/pendaftaran.png'
+        'icon_3d' => 'assets/images/icons_3d/sidang.png'
     ],
     [
         'heading' => 'Lihat Pembimbing',
         'href'    => site_url('adminlayanan/lihat_pembimbing'),
-        'icon_3d' => 'assets/images/icons_3d/jadwal.png'
+        'icon_3d' => 'assets/images/icons_3d/preview.png'
     ],
     [
         'heading' => 'Yudisium',
         'href'    => site_url('adminlayanan/yudisium'),
-        'icon_3d' => 'assets/images/icons_3d/status.png'
+        'icon_3d' => 'assets/images/icons_3d/approval.png'
     ],
     [
         'heading' => 'Jadwal Sidang',
         'href'    => site_url('adminlayanan/jadwal_sidang'),
-        'icon_3d' => 'assets/images/icons_3d/jadwal.png'
+        'icon_3d' => 'assets/images/icons_3d/kalender.png'
     ],
     [
         'heading' => 'BAP Sidang',
         'href'    => site_url('adminlayanan/bap_sidang'),
-        'icon_3d' => 'assets/images/icons_3d/dokumen.png'
+        'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'
     ],
     [
         'heading' => 'Kelola Tiket LAA',
@@ -157,8 +157,10 @@ $laaNavItems = [
                                 </div>
                             </div>
                         </div>
-                    <?php else: ?>
-                        <a href="<?= htmlspecialchars($item['href']); ?>" class="curved-nav-item">
+                    <?php else: 
+                        $isItemActive = (rtrim($item['href'], '/') === $current_full);
+                    ?>
+                        <a href="<?= htmlspecialchars($item['href']); ?>" class="curved-nav-item <?= $isItemActive ? 'active' : ''; ?>">
                             <div class="curved-nav-content">
                                 <?php if (!empty($icon3d)): ?>
                                     <div class="curved-nav-3d-wrap">
