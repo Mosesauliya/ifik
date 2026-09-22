@@ -478,6 +478,8 @@
             display: flex;
             align-items: center;
             gap: 14px;
+            min-width: 0;
+            flex: 1;
         }
 
         .btn-mobile-back {
@@ -495,50 +497,71 @@
         }
 
         .header-avatar {
-            width: 46px;
-            height: 46px;
-            border-radius: 14px;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 800;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             color: #ffffff;
             background: linear-gradient(135deg, #ea580c, #f97316);
+            flex-shrink: 0;
+        }
+
+        .header-info {
+            min-width: 0;
+            flex: 1;
         }
 
         .header-info h2 {
-            font-size: 1.05rem;
+            font-size: 1.02rem;
             font-weight: 800;
             color: #0f172a;
             display: flex;
             align-items: center;
             gap: 8px;
+            min-width: 0;
+        }
+
+        .header-info h2 span:first-child {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
         }
 
         .header-info p {
             font-size: 0.8rem;
             color: #64748b;
             margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
         }
 
         .header-actions-wrap {
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-shrink: 0;
         }
 
         .btn-status-toggle {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 14px;
+            padding: 8px 16px;
             border-radius: 10px;
             font-size: 0.82rem;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
             border: none;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .btn-status-toggle .btn-text-short {
@@ -547,6 +570,7 @@
 
         .btn-status-toggle .btn-text-full {
             display: inline;
+            white-space: nowrap;
         }
 
         .btn-status-toggle.resolve-btn {
