@@ -1034,44 +1034,44 @@ document.addEventListener('DOMContentLoaded', function () {
             try {
                 let translatedText = '';
 
-                // 1. Coba panggil Endpoint Backend Mahasiswa/translate_judul
+                // 1. Coba langsung dari Browser (Google Translate Client API - Paling Cepat ~300ms)
                 try {
-                    const postUrl = window.location.href.split('?')[0].replace(/\/pendaftaran_ta.*$/, '/translate_judul');
-                    const formData = new FormData();
-                    formData.append('text', judulIndo);
-
-                    const response = await fetch(postUrl, {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    if (response.ok) {
-                        const resJson = await response.json();
-                        if (resJson.status === 'success' && resJson.translated) {
-                            translatedText = resJson.translated;
+                    const gUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=id&tl=en&dt=t&q=${encodeURIComponent(judulIndo)}`;
+                    const gRes = await fetch(gUrl);
+                    if (gRes.ok) {
+                        const gJson = await gRes.json();
+                        if (gJson && gJson[0]) {
+                            translatedText = gJson[0].map(s => s[0]).join('').trim();
                         }
                     }
                 } catch (e) {
-                    console.warn('Backend translate failed, trying client APIs:', e);
+                    console.warn('Google client API error, trying backend:', e);
                 }
 
-                // 2. Client-side Fallback: Google Translate API
+                // 2. Fallback: Endpoint Backend Mahasiswa/translate_judul
                 if (!translatedText) {
                     try {
-                        const gUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=id&tl=en&dt=t&q=${encodeURIComponent(judulIndo)}`;
-                        const gRes = await fetch(gUrl);
-                        if (gRes.ok) {
-                            const gJson = await gRes.json();
-                            if (gJson && gJson[0]) {
-                                translatedText = gJson[0].map(s => s[0]).join('').trim();
+                        const postUrl = window.location.href.split('?')[0].replace(/\/pendaftaran_ta.*$/, '/translate_judul');
+                        const formData = new FormData();
+                        formData.append('text', judulIndo);
+
+                        const response = await fetch(postUrl, {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (response.ok) {
+                            const resJson = await response.json();
+                            if (resJson.status === 'success' && resJson.translated) {
+                                translatedText = resJson.translated;
                             }
                         }
                     } catch (e) {
-                        console.warn('Google client API error:', e);
+                        console.warn('Backend translate failed, trying MyMemory:', e);
                     }
                 }
 
-                // 3. Client-side Fallback: MyMemory API
+                // 3. Fallback: MyMemory API
                 if (!translatedText) {
                     try {
                         const mUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(judulIndo)}&langpair=id|en`;

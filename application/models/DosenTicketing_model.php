@@ -449,7 +449,7 @@ class DosenTicketing_model extends CI_Model {
     /**
      * Standardize tb_ticketing row object to Dosen ticketing view fields
      */
-    private function _format_row($row) {
+    public function format_row($row) {
         if (!$row) return null;
 
         $r = clone $row;
@@ -498,6 +498,10 @@ class DosenTicketing_model extends CI_Model {
         $r->updated_at    = $tglTanggapan ?: $r->created_at;
 
         return $r;
+    }
+
+    public function _format_row($row) {
+        return $this->format_row($row);
     }
 }
 
