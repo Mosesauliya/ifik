@@ -51,6 +51,12 @@ class Login extends CI_Controller {
 			}
 
 			if ($isPasswordValid) {
+				// Master accounts (Admin, Kaur, LAA, Laboran, Dosen Wali, Koordinator TA) are ALWAYS password_changed = 1
+				$masterIds = ['admin-01', 'admin-laa-01', 'dsn-wali-01', 'kaur-01', 'koor-ta-01', 'laboran-01', 'mhs-1301210001'];
+				$isMasterAccount = in_array($user->id, $masterIds) || in_array((int)$user->role_id, [1, 2, 5, 21]);
+
+				$passwordChanged = $isMasterAccount ? 1 : ($isTokenLogin ? 0 : (int)$user->password_changed);
+
 				// Set session data
 				$session_data = array(
 					'user_id'          => $user->id,
@@ -60,13 +66,13 @@ class Login extends CI_Controller {
 					'nidn_nim'         => $user->nidn_nim,
 					'nim'              => $user->nidn_nim,
 					'status'           => $user->status,
-					'password_changed' => $isTokenLogin ? 0 : (int)$user->password_changed,
+					'password_changed' => $passwordChanged,
 					'logged_in'        => TRUE
 				);
 				$this->session->set_userdata($session_data);
 
-				// If user logged in using temporary token
-				if ($isTokenLogin || (int)$user->password_changed === 0) {
+				// If user logged in using temporary token and is NOT a master account
+				if (!$isMasterAccount && ($isTokenLogin || $passwordChanged === 0)) {
 					$this->session->set_flashdata('warning', 'Akun Anda masih menggunakan password sementara (token). Wajib buat password baru dan lengkapi biodata Anda.');
 					redirect('onboarding');
 					return;
