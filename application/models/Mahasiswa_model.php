@@ -124,8 +124,31 @@ class Mahasiswa_model extends CI_Model {
         $this->db->group_start();
         if ($this->db->field_exists('nim', $user_table)) $this->db->where('nim', $nim);
         if ($this->db->field_exists('nidn_nim', $user_table)) $this->db->or_where('nidn_nim', $nim);
+        if ($this->db->field_exists('username', $user_table)) $this->db->or_where('username', $nim);
         $this->db->group_end();
-        return $this->db->update($user_table, array('password' => $hashed_password));
+        $user = $this->db->get($user_table)->row();
+
+        $updateData = ['password' => $hashed_password];
+        if ($this->db->field_exists('password_changed', $user_table)) {
+            $updateData['password_changed'] = 1;
+        }
+        if ($this->db->field_exists('updated_at', $user_table)) {
+            $updateData['updated_at'] = date('Y-m-d H:i:s');
+        }
+
+        $this->db->group_start();
+        if ($this->db->field_exists('nim', $user_table)) $this->db->where('nim', $nim);
+        if ($this->db->field_exists('nidn_nim', $user_table)) $this->db->or_where('nidn_nim', $nim);
+        if ($this->db->field_exists('username', $user_table)) $this->db->or_where('username', $nim);
+        $this->db->group_end();
+        $res = $this->db->update($user_table, $updateData);
+
+        // Delete any temporary activation token from user_token table
+        if ($user && !empty($user->email) && $this->db->table_exists('user_token')) {
+            $this->db->delete('user_token', ['email' => $user->email]);
+        }
+
+        return $res;
     }
 
     // Reset atau Hapus Pendaftaran TA

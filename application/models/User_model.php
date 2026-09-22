@@ -28,16 +28,12 @@ class User_model extends CI_Model {
             $user->nim = $user->nidn_nim;
         }
         if (!isset($user->status)) {
-            $user->status = (!empty($user->is_active) && $user->is_active == 1) ? 'active' : 'inactive';
+            $user->status = (!empty($user->is_active) && (int)$user->is_active === 1) ? 'active' : 'inactive';
         }
-        if (!isset($user->password_changed)) {
-            if (!empty($user->token)) {
-                $user->password_changed = 0;
-            } else {
-                $user->password_changed = (!empty($user->is_active) && $user->is_active == 1) ? 1 : 0;
-            }
-        } else {
+        if (isset($user->password_changed)) {
             $user->password_changed = (int)$user->password_changed;
+        } else {
+            $user->password_changed = (!empty($user->is_active) && (int)$user->is_active === 1) ? 1 : 0;
         }
         if (empty($user->token) && !empty($user->email) && $this->db->table_exists('user_token')) {
             $tokRow = $this->db->get_where('user_token', ['email' => $user->email])->row();
@@ -247,8 +243,8 @@ class User_model extends CI_Model {
                 $row['token'] = $row['token_hash'];
             }
             $isActive = isset($row['is_active']) ? (int)$row['is_active'] : 0;
-            if (!empty($row['token'])) {
-                $row['password_changed'] = 0;
+            if (isset($row['password_changed'])) {
+                $row['password_changed'] = (int)$row['password_changed'];
             } else {
                 $row['password_changed'] = ($isActive === 1) ? 1 : 0;
             }
@@ -373,9 +369,12 @@ class User_model extends CI_Model {
                 if ($this->db->field_exists('nim', $this->tbl_user)) $updateData['nim'] = $nimNip;
                 if ($this->db->field_exists('updated_at', $this->tbl_user)) $updateData['updated_at'] = $now;
 
-                if ($token && empty($existing['password_changed'])) {
+                $isUserProtected = (!empty($existing['password_changed']) && (int)$existing['password_changed'] === 1) || (!empty($existing['is_active']) && (int)$existing['is_active'] === 1);
+
+                // DO NOT overwrite password if the user has already changed password or is an active account!
+                if ($token && !$isUserProtected) {
                     if ($this->db->field_exists('token', $this->tbl_user)) $updateData['token'] = $token;
-                    $updateData['password'] = password_hash($token, PASSWORD_DEFAULT, ['cost' => 8]);
+                    $updateData['password'] = password_hash($token, PASSWORD_DEFAULT, ['cost' => 10]);
                 }
                 $this->db->where('id', $existing['id']);
                 $this->db->update($this->tbl_user, $updateData);
@@ -390,7 +389,7 @@ class User_model extends CI_Model {
                     'role_id' => $roleId,
                     'name' => $name,
                     'email' => $email,
-                    'password' => password_hash($rawPwd, PASSWORD_DEFAULT, ['cost' => 8]),
+                    'password' => password_hash($rawPwd, PASSWORD_DEFAULT, ['cost' => 10]),
                     'status' => 'active'
                 ];
                 if ($this->db->field_exists('salt', $this->tbl_user)) $insertRow['salt'] = $salt;
@@ -414,8 +413,10 @@ class User_model extends CI_Model {
                 }
             }
 
-            // Sync with user_token table if exists
-            if ($token && $this->db->table_exists('user_token')) {
+            // Sync with user_token table ONLY IF user is NOT protected (has not changed password)
+            $isProtectedForToken = isset($existingMap[$email]) && ((!empty($existingMap[$email]['password_changed']) && (int)$existingMap[$email]['password_changed'] === 1) || (!empty($existingMap[$email]['is_active']) && (int)$existingMap[$email]['is_active'] === 1));
+
+            if ($token && !$isProtectedForToken && $this->db->table_exists('user_token')) {
                 $this->db->replace('user_token', [
                     'email' => $email,
                     'token' => $token,
@@ -456,19 +457,20 @@ class User_model extends CI_Model {
             if ($this->db->field_exists('nim', $this->tbl_user)) $updateData['nim'] = isset($data['nidn_nim']) ? $data['nidn_nim'] : ($existing->nim ?? '');
             if ($this->db->field_exists('updated_at', $this->tbl_user)) $updateData['updated_at'] = date('Y-m-d H:i:s');
 
-            if (!empty($data['token']) && empty($existing->password_changed)) {
+            $isUserProtected = (!empty($existing->password_changed) && (int)$existing->password_changed === 1) || (!empty($existing->is_active) && (int)$existing->is_active === 1);
+
+            if (!empty($data['token']) && !$isUserProtected) {
                 $salt = bin2hex(random_bytes(16));
                 if ($this->db->field_exists('salt', $this->tbl_user)) $updateData['salt'] = $salt;
                 if ($this->db->table_exists('user_token')) {
-                    $tokenHash = password_hash($data['token'], PASSWORD_DEFAULT, ['cost' => 8]);
                     $this->db->replace('user_token', [
                         'email' => $email,
-                        'token' => $tokenHash,
+                        'token' => $data['token'],
                         'date_created' => time()
                     ]);
                 } else if ($this->db->field_exists('token', $this->tbl_user)) {
                     $updateData['token'] = $data['token'];
-                    $updateData['password'] = password_hash($data['token'], PASSWORD_DEFAULT, ['cost' => 8]);
+                    $updateData['password'] = password_hash($data['token'], PASSWORD_DEFAULT, ['cost' => 10]);
                 }
             }
             $this->db->where('id', $existing->id);
@@ -483,7 +485,7 @@ class User_model extends CI_Model {
                 'role_id' => isset($data['role_id']) ? $data['role_id'] : (($this->tbl_role === 'user_role') ? 4 : 5),
                 'name' => $data['name'],
                 'email' => $email,
-                'password' => password_hash('Telkom#123', PASSWORD_DEFAULT, ['cost' => 8]),
+                'password' => password_hash('Telkom#123', PASSWORD_DEFAULT, ['cost' => 10]),
                 'salt' => $salt,
                 'status' => 'active'
             ];
@@ -500,7 +502,7 @@ class User_model extends CI_Model {
             if ($this->tbl_user === 'users' && $this->db->field_exists('token', 'users')) {
                 $insertData['token'] = $rawToken;
                 if ($rawToken) {
-                    $insertData['password'] = password_hash($rawToken, PASSWORD_DEFAULT, ['cost' => 8]);
+                    $insertData['password'] = password_hash($rawToken, PASSWORD_DEFAULT, ['cost' => 10]);
                 }
             }
 
@@ -508,10 +510,9 @@ class User_model extends CI_Model {
             $newId = $insertData['id'];
 
             if ($rawToken && $this->db->table_exists('user_token')) {
-                $tokenHash = password_hash($rawToken, PASSWORD_DEFAULT, ['cost' => 8]);
                 $this->db->replace('user_token', [
                     'email' => $email,
-                    'token' => $tokenHash,
+                    'token' => $rawToken,
                     'date_created' => time()
                 ]);
             }
@@ -538,6 +539,11 @@ class User_model extends CI_Model {
 
             $user = $this->get_by_id($id);
             if ($user && !empty($user->email)) {
+                // If account is protected (password_changed == 1 or is_active == 1), skip token regeneration to protect user credentials
+                if ((int)$user->password_changed === 1 || (int)$user->is_active === 1) {
+                    continue;
+                }
+
                 // 1. Save strictly to user_token table
                 if ($this->db->table_exists('user_token')) {
                     $this->db->replace('user_token', [
