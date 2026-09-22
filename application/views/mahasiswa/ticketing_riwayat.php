@@ -259,12 +259,18 @@
 
                                     <!-- Tujuan & Kategori -->
                                     <td class="py-4 px-6">
-                                        <div class="flex items-center gap-1.5">
-                                            <span class="w-2 h-2 rounded-full bg-orange-500 shrink-0"></span>
-                                            <span class="text-xs font-bold text-slate-800"><?= htmlspecialchars($t->unit_tujuan ?: 'Layanan IFIK'); ?></span>
+                                        <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-orange-100 text-orange-800 border border-orange-200">
+                                                <i class="bi bi-person-check-fill"></i> <?= htmlspecialchars($t->tujuan_penerima ?? 'Laboran'); ?>
+                                            </span>
+                                            <?php if (!empty($t->unit_terkait)): ?>
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200" title="Unit Terkait">
+                                                    <i class="bi bi-building"></i> <?= htmlspecialchars($t->unit_terkait); ?>
+                                                </span>
+                                            <?php endif; ?>
                                         </div>
-                                        <div class="text-[11px] text-slate-500 mt-0.5 truncate max-w-xs pl-3.5">
-                                            <?= htmlspecialchars($t->kategori); ?>
+                                        <div class="text-[11px] text-slate-600 font-medium truncate max-w-xs">
+                                            <i class="bi bi-tag-fill text-orange-400 text-[10px] mr-1"></i><?= htmlspecialchars($t->kategori); ?>
                                         </div>
                                     </td>
 
@@ -409,11 +415,14 @@
                                 <?php endif; ?>
                             </div>
 
-                            <!-- Meta Info: Unit Tujuan & Kategori -->
+                            <!-- Meta Info: Penerima, Unit Terkait & Kategori -->
                             <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
-                                <?php if (!empty($t->unit_tujuan)): ?>
-                                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-orange-700 bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200/60">
-                                        <i class="bi bi-building"></i> <?= htmlspecialchars($t->unit_tujuan); ?>
+                                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-orange-800 bg-orange-100 px-2 py-0.5 rounded-md border border-orange-200">
+                                    <i class="bi bi-person-check-fill"></i> <?= htmlspecialchars($t->tujuan_penerima ?? 'Laboran'); ?>
+                                </span>
+                                <?php if (!empty($t->unit_terkait)): ?>
+                                    <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200" title="Unit Terkait">
+                                        <i class="bi bi-building"></i> <?= htmlspecialchars($t->unit_terkait); ?>
                                     </span>
                                 <?php endif; ?>
                                 <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
@@ -458,48 +467,48 @@
         <div class="relative pl-6 space-y-4 text-left text-xs">
             <div id="stepperLine" class="absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-slate-200"></div>
 
-            <!-- Step 1: Terkirim -->
+            <!-- Step 1: Menunggu -->
             <div class="relative">
-                <div class="absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-500 text-white shadow-xs">
+                <div id="step1Icon" class="absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-500 text-white shadow-xs">
                     <i class="bi bi-check"></i>
                 </div>
-                <div class="font-bold text-[11px] text-slate-800">Tiket Terkirim</div>
+                <div id="step1Title" class="font-bold text-[11px] text-slate-800">1. Menunggu</div>
                 <div class="text-[10px] font-mono text-slate-500" id="step1Time">-</div>
-                <div class="text-[11px] text-slate-500 mt-0.5">Terkirim ke unit <span id="step1Unit" class="font-semibold text-slate-700"></span>.</div>
+                <div id="step1Desc" class="text-[11px] text-slate-500 mt-0.5">Laporan masuk ke antrean unit <span id="step1Unit" class="font-semibold text-slate-700"></span>.</div>
             </div>
 
-            <!-- Step 2: Diterima & Diproses -->
+            <!-- Step 2: Diproses -->
             <div class="relative">
                 <div id="step2Icon" class="absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-200 text-slate-500">
                     <i class="bi bi-arrow-repeat"></i>
                 </div>
-                <div id="step2Title" class="font-bold text-[11px] text-slate-600">Diproses Unit</div>
+                <div id="step2Title" class="font-bold text-[11px] text-slate-600">2. Diproses</div>
                 <div id="step2Time" class="text-[10px] font-mono text-slate-400">-</div>
-                <div id="step2Desc" class="text-[11px] text-slate-500 mt-0.5">Staf unit sedang meninjau kendala.</div>
+                <div id="step2Desc" class="text-[11px] text-slate-500 mt-0.5">Kendala sedang diinvestigasi & dikerjakan.</div>
             </div>
 
-            <!-- Step 3: Ditanggapi & Selesai -->
+            <!-- Step 3: Selesai -->
             <div class="relative">
                 <div id="step3Icon" class="absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-200 text-slate-500">
                     <i class="bi bi-check-all"></i>
                 </div>
-                <div id="step3Title" class="font-bold text-[11px] text-slate-600">Selesai & Solusi Diberikan</div>
+                <div id="step3Title" class="font-bold text-[11px] text-slate-600">3. Selesai</div>
                 <div id="step3Time" class="text-[10px] font-mono text-slate-400">-</div>
-                <div id="step3Desc" class="text-[11px] text-slate-500 mt-0.5">Solusi atau tanggapan telah diberikan.</div>
+                <div id="step3Desc" class="text-[11px] text-slate-500 mt-0.5">Solusi telah diberikan, kendala selesai ditangani.</div>
                 <div id="step3TanggapanBox" class="hidden mt-2 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-900 leading-snug">
                     <span class="font-bold block text-emerald-800 mb-0.5">Tanggapan Unit:</span>
                     <span id="step3TanggapanText" class="italic line-clamp-3"></span>
                 </div>
             </div>
 
-            <!-- Step 4: Ditutup Tuntas -->
+            <!-- Step 4: Ditutup -->
             <div class="relative">
                 <div id="step4Icon" class="absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-200 text-slate-500">
                     <i class="bi bi-patch-check-fill"></i>
                 </div>
-                <div id="step4Title" class="font-bold text-[11px] text-slate-600">Tiket Ditutup Tuntas</div>
+                <div id="step4Title" class="font-bold text-[11px] text-slate-600">4. Ditutup</div>
                 <div id="step4Time" class="text-[10px] font-mono text-slate-400">-</div>
-                <div id="step4Desc" class="text-[11px] text-slate-500 mt-0.5">Kendala dianggap tuntas.</div>
+                <div id="step4Desc" class="text-[11px] text-slate-500 mt-0.5">Tiket ditutup secara permanen & diarsipkan.</div>
             </div>
         </div>
 
@@ -534,7 +543,11 @@
                         <strong id="modalPelapor" class="text-slate-700 font-semibold block">-</strong>
                     </div>
                     <div>
-                        <span class="text-slate-400 block mb-0.5">Unit Tujuan:</span>
+                        <span class="text-slate-400 block mb-0.5">Ditujukan Kepada:</span>
+                        <strong id="modalPenerima" class="text-orange-600 font-bold block">-</strong>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block mb-0.5">Unit / Lingkup Terkait:</span>
                         <strong id="modalUnit" class="text-slate-700 font-semibold block">-</strong>
                     </div>
                     <div>
@@ -549,9 +562,8 @@
                         <span class="text-slate-400 block mb-0.5">Status Terkini:</span>
                         <strong id="modalStatus" class="text-slate-700 font-semibold block">-</strong>
                     </div>
-                    <div>
-                        <span class="text-slate-400 block mb-0.5">Diajukan Pada:</span>
-                        <strong id="modalWaktu" class="text-slate-700 font-semibold block">-</strong>
+                    <div class="col-span-2 sm:col-span-3 pt-1 border-t border-slate-200/60 flex items-center justify-between text-[11px] text-slate-400">
+                        <span>Diajukan Pada: <strong id="modalWaktu" class="text-slate-700 font-medium">-</strong></span>
                     </div>
                 </div>
 
@@ -610,11 +622,14 @@
                 <!-- Lampiran -->
                 <div id="modalLampiranSection" class="hidden">
                     <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Lampiran Berkas</h4>
-                    <a id="modalLampiranLink" href="#" target="_blank"
-                       class="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-bold border border-orange-200 transition-colors">
-                        <i class="bi bi-file-earmark-arrow-down text-base"></i>
-                        <span id="modalLampiranName">Unduh / Buka Lampiran</span>
-                    </a>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button type="button" onclick="bukaModalPreviewLampiranRiwayat()" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-bold border border-orange-200 transition-all cursor-pointer shadow-xs">
+                            <i class="bi bi-paperclip text-sm"></i> <span id="modalLampiranName">Lihat Lampiran</span>
+                        </button>
+                        <button type="button" onclick="unduhLampiranRiwayat()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-200 transition-all cursor-pointer shadow-xs" title="Unduh File Langsung">
+                            <i class="bi bi-download"></i> <span>Unduh</span>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Tanggapan Admin Support -->
@@ -636,6 +651,76 @@
                 </button>
             </div>
 
+        </div>
+    </div>
+
+    <!-- Modal Popup Preview & Unduh Lampiran Pendukung -->
+    <div id="modalPreviewLampiran" class="fixed inset-0 z-[70] hidden overflow-y-auto" aria-labelledby="modal-preview-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen px-4 py-6 text-center sm:p-0">
+            <!-- Backdrop -->
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="tutupModalPreviewLampiranRiwayat()"></div>
+
+            <!-- Dialog Box -->
+            <div class="relative inline-block w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200/80 text-left overflow-hidden transform transition-all align-middle z-10">
+                <!-- Header -->
+                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+                    <div class="flex items-center gap-3 min-w-0 pr-4">
+                        <div class="w-9 h-9 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center text-base font-bold flex-shrink-0 shadow-xs">
+                            <i class="bi bi-paperclip"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <h4 class="text-sm font-black text-slate-800 tracking-tight" id="modal-preview-title">Lampiran Pendukung Kendala</h4>
+                            <p class="text-[11px] text-slate-400 font-mono truncate max-w-sm" id="previewLampiranFilename">-</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <button type="button" onclick="unduhLampiranRiwayat()" id="previewDownloadBtn" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer">
+                            <i class="bi bi-download"></i> <span>Unduh</span>
+                        </button>
+                        <button type="button" onclick="tutupModalPreviewLampiranRiwayat()" class="w-8 h-8 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer" title="Tutup Preview">
+                            <i class="bi bi-x-lg text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Body (Preview Content) -->
+                <div class="p-6 bg-slate-900/5 flex flex-col items-center justify-center min-h-[320px] max-h-[70vh] overflow-auto" id="previewContainer">
+                    <!-- Image Preview -->
+                    <img id="previewImage" src="" alt="Preview Lampiran" class="hidden max-h-[62vh] max-w-full rounded-2xl shadow-md object-contain mx-auto transition-all">
+                    
+                    <!-- PDF / Iframe Preview -->
+                    <iframe id="previewIframe" src="" class="hidden w-full h-[62vh] rounded-2xl border border-slate-200 shadow-xs bg-white"></iframe>
+
+                    <!-- Fallback if file cannot be previewed -->
+                    <div id="previewFallback" class="hidden flex flex-col items-center justify-center py-10 text-center space-y-3">
+                        <div class="w-16 h-16 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center text-3xl shadow-sm">
+                            <i class="bi bi-file-earmark-arrow-down-fill"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-slate-800" id="previewFallbackFilename">lampiran.file</p>
+                            <p class="text-xs text-slate-400 mt-1 max-w-xs">Format file ini tidak mendukung preview langsung. Silakan klik tombol di bawah untuk mengunduh dan membukanya.</p>
+                        </div>
+                        <button type="button" onclick="unduhLampiranRiwayat()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold shadow-sm transition-all cursor-pointer">
+                            <i class="bi bi-download"></i> Unduh Berkas Ini
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="px-6 py-3.5 bg-white border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                    <span class="flex items-center gap-1.5 text-slate-400 text-[11px]">
+                        <i class="bi bi-info-circle text-orange-500"></i> Klik Unduh untuk menyimpan berkas ke perangkat Anda.
+                    </span>
+                    <div class="flex items-center gap-2">
+                        <a id="previewOpenTabBtn" href="#" target="_blank" class="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold transition-all">
+                            Buka di Tab Baru <i class="bi bi-box-arrow-up-right text-[10px] ml-1"></i>
+                        </a>
+                        <button type="button" onclick="tutupModalPreviewLampiranRiwayat()" class="px-4 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer">
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -704,7 +789,9 @@
                         document.getElementById('modalKode').textContent = d.kode_tiket;
                         document.getElementById('modalSubjek').textContent = d.subjek;
                         document.getElementById('modalPelapor').textContent = d.nama_dosen + (d.nidn ? ' (NIM: ' + d.nidn + ')' : '');
-                        document.getElementById('modalUnit').textContent = d.unit_tujuan || 'Unit Terkait';
+                        const elPenerima = document.getElementById('modalPenerima');
+                        if (elPenerima) elPenerima.textContent = d.tujuan_penerima || 'Laboran';
+                        document.getElementById('modalUnit').textContent = d.unit_terkait || d.unit_tujuan || 'Unit Terkait';
                         document.getElementById('modalKategori').textContent = d.kategori;
                         document.getElementById('modalPrioritas').textContent = d.prioritas;
                         document.getElementById('modalStatus').textContent = d.status;
@@ -715,10 +802,13 @@
                         const lampSection = document.getElementById('modalLampiranSection');
                         if (d.lampiran && d.lampiran_url) {
                             lampSection.classList.remove('hidden');
-                            document.getElementById('modalLampiranLink').href = d.lampiran_url;
-                            document.getElementById('modalLampiranName').textContent = 'Buka Lampiran: ' + d.lampiran;
+                            currentLampiranUrl = d.lampiran_url;
+                            currentLampiranFilename = d.lampiran;
+                            document.getElementById('modalLampiranName').textContent = 'Lihat Lampiran (' + d.lampiran + ')';
                         } else {
                             lampSection.classList.add('hidden');
+                            currentLampiranUrl = '';
+                            currentLampiranFilename = '';
                         }
 
                         // Tanggapan
@@ -745,13 +835,82 @@
                 });
         }
 
+        let currentLampiranUrl = '';
+        let currentLampiranFilename = '';
+
+        function bukaModalPreviewLampiranRiwayat() {
+            if (!currentLampiranUrl) return;
+            const filename = currentLampiranFilename || 'lampiran';
+            document.getElementById('previewLampiranFilename').textContent = filename;
+            document.getElementById('previewOpenTabBtn').href = currentLampiranUrl;
+
+            const previewImg = document.getElementById('previewImage');
+            const previewIframe = document.getElementById('previewIframe');
+            const previewFallback = document.getElementById('previewFallback');
+
+            previewImg.classList.add('hidden');
+            previewIframe.classList.add('hidden');
+            previewFallback.classList.add('hidden');
+
+            const ext = filename.split('.').pop().toLowerCase();
+            if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
+                previewImg.src = currentLampiranUrl;
+                previewImg.classList.remove('hidden');
+            } else if (ext === 'pdf') {
+                previewIframe.src = currentLampiranUrl;
+                previewIframe.classList.remove('hidden');
+            } else {
+                document.getElementById('previewFallbackFilename').textContent = filename;
+                previewFallback.classList.remove('hidden');
+            }
+
+            document.getElementById('modalPreviewLampiran').classList.remove('hidden');
+        }
+
+        function tutupModalPreviewLampiranRiwayat() {
+            const modal = document.getElementById('modalPreviewLampiran');
+            if (modal) modal.classList.add('hidden');
+            const img = document.getElementById('previewImage');
+            if (img) img.src = '';
+            const iframe = document.getElementById('previewIframe');
+            if (iframe) iframe.src = '';
+        }
+
+        function unduhLampiranRiwayat() {
+            if (!currentLampiranUrl) return;
+            fetch(currentLampiranUrl)
+                .then(res => res.blob())
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = currentLampiranFilename || 'lampiran_tiket';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                })
+                .catch(() => {
+                    window.open(currentLampiranUrl, '_blank');
+                });
+        }
+
         function closeModal() {
             document.getElementById('detailModal').classList.add('hidden');
+            tutupModalPreviewLampiranRiwayat();
         }
 
         // Close on ESC
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeModal();
+            if (e.key === 'Escape') {
+                const previewModal = document.getElementById('modalPreviewLampiran');
+                if (previewModal && !previewModal.classList.contains('hidden')) {
+                    tutupModalPreviewLampiranRiwayat();
+                    return;
+                }
+                closeModal();
+            }
         });
 
         // Filter Table & Mobile Cards by Status Pill
@@ -857,6 +1016,10 @@
             document.getElementById('step1Unit').textContent = unit || 'terkait';
 
             const popWaBadge = document.getElementById('popWaBadge');
+            const step1Icon = document.getElementById('step1Icon');
+            const step1Title = document.getElementById('step1Title');
+            const step1Desc = document.getElementById('step1Desc');
+
             const step2Icon = document.getElementById('step2Icon');
             const step2Title = document.getElementById('step2Title');
             const step2Time = document.getElementById('step2Time');
@@ -876,60 +1039,88 @@
 
             const stepperLine = document.getElementById('stepperLine');
 
+            // Default titles
+            if (step1Title) step1Title.textContent = '1. Menunggu';
+            if (step2Title) step2Title.textContent = '2. Diproses';
+            if (step3Title) step3Title.textContent = '3. Selesai';
+            if (step4Title) step4Title.textContent = '4. Ditutup';
+
             // Reset step 3 quote
             step3Box.classList.add('hidden');
             step3Text.textContent = '';
 
             if (status === 'Menunggu') {
                 popWaBadge.className = 'inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border bg-amber-50 text-amber-700 border-amber-200';
-                popWaBadge.innerHTML = '<i class="bi bi-check text-slate-400 font-black text-sm"></i> Menunggu';
+                popWaBadge.innerHTML = '<i class="bi bi-hourglass-split text-amber-600 font-black text-xs"></i> 1. Menunggu';
 
-                step2Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-amber-100 text-amber-600 border border-amber-300';
-                step2Icon.innerHTML = '<i class="bi bi-hourglass-split animate-pulse"></i>';
-                step2Title.className = 'font-bold text-[11px] text-amber-800';
-                step2Time.textContent = 'Dalam Antrean';
-                step2Desc.textContent = 'Menunggu staf ' + (unit || 'unit') + ' membuka dan merespon laporan.';
+                // Step 1: Active
+                if (step1Icon) {
+                    step1Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-amber-500 text-white shadow-xs animate-pulse';
+                    step1Icon.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+                }
+                if (step1Title) step1Title.className = 'font-bold text-[11px] text-amber-800';
+                if (step1Desc) step1Desc.innerHTML = 'Laporan masuk antrean unit <span class="font-semibold text-slate-700">' + (unit || 'terkait') + '</span>.';
 
+                // Step 2: Waiting
+                step2Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200';
+                step2Icon.innerHTML = '<i class="bi bi-hourglass text-[9px]"></i>';
+                step2Title.className = 'font-bold text-[11px] text-slate-400';
+                step2Time.textContent = 'Menunggu Antrean';
+                step2Desc.textContent = 'Menunggu staf ' + (unit || 'unit') + ' membuka dan menangani kendala.';
+
+                // Step 3: Pending
                 step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200';
                 step3Icon.innerHTML = '<i class="bi bi-dash"></i>';
                 step3Title.className = 'font-bold text-[11px] text-slate-400';
                 step3Time.textContent = '-';
                 step3Desc.textContent = 'Solusi belum tersedia.';
 
+                // Step 4: Pending
                 step4Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200';
                 step4Icon.innerHTML = '<i class="bi bi-lock text-[10px]"></i>';
                 step4Title.className = 'font-bold text-[11px] text-slate-400';
                 step4Time.textContent = '-';
-                step4Desc.textContent = 'Tiket masih aktif.';
+                step4Desc.textContent = 'Tiket masih aktif dalam antrean.';
 
                 stepperLine.className = 'absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-slate-200';
 
             } else if (status === 'Diproses') {
                 popWaBadge.className = 'inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-200';
-                popWaBadge.innerHTML = '<i class="bi bi-check-all text-slate-500 font-black text-base"></i> Diproses';
+                popWaBadge.innerHTML = '<i class="bi bi-gear-wide-connected text-blue-600 font-black text-xs"></i> 2. Diproses';
 
+                // Step 1: Completed
+                if (step1Icon) {
+                    step1Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-emerald-500 text-white shadow-xs';
+                    step1Icon.innerHTML = '<i class="bi bi-check-lg"></i>';
+                }
+                if (step1Title) step1Title.className = 'font-bold text-[11px] text-slate-700';
+                if (step1Desc) step1Desc.innerHTML = 'Laporan telah diterima unit <span class="font-semibold text-slate-700">' + (unit || 'terkait') + '</span>.';
+
+                // Step 2: Active
                 step2Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-blue-600 text-white shadow-xs';
-                step2Icon.innerHTML = '<i class="bi bi-check-all text-sm font-bold"></i>';
+                step2Icon.innerHTML = '<i class="bi bi-gear-wide-connected text-xs animate-spin"></i>';
                 step2Title.className = 'font-bold text-[11px] text-blue-800';
                 step2Time.textContent = updated || created;
-                step2Desc.textContent = 'Staf ' + (unit || 'unit') + ' sedang aktif menangani kendala Anda.';
+                step2Desc.textContent = 'Kendala sedang diinvestigasi & dikerjakan staf ' + (unit || 'unit') + '.';
 
+                // Step 3: Notes / In progress
                 if (tanggapan && tanggapan.trim()) {
                     step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-blue-100 text-blue-600 border border-blue-300';
                     step3Icon.innerHTML = '<i class="bi bi-chat-dots-fill text-[9px]"></i>';
                     step3Title.className = 'font-bold text-[11px] text-blue-800';
                     step3Time.textContent = tglTanggapan || updated;
-                    step3Desc.textContent = 'Staf telah memberikan tanggapan awal.';
+                    step3Desc.textContent = 'Staf telah memberikan catatan tanggapan.';
                     step3Box.classList.remove('hidden');
                     step3Text.textContent = '"' + tanggapan.trim() + '"';
                 } else {
-                    step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200';
-                    step3Icon.innerHTML = '<i class="bi bi-hourglass-split animate-pulse"></i>';
-                    step3Title.className = 'font-bold text-[11px] text-slate-600';
+                    step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200';
+                    step3Icon.innerHTML = '<i class="bi bi-hourglass text-[9px]"></i>';
+                    step3Title.className = 'font-bold text-[11px] text-slate-400';
                     step3Time.textContent = 'Sedang Disiapkan';
-                    step3Desc.textContent = 'Solusi atau jawaban sedang dirumuskan staf.';
+                    step3Desc.textContent = 'Solusi atau jawaban sedang disiapkan staf.';
                 }
 
+                // Step 4: Pending
                 step4Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200';
                 step4Icon.innerHTML = '<i class="bi bi-lock text-[10px]"></i>';
                 step4Title.className = 'font-bold text-[11px] text-slate-400';
@@ -940,57 +1131,79 @@
 
             } else if (status === 'Selesai') {
                 popWaBadge.className = 'inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200';
-                popWaBadge.innerHTML = '<i class="bi bi-check-all text-sky-500 font-black text-base"></i> Selesai';
+                popWaBadge.innerHTML = '<i class="bi bi-check2-circle text-emerald-600 font-black text-xs"></i> 3. Selesai';
 
-                step2Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-blue-500 text-white shadow-xs';
+                // Step 1: Completed
+                if (step1Icon) {
+                    step1Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-emerald-500 text-white shadow-xs';
+                    step1Icon.innerHTML = '<i class="bi bi-check-lg"></i>';
+                }
+                if (step1Title) step1Title.className = 'font-bold text-[11px] text-slate-700';
+                if (step1Desc) step1Desc.innerHTML = 'Laporan diterima sistem.';
+
+                // Step 2: Completed
+                step2Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-emerald-500 text-white shadow-xs';
                 step2Icon.innerHTML = '<i class="bi bi-check-lg"></i>';
                 step2Title.className = 'font-bold text-[11px] text-slate-700';
                 step2Time.textContent = updated;
-                step2Desc.textContent = 'Telah ditinjau dan ditindaklanjuti.';
+                step2Desc.textContent = 'Kendala telah selesai ditindaklanjuti staf.';
 
+                // Step 3: Active
                 step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-emerald-600 text-white shadow-xs';
                 step3Icon.innerHTML = '<i class="bi bi-check2-all text-xs"></i>';
                 step3Title.className = 'font-bold text-[11px] text-emerald-800';
                 step3Time.textContent = tglTanggapan || updated;
-                step3Desc.textContent = 'Solusi telah diberikan oleh unit terkait.';
+                step3Desc.textContent = 'Solusi telah diberikan, kendala selesai ditangani.';
                 if (tanggapan && tanggapan.trim()) {
                     step3Box.classList.remove('hidden');
                     step3Text.textContent = '"' + tanggapan.trim() + '"';
                 }
 
+                // Step 4: Pending
                 step4Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200';
                 step4Icon.innerHTML = '<i class="bi bi-clock text-[10px]"></i>';
                 step4Title.className = 'font-bold text-[11px] text-slate-400';
-                step4Time.textContent = 'Menunggu Konfirmasi Penutupan';
-                step4Desc.textContent = 'Masalah telah diselesaikan.';
+                step4Time.textContent = 'Menunggu Konfirmasi';
+                step4Desc.textContent = 'Menunggu konfirmasi penutupan tiket / arsip final.';
 
                 stepperLine.className = 'absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-emerald-400';
 
             } else if (status === 'Ditutup') {
                 popWaBadge.className = 'inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border bg-purple-50 text-purple-800 border-purple-200';
-                popWaBadge.innerHTML = '<i class="bi bi-patch-check-fill text-purple-600 text-xs"></i> Ditutup';
+                popWaBadge.innerHTML = '<i class="bi bi-archive-fill text-purple-600 text-xs"></i> 4. Ditutup';
 
-                step2Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-blue-500 text-white shadow-xs';
+                // Step 1: Completed
+                if (step1Icon) {
+                    step1Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-emerald-500 text-white shadow-xs';
+                    step1Icon.innerHTML = '<i class="bi bi-check-lg"></i>';
+                }
+                if (step1Title) step1Title.className = 'font-bold text-[11px] text-slate-700';
+                if (step1Desc) step1Desc.innerHTML = 'Laporan diterima sistem.';
+
+                // Step 2: Completed
+                step2Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-emerald-500 text-white shadow-xs';
                 step2Icon.innerHTML = '<i class="bi bi-check-lg"></i>';
                 step2Title.className = 'font-bold text-[11px] text-slate-700';
                 step2Time.textContent = updated;
                 step2Desc.textContent = 'Proses penanganan selesai.';
 
+                // Step 3: Completed
                 step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-emerald-600 text-white shadow-xs';
                 step3Icon.innerHTML = '<i class="bi bi-check2-all text-xs"></i>';
                 step3Title.className = 'font-bold text-[11px] text-emerald-800';
                 step3Time.textContent = tglTanggapan || updated;
-                step3Desc.textContent = 'Solusi telah diterima.';
+                step3Desc.textContent = 'Solusi telah diterima & kendala teratasi.';
                 if (tanggapan && tanggapan.trim()) {
                     step3Box.classList.remove('hidden');
                     step3Text.textContent = '"' + tanggapan.trim() + '"';
                 }
 
+                // Step 4: Active
                 step4Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-purple-600 text-white shadow-xs';
                 step4Icon.innerHTML = '<i class="bi bi-check-lg text-xs"></i>';
                 step4Title.className = 'font-bold text-[11px] text-purple-800';
                 step4Time.textContent = updated;
-                step4Desc.textContent = 'Tiket telah ditutup tuntas.';
+                step4Desc.textContent = 'Tiket telah ditutup secara permanen & diarsipkan.';
 
                 stepperLine.className = 'absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-purple-400';
             }

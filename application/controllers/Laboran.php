@@ -325,11 +325,14 @@ class Laboran extends CI_Controller {
         }
 
         $user_id = $this->session->userdata('user_id');
-        $user = $this->db->get_where('users', ['id' => $user_id])->row();
+        $user = $this->db->get_where('user', ['id' => $user_id])->row();
+        if (!$user && $this->db->table_exists('users')) {
+            $user = $this->db->get_where('users', ['id' => $user_id])->row();
+        }
 
-        $nip_laboran = $user ? ($user->nidn_nim ?: $this->session->userdata('nidn_nim')) : $this->session->userdata('nidn_nim');
+        $nip_laboran = $user ? ($user->nip ?? ($user->nidn_nim ?? $this->session->userdata('nidn_nim'))) : $this->session->userdata('nidn_nim');
         $nama_laboran = $user ? $user->name : $this->session->userdata('name');
-        $tanda_tangan = $user ? $user->tanda_tangan : null;
+        $tanda_tangan = $user ? ($user->ttd ?? ($user->tanda_tangan ?? null)) : null;
 
         $data = [
             'title'        => 'Pengaturan Tanda Tangan Digital - Panel Laboran',
@@ -419,12 +422,17 @@ class Laboran extends CI_Controller {
 
         if (!empty($filename)) {
             // Hapus file tanda tangan lama jika ada
-            $oldTtd = $user ? $user->tanda_tangan : null;
+            $oldTtd = $user ? ($user->ttd ?? ($user->tanda_tangan ?? null)) : null;
             if (!empty($oldTtd) && file_exists($uploadDir . $oldTtd)) {
                 @unlink($uploadDir . $oldTtd);
             }
 
-            $this->db->where('id', $user_id)->update('users', ['tanda_tangan' => $filename]);
+            if ($this->db->table_exists('user')) {
+                $this->db->where('id', $user_id)->update('user', ['ttd' => $filename]);
+            }
+            if ($this->db->table_exists('users')) {
+                $this->db->where('id', $user_id)->update('users', ['tanda_tangan' => $filename]);
+            }
             $this->session->set_flashdata('success', 'Tanda tangan digital Laboran berhasil disimpan dan siap digunakan pada surat resmi!');
         }
 
@@ -442,15 +450,23 @@ class Laboran extends CI_Controller {
         }
 
         $user_id = $this->session->userdata('user_id');
-        $user = $this->db->get_where('users', ['id' => $user_id])->row();
-        $oldTtd = $user ? $user->tanda_tangan : null;
+        $user = $this->db->get_where('user', ['id' => $user_id])->row();
+        if (!$user && $this->db->table_exists('users')) {
+            $user = $this->db->get_where('users', ['id' => $user_id])->row();
+        }
+        $oldTtd = $user ? ($user->ttd ?? ($user->tanda_tangan ?? null)) : null;
 
         if (!empty($oldTtd)) {
             $filePath = FCPATH . 'uploads/signatures/' . $oldTtd;
             if (file_exists($filePath)) {
                 @unlink($filePath);
             }
-            $this->db->where('id', $user_id)->update('users', ['tanda_tangan' => null]);
+            if ($this->db->table_exists('user')) {
+                $this->db->where('id', $user_id)->update('user', ['ttd' => null]);
+            }
+            if ($this->db->table_exists('users')) {
+                $this->db->where('id', $user_id)->update('users', ['tanda_tangan' => null]);
+            }
             $this->session->set_flashdata('success', 'Tanda tangan digital berhasil dihapus.');
         }
 

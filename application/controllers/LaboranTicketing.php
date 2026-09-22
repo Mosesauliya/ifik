@@ -23,12 +23,22 @@ class LaboranTicketing extends CI_Controller {
      * Filter query khusus untuk unit Laboratorium & Sarpras
      */
     private function _apply_lab_unit_filter() {
-        $col = ($this->table === 'tb_ticketing') ? 'unit' : 'unit_tujuan';
-        $this->db->group_start();
-        $this->db->like($col, 'Laboratorium');
-        $this->db->or_like($col, 'Lab');
-        $this->db->or_like($col, 'Sarpras');
-        $this->db->group_end();
+        if ($this->table === 'tb_ticketing') {
+            $this->db->group_start();
+            $this->db->where('tujuan_penerima', 'Laboran');
+            $this->db->or_like('unit', 'Laboran');
+            $this->db->or_like('unit', 'Laboratorium');
+            $this->db->or_like('unit', 'Lab');
+            $this->db->or_like('unit', 'Sarpras');
+            $this->db->group_end();
+        } else {
+            $this->db->group_start();
+            $this->db->like('unit_tujuan', 'Laboran');
+            $this->db->or_like('unit_tujuan', 'Laboratorium');
+            $this->db->or_like('unit_tujuan', 'Lab');
+            $this->db->or_like('unit_tujuan', 'Sarpras');
+            $this->db->group_end();
+        }
     }
 
     /**
@@ -338,6 +348,26 @@ class LaboranTicketing extends CI_Controller {
                 'email' => $email
             ],
             'custom_fields'     => $custom_fields,
+            'penerima_list'     => [
+                'Laboran'    => [
+                    'id'    => 'Laboran',
+                    'title' => 'Laboran',
+                    'desc'  => 'Fasilitas Lab, Hardware, Software, Jaringan & Sarpras',
+                    'icon'  => 'bi-pc-display-horizontal'
+                ],
+                'Dosen Kaur' => [
+                    'id'    => 'Dosen Kaur',
+                    'title' => 'Dosen Kaur',
+                    'desc'  => 'Kepala Urusan, Dosen Wali, Bimbingan & Perkuliahan',
+                    'icon'  => 'bi-person-video3'
+                ],
+                'Admin LAA'  => [
+                    'id'    => 'Admin LAA',
+                    'title' => 'Admin LAA',
+                    'desc'  => 'Layanan Akademik, Surat Pengantar, Ijazah & KTM',
+                    'icon'  => 'bi-building-check'
+                ]
+            ],
             'unit_kategori_map' => $unit_kategori_map,
             'prioritas_list'    => [
                 'Rendah'  => ['label' => 'Rendah', 'color' => 'slate', 'desc' => 'Pertanyaan umum / kendala minor'],
@@ -359,7 +389,8 @@ class LaboranTicketing extends CI_Controller {
         $nidn        = $this->session->userdata('nidn_nim') ?: $this->session->userdata('nim');
         $namaLengkap = trim($this->input->post('nama_lengkap', true)) ?: ($this->session->userdata('name') ?: 'Laboran');
 
-        $unit_tujuan      = trim($this->input->post('unit_tujuan', true));
+        $tujuan_penerima  = trim($this->input->post('tujuan_penerima', true)) ?: 'Laboran';
+        $unit_terkait     = trim($this->input->post('unit_terkait', true)) ?: (trim($this->input->post('unit_tujuan', true)) ?: 'Laboratorium (Fasilitas & Lab)');
         $kategori         = trim($this->input->post('kategori', true));
         $kategori_lainnya = trim($this->input->post('kategori_lainnya', true));
         $prioritas        = trim($this->input->post('prioritas', true));
@@ -367,7 +398,7 @@ class LaboranTicketing extends CI_Controller {
         $deskripsi        = $this->input->post('deskripsi'); // Rich text from TinyMCE
 
         $textOnly = trim(strip_tags($deskripsi));
-        if (empty($namaLengkap) || empty($unit_tujuan) || empty($kategori) || empty($subjek) || empty($textOnly)) {
+        if (empty($namaLengkap) || empty($tujuan_penerima) || empty($unit_terkait) || empty($kategori) || empty($subjek) || empty($textOnly)) {
             if ($this->input->is_ajax_request()) {
                 echo json_encode(['status' => 'error', 'message' => 'Semua field bertanda bintang wajib diisi.']);
                 return;
@@ -432,7 +463,7 @@ class LaboranTicketing extends CI_Controller {
         }
 
         if ($recentTicket) {
-            $msg = "Tiket kendala berhasil diajukan dengan Kode: <b>{$recentTicket->kode_tiket}</b> ke unit <b>" . htmlspecialchars($unit_tujuan) . "</b>.";
+            $msg = "Tiket kendala berhasil diajukan dengan Kode: <b>{$recentTicket->kode_tiket}</b> ditujukan kepada <b>" . htmlspecialchars($tujuan_penerima) . "</b>.";
             $this->session->set_flashdata('success', $msg);
             if ($this->input->is_ajax_request()) {
                 echo json_encode([
@@ -471,7 +502,9 @@ class LaboranTicketing extends CI_Controller {
             'id_user'            => $userId,
             'nama_dosen'         => $namaLengkap,
             'nidn'               => $nidn,
-            'unit_tujuan'        => $unit_tujuan,
+            'tujuan_penerima'    => $tujuan_penerima,
+            'unit_terkait'       => $unit_terkait,
+            'unit_tujuan'        => $unit_terkait,
             'kategori'           => $kategori,
             'prioritas'          => in_array($prioritas, ['Rendah', 'Sedang', 'Tinggi', 'Darurat']) ? $prioritas : 'Sedang',
             'subjek'             => $subjek,
@@ -485,7 +518,7 @@ class LaboranTicketing extends CI_Controller {
         $createdTicket = $this->DosenTicketing_model->get_by_id($insertedId);
         $kodeTiket = $createdTicket ? $createdTicket->kode_tiket : '';
 
-        $msg = "Tiket Anda berhasil diajukan dengan Kode: <b>{$kodeTiket}</b> ke unit <b>" . htmlspecialchars($unit_tujuan) . "</b>.";
+        $msg = "Tiket Anda berhasil diajukan dengan Kode: <b>{$kodeTiket}</b> ditujukan kepada <b>" . htmlspecialchars($tujuan_penerima) . "</b> (Lingkup Terkait: <b>" . htmlspecialchars($unit_terkait) . "</b>).";
         $this->session->set_flashdata('success', $msg);
         if ($this->input->is_ajax_request()) {
             echo json_encode([

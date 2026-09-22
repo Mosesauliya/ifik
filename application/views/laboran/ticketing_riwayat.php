@@ -263,13 +263,18 @@
 
                                     <!-- Tujuan & Kategori -->
                                     <td class="py-4 px-6">
-                                        <?php if (!empty($t->unit_tujuan)): ?>
-                                            <span class="inline-flex items-center gap-1 text-[11px] font-bold text-orange-700 bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200/60 mb-1">
-                                                <i class="bi bi-building"></i> <?= htmlspecialchars($t->unit_tujuan); ?>
+                                        <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-orange-100 text-orange-800 border border-orange-200">
+                                                <i class="bi bi-person-check-fill"></i> <?= htmlspecialchars($t->tujuan_penerima ?? 'Laboran'); ?>
                                             </span>
-                                        <?php endif; ?>
-                                        <p class="font-semibold text-xs text-slate-700">
-                                            <?= htmlspecialchars($t->kategori); ?>
+                                            <?php if (!empty($t->unit_terkait)): ?>
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200" title="Unit Terkait">
+                                                    <i class="bi bi-building"></i> <?= htmlspecialchars($t->unit_terkait); ?>
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <p class="font-semibold text-xs text-slate-600">
+                                            <i class="bi bi-tag-fill text-orange-400 text-[10px] mr-1"></i><?= htmlspecialchars($t->kategori); ?>
                                         </p>
                                     </td>
 
@@ -412,11 +417,14 @@
                                 <?php endif; ?>
                             </div>
 
-                            <!-- Meta Info: Unit Tujuan & Kategori -->
+                            <!-- Meta Info: Penerima, Unit Terkait & Kategori -->
                             <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
-                                <?php if (!empty($t->unit_tujuan)): ?>
-                                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-orange-700 bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200/60">
-                                        <i class="bi bi-building"></i> <?= htmlspecialchars($t->unit_tujuan); ?>
+                                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-orange-800 bg-orange-100 px-2 py-0.5 rounded-md border border-orange-200">
+                                    <i class="bi bi-person-check-fill"></i> <?= htmlspecialchars($t->tujuan_penerima ?? 'Laboran'); ?>
+                                </span>
+                                <?php if (!empty($t->unit_terkait)): ?>
+                                    <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200" title="Unit Terkait">
+                                        <i class="bi bi-building"></i> <?= htmlspecialchars($t->unit_terkait); ?>
                                     </span>
                                 <?php endif; ?>
                                 <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
@@ -482,13 +490,13 @@
             <!-- Vertical Stepper Track Line -->
             <div id="stepperLine" class="absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-slate-200"></div>
 
-            <!-- Step 1: Tiket Terkirim -->
+            <!-- Step 1: Menunggu -->
             <div class="relative">
                 <span id="step1Icon" class="absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-emerald-500 text-white shadow-xs">
                     <i class="bi bi-check-lg"></i>
                 </span>
                 <div class="flex items-center justify-between gap-2">
-                    <span class="font-bold text-slate-800 text-[11px]">1. Tiket Terkirim</span>
+                    <span class="font-bold text-slate-800 text-[11px]">1. Menunggu</span>
                     <span id="step1Time" class="text-[10px] font-mono text-emerald-600 font-bold whitespace-nowrap">-</span>
                 </div>
                 <p class="text-[10px] text-slate-400 leading-snug mt-0.5">
@@ -496,13 +504,13 @@
                 </p>
             </div>
 
-            <!-- Step 2: Sedang Diproses -->
+            <!-- Step 2: Diproses -->
             <div class="relative">
                 <span id="step2Icon" class="absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border">
                     <!-- Dynamic Icon -->
                 </span>
                 <div class="flex items-center justify-between gap-2">
-                    <span id="step2Title" class="font-bold text-[11px]">2. Sedang Diproses</span>
+                    <span id="step2Title" class="font-bold text-[11px]">2. Diproses</span>
                     <span id="step2Time" class="text-[10px] font-mono font-bold whitespace-nowrap">-</span>
                 </div>
                 <p id="step2Desc" class="text-[10px] text-slate-400 leading-snug mt-0.5">
@@ -510,13 +518,13 @@
                 </p>
             </div>
 
-            <!-- Step 3: Tanggapan & Solusi -->
+            <!-- Step 3: Selesai -->
             <div class="relative">
                 <span id="step3Icon" class="absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border">
                     <!-- Dynamic Icon -->
                 </span>
                 <div class="flex items-center justify-between gap-2">
-                    <span id="step3Title" class="font-bold text-[11px]">3. Tanggapan & Solusi</span>
+                    <span id="step3Title" class="font-bold text-[11px]">3. Selesai</span>
                     <span id="step3Time" class="text-[10px] font-mono font-bold whitespace-nowrap">-</span>
                 </div>
                 <p id="step3Desc" class="text-[10px] text-slate-400 leading-snug mt-0.5">
@@ -591,8 +599,12 @@
                         <span id="modalPelapor" class="font-bold text-slate-800">-</span>
                     </div>
                     <div>
-                        <span class="text-slate-400 block font-semibold">Unit yang Dituju</span>
-                        <span id="modalUnit" class="font-bold text-orange-600">-</span>
+                        <span class="text-slate-400 block font-semibold">Ditujukan Kepada</span>
+                        <span id="modalPenerima" class="font-bold text-orange-600">-</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block font-semibold">Unit / Lingkup Terkait</span>
+                        <span id="modalUnit" class="font-bold text-slate-700">-</span>
                     </div>
                     <div>
                         <span class="text-slate-400 block font-semibold">Kategori</span>
@@ -606,9 +618,8 @@
                         <span class="text-slate-400 block font-semibold">Status</span>
                         <span id="modalStatus" class="font-bold text-slate-800">-</span>
                     </div>
-                    <div>
-                        <span class="text-slate-400 block font-semibold">Tanggal Diajukan</span>
-                        <span id="modalWaktu" class="font-bold text-slate-800">-</span>
+                    <div class="col-span-2 sm:col-span-3 pt-1 border-t border-slate-200/60 flex items-center justify-between text-[11px] text-slate-400">
+                        <span>Diajukan Pada: <strong id="modalWaktu" class="text-slate-700 font-medium">-</strong></span>
                     </div>
                 </div>
 
@@ -670,7 +681,9 @@
                         document.getElementById('modalKode').textContent = d.kode_tiket;
                         document.getElementById('modalSubjek').textContent = d.subjek;
                         document.getElementById('modalPelapor').textContent = d.nama_dosen + (d.nidn ? ' (' + d.nidn + ')' : '');
-                        document.getElementById('modalUnit').textContent = d.unit_tujuan || 'Unit Terkait';
+                        const elPenerima = document.getElementById('modalPenerima');
+                        if (elPenerima) elPenerima.textContent = d.tujuan_penerima || 'Laboran';
+                        document.getElementById('modalUnit').textContent = d.unit_terkait || d.unit_tujuan || 'Unit Terkait';
                         document.getElementById('modalKategori').textContent = d.kategori;
                         document.getElementById('modalPrioritas').textContent = d.prioritas;
                         document.getElementById('modalStatus').textContent = d.status;
@@ -871,6 +884,10 @@
             // Reset step 3 quote
             step3Box.classList.add('hidden');
             step3Text.textContent = '';
+
+            step2Title.textContent = '2. Diproses';
+            step3Title.textContent = '3. Selesai';
+            step4Title.textContent = '4. Ditutup';
 
             if (status === 'Menunggu') {
                 popWaBadge.className = 'inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border bg-amber-50 text-amber-700 border-amber-200';

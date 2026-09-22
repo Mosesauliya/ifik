@@ -8,6 +8,18 @@ class Mahasiswa extends CI_Controller {
         $this->load->model('Mahasiswa_model');
         $this->load->library('form_validation');
         $this->load->helper(array('form', 'url'));
+
+        if (!$this->session->userdata('logged_in')) {
+            if ($this->input->is_ajax_request()) {
+                $this->output
+                    ->set_status_header(401)
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode(['success' => false, 'message' => 'Sesi berakhir, silakan login kembali.']));
+                exit;
+            }
+            redirect('login');
+            return;
+        }
     }
 
     private function _get_current_nim() {
@@ -1154,7 +1166,14 @@ class Mahasiswa extends CI_Controller {
             if ($this->db->table_exists('file_pendaftaran')) {
                 $id_fp = 'fp_' . $nim . '_' . $kode_berkas;
                 $id_mhs_usr = 'usr_mhs_' . $nim;
-                $ex_fp = $this->db->where('id', $id_fp)->or_where(['id_mhs' => $id_mhs_usr, 'nama' => $kode_berkas])->get('file_pendaftaran')->row_array();
+                $ex_fp = $this->db->group_start()
+                    ->where('id', $id_fp)
+                    ->or_group_start()
+                        ->where('id_mhs', $id_mhs_usr)
+                        ->where('nama', $kode_berkas)
+                    ->group_end()
+                ->group_end()
+                ->get('file_pendaftaran')->row_array();
                 $rel_file_path = 'uploads/persyaratan_ta/' . $file_name;
                 if ($ex_fp) {
                     $this->db->where('id', $ex_fp['id'])->update('file_pendaftaran', [
@@ -1256,7 +1275,7 @@ class Mahasiswa extends CI_Controller {
             ]));
     }
 
-    // AJAX Endpoint: Auto-Save Draft Teks (Jenis TA & Judul) ke Database Server
+    // AJAX Endpoint: Auto-Save / Manual Save Draft Teks & Berkas ke Database Server
     public function ajax_save_draft_ta() {
         $nim = $this->input->post('nim') ?: $this->_get_current_nim();
         $mhs = $this->Mahasiswa_model->get_mahasiswa($nim);
@@ -1278,9 +1297,34 @@ class Mahasiswa extends CI_Controller {
         if ($judul_2 !== null)  $data_update['judul_2'] = $judul_2;
         if ($judul_3 !== null)  $data_update['judul_3'] = $judul_3;
         if ($judul_en !== null) $data_update['judul_en'] = $judul_en;
-        if ($draft_step >= 1 && $draft_step <= 6) $data_update['draft_step'] = $draft_step;
+        if ($draft_step >= 1 && $draft_step <= 3) $data_update['draft_step'] = $draft_step;
         $data_update['konsentrasi_dkv'] = $konsentrasi_dkv;
         $data_update['id_kk'] = $mhs_id_kk;
+
+        // Tangkap seluruh berkas persyaratan (file_* dan file_*_old)
+        $this->load->model('AdminLayanan_model');
+        $post_data = $this->input->post(null, true);
+        $has_any_file = false;
+
+        foreach ($post_data as $key => $val) {
+            if (empty($val) || !is_string($val)) continue;
+            if (preg_match('/^file_([a-z0-9_]+)$/i', $key)) {
+                $clean_key = preg_replace('/_old$/i', '', $key);
+                $raw_kode  = str_replace('file_', '', $clean_key);
+                $col_name  = 'file_' . $raw_kode;
+                $val = trim($val);
+
+                if (!empty($val) && strtolower(substr($val, -4)) === '.pdf') {
+                    $has_any_file = true;
+                    if ($this->db->table_exists('pendaftaran_ta') && $this->db->field_exists($col_name, 'pendaftaran_ta')) {
+                        $data_update[$col_name] = $val;
+                    }
+                    if ($this->db->table_exists('pendaftaran_berkas') && method_exists($this->AdminLayanan_model, 'save_student_berkas')) {
+                        $this->AdminLayanan_model->save_student_berkas($nim, $raw_kode, $val, 'Pending');
+                    }
+                }
+            }
+        }
 
         $data_update['updated_at'] = date('Y-m-d H:i:s');
         $db_saved = false;
@@ -1291,8 +1335,8 @@ class Mahasiswa extends CI_Controller {
                 $this->db->where('nim', $nim)->update('pendaftaran_ta', $data_update);
                 $db_saved = true;
             } else {
-                // Cegah membuat baris baru jika form masih kosong
-                if (!empty($jenis_ta) || !empty($judul_1)) {
+                // Buat baris baru jika ada isian jenis_ta, judul_1, atau berkas terunggah
+                if (!empty($jenis_ta) || !empty($judul_1) || $has_any_file) {
                     $data_update['nim'] = $nim;
                     $data_update['created_at'] = date('Y-m-d H:i:s');
                     $data_update['is_submitted'] = 0;
@@ -1309,7 +1353,11 @@ class Mahasiswa extends CI_Controller {
 
         $this->output
             ->set_content_type('application/json')
-            ->set_output(json_encode(['success' => true, 'message' => 'Draft berhasil tersimpan di server.']));
+            ->set_output(json_encode([
+                'success' => true,
+                'db_saved' => $db_saved,
+                'message' => 'Draft formulir & berkas berhasil tersimpan di database server.'
+            ]));
     }
 
     // AJAX Endpoint: Ambil data mahasiswa bimbingan & preview secara efisien
@@ -2013,6 +2061,26 @@ class Mahasiswa extends CI_Controller {
             ],
             'mahasiswa'         => $mhs,
             'custom_fields'     => $custom_fields,
+            'penerima_list'     => [
+                'Laboran'    => [
+                    'id'    => 'Laboran',
+                    'title' => 'Laboran',
+                    'desc'  => 'Fasilitas Lab, Hardware, Software, Jaringan & Sarpras',
+                    'icon'  => 'bi-pc-display-horizontal'
+                ],
+                'Dosen Kaur' => [
+                    'id'    => 'Dosen Kaur',
+                    'title' => 'Dosen Kaur',
+                    'desc'  => 'Kepala Urusan, Dosen Wali, Bimbingan & Perkuliahan',
+                    'icon'  => 'bi-person-video3'
+                ],
+                'Admin LAA'  => [
+                    'id'    => 'Admin LAA',
+                    'title' => 'Admin LAA',
+                    'desc'  => 'Layanan Akademik, Surat Pengantar, Ijazah & KTM',
+                    'icon'  => 'bi-building-check'
+                ]
+            ],
             'unit_kategori_map' => $unit_kategori_map,
             'prioritas_list'    => [
                 'Rendah'  => ['label' => 'Rendah', 'color' => 'slate', 'desc' => 'Pertanyaan umum / kendala minor'],
@@ -2038,7 +2106,8 @@ class Mahasiswa extends CI_Controller {
         $namaLengkap = trim($this->input->post('nama_lengkap', true)) ?: $namaDefault;
         $email       = $this->session->userdata('email') ?: ($mhs['email'] ?? '');
 
-        $unit_tujuan      = trim($this->input->post('unit_tujuan', true));
+        $tujuan_penerima  = trim($this->input->post('tujuan_penerima', true)) ?: 'Laboran';
+        $unit_terkait     = trim($this->input->post('unit_terkait', true)) ?: (trim($this->input->post('unit_tujuan', true)) ?: 'Layanan Umum');
         $kategori         = trim($this->input->post('kategori', true));
         $kategori_lainnya = trim($this->input->post('kategori_lainnya', true));
         $prioritas        = trim($this->input->post('prioritas', true));
@@ -2046,7 +2115,7 @@ class Mahasiswa extends CI_Controller {
         $deskripsi        = $this->input->post('deskripsi'); // Rich text TinyMCE
 
         $textOnly = trim(strip_tags($deskripsi));
-        if (empty($namaLengkap) || empty($unit_tujuan) || empty($kategori) || empty($subjek) || empty($textOnly)) {
+        if (empty($namaLengkap) || empty($tujuan_penerima) || empty($unit_terkait) || empty($kategori) || empty($subjek) || empty($textOnly)) {
             if ($this->input->is_ajax_request()) {
                 echo json_encode(['status' => 'error', 'message' => 'Semua field bertanda bintang (*) wajib diisi.']);
                 return;
@@ -2068,7 +2137,7 @@ class Mahasiswa extends CI_Controller {
         }
 
         if ($recentTicket) {
-            $msg = "Tiket Anda berhasil diajukan dengan Kode: <b>{$recentTicket->kode_tiket}</b> ke unit <b>" . htmlspecialchars($unit_tujuan) . "</b>.";
+            $msg = "Tiket Anda berhasil diajukan dengan Kode: <b>{$recentTicket->kode_tiket}</b> ditujukan kepada <b>" . htmlspecialchars($tujuan_penerima) . "</b>.";
             $this->session->set_flashdata('success', $msg);
             if ($this->input->is_ajax_request()) {
                 echo json_encode([
@@ -2133,25 +2202,27 @@ class Mahasiswa extends CI_Controller {
         $kodeTiket = $this->DosenTicketing_model->generate_kode();
 
         $ticketData = [
-            'kode_tiket'  => $kodeTiket,
-            'id_user'     => $userId ?: $nim,
-            'nama_dosen'  => $namaLengkap, // Disimpan di field nama_dosen/nama agar kompatibel dengan tabel utama
-            'nama'        => $namaLengkap,
-            'email'       => $email,
-            'nidn'        => $nim,         // Disimpan di field nidn agar query get_tickets($user_id, $nim) berfungsi optimal
-            'unit_tujuan' => $unit_tujuan,
-            'kategori'    => $kategori,
-            'prioritas'   => in_array($prioritas, ['Rendah', 'Sedang', 'Tinggi', 'Darurat']) ? $prioritas : 'Sedang',
-            'subjek'      => $subjek,
-            'deskripsi'   => $deskripsi,
-            'lampiran'    => $lampiran_name,
-            'status'      => 'Menunggu'
+            'kode_tiket'      => $kodeTiket,
+            'id_user'         => $userId ?: $nim,
+            'nama_dosen'      => $namaLengkap,
+            'nama'            => $namaLengkap,
+            'email'           => $email,
+            'nidn'            => $nim,
+            'tujuan_penerima' => $tujuan_penerima,
+            'unit_terkait'    => $unit_terkait,
+            'unit_tujuan'     => $unit_terkait,
+            'kategori'        => $kategori,
+            'prioritas'       => in_array($prioritas, ['Rendah', 'Sedang', 'Tinggi', 'Darurat']) ? $prioritas : 'Sedang',
+            'subjek'          => $subjek,
+            'deskripsi'       => $deskripsi,
+            'lampiran'        => $lampiran_name,
+            'status'          => 'Menunggu'
         ];
 
         $insertedId = $this->DosenTicketing_model->insert($ticketData);
 
         if ($insertedId) {
-            $msg = "Tiket kendala berhasil diajukan dengan Kode: <b>{$kodeTiket}</b> ke unit <b>" . htmlspecialchars($unit_tujuan) . "</b>. Mohon pantau status respon secara berkala.";
+            $msg = "Tiket kendala berhasil diajukan dengan Kode: <b>{$kodeTiket}</b> ditujukan kepada <b>" . htmlspecialchars($tujuan_penerima) . "</b> (Lingkup Terkait: <b>" . htmlspecialchars($unit_terkait) . "</b>). Mohon pantau status respon secara berkala.";
             $this->session->set_flashdata('success', $msg);
             if ($this->input->is_ajax_request()) {
                 echo json_encode([
@@ -2236,22 +2307,24 @@ class Mahasiswa extends CI_Controller {
             ->set_output(json_encode([
                 'status'  => 'success',
                 'data'    => [
-                    'id'            => $ticket->id,
-                    'kode_tiket'    => $ticket->kode_tiket,
-                    'nama_dosen'    => $ticket->nama_dosen,
-                    'nidn'          => $ticket->nidn,
-                    'unit_tujuan'   => $ticket->unit_tujuan ?: 'Layanan IFIK',
-                    'kategori'      => $ticket->kategori,
-                    'prioritas'     => $ticket->prioritas,
-                    'subjek'        => $ticket->subjek,
-                    'deskripsi'     => $deskripsiFormatted,
-                    'lampiran'      => $ticket->lampiran,
-                    'lampiran_url'  => $ticket->lampiran ? base_url('uploads/ticketing/' . $ticket->lampiran) : null,
-                    'status'        => $ticket->status,
-                    'tanggapan'     => $ticket->tanggapan ? nl2br(htmlspecialchars($ticket->tanggapan)) : null,
-                    'tgl_tanggapan' => $ticket->tgl_tanggapan ? date('d M Y H:i', strtotime($ticket->tgl_tanggapan)) : null,
-                    'created_at'    => date('d M Y H:i', strtotime($ticket->created_at)),
-                    'updated_at'    => date('d M Y H:i', strtotime($ticket->updated_at))
+                    'id'              => $ticket->id,
+                    'kode_tiket'      => $ticket->kode_tiket,
+                    'nama_dosen'      => $ticket->nama_dosen,
+                    'nidn'            => $ticket->nidn,
+                    'tujuan_penerima' => $ticket->tujuan_penerima ?? 'Laboran',
+                    'unit_terkait'    => $ticket->unit_terkait ?? ($ticket->unit_tujuan ?: 'Layanan IFIK'),
+                    'unit_tujuan'     => $ticket->unit_terkait ?? ($ticket->unit_tujuan ?: 'Layanan IFIK'),
+                    'kategori'        => $ticket->kategori,
+                    'prioritas'       => $ticket->prioritas,
+                    'subjek'          => $ticket->subjek,
+                    'deskripsi'       => $deskripsiFormatted,
+                    'lampiran'        => $ticket->lampiran,
+                    'lampiran_url'    => $ticket->lampiran ? base_url('uploads/ticketing/' . $ticket->lampiran) : null,
+                    'status'          => $ticket->status,
+                    'tanggapan'       => $ticket->tanggapan ? nl2br(htmlspecialchars($ticket->tanggapan)) : null,
+                    'tgl_tanggapan'   => $ticket->tgl_tanggapan ? date('d M Y H:i', strtotime($ticket->tgl_tanggapan)) : null,
+                    'created_at'      => date('d M Y H:i', strtotime($ticket->created_at)),
+                    'updated_at'      => date('d M Y H:i', strtotime($ticket->updated_at))
                 ]
             ]));
     }

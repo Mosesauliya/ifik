@@ -251,13 +251,18 @@
 
                                     <!-- Tujuan & Kategori -->
                                     <td class="py-4 px-6">
-                                        <?php if (!empty($t->unit_tujuan)): ?>
-                                            <span class="inline-flex items-center gap-1 text-[11px] font-bold text-orange-700 bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200/60 mb-1">
-                                                <i class="bi bi-building"></i> <?= htmlspecialchars($t->unit_tujuan); ?>
+                                        <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-orange-100 text-orange-800 border border-orange-200">
+                                                <i class="bi bi-person-check-fill"></i> <?= htmlspecialchars($t->tujuan_penerima ?? 'Laboran'); ?>
                                             </span>
-                                        <?php endif; ?>
-                                        <p class="font-semibold text-xs text-slate-700">
-                                            <?= htmlspecialchars($t->kategori); ?>
+                                            <?php if (!empty($t->unit_terkait)): ?>
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200" title="Unit Terkait">
+                                                    <i class="bi bi-building"></i> <?= htmlspecialchars($t->unit_terkait); ?>
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <p class="font-semibold text-xs text-slate-600">
+                                            <i class="bi bi-tag-fill text-orange-400 text-[10px] mr-1"></i><?= htmlspecialchars($t->kategori); ?>
                                         </p>
                                     </td>
 
@@ -400,11 +405,14 @@
                                 <?php endif; ?>
                             </div>
 
-                            <!-- Meta Info: Unit Tujuan & Kategori -->
+                            <!-- Meta Info: Penerima, Unit Terkait & Kategori -->
                             <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
-                                <?php if (!empty($t->unit_tujuan)): ?>
-                                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-orange-700 bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200/60">
-                                        <i class="bi bi-building"></i> <?= htmlspecialchars($t->unit_tujuan); ?>
+                                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-orange-800 bg-orange-100 px-2 py-0.5 rounded-md border border-orange-200">
+                                    <i class="bi bi-person-check-fill"></i> <?= htmlspecialchars($t->tujuan_penerima ?? 'Laboran'); ?>
+                                </span>
+                                <?php if (!empty($t->unit_terkait)): ?>
+                                    <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200" title="Unit Terkait">
+                                        <i class="bi bi-building"></i> <?= htmlspecialchars($t->unit_terkait); ?>
                                     </span>
                                 <?php endif; ?>
                                 <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
@@ -470,13 +478,13 @@
             <!-- Vertical Stepper Track Line -->
             <div id="stepperLine" class="absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-slate-200"></div>
 
-            <!-- Step 1: Tiket Terkirim -->
+            <!-- Step 1: Menunggu -->
             <div class="relative">
                 <span id="step1Icon" class="absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-emerald-500 text-white shadow-xs">
                     <i class="bi bi-check-lg"></i>
                 </span>
                 <div class="flex items-center justify-between gap-2">
-                    <span class="font-bold text-slate-800 text-[11px]">1. Tiket Terkirim</span>
+                    <span class="font-bold text-slate-800 text-[11px]">1. Menunggu</span>
                     <span id="step1Time" class="text-[10px] font-mono text-emerald-600 font-bold whitespace-nowrap">-</span>
                 </div>
                 <p class="text-[10px] text-slate-400 leading-snug mt-0.5">
@@ -484,13 +492,13 @@
                 </p>
             </div>
 
-            <!-- Step 2: Sedang Diproses -->
+            <!-- Step 2: Diproses -->
             <div class="relative">
                 <span id="step2Icon" class="absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border">
                     <!-- Dynamic Icon -->
                 </span>
                 <div class="flex items-center justify-between gap-2">
-                    <span id="step2Title" class="font-bold text-[11px]">2. Sedang Diproses</span>
+                    <span id="step2Title" class="font-bold text-[11px]">2. Diproses</span>
                     <span id="step2Time" class="text-[10px] font-mono font-bold whitespace-nowrap">-</span>
                 </div>
                 <p id="step2Desc" class="text-[10px] text-slate-400 leading-snug mt-0.5">
@@ -498,13 +506,13 @@
                 </p>
             </div>
 
-            <!-- Step 3: Tanggapan & Solusi -->
+            <!-- Step 3: Selesai -->
             <div class="relative">
                 <span id="step3Icon" class="absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border">
                     <!-- Dynamic Icon -->
                 </span>
                 <div class="flex items-center justify-between gap-2">
-                    <span id="step3Title" class="font-bold text-[11px]">3. Tanggapan & Solusi</span>
+                    <span id="step3Title" class="font-bold text-[11px]">3. Selesai</span>
                     <span id="step3Time" class="text-[10px] font-mono font-bold whitespace-nowrap">-</span>
                 </div>
                 <p id="step3Desc" class="text-[10px] text-slate-400 leading-snug mt-0.5">
@@ -579,8 +587,12 @@
                         <span id="modalPelapor" class="font-bold text-slate-800">-</span>
                     </div>
                     <div>
-                        <span class="text-slate-400 block font-semibold">Unit yang Dituju</span>
-                        <span id="modalUnit" class="font-bold text-orange-600">-</span>
+                        <span class="text-slate-400 block font-semibold">Ditujukan Kepada</span>
+                        <span id="modalPenerima" class="font-bold text-orange-600">-</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block font-semibold">Unit / Lingkup Terkait</span>
+                        <span id="modalUnit" class="font-bold text-slate-700">-</span>
                     </div>
                     <div>
                         <span class="text-slate-400 block font-semibold">Kategori</span>
@@ -611,11 +623,14 @@
                 <!-- Lampiran -->
                 <div id="modalLampiranSection" class="hidden">
                     <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Lampiran Berkas</h4>
-                    <a id="modalLampiranLink" href="#" target="_blank"
-                       class="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-bold border border-orange-200 transition-colors">
-                        <i class="bi bi-file-earmark-arrow-down text-base"></i>
-                        <span id="modalLampiranName">Unduh / Buka Lampiran</span>
-                    </a>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button type="button" onclick="bukaModalPreviewLampiranRiwayat()" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-bold border border-orange-200 transition-all cursor-pointer shadow-xs">
+                            <i class="bi bi-paperclip text-sm"></i> <span id="modalLampiranName">Lihat Lampiran</span>
+                        </button>
+                        <button type="button" onclick="unduhLampiranRiwayat()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-200 transition-all cursor-pointer shadow-xs" title="Unduh File Langsung">
+                            <i class="bi bi-download"></i> <span>Unduh</span>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Tanggapan Admin Support -->
@@ -640,6 +655,76 @@
         </div>
     </div>
 
+    <!-- Modal Popup Preview & Unduh Lampiran Pendukung -->
+    <div id="modalPreviewLampiran" class="fixed inset-0 z-[70] hidden overflow-y-auto" aria-labelledby="modal-preview-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen px-4 py-6 text-center sm:p-0">
+            <!-- Backdrop -->
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="tutupModalPreviewLampiranRiwayat()"></div>
+
+            <!-- Dialog Box -->
+            <div class="relative inline-block w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200/80 text-left overflow-hidden transform transition-all align-middle z-10">
+                <!-- Header -->
+                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+                    <div class="flex items-center gap-3 min-w-0 pr-4">
+                        <div class="w-9 h-9 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center text-base font-bold flex-shrink-0 shadow-xs">
+                            <i class="bi bi-paperclip"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <h4 class="text-sm font-black text-slate-800 tracking-tight" id="modal-preview-title">Lampiran Pendukung Kendala</h4>
+                            <p class="text-[11px] text-slate-400 font-mono truncate max-w-sm" id="previewLampiranFilename">-</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <button type="button" onclick="unduhLampiranRiwayat()" id="previewDownloadBtn" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer">
+                            <i class="bi bi-download"></i> <span>Unduh</span>
+                        </button>
+                        <button type="button" onclick="tutupModalPreviewLampiranRiwayat()" class="w-8 h-8 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer" title="Tutup Preview">
+                            <i class="bi bi-x-lg text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Body (Preview Content) -->
+                <div class="p-6 bg-slate-900/5 flex flex-col items-center justify-center min-h-[320px] max-h-[70vh] overflow-auto" id="previewContainer">
+                    <!-- Image Preview -->
+                    <img id="previewImage" src="" alt="Preview Lampiran" class="hidden max-h-[62vh] max-w-full rounded-2xl shadow-md object-contain mx-auto transition-all">
+                    
+                    <!-- PDF / Iframe Preview -->
+                    <iframe id="previewIframe" src="" class="hidden w-full h-[62vh] rounded-2xl border border-slate-200 shadow-xs bg-white"></iframe>
+
+                    <!-- Fallback if file cannot be previewed -->
+                    <div id="previewFallback" class="hidden flex flex-col items-center justify-center py-10 text-center space-y-3">
+                        <div class="w-16 h-16 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center text-3xl shadow-sm">
+                            <i class="bi bi-file-earmark-arrow-down-fill"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-slate-800" id="previewFallbackFilename">lampiran.file</p>
+                            <p class="text-xs text-slate-400 mt-1 max-w-xs">Format file ini tidak mendukung preview langsung. Silakan klik tombol di bawah untuk mengunduh dan membukanya.</p>
+                        </div>
+                        <button type="button" onclick="unduhLampiranRiwayat()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold shadow-sm transition-all cursor-pointer">
+                            <i class="bi bi-download"></i> Unduh Berkas Ini
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="px-6 py-3.5 bg-white border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                    <span class="flex items-center gap-1.5 text-slate-400 text-[11px]">
+                        <i class="bi bi-info-circle text-orange-500"></i> Klik Unduh untuk menyimpan berkas ke perangkat Anda.
+                    </span>
+                    <div class="flex items-center gap-2">
+                        <a id="previewOpenTabBtn" href="#" target="_blank" class="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold transition-all">
+                            Buka di Tab Baru <i class="bi bi-box-arrow-up-right text-[10px] ml-1"></i>
+                        </a>
+                        <button type="button" onclick="tutupModalPreviewLampiranRiwayat()" class="px-4 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer">
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Client-side Scripts for Filtering & Modal -->
     <script>
         function showTicketDetail(kodeTiket) {
@@ -651,7 +736,9 @@
                         document.getElementById('modalKode').textContent = d.kode_tiket;
                         document.getElementById('modalSubjek').textContent = d.subjek;
                         document.getElementById('modalPelapor').textContent = d.nama_dosen + (d.nidn ? ' (' + d.nidn + ')' : '');
-                        document.getElementById('modalUnit').textContent = d.unit_tujuan || 'Layanan IFIK';
+                        const elPenerima = document.getElementById('modalPenerima');
+                        if (elPenerima) elPenerima.textContent = d.tujuan_penerima || 'Laboran';
+                        document.getElementById('modalUnit').textContent = d.unit_terkait || d.unit_tujuan || 'Layanan IFIK';
                         document.getElementById('modalKategori').textContent = d.kategori;
                         document.getElementById('modalPrioritas').textContent = d.prioritas;
                         document.getElementById('modalStatus').textContent = d.status;
@@ -661,10 +748,13 @@
                         // Lampiran
                         const lampSection = document.getElementById('modalLampiranSection');
                         if (d.lampiran && d.lampiran_url) {
+                            currentLampiranUrlRiwayat = d.lampiran_url;
+                            currentLampiranFilenameRiwayat = d.lampiran;
                             lampSection.classList.remove('hidden');
-                            document.getElementById('modalLampiranLink').href = d.lampiran_url;
-                            document.getElementById('modalLampiranName').textContent = 'Buka Lampiran: ' + d.lampiran;
+                            document.getElementById('modalLampiranName').textContent = d.lampiran;
                         } else {
+                            currentLampiranUrlRiwayat = '';
+                            currentLampiranFilenameRiwayat = '';
                             lampSection.classList.add('hidden');
                         }
 
@@ -691,11 +781,106 @@
 
         function closeModal() {
             document.getElementById('detailModal').classList.add('hidden');
+            tutupModalPreviewLampiranRiwayat();
+        }
+
+        // --- Fitur Popup Preview & Unduh Lampiran Riwayat ---
+        let currentLampiranUrlRiwayat = '';
+        let currentLampiranFilenameRiwayat = '';
+
+        function bukaModalPreviewLampiranRiwayat(url, filename) {
+            const targetUrl = url || currentLampiranUrlRiwayat;
+            const targetName = filename || currentLampiranFilenameRiwayat || 'Berkas Lampiran';
+
+            if (!targetUrl) return;
+
+            document.getElementById('previewLampiranFilename').innerText = targetName;
+            document.getElementById('previewFallbackFilename').innerText = targetName;
+            document.getElementById('previewOpenTabBtn').href = targetUrl;
+
+            const imgEl = document.getElementById('previewImage');
+            const iframeEl = document.getElementById('previewIframe');
+            const fallbackEl = document.getElementById('previewFallback');
+
+            imgEl.classList.add('hidden');
+            iframeEl.classList.add('hidden');
+            fallbackEl.classList.add('hidden');
+            imgEl.src = '';
+            iframeEl.src = '';
+
+            const ext = targetName.split('.').pop().toLowerCase();
+            const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext);
+            const isPdf = (ext === 'pdf');
+
+            if (isImage) {
+                imgEl.src = targetUrl;
+                imgEl.classList.remove('hidden');
+            } else if (isPdf) {
+                iframeEl.src = targetUrl;
+                iframeEl.classList.remove('hidden');
+            } else {
+                fallbackEl.classList.remove('hidden');
+            }
+
+            const modal = document.getElementById('modalPreviewLampiran');
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function tutupModalPreviewLampiranRiwayat() {
+            const modal = document.getElementById('modalPreviewLampiran');
+            if (modal) {
+                modal.classList.add('hidden');
+                const imgEl = document.getElementById('previewImage');
+                const iframeEl = document.getElementById('previewIframe');
+                if (imgEl) imgEl.src = '';
+                if (iframeEl) iframeEl.src = '';
+            }
+            const detailModal = document.getElementById('detailModal');
+            if (!detailModal || detailModal.classList.contains('hidden')) {
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
+
+        async function unduhLampiranRiwayat(url, filename) {
+            const targetUrl = url || currentLampiranUrlRiwayat;
+            const targetName = filename || currentLampiranFilenameRiwayat || 'lampiran';
+
+            if (!targetUrl) return;
+
+            try {
+                const res = await fetch(targetUrl);
+                if (!res.ok) throw new Error('Fetch failed');
+                const blob = await res.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = targetName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+            } catch (err) {
+                const a = document.createElement('a');
+                a.href = targetUrl;
+                a.download = targetName;
+                a.target = '_blank';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
         }
 
         // Close on ESC
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeModal();
+            if (e.key === 'Escape') {
+                const previewModal = document.getElementById('modalPreviewLampiran');
+                if (previewModal && !previewModal.classList.contains('hidden')) {
+                    tutupModalPreviewLampiranRiwayat();
+                    return;
+                }
+                closeModal();
+            }
         });
 
         // Filter Table & Mobile Cards by Status Pill
@@ -827,6 +1012,10 @@
             // Reset step 3 quote
             step3Box.classList.add('hidden');
             step3Text.textContent = '';
+
+            step2Title.textContent = '2. Diproses';
+            step3Title.textContent = '3. Selesai';
+            step4Title.textContent = '4. Ditutup';
 
             if (status === 'Menunggu') {
                 popWaBadge.className = 'inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border bg-amber-50 text-amber-700 border-amber-200';
