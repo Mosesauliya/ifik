@@ -270,6 +270,167 @@ class LaboranHelp extends CI_Controller {
     }
 
     /**
+     * Endpoint API/AJAX: Pembuatan tiket chat baru oleh User / Mahasiswa / Dosen
+     */
+    public function create_chat_user_ajax() {
+        header('Content-Type: application/json');
+
+        $topik = trim($this->input->post('topik', true) ?? '');
+        $message = trim($this->input->post('message', true) ?? '');
+
+        if (empty($topik) || empty($message)) {
+            echo json_encode([
+                'status'  => 'error',
+                'message' => 'Topik dan pesan pertanyaan wajib diisi.'
+            ]);
+            exit;
+        }
+
+        // Ambil data user dari session atau POST data
+        $userId = $this->session->userdata('user_id') ?: ($this->input->post('user_id', true) ?: null);
+        $userNama = $this->session->userdata('name') ?: ($this->input->post('user_nama', true) ?: 'Pengguna IFIK');
+        $userEmail = $this->session->userdata('email') ?: ($this->input->post('user_email', true) ?: null);
+        $userNimNip = $this->session->userdata('nidn_nim') ?: ($this->session->userdata('nim') ?: ($this->input->post('user_nim_nip', true) ?: '-'));
+        
+        $roleId = (int)($this->session->userdata('role_id') ?? 4);
+        $roleMap = [
+            1 => 'Admin',
+            2 => 'Kaur',
+            3 => 'Dosen',
+            4 => 'Mahasiswa',
+            5 => 'Admin Layanan',
+            6 => 'Koordinator TA',
+            9 => 'Ketua KK',
+            21 => 'Laboran'
+        ];
+        $userRole = $this->input->post('user_role', true) ?: ($roleMap[$roleId] ?? 'Mahasiswa');
+
+        $conv_id = $this->Help_chat_model->create_conversation([
+            'user_id'      => $userId,
+            'user_nama'    => $userNama,
+            'user_email'   => $userEmail,
+            'user_role'    => $userRole,
+            'user_nim_nip' => $userNimNip,
+            'topik'        => $topik,
+            'message'      => $message
+        ]);
+
+        if ($conv_id) {
+            echo json_encode([
+                'status'          => 'success',
+                'conversation_id' => (int)$conv_id,
+                'message'         => 'Pesan berhasil terkirim ke Help Desk Laboran.'
+            ]);
+        } else {
+            echo json_encode([
+                'status'  => 'error',
+                'message' => 'Gagal membuat sesi bantuan.'
+            ]);
+        }
+        exit;
+    }
+
+    /**
+     * Endpoint API/AJAX: Pengiriman pesan balasan dari sisi User / Mahasiswa / Dosen
+     */
+    public function send_user_message_ajax() {
+        header('Content-Type: application/json');
+
+        $conversation_id = $this->input->post('conversation_id', true);
+        $message = trim($this->input->post('message', true) ?? '');
+
+        if (empty($conversation_id) || empty($message)) {
+            echo json_encode([
+                'status'  => 'error',
+                'message' => 'Pesan tidak boleh kosong.'
+            ]);
+            exit;
+        }
+
+        $conversation = $this->Help_chat_model->get_conversation_by_id($conversation_id);
+        if (!$conversation) {
+            echo json_encode([
+                'status'  => 'error',
+                'message' => 'Percakapan tidak ditemukan.'
+            ]);
+            exit;
+        }
+
+        $senderId = $this->session->userdata('user_id') ?: ($this->input->post('sender_id', true) ?: $conversation->user_id);
+        $senderName = $this->session->userdata('name') ?: ($this->input->post('sender_name', true) ?: $conversation->user_nama);
+
+        $msgId = $this->Help_chat_model->send_message(
+            $conversation_id,
+            $senderId,
+            $senderName,
+            'user',
+            $message
+        );
+
+        if ($msgId) {
+            echo json_encode([
+                'status'  => 'success',
+                'message' => 'Pesan terkirim ke Laboran.',
+                'data'    => [
+                    'id'          => $msgId,
+                    'sender_name' => $senderName,
+                    'sender_role' => 'user',
+                    'message'     => nl2br(htmlspecialchars($message)),
+                    'time'        => date('H:i'),
+                    'date_full'   => date('d M Y, H:i')
+                ]
+            ]);
+        } else {
+            echo json_encode([
+                'status'  => 'error',
+                'message' => 'Gagal mengirim pesan.'
+            ]);
+        }
+        exit;
+    }
+
+    /**
+     * Endpoint API/AJAX: Ambil daftar riwayat percakapan milik user yang sedang login
+     */
+    public function my_conversations_ajax() {
+        header('Content-Type: application/json');
+
+        $userId = $this->session->userdata('user_id');
+        $userEmail = $this->session->userdata('email');
+
+        $this->db->from('help_conversations');
+        if ($userId) {
+            $this->db->where('user_id', $userId);
+            if ($userEmail) {
+                $this->db->or_where('user_email', $userEmail);
+            }
+        } elseif ($userEmail) {
+            $this->db->where('user_email', $userEmail);
+        }
+        $this->db->order_by('last_message_time', 'DESC');
+        $conversations = $this->db->get()->result();
+
+        $formatted = [];
+        foreach ($conversations as $c) {
+            $formatted[] = [
+                'id'                => (int)$c->id,
+                'topik'             => htmlspecialchars($c->topik),
+                'status'            => $c->status,
+                'last_message'      => htmlspecialchars($c->last_message ?? ''),
+                'last_message_time' => $this->_format_time_ago($c->last_message_time ?? $c->created_at),
+                'unread_user'       => (int)$c->unread_user,
+                'created_at'        => date('d M Y, H:i', strtotime($c->created_at))
+            ];
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'data'   => $formatted
+        ]);
+        exit;
+    }
+
+    /**
      * Endpoint AJAX: Buat demo simulasi chat baru (untuk testing laboran)
      */
     public function create_sample_ajax() {

@@ -58,10 +58,25 @@
     <!-- Main Content -->
     <main class="min-h-screen p-6 sm:p-8 lg:p-10 max-w-5xl mx-auto">
         
+        <?php
+            $sessionRoleId = (int)$this->session->userdata('role_id');
+            $roleHomeMap = [
+                1 => ['title' => 'Admin Panel', 'url' => site_url('admin')],
+                2 => ['title' => 'Portal Ka. Ur', 'url' => site_url('kaur/approval')],
+                3 => ['title' => 'Portal Dosen', 'url' => site_url('dosen/bimbingan')],
+                4 => ['title' => 'Portal Mahasiswa', 'url' => site_url('mahasiswa')],
+                5 => ['title' => 'Admin Layanan', 'url' => site_url('adminlayanan')],
+                6 => ['title' => 'Koordinator TA', 'url' => site_url('koordinatorta')],
+                7 => ['title' => 'PIC KK', 'url' => site_url('ketuakk')],
+                9 => ['title' => 'Ketua KK', 'url' => site_url('ketuakk')],
+                21 => ['title' => 'Laboran', 'url' => site_url('laboran/booking')],
+            ];
+            $parentPortal = $roleHomeMap[$sessionRoleId] ?? ['title' => 'Portal IFIK', 'url' => site_url('dashboard')];
+        ?>
         <!-- Header & Breadcrumb -->
         <div class="mb-8">
             <div class="flex items-center gap-2 text-xs font-semibold text-slate-400 mb-2">
-                <a href="<?= site_url('dosen/bimbingan') ?>" class="hover:text-orange-600 transition-colors">Portal Dosen</a>
+                <a href="<?= $parentPortal['url'] ?>" class="hover:text-orange-600 transition-colors"><?= htmlspecialchars($parentPortal['title']) ?></a>
                 <i class="bi bi-chevron-right text-[10px]"></i>
                 <span class="text-slate-600">Ticketing</span>
                 <i class="bi bi-chevron-right text-[10px]"></i>
