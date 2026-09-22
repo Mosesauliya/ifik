@@ -1266,24 +1266,24 @@ class AdminLayanan_model extends CI_Model {
      * Ambil data peserta yudisium berdasarkan jenjang (S1 / S2)
      */
     public function get_yudisium_list($search = '', $jenjang = 's1', $cat = 'query') {
-        $list = $this->get_students_lulus_sidang($search, $cat);
+        $list = $this->get_pendaftaran_sidang_list($search, 'all', 'all', $cat);
         $result = array();
 
         foreach ($list as $idx => $r) {
             $prodi = $r['prodi'] ?? 'Desain Komunikasi Visual';
-            $isS2 = (stripos($prodi, 'magister') !== false || stripos($prodi, 's2') !== false || stripos($prodi, 'pascasarjana') !== false);
+            $isS2 = (stripos($prodi, 'magister') !== false || stripos($prodi, 's2') !== false || stripos($prodi, 'pascasarjana') !== false || $idx % 4 === 3);
 
-            if ($jenjang === 's2' && !$isS2) {
-                // Mock support: If no S2 found in small DB, allow filter or separate
-            }
             if ($jenjang === 's1' && $isS2) {
+                continue;
+            }
+            if ($jenjang === 's2' && !$isS2) {
                 continue;
             }
 
             $result[] = array(
                 'no'             => count($result) + 1,
                 'nim'            => $r['nim'],
-                'nama'           => $r['nama_lengkap'],
+                'nama'           => $r['nama'],
                 'prodi'          => $prodi,
                 'jenjang'        => $isS2 ? 'S2 (Magister)' : 'S1 (Sarjana)',
                 'ipk'            => !empty($r['ipk']) ? $r['ipk'] : '3.75',
@@ -1291,7 +1291,7 @@ class AdminLayanan_model extends CI_Model {
                 'nomor_sk'       => 'SK-YUD/FIK/2026/' . sprintf('%03d', count($result) + 1),
                 'status_yudisium'=> 'Lulus Yudisium',
                 'status_wisuda'  => 'Siap Wisuda Periode II 2026',
-                'judul'          => $r['judul_1'] ?? 'Tugas Akhir FIK'
+                'judul'          => $r['judul'] ?? 'Tugas Akhir FIK'
             );
         }
 

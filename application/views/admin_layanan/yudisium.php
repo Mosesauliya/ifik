@@ -89,8 +89,59 @@
             </div>
         </div>
 
-        <!-- Jenjang Tab Switcher (S1 vs S2) -->
-        <div class="flex items-center gap-2 mb-6 border-b border-slate-200/80 pb-3">
+        <!-- 4 Stat Overview Cards (Matching Pendaftaran Sidang Layout) -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+            <!-- Total Calon Yudisium -->
+            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs sm:shadow-sm flex items-center justify-between">
+                <div class="min-w-0">
+                    <span class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider block truncate">Total Yudisium</span>
+                    <span class="text-xl sm:text-3xl font-extrabold text-slate-800 mt-0.5 block"><?= $stats['total'] ?? 0; ?></span>
+                    <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium block">Semua Jenjang</span>
+                </div>
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center text-lg sm:text-xl shrink-0">
+                    <i class="bi bi-mortarboard"></i>
+                </div>
+            </div>
+
+            <!-- Program Sarjana (S1) -->
+            <a href="<?= site_url('adminlayanan/yudisium?jenjang=s1') ?>" class="bg-white p-4 sm:p-5 rounded-2xl border border-orange-200/80 shadow-xs sm:shadow-sm flex items-center justify-between hover:border-orange-400 transition group">
+                <div class="min-w-0">
+                    <span class="text-[10px] sm:text-xs font-bold text-orange-600 uppercase tracking-wider block truncate">Program S1</span>
+                    <span class="text-xl sm:text-3xl font-extrabold text-slate-800 mt-0.5 block group-hover:text-orange-600 transition"><?= $stats['total_s1'] ?? 0; ?></span>
+                    <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium block">Sarjana S1 FIK</span>
+                </div>
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center text-lg sm:text-xl shrink-0">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+            </a>
+
+            <!-- Program Magister (S2) -->
+            <a href="<?= site_url('adminlayanan/yudisium?jenjang=s2') ?>" class="bg-white p-4 sm:p-5 rounded-2xl border border-purple-200/80 shadow-xs sm:shadow-sm flex items-center justify-between hover:border-purple-400 transition group">
+                <div class="min-w-0">
+                    <span class="text-[10px] sm:text-xs font-bold text-purple-600 uppercase tracking-wider block truncate">Program S2</span>
+                    <span class="text-xl sm:text-3xl font-extrabold text-slate-800 mt-0.5 block group-hover:text-purple-600 transition"><?= $stats['total_s2'] ?? 0; ?></span>
+                    <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium block">Magister S2 FIK</span>
+                </div>
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg sm:text-xl shrink-0">
+                    <i class="bi bi-award-fill"></i>
+                </div>
+            </a>
+
+            <!-- Siap Wisuda -->
+            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-emerald-200/80 shadow-xs sm:shadow-sm flex items-center justify-between">
+                <div class="min-w-0">
+                    <span class="text-[10px] sm:text-xs font-bold text-emerald-600 uppercase tracking-wider block truncate">Siap Wisuda</span>
+                    <span class="text-xl sm:text-3xl font-extrabold text-slate-800 mt-0.5 block"><?= $stats['siap_wisuda'] ?? 0; ?></span>
+                    <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium block">Periode II 2026</span>
+                </div>
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg sm:text-xl shrink-0">
+                    <i class="bi bi-check2-all"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Jenjang Tab Switcher Pills -->
+        <div class="flex items-center gap-2 mb-6">
             <a href="<?= site_url('adminlayanan/yudisium?jenjang=s1'); ?>" 
                class="px-5 py-2.5 rounded-2xl text-xs font-extrabold transition flex items-center gap-2 <?= ($jenjang ?? 's1') === 's1' ? 'bg-orange-600 text-white shadow-md shadow-orange-500/20' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200' ?>">
                 <i class="bi bi-mortarboard"></i> Program Sarjana (S1)
