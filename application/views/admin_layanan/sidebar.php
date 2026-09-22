@@ -18,20 +18,45 @@ $laaNavItems = [
         ]
     ],
     [
+        'heading' => 'Pendaftaran Sidang',
+        'href'    => site_url('adminlayanan/pendaftaran_sidang'),
+        'icon_3d' => 'assets/images/icons_3d/pendaftaran.png'
+    ],
+    [
+        'heading' => 'Lihat Pembimbing',
+        'href'    => site_url('adminlayanan/lihat_pembimbing'),
+        'icon_3d' => 'assets/images/icons_3d/jadwal.png'
+    ],
+    [
+        'heading' => 'Yudisium',
+        'href'    => site_url('adminlayanan/yudisium'),
+        'icon_3d' => 'assets/images/icons_3d/status.png'
+    ],
+    [
+        'heading' => 'Jadwal Sidang',
+        'href'    => site_url('adminlayanan/jadwal_sidang'),
+        'icon_3d' => 'assets/images/icons_3d/jadwal.png'
+    ],
+    [
+        'heading' => 'BAP Sidang',
+        'href'    => site_url('adminlayanan/bap_sidang'),
+        'icon_3d' => 'assets/images/icons_3d/dokumen.png'
+    ],
+    [
         'heading' => 'Kelola Tiket LAA',
         'href'    => site_url('adminlayanan/ticketing'),
         'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'
     ],
     [
         'heading' => 'Keluar',
-        'href' => site_url('login/logout'),
+        'href'    => site_url('login/logout'),
         'icon_3d' => 'assets/images/icons_3d/logout.png'
     ]
 ];
 ?>
 
-<!-- Curved Sidebar Stylesheet -->
-<link rel="stylesheet" href="<?= base_url('assets/css/curved_sidebar.css?v=' . time()); ?>">
+<!-- LAA Standalone Sidebar Stylesheet -->
+<link rel="stylesheet" href="<?= base_url('assets/css/laa_sidebar.css?v=' . time()); ?>">
 
 <style>
 /* Dedicated LAA Accordion Animation */

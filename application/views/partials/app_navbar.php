@@ -95,12 +95,32 @@
                             <i class="bi bi-file-earmark-text text-orange-500"></i>
                             <span>Pendaftaran TA</span>
                         </a>
+                        <a href="<?= site_url('adminlayanan/pendaftaran_sidang'); ?>" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-slate-700 hover:text-orange-600 hover:bg-orange-50 transition-colors <?= in_array($sub_seg, ['pendaftaran_sidang', 'detail_pendaftaran_sidang']) ? 'text-orange-600 font-bold bg-orange-50/60' : '' ?>">
+                            <i class="bi bi-mortarboard text-amber-500"></i>
+                            <span>Pendaftaran Sidang</span>
+                        </a>
+                        <a href="<?= site_url('adminlayanan/lihat_pembimbing'); ?>" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-slate-700 hover:text-orange-600 hover:bg-orange-50 transition-colors <?= $sub_seg === 'lihat_pembimbing' ? 'text-orange-600 font-bold bg-orange-50/60' : '' ?>">
+                            <i class="bi bi-people text-blue-500"></i>
+                            <span>Lihat Pembimbing</span>
+                        </a>
+                        <a href="<?= site_url('adminlayanan/jadwal_sidang'); ?>" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-slate-700 hover:text-orange-600 hover:bg-orange-50 transition-colors <?= $sub_seg === 'jadwal_sidang' ? 'text-orange-600 font-bold bg-orange-50/60' : '' ?>">
+                            <i class="bi bi-calendar-check text-cyan-500"></i>
+                            <span>Jadwal Sidang</span>
+                        </a>
+                        <a href="<?= site_url('adminlayanan/bap_sidang'); ?>" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-slate-700 hover:text-orange-600 hover:bg-orange-50 transition-colors <?= in_array($sub_seg, ['bap_sidang', 'preview_bap', 'cetak_bap']) ? 'text-orange-600 font-bold bg-orange-50/60' : '' ?>">
+                            <i class="bi bi-file-earmark-check text-rose-500"></i>
+                            <span>BAP Sidang</span>
+                        </a>
+                        <a href="<?= site_url('adminlayanan/yudisium'); ?>" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-slate-700 hover:text-orange-600 hover:bg-orange-50 transition-colors <?= $sub_seg === 'yudisium' ? 'text-orange-600 font-bold bg-orange-50/60' : '' ?>">
+                            <i class="bi bi-award text-purple-500"></i>
+                            <span>Yudisium (S1 & S2)</span>
+                        </a>
                         <a href="<?= site_url('adminlayanan/lulus_sidang'); ?>" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-slate-700 hover:text-orange-600 hover:bg-orange-50 transition-colors <?= $sub_seg === 'lulus_sidang' ? 'text-orange-600 font-bold bg-orange-50/60' : '' ?>">
-                            <i class="bi bi-mortarboard text-emerald-500"></i>
+                            <i class="bi bi-patch-check text-emerald-500"></i>
                             <span>Sudah Lulus Sidang</span>
                         </a>
                         <a href="<?= site_url('adminlayanan/status_peserta_ta'); ?>" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-slate-700 hover:text-orange-600 hover:bg-orange-50 transition-colors <?= $sub_seg === 'status_peserta_ta' ? 'text-orange-600 font-bold bg-orange-50/60' : '' ?>">
-                            <i class="bi bi-person-lines-fill text-blue-500"></i>
+                            <i class="bi bi-person-lines-fill text-indigo-500"></i>
                             <span>Status Peserta TA</span>
                         </a>
                         <div class="my-1 border-t border-slate-100"></div>

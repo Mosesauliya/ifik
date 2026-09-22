@@ -837,5 +837,325 @@ class AdminLayanan extends CI_Controller {
         $this->output->set_content_type('application/json')
                      ->set_output(json_encode(['success' => true, 'message' => $msg]));
     }
+
+    // =========================================================================
+    // 1. PENDAFTARAN SIDANG CONTROLLER ACTIONS
+    // =========================================================================
+
+    /**
+     * Halaman List Pendaftar Sidang
+     */
+    public function pendaftaran_sidang() {
+        $search        = trim($this->input->get('q') ?? '');
+        $cat           = trim($this->input->get('cat') ?? 'query');
+        $filter_jenis  = trim($this->input->get('jenis') ?? 'all');   // 'all', 'sidang', 'non-sidang'
+        $filter_status = trim($this->input->get('status') ?? 'all');  // 'all', 'disetujui', 'pending'
+
+        $data['title']          = 'Pendaftaran Sidang - Admin Layanan';
+        $data['search']         = $search;
+        $data['cat']            = $cat;
+        $data['filter_jenis']   = $filter_jenis;
+        $data['filter_status']  = $filter_status;
+        $data['stats']          = $this->AdminLayanan_model->get_pendaftaran_sidang_stats();
+        $data['list']           = $this->AdminLayanan_model->get_pendaftaran_sidang_list($search, $filter_jenis, $filter_status, $cat);
+
+        $this->load->view('admin_layanan/pendaftaran_sidang', $data);
+    }
+
+    /**
+     * Halaman Detail & Verifikasi 7 Berkas Pendaftaran Sidang Mahasiswa
+     */
+    public function detail_pendaftaran_sidang($nim = '') {
+        if (empty($nim)) {
+            $this->session->set_flashdata('error', 'NIM mahasiswa tidak boleh kosong.');
+            redirect('adminlayanan/pendaftaran_sidang');
+            return;
+        }
+
+        $detail = $this->AdminLayanan_model->get_detail_pendaftaran_sidang($nim);
+        if (!$detail) {
+            $this->session->set_flashdata('error', 'Data pendaftaran sidang untuk NIM ' . $nim . ' tidak ditemukan.');
+            redirect('adminlayanan/pendaftaran_sidang');
+            return;
+        }
+
+        $data['title']  = 'Detail Pendaftaran Sidang - ' . $detail['nama'];
+        $data['detail'] = $detail;
+        $data['berkas'] = $this->AdminLayanan_model->get_berkas_pendaftaran_sidang($nim);
+
+        $this->load->view('admin_layanan/detail_pendaftaran_sidang', $data);
+    }
+
+    /**
+     * AJAX: Update status verifikasi 1 berkas pendaftaran sidang
+     */
+    public function ajax_update_berkas_sidang() {
+        $nim         = trim($this->input->post('nim') ?? '');
+        $kode_berkas = trim($this->input->post('kode_berkas') ?? '');
+        $status      = trim($this->input->post('status') ?? 'Disetujui Admin LAA');
+        $catatan     = trim($this->input->post('catatan') ?? '');
+
+        if (empty($nim) || empty($kode_berkas)) {
+            $this->output->set_content_type('application/json')
+                         ->set_output(json_encode(['success' => false, 'message' => 'Parameter tidak valid.']));
+            return;
+        }
+
+        $this->AdminLayanan_model->save_status_berkas_sidang($nim, $kode_berkas, $status, $catatan);
+
+        $this->output->set_content_type('application/json')
+                     ->set_output(json_encode([
+                         'success' => true,
+                         'message' => 'Status berkas berhasil diupdate menjadi: ' . $status
+                     ]));
+    }
+
+    /**
+     * Submit Verifikasi Sidang Akhir
+     */
+    public function submit_approval_sidang($nim = '') {
+        $status  = trim($this->input->post('status') ?? 'Disetujui Admin LAA');
+        $catatan = trim($this->input->post('catatan') ?? '');
+
+        if (!empty($nim) && $this->db->table_exists('guidance')) {
+            $this->db->where('id_mhs', $nim)->or_where('id', $nim)->update('guidance', [
+                'status_filesidang'           => $status,
+                'komentar_pendaftaran_sidang' => $catatan
+            ]);
+            $this->session->set_flashdata('success', 'Status pendaftaran sidang mahasiswa NIM ' . $nim . ' berhasil diupdate!');
+        }
+
+        redirect('adminlayanan/detail_pendaftaran_sidang/' . $nim);
+    }
+
+    // =========================================================================
+    // 2. LIHAT PEMBIMBING CONTROLLER ACTIONS
+    // =========================================================================
+
+    /**
+     * Halaman Tabel Rekapitulasi Pembimbing
+     */
+    public function lihat_pembimbing() {
+        $search        = trim($this->input->get('q') ?? '');
+        $cat           = trim($this->input->get('cat') ?? 'query');
+        $filter_prodi  = trim($this->input->get('prodi') ?? 'all');
+        $filter_status = trim($this->input->get('status') ?? 'all');
+
+        $data['title']         = 'Lihat Pembimbing Tugas Akhir - Admin Layanan';
+        $data['search']        = $search;
+        $data['cat']           = $cat;
+        $data['filter_prodi']  = $filter_prodi;
+        $data['filter_status'] = $filter_status;
+        $data['list']          = $this->AdminLayanan_model->get_lihat_pembimbing_list($search, $filter_prodi, $filter_status, $cat);
+
+        $this->load->view('admin_layanan/lihat_pembimbing', $data);
+    }
+
+    /**
+     * Export Data Pembimbing ke Spreadsheet CSV (Excel Friendly)
+     */
+    public function export_pembimbing() {
+        $list = $this->AdminLayanan_model->get_lihat_pembimbing_list('', 'all', 'all', 'query');
+        
+        $filename = "Rekap_Pembimbing_TA_" . date('Ymd_His') . ".csv";
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=' . $filename);
+
+        $output = fopen('php://output', 'w');
+        // Add UTF-8 BOM for Excel compatibility
+        fputs($output, "\xEF\xBB\xBF");
+
+        // Header
+        fputcsv($output, ['No', 'Nama Mahasiswa', 'NIM', 'Program Studi', 'Konsentrasi', 'Dosen Wali', 'Pembimbing 1', 'Pembimbing 2', 'Tanggal Approve', 'Status', 'Tahapan', 'Jenis TA']);
+
+        // Data Rows
+        foreach ($list as $r) {
+            fputcsv($output, [
+                $r['no'],
+                $r['nama'],
+                "'" . $r['nim'], // single quote to prevent scientific notation in Excel
+                $r['prodi'],
+                $r['konsentrasi'],
+                $r['dosen_wali'],
+                $r['pembimbing_1'],
+                $r['pembimbing_2'],
+                $r['tanggal_approve'],
+                $r['status'],
+                $r['tahapan'],
+                $r['jenis_ta']
+            ]);
+        }
+
+        fclose($output);
+        exit();
+    }
+
+    // =========================================================================
+    // 3. YUDISIUM CONTROLLER ACTIONS (S1 & S2)
+    // =========================================================================
+
+    /**
+     * Halaman Rekapitulasi Yudisium
+     */
+    public function yudisium() {
+        $search  = trim($this->input->get('q') ?? '');
+        $cat     = trim($this->input->get('cat') ?? 'query');
+        $jenjang = trim($this->input->get('jenjang') ?? 's1'); // 's1' or 's2'
+
+        $data['title']       = 'Rekapitulasi Yudisium S1 & S2 - Admin Layanan';
+        $data['search']      = $search;
+        $data['cat']         = $cat;
+        $data['jenjang']     = $jenjang;
+        $data['stats']       = $this->AdminLayanan_model->get_yudisium_stats();
+        $data['list']        = $this->AdminLayanan_model->get_yudisium_list($search, $jenjang, $cat);
+
+        $this->load->view('admin_layanan/yudisium', $data);
+    }
+
+    /**
+     * Export Data Yudisium ke CSV / Excel
+     */
+    public function export_yudisium() {
+        $jenjang = trim($this->input->get('jenjang') ?? 's1');
+        $list = $this->AdminLayanan_model->get_yudisium_list('', $jenjang, 'query');
+
+        $filename = "Rekap_Yudisium_" . strtoupper($jenjang) . "_" . date('Ymd_His') . ".csv";
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=' . $filename);
+
+        $output = fopen('php://output', 'w');
+        fputs($output, "\xEF\xBB\xBF");
+
+        fputcsv($output, ['No', 'NIM', 'Nama Mahasiswa', 'Program Studi', 'Jenjang', 'IPK', 'Tanggal Lulus Sidang', 'Nomor SK Yudisium', 'Status Yudisium', 'Status Wisuda']);
+
+        foreach ($list as $r) {
+            fputcsv($output, [
+                $r['no'],
+                "'" . $r['nim'],
+                $r['nama'],
+                $r['prodi'],
+                $r['jenjang'],
+                $r['ipk'],
+                $r['tanggal_lulus'],
+                $r['nomor_sk'],
+                $r['status_yudisium'],
+                $r['status_wisuda']
+            ]);
+        }
+
+        fclose($output);
+        exit();
+    }
+
+    // =========================================================================
+    // 4. JADWAL SIDANG CONTROLLER ACTIONS
+    // =========================================================================
+
+    /**
+     * Halaman Jadwal Sidang Tugas Akhir
+     */
+    public function jadwal_sidang() {
+        $search         = trim($this->input->get('q') ?? '');
+        $cat            = trim($this->input->get('cat') ?? 'query');
+        $filter_tanggal = trim($this->input->get('tanggal') ?? 'all');
+        $filter_prodi   = trim($this->input->get('prodi') ?? 'all');
+
+        $data['title']          = 'Jadwal Sidang Tugas Akhir - Admin Layanan';
+        $data['search']         = $search;
+        $data['cat']            = $cat;
+        $data['filter_tanggal'] = $filter_tanggal;
+        $data['filter_prodi']   = $filter_prodi;
+        $data['list']           = $this->AdminLayanan_model->get_jadwal_sidang_list($search, $filter_tanggal, $filter_prodi, $cat);
+
+        $this->load->view('admin_layanan/jadwal_sidang', $data);
+    }
+
+    /**
+     * Export Jadwal Sidang ke Spreadsheet CSV
+     */
+    public function export_jadwal_sidang() {
+        $list = $this->AdminLayanan_model->get_jadwal_sidang_list('', 'all', 'all', 'query');
+
+        $filename = "Jadwal_Sidang_TA_" . date('Ymd_His') . ".csv";
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=' . $filename);
+
+        $output = fopen('php://output', 'w');
+        fputs($output, "\xEF\xBB\xBF");
+
+        fputcsv($output, ['No', 'Hari & Tanggal', 'Waktu', 'Ruangan', 'NIM', 'Nama Mahasiswa', 'Program Studi', 'Judul Tugas Akhir', 'Pembimbing 1', 'Pembimbing 2', 'Penguji 1', 'Penguji 2', 'Status Sidang']);
+
+        foreach ($list as $r) {
+            fputcsv($output, [
+                $r['no'],
+                $r['hari_tanggal'],
+                $r['waktu'],
+                $r['ruangan'],
+                "'" . $r['nim'],
+                $r['nama'],
+                $r['prodi'],
+                $r['judul'],
+                $r['pembimbing_1'],
+                $r['pembimbing_2'],
+                $r['penguji_1'],
+                $r['penguji_2'],
+                $r['status_sidang']
+            ]);
+        }
+
+        fclose($output);
+        exit();
+    }
+
+    // =========================================================================
+    // 5. BAP SIDANG CONTROLLER ACTIONS
+    // =========================================================================
+
+    /**
+     * Halaman Tabel Pengajuan BAP Sidang
+     */
+    public function bap_sidang() {
+        $search        = trim($this->input->get('q') ?? '');
+        $cat           = trim($this->input->get('cat') ?? 'query');
+        $filter_status = trim($this->input->get('status') ?? 'all');
+
+        $data['title']         = 'Berita Acara Sidang (BAP) - Admin Layanan';
+        $data['search']        = $search;
+        $data['cat']           = $cat;
+        $data['filter_status'] = $filter_status;
+        $data['list']          = $this->AdminLayanan_model->get_bap_sidang_list($search, $filter_status, $cat);
+
+        $this->load->view('admin_layanan/bap_sidang', $data);
+    }
+
+    /**
+     * AJAX / Modal Preview BAP Sidang Lengkap 2 Halaman
+     */
+    public function preview_bap($nim = '') {
+        if (empty($nim)) {
+            $nim = '1601200295';
+        }
+        $bap = $this->AdminLayanan_model->get_detail_bap_sidang($nim);
+
+        if ($this->input->is_ajax_request()) {
+            $this->output->set_content_type('application/json')
+                         ->set_output(json_encode(['success' => true, 'bap' => $bap]));
+            return;
+        }
+
+        $data['title'] = 'Preview Dokumen BAP Sidang - ' . $bap['nama'];
+        $data['bap']   = $bap;
+        $this->load->view('admin_layanan/template_bap_pdf', $data);
+    }
+
+    /**
+     * Cetak BAP Sidang (Format Print-Ready 2 Halaman)
+     */
+    public function cetak_bap($nim = '') {
+        $data['bap'] = $this->AdminLayanan_model->get_detail_bap_sidang($nim);
+        $data['title'] = 'Cetak BAP Sidang - ' . $data['bap']['nama'];
+        $data['auto_print'] = true;
+        $this->load->view('admin_layanan/template_bap_pdf', $data);
+    }
 }
 
