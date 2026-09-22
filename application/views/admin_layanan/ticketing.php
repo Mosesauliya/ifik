@@ -262,7 +262,12 @@
                                             <?= htmlspecialchars($t['nama']); ?>
                                             <div class="text-[10px] text-slate-400 font-mono"><?= htmlspecialchars($t['nim_nip']); ?></div>
                                         </td>
-                                        <td class="p-3"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold text-[10px]"><?= htmlspecialchars($t['kategori']); ?></span></td>
+                                        <td class="p-3">
+                                            <?php if (!empty($t['unit_terkait'])): ?>
+                                                <span class="px-2 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-100 font-semibold text-[10px] block w-fit mb-1"><?= htmlspecialchars($t['unit_terkait']); ?></span>
+                                            <?php endif; ?>
+                                            <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold text-[10px]"><?= htmlspecialchars($t['kategori']); ?></span>
+                                        </td>
                                         <td class="p-3 max-w-xs truncate" title="<?= htmlspecialchars($t['deskripsi'] ?? ''); ?>"><?= htmlspecialchars($t['perihal']); ?></td>
                                         <td class="p-3">
                                             <?php if ($t['prioritas'] === 'Urgent'): ?>
@@ -353,8 +358,11 @@
                                     </div>
                                 </div>
 
-                                <!-- Kategori + Prioritas -->
+                                <!-- Unit Terkait + Kategori + Prioritas -->
                                 <div class="flex flex-wrap items-center gap-1.5">
+                                    <?php if (!empty($t['unit_terkait'])): ?>
+                                        <span class="px-2 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-100 font-semibold text-[10px]"><?= htmlspecialchars($t['unit_terkait']); ?></span>
+                                    <?php endif; ?>
                                     <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold text-[10px]"><?= htmlspecialchars($t['kategori']); ?></span>
                                     <span class="px-2 py-0.5 rounded-full font-bold text-[10px] <?= $prioClass ?>"><?= $prioLabel ?></span>
                                 </div>

@@ -736,6 +736,76 @@ class AdminLayanan_model extends CI_Model {
     // ==========================================
 
     public function get_tickets($type = 'all', $search = '') {
+        if ($this->db->table_exists('tb_ticketing')) {
+            $this->db->select('*');
+            $this->db->from('tb_ticketing');
+            
+            // Filter recipient Admin LAA
+            $this->db->group_start();
+            $this->db->where('tujuan_penerima', 'Admin LAA');
+            $this->db->or_like('unit', 'Admin LAA');
+            $this->db->or_like('unit', 'LAA');
+            $this->db->or_like('unit', 'Layanan');
+            $this->db->or_like('unit_terkait', 'LAA');
+            $this->db->or_like('unit_terkait', 'Layanan');
+            $this->db->group_end();
+
+            if ($type === 'approval') {
+                $this->db->where('status', 'Dikirim');
+            } elseif ($type === 'riwayat') {
+                $this->db->where_in('status', ['Sedang Diproses', 'Closed', 'Diproses', 'Selesai', 'Ditutup']);
+            }
+
+            if (!empty($search)) {
+                $this->db->group_start();
+                $this->db->like('id', $search);
+                $this->db->or_like('id_user', $search);
+                $this->db->or_like('nama', $search);
+                $this->db->or_like('kategori', $search);
+                $this->db->or_like('isi_ticketing', $search);
+                $this->db->group_end();
+            }
+
+            $this->db->order_by('tgl_ticketing', 'DESC');
+            $this->db->order_by('id', 'DESC');
+            $rows = $this->db->get()->result_array();
+
+            $formatted = [];
+            foreach ($rows as $r) {
+                $subjek = 'Kendala ' . ($r['kategori'] ?? 'Layanan');
+                $deskripsi = $r['isi_ticketing'] ?? '';
+                if (preg_match('/<strong>(.*?)<\/strong><br>(.*)/is', $r['isi_ticketing'] ?? '', $m)) {
+                    $subjek = trim(strip_tags($m[1]));
+                    $deskripsi = trim($m[2]);
+                }
+
+                $st = 'Pending';
+                if ($r['status'] === 'Sedang Diproses') $st = 'Approved';
+                elseif ($r['status'] === 'Closed') $st = 'Selesai';
+                elseif ($r['status'] === 'Dikirim') $st = 'Pending';
+                else $st = $r['status'];
+
+                $formatted[] = [
+                    'id'            => $r['id'],
+                    'ticket_number' => $r['id'],
+                    'nim_nip'       => $r['id_user'] ?? '-',
+                    'nama'          => $r['nama'] ?? 'Mahasiswa',
+                    'email'         => $r['email'] ?? '',
+                    'tujuan_penerima' => $r['tujuan_penerima'] ?? 'Admin LAA',
+                    'unit_terkait'  => $r['unit_terkait'] ?? ($r['unit'] ?? 'Layanan Akademik (LAA)'),
+                    'kategori'      => $r['kategori'] ?? 'Layanan Umum',
+                    'perihal'       => $subjek,
+                    'deskripsi'     => $deskripsi,
+                    'prioritas'     => 'Normal',
+                    'status'        => $st,
+                    'catatan'       => $r['keterangan'] ?? '',
+                    'created_at'    => !empty($r['tgl_ticketing']) ? ($r['tgl_ticketing'] . ' 08:00:00') : date('Y-m-d H:i:s'),
+                    'updated_at'    => $r['tgl_closed'] ?? ($r['tgl_diproses'] ?? date('Y-m-d H:i:s'))
+                ];
+            }
+            return $formatted;
+        }
+
         if (!$this->db->table_exists('ticketing_laa')) return array();
 
         $this->db->select('*');
@@ -761,6 +831,23 @@ class AdminLayanan_model extends CI_Model {
     }
 
     public function save_ticket($data) {
+        if ($this->db->table_exists('tb_ticketing')) {
+            $this->load->model('DosenTicketing_model');
+            return $this->DosenTicketing_model->insert([
+                'id_user'         => $data['nim_nip'] ?? '0',
+                'nama'            => $data['nama'] ?? 'Pemohon',
+                'email'           => $data['email'] ?? '',
+                'tujuan_penerima' => 'Admin LAA',
+                'unit_terkait'    => 'Layanan Administrasi Akademik (LAA)',
+                'unit_tujuan'     => 'Layanan Administrasi Akademik (LAA)',
+                'kategori'        => $data['kategori'] ?? 'Layanan Umum',
+                'prioritas'       => $data['prioritas'] ?? 'Sedang',
+                'subjek'          => $data['perihal'] ?? 'Tiket Layanan',
+                'deskripsi'       => $data['deskripsi'] ?? '',
+                'status'          => 'Dikirim'
+            ]);
+        }
+
         if (!$this->db->table_exists('ticketing_laa')) return false;
         if (empty($data['ticket_number'])) {
             $data['ticket_number'] = 'TICK-' . date('Ymd') . '-' . rand(1000, 9999);
@@ -775,6 +862,31 @@ class AdminLayanan_model extends CI_Model {
     }
 
     public function update_ticket_status($id, $status, $catatan = '') {
+        if ($this->db->table_exists('tb_ticketing')) {
+            $mappedStatus = 'Dikirim';
+            $tglDiproses = NULL;
+            $tglClosed = NULL;
+            $now = date('Y-m-d H:i:s');
+
+            if ($status === 'Approved' || $status === 'Diproses') {
+                $mappedStatus = 'Sedang Diproses';
+                $tglDiproses = $now;
+            } elseif ($status === 'Selesai' || $status === 'Closed' || $status === 'Rejected') {
+                $mappedStatus = 'Closed';
+                $tglClosed = $now;
+            }
+
+            $updateData = ['status' => $mappedStatus];
+            if (!empty($catatan)) {
+                $updateData['keterangan'] = $catatan;
+            }
+            if ($tglDiproses) $updateData['tgl_diproses'] = $tglDiproses;
+            if ($tglClosed) $updateData['tgl_closed'] = $tglClosed;
+
+            $this->db->where('id', $id);
+            return $this->db->update('tb_ticketing', $updateData);
+        }
+
         if (!$this->db->table_exists('ticketing_laa')) return false;
         $this->db->where('id', $id);
         return $this->db->update('ticketing_laa', [

@@ -669,44 +669,156 @@ class DosenWali_model extends CI_Model {
     }
 
     // Ambil nama file tanda tangan digital dosen
-    public function get_tanda_tangan($nip) {
+    public function get_tanda_tangan($nip = null) {
+        $userId = $this->session->userdata('user_id');
+
+        if ($this->db->table_exists('user')) {
+            if (!empty($userId)) {
+                $row = $this->db->get_where('user', ['id' => $userId])->row_array();
+                if ($row) {
+                    if (!empty($row['ttd'])) return $row['ttd'];
+                    if (!empty($row['tanda_tangan'])) return $row['tanda_tangan'];
+                }
+            }
+            if (!empty($nip)) {
+                $this->db->group_start();
+                if ($this->db->field_exists('nip', 'user')) $this->db->where('nip', $nip);
+                if ($this->db->field_exists('nidn_nim', 'user')) $this->db->or_where('nidn_nim', $nip);
+                $this->db->or_where('username', $nip);
+                $this->db->or_where('id', $nip);
+                $this->db->group_end();
+                $row = $this->db->get('user')->row_array();
+                if ($row) {
+                    if (!empty($row['ttd'])) return $row['ttd'];
+                    if (!empty($row['tanda_tangan'])) return $row['tanda_tangan'];
+                }
+            }
+        }
+
+        if ($this->db->table_exists('users')) {
+            if (!empty($userId)) {
+                $row = $this->db->get_where('users', ['id' => $userId])->row_array();
+                if ($row) {
+                    if (!empty($row['ttd'])) return $row['ttd'];
+                    if (!empty($row['tanda_tangan'])) return $row['tanda_tangan'];
+                }
+            }
+            if (!empty($nip)) {
+                $row = $this->db->get_where('users', ['nidn_nim' => $nip])->row_array();
+                if ($row) {
+                    if (!empty($row['ttd'])) return $row['ttd'];
+                    if (!empty($row['tanda_tangan'])) return $row['tanda_tangan'];
+                }
+            }
+        }
+
         if ($this->db->table_exists('dosen_wali') && $this->db->field_exists('tanda_tangan', 'dosen_wali')) {
             $row = $this->db->get_where('dosen_wali', ['nip' => $nip])->row_array();
             if (!empty($row['tanda_tangan'])) {
                 return $row['tanda_tangan'];
             }
         }
-        if ($this->db->table_exists('users') && $this->db->field_exists('tanda_tangan', 'users')) {
-            $row = $this->db->get_where('users', ['nidn_nim' => $nip])->row_array();
-            if (!empty($row['tanda_tangan'])) {
-                return $row['tanda_tangan'];
-            }
-        }
+
         return null;
     }
 
     // Simpan file tanda tangan digital dosen ke database
     public function save_tanda_tangan($nip, $filename) {
         $saved = false;
+        $userId = $this->session->userdata('user_id');
+
+        if ($this->db->table_exists('user')) {
+            $updateData = [];
+            if ($this->db->field_exists('ttd', 'user')) $updateData['ttd'] = $filename;
+            if ($this->db->field_exists('tanda_tangan', 'user')) $updateData['tanda_tangan'] = $filename;
+
+            if (!empty($updateData)) {
+                if (!empty($userId)) {
+                    $this->db->where('id', $userId)->update('user', $updateData);
+                    $saved = true;
+                }
+                if (!empty($nip)) {
+                    $this->db->group_start();
+                    if ($this->db->field_exists('nip', 'user')) $this->db->where('nip', $nip);
+                    if ($this->db->field_exists('nidn_nim', 'user')) $this->db->or_where('nidn_nim', $nip);
+                    $this->db->or_where('username', $nip);
+                    $this->db->or_where('id', $nip);
+                    $this->db->group_end();
+                    $this->db->update('user', $updateData);
+                    $saved = true;
+                }
+            }
+        }
+
+        if ($this->db->table_exists('users')) {
+            $updateData = [];
+            if ($this->db->field_exists('ttd', 'users')) $updateData['ttd'] = $filename;
+            if ($this->db->field_exists('tanda_tangan', 'users')) $updateData['tanda_tangan'] = $filename;
+
+            if (!empty($updateData)) {
+                if (!empty($userId)) {
+                    $this->db->where('id', $userId)->update('users', $updateData);
+                    $saved = true;
+                }
+                if (!empty($nip)) {
+                    $this->db->where('nidn_nim', $nip)->update('users', $updateData);
+                    $saved = true;
+                }
+            }
+        }
+
         if ($this->db->table_exists('dosen_wali') && $this->db->field_exists('tanda_tangan', 'dosen_wali')) {
             $this->db->where('nip', $nip)->update('dosen_wali', ['tanda_tangan' => $filename]);
             $saved = true;
         }
-        if ($this->db->table_exists('users') && $this->db->field_exists('tanda_tangan', 'users')) {
-            $this->db->where('nidn_nim', $nip)->update('users', ['tanda_tangan' => $filename]);
-            $saved = true;
-        }
+
         return $saved;
     }
 
     // Hapus tanda tangan digital dosen dari database
     public function delete_tanda_tangan($nip) {
+        $userId = $this->session->userdata('user_id');
+
+        if ($this->db->table_exists('user')) {
+            $updateData = [];
+            if ($this->db->field_exists('ttd', 'user')) $updateData['ttd'] = null;
+            if ($this->db->field_exists('tanda_tangan', 'user')) $updateData['tanda_tangan'] = null;
+
+            if (!empty($updateData)) {
+                if (!empty($userId)) {
+                    $this->db->where('id', $userId)->update('user', $updateData);
+                }
+                if (!empty($nip)) {
+                    $this->db->group_start();
+                    if ($this->db->field_exists('nip', 'user')) $this->db->where('nip', $nip);
+                    if ($this->db->field_exists('nidn_nim', 'user')) $this->db->or_where('nidn_nim', $nip);
+                    $this->db->or_where('username', $nip);
+                    $this->db->or_where('id', $nip);
+                    $this->db->group_end();
+                    $this->db->update('user', $updateData);
+                }
+            }
+        }
+
+        if ($this->db->table_exists('users')) {
+            $updateData = [];
+            if ($this->db->field_exists('ttd', 'users')) $updateData['ttd'] = null;
+            if ($this->db->field_exists('tanda_tangan', 'users')) $updateData['tanda_tangan'] = null;
+
+            if (!empty($updateData)) {
+                if (!empty($userId)) {
+                    $this->db->where('id', $userId)->update('users', $updateData);
+                }
+                if (!empty($nip)) {
+                    $this->db->where('nidn_nim', $nip)->update('users', $updateData);
+                }
+            }
+        }
+
         if ($this->db->table_exists('dosen_wali') && $this->db->field_exists('tanda_tangan', 'dosen_wali')) {
             $this->db->where('nip', $nip)->update('dosen_wali', ['tanda_tangan' => null]);
         }
-        if ($this->db->table_exists('users') && $this->db->field_exists('tanda_tangan', 'users')) {
-            $this->db->where('nidn_nim', $nip)->update('users', ['tanda_tangan' => null]);
-        }
+
         return true;
     }
 

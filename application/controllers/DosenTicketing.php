@@ -117,6 +117,26 @@ class DosenTicketing extends CI_Controller {
                 'email' => $email
             ],
             'custom_fields'     => $custom_fields,
+            'penerima_list'     => [
+                'Laboran'    => [
+                    'id'    => 'Laboran',
+                    'title' => 'Laboran',
+                    'desc'  => 'Fasilitas Lab, Hardware, Software, Jaringan & Sarpras',
+                    'icon'  => 'bi-pc-display-horizontal'
+                ],
+                'Dosen Kaur' => [
+                    'id'    => 'Dosen Kaur',
+                    'title' => 'Dosen Kaur',
+                    'desc'  => 'Kepala Urusan, Dosen Wali, Bimbingan & Perkuliahan',
+                    'icon'  => 'bi-person-video3'
+                ],
+                'Admin LAA'  => [
+                    'id'    => 'Admin LAA',
+                    'title' => 'Admin LAA',
+                    'desc'  => 'Layanan Akademik, Surat Pengantar, Ijazah & KTM',
+                    'icon'  => 'bi-building-check'
+                ]
+            ],
             'unit_kategori_map' => $unit_kategori_map,
             'prioritas_list'    => [
                 'Rendah'  => ['label' => 'Rendah', 'color' => 'slate', 'desc' => 'Pertanyaan umum / kendala minor'],
@@ -136,7 +156,9 @@ class DosenTicketing extends CI_Controller {
         $userId      = $this->session->userdata('user_id');
         $nidn        = $this->session->userdata('nidn_nim') ?: $this->session->userdata('nim');
         $namaLengkap = trim($this->input->post('nama_lengkap', true)) ?: ($this->session->userdata('name') ?: 'Dosen');
-        $unitTujuan      = trim($this->input->post('unit_tujuan', true));
+        $tujuanPenerima  = trim($this->input->post('tujuan_penerima', true)) ?: 'Dosen Kaur';
+        $unitTerkait     = trim($this->input->post('unit_terkait', true)) ?: (trim($this->input->post('unit_tujuan', true)) ?: 'Layanan Umum');
+        $unitTujuan      = $unitTerkait;
         $kategori        = trim($this->input->post('kategori', true));
         $kategoriLainnya = trim($this->input->post('kategori_lainnya', true));
         $prioritas       = trim($this->input->post('prioritas', true));
@@ -145,12 +167,12 @@ class DosenTicketing extends CI_Controller {
 
         // Validasi input
         $textOnly = trim(strip_tags($deskripsi));
-        if (empty($namaLengkap) || empty($unitTujuan) || empty($kategori) || empty($subjek) || empty($textOnly)) {
+        if (empty($namaLengkap) || empty($tujuanPenerima) || empty($unitTerkait) || empty($kategori) || empty($subjek) || empty($textOnly)) {
             if ($this->input->is_ajax_request()) {
-                echo json_encode(['status' => 'error', 'message' => 'Harap lengkapi semua kolom wajib (Nama Lengkap, Unit yang Dituju, Kategori, Subjek, dan Deskripsi).']);
+                echo json_encode(['status' => 'error', 'message' => 'Harap lengkapi semua kolom wajib (Nama Lengkap, Tujuan Penerima, Unit Terkait, Kategori, Subjek, dan Deskripsi).']);
                 return;
             }
-            $this->session->set_flashdata('error', 'Harap lengkapi semua kolom wajib (Nama Lengkap, Unit yang Dituju, Kategori, Subjek, dan Deskripsi).');
+            $this->session->set_flashdata('error', 'Harap lengkapi semua kolom wajib (Nama Lengkap, Tujuan Penerima, Unit Terkait, Kategori, Subjek, dan Deskripsi).');
             redirect('dosen/ticketing/input');
             return;
         }
@@ -266,24 +288,27 @@ class DosenTicketing extends CI_Controller {
         $kodeTiket = $this->DosenTicketing_model->generate_kode();
 
         $ticketData = [
-            'kode_tiket'  => $kodeTiket,
-            'id_user'     => $userId,
-            'nama_dosen'  => $namaLengkap,
-            'nidn'        => $nidn,
-            'unit_tujuan' => $unitTujuan,
-            'kategori'    => $kategori,
-            'prioritas'   => $prioritas,
-            'subjek'      => $subjek,
-            'deskripsi'   => $deskripsi,
+            'kode_tiket'         => $kodeTiket,
+            'id_user'            => $userId,
+            'nama_dosen'         => $namaLengkap,
+            'nama'               => $namaLengkap,
+            'nidn'               => $nidn,
+            'tujuan_penerima'    => $tujuanPenerima,
+            'unit_terkait'       => $unitTerkait,
+            'unit_tujuan'        => $unitTerkait,
+            'kategori'           => $kategori,
+            'prioritas'          => $prioritas,
+            'subjek'             => $subjek,
+            'deskripsi'          => $deskripsi,
             'custom_fields_data' => !empty($submittedCustomData) ? json_encode($submittedCustomData, JSON_UNESCAPED_UNICODE) : null,
-            'lampiran'    => $lampiranFile,
-            'status'      => 'Menunggu'
+            'lampiran'           => $lampiranFile,
+            'status'             => 'Menunggu'
         ];
 
         $insertId = $this->DosenTicketing_model->insert($ticketData);
 
         if ($insertId) {
-            $msg = "Tiket kendala berhasil dikirim dengan kode: <strong>{$kodeTiket}</strong> ke unit <strong>" . htmlspecialchars($unitTujuan) . "</strong>. Tim terkait akan segera meninjau laporan Anda.";
+            $msg = "Tiket kendala berhasil dikirim dengan kode: <strong>{$kodeTiket}</strong> ditujukan kepada <strong>" . htmlspecialchars($tujuanPenerima) . "</strong> (Lingkup Terkait: <strong>" . htmlspecialchars($unitTerkait) . "</strong>). Tim terkait akan segera meninjau laporan Anda.";
             $this->session->set_flashdata('success', $msg);
             if ($this->input->is_ajax_request()) {
                 echo json_encode([
@@ -373,47 +398,49 @@ class DosenTicketing extends CI_Controller {
             ->set_output(json_encode([
                 'status' => 'success',
                 'data'   => [
-                    'id'            => $ticket->id,
-                    'kode_tiket'    => $ticket->kode_tiket,
-                    'nama_dosen'    => $ticket->nama_dosen,
-                    'nidn'          => $ticket->nidn,
-                    'unit_tujuan'   => $ticket->unit_tujuan ?: 'Layanan IFIK',
-                    'kategori'      => $ticket->kategori,
-                    'prioritas'     => $ticket->prioritas,
-                    'subjek'        => $ticket->subjek,
-                    'deskripsi'     => $deskripsiFormatted,
-                    'lampiran'      => $ticket->lampiran,
-                    'lampiran_url'  => $ticket->lampiran ? base_url('uploads/ticketing/' . $ticket->lampiran) : null,
-                    'status'        => $ticket->status,
-                    'tanggapan'     => $ticket->tanggapan ? nl2br(htmlspecialchars($ticket->tanggapan)) : null,
-                    'tgl_tanggapan' => $ticket->tgl_tanggapan ? date('d M Y H:i', strtotime($ticket->tgl_tanggapan)) : null,
-                    'created_at'    => date('d M Y H:i', strtotime($ticket->created_at)),
-                    'updated_at'    => date('d M Y H:i', strtotime($ticket->updated_at))
+                    'id'              => $ticket->id,
+                    'kode_tiket'      => $ticket->kode_tiket,
+                    'nama_dosen'      => $ticket->nama_dosen,
+                    'nidn'            => $ticket->nidn,
+                    'tujuan_penerima' => $ticket->tujuan_penerima ?? 'Dosen Kaur',
+                    'unit_terkait'    => $ticket->unit_terkait ?? ($ticket->unit_tujuan ?: 'Layanan IFIK'),
+                    'unit_tujuan'     => $ticket->unit_terkait ?? ($ticket->unit_tujuan ?: 'Layanan IFIK'),
+                    'kategori'        => $ticket->kategori,
+                    'prioritas'       => $ticket->prioritas,
+                    'subjek'          => $ticket->subjek,
+                    'deskripsi'       => $deskripsiFormatted,
+                    'lampiran'        => $ticket->lampiran,
+                    'lampiran_url'    => $ticket->lampiran ? base_url('uploads/ticketing/' . $ticket->lampiran) : null,
+                    'status'          => $ticket->status,
+                    'tanggapan'       => $ticket->tanggapan ? nl2br(htmlspecialchars($ticket->tanggapan)) : null,
+                    'tgl_tanggapan'   => $ticket->tgl_tanggapan ? date('d M Y H:i', strtotime($ticket->tgl_tanggapan)) : null,
+                    'created_at'      => date('d M Y H:i', strtotime($ticket->created_at)),
+                    'updated_at'      => date('d M Y H:i', strtotime($ticket->updated_at))
                 ]
             ]));
     }
 
     /**
-     * Halaman Inbox Respon Ticketing khusus Role Dosen
+     * Halaman Inbox Respon Ticketing khusus Role Dosen Kaur
      */
     public function respon_index() {
         $filterStatus = $this->input->get('status', true) ?: 'all';
         $search = trim($this->input->get('q', true) ?? '');
 
-        // 1. Query Tiket Masuk Khusus Dosen dari Model
-        $tickets = $this->DosenTicketing_model->get_respon_tickets($filterStatus, $search);
+        // 1. Query Tiket Masuk Khusus Dosen Kaur dari Model
+        $tickets = $this->DosenTicketing_model->get_respon_tickets($filterStatus, $search, 'Dosen Kaur');
 
-        // 2. Hitung Statistik Khusus Unit Dosen
+        // 2. Hitung Statistik Khusus Unit Dosen Kaur
         $stats = [
-            'total'    => $this->DosenTicketing_model->count_respon_tickets('all'),
-            'menunggu' => $this->DosenTicketing_model->count_respon_tickets('Menunggu'),
-            'diproses' => $this->DosenTicketing_model->count_respon_tickets('Diproses'),
-            'selesai'  => $this->DosenTicketing_model->count_respon_tickets('Selesai'),
-            'ditutup'  => $this->DosenTicketing_model->count_respon_tickets('Ditutup')
+            'total'    => $this->DosenTicketing_model->count_respon_tickets('all', 'Dosen Kaur'),
+            'menunggu' => $this->DosenTicketing_model->count_respon_tickets('Menunggu', 'Dosen Kaur'),
+            'diproses' => $this->DosenTicketing_model->count_respon_tickets('Diproses', 'Dosen Kaur'),
+            'selesai'  => $this->DosenTicketing_model->count_respon_tickets('Selesai', 'Dosen Kaur'),
+            'ditutup'  => $this->DosenTicketing_model->count_respon_tickets('Ditutup', 'Dosen Kaur')
         ];
 
         $data = [
-            'title'        => 'Inbox Respon Tiket Dosen — IFIK Portal',
+            'title'        => 'Inbox Respon Tiket Dosen & Kaur — IFIK Portal',
             'tickets'      => $tickets,
             'stats'        => $stats,
             'filterStatus' => $filterStatus,

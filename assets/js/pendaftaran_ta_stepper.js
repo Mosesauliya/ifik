@@ -19,10 +19,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (urlStep && urlStep >= 1 && urlStep <= totalSteps) {
         currentStep = urlStep;
-    } else if (savedStep && savedStep >= 1 && savedStep <= totalSteps) {
-        currentStep = savedStep;
     } else if (serverStep && serverStep >= 1 && serverStep <= totalSteps) {
         currentStep = serverStep;
+        if (savedStep && savedStep > currentStep && savedStep <= totalSteps) {
+            currentStep = savedStep;
+        }
+    } else if (savedStep && savedStep >= 1 && savedStep <= totalSteps) {
+        currentStep = savedStep;
     }
 
     const btnNext = document.getElementById('btnNext');
@@ -360,15 +363,26 @@ document.addEventListener('DOMContentLoaded', function () {
                 isValid = false;
                 errorMessage = '⚠️ Harap pilih Jenis Tugas Akhir pada Langkah 1 terlebih dahulu!';
                 const trigger = currentContainer.querySelector('.dropdown-trigger');
-                if (trigger) trigger.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/20');
+                if (trigger) {
+                    trigger.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/20');
+                    trigger.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             } else if (!inputJ1 || !inputJ1.value.trim()) {
                 isValid = false;
                 errorMessage = '⚠️ Harap isi Judul Usulan 1 (Utama) pada Langkah 1!';
-                if (inputJ1) inputJ1.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/20');
+                if (inputJ1) {
+                    inputJ1.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/20');
+                    inputJ1.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    inputJ1.focus();
+                }
             } else if (!inputJEn || !inputJEn.value.trim()) {
                 isValid = false;
                 errorMessage = '⚠️ Harap isi Judul dalam Bahasa Inggris pada Langkah 1 (atau klik Translate Otomatis)!';
-                if (inputJEn) inputJEn.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/20');
+                if (inputJEn) {
+                    inputJEn.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/20');
+                    inputJEn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    inputJEn.focus();
+                }
             } else {
                 const trigger = currentContainer.querySelector('.dropdown-trigger');
                 if (trigger) trigger.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/20');
@@ -378,6 +392,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } else if (step === 2) {
             const reqCards = currentContainer.querySelectorAll('.doc-requirement-card[data-required="1"]');
             let missingDoc = null;
+            let firstMissingCard = null;
             reqCards.forEach(card => {
                 const fileInput = card.querySelector('.input-doc-file');
                 const oldInput = card.querySelector('.input-doc-old');
@@ -386,6 +401,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const titleEl = card.querySelector('h4');
                     missingDoc = titleEl ? titleEl.textContent.trim().replace(/^\d+\.\s*/, '').replace(/\s*(Wajib|Opsional)\s*$/gi, '') : 'Dokumen';
                     card.querySelector('.drop-zone')?.classList.add('border-rose-500', 'bg-rose-50');
+                    firstMissingCard = card;
                 } else if (hasFile) {
                     card.querySelector('.drop-zone')?.classList.remove('border-rose-500', 'bg-rose-50');
                 }
@@ -393,12 +409,17 @@ document.addEventListener('DOMContentLoaded', function () {
             if (missingDoc) {
                 isValid = false;
                 errorMessage = `⚠️ Mohon unggah berkas wajib "${missingDoc}" pada Langkah 2 sebelum melanjutkan!`;
+                if (firstMissingCard) {
+                    firstMissingCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             }
         } else if (step === 3) {
             const checkSubmit = document.getElementById('checkKonfirmasiSubmit');
             if (checkSubmit && !checkSubmit.checked) {
                 isValid = false;
                 errorMessage = '⚠️ Harap centang pernyataan konfirmasi sebelum mengirimkan pendaftaran!';
+                checkSubmit.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                checkSubmit.focus();
             }
         }
 
@@ -449,6 +470,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+
 
     // Custom 3D Glass Dropdown Interaction Handler
     const dropdowns = document.querySelectorAll('.custom-dropdown');
@@ -521,12 +543,28 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
-        // Prefill initialization for dropdowns
+        // Prefill initialization for dropdowns (without firing artificial saveDraft on load)
         if (hiddenInput && hiddenInput.value.trim() !== '') {
             const currentVal = hiddenInput.value.trim();
             options.forEach(opt => {
                 if (opt.getAttribute('data-value') === currentVal) {
-                    opt.click();
+                    const labelText = opt.querySelector('span')?.textContent || currentVal;
+                    if (triggerLabel) {
+                        triggerLabel.textContent = labelText;
+                        triggerLabel.className = 'trigger-label text-slate-900 font-semibold';
+                    }
+                    opt.classList.add('bg-orange-100/80', 'text-orange-700', 'font-bold');
+                    const check = opt.querySelector('.check-icon');
+                    if (check) check.classList.remove('hidden');
+
+                    if (hiddenInput.id === 'inputJenisTA') {
+                        const previewJenisTA = document.getElementById('previewJenisTA');
+                        const previewTextJenisTA = document.getElementById('previewTextJenisTA');
+                        if (previewJenisTA && previewTextJenisTA) {
+                            previewTextJenisTA.textContent = labelText;
+                            previewJenisTA.classList.remove('hidden');
+                        }
+                    }
                 }
             });
         }
@@ -554,7 +592,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const oldFileInput = document.querySelector(`input[type="hidden"][name="${fileInput.name}_old"]`);
 
-        function renderFileCard(file, isSaved = false) {
+        function renderFileCard(file, isSaved = false, shouldUpdateUI = true) {
             if (!file) return;
 
             if (fileNameEl) fileNameEl.textContent = file.name;
@@ -575,12 +613,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
             zone.classList.remove('border-rose-500', 'bg-rose-50');
             zone.classList.add('border-emerald-400', 'bg-emerald-50/20');
-            updateStepUI();
+            if (shouldUpdateUI) {
+                updateStepUI();
+            }
         }
 
-        // Initialize prefilled old file card on load
+        // Initialize prefilled old file card on load (without premature step UI update)
         if (oldFileInput && oldFileInput.value.trim() !== '') {
-            renderFileCard({ name: oldFileInput.value.split('/').pop(), size: 0 }, true);
+            renderFileCard({ name: oldFileInput.value.split('/').pop(), size: 0 }, true, false);
         }
 
         ['dragenter', 'dragover'].forEach(eventName => {
@@ -725,6 +765,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 setDbStatus('saved', 'Berkas berhasil disimpan di database');
                 showInPageAlert('✅ Berkas PDF berhasil diunggah & tersimpan aman di database!', 'success');
                 updateStepUI();
+                saveDraft(true, true, false);
             } else {
                 if (fileSizeEl) {
                     fileSizeEl.innerHTML = `<span class="text-rose-600 font-semibold flex items-center gap-1.5"><i class="bi bi-exclamation-triangle-fill text-rose-500"></i> Gagal: ${data.message || 'Error'}</span>`;
@@ -764,10 +805,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- DRAFT FORM PERSISTENCE (LOCAL STORAGE + DATABASE AUTO-SAVE) ---
+    // --- DRAFT FORM PERSISTENCE (LOCAL STORAGE + DATABASE AUTO-SAVE & MANUAL SAVE) ---
     let draftDebounceTimer = null;
 
-    function saveDraft(syncToServer = true) {
+    function saveDraft(syncToServer = true, forceImmediate = false, notifyUser = false) {
         try {
             const inputJenis = document.getElementById('inputJenisTA');
             const inputJ1 = document.getElementById('inputJudul1');
@@ -775,23 +816,32 @@ document.addEventListener('DOMContentLoaded', function () {
             const inputJ3 = document.getElementById('inputJudul3');
             const inputJEn = document.getElementById('inputJudulEn');
 
+            // Kumpulkan semua nama berkas PDF yang ada di form
+            const filesData = {};
+            document.querySelectorAll('.input-doc-old').forEach(input => {
+                if (input.name && input.value && input.value.trim() !== '') {
+                    filesData[input.name] = input.value.trim();
+                }
+            });
+
             const draft = {
                 jenis_ta: inputJenis ? inputJenis.value : '',
                 judul_1: inputJ1 ? inputJ1.value : '',
                 judul_2: inputJ2 ? inputJ2.value : '',
                 judul_3: inputJ3 ? inputJ3.value : '',
                 judul_en: inputJEn ? inputJEn.value : '',
-                draft_step: currentStep
+                draft_step: currentStep,
+                files: filesData
             };
 
             // 1. Simpan langsung ke memori lokal browser (localStorage)
             localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
 
-            // 2. Simpan otomatis langsung ke Database MySQL via AJAX
-            if (syncToServer && window.SAVE_DRAFT_AJAX_URL && (draft.jenis_ta || draft.judul_1)) {
-                clearTimeout(draftDebounceTimer);
-                setDbStatus('saving', 'Menyimpan perubahan ke database...');
-                draftDebounceTimer = setTimeout(() => {
+            // 2. Simpan ke Database MySQL via AJAX
+            if (syncToServer && window.SAVE_DRAFT_AJAX_URL) {
+                const executeAjaxSave = () => {
+                    setDbStatus('saving', 'Menyimpan perubahan ke database...');
+
                     const fd = new FormData();
                     fd.append('nim', userNim);
                     fd.append('jenis_ta', draft.jenis_ta);
@@ -801,6 +851,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     fd.append('judul_en', draft.judul_en);
                     fd.append('draft_step', currentStep);
 
+                    // Sertakan seluruh referensi file berkas
+                    for (const [fKey, fVal] of Object.entries(filesData)) {
+                        fd.append(fKey, fVal);
+                        fd.append(fKey.replace('_old', ''), fVal);
+                    }
+
                     fetch(window.SAVE_DRAFT_AJAX_URL, {
                         method: 'POST',
                         body: fd
@@ -808,12 +864,26 @@ document.addEventListener('DOMContentLoaded', function () {
                     .then(res => res.json())
                     .then(resData => {
                         setDbStatus('saved', 'Draft tersimpan di database');
+                        if (notifyUser) {
+                            showInPageAlert('✅ Draft formulir dan seluruh berkas berhasil disimpan di database server!', 'success');
+                        }
                     })
                     .catch(err => {
-                        console.warn('Auto-save draft warning:', err);
+                        console.warn('Save draft warning:', err);
                         setDbStatus('error', 'Gagal tersambung ke database');
+                        if (notifyUser) {
+                            showInPageAlert('⚠️ Gagal menghubungi server saat menyimpan draft.', 'error');
+                        }
                     });
-                }, 400);
+                };
+
+                clearTimeout(draftDebounceTimer);
+                if (forceImmediate) {
+                    executeAjaxSave();
+                } else {
+                    setDbStatus('saving', 'Menyimpan perubahan ke database...');
+                    draftDebounceTimer = setTimeout(executeAjaxSave, 400);
+                }
             }
         } catch (e) {
             console.warn('saveDraft error:', e);
@@ -844,6 +914,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     previewTextJenisTA.textContent = labelText;
                     previewJenisTA.classList.remove('hidden');
                 }
+                // Update dropdown options styling
+                document.querySelectorAll('#dropdownJenisTA .dropdown-option').forEach(o => {
+                    if (o.getAttribute('data-value') === val) {
+                        o.classList.add('bg-orange-100/80', 'text-orange-700', 'font-bold');
+                        o.querySelector('.check-icon')?.classList.remove('hidden');
+                    } else {
+                        o.classList.remove('bg-orange-100/80', 'text-orange-700', 'font-bold');
+                        o.querySelector('.check-icon')?.classList.add('hidden');
+                    }
+                });
             }
 
             if (inputJenis && inputJenis.value) {
@@ -882,6 +962,28 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             if (draft.judul_en && inputJEn && !inputJEn.value) {
                 inputJEn.value = draft.judul_en;
+            }
+
+            // Pulihkan berkas dari localStorage jika di HTML belum ada
+            if (draft.files && typeof draft.files === 'object') {
+                for (const [fName, fVal] of Object.entries(draft.files)) {
+                    const oldInp = document.querySelector(`input[type="hidden"][name="${fName}"]`);
+                    if (oldInp && !oldInp.value && fVal) {
+                        oldInp.value = fVal;
+                        const card = oldInp.closest('.doc-requirement-card');
+                        const z = card ? card.querySelector('.drop-zone') : null;
+                        if (z) {
+                            const nameEl = z.querySelector('.file-name');
+                            const pContainer = z.querySelector('.drop-zone-prompt');
+                            const sContainer = z.querySelector('.drop-zone-selected');
+                            if (nameEl) nameEl.textContent = fVal.split('/').pop();
+                            if (pContainer) { pContainer.classList.add('hidden'); pContainer.style.display = 'none'; }
+                            if (sContainer) { sContainer.classList.remove('hidden'); sContainer.style.display = 'flex'; }
+                            z.classList.remove('border-rose-500', 'bg-rose-50');
+                            z.classList.add('border-emerald-400', 'bg-emerald-50/20');
+                        }
+                    }
+                }
             }
         } catch (e) {
             console.warn('loadDraft error:', e);
