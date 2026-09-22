@@ -108,6 +108,19 @@
             background: #ea580c;
         }
 
+        /* Ensure all modals and SweetAlert are in front of curved sidebar (sidebar z-index: 99995) */
+        #modal-import-preview,
+        #modal-flux-loader,
+        #modal-account,
+        #modal-send-progress,
+        #modal-template {
+            z-index: 100050 !important;
+        }
+
+        .swal2-container {
+            z-index: 100060 !important;
+        }
+
         @keyframes pulseGlow {
             0%, 100% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.4); }
             50% { box-shadow: 0 0 0 10px rgba(234, 88, 12, 0); }
@@ -1249,7 +1262,7 @@
     </div>
 
     <!-- MODAL: Email Template Editor & Visual Preview -->
-    <div id="modal-template" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="modal-template" class="fixed inset-0 z-[100050] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-3xl w-full shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
             <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -1331,7 +1344,7 @@
     </div>
 
     <!-- MODAL: Email Sending Progress Simulation Modal -->
-    <div id="modal-send-progress" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4">
+    <div id="modal-send-progress" class="fixed inset-0 z-[100050] hidden bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200">
             <div class="px-6 py-4 bg-brand-600 text-white flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -1374,7 +1387,7 @@
     </div>
 
     <!-- MODAL: Add / Edit Account Manual -->
-    <div id="modal-account" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="modal-account" class="fixed inset-0 z-[100050] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200">
             <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
                 <h3 id="modal-account-title" class="font-bold text-sm">Tambah Akun Manual</h3>
@@ -1423,7 +1436,7 @@
     </div>
 
     <!-- MODAL: Progressive Flux Loader for Excel/CSV Upload (Light Theme) -->
-    <div id="modal-flux-loader" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 transition-all duration-300">
+    <div id="modal-flux-loader" class="fixed inset-0 z-[100050] hidden bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 transition-all duration-300">
         <div class="bg-white/95 backdrop-blur-2xl rounded-3xl max-w-lg w-full shadow-[0_25px_60px_-15px_rgba(234,88,12,0.18),0_10px_30px_-5px_rgba(0,0,0,0.08)] p-10 border border-slate-200/80 flex flex-col items-center justify-center text-center relative overflow-hidden">
             <!-- Decorative Ambient Blurs in Light Pastel Orange -->
             <div class="absolute -top-16 -left-16 w-48 h-48 rounded-full bg-orange-500/10 blur-3xl pointer-events-none"></div>
@@ -1454,7 +1467,7 @@
     </div>
 
     <!-- MODAL: Preview & Validasi Import Data Excel/CSV -->
-    <div id="modal-import-preview" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="modal-import-preview" class="fixed inset-0 z-[100050] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-5xl w-full shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
             <!-- Header -->
             <div class="px-6 py-4 bg-gradient-to-r from-brand-600 via-orange-600 to-amber-600 text-white flex items-center justify-between shadow-md">
@@ -1779,6 +1792,8 @@
 
             function resize() {
                 const rect = dropzone.getBoundingClientRect();
+                if (rect.width <= 0 || rect.height <= 0) return;
+
                 width = rect.width;
                 height = rect.height;
                 dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -1811,8 +1826,17 @@
                 }
             }
 
+            if (window.ResizeObserver) {
+                const ro = new ResizeObserver(() => {
+                    resize();
+                });
+                ro.observe(dropzone);
+            }
+
             window.addEventListener('resize', resize);
             setTimeout(resize, 50);
+            setTimeout(resize, 300);
+            setTimeout(resize, 800);
 
             dropzone.addEventListener('mouseenter', () => {
                 mouse.active = true;

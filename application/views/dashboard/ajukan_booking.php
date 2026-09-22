@@ -80,35 +80,62 @@
             border-radius: 28px;
             padding: 36px 44px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.06);
+            box-sizing: border-box;
         }
 
         .page-topbar {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: space-between;
-            margin-bottom: 28px;
-            padding-bottom: 18px;
+            gap: 12px;
+            margin-bottom: 22px;
+            padding-bottom: 16px;
             border-bottom: 1px solid rgba(226,232,240,0.8);
+        }
+
+        .page-topbar-title-group {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .page-topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
         }
 
         .btn-back {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            gap: 6px;
             color: #64748b;
             text-decoration: none;
             font-weight: 700;
-            font-size: 0.88rem;
-            padding: 8px 16px;
+            font-size: 0.84rem;
+            padding: 8px 14px;
             border-radius: 12px;
             background: #fff;
             border: 1px solid #e2e8f0;
             transition: all 0.25s ease;
+            white-space: nowrap;
         }
-        .btn-back:hover { color: var(--primary); border-color: var(--primary); transform: translateX(-3px); }
+        .btn-back:hover { color: var(--primary); border-color: var(--primary); transform: translateY(-2px); }
 
-        .page-title { font-size: 1.55rem; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; }
-        .page-subtitle { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
+        .btn-back.btn-history {
+            background: #fff7ed;
+            color: #ea580c;
+            border-color: rgba(234,88,12,0.3);
+        }
+        .btn-back.btn-history:hover {
+            background: #ffedd5;
+            border-color: #ea580c;
+            color: #c2410c;
+        }
+
+        .page-title { font-size: 1.45rem; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; line-height: 1.25; margin: 0; }
+        .page-subtitle { font-size: 0.84rem; color: #64748b; margin-top: 4px; margin-bottom: 0; line-height: 1.4; }
 
         .form-grid {
             display: grid;
@@ -327,9 +354,86 @@
 
         .swal2-container { z-index: 99999 !important; }
 
-        @media (max-width: 640px) {
-            .booking-page-container { padding: 24px 20px; border-radius: 20px; }
-            .form-grid { grid-template-columns: 1fr; }
+        @media (max-width: 768px) {
+            .page-wrapper-for-sidebar {
+                padding: 48px 14px 28px 14px;
+            }
+            .booking-page-container {
+                padding: 20px 16px;
+                border-radius: 20px;
+            }
+            .page-topbar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+                margin-bottom: 18px;
+                padding-bottom: 14px;
+            }
+            .page-title {
+                font-size: 1.25rem;
+            }
+            .page-subtitle {
+                font-size: 0.8rem;
+                margin-top: 3px;
+            }
+            .page-topbar-actions {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+                width: 100%;
+                margin-top: 2px;
+            }
+            .page-topbar-actions .btn-back {
+                width: 100%;
+                padding: 8px 10px;
+                font-size: 0.8rem;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-wrapper-for-sidebar {
+                padding: 44px 10px 20px 10px;
+            }
+            .booking-page-container {
+                padding: 16px 12px;
+                border-radius: 16px;
+            }
+            .page-title {
+                font-size: 1.15rem;
+            }
+            .page-subtitle {
+                font-size: 0.76rem;
+            }
+            .page-topbar {
+                gap: 10px;
+                margin-bottom: 14px;
+                padding-bottom: 12px;
+            }
+            .page-topbar-actions {
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+            }
+            .page-topbar-actions .btn-back {
+                font-size: 0.76rem;
+                padding: 7px 6px;
+                gap: 4px;
+            }
+            .inline-clock-panel {
+                padding: 12px 8px !important;
+            }
+            .time-picker-flex {
+                flex-direction: column !important;
+                gap: 12px !important;
+            }
+            .tp-subpanel {
+                min-width: 100% !important;
+                width: 100% !important;
+                padding: 12px 8px !important;
+            }
         }
     </style>
 </head>
@@ -342,21 +446,21 @@
     <div id="mainPageContent" class="page-wrapper-for-sidebar">
         <div class="booking-page-container">
             <div class="page-topbar">
-            <div>
-                <h1 class="page-title">Ajukan Peminjaman Ruangan</h1>
-                <p class="page-subtitle">Silakan lengkapi form berikut untuk mengajukan peminjaman ruangan.</p>
+                <div class="page-topbar-title-group">
+                    <h1 class="page-title">Ajukan Peminjaman Ruangan</h1>
+                    <p class="page-subtitle">Silakan lengkapi form berikut untuk mengajukan peminjaman ruangan.</p>
+                </div>
+                <div class="page-topbar-actions">
+                    <a href="<?= site_url('riwayat-booking') ?>" class="btn-back btn-history">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        Riwayat Saya
+                    </a>
+                    <a href="<?= base_url('kalender') ?>" class="btn-back">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                        Kembali
+                    </a>
+                </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <a href="<?= site_url('riwayat-booking') ?>" class="btn-back" style="background: #fff7ed; color: #ea580c; border-color: rgba(234,88,12,0.3);">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                    Riwayat Saya
-                </a>
-                <a href="<?= base_url('kalender') ?>" class="btn-back">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-                    Kembali
-                </a>
-            </div>
-        </div>
 
         <form id="formAjukanBooking" onsubmit="submitBooking(event)">
             <div class="form-grid">
@@ -443,11 +547,11 @@
                     </div>
 
                     <!-- Inline Radial Clock Picker Panel -->
-                    <div id="inlineClockPanel" style="display:none; margin-top: 16px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 18px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.03);">
-                        <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+                    <div id="inlineClockPanel" class="inline-clock-panel" style="display:none; margin-top: 16px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 18px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.03);">
+                        <div class="time-picker-flex" style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
 
                             <!-- Kiri: Display Waktu & Quick Drag Slots -->
-                            <div style="flex: 1.1; min-width: 250px; background: #ffffff; border-radius: 14px; padding: 20px; border: 1px solid #f1f5f9; display: flex; flex-direction: column; align-items: center;">
+                            <div class="tp-subpanel" style="flex: 1.1; min-width: 250px; background: #ffffff; border-radius: 14px; padding: 20px; border: 1px solid #f1f5f9; display: flex; flex-direction: column; align-items: center; box-sizing: border-box;">
                                 <div id="inlineTpLabel" style="font-size: 0.72rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">WAKTU DIPALIKAN</div>
                                 <div style="font-size: 2.8rem; font-weight: 800; color: #1e293b; line-height: 1; margin-bottom: 8px;">
                                     <span id="tpDisplayHour" onclick="setMode('hour')" style="cursor:pointer;">14</span><span style="color:#cbd5e1; margin:0 2px;">:</span><span id="tpDisplayMinute" onclick="setMode('minute')" style="cursor:pointer; color:#94a3b8;">30</span>
@@ -473,7 +577,7 @@
                             </div>
 
                             <!-- Kanan: Radial Analog Clock (Fix Dimensions: 240px x 240px) -->
-                            <div style="flex: 1.2; min-width: 260px; display:flex; flex-direction:column; align-items:center; background:#ffffff; border-radius:14px; padding:20px; border:1px solid #f1f5f9;">
+                            <div class="tp-subpanel" style="flex: 1.2; min-width: 260px; display:flex; flex-direction:column; align-items:center; background:#ffffff; border-radius:14px; padding:20px; border:1px solid #f1f5f9; box-sizing: border-box;">
                                 <div class="tp-tab-wrap">
                                     <div id="tpTabHour" class="active" onclick="setMode('hour')">🕐 Jam</div>
                                     <div id="tpTabMinute" onclick="setMode('minute')">⏱ Menit</div>
