@@ -1037,8 +1037,8 @@
                     <!-- Main Category Selector Dropdown -->
                     <div class="relative custom-dropdown-container">
                         <input type="hidden" id="mainCategorySelect" value="query">
-                        <button type="button" onclick="toggleCustomDropdown('main-cat', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-brand-600 focus:outline-none">
-                            <span id="label-filter-main-cat" class="truncate max-w-[130px]">Cari Kata Kunci</span>
+                        <button type="button" onclick="toggleCustomDropdown('main-cat', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-brand-600 focus:outline-none" title="Kategori Pencarian">
+                            <span id="label-filter-main-cat" class="text-sm sm:text-base leading-none block">🔍</span>
                             <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-main-cat"></i>
                         </button>
                         <div id="menu-filter-main-cat" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
@@ -1416,8 +1416,8 @@
                         <!-- Category Selector Dropdown -->
                         <div class="relative custom-dropdown-container">
                             <input type="hidden" id="p2MainCategorySelect" value="query">
-                            <button type="button" onclick="toggleCustomDropdown('p2-main-cat', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-indigo-600 focus:outline-none">
-                                <span id="label-filter-p2-main-cat" class="truncate max-w-[130px]">Cari Kata Kunci</span>
+                            <button type="button" onclick="toggleCustomDropdown('p2-main-cat', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-indigo-600 focus:outline-none" title="Kategori Pencarian">
+                                <span id="label-filter-p2-main-cat" class="text-sm sm:text-base leading-none block">🔍</span>
                                 <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-p2-main-cat"></i>
                             </button>
                             <div id="menu-filter-p2-main-cat" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
@@ -1783,8 +1783,8 @@
                         <!-- Category Selector Dropdown -->
                         <div class="relative custom-dropdown-container">
                             <input type="hidden" id="sidangMainCategorySelect" value="query">
-                            <button type="button" onclick="toggleCustomDropdown('sidang-main-cat', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-amber-600 focus:outline-none">
-                                <span id="label-filter-sidang-main-cat" class="truncate max-w-[130px]">Cari Kata Kunci</span>
+                            <button type="button" onclick="toggleCustomDropdown('sidang-main-cat', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-amber-600 focus:outline-none" title="Kategori Pencarian">
+                                <span id="label-filter-sidang-main-cat" class="text-sm sm:text-base leading-none block">🔍</span>
                                 <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-sidang-main-cat"></i>
                             </button>
                             <div id="menu-filter-sidang-main-cat" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">

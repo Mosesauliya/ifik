@@ -1510,11 +1510,13 @@
             }
 
             #label-filter-main-cat, .extra-category-label {
-                max-width: 110px !important;
+                max-width: 40px !important;
                 overflow: hidden !important;
                 text-overflow: ellipsis !important;
                 white-space: nowrap !important;
-                font-size: 0.82rem !important;
+                font-size: 0.95rem !important;
+                line-height: 1 !important;
+                display: block !important;
             }
 
             .btn-search-cari {
@@ -2156,8 +2158,8 @@
                     <!-- Category Dropdown Container -->
                     <div class="custom-dropdown-container">
                         <input type="hidden" id="mainCategoryVal" value="query">
-                        <button type="button" onclick="toggleCustomDropdown('main-cat', event)" class="flex items-center gap-1.5 bg-transparent border-none font-bold text-slate-800 cursor-pointer py-1 px-1 hover:text-orange-600 focus:outline-none" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-weight:700;font-size:0.84rem;color:#1e293b;">
-                            <span id="label-filter-main-cat">Cari Kata Kunci</span>
+                        <button type="button" onclick="toggleCustomDropdown('main-cat', event)" class="flex items-center gap-1.5 bg-transparent border-none font-bold text-slate-800 cursor-pointer py-1 px-1 hover:text-orange-600 focus:outline-none" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-weight:700;color:#1e293b;" title="Kategori Pencarian">
+                            <span id="label-filter-main-cat" class="text-sm sm:text-base leading-none block" style="font-size: 1rem; line-height: 1;">🔍</span>
                             <i class="fa-solid fa-chevron-down text-[11px] text-slate-400 dropdown-arrow" id="arrow-filter-main-cat"></i>
                         </button>
                         <div id="menu-filter-main-cat" class="custom-dropdown-menu">
@@ -2706,12 +2708,12 @@
         let extraRowCounter = 0;
 
         const SEARCH_CATEGORIES = [
-            { key: 'query', label: '🔍 Kata Kunci (Semua)' },
-            { key: 'nama', label: '🏷️ Nama Peminjam' },
-            { key: 'ruangan', label: '🚪 Nama / Kode Ruangan' },
-            { key: 'tanggal', label: '📅 Tanggal Peminjaman' },
-            { key: 'keterangan', label: '📝 Keterangan / Keperluan' },
-            { key: 'status', label: '⚡ Status Permohonan' }
+            { key: 'query', emoji: '🔍', label: '🔍 Kata Kunci (Semua)' },
+            { key: 'nama', emoji: '🏷️', label: '🏷️ Nama Peminjam' },
+            { key: 'ruangan', emoji: '🚪', label: '🚪 Nama / Kode Ruangan' },
+            { key: 'tanggal', emoji: '📅', label: '📅 Tanggal Peminjaman' },
+            { key: 'keterangan', emoji: '📝', label: '📝 Keterangan / Keperluan' },
+            { key: 'status', emoji: '⚡', label: '⚡ Status Permohonan' }
         ];
 
         // ==========================================
@@ -2986,8 +2988,9 @@
         }
 
         function selectMainCategory(catKey, catLabel, el) {
+            const catObj = SEARCH_CATEGORIES.find(c => c.key === catKey) || SEARCH_CATEGORIES[0];
             document.getElementById('mainCategoryVal').value = catKey;
-            document.getElementById('label-filter-main-cat').innerText = catLabel.replace(/^[^\s]+\s*/, '');
+            document.getElementById('label-filter-main-cat').innerText = catObj.emoji || '🔍';
             if (el) {
                 el.parentElement.querySelectorAll('.dropdown-item').forEach(d => d.classList.remove('active'));
                 el.classList.add('active');
@@ -3046,7 +3049,6 @@
             });
 
             const catObj = SEARCH_CATEGORIES.find(c => c.key === defaultKey) || SEARCH_CATEGORIES[0];
-            const cleanLabel = catObj.label.replace(/^[^\s]+\s*/, '');
 
             const rowHtml = document.createElement('div');
             rowHtml.className = 'extra-filter-row';
@@ -3055,8 +3057,8 @@
                 <div class="unified-search-pill" style="height: 44px;">
                     <div class="custom-dropdown-container">
                         <input type="hidden" class="extra-category-val" value="${defaultKey}">
-                        <button type="button" onclick="toggleCustomDropdown('${rowId}', event)" class="flex items-center gap-1.5 bg-transparent border-none font-bold text-slate-800 cursor-pointer py-1 px-1 hover:text-orange-600 focus:outline-none" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-weight:700;font-size:0.84rem;color:#1e293b;">
-                            <span class="extra-category-label">${cleanLabel}</span>
+                        <button type="button" onclick="toggleCustomDropdown('${rowId}', event)" class="flex items-center gap-1.5 bg-transparent border-none font-bold text-slate-800 cursor-pointer py-1 px-1 hover:text-orange-600 focus:outline-none" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-weight:700;color:#1e293b;" title="Kategori Pencarian">
+                            <span class="extra-category-label text-sm sm:text-base leading-none block" style="font-size: 1rem; line-height: 1;">${catObj.emoji || '🔍'}</span>
                             <i class="fa-solid fa-chevron-down text-[11px] text-slate-400 dropdown-arrow" id="arrow-filter-${rowId}"></i>
                         </button>
                         <div id="menu-filter-${rowId}" class="custom-dropdown-menu">
@@ -3081,8 +3083,9 @@
         function selectExtraCategory(rowId, catKey, catLabel, el) {
             const row = document.getElementById(rowId);
             if (!row) return;
+            const catObj = SEARCH_CATEGORIES.find(c => c.key === catKey) || SEARCH_CATEGORIES[0];
             row.querySelector('.extra-category-val').value = catKey;
-            row.querySelector('.extra-category-label').innerText = catLabel.replace(/^[^\s]+\s*/, '');
+            row.querySelector('.extra-category-label').innerText = catObj.emoji || '🔍';
             if (el) {
                 el.parentElement.querySelectorAll('.dropdown-item').forEach(d => d.classList.remove('active'));
                 el.classList.add('active');

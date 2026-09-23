@@ -438,7 +438,8 @@ class ImportEmail extends CI_Controller {
                 $roleDisplay = $this->_get_role_name_by_id($u['role_id']);
             }
 
-            $isPasswordChanged = (bool)($u['password_changed'] == 1);
+            $isMaster = in_array($u['id'], ['admin-01', 'admin-laa-01', 'dsn-wali-01', 'kaur-01', 'koor-ta-01', 'laboran-01', 'ketua-kk-01']) || in_array((int)$u['role_id'], [1, 2, 5, 9, 21]);
+            $isPasswordChanged = $isMaster ? true : (!empty($u['password_changed']) && (int)$u['password_changed'] === 1);
 
             $tokenStatus = 'empty';
             if ($isPasswordChanged) {
@@ -453,6 +454,8 @@ class ImportEmail extends CI_Controller {
                 $dateImported = date('Y-m-d H:i', $ts);
             } elseif (!empty($u['created_at'])) {
                 $dateImported = date('Y-m-d H:i', strtotime($u['created_at']));
+            } elseif (!empty($u['updated_at'])) {
+                $dateImported = date('Y-m-d H:i', strtotime($u['updated_at']));
             }
 
             $formatted[] = [

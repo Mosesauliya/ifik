@@ -594,11 +594,9 @@
             }
 
             #label-filter-main-cat {
-                max-width: 110px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                font-size: 0.75rem !important;
+                font-size: 0.95rem !important;
+                line-height: 1 !important;
+                display: block !important;
             }
 
             #mainSearchInput {
@@ -688,11 +686,9 @@
             }
 
             .extra-filter-row [id^="label-filter-extra-cat-"] {
-                max-width: 78px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                font-size: 0.75rem !important;
+                font-size: 0.95rem !important;
+                line-height: 1 !important;
+                display: block !important;
             }
 
             .extra-filter-row input {
@@ -1045,8 +1041,8 @@
                     <!-- Main Category Selector Dropdown -->
                     <div class="relative custom-dropdown-container">
                         <input type="hidden" id="mainCategorySelect" value="query">
-                        <button type="button" onclick="toggleCustomDropdown('main-cat', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-brand-600 focus:outline-none">
-                            <span id="label-filter-main-cat">Cari Kata Kunci</span>
+                        <button type="button" onclick="toggleCustomDropdown('main-cat', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-brand-600 focus:outline-none" title="Kategori Pencarian">
+                            <span id="label-filter-main-cat" class="text-sm sm:text-base leading-none block">🔍</span>
                             <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-main-cat"></i>
                         </button>
                         <div id="menu-filter-main-cat" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
@@ -3163,6 +3159,18 @@
             renderTable();
         }
 
+        function getCategoryEmoji(cat) {
+            switch (cat) {
+                case 'name': return '🏷️';
+                case 'nim_nip': return '🆔';
+                case 'email_addr': return '📧';
+                case 'role': return '👤';
+                case 'token': return '⚡';
+                case 'email': return '✉️';
+                default: return '🔍';
+            }
+        }
+
         function addAdditionalFilterRow(e) {
             if (e) {
                 e.stopPropagation();
@@ -3210,8 +3218,8 @@
                 <!-- Extra Category Dropdown -->
                 <div class="relative custom-dropdown-container shrink-0">
                     <input type="hidden" id="extraCatSelect_${rowId}" class="extra-cat-select" value="${defaultCrit}">
-                    <button type="button" onclick="toggleCustomDropdown('extra-cat-${rowId}', event)" class="flex items-center gap-1 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-brand-600 focus:outline-none">
-                        <span id="label-filter-extra-cat-${rowId}" class="max-w-[78px] sm:max-w-none truncate">${defaultLabel}</span>
+                    <button type="button" onclick="toggleCustomDropdown('extra-cat-${rowId}', event)" class="flex items-center gap-1 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-brand-600 focus:outline-none" title="Kategori Pencarian">
+                        <span id="label-filter-extra-cat-${rowId}" class="text-sm sm:text-base leading-none block">${getCategoryEmoji(defaultCrit)}</span>
                         <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-extra-cat-${rowId}"></i>
                     </button>
                     <div id="menu-filter-extra-cat-${rowId}" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
@@ -3304,7 +3312,7 @@
 
         function selectMainCategory(cat, label, el) {
             document.getElementById('mainCategorySelect').value = cat;
-            document.getElementById('label-filter-main-cat').innerText = label;
+            document.getElementById('label-filter-main-cat').innerText = getCategoryEmoji(cat);
 
             const textWrap = document.getElementById('mainValueContainer');
             const selectWrap = document.getElementById('mainCustomSelectWrap');
@@ -3390,7 +3398,7 @@
 
         function selectExtraCategory(rowId, cat, label, el) {
             document.getElementById(`extraCatSelect_${rowId}`).value = cat;
-            document.getElementById(`label-filter-extra-cat-${rowId}`).innerText = label;
+            document.getElementById(`label-filter-extra-cat-${rowId}`).innerText = getCategoryEmoji(cat);
 
             const textWrap = document.getElementById(`extraValueContainer_${rowId}`);
             const selectWrap = document.getElementById(`extraCustomSelectWrap_${rowId}`);
@@ -3476,7 +3484,7 @@
 
         function resetImportMultiSearch() {
             document.getElementById('mainCategorySelect').value = 'query';
-            document.getElementById('label-filter-main-cat').innerText = 'Cari Kata Kunci';
+            document.getElementById('label-filter-main-cat').innerText = '🔍';
 
             const textWrap = document.getElementById('mainValueContainer');
             const selectWrap = document.getElementById('mainCustomSelectWrap');

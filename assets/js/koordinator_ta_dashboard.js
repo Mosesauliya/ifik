@@ -298,6 +298,17 @@
         return cat !== 'status' && cat !== 'tahap';
     }
 
+    function getCategoryEmoji(cat) {
+        switch (cat) {
+            case 'nama': return '🏷️';
+            case 'nim': return '🆔';
+            case 'judul': return '📖';
+            case 'status': return '⚡';
+            case 'tahap': return '🔄';
+            default: return '🔍';
+        }
+    }
+
     function getPlaceholderForCategory(cat) {
         if (cat === 'nama') return 'Ketik nama mahasiswa lalu tekan Enter atau klik Cari...';
         if (cat === 'nim') return 'Ketik NIM lalu tekan Enter atau klik Cari...';
@@ -339,13 +350,6 @@
 
         const defaultCrit = allCriteria.find(c => !usedCriteria.includes(c)) || 'status';
 
-        let defaultLabel = '⚡ Status Approval';
-        if (defaultCrit === 'nama') defaultLabel = '🏷️ Nama Mahasiswa';
-        else if (defaultCrit === 'nim') defaultLabel = '🆔 NIM Mahasiswa';
-        else if (defaultCrit === 'judul') defaultLabel = '📖 Judul Tugas Akhir';
-        else if (defaultCrit === 'tahap') defaultLabel = '🔄 Tahap Saat Ini';
-        else if (defaultCrit === 'query') defaultLabel = '🔍 Kata Kunci (Semua)';
-
         const rowDiv = document.createElement('div');
         rowDiv.className = 'extra-filter-row';
         rowDiv.id = `extraRow_${rowId}`;
@@ -355,8 +359,8 @@
                 <!-- Extra Category Dropdown -->
                 <div class="relative custom-dropdown-container">
                     <input type="hidden" id="extraCatSelect_${rowId}" class="extra-cat-select" value="${defaultCrit}">
-                    <button type="button" onclick="toggleCustomDropdown('extra-cat-${rowId}', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-brand-600 focus:outline-none">
-                        <span id="label-filter-extra-cat-${rowId}" class="truncate max-w-[130px]">${defaultLabel}</span>
+                    <button type="button" onclick="toggleCustomDropdown('extra-cat-${rowId}', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-brand-600 focus:outline-none" title="Kategori Pencarian">
+                        <span id="label-filter-extra-cat-${rowId}" class="text-sm sm:text-base leading-none block">${getCategoryEmoji(defaultCrit)}</span>
                         <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-extra-cat-${rowId}"></i>
                     </button>
                     <div id="menu-filter-extra-cat-${rowId}" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
@@ -416,7 +420,7 @@
 
     window.selectMainCategory = function (cat, label, el) {
         document.getElementById('mainCategorySelect').value = cat;
-        document.getElementById('label-filter-main-cat').innerText = label;
+        document.getElementById('label-filter-main-cat').innerText = getCategoryEmoji(cat);
 
         const menu = document.getElementById('menu-filter-main-cat');
         if (menu) {
@@ -487,7 +491,7 @@
 
     window.selectExtraCategory = function (rowId, cat, label, el) {
         document.getElementById(`extraCatSelect_${rowId}`).value = cat;
-        document.getElementById(`label-filter-extra-cat-${rowId}`).innerText = label;
+        document.getElementById(`label-filter-extra-cat-${rowId}`).innerText = getCategoryEmoji(cat);
 
         const textWrap = document.getElementById(`extraValueContainer_${rowId}`);
         const selectWrap = document.getElementById(`extraCustomSelectWrap_${rowId}`);
@@ -548,7 +552,7 @@
         const catSelect = document.getElementById('mainCategorySelect');
         if (catSelect) catSelect.value = 'query';
         const catLabel = document.getElementById('label-filter-main-cat');
-        if (catLabel) catLabel.innerText = 'Cari Kata Kunci';
+        if (catLabel) catLabel.innerText = '🔍';
         
         const mainInput = document.getElementById('mainSearchInput');
         if (mainInput) {
@@ -2699,6 +2703,18 @@
         return cat !== 'status';
     }
 
+    function getP2CategoryEmoji(cat) {
+        switch (cat) {
+            case 'nama': return '🏷️';
+            case 'nim': return '🆔';
+            case 'judul': return '📖';
+            case 'pembimbing': return '👔';
+            case 'penguji': return '👨‍🏫';
+            case 'status': return '⚡';
+            default: return '🔍';
+        }
+    }
+
     function getPlaceholderForP2Category(cat) {
         if (cat === 'nama') return 'Ketik nama mahasiswa lalu tekan Enter atau klik Cari...';
         if (cat === 'nim') return 'Ketik NIM lalu tekan Enter atau klik Cari...';
@@ -2742,14 +2758,6 @@
 
         const defaultCrit = allCriteria.find(c => !usedCriteria.includes(c)) || 'status';
 
-        let defaultLabel = '⚡ Status Plotting';
-        if (defaultCrit === 'nama') defaultLabel = '🏷️ Nama Mahasiswa';
-        else if (defaultCrit === 'nim') defaultLabel = '🆔 NIM Mahasiswa';
-        else if (defaultCrit === 'judul') defaultLabel = '📖 Judul Tugas Akhir';
-        else if (defaultCrit === 'pembimbing') defaultLabel = '👔 Dosen Pembimbing';
-        else if (defaultCrit === 'penguji') defaultLabel = '👨‍🏫 Dosen Penguji';
-        else if (defaultCrit === 'query') defaultLabel = '🔍 Kata Kunci (Semua)';
-
         const rowDiv = document.createElement('div');
         rowDiv.className = 'extra-filter-row extra-filter-row-p2';
         rowDiv.id = `extraP2Row_${rowId}`;
@@ -2759,8 +2767,8 @@
                 <!-- Extra Category Dropdown -->
                 <div class="relative custom-dropdown-container">
                     <input type="hidden" id="extraP2CatSelect_${rowId}" class="extra-p2-cat-select" value="${defaultCrit}">
-                    <button type="button" onclick="toggleCustomDropdown('extra-p2-cat-${rowId}', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-indigo-600 focus:outline-none">
-                        <span id="label-filter-extra-p2-cat-${rowId}" class="truncate max-w-[130px]">${defaultLabel}</span>
+                    <button type="button" onclick="toggleCustomDropdown('extra-p2-cat-${rowId}', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-indigo-600 focus:outline-none" title="Kategori Pencarian">
+                        <span id="label-filter-extra-p2-cat-${rowId}" class="text-sm sm:text-base leading-none block">${getP2CategoryEmoji(defaultCrit)}</span>
                         <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-extra-p2-cat-${rowId}"></i>
                     </button>
                     <div id="menu-filter-extra-p2-cat-${rowId}" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
@@ -2823,7 +2831,7 @@
         const catSelect = document.getElementById('p2MainCategorySelect');
         if (catSelect) catSelect.value = cat;
         const catLabel = document.getElementById('label-filter-p2-main-cat');
-        if (catLabel) catLabel.innerText = label;
+        if (catLabel) catLabel.innerText = getP2CategoryEmoji(cat);
 
         const menu = document.getElementById('menu-filter-p2-main-cat');
         if (menu) {
@@ -2891,7 +2899,7 @@
         const catSelect = document.getElementById(`extraP2CatSelect_${rowId}`);
         if (catSelect) catSelect.value = cat;
         const catLabel = document.getElementById(`label-filter-extra-p2-cat-${rowId}`);
-        if (catLabel) catLabel.innerText = label;
+        if (catLabel) catLabel.innerText = getP2CategoryEmoji(cat);
 
         const textWrap = document.getElementById(`extraP2ValueContainer_${rowId}`);
         const selectWrap = document.getElementById(`extraP2CustomSelectWrap_${rowId}`);
@@ -2947,7 +2955,7 @@
         const catSelect = document.getElementById('p2MainCategorySelect');
         if (catSelect) catSelect.value = 'query';
         const catLabel = document.getElementById('label-filter-p2-main-cat');
-        if (catLabel) catLabel.innerText = 'Cari Kata Kunci';
+        if (catLabel) catLabel.innerText = '🔍';
         
         const mainInput = document.getElementById('p2MainSearchInput');
         if (mainInput) {
@@ -5730,6 +5738,19 @@
         return cat !== 'status';
     }
 
+    function getSidangCategoryEmoji(cat) {
+        switch (cat) {
+            case 'nama': return '🏷️';
+            case 'nim': return '🆔';
+            case 'judul': return '📖';
+            case 'pembimbing': return '👔';
+            case 'penguji': return '👨‍🏫';
+            case 'ruangan': return '🏛️';
+            case 'status': return '⚡';
+            default: return '🔍';
+        }
+    }
+
     function getPlaceholderForSidangCategory(cat) {
         switch (cat) {
             case 'nama': return 'Ketik nama mahasiswa lalu tekan Enter atau klik Cari...';
@@ -5746,7 +5767,7 @@
         const catSelect = document.getElementById('sidangMainCategorySelect');
         if (catSelect) catSelect.value = cat;
         const catLabel = document.getElementById('label-filter-sidang-main-cat');
-        if (catLabel) catLabel.innerText = label;
+        if (catLabel) catLabel.innerText = getSidangCategoryEmoji(cat);
 
         const textWrap = document.getElementById('sidangMainValueContainer');
         const selectWrap = document.getElementById('sidangMainCustomSelectWrap');
@@ -5881,15 +5902,6 @@
 
         const defaultCrit = allCriteria.find(c => !usedCriteria.includes(c)) || 'status';
 
-        let defaultLabel = '⚡ Status Sidang';
-        if (defaultCrit === 'nama') defaultLabel = '🏷️ Nama Mahasiswa';
-        else if (defaultCrit === 'nim') defaultLabel = '🆔 NIM Mahasiswa';
-        else if (defaultCrit === 'judul') defaultLabel = '📖 Judul Tugas Akhir';
-        else if (defaultCrit === 'pembimbing') defaultLabel = '👔 Dosen Pembimbing';
-        else if (defaultCrit === 'penguji') defaultLabel = '👨‍🏫 Dosen Penguji';
-        else if (defaultCrit === 'ruangan') defaultLabel = '🏛️ Ruangan Sidang';
-        else if (defaultCrit === 'query') defaultLabel = '🔍 Kata Kunci (Semua)';
-
         const rowDiv = document.createElement('div');
         rowDiv.id = `extraSidangRow_${rowId}`;
         rowDiv.className = 'extra-filter-row extra-filter-row-sidang';
@@ -5899,8 +5911,8 @@
                 <!-- Extra Category Dropdown -->
                 <div class="relative custom-dropdown-container">
                     <input type="hidden" id="extraSidangCatSelect_${rowId}" class="extra-sidang-cat-select" value="${defaultCrit}">
-                    <button type="button" onclick="toggleCustomDropdown('extra-sidang-cat-${rowId}', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-amber-600 focus:outline-none">
-                        <span id="label-filter-extra-sidang-cat-${rowId}" class="truncate max-w-[130px]">${defaultLabel}</span>
+                    <button type="button" onclick="toggleCustomDropdown('extra-sidang-cat-${rowId}', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-amber-600 focus:outline-none" title="Kategori Pencarian">
+                        <span id="label-filter-extra-sidang-cat-${rowId}" class="text-sm sm:text-base leading-none block">${getSidangCategoryEmoji(defaultCrit)}</span>
                         <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-extra-sidang-cat-${rowId}"></i>
                     </button>
                     <div id="menu-filter-extra-sidang-cat-${rowId}" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
@@ -5952,7 +5964,7 @@
         const catSelect = document.getElementById(`extraSidangCatSelect_${rowId}`);
         if (catSelect) catSelect.value = cat;
         const catLabel = document.getElementById(`label-filter-extra-sidang-cat-${rowId}`);
-        if (catLabel) catLabel.innerText = label;
+        if (catLabel) catLabel.innerText = getSidangCategoryEmoji(cat);
 
         const textWrap = document.getElementById(`extraSidangValueContainer_${rowId}`);
         const selectWrap = document.getElementById(`extraSidangCustomSelectWrap_${rowId}`);
@@ -6025,7 +6037,7 @@
         const catSelect = document.getElementById('sidangMainCategorySelect');
         if (catSelect) catSelect.value = 'query';
         const catLabel = document.getElementById('label-filter-sidang-main-cat');
-        if (catLabel) catLabel.innerText = 'Cari Kata Kunci';
+        if (catLabel) catLabel.innerText = '🔍';
 
         const mainInput = document.getElementById('sidangMainSearchInput');
         if (mainInput) {

@@ -30,9 +30,9 @@ class User_model extends CI_Model {
         if (!isset($user->status)) {
             $user->status = (!empty($user->is_active) && (int)$user->is_active === 1) ? 'active' : 'inactive';
         }
-        // Master accounts (Admin, Kaur, LAA, Laboran, Dosen Wali, Koordinator TA) are ALWAYS password_changed = 1
-        $masterIds = ['admin-01', 'admin-laa-01', 'dsn-wali-01', 'kaur-01', 'koor-ta-01', 'laboran-01', 'mhs-1301210001'];
-        $masterRoles = [1, 2, 5, 21]; // Admin, Kaur, LAA, Laboran
+        // Master accounts (Admin, Kaur, LAA, Laboran, Dosen Wali, Koordinator TA, Ketua KK) are ALWAYS password_changed = 1
+        $masterIds = ['admin-01', 'admin-laa-01', 'dsn-wali-01', 'kaur-01', 'koor-ta-01', 'laboran-01', 'ketua-kk-01', 'mhs-1301210001'];
+        $masterRoles = [1, 2, 5, 9, 21]; // Admin, Kaur, LAA, Ketua KK, Laboran
         if (in_array($user->id, $masterIds) || in_array((int)$user->role_id, $masterRoles)) {
             $user->password_changed = 1;
         } elseif (isset($user->password_changed)) {
@@ -248,11 +248,17 @@ class User_model extends CI_Model {
             if (empty($row['token']) && !empty($row['token_hash'])) {
                 $row['token'] = $row['token_hash'];
             }
+            $isMaster = in_array($row['id'], ['admin-01', 'admin-laa-01', 'dsn-wali-01', 'kaur-01', 'koor-ta-01', 'laboran-01', 'ketua-kk-01']) || in_array((int)$row['role_id'], [1, 2, 5, 9, 21]);
             $isActive = isset($row['is_active']) ? (int)$row['is_active'] : 0;
-            if (isset($row['password_changed'])) {
+            if ($isMaster) {
+                $row['password_changed'] = 1;
+            } elseif (isset($row['password_changed'])) {
                 $row['password_changed'] = (int)$row['password_changed'];
             } else {
                 $row['password_changed'] = ($isActive === 1) ? 1 : 0;
+            }
+            if (empty($row['date_created']) && !empty($row['updated_at'])) {
+                $row['date_created'] = strtotime($row['updated_at']);
             }
             if (empty($row['role_display_name']) && !empty($row['role_slug'])) {
                 $row['role_display_name'] = $row['role_slug'];

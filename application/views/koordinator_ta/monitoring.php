@@ -467,6 +467,225 @@
             background: #ea580c;
             border-radius: 999px;
         }
+
+        /* Stage Filter Pills Scroll Dots Indicator on Mobile */
+        .filter-pills-dots {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            margin-top: 4px;
+            margin-bottom: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .filter-pills-dots {
+                display: flex !important;
+            }
+        }
+
+        .filter-pills-dots .pill-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 999px;
+            background: #cbd5e1;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .filter-pills-dots .pill-dot.active {
+            width: 18px;
+            background: #ea580c;
+            border-radius: 999px;
+        }
+
+        /* Unified Multi-Search Pill Component (Approval / Booking Style) */
+        .search-pill-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .unified-search-pill {
+            display: flex;
+            align-items: center;
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 4px 6px 4px 14px;
+            flex: 1;
+            height: 48px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .unified-search-pill:focus-within, .unified-search-pill.active {
+            border-color: #ea580c !important;
+            background: #ffffff !important;
+            box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12) !important;
+        }
+
+        .unified-divider {
+            width: 1.5px;
+            height: 22px;
+            background-color: #cbd5e1;
+            margin: 0 10px;
+            flex-shrink: 0;
+        }
+
+        .standalone-btn-text {
+            display: none;
+        }
+
+        @media (min-width: 640px) {
+            .standalone-btn-text {
+                display: inline;
+            }
+        }
+
+        .btn-standalone-add {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #fff7ed;
+            border: 1.5px solid #ffedd5;
+            border-radius: 16px;
+            padding: 6px 14px;
+            height: 48px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #ea580c;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(234, 88, 12, 0.06);
+            flex-shrink: 0;
+        }
+        .btn-standalone-add:hover, .btn-standalone-add.active {
+            background: #ffedd5;
+            border-color: #fdba74;
+            transform: scale(1.02);
+        }
+
+        .badge-standalone-count {
+            background: #ea580c;
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 99px;
+        }
+
+        @media (max-width: 639px) {
+            .search-pill-container {
+                gap: 6px;
+            }
+            .unified-search-pill {
+                height: 42px;
+                padding: 2px 4px 2px 10px;
+                border-radius: 14px;
+            }
+            .unified-divider {
+                height: 18px;
+                margin: 0 6px;
+            }
+            .btn-standalone-add {
+                height: 42px;
+                padding: 4px 10px;
+                gap: 4px;
+                border-radius: 14px;
+            }
+            .badge-standalone-count {
+                padding: 1.5px 6px;
+                font-size: 0.68rem;
+            }
+            .extra-rows-card {
+                padding: 12px;
+                border-radius: 14px;
+            }
+        }
+
+        .extra-rows-card {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            width: 100%;
+            background: #ffffff;
+            border: 1.5px solid #fed7aa;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 16px 36px -6px rgba(15, 23, 42, 0.16);
+            z-index: 1000;
+        }
+
+        .extra-filter-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .btn-remove-row {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: #fff1f2;
+            border: 1.5px solid #fecdd3;
+            border-radius: 12px;
+            color: #e11d48;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+        .btn-remove-row:hover {
+            background: #ffe4e6;
+            transform: scale(1.05);
+        }
+
+        .custom-dropdown-container {
+            position: relative;
+        }
+
+        .custom-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 6px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 12px 30px -5px rgba(15, 23, 42, 0.16);
+            z-index: 2000;
+            padding: 6px;
+            min-width: 220px;
+            display: none;
+        }
+        .custom-dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.15s ease;
+        }
+        .dropdown-item:hover, .dropdown-item.active {
+            background: #fff7ed;
+            color: #ea580c;
+            font-weight: 700;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased pb-24">
@@ -495,10 +714,6 @@
 
                 <!-- Profile Badge Right -->
                 <div class="flex items-center gap-2.5 sm:gap-3 shrink-0">
-                    <a href="<?= site_url('koordinatorta'); ?>" class="hidden sm:inline-flex items-center gap-2 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
-                        <i class="fa-solid fa-arrow-left text-xs"></i>
-                        <span>Dashboard Koor</span>
-                    </a>
                     <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-orange-50 border border-orange-200 text-brand-600 flex items-center justify-center font-bold text-sm sm:text-base shadow-xs" title="Koordinator TA">
                         <i class="fa-solid fa-user-tie"></i>
                     </div>
@@ -652,14 +867,19 @@
 
             <!-- Milestone Funnel Filter Chips Container (Scrollable Horizontal) -->
             <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm space-y-3">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                        <i class="fa-solid fa-filter text-orange-500"></i> Filter Tahap Progres:
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0">
+                        <i class="fa-solid fa-filter text-orange-500"></i>
+                        <span class="hidden xs:inline">Filter Tahap Progres:</span>
+                        <span class="xs:hidden">Filter Tahap:</span>
                     </span>
-                    <span class="text-[11px] text-slate-400">Klik salah satu tahap untuk memfilter data</span>
+                    <span class="text-[10px] sm:text-[11px] text-slate-400 text-right truncate">
+                        <span class="hidden xs:inline">Klik salah satu tahap untuk memfilter data</span>
+                        <span class="xs:hidden">Geser &amp; pilih tahap</span>
+                    </span>
                 </div>
 
-                <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none" id="stageChipsWrap">
                     <button type="button" class="stage-chip active" data-stage="all" onclick="filterByStage('all', this)">
                         <span>Semua Tahap</span>
                         <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-100 text-slate-700 font-black"><?= $totalPeserta ?></span>
@@ -719,45 +939,143 @@
                         <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-bold"><?= $countLulus ?></span>
                     </button>
                 </div>
+
+                <!-- Mobile Stage Chips Scroll Dots Indicator -->
+                <div class="filter-pills-dots" id="stageChipsDots"></div>
             </div>
 
-            <!-- Search Bar & Combined Filters -->
-            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                <div class="unified-search-pill flex-1">
-                    <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs mr-2 shrink-0"></i>
-                    <input type="text" id="searchInput" oninput="renderTable()" placeholder="Cari nama, NIM, usulan judul, dosen pembimbing, penguji, atau dosen wali..." class="w-full text-xs font-medium bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400">
+            <!-- Search & Toolbar Card (Spacious Multi-Search Row + Meta Row) -->
+            <div class="toolbar-card bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col gap-2.5 sm:gap-3">
+                <!-- Row 1: Unified Multi-Search Pill Component & Standalone Add Button (+ 1/4) -->
+                <div class="search-pill-container">
+                    <div class="unified-search-pill" id="mainSearchPill">
+                        <!-- Category Dropdown Container -->
+                        <div class="custom-dropdown-container">
+                            <input type="hidden" id="mainCategoryVal" value="query">
+                            <button type="button" onclick="toggleCustomDropdown('main-cat', event)" class="flex items-center gap-1 sm:gap-1.5 bg-transparent border-none font-bold text-slate-800 cursor-pointer py-1 px-1 hover:text-orange-600 focus:outline-none" style="background:none;border:none;cursor:pointer;" title="Pilih Kategori Pencarian">
+                                <span id="label-filter-main-cat" class="text-sm sm:text-base leading-none block">🔍</span>
+                                <i class="fa-solid fa-chevron-down text-[10px] sm:text-[11px] text-slate-400 dropdown-arrow shrink-0" id="arrow-filter-main-cat"></i>
+                            </button>
+                            <div id="menu-filter-main-cat" class="custom-dropdown-menu">
+                                <div onclick="selectMainCategory('query', this)" class="dropdown-item active"><span>🔍 Kata Kunci (Semua)</span></div>
+                                <div onclick="selectMainCategory('nama', this)" class="dropdown-item"><span>🏷️ Mahasiswa (Nama / NIM)</span></div>
+                                <div onclick="selectMainCategory('judul', this)" class="dropdown-item"><span>📖 Usulan Judul TA</span></div>
+                                <div onclick="selectMainCategory('pembimbing', this)" class="dropdown-item"><span>👨‍🏫 Dosen Pembimbing</span></div>
+                                <div onclick="selectMainCategory('penguji', this)" class="dropdown-item"><span>🎓 Dosen Penguji</span></div>
+                                <div onclick="selectMainCategory('wali', this)" class="dropdown-item"><span>🧑‍💼 Dosen Wali</span></div>
+                                <div onclick="selectMainCategory('berkas', this)" class="dropdown-item"><span>📁 Status Berkas</span></div>
+                            </div>
+                        </div>
+
+                        <div class="unified-divider"></div>
+
+                        <!-- Input Value Container (2 modes: text, berkas) -->
+                        <div id="mainValueContainer" style="flex: 1; display: flex; align-items: center; min-width: 0; position: relative;">
+                            <!-- MODE 1: Text Search (default) -->
+                            <div id="modeText" style="flex:1;display:flex;align-items:center;min-width:0;">
+                                <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs mr-1.5 sm:mr-2.5 shrink-0"></i>
+                                <input type="text" id="mainSearchInput" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); renderTable(); }" placeholder="Cari kata kunci..." class="w-full text-xs sm:text-[0.85rem] font-medium bg-transparent border-none outline-none text-slate-800 placeholder:text-slate-400 min-w-0">
+                            </div>
+                            <!-- MODE 2: Status Berkas Dropdown -->
+                            <div id="modeBerkas" style="flex:1;display:none;align-items:center;min-width:0;position:relative;">
+                                <i class="fa-solid fa-folder-closed text-slate-400 text-xs mr-1.5 sm:mr-2.5 shrink-0"></i>
+                                <button type="button" id="berkasDropdownTrigger" onclick="toggleMainBerkasDropdown(event)" class="flex-1 flex items-center justify-between bg-transparent border-none outline-none cursor-pointer text-xs sm:text-[0.85rem] font-bold text-slate-800 p-0 min-w-0">
+                                    <span id="berkasDropdownLabel" class="flex items-center gap-1.5 sm:gap-2 truncate">
+                                        <span id="berkasDropdownDot" class="w-2 h-2 rounded-full bg-slate-400 inline-block shrink-0"></span>
+                                        <span id="berkasDropdownText" class="truncate">Semua Status Berkas</span>
+                                    </span>
+                                    <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 mr-1 shrink-0"></i>
+                                </button>
+                                <input type="hidden" id="berkasDropdownVal" value="">
+                                <!-- Status Berkas Dropdown Menu -->
+                                <div id="berkasDropdownMenu" style="display:none;position:absolute;top:calc(100% + 8px);left:0;min-width:240px;background:#fff;border:1.5px solid #e2e8f0;border-radius:16px;box-shadow:0 16px 40px rgba(0,0,0,0.18);z-index:100030;padding:6px;">
+                                    <div onclick="selectBerkasFilter('','Semua Status Berkas','#94a3b8',this)" class="berkas-filter-opt active" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;font-size:0.82rem;font-weight:700;color:#334155;cursor:pointer;transition:all 0.15s;">
+                                        <span style="width:8px;height:8px;border-radius:50%;background:#94a3b8;display:inline-block;flex-shrink:0;"></span> Semua Status Berkas
+                                    </div>
+                                    <div onclick="selectBerkasFilter('lengkap','🟢 Lengkap (<?= $countBerkasLengkap ?>)','#10b981',this)" class="berkas-filter-opt" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;font-size:0.82rem;font-weight:700;color:#334155;cursor:pointer;transition:all 0.15s;">
+                                        <span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block;flex-shrink:0;"></span> 🟢 Lengkap (<?= $countBerkasLengkap ?>)
+                                    </div>
+                                    <div onclick="selectBerkasFilter('revisi','🔴 Ada Revisi (<?= $countBerkasRevisi ?>)','#ef4444',this)" class="berkas-filter-opt" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;font-size:0.82rem;font-weight:700;color:#334155;cursor:pointer;transition:all 0.15s;">
+                                        <span style="width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block;flex-shrink:0;"></span> 🔴 Ada Revisi (<?= $countBerkasRevisi ?>)
+                                    </div>
+                                    <div onclick="selectBerkasFilter('proses','🟡 Sedang Verifikasi (<?= $countBerkasProses ?>)','#f59e0b',this)" class="berkas-filter-opt" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;font-size:0.82rem;font-weight:700;color:#334155;cursor:pointer;transition:all 0.15s;">
+                                        <span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block;flex-shrink:0;"></span> 🟡 Sedang Verifikasi (<?= $countBerkasProses ?>)
+                                    </div>
+                                    <div onclick="selectBerkasFilter('kosong','⚪ Belum Unggah (<?= $countBerkasKosong ?>)','#94a3b8',this)" class="berkas-filter-opt" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;font-size:0.82rem;font-weight:700;color:#334155;cursor:pointer;transition:all 0.15s;">
+                                        <span style="width:8px;height:8px;border-radius:50%;background:#94a3b8;display:inline-block;flex-shrink:0;"></span> ⚪ Belum Unggah (<?= $countBerkasKosong ?>)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tombol Cari -->
+                        <button type="button" onclick="renderTable()" class="btn-search-cari" style="margin-left: 4px; padding: 6px 12px; background: linear-gradient(135deg, #ea580c, #f97316); color: #fff; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 5px; flex-shrink: 0; box-shadow: 0 2px 8px rgba(234,88,12,0.25);">
+                            <i class="fa-solid fa-magnifying-glass text-[11px] sm:text-xs"></i>
+                            <span class="text-xs font-bold hidden xs:inline">Cari</span>
+                        </button>
+                    </div>
+
+                    <!-- Standalone Add Filter Button (+ 1/4) -->
+                    <button type="button" id="standaloneAddBtn" onclick="toggleOrAddFilterRow(event)" class="btn-standalone-add" title="Buka / Tutup / Tambah Filter Baru (Maks 4)">
+                        <span class="standalone-btn-content" style="display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-filter text-[11px]" style="color: #ea580c; font-size: 0.75rem;"></i>
+                            <span class="standalone-btn-text">Filter Tambahan</span>
+                        </span>
+                        <span id="filterCountBadge" class="badge-standalone-count">1/4</span>
+                    </button>
+
+                    <!-- Extra Filter Rows Card Popover -->
+                    <div id="extraRowsCard" class="extra-rows-card">
+                        <div id="additionalFilterRowsContainer" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                        
+                        <!-- Tombol Tambah Baris Filter di dalam Popover -->
+                        <div class="mt-2" id="btnAddFilterRowWrap">
+                            <button type="button" onclick="addFilterRow()" class="w-full py-2 px-3 border border-dashed border-orange-300 hover:border-orange-500 bg-orange-50/50 hover:bg-orange-50 text-orange-600 font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-2xs">
+                                <i class="fa-solid fa-plus text-xs"></i>
+                                <span>Tambah Kriteria Filter Baru</span>
+                            </button>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #f1f5f9; padding-top: 10px; margin-top: 10px; font-size: 0.72rem; flex-wrap: wrap; gap: 8px;">
+                            <span style="color: #94a3b8;">Gunakan kombinasi kriteria untuk mempersempit pencarian peserta (Maks. 4).</span>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
+                                <button type="button" onclick="resetMultiSearch()" style="background: none; border: none; color: #dc2626; font-weight: 700; cursor: pointer;">
+                                    Reset All
+                                </button>
+                                <button type="button" onclick="renderTable()" style="padding: 5px 12px; background: #ea580c; color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                    <i class="fa-solid fa-check text-xs"></i> Terapkan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-2.5 shrink-0 justify-between sm:justify-end">
-                    <!-- Filter Status Berkas -->
-                    <div class="flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 border border-slate-200 px-3 h-10 rounded-xl">
-                        <i class="fa-solid fa-folder-closed text-slate-400 text-xs mr-1"></i>
-                        <span class="font-medium hidden md:inline">Berkas:</span>
-                        <select id="berkasFilterSelect" onchange="filterByBerkas(this.value)" class="h-7 px-1.5 text-xs font-bold bg-white border border-slate-300 rounded-lg text-slate-800 focus:outline-none cursor-pointer">
-                            <option value="all">Semua Status Berkas</option>
-                            <option value="lengkap">🟢 Lengkap (<?= $countBerkasLengkap ?>)</option>
-                            <option value="revisi">🔴 Ada Revisi (<?= $countBerkasRevisi ?>)</option>
-                            <option value="proses">🟡 Sedang Verifikasi (<?= $countBerkasProses ?>)</option>
-                            <option value="kosong">⚪ Belum Unggah (<?= $countBerkasKosong ?>)</option>
-                        </select>
+                <!-- Row 2: Subtitle Left & Page Size / Total / Reset Right -->
+                <div class="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-500 font-medium">
+                    <div class="text-[10.5px] sm:text-xs text-slate-500 leading-tight">
+                        <span>Kelola &amp; telusuri data peserta tugas akhir secara langsung.</span>
                     </div>
 
-                    <!-- Filter Page Size -->
-                    <div class="flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 border border-slate-200 px-3 h-10 rounded-xl">
-                        <span class="font-medium">Tampilkan:</span>
-                        <select id="pageSizeSelect" onchange="changePageSize(this.value)" class="h-7 px-1.5 text-xs font-bold bg-white border border-slate-300 rounded-lg text-slate-800 focus:outline-none cursor-pointer">
-                            <option value="10">10</option>
-                            <option value="20" selected>20</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
-                        <span class="font-medium hidden md:inline">baris</span>
-                    </div>
+                    <div class="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
+                        <!-- Tampilkan Data/Hal & Total Badge -->
+                        <div class="flex items-center gap-1 sm:gap-1.5 text-[10.5px] sm:text-xs text-slate-600 bg-slate-50 border border-slate-200 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl font-medium whitespace-nowrap shrink-0">
+                            <span class="hidden xs:inline">Tampilkan</span>
+                            <select id="pageSizeSelect" onchange="changePageSize(this.value)" class="h-6 sm:h-6.5 px-1 text-[11px] sm:text-xs font-bold bg-white border border-slate-300 rounded-md text-slate-800 focus:outline-none cursor-pointer">
+                                <option value="10">10</option>
+                                <option value="20" selected>20</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            <span class="hidden xs:inline">data</span><span>/hal</span>
+                            <span class="text-slate-300">|</span>
+                            <span class="whitespace-nowrap">Total: <strong class="text-slate-900 font-bold" id="toolbarTotalCount"><?= count($pesertaList) ?></strong></span>
+                        </div>
 
-                    <button type="button" onclick="resetFilters()" class="h-10 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition flex items-center gap-1.5 cursor-pointer" title="Reset Pencarian & Filter">
-                        <i class="fa-solid fa-rotate-right text-xs"></i>
-                        <span class="hidden sm:inline">Reset</span>
-                    </button>
+                        <button type="button" onclick="resetFilters()" class="h-7.5 sm:h-8 px-2.5 sm:px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-[11px] sm:text-xs transition flex items-center gap-1.5 cursor-pointer shrink-0" title="Reset Semua Filter & Pencarian">
+                            <i class="fa-solid fa-rotate-right text-[10px]"></i>
+                            <span>Reset</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -829,9 +1147,367 @@
     <script>
         const RAW_PESERTA_DATA = <?= json_encode($pesertaList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
         let currentStageFilter = 'all';
-        let currentBerkasFilter = 'all';
         let currentPage = 1;
         let pageSize = 20;
+        let extraRowCounter = 0;
+
+        const SEARCH_CATEGORIES = [
+            { key: 'query', label: '🔍 Kata Kunci (Semua)', emoji: '🔍', placeholder: 'Cari kata kunci...' },
+            { key: 'nama', label: '🏷️ Mahasiswa (Nama / NIM)', emoji: '🏷️', placeholder: 'Ketik nama / NIM...' },
+            { key: 'judul', label: '📖 Usulan Judul TA', emoji: '📖', placeholder: 'Ketik judul TA...' },
+            { key: 'pembimbing', label: '👨‍🏫 Dosen Pembimbing', emoji: '👨‍🏫', placeholder: 'Ketik pembimbing...' },
+            { key: 'penguji', label: '🎓 Dosen Penguji', emoji: '🎓', placeholder: 'Ketik penguji...' },
+            { key: 'wali', label: '🧑‍💼 Dosen Wali', emoji: '🧑‍💼', placeholder: 'Ketik dosen wali...' },
+            { key: 'berkas', label: '📁 Status Berkas', emoji: '📁', placeholder: 'Pilih status...' }
+        ];
+
+        // ==========================================
+        // MULTI-SEARCH & DROPDOWNS
+        // ==========================================
+        function toggleCustomDropdown(id, e) {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById('menu-filter-' + id);
+            const arrow = document.getElementById('arrow-filter-' + id);
+            const isShown = menu && menu.classList.contains('show');
+            closeAllCustomDropdowns();
+            if (menu && !isShown) {
+                menu.classList.add('show');
+                if (arrow) arrow.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        function closeAllCustomDropdowns() {
+            document.querySelectorAll('.custom-dropdown-menu').forEach(m => m.classList.remove('show'));
+            document.querySelectorAll('.dropdown-arrow').forEach(a => a.style.transform = 'rotate(0deg)');
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.custom-dropdown-container') && !e.target.closest('.extra-rows-card') && !e.target.closest('#standaloneAddBtn')) {
+                closeAllCustomDropdowns();
+                const card = document.getElementById('extraRowsCard');
+                if (card && !e.target.closest('.extra-rows-card')) {
+                    card.style.display = 'none';
+                    const btn = document.getElementById('standaloneAddBtn');
+                    if (btn) btn.classList.remove('active');
+                }
+            }
+        });
+
+        function toggleMainBerkasDropdown(e) {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById('berkasDropdownMenu');
+            if (!menu) return;
+            const isOpen = menu.style.display === 'block';
+            menu.style.display = isOpen ? 'none' : 'block';
+        }
+
+        function selectBerkasFilter(val, label, color, el) {
+            const valInput = document.getElementById('berkasDropdownVal');
+            const dot = document.getElementById('berkasDropdownDot');
+            const text = document.getElementById('berkasDropdownText');
+            if (valInput) valInput.value = val;
+            if (dot) dot.style.background = color;
+            if (text) text.innerText = label.replace(/^[^\s]+\s*/, '');
+            document.querySelectorAll('.berkas-filter-opt').forEach(o => {
+                o.style.background = '';
+                o.style.color = '#334155';
+            });
+            if (el) {
+                el.style.background = '#fff7ed';
+                el.style.color = '#ea580c';
+            }
+            const menu = document.getElementById('berkasDropdownMenu');
+            if (menu) menu.style.display = 'none';
+        }
+
+        function switchMainMode(mode) {
+            const modeText = document.getElementById('modeText');
+            const modeBerkas = document.getElementById('modeBerkas');
+            if (modeText) modeText.style.display = (mode === 'text') ? 'flex' : 'none';
+            if (modeBerkas) modeBerkas.style.display = (mode === 'berkas') ? 'flex' : 'none';
+        }
+
+        function selectMainCategory(catKey, el) {
+            const catObj = SEARCH_CATEGORIES.find(c => c.key === catKey) || SEARCH_CATEGORIES[0];
+            const valInput = document.getElementById('mainCategoryVal');
+            const labelEl = document.getElementById('label-filter-main-cat');
+            if (valInput) valInput.value = catKey;
+            if (labelEl) labelEl.innerText = catObj.emoji;
+            if (el && el.parentElement) {
+                el.parentElement.querySelectorAll('.dropdown-item').forEach(d => d.classList.remove('active'));
+                el.classList.add('active');
+            }
+            closeAllCustomDropdowns();
+
+            if (catKey === 'berkas') {
+                switchMainMode('berkas');
+            } else {
+                switchMainMode('text');
+                const inp = document.getElementById('mainSearchInput');
+                if (inp) {
+                    inp.placeholder = catObj.placeholder;
+                    inp.focus();
+                }
+            }
+        }
+
+        function toggleOrAddFilterRow(e) {
+            if (e) e.stopPropagation();
+            const card = document.getElementById('extraRowsCard');
+            const btn = document.getElementById('standaloneAddBtn');
+            if (!card) return;
+            const isOpen = card.style.display === 'block';
+
+            if (isOpen) {
+                card.style.display = 'none';
+                if (btn) btn.classList.remove('active');
+            } else {
+                card.style.display = 'block';
+                if (btn) btn.classList.add('active');
+                const container = document.getElementById('additionalFilterRowsContainer');
+                if (container && container.children.length === 0) {
+                    addFilterRow();
+                }
+            }
+        }
+
+        function getExtraRowInputHtml(rowId, catKey, defaultVal = '') {
+            const catObj = SEARCH_CATEGORIES.find(c => c.key === catKey) || SEARCH_CATEGORIES[0];
+
+            if (catKey === 'berkas') {
+                return `
+                    <div style="flex: 1; display: flex; align-items: center; min-width: 0; position: relative;" id="extraBerkasWrapper_${rowId}">
+                        <input type="hidden" class="extra-berkas-val" id="extraBerkasVal_${rowId}" value="${defaultVal || ''}">
+                        <button type="button" onclick="toggleExtraBerkasDropdown('${rowId}', event)" style="background: none; border: none; display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.82rem; font-weight: 700; color: #1e293b; width: 100%; text-align: left; padding: 0;">
+                            <span id="extraBerkasDot_${rowId}" style="width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; display: inline-block; flex-shrink: 0;"></span>
+                            <span id="extraBerkasText_${rowId}" style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Semua Status Berkas</span>
+                            <i class="fa-solid fa-chevron-down" style="font-size: 0.65rem; color: #94a3b8; margin-right: 4px;"></i>
+                        </button>
+                        <div id="extraBerkasMenu_${rowId}" class="extra-berkas-menu" style="display: none; position: absolute; top: calc(100% + 8px); left: 0; min-width: 220px; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 14px; box-shadow: 0 16px 40px rgba(0,0,0,0.18); z-index: 100030; padding: 6px;">
+                            <div onclick="selectExtraBerkas('${rowId}', '', 'Semua Status Berkas', '#94a3b8', this)" class="berkas-filter-opt active" style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;font-size:0.82rem;font-weight:700;color:#334155;cursor:pointer;transition:all 0.15s;">
+                                <span style="width:8px;height:8px;border-radius:50%;background:#94a3b8;display:inline-block;flex-shrink:0;"></span> Semua Status Berkas
+                            </div>
+                            <div onclick="selectExtraBerkas('${rowId}', 'lengkap', '🟢 Lengkap', '#10b981', this)" class="berkas-filter-opt" style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;font-size:0.82rem;font-weight:700;color:#334155;cursor:pointer;transition:all 0.15s;">
+                                <span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block;flex-shrink:0;"></span> 🟢 Lengkap
+                            </div>
+                            <div onclick="selectExtraBerkas('${rowId}', 'revisi', '🔴 Ada Revisi', '#ef4444', this)" class="berkas-filter-opt" style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;font-size:0.82rem;font-weight:700;color:#334155;cursor:pointer;transition:all 0.15s;">
+                                <span style="width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block;flex-shrink:0;"></span> 🔴 Ada Revisi
+                            </div>
+                            <div onclick="selectExtraBerkas('${rowId}', 'proses', '🟡 Sedang Verifikasi', '#f59e0b', this)" class="berkas-filter-opt" style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;font-size:0.82rem;font-weight:700;color:#334155;cursor:pointer;transition:all 0.15s;">
+                                <span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block;flex-shrink:0;"></span> 🟡 Sedang Verifikasi
+                            </div>
+                            <div onclick="selectExtraBerkas('${rowId}', 'kosong', '⚪ Belum Unggah', '#94a3b8', this)" class="berkas-filter-opt" style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;font-size:0.82rem;font-weight:700;color:#334155;cursor:pointer;transition:all 0.15s;">
+                                <span style="width:8px;height:8px;border-radius:50%;background:#94a3b8;display:inline-block;flex-shrink:0;"></span> ⚪ Belum Unggah
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div style="flex: 1; display: flex; align-items: center; min-width: 0;">
+                        <input type="text" class="extra-search-input" value="${defaultVal}" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); renderTable(); }" placeholder="${catObj.placeholder}" style="width: 100%; font-size: 0.82rem; font-weight: 500; background: transparent; border: none; outline: none; color: #1e293b; min-width: 0;">
+                    </div>
+                `;
+            }
+        }
+
+        function toggleExtraBerkasDropdown(rowId, e) {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById('extraBerkasMenu_' + rowId);
+            if (!menu) return;
+            const isShown = menu.style.display === 'block';
+            document.querySelectorAll('.extra-berkas-menu').forEach(m => m.style.display = 'none');
+            const mainBerkasMenu = document.getElementById('berkasDropdownMenu');
+            if (mainBerkasMenu) mainBerkasMenu.style.display = 'none';
+            closeAllCustomDropdowns();
+            menu.style.display = isShown ? 'none' : 'block';
+        }
+
+        function selectExtraBerkas(rowId, val, label, color, el) {
+            const valInput = document.getElementById('extraBerkasVal_' + rowId);
+            const dot = document.getElementById('extraBerkasDot_' + rowId);
+            const text = document.getElementById('extraBerkasText_' + rowId);
+            const menu = document.getElementById('extraBerkasMenu_' + rowId);
+            if (valInput) valInput.value = val;
+            if (dot) dot.style.background = color;
+            if (text) text.innerText = label.replace(/^[^\s]+\s*/, '');
+            if (menu) {
+                menu.querySelectorAll('.berkas-filter-opt').forEach(o => {
+                    o.style.background = '';
+                    o.style.color = '#334155';
+                });
+                if (el) {
+                    el.style.background = '#fff7ed';
+                    el.style.color = '#ea580c';
+                }
+                menu.style.display = 'none';
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#modeBerkas')) {
+                const m = document.getElementById('berkasDropdownMenu');
+                if (m) m.style.display = 'none';
+            }
+            document.querySelectorAll('.extra-berkas-menu').forEach(menu => {
+                if (!e.target.closest('#' + menu.parentElement?.id)) {
+                    menu.style.display = 'none';
+                }
+            });
+        }, true);
+
+        function addFilterRow(defaultKey = 'judul', defaultVal = '') {
+            const container = document.getElementById('additionalFilterRowsContainer');
+            if (!container) return;
+            if (container.children.length >= 3) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Batas Maksimal Filter',
+                        text: 'Maksimal 4 kriteria pencarian kombinasi (1 utama + 3 filter tambahan).',
+                        icon: 'info',
+                        confirmButtonColor: '#ea580c'
+                    });
+                } else {
+                    alert('Maksimal 4 kriteria pencarian kombinasi.');
+                }
+                return;
+            }
+
+            extraRowCounter++;
+            const rowId = 'extra-row-' + extraRowCounter;
+
+            let dropdownItems = '';
+            SEARCH_CATEGORIES.forEach(c => {
+                const isActive = (c.key === defaultKey) ? 'active' : '';
+                dropdownItems += `<div onclick="selectExtraCategory('${rowId}', '${c.key}', this)" class="dropdown-item ${isActive}"><span>${c.label}</span></div>`;
+            });
+
+            const catObj = SEARCH_CATEGORIES.find(c => c.key === defaultKey) || SEARCH_CATEGORIES[0];
+
+            const rowHtml = document.createElement('div');
+            rowHtml.className = 'extra-filter-row';
+            rowHtml.id = rowId;
+            rowHtml.innerHTML = `
+                <div class="unified-search-pill" style="height: 42px;">
+                    <div class="custom-dropdown-container">
+                        <input type="hidden" class="extra-category-val" value="${defaultKey}">
+                        <button type="button" onclick="toggleCustomDropdown('${rowId}', event)" class="flex items-center gap-1 sm:gap-1.5 bg-transparent border-none font-bold text-slate-800 cursor-pointer py-1 px-1 hover:text-orange-600 focus:outline-none" style="display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;" title="${catObj.label}">
+                            <span class="extra-category-label text-sm sm:text-base leading-none block">${catObj.emoji}</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow shrink-0" id="arrow-filter-${rowId}"></i>
+                        </button>
+                        <div id="menu-filter-${rowId}" class="custom-dropdown-menu">
+                            ${dropdownItems}
+                        </div>
+                    </div>
+                    <div class="unified-divider" style="height: 18px;"></div>
+                    <div id="extraInputContainer_${rowId}" style="flex: 1; display: flex; align-items: center; min-width: 0;">
+                        ${getExtraRowInputHtml(rowId, defaultKey, defaultVal)}
+                    </div>
+                </div>
+                <button type="button" onclick="removeFilterRow('${rowId}')" class="btn-remove-row" title="Hapus kriteria ini" style="width: 36px; height: 36px; border-radius: 10px;">
+                    <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+            `;
+
+            container.appendChild(rowHtml);
+            updateFilterCountBadge();
+        }
+
+        function selectExtraCategory(rowId, catKey, el) {
+            const row = document.getElementById(rowId);
+            if (!row) return;
+            const catObj = SEARCH_CATEGORIES.find(c => c.key === catKey) || SEARCH_CATEGORIES[0];
+            const valInput = row.querySelector('.extra-category-val');
+            const labelEl = row.querySelector('.extra-category-label');
+            if (valInput) valInput.value = catKey;
+            if (labelEl) labelEl.innerText = catObj.emoji;
+            if (el && el.parentElement) {
+                el.parentElement.querySelectorAll('.dropdown-item').forEach(d => d.classList.remove('active'));
+                el.classList.add('active');
+            }
+            closeAllCustomDropdowns();
+
+            const inputContainer = document.getElementById('extraInputContainer_' + rowId);
+            if (inputContainer) {
+                inputContainer.innerHTML = getExtraRowInputHtml(rowId, catKey, '');
+                if (catKey !== 'berkas') {
+                    const inp = inputContainer.querySelector('.extra-search-input');
+                    if (inp) inp.focus();
+                }
+            }
+        }
+
+        function removeFilterRow(rowId) {
+            const row = document.getElementById(rowId);
+            if (row) {
+                row.remove();
+                updateFilterCountBadge();
+                renderTable();
+            }
+        }
+
+        function updateFilterCountBadge() {
+            const container = document.getElementById('additionalFilterRowsContainer');
+            const rowCount = container ? container.children.length : 0;
+            const count = 1 + rowCount;
+            const badge = document.getElementById('filterCountBadge');
+            if (badge) badge.innerText = count + '/4';
+
+            const addBtnWrap = document.getElementById('btnAddFilterRowWrap');
+            if (addBtnWrap) {
+                addBtnWrap.style.display = (rowCount >= 3) ? 'none' : 'block';
+            }
+        }
+
+        function resetMultiSearch() {
+            const searchInp = document.getElementById('mainSearchInput');
+            if (searchInp) searchInp.value = '';
+            selectBerkasFilter('', 'Semua Status Berkas', '#94a3b8', null);
+            selectMainCategory('query', null);
+            
+            const container = document.getElementById('additionalFilterRowsContainer');
+            if (container) container.innerHTML = '';
+            updateFilterCountBadge();
+            const card = document.getElementById('extraRowsCard');
+            if (card) card.style.display = 'none';
+            const btn2 = document.getElementById('standaloneAddBtn');
+            if (btn2) btn2.classList.remove('active');
+            renderTable();
+        }
+
+        function getActiveFilters() {
+            const filters = [];
+            const mainKey = document.getElementById('mainCategoryVal')?.value || 'query';
+
+            if (mainKey === 'berkas') {
+                const berkasVal = (document.getElementById('berkasDropdownVal')?.value || '').trim();
+                if (berkasVal) {
+                    filters.push({ key: 'berkas', val: berkasVal });
+                }
+            } else {
+                const mainVal = (document.getElementById('mainSearchInput')?.value || '').toLowerCase().trim();
+                if (mainVal) {
+                    filters.push({ key: mainKey, val: mainVal });
+                }
+            }
+
+            document.querySelectorAll('#additionalFilterRowsContainer .extra-filter-row').forEach(row => {
+                const key = row.querySelector('.extra-category-val')?.value;
+                if (key === 'berkas') {
+                    const berkasVal = (row.querySelector('.extra-berkas-val')?.value || '').trim();
+                    if (berkasVal) {
+                        filters.push({ key: 'berkas', val: berkasVal });
+                    }
+                } else {
+                    const val = (row.querySelector('.extra-search-input')?.value || '').toLowerCase().trim();
+                    if (val) {
+                        filters.push({ key: key, val: val });
+                    }
+                }
+            });
+
+            return filters;
+        }
 
         function getStageBadgeHTML(stageKey, stageName, stageDesc) {
             const badges = {
@@ -899,13 +1575,10 @@
             currentStageFilter = stage;
             currentPage = 1;
             document.querySelectorAll('.stage-chip').forEach(c => c.classList.remove('active'));
-            if (el) el.classList.add('active');
-            renderTable();
-        }
-
-        function filterByBerkas(code) {
-            currentBerkasFilter = code;
-            currentPage = 1;
+            if (el) {
+                el.classList.add('active');
+                el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+            }
             renderTable();
         }
 
@@ -916,14 +1589,15 @@
         }
 
         function resetFilters() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('berkasFilterSelect').value = 'all';
-            currentBerkasFilter = 'all';
+            resetMultiSearch();
+            pageSize = 20;
+            const pSizeSelect = document.getElementById('pageSizeSelect');
+            if (pSizeSelect) pSizeSelect.value = '20';
             filterByStage('all', document.querySelector('.stage-chip[data-stage="all"]'));
         }
 
         function renderTable() {
-            const query = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+            const filters = getActiveFilters();
 
             // Filter data
             const filtered = RAW_PESERTA_DATA.filter(item => {
@@ -932,25 +1606,46 @@
                     return false;
                 }
 
-                // Filter by berkas status
-                if (currentBerkasFilter !== 'all' && item.berkas_status_code !== currentBerkasFilter) {
-                    return false;
-                }
+                // Filter by all active multi-search criteria (AND logic)
+                for (let i = 0; i < filters.length; i++) {
+                    const f = filters[i];
+                    const q = f.val;
 
-                // Filter by search query
-                if (query) {
-                    const matchNim = (item.nim || '').toLowerCase().includes(query);
-                    const matchNama = (item.nama || item.name || '').toLowerCase().includes(query);
-                    const matchJudul = (item.judul_1 || '').toLowerCase().includes(query);
-                    const matchP1 = (item.nama_pembimbing_1 || item.pembimbing_1 || '').toLowerCase().includes(query);
-                    const matchP2 = (item.nama_pembimbing_2 || item.pembimbing_2 || '').toLowerCase().includes(query);
-                    const matchU1 = (item.nama_penguji_1 || item.penguji_1 || '').toLowerCase().includes(query);
-                    const matchU2 = (item.nama_penguji_2 || item.penguji_2 || '').toLowerCase().includes(query);
-                    const matchWali = (item.nama_dosen_wali || item.dosen_wali || '').toLowerCase().includes(query);
-                    const matchStage = (item.progres_stage || '').toLowerCase().includes(query);
-                    const matchBerkas = (item.berkas_status_label || '').toLowerCase().includes(query);
-
-                    return matchNim || matchNama || matchJudul || matchP1 || matchP2 || matchU1 || matchU2 || matchWali || matchStage || matchBerkas;
+                    if (f.key === 'query') {
+                        const matchNim = (item.nim || '').toLowerCase().includes(q);
+                        const matchNama = (item.nama || item.name || '').toLowerCase().includes(q);
+                        const matchJudul = (item.judul_1 || '').toLowerCase().includes(q);
+                        const matchP1 = (item.nama_pembimbing_1 || item.pembimbing_1 || '').toLowerCase().includes(q);
+                        const matchP2 = (item.nama_pembimbing_2 || item.pembimbing_2 || '').toLowerCase().includes(q);
+                        const matchU1 = (item.nama_penguji_1 || item.penguji_1 || '').toLowerCase().includes(q);
+                        const matchU2 = (item.nama_penguji_2 || item.penguji_2 || '').toLowerCase().includes(q);
+                        const matchWali = (item.nama_dosen_wali || item.dosen_wali || '').toLowerCase().includes(q);
+                        const matchStage = (item.progres_stage || '').toLowerCase().includes(q);
+                        const matchBerkas = (item.berkas_status_label || '').toLowerCase().includes(q);
+                        if (!matchNim && !matchNama && !matchJudul && !matchP1 && !matchP2 && !matchU1 && !matchU2 && !matchWali && !matchStage && !matchBerkas) {
+                            return false;
+                        }
+                    } else if (f.key === 'nama') {
+                        const matchNama = (item.nama || item.name || '').toLowerCase().includes(q);
+                        const matchNim = (item.nim || '').toLowerCase().includes(q);
+                        if (!matchNama && !matchNim) return false;
+                    } else if (f.key === 'judul') {
+                        const matchJudul = (item.judul_1 || '').toLowerCase().includes(q);
+                        if (!matchJudul) return false;
+                    } else if (f.key === 'pembimbing') {
+                        const matchP1 = (item.nama_pembimbing_1 || item.pembimbing_1 || '').toLowerCase().includes(q);
+                        const matchP2 = (item.nama_pembimbing_2 || item.pembimbing_2 || '').toLowerCase().includes(q);
+                        if (!matchP1 && !matchP2) return false;
+                    } else if (f.key === 'penguji') {
+                        const matchU1 = (item.nama_penguji_1 || item.penguji_1 || '').toLowerCase().includes(q);
+                        const matchU2 = (item.nama_penguji_2 || item.penguji_2 || '').toLowerCase().includes(q);
+                        if (!matchU1 && !matchU2) return false;
+                    } else if (f.key === 'wali') {
+                        const matchWali = (item.nama_dosen_wali || item.dosen_wali || '').toLowerCase().includes(q);
+                        if (!matchWali) return false;
+                    } else if (f.key === 'berkas') {
+                        if (item.berkas_status_code !== q) return false;
+                    }
                 }
 
                 return true;
@@ -966,6 +1661,8 @@
 
             // Update Counts
             document.getElementById('totalRecords').innerText = total;
+            const tbCount = document.getElementById('toolbarTotalCount');
+            if (tbCount) tbCount.innerText = total;
             document.getElementById('pageStart').innerText = total > 0 ? startIdx + 1 : 0;
             document.getElementById('pageEnd').innerText = endIdx;
 
@@ -1665,13 +2362,63 @@
             }, { passive: true });
         }
 
+        function initStageChipsDots() {
+            const wrap = document.getElementById('stageChipsWrap');
+            const dotsContainer = document.getElementById('stageChipsDots');
+            if (!wrap || !dotsContainer) return;
+
+            const chips = Array.from(wrap.querySelectorAll('.stage-chip'));
+            if (chips.length <= 1) return;
+
+            dotsContainer.innerHTML = '';
+            chips.forEach((chip, idx) => {
+                const dot = document.createElement('span');
+                dot.className = 'pill-dot' + (idx === 0 ? ' active' : '');
+                dot.setAttribute('title', chip.textContent.trim());
+                dot.addEventListener('click', () => {
+                    chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                });
+                dotsContainer.appendChild(dot);
+            });
+
+            const dots = dotsContainer.querySelectorAll('.pill-dot');
+            const updateDots = () => {
+                const maxScroll = wrap.scrollWidth - wrap.clientWidth;
+                if (maxScroll <= 0) {
+                    dots.forEach((dot, i) => dot.classList.toggle('active', i === 0));
+                    return;
+                }
+                const scrollLeft = wrap.scrollLeft;
+                let activeIdx = 0;
+                if (scrollLeft <= 5) {
+                    activeIdx = 0;
+                } else if (scrollLeft >= maxScroll - 5) {
+                    activeIdx = dots.length - 1;
+                } else {
+                    activeIdx = Math.min(Math.max(0, Math.round((scrollLeft / maxScroll) * (dots.length - 1))), dots.length - 1);
+                }
+
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === activeIdx);
+                });
+            };
+
+            wrap.addEventListener('scroll', updateDots, { passive: true });
+            window.addEventListener('resize', updateDots, { passive: true });
+            updateDots();
+        }
+
         // Init render on page load
-        document.addEventListener('DOMContentLoaded', () => {
+        function initMonitoringPage() {
             renderTable();
             initStatSliderDots();
-        });
-        if (document.readyState === 'complete' || document.readyState === 'interactive') {
-            initStatSliderDots();
+            initStageChipsDots();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initMonitoringPage);
+        } else {
+            initMonitoringPage();
         }
     </script>
 </body>
