@@ -14,29 +14,18 @@ class KoordinatorTA extends CI_Controller {
                   (strpos($uriString, 'ajax_') !== false) ||
                   (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
 
-        // 1. Cek Login (dengan auto-fallback session di local development jika belum login)
+        // 1. Cek Login
         if (!$this->session->userdata('logged_in')) {
-            if (defined('ENVIRONMENT') && (ENVIRONMENT === 'development' || ENVIRONMENT === 'testing')) {
-                $this->session->set_userdata(array(
-                    'user_id'   => 'koor-ta-01',
-                    'name'      => 'Dr. Koordinator TA, M.T.',
-                    'email'     => 'koor.ta@telkomuniversity.ac.id',
-                    'nip'       => '1987010102',
-                    'role_id'   => 6,
-                    'logged_in' => TRUE
-                ));
-            } else {
-                if ($isAjax) {
-                    $this->output
-                        ->set_status_header(401)
-                        ->set_content_type('application/json')
-                        ->set_output(json_encode(['status' => false, 'message' => 'Sesi login telah berakhir. Silakan login kembali.']));
-                    exit;
-                }
-                $this->session->set_flashdata('error', 'Silakan login terlebih dahulu untuk mengakses halaman Koordinator TA.');
-                redirect('login');
-                return;
+            if ($isAjax) {
+                $this->output
+                    ->set_status_header(401)
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode(['status' => false, 'message' => 'Sesi login telah berakhir. Silakan login kembali.']));
+                exit;
             }
+            $this->session->set_flashdata('error', 'Silakan login terlebih dahulu untuk mengakses halaman Koordinator TA.');
+            redirect('login');
+            return;
         }
 
         // 2. Cek Role (Hanya Role 6 = Koordinator TA, atau Role 1 = Admin)
