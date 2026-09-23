@@ -826,8 +826,37 @@ class DosenWali_model extends CI_Model {
      * Helper: Ambil data mahasiswa bimbingan langsung dari tabel file_pendaftaran
      */
     private function _get_mahasiswa_bimbingan_from_file_pendaftaran($nip_dosen = null) {
-        // Ambil semua berkas di tabel file_pendaftaran
-        $files = $this->db->order_by('date', 'DESC')->get('file_pendaftaran')->result_array();
+        $user_tbl = $this->db->table_exists('user') ? 'user' : ($this->db->table_exists('users') ? 'users' : null);
+        $student_users = [];
+        $target_ids = [];
+
+        if ($user_tbl && !empty($nip_dosen)) {
+            $u_rows = $this->db->select('id, username, name, nim, email, dosen_wali, prodi')
+                ->group_start()
+                    ->where('dosen_wali', $nip_dosen)
+                    ->or_where('dosen_wali LIKE', '%' . $nip_dosen . '%')
+                ->group_end()
+                ->get($user_tbl)
+                ->result_array();
+            foreach ($u_rows as $ur) {
+                $nim = !empty($ur['nim']) ? $ur['nim'] : $ur['username'];
+                $target_ids[] = $ur['id'];
+                $target_ids[] = 'usr_mhs_' . $nim;
+                $target_ids[] = 'mhs_' . $nim;
+                $target_ids[] = $nim;
+                $student_users[$nim] = $ur;
+                $student_users[$ur['id']] = $ur;
+                $student_users['usr_mhs_' . $nim] = $ur;
+            }
+        }
+
+        if (!empty($target_ids)) {
+            $this->db->where_in('id_mhs', array_unique($target_ids));
+        } else {
+            $this->db->limit(30);
+        }
+
+        $files = $this->db->order_by('id', 'DESC')->get('file_pendaftaran')->result_array();
         if (empty($files)) return array();
 
         // Kelompokkan file berdasarkan id_mhs
@@ -845,15 +874,12 @@ class DosenWali_model extends CI_Model {
         }
 
         $results = [];
-        $user_tbl = $this->db->table_exists('user') ? 'user' : ($this->db->table_exists('users') ? 'users' : null);
-
         foreach ($grouped as $idMhs => $info) {
             // Bersihkan NIM dari id_mhs (misal: 'usr_mhs_1301210001' -> '1301210001')
             $nim = preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', $idMhs);
+            $user_row = $student_users[$nim] ?? ($student_users[$idMhs] ?? null);
 
-            // Ambil data user dari tabel user
-            $user_row = null;
-            if ($user_tbl) {
+            if (!$user_row && $user_tbl) {
                 $user_row = $this->db->group_start()
                     ->where('id', $idMhs)
                     ->or_where('id', $nim)
@@ -861,10 +887,14 @@ class DosenWali_model extends CI_Model {
                     ->group_end()
                     ->get($user_tbl)
                     ->row_array();
+                if ($user_row) {
+                    $student_users[$nim] = $user_row;
+                }
             }
 
             $namaMhs = $user_row['name'] ?? ('Mahasiswa ' . $nim);
             $emailMhs = $user_row['email'] ?? '';
+            $prodiMhs = $user_row['prodi'] ?? '';
 
             // Cek status persetujuan berkas oleh Dosen Wali
             $all_approved = true;
@@ -876,6 +906,7 @@ class DosenWali_model extends CI_Model {
             $file_pernyataan = ''; $st_pernyataan = 'Pending';
             $file_bebas_lab = ''; $st_bebas_lab = 'Pending';
 
+            $bMap = [];
             foreach ($info['files'] as $namaDoc => $fData) {
                 $has_file = true;
                 $st = $fData['status_doswal'] ?? 'Pending';
@@ -893,6 +924,12 @@ class DosenWali_model extends CI_Model {
                 } elseif (strpos($namaDoc, 'bebas_lab') !== false || strpos($namaDoc, 'lab') !== false) {
                     $file_bebas_lab = $fData['file']; $st_bebas_lab = $cleanSt;
                 }
+
+                $bMap[$namaDoc] = [
+                    'file_name'         => $fData['file'],
+                    'status_verifikasi' => ($cleanSt === 'Approved') ? 'Valid' : (($cleanSt === 'Rejected') ? 'Invalid' : 'Pending'),
+                    'catatan'           => $fData['komentar'] ?? ''
+                ];
             }
 
             $status_wali = ($all_approved && $has_file) ? 'Approved' : ($has_rejected ? 'Rejected' : 'Pending');
@@ -903,6 +940,7 @@ class DosenWali_model extends CI_Model {
                 'nim'                    => $nim,
                 'nama_depan'             => $namaMhs,
                 'nama_belakang'          => '',
+                'mhs_konsentrasi'        => $prodiMhs,
                 'email'                  => $emailMhs,
                 'judul_1'                => 'Usulan Judul Tugas Akhir',
                 'status_judul'           => 'Approved',
@@ -922,6 +960,7 @@ class DosenWali_model extends CI_Model {
                 'status_file_pernyataan' => $st_pernyataan,
                 'file_bebas_lab'         => $file_bebas_lab,
                 'status_file_bebas_lab'  => $st_bebas_lab,
+                'berkas_map'             => $bMap,
                 'total_berkas'           => count($info['files'])
             ];
         }
@@ -933,24 +972,97 @@ class DosenWali_model extends CI_Model {
      * Helper: Ambil detail pendaftaran mahasiswa dari tabel file_pendaftaran
      */
     private function _get_detail_from_file_pendaftaran($nim) {
-        $list = $this->_get_mahasiswa_bimbingan_from_file_pendaftaran();
-        foreach ($list as $row) {
-            if ($row['nim'] === $nim || $row['id'] === $nim || strpos($row['id'], $nim) !== false) {
-                // Ambil berkas_map spesifik
-                $files = $this->db->where('id_mhs', $row['id'])->get('file_pendaftaran')->result_array();
-                $bMap = [];
-                foreach ($files as $f) {
-                    $bMap[$f['nama']] = [
-                        'file_name'         => $f['file'],
-                        'status_verifikasi' => ($f['status_doswal'] === 'Approved') ? 'Valid' : (($f['status_doswal'] === 'Rejected') ? 'Invalid' : 'Pending'),
-                        'catatan'           => $f['komentar'] ?? ''
-                    ];
-                }
-                $row['berkas_map'] = $bMap;
-                return $row;
-            }
+        $user_tbl = $this->db->table_exists('user') ? 'user' : ($this->db->table_exists('users') ? 'users' : null);
+        $user_row = null;
+        if ($user_tbl) {
+            $user_row = $this->db->group_start()
+                ->where('id', 'usr_mhs_' . $nim)
+                ->or_where('id', $nim)
+                ->or_where('username', $nim)
+                ->or_where('nim', $nim)
+                ->group_end()
+                ->get($user_tbl)
+                ->row_array();
         }
-        return null;
+
+        $target_ids = array_unique(['usr_mhs_' . $nim, 'mhs_' . $nim, $nim]);
+        $files = $this->db->where_in('id_mhs', $target_ids)->get('file_pendaftaran')->result_array();
+        if (empty($files) && empty($user_row)) return null;
+
+        $namaMhs = $user_row['name'] ?? ('Mahasiswa ' . $nim);
+        $emailMhs = $user_row['email'] ?? '';
+        $prodiMhs = $user_row['prodi'] ?? '';
+
+        $all_approved = true;
+        $has_rejected = false;
+        $has_file = false;
+
+        $file_ksm = ''; $st_ksm = 'Pending';
+        $file_transkrip = ''; $st_transkrip = 'Pending';
+        $file_pernyataan = ''; $st_pernyataan = 'Pending';
+        $file_bebas_lab = ''; $st_bebas_lab = 'Pending';
+
+        $bMap = [];
+        $tgl_daftar = date('Y-m-d H:i:s');
+        foreach ($files as $fData) {
+            $has_file = true;
+            $namaDoc = $fData['nama'];
+            if (!empty($fData['date'])) $tgl_daftar = $fData['date'];
+
+            $st = $fData['status_doswal'] ?? 'Pending';
+            if ($st !== 'Approved' && $st !== 'Valid') $all_approved = false;
+            if ($st === 'Rejected' || $st === 'Invalid') $has_rejected = true;
+
+            $cleanSt = ($st === 'Approved' || $st === 'Valid') ? 'Approved' : (($st === 'Rejected' || $st === 'Invalid') ? 'Rejected' : 'Pending');
+
+            if (strpos($namaDoc, 'ksm') !== false) {
+                $file_ksm = $fData['file']; $st_ksm = $cleanSt;
+            } elseif (strpos($namaDoc, 'transkrip') !== false) {
+                $file_transkrip = $fData['file']; $st_transkrip = $cleanSt;
+            } elseif (strpos($namaDoc, 'pernyataan') !== false) {
+                $file_pernyataan = $fData['file']; $st_pernyataan = $cleanSt;
+            } elseif (strpos($namaDoc, 'bebas_lab') !== false || strpos($namaDoc, 'lab') !== false) {
+                $file_bebas_lab = $fData['file']; $st_bebas_lab = $cleanSt;
+            }
+
+            $bMap[$namaDoc] = [
+                'file_name'         => $fData['file'],
+                'status_verifikasi' => ($cleanSt === 'Approved') ? 'Valid' : (($cleanSt === 'Rejected') ? 'Invalid' : 'Pending'),
+                'catatan'           => $fData['komentar'] ?? ''
+            ];
+        }
+
+        $status_wali = ($all_approved && $has_file) ? 'Approved' : ($has_rejected ? 'Rejected' : 'Pending');
+        $stage = ($status_wali === 'Approved') ? 'Admin Layanan' : ($status_wali === 'Rejected' ? 'Dosen Wali (Ditolak)' : 'Dosen Wali');
+
+        return [
+            'id'                     => 'usr_mhs_' . $nim,
+            'nim'                    => $nim,
+            'nama_depan'             => $namaMhs,
+            'nama_belakang'          => '',
+            'mhs_konsentrasi'        => $prodiMhs,
+            'email'                  => $emailMhs,
+            'judul_1'                => 'Usulan Judul Tugas Akhir',
+            'status_judul'           => 'Approved',
+            'catatan_judul'          => '',
+            'status_approval_wali'   => $status_wali,
+            'status_approval_admin'  => 'Pending',
+            'status_approval_koor'   => 'Pending',
+            'status_approval_kk'     => 'Pending',
+            'current_stage'          => $stage,
+            'tgl_daftar'             => $tgl_daftar,
+            'created_at'             => $tgl_daftar,
+            'file_ksm'               => $file_ksm,
+            'status_file_ksm'        => $st_ksm,
+            'file_transkrip'         => $file_transkrip,
+            'status_file_transkrip'  => $st_transkrip,
+            'file_pernyataan'        => $file_pernyataan,
+            'status_file_pernyataan' => $st_pernyataan,
+            'file_bebas_lab'         => $file_bebas_lab,
+            'status_file_bebas_lab'  => $st_bebas_lab,
+            'berkas_map'             => $bMap,
+            'total_berkas'           => count($bMap)
+        ];
     }
 
     /**
