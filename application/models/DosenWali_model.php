@@ -50,15 +50,20 @@ class DosenWali_model extends CI_Model {
         return $this->db->update('pendaftaran_ta', $data);
     }
 
-    // Get List Mahasiswa Bimbingan Wali (Fetch REAL Submitted Pendaftaran TA Data)
     public function get_mahasiswa_bimbingan($nip_dosen = null) {
+        $legacy_records = [];
+        if ($this->db->table_exists('file_pendaftaran')) {
+            $legacy_records = $this->_get_mahasiswa_bimbingan_from_file_pendaftaran($nip_dosen);
+        }
+
         if (!$this->db->table_exists('pendaftaran_ta')) {
-            return array();
+            return $legacy_records;
         }
 
         $has_mhs = $this->db->table_exists('mahasiswa');
         $has_depan = $has_mhs && $this->db->field_exists('nama_depan', 'mahasiswa');
-        $has_users = $this->db->table_exists('users');
+        $has_users = $this->db->table_exists('user') || $this->db->table_exists('users');
+        $user_tbl  = $this->db->table_exists('user') ? 'user' : ($this->db->table_exists('users') ? 'users' : null);
 
         if ($has_depan) {
             $select = 'p.*, COALESCE(m.nama_depan, "Mahasiswa") as nama_depan, COALESCE(m.nama_belakang, "") as nama_belakang, m.konsentrasi_dkv as mhs_konsentrasi, m.alamat, p.created_at as tgl_daftar';
@@ -72,8 +77,8 @@ class DosenWali_model extends CI_Model {
         $this->db->from('pendaftaran_ta p');
         if ($has_depan) {
             $this->db->join('mahasiswa m', 'm.nim = p.nim', 'left');
-        } else if ($has_users) {
-            $this->db->join('users u', 'u.nidn_nim = p.nim', 'left');
+        } else if ($user_tbl) {
+            $this->db->join($user_tbl . ' u', '(u.nim = p.nim OR u.username = p.nim OR u.id = CONCAT("usr_mhs_", p.nim))', 'left');
         }
 
         if ($this->db->field_exists('is_submitted', 'pendaftaran_ta')) {
@@ -122,7 +127,15 @@ class DosenWali_model extends CI_Model {
                     }
                 }
             }
-            unset($row);
+        }
+        // Gabungkan dengan record legacy file_pendaftaran (tanpa duplikasi NIM)
+        if (!empty($legacy_records)) {
+            $existing_nims = !empty($results) ? array_column($results, 'nim') : [];
+            foreach ($legacy_records as $leg) {
+                if (!in_array($leg['nim'], $existing_nims)) {
+                    $results[] = $leg;
+                }
+            }
         }
 
         return $results;
@@ -131,12 +144,16 @@ class DosenWali_model extends CI_Model {
     // Get Detail Mahasiswa dan Pendaftaran TA (Real Data from MySQL)
     public function get_detail_pendaftaran_mahasiswa($nim) {
         if (!$this->db->table_exists('pendaftaran_ta')) {
+            if ($this->db->table_exists('file_pendaftaran')) {
+                return $this->_get_detail_from_file_pendaftaran($nim);
+            }
             return null;
         }
 
         $has_mhs = $this->db->table_exists('mahasiswa');
         $has_depan = $has_mhs && $this->db->field_exists('nama_depan', 'mahasiswa');
-        $has_users = $this->db->table_exists('users');
+        $has_users = $this->db->table_exists('user') || $this->db->table_exists('users');
+        $user_tbl  = $this->db->table_exists('user') ? 'user' : ($this->db->table_exists('users') ? 'users' : null);
 
         if ($has_depan) {
             $select = 'p.*, m.nama_depan, m.nama_belakang, m.konsentrasi_dkv as mhs_konsentrasi, m.alamat, m.kota, m.provinsi';
@@ -150,12 +167,15 @@ class DosenWali_model extends CI_Model {
         $this->db->from('pendaftaran_ta p');
         if ($has_depan) {
             $this->db->join('mahasiswa m', 'm.nim = p.nim', 'left');
-        } else if ($has_users) {
-            $this->db->join('users u', 'u.nidn_nim = p.nim', 'left');
+        } else if ($user_tbl) {
+            $this->db->join($user_tbl . ' u', '(u.nim = p.nim OR u.username = p.nim OR u.id = CONCAT("usr_mhs_", p.nim))', 'left');
         }
         $this->db->where('p.nim', $nim);
         $query = $this->db->get();
         $row = $query ? $query->row_array() : null;
+        if (!$row && $this->db->table_exists('file_pendaftaran')) {
+            $row = $this->_get_detail_from_file_pendaftaran($nim);
+        }
 
         if (!$row && $has_mhs) {
             $this->db->where('nim', $nim);
@@ -185,27 +205,37 @@ class DosenWali_model extends CI_Model {
     }
 
 
-    // Get Info Dosen Wali (Kode, Nama, Kejuruan)
-    public function get_dosen_wali_info($nip) {
-        if (!$this->db->table_exists('dosen_wali')) {
-            return array(
-                'nip' => '19850101',
-                'kode_dosen' => 'DW-001',
-                'nama_dosen' => 'Alif Dosen, S.T., M.T.',
-                'kejuruan' => 'Informatika / DKV'
-            );
+    // Get Info Dosen Wali (Kode, Nama, Kejuruan) Dinamis dari tabel user / session
+    public function get_dosen_wali_info($nip = null) {
+        $userId = $this->session->userdata('user_id');
+        $user = null;
+
+        if ($this->db->table_exists('user')) {
+            if (!empty($userId)) {
+                $user = $this->db->get_where('user', ['id' => $userId])->row_array();
+            }
+            if (!$user && !empty($nip)) {
+                $this->db->group_start();
+                $this->db->where('nip', $nip);
+                if ($this->db->field_exists('nidn_nim', 'user')) $this->db->or_where('nidn_nim', $nip);
+                $this->db->or_where('username', $nip);
+                $this->db->group_end();
+                $user = $this->db->get('user')->row_array();
+            }
         }
-        $this->db->where('nip', $nip);
-        $row = $this->db->get('dosen_wali')->row_array();
-        if (!$row) {
-            return array(
-                'nip' => $nip,
-                'kode_dosen' => 'DW-001',
-                'nama_dosen' => 'Alif Dosen, S.T., M.T.',
-                'kejuruan' => 'Informatika / DKV'
-            );
-        }
-        return $row;
+
+        $namaDosen = !empty($user['name']) ? $user['name'] : ($this->session->userdata('name') ?: 'Dosen Wali');
+        $kodeDosen = !empty($user['kode_dosen']) ? $user['kode_dosen'] : ($this->session->userdata('kode_dosen') ?: 'DWL');
+        $nipDosen  = !empty($user['nip']) ? $user['nip'] : ($user['nidn_nim'] ?? ($nip ?: '-'));
+        $prodi     = !empty($user['prodi']) ? $user['prodi'] : ($this->session->userdata('selected_prodi') ?: 'Desain Komunikasi Visual');
+
+        return array(
+            'nip'        => $nipDosen,
+            'kode_dosen' => $kodeDosen,
+            'nama_dosen' => $namaDosen,
+            'kejuruan'   => $prodi,
+            'prodi'      => $prodi
+        );
     }
 
     // Log ketika Dosen Wali membuka/meninjau file PDF
@@ -229,7 +259,13 @@ class DosenWali_model extends CI_Model {
 
     // Update status approval per-file (Approved / Rejected / Pending) oleh Dosen Wali
     public function update_file_approval($nim, $file_type, $status, $comment = '') {
-        if (!$this->db->table_exists('pendaftaran_ta') || empty($file_type)) return false;
+        if (!$this->db->table_exists('pendaftaran_ta')) {
+            // Update langsung ke file_pendaftaran dan pendaftaran_berkas
+            if ($this->db->table_exists('file_pendaftaran')) {
+                return $this->_update_file_approval_file_pendaftaran($nim, $file_type, $status, $comment);
+            }
+            return false;
+        }
 
         $col_status  = 'status_file_' . $file_type;
         $col_review  = 'review_file_' . $file_type;
@@ -259,6 +295,11 @@ class DosenWali_model extends CI_Model {
                 $berkasUpdate['catatan'] = ($status === 'Rejected') ? $comment : '';
             }
             $this->db->where('nim', $nim)->where('kode_berkas', $file_type)->update('pendaftaran_berkas', $berkasUpdate);
+        }
+
+        // Update juga file_pendaftaran jika ada
+        if ($this->db->table_exists('file_pendaftaran')) {
+            $this->_update_file_approval_file_pendaftaran($nim, $file_type, $status, $comment);
         }
 
         // Auto-sinkronisasi status keseluruhan & tahap pendaftaran di DB
@@ -628,44 +669,313 @@ class DosenWali_model extends CI_Model {
     }
 
     // Ambil nama file tanda tangan digital dosen
-    public function get_tanda_tangan($nip) {
+    public function get_tanda_tangan($nip = null) {
+        $userId = $this->session->userdata('user_id');
+
+        if ($this->db->table_exists('user')) {
+            if (!empty($userId)) {
+                $row = $this->db->get_where('user', ['id' => $userId])->row_array();
+                if ($row) {
+                    if (!empty($row['ttd'])) return $row['ttd'];
+                    if (!empty($row['tanda_tangan'])) return $row['tanda_tangan'];
+                }
+            }
+            if (!empty($nip)) {
+                $this->db->group_start();
+                if ($this->db->field_exists('nip', 'user')) $this->db->where('nip', $nip);
+                if ($this->db->field_exists('nidn_nim', 'user')) $this->db->or_where('nidn_nim', $nip);
+                $this->db->or_where('username', $nip);
+                $this->db->or_where('id', $nip);
+                $this->db->group_end();
+                $row = $this->db->get('user')->row_array();
+                if ($row) {
+                    if (!empty($row['ttd'])) return $row['ttd'];
+                    if (!empty($row['tanda_tangan'])) return $row['tanda_tangan'];
+                }
+            }
+        }
+
+        if ($this->db->table_exists('users')) {
+            if (!empty($userId)) {
+                $row = $this->db->get_where('users', ['id' => $userId])->row_array();
+                if ($row) {
+                    if (!empty($row['ttd'])) return $row['ttd'];
+                    if (!empty($row['tanda_tangan'])) return $row['tanda_tangan'];
+                }
+            }
+            if (!empty($nip)) {
+                $row = $this->db->get_where('users', ['nidn_nim' => $nip])->row_array();
+                if ($row) {
+                    if (!empty($row['ttd'])) return $row['ttd'];
+                    if (!empty($row['tanda_tangan'])) return $row['tanda_tangan'];
+                }
+            }
+        }
+
         if ($this->db->table_exists('dosen_wali') && $this->db->field_exists('tanda_tangan', 'dosen_wali')) {
             $row = $this->db->get_where('dosen_wali', ['nip' => $nip])->row_array();
             if (!empty($row['tanda_tangan'])) {
                 return $row['tanda_tangan'];
             }
         }
-        if ($this->db->table_exists('users') && $this->db->field_exists('tanda_tangan', 'users')) {
-            $row = $this->db->get_where('users', ['nidn_nim' => $nip])->row_array();
-            if (!empty($row['tanda_tangan'])) {
-                return $row['tanda_tangan'];
-            }
-        }
+
         return null;
     }
 
     // Simpan file tanda tangan digital dosen ke database
     public function save_tanda_tangan($nip, $filename) {
         $saved = false;
+        $userId = $this->session->userdata('user_id');
+
+        if ($this->db->table_exists('user')) {
+            $updateData = [];
+            if ($this->db->field_exists('ttd', 'user')) $updateData['ttd'] = $filename;
+            if ($this->db->field_exists('tanda_tangan', 'user')) $updateData['tanda_tangan'] = $filename;
+
+            if (!empty($updateData)) {
+                if (!empty($userId)) {
+                    $this->db->where('id', $userId)->update('user', $updateData);
+                    $saved = true;
+                }
+                if (!empty($nip)) {
+                    $this->db->group_start();
+                    if ($this->db->field_exists('nip', 'user')) $this->db->where('nip', $nip);
+                    if ($this->db->field_exists('nidn_nim', 'user')) $this->db->or_where('nidn_nim', $nip);
+                    $this->db->or_where('username', $nip);
+                    $this->db->or_where('id', $nip);
+                    $this->db->group_end();
+                    $this->db->update('user', $updateData);
+                    $saved = true;
+                }
+            }
+        }
+
+        if ($this->db->table_exists('users')) {
+            $updateData = [];
+            if ($this->db->field_exists('ttd', 'users')) $updateData['ttd'] = $filename;
+            if ($this->db->field_exists('tanda_tangan', 'users')) $updateData['tanda_tangan'] = $filename;
+
+            if (!empty($updateData)) {
+                if (!empty($userId)) {
+                    $this->db->where('id', $userId)->update('users', $updateData);
+                    $saved = true;
+                }
+                if (!empty($nip)) {
+                    $this->db->where('nidn_nim', $nip)->update('users', $updateData);
+                    $saved = true;
+                }
+            }
+        }
+
         if ($this->db->table_exists('dosen_wali') && $this->db->field_exists('tanda_tangan', 'dosen_wali')) {
             $this->db->where('nip', $nip)->update('dosen_wali', ['tanda_tangan' => $filename]);
             $saved = true;
         }
-        if ($this->db->table_exists('users') && $this->db->field_exists('tanda_tangan', 'users')) {
-            $this->db->where('nidn_nim', $nip)->update('users', ['tanda_tangan' => $filename]);
-            $saved = true;
-        }
+
         return $saved;
     }
 
     // Hapus tanda tangan digital dosen dari database
     public function delete_tanda_tangan($nip) {
+        $userId = $this->session->userdata('user_id');
+
+        if ($this->db->table_exists('user')) {
+            $updateData = [];
+            if ($this->db->field_exists('ttd', 'user')) $updateData['ttd'] = null;
+            if ($this->db->field_exists('tanda_tangan', 'user')) $updateData['tanda_tangan'] = null;
+
+            if (!empty($updateData)) {
+                if (!empty($userId)) {
+                    $this->db->where('id', $userId)->update('user', $updateData);
+                }
+                if (!empty($nip)) {
+                    $this->db->group_start();
+                    if ($this->db->field_exists('nip', 'user')) $this->db->where('nip', $nip);
+                    if ($this->db->field_exists('nidn_nim', 'user')) $this->db->or_where('nidn_nim', $nip);
+                    $this->db->or_where('username', $nip);
+                    $this->db->or_where('id', $nip);
+                    $this->db->group_end();
+                    $this->db->update('user', $updateData);
+                }
+            }
+        }
+
+        if ($this->db->table_exists('users')) {
+            $updateData = [];
+            if ($this->db->field_exists('ttd', 'users')) $updateData['ttd'] = null;
+            if ($this->db->field_exists('tanda_tangan', 'users')) $updateData['tanda_tangan'] = null;
+
+            if (!empty($updateData)) {
+                if (!empty($userId)) {
+                    $this->db->where('id', $userId)->update('users', $updateData);
+                }
+                if (!empty($nip)) {
+                    $this->db->where('nidn_nim', $nip)->update('users', $updateData);
+                }
+            }
+        }
+
         if ($this->db->table_exists('dosen_wali') && $this->db->field_exists('tanda_tangan', 'dosen_wali')) {
             $this->db->where('nip', $nip)->update('dosen_wali', ['tanda_tangan' => null]);
         }
-        if ($this->db->table_exists('users') && $this->db->field_exists('tanda_tangan', 'users')) {
-            $this->db->where('nidn_nim', $nip)->update('users', ['tanda_tangan' => null]);
-        }
+
         return true;
     }
+
+    /**
+     * Helper: Ambil data mahasiswa bimbingan langsung dari tabel file_pendaftaran
+     */
+    private function _get_mahasiswa_bimbingan_from_file_pendaftaran($nip_dosen = null) {
+        // Ambil semua berkas di tabel file_pendaftaran
+        $files = $this->db->order_by('date', 'DESC')->get('file_pendaftaran')->result_array();
+        if (empty($files)) return array();
+
+        // Kelompokkan file berdasarkan id_mhs
+        $grouped = [];
+        foreach ($files as $f) {
+            $idMhs = $f['id_mhs'];
+            if (!isset($grouped[$idMhs])) {
+                $grouped[$idMhs] = [
+                    'id_mhs' => $idMhs,
+                    'files'  => [],
+                    'date'   => $f['date']
+                ];
+            }
+            $grouped[$idMhs]['files'][$f['nama']] = $f;
+        }
+
+        $results = [];
+        $user_tbl = $this->db->table_exists('user') ? 'user' : ($this->db->table_exists('users') ? 'users' : null);
+
+        foreach ($grouped as $idMhs => $info) {
+            // Bersihkan NIM dari id_mhs (misal: 'usr_mhs_1301210001' -> '1301210001')
+            $nim = preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', $idMhs);
+
+            // Ambil data user dari tabel user
+            $user_row = null;
+            if ($user_tbl) {
+                $user_row = $this->db->group_start()
+                    ->where('id', $idMhs)
+                    ->or_where('id', $nim)
+                    ->or_where('username', $nim)
+                    ->group_end()
+                    ->get($user_tbl)
+                    ->row_array();
+            }
+
+            $namaMhs = $user_row['name'] ?? ('Mahasiswa ' . $nim);
+            $emailMhs = $user_row['email'] ?? '';
+
+            // Cek status persetujuan berkas oleh Dosen Wali
+            $all_approved = true;
+            $has_rejected = false;
+            $has_file = false;
+
+            $file_ksm = ''; $st_ksm = 'Pending';
+            $file_transkrip = ''; $st_transkrip = 'Pending';
+            $file_pernyataan = ''; $st_pernyataan = 'Pending';
+            $file_bebas_lab = ''; $st_bebas_lab = 'Pending';
+
+            foreach ($info['files'] as $namaDoc => $fData) {
+                $has_file = true;
+                $st = $fData['status_doswal'] ?? 'Pending';
+                if ($st !== 'Approved' && $st !== 'Valid') $all_approved = false;
+                if ($st === 'Rejected' || $st === 'Invalid') $has_rejected = true;
+
+                $cleanSt = ($st === 'Approved' || $st === 'Valid') ? 'Approved' : (($st === 'Rejected' || $st === 'Invalid') ? 'Rejected' : 'Pending');
+
+                if (strpos($namaDoc, 'ksm') !== false) {
+                    $file_ksm = $fData['file']; $st_ksm = $cleanSt;
+                } elseif (strpos($namaDoc, 'transkrip') !== false) {
+                    $file_transkrip = $fData['file']; $st_transkrip = $cleanSt;
+                } elseif (strpos($namaDoc, 'pernyataan') !== false) {
+                    $file_pernyataan = $fData['file']; $st_pernyataan = $cleanSt;
+                } elseif (strpos($namaDoc, 'bebas_lab') !== false || strpos($namaDoc, 'lab') !== false) {
+                    $file_bebas_lab = $fData['file']; $st_bebas_lab = $cleanSt;
+                }
+            }
+
+            $status_wali = ($all_approved && $has_file) ? 'Approved' : ($has_rejected ? 'Rejected' : 'Pending');
+            $stage = ($status_wali === 'Approved') ? 'Admin Layanan' : ($status_wali === 'Rejected' ? 'Dosen Wali (Ditolak)' : 'Dosen Wali');
+
+            $results[] = [
+                'id'                     => $idMhs,
+                'nim'                    => $nim,
+                'nama_depan'             => $namaMhs,
+                'nama_belakang'          => '',
+                'email'                  => $emailMhs,
+                'judul_1'                => 'Usulan Judul Tugas Akhir',
+                'status_judul'           => 'Approved',
+                'catatan_judul'          => '',
+                'status_approval_wali'   => $status_wali,
+                'status_approval_admin'  => 'Pending',
+                'status_approval_koor'   => 'Pending',
+                'status_approval_kk'     => 'Pending',
+                'current_stage'          => $stage,
+                'tgl_daftar'             => $info['date'],
+                'created_at'             => $info['date'],
+                'file_ksm'               => $file_ksm,
+                'status_file_ksm'        => $st_ksm,
+                'file_transkrip'         => $file_transkrip,
+                'status_file_transkrip'  => $st_transkrip,
+                'file_pernyataan'        => $file_pernyataan,
+                'status_file_pernyataan' => $st_pernyataan,
+                'file_bebas_lab'         => $file_bebas_lab,
+                'status_file_bebas_lab'  => $st_bebas_lab,
+                'total_berkas'           => count($info['files'])
+            ];
+        }
+
+        return $results;
+    }
+
+    /**
+     * Helper: Ambil detail pendaftaran mahasiswa dari tabel file_pendaftaran
+     */
+    private function _get_detail_from_file_pendaftaran($nim) {
+        $list = $this->_get_mahasiswa_bimbingan_from_file_pendaftaran();
+        foreach ($list as $row) {
+            if ($row['nim'] === $nim || $row['id'] === $nim || strpos($row['id'], $nim) !== false) {
+                // Ambil berkas_map spesifik
+                $files = $this->db->where('id_mhs', $row['id'])->get('file_pendaftaran')->result_array();
+                $bMap = [];
+                foreach ($files as $f) {
+                    $bMap[$f['nama']] = [
+                        'file_name'         => $f['file'],
+                        'status_verifikasi' => ($f['status_doswal'] === 'Approved') ? 'Valid' : (($f['status_doswal'] === 'Rejected') ? 'Invalid' : 'Pending'),
+                        'catatan'           => $f['komentar'] ?? ''
+                    ];
+                }
+                $row['berkas_map'] = $bMap;
+                return $row;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Helper: Update status berkas di tabel file_pendaftaran
+     */
+    private function _update_file_approval_file_pendaftaran($nim, $file_type, $status, $comment = '') {
+        $ver = ($status === 'Approved') ? 'Approved' : (($status === 'Rejected') ? 'Rejected' : 'Pending');
+
+        // Cari record yang cocok di file_pendaftaran
+        $this->db->group_start()
+            ->where('id_mhs', $nim)
+            ->or_where('id_mhs', 'usr_mhs_' . $nim)
+            ->or_where('id_mhs', 'mhs_' . $nim)
+            ->or_like('id_mhs', $nim)
+            ->group_end();
+        $this->db->like('nama', $file_type);
+
+        $update = $this->db->update('file_pendaftaran', [
+            'status_doswal' => $ver,
+            'komentar'      => $comment,
+            'date_edit'     => date('Y-m-d H:i:s'),
+            'view_doswal'   => 1
+        ]);
+
+        return $update;
+    }
 }
+

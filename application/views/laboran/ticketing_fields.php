@@ -379,6 +379,31 @@
                 <form action="<?= site_url('laboran/ticketing/unit_save'); ?>" method="POST" class="p-6 space-y-4">
                     <input type="hidden" name="id" id="unit_id" value="0">
 
+                    <?php if (!empty($available_roles)): ?>
+                    <div id="role_template_box" class="p-3.5 bg-gradient-to-r from-orange-50 to-amber-50/50 rounded-2xl border border-orange-200/80">
+                        <label for="select_role_template" class="block text-xs font-bold text-slate-800 mb-1 flex items-center justify-between">
+                            <span class="flex items-center gap-1.5 text-orange-950 font-bold">
+                                <i class="bi bi-person-badge-fill text-orange-600"></i>
+                                Pilih dari Role Sistem (Rekomendasi)
+                            </span>
+                            <span class="text-[10px] text-orange-700 bg-orange-100 px-2 py-0.5 rounded-full font-semibold">Belum terdaftar</span>
+                        </label>
+                        <select id="select_role_template" onchange="pilihRoleTemplate(this)"
+                                class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-orange-300/80 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 text-xs font-semibold text-slate-700 transition-all outline-hidden cursor-pointer shadow-xs">
+                            <option value="">-- Pilih Role yang belum ada di ticketing (atau ketik manual) --</option>
+                            <?php foreach ($available_roles as $ar): ?>
+                                <option value="<?= htmlspecialchars($ar['role']); ?>" data-id="<?= $ar['id']; ?>">
+                                    Role: <?= htmlspecialchars($ar['role']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <p class="text-[11px] text-slate-500 mt-1.5 flex items-center gap-1">
+                            <i class="bi bi-info-circle text-orange-500"></i>
+                            <span>Memilih role akan otomatis mengisi Nama Unit &amp; Deskripsi di bawah.</span>
+                        </p>
+                    </div>
+                    <?php endif; ?>
+
                     <div>
                         <label for="modal_nama_unit" class="block text-xs font-bold text-slate-700 mb-1.5">
                             Nama Unit Tujuan <span class="text-rose-500">*</span>
@@ -479,6 +504,25 @@
             document.getElementById('modal_unit_deskripsi').value = '';
             document.getElementById('modal_unit_sort_order').value = '<?= count($units) + 1; ?>';
             document.getElementById('unit_active_container').classList.add('hidden');
+            
+            const selRole = document.getElementById('select_role_template');
+            if (selRole) selRole.selectedIndex = 0;
+            const roleBox = document.getElementById('role_template_box');
+            if (roleBox) roleBox.classList.remove('hidden');
+        }
+
+        function pilihRoleTemplate(selectEl) {
+            const role = selectEl.value;
+            if (!role) return;
+            const namaInput = document.getElementById('modal_nama_unit');
+            const deskripsiInput = document.getElementById('modal_unit_deskripsi');
+            if (namaInput) {
+                namaInput.value = role;
+                namaInput.focus();
+            }
+            if (deskripsiInput) {
+                deskripsiInput.value = 'Layanan dan penanganan kendala seputar ' + role;
+            }
         }
 
         function tutupModalUnit() {

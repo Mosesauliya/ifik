@@ -21,7 +21,6 @@ class Header_model extends CI_Model {
             $default->updated_at     = null;
             return $default;
         }
-
         return $this->db->get_where('header_settings', ['id' => 1])->row();
     }
 
@@ -42,6 +41,9 @@ class Header_model extends CI_Model {
      * show_text, overlay_title, overlay_description, created_at).
      */
     public function get_slides() {
+        if (!$this->db->table_exists('header_slides')) {
+            return [];
+        }
         $this->db->order_by('order_num', 'ASC');
         return $this->db->get('tb_panel')->result();
     }

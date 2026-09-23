@@ -271,9 +271,18 @@ $route['laboran/help'] = 'LaboranHelp/index';
 $route['laboran/help/conversations'] = 'LaboranHelp/get_conversations_ajax';
 $route['laboran/help/messages/(:num)'] = 'LaboranHelp/get_messages_ajax/$1';
 $route['laboran/help/send'] = 'LaboranHelp/send_message_ajax';
+$route['laboran/help/send-user-message'] = 'LaboranHelp/send_user_message_ajax';
+$route['laboran/help/create-chat'] = 'LaboranHelp/create_chat_user_ajax';
+$route['laboran/help/my-chats'] = 'LaboranHelp/my_conversations_ajax';
 $route['laboran/help/toggle-status'] = 'LaboranHelp/toggle_status_ajax';
 $route['laboran/help/quick-replies'] = 'LaboranHelp/quick_replies_ajax';
 $route['laboran/help/sample'] = 'LaboranHelp/create_sample_ajax';
+
+// User / Mahasiswa / Dosen Public Help Desk API Routes (Mudah diintegrasikan teman)
+$route['api/help/create'] = 'LaboranHelp/create_chat_user_ajax';
+$route['api/help/send'] = 'LaboranHelp/send_user_message_ajax';
+$route['api/help/messages/(:num)'] = 'LaboranHelp/get_messages_ajax/$1';
+$route['api/help/my-chats'] = 'LaboranHelp/my_conversations_ajax';
 
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;

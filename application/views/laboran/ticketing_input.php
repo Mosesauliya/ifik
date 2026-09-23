@@ -151,31 +151,79 @@
                     <p class="text-xs text-slate-400 mt-1.5">Nama petugas laboran yang mengajukan tiket kendala ini.</p>
                 </div>
 
-                <!-- 2. Unit yang Dituju (Dropdown) -->
+                <!-- 2. Ditujukan Kepada (Tujuan Penerima Tiket) -->
                 <div>
-                    <label for="unit_tujuan" class="block text-sm font-bold text-slate-700 mb-2">
-                        2. Unit yang Dituju <span class="text-rose-500">*</span>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">
+                        2. Ditujukan Kepada (Tujuan Penerima Tiket) <span class="text-rose-500">*</span>
+                    </label>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="penerimaGroup">
+                        
+                        <!-- 1. Laboran -->
+                        <label id="card_penerima_Laboran" onclick="selectPenerima('Laboran')" class="relative flex items-start gap-3.5 p-3.5 rounded-2xl border border-orange-500 bg-orange-50/80 ring-2 ring-orange-500/20 shadow-xs cursor-pointer transition-all select-none">
+                            <input type="radio" name="tujuan_penerima" id="radio_penerima_Laboran" value="Laboran" checked onchange="updatePenerimaUI(this.value)" class="sr-only">
+                            <div class="penerima-icon-box w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center text-base shrink-0 shadow-xs">
+                                <i class="bi bi-pc-display-horizontal"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <span class="penerima-title text-xs font-bold text-orange-700 block">Laboran</span>
+                                <span class="text-[11px] text-slate-500 leading-tight block mt-0.5">Fasilitas Lab, Hardware/Software, Jaringan & Sarpras</span>
+                            </div>
+                        </label>
+
+                        <!-- 2. Dosen Kaur -->
+                        <label id="card_penerima_Dosen_Kaur" onclick="selectPenerima('Dosen Kaur')" class="relative flex items-start gap-3.5 p-3.5 rounded-2xl border border-slate-200 bg-white hover:border-orange-300 hover:bg-orange-50/20 shadow-2xs cursor-pointer transition-all select-none">
+                            <input type="radio" name="tujuan_penerima" id="radio_penerima_Dosen_Kaur" value="Dosen Kaur" onchange="updatePenerimaUI(this.value)" class="sr-only">
+                            <div class="penerima-icon-box w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center text-base shrink-0 transition-all">
+                                <i class="bi bi-person-video3"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <span class="penerima-title text-xs font-semibold text-slate-700 block">Dosen Kaur</span>
+                                <span class="text-[11px] text-slate-400 leading-tight block mt-0.5">Kepala Urusan, Dosen Wali, Bimbingan & Masalah Perkuliahan</span>
+                            </div>
+                        </label>
+
+                        <!-- 3. Admin LAA -->
+                        <label id="card_penerima_Admin_LAA" onclick="selectPenerima('Admin LAA')" class="relative flex items-start gap-3.5 p-3.5 rounded-2xl border border-slate-200 bg-white hover:border-orange-300 hover:bg-orange-50/20 shadow-2xs cursor-pointer transition-all select-none">
+                            <input type="radio" name="tujuan_penerima" id="radio_penerima_Admin_LAA" value="Admin LAA" onchange="updatePenerimaUI(this.value)" class="sr-only">
+                            <div class="penerima-icon-box w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center text-base shrink-0 transition-all">
+                                <i class="bi bi-building-check"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <span class="penerima-title text-xs font-semibold text-slate-700 block">Admin LAA</span>
+                                <span class="text-[11px] text-slate-400 leading-tight block mt-0.5">Layanan Akademik, Surat Pengantar, Ijazah, Transkrip & KTM</span>
+                            </div>
+                        </label>
+
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1.5">Pilih pihak penerima yang berwenang menindaklanjuti dan merespon kendala ini.</p>
+                </div>
+
+                <!-- 3. Unit / Lingkup Terkait (Dropdown Topik Pembahasan) -->
+                <div>
+                    <label for="unit_terkait" class="block text-sm font-bold text-slate-700 mb-2">
+                        3. Unit / Lingkup Terkait <span class="text-rose-500">*</span>
                     </label>
                     <div class="relative">
                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
                             <i class="bi bi-building-gear text-base"></i>
                         </span>
-                        <select id="unit_tujuan" name="unit_tujuan" required onchange="handleUnitChange(this.value)"
+                        <select id="unit_terkait" name="unit_terkait" required onchange="handleUnitChange(this.value)"
                                 class="w-full pl-11 pr-10 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 text-sm font-semibold text-slate-800 transition-all outline-hidden appearance-none cursor-pointer">
-                            <option value="">-- Pilih Unit yang Dituju --</option>
+                            <option value="">-- Pilih Unit / Lingkup yang Terkait dengan Kendala --</option>
                             <?php foreach ($unit_kategori_map as $unitName => $kategoriList): ?>
                                 <option value="<?= htmlspecialchars($unitName); ?>"><?= htmlspecialchars($unitName); ?></option>
                             <?php endforeach; ?>
                         </select>
+                        <input type="hidden" name="unit_tujuan" id="unit_tujuan" value="">
                         <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
                     </div>
-                    <p class="text-xs text-slate-400 mt-1.5">Pilih unit kerja atau departemen tujuan kendala (contoh: LAA, IT Support, Koor TA).</p>
+                    <p class="text-xs text-slate-400 mt-1.5">Pilih unit kerja atau departemen yang menjadi topik pembahasan persoalan.</p>
                 </div>
 
-                <!-- 3. Kategori Kendala (Dropdown Dinamis) -->
+                <!-- 4. Kategori Kendala (Dropdown Dinamis) -->
                 <div>
                     <label for="kategori" class="block text-sm font-bold text-slate-700 mb-2">
-                        3. Kategori Kendala <span class="text-rose-500">*</span>
+                        4. Kategori Kendala <span class="text-rose-500">*</span>
                     </label>
                     <div class="relative">
                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
@@ -183,14 +231,14 @@
                         </span>
                         <select id="kategori" name="kategori" required disabled onchange="handleKategoriChange(this.value)"
                                 class="w-full pl-11 pr-10 py-3 rounded-xl bg-slate-100 border border-slate-200 focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 text-sm font-semibold text-slate-800 transition-all outline-hidden appearance-none cursor-not-allowed disabled:opacity-75">
-                            <option value="">-- Silakan pilih Unit yang Dituju terlebih dahulu --</option>
+                            <option value="">-- Silakan pilih Unit / Lingkup Terkait terlebih dahulu --</option>
                         </select>
                         <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
                     </div>
                     <p id="kategori-hint" class="text-xs text-slate-400 mt-1.5">Kategori akan otomatis disesuaikan dengan unit yang dipilih di atas.</p>
                 </div>
 
-                <!-- 3b. Detail / Keterangan Kategori Lainnya -->
+                <!-- 4b. Detail / Keterangan Kategori Lainnya -->
                 <div id="container_kategori_lainnya" class="hidden transition-all duration-300">
                     <label for="kategori_lainnya" class="block text-sm font-bold text-slate-700 mb-2 flex items-center justify-between">
                         <span>Detail Kategori Lainnya <span class="text-rose-500">*</span></span>
@@ -207,14 +255,13 @@
                                class="w-full pl-11 pr-4 py-3 rounded-xl bg-orange-50/40 border border-orange-200 focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 text-sm font-semibold text-slate-800 placeholder-slate-400 transition-all outline-hidden">
                     </div>
                 </div>
-
-                <!-- 4 & 5. Grid: Prioritas & Subjek (Berurutan No 4 & 5) -->
+                <!-- 5 & 6. Grid: Prioritas & Subjek (Berurutan No 5 & 6) -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                     
-                    <!-- 4. Tingkat Prioritas -->
+                    <!-- 5. Tingkat Prioritas -->
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2">
-                            4. Tingkat Prioritas <span class="text-rose-500">*</span>
+                            5. Tingkat Prioritas <span class="text-rose-500">*</span>
                         </label>
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5" id="prioritasGroup">
                             
@@ -253,10 +300,10 @@
                         </div>
                     </div>
 
-                    <!-- 5. Subjek Kendala -->
+                    <!-- 6. Subjek Kendala -->
                     <div>
                         <label for="subjek" class="block text-sm font-bold text-slate-700 mb-2">
-                            5. Subjek / Ringkasan Kendala <span class="text-rose-500">*</span>
+                            6. Subjek / Ringkasan Kendala <span class="text-rose-500">*</span>
                         </label>
                         <div class="relative">
                             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
@@ -271,18 +318,18 @@
 
                 </div>
 
-                <!-- 6. Deskripsi Rinci (TinyMCE) -->
+                <!-- 7. Deskripsi Rinci (TinyMCE) -->
                 <div class="pt-2">
                     <label for="deskripsi" class="block text-sm font-bold text-slate-700 mb-2">
-                        6. Deskripsi Kendala Rinci <span class="text-rose-500">*</span>
+                        7. Deskripsi Kendala Rinci <span class="text-rose-500">*</span>
                     </label>
                     <textarea id="deskripsi" name="deskripsi" rows="6"
                               placeholder="Tuliskan rincian kendala Anda di sini..."></textarea>
                 </div>
 
-                <!-- Kolom Tambahan Dinamis Khusus (Nomor 8 dst jika ada inputan kustom dari Laboran) -->
+                <!-- Kolom Tambahan Dinamis Khusus (Nomor 9 dst jika ada inputan kustom dari Laboran) -->
                 <?php 
-                    $coreFieldNames = ['nama_lengkap', 'unit_tujuan', 'kategori', 'prioritas', 'subjek', 'deskripsi', 'lampiran'];
+                    $coreFieldNames = ['nama_lengkap', 'unit_tujuan', 'tujuan_penerima', 'unit_terkait', 'kategori', 'prioritas', 'subjek', 'deskripsi', 'lampiran'];
                     $extraFields = !empty($custom_fields) ? array_values(array_filter($custom_fields, function($cf) use ($coreFieldNames) {
                         return !in_array($cf['field_name'], $coreFieldNames) && $cf['is_active'] == 1;
                     })) : [];
@@ -292,7 +339,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <?php foreach ($extraFields as $idx => $cf): ?>
                                 <?php 
-                                    $nomorUrut = 8 + $idx;
+                                    $nomorUrut = 9 + $idx;
                                     $isTextarea = ($cf['field_type'] === 'textarea');
                                     $colSpan = $isTextarea ? 'sm:col-span-2' : '';
                                 ?>
@@ -359,16 +406,16 @@
                     </div>
                 <?php endif; ?>
 
-                <!-- 7. Upload Lampiran -->
+                <!-- 8. Upload Lampiran -->
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-2">
-                        7. Lampiran Berkas / Screenshot <span class="text-xs font-normal text-slate-400">(Opsional)</span>
+                        8. Lampiran Berkas / Screenshot <span class="text-xs font-normal text-slate-400">(Opsional)</span>
                     </label>
                     <div class="relative border-2 border-dashed border-slate-200 hover:border-orange-400 bg-slate-50/60 rounded-2xl p-6 transition-all group text-center cursor-pointer"
                          onclick="document.getElementById('lampiran').click()">
                         <input type="file" id="lampiran" name="lampiran" class="hidden"
-                               accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
-                               onchange="handleFileSelected(this)">
+                                accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
+                                onchange="handleFileSelected(this)">
                         
                         <div id="upload-placeholder" class="flex flex-col items-center justify-center pointer-events-none">
                             <div class="w-12 h-12 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
@@ -498,9 +545,43 @@
     <script>
         const unitKategoriMap = <?= json_encode($unit_kategori_map); ?>;
 
+        function selectPenerima(val) {
+            const rad = document.querySelector('input[name="tujuan_penerima"][value="' + val + '"]');
+            if (rad) {
+                rad.checked = true;
+            }
+            updatePenerimaUI(val);
+        }
+
+        function updatePenerimaUI(val) {
+            const penerimaKeys = ['Laboran', 'Dosen_Kaur', 'Admin_LAA'];
+            const valKey = val.replace(/\s+/g, '_');
+
+            penerimaKeys.forEach(function(key) {
+                const card = document.getElementById('card_penerima_' + key);
+                if (!card) return;
+                const iconBox = card.querySelector('.penerima-icon-box');
+                const title = card.querySelector('.penerima-title');
+
+                if (key === valKey) {
+                    card.className = 'relative flex items-start gap-3.5 p-3.5 rounded-2xl border border-orange-500 bg-orange-50/80 ring-2 ring-orange-500/20 shadow-xs cursor-pointer transition-all select-none';
+                    if (iconBox) iconBox.className = 'penerima-icon-box w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center text-base shrink-0 shadow-xs';
+                    if (title) title.className = 'penerima-title text-xs font-bold text-orange-700 block';
+                } else {
+                    card.className = 'relative flex items-start gap-3.5 p-3.5 rounded-2xl border border-slate-200 bg-white hover:border-orange-300 hover:bg-orange-50/20 shadow-2xs cursor-pointer transition-all select-none';
+                    if (iconBox) iconBox.className = 'penerima-icon-box w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center text-base shrink-0 transition-all';
+                    if (title) title.className = 'penerima-title text-xs font-semibold text-slate-700 block';
+                }
+            });
+        }
+
         function handleUnitChange(selectedUnit) {
             const kategoriSelect = document.getElementById('kategori');
             const kategoriHint = document.getElementById('kategori-hint');
+            const hiddenUnitTujuan = document.getElementById('unit_tujuan');
+            if (hiddenUnitTujuan) {
+                hiddenUnitTujuan.value = selectedUnit;
+            }
             
             handleKategoriChange('');
             kategoriSelect.innerHTML = '';
@@ -511,7 +592,7 @@
                 kategoriSelect.classList.remove('cursor-pointer', 'bg-slate-50');
                 const defaultOpt = document.createElement('option');
                 defaultOpt.value = '';
-                defaultOpt.textContent = '-- Silakan pilih Unit yang Dituju terlebih dahulu --';
+                defaultOpt.textContent = '-- Silakan pilih Unit / Lingkup Terkait terlebih dahulu --';
                 kategoriSelect.appendChild(defaultOpt);
                 kategoriHint.textContent = 'Kategori akan otomatis disesuaikan dengan unit yang dipilih di atas.';
                 return;

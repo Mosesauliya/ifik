@@ -445,27 +445,27 @@
             <!-- Vertical Stepper Track Line -->
             <div id="stepperLine" class="absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-slate-200"></div>
 
-            <!-- Step 1: Tiket Masuk -->
+            <!-- Step 1: Menunggu -->
             <div class="relative">
                 <span id="step1Icon" class="absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-emerald-500 text-white shadow-xs">
                     <i class="bi bi-check-lg"></i>
                 </span>
                 <div class="flex items-center justify-between gap-2">
-                    <span class="font-bold text-slate-800 text-[11px]">1. Tiket Masuk</span>
+                    <span class="font-bold text-slate-800 text-[11px]">1. Menunggu</span>
                     <span id="step1Time" class="text-[10px] font-mono text-emerald-600 font-bold whitespace-nowrap">-</span>
                 </div>
                 <p class="text-[10px] text-slate-400 leading-snug mt-0.5">
-                    Laporan kendala masuk ke sistem unit <span id="step1Unit" class="font-semibold text-slate-600"></span>.
+                    Laporan kendala masuk ke sistem antrean unit <span id="step1Unit" class="font-semibold text-slate-600"></span>.
                 </p>
             </div>
 
-            <!-- Step 2: Sedang Diproses -->
+            <!-- Step 2: Diproses -->
             <div class="relative">
                 <span id="step2Icon" class="absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border">
                     <!-- Dynamic Icon -->
                 </span>
                 <div class="flex items-center justify-between gap-2">
-                    <span id="step2Title" class="font-bold text-[11px]">2. Sedang Diproses</span>
+                    <span id="step2Title" class="font-bold text-[11px]">2. Diproses</span>
                     <span id="step2Time" class="text-[10px] font-mono font-bold whitespace-nowrap">-</span>
                 </div>
                 <p id="step2Desc" class="text-[10px] text-slate-400 leading-snug mt-0.5">
@@ -473,13 +473,13 @@
                 </p>
             </div>
 
-            <!-- Step 3: Tanggapan & Solusi -->
+            <!-- Step 3: Selesai -->
             <div class="relative">
                 <span id="step3Icon" class="absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border">
                     <!-- Dynamic Icon -->
                 </span>
                 <div class="flex items-center justify-between gap-2">
-                    <span id="step3Title" class="font-bold text-[11px]">3. Tanggapan & Solusi</span>
+                    <span id="step3Title" class="font-bold text-[11px]">3. Selesai</span>
                     <span id="step3Time" class="text-[10px] font-mono font-bold whitespace-nowrap">-</span>
                 </div>
                 <p id="step3Desc" class="text-[10px] text-slate-400 leading-snug mt-0.5">
@@ -552,23 +552,26 @@
                 <!-- Modal Body -->
                 <div class="px-6 py-5 max-h-[75vh] overflow-y-auto space-y-4">
                     <!-- Info Pengirim -->
-                    <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/70 grid grid-cols-2 gap-3 text-xs">
+                    <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/70 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                         <div>
                             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Pengirim</span>
                             <span class="font-extrabold text-slate-800" id="modalNamaDosen">-</span>
                             <span class="text-[11px] text-slate-400 font-mono block" id="modalNidn">-</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Unit Tujuan</span>
-                            <span class="font-bold text-orange-700 inline-flex items-center gap-1 mt-0.5 bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200 text-[11px]" id="modalUnitTujuan">-</span>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Ditujukan Kepada</span>
+                            <span class="font-bold text-orange-700 inline-flex items-center gap-1 mt-0.5 bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200 text-[11px]" id="modalTujuanPenerima">Dosen Kaur</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Kategori</span>
-                            <span class="font-semibold text-slate-700" id="modalKategori">-</span>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Unit / Lingkup Terkait</span>
+                            <span class="font-bold text-slate-700 inline-flex items-center gap-1 mt-0.5 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 text-[11px]" id="modalUnitTerkait">-</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Prioritas</span>
-                            <span class="font-bold text-slate-700" id="modalPrioritas">-</span>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Kategori & Prioritas</span>
+                            <div class="flex items-center gap-1 mt-0.5 flex-wrap">
+                                <span class="font-semibold text-slate-700" id="modalKategori">-</span>
+                                <span class="font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded text-[10px] border border-slate-200" id="modalPrioritas">-</span>
+                            </div>
                         </div>
                     </div>
 
@@ -585,11 +588,14 @@
 
                     <!-- Lampiran File/Foto -->
                     <div id="modalLampiranSection" class="hidden">
-                        <span class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block mb-1">Lampiran Pendukung</span>
-                        <div class="flex items-center gap-2">
-                            <a id="modalLampiranLink" href="#" target="_blank" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-orange-50 hover:bg-orange-100 text-brand-700 text-xs font-bold border border-orange-200 transition-all">
-                                <i class="bi bi-paperclip"></i> <span id="modalLampiranName">Lihat Lampiran</span>
-                            </a>
+                        <span class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block mb-1.5">Lampiran Pendukung</span>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <button type="button" onclick="bukaModalPreviewLampiran()" id="btnPreviewLampiran" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-bold border border-orange-200 transition-all cursor-pointer shadow-xs">
+                                <i class="bi bi-paperclip text-sm"></i> <span id="modalLampiranName">Lihat Lampiran</span>
+                            </button>
+                            <button type="button" onclick="unduhLampiranAktif()" id="btnDirectDownloadLampiran" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-200 transition-all cursor-pointer shadow-xs" title="Unduh File Langsung">
+                                <i class="bi bi-download"></i> <span>Unduh</span>
+                            </button>
                         </div>
                     </div>
 
@@ -607,13 +613,74 @@
                         <input type="hidden" name="id_tiket" id="formTicketId" value="">
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Perbarui Status Penanganan <span class="text-rose-500">*</span></label>
-                            <select name="status" id="formStatusSelect" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500">
-                                <option value="Menunggu">Menunggu</option>
-                                <option value="Diproses">Diproses (Sedang Ditangani Dosen)</option>
-                                <option value="Selesai">Selesai (Kendala Telah Diatasi)</option>
-                                <option value="Ditutup">Ditutup</option>
-                            </select>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label class="block text-xs font-extrabold text-slate-700">Tahap Penanganan Tiket <span class="text-rose-500">*</span></label>
+                                <span class="text-[10px] font-bold text-slate-400"><i class="bi bi-shield-check text-emerald-500"></i> Alur Maju Terkunci (Satu Arah)</span>
+                            </div>
+                            <input type="hidden" name="status" id="formStatusInput" value="Menunggu">
+                            
+                            <!-- Card Selector Stepper (One-Way) -->
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5" id="statusCardContainer">
+                                <!-- Card Menunggu -->
+                                <div id="cardStatus_Menunggu" onclick="selectStatusCard('Menunggu')" 
+                                     class="status-choice-card cursor-pointer p-3 rounded-2xl border-2 transition-all flex flex-col items-center justify-center text-center gap-1.5 select-none relative bg-slate-50 border-slate-200">
+                                    <div class="w-7 h-7 rounded-xl flex items-center justify-center text-sm font-bold icon-box bg-amber-100 text-amber-600">
+                                        <i class="bi bi-hourglass-split"></i>
+                                    </div>
+                                    <div>
+                                        <span class="text-[11px] font-extrabold block text-slate-800 leading-tight">1. Menunggu</span>
+                                        <span class="text-[9px] text-slate-400 block mt-0.5 card-subtext">Antrean Masuk</span>
+                                    </div>
+                                    <span class="status-badge-indicator absolute -top-1.5 -right-1.5 hidden w-5 h-5 rounded-full bg-orange-600 text-white text-[10px] flex items-center justify-center shadow-xs">
+                                        <i class="bi bi-check-lg"></i>
+                                    </span>
+                                </div>
+
+                                <!-- Card Diproses -->
+                                <div id="cardStatus_Diproses" onclick="selectStatusCard('Diproses')" 
+                                     class="status-choice-card cursor-pointer p-3 rounded-2xl border-2 transition-all flex flex-col items-center justify-center text-center gap-1.5 select-none relative bg-slate-50 border-slate-200">
+                                    <div class="w-7 h-7 rounded-xl flex items-center justify-center text-sm font-bold icon-box bg-blue-100 text-blue-600">
+                                        <i class="bi bi-gear-wide-connected"></i>
+                                    </div>
+                                    <div>
+                                        <span class="text-[11px] font-extrabold block text-slate-800 leading-tight">2. Diproses</span>
+                                        <span class="text-[9px] text-slate-400 block mt-0.5 card-subtext">Sedang Ditangani</span>
+                                    </div>
+                                    <span class="status-badge-indicator absolute -top-1.5 -right-1.5 hidden w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center shadow-xs">
+                                        <i class="bi bi-check-lg"></i>
+                                    </span>
+                                </div>
+
+                                <!-- Card Selesai -->
+                                <div id="cardStatus_Selesai" onclick="selectStatusCard('Selesai')" 
+                                     class="status-choice-card cursor-pointer p-3 rounded-2xl border-2 transition-all flex flex-col items-center justify-center text-center gap-1.5 select-none relative bg-slate-50 border-slate-200">
+                                    <div class="w-7 h-7 rounded-xl flex items-center justify-center text-sm font-bold icon-box bg-emerald-100 text-emerald-600">
+                                        <i class="bi bi-check2-circle"></i>
+                                    </div>
+                                    <div>
+                                        <span class="text-[11px] font-extrabold block text-slate-800 leading-tight">3. Selesai</span>
+                                        <span class="text-[9px] text-slate-400 block mt-0.5 card-subtext">Kendala Teratasi</span>
+                                    </div>
+                                    <span class="status-badge-indicator absolute -top-1.5 -right-1.5 hidden w-5 h-5 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center shadow-xs">
+                                        <i class="bi bi-check-lg"></i>
+                                    </span>
+                                </div>
+
+                                <!-- Card Ditutup -->
+                                <div id="cardStatus_Ditutup" onclick="selectStatusCard('Ditutup')" 
+                                     class="status-choice-card cursor-pointer p-3 rounded-2xl border-2 transition-all flex flex-col items-center justify-center text-center gap-1.5 select-none relative bg-slate-50 border-slate-200">
+                                    <div class="w-7 h-7 rounded-xl flex items-center justify-center text-sm font-bold icon-box bg-purple-100 text-purple-600">
+                                        <i class="bi bi-archive-fill"></i>
+                                    </div>
+                                    <div>
+                                        <span class="text-[11px] font-extrabold block text-slate-800 leading-tight">4. Ditutup</span>
+                                        <span class="text-[9px] text-slate-400 block mt-0.5 card-subtext">Arsip Final</span>
+                                    </div>
+                                    <span class="status-badge-indicator absolute -top-1.5 -right-1.5 hidden w-5 h-5 rounded-full bg-purple-600 text-white text-[10px] flex items-center justify-center shadow-xs">
+                                        <i class="bi bi-check-lg"></i>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
 
                         <div>
@@ -639,8 +706,179 @@
         </div>
     </div>
 
-    <!-- Script AJAX Modal -->
+    <!-- Modal Popup Preview & Unduh Lampiran Pendukung -->
+    <div id="modalPreviewLampiran" class="fixed inset-0 z-[70] hidden overflow-y-auto" aria-labelledby="modal-preview-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen px-4 py-6 text-center sm:p-0">
+            <!-- Backdrop -->
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="tutupModalPreviewLampiran()"></div>
+
+            <!-- Dialog Box -->
+            <div class="relative inline-block w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200/80 text-left overflow-hidden transform transition-all align-middle z-10">
+                <!-- Header -->
+                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+                    <div class="flex items-center gap-3 min-w-0 pr-4">
+                        <div class="w-9 h-9 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center text-base font-bold flex-shrink-0 shadow-xs">
+                            <i class="bi bi-paperclip"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <h4 class="text-sm font-black text-slate-800 tracking-tight" id="modal-preview-title">Lampiran Pendukung Kendala</h4>
+                            <p class="text-[11px] text-slate-400 font-mono truncate max-w-sm" id="previewLampiranFilename">-</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <button type="button" onclick="unduhLampiranAktif()" id="previewDownloadBtn" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer">
+                            <i class="bi bi-download"></i> <span>Unduh</span>
+                        </button>
+                        <button type="button" onclick="tutupModalPreviewLampiran()" class="w-8 h-8 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer" title="Tutup Preview">
+                            <i class="bi bi-x-lg text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Body (Preview Content) -->
+                <div class="p-6 bg-slate-900/5 flex flex-col items-center justify-center min-h-[320px] max-h-[70vh] overflow-auto" id="previewContainer">
+                    <!-- Image Preview -->
+                    <img id="previewImage" src="" alt="Preview Lampiran" class="hidden max-h-[62vh] max-w-full rounded-2xl shadow-md object-contain mx-auto transition-all">
+                    
+                    <!-- PDF / Iframe Preview -->
+                    <iframe id="previewIframe" src="" class="hidden w-full h-[62vh] rounded-2xl border border-slate-200 shadow-xs bg-white"></iframe>
+
+                    <!-- Fallback if file cannot be previewed -->
+                    <div id="previewFallback" class="hidden flex flex-col items-center justify-center py-10 text-center space-y-3">
+                        <div class="w-16 h-16 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center text-3xl shadow-sm">
+                            <i class="bi bi-file-earmark-arrow-down-fill"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-slate-800" id="previewFallbackFilename">lampiran.file</p>
+                            <p class="text-xs text-slate-400 mt-1 max-w-xs">Format file ini tidak mendukung preview langsung. Silakan klik tombol di bawah untuk mengunduh dan membukanya.</p>
+                        </div>
+                        <button type="button" onclick="unduhLampiranAktif()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold shadow-sm transition-all cursor-pointer">
+                            <i class="bi bi-download"></i> Unduh Berkas Ini
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="px-6 py-3.5 bg-white border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                    <span class="flex items-center gap-1.5 text-slate-400 text-[11px]">
+                        <i class="bi bi-info-circle text-orange-500"></i> Klik Unduh untuk menyimpan berkas ke perangkat Anda.
+                    </span>
+                    <div class="flex items-center gap-2">
+                        <a id="previewOpenTabBtn" href="#" target="_blank" class="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold transition-all">
+                            Buka di Tab Baru <i class="bi bi-box-arrow-up-right text-[10px] ml-1"></i>
+                        </a>
+                        <button type="button" onclick="tutupModalPreviewLampiran()" class="px-4 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer">
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script AJAX Modal & Card Stepper Satu Arah -->
     <script>
+        // Urutan tahapan status (Nilai lebih besar = tahap lebih maju)
+        const STATUS_WEIGHT = {
+            'Menunggu': 1,
+            'Diproses': 2,
+            'Selesai':  3,
+            'Ditutup':  4
+        };
+
+        let currentTicketInitialStatus = 'Menunggu';
+
+        function setupStatusCards(currentStatus) {
+            currentTicketInitialStatus = currentStatus || 'Menunggu';
+            const initialWeight = STATUS_WEIGHT[currentTicketInitialStatus] || 1;
+            const inputHidden = document.getElementById('formStatusInput');
+            const noticeLocked = document.getElementById('statusLockedNotice');
+
+            // Default seleksi ke status sekarang
+            inputHidden.value = currentTicketInitialStatus;
+
+            let hasLockedBefore = false;
+
+            // Iterasi 4 card status
+            ['Menunggu', 'Diproses', 'Selesai', 'Ditutup'].forEach(st => {
+                const card = document.getElementById('cardStatus_' + st);
+                if (!card) return;
+
+                const cardWeight = STATUS_WEIGHT[st];
+                const badge = card.querySelector('.status-badge-indicator');
+                const subtext = card.querySelector('.card-subtext');
+
+                // Reset kelas dasar
+                card.className = 'status-choice-card p-3 rounded-2xl border-2 transition-all flex flex-col items-center justify-center text-center gap-1.5 select-none relative';
+
+                if (cardWeight < initialWeight) {
+                    // Tahap sebelumnya: TERKUNCI & TIDAK BISA MUNDUR
+                    hasLockedBefore = true;
+                    card.classList.add('bg-slate-100', 'border-slate-200', 'opacity-50', 'cursor-not-allowed');
+                    card.setAttribute('title', 'Tahap ini sudah dilewati dan tidak dapat dimundurkan kembali.');
+                    card.onclick = function() {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Tahap Telah Dilewati',
+                            text: 'Status tiket tidak dapat dimundurkan kembali ke tahap sebelumnya.',
+                            confirmButtonColor: '#ea580c',
+                            customClass: { popup: 'rounded-3xl' }
+                        });
+                    };
+                    if (subtext) subtext.innerHTML = '<span class="text-slate-400 font-bold">Dilewati</span>';
+                    if (badge) badge.classList.add('hidden');
+                } else {
+                    // Tahap saat ini atau tahap maju: BISA DIPILIH
+                    card.classList.add('cursor-pointer');
+                    card.onclick = function() { selectStatusCard(st); };
+
+                    if (st === currentTicketInitialStatus) {
+                        // Card Aktif terpilih
+                        card.classList.add('border-orange-500', 'bg-orange-50/60', 'ring-2', 'ring-orange-500/20', 'shadow-sm');
+                        if (badge) badge.classList.remove('hidden');
+                    } else {
+                        card.classList.add('border-slate-200', 'bg-white', 'hover:border-slate-300', 'hover:bg-slate-50/60');
+                        if (badge) badge.classList.add('hidden');
+                    }
+                }
+            });
+
+            if (noticeLocked) {
+                if (hasLockedBefore) noticeLocked.classList.remove('hidden');
+                else noticeLocked.classList.add('hidden');
+            }
+        }
+
+        function selectStatusCard(selectedStatus) {
+            const initialWeight = STATUS_WEIGHT[currentTicketInitialStatus] || 1;
+            const targetWeight  = STATUS_WEIGHT[selectedStatus] || 1;
+
+            // Larang mundur secara tegas
+            if (targetWeight < initialWeight) {
+                return;
+            }
+
+            document.getElementById('formStatusInput').value = selectedStatus;
+
+            ['Menunggu', 'Diproses', 'Selesai', 'Ditutup'].forEach(st => {
+                const card = document.getElementById('cardStatus_' + st);
+                if (!card) return;
+
+                const cardWeight = STATUS_WEIGHT[st];
+                if (cardWeight < initialWeight) return; // Lewati yang sudah terkunci
+
+                const badge = card.querySelector('.status-badge-indicator');
+
+                if (st === selectedStatus) {
+                    card.className = 'status-choice-card cursor-pointer p-3 rounded-2xl border-2 transition-all flex flex-col items-center justify-center text-center gap-1.5 select-none relative border-orange-500 bg-orange-50/60 ring-2 ring-orange-500/20 shadow-sm';
+                    if (badge) badge.classList.remove('hidden');
+                } else {
+                    card.className = 'status-choice-card cursor-pointer p-3 rounded-2xl border-2 transition-all flex flex-col items-center justify-center text-center gap-1.5 select-none relative border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60';
+                    if (badge) badge.classList.add('hidden');
+                }
+            });
+        }
+
         function bukaModalRespon(kodeTiket) {
             const modal = document.getElementById('modalRespon');
             modal.classList.remove('hidden');
@@ -650,7 +888,8 @@
             document.getElementById('modalCreatedAt').innerText = '-';
             document.getElementById('modalNamaDosen').innerText = '-';
             document.getElementById('modalNidn').innerText = '-';
-            document.getElementById('modalUnitTujuan').innerText = '-';
+            if (document.getElementById('modalTujuanPenerima')) document.getElementById('modalTujuanPenerima').innerText = 'Dosen Kaur';
+            if (document.getElementById('modalUnitTerkait')) document.getElementById('modalUnitTerkait').innerText = '-';
             document.getElementById('modalKategori').innerText = '-';
             document.getElementById('modalPrioritas').innerText = '-';
             document.getElementById('modalSubjek').innerText = '-';
@@ -670,23 +909,26 @@
                         document.getElementById('modalCreatedAt').innerText = 'Dibuat pada: ' + d.created_at;
                         document.getElementById('modalNamaDosen').innerText = d.nama_dosen;
                         document.getElementById('modalNidn').innerText = 'NIDN/ID: ' + d.nidn;
-                        document.getElementById('modalUnitTujuan').innerText = d.unit_tujuan;
+                        if (document.getElementById('modalTujuanPenerima')) document.getElementById('modalTujuanPenerima').innerText = d.tujuan_penerima || 'Dosen Kaur';
+                        if (document.getElementById('modalUnitTerkait')) document.getElementById('modalUnitTerkait').innerText = d.unit_terkait || d.unit_tujuan || '-';
                         document.getElementById('modalKategori').innerText = d.kategori;
                         document.getElementById('modalPrioritas').innerText = d.prioritas;
                         document.getElementById('modalSubjek').innerText = d.subjek;
                         document.getElementById('modalDeskripsi').innerHTML = d.deskripsi || '-';
 
-                        // Set status select value
-                        const stSelect = document.getElementById('formStatusSelect');
-                        if (stSelect) {
-                            stSelect.value = d.status || 'Diproses';
-                        }
+                        // Atur Card Stepper Satu Arah (Non-reversible)
+                        setupStatusCards(d.status || 'Menunggu');
 
                         // Lampiran
                         if (d.lampiran_url) {
+                            currentLampiranUrl = d.lampiran_url;
+                            currentLampiranFilename = d.lampiran || 'lampiran';
                             document.getElementById('modalLampiranSection').classList.remove('hidden');
-                            document.getElementById('modalLampiranLink').href = d.lampiran_url;
-                            document.getElementById('modalLampiranName').innerText = d.lampiran || 'Buka Lampiran';
+                            document.getElementById('modalLampiranName').innerText = d.lampiran || 'Lihat Lampiran';
+                        } else {
+                            currentLampiranUrl = '';
+                            currentLampiranFilename = '';
+                            document.getElementById('modalLampiranSection').classList.add('hidden');
                         }
 
                         // Tanggapan sebelumnya
@@ -710,11 +952,105 @@
 
         function tutupModalRespon() {
             document.getElementById('modalRespon').classList.add('hidden');
+            tutupModalPreviewLampiran();
+        }
+
+        // --- Fitur Popup Preview & Unduh Lampiran ---
+        let currentLampiranUrl = '';
+        let currentLampiranFilename = '';
+
+        function bukaModalPreviewLampiran(url, filename) {
+            const targetUrl = url || currentLampiranUrl;
+            const targetName = filename || currentLampiranFilename || 'Berkas Lampiran';
+
+            if (!targetUrl) return;
+
+            document.getElementById('previewLampiranFilename').innerText = targetName;
+            document.getElementById('previewFallbackFilename').innerText = targetName;
+            document.getElementById('previewOpenTabBtn').href = targetUrl;
+
+            const imgEl = document.getElementById('previewImage');
+            const iframeEl = document.getElementById('previewIframe');
+            const fallbackEl = document.getElementById('previewFallback');
+
+            imgEl.classList.add('hidden');
+            iframeEl.classList.add('hidden');
+            fallbackEl.classList.add('hidden');
+            imgEl.src = '';
+            iframeEl.src = '';
+
+            const ext = targetName.split('.').pop().toLowerCase();
+            const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext);
+            const isPdf = (ext === 'pdf');
+
+            if (isImage) {
+                imgEl.src = targetUrl;
+                imgEl.classList.remove('hidden');
+            } else if (isPdf) {
+                iframeEl.src = targetUrl;
+                iframeEl.classList.remove('hidden');
+            } else {
+                fallbackEl.classList.remove('hidden');
+            }
+
+            const modal = document.getElementById('modalPreviewLampiran');
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function tutupModalPreviewLampiran() {
+            const modal = document.getElementById('modalPreviewLampiran');
+            if (modal) {
+                modal.classList.add('hidden');
+                const imgEl = document.getElementById('previewImage');
+                const iframeEl = document.getElementById('previewIframe');
+                if (imgEl) imgEl.src = '';
+                if (iframeEl) iframeEl.src = '';
+            }
+            const modalRespon = document.getElementById('modalRespon');
+            if (!modalRespon || modalRespon.classList.contains('hidden')) {
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
+
+        async function unduhLampiranAktif(url, filename) {
+            const targetUrl = url || currentLampiranUrl;
+            const targetName = filename || currentLampiranFilename || 'lampiran';
+
+            if (!targetUrl) return;
+
+            try {
+                const res = await fetch(targetUrl);
+                if (!res.ok) throw new Error('Fetch failed');
+                const blob = await res.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = targetName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+            } catch (err) {
+                // Fallback direct anchor download
+                const a = document.createElement('a');
+                a.href = targetUrl;
+                a.download = targetName;
+                a.target = '_blank';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
         }
 
         // Close on ESC
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
+                const previewModal = document.getElementById('modalPreviewLampiran');
+                if (previewModal && !previewModal.classList.contains('hidden')) {
+                    tutupModalPreviewLampiran();
+                    return;
+                }
                 tutupModalRespon();
                 hidePopover();
             }
@@ -783,6 +1119,10 @@
             // Reset step 3 quote
             step3Box.classList.add('hidden');
             step3Text.textContent = '';
+
+            step2Title.textContent = '2. Diproses';
+            step3Title.textContent = '3. Selesai';
+            step4Title.textContent = '4. Ditutup';
 
             if (status === 'Menunggu') {
                 popWaBadge.className = 'inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border bg-amber-50 text-amber-700 border-amber-200';

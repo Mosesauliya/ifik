@@ -73,16 +73,47 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 $active_group = 'default';
 $query_builder = TRUE;
 
+$is_local_win = (
+	(isset($_SERVER['HTTP_HOST']) && (
+		strpos($_SERVER['HTTP_HOST'], 'localhost') !== false ||
+		strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false
+	)) ||
+	PHP_OS_FAMILY === 'Windows'
+);
+
 $is_nas = (
 	(isset($_SERVER['HTTP_HOST']) && (
 		strpos($_SERVER['HTTP_HOST'], 'ifik.forzasoftwarehouse.com') !== false ||
 		strpos($_SERVER['HTTP_HOST'], 'nas') !== false ||
 		strpos($_SERVER['HTTP_HOST'], '192.168.') !== false
 	)) ||
-	PHP_OS_FAMILY === 'Linux'
+	(PHP_OS_FAMILY === 'Linux' && !isset($_SERVER['HTTP_HOST']))
 );
 
-if ($is_nas) {
+if ($is_local_win) {
+	// === DATABASE LOCAL XAMPP / WINDOWS ===
+	$db['default'] = array(
+		'dsn'	=> '',
+		'hostname' => 'localhost',
+		'username' => 'root',
+		'password' => '',
+		'database' => 'db_ifik_baru',
+		'dbdriver' => 'mysqli',
+		'dbprefix' => '',
+		'pconnect' => FALSE,
+		'db_debug' => (ENVIRONMENT !== 'production'),
+		'cache_on' => FALSE,
+		'cachedir' => '',
+		'char_set' => 'utf8',
+		'dbcollat' => 'utf8_general_ci',
+		'swap_pre' => '',
+		'encrypt' => FALSE,
+		'compress' => FALSE,
+		'stricton' => FALSE,
+		'failover' => array(),
+		'save_queries' => TRUE
+	);
+} elseif ($is_nas) {
 	// === DATABASE NAS (PRODUCTION / SERVER) ===
 	$db['default'] = array(
 		'dsn'	=> '',
@@ -106,7 +137,7 @@ if ($is_nas) {
 		'save_queries' => TRUE
 	);
 } else {
-	// === DATABASE LOCAL / LARAGON / TAILSCALE ===
+	// === DATABASE TAILSCALE / REMOTE ===
 	$db['default'] = array(
 		'dsn'	=> '',
 		'hostname' => '100.83.19.18',

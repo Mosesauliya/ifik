@@ -77,21 +77,26 @@ class DosenTicketing_model extends CI_Model {
                 }
             }
 
+            $tujuanPenerima = !empty($data['tujuan_penerima']) ? $data['tujuan_penerima'] : (!empty($data['penerima']) ? $data['penerima'] : 'Laboran');
+            $unitTerkait    = !empty($data['unit_terkait']) ? $data['unit_terkait'] : (!empty($data['unit_tujuan']) ? $data['unit_tujuan'] : ($data['unit'] ?? 'Layanan IFIK'));
+
             $insertData = [
-                'id'             => $kode,
-                'id_user'        => (string)($data['id_user'] ?? $data['nidn'] ?? '0'),
-                'nama'           => $data['nama_dosen'] ?? ($data['nama'] ?? 'Dosen'),
-                'email'          => $userEmail ?: '-',
-                'ruangan'        => $data['ruangan'] ?? '-',
-                'unit'           => $data['unit_tujuan'] ?? ($data['unit'] ?? 'Layanan IFIK'),
-                'kategori'       => $data['kategori'] ?? 'Umum',
-                'isi_ticketing'  => $isi,
-                'tgl_ticketing'  => date('Y-m-d'),
-                'tgl_diproses'   => '1970-01-01 00:00:00',
-                'tgl_closed'     => '1970-01-01 00:00:00',
-                'status'         => $statusMapped,
-                'file_pendukung' => $data['lampiran'] ?? ($data['file_pendukung'] ?? ''),
-                'keterangan'     => ''
+                'id'              => $kode,
+                'id_user'         => (string)($data['id_user'] ?? $data['nidn'] ?? '0'),
+                'nama'            => $data['nama_dosen'] ?? ($data['nama'] ?? 'Dosen'),
+                'email'           => $userEmail ?: '-',
+                'ruangan'         => $data['ruangan'] ?? '-',
+                'unit'            => $tujuanPenerima,
+                'tujuan_penerima' => $tujuanPenerima,
+                'unit_terkait'    => $unitTerkait,
+                'kategori'        => $data['kategori'] ?? 'Umum',
+                'isi_ticketing'   => $isi,
+                'tgl_ticketing'   => date('Y-m-d'),
+                'tgl_diproses'    => '1970-01-01 00:00:00',
+                'tgl_closed'      => '1970-01-01 00:00:00',
+                'status'          => $statusMapped,
+                'file_pendukung'  => $data['lampiran'] ?? ($data['file_pendukung'] ?? ''),
+                'keterangan'      => ''
             ];
 
             $this->db->insert('tb_ticketing', $insertData);
@@ -218,9 +223,19 @@ class DosenTicketing_model extends CI_Model {
                 $this->db->group_end();
             }
             $this->db->where('status', 'Closed');
-            $closedCount = $this->db->count_all_results();
-            $stats['selesai'] = $closedCount;
-            $stats['ditutup'] = $closedCount;
+            $this->db->not_like('keterangan', '[DITUTUP]');
+            $stats['selesai'] = $this->db->count_all_results();
+
+            $this->db->from('tb_ticketing');
+            if ($user_id !== null || $nidn !== null) {
+                $this->db->group_start();
+                if ($user_id !== null) $this->db->where('id_user', (string)$user_id);
+                if ($nidn !== null) $this->db->or_where('id_user', (string)$nidn);
+                $this->db->group_end();
+            }
+            $this->db->where('status', 'Closed');
+            $this->db->like('keterangan', '[DITUTUP]');
+            $stats['ditutup'] = $this->db->count_all_results();
 
             return $stats;
         }
@@ -288,19 +303,14 @@ class DosenTicketing_model extends CI_Model {
     }
 
     /**
-     * Get tickets routed to Dosen units
+     * Get tickets routed to specific recipient role (Laboran, Dosen Kaur, Admin LAA)
      */
-    public function get_respon_tickets($filterStatus = 'all', $search = '') {
+    public function get_respon_tickets($filterStatus = 'all', $search = '', $recipientRole = 'Dosen Kaur') {
         if ($this->table === 'tb_ticketing') {
             $this->db->from('tb_ticketing');
             
-            // Dosen Unit Filter
-            $this->db->group_start();
-            $this->db->like('unit', 'Dosen');
-            $this->db->or_like('unit', 'Wali');
-            $this->db->or_like('unit', 'Koordinator');
-            $this->db->or_like('unit', 'Ketua KK');
-            $this->db->group_end();
+            // Recipient Role Filter
+            $this->_apply_recipient_filter($recipientRole);
 
             // Status Filter
             if (!empty($filterStatus) && $filterStatus !== 'all') {
@@ -320,6 +330,7 @@ class DosenTicketing_model extends CI_Model {
                 $this->db->or_like('nama', $search);
                 $this->db->or_like('kategori', $search);
                 $this->db->or_like('isi_ticketing', $search);
+                $this->db->or_like('unit_terkait', $search);
                 $this->db->group_end();
             }
 
@@ -357,17 +368,44 @@ class DosenTicketing_model extends CI_Model {
     }
 
     /**
-     * Count tickets routed to Dosen units by status
+     * Apply recipient role filter based on Laboran, Dosen Kaur, or Admin LAA
      */
-    public function count_respon_tickets($status = 'all') {
-        if ($this->table === 'tb_ticketing') {
-            $this->db->from('tb_ticketing');
+    private function _apply_recipient_filter($recipientRole = 'Dosen Kaur') {
+        if ($recipientRole === 'Laboran') {
             $this->db->group_start();
-            $this->db->like('unit', 'Dosen');
+            $this->db->where('tujuan_penerima', 'Laboran');
+            $this->db->or_like('unit', 'Laboran');
+            $this->db->or_like('unit', 'Laboratorium');
+            $this->db->or_like('unit', 'Lab');
+            $this->db->or_like('unit', 'Sarpras');
+            $this->db->group_end();
+        } elseif ($recipientRole === 'Admin LAA' || $recipientRole === 'LAA') {
+            $this->db->group_start();
+            $this->db->where('tujuan_penerima', 'Admin LAA');
+            $this->db->or_like('tujuan_penerima', 'LAA');
+            $this->db->or_like('unit', 'LAA');
+            $this->db->or_like('unit', 'Layanan Akademik');
+            $this->db->group_end();
+        } else { // Dosen Kaur
+            $this->db->group_start();
+            $this->db->where('tujuan_penerima', 'Dosen Kaur');
+            $this->db->or_like('tujuan_penerima', 'Dosen');
+            $this->db->or_like('tujuan_penerima', 'Kaur');
+            $this->db->or_like('unit', 'Dosen');
             $this->db->or_like('unit', 'Wali');
             $this->db->or_like('unit', 'Koordinator');
             $this->db->or_like('unit', 'Ketua KK');
             $this->db->group_end();
+        }
+    }
+
+    /**
+     * Count tickets routed to specific recipient role by status
+     */
+    public function count_respon_tickets($status = 'all', $recipientRole = 'Dosen Kaur') {
+        if ($this->table === 'tb_ticketing') {
+            $this->db->from('tb_ticketing');
+            $this->_apply_recipient_filter($recipientRole);
 
             if ($status !== 'all') {
                 if ($status === 'Menunggu') {
@@ -396,7 +434,7 @@ class DosenTicketing_model extends CI_Model {
     }
 
     /**
-     * Update ticket response and status by Dosen
+     * Update ticket response and status
      */
     public function update_respon($id, $status, $tanggapan = '') {
         if ($this->table === 'tb_ticketing') {
@@ -416,8 +454,11 @@ class DosenTicketing_model extends CI_Model {
                 $updateData['tgl_closed'] = $now;
             }
 
-            if ($tanggapan !== '') {
-                $updateData['keterangan'] = $tanggapan;
+            if ($status === 'Ditutup') {
+                $cleanTang = trim(str_replace('[DITUTUP]', '', $tanggapan));
+                $updateData['keterangan'] = '[DITUTUP] ' . $cleanTang;
+            } elseif ($tanggapan !== '') {
+                $updateData['keterangan'] = trim(str_replace('[DITUTUP]', '', $tanggapan));
             } elseif ($status === 'Menunggu') {
                 $updateData['keterangan'] = '';
             }
@@ -447,19 +488,21 @@ class DosenTicketing_model extends CI_Model {
     }
 
     /**
-     * Standardize tb_ticketing row object to Dosen ticketing view fields
+     * Standardize tb_ticketing row object to Dosen/Mahasiswa/Laboran ticketing view fields
      */
-    private function _format_row($row) {
+    public function format_row($row) {
         if (!$row) return null;
 
         $r = clone $row;
-        $r->id          = $row->id;
-        $r->kode_tiket  = $row->id;
-        $r->nama_dosen  = $row->nama ?? 'Dosen';
-        $r->nidn        = $row->id_user ?? '-';
-        $r->unit_tujuan = $row->unit ?? 'Layanan IFIK';
-        $r->kategori    = $row->kategori ?? 'Umum';
-        $r->prioritas   = 'Sedang';
+        $r->id              = $row->id;
+        $r->kode_tiket      = $row->id;
+        $r->nama_dosen      = $row->nama ?? 'Dosen';
+        $r->nidn            = $row->id_user ?? '-';
+        $r->tujuan_penerima = !empty($row->tujuan_penerima) ? $row->tujuan_penerima : (!empty($row->unit) ? $row->unit : 'Laboran');
+        $r->unit_terkait    = !empty($row->unit_terkait) ? $row->unit_terkait : (!empty($row->unit) ? $row->unit : 'Layanan IFIK');
+        $r->unit_tujuan     = $r->unit_terkait;
+        $r->kategori        = $row->kategori ?? 'Umum';
+        $r->prioritas       = 'Sedang';
 
         // Ekstrak subjek dan deskripsi dari isi_ticketing
         $rawIsi = $row->isi_ticketing ?? '';
@@ -471,19 +514,25 @@ class DosenTicketing_model extends CI_Model {
             $r->deskripsi = trim($m[2]);
         }
 
-        // Normalisasi status ke format UI Dosen
+        // Normalisasi status ke format UI (Menunggu, Diproses, Selesai, Ditutup)
         if ($row->status === 'Dikirim') {
             $r->status = 'Menunggu';
         } elseif ($row->status === 'Sedang Diproses') {
             $r->status = 'Diproses';
         } elseif ($row->status === 'Closed') {
-            $r->status = 'Selesai';
+            if (strpos($row->keterangan ?? '', '[DITUTUP]') !== false) {
+                $r->status = 'Ditutup';
+            } else {
+                $r->status = 'Selesai';
+            }
         } else {
             $r->status = $row->status ?? 'Menunggu';
         }
 
         $r->lampiran      = !empty($row->file_pendukung) ? $row->file_pendukung : null;
-        $r->tanggapan     = !empty($row->keterangan) ? $row->keterangan : null;
+        $rawKeterangan    = $row->keterangan ?? '';
+        $cleanKeterangan  = trim(str_replace('[DITUTUP]', '', $rawKeterangan));
+        $r->tanggapan     = !empty($cleanKeterangan) ? $cleanKeterangan : null;
 
         $tglTanggapan = null;
         if (!empty($row->tgl_diproses) && !in_array($row->tgl_diproses, ['0000-00-00 00:00:00', '1970-01-01 00:00:00'])) {
@@ -498,6 +547,10 @@ class DosenTicketing_model extends CI_Model {
         $r->updated_at    = $tglTanggapan ?: $r->created_at;
 
         return $r;
+    }
+
+    public function _format_row($row) {
+        return $this->format_row($row);
     }
 }
 

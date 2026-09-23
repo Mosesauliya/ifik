@@ -108,6 +108,19 @@
             background: #ea580c;
         }
 
+        /* Ensure all modals and SweetAlert are in front of curved sidebar (sidebar z-index: 99995) */
+        #modal-import-preview,
+        #modal-flux-loader,
+        #modal-account,
+        #modal-send-progress,
+        #modal-template {
+            z-index: 100050 !important;
+        }
+
+        .swal2-container {
+            z-index: 100060 !important;
+        }
+
         @keyframes pulseGlow {
             0%, 100% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.4); }
             50% { box-shadow: 0 0 0 10px rgba(234, 88, 12, 0); }
@@ -581,11 +594,9 @@
             }
 
             #label-filter-main-cat {
-                max-width: 110px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                font-size: 0.75rem !important;
+                font-size: 0.95rem !important;
+                line-height: 1 !important;
+                display: block !important;
             }
 
             #mainSearchInput {
@@ -675,11 +686,9 @@
             }
 
             .extra-filter-row [id^="label-filter-extra-cat-"] {
-                max-width: 78px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                font-size: 0.75rem !important;
+                font-size: 0.95rem !important;
+                line-height: 1 !important;
+                display: block !important;
             }
 
             .extra-filter-row input {
@@ -722,13 +731,13 @@
         }
 
         /* ============================================================
-           TOOLBAR ROW 2 RESPONSIVENESS (Sidebar Open vs Collapsed)
+           TOOLBAR ROW 2 RESPONSIVENESS (Consistent 2-Row Structured Layout)
            ============================================================ */
         @media (min-width: 641px) {
             .table-toolbar-row2 {
                 display: flex !important;
                 flex-direction: column !important;
-                gap: 10px !important;
+                gap: 12px !important;
                 width: 100% !important;
             }
             .table-toolbar-row2 .batch-actions-grid {
@@ -753,50 +762,6 @@
                 display: flex !important;
                 align-items: center !important;
                 gap: 10px !important;
-            }
-        }
-
-        /* When screen is extra wide (>= 1536px / 2xl), single horizontal row */
-        @media (min-width: 1536px) {
-            .table-toolbar-row2 {
-                flex-direction: row !important;
-                align-items: center !important;
-                justify-content: space-between !important;
-            }
-            .table-toolbar-row2 .batch-actions-grid {
-                display: flex !important;
-                flex-direction: row !important;
-                width: auto !important;
-                gap: 10px !important;
-            }
-            .table-toolbar-row2 .batch-actions-grid button {
-                width: auto !important;
-            }
-            .table-toolbar-row2 .toolbar-right-group {
-                width: auto !important;
-                justify-content: flex-end !important;
-            }
-        }
-
-        /* When sidebar is COLLAPSED / HIDDEN on desktop (>= 1200px), single horizontal row fits cleanly */
-        @media (min-width: 1200px) {
-            body.curved-sidebar-desktop-collapsed .table-toolbar-row2 {
-                flex-direction: row !important;
-                align-items: center !important;
-                justify-content: space-between !important;
-            }
-            body.curved-sidebar-desktop-collapsed .table-toolbar-row2 .batch-actions-grid {
-                display: flex !important;
-                flex-direction: row !important;
-                width: auto !important;
-                gap: 10px !important;
-            }
-            body.curved-sidebar-desktop-collapsed .table-toolbar-row2 .batch-actions-grid button {
-                width: auto !important;
-            }
-            body.curved-sidebar-desktop-collapsed .table-toolbar-row2 .toolbar-right-group {
-                width: auto !important;
-                justify-content: flex-end !important;
             }
         }
     </style>
@@ -1076,8 +1041,8 @@
                     <!-- Main Category Selector Dropdown -->
                     <div class="relative custom-dropdown-container">
                         <input type="hidden" id="mainCategorySelect" value="query">
-                        <button type="button" onclick="toggleCustomDropdown('main-cat', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-brand-600 focus:outline-none">
-                            <span id="label-filter-main-cat">Cari Kata Kunci</span>
+                        <button type="button" onclick="toggleCustomDropdown('main-cat', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-brand-600 focus:outline-none" title="Kategori Pencarian">
+                            <span id="label-filter-main-cat" class="text-sm sm:text-base leading-none block">🔍</span>
                             <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-main-cat"></i>
                         </button>
                         <div id="menu-filter-main-cat" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
@@ -1160,27 +1125,27 @@
                 </div>
             </div>
 
-            <!-- Row 2: Batch Actions, Page Size & Tools -->
-            <div class="table-toolbar-row2 pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <!-- Batch Actions Left -->
-                <div class="batch-actions-grid sm:flex sm:flex-wrap sm:items-center sm:gap-2.5">
-                    <button onclick="bulkGenerateTokenSelected()" class="btn-gradient-base btn-gradient-orange-solid h-9 px-3.5 text-xs flex items-center gap-2">
+            <!-- Row 2: Batch Actions (Row 1) & Page Size / Tools (Row 2) -->
+            <div class="table-toolbar-row2 pt-3 border-t border-slate-100 flex flex-col gap-3">
+                <!-- Batch Actions (3 Grid Columns) -->
+                <div class="batch-actions-grid grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full">
+                    <button onclick="bulkGenerateTokenSelected()" class="btn-gradient-base btn-gradient-orange-solid h-9 px-3.5 text-xs flex items-center justify-center gap-2 w-full">
                         <i class="fa-solid fa-bolt text-xs"></i>
-                        <span>Generate Token</span><span class="opacity-85 text-[11px] hidden xl:inline">&nbsp;(Selected)</span>
+                        <span>Generate Token</span> <span class="opacity-85 text-[11px]">&nbsp;(Selected)</span>
                     </button>
-                    <button onclick="bulkGenerateTokenAll()" class="btn-gradient-base btn-gradient-orange-soft h-9 px-3.5 text-xs flex items-center gap-2">
+                    <button onclick="bulkGenerateTokenAll()" class="btn-gradient-base btn-gradient-orange-soft h-9 px-3.5 text-xs flex items-center justify-center gap-2 w-full">
                         <i class="fa-solid fa-key text-brand-600 text-xs"></i>
-                        <span>Generate All</span><span class="opacity-85 text-[11px] hidden xl:inline">&nbsp;(Kosong)</span>
+                        <span>Generate All</span> <span class="opacity-85 text-[11px]">&nbsp;(Kosong)</span>
                     </button>
-                    <button onclick="bulkSendEmailSelected()" class="btn-gradient-base btn-gradient-emerald-solid btn-full-mobile h-9 px-3.5 text-xs flex items-center gap-2">
+                    <button onclick="bulkSendEmailSelected()" class="btn-gradient-base btn-gradient-emerald-solid btn-full-mobile h-9 px-3.5 text-xs flex items-center justify-center gap-2 w-full">
                         <i class="fa-solid fa-paper-plane text-xs"></i>
-                        <span>Kirim Email</span><span class="opacity-85 text-[11px] hidden xl:inline">&nbsp;(Selected)</span>
+                        <span>Kirim Email</span> <span class="opacity-85 text-[11px]">&nbsp;(Selected)</span>
                     </button>
                 </div>
 
-                <!-- Page Size & Tools Right -->
-                <div class="toolbar-right-group flex flex-col sm:flex-row sm:items-center gap-2.5 w-full sm:w-auto">
-                    <!-- Page Size Selector Top -->
+                <!-- Page Size & Tools Row -->
+                <div class="toolbar-right-group flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 w-full">
+                    <!-- Page Size Selector Left -->
                     <div class="page-size-wrap-mobile flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 border border-slate-200 px-3 h-9 rounded-xl shadow-2xs">
                         <div class="flex items-center gap-1.5">
                             <span class="font-medium">Tampilkan</span>
@@ -1199,10 +1164,8 @@
                         </div>
                     </div>
 
-                    <div class="h-6 w-px bg-slate-200 mx-0.5 hidden sm:block"></div>
-
                     <!-- Tools Right -->
-                    <div class="tools-grid-mobile sm:flex sm:items-center sm:gap-2.5">
+                    <div class="tools-grid-mobile flex items-center gap-2.5">
                         <button onclick="exportData('xlsx')" class="btn-gradient-base btn-gradient-emerald-soft h-9 px-3.5 text-xs flex items-center gap-2" title="Export to Excel XLSX">
                             <i class="fa-solid fa-file-excel text-emerald-600 text-sm"></i>
                             <span>Export Excel</span>
@@ -1295,7 +1258,7 @@
     </div>
 
     <!-- MODAL: Email Template Editor & Visual Preview -->
-    <div id="modal-template" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="modal-template" class="fixed inset-0 z-[100050] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-3xl w-full shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
             <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -1377,7 +1340,7 @@
     </div>
 
     <!-- MODAL: Email Sending Progress Simulation Modal -->
-    <div id="modal-send-progress" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4">
+    <div id="modal-send-progress" class="fixed inset-0 z-[100050] hidden bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200">
             <div class="px-6 py-4 bg-brand-600 text-white flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -1420,7 +1383,7 @@
     </div>
 
     <!-- MODAL: Add / Edit Account Manual -->
-    <div id="modal-account" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="modal-account" class="fixed inset-0 z-[100050] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200">
             <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
                 <h3 id="modal-account-title" class="font-bold text-sm">Tambah Akun Manual</h3>
@@ -1469,7 +1432,7 @@
     </div>
 
     <!-- MODAL: Progressive Flux Loader for Excel/CSV Upload (Light Theme) -->
-    <div id="modal-flux-loader" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 transition-all duration-300">
+    <div id="modal-flux-loader" class="fixed inset-0 z-[100050] hidden bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 transition-all duration-300">
         <div class="bg-white/95 backdrop-blur-2xl rounded-3xl max-w-lg w-full shadow-[0_25px_60px_-15px_rgba(234,88,12,0.18),0_10px_30px_-5px_rgba(0,0,0,0.08)] p-10 border border-slate-200/80 flex flex-col items-center justify-center text-center relative overflow-hidden">
             <!-- Decorative Ambient Blurs in Light Pastel Orange -->
             <div class="absolute -top-16 -left-16 w-48 h-48 rounded-full bg-orange-500/10 blur-3xl pointer-events-none"></div>
@@ -1500,7 +1463,7 @@
     </div>
 
     <!-- MODAL: Preview & Validasi Import Data Excel/CSV -->
-    <div id="modal-import-preview" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="modal-import-preview" class="fixed inset-0 z-[100050] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-5xl w-full shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
             <!-- Header -->
             <div class="px-6 py-4 bg-gradient-to-r from-brand-600 via-orange-600 to-amber-600 text-white flex items-center justify-between shadow-md">
@@ -1825,6 +1788,8 @@
 
             function resize() {
                 const rect = dropzone.getBoundingClientRect();
+                if (rect.width <= 0 || rect.height <= 0) return;
+
                 width = rect.width;
                 height = rect.height;
                 dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -1857,8 +1822,17 @@
                 }
             }
 
+            if (window.ResizeObserver) {
+                const ro = new ResizeObserver(() => {
+                    resize();
+                });
+                ro.observe(dropzone);
+            }
+
             window.addEventListener('resize', resize);
             setTimeout(resize, 50);
+            setTimeout(resize, 300);
+            setTimeout(resize, 800);
 
             dropzone.addEventListener('mouseenter', () => {
                 mouse.active = true;
@@ -3185,6 +3159,18 @@
             renderTable();
         }
 
+        function getCategoryEmoji(cat) {
+            switch (cat) {
+                case 'name': return '🏷️';
+                case 'nim_nip': return '🆔';
+                case 'email_addr': return '📧';
+                case 'role': return '👤';
+                case 'token': return '⚡';
+                case 'email': return '✉️';
+                default: return '🔍';
+            }
+        }
+
         function addAdditionalFilterRow(e) {
             if (e) {
                 e.stopPropagation();
@@ -3232,8 +3218,8 @@
                 <!-- Extra Category Dropdown -->
                 <div class="relative custom-dropdown-container shrink-0">
                     <input type="hidden" id="extraCatSelect_${rowId}" class="extra-cat-select" value="${defaultCrit}">
-                    <button type="button" onclick="toggleCustomDropdown('extra-cat-${rowId}', event)" class="flex items-center gap-1 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-brand-600 focus:outline-none">
-                        <span id="label-filter-extra-cat-${rowId}" class="max-w-[78px] sm:max-w-none truncate">${defaultLabel}</span>
+                    <button type="button" onclick="toggleCustomDropdown('extra-cat-${rowId}', event)" class="flex items-center gap-1 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-brand-600 focus:outline-none" title="Kategori Pencarian">
+                        <span id="label-filter-extra-cat-${rowId}" class="text-sm sm:text-base leading-none block">${getCategoryEmoji(defaultCrit)}</span>
                         <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-extra-cat-${rowId}"></i>
                     </button>
                     <div id="menu-filter-extra-cat-${rowId}" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
@@ -3326,7 +3312,7 @@
 
         function selectMainCategory(cat, label, el) {
             document.getElementById('mainCategorySelect').value = cat;
-            document.getElementById('label-filter-main-cat').innerText = label;
+            document.getElementById('label-filter-main-cat').innerText = getCategoryEmoji(cat);
 
             const textWrap = document.getElementById('mainValueContainer');
             const selectWrap = document.getElementById('mainCustomSelectWrap');
@@ -3412,7 +3398,7 @@
 
         function selectExtraCategory(rowId, cat, label, el) {
             document.getElementById(`extraCatSelect_${rowId}`).value = cat;
-            document.getElementById(`label-filter-extra-cat-${rowId}`).innerText = label;
+            document.getElementById(`label-filter-extra-cat-${rowId}`).innerText = getCategoryEmoji(cat);
 
             const textWrap = document.getElementById(`extraValueContainer_${rowId}`);
             const selectWrap = document.getElementById(`extraCustomSelectWrap_${rowId}`);
@@ -3498,7 +3484,7 @@
 
         function resetImportMultiSearch() {
             document.getElementById('mainCategorySelect').value = 'query';
-            document.getElementById('label-filter-main-cat').innerText = 'Cari Kata Kunci';
+            document.getElementById('label-filter-main-cat').innerText = '🔍';
 
             const textWrap = document.getElementById('mainValueContainer');
             const selectWrap = document.getElementById('mainCustomSelectWrap');

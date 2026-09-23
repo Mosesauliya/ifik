@@ -14,42 +14,51 @@
  *   ]); ?>
  */
 
-$sessionRoleId = (int)$this->session->userdata('role_id');
-$currentUri = trim(uri_string(), '/');
+$isLoggedIn    = (bool)$this->session->userdata('logged_in');
+$sessionRoleId = $isLoggedIn ? (int)$this->session->userdata('role_id') : 0;
+$sessionEmail  = (string)$this->session->userdata('email');
+$currentUri    = trim(uri_string(), '/');
 
-// Tentukan active role ID (utamakan rute modul aktif jika berada di portal spesifik, atau session role)
+// Tentukan active role ID (utamakan session role jika user sudah login)
 $activeRoleId = $sessionRoleId;
 
-if (strpos($currentUri, 'laboran') === 0) {
-    $activeRoleId = 21; // Laboran
-} elseif (strpos($currentUri, 'kaur') === 0) {
-    $activeRoleId = 2; // Kaur / Ka Lab
-} elseif (strpos($currentUri, 'dosen') === 0 || strpos($currentUri, 'dosenwali') === 0) {
-    $activeRoleId = 3; // Dosen
-} elseif (strpos($currentUri, 'koordinatorta') === 0 || strpos($currentUri, 'koordinator') === 0) {
-    $activeRoleId = 6; // Koordinator TA
-} elseif (strpos($currentUri, 'adminlayanan') === 0) {
-    $activeRoleId = 5; // Admin LAA
-} elseif (strpos($currentUri, 'ketuakk') === 0) {
-    $activeRoleId = 9; // Ketua KK
-} elseif (strpos($currentUri, 'mahasiswa') === 0) {
-    $activeRoleId = 4; // Mahasiswa
-} elseif (strpos($currentUri, 'admin') === 0 || strpos($currentUri, 'kelolabooking') === 0) {
-    $activeRoleId = 1; // Admin
-} elseif (strpos($currentUri, 'importemail') === 0 || strpos($currentUri, 'import-email') === 0) {
-    $ref = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
-    if (strpos($ref, 'admin') !== false) {
-        $activeRoleId = 1; // Admin
-    } else {
+// Jika role 2 tapi akun khusus laboran, arahkan ke role 21 (Laboran)
+if ($isLoggedIn && $sessionRoleId === 2 && strpos(strtolower($sessionEmail), 'laboran') !== false) {
+    $activeRoleId = 21;
+}
+
+// Fallback deteksi URI hanya jika user sudah login tapi sessionRoleId belum match
+if ($isLoggedIn && $activeRoleId === 0) {
+    if (strpos($currentUri, 'laboran') === 0) {
         $activeRoleId = 21; // Laboran
+    } elseif (strpos($currentUri, 'kaur') === 0) {
+        $activeRoleId = 2; // Kaur / Ka Lab
+    } elseif (strpos($currentUri, 'dosen') === 0 || strpos($currentUri, 'dosenwali') === 0) {
+        $activeRoleId = 3; // Dosen
+    } elseif (strpos($currentUri, 'koordinatorta') === 0 || strpos($currentUri, 'koordinator') === 0) {
+        $activeRoleId = 6; // Koordinator TA
+    } elseif (strpos($currentUri, 'adminlayanan') === 0) {
+        $activeRoleId = 5; // Admin LAA
+    } elseif (strpos($currentUri, 'ketuakk') === 0) {
+        $activeRoleId = 9; // Ketua KK
+    } elseif (strpos($currentUri, 'mahasiswa') === 0) {
+        $activeRoleId = 4; // Mahasiswa
+    } elseif (strpos($currentUri, 'admin') === 0 || strpos($currentUri, 'kelolabooking') === 0) {
+        $activeRoleId = 1; // Admin
+    } elseif (strpos($currentUri, 'importemail') === 0 || strpos($currentUri, 'import-email') === 0) {
+        $ref = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
+        if (strpos($ref, 'admin') !== false) {
+            $activeRoleId = 1; // Admin
+        } else {
+            $activeRoleId = 21; // Laboran
+        }
+    } else {
+        $activeRoleId = 0; // Publik
     }
 }
 
-if ($activeRoleId === 0) {
-    $activeRoleId = 4; // Fallback ke Mahasiswa
-}
-
 $roleBadgeMap = [
+    0 => 'Publik / Tamu',
     1 => 'Admin Panel',
     2 => 'Ka. Ur / Ka Lab',
     3 => 'Portal Dosen',
@@ -118,6 +127,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['heading' => 'Pendaftaran TA', 'href' => site_url('koordinatorta#pendaftaran'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
                 ['heading' => 'Tahap Preview 2', 'href' => site_url('koordinatorta#preview2'), 'icon_3d' => 'assets/images/icons_3d/preview2.png'],
                 ['heading' => 'Jadwal Sidang TA', 'href' => site_url('koordinatorta#sidang'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
+                ['heading' => 'Monitoring Status Peserta', 'href' => site_url('koordinatorta/monitoring'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
 
                 ['category' => 'Layanan Ticketing & Bantuan', 'has_divider' => true],
                 ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
@@ -239,14 +249,12 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
             ];
             break;
 
-        default: // Publik
+        default: // Publik / Tamu
             $defaultNavItems = [
                 ['category' => 'Menu Utama'],
                 ['heading' => 'Dashboard Utama', 'href' => site_url('dashboard'), 'icon_3d' => 'assets/images/icons_3d/home.png'],
-                ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
-                ['heading' => 'Riwayat Peminjaman Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
                 ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
-                ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
+                ['heading' => $isLoggedIn ? 'Keluar' : 'Masuk ke Portal', 'href' => site_url($isLoggedIn ? 'login/logout' : 'login'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
             ];
             break;
     }
@@ -486,6 +494,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
 
         <!-- Bottom Section: Portal Info & Version -->
         <div>
+            <?php if ($isLoggedIn): ?>
             <!-- User Profile Summary Card -->
             <div class="curved-sidebar-user-card">
                 <div class="curved-sidebar-user-avatar">
@@ -500,6 +509,13 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                     </div>
                 </div>
             </div>
+            <?php else: ?>
+            <!-- Public Login Button -->
+            <a href="<?= site_url('login'); ?>" class="btn-sidebar-login" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 10px 14px; background: linear-gradient(135deg, #ea580c, #c2410c); color: #fff; border-radius: 12px; font-weight: 700; font-size: 0.82rem; text-decoration: none; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25); transition: all 0.2s ease;">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                <span>Masuk ke Akun</span>
+            </a>
+            <?php endif; ?>
 
             <div class="curved-sidebar-footer">
                 <div class="curved-sidebar-footer-brand">

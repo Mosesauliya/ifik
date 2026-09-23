@@ -48,10 +48,42 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             height: 100vh;
-            padding: 16px 24px 16px 76px; /* space for fixed left sidebar */
+            margin: 0;
+            padding: 0;
             overflow: hidden;
+        }
+
+        .page-wrapper-for-sidebar {
+            width: 100%;
+            height: 100vh;
+            padding: 16px 24px;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
+            box-sizing: border-box;
+            transition: margin-left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1), padding-left 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+        }
+
+        @media (min-width: 1024px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 270px;
+                width: calc(100% - 270px);
+                padding-left: 24px;
+            }
+
+            body.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar {
+                margin-left: 0;
+                width: 100%;
+                padding-left: 76px;
+            }
+        }
+
+        @media (max-width: 1023.98px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding: 60px 16px 16px 16px;
+            }
         }
 
         .main-container {
@@ -446,6 +478,8 @@
             display: flex;
             align-items: center;
             gap: 14px;
+            min-width: 0;
+            flex: 1;
         }
 
         .btn-mobile-back {
@@ -463,50 +497,80 @@
         }
 
         .header-avatar {
-            width: 46px;
-            height: 46px;
-            border-radius: 14px;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 800;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             color: #ffffff;
             background: linear-gradient(135deg, #ea580c, #f97316);
+            flex-shrink: 0;
+        }
+
+        .header-info {
+            min-width: 0;
+            flex: 1;
         }
 
         .header-info h2 {
-            font-size: 1.05rem;
+            font-size: 1.02rem;
             font-weight: 800;
             color: #0f172a;
             display: flex;
             align-items: center;
             gap: 8px;
+            min-width: 0;
+        }
+
+        .header-info h2 span:first-child {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
         }
 
         .header-info p {
             font-size: 0.8rem;
             color: #64748b;
             margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
         }
 
         .header-actions-wrap {
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-shrink: 0;
         }
 
         .btn-status-toggle {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 14px;
+            padding: 8px 16px;
             border-radius: 10px;
             font-size: 0.82rem;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
             border: none;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-status-toggle .btn-text-short {
+            display: none;
+        }
+
+        .btn-status-toggle .btn-text-full {
+            display: inline;
+            white-space: nowrap;
         }
 
         .btn-status-toggle.resolve-btn {
@@ -655,8 +719,9 @@
         .chat-textarea {
             flex: 1;
             min-height: 42px;
-            max-height: 100px;
-            padding: 10px 14px;
+            height: 42px;
+            max-height: 120px;
+            padding: 9px 14px;
             border: 1px solid #cbd5e1;
             border-radius: 12px;
             outline: none;
@@ -664,8 +729,10 @@
             font-size: 0.86rem;
             resize: none;
             background: #f8fafc;
-            transition: all 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s;
             line-height: 1.4;
+            box-sizing: border-box;
+            overflow-y: hidden;
         }
 
         .chat-textarea:focus {
@@ -702,9 +769,6 @@
 
         /* Responsive Styles */
         @media (max-width: 1024px) {
-            body {
-                padding: 12px 16px 12px 16px;
-            }
             .chat-workspace {
                 grid-template-columns: 320px 1fr;
             }
@@ -712,24 +776,93 @@
 
         @media (max-width: 768px) {
             body {
-                padding: 10px 10px 10px 10px;
+                padding: 0;
+                overflow: hidden;
             }
+
+            .page-wrapper-for-sidebar {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding: 56px 12px 12px 12px;
+                height: 100dvh;
+                height: 100vh;
+            }
+
             .page-header {
-                flex-direction: column;
-                align-items: flex-start;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
                 gap: 8px;
                 margin-bottom: 8px;
             }
 
+            .header-title-wrap h1 {
+                font-size: 1.05rem;
+                gap: 6px;
+            }
+
+            .header-title-wrap h1 .role-badge {
+                font-size: 0.62rem;
+                padding: 2px 7px;
+            }
+
+            .header-title-wrap p {
+                display: none; /* Hide verbose tagline on mobile */
+            }
+
+            .header-actions {
+                gap: 5px;
+            }
+
+            .live-status-pill {
+                padding: 4px 8px !important;
+                font-size: 0.65rem !important;
+            }
+
+            .btn-action {
+                padding: 5px 8px;
+                font-size: 0.72rem;
+                border-radius: 8px;
+            }
+
             .chat-workspace {
                 display: block;
-                height: 100%;
+                height: calc(100% - 4px);
                 position: relative;
+                border-radius: 16px;
             }
+
             .chat-sidebar {
                 width: 100%;
                 height: 100%;
             }
+
+            .conversation-item {
+                padding: 10px 12px;
+                margin-bottom: 5px;
+                gap: 10px;
+                border-radius: 12px;
+            }
+
+            .conv-avatar {
+                width: 38px;
+                height: 38px;
+                font-size: 0.85rem;
+                border-radius: 10px;
+            }
+
+            .conv-name {
+                font-size: 0.82rem;
+            }
+
+            .conv-time {
+                font-size: 0.68rem;
+            }
+
+            .conv-preview {
+                font-size: 0.75rem;
+            }
+
             .chat-main {
                 position: absolute;
                 top: 0;
@@ -738,13 +871,190 @@
                 height: 100%;
                 z-index: 20;
                 transform: translateX(100%);
-                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+                background: #ffffff;
             }
+
             .chat-workspace.mobile-active .chat-main {
                 transform: translateX(0);
             }
+
+            /* Fullscreen mobile active chat state */
+            body.mobile-chat-open .page-wrapper-for-sidebar {
+                padding: 0 !important;
+                height: 100dvh !important;
+                height: 100vh !important;
+            }
+
+            body.mobile-chat-open .page-header {
+                display: none !important;
+            }
+
+            body.mobile-chat-open #curvedSidebarToggle {
+                display: none !important;
+            }
+
+            body.mobile-chat-open .chat-workspace {
+                height: 100dvh !important;
+                height: 100vh !important;
+                border-radius: 0 !important;
+                border: none !important;
+            }
+
+            /* Active Chat Header on Mobile */
+            .chat-header {
+                padding: 10px 12px;
+                gap: 8px;
+            }
+
+            .chat-header-user {
+                gap: 8px;
+                min-width: 0;
+                flex: 1;
+                display: flex;
+                align-items: center;
+            }
+
             .btn-mobile-back {
                 display: inline-flex;
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                flex-shrink: 0;
+                background: #f1f5f9;
+                color: #334155;
+                font-size: 0.88rem;
+                align-items: center;
+                justify-content: center;
+                border: 1px solid #e2e8f0;
+            }
+
+            .btn-mobile-back:active {
+                background: #e2e8f0;
+            }
+
+            .header-avatar {
+                width: 36px;
+                height: 36px;
+                border-radius: 10px;
+                font-size: 0.85rem;
+                font-weight: 800;
+                flex-shrink: 0;
+            }
+
+            .header-info {
+                min-width: 0;
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            .header-info h2 {
+                font-size: 0.88rem;
+                font-weight: 700;
+                gap: 6px;
+                display: flex;
+                align-items: center;
+                min-width: 0;
+                line-height: 1.25;
+            }
+
+            .header-info h2 span:first-child {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                min-width: 0;
+                flex-shrink: 1;
+            }
+
+            .header-info .role-pill {
+                font-size: 0.58rem;
+                padding: 1px 5px;
+                border-radius: 4px;
+                letter-spacing: 0.02em;
+                flex-shrink: 0;
+            }
+
+            .header-info p {
+                font-size: 0.72rem;
+                color: #64748b;
+                margin-top: 2px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                min-width: 0;
+                line-height: 1.2;
+            }
+
+            .btn-status-toggle {
+                padding: 6px 10px;
+                font-size: 0.74rem;
+                gap: 5px;
+                white-space: nowrap;
+                border-radius: 8px;
+                flex-shrink: 0;
+            }
+
+            .btn-status-toggle .btn-text-full {
+                display: none;
+            }
+
+            .btn-status-toggle .btn-text-short {
+                display: inline;
+            }
+
+            /* Message Feed Area on Mobile */
+            .chat-messages {
+                padding: 12px 10px;
+                gap: 8px;
+            }
+
+            .message-row {
+                max-width: 88%;
+                gap: 6px;
+            }
+
+            .bubble-avatar {
+                width: 28px;
+                height: 28px;
+                font-size: 0.7rem;
+                border-radius: 8px;
+            }
+
+            .message-bubble {
+                padding: 8px 11px;
+                border-radius: 13px;
+                font-size: 0.82rem;
+            }
+
+            /* Chat Input on Mobile */
+            .chat-input-area {
+                padding: 10px 12px;
+                gap: 8px;
+                background: #ffffff;
+                border-top: 1px solid #e2e8f0;
+                padding-bottom: max(10px, env(safe-area-inset-bottom));
+                align-items: flex-end;
+            }
+
+            .chat-textarea {
+                min-height: 42px;
+                height: 42px;
+                max-height: 120px;
+                padding: 9px 12px;
+                font-size: 0.86rem;
+                border-radius: 12px;
+                line-height: 1.4;
+                box-sizing: border-box;
+                overflow-y: hidden;
+            }
+
+            .btn-send {
+                width: 42px;
+                height: 42px;
+                border-radius: 12px;
+                font-size: 1rem;
             }
         }
     </style>
@@ -754,7 +1064,8 @@
     <!-- Sidebar Integration -->
     <?php $this->load->view('components/curved_sidebar'); ?>
 
-    <div class="main-container">
+    <div class="page-wrapper-for-sidebar">
+        <div class="main-container">
         <!-- Top Header -->
         <div class="page-header">
             <div class="header-title-wrap">
@@ -765,12 +1076,13 @@
                 <p>Pusat help desk interaktif untuk menjawab pertanyaan, kendala praktikum, dan izin lab secara langsung.</p>
             </div>
             <div class="header-actions">
-                <button type="button" class="btn-action" onclick="createSampleChat()" title="Simulasikan pesan chat masuk baru">
-                    <i class="fa-solid fa-plus-circle text-orange-500"></i>
-                    <span>Simulasi Chat Masuk</span>
-                </button>
-                <button type="button" class="btn-action" onclick="fetchConversations()" title="Segarkan data">
+                <span class="live-status-pill" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 9999px; background: #ecfdf5; color: #047857; font-size: 0.75rem; font-weight: 700; border: 1px solid #a7f3d0;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+                    <span>Live Help Desk</span>
+                </span>
+                <button type="button" class="btn-action" onclick="fetchConversations()" title="Segarkan data chat">
                     <i class="fa-solid fa-arrows-rotate"></i>
+                    <span>Segarkan</span>
                 </button>
             </div>
         </div>
@@ -832,7 +1144,8 @@
                         <div class="header-actions-wrap">
                             <button type="button" id="btnToggleStatus" class="btn-status-toggle resolve-btn" onclick="toggleActiveStatus()">
                                 <i class="fa-solid fa-check"></i>
-                                <span>Tandai Selesai</span>
+                                <span class="btn-text-full">Tandai Selesai</span>
+                                <span class="btn-text-short">Selesai</span>
                             </button>
                         </div>
                     </div>
@@ -844,7 +1157,7 @@
 
                     <!-- Input Area -->
                     <div class="chat-input-area">
-                        <textarea id="chatInput" class="chat-textarea" placeholder="Tulis balasan untuk pengguna... (Tekan Enter untuk kirim, Shift+Enter baris baru)" rows="1" onkeydown="handleInputKeydown(event)"></textarea>
+                        <textarea id="chatInput" class="chat-textarea" placeholder="Tulis balasan pesan..." rows="1" onkeydown="handleInputKeydown(event)"></textarea>
                         <button type="button" class="btn-send" onclick="sendMessage()" title="Kirim Balasan">
                             <i class="fa-solid fa-paper-plane"></i>
                         </button>
@@ -853,8 +1166,9 @@
             </div>
         </div>
     </div>
+</div>
 
-    <!-- JavaScript Chat Engine -->
+<!-- JavaScript Chat Engine -->
     <script>
         let currentStatusFilter = 'all';
         let searchQuery = '';
@@ -878,8 +1192,10 @@
             // Auto resize textarea
             const textarea = document.getElementById('chatInput');
             textarea.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = (this.scrollHeight) + 'px';
+                this.style.height = '42px';
+                const newHeight = Math.min(Math.max(this.scrollHeight, 42), 120);
+                this.style.height = newHeight + 'px';
+                this.style.overflowY = this.scrollHeight > 120 ? 'auto' : 'hidden';
             });
         });
 
@@ -982,6 +1298,9 @@
                 renderedMessageIds.clear();
             }
             $('#chatWorkspace').addClass('mobile-active');
+            if (window.innerWidth <= 768) {
+                $('body').addClass('mobile-chat-open');
+            }
             $('#emptyChatState').hide();
             $('#activeChatWrap').css('display', 'flex');
 
@@ -1020,10 +1339,10 @@
             const btn = $('#btnToggleStatus');
             if (conv.status === 'resolved') {
                 btn.attr('class', 'btn-status-toggle reopen-btn')
-                   .html('<i class="fa-solid fa-rotate-left"></i><span>Buka Kembali Tiket</span>');
+                   .html('<i class="fa-solid fa-rotate-left"></i><span class="btn-text-full">Buka Kembali Tiket</span><span class="btn-text-short">Buka</span>');
             } else {
                 btn.attr('class', 'btn-status-toggle resolve-btn')
-                   .html('<i class="fa-solid fa-check"></i><span>Tandai Selesai</span>');
+                   .html('<i class="fa-solid fa-check"></i><span class="btn-text-full">Tandai Selesai</span><span class="btn-text-short">Selesai</span>');
             }
         }
 
@@ -1122,7 +1441,7 @@
                 success: function(res) {
                     isSending = false;
                     input.prop('disabled', false).val('');
-                    input.css('height', 'auto');
+                    input.css({ 'height': '42px', 'overflow-y': 'hidden' });
                     input.focus();
 
                     if (res.status === 'success') {
@@ -1218,6 +1537,7 @@
 
         function closeMobileChat() {
             $('#chatWorkspace').removeClass('mobile-active');
+            $('body').removeClass('mobile-chat-open');
         }
 
         function pollUpdates() {

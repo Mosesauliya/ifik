@@ -1037,8 +1037,8 @@
                     <!-- Main Category Selector Dropdown -->
                     <div class="relative custom-dropdown-container">
                         <input type="hidden" id="mainCategorySelect" value="query">
-                        <button type="button" onclick="toggleCustomDropdown('main-cat', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-brand-600 focus:outline-none">
-                            <span id="label-filter-main-cat" class="truncate max-w-[130px]">Cari Kata Kunci</span>
+                        <button type="button" onclick="toggleCustomDropdown('main-cat', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-brand-600 focus:outline-none" title="Kategori Pencarian">
+                            <span id="label-filter-main-cat" class="text-sm sm:text-base leading-none block">🔍</span>
                             <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-main-cat"></i>
                         </button>
                         <div id="menu-filter-main-cat" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
@@ -1177,22 +1177,23 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 shrink-0">
-                    <!-- Button 1: Cek Dokumen Massal -->
+                <div class="flex items-center gap-2.5 shrink-0">
+                    <!-- Button 1: Cek Dokumen Massal (Dicomment: Koordinator TA tugasnya fokus plotting)
                     <button type="button" onclick="event.stopPropagation(); openP1BatchReviewModal();" class="col-span-2 sm:col-auto h-9 sm:h-10 px-3.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 active:scale-95 text-white font-bold rounded-xl text-xs shadow-md shadow-orange-600/30 transition flex items-center justify-center gap-2 cursor-pointer">
                         <i class="fa-solid fa-folder-open text-xs text-amber-200"></i>
                         <span>Cek Dokumen Massal</span>
                     </button>
+                    -->
 
                     <!-- Button 2: Quick Batch Plotting -->
-                    <button type="button" onclick="event.stopPropagation(); openBatchModal('Approved');" class="h-9 sm:h-10 px-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white font-bold rounded-xl text-xs shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-1.5 cursor-pointer">
-                        <i class="fa-solid fa-bolt text-amber-300 text-xs"></i>
+                    <button type="button" onclick="event.stopPropagation(); openBatchModal('Approved');" class="h-10 sm:h-11 px-5 sm:px-6 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white font-extrabold rounded-xl text-xs sm:text-sm shadow-lg shadow-emerald-600/30 hover:shadow-emerald-600/40 transition-all flex items-center justify-center gap-2 cursor-pointer tracking-wide">
+                        <i class="fa-solid fa-bolt text-amber-300 text-sm"></i>
                         <span>Plot Cepat</span>
                     </button>
 
                     <!-- Button 3: Cancel -->
-                    <button type="button" onclick="event.stopPropagation(); clearAllSelection();" class="h-9 sm:h-10 px-3 bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer" title="Batal Pilihan">
-                        <i class="fa-solid fa-xmark text-xs"></i>
+                    <button type="button" onclick="event.stopPropagation(); clearAllSelection();" class="h-10 sm:h-11 px-3.5 sm:px-4 bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-slate-300 hover:text-white rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer" title="Batal Pilihan">
+                        <i class="fa-solid fa-xmark text-xs sm:text-sm"></i>
                         <span>Batal</span>
                     </button>
                 </div>
@@ -1415,8 +1416,8 @@
                         <!-- Category Selector Dropdown -->
                         <div class="relative custom-dropdown-container">
                             <input type="hidden" id="p2MainCategorySelect" value="query">
-                            <button type="button" onclick="toggleCustomDropdown('p2-main-cat', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-indigo-600 focus:outline-none">
-                                <span id="label-filter-p2-main-cat" class="truncate max-w-[130px]">Cari Kata Kunci</span>
+                            <button type="button" onclick="toggleCustomDropdown('p2-main-cat', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-indigo-600 focus:outline-none" title="Kategori Pencarian">
+                                <span id="label-filter-p2-main-cat" class="text-sm sm:text-base leading-none block">🔍</span>
                                 <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-p2-main-cat"></i>
                             </button>
                             <div id="menu-filter-p2-main-cat" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
@@ -1782,8 +1783,8 @@
                         <!-- Category Selector Dropdown -->
                         <div class="relative custom-dropdown-container">
                             <input type="hidden" id="sidangMainCategorySelect" value="query">
-                            <button type="button" onclick="toggleCustomDropdown('sidang-main-cat', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-amber-600 focus:outline-none">
-                                <span id="label-filter-sidang-main-cat" class="truncate max-w-[130px]">Cari Kata Kunci</span>
+                            <button type="button" onclick="toggleCustomDropdown('sidang-main-cat', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-amber-600 focus:outline-none" title="Kategori Pencarian">
+                                <span id="label-filter-sidang-main-cat" class="text-sm sm:text-base leading-none block">🔍</span>
                                 <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-sidang-main-cat"></i>
                             </button>
                             <div id="menu-filter-sidang-main-cat" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
