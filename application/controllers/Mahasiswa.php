@@ -523,40 +523,6 @@ class Mahasiswa extends CI_Controller {
                             ]);
                         }
                     }
-
-                    // Sync fail-safe ke file_pendaftaran (legacy)
-                    if ($this->db->table_exists('file_pendaftaran') && !empty($f_name)) {
-                        try {
-                            $fp_fields = $this->db->list_fields('file_pendaftaran');
-                            $id_fp = 'fp_' . $nim . '_' . $f_code;
-                            $id_mhs_usr = 'usr_mhs_' . $nim;
-                            $ex_fp = $this->db->where('id', $id_fp)->or_where(['id_mhs' => $id_mhs_usr, 'nama' => $f_code])->get('file_pendaftaran')->row_array();
-                            $rel_path = 'uploads/persyaratan_ta/' . $f_name;
-                            
-                            $fp_payload = array();
-                            if (in_array('file', $fp_fields)) $fp_payload['file'] = $rel_path;
-                            if (in_array('status_doswal', $fp_fields)) $fp_payload['status_doswal'] = 'Pending';
-                            if (in_array('status_adminlaa', $fp_fields)) $fp_payload['status_adminlaa'] = 'Pending';
-                            if (in_array('date_edit', $fp_fields)) $fp_payload['date_edit'] = date('Y-m-d H:i:s');
-                            
-                            if ($ex_fp) {
-                                if (!empty($fp_payload)) {
-                                    $this->db->where('id', $ex_fp['id'])->update('file_pendaftaran', $fp_payload);
-                                }
-                            } else {
-                                if (in_array('id', $fp_fields)) $fp_payload['id'] = $id_fp;
-                                if (in_array('id_mhs', $fp_fields)) $fp_payload['id_mhs'] = $id_mhs_usr;
-                                if (in_array('nama', $fp_fields)) $fp_payload['nama'] = $f_code;
-                                if (in_array('view_adminlaa', $fp_fields)) $fp_payload['view_adminlaa'] = 0;
-                                if (in_array('view_doswal', $fp_fields)) $fp_payload['view_doswal'] = 0;
-                                if (in_array('komentar', $fp_fields)) $fp_payload['komentar'] = '';
-                                if (in_array('date', $fp_fields)) $fp_payload['date'] = date('Y-m-d H:i:s');
-                                $this->db->insert('file_pendaftaran', $fp_payload);
-                            }
-                        } catch (Exception $e) {
-                            log_message('error', 'Error syncing file_pendaftaran: ' . $e->getMessage());
-                        }
-                    }
                 }
             }
 
