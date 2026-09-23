@@ -1047,20 +1047,23 @@
 
                     let stBadge = '';
                     if (st === 'Valid') {
-                        stBadge = '<span class="px-1.5 py-0.2 text-[8.5px] font-bold bg-emerald-100 text-emerald-700 rounded-full border border-emerald-200">Valid</span>';
+                        stBadge = '<span class="px-1.5 py-0.2 text-[8.5px] font-bold bg-emerald-100 text-emerald-700 rounded-full border border-emerald-200 shrink-0">Valid</span>';
                     } else if (st === 'Invalid') {
-                        stBadge = '<span class="px-1.5 py-0.2 text-[8.5px] font-bold bg-rose-100 text-rose-700 rounded-full border border-rose-200">Revisi</span>';
+                        stBadge = '<span class="px-1.5 py-0.2 text-[8.5px] font-bold bg-rose-100 text-rose-700 rounded-full border border-rose-200 shrink-0">Revisi</span>';
                     } else {
-                        stBadge = '<span class="px-1.5 py-0.2 text-[8.5px] font-bold bg-amber-100 text-amber-700 rounded-full border border-amber-200">Pending</span>';
+                        stBadge = '<span class="px-1.5 py-0.2 text-[8.5px] font-bold bg-amber-100 text-amber-700 rounded-full border border-amber-200 shrink-0">Pending</span>';
                     }
+
+                    // Clean name like "KSM (Kartu Studi Mahasiswa)" -> "KSM"
+                    let displayDocName = (b.kode === 'ksm' ? 'KSM' : (b.nama || b.kode)).replace(/\s*\([^)]*\)/, '');
 
                     itemsHtml += `
                         <div class="p-2.5 rounded-xl border transition-all ${isCurrentlyPreviewed ? 'bg-orange-50/70 border-orange-400 ring-2 ring-orange-400/40 shadow-xs' : 'bg-white border-slate-200 hover:border-slate-300'}">
-                            <div class="flex items-center justify-between gap-1.5">
+                            <div class="flex items-center justify-between gap-2">
                                 <div class="min-w-0 flex-1">
-                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                    <div class="flex items-center gap-1.5 min-w-0">
                                         <i class="fa-solid fa-file-pdf text-xs ${isCurrentlyPreviewed ? 'text-orange-600' : 'text-rose-500'} shrink-0"></i>
-                                        <span class="font-bold text-xs text-slate-900 truncate">${idx + 1}. ${escapeHtml(b.nama || b.kode)}</span>
+                                        <span class="font-bold text-xs text-slate-900 truncate" title="${escapeHtml(b.nama || b.kode)}">${idx + 1}. ${escapeHtml(displayDocName)}</span>
                                         ${stBadge}
                                     </div>
                                     <div class="text-[9.5px] text-slate-400 font-mono truncate mt-0.5" title="${escapeHtml(rawFile || 'Belum diunggah')}">
