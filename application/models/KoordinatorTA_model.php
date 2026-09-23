@@ -509,48 +509,53 @@ class KoordinatorTA_model extends CI_Model {
     }
 
     /**
-     * TAHAP 2: Ambil mahasiswa untuk Tahap Preview 2 (Hanya yang sudah di-approve Koordinator TA)
+     * TAHAP 2: Ambil mahasiswa untuk Tahap Preview 2 (Hanya yang sudah di-approve Koordinator TA & masuk tahap Preview 2)
      */
     public function get_all_mahasiswa_preview2() {
         $all = $this->get_all_mahasiswa_ta();
-        $filtered = array();
+        if (empty($all)) {
+            return array();
+        }
 
-        foreach ($all as $item) {
-            // Syarat masuk Preview 2: Proposal TA sudah disetujui Koordinator TA & sudah ada Dosen Pembimbing
-            $isApprovedKoor = (strcasecmp($item['status_approval_koor'] ?? '', 'Approved') === 0);
-            $hasPembimbing = !empty($item['pembimbing_1']) && !empty($item['pembimbing_2']);
-
-            if ($isApprovedKoor && $hasPembimbing) {
-                $filtered[] = $item;
+        $guidanceIds = array_column($all, 'guidance_id');
+        $this->db->select('id, tanggal_presentasi, waktu_presentasi, ruang_sidang, status_preview');
+        $this->db->from('guidance');
+        $this->db->where_in('id', $guidanceIds);
+        $gQuery = $this->db->get();
+        $gMap = array();
+        if ($gQuery && $gQuery->num_rows() > 0) {
+            foreach ($gQuery->result_array() as $gr) {
+                $gMap[$gr['id']] = $gr;
             }
         }
 
-        $result = array();
-        if (!empty($filtered)) {
-            $guidanceIds = array_column($filtered, 'guidance_id');
-            $this->db->select('id, tanggal_presentasi, waktu_presentasi, ruang_sidang, status_preview');
-            $this->db->from('guidance');
-            $this->db->where_in('id', $guidanceIds);
-            $gQuery = $this->db->get();
-            $gMap = array();
-            if ($gQuery && $gQuery->num_rows() > 0) {
-                foreach ($gQuery->result_array() as $gr) {
-                    $gMap[$gr['id']] = $gr;
-                }
+        $filtered = array();
+        foreach ($all as $item) {
+            // Syarat masuk Preview 2: Proposal TA sudah disetujui Koordinator TA & sudah ada Dosen Pembimbing
+            $isApprovedKoor = (strcasecmp($item['status_approval_koor'] ?? '', 'Approved') === 0);
+            $hasPembimbing  = !empty($item['pembimbing_1']) && !empty($item['pembimbing_2']);
+
+            if (!$isApprovedKoor || !$hasPembimbing) {
+                continue;
             }
 
-            foreach ($filtered as $item) {
-                $gId = $item['guidance_id'];
-                $gRow = $gMap[$gId] ?? array();
+            $gId = $item['guidance_id'];
+            $gRow = $gMap[$gId] ?? array();
+            $statusPreview = strtolower(trim($gRow['status_preview'] ?? ''));
 
+            // Syarat Preview 2: Sudah berada di tahap preview2 (atau kelanjutannya preview3/sidang/selesai), atau sudah ada penguji/jadwal presentasi
+            $hasPenguji = (!empty($item['penguji_1']) && !empty($item['penguji_2']));
+            $hasJadwalPresentasi = !empty($gRow['tanggal_presentasi']);
+            $isInPreview2 = in_array($statusPreview, ['preview2', 'preview3', 'sidang', 'selesai']) || $hasPenguji || $hasJadwalPresentasi;
+
+            if ($isInPreview2) {
                 $item['tgl_sidang']         = $gRow['tanggal_presentasi'] ?? null;
                 $item['jam_mulai_sidang']   = $gRow['waktu_presentasi'] ?? null;
                 $item['jam_selesai_sidang'] = null;
                 $item['ruangan_sidang']     = $gRow['ruang_sidang'] ?? null;
-                $item['status_preview']     = $gRow['status_preview'] ?? 'preview2';
+                $item['status_preview']     = !empty($gRow['status_preview']) ? $gRow['status_preview'] : 'preview2';
 
-                $hasPenguji = (!empty($item['penguji_1']) && !empty($item['penguji_2']));
-                $hasJadwal  = (!empty($item['tgl_sidang']) && !empty($item['jam_mulai_sidang']));
+                $hasJadwal = (!empty($item['tgl_sidang']) && !empty($item['jam_mulai_sidang']));
 
                 if ($hasPenguji && $hasJadwal) {
                     $item['status_preview2'] = 'Terjadwal';
@@ -560,11 +565,11 @@ class KoordinatorTA_model extends CI_Model {
                     $item['status_preview2'] = 'Belum Diplot';
                 }
 
-                $result[] = $item;
+                $filtered[] = $item;
             }
         }
 
-        return $result;
+        return $filtered;
     }
 
     /**
@@ -777,10 +782,15 @@ class KoordinatorTA_model extends CI_Model {
             $gId = $item['guidance_id'];
             $gRow = $gMap[$gId] ?? array();
 
+            $statusPreview = strtolower(trim($gRow['status_preview'] ?? ($item['status_preview'] ?? '')));
             $hasPenguji = !empty($item['penguji_1']) && !empty($item['penguji_2']);
             $hasJadwalSidang = !empty($gRow['tanggal_sidang']);
 
-            if (!$hasPenguji && !$hasJadwalSidang) {
+            // Syarat masuk Tab 3 (Jadwal Sidang & Penilaian Sidang):
+            // Mahasiswa harus sudah memiliki Penguji dan sudah masuk ke tahap Preview 3 / Sidang / Terjadwal Sidang
+            $isInPreview3OrSidang = in_array($statusPreview, ['preview3', 'sidang', 'selesai']) || $hasJadwalSidang || !empty($gRow['nilaisidang_pembimbing1']);
+
+            if (!$hasPenguji || !$isInPreview3OrSidang) {
                 continue;
             }
 
