@@ -1555,6 +1555,9 @@ class KoordinatorTA_model extends CI_Model {
             }
         }
 
+        $this->load->model('AdminLayanan_model');
+        $berkasSummaries = $this->AdminLayanan_model->get_batch_student_berkas_summaries($all);
+
         $result = array();
         foreach ($all as $item) {
             $gId = $item['guidance_id'];
@@ -1647,19 +1650,60 @@ class KoordinatorTA_model extends CI_Model {
                 }
             }
 
-            $item['progres_stage']   = $progresStage;
-            $item['stage_key']       = $stageKey;
-            $item['stage_index']     = $stageIndex;
-            $item['stage_desc']      = $stageDesc;
-            $item['stage_color']     = $stageColor;
-            $item['tgl_presentasi']  = $gRow['tanggal_presentasi'] ?? null;
-            $item['waktu_presentasi']= $gRow['waktu_presentasi'] ?? null;
-            $item['tgl_sidang']      = $gRow['tanggal_sidang'] ?? null;
-            $item['waktu_sidang']    = $gRow['waktu_sidang'] ?? null;
-            $item['ruang_sidang']    = $gRow['ruang_sidang'] ?? null;
-            $item['link_sidang']     = $gRow['link_sidang'] ?? null;
-            $item['status_bap']      = $gRow['status_bap'] ?? 'Pending';
-            $item['avg_score']       = $avgScore;
+            // Ringkasan Berkas Mahasiswa
+            $nim = $item['nim'];
+            $bSummary = $berkasSummaries[$nim] ?? array(
+                'valid_count'   => 0,
+                'invalid_count' => 0,
+                'pending_count' => 0,
+                'total_count'   => 0,
+                'items'         => array()
+            );
+
+            $totalBerkas   = (int)($bSummary['total_count'] ?? 0);
+            $validBerkas   = (int)($bSummary['valid_count'] ?? 0);
+            $invalidBerkas = (int)($bSummary['invalid_count'] ?? 0);
+            $pendingBerkas = (int)($bSummary['pending_count'] ?? 0);
+
+            if ($totalBerkas > 0 && $validBerkas >= $totalBerkas) {
+                $berkasStatusLabel = 'Lengkap (' . $validBerkas . '/' . $totalBerkas . ')';
+                $berkasStatusCode  = 'lengkap';
+                $berkasStatusColor = 'emerald';
+            } elseif ($invalidBerkas > 0) {
+                $berkasStatusLabel = $invalidBerkas . ' Perlu Revisi';
+                $berkasStatusCode  = 'revisi';
+                $berkasStatusColor = 'rose';
+            } elseif ($validBerkas > 0) {
+                $berkasStatusLabel = $validBerkas . '/' . $totalBerkas . ' Valid';
+                $berkasStatusCode  = 'proses';
+                $berkasStatusColor = 'amber';
+            } elseif ($pendingBerkas > 0) {
+                $berkasStatusLabel = $pendingBerkas . ' Pending Cek';
+                $berkasStatusCode  = 'proses';
+                $berkasStatusColor = 'amber';
+            } else {
+                $berkasStatusLabel = 'Belum Unggah';
+                $berkasStatusCode  = 'kosong';
+                $berkasStatusColor = 'slate';
+            }
+
+            $item['progres_stage']       = $progresStage;
+            $item['stage_key']           = $stageKey;
+            $item['stage_index']         = $stageIndex;
+            $item['stage_desc']          = $stageDesc;
+            $item['stage_color']         = $stageColor;
+            $item['tgl_presentasi']      = $gRow['tanggal_presentasi'] ?? null;
+            $item['waktu_presentasi']    = $gRow['waktu_presentasi'] ?? null;
+            $item['tgl_sidang']          = $gRow['tanggal_sidang'] ?? null;
+            $item['waktu_sidang']        = $gRow['waktu_sidang'] ?? null;
+            $item['ruang_sidang']        = $gRow['ruang_sidang'] ?? null;
+            $item['link_sidang']         = $gRow['link_sidang'] ?? null;
+            $item['status_bap']          = $gRow['status_bap'] ?? 'Pending';
+            $item['avg_score']           = $avgScore;
+            $item['berkas_summary']      = $bSummary;
+            $item['berkas_status_label'] = $berkasStatusLabel;
+            $item['berkas_status_code']  = $berkasStatusCode;
+            $item['berkas_status_color'] = $berkasStatusColor;
 
             $result[] = $item;
         }

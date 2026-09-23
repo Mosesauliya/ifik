@@ -549,12 +549,15 @@ class AdminLayanan_model extends CI_Model {
             $nama_berkas = !empty($record['nama_berkas']) ? $record['nama_berkas'] : ($record['nama'] ?? ucfirst(str_replace('_', ' ', $kode)));
             $file_name   = $record['file_name'] ?? '';
             $file_url    = $this->resolve_pdf_url($file_name);
+            $has_file    = !empty($file_name) && file_exists(FCPATH . 'uploads/persyaratan_ta/' . $file_name);
 
             $items[] = array(
                 'kode'      => $kode,
                 'nama'      => $nama_berkas,
                 'short'     => $this->get_short_berkas_label($nama_berkas, $kode),
                 'status'    => $st,
+                'catatan'   => $record['catatan'] ?? '',
+                'has_file'  => $has_file,
                 'file_name' => $file_name,
                 'file_url'  => $file_url
             );
@@ -585,12 +588,15 @@ class AdminLayanan_model extends CI_Model {
 
             $file_name = $row['file_' . $kode] ?? '';
             $file_url  = $this->resolve_pdf_url($file_name);
+            $has_file  = !empty($file_name) && file_exists(FCPATH . 'uploads/persyaratan_ta/' . $file_name);
 
             $items[] = array(
                 'kode'      => $kode,
                 'nama'      => $sb['nama_berkas'],
                 'short'     => $this->get_short_berkas_label($sb['nama_berkas'], $kode),
                 'status'    => $st,
+                'catatan'   => $row['catatan_' . $kode] ?? ($row['catatan_file_' . $kode] ?? ''),
+                'has_file'  => $has_file,
                 'file_name' => $file_name,
                 'file_url'  => $file_url
             );
@@ -672,12 +678,15 @@ class AdminLayanan_model extends CI_Model {
                 $nama_berkas = !empty($record['nama_berkas']) ? $record['nama_berkas'] : ($record['nama'] ?? ucfirst(str_replace('_', ' ', $kode)));
                 $file_name   = $record['file_name'] ?? '';
                 $file_url    = $this->resolve_pdf_url($file_name);
+                $has_file    = !empty($file_name) && file_exists(FCPATH . 'uploads/persyaratan_ta/' . $file_name);
 
                 $items[] = array(
                     'kode'      => $kode,
                     'nama'      => $nama_berkas,
                     'short'     => $this->get_short_berkas_label($nama_berkas, $kode),
                     'status'    => $st,
+                    'catatan'   => $record['catatan'] ?? '',
+                    'has_file'  => $has_file,
                     'file_name' => $file_name,
                     'file_url'  => $file_url
                 );
@@ -708,12 +717,15 @@ class AdminLayanan_model extends CI_Model {
 
                 $file_name = $s_row['file_' . $kode] ?? '';
                 $file_url  = $this->resolve_pdf_url($file_name);
+                $has_file  = !empty($file_name) && file_exists(FCPATH . 'uploads/persyaratan_ta/' . $file_name);
 
                 $items[] = array(
                     'kode'      => $kode,
                     'nama'      => $sb['nama_berkas'],
                     'short'     => $this->get_short_berkas_label($sb['nama_berkas'], $kode),
                     'status'    => $st,
+                    'catatan'   => $s_row['catatan_' . $kode] ?? ($s_row['catatan_file_' . $kode] ?? ''),
+                    'has_file'  => $has_file,
                     'file_name' => $file_name,
                     'file_url'  => $file_url
                 );
