@@ -200,6 +200,273 @@
             background: #ffffff;
             border-radius: 18.5px;
         }
+
+        /* =========================================================================
+           3D Claymorphic Stat Cards & Mobile Carousel
+           ========================================================================= */
+        .stat-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 1023px) {
+            .stat-cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 639px) {
+            .stat-cards-grid {
+                display: flex !important;
+                flex-direction: row !important;
+                overflow-x: auto !important;
+                scroll-snap-type: x mandatory;
+                -webkit-overflow-scrolling: touch;
+                gap: 14px !important;
+                padding: 4px 2px 8px 2px;
+                margin-bottom: 4px !important;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+                width: 100%;
+            }
+            .stat-cards-grid::-webkit-scrollbar {
+                display: none;
+            }
+            .stat-card-highlight {
+                flex: 0 0 100% !important;
+                width: 100% !important;
+                min-width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box;
+                scroll-snap-align: start;
+                scroll-snap-stop: always;
+            }
+            .stat-slider-dots {
+                display: flex !important;
+            }
+        }
+
+        .stat-card-highlight {
+            position: relative;
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.95);
+            border-radius: 20px;
+            padding: 18px 18px 16px 18px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+            backdrop-filter: blur(12px);
+            overflow: hidden;
+            cursor: default;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-width: 0;
+        }
+
+        .stat-card-highlight:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 30px -8px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        /* Ambient Glow Backdrop */
+        .stat-card-glow {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+        .stat-card-glow .glow-bubble {
+            position: absolute;
+            bottom: -40px;
+            right: -40px;
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            background: var(--card-accent-soft, rgba(234, 88, 12, 0.12));
+            filter: blur(28px);
+            transition: transform 0.5s ease;
+        }
+        .stat-card-highlight:hover .glow-bubble {
+            transform: scale(1.4);
+        }
+
+        /* Top Row Content */
+        .stat-card-top {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .stat-card-meta {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .stat-card-label {
+            font-size: 10.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: color 0.2s ease;
+        }
+        .stat-card-highlight:hover .stat-card-label {
+            color: var(--card-accent, #ea580c);
+        }
+
+        .stat-card-val {
+            font-size: 1.75rem;
+            font-weight: 900;
+            color: #0f172a;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+
+        .stat-card-percent {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--card-accent, #ea580c);
+        }
+
+        .stat-card-desc {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #64748b;
+            margin-top: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 3D Claymorphic Icon Box */
+        .stat-card-3d-icon {
+            position: relative;
+            flex-shrink: 0;
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            background: var(--card-icon-bg, linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%));
+            border: 1px solid var(--card-icon-border, #fed7aa);
+            color: var(--card-accent, #ea580c);
+            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.9), 0 6px 16px var(--card-icon-shadow, rgba(234, 88, 12, 0.16));
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease;
+        }
+        .stat-card-highlight:hover .stat-card-3d-icon {
+            transform: rotate(6deg) scale(1.08);
+        }
+
+        /* Bottom Row Divider & Pulse Dots */
+        .stat-card-bottom {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(241, 245, 249, 0.9);
+        }
+
+        .stat-card-bar {
+            width: 38%;
+            height: 2.5px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--card-accent, #ea580c), transparent);
+            transition: width 0.4s ease;
+        }
+        .stat-card-highlight:hover .stat-card-bar {
+            width: 65%;
+        }
+
+        .stat-card-dots {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            opacity: 0.55;
+            transition: opacity 0.3s ease;
+        }
+        .stat-card-highlight:hover .stat-card-dots {
+            opacity: 1;
+        }
+
+        .stat-card-dots span {
+            width: 4.5px;
+            height: 4.5px;
+            border-radius: 50%;
+            background: var(--card-accent, #ea580c);
+            display: inline-block;
+        }
+
+        /* Theme Variants */
+        .theme-orange {
+            --card-accent: #ea580c;
+            --card-accent-soft: rgba(234, 88, 12, 0.14);
+            --card-icon-bg: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+            --card-icon-border: #fed7aa;
+            --card-icon-shadow: rgba(234, 88, 12, 0.18);
+        }
+        .theme-amber {
+            --card-accent: #d97706;
+            --card-accent-soft: rgba(245, 158, 11, 0.14);
+            --card-icon-bg: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            --card-icon-border: #fde68a;
+            --card-icon-shadow: rgba(245, 158, 11, 0.18);
+        }
+        .theme-sky {
+            --card-accent: #0284c7;
+            --card-accent-soft: rgba(2, 132, 199, 0.14);
+            --card-icon-bg: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            --card-icon-border: #bae6fd;
+            --card-icon-shadow: rgba(2, 132, 199, 0.18);
+        }
+        .theme-emerald {
+            --card-accent: #059669;
+            --card-accent-soft: rgba(16, 185, 129, 0.14);
+            --card-icon-bg: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            --card-icon-border: #bbf7d0;
+            --card-icon-shadow: rgba(16, 185, 129, 0.18);
+        }
+
+        /* Stat Slider Dots Indicator */
+        .stat-slider-dots {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            margin-top: 6px;
+            margin-bottom: 18px;
+        }
+
+        .stat-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #cbd5e1;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .stat-dot.active {
+            width: 22px;
+            background: #ea580c;
+            border-radius: 999px;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased pb-24">
@@ -286,56 +553,102 @@
                 $totalSidangLulus = $countSidang + $countLulus;
             ?>
 
-            <!-- Top Stat Summary Cards (4 Columns Grid) -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <!-- Top Stat Summary Cards (3D Claymorphic Highlight Style with Mobile Slider) -->
+            <div class="stat-cards-grid">
                 <!-- Card 1: Total Peserta -->
-                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm relative overflow-hidden group hover:border-orange-300 transition">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Peserta TA</span>
-                        <div class="w-8 h-8 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center text-sm font-bold">
+                <div class="stat-card-highlight theme-orange">
+                    <div class="stat-card-glow"><div class="glow-bubble"></div></div>
+                    <div class="stat-card-top">
+                        <div class="stat-card-meta">
+                            <div class="stat-card-label">Total Peserta TA</div>
+                            <div class="stat-card-val"><?= $totalPeserta; ?></div>
+                            <div class="stat-card-desc">Seluruh mahasiswa aktif TA</div>
+                        </div>
+                        <div class="stat-card-3d-icon">
                             <i class="fa-solid fa-users"></i>
                         </div>
                     </div>
-                    <h3 class="text-2xl font-black text-slate-900 mt-2"><?= $totalPeserta; ?></h3>
-                    <p class="text-[11px] text-slate-500 mt-0.5">Seluruh mahasiswa aktif TA</p>
+                    <div class="stat-card-bottom">
+                        <div class="stat-card-bar"></div>
+                        <div class="stat-card-dots"><span></span><span></span><span></span></div>
+                    </div>
                 </div>
 
                 <!-- Card 2: Tahap Pendaftaran -->
-                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm relative overflow-hidden group hover:border-amber-300 transition">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Proses Pendaftaran</span>
-                        <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm font-bold">
+                <div class="stat-card-highlight theme-amber">
+                    <div class="stat-card-glow"><div class="glow-bubble"></div></div>
+                    <div class="stat-card-top">
+                        <div class="stat-card-meta">
+                            <div class="stat-card-label">Proses Pendaftaran</div>
+                            <div class="stat-card-val">
+                                <?= $totalPendaftaran; ?>
+                                <?php if ($totalPeserta > 0): ?>
+                                    <span class="stat-card-percent">(<?= round(($totalPendaftaran / $totalPeserta) * 100); ?>%)</span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="stat-card-desc">Wali (<?= $countWali ?>), LAA (<?= $countAdmin ?>), Koor (<?= $countKoor ?>), KK (<?= $countKk ?>)</div>
+                        </div>
+                        <div class="stat-card-3d-icon">
                             <i class="fa-solid fa-file-signature"></i>
                         </div>
                     </div>
-                    <h3 class="text-2xl font-black text-amber-600 mt-2"><?= $totalPendaftaran; ?></h3>
-                    <p class="text-[11px] text-slate-500 mt-0.5">Wali (<?= $countWali ?>), LAA (<?= $countAdmin ?>), Koor (<?= $countKoor ?>), KK (<?= $countKk ?>)</p>
+                    <div class="stat-card-bottom">
+                        <div class="stat-card-bar"></div>
+                        <div class="stat-card-dots"><span></span><span></span><span></span></div>
+                    </div>
                 </div>
 
                 <!-- Card 3: Bimbingan & Preview -->
-                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm relative overflow-hidden group hover:border-indigo-300 transition">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Bimbingan &amp; Evaluasi</span>
-                        <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-bold">
+                <div class="stat-card-highlight theme-sky">
+                    <div class="stat-card-glow"><div class="glow-bubble"></div></div>
+                    <div class="stat-card-top">
+                        <div class="stat-card-meta">
+                            <div class="stat-card-label">Bimbingan &amp; Evaluasi</div>
+                            <div class="stat-card-val">
+                                <?= $totalBimbingan; ?>
+                                <?php if ($totalPeserta > 0): ?>
+                                    <span class="stat-card-percent">(<?= round(($totalBimbingan / $totalPeserta) * 100); ?>%)</span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="stat-card-desc">P1 (<?= $countP1 ?>), P2 (<?= $countP2 ?>), P3 (<?= $countP3 ?>)</div>
+                        </div>
+                        <div class="stat-card-3d-icon">
                             <i class="fa-solid fa-chalkboard-user"></i>
                         </div>
                     </div>
-                    <h3 class="text-2xl font-black text-indigo-600 mt-2"><?= $totalBimbingan; ?></h3>
-                    <p class="text-[11px] text-slate-500 mt-0.5">P1 (<?= $countP1 ?>), P2 (<?= $countP2 ?>), P3 (<?= $countP3 ?>)</p>
+                    <div class="stat-card-bottom">
+                        <div class="stat-card-bar"></div>
+                        <div class="stat-card-dots"><span></span><span></span><span></span></div>
+                    </div>
                 </div>
 
                 <!-- Card 4: Sidang & Lulus -->
-                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm relative overflow-hidden group hover:border-emerald-300 transition">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Sidang &amp; Lulus</span>
-                        <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold">
+                <div class="stat-card-highlight theme-emerald">
+                    <div class="stat-card-glow"><div class="glow-bubble"></div></div>
+                    <div class="stat-card-top">
+                        <div class="stat-card-meta">
+                            <div class="stat-card-label">Sidang &amp; Lulus</div>
+                            <div class="stat-card-val">
+                                <?= $totalSidangLulus; ?>
+                                <?php if ($totalPeserta > 0): ?>
+                                    <span class="stat-card-percent">(<?= round(($totalSidangLulus / $totalPeserta) * 100); ?>%)</span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="stat-card-desc">Sidang (<?= $countSidang ?>), Lulus (<?= $countLulus ?>)</div>
+                        </div>
+                        <div class="stat-card-3d-icon">
                             <i class="fa-solid fa-graduation-cap"></i>
                         </div>
                     </div>
-                    <h3 class="text-2xl font-black text-emerald-600 mt-2"><?= $totalSidangLulus; ?></h3>
-                    <p class="text-[11px] text-slate-500 mt-0.5">Sidang (<?= $countSidang ?>), Lulus (<?= $countLulus ?>)</p>
+                    <div class="stat-card-bottom">
+                        <div class="stat-card-bar"></div>
+                        <div class="stat-card-dots"><span></span><span></span><span></span></div>
+                    </div>
                 </div>
             </div>
+
+            <!-- Mobile Stat Slider Pagination Dots -->
+            <div class="stat-slider-dots" id="statSliderDots"></div>
 
             <!-- Milestone Funnel Filter Chips Container (Scrollable Horizontal) -->
             <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm space-y-3">
@@ -1322,10 +1635,44 @@
                 .replace(/'/g, '&#039;');
         }
 
+        function initStatSliderDots() {
+            const grid = document.querySelector('.stat-cards-grid');
+            const dotsContainer = document.getElementById('statSliderDots');
+            if (!grid || !dotsContainer) return;
+
+            const cards = grid.querySelectorAll('.stat-card-highlight');
+            if (cards.length <= 1) return;
+
+            dotsContainer.innerHTML = '';
+            cards.forEach((_, idx) => {
+                const dot = document.createElement('span');
+                dot.className = 'stat-dot' + (idx === 0 ? ' active' : '');
+                dot.setAttribute('title', `Slide ${idx + 1}`);
+                dot.addEventListener('click', () => {
+                    cards[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+                });
+                dotsContainer.appendChild(dot);
+            });
+
+            const dots = dotsContainer.querySelectorAll('.stat-dot');
+            grid.addEventListener('scroll', () => {
+                const scrollLeft = grid.scrollLeft;
+                const cardWidth = grid.offsetWidth || 1;
+                const activeIndex = Math.min(Math.max(0, Math.round(scrollLeft / cardWidth)), cards.length - 1);
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === activeIndex);
+                });
+            }, { passive: true });
+        }
+
         // Init render on page load
         document.addEventListener('DOMContentLoaded', () => {
             renderTable();
+            initStatSliderDots();
         });
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            initStatSliderDots();
+        }
     </script>
 </body>
 </html>
