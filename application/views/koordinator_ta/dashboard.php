@@ -1178,11 +1178,12 @@
                 </div>
 
                 <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 shrink-0">
-                    <!-- Button 1: Cek Dokumen Massal -->
+                    <!-- Button 1: Cek Dokumen Massal (Dicomment: Koordinator TA tugasnya fokus plotting)
                     <button type="button" onclick="event.stopPropagation(); openP1BatchReviewModal();" class="col-span-2 sm:col-auto h-9 sm:h-10 px-3.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 active:scale-95 text-white font-bold rounded-xl text-xs shadow-md shadow-orange-600/30 transition flex items-center justify-center gap-2 cursor-pointer">
                         <i class="fa-solid fa-folder-open text-xs text-amber-200"></i>
                         <span>Cek Dokumen Massal</span>
                     </button>
+                    -->
 
                     <!-- Button 2: Quick Batch Plotting -->
                     <button type="button" onclick="event.stopPropagation(); openBatchModal('Approved');" class="h-9 sm:h-10 px-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white font-bold rounded-xl text-xs shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-1.5 cursor-pointer">
