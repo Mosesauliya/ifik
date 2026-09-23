@@ -78,43 +78,167 @@ class Mahasiswa_model extends CI_Model {
         return $this->db->update('mahasiswa', $data_geodata);
     }
 
-    // Simpan Pendaftaran TA 6-Step
+    // Simpan Pendaftaran TA ke tabel guidance & file_pendaftaran
     public function save_pendaftaran_ta($data_ta) {
-        if (!$this->db->table_exists('pendaftaran_ta')) return true;
-        $existing = $this->db->get_where('pendaftaran_ta', array('nim' => $data_ta['nim']))->row_array();
-        if ($existing) {
-            $this->db->where('nim', $data_ta['nim']);
-            return $this->db->update('pendaftaran_ta', $data_ta);
-        } else {
-            return $this->db->insert('pendaftaran_ta', $data_ta);
+        $nim = $data_ta['nim'] ?? null;
+        if (!$nim) return false;
+
+        // Ambil ID User dari tabel user
+        $user = null;
+        if ($this->db->table_exists('user')) {
+            $user = $this->db->get_where('user', ['nim' => $nim])->row_array() 
+                 ?: $this->db->get_where('user', ['username' => $nim])->row_array();
         }
+        $userId = $user ? $user['id'] : ('usr_mhs_' . $nim);
+
+        // 1. Simpan ke tabel guidance
+        if ($this->db->table_exists('guidance')) {
+            $existing_g = $this->db->group_start()
+                ->where('id_mhs', $userId)
+                ->or_where('id_mhs', $nim)
+            ->group_end()->get('guidance')->row_array();
+
+            $g_fields = $this->db->list_fields('guidance');
+            $g_data = array();
+
+            if (in_array('judul_1', $g_fields)) $g_data['judul_1'] = $data_ta['judul_1'] ?? '';
+            if (in_array('judul_2', $g_fields)) $g_data['judul_2'] = $data_ta['judul_2'] ?? '';
+            if (in_array('judul_3', $g_fields)) $g_data['judul_3'] = $data_ta['judul_3'] ?? '';
+            if (in_array('judul_en', $g_fields)) $g_data['judul_en'] = $data_ta['judul_en'] ?? '';
+            if (in_array('jenis_TA', $g_fields)) $g_data['jenis_TA'] = $data_ta['jenis_ta'] ?? 'Pengkaryaan';
+            if (in_array('peminatan', $g_fields)) $g_data['peminatan'] = $data_ta['konsentrasi_dkv'] ?? 'Desain Komunikasi Visual';
+            if (in_array('tahun', $g_fields)) $g_data['tahun'] = date('Y');
+            if (in_array('keterangan', $g_fields)) $g_data['keterangan'] = $data_ta['status_approval_wali'] ?? 'Pending';
+            if (in_array('date', $g_fields) && empty($existing_g)) $g_data['date'] = date('Y-m-d H:i:s');
+            if (in_array('date_edit', $g_fields)) $g_data['date_edit'] = date('Y-m-d H:i:s');
+
+            if ($existing_g) {
+                $this->db->where('id', $existing_g['id'])->update('guidance', $g_data);
+            } else {
+                if (in_array('id', $g_fields)) $g_data['id'] = 'gdn_' . $nim;
+                if (in_array('id_mhs', $g_fields)) $g_data['id_mhs'] = $userId;
+                $this->db->insert('guidance', $g_data);
+            }
+        }
+
+        // 2. Simpan file-file ke tabel file_pendaftaran
+        if ($this->db->table_exists('file_pendaftaran')) {
+            $files = [
+                'ksm'        => $data_ta['file_ksm'] ?? null,
+                'transkrip'  => $data_ta['file_transkrip'] ?? null,
+                'pernyataan' => $data_ta['file_pernyataan'] ?? null,
+                'bebas_lab'  => $data_ta['file_bebas_lab'] ?? null
+            ];
+
+            $fp_fields = $this->db->list_fields('file_pendaftaran');
+
+            foreach ($files as $kode => $fileName) {
+                if (empty($fileName)) continue;
+
+                $relPath = (strpos($fileName, 'uploads/') === 0) ? $fileName : ('uploads/persyaratan_ta/' . $fileName);
+
+                $exFp = $this->db->group_start()
+                    ->where('id_mhs', $userId)
+                    ->or_where('id_mhs', $nim)
+                ->group_end()
+                ->where('nama', $kode)
+                ->get('file_pendaftaran')->row_array();
+
+                $fpData = array();
+                if (in_array('file', $fp_fields)) $fpData['file'] = $relPath;
+                if (in_array('status_doswal', $fp_fields)) $fpData['status_doswal'] = 'Pending';
+                if (in_array('status_adminlaa', $fp_fields)) $fpData['status_adminlaa'] = 'Pending';
+                if (in_array('date_edit', $fp_fields)) $fpData['date_edit'] = date('Y-m-d H:i:s');
+
+                if ($exFp) {
+                    $this->db->where('id', $exFp['id'])->update('file_pendaftaran', $fpData);
+                } else {
+                    if (in_array('id', $fp_fields)) $fpData['id'] = 'fp_' . $nim . '_' . $kode;
+                    if (in_array('id_mhs', $fp_fields)) $fpData['id_mhs'] = $userId;
+                    if (in_array('nama', $fp_fields)) $fpData['nama'] = $kode;
+                    if (in_array('view_adminlaa', $fp_fields)) $fpData['view_adminlaa'] = 0;
+                    if (in_array('view_doswal', $fp_fields)) $fpData['view_doswal'] = 0;
+                    if (in_array('komentar', $fp_fields)) $fpData['komentar'] = '';
+                    if (in_array('date', $fp_fields)) $fpData['date'] = date('Y-m-d H:i:s');
+                    $this->db->insert('file_pendaftaran', $fpData);
+                }
+            }
+        }
+
+        return true;
     }
 
-    // Get Status Pendaftaran & Approval Chain
+    // Get Status Pendaftaran & Approval Chain langsung dari guidance & file_pendaftaran
     public function get_status_pendaftaran($nim) {
-        if (!$this->db->table_exists('pendaftaran_ta')) {
-            return array(
-                'status_approval_wali' => 'Pending',
-                'status_approval_admin' => 'Pending',
-                'status_approval_koor' => 'Pending',
-                'status_approval_kk' => 'Pending',
-                'current_stage' => 'Dosen Wali'
-            );
+        $user = null;
+        if ($this->db->table_exists('user')) {
+            $user = $this->db->get_where('user', ['nim' => $nim])->row_array() 
+                 ?: $this->db->get_where('user', ['username' => $nim])->row_array();
         }
-        $has_dw = $this->db->table_exists('dosen_wali') && $this->db->field_exists('id_dosen_wali', 'pendaftaran_ta');
+        $userId = $user ? $user['id'] : ('usr_mhs_' . $nim);
 
-        $this->db->select('p.*' . ($has_dw ? ', w.nama_dosen as nama_dosen_wali' : ''));
-        $this->db->from('pendaftaran_ta p');
-        if ($has_dw) {
-            $this->db->join('dosen_wali w', 'w.id = p.id_dosen_wali', 'left');
+        $guidance = null;
+        if ($this->db->table_exists('guidance')) {
+            $guidance = $this->db->group_start()
+                ->where('id_mhs', $userId)
+                ->or_where('id_mhs', $nim)
+            ->group_end()->get('guidance')->row_array();
         }
-        $this->db->where('p.nim', $nim);
-        $query = $this->db->get();
-        return $query->row_array() ?: array(
-            'status_approval_wali' => 'Pending',
-            'status_approval_admin' => 'Pending',
-            'status_approval_koor' => 'Pending',
-            'status_approval_kk' => 'Pending'
+
+        $files = array();
+        if ($this->db->table_exists('file_pendaftaran')) {
+            $fileRows = $this->db->group_start()
+                ->where('id_mhs', $userId)
+                ->or_where('id_mhs', $nim)
+            ->group_end()->get('file_pendaftaran')->result_array();
+
+            foreach ($fileRows as $fr) {
+                $files[$fr['nama']] = $fr;
+            }
+        }
+
+        // Tentukan status approval dari file_pendaftaran & guidance
+        $status_doswal = 'Pending';
+        $status_laa = 'Pending';
+        $catatan_wali = '';
+        $catatan_laa = '';
+
+        foreach ($files as $fKey => $fRow) {
+            if (!empty($fRow['status_doswal']) && $fRow['status_doswal'] === 'Rejected') {
+                $status_doswal = 'Rejected';
+                if (!empty($fRow['komentar'])) $catatan_wali .= $fRow['komentar'] . ' ';
+            }
+            if (!empty($fRow['status_adminlaa']) && $fRow['status_adminlaa'] === 'Rejected') {
+                $status_laa = 'Rejected';
+                if (!empty($fRow['komentar'])) $catatan_laa .= $fRow['komentar'] . ' ';
+            }
+        }
+
+        $is_submitted = ($guidance !== null || !empty($files)) ? 1 : 0;
+        $current_stage = ($status_doswal !== 'Approved') ? 'Dosen Wali' : (($status_laa !== 'Approved') ? 'Admin Layanan' : 'Koordinator TA');
+
+        return array(
+            'nim'                   => $nim,
+            'is_submitted'          => $is_submitted,
+            'jenis_ta'              => $guidance['jenis_TA'] ?? ($guidance['jenis_ta'] ?? ''),
+            'judul_1'               => $guidance['judul_1'] ?? '',
+            'judul_2'               => $guidance['judul_2'] ?? '',
+            'judul_3'               => $guidance['judul_3'] ?? '',
+            'judul_en'              => $guidance['judul_en'] ?? '',
+            'konsentrasi_dkv'       => $guidance['peminatan'] ?? '',
+            'file_ksm'              => basename($files['ksm']['file'] ?? ''),
+            'file_transkrip'        => basename($files['transkrip']['file'] ?? ''),
+            'file_pernyataan'       => basename($files['pernyataan']['file'] ?? ''),
+            'file_bebas_lab'        => basename($files['bebas_lab']['file'] ?? ''),
+            'status_approval_wali'  => $status_doswal,
+            'status_approval_admin' => $status_laa,
+            'status_approval_koor'  => $guidance['keterangan'] ?? 'Pending',
+            'status_approval_kk'    => 'Pending',
+            'current_stage'         => $current_stage,
+            'catatan_wali'          => trim($catatan_wali ?: ($guidance['komentar'] ?? '')),
+            'catatan_admin'         => trim($catatan_laa),
+            'catatan_koor'          => $guidance['komentar'] ?? '',
+            'created_at'            => $guidance['date'] ?? date('Y-m-d H:i:s')
         );
     }
 
@@ -155,6 +279,14 @@ class Mahasiswa_model extends CI_Model {
     public function reset_pendaftaran_ta($nim) {
         $upload_path = FCPATH . 'uploads/persyaratan_ta/';
 
+        // Ambil User ID jika ada
+        $user = null;
+        if ($this->db->table_exists('user')) {
+            $user = $this->db->get_where('user', ['nim' => $nim])->row_array() 
+                 ?: $this->db->get_where('user', ['username' => $nim])->row_array();
+        }
+        $userId = $user ? $user['id'] : ('usr_mhs_' . $nim);
+
         // 1. Bersihkan berkas fisik legacy dari pendaftaran_ta & hapus record
         if ($this->db->table_exists('pendaftaran_ta')) {
             $existing = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
@@ -189,6 +321,54 @@ class Mahasiswa_model extends CI_Model {
             }
             $this->db->where('nim', $nim);
             $this->db->delete('pendaftaran_berkas');
+        }
+
+        // 3. Bersihkan record dari guidance
+        if ($this->db->table_exists('guidance')) {
+            $this->db->group_start()
+                ->where('id_mhs', $userId)
+                ->or_where('id_mhs', $nim)
+            ->group_end()->delete('guidance');
+        }
+
+        // 4. Bersihkan berkas fisik dan record dari file_pendaftaran
+        if ($this->db->table_exists('file_pendaftaran')) {
+            $fp_rows = $this->db->group_start()
+                ->where('id_mhs', $userId)
+                ->or_where('id_mhs', $nim)
+            ->group_end()->get('file_pendaftaran')->result_array();
+
+            if (!empty($fp_rows)) {
+                foreach ($fp_rows as $fpr) {
+                    if (!empty($fpr['file'])) {
+                        $filepath = FCPATH . $fpr['file'];
+                        if (file_exists($filepath) && is_file($filepath)) {
+                            @unlink($filepath);
+                        }
+                    }
+                }
+            }
+
+            $this->db->group_start()
+                ->where('id_mhs', $userId)
+                ->or_where('id_mhs', $nim)
+            ->group_end()->delete('file_pendaftaran');
+        }
+
+        // 5. Bersihkan berkas fisik dan riwayat bimbingan_preview
+        if ($this->db->table_exists('bimbingan_preview')) {
+            $prev_rows = $this->db->get_where('bimbingan_preview', ['nim' => $nim])->result_array();
+            if (!empty($prev_rows)) {
+                foreach ($prev_rows as $pr) {
+                    if (!empty($pr['file_laporan'])) {
+                        $filepath = FCPATH . 'uploads/bimbingan_preview/' . $pr['file_laporan'];
+                        if (file_exists($filepath) && is_file($filepath)) {
+                            @unlink($filepath);
+                        }
+                    }
+                }
+            }
+            $this->db->where('nim', $nim)->delete('bimbingan_preview');
         }
 
         return true;

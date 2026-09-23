@@ -231,14 +231,13 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
             break;
 
         case 4: // Mahasiswa
-        case 5: // Mahasiswa (fallback)
             $defaultNavItems = [
-                ['category' => 'Menu Utama', 'mobile_only' => true],
-                ['heading' => 'Dashboard', 'href' => site_url('mahasiswa'), 'icon_3d' => 'assets/images/icons_3d/home.png', 'mobile_only' => true],
-                ['heading' => 'Pendaftaran TA', 'href' => site_url('mahasiswa/pendaftaran_ta'), 'icon_3d' => 'assets/images/icons_3d/daftar.png', 'mobile_only' => true],
-                ['heading' => 'Bimbingan TA', 'href' => site_url('mahasiswa/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/sidang.png', 'mobile_only' => true],
+                ['category' => 'Akademik Mahasiswa'],
+                ['heading' => 'Dashboard', 'href' => site_url('mahasiswa'), 'icon_3d' => 'assets/images/icons_3d/home.png'],
+                ['heading' => 'Pendaftaran TA', 'href' => site_url('mahasiswa/pendaftaran_ta'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
+                ['heading' => 'Bimbingan TA', 'href' => site_url('mahasiswa/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
 
-                ['category' => 'Menu Mahasiswa', 'has_divider_mobile' => true],
+                ['category' => 'Fasilitas & Jadwal', 'has_divider' => true],
                 ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
                 ['heading' => 'Riwayat Peminjaman Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
                 ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],

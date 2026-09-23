@@ -19,6 +19,43 @@ class Booking_model extends CI_Model {
         return [];
     }
 
+    public function get_all_ruangan()
+    {
+        $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan, kategori_ruangan.nama_kategori');
+        $this->db->from('ruangan');
+        $this->db->join('kategori_ruangan', 'kategori_ruangan.id = ruangan.id_kategori', 'left');
+        $this->db->order_by('ruangan.id', 'ASC');
+        $ruangan_list = $this->db->get()->result();
+
+        if (!empty($ruangan_list)) {
+            foreach ($ruangan_list as &$r) {
+                if (empty($r->nama_ruangan) && !empty($r->ruangan)) {
+                    $r->nama_ruangan = $r->ruangan;
+                }
+                if (empty($r->kode_ruangan) && !empty($r->id)) {
+                    $r->kode_ruangan = $r->id;
+                }
+                // Parse file foto & 3d model dari kolom images jika foto/model_3d kosong
+                if (!empty($r->images)) {
+                    if (strpos($r->images, '|') !== false) {
+                        list($f, $m) = explode('|', $r->images, 2);
+                        if (empty($r->foto)) $r->foto = $f;
+                        if (empty($r->model_3d)) $r->model_3d = $m;
+                    } else {
+                        $ext = strtolower(pathinfo($r->images, PATHINFO_EXTENSION));
+                        if (in_array($ext, ['glb', 'gltf', 'fbx', 'obj'])) {
+                            if (empty($r->model_3d)) $r->model_3d = $r->images;
+                        } else {
+                            if (empty($r->foto)) $r->foto = $r->images;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $ruangan_list;
+    }
+
     public function get_ruangan_by_kategori($id_kategori)
     {
         $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan');
@@ -47,6 +84,8 @@ class Booking_model extends CI_Model {
             booking.id_ruangan,
             COALESCE(
                 NULLIF(TRIM(u.name), ''),
+                NULLIF(TRIM(u2.name), ''),
+                NULLIF(TRIM(u3.name), ''),
                 NULLIF(TRIM(CONCAT(m.nama_depan, ' ', COALESCE(m.nama_belakang, ''))), ''),
                 'Mahasiswa / Civitas IFIK'
             ) AS nama_lengkap,
@@ -73,10 +112,12 @@ class Booking_model extends CI_Model {
             booking.date_declined
         ", FALSE);
         $this->db->from('booking');
-        $this->db->join('user u', '(BINARY u.id = BINARY booking.id_peminjam OR BINARY u.nim = BINARY booking.id_peminjam OR BINARY u.nip = BINARY booking.id_peminjam)', 'left', FALSE);
-        $this->db->join('mahasiswa m', 'BINARY m.nim = BINARY booking.id_peminjam', 'left', FALSE);
-        $this->db->join('ruangan', 'BINARY ruangan.id = BINARY booking.id_ruangan', 'left', FALSE);
-        $this->db->join('kategori_ruangan', 'BINARY kategori_ruangan.id = BINARY ruangan.id_kategori', 'left', FALSE);
+        $this->db->join('user u', 'u.id = booking.id_peminjam', 'left');
+        $this->db->join('user u2', 'u2.nim = booking.id_peminjam', 'left');
+        $this->db->join('user u3', 'u3.nip = booking.id_peminjam', 'left');
+        $this->db->join('mahasiswa m', 'm.nim = booking.id_peminjam', 'left');
+        $this->db->join('ruangan', 'ruangan.id = booking.id_ruangan', 'left');
+        $this->db->join('kategori_ruangan', 'kategori_ruangan.id = ruangan.id_kategori', 'left');
     }
 
     public function get_all_peminjaman()

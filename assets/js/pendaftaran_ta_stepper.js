@@ -1099,11 +1099,42 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateProgressUI(progress, statusMsg);
             }, 250);
 
+            // Safety timeout to unlock button if server takes too long or fails
+            setTimeout(() => {
+                if (isSubmitting) {
+                    const btnCloseModal = document.getElementById('btnCloseSubmitModal');
+                    if (btnCloseModal) btnCloseModal.classList.remove('hidden');
+                }
+            }, 12000);
+
             // Clear saved draft & step upon valid submit
             try {
                 localStorage.removeItem(STEP_KEY);
                 localStorage.removeItem(DRAFT_KEY);
             } catch (err) {}
+        });
+
+        // Reset submit lock if user navigates back from browser history / bfcache
+        window.addEventListener('pageshow', function (e) {
+            isSubmitting = false;
+            const progressModal = document.getElementById('submitProgressModal');
+            if (progressModal) {
+                progressModal.classList.add('hidden');
+                progressModal.classList.remove('flex');
+            }
+            const inlineProgress = document.getElementById('inlineSubmitProgress');
+            if (inlineProgress) {
+                inlineProgress.classList.add('hidden');
+            }
+            if (btnSubmit && !btnSubmit.hasAttribute('disabled-permanently')) {
+                btnSubmit.disabled = false;
+                btnSubmit.classList.remove('opacity-75', 'cursor-not-allowed', 'pointer-events-none');
+                btnSubmit.innerHTML = '<i class="bi bi-send-fill text-sm"></i> Kirim Pendaftaran';
+            }
+            if (btnPrev) {
+                btnPrev.disabled = false;
+                btnPrev.classList.remove('opacity-50', 'pointer-events-none');
+            }
         });
     }
 

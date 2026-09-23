@@ -28,12 +28,15 @@
     <!-- Auto Role-Aware Curved Animated Sidebar -->
     <?php $this->load->view('components/curved_sidebar'); ?>
 
-    <!-- Header Glass Navbar (Clean White Glass - Identical to Dashboard) -->
-    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-2xl border-b border-orange-100/80 shadow-xs mb-6">
-        <div class="w-full px-4 sm:px-6 lg:px-10">
-            <div class="flex items-center justify-between h-16 sm:h-18">
-                <!-- Brand -->
-                <div class="flex items-center gap-3 pl-11 sm:pl-12">
+    <!-- Main Page Content Wrapper (Shrinks / Expands with Sidebar) -->
+    <div id="mainPageContent" class="page-wrapper-for-sidebar min-h-screen flex flex-col flex-grow">
+
+        <!-- Header Glass Navbar (Clean White Glass - Identical to Dashboard) -->
+        <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-2xl border-b border-orange-100/80 shadow-xs mb-6">
+            <div class="w-full px-4 sm:px-6 lg:px-10">
+                <div class="flex items-center justify-between h-16 sm:h-18">
+                    <!-- Brand -->
+                    <div class="flex items-center gap-3 header-title-shift pl-11 lg:pl-0">
                     <div class="w-9 h-9 bg-gradient-to-tr from-orange-600 to-amber-500 text-white rounded-xl font-bold text-lg flex items-center justify-center box-3d">
                         I
                     </div>
@@ -42,22 +45,6 @@
                         <span class="text-[9px] uppercase font-bold tracking-wider text-orange-500 mt-0.5 block">Akademik Mahasiswa</span>
                     </div>
                 </div>
-
-                <!-- Nav Menu -->
-                <nav class="hidden md:flex items-center gap-7 relative" id="mainNav">
-                    <a href="<?= site_url('mahasiswa'); ?>" class="nav-link flex items-center gap-2 tracking-wide">
-                        <i class="bi bi-grid-1x2-fill"></i>
-                        <span>Dashboard</span>
-                    </a>
-                    <a href="<?= site_url('mahasiswa/pendaftaran_ta'); ?>" class="nav-link active-link flex items-center gap-2 tracking-wide">
-                        <i class="bi bi-file-earmark-text"></i>
-                        <span>Pendaftaran TA</span>
-                    </a>
-                    <a href="<?= site_url('mahasiswa/bimbingan'); ?>" class="nav-link flex items-center gap-2 tracking-wide">
-                        <i class="bi bi-person-video3"></i>
-                        <span>Bimbingan TA</span>
-                    </a>
-                </nav>
 
                 <!-- User Quick Info -->
                 <div class="flex items-center gap-2.5">
@@ -121,6 +108,28 @@
                 </div>
             </div>
         </div>
+
+        <?php if($this->session->flashdata('success')): ?>
+            <div class="p-4 mb-6 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-emerald-950 shadow-xs flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg font-bold box-3d shrink-0">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <div class="text-xs font-semibold">
+                    <?= $this->session->flashdata('success'); ?>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <?php if($this->session->flashdata('error')): ?>
+            <div class="p-4 mb-6 rounded-2xl bg-rose-50 border-2 border-rose-300 text-rose-950 shadow-xs flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center text-lg font-bold box-3d shrink-0">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+                <div class="text-xs font-semibold">
+                    <?= $this->session->flashdata('error'); ?>
+                </div>
+            </div>
+        <?php endif; ?>
 
         <?php if(!empty($has_revisi)): ?>
             <!-- Revision Notice Banner -->
@@ -238,7 +247,7 @@
                                 </div>
                                 <div>
                                     <span class="text-[9px] font-bold uppercase tracking-wider text-orange-700 block">JENIS TUGAS AKHIR DIPILIH</span>
-                                    <span class="text-xs font-bold text-slate-900" id="previewTextJenisTA"><?= htmlspecialchars($pendaftaran['jenis_ta'] ?? 'Pengkaryaan'); ?></span>
+                                    <span class="text-xs font-bold text-slate-900" id="previewTextJenisTA"><?= htmlspecialchars($pendaftaran['jenis_ta'] ?? ''); ?></span>
                                 </div>
                             </div>
 
@@ -531,6 +540,7 @@
     <footer class="bg-white/90 border-t border-orange-100 py-5 text-center text-xs text-slate-400 font-medium mt-12">
         &copy; <?= date('Y'); ?> IFIK Portal — Fakultas Industri Kreatif, Telkom University
     </footer>
+    </div> <!-- /#mainPageContent -->
 
     <?php
         $has_saved_draft = !empty($has_ta) && (!empty($pendaftaran['jenis_ta']) || !empty($pendaftaran['judul_1']) || !empty($pendaftaran['file_ksm']) || !empty($student_berkas));

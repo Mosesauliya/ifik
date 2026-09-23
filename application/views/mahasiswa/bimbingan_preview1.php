@@ -310,6 +310,10 @@
 <body class="bg-gradient-to-br from-amber-50/40 via-orange-50/25 to-slate-100 min-h-screen text-slate-800 antialiased flex flex-col justify-between selection:bg-orange-500 selection:text-white">
 
     <?php $this->load->view('components/curved_sidebar'); ?>
+
+    <!-- Main Page Content Wrapper (Shrinks / Expands with Sidebar) -->
+    <div id="mainPageContent" class="page-wrapper-for-sidebar min-h-screen flex flex-col flex-grow">
+
     <?php $this->load->view('partials/mahasiswa_navbar'); ?>
 
     <main class="w-full px-4 sm:px-6 lg:px-10 py-6 sm:py-8 flex-grow space-y-7">
@@ -1219,6 +1223,7 @@
     <footer class="bg-white/90 border-t border-orange-100 py-6 text-center text-xs sm:text-sm text-slate-500 font-medium">
         &copy; <?= date('Y'); ?> IFIK Portal — Fakultas Industri Kreatif, Telkom University
     </footer>
+    </div> <!-- /#mainPageContent -->
 
     <!-- ==========================================================
          UNIFIED COMMENT MODAL (P1, P2, U1, U2)

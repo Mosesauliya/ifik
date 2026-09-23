@@ -175,25 +175,27 @@ class Mahasiswa extends CI_Controller {
                     // 1. Simpan ke pendaftaran_berkas
                     $this->AdminLayanan_model->save_student_berkas($nim, $k, $new_file, 'Pending');
 
-                    // 2. Simpan ke pendaftaran_ta jika kolomnya ada
-                    if ($this->db->field_exists($f, 'pendaftaran_ta')) {
-                        $updated_data[$f] = $new_file;
-                    }
-                    $col_status  = 'status_file_' . $k;
-                    $col_review  = 'review_file_' . $k;
-                    $col_catatan = 'catatan_file_' . $k;
-                    if ($this->db->field_exists($col_status, 'pendaftaran_ta')) {
-                        $updated_data[$col_status] = 'Pending';
-                    }
-                    $col_legacy_status = 'status_' . $k;
-                    if ($this->db->field_exists($col_legacy_status, 'pendaftaran_ta')) {
-                        $updated_data[$col_legacy_status] = 'Pending';
-                    }
-                    if ($this->db->field_exists($col_review, 'pendaftaran_ta')) {
-                        $updated_data[$col_review] = 0;
-                    }
-                    if ($this->db->field_exists($col_catatan, 'pendaftaran_ta')) {
-                        $updated_data[$col_catatan] = '';
+                    // 2. Simpan ke pendaftaran_ta jika tabel dan kolomnya ada
+                    if ($this->db->table_exists('pendaftaran_ta')) {
+                        if ($this->db->field_exists($f, 'pendaftaran_ta')) {
+                            $updated_data[$f] = $new_file;
+                        }
+                        $col_status  = 'status_file_' . $k;
+                        $col_review  = 'review_file_' . $k;
+                        $col_catatan = 'catatan_file_' . $k;
+                        if ($this->db->field_exists($col_status, 'pendaftaran_ta')) {
+                            $updated_data[$col_status] = 'Pending';
+                        }
+                        $col_legacy_status = 'status_' . $k;
+                        if ($this->db->field_exists($col_legacy_status, 'pendaftaran_ta')) {
+                            $updated_data[$col_legacy_status] = 'Pending';
+                        }
+                        if ($this->db->field_exists($col_review, 'pendaftaran_ta')) {
+                            $updated_data[$col_review] = 0;
+                        }
+                        if ($this->db->field_exists($col_catatan, 'pendaftaran_ta')) {
+                            $updated_data[$col_catatan] = '';
+                        }
                     }
                 }
             }
@@ -287,7 +289,9 @@ class Mahasiswa extends CI_Controller {
                 $updated_data['catatan_wali'] = '';
             }
 
-            $this->db->where('nim', $nim)->update('pendaftaran_ta', $updated_data);
+            if ($this->db->table_exists('pendaftaran_ta')) {
+                $this->db->where('nim', $nim)->update('pendaftaran_ta', $updated_data);
+            }
             $this->session->set_flashdata('success', 'Berhasil mengunggah ' . ($uploaded_count ? $uploaded_count . ' berkas perbaikan' : 'perubahan usulan') . ' untuk diverifikasi kembali!');
         } else {
             $this->session->set_flashdata('error', 'Tidak ada file baru yang diunggah. Silakan pilih file PDF yang valid.');
@@ -421,7 +425,9 @@ class Mahasiswa extends CI_Controller {
             $file_step6 = $file_uploads['bebas_lab'] ?? $this->_do_upload('file_bebas_lab', $config);
 
             // Ambil data pendaftaran_ta yang sudah ada untuk menjaga status yang sudah di-Approve
-            $existing_ta = $this->db->get_where('pendaftaran_ta', array('nim' => $nim))->row_array();
+            $existing_ta = $this->db->table_exists('pendaftaran_ta')
+                ? $this->db->get_where('pendaftaran_ta', array('nim' => $nim))->row_array()
+                : $this->Mahasiswa_model->get_status_pendaftaran($nim);
 
             $w_status  = isset($existing_ta['status_approval_wali']) ? $existing_ta['status_approval_wali'] : 'Pending';
             $a_status  = isset($existing_ta['status_approval_admin']) ? $existing_ta['status_approval_admin'] : 'Pending';
@@ -514,36 +520,6 @@ class Mahasiswa extends CI_Controller {
                                 'file_name'         => $f_name,
                                 'status_verifikasi' => 'Pending',
                                 'created_at'        => date('Y-m-d H:i:s')
-                            ]);
-                        }
-                    }
-
-                    // Sync juga ke file_pendaftaran
-                    if ($this->db->table_exists('file_pendaftaran') && !empty($f_name)) {
-                        $id_fp = 'fp_' . $nim . '_' . $f_code;
-                        $id_mhs_usr = 'usr_mhs_' . $nim;
-                        $ex_fp = $this->db->where('id', $id_fp)->or_where(['id_mhs' => $id_mhs_usr, 'nama' => $f_code])->get('file_pendaftaran')->row_array();
-                        $rel_path = 'uploads/persyaratan_ta/' . $f_name;
-                        if ($ex_fp) {
-                            $this->db->where('id', $ex_fp['id'])->update('file_pendaftaran', [
-                                'file'            => $rel_path,
-                                'status_doswal'   => 'Pending',
-                                'status_adminlaa' => 'Pending',
-                                'date_edit'       => date('Y-m-d H:i:s')
-                            ]);
-                        } else {
-                            $this->db->insert('file_pendaftaran', [
-                                'id'              => $id_fp,
-                                'id_mhs'          => $id_mhs_usr,
-                                'nama'            => $f_code,
-                                'file'            => $rel_path,
-                                'view_adminlaa'   => 0,
-                                'status_adminlaa' => 'Pending',
-                                'view_doswal'     => 0,
-                                'status_doswal'   => 'Pending',
-                                'komentar'        => '',
-                                'date'            => date('Y-m-d H:i:s'),
-                                'date_edit'       => date('Y-m-d H:i:s')
                             ]);
                         }
                     }
@@ -1092,38 +1068,40 @@ class Mahasiswa extends CI_Controller {
 
             $kode_berkas = str_replace('file_', '', $field_name);
 
-            // 1. Simpan / update ke database pendaftaran_ta sebagai draft
-            $existing_ta = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
-            $upData = [];
-            if ($this->db->field_exists($field_name, 'pendaftaran_ta')) {
-                $upData[$field_name] = $file_name;
-            }
-            $upData['draft_step'] = 2; // Step berkas
-            $upData['updated_at'] = date('Y-m-d H:i:s');
-
-            if ($existing_ta) {
-                if (empty($existing_ta['konsentrasi_dkv'])) $upData['konsentrasi_dkv'] = $mhs_konsentrasi;
-                if (empty($existing_ta['id_kk'])) $upData['id_kk'] = $mhs_id_kk;
-                // Jika status LAA sudah Approved/Rejected sebelumnya, reset ke Pending karena ada re-upload / upload file baru
-                if (isset($existing_ta['status_approval_admin']) && in_array($existing_ta['status_approval_admin'], ['Approved', 'Rejected'])) {
-                    $upData['status_approval_admin'] = 'Pending';
-                    if (($existing_ta['status_approval_wali'] ?? '') === 'Approved') {
-                        $upData['current_stage'] = 'Admin Layanan';
-                    }
+            // 1. Simpan / update ke database pendaftaran_ta sebagai draft (jika tabel ada)
+            if ($this->db->table_exists('pendaftaran_ta')) {
+                $existing_ta = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
+                $upData = [];
+                if ($this->db->field_exists($field_name, 'pendaftaran_ta')) {
+                    $upData[$field_name] = $file_name;
                 }
-                $this->db->where('nim', $nim)->update('pendaftaran_ta', $upData);
-            } else {
-                $upData['nim']                  = $nim;
-                $upData['konsentrasi_dkv']      = $mhs_konsentrasi;
-                $upData['id_kk']                = $mhs_id_kk;
-                $upData['is_submitted']         = 0;
-                $upData['status_approval_wali'] = 'Draft';
-                $upData['status_approval_admin'] = 'Pending';
-                $upData['status_approval_koor'] = 'Pending';
-                $upData['status_approval_kk']   = 'Pending';
-                $upData['current_stage']        = 'Draft';
-                $upData['created_at']           = date('Y-m-d H:i:s');
-                $this->db->insert('pendaftaran_ta', $upData);
+                $upData['draft_step'] = 2; // Step berkas
+                $upData['updated_at'] = date('Y-m-d H:i:s');
+
+                if ($existing_ta) {
+                    if (empty($existing_ta['konsentrasi_dkv'])) $upData['konsentrasi_dkv'] = $mhs_konsentrasi;
+                    if (empty($existing_ta['id_kk'])) $upData['id_kk'] = $mhs_id_kk;
+                    // Jika status LAA sudah Approved/Rejected sebelumnya, reset ke Pending karena ada re-upload / upload file baru
+                    if (isset($existing_ta['status_approval_admin']) && in_array($existing_ta['status_approval_admin'], ['Approved', 'Rejected'])) {
+                        $upData['status_approval_admin'] = 'Pending';
+                        if (($existing_ta['status_approval_wali'] ?? '') === 'Approved') {
+                            $upData['current_stage'] = 'Admin Layanan';
+                        }
+                    }
+                    $this->db->where('nim', $nim)->update('pendaftaran_ta', $upData);
+                } else {
+                    $upData['nim']                  = $nim;
+                    $upData['konsentrasi_dkv']      = $mhs_konsentrasi;
+                    $upData['id_kk']                = $mhs_id_kk;
+                    $upData['is_submitted']         = 0;
+                    $upData['status_approval_wali'] = 'Draft';
+                    $upData['status_approval_admin'] = 'Pending';
+                    $upData['status_approval_koor'] = 'Pending';
+                    $upData['status_approval_kk']   = 'Pending';
+                    $upData['current_stage']        = 'Draft';
+                    $upData['created_at']           = date('Y-m-d H:i:s');
+                    $this->db->insert('pendaftaran_ta', $upData);
+                }
             }
 
             // 2. Simpan juga ke tabel pendaftaran_berkas via AdminLayanan_model
@@ -1162,40 +1140,44 @@ class Mahasiswa extends CI_Controller {
                 }
             }
 
-            // Sync langsung ke file_pendaftaran jika tabel tersedia
+            // Sync langsung ke file_pendaftaran jika tabel tersedia (Fail-Safe)
             if ($this->db->table_exists('file_pendaftaran')) {
-                $id_fp = 'fp_' . $nim . '_' . $kode_berkas;
-                $id_mhs_usr = 'usr_mhs_' . $nim;
-                $ex_fp = $this->db->group_start()
-                    ->where('id', $id_fp)
-                    ->or_group_start()
-                        ->where('id_mhs', $id_mhs_usr)
-                        ->where('nama', $kode_berkas)
+                try {
+                    $fp_fields = $this->db->list_fields('file_pendaftaran');
+                    $id_fp = 'fp_' . $nim . '_' . $kode_berkas;
+                    $id_mhs_usr = 'usr_mhs_' . $nim;
+                    $ex_fp = $this->db->group_start()
+                        ->where('id', $id_fp)
+                        ->or_group_start()
+                            ->where('id_mhs', $id_mhs_usr)
+                            ->where('nama', $kode_berkas)
+                        ->group_end()
                     ->group_end()
-                ->group_end()
-                ->get('file_pendaftaran')->row_array();
-                $rel_file_path = 'uploads/persyaratan_ta/' . $file_name;
-                if ($ex_fp) {
-                    $this->db->where('id', $ex_fp['id'])->update('file_pendaftaran', [
-                        'file'            => $rel_file_path,
-                        'status_doswal'   => 'Pending',
-                        'status_adminlaa' => 'Pending',
-                        'date_edit'       => date('Y-m-d H:i:s')
-                    ]);
-                } else {
-                    $this->db->insert('file_pendaftaran', [
-                        'id'              => $id_fp,
-                        'id_mhs'          => $id_mhs_usr,
-                        'nama'            => $kode_berkas,
-                        'file'            => $rel_file_path,
-                        'view_adminlaa'   => 0,
-                        'status_adminlaa' => 'Pending',
-                        'view_doswal'     => 0,
-                        'status_doswal'   => 'Pending',
-                        'komentar'        => '',
-                        'date'            => date('Y-m-d H:i:s'),
-                        'date_edit'       => date('Y-m-d H:i:s')
-                    ]);
+                    ->get('file_pendaftaran')->row_array();
+                    $rel_file_path = 'uploads/persyaratan_ta/' . $file_name;
+                    
+                    $fp_payload = array();
+                    if (in_array('file', $fp_fields)) $fp_payload['file'] = $rel_file_path;
+                    if (in_array('status_doswal', $fp_fields)) $fp_payload['status_doswal'] = 'Pending';
+                    if (in_array('status_adminlaa', $fp_fields)) $fp_payload['status_adminlaa'] = 'Pending';
+                    if (in_array('date_edit', $fp_fields)) $fp_payload['date_edit'] = date('Y-m-d H:i:s');
+
+                    if ($ex_fp) {
+                        if (!empty($fp_payload)) {
+                            $this->db->where('id', $ex_fp['id'])->update('file_pendaftaran', $fp_payload);
+                        }
+                    } else {
+                        if (in_array('id', $fp_fields)) $fp_payload['id'] = $id_fp;
+                        if (in_array('id_mhs', $fp_fields)) $fp_payload['id_mhs'] = $id_mhs_usr;
+                        if (in_array('nama', $fp_fields)) $fp_payload['nama'] = $kode_berkas;
+                        if (in_array('view_adminlaa', $fp_fields)) $fp_payload['view_adminlaa'] = 0;
+                        if (in_array('view_doswal', $fp_fields)) $fp_payload['view_doswal'] = 0;
+                        if (in_array('komentar', $fp_fields)) $fp_payload['komentar'] = '';
+                        if (in_array('date', $fp_fields)) $fp_payload['date'] = date('Y-m-d H:i:s');
+                        $this->db->insert('file_pendaftaran', $fp_payload);
+                    }
+                } catch (Exception $e) {
+                    log_message('error', 'Error syncing file_pendaftaran in ajax_upload: ' . $e->getMessage());
                 }
             }
 
@@ -1236,7 +1218,9 @@ class Mahasiswa extends CI_Controller {
         $kode_berkas = str_replace('file_', '', $field_name);
 
         // Cek jika pendaftaran sudah dikunci
-        $pendaftaran = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
+        $pendaftaran = $this->db->table_exists('pendaftaran_ta')
+            ? $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array()
+            : $this->Mahasiswa_model->get_status_pendaftaran($nim);
         if (!empty($pendaftaran['is_submitted'])) {
             $w_status  = $pendaftaran['status_approval_wali'] ?? 'Pending';
             $a_status  = $pendaftaran['status_approval_admin'] ?? 'Pending';
