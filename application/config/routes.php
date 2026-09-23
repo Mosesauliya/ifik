@@ -123,7 +123,25 @@ $route['dosen/respon-ticketing/detail/(:any)'] = 'DosenTicketing/respon_detail/$
 $route['dosen/respon-ticketing/simpan_tanggapan'] = 'DosenTicketing/respon_simpan_tanggapan';
 $route['dosen/respon-ticketing/(:any)'] = 'DosenTicketing/respon_$1';
 
-// Koordinator TA Routes
+// Koordinator TA Help Chat Routes (Harus sebelum wildcard)
+$route['koordinatorta/help'] = 'KoordinatorTA/help';
+$route['koordinator/help'] = 'KoordinatorTA/help';
+$route['koordinatorta/help/channel'] = 'KoordinatorTA/help_get_channel_ajax';
+$route['koordinator/help/channel'] = 'KoordinatorTA/help_get_channel_ajax';
+$route['koordinatorta/help/conversations'] = 'KoordinatorTA/help_get_conversations_ajax';
+$route['koordinator/help/conversations'] = 'KoordinatorTA/help_get_conversations_ajax';
+$route['koordinatorta/help/messages/(:num)'] = 'KoordinatorTA/help_get_messages_ajax/$1';
+$route['koordinator/help/messages/(:num)'] = 'KoordinatorTA/help_get_messages_ajax/$1';
+$route['koordinatorta/help/create'] = 'KoordinatorTA/help_create_chat_ajax';
+$route['koordinator/help/create'] = 'KoordinatorTA/help_create_chat_ajax';
+$route['koordinatorta/help/send'] = 'KoordinatorTA/help_send_message_ajax';
+$route['koordinator/help/send'] = 'KoordinatorTA/help_send_message_ajax';
+$route['koordinatorta/help/toggle-status'] = 'KoordinatorTA/help_toggle_status_ajax';
+$route['koordinator/help/toggle-status'] = 'KoordinatorTA/help_toggle_status_ajax';
+$route['koordinatorta/help/quick-topics'] = 'KoordinatorTA/help_quick_topics_ajax';
+$route['koordinator/help/quick-topics'] = 'KoordinatorTA/help_quick_topics_ajax';
+
+// Koordinator TA General Routes
 $route['koordinatorta'] = 'KoordinatorTA';
 $route['koordinatorta/detail_mahasiswa/(:any)'] = 'KoordinatorTA/detail_mahasiswa/$1';
 $route['koordinatorta/(:any)'] = 'KoordinatorTA/$1';
@@ -277,6 +295,10 @@ $route['laboran/help/my-chats'] = 'LaboranHelp/my_conversations_ajax';
 $route['laboran/help/toggle-status'] = 'LaboranHelp/toggle_status_ajax';
 $route['laboran/help/quick-replies'] = 'LaboranHelp/quick_replies_ajax';
 $route['laboran/help/sample'] = 'LaboranHelp/create_sample_ajax';
+
+// Kaur & Admin Layanan Help Desk Routes Alias
+$route['kaur/help'] = 'LaboranHelp/index';
+$route['adminlayanan/help'] = 'LaboranHelp/index';
 
 // User / Mahasiswa / Dosen Public Help Desk API Routes (Mudah diintegrasikan teman)
 $route['api/help/create'] = 'LaboranHelp/create_chat_user_ajax';

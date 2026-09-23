@@ -792,5 +792,424 @@ class KoordinatorTA extends CI_Controller {
             'data'    => $rubriks
         ));
     }
+
+    // =========================================================================
+    // MODUL CHAT HELP: KOORDINATOR TA -> TRIO (LABORAN / KA. UR / ADMIN LAYANAN)
+    // =========================================================================
+
+    /**
+     * Halaman Utama Bantuan & Live Chat Koordinator TA
+     */
+    public function help() {
+        $this->load->model('Help_chat_model');
+        $nip_koor = $this->session->userdata('nip') ?: ($this->session->userdata('username') ?: '1987010102');
+        $user_id = $this->session->userdata('user_id') ?: 6;
+
+        $data['title'] = 'Bantuan & Live Chat - Koordinator TA';
+        $data['nip_koor'] = $nip_koor;
+        $data['stats'] = $this->Help_chat_model->get_stats(null, $user_id);
+        $data['conversations'] = $this->Help_chat_model->get_conversations('all', '', null, $user_id);
+
+        $this->load->view('koordinator_ta/help', $data);
+    }
+
+    /**
+     * AJAX: Ambil daftar percakapan Koordinator TA dengan filter target, status, & pencarian
+     */
+    public function help_get_conversations_ajax() {
+        header('Content-Type: application/json');
+        $this->load->model('Help_chat_model');
+
+        $user_id = $this->session->userdata('user_id') ?: 6;
+        $target_role = $this->input->get('target', true) ?: 'all';
+        $status = $this->input->get('status', true) ?: 'all';
+        $search = trim($this->input->get('q', true) ?? '');
+
+        $conversations = $this->Help_chat_model->get_conversations($status, $search, $target_role, $user_id);
+        $stats = $this->Help_chat_model->get_stats($target_role, $user_id);
+
+        $formatted = [];
+        foreach ($conversations as $c) {
+            $formatted[] = [
+                'id'                => (int)$c->id,
+                'target_role'       => htmlspecialchars($c->target_role ?? 'laboran'),
+                'target_role_label' => $this->_get_target_role_label($c->target_role ?? 'laboran'),
+                'topik'             => htmlspecialchars($c->topik ?? 'Bantuan Umum'),
+                'status'            => $c->status,
+                'last_message'      => htmlspecialchars($c->last_message ?? ''),
+                'last_message_time' => $this->_format_help_time_ago($c->last_message_time ?? $c->created_at),
+                'unread_user'       => (int)$c->unread_user,
+                'unread_laboran'    => (int)$c->unread_laboran,
+                'created_at'        => date('d M Y, H:i', strtotime($c->created_at))
+            ];
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'stats'  => $stats,
+            'data'   => $formatted
+        ]);
+        exit;
+    }
+
+    /**
+     * AJAX: Dapatkan atau buat channel chat langsung dengan salah satu Trio (Laboran / Ka. Ur / Admin Layanan)
+     */
+    public function help_get_channel_ajax() {
+        header('Content-Type: application/json');
+        $this->load->model('Help_chat_model');
+
+        $target_role = strtolower(trim($this->input->get('target', true) ?? 'laboran'));
+        if (!in_array($target_role, ['laboran', 'kaur', 'admin_layanan'])) {
+            $target_role = 'laboran';
+        }
+
+        $userId    = $this->session->userdata('user_id') ?: 6;
+        $userNama  = $this->session->userdata('name') ?: 'Dr. Koordinator TA, M.T.';
+        $userEmail = $this->session->userdata('email') ?: 'koordinator.ta@telkomuniversity.ac.id';
+        $userNip   = $this->session->userdata('nip') ?: ($this->session->userdata('username') ?: '1987010102');
+
+        $conv = $this->Help_chat_model->get_or_create_channel($userId, $userNama, $userEmail, 'Koordinator TA', $userNip, $target_role);
+
+        // Mark as read
+        $this->Help_chat_model->mark_as_read_by_user($conv->id);
+
+        $messages = $this->Help_chat_model->get_messages($conv->id);
+        $formattedMessages = [];
+
+        foreach ($messages as $m) {
+            $formattedMessages[] = [
+                'id'          => (int)$m->id,
+                'sender_id'   => $m->sender_id,
+                'sender_name' => htmlspecialchars($m->sender_name),
+                'sender_role' => $m->sender_role,
+                'is_me'       => in_array($m->sender_role, ['koordinator_ta', 'user']),
+                'message'     => nl2br(htmlspecialchars($m->message)),
+                'attachment'  => $m->attachment ? base_url('uploads/help_attachments/' . $m->attachment) : null,
+                'is_read'     => (int)$m->is_read,
+                'time'        => date('H:i', strtotime($m->created_at)),
+                'date_full'   => date('d M Y, H:i', strtotime($m->created_at)),
+                'created_at'  => $m->created_at
+            ];
+        }
+
+        // Get unread counts for all 3 channels
+        $statsLaboran = $this->Help_chat_model->get_stats('laboran', $userId);
+        $statsKaur = $this->Help_chat_model->get_stats('kaur', $userId);
+        $statsAdmin = $this->Help_chat_model->get_stats('admin_layanan', $userId);
+
+        echo json_encode([
+            'status'       => 'success',
+            'conversation' => [
+                'id'                => (int)$conv->id,
+                'target_role'       => htmlspecialchars($conv->target_role ?? $target_role),
+                'target_role_label' => $this->_get_target_role_label($conv->target_role ?? $target_role),
+                'topik'             => htmlspecialchars($conv->topik),
+                'status'            => $conv->status,
+                'last_message_time' => $this->_format_help_time_ago($conv->last_message_time ?? $conv->created_at),
+                'created_at'        => date('d M Y, H:i', strtotime($conv->created_at))
+            ],
+            'messages'     => $formattedMessages,
+            'unreads'      => [
+                'laboran'       => $statsLaboran['unread'] ?? 0,
+                'kaur'          => $statsKaur['unread'] ?? 0,
+                'admin_layanan' => $statsAdmin['unread'] ?? 0
+            ]
+        ]);
+        exit;
+    }
+
+    /**
+     * AJAX: Ambil detail pesan percakapan & auto mark read oleh Koordinator TA
+     */
+    public function help_get_messages_ajax($conversation_id) {
+        header('Content-Type: application/json');
+        $this->load->model('Help_chat_model');
+
+        $conversation = $this->Help_chat_model->get_conversation_by_id($conversation_id);
+        if (!$conversation) {
+            echo json_encode([
+                'status'  => 'error',
+                'message' => 'Percakapan tidak ditemukan.'
+            ]);
+            exit;
+        }
+
+        // Tandai pesan sudah dibaca oleh user/Koor
+        $this->Help_chat_model->mark_as_read_by_user($conversation_id);
+
+        $messages = $this->Help_chat_model->get_messages($conversation_id);
+        $formattedMessages = [];
+
+        foreach ($messages as $m) {
+            $formattedMessages[] = [
+                'id'          => (int)$m->id,
+                'sender_id'   => $m->sender_id,
+                'sender_name' => htmlspecialchars($m->sender_name),
+                'sender_role' => $m->sender_role,
+                'is_me'       => in_array($m->sender_role, ['koordinator_ta', 'user']),
+                'message'     => nl2br(htmlspecialchars($m->message)),
+                'attachment'  => $m->attachment ? base_url('uploads/help_attachments/' . $m->attachment) : null,
+                'is_read'     => (int)$m->is_read,
+                'time'        => date('H:i', strtotime($m->created_at)),
+                'date_full'   => date('d M Y, H:i', strtotime($m->created_at)),
+                'created_at'  => $m->created_at
+            ];
+        }
+
+        echo json_encode([
+            'status'       => 'success',
+            'conversation' => [
+                'id'                => (int)$conversation->id,
+                'target_role'       => htmlspecialchars($conversation->target_role ?? 'laboran'),
+                'target_role_label' => $this->_get_target_role_label($conversation->target_role ?? 'laboran'),
+                'topik'             => htmlspecialchars($conversation->topik),
+                'status'            => $conversation->status,
+                'user_nama'         => htmlspecialchars($conversation->user_nama),
+                'last_message_time' => $this->_format_help_time_ago($conversation->last_message_time ?? $conversation->created_at),
+                'created_at'        => date('d M Y, H:i', strtotime($conversation->created_at))
+            ],
+            'messages'     => $formattedMessages
+        ]);
+        exit;
+    }
+
+    /**
+     * AJAX: Buat tiket bantuan baru dari Koordinator TA ke salah satu Trio
+     */
+    public function help_create_chat_ajax() {
+        header('Content-Type: application/json');
+        $this->load->model('Help_chat_model');
+
+        $target_role = strtolower(trim($this->input->post('target_role', true) ?? 'laboran'));
+        $topik       = trim($this->input->post('topik', true) ?? '');
+        $message     = trim($this->input->post('message', true) ?? '');
+
+        if (!in_array($target_role, ['laboran', 'kaur', 'admin_layanan'])) {
+            $target_role = 'laboran';
+        }
+
+        if (empty($topik) || empty($message)) {
+            echo json_encode([
+                'status'  => 'error',
+                'message' => 'Topik dan pesan bantuan wajib diisi.'
+            ]);
+            exit;
+        }
+
+        $userId    = $this->session->userdata('user_id') ?: 6;
+        $userNama  = $this->session->userdata('name') ?: 'Dr. Koordinator TA, M.T.';
+        $userEmail = $this->session->userdata('email') ?: 'koordinator.ta@telkomuniversity.ac.id';
+        $userNip   = $this->session->userdata('nip') ?: ($this->session->userdata('username') ?: '1987010102');
+
+        $conv_id = $this->Help_chat_model->create_conversation([
+            'user_id'      => $userId,
+            'user_nama'    => $userNama,
+            'user_email'   => $userEmail,
+            'user_role'    => 'Koordinator TA',
+            'user_nim_nip' => $userNip,
+            'target_role'  => $target_role,
+            'sender_role'  => 'koordinator_ta',
+            'topik'        => $topik,
+            'message'      => $message
+        ]);
+
+        if ($conv_id) {
+            echo json_encode([
+                'status'          => 'success',
+                'conversation_id' => (int)$conv_id,
+                'message'         => 'Permintaan bantuan berhasil dikirim ke ' . $this->_get_target_role_label($target_role) . '.'
+            ]);
+        } else {
+            echo json_encode([
+                'status'  => 'error',
+                'message' => 'Gagal membuat percakapan bantuan.'
+            ]);
+        }
+        exit;
+    }
+
+    /**
+     * AJAX: Kirim pesan balasan dalam percakapan
+     */
+    public function help_send_message_ajax() {
+        header('Content-Type: application/json');
+        $this->load->model('Help_chat_model');
+
+        $conversation_id = $this->input->post('conversation_id', true);
+        $message         = trim($this->input->post('message', true) ?? '');
+
+        if (empty($conversation_id) || empty($message)) {
+            echo json_encode([
+                'status'  => 'error',
+                'message' => 'Pesan tidak boleh kosong.'
+            ]);
+            exit;
+        }
+
+        $conversation = $this->Help_chat_model->get_conversation_by_id($conversation_id);
+        if (!$conversation) {
+            echo json_encode([
+                'status'  => 'error',
+                'message' => 'Percakapan tidak ditemukan.'
+            ]);
+            exit;
+        }
+
+        $userId   = $this->session->userdata('user_id') ?: 6;
+        $userNama = $this->session->userdata('name') ?: 'Dr. Koordinator TA, M.T.';
+
+        $msgId = $this->Help_chat_model->send_message(
+            $conversation_id,
+            $userId,
+            $userNama,
+            'koordinator_ta',
+            $message
+        );
+
+        if ($msgId) {
+            echo json_encode([
+                'status'  => 'success',
+                'message' => 'Pesan terkirim.',
+                'data'    => [
+                    'id'          => $msgId,
+                    'sender_name' => $userNama,
+                    'sender_role' => 'koordinator_ta',
+                    'is_me'       => true,
+                    'message'     => nl2br(htmlspecialchars($message)),
+                    'time'        => date('H:i'),
+                    'date_full'   => date('d M Y, H:i')
+                ]
+            ]);
+        } else {
+            echo json_encode([
+                'status'  => 'error',
+                'message' => 'Gagal mengirim pesan.'
+            ]);
+        }
+        exit;
+    }
+
+    /**
+     * AJAX: Toggle status Open / Resolved
+     */
+    public function help_toggle_status_ajax() {
+        header('Content-Type: application/json');
+        $this->load->model('Help_chat_model');
+
+        $conversation_id = $this->input->post('conversation_id', true);
+        $status          = $this->input->post('status', true);
+
+        if (empty($conversation_id) || !in_array($status, ['open', 'resolved'])) {
+            echo json_encode([
+                'status'  => 'error',
+                'message' => 'Parameter status tidak valid.'
+            ]);
+            exit;
+        }
+
+        $userId   = $this->session->userdata('user_id') ?: 6;
+        $userNama = $this->session->userdata('name') ?: 'Dr. Koordinator TA, M.T.';
+
+        $updated = $this->Help_chat_model->update_status($conversation_id, $status);
+
+        if ($updated) {
+            $sysMsg = ($status === 'resolved') 
+                ? '[Sistem] Tiket bantuan ini telah ditandai Selesai oleh Koordinator TA.'
+                : '[Sistem] Tiket bantuan telah dibuka kembali oleh Koordinator TA.';
+
+            $this->Help_chat_model->send_message(
+                $conversation_id,
+                $userId,
+                $userNama,
+                'koordinator_ta',
+                $sysMsg
+            );
+
+            echo json_encode([
+                'status'     => 'success',
+                'new_status' => $status,
+                'message'    => 'Status tiket bantuan berhasil diperbarui.'
+            ]);
+        } else {
+            echo json_encode([
+                'status'  => 'error',
+                'message' => 'Gagal memperbarui status tiket.'
+            ]);
+        }
+        exit;
+    }
+
+    /**
+     * AJAX: Daftar preset topik bantuan untuk tiap target role
+     */
+    public function help_quick_topics_ajax() {
+        header('Content-Type: application/json');
+        $target = $this->input->get('target', true) ?: 'laboran';
+
+        $topics = [
+            'laboran' => [
+                'Kebutuhan Alat & Sensor untuk Pengujian TA',
+                'Pengecekan Kesiapan Ruang Lab untuk Demo Sidang',
+                'Permohonan Akses Komputer High-End / Server Lab',
+                'Laporan Kendala Jaringan LAN / Hardware di Ruang Uji',
+                'Konfirmasi Jadwal Penggunaan Lab Riset TA'
+            ],
+            'kaur' => [
+                'Validasi & Rekomendasi Jadwal Sidang Gelombang Baru',
+                'Pengajuan Izin Khusus Penggunaan Fasilitas Lab',
+                'Koordinasi Kebijakan Ruang Sidang & Penilaian',
+                'Persetujuan Surat Rekomendasi Bebas Lab Mahasiswa',
+                'Permintaan Perangkat Cadangan untuk Sidang Hybrid'
+            ],
+            'admin_layanan' => [
+                'Verifikasi Berkas Pendaftaran TA Mahasiswa',
+                'Validasi SK Dosen Pembimbing & Penguji',
+                'Cek Kelengkapan Bebas Lab & Persyaratan Yudisium',
+                'Penerbitan Berita Acara & Nilai Akhir Sidang',
+                'Sinkronisasi Data Mahasiswa Lulus TA'
+            ]
+        ];
+
+        echo json_encode([
+            'status' => 'success',
+            'data'   => $topics[$target] ?? $topics['laboran']
+        ]);
+        exit;
+    }
+
+    /**
+     * Helper Label Target Role
+     */
+    private function _get_target_role_label($role) {
+        switch ($role) {
+            case 'laboran': return 'Laboran (Lab & Alat)';
+            case 'kaur': return 'Ka. Ur (Kepala Urusan)';
+            case 'admin_layanan': return 'Admin Layanan (LAA)';
+            default: return 'Staff Layanan';
+        }
+    }
+
+    /**
+     * Helper pemformat waktu relatif
+     */
+    private function _format_help_time_ago($datetime) {
+        if (empty($datetime)) return '-';
+        $timestamp = strtotime($datetime);
+        $diff = time() - $timestamp;
+
+        if ($diff < 60) {
+            return 'Baru saja';
+        } elseif ($diff < 3600) {
+            return floor($diff / 60) . ' mnt lalu';
+        } elseif ($diff < 86400) {
+            return floor($diff / 3600) . ' jam lalu';
+        } elseif ($diff < 172800) {
+            return 'Kemarin, ' . date('H:i', $timestamp);
+        } else {
+            return date('d M Y', $timestamp);
+        }
+    }
 }
+
 

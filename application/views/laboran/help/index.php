@@ -1141,6 +1141,7 @@
                                 <p id="headerUserSub">1301213001 &bull; Topik: Peminjaman Ruangan Lab</p>
                             </div>
                         </div>
+                        <!-- 
                         <div class="header-actions-wrap">
                             <button type="button" id="btnToggleStatus" class="btn-status-toggle resolve-btn" onclick="toggleActiveStatus()">
                                 <i class="fa-solid fa-check"></i>
@@ -1148,6 +1149,7 @@
                                 <span class="btn-text-short">Selesai</span>
                             </button>
                         </div>
+                        -->
                     </div>
 
                     <!-- Message Feed -->
