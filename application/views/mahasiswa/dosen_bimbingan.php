@@ -2279,5 +2279,6 @@
         window.closeCommentActionModal = closeCommentActionModal;
     </script>
 
+    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>

@@ -18,7 +18,19 @@ class Dashboard extends CI_Controller {
         $data['kategori'] = $this->Booking_model->get_all_kategori();
         
         $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan');
-        $data['ruangan'] = $this->db->get('ruangan')->result();
+        $ruangan_list = $this->db->get('ruangan')->result();
+        foreach ($ruangan_list as &$r) {
+            if (empty($r->foto) && !empty($r->images)) {
+                if (strpos($r->images, '|') !== false) {
+                    list($f, $m) = explode('|', $r->images, 2);
+                    $r->foto = $f;
+                    if (empty($r->model_3d)) $r->model_3d = $m;
+                } else {
+                    $r->foto = $r->images;
+                }
+            }
+        }
+        $data['ruangan'] = $ruangan_list;
 
         $data['header_settings'] = $this->Header_model->get_settings();
         $data['header_slides'] = $this->Header_model->get_slides();
@@ -33,7 +45,19 @@ class Dashboard extends CI_Controller {
 
         // Load all ruangan data from DB to sync details
         $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan');
-        $data['all_ruangan'] = $this->db->get('ruangan')->result();
+        $all_ruangan = $this->db->get('ruangan')->result();
+        foreach ($all_ruangan as &$r) {
+            if (empty($r->foto) && !empty($r->images)) {
+                if (strpos($r->images, '|') !== false) {
+                    list($f, $m) = explode('|', $r->images, 2);
+                    $r->foto = $f;
+                    if (empty($r->model_3d)) $r->model_3d = $m;
+                } else {
+                    $r->foto = $r->images;
+                }
+            }
+        }
+        $data['all_ruangan'] = $all_ruangan;
 
         $this->load->view('dashboard/lab_detail', $data);
     }
@@ -45,7 +69,19 @@ class Dashboard extends CI_Controller {
         $data['jadwal_peminjaman'] = $this->Booking_model->get_approved_bookings();
         $data['kategori'] = $this->Booking_model->get_all_kategori();
         $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan');
-        $data['ruangan'] = $this->db->get('ruangan')->result();
+        $cal_ruangan = $this->db->get('ruangan')->result();
+        foreach ($cal_ruangan as &$r) {
+            if (empty($r->foto) && !empty($r->images)) {
+                if (strpos($r->images, '|') !== false) {
+                    list($f, $m) = explode('|', $r->images, 2);
+                    $r->foto = $f;
+                    if (empty($r->model_3d)) $r->model_3d = $m;
+                } else {
+                    $r->foto = $r->images;
+                }
+            }
+        }
+        $data['ruangan'] = $cal_ruangan;
         $this->load->view('dashboard/kalender', $data);
     }
 

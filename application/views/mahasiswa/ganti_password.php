@@ -11,12 +11,18 @@
 </head>
 <body class="bg-gradient-to-br from-amber-100/80 via-orange-50 to-amber-100/90 text-slate-900 font-sans antialiased min-h-screen flex flex-col selection:bg-orange-600 selection:text-white">
 
+    <!-- Auto Role-Aware Curved Animated Sidebar -->
+    <?php $this->load->view('components/curved_sidebar'); ?>
+
+    <!-- Main Page Content Wrapper (Shrinks / Expands with Sidebar) -->
+    <div id="mainPageContent" class="page-wrapper-for-sidebar min-h-screen flex flex-col flex-grow">
+
     <!-- Header Glass Navbar (Clean White Glass - Identical to Dashboard) -->
     <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-2xl border-b border-orange-100/80 shadow-xs mb-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 sm:h-18">
                 <!-- Brand -->
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 header-title-shift pl-11 lg:pl-0">
                     <div class="w-9 h-9 bg-gradient-to-tr from-orange-600 to-amber-500 text-white rounded-xl font-bold text-lg flex items-center justify-center box-3d">
                         I
                     </div>
@@ -25,18 +31,6 @@
                         <span class="text-[9px] uppercase font-bold tracking-wider text-orange-500 mt-0.5 block">Akademik Mahasiswa</span>
                     </div>
                 </div>
-
-                <!-- Nav Menu -->
-                <nav class="hidden md:flex items-center gap-7 relative" id="mainNav">
-                    <a href="<?= site_url('mahasiswa'); ?>" class="nav-link flex items-center gap-2 tracking-wide">
-                        <i class="bi bi-grid-1x2-fill"></i>
-                        <span>Dashboard</span>
-                    </a>
-                    <a href="<?= site_url('mahasiswa/pendaftaran_ta'); ?>" class="nav-link flex items-center gap-2 tracking-wide">
-                        <i class="bi bi-file-earmark-text"></i>
-                        <span>Pendaftaran TA</span>
-                    </a>
-                </nav>
 
                 <!-- User Quick Info -->
                 <div class="flex items-center gap-2.5">
@@ -95,7 +89,9 @@
     <footer class="bg-white/90 border-t border-orange-100 py-5 text-center text-xs text-slate-400 font-medium mt-12">
         &copy; <?= date('Y'); ?> IFIK Portal — Fakultas Industri Kreatif, Telkom University
     </footer>
+    </div> <!-- /#mainPageContent -->
 
     <script src="<?= base_url('assets/js/navbar_animated.js'); ?>?v=<?= time(); ?>"></script>
+    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>

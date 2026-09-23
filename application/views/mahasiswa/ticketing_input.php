@@ -60,8 +60,11 @@
     <!-- Include Curved Sidebar (Panel Mahasiswa) -->
     <?php $this->load->view('components/curved_sidebar'); ?>
 
+    <!-- Main Page Content Wrapper (Shrinks / Expands with Sidebar) -->
+    <div id="mainPageContent" class="page-wrapper-for-sidebar min-h-screen flex flex-col flex-grow">
+
     <!-- Main Content -->
-    <main class="min-h-screen p-6 sm:p-8 lg:p-10 max-w-5xl mx-auto pl-16">
+    <main class="min-h-screen p-6 sm:p-8 lg:p-10 max-w-5xl mx-auto w-full">
         
         <!-- Header & Breadcrumb -->
         <div class="mb-8">
@@ -390,6 +393,7 @@
         </div>
 
     </main>
+    </div> <!-- /#mainPageContent -->
 
     <!-- MODAL: Progress Bar Pengiriman Tiket Kendala -->
     <div id="modalTicketingProgress" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300">
@@ -842,5 +846,6 @@
             });
         });
     </script>
+    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>

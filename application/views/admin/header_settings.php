@@ -1162,7 +1162,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <div style="font-weight: 800; font-size: 0.92rem; color: #0f172a; line-height: 1.3;"><?= htmlspecialchars(isset($r->nama_ruangan) ? $r->nama_ruangan : '') ?></div>
+                                    <div style="font-weight: 800; font-size: 0.92rem; color: #0f172a; line-height: 1.3;"><?= htmlspecialchars(!empty($r->nama_ruangan) ? $r->nama_ruangan : (!empty($r->ruangan) ? $r->ruangan : '')) ?></div>
                                     <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; margin-bottom: 4px; align-items: center;">
                                         <?php 
                                             $rawCodes = isset($r->kode_ruangan) ? trim($r->kode_ruangan) : '';
@@ -1227,7 +1227,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                         <button class="btn-action btn-edit" title="Edit Ruangan" onclick='openModalEdit(<?= json_encode($r) ?>)'>
                                             ✏️
                                         </button>
-                                        <button class="btn-action btn-delete" title="Hapus Ruangan" onclick="confirmDeleteRuangan(<?= $r->id ?>, '<?= htmlspecialchars($r->nama_ruangan) ?>')">
+                                        <button class="btn-action btn-delete" title="Hapus Ruangan" onclick="confirmDeleteRuangan('<?= htmlspecialchars($r->id) ?>', '<?= htmlspecialchars(addslashes(!empty($r->nama_ruangan) ? $r->nama_ruangan : (!empty($r->ruangan) ? $r->ruangan : 'Ruangan'))) ?>')">
                                             🗑️
                                         </button>
                                     </div>
@@ -2284,12 +2284,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
       // ==========================================
       // MULTI-ROOM PHYSICAL PILLS LOGIC (OPSI 1)
       // ==========================================
-      // Data seluruh ruangan yang sudah tersimpan untuk mendeteksi ketersediaan ruangan fisik
       const ALL_EXISTING_ROOMS = <?= json_encode(array_map(function($item) {
           return [
-              'id'           => (int)$item->id,
-              'nama_ruangan' => $item->nama_ruangan,
-              'kode_ruangan' => $item->kode_ruangan
+              'id'           => (string)$item->id,
+              'nama_ruangan' => $item->nama_ruangan ?? ($item->ruangan ?? ''),
+              'kode_ruangan' => $item->kode_ruangan ?? ($item->id ?? '')
           ];
       }, (isset($ruangan) && is_array($ruangan)) ? $ruangan : [])) ?>;
 
@@ -2577,7 +2576,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
           document.body.style.overflow = 'hidden';
           document.getElementById('modalTitle').innerText = '✏️ Edit Data Ruangan & Berkas';
           document.getElementById('ruanganId').value = data.id;
-          document.getElementById('inputNama').value = data.nama_ruangan || '';
+          document.getElementById('inputNama').value = data.nama_ruangan || data.ruangan || '';
           
           const raw = data.kode_ruangan || '';
           currentRoomTags = raw.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
