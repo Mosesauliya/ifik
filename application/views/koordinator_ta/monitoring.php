@@ -920,6 +920,47 @@
             window.activePreviews = [];
         }
 
+        window.activeFocusedPreviewKey = null;
+
+        function focusPreviewCard(nim, docKey) {
+            window.activeFocusedPreviewKey = `${nim}_${docKey}`;
+            
+            // Update all open preview cards: border, ring, pointer-events on iframe, overlay
+            (window.activePreviews || []).forEach(p => {
+                const key = `${p.nim}_${p.docKey}`;
+                const cardEl = document.getElementById(`previewCard_${key}`);
+                const iframe = document.getElementById(`iframePreviewBerkas_${key}`);
+                const overlay = document.getElementById(`previewOverlay_${key}`);
+                const isFocused = (key === window.activeFocusedPreviewKey);
+
+                if (cardEl) {
+                    if (isFocused) {
+                        cardEl.classList.add('ring-2', 'ring-orange-500', 'border-orange-500', 'shadow-xl', 'shadow-orange-500/15');
+                        cardEl.classList.remove('border-slate-200/90');
+                    } else {
+                        cardEl.classList.remove('ring-2', 'ring-orange-500', 'border-orange-500', 'shadow-xl', 'shadow-orange-500/15');
+                        cardEl.classList.add('border-slate-200/90');
+                    }
+                }
+                if (iframe) {
+                    if (isFocused) {
+                        iframe.classList.remove('pointer-events-none');
+                        iframe.classList.add('pointer-events-auto');
+                    } else {
+                        iframe.classList.remove('pointer-events-auto');
+                        iframe.classList.add('pointer-events-none');
+                    }
+                }
+                if (overlay) {
+                    if (isFocused) {
+                        overlay.classList.add('hidden');
+                    } else {
+                        overlay.classList.remove('hidden');
+                    }
+                }
+            });
+        }
+
         function previewBerkasItem(nim, docKey) {
             if (!window.activePreviews) window.activePreviews = [];
             const idx = window.activePreviews.findIndex(p => String(p.nim) === String(nim) && String(p.docKey) === String(docKey));
@@ -932,9 +973,11 @@
                 window.activePreviews.shift();
             }
             window.activePreviews.push({ nim: String(nim), docKey: String(docKey) });
+            window.activeFocusedPreviewKey = `${nim}_${docKey}`;
             renderLihatBerkasView();
 
             setTimeout(() => {
+                focusPreviewCard(nim, docKey);
                 const previewWrapper = document.getElementById('wrapperPreviewBerkas');
                 if (previewWrapper) {
                     previewWrapper.scrollLeft = previewWrapper.scrollWidth;
@@ -944,25 +987,16 @@
 
         function closeSinglePreview(index) {
             if (!window.activePreviews) return;
-            window.activePreviews.splice(index, 1);
-            renderLihatBerkasView();
-        }
-
-        function togglePreviewIframeInteraction(nim, docKey) {
-            const key = `${nim}_${docKey}`;
-            window.previewIframeInteractions[key] = !window.previewIframeInteractions[key];
-            const isInteractive = window.previewIframeInteractions[key];
-            const iframe = document.getElementById(`iframePreviewBerkas_${nim}_${docKey}`);
-            const btn = document.getElementById(`btnPreviewInteract_${nim}_${docKey}`);
-            if (iframe) {
-                if (isInteractive) {
-                    iframe.classList.remove('pointer-events-none');
-                    if (btn) btn.classList.add('bg-orange-500', 'text-white');
+            const removed = window.activePreviews.splice(index, 1)[0];
+            if (removed && `${removed.nim}_${removed.docKey}` === window.activeFocusedPreviewKey) {
+                if (window.activePreviews.length > 0) {
+                    const last = window.activePreviews[window.activePreviews.length - 1];
+                    window.activeFocusedPreviewKey = `${last.nim}_${last.docKey}`;
                 } else {
-                    iframe.classList.add('pointer-events-none');
-                    if (btn) btn.classList.remove('bg-orange-500', 'text-white');
+                    window.activeFocusedPreviewKey = null;
                 }
             }
+            renderLihatBerkasView();
         }
 
         function updateLihatBerkasLayout() {
@@ -1182,20 +1216,39 @@
                     statusBadgeHtml = '<span class="px-2 py-0.5 rounded-md text-[9.5px] font-bold bg-amber-100 text-amber-800 border border-amber-200"><i class="fa-solid fa-clock mr-1 text-amber-600"></i>Pending</span>';
                 }
 
+                const isFocused = (window.activeFocusedPreviewKey === `${p.nim}_${p.docKey}`);
+                const focusBorderClass = isFocused ? 'ring-2 ring-orange-500 border-orange-500 shadow-xl shadow-orange-500/15' : 'border-slate-200/90 hover:border-slate-300';
+
                 if (cardEl) {
-                    cardEl.className = `preview-card-item pointer-events-auto bg-white rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden flex flex-col shrink-0 transition-all duration-300 ${panelWidthClass}`;
+                    cardEl.className = `preview-card-item pointer-events-auto bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col shrink-0 transition-all duration-200 ${panelWidthClass} ${focusBorderClass}`;
                     const badgeEl = cardEl.querySelector('.preview-slot-badge');
                     if (badgeEl) badgeEl.innerHTML = totalPreviews > 1 ? slotNum : '<i class="fa-solid fa-file-pdf"></i>';
                     const closeBtn = cardEl.querySelector('.preview-close-btn');
                     if (closeBtn) closeBtn.setAttribute('onclick', `closeSinglePreview(${index})`);
                     const footerCloseBtn = cardEl.querySelector('.preview-footer-close-btn');
                     if (footerCloseBtn) footerCloseBtn.setAttribute('onclick', `closeSinglePreview(${index})`);
+                    const iframe = document.getElementById(`iframePreviewBerkas_${p.nim}_${p.docKey}`);
+                    if (iframe) {
+                        if (isFocused) {
+                            iframe.classList.remove('pointer-events-none');
+                            iframe.classList.add('pointer-events-auto');
+                        } else {
+                            iframe.classList.remove('pointer-events-auto');
+                            iframe.classList.add('pointer-events-none');
+                        }
+                    }
+                    const overlay = document.getElementById(`previewOverlay_${p.nim}_${p.docKey}`);
+                    if (overlay) {
+                        if (isFocused) overlay.classList.add('hidden');
+                        else overlay.classList.remove('hidden');
+                    }
                 } else {
                     const div = document.createElement('div');
                     div.id = cardId;
-                    div.className = `preview-card-item pointer-events-auto bg-white rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden flex flex-col shrink-0 transition-all duration-300 ${panelWidthClass}`;
+                    div.className = `preview-card-item pointer-events-auto bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col shrink-0 transition-all duration-200 ${panelWidthClass} ${focusBorderClass}`;
+                    div.setAttribute('onclick', `focusPreviewCard('${p.nim}', '${p.docKey}')`);
                     div.innerHTML = `
-                        <!-- Header Pratinjau Kompak dengan Label Sub-Pratinjau Jelas (Identik Gambar) -->
+                        <!-- Header Pratinjau Kompak dengan Label Sub-Pratinjau Jelas -->
                         <div class="p-2 px-3 bg-slate-900 text-white flex items-center justify-between gap-2 shrink-0 border-b border-slate-800">
                             <div class="flex items-center gap-2 min-w-0">
                                 <div class="preview-slot-badge w-6 h-6 rounded-lg bg-rose-600/30 border border-rose-500/50 text-rose-400 flex items-center justify-center font-bold text-[11px] shrink-0 shadow-2xs">
@@ -1210,13 +1263,10 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap-1 shrink-0">
-                                <button type="button" onclick="togglePreviewIframeInteraction('${p.nim}', '${p.docKey}')" id="btnPreviewInteract_${p.nim}_${p.docKey}" class="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Kursor Terkunci (Normal). Klik jika ingin mengaktifkan scroll di dalam berkas">
-                                    <i class="fa-solid fa-arrow-pointer text-[9px]" id="iconPreviewInteract_${p.nim}_${p.docKey}"></i>
-                                </button>
                                 <a href="${pdfUrl}" target="_blank" class="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Buka Layar Penuh di Tab Baru">
                                     <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
                                 </a>
-                                <button type="button" onclick="closeSinglePreview(${index})" class="preview-close-btn w-6 h-6 rounded-lg bg-white/10 hover:bg-rose-600/80 text-slate-300 hover:text-white flex items-center justify-center text-xs font-bold transition-colors cursor-pointer ml-0.5" title="Tutup Pratinjau Ini">
+                                <button type="button" onclick="event.stopPropagation(); closeSinglePreview(${index})" class="preview-close-btn w-6 h-6 rounded-lg bg-white/10 hover:bg-rose-600/80 text-slate-300 hover:text-white flex items-center justify-center text-xs font-bold transition-colors cursor-pointer ml-0.5" title="Tutup Pratinjau Ini">
                                     <i class="fa-solid fa-xmark"></i>
                                 </button>
                             </div>
@@ -1224,7 +1274,8 @@
 
                         <!-- Body Frame Pratinjau PDF -->
                         <div class="${isMobile ? 'h-[300px] sm:h-[340px]' : 'h-[380px] sm:h-[410px] md:h-[430px]'} bg-slate-200 relative border-b border-slate-200 overflow-hidden cursor-default select-none">
-                            <iframe id="iframePreviewBerkas_${p.nim}_${p.docKey}" src="${pdfUrl}#toolbar=0&navpanes=0" class="w-full h-full border-0 pointer-events-none" title="Pratinjau Dokumen PDF"></iframe>
+                            <iframe id="iframePreviewBerkas_${p.nim}_${p.docKey}" src="${pdfUrl}#toolbar=0&navpanes=0" class="w-full h-full border-0 ${isFocused ? 'pointer-events-auto' : 'pointer-events-none'}" title="Pratinjau Dokumen PDF"></iframe>
+                            <div id="previewOverlay_${p.nim}_${p.docKey}" class="absolute inset-0 cursor-pointer ${isFocused ? 'hidden' : ''}" onclick="event.stopPropagation(); focusPreviewCard('${p.nim}', '${p.docKey}')" title="Klik untuk fokus dan scroll berkas ini"></div>
                         </div>
 
                         <!-- Footer Pratinjau dengan Status & Unduh -->
@@ -1242,7 +1293,7 @@
 
                                 <div class="flex items-center gap-1">
                                     <button type="button" 
-                                            onclick="closeSinglePreview(${index})" 
+                                            onclick="event.stopPropagation(); closeSinglePreview(${index})" 
                                             class="preview-footer-close-btn px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition cursor-pointer text-xs ml-0.5" 
                                             title="Tutup Pratinjau">
                                         Tutup
