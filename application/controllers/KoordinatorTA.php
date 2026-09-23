@@ -69,6 +69,22 @@ class KoordinatorTA extends CI_Controller {
         $this->load->view('koordinator_ta/dashboard', $data);
     }
 
+    // Halaman Monitoring Status Peserta Tugas Akhir (Semua Tahapan: Dosen Wali -> Lulus)
+    public function monitoring() {
+        $nip_koor = $this->session->userdata('nip') ?: ($this->session->userdata('username') ?: '1987010102');
+        $data['title'] = 'Monitoring Status Peserta Tugas Akhir';
+        $data['nip_koor'] = $nip_koor;
+        $data['list_peserta'] = $this->KoordinatorTA_model->get_monitoring_peserta_ta();
+        $data['dosen_list'] = $this->KoordinatorTA_model->get_dosen_list();
+
+        $this->load->view('koordinator_ta/monitoring', $data);
+    }
+
+    // Alias route status_peserta_ta
+    public function status_peserta_ta() {
+        $this->monitoring();
+    }
+
     public function pengaturan_jalur() {
         $data['title'] = 'Pengaturan Jalur Sidang & Non-Sidang (Dinamis)';
         $this->load->model('Rekomendasi_model');

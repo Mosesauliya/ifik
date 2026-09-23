@@ -1514,4 +1514,156 @@ class KoordinatorTA_model extends CI_Model {
     public function terapkan_rubrik_massal($prodi, $peminatan, $nim_list = array()) {
         return array('status' => true, 'message' => 'Rubrik berhasil diterapkan ke mahasiswa terpilih.');
     }
+
+    /**
+     * Ambil data lengkap seluruh peserta TA untuk Halaman Monitoring Status Peserta TA
+     * Mencakup semua tahapan: Dosen Wali -> Admin Layanan -> Koordinator TA -> Ketua KK -> Preview 1 -> Preview 2 -> Preview 3 -> Sidang -> Lulus
+     */
+    public function get_monitoring_peserta_ta() {
+        $all = $this->get_all_mahasiswa_ta();
+        if (empty($all)) {
+            return array();
+        }
+
+        $guidanceIds = array_column($all, 'guidance_id');
+        $this->db->select('
+            id,
+            tanggal_presentasi,
+            waktu_presentasi,
+            ruang_sidang,
+            status_preview,
+            kelayakan,
+            kelayakan2,
+            kelayakan3,
+            tanggal_sidang,
+            waktu_sidang,
+            link_sidang,
+            nilaisidang_pembimbing1,
+            nilaisidang_pembimbing2,
+            nilaisidang_penguji1,
+            nilaisidang_penguji2,
+            bap,
+            status_bap
+        ');
+        $this->db->from('guidance');
+        $this->db->where_in('id', $guidanceIds);
+        $gQuery = $this->db->get();
+        $gMap = array();
+        if ($gQuery && $gQuery->num_rows() > 0) {
+            foreach ($gQuery->result_array() as $gr) {
+                $gMap[$gr['id']] = $gr;
+            }
+        }
+
+        $result = array();
+        foreach ($all as $item) {
+            $gId = $item['guidance_id'];
+            $gRow = $gMap[$gId] ?? array();
+
+            $statusWali   = $item['status_approval_wali'] ?? 'Pending';
+            $statusAdmin  = $item['status_approval_admin'] ?? 'Pending';
+            $statusKoor   = $item['status_approval_koor'] ?? 'Pending';
+            $statusKk     = $item['status_approval_kk'] ?? 'Pending';
+            $statusPrev   = strtolower(trim($gRow['status_preview'] ?? ''));
+
+            $hasPembimbing = (!empty($item['pembimbing_1']) && !empty($item['pembimbing_2']));
+            $hasPenguji    = (!empty($item['penguji_1']) && !empty($item['penguji_2']));
+            $hasSidang     = !empty($gRow['tanggal_sidang']);
+
+            $n1  = (float)($gRow['nilaisidang_pembimbing1'] ?? 0);
+            $n2  = (float)($gRow['nilaisidang_pembimbing2'] ?? 0);
+            $np1 = (float)($gRow['nilaisidang_penguji1'] ?? 0);
+            $np2 = (float)($gRow['nilaisidang_penguji2'] ?? 0);
+            $isNilaiLengkap = ($n1 > 0 && $n2 > 0 && $np1 > 0 && $np2 > 0);
+            $avgScore = $isNilaiLengkap ? round(($n1 + $n2 + $np1 + $np2) / 4, 2) : 0;
+            $isLulus = ($isNilaiLengkap && $avgScore >= 55) || (strcasecmp($gRow['status_bap'] ?? '', 'Approved') === 0) || ($statusPrev === 'lulus' || $statusPrev === 'selesai');
+
+            // Deteksi Tahap Progres Terkini:
+            // 1. Dosen Wali
+            // 2. Admin Layanan
+            // 3. Koordinator TA
+            // 4. Ketua KK
+            // 5. Preview 1
+            // 6. Preview 2
+            // 7. Preview 3
+            // 8. Sidang TA
+            // 9. Lulus
+            if (strcasecmp($statusWali, 'Approved') !== 0) {
+                $progresStage = 'Dosen Wali';
+                $stageKey     = 'dosen_wali';
+                $stageIndex   = 1;
+                $stageDesc    = 'Verifikasi Prasyarat Akademik & SKS';
+                $stageColor   = 'blue';
+            } elseif (strcasecmp($statusAdmin, 'Approved') !== 0) {
+                $progresStage = 'Admin Layanan';
+                $stageKey     = 'admin_layanan';
+                $stageIndex   = 2;
+                $stageDesc    = 'Pemeriksaan Berkas & Administrasi LAA';
+                $stageColor   = 'amber';
+            } elseif (strcasecmp($statusKoor, 'Approved') !== 0) {
+                $progresStage = 'Koordinator TA';
+                $stageKey     = 'koordinator_ta';
+                $stageIndex   = 3;
+                $stageDesc    = 'Persetujuan Proposal & Plot Pembimbing';
+                $stageColor   = 'orange';
+            } elseif (strcasecmp($statusKk, 'Approved') !== 0) {
+                $progresStage = 'Ketua KK';
+                $stageKey     = 'ketua_kk';
+                $stageIndex   = 4;
+                $stageDesc    = 'Konfirmasi Distribusi Riset KK';
+                $stageColor   = 'purple';
+            } else {
+                // Pendaftaran sudah selesai, masuk ke tahapan riset & bimbingan:
+                if ($isLulus) {
+                    $progresStage = 'Lulus';
+                    $stageKey     = 'lulus';
+                    $stageIndex   = 9;
+                    $stageDesc    = 'Lulus Sidang Tugas Akhir';
+                    $stageColor   = 'emerald';
+                } elseif ($hasSidang || $statusPrev === 'sidang') {
+                    $progresStage = 'Sidang TA';
+                    $stageKey     = 'sidang';
+                    $stageIndex   = 8;
+                    $stageDesc    = 'Pelaksanaan Sidang Akhir';
+                    $stageColor   = 'rose';
+                } elseif ($statusPrev === 'preview3') {
+                    $progresStage = 'Preview 3';
+                    $stageKey     = 'preview3';
+                    $stageIndex   = 7;
+                    $stageDesc    = 'Pra-Sidang & Finalisasi Dokumen TA';
+                    $stageColor   = 'cyan';
+                } elseif ($statusPrev === 'preview2' || $hasPenguji || !empty($gRow['tanggal_presentasi'])) {
+                    $progresStage = 'Preview 2';
+                    $stageKey     = 'preview2';
+                    $stageIndex   = 6;
+                    $stageDesc    = 'Evaluasi Progres & Presentasi Penguji';
+                    $stageColor   = 'indigo';
+                } else {
+                    $progresStage = 'Preview 1';
+                    $stageKey     = 'preview1';
+                    $stageIndex   = 5;
+                    $stageDesc    = 'Bimbingan Bab 1-3 Bersama Pembimbing';
+                    $stageColor   = 'teal';
+                }
+            }
+
+            $item['progres_stage']   = $progresStage;
+            $item['stage_key']       = $stageKey;
+            $item['stage_index']     = $stageIndex;
+            $item['stage_desc']      = $stageDesc;
+            $item['stage_color']     = $stageColor;
+            $item['tgl_presentasi']  = $gRow['tanggal_presentasi'] ?? null;
+            $item['waktu_presentasi']= $gRow['waktu_presentasi'] ?? null;
+            $item['tgl_sidang']      = $gRow['tanggal_sidang'] ?? null;
+            $item['waktu_sidang']    = $gRow['waktu_sidang'] ?? null;
+            $item['ruang_sidang']    = $gRow['ruang_sidang'] ?? null;
+            $item['link_sidang']     = $gRow['link_sidang'] ?? null;
+            $item['status_bap']      = $gRow['status_bap'] ?? 'Pending';
+            $item['avg_score']       = $avgScore;
+
+            $result[] = $item;
+        }
+
+        return $result;
+    }
 }
