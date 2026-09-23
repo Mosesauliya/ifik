@@ -14,20 +14,21 @@
  *   ]); ?>
  */
 
-$sessionRoleId = (int)$this->session->userdata('role_id');
+$isLoggedIn    = (bool)$this->session->userdata('logged_in');
+$sessionRoleId = $isLoggedIn ? (int)$this->session->userdata('role_id') : 0;
 $sessionEmail  = (string)$this->session->userdata('email');
-$currentUri = trim(uri_string(), '/');
+$currentUri    = trim(uri_string(), '/');
 
 // Tentukan active role ID (utamakan session role jika user sudah login)
 $activeRoleId = $sessionRoleId;
 
 // Jika role 2 tapi akun khusus laboran, arahkan ke role 21 (Laboran)
-if ($sessionRoleId === 2 && strpos(strtolower($sessionEmail), 'laboran') !== false) {
+if ($isLoggedIn && $sessionRoleId === 2 && strpos(strtolower($sessionEmail), 'laboran') !== false) {
     $activeRoleId = 21;
 }
 
-// Fallback deteksi URI hanya jika user belum login ($sessionRoleId === 0)
-if ($activeRoleId === 0) {
+// Fallback deteksi URI hanya jika user sudah login tapi sessionRoleId belum match
+if ($isLoggedIn && $activeRoleId === 0) {
     if (strpos($currentUri, 'laboran') === 0) {
         $activeRoleId = 21; // Laboran
     } elseif (strpos($currentUri, 'kaur') === 0) {
@@ -57,7 +58,7 @@ if ($activeRoleId === 0) {
 }
 
 $roleBadgeMap = [
-    0 => 'Portal IFIK',
+    0 => 'Publik / Tamu',
     1 => 'Admin Panel',
     2 => 'Ka. Ur / Ka Lab',
     3 => 'Portal Dosen',
@@ -247,14 +248,12 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
             ];
             break;
 
-        default: // Publik
+        default: // Publik / Tamu
             $defaultNavItems = [
                 ['category' => 'Menu Utama'],
                 ['heading' => 'Dashboard Utama', 'href' => site_url('dashboard'), 'icon_3d' => 'assets/images/icons_3d/home.png'],
-                ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
-                ['heading' => 'Riwayat Peminjaman Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
                 ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
-                ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
+                ['heading' => $isLoggedIn ? 'Keluar' : 'Masuk ke Portal', 'href' => site_url($isLoggedIn ? 'login/logout' : 'login'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
             ];
             break;
     }
@@ -494,6 +493,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
 
         <!-- Bottom Section: Portal Info & Version -->
         <div>
+            <?php if ($isLoggedIn): ?>
             <!-- User Profile Summary Card -->
             <div class="curved-sidebar-user-card">
                 <div class="curved-sidebar-user-avatar">
@@ -508,6 +508,13 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                     </div>
                 </div>
             </div>
+            <?php else: ?>
+            <!-- Public Login Button -->
+            <a href="<?= site_url('login'); ?>" class="btn-sidebar-login" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 10px 14px; background: linear-gradient(135deg, #ea580c, #c2410c); color: #fff; border-radius: 12px; font-weight: 700; font-size: 0.82rem; text-decoration: none; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25); transition: all 0.2s ease;">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                <span>Masuk ke Akun</span>
+            </a>
+            <?php endif; ?>
 
             <div class="curved-sidebar-footer">
                 <div class="curved-sidebar-footer-brand">
