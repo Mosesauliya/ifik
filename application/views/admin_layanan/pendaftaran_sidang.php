@@ -22,12 +22,13 @@
         }
     </script>
 
-    <!-- Icons & Fonts -->
+    <!-- Icons & Fonts & SweetAlert2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         body, button, input, textarea, select {
@@ -113,7 +114,11 @@
                     </p>
                 </div>
 
-                <div class="flex items-center gap-2 self-start sm:self-auto">
+                <div class="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+                    <button type="button" onclick="openMasterSyaratModal()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 via-orange-600 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold shadow-md shadow-orange-500/25 hover:shadow-orange-500/40 transition transform active:scale-95 cursor-pointer">
+                        <i class="bi bi-file-earmark-diff-fill text-sm"></i>
+                        <span>Ubah File Pendaftaran Sidang</span>
+                    </button>
                     <span class="px-3.5 py-2 rounded-xl bg-orange-50 text-orange-800 text-xs font-extrabold uppercase tracking-wider border border-orange-200 shadow-xs flex items-center gap-1.5">
                         <i class="bi bi-people-fill text-orange-600"></i> Total: <?= count($list ?? []); ?> Mahasiswa
                     </span>
@@ -301,15 +306,15 @@
                 <table class="w-full text-left border-collapse" id="pendaftaranSidangTable">
                     <thead>
                         <tr class="border-b border-slate-100 bg-slate-50/60 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">
-                            <th class="py-3.5 px-4 text-center w-12">No</th>
-                            <th class="py-3.5 px-4 text-center">Action</th>
-                            <th class="py-3.5 px-5">Nama Mahasiswa</th>
-                            <th class="py-3.5 px-4">NIM</th>
-                            <th class="py-3.5 px-4">Prodi</th>
-                            <th class="py-3.5 px-4">Konsentrasi</th>
-                            <th class="py-3.5 px-4">Dosen Wali</th>
-                            <th class="py-3.5 px-4 text-center">Jenis TA</th>
-                            <th class="py-3.5 px-4 text-center">Tahapan / Status</th>
+                            <th class="py-3 px-3 text-center w-12 whitespace-nowrap">No</th>
+                            <th class="py-3 px-3 text-center whitespace-nowrap">Action</th>
+                            <th class="py-3 px-4">Nama Mahasiswa</th>
+                            <th class="py-3 px-3 whitespace-nowrap">NIM</th>
+                            <th class="py-3 px-3">Prodi</th>
+                            <th class="py-3 px-3">Konsentrasi</th>
+                            <th class="py-3 px-3">Dosen Wali</th>
+                            <th class="py-3 px-3 text-center whitespace-nowrap">Jenis TA</th>
+                            <th class="py-3 px-3 text-center whitespace-nowrap">Tahapan / Status</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-xs font-medium" id="sidangTableBody">
@@ -332,19 +337,19 @@
                             ?>
                                 <tr class="hover:bg-slate-50/80 transition-colors">
                                     <!-- No -->
-                                    <td class="py-4 px-4 text-center font-bold text-slate-400"><?= $idx + 1; ?></td>
+                                    <td class="py-3.5 px-3 text-center font-bold text-slate-400"><?= $idx + 1; ?></td>
 
                                     <!-- Details Button (Matching Photo 1) -->
-                                    <td class="py-4 px-4 text-center">
+                                    <td class="py-3.5 px-3 text-center whitespace-nowrap">
                                         <a href="<?= site_url('adminlayanan/detail_pendaftaran_sidang/' . $row['nim']); ?>" 
-                                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-orange-600 text-white text-[11px] font-bold shadow-xs hover:shadow-md transition-all">
+                                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-orange-600 text-white text-[11px] font-bold shadow-xs hover:shadow-md transition-all whitespace-nowrap">
                                             <span>Details</span>
                                             <i class="bi bi-arrow-right-short text-sm"></i>
                                         </a>
                                     </td>
 
                                     <!-- Nama Mahasiswa -->
-                                    <td class="py-4 px-5 font-bold text-slate-800">
+                                    <td class="py-3.5 px-4 font-bold text-slate-800">
                                         <div class="flex items-center gap-2.5">
                                             <div class="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center text-xs font-extrabold shrink-0">
                                                 <?= strtoupper(substr($row['nama'], 0, 1)); ?>
@@ -354,46 +359,46 @@
                                     </td>
 
                                     <!-- NIM -->
-                                    <td class="py-4 px-4 font-mono font-bold text-orange-600">
+                                    <td class="py-3.5 px-3 font-mono font-bold text-orange-600 whitespace-nowrap">
                                         <?= htmlspecialchars($row['nim']); ?>
                                     </td>
 
                                     <!-- Prodi -->
-                                    <td class="py-4 px-4 text-slate-600 font-semibold truncate max-w-[150px]">
+                                    <td class="py-3.5 px-3 text-slate-600 font-semibold truncate max-w-[150px]">
                                         <?= htmlspecialchars($row['prodi']); ?>
                                     </td>
 
                                     <!-- Konsentrasi -->
-                                    <td class="py-4 px-4 text-slate-500 truncate max-w-[130px]">
+                                    <td class="py-3.5 px-3 text-slate-500 truncate max-w-[130px]">
                                         <?= htmlspecialchars($row['konsentrasi']); ?>
                                     </td>
 
                                     <!-- Dosen Wali -->
-                                    <td class="py-4 px-4 text-slate-600 truncate max-w-[150px]">
+                                    <td class="py-3.5 px-3 text-slate-600 truncate max-w-[150px]">
                                         <?= htmlspecialchars($row['dosen_wali']); ?>
                                     </td>
 
                                     <!-- Jenis TA (Sidang vs Non-Sidang) -->
-                                    <td class="py-4 px-4 text-center">
+                                    <td class="py-4 px-4 text-center whitespace-nowrap">
                                         <?php if ($isNonSidang): ?>
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
                                                 <i class="bi bi-journal-check"></i> Non-Sidang
                                             </span>
                                         <?php else: ?>
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-50 text-orange-700 border border-orange-200">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-50 text-orange-700 border border-orange-200 whitespace-nowrap">
                                                 <i class="bi bi-mortarboard"></i> Sidang TA
                                             </span>
                                         <?php endif; ?>
                                     </td>
 
                                     <!-- Status / Tahapan -->
-                                    <td class="py-4 px-4 text-center">
+                                    <td class="py-4 px-4 text-center whitespace-nowrap">
                                         <?php if ($isApproved): ?>
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
                                                 <i class="bi bi-check-circle-fill"></i> Disetujui
                                             </span>
                                         <?php else: ?>
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
                                                 <i class="bi bi-clock-fill"></i> Pending
                                             </span>
                                         <?php endif; ?>
@@ -683,6 +688,384 @@
                 autoBox.classList.add('hidden');
             }
         });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('manage_syarat') === '1') {
+                openMasterSyaratModal();
+            }
+        });
+
+        // =========================================================================
+        // KELOLA FILE PERSYARATAN PENDAFTARAN SIDANG (MODAL & AJAX)
+        // =========================================================================
+        let masterSyaratData = [];
+
+        function openMasterSyaratModal() {
+            document.getElementById('modalMasterSyarat').classList.remove('hidden');
+            document.getElementById('modalMasterSyarat').classList.add('flex');
+            resetMasterSyaratForm();
+            loadMasterSyaratList();
+        }
+
+        function closeMasterSyaratModal() {
+            document.getElementById('modalMasterSyarat').classList.add('hidden');
+            document.getElementById('modalMasterSyarat').classList.remove('flex');
+        }
+
+        function loadMasterSyaratList() {
+            const tableBody = document.getElementById('syaratTableBody');
+            tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400 font-semibold"><i class="bi bi-arrow-repeat animate-spin text-lg inline-block mr-2"></i> Memuat daftar berkas persyaratan...</td></tr>`;
+
+            fetch('<?= site_url('adminlayanan/ajax_get_master_syarat_sidang'); ?>')
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success && Array.isArray(res.data)) {
+                        masterSyaratData = res.data;
+                        renderMasterSyaratTable();
+                    } else {
+                        tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-rose-500 font-bold">Gagal memuat data persyaratan.</td></tr>`;
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-rose-500 font-bold">Terjadi kesalahan koneksi server.</td></tr>`;
+                });
+        }
+
+        function renderMasterSyaratTable() {
+            const tableBody = document.getElementById('syaratTableBody');
+            if (masterSyaratData.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">Belum ada berkas persyaratan yang tersimpan.</td></tr>`;
+                return;
+            }
+
+            tableBody.innerHTML = masterSyaratData.map((item, index) => {
+                const isReq = parseInt(item.is_required) === 1;
+                const isAct = parseInt(item.is_active) === 1;
+
+                return `
+                    <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100">
+                        <td class="py-3 px-3.5 text-center font-bold text-slate-400">${item.urutan || (index + 1)}</td>
+                        <td class="py-3 px-4">
+                            <div class="font-bold text-slate-800 text-xs">${escapeHtml(item.nama_berkas || '')}</div>
+                            <div class="text-[11px] text-slate-400 mt-0.5 line-clamp-1">${escapeHtml(item.deskripsi || '-')}</div>
+                        </td>
+                        <td class="py-3 px-3 font-mono text-[11px] text-orange-600 font-semibold">${escapeHtml(item.kode_berkas || '')}</td>
+                        <td class="py-3 px-3 text-center">
+                            ${isReq 
+                                ? '<span class="inline-flex items-center justify-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200 whitespace-nowrap">Wajib</span>' 
+                                : '<span class="inline-flex items-center justify-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 whitespace-nowrap">Opsional</span>'}
+                        </td>
+                        <td class="py-3 px-3 text-center">
+                            ${isAct 
+                                ? '<span class="inline-flex items-center justify-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap"><i class="bi bi-check-circle-fill"></i> Aktif</span>' 
+                                : '<span class="inline-flex items-center justify-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200 whitespace-nowrap">Nonaktif</span>'}
+                        </td>
+                        <td class="py-3 px-3 text-center">
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button type="button" onclick="editMasterSyarat(${item.id})" class="w-7 h-7 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 flex items-center justify-center text-xs transition" title="Edit Berkas">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <button type="button" onclick="deleteMasterSyarat(${item.id}, '${escapeHtml(item.nama_berkas || '')}')" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 flex items-center justify-center text-xs transition" title="Hapus Berkas">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function toggleSyaratForm(forceOpen = null) {
+            const formCard = document.getElementById('formMasterSyaratCard');
+            const btnToggle = document.getElementById('btnToggleSyaratForm');
+
+            if (forceOpen === true || (forceOpen === null && formCard.classList.contains('hidden'))) {
+                formCard.classList.remove('hidden');
+                btnToggle.innerHTML = `<i class="bi bi-dash-lg text-sm"></i> <span>Tutup Form</span>`;
+                btnToggle.classList.replace('from-orange-500', 'from-slate-600');
+                btnToggle.classList.replace('to-amber-500', 'to-slate-700');
+            } else {
+                formCard.classList.add('hidden');
+                btnToggle.innerHTML = `<i class="bi bi-plus-lg text-sm"></i> <span>Tambah Berkas Baru</span>`;
+                btnToggle.classList.replace('from-slate-600', 'from-orange-500');
+                btnToggle.classList.replace('to-slate-700', 'to-amber-500');
+                resetMasterSyaratForm();
+            }
+        }
+
+        function resetMasterSyaratForm() {
+            document.getElementById('formMasterSyarat').reset();
+            document.getElementById('syarat_id').value = '';
+            document.getElementById('formSyaratTitle').innerText = 'Tambah Berkas Persyaratan Baru';
+            document.getElementById('syarat_is_required').checked = true;
+            document.getElementById('syarat_is_active').checked = true;
+            document.getElementById('syarat_urutan').value = masterSyaratData.length + 1;
+        }
+
+        function editMasterSyarat(id) {
+            const found = masterSyaratData.find(item => parseInt(item.id) === parseInt(id));
+            if (!found) return;
+
+            document.getElementById('syarat_id').value = found.id;
+            document.getElementById('syarat_nama').value = found.nama_berkas || '';
+            document.getElementById('syarat_kode').value = found.kode_berkas || '';
+            document.getElementById('syarat_deskripsi').value = found.deskripsi || '';
+            document.getElementById('syarat_urutan').value = found.urutan || 1;
+            document.getElementById('syarat_is_required').checked = parseInt(found.is_required) === 1;
+            document.getElementById('syarat_is_active').checked = parseInt(found.is_active) === 1;
+
+            document.getElementById('formSyaratTitle').innerText = 'Edit Berkas Persyaratan';
+            toggleSyaratForm(true);
+            document.getElementById('formMasterSyaratCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function autoGenerateKodeBerkas(input) {
+            const kodeInput = document.getElementById('syarat_kode');
+            if (!document.getElementById('syarat_id').value) {
+                kodeInput.value = input.value
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '_')
+                    .replace(/^_+|_+$/g, '');
+            }
+        }
+
+        function submitMasterSyaratForm(e) {
+            e.preventDefault();
+            const form = document.getElementById('formMasterSyarat');
+            const formData = new FormData(form);
+
+            formData.set('is_required', document.getElementById('syarat_is_required').checked ? 1 : 0);
+            formData.set('is_active', document.getElementById('syarat_is_active').checked ? 1 : 0);
+
+            const submitBtn = document.getElementById('btnSubmitSyarat');
+            const origText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="bi bi-arrow-repeat animate-spin"></i> Menyimpan...`;
+
+            fetch('<?= site_url('adminlayanan/ajax_save_master_syarat_sidang'); ?>', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(res => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = origText;
+
+                if (res.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: res.message,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    toggleSyaratForm(false);
+                    loadMasterSyaratList();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: res.message || 'Terjadi kesalahan saat menyimpan.'
+                    });
+                }
+            })
+            .catch(err => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = origText;
+                console.error(err);
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Koneksi ke server gagal.' });
+            });
+        }
+
+        function deleteMasterSyarat(id, name) {
+            Swal.fire({
+                title: 'Hapus Berkas?',
+                text: `Apakah Anda yakin ingin menghapus persyaratan "${name}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ea580c',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const fd = new FormData();
+                    fd.append('id', id);
+
+                    fetch('<?= site_url('adminlayanan/ajax_delete_master_syarat_sidang'); ?>', {
+                        method: 'POST',
+                        body: fd
+                    })
+                    .then(res => res.json())
+                    .then(res => {
+                        if (res.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Terhapus!',
+                                text: res.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                            loadMasterSyaratList();
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'Gagal', text: res.message });
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        Swal.fire({ icon: 'error', title: 'Error', text: 'Koneksi ke server gagal.' });
+                    });
+                }
+            });
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return String(text)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
     </script>
+
+    <!-- ========================================================================= -->
+    <!-- MODAL: KELOLA FILE PERSYARATAN PENDAFTARAN SIDANG -->
+    <!-- ========================================================================= -->
+    <div id="modalMasterSyarat" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div class="bg-white w-full max-w-4xl rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-6 transform transition-all flex flex-col max-h-[92vh]">
+            
+            <!-- Modal Header -->
+            <div class="px-5 sm:px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-orange-50/60 to-amber-50/30 shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-md shadow-orange-500/20 shrink-0">
+                        <i class="bi bi-file-earmark-diff-fill text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm sm:text-base font-extrabold text-slate-800">Kelola File Persyaratan Pendaftaran Sidang</h3>
+                        <p class="text-[11px] text-slate-500 font-medium">Atur daftar dokumen wajib / opsional yang harus diunggah mahasiswa pada proses sidang.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeMasterSyaratModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition">
+                    <i class="bi bi-x-lg text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content (Scrollable) -->
+            <div class="p-5 sm:p-6 overflow-y-auto space-y-5">
+                
+                <!-- Action Bar & Add Button -->
+                <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-xs font-bold text-slate-700">Daftar Master Berkas Sidang</span>
+                    </div>
+                    <button type="button" id="btnToggleSyaratForm" onclick="toggleSyaratForm()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold shadow-sm transition">
+                        <i class="bi bi-plus-lg text-sm"></i>
+                        <span>Tambah Berkas Baru</span>
+                    </button>
+                </div>
+
+                <!-- Form Tambah / Edit Berkas (Collapsible) -->
+                <div id="formMasterSyaratCard" class="hidden bg-orange-50/40 border border-orange-200/90 rounded-2xl p-4 sm:p-5 transition-all">
+                    <div class="flex items-center justify-between border-b border-orange-200/60 pb-3 mb-4">
+                        <h4 id="formSyaratTitle" class="text-xs sm:text-sm font-extrabold text-slate-800 flex items-center gap-2">
+                            <i class="bi bi-plus-circle-fill text-orange-600"></i> Tambah Berkas Persyaratan Baru
+                        </h4>
+                        <button type="button" onclick="toggleSyaratForm(false)" class="text-xs text-slate-400 hover:text-slate-700 font-bold">&times; Batal</button>
+                    </div>
+
+                    <form id="formMasterSyarat" onsubmit="submitMasterSyaratForm(event)">
+                        <input type="hidden" id="syarat_id" name="id" value="">
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs mb-4">
+                            <!-- Nama Berkas -->
+                            <div class="sm:col-span-2">
+                                <label class="block font-bold text-slate-700 mb-1">Nama Dokumen / Berkas <span class="text-rose-500">*</span></label>
+                                <input type="text" id="syarat_nama" name="nama_berkas" oninput="autoGenerateKodeBerkas(this)" required placeholder="Contoh: Surat Rekomendasi Bebas Tunggakan Lab" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 text-xs font-semibold outline-none transition">
+                            </div>
+
+                            <!-- Kode Berkas -->
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Kode Berkas (ID Teknis)</label>
+                                <input type="text" id="syarat_kode" name="kode_berkas" placeholder="Contoh: surat_bebas_lab" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 text-xs font-mono font-semibold outline-none transition">
+                                <span class="text-[10px] text-slate-400 mt-1 block">Otomatis digenerate atau gunakan format lowercase_underscore.</span>
+                            </div>
+
+                            <!-- Urutan Tampil -->
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Urutan Tampil (Posisi #)</label>
+                                <input type="number" id="syarat_urutan" name="urutan" value="1" min="1" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 text-xs font-semibold outline-none transition">
+                            </div>
+
+                            <!-- Deskripsi -->
+                            <div class="sm:col-span-2">
+                                <label class="block font-bold text-slate-700 mb-1">Deskripsi / Petunjuk Pengunggahan</label>
+                                <textarea id="syarat_deskripsi" name="deskripsi" rows="2" placeholder="Tuliskan keterangan dokumen atau format file yang diminta..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 text-xs font-medium outline-none transition"></textarea>
+                            </div>
+
+                            <!-- Checkboxes: Wajib & Aktif -->
+                            <div class="sm:col-span-2 flex flex-wrap items-center gap-6 pt-1">
+                                <label class="flex items-center gap-2 cursor-pointer font-bold text-slate-700 select-none">
+                                    <input type="checkbox" id="syarat_is_required" checked class="w-4 h-4 rounded text-orange-600 focus:ring-orange-500 border-slate-300">
+                                    <span>Wajib Diunggah (Mandatory)</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer font-bold text-slate-700 select-none">
+                                    <input type="checkbox" id="syarat_is_active" checked class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300">
+                                    <span>Status Aktif Digunakan</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-2 border-t border-orange-200/60 pt-3">
+                            <button type="button" onclick="toggleSyaratForm(false)" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">Batal</button>
+                            <button type="submit" id="btnSubmitSyarat" class="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold shadow-md shadow-orange-500/25 transition">
+                                <i class="bi bi-check2-circle text-sm"></i>
+                                <span>Simpan Persyaratan</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Tabel List Berkas Persyaratan -->
+                <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-100/70 border-b border-slate-200 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                                    <th class="py-3 px-3.5 text-center w-12">#</th>
+                                    <th class="py-3 px-4">Nama Dokumen &amp; Deskripsi</th>
+                                    <th class="py-3 px-3">Kode Berkas</th>
+                                    <th class="py-3 px-3 text-center">Sifat</th>
+                                    <th class="py-3 px-3 text-center">Status</th>
+                                    <th class="py-3 px-3 text-center w-24">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="syaratTableBody" class="divide-y divide-slate-100 font-medium text-xs">
+                                <tr>
+                                    <td colspan="6" class="text-center py-6 text-slate-400 font-semibold">
+                                        <i class="bi bi-arrow-repeat animate-spin text-lg inline-block mr-2"></i> Memuat data...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-5 sm:px-6 py-3.5 border-t border-slate-100 bg-slate-50 flex items-center justify-between shrink-0">
+                <span class="text-[11px] text-slate-400 font-medium">Perubahan dokumen persyaratan akan langsung diterapkan ke seluruh halaman pendaftaran &amp; detail mahasiswa.</span>
+                <button type="button" onclick="closeMasterSyaratModal()" class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold transition">
+                    Tutup
+                </button>
+            </div>
+
+        </div>
+    </div>
 </body>
 </html>

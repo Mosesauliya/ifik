@@ -911,6 +911,72 @@ class AdminLayanan extends CI_Controller {
     }
 
     /**
+     * AJAX: Get all master requirements for defense registration
+     */
+    public function ajax_get_master_syarat_sidang() {
+        $syarat = $this->AdminLayanan_model->get_all_master_syarat_sidang();
+        $this->output->set_content_type('application/json')
+                     ->set_output(json_encode(['success' => true, 'data' => $syarat]));
+    }
+
+    /**
+     * AJAX: Save or Update 1 master requirement
+     */
+    public function ajax_save_master_syarat_sidang() {
+        $id          = $this->input->post('id');
+        $nama_berkas = trim($this->input->post('nama_berkas') ?? '');
+        $kode_berkas = trim($this->input->post('kode_berkas') ?? '');
+        $deskripsi   = trim($this->input->post('deskripsi') ?? '');
+        $is_required = (int)($this->input->post('is_required') ?? 1);
+        $is_active   = (int)($this->input->post('is_active') ?? 1);
+        $urutan      = (int)($this->input->post('urutan') ?? 0);
+
+        if (empty($nama_berkas)) {
+            $this->output->set_content_type('application/json')
+                         ->set_output(json_encode(['success' => false, 'message' => 'Nama berkas tidak boleh kosong.']));
+            return;
+        }
+
+        if (empty($kode_berkas)) {
+            $kode_berkas = strtolower(preg_replace('/[^a-zA-Z0-9_]+/', '_', trim($nama_berkas)));
+        }
+
+        $data = [
+            'kode_berkas' => $kode_berkas,
+            'nama_berkas' => $nama_berkas,
+            'deskripsi'   => $deskripsi,
+            'is_required' => $is_required,
+            'is_active'   => $is_active,
+            'urutan'      => $urutan
+        ];
+
+        $res = $this->AdminLayanan_model->save_master_syarat_item($id, $data);
+
+        $this->output->set_content_type('application/json')
+                     ->set_output(json_encode([
+                         'success' => true,
+                         'message' => !empty($id) ? 'Master berkas berhasil diperbarui!' : 'Master berkas baru berhasil ditambahkan!',
+                         'id'      => $res
+                     ]));
+    }
+
+    /**
+     * AJAX: Delete or toggle master requirement
+     */
+    public function ajax_delete_master_syarat_sidang() {
+        $id = (int)$this->input->post('id');
+        if (empty($id)) {
+            $this->output->set_content_type('application/json')
+                         ->set_output(json_encode(['success' => false, 'message' => 'ID tidak valid.']));
+            return;
+        }
+
+        $this->AdminLayanan_model->delete_master_syarat_item($id);
+        $this->output->set_content_type('application/json')
+                     ->set_output(json_encode(['success' => true, 'message' => 'Master berkas berhasil dihapus.']));
+    }
+
+    /**
      * Submit Verifikasi Sidang Akhir
      */
     public function submit_approval_sidang($nim = '') {

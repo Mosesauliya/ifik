@@ -343,6 +343,12 @@
     </li>
 
     <li class="nav-item">
+        <a href="<?= base_url('#berita') ?>" class="nav-link" onclick="scrollToBeritaNav(event)">
+            <span>Berita</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
         <a href="<?= site_url('welcome') ?>" class="nav-link"><span>Layanan LAB</span></a>
         <div class="nav-dropdown">
             <a href="<?= base_url('ajukan-booking') ?>">
@@ -543,6 +549,17 @@
             if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
         }
         if (typeof window.goToSlide === 'function') window.goToSlide(0);
+        closeMobileNav();
+    }
+
+    function scrollToBeritaNav(e) {
+        if (e) e.preventDefault();
+        if (typeof window.scrollToSection === 'function') {
+            window.scrollToSection('berita');
+        } else {
+            const target = document.getElementById('section-contact') || document.getElementById('section-berita');
+            if (target) target.scrollIntoView({ behavior: 'smooth' });
+        }
         closeMobileNav();
     }
 

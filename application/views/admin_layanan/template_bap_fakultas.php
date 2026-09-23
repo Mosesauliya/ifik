@@ -254,22 +254,46 @@
                 <tr>
                     <td>Pembimbing 1</td>
                     <td>: <?= htmlspecialchars($bap['pembimbing_1']); ?></td>
-                    <td align="center"><div class="sig-box">~ Nina N. ~</div></td>
+                    <td align="center">
+                        <?php if (!empty($bap['ttd_pembimbing_1']) && file_exists(FCPATH . 'uploads/signatures/' . $bap['ttd_pembimbing_1'])): ?>
+                            <img src="<?= base_url('uploads/signatures/' . $bap['ttd_pembimbing_1']); ?>" style="max-height: 42px; width: auto; display: block; margin: 0 auto;">
+                        <?php else: ?>
+                            <div class="sig-box">~ TTD Digital ~</div>
+                        <?php endif; ?>
+                    </td>
                 </tr>
                 <tr>
                     <td>Pembimbing 2</td>
                     <td>: <?= htmlspecialchars($bap['pembimbing_2']); ?></td>
-                    <td align="center"><div class="sig-box">~ Rangga L. ~</div></td>
+                    <td align="center">
+                        <?php if (!empty($bap['ttd_pembimbing_2']) && file_exists(FCPATH . 'uploads/signatures/' . $bap['ttd_pembimbing_2'])): ?>
+                            <img src="<?= base_url('uploads/signatures/' . $bap['ttd_pembimbing_2']); ?>" style="max-height: 42px; width: auto; display: block; margin: 0 auto;">
+                        <?php else: ?>
+                            <div class="sig-box">~ TTD Digital ~</div>
+                        <?php endif; ?>
+                    </td>
                 </tr>
                 <tr>
                     <td>Penguji 1/Ketua Sidang</td>
                     <td>: <?= htmlspecialchars($bap['penguji_1']); ?></td>
-                    <td align="center"><div class="sig-box">~ Samsul A. ~</div></td>
+                    <td align="center">
+                        <?php if (!empty($bap['ttd_penguji_1']) && file_exists(FCPATH . 'uploads/signatures/' . $bap['ttd_penguji_1'])): ?>
+                            <img src="<?= base_url('uploads/signatures/' . $bap['ttd_penguji_1']); ?>" style="max-height: 42px; width: auto; display: block; margin: 0 auto;">
+                        <?php else: ?>
+                            <div class="sig-box">~ TTD Digital ~</div>
+                        <?php endif; ?>
+                    </td>
                 </tr>
                 <tr>
                     <td>Penguji 2</td>
                     <td>: <?= htmlspecialchars($bap['penguji_2']); ?></td>
-                    <td align="center"><div class="sig-box">~ Putu Raka ~</div></td>
+                    <td align="center">
+                        <?php if (!empty($bap['ttd_penguji_2']) && file_exists(FCPATH . 'uploads/signatures/' . $bap['ttd_penguji_2'])): ?>
+                            <img src="<?= base_url('uploads/signatures/' . $bap['ttd_penguji_2']); ?>" style="max-height: 42px; width: auto; display: block; margin: 0 auto;">
+                        <?php else: ?>
+                            <div class="sig-box">~ TTD Digital ~</div>
+                        <?php endif; ?>
+                    </td>
                 </tr>
             </table>
 

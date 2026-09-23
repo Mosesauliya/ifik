@@ -14,7 +14,8 @@ class News extends CI_Controller {
     // ─── Helper: cek role admin ────────────────────────────────────────────
     private function _is_admin()
     {
-        return $this->session->userdata('role_id') == 1;
+        $role_id = (int)$this->session->userdata('role_id');
+        return in_array($role_id, [1, 5]);
     }
 
     private function _require_admin()
@@ -123,8 +124,14 @@ class News extends CI_Controller {
     // ─── ADMIN: Halaman Newsroom ────────────────────────────────────────────
     public function index()
     {
+        $this->_require_admin();
         $data['all_berita'] = $this->News_model->get_all();
         $this->load->view('news/admin_newsroom', $data);
+    }
+
+    public function newsroom()
+    {
+        $this->index();
     }
 
     // ─── ADMIN: Save (Insert / Update) ─────────────────────────────────────

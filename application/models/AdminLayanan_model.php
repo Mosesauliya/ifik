@@ -128,9 +128,18 @@ class AdminLayanan_model extends CI_Model {
 
         $existing = $this->db->get_where('pendaftaran_berkas', ['nim' => $nim, 'kode_berkas' => $kode_berkas])->row_array();
 
+        // Convert long status string to enum ('Pending'|'Valid'|'Invalid') for pendaftaran_berkas column status_verifikasi
+        $enum_status = 'Pending';
+        $st_lower = strtolower($status);
+        if ($st_lower === 'valid' || strpos($st_lower, 'setuju') !== false || strpos($st_lower, 'approved') !== false || $st_lower === 'acc') {
+            $enum_status = 'Valid';
+        } else if ($st_lower === 'invalid' || strpos($st_lower, 'revisi') !== false || strpos($st_lower, 'tolak') !== false || strpos($st_lower, 'rejected') !== false) {
+            $enum_status = 'Invalid';
+        }
+
         $data = [
             'file_name'         => $file_name,
-            'status_verifikasi' => $status,
+            'status_verifikasi' => $enum_status,
             'updated_at'        => date('Y-m-d H:i:s')
         ];
 
@@ -1063,7 +1072,7 @@ class AdminLayanan_model extends CI_Model {
             foreach ($rows as $r) {
                 $nim = $r['nim'] ?: $r['id_mhs'];
                 $isNonSidang = in_array($r['jenis_TA'], ['TA Jurnal', 'TA HKI', 'TA PROYEK', 'TA Lainnya', 'Non-Sidang', 'Publikasi']);
-                $st = !empty($r['status_filesidang']) ? $r['status_filesidang'] : 'Disetujui Admin LAA';
+                $st = !empty($r['status_filesidang']) ? $r['status_filesidang'] : 'Pending Verifikasi';
 
                 $result[] = array(
                     'guidance_id'   => $r['guidance_id'],
@@ -1147,7 +1156,7 @@ class AdminLayanan_model extends CI_Model {
     }
 
     /**
-     * Ambil master berkas persyaratan pendaftaran sidang (Dinamis dari database syarat_berkas_sidang)
+     * Ambil master berkas persyaratan pendaftaran sidang (Hanya yang aktif)
      */
     public function get_master_syarat_sidang() {
         if ($this->db->table_exists('syarat_berkas_sidang')) {
@@ -1160,14 +1169,55 @@ class AdminLayanan_model extends CI_Model {
 
         // Fallback default 7 berkas jika tabel belum ada / kosong
         return [
-            ['kode_berkas' => 'surat_izin_wali', 'nama_berkas' => 'Surat Izin Sidang yang Telah Ditandatangani Dosen Wali', 'is_required' => 1, 'urutan' => 1],
-            ['kode_berkas' => 'formulir_sidang', 'nama_berkas' => 'Formulir Pendaftaran Sidang',                             'is_required' => 1, 'urutan' => 2],
-            ['kode_berkas' => 'daftar_nilai',    'nama_berkas' => 'Daftar Nilai yang Telah Divalidasi oleh Ka Prodi',        'is_required' => 1, 'urutan' => 3],
-            ['kode_berkas' => 'sertifikat_eprt', 'nama_berkas' => 'Sertifikat EPRT',                                         'is_required' => 1, 'urutan' => 4],
-            ['kode_berkas' => 'sertifikat_tak',  'nama_berkas' => 'Sertifikat TAK',                                          'is_required' => 1, 'urutan' => 5],
-            ['kode_berkas' => 'bukti_bimbingan', 'nama_berkas' => 'Bukti Bimbingan (Logbook)',                               'is_required' => 1, 'urutan' => 6],
-            ['kode_berkas' => 'bukti_skpi',      'nama_berkas' => 'Bukti SKPI',                                              'is_required' => 1, 'urutan' => 7]
+            ['id' => 1, 'kode_berkas' => 'surat_izin_wali', 'nama_berkas' => 'Surat Izin Sidang yang Telah Ditandatangani Dosen Wali', 'deskripsi' => 'Surat rekomendasi izin pendaftaran sidang dari dosen wali akademik', 'is_required' => 1, 'is_active' => 1, 'urutan' => 1],
+            ['id' => 2, 'kode_berkas' => 'formulir_sidang', 'nama_berkas' => 'Formulir Pendaftaran Sidang',                             'deskripsi' => 'Formulir bukti pendaftaran sidang tugas akhir lengkap', 'is_required' => 1, 'is_active' => 1, 'urutan' => 2],
+            ['id' => 3, 'kode_berkas' => 'daftar_nilai',    'nama_berkas' => 'Daftar Nilai yang Telah Divalidasi oleh Ka Prodi',        'deskripsi' => 'Transkrip / daftar nilai akademik kelulusan mata kuliah tervalidasi Kaprodi', 'is_required' => 1, 'is_active' => 1, 'urutan' => 3],
+            ['id' => 4, 'kode_berkas' => 'sertifikat_eprt', 'nama_berkas' => 'Sertifikat EPRT',                                         'deskripsi' => 'Sertifikat kelulusan tes Bahasa Inggris / EPRT dengan skor memenuhi syarat', 'is_required' => 1, 'is_active' => 1, 'urutan' => 4],
+            ['id' => 5, 'kode_berkas' => 'sertifikat_tak',  'nama_berkas' => 'Sertifikat TAK',                                          'deskripsi' => 'Sertifikat Transkrip Aktivitas Kemahasiswaan (TAK) minimum poin terpenuhi', 'is_required' => 1, 'is_active' => 1, 'urutan' => 5],
+            ['id' => 6, 'kode_berkas' => 'bukti_bimbingan', 'nama_berkas' => 'Bukti Bimbingan (Logbook)',                               'deskripsi' => 'Logbook asistensi / bimbingan tugas akhir dengan pembimbing 1 & 2', 'is_required' => 1, 'is_active' => 1, 'urutan' => 6],
+            ['id' => 7, 'kode_berkas' => 'bukti_skpi',      'nama_berkas' => 'Bukti SKPI',                                              'deskripsi' => 'Dokumen Surat Keterangan Pendamping Ijazah & sertifikat pendukung', 'is_required' => 1, 'is_active' => 1, 'urutan' => 7]
         ];
+    }
+
+    /**
+     * Ambil SELURUH master berkas persyaratan sidang (Aktif & Nonaktif untuk Admin Management)
+     */
+    public function get_all_master_syarat_sidang() {
+        if ($this->db->table_exists('syarat_berkas_sidang')) {
+            $this->db->order_by('urutan', 'ASC');
+            $query = $this->db->get('syarat_berkas_sidang');
+            if ($query && $query->num_rows() > 0) {
+                return $query->result_array();
+            }
+        }
+        return $this->get_master_syarat_sidang();
+    }
+
+    /**
+     * Tambah atau update 1 master syarat sidang
+     */
+    public function save_master_syarat_item($id = null, $data = []) {
+        if (!$this->db->table_exists('syarat_berkas_sidang')) {
+            return false;
+        }
+
+        if (!empty($id)) {
+            $this->db->where('id', $id)->update('syarat_berkas_sidang', $data);
+            return $id;
+        } else {
+            $this->db->insert('syarat_berkas_sidang', $data);
+            return $this->db->insert_id();
+        }
+    }
+
+    /**
+     * Hapus master syarat berkas sidang
+     */
+    public function delete_master_syarat_item($id) {
+        if ($this->db->table_exists('syarat_berkas_sidang')) {
+            return $this->db->where('id', $id)->delete('syarat_berkas_sidang');
+        }
+        return false;
     }
 
     /**
@@ -1175,19 +1225,47 @@ class AdminLayanan_model extends CI_Model {
      */
     public function get_berkas_pendaftaran_sidang($nim) {
         $master_syarat = $this->get_master_syarat_sidang();
+        $nim_clean = preg_replace('/^usr_mhs_/', '', $nim);
+        $nim_prefixed = 'usr_mhs_' . $nim_clean;
+
+        // Check if student is already fully approved (completed)
+        $detail = $this->get_detail_pendaftaran_sidang($nim);
+        $is_fully_approved = !empty($detail['is_approved']);
 
         // Cek apakah ada record di file_pendaftaran atau pendaftaran_berkas
         $db_files = array();
         if ($this->db->table_exists('file_pendaftaran')) {
-            $rows = $this->db->get_where('file_pendaftaran', ['id_mhs' => $nim])->result_array();
+            $rows = $this->db->group_start()
+                             ->where('id_mhs', $nim)
+                             ->or_where('id_mhs', $nim_clean)
+                             ->or_where('id_mhs', $nim_prefixed)
+                             ->group_end()
+                             ->get('file_pendaftaran')
+                             ->result_array();
             foreach ($rows as $r) {
                 $db_files[strtolower(trim($r['nama']))] = $r;
             }
         }
         if ($this->db->table_exists('pendaftaran_berkas')) {
-            $rows2 = $this->db->get_where('pendaftaran_berkas', ['nim' => $nim])->result_array();
+            $rows2 = $this->db->group_start()
+                              ->where('nim', $nim)
+                              ->or_where('nim', $nim_clean)
+                              ->or_where('nim', $nim_prefixed)
+                              ->group_end()
+                              ->get('pendaftaran_berkas')
+                              ->result_array();
             foreach ($rows2 as $r2) {
-                $db_files[$r2['kode_berkas']] = $r2;
+                $k = strtolower(trim($r2['kode_berkas']));
+                if (!isset($db_files[$k])) {
+                    $db_files[$k] = $r2;
+                } else {
+                    if (!empty($r2['status_verifikasi']) && strtolower($r2['status_verifikasi']) !== 'pending') {
+                        $db_files[$k]['status_verifikasi'] = $r2['status_verifikasi'];
+                    }
+                    if (!empty($r2['catatan'])) {
+                        $db_files[$k]['catatan'] = $r2['catatan'];
+                    }
+                }
             }
         }
 
@@ -1198,7 +1276,33 @@ class AdminLayanan_model extends CI_Model {
             $found = $db_files[$kode] ?? null;
 
             $file_name = !empty($found['file_name']) ? $found['file_name'] : (!empty($found['file']) ? $found['file'] : ($kode . '_' . $nim . '.pdf'));
-            $status = !empty($found['status_verifikasi']) ? $found['status_verifikasi'] : (!empty($found['status_adminlaa']) ? $found['status_adminlaa'] : 'Disetujui Admin LAA');
+
+            // Parse status from status_adminlaa or status_verifikasi
+            $raw_status = '';
+            if ($found) {
+                if (!empty($found['status_adminlaa']) && strtolower($found['status_adminlaa']) !== 'pending') {
+                    $raw_status = $found['status_adminlaa'];
+                } else if (!empty($found['status_verifikasi']) && strtolower($found['status_verifikasi']) !== 'pending') {
+                    $raw_status = $found['status_verifikasi'];
+                } else if (!empty($found['status_adminlaa'])) {
+                    $raw_status = $found['status_adminlaa'];
+                } else if (!empty($found['status_verifikasi'])) {
+                    $raw_status = $found['status_verifikasi'];
+                }
+            } else if ($is_fully_approved) {
+                // If student was already fully approved before this new requirement item was added, preserve approval
+                $raw_status = 'Disetujui Admin LAA';
+            }
+
+            $stClean = strtolower($raw_status);
+            if ($stClean === 'valid' || strpos($stClean, 'setuju') !== false || strpos($stClean, 'approved') !== false || $stClean === 'acc') {
+                $status = 'Disetujui Admin LAA';
+            } else if ($stClean === 'invalid' || strpos($stClean, 'revisi') !== false || strpos($stClean, 'tolak') !== false || strpos($stClean, 'rejected') !== false) {
+                $status = 'Revisi Admin LAA';
+            } else {
+                $status = 'Pending Verifikasi';
+            }
+
             $catatan = !empty($found['catatan']) ? $found['catatan'] : (!empty($found['komentar']) ? $found['komentar'] : '');
 
             $berkas[] = array(
@@ -1209,7 +1313,7 @@ class AdminLayanan_model extends CI_Model {
                 'file_name'   => $file_name,
                 'file_url'    => $this->resolve_pdf_url($file_name),
                 'status'      => $status,
-                'is_valid'    => (strpos(strtolower($status), 'setuju') !== false || strpos(strtolower($status), 'valid') !== false || strpos(strtolower($status), 'approved') !== false),
+                'is_valid'    => ($status === 'Disetujui Admin LAA'),
                 'catatan'     => $catatan,
                 'is_required' => $s['is_required'] ?? 1
             );
@@ -1222,15 +1326,37 @@ class AdminLayanan_model extends CI_Model {
      * Update status berkas pendaftaran sidang mahasiswa
      */
     public function save_status_berkas_sidang($nim, $kode_berkas, $status, $catatan = '') {
+        $nim_clean = preg_replace('/^usr_mhs_/', '', $nim);
+        $nim_prefixed = 'usr_mhs_' . $nim_clean;
+
+        // Standardize status representation
+        $st_lower = strtolower($status);
+        if ($st_lower === 'valid' || strpos($st_lower, 'setuju') !== false || strpos($st_lower, 'approved') !== false || $st_lower === 'acc') {
+            $disp_status = 'Disetujui Admin LAA';
+        } else if ($st_lower === 'invalid' || strpos($st_lower, 'revisi') !== false || strpos($st_lower, 'tolak') !== false || strpos($st_lower, 'rejected') !== false) {
+            $disp_status = 'Revisi Admin LAA';
+        } else {
+            $disp_status = 'Pending Verifikasi';
+        }
+
         if ($this->db->table_exists('pendaftaran_berkas')) {
-            $this->save_student_berkas($nim, $kode_berkas, $kode_berkas . '_' . $nim . '.pdf', $status, null, $catatan);
+            $this->save_student_berkas($nim, $kode_berkas, $kode_berkas . '_' . $nim_clean . '.pdf', $disp_status, null, $catatan);
+            if ($nim !== $nim_clean) {
+                $this->save_student_berkas($nim_clean, $kode_berkas, $kode_berkas . '_' . $nim_clean . '.pdf', $disp_status, null, $catatan);
+            }
         }
         if ($this->db->table_exists('file_pendaftaran')) {
-            $this->db->where('id_mhs', $nim)->where('nama', $kode_berkas)->update('file_pendaftaran', [
-                'status_adminlaa' => $status,
-                'komentar'        => $catatan,
-                'date_edit'       => date('Y-m-d H:i:s')
-            ]);
+            $this->db->group_start()
+                     ->where('id_mhs', $nim)
+                     ->or_where('id_mhs', $nim_clean)
+                     ->or_where('id_mhs', $nim_prefixed)
+                     ->group_end()
+                     ->where('nama', $kode_berkas)
+                     ->update('file_pendaftaran', [
+                         'status_adminlaa' => $disp_status,
+                         'komentar'        => $catatan,
+                         'date_edit'       => date('Y-m-d H:i:s')
+                     ]);
         }
         return true;
     }
@@ -1457,33 +1583,74 @@ class AdminLayanan_model extends CI_Model {
         elseif ($nilai_akhir > 40) $indeks = 'D';
         else                       $indeks = 'E';
 
+        // Look up digital signature image files from user table
+        $ttd_p1  = $this->get_dosen_ttd_by_name($mhs['pembimbing_1'] ?? '');
+        $ttd_p2  = $this->get_dosen_ttd_by_name($mhs['pembimbing_2'] ?? '');
+        $ttd_pj1 = $this->get_dosen_ttd_by_name($mhs['penguji_1'] ?? '');
+        $ttd_pj2 = $this->get_dosen_ttd_by_name($mhs['penguji_2'] ?? '');
+
         return array(
-            'nim'             => $mhs['nim'],
-            'nama'            => $mhs['nama'],
-            'prodi'           => $mhs['prodi'],
-            'konsentrasi'     => $mhs['konsentrasi'],
-            'judul'           => $mhs['judul'],
-            'hari'            => 'Selasa',
-            'tanggal_text'    => '30 Juni 2026',
-            'tempat'          => 'Kampus Fakultas Industri Kreatif Jl. Telekomunikasi, Ters. Buah Batu Bandung',
-            'semester'        => 'Genap',
-            'tahun_akademik'  => '2025/2026',
-            'pembimbing_1'    => $mhs['pembimbing_1'],
-            'pembimbing_2'    => $mhs['pembimbing_2'],
-            'penguji_1'       => $mhs['penguji_1'],
-            'penguji_2'       => $mhs['penguji_2'],
-            'catatan_penguji' => 'Perbaiki beberapa format sitasi pada Bab 4 dan perjelas diagram kerangka penelitian.',
-            'evaluasi_nilai'  => [
+            'nim'              => $mhs['nim'],
+            'nama'             => $mhs['nama'],
+            'prodi'            => $mhs['prodi'],
+            'konsentrasi'      => $mhs['konsentrasi'],
+            'judul'            => $mhs['judul'],
+            'hari'             => 'Selasa',
+            'tanggal_text'     => '30 Juni 2026',
+            'tempat'           => 'Kampus Fakultas Industri Kreatif Jl. Telekomunikasi, Ters. Buah Batu Bandung',
+            'semester'         => 'Genap',
+            'tahun_akademik'   => '2025/2026',
+            'pembimbing_1'     => $mhs['pembimbing_1'],
+            'pembimbing_2'     => $mhs['pembimbing_2'],
+            'penguji_1'        => $mhs['penguji_1'],
+            'penguji_2'        => $mhs['penguji_2'],
+            'ttd_pembimbing_1' => $ttd_p1,
+            'ttd_pembimbing_2' => $ttd_p2,
+            'ttd_penguji_1'    => $ttd_pj1,
+            'ttd_penguji_2'    => $ttd_pj2,
+            'catatan_penguji'  => 'Perbaiki beberapa format sitasi pada Bab 4 dan perjelas diagram kerangka penelitian.',
+            'evaluasi_nilai'   => [
                 ['peran' => 'Pembimbing 1', 'nama' => $mhs['pembimbing_1'], 'nilai' => $nilai_p1, 'bobot' => $bobot_p1, 'nilai_bobot' => $nb_p1],
                 ['peran' => 'Pembimbing 2', 'nama' => $mhs['pembimbing_2'], 'nilai' => $nilai_p2, 'bobot' => $bobot_p2, 'nilai_bobot' => $nb_p2],
                 ['peran' => 'Penguji 1',    'nama' => $mhs['penguji_1'],    'nilai' => $nilai_pj1, 'bobot' => $bobot_pj1, 'nilai_bobot' => $nb_pj1],
                 ['peran' => 'Penguji 2',    'nama' => $mhs['penguji_2'],    'nilai' => $nilai_pj2, 'bobot' => $bobot_pj2, 'nilai_bobot' => $nb_pj2],
             ],
-            'nilai_akhir'     => $nilai_akhir,
-            'indeks_huruf'    => $indeks,
-            'hasil_sidang'    => 'Lulus',
-            'ketua_sidang'    => $mhs['penguji_1']
+            'nilai_akhir'      => $nilai_akhir,
+            'indeks_huruf'     => $indeks,
+            'hasil_sidang'     => 'Lulus',
+            'ketua_sidang'     => $mhs['penguji_1']
         );
+    }
+
+    /**
+     * Helper lookup signature image file from user table by lecturer name or NIP
+     */
+    public function get_dosen_ttd_by_name($name_or_nip) {
+        if (empty($name_or_nip)) return null;
+        if (!$this->db->table_exists('user')) return null;
+
+        $clean_name = trim(preg_replace('/^(Dr\.|Prof\.|Drs\.|Dra\.|Ir\.)\s*/i', '', $name_or_nip));
+        $name_parts = explode(',', $clean_name);
+        $pure_name  = trim($name_parts[0]);
+
+        if (empty($pure_name)) return null;
+
+        $row = $this->db->group_start()
+                         ->like('name', $pure_name)
+                         ->or_where('nip', $name_or_nip)
+                         ->or_where('username', $name_or_nip)
+                         ->group_end()
+                         ->where('ttd IS NOT NULL AND ttd != ""')
+                         ->get('user')
+                         ->row_array();
+
+        if ($row && !empty($row['ttd'])) {
+            $path = FCPATH . 'uploads/signatures/' . $row['ttd'];
+            if (file_exists($path)) {
+                return $row['ttd'];
+            }
+        }
+        return null;
     }
 }
 

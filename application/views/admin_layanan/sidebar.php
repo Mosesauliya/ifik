@@ -48,6 +48,11 @@ $laaNavItems = [
         'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'
     ],
     [
+        'heading' => 'Kelola Berita',
+        'href'    => site_url('news/newsroom'),
+        'icon_3d' => 'assets/images/icons_3d/email_token.png'
+    ],
+    [
         'heading' => 'Keluar',
         'href'    => site_url('login/logout'),
         'icon_3d' => 'assets/images/icons_3d/logout.png'

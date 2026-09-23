@@ -58,10 +58,15 @@ class KetuaKK_model extends CI_Model {
             return array();
         }
 
-        $has_kk_table = $this->db->table_exists('kelompok_keahlian');
+        $has_kk_table  = $this->db->table_exists('kelompok_keahlian');
+        $has_ketua_col = $has_kk_table && $this->db->field_exists('ketua_kk', 'kelompok_keahlian');
 
         if ($has_kk_table) {
-            $this->db->select('p.*, m.nama_depan, m.nama_belakang, m.prodi, m.konsentrasi_dkv, m.email, m.no_hp, kk.nama_kk, kk.kode_kk, kk.ketua_kk');
+            $select_str = 'p.*, m.nama_depan, m.nama_belakang, m.prodi, m.konsentrasi_dkv, m.email, m.no_hp, kk.nama_kk, kk.kode_kk';
+            if ($has_ketua_col) {
+                $select_str .= ', kk.ketua_kk';
+            }
+            $this->db->select($select_str);
         } else {
             $this->db->select('p.*, m.nama_depan, m.nama_belakang, m.prodi, m.konsentrasi_dkv, m.email, m.no_hp');
         }
@@ -177,11 +182,15 @@ class KetuaKK_model extends CI_Model {
             return null;
         }
 
-        $has_kk_table = $this->db->table_exists('kelompok_keahlian');
+        $has_kk_table  = $this->db->table_exists('kelompok_keahlian');
+        $has_ketua_col = $has_kk_table && $this->db->field_exists('ketua_kk', 'kelompok_keahlian');
         $has_nip_ketua = $has_kk_table && $this->db->field_exists('nip_ketua', 'kelompok_keahlian');
 
         if ($has_kk_table) {
-            $select_str = 'p.*, m.nama_depan, m.nama_belakang, m.prodi, m.konsentrasi_dkv, m.email, m.no_hp, m.alamat, kk.nama_kk, kk.kode_kk, kk.ketua_kk';
+            $select_str = 'p.*, m.nama_depan, m.nama_belakang, m.prodi, m.konsentrasi_dkv, m.email, m.no_hp, m.alamat, kk.nama_kk, kk.kode_kk';
+            if ($has_ketua_col) {
+                $select_str .= ', kk.ketua_kk';
+            }
             if ($has_nip_ketua) {
                 $select_str .= ', kk.nip_ketua';
             }

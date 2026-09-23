@@ -207,25 +207,49 @@
                     <td align="center">1</td>
                     <td><strong><?= htmlspecialchars($bap['penguji_1'] ?? 'Dr. Samsul Alam, S.Pd., M.Pd.'); ?></strong></td>
                     <td>Ketua Sidang / Penguji 1</td>
-                    <td><div class="sig-cell">~ Samsul A. ~</div></td>
+                    <td align="center">
+                        <?php if (!empty($bap['ttd_penguji_1']) && file_exists(FCPATH . 'uploads/signatures/' . $bap['ttd_penguji_1'])): ?>
+                            <img src="<?= base_url('uploads/signatures/' . $bap['ttd_penguji_1']); ?>" style="max-height: 38px; width: auto; display: block; margin: 0 auto;">
+                        <?php else: ?>
+                            <div class="sig-cell">~ TTD Digital ~</div>
+                        <?php endif; ?>
+                    </td>
                 </tr>
                 <tr>
                     <td align="center">2</td>
                     <td><strong><?= htmlspecialchars($bap['penguji_2'] ?? 'Putu Raka Setya Putra, S.Ds., M.Ds.'); ?></strong></td>
                     <td>Penguji 2</td>
-                    <td><div class="sig-cell">~ Putu Raka ~</div></td>
+                    <td align="center">
+                        <?php if (!empty($bap['ttd_penguji_2']) && file_exists(FCPATH . 'uploads/signatures/' . $bap['ttd_penguji_2'])): ?>
+                            <img src="<?= base_url('uploads/signatures/' . $bap['ttd_penguji_2']); ?>" style="max-height: 38px; width: auto; display: block; margin: 0 auto;">
+                        <?php else: ?>
+                            <div class="sig-cell">~ TTD Digital ~</div>
+                        <?php endif; ?>
+                    </td>
                 </tr>
                 <tr>
                     <td align="center">3</td>
                     <td><strong><?= htmlspecialchars($bap['pembimbing_1'] ?? 'Nina Nursetia Ningrum, S.Pd., M.Pd.'); ?></strong></td>
                     <td>Pembimbing 1</td>
-                    <td><div class="sig-cell">~ Nina N. ~</div></td>
+                    <td align="center">
+                        <?php if (!empty($bap['ttd_pembimbing_1']) && file_exists(FCPATH . 'uploads/signatures/' . $bap['ttd_pembimbing_1'])): ?>
+                            <img src="<?= base_url('uploads/signatures/' . $bap['ttd_pembimbing_1']); ?>" style="max-height: 38px; width: auto; display: block; margin: 0 auto;">
+                        <?php else: ?>
+                            <div class="sig-cell">~ TTD Digital ~</div>
+                        <?php endif; ?>
+                    </td>
                 </tr>
                 <tr>
                     <td align="center">4</td>
                     <td><strong><?= htmlspecialchars($bap['pembimbing_2'] ?? 'I Gusti Agung Rangga Lawe, S.Ds., M.Ds.'); ?></strong></td>
                     <td>Pembimbing 2</td>
-                    <td><div class="sig-cell">~ Rangga L. ~</div></td>
+                    <td align="center">
+                        <?php if (!empty($bap['ttd_pembimbing_2']) && file_exists(FCPATH . 'uploads/signatures/' . $bap['ttd_pembimbing_2'])): ?>
+                            <img src="<?= base_url('uploads/signatures/' . $bap['ttd_pembimbing_2']); ?>" style="max-height: 38px; width: auto; display: block; margin: 0 auto;">
+                        <?php else: ?>
+                            <div class="sig-cell">~ TTD Digital ~</div>
+                        <?php endif; ?>
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -241,8 +265,12 @@
             <div>
                 <div>Bandung, <?= htmlspecialchars($bap['tanggal_text'] ?? '30 Juni 2026'); ?></div>
                 <div style="margin-top: 4px; font-weight: bold;">Ketua Sidang Tugas Akhir,</div>
-                <div class="sig-cell" style="height: 48px; font-size: 20pt; margin: 4px 0;">
-                    ~ Samsul Alam ~
+                <div class="sig-cell" style="height: 52px; margin: 4px 0; display: flex; align-items: center; justify-content: center;">
+                    <?php if (!empty($bap['ttd_penguji_1']) && file_exists(FCPATH . 'uploads/signatures/' . $bap['ttd_penguji_1'])): ?>
+                        <img src="<?= base_url('uploads/signatures/' . $bap['ttd_penguji_1']); ?>" style="max-height: 48px; width: auto; display: block; margin: 0 auto;">
+                    <?php else: ?>
+                        <span style="font-family: 'Brush Script MT', cursive; font-size: 18pt; color: #1e3a8a;">~ TTD Digital ~</span>
+                    <?php endif; ?>
                 </div>
                 <div><strong><?= htmlspecialchars($bap['penguji_1'] ?? 'Dr. Samsul Alam, S.Pd., M.Pd.'); ?></strong></div>
             </div>

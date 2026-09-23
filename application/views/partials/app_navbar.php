@@ -86,8 +86,8 @@
                         <span>Admin LAA</span>
                         <i class="bi bi-chevron-down text-[10px] text-slate-400 group-hover:text-orange-600 transition-transform duration-200 group-hover:rotate-180"></i>
                     </button>
-                    <!-- Dropdown Menu -->
-                    <div class="absolute left-0 top-full mt-1 w-60 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 hidden group-hover:block transition-all z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                    <!-- Dropdown Menu (with invisible hover bridge to prevent closing on mouse move) -->
+                    <div class="absolute left-0 top-full mt-1 w-60 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 hidden group-hover:block transition-all z-50 animate-in fade-in slide-in-from-top-1 duration-150 before:content-[''] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3">
                         <div class="px-3 py-1.5 border-b border-slate-100 mb-1">
                             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Modul Layanan LAA</span>
                         </div>
@@ -150,14 +150,6 @@
                 </a>
                 <?php endif; ?>
 
-                <!-- Kelola Berita - Role 1 or 5 -->
-                <?php if (in_array($role_id, [1, 5])): ?>
-                <a href="<?= site_url('news/newsroom'); ?>" 
-                   class="whitespace-nowrap text-xs font-semibold flex items-center gap-1.5 transition-colors py-1 <?= $current_uri === 'news' ? 'text-orange-600 font-bold border-b-2 border-orange-600' : 'text-slate-600 hover:text-orange-600'; ?>">
-                    <i class="bi bi-newspaper <?= $current_uri === 'news' ? 'text-orange-600' : 'text-slate-400'; ?>"></i>
-                    <span>Berita</span>
-                </a>
-                <?php endif; ?>
 
                 <!-- Riwayat Log Approval - Global Access for Admin & Staff -->
                 <?php if (in_array($role_id, [1, 2, 3, 5, 6, 7, 9, 21])): ?>
