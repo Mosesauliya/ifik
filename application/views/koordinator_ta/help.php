@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title><?= htmlspecialchars($title ?? 'Bantuan & Live Chat - Koordinator TA') ?></title>
     
     <!-- Google Fonts & FontAwesome & SweetAlert2 -->
@@ -52,12 +52,14 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             height: 100vh;
+            height: 100dvh;
             overflow: hidden;
         }
 
         .page-wrapper-for-sidebar {
             width: 100%;
             height: 100vh;
+            height: 100dvh;
             padding: 16px 24px;
             display: flex;
             flex-direction: column;
@@ -85,8 +87,8 @@
                 margin-left: 0 !important;
                 width: 100% !important;
                 padding: 56px 12px 12px 12px;
-                height: 100dvh;
                 height: 100vh;
+                height: 100dvh;
             }
         }
 
@@ -641,18 +643,39 @@
             }
 
             .chat-workspace.mobile-active .chat-sidebar {
-                display: none;
+                display: none !important;
             }
 
             .chat-workspace:not(.mobile-active) .chat-main-area {
-                display: none;
+                display: none !important;
             }
 
             /* Fullscreen mobile active chat state */
+            body.mobile-chat-open {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                width: 100%;
+                height: 100%;
+                height: 100dvh;
+                overflow: hidden;
+            }
+
             body.mobile-chat-open .page-wrapper-for-sidebar {
-                padding: 0 !important;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
                 height: 100dvh !important;
-                height: 100vh !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                overflow: hidden !important;
+                z-index: 9999 !important;
             }
 
             body.mobile-chat-open .page-header {
@@ -661,44 +684,69 @@
 
             body.mobile-chat-open #curvedSidebarToggle,
             body.mobile-chat-open .curved-sidebar-btn,
-            body.mobile-chat-open .floating-sidebar-toggle {
+            body.mobile-chat-open .floating-sidebar-toggle,
+            body.mobile-chat-open .curved-sidebar-nav,
+            body.mobile-chat-open .curved-sidebar-backdrop {
                 display: none !important;
             }
 
+            body.mobile-chat-open .main-container {
+                height: 100% !important;
+                max-height: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                flex: 1 1 0% !important;
+                min-height: 0 !important;
+                overflow: hidden !important;
+            }
+
             body.mobile-chat-open .chat-workspace {
-                height: 100dvh !important;
-                height: 100vh !important;
+                height: 100% !important;
+                max-height: 100% !important;
                 border-radius: 0 !important;
                 border: none !important;
                 display: flex !important;
                 flex-direction: column !important;
+                flex: 1 1 0% !important;
+                min-height: 0 !important;
                 overflow: hidden !important;
+                margin: 0 !important;
+                gap: 0 !important;
             }
 
             body.mobile-chat-open .chat-main-area {
                 border-radius: 0 !important;
                 border: none !important;
                 height: 100% !important;
+                max-height: 100% !important;
                 min-height: 0 !important;
                 display: flex !important;
                 flex-direction: column !important;
-                flex: 1 !important;
+                flex: 1 1 0% !important;
                 width: 100% !important;
                 overflow: hidden !important;
+                box-shadow: none !important;
             }
 
             body.mobile-chat-open .chat-messages {
-                flex: 1 !important;
+                flex: 1 1 0% !important;
                 min-height: 0 !important;
+                height: 0 !important;
                 overflow-y: auto !important;
                 display: flex !important;
                 flex-direction: column !important;
+                -webkit-overflow-scrolling: touch;
+                overscroll-behavior-y: contain;
             }
 
             /* Active Chat Header on Mobile */
             .chat-header {
                 padding: 10px 12px;
                 gap: 8px;
+                flex-shrink: 0 !important;
             }
 
             .chat-header-user {
@@ -807,8 +855,11 @@
                 gap: 8px;
                 background: #ffffff;
                 border-top: 1px solid #e2e8f0;
-                padding-bottom: max(10px, env(safe-area-inset-bottom));
+                padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
                 align-items: flex-end;
+                flex-shrink: 0 !important;
+                position: relative !important;
+                z-index: 20 !important;
             }
 
             .chat-textarea {
@@ -816,7 +867,7 @@
                 height: 42px;
                 max-height: 120px;
                 padding: 9px 12px;
-                font-size: 0.86rem;
+                font-size: 0.95rem;
                 border-radius: 12px;
                 line-height: 1.4;
                 box-sizing: border-box;
