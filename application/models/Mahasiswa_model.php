@@ -186,7 +186,7 @@ class Mahasiswa_model extends CI_Model {
             if (in_array('judul_3', $g_fields)) $g_data['judul_3'] = $data_ta['judul_3'] ?? '';
             if (in_array('judul_en', $g_fields)) $g_data['judul_en'] = $data_ta['judul_en'] ?? '';
             if (in_array('jenis_TA', $g_fields)) {
-                $g_data['jenis_TA'] = !empty(trim($data_ta['jenis_ta'] ?? '')) ? trim($data_ta['jenis_ta']) : 'Pengkaryaan';
+                $g_data['jenis_TA'] = !empty(trim($data_ta['jenis_ta'] ?? '')) ? trim($data_ta['jenis_ta']) : '';
             }
             if (in_array('peminatan', $g_fields)) {
                 $g_data['peminatan'] = !empty(trim($data_ta['konsentrasi_dkv'] ?? '')) ? trim($data_ta['konsentrasi_dkv']) : 'Desain Komunikasi Visual';
@@ -217,13 +217,19 @@ class Mahasiswa_model extends CI_Model {
             foreach ($files as $kode => $fileName) {
                 if (empty($fileName)) continue;
                 $relPath = (strpos($fileName, 'uploads/') === 0) ? $fileName : ('uploads/persyaratan_ta/' . $fileName);
+                $targetFpId = 'fp_' . $nim . '_' . $kode;
 
-                $exFp = $this->db->group_start()
-                    ->where('id_mhs', $userId)
-                    ->or_where('id_mhs', $nim)
-                ->group_end()
-                ->where('nama', $kode)
-                ->get('file_pendaftaran')->row_array();
+                // Check existing record by primary key ID or by id_mhs + nama
+                $exFp = $this->db->get_where('file_pendaftaran', ['id' => $targetFpId])->row_array();
+                if (!$exFp) {
+                    $exFp = $this->db->group_start()
+                        ->where('id_mhs', $userId)
+                        ->or_where('id_mhs', $nim)
+                        ->or_where('id_mhs', 'usr_mhs_' . $nim)
+                    ->group_end()
+                    ->where('nama', $kode)
+                    ->get('file_pendaftaran')->row_array();
+                }
 
                 $fpData = [];
                 if (in_array('file',            $fp_fields)) $fpData['file']            = $relPath;
@@ -234,14 +240,20 @@ class Mahasiswa_model extends CI_Model {
                 if ($exFp) {
                     $this->db->where('id', $exFp['id'])->update('file_pendaftaran', $fpData);
                 } else {
-                    if (in_array('id',            $fp_fields)) $fpData['id']            = 'fp_' . $nim . '_' . $kode;
+                    if (in_array('id',            $fp_fields)) $fpData['id']            = $targetFpId;
                     if (in_array('id_mhs',        $fp_fields)) $fpData['id_mhs']        = $userId;
                     if (in_array('nama',          $fp_fields)) $fpData['nama']          = $kode;
                     if (in_array('view_adminlaa', $fp_fields)) $fpData['view_adminlaa'] = 0;
                     if (in_array('view_doswal',   $fp_fields)) $fpData['view_doswal']   = 0;
                     if (in_array('komentar',      $fp_fields)) $fpData['komentar']      = '';
                     if (in_array('date',          $fp_fields)) $fpData['date']          = date('Y-m-d H:i:s');
-                    $this->db->insert('file_pendaftaran', $fpData);
+
+                    $checkFpAgain = $this->db->get_where('file_pendaftaran', ['id' => $targetFpId])->row_array();
+                    if ($checkFpAgain) {
+                        $this->db->where('id', $targetFpId)->update('file_pendaftaran', $fpData);
+                    } else {
+                        $this->db->insert('file_pendaftaran', $fpData);
+                    }
                 }
             }
         }
@@ -493,7 +505,7 @@ class Mahasiswa_model extends CI_Model {
                                         ? trim($pt_data['jenis_ta']) 
                                         : (!empty(trim($guidance['jenis_TA'] ?? '')) 
                                             ? trim($guidance['jenis_TA']) 
-                                            : (!empty(trim($guidance['jenis_ta'] ?? '')) ? trim($guidance['jenis_ta']) : 'Pengkaryaan')),
+                                            : (!empty(trim($guidance['jenis_ta'] ?? '')) ? trim($guidance['jenis_ta']) : '')),
             'judul_1'               => $pt_data['judul_1'] ?? ($guidance['judul_1'] ?? ''),
             'judul_2'               => $pt_data['judul_2'] ?? ($guidance['judul_2'] ?? ''),
             'judul_3'               => $pt_data['judul_3'] ?? ($guidance['judul_3'] ?? ''),
