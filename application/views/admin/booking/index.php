@@ -1367,6 +1367,110 @@
             flex: 1;
         }
 
+        /* Surat Modal Header & Actions (Desktop) */
+        .surat-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .surat-header-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: #ecfdf5;
+            color: #16a34a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .surat-header-title {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0;
+        }
+
+        .surat-header-desc {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin: 0;
+        }
+
+        .surat-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .btn-surat-print {
+            padding: 7px 14px;
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-surat-print:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+        }
+
+        .btn-surat-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-surat-icon:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .btn-surat-close {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            border: none;
+            background: #f1f5f9;
+            color: #64748b;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .btn-surat-close:hover {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+
         /* Stat Slider Dots Indicator */
         .stat-slider-dots {
             display: none;
