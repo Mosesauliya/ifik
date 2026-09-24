@@ -992,30 +992,7 @@
                 <?php else: ?>
                 <?= form_open_multipart('mahasiswa/upload_preview3', ['id' => 'formUploadPreview3', 'class' => 'space-y-6 max-w-3xl']); ?>
 
-                    <div class="p-5 rounded-2xl border border-slate-200 bg-white/60 space-y-3">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-indigo-500 text-white flex items-center justify-center text-lg shrink-0 box-3d">
-                                <i class="bi bi-quote"></i>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-bold text-slate-900">File Sitasi <span class="text-rose-500">*</span></label>
-                                <span class="text-xs text-slate-500 font-medium">Dokumen daftar sitasi / referensi (format APA / IEEE)</span>
-                            </div>
-                        </div>
-                        <div class="drop-zone-sidang relative border-2 border-dashed rounded-2xl p-4 text-center transition-all cursor-pointer" id="dropZoneSitasiP3">
-                            <input type="file" name="file_sitasi" id="fileSitasiP3" accept=".pdf,.doc,.docx" required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
-                            <div class="pointer-events-none">
-                                <i class="bi bi-cloud-arrow-up text-2xl text-slate-400"></i>
-                                <p class="text-sm text-slate-500 mt-1">Klik untuk pilih file atau seret ke sini</p>
-                            </div>
-                        </div>
-                        <div id="fileBadgeSitasiP3" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center justify-between">
-                            <span id="fileNameSitasiP3" class="truncate font-mono">file.pdf</span>
-                            <span id="fileSizeSitasiP3" class="text-emerald-700">0 MB</span>
-                        </div>
-                    </div>
-
-                    <div class="p-5 rounded-2xl border border-slate-200 bg-white/60 space-y-3">
+                    <div class="p-5 rounded-2xl border border-slate-200 bg-white/60 space-y-3" id="containerBimbinganP3">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-xl bg-indigo-500 text-white flex items-center justify-center text-lg shrink-0 box-3d">
                                 <i class="bi bi-file-earmark-check-fill"></i>
@@ -1038,9 +1015,32 @@
                         </div>
                     </div>
 
-                    <div class="p-5 rounded-2xl border border-slate-200 bg-white/60 space-y-3">
+                    <div class="p-5 rounded-2xl border border-slate-200 bg-slate-50 opacity-50 space-y-3 transition-all duration-300" id="containerSitasiP3">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-indigo-500 text-white flex items-center justify-center text-lg shrink-0 box-3d">
+                            <div class="w-10 h-10 rounded-xl bg-slate-400 text-white flex items-center justify-center text-lg shrink-0 box-3d transition-colors" id="iconSitasiP3">
+                                <i class="bi bi-quote"></i>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-slate-900">File Sitasi <span class="text-rose-500">*</span></label>
+                                <span class="text-xs text-slate-500 font-medium">Dokumen daftar sitasi / referensi (format APA / IEEE)</span>
+                            </div>
+                        </div>
+                        <div class="drop-zone-sidang relative border-2 border-dashed rounded-2xl p-4 text-center transition-all cursor-not-allowed bg-slate-100" id="dropZoneSitasiP3">
+                            <input type="file" name="file_sitasi" id="fileSitasiP3" accept=".pdf,.doc,.docx" required disabled class="absolute inset-0 w-full h-full opacity-0 cursor-not-allowed z-10">
+                            <div class="pointer-events-none">
+                                <i class="bi bi-lock-fill text-2xl text-slate-400" id="iconLockSitasiP3"></i>
+                                <p class="text-sm text-slate-500 mt-1" id="textLockSitasiP3">Terkunci (Upload File Bimbingan dulu)</p>
+                            </div>
+                        </div>
+                        <div id="fileBadgeSitasiP3" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center justify-between">
+                            <span id="fileNameSitasiP3" class="truncate font-mono">file.pdf</span>
+                            <span id="fileSizeSitasiP3" class="text-emerald-700">0 MB</span>
+                        </div>
+                    </div>
+
+                    <div class="p-5 rounded-2xl border border-slate-200 bg-slate-50 opacity-50 space-y-3 transition-all duration-300" id="containerPersyaratanP3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-slate-400 text-white flex items-center justify-center text-lg shrink-0 box-3d transition-colors" id="iconPersyaratanP3">
                                 <i class="bi bi-signpost-split-fill"></i>
                             </div>
                             <div>
@@ -1048,11 +1048,11 @@
                                 <span class="text-xs text-slate-500 font-medium">Dokumen persyaratan sesuai jalur TA yang ditempuh (Skripsi / Proyek / Jurnal)</span>
                             </div>
                         </div>
-                        <div class="drop-zone-sidang relative border-2 border-dashed rounded-2xl p-4 text-center transition-all cursor-pointer" id="dropZonePersyaratanP3">
-                            <input type="file" name="file_persyaratan" id="filePersyaratanP3" accept=".pdf,.doc,.docx" required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                        <div class="drop-zone-sidang relative border-2 border-dashed rounded-2xl p-4 text-center transition-all cursor-not-allowed bg-slate-100" id="dropZonePersyaratanP3">
+                            <input type="file" name="file_persyaratan" id="filePersyaratanP3" accept=".pdf,.doc,.docx" required disabled class="absolute inset-0 w-full h-full opacity-0 cursor-not-allowed z-10">
                             <div class="pointer-events-none">
-                                <i class="bi bi-cloud-arrow-up text-2xl text-slate-400"></i>
-                                <p class="text-sm text-slate-500 mt-1">Klik untuk pilih file atau seret ke sini</p>
+                                <i class="bi bi-lock-fill text-2xl text-slate-400" id="iconLockPersyaratanP3"></i>
+                                <p class="text-sm text-slate-500 mt-1" id="textLockPersyaratanP3">Terkunci (Upload File Sitasi dulu)</p>
                             </div>
                         </div>
                         <div id="fileBadgePersyaratanP3" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center justify-between">
@@ -1061,13 +1061,13 @@
                         </div>
                     </div>
 
-                    <div>
+                    <div class="opacity-50 transition-opacity duration-300" id="containerSubmitP3">
                         <label class="block text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wider mb-2.5">Catatan Kelayakan Pra-Sidang</label>
-                        <textarea name="catatan_mahasiswa" rows="3" class="w-full p-4 border border-slate-200 rounded-2xl text-xs sm:text-sm font-medium" placeholder="Uraikan kelengkapan naskah dan karya yang siap disidangkan..."></textarea>
+                        <textarea name="catatan_mahasiswa" id="catatanP3" rows="3" disabled class="w-full p-4 border border-slate-200 rounded-2xl text-xs sm:text-sm font-medium bg-slate-100 cursor-not-allowed" placeholder="Uraikan kelengkapan naskah dan karya yang siap disidangkan..."></textarea>
                     </div>
 
-                    <button type="submit" class="py-4 px-8 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md transition cursor-pointer w-full">
-                        <i class="bi bi-send-check-fill mr-2"></i> Submit Berkas Pra-Sidang (Preview 3)
+                    <button type="submit" id="btnSubmitP3" disabled class="mt-4 py-4 px-8 rounded-2xl bg-slate-400 text-white font-bold text-xs sm:text-sm shadow-md transition cursor-not-allowed w-full">
+                        <i class="bi bi-lock-fill mr-2" id="iconSubmitP3"></i> Submit Berkas Pra-Sidang (Preview 3)
                     </button>
                 <?= form_close(); ?>
                 <?php endif; ?>
@@ -1567,9 +1567,121 @@
             }
         }
 
-        setupGenericFileUploader('fileSitasiP3', 'fileBadgeSitasiP3', 'fileNameSitasiP3', 'fileSizeSitasiP3', 'dropZoneSitasiP3');
         setupGenericFileUploader('fileBimbinganP3', 'fileBadgeBimbinganP3', 'fileNameBimbinganP3', 'fileSizeBimbinganP3', 'dropZoneBimbinganP3');
+        setupGenericFileUploader('fileSitasiP3', 'fileBadgeSitasiP3', 'fileNameSitasiP3', 'fileSizeSitasiP3', 'dropZoneSitasiP3');
         setupGenericFileUploader('filePersyaratanP3', 'fileBadgePersyaratanP3', 'fileNamePersyaratanP3', 'fileSizePersyaratanP3', 'dropZonePersyaratanP3');
+
+        // Sequential upload logic for Preview 3
+        const fbBimbingan = document.getElementById('fileBimbinganP3');
+        const fbSitasi = document.getElementById('fileSitasiP3');
+        const fbPersyaratan = document.getElementById('filePersyaratanP3');
+        
+        if (fbBimbingan && fbSitasi && fbPersyaratan) {
+            fbBimbingan.addEventListener('change', function() {
+                if (this.files && this.files.length > 0) {
+                    document.getElementById('containerSitasiP3').classList.remove('opacity-50', 'bg-slate-50');
+                    document.getElementById('containerSitasiP3').classList.add('bg-white/60');
+                    document.getElementById('iconSitasiP3').classList.replace('bg-slate-400', 'bg-indigo-500');
+                    document.getElementById('dropZoneSitasiP3').classList.remove('cursor-not-allowed', 'bg-slate-100');
+                    document.getElementById('dropZoneSitasiP3').classList.add('cursor-pointer');
+                    
+                    fbSitasi.disabled = false;
+                    fbSitasi.classList.remove('cursor-not-allowed');
+                    fbSitasi.classList.add('cursor-pointer');
+                    
+                    document.getElementById('iconLockSitasiP3').classList.replace('bi-lock-fill', 'bi-cloud-arrow-up');
+                    document.getElementById('textLockSitasiP3').textContent = 'Klik untuk pilih file atau seret ke sini';
+                }
+            });
+
+            fbSitasi.addEventListener('change', function() {
+                if (this.files && this.files.length > 0) {
+                    document.getElementById('containerPersyaratanP3').classList.remove('opacity-50', 'bg-slate-50');
+                    document.getElementById('containerPersyaratanP3').classList.add('bg-white/60');
+                    document.getElementById('iconPersyaratanP3').classList.replace('bg-slate-400', 'bg-indigo-500');
+                    document.getElementById('dropZonePersyaratanP3').classList.remove('cursor-not-allowed', 'bg-slate-100');
+                    document.getElementById('dropZonePersyaratanP3').classList.add('cursor-pointer');
+                    
+                    fbPersyaratan.disabled = false;
+                    fbPersyaratan.classList.remove('cursor-not-allowed');
+                    fbPersyaratan.classList.add('cursor-pointer');
+                    
+                    document.getElementById('iconLockPersyaratanP3').classList.replace('bi-lock-fill', 'bi-cloud-arrow-up');
+                    document.getElementById('textLockPersyaratanP3').textContent = 'Klik untuk pilih file atau seret ke sini';
+                }
+            });
+
+            fbPersyaratan.addEventListener('change', function() {
+                if (this.files && this.files.length > 0) {
+                    document.getElementById('containerSubmitP3').classList.remove('opacity-50');
+                    
+                    const catatan = document.getElementById('catatanP3');
+                    catatan.disabled = false;
+                    catatan.classList.remove('bg-slate-100', 'cursor-not-allowed');
+                    if (tinymce && tinymce.get('catatanP3')) tinymce.get('catatanP3').mode.set('design');
+                    
+                    const btnSubmit = document.getElementById('btnSubmitP3');
+                    btnSubmit.disabled = false;
+                    btnSubmit.classList.replace('bg-slate-400', 'bg-indigo-600');
+                    btnSubmit.classList.add('hover:bg-indigo-700');
+                    btnSubmit.classList.remove('cursor-not-allowed');
+                    btnSubmit.classList.add('cursor-pointer');
+                    
+                    document.getElementById('iconSubmitP3').classList.replace('bi-lock-fill', 'bi-send-check-fill');
+                }
+            });
+            
+            const formPreview3 = document.getElementById('formUploadPreview3');
+            if (formPreview3) {
+                formPreview3.addEventListener('reset', function() {
+                    setTimeout(() => {
+                        // Relock Sitasi
+                        document.getElementById('containerSitasiP3').classList.add('opacity-50', 'bg-slate-50');
+                        document.getElementById('containerSitasiP3').classList.remove('bg-white/60');
+                        document.getElementById('iconSitasiP3').classList.replace('bg-indigo-500', 'bg-slate-400');
+                        document.getElementById('dropZoneSitasiP3').classList.add('cursor-not-allowed', 'bg-slate-100');
+                        document.getElementById('dropZoneSitasiP3').classList.remove('cursor-pointer');
+                        fbSitasi.disabled = true;
+                        fbSitasi.classList.add('cursor-not-allowed');
+                        fbSitasi.classList.remove('cursor-pointer');
+                        document.getElementById('iconLockSitasiP3').classList.replace('bi-cloud-arrow-up', 'bi-lock-fill');
+                        document.getElementById('textLockSitasiP3').textContent = 'Terkunci (Upload File Bimbingan dulu)';
+                        
+                        // Relock Persyaratan
+                        document.getElementById('containerPersyaratanP3').classList.add('opacity-50', 'bg-slate-50');
+                        document.getElementById('containerPersyaratanP3').classList.remove('bg-white/60');
+                        document.getElementById('iconPersyaratanP3').classList.replace('bg-indigo-500', 'bg-slate-400');
+                        document.getElementById('dropZonePersyaratanP3').classList.add('cursor-not-allowed', 'bg-slate-100');
+                        document.getElementById('dropZonePersyaratanP3').classList.remove('cursor-pointer');
+                        fbPersyaratan.disabled = true;
+                        fbPersyaratan.classList.add('cursor-not-allowed');
+                        fbPersyaratan.classList.remove('cursor-pointer');
+                        document.getElementById('iconLockPersyaratanP3').classList.replace('bi-cloud-arrow-up', 'bi-lock-fill');
+                        document.getElementById('textLockPersyaratanP3').textContent = 'Terkunci (Upload File Sitasi dulu)';
+                        
+                        // Relock Submit
+                        document.getElementById('containerSubmitP3').classList.add('opacity-50');
+                        document.getElementById('catatanP3').disabled = true;
+                        document.getElementById('catatanP3').classList.add('bg-slate-100', 'cursor-not-allowed');
+                        if (tinymce && tinymce.get('catatanP3')) tinymce.get('catatanP3').mode.set('readonly');
+
+                        const btnSubmit = document.getElementById('btnSubmitP3');
+                        btnSubmit.disabled = true;
+                        btnSubmit.classList.replace('bg-indigo-600', 'bg-slate-400');
+                        btnSubmit.classList.remove('hover:bg-indigo-700');
+                        btnSubmit.classList.add('cursor-not-allowed');
+                        btnSubmit.classList.remove('cursor-pointer');
+                        document.getElementById('iconSubmitP3').classList.replace('bi-send-check-fill', 'bi-lock-fill');
+                    }, 50);
+                });
+            }
+
+            setTimeout(() => {
+                if (tinymce && tinymce.get('catatanP3')) {
+                    tinymce.get('catatanP3').mode.set('readonly');
+                }
+            }, 1000);
+        }
         setupGenericFileUploader('fileSidangSingle', 'fileBadgeSidangSingle', 'fileNameSidangSingle', 'fileSizeSidangSingle', 'dropZoneSidangSingle');
 
         // ===================== TINYMCE INIT =====================

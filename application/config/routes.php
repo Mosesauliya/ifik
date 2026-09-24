@@ -73,19 +73,41 @@ $route['mahasiswa/detail_pendaftaran'] = 'Mahasiswa/detail_pendaftaran';
 $route['mahasiswa/edit'] = 'Mahasiswa/edit_pendaftaran';
 $route['mahasiswa/edit_pendaftaran'] = 'Mahasiswa/edit_pendaftaran';
 
-// Bimbingan Mahasiswa Routes
-$route['bimbingan'] = 'Mahasiswa/bimbingan';
-$route['bimbingan/(:any)'] = 'Mahasiswa/bimbingan/$1';
+// Bimbingan & Preview TA + Dosen (Dosen_bimbingan)
+$route['bimbingan']                          = 'Dosen_bimbingan/index';
+$route['bimbingan/preview1']                 = 'Dosen_bimbingan/preview1';
+$route['bimbingan/(:any)']                   = 'Dosen_bimbingan/$1';
+$route['mahasiswa/bimbingan']                = 'Dosen_bimbingan/index';
 
-// Dosen Bimbingan & Penguji Routes
-$route['dosen/bimbingan'] = 'Mahasiswa/dosen_bimbingan';
-$route['dosenbimbingan'] = 'Mahasiswa/dosen_bimbingan';
-$route['bimbingan-dosen'] = 'Mahasiswa/dosen_bimbingan';
-$route['mahasiswa/dosen_bimbingan'] = 'Mahasiswa/dosen_bimbingan';
+// Upload preview (mahasiswa)
+$route['mahasiswa/upload_preview']           = 'Dosen_bimbingan/upload_preview';
+$route['mahasiswa/upload_preview1']          = 'Dosen_bimbingan/upload_preview1';
+$route['mahasiswa/upload_preview_ajax']      = 'Dosen_bimbingan/upload_preview_ajax';
+$route['mahasiswa/upload_preview3']          = 'Dosen_bimbingan/upload_preview3';
+$route['mahasiswa/upload_preview3_ajax']     = 'Dosen_bimbingan/upload_preview3_ajax';
+$route['mahasiswa/upload_sidang']            = 'Dosen_bimbingan/upload_sidang';
+$route['mahasiswa/upload_sidang_ajax']       = 'Dosen_bimbingan/upload_sidang_ajax';
 
-$route['dosen/penguji'] = 'Mahasiswa/dosen_penguji';
-$route['dosenpenguji'] = 'Mahasiswa/dosen_penguji';
-$route['mahasiswa/dosen_penguji'] = 'Mahasiswa/dosen_penguji';
+// Review dosen (P1, P2, U1, U2)
+$route['mahasiswa/review_preview']            = 'Dosen_bimbingan/review_preview';
+$route['mahasiswa/review_preview_ajax']       = 'Dosen_bimbingan/review_preview_ajax';
+$route['mahasiswa/review_preview_batch_ajax'] = 'Dosen_bimbingan/review_preview_batch_ajax';
+
+// AJAX & SSE
+$route['mahasiswa/ajax_get_preview_log']      = 'Dosen_bimbingan/ajax_get_preview_log';
+$route['mahasiswa/ajax_get_dosen_bimbingan']  = 'Dosen_bimbingan/ajax_get_dosen_bimbingan';
+$route['mahasiswa/sse_mahasiswa_bimbingan']   = 'Dosen_bimbingan/sse_mahasiswa_bimbingan';
+$route['mahasiswa/sse_dosen_bimbingan']       = 'Dosen_bimbingan/sse_dosen_bimbingan';
+
+// Dosen bimbingan & penguji
+$route['dosen/bimbingan']                     = 'Dosen_bimbingan/dosen_bimbingan';
+$route['dosenbimbingan']                      = 'Dosen_bimbingan/dosen_bimbingan';
+$route['bimbingan-dosen']                     = 'Dosen_bimbingan/dosen_bimbingan';
+$route['mahasiswa/dosen_bimbingan']           = 'Dosen_bimbingan/dosen_bimbingan';
+
+$route['dosen/penguji']                       = 'Dosen_bimbingan/dosen_penguji';
+$route['dosenpenguji']                        = 'Dosen_bimbingan/dosen_penguji';
+$route['mahasiswa/dosen_penguji']             = 'Dosen_bimbingan/dosen_penguji';
 
 // Dosen Wali Routes
 $route['dosen/wali'] = 'DosenWali';
