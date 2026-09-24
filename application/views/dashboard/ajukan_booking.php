@@ -402,6 +402,19 @@
             z-index: 20 !important;
         }
 
+        #tpClockContainer,
+        .tp-clock-container,
+        #tpClockNumbers,
+        .tp-clock-number,
+        #tpClockHand,
+        #tpTimeSlots,
+        .tp-slot {
+            touch-action: none !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            -webkit-touch-callout: none !important;
+        }
+
         .swal2-container { z-index: 99999 !important; }
 
         @media (max-width: 768px) {

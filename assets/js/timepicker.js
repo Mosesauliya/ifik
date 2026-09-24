@@ -151,23 +151,29 @@ function renderClock() {
 let isDragging = false;
 
 function handleClockEvent(e) {
-    if (!isDragging) return;
+    if (!isDragging && e.type !== 'mousedown' && e.type !== 'touchstart') return;
     
-    // Prevent default to avoid scrolling and text selection while dragging clock hand
+    // Prevent default to avoid scrolling and text selection while interacting with clock hand
     if (e.cancelable) e.preventDefault();
     
     // Support touch and mouse
     let clientX = e.clientX;
     let clientY = e.clientY;
     
-    if(e.touches && e.touches.length > 0) {
+    if (e.touches && e.touches.length > 0) {
         clientX = e.touches[0].clientX;
         clientY = e.touches[0].clientY;
+    } else if (e.changedTouches && e.changedTouches.length > 0) {
+        clientX = e.changedTouches[0].clientX;
+        clientY = e.changedTouches[0].clientY;
     }
     
-    const rect = document.getElementById('tpClockContainer').getBoundingClientRect();
-    const x = clientX - rect.left - 120; // 120 is center
-    const y = clientY - rect.top - 120;
+    const clockContainer = document.getElementById('tpClockContainer');
+    if (!clockContainer) return;
+    
+    const rect = clockContainer.getBoundingClientRect();
+    const x = clientX - (rect.left + rect.width / 2);
+    const y = clientY - (rect.top + rect.height / 2);
     
     // Calculate angle in degrees (0 is top, clockwise)
     let angle = Math.atan2(y, x) * (180 / Math.PI) + 90;
@@ -208,12 +214,17 @@ document.addEventListener('DOMContentLoaded', function() {
     if (clockContainer) {
         // Mouse Events
         clockContainer.addEventListener('mousedown', function(e) {
+            e.preventDefault();
             isDragging = true;
             handleClockEvent(e);
         });
-        document.addEventListener('mousemove', handleClockEvent);
+        document.addEventListener('mousemove', function(e) {
+            if (isDragging) {
+                handleClockEvent(e);
+            }
+        });
         document.addEventListener('mouseup', function(e) {
-            if(isDragging && isSelectingHour) {
+            if (isDragging && isSelectingHour) {
                 setMode('minute'); // Auto switch after hour drop
             }
             isDragging = false;
@@ -221,14 +232,28 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Touch Events
         clockContainer.addEventListener('touchstart', function(e) {
+            if (e.cancelable) e.preventDefault();
             isDragging = true;
             handleClockEvent(e);
         }, {passive: false});
-        document.addEventListener('touchmove', handleClockEvent, {passive: false});
-        document.addEventListener('touchend', function(e) {
-            if(isDragging && isSelectingHour) {
-                setMode('minute');
+        
+        document.addEventListener('touchmove', function(e) {
+            if (isDragging) {
+                if (e.cancelable) e.preventDefault();
+                handleClockEvent(e);
             }
+        }, {passive: false});
+        
+        document.addEventListener('touchend', function(e) {
+            if (isDragging) {
+                if (isSelectingHour) {
+                    setMode('minute');
+                }
+                isDragging = false;
+            }
+        });
+        
+        document.addEventListener('touchcancel', function(e) {
             isDragging = false;
         });
     }
@@ -347,19 +372,21 @@ document.addEventListener('DOMContentLoaded', function() {
         finalizeSelection(minIdx, maxIdx);
     });
 
-    // Touch support
+    // Touch support for time slots
     document.addEventListener('touchstart', function(e) {
         var slot = e.target.closest('.tp-slot');
         if (!slot) return;
+        if (e.cancelable) e.preventDefault();
         isDragging = true;
         var slots = getSlots();
         dragStartIdx = slots.indexOf(slot);
         currentEndIdx = dragStartIdx;
         updateHighlight(dragStartIdx, dragStartIdx);
-    }, {passive: true});
+    }, {passive: false});
 
     document.addEventListener('touchmove', function(e) {
         if (!isDragging) return;
+        if (e.cancelable) e.preventDefault();
         var touch = e.touches[0];
         var el = document.elementFromPoint(touch.clientX, touch.clientY);
         if (!el) return;
@@ -372,7 +399,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var minIdx = Math.min(dragStartIdx, currentEndIdx);
         var maxIdx = Math.max(dragStartIdx, currentEndIdx);
         updateHighlight(minIdx, maxIdx);
-    }, {passive: true});
+    }, {passive: false});
 
     document.addEventListener('touchend', function() {
         if (!isDragging) return;
@@ -380,5 +407,10 @@ document.addEventListener('DOMContentLoaded', function() {
         var minIdx = Math.min(dragStartIdx, currentEndIdx);
         var maxIdx = Math.max(dragStartIdx, currentEndIdx);
         finalizeSelection(minIdx, maxIdx);
+    });
+
+    document.addEventListener('touchcancel', function() {
+        if (!isDragging) return;
+        isDragging = false;
     });
 })();
