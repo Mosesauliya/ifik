@@ -186,7 +186,7 @@ class Mahasiswa_model extends CI_Model {
             if (in_array('judul_3', $g_fields)) $g_data['judul_3'] = $data_ta['judul_3'] ?? '';
             if (in_array('judul_en', $g_fields)) $g_data['judul_en'] = $data_ta['judul_en'] ?? '';
             if (in_array('jenis_TA', $g_fields)) {
-                $g_data['jenis_TA'] = !empty(trim($data_ta['jenis_ta'] ?? '')) ? trim($data_ta['jenis_ta']) : 'Pengkaryaan';
+                $g_data['jenis_TA'] = !empty(trim($data_ta['jenis_ta'] ?? '')) ? trim($data_ta['jenis_ta']) : '';
             }
             if (in_array('peminatan', $g_fields)) {
                 $g_data['peminatan'] = !empty(trim($data_ta['konsentrasi_dkv'] ?? '')) ? trim($data_ta['konsentrasi_dkv']) : 'Desain Komunikasi Visual';
@@ -505,7 +505,7 @@ class Mahasiswa_model extends CI_Model {
                                         ? trim($pt_data['jenis_ta']) 
                                         : (!empty(trim($guidance['jenis_TA'] ?? '')) 
                                             ? trim($guidance['jenis_TA']) 
-                                            : (!empty(trim($guidance['jenis_ta'] ?? '')) ? trim($guidance['jenis_ta']) : 'Pengkaryaan')),
+                                            : (!empty(trim($guidance['jenis_ta'] ?? '')) ? trim($guidance['jenis_ta']) : '')),
             'judul_1'               => $pt_data['judul_1'] ?? ($guidance['judul_1'] ?? ''),
             'judul_2'               => $pt_data['judul_2'] ?? ($guidance['judul_2'] ?? ''),
             'judul_3'               => $pt_data['judul_3'] ?? ($guidance['judul_3'] ?? ''),
