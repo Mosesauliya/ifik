@@ -1187,12 +1187,25 @@
         }
 
         /* Empty State */
+        #noDataRow {
+            width: 100%;
+        }
+        #noDataRow td {
+            text-align: center;
+            border: none;
+            width: 100%;
+            padding: 0;
+        }
         .empty-state {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
             padding: 56px 20px;
             text-align: center;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             gap: 10px;
         }
         .empty-state .empty-state-icon {
@@ -1548,6 +1561,43 @@
                 gap: 12px !important;
                 width: 100% !important;
                 min-width: 0 !important;
+            }
+
+            #noDataRow {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 100% !important;
+                box-sizing: border-box !important;
+                border: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+            }
+
+            #noDataRow td {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 100% !important;
+                box-sizing: border-box !important;
+                padding: 0 !important;
+                border: none !important;
+            }
+
+            .empty-state {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                text-align: center !important;
+                padding: 44px 16px !important;
+            }
+
+            .empty-state p {
+                max-width: 100% !important;
             }
 
             .booking-row {
