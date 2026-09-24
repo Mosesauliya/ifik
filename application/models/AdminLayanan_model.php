@@ -548,28 +548,31 @@ class AdminLayanan_model extends CI_Model {
         // 1. Fetch from user / users table
         $user_map = array();
         if ($user_tbl) {
-            $u_rows = $this->db->select('id, username, name, nim, email')
-                ->group_start()
-                    ->where_in('nim', $nims)
-                    ->or_where_in('username', $nims)
-                    ->or_where_in('id', $target_ids)
-                ->group_end()
-                ->get($user_tbl)
-                ->result_array();
-            foreach ($u_rows as $ur) {
-                $c_nim = !empty($ur['nim']) ? $ur['nim'] : $ur['username'];
-                if (empty($c_nim)) $c_nim = preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', $ur['id']);
-                if (!empty($c_nim) && !empty($ur['name'])) {
-                    $user_map[$c_nim] = $ur;
-                    $user_map[$ur['id']] = $ur;
-                    $user_map['usr_mhs_' . $c_nim] = $ur;
+            $name_col = $this->db->field_exists('name', $user_tbl) ? 'name' : ($this->db->field_exists('nama', $user_tbl) ? 'nama' : ($this->db->field_exists('nama_depan', $user_tbl) ? 'nama_depan' : null));
+            $nim_col  = $this->db->field_exists('nim', $user_tbl) ? 'nim' : ($this->db->field_exists('username', $user_tbl) ? 'username' : 'id');
+
+            if ($name_col) {
+                $u_rows = $this->db->select("id, {$nim_col}, {$name_col}")
+                    ->group_start()
+                        ->where_in($nim_col, $nims)
+                        ->or_where_in('id', $target_ids)
+                    ->group_end()
+                    ->get($user_tbl)
+                    ->result_array();
+                foreach ($u_rows as $ur) {
+                    $c_nim = !empty($ur[$nim_col]) ? $ur[$nim_col] : preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', $ur['id']);
+                    if (!empty($c_nim) && !empty($ur[$name_col])) {
+                        $user_map[$c_nim] = $ur[$name_col];
+                        $user_map[$ur['id']] = $ur[$name_col];
+                        $user_map['usr_mhs_' . $c_nim] = $ur[$name_col];
+                    }
                 }
             }
         }
 
         // 2. Fetch from guidance table
         $guidance_map = array();
-        if ($has_guid) {
+        if ($has_guid && $this->db->field_exists('nama', 'guidance')) {
             $g_rows = $this->db->select('id_mhs, nama')
                 ->where_in('id_mhs', $target_ids)
                 ->get('guidance')
@@ -584,7 +587,7 @@ class AdminLayanan_model extends CI_Model {
 
         // 3. Fetch from file_pendaftaran table
         $fp_map = array();
-        if ($has_fp) {
+        if ($has_fp && $this->db->field_exists('nama', 'file_pendaftaran')) {
             $fp_rows = $this->db->select('id_mhs, nama')
                 ->where_in('id_mhs', $target_ids)
                 ->get('file_pendaftaran')
@@ -606,8 +609,8 @@ class AdminLayanan_model extends CI_Model {
             $full = trim($nd . ' ' . $nb);
             if (empty($full) || $full === 'Mahasiswa' || $nd === 'Mahasiswa') {
                 $resolved_name = null;
-                if (!empty($user_map[$nim]['name'])) {
-                    $resolved_name = $user_map[$nim]['name'];
+                if (!empty($user_map[$nim])) {
+                    $resolved_name = $user_map[$nim];
                 } elseif (!empty($guidance_map[$nim])) {
                     $resolved_name = $guidance_map[$nim];
                 } elseif (!empty($fp_map[$nim])) {
