@@ -183,15 +183,15 @@ class KetuaKK extends CI_Controller {
             return;
         }
 
-        $status  = $this->input->post('status') ?: $this->input->post('action_status'); // 'Approved' atau 'Rejected'
+        $status  = $this->input->post('status') ?: $this->input->post('action_status'); // 'Approved', 'Rejected', atau 'Pending'
         if (empty($status)) {
             $status = 'Approved';
         }
         
         $catatan = trim($this->input->post('catatan_kk') ?? '');
 
-        if (!in_array($status, array('Approved', 'Rejected'))) {
-            $this->session->set_flashdata('error', 'Pilih tindakan persetujuan (Setujui atau Tolak) dengan benar!');
+        if (!in_array($status, array('Approved', 'Rejected', 'Pending'))) {
+            $this->session->set_flashdata('error', 'Pilih tindakan persetujuan dengan benar!');
             redirect('ketuakk/detail/' . $nim);
             return;
         }
@@ -207,17 +207,20 @@ class KetuaKK extends CI_Controller {
         // Record Approval History Log
         $this->load->model('Approval_log_model');
         $mhs_name = trim(($detail['nama_depan'] ?? '') . ' ' . ($detail['nama_belakang'] ?? ''));
+        $log_action = ($status === 'Approved') ? 'Approved' : (($status === 'Pending') ? 'Reset' : 'Rejected');
         $this->Approval_log_model->log(array(
             'modul'       => 'Ketua KK',
             'ref_id'      => $nim,
             'target_name' => $mhs_name,
-            'action'      => ($status === 'Approved') ? 'Approved' : 'Rejected',
-            'catatan'     => $catatan
+            'action'      => $log_action,
+            'catatan'     => !empty($catatan) ? $catatan : ($status === 'Pending' ? 'Status dikembalikan ke Pending' : '')
         ));
 
         $msg = "";
         if ($status === 'Approved') {
             $msg = 'Persetujuan Ketua KK berhasil disimpan! Akses modul Bimbingan Tugas Akhir mahasiswa resmi DIBUKA (Unlocked).';
+        } elseif ($status === 'Pending') {
+            $msg = 'Status persetujuan Ketua KK berhasil di-restore (dikembalikan ke Pending).';
         } else {
             $msg = 'Status penolakan/revisi Ketua KK berhasil diperbarui.';
         }
@@ -245,7 +248,7 @@ class KetuaKK extends CI_Controller {
         $catatan  = trim($this->input->post('catatan_kk_bulk') ?? '');
         $status_action = $this->input->post('bulk_action') ?: 'Approved';
 
-        if (!in_array($status_action, array('Approved', 'Rejected'))) {
+        if (!in_array($status_action, array('Approved', 'Rejected', 'Pending'))) {
             $status_action = 'Approved';
         }
 

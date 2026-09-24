@@ -11,10 +11,36 @@ $laaNavItems = [
         'heading' => 'Pendaftaran TA',
         'icon_3d' => 'assets/images/icons_3d/daftar.png',
         'children' => [
-            ['heading' => 'Pendaftaran TA', 'href' => site_url('adminlayanan')],
-            ['heading' => 'Sudah Lulus Sidang', 'href' => site_url('adminlayanan/lulus_sidang')],
+            ['heading' => 'Pendaftaran TA',    'href' => site_url('adminlayanan')],
+            ['heading' => 'Sudah Lulus Sidang','href' => site_url('adminlayanan/lulus_sidang')],
             ['heading' => 'Status Peserta TA', 'href' => site_url('adminlayanan/status_peserta_ta')],
+            ['heading' => 'Reset File TA',     'href' => site_url('adminlayanan/reset_file_ta')],
         ]
+    ],
+    [
+        'heading' => 'Pendaftaran Sidang',
+        'href'    => site_url('adminlayanan/pendaftaran_sidang'),
+        'icon_3d' => 'assets/images/icons_3d/sidang.png'
+    ],
+    [
+        'heading' => 'Lihat Pembimbing',
+        'href'    => site_url('adminlayanan/lihat_pembimbing'),
+        'icon_3d' => 'assets/images/icons_3d/preview.png'
+    ],
+    [
+        'heading' => 'Yudisium',
+        'href'    => site_url('adminlayanan/yudisium'),
+        'icon_3d' => 'assets/images/icons_3d/approval.png'
+    ],
+    [
+        'heading' => 'Jadwal Sidang',
+        'href'    => site_url('adminlayanan/jadwal_sidang'),
+        'icon_3d' => 'assets/images/icons_3d/kalender.png'
+    ],
+    [
+        'heading' => 'BAP Sidang',
+        'href'    => site_url('adminlayanan/bap_sidang'),
+        'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'
     ],
     [
         'heading' => 'Kelola Tiket LAA',
@@ -22,14 +48,19 @@ $laaNavItems = [
         'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'
     ],
     [
+        'heading' => 'Kelola Berita',
+        'href'    => site_url('news/newsroom'),
+        'icon_3d' => 'assets/images/icons_3d/email_token.png'
+    ],
+    [
         'heading' => 'Keluar',
-        'href' => site_url('login/logout'),
+        'href'    => site_url('login/logout'),
         'icon_3d' => 'assets/images/icons_3d/logout.png'
     ]
 ];
 ?>
 
-<!-- LAA Sidebar Stylesheet -->
+<!-- LAA Standalone Sidebar Stylesheet -->
 <link rel="stylesheet" href="<?= base_url('assets/css/laa_sidebar.css?v=' . time()); ?>">
 
 <style>
@@ -131,8 +162,10 @@ $laaNavItems = [
                                 </div>
                             </div>
                         </div>
-                    <?php else: ?>
-                        <a href="<?= htmlspecialchars($item['href']); ?>" class="curved-nav-item">
+                    <?php else: 
+                        $isItemActive = (rtrim($item['href'], '/') === $current_full);
+                    ?>
+                        <a href="<?= htmlspecialchars($item['href']); ?>" class="curved-nav-item <?= $isItemActive ? 'active' : ''; ?>">
                             <div class="curved-nav-content">
                                 <?php if (!empty($icon3d)): ?>
                                     <div class="curved-nav-3d-wrap">
@@ -174,6 +207,9 @@ function toggleLaaSidebarDropdown(btn) {
     parent.classList.toggle('is-open');
 }
 </script>
+
+<!-- LAA Sidebar Standalone Styles -->
+<link rel="stylesheet" href="<?= base_url('assets/css/laa_sidebar.css?v=' . time()); ?>">
 
 <!-- LAA Sidebar Standalone Script -->
 <script src="<?= base_url('assets/js/laa_sidebar.js?v=' . time()); ?>"></script>

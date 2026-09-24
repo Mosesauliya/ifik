@@ -1,4 +1,4 @@
-﻿/**
+/**
  * LAA Sidebar JS (Standalone) (Ultra-Polished Left Layout)
  * Converted from React + Framer Motion (sidebar.tsx)
  * Features:
@@ -285,8 +285,8 @@
                 'curvedSidebarToggle',
                 'laaMainContentWrapper'
             ]);
-            // Keep <header> (sticky navbar) at body level â€” don't push it
-            const skipTags = new Set(['HEADER']);
+            // Keep non-visual head/script elements at body root level (don't wrap script/link/style tags)
+            const skipTags = new Set(['SCRIPT', 'LINK', 'STYLE', 'META', 'SVG']);
 
             // Find all body children that should go into the wrapper
             const toWrap = Array.from(document.body.children).filter(el =>
