@@ -673,9 +673,7 @@ class AdminLayanan_model extends CI_Model {
         $student_map = array();
 
         if ($has_fp) {
-            $fp_rows = $this->db->select('id, id_mhs, nama, file, status_doswal, status_admin, status_laa, status_admin_laa, komentar, date_edit')
-                ->get('file_pendaftaran')
-                ->result_array();
+            $fp_rows = $this->db->get('file_pendaftaran')->result_array();
             foreach ($fp_rows as $fp) {
                 $raw_id = $fp['id_mhs'] ?? '';
                 if (empty($raw_id)) continue;
