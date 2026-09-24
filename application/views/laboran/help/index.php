@@ -1157,10 +1157,10 @@
         <div class="page-header">
             <div class="header-title-wrap">
                 <h1>
-                    <span>Bantuan & Live Chat Lab</span>
-                    <span class="role-badge">Panel Laboran</span>
+                    <span><?= htmlspecialchars($channelTitle ?? 'Bantuan & Live Chat Lab') ?></span>
+                    <span class="role-badge"><?= htmlspecialchars($panelRole ?? 'Panel Laboran') ?></span>
                 </h1>
-                <p>Pusat help desk interaktif untuk menjawab pertanyaan, kendala praktikum, dan izin lab secara langsung.</p>
+                <p><?= htmlspecialchars($channelDesc ?? 'Pusat help desk interaktif untuk menjawab pertanyaan, kendala praktikum, dan izin lab secara langsung.') ?></p>
             </div>
             <div class="header-actions">
                 <span class="live-status-pill" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 9999px; background: #ecfdf5; color: #047857; font-size: 0.75rem; font-weight: 700; border: 1px solid #a7f3d0;">
@@ -1312,7 +1312,8 @@
                 type: 'GET',
                 data: {
                     status: currentStatusFilter,
-                    q: searchQuery
+                    q: searchQuery,
+                    target_role: '<?= $targetRole ?? "laboran" ?>'
                 },
                 dataType: 'json',
                 success: function(res) {

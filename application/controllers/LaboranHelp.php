@@ -13,12 +13,42 @@ class LaboranHelp extends CI_Controller {
     }
 
     /**
-     * Halaman Utama Help Desk / Live Chat Laboran
+     * Halaman Utama Help Desk / Live Chat Laboran / Ka. Ur / Admin Layanan
      */
     public function index() {
-        $data['title'] = 'Bantuan & Live Chat Lab - Panel Laboran';
-        $data['stats'] = $this->Help_chat_model->get_stats();
-        $data['conversations'] = $this->Help_chat_model->get_conversations('all');
+        $roleId = (int)$this->session->userdata('role_id');
+        $email = strtolower((string)$this->session->userdata('email'));
+        $currentUri = trim(uri_string(), '/');
+
+        $roleLabel = 'Panel Laboran';
+        $channelTitle = 'Bantuan & Live Chat Lab';
+        $channelDesc = 'Pusat help desk interaktif untuk menjawab pertanyaan, kendala praktikum, dan izin lab secara langsung.';
+        $targetRole = 'laboran';
+
+        if (strpos($currentUri, 'kaur') === 0 || ($roleId === 2 && strpos($email, 'laboran') === false)) {
+            $roleLabel = 'Panel Ka. Ur / Ka Lab';
+            $channelTitle = 'Bantuan & Live Chat';
+            $channelDesc = 'Pusat help desk interaktif untuk konsultasi permohonan ruangan, persetujuan resmi, dan layanan lab.';
+            $targetRole = 'kaur';
+        } elseif (strpos($currentUri, 'adminlayanan') === 0 || $roleId === 5) {
+            $roleLabel = 'Panel Admin Layanan';
+            $channelTitle = 'Bantuan & Live Chat LAA';
+            $channelDesc = 'Pusat help desk interaktif untuk menjawab pertanyaan dan kendala layanan administrasi akademik.';
+            $targetRole = 'admin_layanan';
+        } elseif ($roleId === 1) {
+            $roleLabel = 'Panel Admin';
+            $channelTitle = 'Bantuan & Live Chat';
+            $channelDesc = 'Pusat help desk interaktif untuk memonitor percakapan dan bantuan sistem.';
+            $targetRole = 'all';
+        }
+
+        $data['title'] = $channelTitle . ' - ' . $roleLabel;
+        $data['panelRole'] = $roleLabel;
+        $data['channelTitle'] = $channelTitle;
+        $data['channelDesc'] = $channelDesc;
+        $data['targetRole'] = $targetRole;
+        $data['stats'] = $this->Help_chat_model->get_stats($targetRole);
+        $data['conversations'] = $this->Help_chat_model->get_conversations('all', '', $targetRole);
 
         $this->load->view('laboran/help/index', $data);
     }
@@ -31,9 +61,24 @@ class LaboranHelp extends CI_Controller {
 
         $status = $this->input->get('status', true) ?: 'all';
         $search = trim($this->input->get('q', true) ?? '');
+        $targetRole = $this->input->get('target_role', true);
 
-        $conversations = $this->Help_chat_model->get_conversations($status, $search);
-        $stats = $this->Help_chat_model->get_stats();
+        if (empty($targetRole)) {
+            $roleId = (int)$this->session->userdata('role_id');
+            $email = strtolower((string)$this->session->userdata('email'));
+            if ($roleId === 2 && strpos($email, 'laboran') === false) {
+                $targetRole = 'kaur';
+            } elseif ($roleId === 5) {
+                $targetRole = 'admin_layanan';
+            } elseif ($roleId === 1) {
+                $targetRole = 'all';
+            } else {
+                $targetRole = 'laboran';
+            }
+        }
+
+        $conversations = $this->Help_chat_model->get_conversations($status, $search, $targetRole);
+        $stats = $this->Help_chat_model->get_stats($targetRole);
 
         $formatted = [];
         foreach ($conversations as $c) {
@@ -143,15 +188,31 @@ class LaboranHelp extends CI_Controller {
             exit;
         }
 
-        // Ambil nama laboran dari session atau default
+        // Ambil nama dan role pengirim dari session atau default
+        $roleId = (int)$this->session->userdata('role_id');
+        $email = strtolower((string)$this->session->userdata('email'));
+        $senderRole = 'laboran';
+        $defaultSenderName = 'Petugas Laboran';
+
+        if ($roleId === 2 && strpos($email, 'laboran') === false) {
+            $senderRole = 'kaur';
+            $defaultSenderName = 'Ka. Ur Laboratorium';
+        } elseif ($roleId === 5) {
+            $senderRole = 'admin_layanan';
+            $defaultSenderName = 'Admin Layanan Akademik';
+        } elseif ($roleId === 1) {
+            $senderRole = 'admin';
+            $defaultSenderName = 'Admin Sistem';
+        }
+
         $laboranId = $this->session->userdata('user_id') ?: 1;
-        $laboranName = $this->session->userdata('name') ?: 'Petugas Laboran';
+        $laboranName = $this->session->userdata('name') ?: $defaultSenderName;
 
         $msgId = $this->Help_chat_model->send_message(
             $conversation_id,
             $laboranId,
             $laboranName,
-            'laboran',
+            $senderRole,
             $message
         );
 
@@ -162,7 +223,7 @@ class LaboranHelp extends CI_Controller {
                 'data'    => [
                     'id'          => $msgId,
                     'sender_name' => $laboranName,
-                    'sender_role' => 'laboran',
+                    'sender_role' => $senderRole,
                     'message'     => nl2br(htmlspecialchars($message)),
                     'time'        => date('H:i'),
                     'date_full'   => date('d M Y, H:i')
