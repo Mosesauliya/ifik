@@ -325,13 +325,19 @@ class Laboran extends CI_Controller {
         }
 
         $user_id = $this->session->userdata('user_id');
-        $user = $this->db->get_where('user', ['id' => $user_id])->row();
+        $user = null;
+        if ($this->db->table_exists('user')) {
+            $user = $this->db->get_where('user', ['id' => $user_id])->row();
+            if (!$user) {
+                $user = $this->db->get_where('user', ['username' => 'laboran'])->row();
+            }
+        }
         if (!$user && $this->db->table_exists('users')) {
             $user = $this->db->get_where('users', ['id' => $user_id])->row();
         }
 
-        $nip_laboran = $user ? ($user->nip ?? ($user->nidn_nim ?? $this->session->userdata('nidn_nim'))) : $this->session->userdata('nidn_nim');
-        $nama_laboran = $user ? $user->name : $this->session->userdata('name');
+        $nip_laboran = $user ? (!empty($user->nip) ? $user->nip : (!empty($user->nidn_nim) ? $user->nidn_nim : (!empty($user->nim) ? $user->nim : '19850101004'))) : '19850101004';
+        $nama_laboran = $user ? $user->name : ($this->session->userdata('name') ?: 'Petugas Laboran FIK');
         $tanda_tangan = $user ? ($user->ttd ?? ($user->tanda_tangan ?? null)) : null;
 
         $data = [
@@ -357,8 +363,18 @@ class Laboran extends CI_Controller {
         }
 
         $user_id = $this->session->userdata('user_id');
-        $user = $this->db->get_where('users', ['id' => $user_id])->row();
-        $nip_laboran = $user ? ($user->nidn_nim ?: $this->session->userdata('nidn_nim')) : $this->session->userdata('nidn_nim');
+        $user = null;
+        if ($this->db->table_exists('user')) {
+            $user = $this->db->get_where('user', ['id' => $user_id])->row();
+            if (!$user) {
+                $user = $this->db->get_where('user', ['username' => 'laboran'])->row();
+            }
+        }
+        if (!$user && $this->db->table_exists('users')) {
+            $user = $this->db->get_where('users', ['id' => $user_id])->row();
+        }
+
+        $nip_laboran = $user ? (!empty($user->nip) ? $user->nip : (!empty($user->nidn_nim) ? $user->nidn_nim : (!empty($user->nim) ? $user->nim : 'laboran'))) : 'laboran';
         $tipe = $this->input->post('tipe'); // 'canvas' atau 'upload'
 
         $uploadDir = FCPATH . 'uploads/signatures/';
@@ -428,10 +444,28 @@ class Laboran extends CI_Controller {
             }
 
             if ($this->db->table_exists('user')) {
-                $this->db->where('id', $user_id)->update('user', ['ttd' => $filename]);
+                $updateData = [];
+                if ($this->db->field_exists('ttd', 'user')) $updateData['ttd'] = $filename;
+                if ($this->db->field_exists('tanda_tangan', 'user')) $updateData['tanda_tangan'] = $filename;
+                
+                if (!empty($updateData)) {
+                    $this->db->group_start();
+                    $this->db->where('id', $user_id);
+                    if ($user && !empty($user->username)) {
+                        $this->db->or_where('username', $user->username);
+                    }
+                    $this->db->or_where('role_id', 21);
+                    $this->db->group_end();
+                    $this->db->update('user', $updateData);
+                }
             }
             if ($this->db->table_exists('users')) {
-                $this->db->where('id', $user_id)->update('users', ['tanda_tangan' => $filename]);
+                $updateData = [];
+                if ($this->db->field_exists('ttd', 'users')) $updateData['ttd'] = $filename;
+                if ($this->db->field_exists('tanda_tangan', 'users')) $updateData['tanda_tangan'] = $filename;
+                if (!empty($updateData)) {
+                    $this->db->where('id', $user_id)->update('users', $updateData);
+                }
             }
             $this->session->set_flashdata('success', 'Tanda tangan digital Laboran berhasil disimpan dan siap digunakan pada surat resmi!');
         }
@@ -450,7 +484,13 @@ class Laboran extends CI_Controller {
         }
 
         $user_id = $this->session->userdata('user_id');
-        $user = $this->db->get_where('user', ['id' => $user_id])->row();
+        $user = null;
+        if ($this->db->table_exists('user')) {
+            $user = $this->db->get_where('user', ['id' => $user_id])->row();
+            if (!$user) {
+                $user = $this->db->get_where('user', ['username' => 'laboran'])->row();
+            }
+        }
         if (!$user && $this->db->table_exists('users')) {
             $user = $this->db->get_where('users', ['id' => $user_id])->row();
         }
@@ -462,10 +502,27 @@ class Laboran extends CI_Controller {
                 @unlink($filePath);
             }
             if ($this->db->table_exists('user')) {
-                $this->db->where('id', $user_id)->update('user', ['ttd' => null]);
+                $updateData = [];
+                if ($this->db->field_exists('ttd', 'user')) $updateData['ttd'] = null;
+                if ($this->db->field_exists('tanda_tangan', 'user')) $updateData['tanda_tangan'] = null;
+                if (!empty($updateData)) {
+                    $this->db->group_start();
+                    $this->db->where('id', $user_id);
+                    if ($user && !empty($user->username)) {
+                        $this->db->or_where('username', $user->username);
+                    }
+                    $this->db->or_where('role_id', 21);
+                    $this->db->group_end();
+                    $this->db->update('user', $updateData);
+                }
             }
             if ($this->db->table_exists('users')) {
-                $this->db->where('id', $user_id)->update('users', ['tanda_tangan' => null]);
+                $updateData = [];
+                if ($this->db->field_exists('ttd', 'users')) $updateData['ttd'] = null;
+                if ($this->db->field_exists('tanda_tangan', 'users')) $updateData['tanda_tangan'] = null;
+                if (!empty($updateData)) {
+                    $this->db->where('id', $user_id)->update('users', $updateData);
+                }
             }
             $this->session->set_flashdata('success', 'Tanda tangan digital berhasil dihapus.');
         }
@@ -484,8 +541,18 @@ class Laboran extends CI_Controller {
         }
 
         $user_id = $this->session->userdata('user_id');
-        $user = $this->db->get_where('users', ['id' => $user_id])->row();
-        $tanda_tangan = $user ? $user->tanda_tangan : null;
+        $user = null;
+        if ($this->db->table_exists('user')) {
+            $user = $this->db->get_where('user', ['id' => $user_id])->row();
+            if (!$user) {
+                $user = $this->db->get_where('user', ['username' => 'laboran'])->row();
+            }
+        }
+        if (!$user && $this->db->table_exists('users')) {
+            $user = $this->db->get_where('users', ['id' => $user_id])->row();
+        }
+
+        $tanda_tangan = $user ? ($user->ttd ?? ($user->tanda_tangan ?? null)) : null;
 
         if (empty($tanda_tangan)) {
             $this->session->set_flashdata('error', 'Belum ada tanda tangan yang tersimpan untuk diunduh.');
@@ -502,7 +569,7 @@ class Laboran extends CI_Controller {
 
         $this->load->helper('download');
         $namaBersih = preg_replace('/[^a-zA-Z0-9_-]/', '_', $user->name ?? 'laboran');
-        $cleanNip = preg_replace('/[^a-zA-Z0-9_-]/', '', $user->nidn_nim ?? 'nip');
+        $cleanNip = preg_replace('/[^a-zA-Z0-9_-]/', '', $user->nip ?? ($user->nidn_nim ?? 'nip'));
         $downloadName = 'TTD_Laboran_' . $namaBersih . '_' . $cleanNip . '.png';
 
         force_download($downloadName, file_get_contents($filePath));

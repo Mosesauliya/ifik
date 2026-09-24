@@ -411,49 +411,62 @@ class Booking_model extends CI_Model {
         $current_role_id = (int)$this->session->userdata('role_id');
         
         $penandatangan = null;
+        $user_tbl = $this->db->table_exists('user') ? 'user' : ($this->db->table_exists('users') ? 'users' : null);
 
-        if ($current_user_id && ($current_role_id === $target_role || $current_role_id === 1)) {
-            $user = $this->db->get_where('user', ['id' => $current_user_id])->row();
-            if (!$user) {
-                $user = $this->db->get_where('user', ['nim' => $current_user_id])->row();
+        if ($user_tbl && $current_user_id && ($current_role_id === $target_role || $current_role_id === 1)) {
+            $user = $this->db->get_where($user_tbl, ['id' => $current_user_id])->row();
+            if (!$user && $this->db->field_exists('nim', $user_tbl)) {
+                $user = $this->db->get_where($user_tbl, ['nim' => $current_user_id])->row();
             }
             if ($user) {
+                $rawTtd = $user->ttd ?? ($user->tanda_tangan ?? null);
+                $cleanNip = !empty($user->nip) ? $user->nip : (!empty($user->nidn_nim) ? $user->nidn_nim : (!empty($user->nim) ? $user->nim : ($is_laboran ? '19850101004' : '19820315002')));
+
                 $penandatangan = [
                     'role_id'       => $user->role_id,
                     'jabatan'       => $is_laboran ? 'Laboran / Pengelola Laboratorium' : 'Kepala Urusan Laboratorium',
                     'jabatan_resmi' => $is_laboran ? 'Laboran / Petugas Pengelola Fasilitas Laboratorium' : 'Kepala Urusan / Kepala Laboratorium',
                     'nama'          => $user->name,
-                    'nip'           => $user->nip ?: ($user->nim ?: '-'),
-                    'tanda_tangan'  => $user->ttd ?? null
+                    'nip'           => $cleanNip,
+                    'tanda_tangan'  => $rawTtd
+                ];
+            }
+        }
+
+        if (!$penandatangan && $user_tbl) {
+            $this->db->where('role_id', $target_role);
+            if ($this->db->field_exists('ttd', $user_tbl)) {
+                $this->db->order_by("(ttd IS NOT NULL AND ttd != '')", 'DESC', false);
+            } elseif ($this->db->field_exists('tanda_tangan', $user_tbl)) {
+                $this->db->order_by("(tanda_tangan IS NOT NULL AND tanda_tangan != '')", 'DESC', false);
+            }
+            $this->db->order_by('id', 'ASC');
+            $user = $this->db->get($user_tbl)->row();
+
+            if ($user) {
+                $rawTtd = $user->ttd ?? ($user->tanda_tangan ?? null);
+                $cleanNip = !empty($user->nip) ? $user->nip : (!empty($user->nidn_nim) ? $user->nidn_nim : (!empty($user->nim) ? $user->nim : ($is_laboran ? '19850101004' : '19820315002')));
+
+                $penandatangan = [
+                    'role_id'       => $user->role_id,
+                    'jabatan'       => $is_laboran ? 'Laboran / Pengelola Laboratorium' : 'Kepala Urusan Laboratorium',
+                    'jabatan_resmi' => $is_laboran ? 'Laboran / Petugas Pengelola Fasilitas Laboratorium' : 'Kepala Urusan / Kepala Laboratorium',
+                    'nama'          => $user->name,
+                    'nip'           => $cleanNip,
+                    'tanda_tangan'  => $rawTtd
                 ];
             }
         }
 
         if (!$penandatangan) {
-            $this->db->where('role_id', $target_role);
-            $this->db->order_by("(ttd IS NOT NULL AND ttd != '')", 'DESC', false);
-            $this->db->order_by('id', 'ASC');
-            $user = $this->db->get('user')->row();
-
-            if ($user) {
-                $penandatangan = [
-                    'role_id'       => $user->role_id,
-                    'jabatan'       => $is_laboran ? 'Laboran / Pengelola Laboratorium' : 'Kepala Urusan Laboratorium',
-                    'jabatan_resmi' => $is_laboran ? 'Laboran / Petugas Pengelola Fasilitas Laboratorium' : 'Kepala Urusan / Kepala Laboratorium',
-                    'nama'          => $user->name,
-                    'nip'           => $user->nip ?: ($user->nim ?: '-'),
-                    'tanda_tangan'  => $user->ttd ?? null
-                ];
-            } else {
-                $penandatangan = [
-                    'role_id'       => $target_role,
-                    'jabatan'       => $is_laboran ? 'Laboran / Pengelola Laboratorium' : 'Kepala Urusan Laboratorium',
-                    'jabatan_resmi' => $is_laboran ? 'Laboran / Petugas Pengelola Fasilitas Laboratorium' : 'Kepala Urusan / Kepala Laboratorium',
-                    'nama'          => $is_laboran ? 'Laboran FIK' : 'Kaur / Ka. Lab FIK',
-                    'nip'           => $is_laboran ? '19850101004' : '198203152010121002',
-                    'tanda_tangan'  => null
-                ];
-            }
+            $penandatangan = [
+                'role_id'       => $target_role,
+                'jabatan'       => $is_laboran ? 'Laboran / Pengelola Laboratorium' : 'Kepala Urusan Laboratorium',
+                'jabatan_resmi' => $is_laboran ? 'Laboran / Petugas Pengelola Fasilitas Laboratorium' : 'Kepala Urusan / Kepala Laboratorium',
+                'nama'          => $is_laboran ? 'Laboran FIK' : 'Kaur / Ka. Lab FIK',
+                'nip'           => $is_laboran ? '19850101004' : '19820315002',
+                'tanda_tangan'  => null
+            ];
         }
 
         return $penandatangan;

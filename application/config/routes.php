@@ -297,11 +297,12 @@ $route['laboran/tanda-tangan/hapus'] = 'Laboran/hapus_tanda_tangan';
 $route['laboran/tanda-tangan/download'] = 'Laboran/download_tanda_tangan';
 $route['laboran/signature'] = 'Laboran/tanda_tangan';
 
-// Kaur Digital Signature Routes Alias
-$route['kaur/tanda-tangan'] = 'DosenWali/tanda_tangan';
-$route['kaur/tanda-tangan/simpan'] = 'DosenWali/simpan_tanda_tangan';
-$route['kaur/tanda-tangan/hapus'] = 'DosenWali/hapus_tanda_tangan';
-$route['kaur/tanda-tangan/download'] = 'DosenWali/download_tanda_tangan';
+// Kaur Digital Signature Routes
+$route['kaur/tanda-tangan'] = 'Kaur/tanda_tangan';
+$route['kaur/tanda-tangan/simpan'] = 'Kaur/simpan_tanda_tangan';
+$route['kaur/tanda-tangan/hapus'] = 'Kaur/hapus_tanda_tangan';
+$route['kaur/tanda-tangan/download'] = 'Kaur/download_tanda_tangan';
+$route['kaur/signature'] = 'Kaur/tanda_tangan';
 
 // Laboran Ticketing & Respon Routes
 $route['laboran/respon-ticketing'] = 'LaboranTicketing/index';
