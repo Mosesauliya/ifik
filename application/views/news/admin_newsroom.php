@@ -293,10 +293,13 @@
             border-radius: 20px;
             box-shadow: var(--shadow);
             border: 1px solid var(--border);
-            overflow: hidden;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
         }
         .news-table {
             width: 100%;
+            min-width: 580px;
             border-collapse: collapse;
         }
         .news-table th {
@@ -936,10 +939,19 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        html, body {
+            overflow-x: hidden !important;
+            width: 100%;
+            max-width: 100vw;
+        }
+
+        .topbar-back-short { display: none; }
+
         /* ─── RESPONSIVE ─── */
         @media (max-width: 1100px) {
             .newsroom-layout {
                 flex-direction: column;
+                padding: 20px 16px;
             }
             .newsroom-layout.editor-open {
                 gap: 24px;
@@ -947,7 +959,7 @@
             .panel-editor {
                 width: 100%;
                 max-width: 100%;
-                transform: translateY(-20px);
+                transform: translateY(0);
                 order: -1;
             }
             .newsroom-layout.editor-open .panel-editor {
@@ -960,55 +972,188 @@
                 width: 100%;
             }
         }
-        @media (max-width: 768px) {
+
+        @media (max-width: 640px) {
+            .topbar-back-full { display: none; }
+            .topbar-back-short { display: inline; }
+
             .topbar {
-                padding: 0 16px;
-                height: 56px;
+                padding: 0 10px;
+                height: 52px;
+                width: 100%;
+                max-width: 100vw;
+                box-sizing: border-box;
+                gap: 6px;
             }
-            .topbar-title {
+            .topbar-logo {
+                font-size: 0.9rem;
+                gap: 6px;
+            }
+            .topbar-logo .icon-badge {
+                width: 30px;
+                height: 30px;
                 font-size: 0.85rem;
             }
-            .topbar-back {
-                padding: 6px 12px;
-                font-size: 0.78rem;
+            .topbar-title, .topbar-sep {
+                display: none;
             }
+            .topbar-back {
+                padding: 5px 10px;
+                font-size: 0.72rem;
+                max-width: 130px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
             .newsroom-layout {
-                padding: 16px;
+                padding: 12px 10px;
+                width: 100%;
+                max-width: 100vw;
+                box-sizing: border-box;
+                overflow-x: hidden;
                 gap: 16px;
             }
             .panel-header {
                 flex-direction: column;
-                align-items: flex-start;
+                align-items: stretch;
                 gap: 12px;
             }
             .btn-add {
                 width: 100%;
                 justify-content: center;
-            }
-            .table-container, .panel-list {
-                width: 100%;
-                overflow-x: auto;
+                padding: 12px 18px;
+                font-size: 0.88rem;
             }
             .editor-card {
-                padding: 16px;
+                padding: 14px;
                 border-radius: 16px;
-            }
-        }
-        @media (max-width: 480px) {
-            .topbar-title {
-                display: none;
-            }
-            .topbar-sep {
-                display: none;
-            }
-            .newsroom-layout {
-                padding: 12px 10px;
-            }
-            .panel-title {
-                font-size: 1.25rem;
             }
             .form-row {
                 grid-template-columns: 1fr;
+            }
+            .editor-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .editor-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            /* Responsive Mobile Cards for Table (No Horizontal Scroll) */
+            .news-table-wrap {
+                background: transparent;
+                box-shadow: none;
+                border: none;
+                border-radius: 0;
+                overflow: visible;
+                width: 100%;
+            }
+            .news-table {
+                display: block;
+                width: 100% !important;
+                min-width: 0 !important;
+            }
+            .news-table thead {
+                display: none;
+            }
+            .news-table tbody {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                width: 100%;
+            }
+            .news-table tr {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 8px 12px;
+                background: #ffffff;
+                border-radius: 16px;
+                border: 1px solid var(--border);
+                box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+                padding: 14px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .news-table tr:hover td {
+                background: transparent;
+            }
+            .news-table td {
+                display: block;
+                padding: 0;
+                border: none;
+                box-sizing: border-box;
+            }
+            /* Foto */
+            .news-table td:nth-child(1) {
+                order: 1;
+                flex-shrink: 0;
+            }
+            .tbl-thumb, .tbl-thumb-placeholder {
+                width: 48px;
+                height: 38px;
+                border-radius: 8px;
+            }
+            /* Judul */
+            .news-table td:nth-child(2) {
+                order: 2;
+                flex: 1 1 calc(100% - 66px);
+                min-width: 0;
+            }
+            .tbl-title {
+                font-size: 0.88rem;
+                font-weight: 700;
+                line-height: 1.3;
+                word-break: break-word;
+            }
+            /* Kategori */
+            .news-table td:nth-child(3) {
+                order: 3;
+                width: auto;
+            }
+            /* Tanggal */
+            .news-table td:nth-child(4) {
+                order: 4;
+                width: auto;
+                margin-left: auto;
+                font-size: 0.75rem;
+                color: var(--muted);
+                font-weight: 600;
+            }
+            /* Publish Toggle Row */
+            .news-table td:nth-child(5) {
+                order: 5;
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding-top: 10px;
+                margin-top: 4px;
+                border-top: 1px dashed rgba(234,88,12,0.15);
+            }
+            .news-table td:nth-child(5)::before {
+                content: "Status Publikasi";
+                font-size: 0.75rem;
+                font-weight: 700;
+                color: var(--muted);
+            }
+            /* Action Buttons Row */
+            .news-table td:nth-child(6) {
+                order: 6;
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding-top: 6px;
+            }
+            .news-table td:nth-child(6)::before {
+                content: "Kelola Artikel";
+                font-size: 0.75rem;
+                font-weight: 700;
+                color: var(--muted);
             }
         }
     </style>
@@ -1019,10 +1164,12 @@
     if ($role_id === 5) {
         $this->load->view('admin_layanan/sidebar');
         $back_url = site_url('adminlayanan');
-        $back_label = '← Kembali ke Portal LAA';
+        $back_label_full = '← Kembali ke Portal LAA';
+        $back_label_short = '← Portal LAA';
     } else {
         $back_url = site_url('dashboard');
-        $back_label = '← Kembali ke Dashboard';
+        $back_label_full = '← Kembali ke Dashboard';
+        $back_label_short = '← Dashboard';
     }
 ?>
 
@@ -1035,7 +1182,8 @@
         <div class="topbar-sep"></div>
         <span class="topbar-title">NEWSROOM</span>
         <a href="<?= $back_url ?>" class="topbar-back">
-            <?= $back_label ?>
+            <span class="topbar-back-full"><?= $back_label_full ?></span>
+            <span class="topbar-back-short"><?= $back_label_short ?></span>
         </a>
     </header>
 
