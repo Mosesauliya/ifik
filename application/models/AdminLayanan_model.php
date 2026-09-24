@@ -9,63 +9,8 @@ class AdminLayanan_model extends CI_Model {
     }
 
     private function _check_table_pendaftaran_ta() {
-        if (!$this->db->table_exists('pendaftaran_ta')) {
-            $sql = "CREATE TABLE IF NOT EXISTS `pendaftaran_ta` (
-                `id` INT(11) NOT NULL AUTO_INCREMENT,
-                `nim` VARCHAR(50) NOT NULL,
-                `jenis_ta` VARCHAR(100) DEFAULT 'Sidang Reguler',
-                `judul_1` VARCHAR(255) NULL,
-                `judul_2` VARCHAR(255) NULL,
-                `judul_3` VARCHAR(255) NULL,
-                `judul_en` VARCHAR(255) NULL,
-                `konsentrasi_dkv` VARCHAR(100) DEFAULT 'Desain Komunikasi Visual',
-                `file_ksm` VARCHAR(255) NULL,
-                `file_transkrip` VARCHAR(255) NULL,
-                `file_pernyataan` VARCHAR(255) NULL,
-                `file_bebas_lab` VARCHAR(255) NULL,
-                `status_ksm` VARCHAR(50) DEFAULT 'Pending',
-                `status_transkrip` VARCHAR(50) DEFAULT 'Pending',
-                `status_pernyataan` VARCHAR(50) DEFAULT 'Pending',
-                `status_bebas_lab` VARCHAR(50) DEFAULT 'Pending',
-                `status_approval_wali` ENUM('Pending','Approved','Rejected') DEFAULT 'Approved',
-                `status_approval_admin` ENUM('Pending','Approved','Rejected') DEFAULT 'Pending',
-                `status_approval_koor` ENUM('Pending','Approved','Rejected') DEFAULT 'Pending',
-                `status_approval_kk` ENUM('Pending','Approved','Rejected') DEFAULT 'Pending',
-                `status_judul` ENUM('Pending','Approved','Rejected') DEFAULT 'Pending',
-                `current_stage` VARCHAR(100) DEFAULT 'Admin Layanan',
-                `berkas_kurang` TEXT NULL,
-                `catatan_admin` TEXT NULL,
-                `id_kk` INT(11) NULL,
-                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-                `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                PRIMARY KEY (`id`),
-                UNIQUE KEY `nim` (`nim`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
-            $this->db->query($sql);
-        }
-
-        if ($this->db->table_exists('pendaftaran_ta') && $this->db->count_all_results('pendaftaran_ta') == 0) {
-            if ($this->db->table_exists('file_pendaftaran')) {
-                $students = $this->db->select('DISTINCT(id_mhs) as id_mhs')->get('file_pendaftaran')->result_array();
-                foreach ($students as $st) {
-                    $nim = str_replace('usr_mhs_', '', $st['id_mhs']);
-                    if (empty($nim)) continue;
-                    $this->db->insert('pendaftaran_ta', [
-                        'nim'                   => $nim,
-                        'jenis_ta'              => 'Sidang Reguler',
-                        'judul_1'               => 'Perancangan Antarmuka dan Pengalaman Pengguna Platform Layanan Akademik (' . $nim . ')',
-                        'status_approval_wali'  => 'Approved',
-                        'status_approval_admin' => 'Pending',
-                        'current_stage'         => 'Admin Layanan',
-                        'file_ksm'              => 'uploads/persyaratan_ta/ksm_' . $nim . '.pdf',
-                        'file_transkrip'        => 'uploads/persyaratan_ta/transkrip_' . $nim . '.pdf',
-                        'file_pernyataan'       => 'uploads/persyaratan_ta/pernyataan_' . $nim . '.pdf',
-                        'file_bebas_lab'        => 'uploads/persyaratan_ta/bebas_lab_' . $nim . '.pdf',
-                        'created_at'            => date('Y-m-d H:i:s')
-                    ]);
-                }
-            }
-        }
+        // Do nothing. Never auto-create or seed pendaftaran_ta table.
+        return;
     }
 
     public function get_short_berkas_label($nama_berkas, $kode_berkas = '') {
