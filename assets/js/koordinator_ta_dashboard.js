@@ -5471,9 +5471,9 @@
             const noteContent = log.catatan || log.keterangan || '';
 
             html += `
-                <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-3.5 sm:p-4 transition-all hover:shadow-md hover:border-amber-300 space-y-3 text-left">
-                    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-3 border-b border-slate-100 pb-2.5">
-                        <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-full min-w-0 bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-3.5 sm:p-4 transition-all hover:shadow-md hover:border-amber-300 space-y-3 text-left overflow-hidden">
+                    <div class="w-full min-w-0 flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-3 border-b border-slate-100 pb-2.5">
+                        <div class="flex items-center gap-2.5 min-w-0 flex-1">
                             <div class="w-8 h-8 rounded-xl ${isSidang ? 'bg-amber-50 text-amber-600 border border-amber-200' : (isPembimbing ? 'bg-orange-50 text-orange-600 border border-orange-200' : 'bg-indigo-50 text-indigo-600 border border-indigo-200')} flex items-center justify-center text-xs font-bold shrink-0">
                                 <i class="fa-solid ${isSidang ? 'fa-graduation-cap' : 'fa-user-graduate'}"></i>
                             </div>
@@ -5483,7 +5483,7 @@
                             </div>
                         </div>
 
-                        <div class="flex items-center sm:items-end justify-between sm:justify-start gap-1.5 flex-wrap pt-1 sm:pt-0">
+                        <div class="w-full sm:w-auto min-w-0 flex items-center sm:items-end justify-between sm:justify-start gap-1.5 flex-wrap pt-1 sm:pt-0">
                             <div class="flex items-center gap-1.5 flex-wrap">
                                 <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10px] font-bold ${katBadgeClass}">
                                     <i class="${katIcon} text-[9px]"></i>
@@ -5501,10 +5501,10 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 text-xs">
+                    <div class="w-full min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 text-xs">
                         <!-- Slot 1 -->
-                        <div class="p-2.5 bg-slate-50/80 rounded-xl border border-slate-100 space-y-1 min-w-0">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(d1Label)}:</span>
+                        <div class="w-full min-w-0 p-2.5 bg-slate-50/80 rounded-xl border border-slate-100 space-y-1 overflow-hidden">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">${escapeHtml(d1Label)}:</span>
                             <div class="font-bold text-slate-900 flex items-center gap-1.5 min-w-0">
                                 ${slot1Badge}
                                 <span class="truncate">${escapeHtml(d1Baru || '-')}</span>
@@ -5517,8 +5517,8 @@
                         </div>
 
                         <!-- Slot 2 -->
-                        <div class="p-2.5 bg-slate-50/80 rounded-xl border border-slate-100 space-y-1 min-w-0">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(d2Label)}:</span>
+                        <div class="w-full min-w-0 p-2.5 bg-slate-50/80 rounded-xl border border-slate-100 space-y-1 overflow-hidden">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">${escapeHtml(d2Label)}:</span>
                             <div class="font-bold text-slate-900 flex items-center gap-1.5 min-w-0">
                                 ${slot2Badge}
                                 <span class="truncate">${escapeHtml(d2Baru || '-')}</span>
@@ -5532,7 +5532,7 @@
                     </div>
 
                     ${noteContent ? `
-                        <div class="text-[11px] text-slate-600 bg-amber-50/80 border border-amber-200/80 p-2.5 rounded-xl flex items-start gap-2 break-words">
+                        <div class="w-full min-w-0 text-[11px] text-slate-600 bg-amber-50/80 border border-amber-200/80 p-2.5 rounded-xl flex items-start gap-2 break-words overflow-hidden">
                             <i class="fa-solid fa-note-sticky text-amber-600 mt-0.5 shrink-0 text-xs"></i>
                             <div class="min-w-0 flex-1">
                                 <strong>Catatan:</strong> ${escapeHtml(noteContent)}
