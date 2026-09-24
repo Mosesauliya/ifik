@@ -1914,34 +1914,40 @@
                 </div>
             </div>
 
-            <!-- Floating Action Bar for Sidang Multi-Selection -->
-            <div id="floatingSidangBatchBar" class="hidden fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-1.5rem)] sm:w-auto max-w-4xl px-0 sm:px-4 animate-in fade-in slide-in-from-bottom-5 duration-200">
-                <div class="bg-slate-950/95 sm:bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 shadow-2xl rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 text-white">
-                    <div class="flex items-center justify-between sm:justify-start gap-2.5">
-                        <div class="flex items-center gap-2.5">
-                            <span id="floatingSidangCount" class="w-8 h-8 rounded-xl bg-amber-500 text-white font-black text-xs flex items-center justify-center shadow-md shadow-amber-500/30">0</span>
-                            <span class="text-xs font-bold text-slate-200">Mahasiswa Terpilih</span>
+            <!-- FLOATING BATCH ACTION BAR (Tab 3: Penjadwalan Sidang TA & Nilai) -->
+            <div id="floatingSidangBatchBar" class="hidden fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] sm:w-full max-w-4xl px-0 sm:px-4 animate-in fade-in slide-in-from-bottom-5 duration-200">
+                <div class="bg-slate-950/95 sm:bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 shadow-2xl rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-white">
+                    <div class="flex items-center gap-3 min-w-0 flex-1">
+                        <div class="w-8 h-8 sm:w-10 sm:h-10 min-w-[2rem] sm:min-w-[2.5rem] rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white flex items-center justify-center font-black text-xs sm:text-sm shadow-md shadow-amber-500/30 shrink-0">
+                            <span id="floatingSidangCount">0</span>
                         </div>
-                        <button type="button" onclick="clearAllSidangSelection()" class="sm:hidden px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-xs font-semibold rounded-lg transition">
-                            <i class="fa-solid fa-xmark mr-1"></i>Batal
-                        </button>
+                        <div class="min-w-0 flex-1">
+                            <h4 class="text-[11px] sm:text-xs font-bold text-white tracking-wide">Mahasiswa Terpilih</h4>
+                            <div id="selectedSidangStudentsPreview" class="flex flex-wrap items-center gap-1 mt-0.5 max-h-6 overflow-hidden"></div>
+                        </div>
                     </div>
-                    <div class="hidden sm:block h-5 w-px bg-slate-700"></div>
-                    <div class="grid grid-cols-1 sm:flex sm:items-center gap-2 flex-wrap">
-                        <button type="button" onclick="openModalBatchPublishNilai()" class="h-9 sm:h-10 px-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition cursor-pointer flex items-center justify-center gap-2 active:scale-95">
+
+                    <div class="flex items-center gap-2 sm:gap-2.5 shrink-0 flex-wrap sm:flex-nowrap">
+                        <button type="button" onclick="event.stopPropagation(); openModalBatchPublishNilai();" class="flex-1 sm:flex-initial h-10 sm:h-11 px-3.5 sm:px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition cursor-pointer flex items-center justify-center gap-2">
                             <i class="fa-solid fa-bullhorn text-xs"></i>
-                            <span>Publikasikan Nilai Terpilih</span>
+                            <span class="whitespace-nowrap">Publikasikan Nilai</span>
                         </button>
-                        <button type="button" onclick="openBatchTerapkanRubrikModal()" class="h-9 sm:h-10 px-3.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl shadow-md shadow-violet-600/20 transition cursor-pointer flex items-center justify-center gap-2 active:scale-95">
+
+                        <!-- Button Terapkan Rubrik Massal (Dicomment)
+                        <button type="button" onclick="event.stopPropagation(); openBatchTerapkanRubrikModal();" class="flex-1 sm:flex-initial h-10 sm:h-11 px-3.5 sm:px-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl shadow-md shadow-violet-600/20 transition cursor-pointer flex items-center justify-center gap-2 active:scale-95">
                             <i class="fa-solid fa-list-check text-xs"></i>
-                            <span>Terapkan Rubrik Massal</span>
+                            <span class="whitespace-nowrap">Terapkan Rubrik Massal</span>
                         </button>
-                        <button type="button" onclick="openModalBatchSidang()" class="h-9 sm:h-10 px-3.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-xs font-bold rounded-xl shadow-md shadow-amber-500/20 transition cursor-pointer flex items-center justify-center gap-2 active:scale-95">
-                            <i class="fa-solid fa-calendar-days text-xs"></i>
-                            <span>Atur Jadwal Terpilih (<span id="floatingSidangBatchCountText">0</span>)</span>
+                        -->
+
+                        <button type="button" onclick="event.stopPropagation(); openModalBatchSidang();" class="flex-1 sm:flex-initial h-10 sm:h-11 px-4 sm:px-5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 active:scale-95 text-white text-xs sm:text-sm font-extrabold rounded-xl shadow-lg shadow-amber-500/30 transition cursor-pointer flex items-center justify-center gap-2 tracking-wide">
+                            <i class="fa-solid fa-calendar-days text-xs sm:text-sm"></i>
+                            <span class="whitespace-nowrap">Atur Jadwal Terpilih (<span id="floatingSidangBatchCountText">0</span>)</span>
                         </button>
-                        <button type="button" onclick="clearAllSidangSelection()" class="hidden sm:flex h-10 px-3 bg-slate-800/90 hover:bg-slate-700 text-slate-400 hover:text-white text-xs font-semibold rounded-xl transition items-center justify-center cursor-pointer">
-                            Batal
+
+                        <button type="button" onclick="event.stopPropagation(); clearAllSidangSelection();" class="h-10 sm:h-11 px-3 sm:px-4 bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-slate-300 hover:text-white rounded-xl text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer" title="Batal Pilihan">
+                            <i class="fa-solid fa-xmark text-xs sm:text-sm"></i>
+                            <span>Batal</span>
                         </button>
                     </div>
                 </div>

@@ -6762,16 +6762,43 @@
         const floatingBar = document.getElementById('floatingSidangBatchBar');
         const floatingCount = document.getElementById('floatingSidangCount');
         const floatingBatchCountText = document.getElementById('floatingSidangBatchCountText');
+        const previewContainer = document.getElementById('selectedSidangStudentsPreview');
 
         if (floatingBar) {
             if (count > 0) {
                 floatingBar.classList.remove('hidden');
-                floatingBar.classList.add('flex');
+                floatingBar.classList.add('block');
                 if (floatingCount) floatingCount.innerText = count;
                 if (floatingBatchCountText) floatingBatchCountText.innerText = count;
+
+                if (previewContainer) {
+                    let chipsHtml = '';
+                    let idx = 0;
+                    state.sidangSelectedStudents.forEach(st => {
+                        if (idx < 2) {
+                            const name = st.nama || st.name || st.nim || 'Mhs';
+                            chipsHtml += `
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-white/15 border border-white/10 text-white rounded-md text-[11px] font-semibold backdrop-blur-md max-w-[140px] truncate">
+                                    <i class="fa-solid fa-user-graduate text-[9px] shrink-0 text-amber-300"></i>
+                                    <span class="truncate">${escapeHtml(name.split(' ')[0])} (${st.nim})</span>
+                                </span>
+                            `;
+                        }
+                        idx++;
+                    });
+
+                    if (count > 2) {
+                        chipsHtml += `
+                            <span class="inline-flex items-center px-1.5 py-0.5 bg-white/25 text-white rounded-md text-[10px] font-bold shrink-0">
+                                +${count - 2} lainnya
+                            </span>
+                        `;
+                    }
+                    previewContainer.innerHTML = chipsHtml;
+                }
             } else {
                 floatingBar.classList.add('hidden');
-                floatingBar.classList.remove('flex');
+                floatingBar.classList.remove('block');
             }
         }
     };
