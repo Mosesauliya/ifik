@@ -2166,13 +2166,19 @@
 
     <?php
     $sessionRoleId = (int)$this->session->userdata('role_id');
-    $currentUri = trim(uri_string(), '/');
-    $isLoggedIn = (bool)$this->session->userdata('logged_in');
+    $sessionEmail  = (string)$this->session->userdata('email');
+    $currentUri    = trim(uri_string(), '/');
+    $isLoggedIn    = (bool)$this->session->userdata('logged_in');
 
     // Tentukan active role ID (utamakan session role jika user sudah login)
     $activeRoleId = $isLoggedIn ? $sessionRoleId : 0;
 
-    if ($isLoggedIn) {
+    // Jika role 2 tapi akun khusus laboran, arahkan ke role 21 (Laboran)
+    if ($isLoggedIn && $sessionRoleId === 2 && strpos(strtolower($sessionEmail), 'laboran') !== false) {
+        $activeRoleId = 21;
+    }
+
+    if ($isLoggedIn && $activeRoleId === 0) {
         if (strpos($currentUri, 'laboran') === 0) {
             $activeRoleId = 21; // Laboran
         } elseif (strpos($currentUri, 'kaur') === 0) {
@@ -2254,6 +2260,7 @@
                 ['heading' => 'Dosen Wali', 'href' => site_url('dosen/wali'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
 
                 ['category' => 'Layanan & Bantuan', 'has_divider' => true],
+                ['heading' => 'Bantuan & Live Chat', 'href' => site_url('kaur/help'), 'icon_3d' => 'assets/images/icons_3d/help_chat.png'],
                 ['heading' => 'Respon Ticketing', 'href' => site_url('dosen/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
                 ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
                 ['heading' => 'Riwayat Ticketing', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
@@ -2275,6 +2282,7 @@
                 ['heading' => 'Monitoring Status Peserta', 'href' => site_url('koordinatorta/monitoring'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
 
                 ['category' => 'Layanan Ticketing & Bantuan', 'has_divider' => true],
+                ['heading' => 'Bantuan & Live Chat', 'href' => site_url('koordinatorta/help'), 'icon_3d' => 'assets/images/icons_3d/help_chat.png'],
                 ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
                 ['heading' => 'Riwayat Tiket Saya', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
 
@@ -2341,6 +2349,7 @@
                 ['heading' => 'Pengaturan Jalur TA', 'href' => site_url('adminlayanan/pengaturan_jalur'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
 
                 ['category' => 'Layanan Ticketing & Bantuan', 'has_divider' => true],
+                ['heading' => 'Bantuan & Live Chat', 'href' => site_url('adminlayanan/help'), 'icon_3d' => 'assets/images/icons_3d/help_chat.png'],
                 ['heading' => 'Respon Ticketing LAA', 'href' => site_url('adminlayanan/ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
                 ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
                 ['heading' => 'Riwayat Tiket Saya', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
