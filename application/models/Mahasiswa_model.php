@@ -803,7 +803,7 @@ public function get_students_by_dosen($dosen_id, $posisi = 1) {
         COALESCE(u.name, m.nama_depan, g.id_mhs) AS nama_mahasiswa
     ", FALSE);
     $this->db->from('thesis_lecturers tl');
-    $this->db->join('guidance g',  'g.id = tl.id_guidance', 'left');
+    $this->db->join('guidance g',  'g.id = tl.id_guidance', 'inner');
     $this->db->join('user u',      '(u.id = g.id_mhs OR u.nim = g.id_mhs)', 'left');
     $this->db->join('mahasiswa m', 'm.nim = u.nim', 'left');
 

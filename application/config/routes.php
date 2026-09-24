@@ -213,6 +213,8 @@ $route['onboarding/(:any)'] = 'Onboarding/$1';
 // Admin Layanan (LAA) Routes
 $route['adminlayanan'] = 'AdminLayanan/index';
 $route['adminlayanan/ajax_get_table'] = 'AdminLayanan/ajax_get_table';
+$route['adminlayanan/berita'] = 'News/newsroom';
+$route['adminlayanan/newsroom'] = 'News/newsroom';
 $route['adminlayanan/pengaturan_berkas'] = 'AdminLayanan/pengaturan_berkas';
 $route['adminlayanan/pengaturan_jalur'] = 'AdminLayanan/pengaturan_jalur';
 $route['koordinatorta/pengaturan_jalur'] = 'KoordinatorTA/pengaturan_jalur';
@@ -224,6 +226,8 @@ $route['adminlayanan/detail_berkas/(:any)'] = 'AdminLayanan/detail_berkas/$1';
 $route['adminlayanan/submit_verifikasi/(:any)'] = 'AdminLayanan/submit_verifikasi/$1';
 $route['adminlayanan/submit_verifikasi_batch'] = 'AdminLayanan/submit_verifikasi_batch';
 $route['adminlayanan/get_batch_details'] = 'AdminLayanan/get_batch_details';
+$route['adminlayanan/(:any)'] = 'AdminLayanan/$1';
+$route['adminlayanan/(:any)/(:any)'] = 'AdminLayanan/$1/$2';
 
 // [TEMPORARY SIMULASI] Admin Layanan (LAA) Ticketing Simulation Routes
 $route['adminlayanan/ticketing'] = 'AdminLayananTicketing/index';

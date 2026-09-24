@@ -800,11 +800,11 @@
         <main class="max-w-7xl mx-auto px-4 sm:px-6 flex-1 w-full">
 
         <!-- Stats Overview Cards (Highlight Card Design & Mobile Snap Slider) -->
-        <div class="relative mb-6 sm:mb-8">
-            <div id="statsCardsSlider" class="stats-slider-container flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 overflow-x-auto sm:overflow-visible snap-x snap-mandatory py-1 scrollbar-none">
+        <div class="relative mb-4 sm:mb-8">
+            <div id="statsCardsSlider" class="stats-slider-container flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-5 overflow-x-auto sm:overflow-visible snap-x snap-mandatory py-1 scrollbar-none">
                 <!-- 1. Total Accounts Card -->
-                <div class="stats-slide-item min-w-[84vw] sm:min-w-0 snap-center shrink-0 group cursor-pointer transform transition-all duration-500 hover:scale-[1.03] hover:-translate-y-1">
-                    <div class="rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-orange-50/20 to-white shadow-xl relative backdrop-blur-xl overflow-hidden hover:border-brand-500/40 hover:shadow-2xl hover:shadow-brand-500/10 p-5">
+                <div class="stats-slide-item min-w-[78vw] sm:min-w-0 snap-center shrink-0 group cursor-pointer transform transition-all duration-500 hover:scale-[1.03] hover:-translate-y-1">
+                    <div class="rounded-xl sm:rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-orange-50/20 to-white shadow-md sm:shadow-xl relative backdrop-blur-xl overflow-hidden hover:border-brand-500/40 hover:shadow-2xl hover:shadow-brand-500/10 p-3.5 sm:p-5">
                         <!-- Ambient Glow Effects -->
                         <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
                             <div class="absolute inset-0 bg-gradient-to-tr from-brand-500/5 to-transparent opacity-40 group-hover:opacity-70 transition-opacity duration-500"></div>
@@ -814,29 +814,29 @@
                         </div>
 
                         <!-- Content -->
-                        <div class="relative z-10 flex items-start justify-between gap-3">
-                            <div class="flex-1">
-                                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-brand-600 transition-colors">Total Akun</p>
-                                <h3 id="stat-total" class="text-2xl font-black text-slate-900 mt-1 tracking-tight">0</h3>
-                                <p id="stat-total-desc" class="text-xs font-medium text-slate-500 mt-1 line-clamp-1">0 Dosen, 0 Mahasiswa</p>
+                        <div class="relative z-10 flex items-start justify-between gap-2.5 sm:gap-3">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-brand-600 transition-colors">Total Akun</p>
+                                <h3 id="stat-total" class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 sm:mt-1 tracking-tight">0</h3>
+                                <p id="stat-total-desc" class="text-[11px] sm:text-xs font-medium text-slate-500 mt-0.5 sm:mt-1 line-clamp-1">0 Dosen, 0 Mahasiswa</p>
                             </div>
                             
                             <!-- Glowing Halo Icon -->
                             <div class="relative shrink-0">
-                                <div class="absolute inset-0 rounded-2xl bg-brand-500/20 blur-md group-hover:blur-lg group-hover:bg-brand-500/30 transition-all"></div>
-                                <div class="relative p-3.5 rounded-2xl border border-orange-200/80 bg-gradient-to-br from-orange-50 to-orange-100/70 shadow-md text-brand-600 transform group-hover:rotate-6 group-hover:scale-110 transition-all duration-500">
-                                    <i class="fa-solid fa-users text-lg"></i>
+                                <div class="absolute inset-0 rounded-xl sm:rounded-2xl bg-brand-500/20 blur-md group-hover:blur-lg group-hover:bg-brand-500/30 transition-all"></div>
+                                <div class="relative p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-orange-200/80 bg-gradient-to-br from-orange-50 to-orange-100/70 shadow-sm sm:shadow-md text-brand-600 transform group-hover:rotate-6 group-hover:scale-110 transition-all duration-500">
+                                    <i class="fa-solid fa-users text-sm sm:text-lg"></i>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Gradient Divider Line & Floating Pulse Dots -->
-                        <div class="relative z-10 flex items-center justify-between mt-3 pt-2 border-t border-slate-100">
+                        <div class="relative z-10 flex items-center justify-between mt-2.5 pt-2 sm:mt-3 sm:pt-2 border-t border-slate-100">
                             <div class="w-1/3 h-0.5 bg-gradient-to-r from-brand-500 to-transparent rounded-full transform group-hover:w-2/3 transition-all duration-500"></div>
                             <div class="flex space-x-1 opacity-50 group-hover:opacity-100 transition-opacity duration-300">
-                                <div class="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce"></div>
-                                <div class="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
-                                <div class="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                                <div class="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-brand-500 rounded-full animate-bounce"></div>
+                                <div class="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-brand-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                                <div class="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-brand-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
                             </div>
                         </div>
 
@@ -847,8 +847,8 @@
                 </div>
 
                 <!-- 2. Token Generated Card -->
-                <div class="stats-slide-item min-w-[84vw] sm:min-w-0 snap-center shrink-0 group cursor-pointer transform transition-all duration-500 hover:scale-[1.03] hover:-translate-y-1">
-                    <div class="rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-cyan-50/20 to-white shadow-xl relative backdrop-blur-xl overflow-hidden hover:border-cyan-500/40 hover:shadow-2xl hover:shadow-cyan-500/10 p-5">
+                <div class="stats-slide-item min-w-[78vw] sm:min-w-0 snap-center shrink-0 group cursor-pointer transform transition-all duration-500 hover:scale-[1.03] hover:-translate-y-1">
+                    <div class="rounded-xl sm:rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-cyan-50/20 to-white shadow-md sm:shadow-xl relative backdrop-blur-xl overflow-hidden hover:border-cyan-500/40 hover:shadow-2xl hover:shadow-cyan-500/10 p-3.5 sm:p-5">
                         <!-- Ambient Glow Effects -->
                         <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
                             <div class="absolute inset-0 bg-gradient-to-tr from-cyan-500/5 to-transparent opacity-40 group-hover:opacity-70 transition-opacity duration-500"></div>
@@ -858,29 +858,29 @@
                         </div>
 
                         <!-- Content -->
-                        <div class="relative z-10 flex items-start justify-between gap-3">
-                            <div class="flex-1">
-                                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-cyan-600 transition-colors">Token Generated</p>
-                                <h3 id="stat-token" class="text-2xl font-black text-slate-900 mt-1 tracking-tight">0 <span class="text-xs font-semibold text-cyan-600 font-normal">(0%)</span></h3>
-                                <p id="stat-token-desc" class="text-xs font-medium text-slate-500 mt-1 line-clamp-1">0 akun sudah siap token</p>
+                        <div class="relative z-10 flex items-start justify-between gap-2.5 sm:gap-3">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-cyan-600 transition-colors">Token Generated</p>
+                                <h3 id="stat-token" class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 sm:mt-1 tracking-tight">0 <span class="text-[11px] sm:text-xs font-semibold text-cyan-600 font-normal">(0%)</span></h3>
+                                <p id="stat-token-desc" class="text-[11px] sm:text-xs font-medium text-slate-500 mt-0.5 sm:mt-1 line-clamp-1">0 akun sudah siap token</p>
                             </div>
                             
                             <!-- Glowing Halo Icon -->
                             <div class="relative shrink-0">
-                                <div class="absolute inset-0 rounded-2xl bg-cyan-500/20 blur-md group-hover:blur-lg group-hover:bg-cyan-500/30 transition-all"></div>
-                                <div class="relative p-3.5 rounded-2xl border border-cyan-200/80 bg-gradient-to-br from-cyan-50 to-cyan-100/70 shadow-md text-cyan-600 transform group-hover:rotate-6 group-hover:scale-110 transition-all duration-500">
-                                    <i class="fa-solid fa-key text-lg"></i>
+                                <div class="absolute inset-0 rounded-xl sm:rounded-2xl bg-cyan-500/20 blur-md group-hover:blur-lg group-hover:bg-cyan-500/30 transition-all"></div>
+                                <div class="relative p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-cyan-200/80 bg-gradient-to-br from-cyan-50 to-cyan-100/70 shadow-sm sm:shadow-md text-cyan-600 transform group-hover:rotate-6 group-hover:scale-110 transition-all duration-500">
+                                    <i class="fa-solid fa-key text-sm sm:text-lg"></i>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Gradient Divider Line & Floating Pulse Dots -->
-                        <div class="relative z-10 flex items-center justify-between mt-3 pt-2 border-t border-slate-100">
+                        <div class="relative z-10 flex items-center justify-between mt-2.5 pt-2 sm:mt-3 sm:pt-2 border-t border-slate-100">
                             <div class="w-1/3 h-0.5 bg-gradient-to-r from-cyan-500 to-transparent rounded-full transform group-hover:w-2/3 transition-all duration-500"></div>
                             <div class="flex space-x-1 opacity-50 group-hover:opacity-100 transition-opacity duration-300">
-                                <div class="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-bounce"></div>
-                                <div class="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
-                                <div class="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                                <div class="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-cyan-500 rounded-full animate-bounce"></div>
+                                <div class="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-cyan-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                                <div class="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-cyan-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
                             </div>
                         </div>
 
@@ -891,8 +891,8 @@
                 </div>
 
                 <!-- 3. Email Sent Card -->
-                <div class="stats-slide-item min-w-[84vw] sm:min-w-0 snap-center shrink-0 group cursor-pointer transform transition-all duration-500 hover:scale-[1.03] hover:-translate-y-1">
-                    <div class="rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-emerald-50/20 to-white shadow-xl relative backdrop-blur-xl overflow-hidden hover:border-emerald-500/40 hover:shadow-2xl hover:shadow-emerald-500/10 p-5">
+                <div class="stats-slide-item min-w-[78vw] sm:min-w-0 snap-center shrink-0 group cursor-pointer transform transition-all duration-500 hover:scale-[1.03] hover:-translate-y-1">
+                    <div class="rounded-xl sm:rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-emerald-50/20 to-white shadow-md sm:shadow-xl relative backdrop-blur-xl overflow-hidden hover:border-emerald-500/40 hover:shadow-2xl hover:shadow-emerald-500/10 p-3.5 sm:p-5">
                         <!-- Ambient Glow Effects -->
                         <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
                             <div class="absolute inset-0 bg-gradient-to-tr from-emerald-500/5 to-transparent opacity-40 group-hover:opacity-70 transition-opacity duration-500"></div>
@@ -902,29 +902,29 @@
                         </div>
 
                         <!-- Content -->
-                        <div class="relative z-10 flex items-start justify-between gap-3">
-                            <div class="flex-1">
-                                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-emerald-600 transition-colors">Email Terkirim</p>
-                                <h3 id="stat-sent" class="text-2xl font-black text-slate-900 mt-1 tracking-tight">0 <span class="text-xs font-semibold text-emerald-600 font-normal">(0%)</span></h3>
-                                <p id="stat-sent-desc" class="text-xs font-medium text-slate-500 mt-1 line-clamp-1">0 email berhasil dikirim</p>
+                        <div class="relative z-10 flex items-start justify-between gap-2.5 sm:gap-3">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-emerald-600 transition-colors">Email Terkirim</p>
+                                <h3 id="stat-sent" class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 sm:mt-1 tracking-tight">0 <span class="text-[11px] sm:text-xs font-semibold text-emerald-600 font-normal">(0%)</span></h3>
+                                <p id="stat-sent-desc" class="text-[11px] sm:text-xs font-medium text-slate-500 mt-0.5 sm:mt-1 line-clamp-1">0 email berhasil dikirim</p>
                             </div>
                             
                             <!-- Glowing Halo Icon -->
                             <div class="relative shrink-0">
-                                <div class="absolute inset-0 rounded-2xl bg-emerald-500/20 blur-md group-hover:blur-lg group-hover:bg-emerald-500/30 transition-all"></div>
-                                <div class="relative p-3.5 rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50 to-emerald-100/70 shadow-md text-emerald-600 transform group-hover:rotate-6 group-hover:scale-110 transition-all duration-500">
-                                    <i class="fa-solid fa-paper-plane text-lg"></i>
+                                <div class="absolute inset-0 rounded-xl sm:rounded-2xl bg-emerald-500/20 blur-md group-hover:blur-lg group-hover:bg-emerald-500/30 transition-all"></div>
+                                <div class="relative p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50 to-emerald-100/70 shadow-sm sm:shadow-md text-emerald-600 transform group-hover:rotate-6 group-hover:scale-110 transition-all duration-500">
+                                    <i class="fa-solid fa-paper-plane text-sm sm:text-lg"></i>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Gradient Divider Line & Floating Pulse Dots -->
-                        <div class="relative z-10 flex items-center justify-between mt-3 pt-2 border-t border-slate-100">
+                        <div class="relative z-10 flex items-center justify-between mt-2.5 pt-2 sm:mt-3 sm:pt-2 border-t border-slate-100">
                             <div class="w-1/3 h-0.5 bg-gradient-to-r from-emerald-500 to-transparent rounded-full transform group-hover:w-2/3 transition-all duration-500"></div>
                             <div class="flex space-x-1 opacity-50 group-hover:opacity-100 transition-opacity duration-300">
-                                <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce"></div>
-                                <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
-                                <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                                <div class="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-emerald-500 rounded-full animate-bounce"></div>
+                                <div class="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-emerald-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                                <div class="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-emerald-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
                             </div>
                         </div>
 
@@ -935,8 +935,8 @@
                 </div>
 
                 <!-- 4. Email Pending Card -->
-                <div class="stats-slide-item min-w-[84vw] sm:min-w-0 snap-center shrink-0 group cursor-pointer transform transition-all duration-500 hover:scale-[1.03] hover:-translate-y-1">
-                    <div class="rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-amber-50/20 to-white shadow-xl relative backdrop-blur-xl overflow-hidden hover:border-amber-500/40 hover:shadow-2xl hover:shadow-amber-500/10 p-5">
+                <div class="stats-slide-item min-w-[78vw] sm:min-w-0 snap-center shrink-0 group cursor-pointer transform transition-all duration-500 hover:scale-[1.03] hover:-translate-y-1">
+                    <div class="rounded-xl sm:rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-amber-50/20 to-white shadow-md sm:shadow-xl relative backdrop-blur-xl overflow-hidden hover:border-amber-500/40 hover:shadow-2xl hover:shadow-amber-500/10 p-3.5 sm:p-5">
                         <!-- Ambient Glow Effects -->
                         <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
                             <div class="absolute inset-0 bg-gradient-to-tr from-amber-500/5 to-transparent opacity-40 group-hover:opacity-70 transition-opacity duration-500"></div>
@@ -946,29 +946,29 @@
                         </div>
 
                         <!-- Content -->
-                        <div class="relative z-10 flex items-start justify-between gap-3">
-                            <div class="flex-1">
-                                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-amber-600 transition-colors">Belum Terkirim</p>
-                                <h3 id="stat-pending" class="text-2xl font-black text-slate-900 mt-1 tracking-tight">0</h3>
-                                <p id="stat-pending-desc" class="text-xs font-medium text-slate-500 mt-1 line-clamp-1">Memerlukan pengiriman</p>
+                        <div class="relative z-10 flex items-start justify-between gap-2.5 sm:gap-3">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-amber-600 transition-colors">Belum Terkirim</p>
+                                <h3 id="stat-pending" class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 sm:mt-1 tracking-tight">0</h3>
+                                <p id="stat-pending-desc" class="text-[11px] sm:text-xs font-medium text-slate-500 mt-0.5 sm:mt-1 line-clamp-1">Memerlukan pengiriman</p>
                             </div>
                             
                             <!-- Glowing Halo Icon -->
                             <div class="relative shrink-0">
-                                <div class="absolute inset-0 rounded-2xl bg-amber-500/20 blur-md group-hover:blur-lg group-hover:bg-amber-500/30 transition-all"></div>
-                                <div class="relative p-3.5 rounded-2xl border border-amber-200/80 bg-gradient-to-br from-amber-50 to-amber-100/70 shadow-md text-amber-600 transform group-hover:rotate-6 group-hover:scale-110 transition-all duration-500">
-                                    <i class="fa-solid fa-clock text-lg"></i>
+                                <div class="absolute inset-0 rounded-xl sm:rounded-2xl bg-amber-500/20 blur-md group-hover:blur-lg group-hover:bg-amber-500/30 transition-all"></div>
+                                <div class="relative p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-amber-200/80 bg-gradient-to-br from-amber-50 to-amber-100/70 shadow-sm sm:shadow-md text-amber-600 transform group-hover:rotate-6 group-hover:scale-110 transition-all duration-500">
+                                    <i class="fa-solid fa-clock text-sm sm:text-lg"></i>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Gradient Divider Line & Floating Pulse Dots -->
-                        <div class="relative z-10 flex items-center justify-between mt-3 pt-2 border-t border-slate-100">
+                        <div class="relative z-10 flex items-center justify-between mt-2.5 pt-2 sm:mt-3 sm:pt-2 border-t border-slate-100">
                             <div class="w-1/3 h-0.5 bg-gradient-to-r from-amber-500 to-transparent rounded-full transform group-hover:w-2/3 transition-all duration-500"></div>
                             <div class="flex space-x-1 opacity-50 group-hover:opacity-100 transition-opacity duration-300">
-                                <div class="w-1.5 h-1.5 bg-amber-500 rounded-full animate-bounce"></div>
-                                <div class="w-1.5 h-1.5 bg-amber-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
-                                <div class="w-1.5 h-1.5 bg-amber-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                                <div class="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-amber-500 rounded-full animate-bounce"></div>
+                                <div class="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-amber-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                                <div class="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-amber-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
                             </div>
                         </div>
 
@@ -980,11 +980,11 @@
             </div>
 
             <!-- Mobile Slider Indicator Bar & Dots -->
-            <div class="flex sm:hidden items-center justify-center gap-1.5 mt-2.5" id="statsSliderIndicators">
-                <button type="button" onclick="scrollToStatSlide(0)" class="stats-indicator-dot h-1.5 w-6 rounded-full bg-brand-500 transition-all duration-300 border-none cursor-pointer p-0" aria-label="Slide 1"></button>
-                <button type="button" onclick="scrollToStatSlide(1)" class="stats-indicator-dot h-1.5 w-2 rounded-full bg-slate-300 transition-all duration-300 border-none cursor-pointer p-0" aria-label="Slide 2"></button>
-                <button type="button" onclick="scrollToStatSlide(2)" class="stats-indicator-dot h-1.5 w-2 rounded-full bg-slate-300 transition-all duration-300 border-none cursor-pointer p-0" aria-label="Slide 3"></button>
-                <button type="button" onclick="scrollToStatSlide(3)" class="stats-indicator-dot h-1.5 w-2 rounded-full bg-slate-300 transition-all duration-300 border-none cursor-pointer p-0" aria-label="Slide 4"></button>
+            <div class="flex sm:hidden items-center justify-center gap-1.5 mt-2" id="statsSliderIndicators">
+                <button type="button" onclick="scrollToStatSlide(0)" class="stats-indicator-dot h-1.5 w-5 rounded-full bg-brand-500 transition-all duration-300 border-none cursor-pointer p-0" aria-label="Slide 1"></button>
+                <button type="button" onclick="scrollToStatSlide(1)" class="stats-indicator-dot h-1.5 w-1.5 rounded-full bg-slate-300 transition-all duration-300 border-none cursor-pointer p-0" aria-label="Slide 2"></button>
+                <button type="button" onclick="scrollToStatSlide(2)" class="stats-indicator-dot h-1.5 w-1.5 rounded-full bg-slate-300 transition-all duration-300 border-none cursor-pointer p-0" aria-label="Slide 3"></button>
+                <button type="button" onclick="scrollToStatSlide(3)" class="stats-indicator-dot h-1.5 w-1.5 rounded-full bg-slate-300 transition-all duration-300 border-none cursor-pointer p-0" aria-label="Slide 4"></button>
             </div>
         </div>
 
