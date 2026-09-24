@@ -150,13 +150,10 @@ function renderClock() {
 
 let isDragging = false;
 
-function handleClockEvent(e) {
-    if (!isDragging && e.type !== 'mousedown' && e.type !== 'touchstart') return;
-    
-    // Prevent default to avoid scrolling and text selection while interacting with clock hand
+function handleClockPointer(e) {
     if (e.cancelable) e.preventDefault();
     
-    // Support touch and mouse
+    // Support pointer, touch, and mouse coordinates
     let clientX = e.clientX;
     let clientY = e.clientY;
     
@@ -212,50 +209,79 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const clockContainer = document.getElementById('tpClockContainer');
     if (clockContainer) {
-        // Mouse Events
-        clockContainer.addEventListener('mousedown', function(e) {
-            e.preventDefault();
-            isDragging = true;
-            handleClockEvent(e);
-        });
-        document.addEventListener('mousemove', function(e) {
-            if (isDragging) {
-                handleClockEvent(e);
-            }
-        });
-        document.addEventListener('mouseup', function(e) {
-            if (isDragging && isSelectingHour) {
-                setMode('minute'); // Auto switch after hour drop
-            }
-            isDragging = false;
-        });
-        
-        // Touch Events
-        clockContainer.addEventListener('touchstart', function(e) {
-            if (e.cancelable) e.preventDefault();
-            isDragging = true;
-            handleClockEvent(e);
-        }, {passive: false});
-        
-        document.addEventListener('touchmove', function(e) {
-            if (isDragging) {
+        let isPointerActive = false;
+
+        // Pointer Events (Modern Standard for Touch/Mouse Dragging without Page Scroll)
+        if (window.PointerEvent) {
+            clockContainer.addEventListener('pointerdown', function(e) {
                 if (e.cancelable) e.preventDefault();
-                handleClockEvent(e);
-            }
-        }, {passive: false});
-        
-        document.addEventListener('touchend', function(e) {
-            if (isDragging) {
-                if (isSelectingHour) {
-                    setMode('minute');
-                }
+                try {
+                    clockContainer.setPointerCapture(e.pointerId);
+                } catch (err) {}
+                isPointerActive = true;
+                isDragging = true;
+                handleClockPointer(e);
+            });
+
+            clockContainer.addEventListener('pointermove', function(e) {
+                if (!isPointerActive) return;
+                if (e.cancelable) e.preventDefault();
+                handleClockPointer(e);
+            });
+
+            function finishPointer(e) {
+                if (!isPointerActive) return;
+                isPointerActive = false;
                 isDragging = false;
+                try {
+                    clockContainer.releasePointerCapture(e.pointerId);
+                } catch (err) {}
+                if (isSelectingHour) {
+                    setMode('minute'); // Auto switch to minute mode after releasing hour
+                }
             }
-        });
-        
-        document.addEventListener('touchcancel', function(e) {
-            isDragging = false;
-        });
+
+            clockContainer.addEventListener('pointerup', finishPointer);
+            clockContainer.addEventListener('pointercancel', finishPointer);
+        } else {
+            // Fallback for older browsers
+            clockContainer.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                isDragging = true;
+                handleClockPointer(e);
+            });
+            document.addEventListener('mousemove', function(e) {
+                if (isDragging) handleClockPointer(e);
+            });
+            document.addEventListener('mouseup', function(e) {
+                if (isDragging && isSelectingHour) setMode('minute');
+                isDragging = false;
+            });
+
+            clockContainer.addEventListener('touchstart', function(e) {
+                if (e.cancelable) e.preventDefault();
+                isDragging = true;
+                handleClockPointer(e);
+            }, {passive: false});
+            clockContainer.addEventListener('touchmove', function(e) {
+                if (isDragging) {
+                    if (e.cancelable) e.preventDefault();
+                    handleClockPointer(e);
+                }
+            }, {passive: false});
+            document.addEventListener('touchmove', function(e) {
+                if (isDragging) {
+                    if (e.cancelable) e.preventDefault();
+                    handleClockPointer(e);
+                }
+            }, {passive: false});
+            document.addEventListener('touchend', function(e) {
+                if (isDragging) {
+                    if (isSelectingHour) setMode('minute');
+                    isDragging = false;
+                }
+            });
+        }
     }
     
     let dateInput = document.querySelector('input[name="tanggal_peminjaman"]');
@@ -271,7 +297,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ===== DRAG SELECT UNTUK TIME RANGE SLOTS =====
 (function() {
-    var isDragging = false;
+    var isSlotDragging = false;
     var dragStartIdx = -1;
     var currentEndIdx = -1;
 
@@ -340,77 +366,126 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    document.addEventListener('mousedown', function(e) {
-        var slot = e.target.closest('.tp-slot');
-        if (!slot) return;
-        e.preventDefault();
-        isDragging = true;
-        var slots = getSlots();
-        dragStartIdx = slots.indexOf(slot);
-        currentEndIdx = dragStartIdx;
-        updateHighlight(dragStartIdx, dragStartIdx);
-    });
+    document.addEventListener('DOMContentLoaded', function() {
+        var slotContainer = document.getElementById('tpTimeSlots');
+        if (!slotContainer) return;
 
-    document.addEventListener('mouseover', function(e) {
-        if (!isDragging) return;
-        var slot = e.target.closest('.tp-slot');
-        if (!slot) return;
-        var slots = getSlots();
-        var idx = slots.indexOf(slot);
-        if (idx === -1) return;
-        currentEndIdx = idx;
-        var minIdx = Math.min(dragStartIdx, currentEndIdx);
-        var maxIdx = Math.max(dragStartIdx, currentEndIdx);
-        updateHighlight(minIdx, maxIdx);
-    });
+        // Modern Pointer Events for Slot Dragging with full pointer capture
+        if (window.PointerEvent) {
+            slotContainer.addEventListener('pointerdown', function(e) {
+                var slot = e.target.closest('.tp-slot');
+                if (!slot) return;
+                if (e.cancelable) e.preventDefault();
+                try {
+                    slotContainer.setPointerCapture(e.pointerId);
+                } catch (err) {}
+                isSlotDragging = true;
+                var slots = getSlots();
+                dragStartIdx = slots.indexOf(slot);
+                currentEndIdx = dragStartIdx;
+                updateHighlight(dragStartIdx, dragStartIdx);
+            });
 
-    document.addEventListener('mouseup', function(e) {
-        if (!isDragging) return;
-        isDragging = false;
-        var minIdx = Math.min(dragStartIdx, currentEndIdx);
-        var maxIdx = Math.max(dragStartIdx, currentEndIdx);
-        finalizeSelection(minIdx, maxIdx);
-    });
+            slotContainer.addEventListener('pointermove', function(e) {
+                if (!isSlotDragging) return;
+                if (e.cancelable) e.preventDefault();
+                var el = document.elementFromPoint(e.clientX, e.clientY);
+                if (!el) return;
+                var slot = el.closest('.tp-slot');
+                if (!slot) return;
+                var slots = getSlots();
+                var idx = slots.indexOf(slot);
+                if (idx === -1) return;
+                if (idx !== currentEndIdx) {
+                    currentEndIdx = idx;
+                    var minIdx = Math.min(dragStartIdx, currentEndIdx);
+                    var maxIdx = Math.max(dragStartIdx, currentEndIdx);
+                    updateHighlight(minIdx, maxIdx);
+                }
+            });
 
-    // Touch support for time slots
-    document.addEventListener('touchstart', function(e) {
-        var slot = e.target.closest('.tp-slot');
-        if (!slot) return;
-        if (e.cancelable) e.preventDefault();
-        isDragging = true;
-        var slots = getSlots();
-        dragStartIdx = slots.indexOf(slot);
-        currentEndIdx = dragStartIdx;
-        updateHighlight(dragStartIdx, dragStartIdx);
-    }, {passive: false});
+            function finishPointerSlot(e) {
+                if (!isSlotDragging) return;
+                isSlotDragging = false;
+                try {
+                    slotContainer.releasePointerCapture(e.pointerId);
+                } catch (err) {}
+                var minIdx = Math.min(dragStartIdx, currentEndIdx);
+                var maxIdx = Math.max(dragStartIdx, currentEndIdx);
+                finalizeSelection(minIdx, maxIdx);
+            }
 
-    document.addEventListener('touchmove', function(e) {
-        if (!isDragging) return;
-        if (e.cancelable) e.preventDefault();
-        var touch = e.touches[0];
-        var el = document.elementFromPoint(touch.clientX, touch.clientY);
-        if (!el) return;
-        var slot = el.closest('.tp-slot');
-        if (!slot) return;
-        var slots = getSlots();
-        var idx = slots.indexOf(slot);
-        if (idx === -1) return;
-        currentEndIdx = idx;
-        var minIdx = Math.min(dragStartIdx, currentEndIdx);
-        var maxIdx = Math.max(dragStartIdx, currentEndIdx);
-        updateHighlight(minIdx, maxIdx);
-    }, {passive: false});
+            slotContainer.addEventListener('pointerup', finishPointerSlot);
+            slotContainer.addEventListener('pointercancel', finishPointerSlot);
+        } else {
+            // Fallback for older browsers
+            document.addEventListener('mousedown', function(e) {
+                var slot = e.target.closest('.tp-slot');
+                if (!slot) return;
+                e.preventDefault();
+                isSlotDragging = true;
+                var slots = getSlots();
+                dragStartIdx = slots.indexOf(slot);
+                currentEndIdx = dragStartIdx;
+                updateHighlight(dragStartIdx, dragStartIdx);
+            });
 
-    document.addEventListener('touchend', function() {
-        if (!isDragging) return;
-        isDragging = false;
-        var minIdx = Math.min(dragStartIdx, currentEndIdx);
-        var maxIdx = Math.max(dragStartIdx, currentEndIdx);
-        finalizeSelection(minIdx, maxIdx);
-    });
+            document.addEventListener('mouseover', function(e) {
+                if (!isSlotDragging) return;
+                var slot = e.target.closest('.tp-slot');
+                if (!slot) return;
+                var slots = getSlots();
+                var idx = slots.indexOf(slot);
+                if (idx === -1) return;
+                currentEndIdx = idx;
+                var minIdx = Math.min(dragStartIdx, currentEndIdx);
+                var maxIdx = Math.max(dragStartIdx, currentEndIdx);
+                updateHighlight(minIdx, maxIdx);
+            });
 
-    document.addEventListener('touchcancel', function() {
-        if (!isDragging) return;
-        isDragging = false;
+            document.addEventListener('mouseup', function(e) {
+                if (!isSlotDragging) return;
+                isSlotDragging = false;
+                var minIdx = Math.min(dragStartIdx, currentEndIdx);
+                var maxIdx = Math.max(dragStartIdx, currentEndIdx);
+                finalizeSelection(minIdx, maxIdx);
+            });
+
+            slotContainer.addEventListener('touchstart', function(e) {
+                var slot = e.target.closest('.tp-slot');
+                if (!slot) return;
+                if (e.cancelable) e.preventDefault();
+                isSlotDragging = true;
+                var slots = getSlots();
+                dragStartIdx = slots.indexOf(slot);
+                currentEndIdx = dragStartIdx;
+                updateHighlight(dragStartIdx, dragStartIdx);
+            }, {passive: false});
+
+            slotContainer.addEventListener('touchmove', function(e) {
+                if (!isSlotDragging) return;
+                if (e.cancelable) e.preventDefault();
+                var touch = e.touches[0];
+                var el = document.elementFromPoint(touch.clientX, touch.clientY);
+                if (!el) return;
+                var slot = el.closest('.tp-slot');
+                if (!slot) return;
+                var slots = getSlots();
+                var idx = slots.indexOf(slot);
+                if (idx === -1) return;
+                currentEndIdx = idx;
+                var minIdx = Math.min(dragStartIdx, currentEndIdx);
+                var maxIdx = Math.max(dragStartIdx, currentEndIdx);
+                updateHighlight(minIdx, maxIdx);
+            }, {passive: false});
+
+            document.addEventListener('touchend', function() {
+                if (!isSlotDragging) return;
+                isSlotDragging = false;
+                var minIdx = Math.min(dragStartIdx, currentEndIdx);
+                var maxIdx = Math.max(dragStartIdx, currentEndIdx);
+                finalizeSelection(minIdx, maxIdx);
+            });
+        }
     });
 })();
