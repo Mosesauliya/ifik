@@ -303,6 +303,21 @@ class AdminLayanan_model extends CI_Model {
             $this->db->where('nim', $nim)->update('pendaftaran_ta', array('status_' . $kode_berkas => $status));
         }
 
+        // Sync back to file_pendaftaran table if present
+        if ($this->db->table_exists('file_pendaftaran')) {
+            $target_ids = array_unique(['usr_mhs_' . $nim, 'mhs_' . $nim, $nim]);
+            $fp_status = ($enum_status === 'Valid') ? 'Approved' : (($enum_status === 'Invalid') ? 'Rejected' : 'Pending');
+            $fp_update = array('status_doswal' => $fp_status);
+            if (!empty($catatan)) {
+                $fp_update['komentar'] = $catatan;
+            }
+            $this->db->where_in('id_mhs', $target_ids)
+                     ->group_start()
+                        ->like('nama', $kode_berkas)
+                     ->group_end()
+                     ->update('file_pendaftaran', $fp_update);
+        }
+
         // Fail-safe sync: If a berkas is uploaded/set to Pending, ensure pendaftaran_ta's status_approval_admin resets to Pending
         if ($status === 'Pending' && $this->db->table_exists('pendaftaran_ta')) {
             $p_row = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
