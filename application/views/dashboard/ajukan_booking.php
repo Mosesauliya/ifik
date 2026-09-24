@@ -561,7 +561,7 @@
                         Tanggal Peminjaman
                     </label>
                     <input type="text" class="form-control" name="tanggal_peminjaman"
-                           id="tanggalPeminjaman" placeholder="Pilih Tanggal..." required>
+                           id="tanggalPeminjaman" placeholder="Pilih Tanggal..." readonly style="cursor: pointer; background-color: #fff;" required>
                 </div>
 
                 <!-- Keterangan / Keperluan Peminjaman (Full Width Row 3) -->
@@ -786,6 +786,12 @@
                 dateFormat: "Y-m-d",
                 minDate: "today",
                 disableMobile: true,
+                allowInput: false,
+                onOpen: function(selectedDates, dateStr, instance) {
+                    if (instance && instance._input) {
+                        instance._input.blur();
+                    }
+                },
                 onChange: function(selectedDates, dateStr, instance) {
                     if (selectedDates.length > 0) {
                         $('#timeSelectionGroup').slideDown();
