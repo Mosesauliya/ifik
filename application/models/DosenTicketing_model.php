@@ -572,7 +572,64 @@ class DosenTicketing_model extends CI_Model {
         $r->unit_terkait    = !empty($row->unit_terkait) ? $row->unit_terkait : (!empty($row->unit) ? $row->unit : 'Layanan IFIK');
         $r->unit_tujuan     = $r->unit_terkait;
         $r->kategori        = $row->kategori ?? 'Umum';
-        $r->prioritas       = 'Sedang';
+        $r->prioritas       = !empty($row->prioritas) ? $row->prioritas : 'Sedang';
+
+        // Resolve NIDN / NIM / NIP dan Identitas Pengirim (agar tidak undefined property $t->nidn)
+        $resolvedNidn   = !empty($row->nidn) ? $row->nidn : '';
+        $roleSender     = 'Dosen';
+        $labelIdentitas = 'NIDN';
+
+        if (empty($resolvedNidn) && !empty($row->id_user)) {
+            static $userMapCache = [];
+            $uid = (string)$row->id_user;
+
+            if (!array_key_exists($uid, $userMapCache)) {
+                $userRec = null;
+                if ($this->db->table_exists('user')) {
+                    $userRec = $this->db->select('id, nidn_nim, nim, nip, role_id, name')
+                        ->get_where('user', ['id' => $row->id_user])
+                        ->row();
+                    if (!$userRec && is_numeric($row->id_user)) {
+                        $userRec = $this->db->select('id, nidn_nim, nim, nip, role_id, name')
+                            ->get_where('user', ['role_id' => $row->id_user])
+                            ->row();
+                    }
+                }
+                $userMapCache[$uid] = $userRec;
+            } else {
+                $userRec = $userMapCache[$uid];
+            }
+
+            if ($userRec) {
+                $resolvedNidn = !empty($userRec->nidn_nim) ? $userRec->nidn_nim : (!empty($userRec->nim) ? $userRec->nim : (!empty($userRec->nip) ? $userRec->nip : ''));
+                if ((int)$userRec->role_id === 3) {
+                    $roleSender     = 'Mahasiswa';
+                    $labelIdentitas = 'NIM';
+                } elseif ((int)$userRec->role_id === 4) {
+                    $roleSender     = 'Dosen';
+                    $labelIdentitas = 'NIDN';
+                } elseif (in_array((int)$userRec->role_id, [1, 2, 5, 21])) {
+                    $roleSender     = 'Staff/Tendik';
+                    $labelIdentitas = 'NIP';
+                }
+            } else {
+                $resolvedNidn = $uid;
+            }
+        }
+
+        // Cek heuristik jika kategori Kemahasiswaan atau format NIM
+        if ($roleSender === 'Dosen' && ($r->kategori === 'Kemahasiswaan' || (strlen($resolvedNidn) >= 9 && is_numeric($resolvedNidn)))) {
+            $roleSender     = 'Mahasiswa';
+            $labelIdentitas = 'NIM';
+        }
+
+        $r->nidn            = !empty($resolvedNidn) ? $resolvedNidn : '-';
+        $r->nim             = $r->nidn;
+        $r->nidn_nim        = $r->nidn;
+        $r->role_sender     = $roleSender;
+        $r->label_identitas = $labelIdentitas;
+        $r->email           = $row->email ?? '-';
+        $r->ruangan         = $row->ruangan ?? '-';
 
         // Ekstrak subjek dan deskripsi dari isi_ticketing
         $rawIsi = $row->isi_ticketing ?? '';

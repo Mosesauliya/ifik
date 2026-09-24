@@ -159,7 +159,9 @@ class LaboranTicketing extends CI_Controller {
                     'id'              => $ticket->id,
                     'kode_tiket'      => $ticket->kode_tiket,
                     'nama_dosen'      => $ticket->nama_dosen,
-                    'nidn'            => $ticket->nidn ?: '-',
+                    'nidn'            => $ticket->nidn ?? '-',
+                    'label_identitas' => $ticket->label_identitas ?? 'NIDN/NIM',
+                    'role_sender'     => $ticket->role_sender ?? 'Pengirim',
                     'unit_tujuan'     => $ticket->unit_tujuan,
                     'kategori'        => $ticket->kategori,
                     'prioritas'       => $ticket->prioritas,
@@ -208,7 +210,9 @@ class LaboranTicketing extends CI_Controller {
                 'id'              => $ticket->id,
                 'kode_tiket'      => $ticket->kode_tiket,
                 'nama_dosen'      => $ticket->nama_dosen,
-                'nidn'            => $ticket->nidn ?: '-',
+                'nidn'            => $ticket->nidn ?? '-',
+                'label_identitas' => $ticket->label_identitas ?? 'NIDN/NIM',
+                'role_sender'     => $ticket->role_sender ?? 'Pengirim',
                 'unit_tujuan'     => $ticket->unit_tujuan,
                 'kategori'        => $ticket->kategori,
                 'prioritas'       => $ticket->prioritas,
@@ -600,7 +604,7 @@ class LaboranTicketing extends CI_Controller {
         $roleId = (int)$this->session->userdata('role_id');
 
         // Access check: Superadmin (1), Kaur (2), Laboran (21), or Owner
-        if ($roleId !== 1 && $roleId !== 2 && $roleId !== 21 && $ticket->id_user != $userId && $ticket->nidn != $nidn) {
+        if ($roleId !== 1 && $roleId !== 2 && $roleId !== 21 && $ticket->id_user != $userId && ($ticket->nidn ?? '') != $nidn) {
             return $this->output
                 ->set_content_type('application/json')
                 ->set_status_header(403)
@@ -621,7 +625,9 @@ class LaboranTicketing extends CI_Controller {
                     'id'            => $ticket->id,
                     'kode_tiket'    => $ticket->kode_tiket,
                     'nama_dosen'    => $ticket->nama_dosen,
-                    'nidn'          => $ticket->nidn,
+                    'nidn'          => $ticket->nidn ?? '-',
+                    'label_identitas' => $ticket->label_identitas ?? 'NIDN/NIM',
+                    'role_sender'   => $ticket->role_sender ?? 'Pengirim',
                     'unit_tujuan'   => $ticket->unit_tujuan ?: 'Layanan IFIK',
                     'kategori'      => $ticket->kategori,
                     'prioritas'     => $ticket->prioritas,

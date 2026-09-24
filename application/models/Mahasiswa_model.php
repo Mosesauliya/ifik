@@ -44,9 +44,16 @@ class Mahasiswa_model extends CI_Model {
             ->group_start()
                 ->where('id_mhs', $userId)
                 ->or_where('id_mhs', $nim)
+                ->or_where('id_mhs', 'usr_mhs_' . $nim)
             ->group_end()
             ->limit(1)
             ->get('guidance')->row_array();
+
+        if (!$g) {
+            $g = $this->db->select('id')
+                ->get_where('guidance', ['id' => 'gdn_' . $nim])
+                ->row_array();
+        }
 
         return $g ? $g['id'] : null;
     }
@@ -162,7 +169,14 @@ class Mahasiswa_model extends CI_Model {
             $existing_g = $this->db->group_start()
                 ->where('id_mhs', $userId)
                 ->or_where('id_mhs', $nim)
+                ->or_where('id_mhs', 'usr_mhs_' . $nim)
             ->group_end()->get('guidance')->row_array();
+            // Fallback: baris guidance bisa saja tersimpan dengan id_mhs format lain
+            // (mis. 'usr_mhs_<NIM>'), pastikan ketemu lewat primary key supaya
+            // tidak di-INSERT ulang dan memicu error Duplicate entry.
+            if (!$existing_g) {
+                $existing_g = $this->db->get_where('guidance', ['id' => 'gdn_' . $nim])->row_array();
+            }
 
             $g_fields = $this->db->list_fields('guidance');
             $g_data   = [];
@@ -370,8 +384,8 @@ class Mahasiswa_model extends CI_Model {
         // 2. Status Jenis TA & Catatan Jenis TA
         $status_jenis_ta = $pt_data['status_jenis_ta'] ?? null;
         $catatan_jenis_ta = $pt_data['catatan_jenis_ta'] ?? null;
-        if (empty($status_jenis_ta)) {
-            if ($status_judul === 'Approved') {
+        if (empty($status_jenis_ta) || $status_jenis_ta === 'Pending') {
+            if ($status_judul === 'Approved' || ($pt_data['status_approval_wali'] ?? '') === 'Approved') {
                 $status_jenis_ta = 'Approved';
             } else {
                 $status_jenis_ta = 'Pending';

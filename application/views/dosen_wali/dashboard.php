@@ -1788,8 +1788,14 @@
                         return 'Pending';
                     };
 
-                    const rawJenis = getInitStatus(st.status_jenis_ta);
-                    const rawJudul = getInitStatus(st.status_judul);
+                    let rawJenis = getInitStatus(st.status_jenis_ta);
+                    let rawJudul = getInitStatus(st.status_judul);
+                    if (rawJenis === 'Rejected' || rawJudul === 'Rejected') {
+                        // biarkan rejected
+                    } else if (rawJenis === 'Approved' || rawJudul === 'Approved' || st.status_approval_wali === 'Approved') {
+                        rawJenis = 'Approved';
+                        rawJudul = 'Approved';
+                    }
 
                     const processedFiles = {};
                     const fileStatuses = [];
