@@ -239,6 +239,10 @@ $route['log-history'] = 'Admin/log_history';
 $route['adminfooter'] = 'AdminFooter/index';
 $route['adminfooter/update_settings'] = 'AdminFooter/update_settings';
 $route['adminfooter/reset_defaults'] = 'AdminFooter/reset_defaults';
+$route['admin/footer'] = 'AdminFooter/index';
+$route['admin/footer/update_settings'] = 'AdminFooter/update_settings';
+$route['admin/footer/reset_defaults'] = 'AdminFooter/reset_defaults';
+$route['admin/footer-settings'] = 'AdminFooter/index';
 
 // News / Berita Routes
 $route['news/detail/(:num)'] = 'News/detail/$1';
