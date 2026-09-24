@@ -51,6 +51,34 @@
             backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(226, 232, 240, 0.8);
         }
+
+        .page-wrapper-for-sidebar {
+            width: 100%;
+            min-width: 0;
+            min-height: 100vh;
+            transition: margin-left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+            box-sizing: border-box;
+        }
+
+        @media (min-width: 1024px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 270px;
+                width: calc(100% - 270px);
+            }
+
+            body.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 1023.98px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding-top: 56px;
+            }
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -58,6 +86,7 @@
     <!-- Include Dosen Sidebar -->
     <?php $this->load->view('partials/dosen_sidebar'); ?>
 
+    <div class="page-wrapper-for-sidebar">
     <!-- Header Navigation -->
     <header class="glass-header sticky top-0 z-30 px-4 sm:px-6 py-3.5 sm:py-4 pl-16 sm:pl-20">
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
@@ -413,6 +442,7 @@
             </div>
         </div>
     </main>
+    </div>
 
     <!-- Floating Popover Status Stepper Tracking ala WhatsApp & Mahasiswa Workflow -->
     <div id="statusTrackingPopover"

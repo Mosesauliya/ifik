@@ -76,6 +76,34 @@
         .cursor-pen, #signaturePadCanvas, #canvasBox {
             cursor: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj48cGF0aCBkPSJNMTcgM2EyLjg1IDIuODMgMCAxIDEgNCA0TDcuNSAyMC41IDIgMjJsMS41LTUuNVoiIGZpbGw9IiMxZTI5M2IiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTcgM2EyLjg1IDIuODMgMCAxIDEgNCA0TDcuNSAyMC41IDIgMjJsMS41LTUuNVoiIGZpbGw9IiMxZTI5M2IiLz48cG9seWdvbiBwb2ludHM9IjIsMjIgMy4yLDE3LjYgNi40LDIwLjgiIGZpbGw9IiNlYTU4MGMiLz48cGF0aCBkPSJtMTUgNSA0IDQiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIxLjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxjaXJjbGUgY3g9IjIiIGN5PSIyMiIgcj0iMC43NSIgZmlsbD0iIzBmMTcyYSIvPjwvc3ZnPg==") 2 22, crosshair !important;
         }
+
+        .page-wrapper-for-sidebar {
+            width: 100%;
+            min-width: 0;
+            min-height: 100vh;
+            transition: margin-left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+            box-sizing: border-box;
+        }
+
+        @media (min-width: 1024px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 270px;
+                width: calc(100% - 270px);
+            }
+
+            body.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 1023.98px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding-top: 56px;
+            }
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 via-orange-50/20 to-slate-100 min-h-screen text-slate-800 antialiased">
@@ -83,7 +111,8 @@
     <!-- Include Dosen Sidebar -->
     <?php $this->load->view('partials/dosen_sidebar'); ?>
 
-    <!-- Main Content -->
+    <!-- Main Content Wrapper -->
+    <div class="page-wrapper-for-sidebar">
     <main class="min-h-screen p-6 sm:p-8 lg:p-10 max-w-6xl mx-auto">
 
         <!-- Top Header Navigation -->
@@ -717,5 +746,6 @@
             });
         }
     </script>
+    </div>
 </body>
 </html>

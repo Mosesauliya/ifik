@@ -22,17 +22,17 @@
         $k_status = $has_ta ? ($pendaftaran['status_approval_koor'] ?? 'Pending') : 'Belum Diajukan';
         $kk_status = $has_ta ? ($pendaftaran['status_approval_kk'] ?? 'Pending') : 'Belum Diajukan';
 
-        $w_is_app = ($w_status === 'Approved');
-        $w_is_rej = ($w_status === 'Rejected');
+        $w_is_app = $has_ta && ($w_status === 'Approved');
+        $w_is_rej = $has_ta && ($w_status === 'Rejected');
 
-        $a_is_app = ($a_status === 'Approved');
-        $a_is_rej = ($a_status === 'Rejected');
+        $a_is_app = $has_ta && ($a_status === 'Approved');
+        $a_is_rej = $has_ta && ($a_status === 'Rejected');
 
-        $k_is_app = ($k_status === 'Approved');
-        $k_is_rej = ($k_status === 'Rejected');
+        $k_is_app = $has_ta && ($k_status === 'Approved');
+        $k_is_rej = $has_ta && ($k_status === 'Rejected');
 
-        $kk_is_app = ($kk_status === 'Approved');
-        $kk_is_rej = ($kk_status === 'Rejected');
+        $kk_is_app = $has_ta && ($kk_status === 'Approved');
+        $kk_is_rej = $has_ta && ($kk_status === 'Rejected');
 
         $approved_count = 0;
         if ($has_ta) {
@@ -49,12 +49,18 @@
         $dashoffset = $circumference - ($circumference * $progress_pct / 100);
     ?>
 
-    <!-- Header Glass Navbar (Clean White Glass) -->
-    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-2xl border-b border-orange-100/80 shadow-xs">
-        <div class="w-full px-4 sm:px-6 lg:px-10">
-            <div class="flex items-center justify-between h-16 sm:h-18">
-                <!-- Brand -->
-                <div class="flex items-center gap-3">
+    <!-- Auto Role-Aware Curved Animated Sidebar -->
+    <?php $this->load->view('components/curved_sidebar'); ?>
+
+    <!-- Main Page Content Wrapper (Shrinks / Expands with Sidebar) -->
+    <div id="mainPageContent" class="page-wrapper-for-sidebar min-h-screen flex flex-col flex-grow">
+
+        <!-- Header Glass Navbar (Clean White Glass) -->
+        <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-2xl border-b border-orange-100/80 shadow-xs">
+            <div class="w-full px-4 sm:px-6 lg:px-10">
+                <div class="flex items-center justify-between h-16 sm:h-18">
+                    <!-- Brand -->
+                    <div class="flex items-center gap-3 header-title-shift pl-11 lg:pl-0">
                     <div class="w-9 h-9 bg-gradient-to-tr from-orange-600 to-amber-500 text-white rounded-xl font-bold text-lg flex items-center justify-center box-3d">
                         I
                     </div>
@@ -63,22 +69,6 @@
                         <span class="text-[9px] uppercase font-bold tracking-wider text-orange-500 mt-0.5 block">Akademik Mahasiswa</span>
                     </div>
                 </div>
-
-                <!-- Nav Menu -->
-                <nav class="hidden md:flex items-center gap-7 relative" id="mainNav">
-                    <a href="<?= site_url('mahasiswa'); ?>" class="nav-link active-link flex items-center gap-2 tracking-wide">
-                        <i class="bi bi-grid-1x2-fill"></i>
-                        <span>Dashboard</span>
-                    </a>
-                    <a href="<?= site_url('mahasiswa/pendaftaran_ta'); ?>" class="nav-link flex items-center gap-2 tracking-wide">
-                        <i class="bi bi-file-earmark-text"></i>
-                        <span>Pendaftaran TA</span>
-                    </a>
-                    <a href="<?= site_url('mahasiswa/bimbingan'); ?>" class="nav-link flex items-center gap-2 tracking-wide">
-                        <i class="bi bi-person-video3"></i>
-                        <span>Bimbingan TA</span>
-                    </a>
-                </nav>
 
                 <!-- User Quick Info -->
                 <div class="flex items-center gap-2.5">
@@ -432,9 +422,9 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 relative z-10">
                     <!-- Stage 1: Dosen Wali -->
                     <?php 
-                        $w_card_bg = $w_is_app ? 'border-2 border-emerald-400 bg-emerald-50/50 shadow-md shadow-emerald-500/10' : ($w_is_rej ? 'border-rose-300 bg-rose-50/60' : 'border-orange-300 bg-orange-100/50');
-                        $w_icon_bg = $w_is_app ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/50 ring-4 ring-emerald-400/25' : ($w_is_rej ? 'bg-gradient-to-tr from-rose-600 to-red-400 text-white' : 'bg-gradient-to-tr from-orange-500 to-amber-500 text-white');
-                        $w_badge_cls = $w_is_app ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : ($w_is_rej ? 'bg-rose-100 text-rose-800 border-rose-300' : 'bg-orange-200 text-orange-900 border-orange-300');
+                        $w_card_bg = $w_is_app ? 'border-2 border-emerald-400 bg-emerald-50/50 shadow-md shadow-emerald-500/10' : ($w_is_rej ? 'border-rose-300 bg-rose-50/60' : ($has_ta ? 'border-orange-300 bg-orange-100/50' : 'border-slate-200 bg-slate-50/80'));
+                        $w_icon_bg = $w_is_app ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/50 ring-4 ring-emerald-400/25' : ($w_is_rej ? 'bg-gradient-to-tr from-rose-600 to-red-400 text-white' : ($has_ta ? 'bg-gradient-to-tr from-orange-500 to-amber-500 text-white' : 'bg-slate-200 text-slate-500'));
+                        $w_badge_cls = $w_is_app ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : ($w_is_rej ? 'bg-rose-100 text-rose-800 border-rose-300' : ($has_ta ? 'bg-orange-200 text-orange-900 border-orange-300' : 'bg-slate-100 text-slate-600 border-slate-200'));
                     ?>
                     <div class="bg-white/95 p-5 rounded-2xl border <?= $w_card_bg; ?> shadow-xs hover-card-elevate flex flex-col justify-between">
                         <div class="flex items-center justify-between mb-3.5">
@@ -447,7 +437,7 @@
                             <h3 class="font-bold text-sm sm:text-base text-slate-900 mb-1">Dosen Wali</h3>
                             <p class="text-xs text-slate-500 mb-3 font-medium">Persetujuan akademik</p>
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg border <?= $w_badge_cls; ?> badge-3d">
-                                <span class="w-2 h-2 rounded-full <?= $w_is_app ? 'bg-emerald-500' : ($w_is_rej ? 'bg-rose-500' : 'bg-orange-600'); ?>"></span>
+                                <span class="w-2 h-2 rounded-full <?= $w_is_app ? 'bg-emerald-500' : ($w_is_rej ? 'bg-rose-500' : ($has_ta ? 'bg-orange-600' : 'bg-slate-400')); ?>"></span>
                                 <?= $w_status; ?>
                             </span>
                         </div>
@@ -603,24 +593,24 @@
             </div>
 
             <?php if(!empty($pendaftaran['judul_1'])): ?>
-                <!-- Table View for Submitted Proposal (Matching Design Reference 2) -->
+                <!-- Table View for Submitted Proposal -->
                 <div class="overflow-x-auto rounded-2xl border border-slate-200/90 bg-white shadow-2xs">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full min-w-[920px] text-left border-collapse">
                         <thead class="bg-slate-50 text-slate-700 font-extrabold uppercase text-xs tracking-wider border-b border-slate-200">
                             <tr>
-                                <th class="py-4.5 px-6 text-center w-14">#</th>
-                                <th class="py-4.5 px-6">Nama Kegiatan / Judul TA</th>
-                                <th class="py-4.5 px-6">Jenis &amp; Konsentrasi</th>
-                                <th class="py-4.5 px-6">Tanggal Pengajuan</th>
-                                <th class="py-4.5 px-6 text-center">Status</th>
-                                <th class="py-4.5 px-6 text-center">Review Berkas</th>
-                                <th class="py-4.5 px-6 text-right">Aksi</th>
+                                <th class="py-4 px-4 text-center w-12">#</th>
+                                <th class="py-4 px-4">Nama Kegiatan / Judul TA</th>
+                                <th class="py-4 px-4 text-center whitespace-nowrap">Jenis &amp; Konsentrasi</th>
+                                <th class="py-4 px-4 whitespace-nowrap">Tanggal Pengajuan</th>
+                                <th class="py-4 px-4 text-center whitespace-nowrap">Status</th>
+                                <th class="py-4 px-4 text-center whitespace-nowrap">Review Berkas</th>
+                                <th class="py-4 px-4 text-center whitespace-nowrap">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 font-medium">
                             <tr class="hover:bg-orange-50/20 transition-colors">
-                                <td class="py-5 px-6 text-center font-bold text-slate-700 text-base">1</td>
-                                <td class="py-5 px-6">
+                                <td class="py-4 px-4 text-center font-bold text-slate-700 text-base align-middle">1</td>
+                                <td class="py-4 px-4 align-middle">
                                     <?php
                                         $st_j = $pendaftaran['status_judul'] ?? 'Pending';
                                     ?>
@@ -629,11 +619,11 @@
                                     </div>
                                     <div class="flex items-center gap-2 flex-wrap text-xs">
                                         <?php if($st_j === 'Approved'): ?>
-                                            <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                            <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
                                                 <i class="bi bi-check-circle-fill text-emerald-600"></i> Judul Disetujui
                                             </span>
                                         <?php elseif($st_j === 'Rejected'): ?>
-                                            <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-300">
+                                            <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-300">
                                                 <i class="bi bi-x-circle-fill text-rose-600"></i> Judul Ditolak / Revisi
                                             </span>
                                         <?php endif; ?>
@@ -644,7 +634,7 @@
                                         <?php endif; ?>
                                     </div>
                                 </td>
-                                <td class="py-5 px-6 whitespace-nowrap">
+                                <td class="py-4 px-4 text-center whitespace-nowrap align-middle">
                                     <span class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-bold bg-sky-100 text-sky-800 border border-sky-200">
                                         <?= htmlspecialchars($pendaftaran['jenis_ta'] ?? 'Pengkaryaan'); ?>
                                     </span>
@@ -652,7 +642,7 @@
                                         <?= htmlspecialchars($pendaftaran['konsentrasi_dkv'] ?? 'Desain Grafis'); ?>
                                     </div>
                                 </td>
-                                <td class="py-5 px-6 text-slate-800 font-bold text-xs whitespace-nowrap">
+                                <td class="py-4 px-4 text-slate-800 font-bold text-xs whitespace-nowrap align-middle">
                                     <?= !empty($pendaftaran['created_at']) ? date('d F Y', strtotime($pendaftaran['created_at'])) : date('d F Y'); ?>
                                 </td>
                                 <?php
@@ -817,7 +807,7 @@
                                     }
                                 ?>
                                 <!-- Kolom Status Keseluruhan -->
-                                <td class="py-5 px-6 text-center whitespace-nowrap align-middle">
+                                <td class="py-4 px-4 text-center whitespace-nowrap align-middle">
                                     <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold border <?= $overall_badge_cls; ?>">
                                         <span class="w-2 h-2 rounded-full <?= $overall_dot_cls; ?>"></span>
                                         <?= $overall_badge_text; ?>
@@ -825,7 +815,7 @@
                                 </td>
 
                                 <!-- Kolom Rincian Review Berkas (Di Kanan Status) -->
-                                <td class="py-5 px-6 text-center whitespace-nowrap align-middle">
+                                <td class="py-4 px-4 text-center whitespace-nowrap align-middle">
                                     <button type="button" onclick="openFileBreakdownModal()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-bold <?= ($rej_items > 0) ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'; ?> transition shadow-2xs cursor-pointer group" title="Klik untuk melihat rincian status berkas & catatan dosen">
                                         <?php if($rej_items > 0): ?>
                                             <i class="bi bi-exclamation-triangle-fill text-rose-500"></i>
@@ -841,14 +831,14 @@
                                     </button>
                                 </td>
 
-                                <!-- Kolom Aksi (Ditumpuk Vertikal - Tombol Edit Dihapus) -->
-                                <td class="py-5 px-6 text-right whitespace-nowrap align-middle">
-                                    <div class="inline-flex flex-col items-end gap-1.5">
-                                        <a href="<?= site_url('mahasiswa/detail_pendaftaran'); ?>" class="w-24 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full bg-sky-100 hover:bg-sky-200 text-sky-700 text-xs font-bold transition shadow-2xs hover:scale-105 active:scale-95" title="Lihat Detail Lengkap Pengajuan Tugas Akhir">
-                                            <i class="bi bi-eye-fill text-xs"></i> Detail
+                                <!-- Kolom Aksi -->
+                                <td class="py-4 px-4 text-center whitespace-nowrap align-middle">
+                                    <div class="inline-flex items-center justify-center gap-2">
+                                        <a href="<?= site_url('mahasiswa/detail_pendaftaran'); ?>" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-xs font-bold transition shadow-2xs hover:scale-105 active:scale-95" title="Lihat Detail Lengkap Pengajuan Tugas Akhir">
+                                            <i class="bi bi-eye-fill text-xs"></i> <span>Detail</span>
                                         </a>
-                                        <button type="button" onclick="openResetModal()" class="w-24 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-100 hover:bg-rose-200 text-rose-700 text-xs font-bold transition cursor-pointer shadow-2xs hover:scale-105 active:scale-95" title="Reset / Batalkan Pengajuan">
-                                            <i class="bi bi-arrow-counterclockwise text-xs"></i> Reset
+                                        <button type="button" onclick="openResetModal()" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition cursor-pointer shadow-2xs hover:scale-105 active:scale-95" title="Reset / Batalkan Pengajuan">
+                                            <i class="bi bi-arrow-counterclockwise text-xs"></i> <span>Reset</span>
                                         </button>
                                     </div>
                                 </td>
@@ -875,6 +865,7 @@
         </div>
 
     </main>
+    </div> <!-- /#mainPageContent -->
 
     <?php if($has_ta): ?>
         <!-- Modal Rincian Status Berkas Persyaratan & Catatan Dosen -->

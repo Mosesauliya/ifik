@@ -209,16 +209,18 @@ class AdminLayanan extends CI_Controller {
         $this->AdminLayanan_model->save_student_berkas($nim, $kode_berkas, $file_name, $status, $catatan);
 
         // Update legacy column if exists (status_ksm, status_transkrip, etc)
-        $legacy_update = array();
-        if (in_array($kode_berkas, array('ksm', 'transkrip', 'pernyataan', 'bebas_lab'))) {
-            $legacy_update['status_' . $kode_berkas] = $status;
-        }
-        if ($this->db->field_exists('catatan_file_' . $kode_berkas, 'pendaftaran_ta')) {
-            $legacy_update['catatan_file_' . $kode_berkas] = ($status === 'Invalid') ? $catatan : '';
-        }
-        if (!empty($legacy_update)) {
-            $this->db->where('nim', $nim);
-            $this->db->update('pendaftaran_ta', $legacy_update);
+        if ($this->db->table_exists('pendaftaran_ta')) {
+            $legacy_update = array();
+            if (in_array($kode_berkas, array('ksm', 'transkrip', 'pernyataan', 'bebas_lab'))) {
+                $legacy_update['status_' . $kode_berkas] = $status;
+            }
+            if ($this->db->field_exists('catatan_file_' . $kode_berkas, 'pendaftaran_ta')) {
+                $legacy_update['catatan_file_' . $kode_berkas] = ($status === 'Invalid') ? $catatan : '';
+            }
+            if (!empty($legacy_update)) {
+                $this->db->where('nim', $nim);
+                $this->db->update('pendaftaran_ta', $legacy_update);
+            }
         }
 
         // Recompute all berkas summary for this student
@@ -233,28 +235,30 @@ class AdminLayanan extends CI_Controller {
             }
         }
 
-        if (!empty($invalid_kodes)) {
-            $this->db->where('nim', $nim);
-            $this->db->update('pendaftaran_ta', array(
-                'status_approval_admin' => 'Rejected',
-                'berkas_kurang'         => json_encode($invalid_kodes),
-                'catatan_admin'         => !empty($catatan) ? $catatan : ($detail['catatan_admin'] ?? 'Beberapa berkas perlu direvisi')
-            ));
-        } elseif ($summary['valid_count'] === $summary['total_count']) {
-            $this->db->where('nim', $nim);
-            $this->db->update('pendaftaran_ta', array(
-                'status_approval_admin' => 'Approved',
-                'catatan_admin'         => !empty($catatan) ? $catatan : 'Seluruh berkas persyaratan telah lengkap & valid.',
-                'berkas_kurang'         => NULL,
-                'current_stage'         => 'Koordinator TA'
-            ));
-        } else {
-            $this->db->where('nim', $nim);
-            $this->db->update('pendaftaran_ta', array(
-                'status_approval_admin' => 'Pending',
-                'berkas_kurang'         => NULL,
-                'current_stage'         => 'Admin Layanan'
-            ));
+        if ($this->db->table_exists('pendaftaran_ta')) {
+            if (!empty($invalid_kodes)) {
+                $this->db->where('nim', $nim);
+                $this->db->update('pendaftaran_ta', array(
+                    'status_approval_admin' => 'Rejected',
+                    'berkas_kurang'         => json_encode($invalid_kodes),
+                    'catatan_admin'         => !empty($catatan) ? $catatan : ($detail['catatan_admin'] ?? 'Beberapa berkas perlu direvisi')
+                ));
+            } elseif ($summary['valid_count'] === $summary['total_count']) {
+                $this->db->where('nim', $nim);
+                $this->db->update('pendaftaran_ta', array(
+                    'status_approval_admin' => 'Approved',
+                    'catatan_admin'         => !empty($catatan) ? $catatan : 'Seluruh berkas persyaratan telah lengkap & valid.',
+                    'berkas_kurang'         => NULL,
+                    'current_stage'         => 'Koordinator TA'
+                ));
+            } else {
+                $this->db->where('nim', $nim);
+                $this->db->update('pendaftaran_ta', array(
+                    'status_approval_admin' => 'Pending',
+                    'berkas_kurang'         => NULL,
+                    'current_stage'         => 'Admin Layanan'
+                ));
+            }
         }
 
         // Log action

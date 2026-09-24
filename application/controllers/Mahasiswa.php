@@ -26,7 +26,19 @@ class Mahasiswa extends CI_Controller {
         return $this->session->userdata('nim') ?: ($this->session->userdata('nidn_nim') ?: '1301210001');
     }
 
-    // Dashboard Mahasiswa & Overview Status Approval Chain
+    private function _do_upload($field_name, $config) {
+        $this->upload->initialize($config);
+        if ($this->upload->do_upload($field_name)) {
+            $upload_data = $this->upload->data();
+            return $upload_data['file_name'];
+        }
+        return null;
+    }
+
+    // =========================================================
+    // DASHBOARD & PROFIL
+    // =========================================================
+
     public function index() {
         $nim = $this->_get_current_nim();
         $this->load->model('AdminLayanan_model');
@@ -39,7 +51,109 @@ class Mahasiswa extends CI_Controller {
         $this->load->view('mahasiswa/dashboard', $data);
     }
 
-    // Detail Lengkap Pendaftaran Tugas Akhir (Single Page View)
+    public function geodata() {
+        $nim = $this->_get_current_nim();
+        $data['title'] = 'Geodata Mahasiswa';
+        $data['mahasiswa'] = $this->Mahasiswa_model->get_mahasiswa($nim);
+
+        if ($this->input->post()) {
+            $update_data = array(
+                'alamat'    => $this->input->post('alamat'),
+                'latitude'  => $this->input->post('latitude'),
+                'longitude' => $this->input->post('longitude'),
+                'kota'      => $this->input->post('kota'),
+                'provinsi'  => $this->input->post('provinsi')
+            );
+            $this->Mahasiswa_model->update_geodata($nim, $update_data);
+            $this->session->set_flashdata('success', 'Geodata berhasil diperbarui!');
+            redirect('mahasiswa/geodata');
+        }
+
+        $this->load->view('mahasiswa/geodata', $data);
+    }
+
+    public function ganti_password() {
+        $nim = $this->_get_current_nim();
+        $data['title'] = 'Ganti Password';
+
+        if ($this->input->post()) {
+            $this->form_validation->set_rules('password_baru', 'Password Baru', 'required|min_length[6]');
+            $this->form_validation->set_rules('konfirmasi_password', 'Konfirmasi Password', 'required|matches[password_baru]');
+
+            if ($this->form_validation->run() === TRUE) {
+                $password_hashed = password_hash($this->input->post('password_baru'), PASSWORD_BCRYPT);
+                $this->Mahasiswa_model->update_password($nim, $password_hashed);
+                $this->session->set_flashdata('success', 'Password berhasil diubah!');
+                redirect('mahasiswa');
+            }
+        }
+
+        $this->load->view('mahasiswa/ganti_password', $data);
+    }
+
+    public function translate_judul() {
+        header('Content-Type: application/json');
+        $text = trim($this->input->post('text') ?? '');
+
+        if (empty($text)) {
+            echo json_encode(['status' => 'error', 'message' => 'Teks judul tidak boleh kosong!']);
+            return;
+        }
+
+        $url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=id&tl=en&dt=t&q=" . urlencode($text);
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $err = curl_error($ch);
+        curl_close($ch);
+
+        if (!$err && $http_code === 200 && !empty($response)) {
+            $data = json_decode($response, true);
+            $translated_text = '';
+            if (isset($data[0]) && is_array($data[0])) {
+                foreach ($data[0] as $segment) {
+                    $translated_text .= $segment[0] ?? '';
+                }
+            }
+            if (!empty($translated_text)) {
+                echo json_encode(['status' => 'success', 'translated' => trim($translated_text)]);
+                return;
+            }
+        }
+
+        $url_fallback = "https://api.mymemory.translated.net/get?q=" . urlencode($text) . "&langpair=id|en";
+        $ch2 = curl_init();
+        curl_setopt($ch2, CURLOPT_URL, $url_fallback);
+        curl_setopt($ch2, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch2, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch2, CURLOPT_CONNECTTIMEOUT, 2);
+        curl_setopt($ch2, CURLOPT_TIMEOUT, 3);
+        $fallback_res = curl_exec($ch2);
+        curl_close($ch2);
+
+        if (!empty($fallback_res)) {
+            $json = json_decode($fallback_res, true);
+            $translated = $json['responseData']['translatedText'] ?? '';
+            if ($translated) {
+                echo json_encode(['status' => 'success', 'translated' => trim($translated)]);
+                return;
+            }
+        }
+
+        echo json_encode(['status' => 'error', 'message' => 'Gagal menerjemahkan secara online, silakan ketik judul Inggris secara manual.']);
+    }
+
+    // =========================================================
+    // PENDAFTARAN TA
+    // =========================================================
+
     public function detail_pendaftaran() {
         $nim = $this->_get_current_nim();
         $data['title'] = 'Detail Pengajuan Tugas Akhir';
@@ -49,7 +163,6 @@ class Mahasiswa extends CI_Controller {
         $this->load->view('mahasiswa/detail_pendaftaran', $data);
     }
 
-    // Formulir Edit Pendaftaran TA (Single Page Non-Wizard Form)
     public function edit_pendaftaran() {
         $nim = $this->_get_current_nim();
         $pendaftaran = $this->Mahasiswa_model->get_status_pendaftaran($nim);
@@ -83,7 +196,7 @@ class Mahasiswa extends CI_Controller {
 
             $config['upload_path']   = './uploads/persyaratan_ta/';
             $config['allowed_types'] = 'pdf';
-            $config['max_size']      = 5120; // 5MB
+            $config['max_size']      = 5120;
 
             if (!is_dir($config['upload_path'])) {
                 mkdir($config['upload_path'], 0777, true);
@@ -96,7 +209,6 @@ class Mahasiswa extends CI_Controller {
             $file_step5 = $this->_do_upload('file_pernyataan', $config);
             $file_step6 = $this->_do_upload('file_bebas_lab', $config);
 
-            // Reset status approval yang sebelumnya ditolak kembali ke Pending untuk re-review
             $new_w_status  = ($w_status === 'Rejected') ? 'Pending' : $w_status;
             $new_a_status  = ($a_status === 'Rejected') ? 'Pending' : $a_status;
             $new_k_status  = ($k_status === 'Rejected') ? 'Pending' : $k_status;
@@ -132,7 +244,6 @@ class Mahasiswa extends CI_Controller {
         $this->load->view('mahasiswa/edit_pendaftaran', $data);
     }
 
-    // Submit perbaikan berkas revisi langsung dari modal mahasiswa
     public function upload_revisi_berkas() {
         $nim = $this->_get_current_nim();
         $pendaftaran = $this->Mahasiswa_model->get_status_pendaftaran($nim);
@@ -154,7 +265,7 @@ class Mahasiswa extends CI_Controller {
 
         $config['upload_path']   = './uploads/persyaratan_ta/';
         $config['allowed_types'] = 'pdf';
-        $config['max_size']      = 5120; // 5MB
+        $config['max_size']      = 5120;
 
         if (!is_dir($config['upload_path'])) {
             mkdir($config['upload_path'], 0777, true);
@@ -172,28 +283,28 @@ class Mahasiswa extends CI_Controller {
                 $new_file = $this->_do_upload($f, $config);
                 if ($new_file) {
                     $uploaded_count++;
-                    // 1. Simpan ke pendaftaran_berkas
                     $this->AdminLayanan_model->save_student_berkas($nim, $k, $new_file, 'Pending');
 
-                    // 2. Simpan ke pendaftaran_ta jika kolomnya ada
-                    if ($this->db->field_exists($f, 'pendaftaran_ta')) {
-                        $updated_data[$f] = $new_file;
-                    }
-                    $col_status  = 'status_file_' . $k;
-                    $col_review  = 'review_file_' . $k;
-                    $col_catatan = 'catatan_file_' . $k;
-                    if ($this->db->field_exists($col_status, 'pendaftaran_ta')) {
-                        $updated_data[$col_status] = 'Pending';
-                    }
-                    $col_legacy_status = 'status_' . $k;
-                    if ($this->db->field_exists($col_legacy_status, 'pendaftaran_ta')) {
-                        $updated_data[$col_legacy_status] = 'Pending';
-                    }
-                    if ($this->db->field_exists($col_review, 'pendaftaran_ta')) {
-                        $updated_data[$col_review] = 0;
-                    }
-                    if ($this->db->field_exists($col_catatan, 'pendaftaran_ta')) {
-                        $updated_data[$col_catatan] = '';
+                    if ($this->db->table_exists('pendaftaran_ta')) {
+                        if ($this->db->field_exists($f, 'pendaftaran_ta')) {
+                            $updated_data[$f] = $new_file;
+                        }
+                        $col_status  = 'status_file_' . $k;
+                        $col_review  = 'review_file_' . $k;
+                        $col_catatan = 'catatan_file_' . $k;
+                        if ($this->db->field_exists($col_status, 'pendaftaran_ta')) {
+                            $updated_data[$col_status] = 'Pending';
+                        }
+                        $col_legacy_status = 'status_' . $k;
+                        if ($this->db->field_exists($col_legacy_status, 'pendaftaran_ta')) {
+                            $updated_data[$col_legacy_status] = 'Pending';
+                        }
+                        if ($this->db->field_exists($col_review, 'pendaftaran_ta')) {
+                            $updated_data[$col_review] = 0;
+                        }
+                        if ($this->db->field_exists($col_catatan, 'pendaftaran_ta')) {
+                            $updated_data[$col_catatan] = '';
+                        }
                     }
                 }
             }
@@ -217,25 +328,17 @@ class Mahasiswa extends CI_Controller {
             $prev_k_st  = $pendaftaran['status_approval_koor'] ?? 'Pending';
             $prev_kk_st = $pendaftaran['status_approval_kk'] ?? 'Pending';
 
-            // Jika Dosen Wali sebelumnya menolak, reset Dosen Wali ke Pending
-            if ($prev_w_st === 'Rejected') {
-                $updated_data['status_approval_wali'] = 'Pending';
-            }
-
-            // Jika Admin Layanan sebelumnya menolak, reset Admin Layanan ke Pending dan bersihkan catatan
+            if ($prev_w_st === 'Rejected') $updated_data['status_approval_wali'] = 'Pending';
             if ($prev_a_st === 'Rejected' || !empty($pendaftaran['berkas_kurang'])) {
                 $updated_data['status_approval_admin'] = 'Pending';
                 $updated_data['berkas_kurang'] = NULL;
                 $updated_data['catatan_admin'] = '';
             }
-
-            // Jika Ketua KK sebelumnya menolak, reset Ketua KK ke Pending dan bersihkan catatan
             if ($prev_kk_st === 'Rejected') {
                 $updated_data['status_approval_kk'] = 'Pending';
                 $updated_data['catatan_kk'] = '';
             }
 
-            // Tentukan current_stage secara presisi
             $new_w_st  = $updated_data['status_approval_wali'] ?? $prev_w_st;
             $new_a_st  = $updated_data['status_approval_admin'] ?? $prev_a_st;
             $new_k_st  = $updated_data['status_approval_koor'] ?? $prev_k_st;
@@ -255,7 +358,6 @@ class Mahasiswa extends CI_Controller {
 
             $updated_data['updated_at'] = date('Y-m-d H:i:s');
 
-            // Reset catatan_wali jika semua item revisi sudah dikirimkan / diperbaiki
             $latest_berkas_map = $this->AdminLayanan_model->get_student_berkas_map($nim);
             $has_any_rejected_left = false;
             foreach ($active_syarat as $sb) {
@@ -271,10 +373,7 @@ class Mahasiswa extends CI_Controller {
                         $st = $pendaftaran[$col_status] ?? 'Pending';
                     }
                 }
-                if ($st === 'Rejected') {
-                    $has_any_rejected_left = true;
-                    break;
-                }
+                if ($st === 'Rejected') { $has_any_rejected_left = true; break; }
             }
             if (!$has_any_rejected_left && ($updated_data['status_judul'] ?? $pendaftaran['status_judul'] ?? 'Pending') === 'Rejected') {
                 $has_any_rejected_left = true;
@@ -287,7 +386,9 @@ class Mahasiswa extends CI_Controller {
                 $updated_data['catatan_wali'] = '';
             }
 
-            $this->db->where('nim', $nim)->update('pendaftaran_ta', $updated_data);
+            if ($this->db->table_exists('pendaftaran_ta')) {
+                $this->db->where('nim', $nim)->update('pendaftaran_ta', $updated_data);
+            }
             $this->session->set_flashdata('success', 'Berhasil mengunggah ' . ($uploaded_count ? $uploaded_count . ' berkas perbaikan' : 'perubahan usulan') . ' untuk diverifikasi kembali!');
         } else {
             $this->session->set_flashdata('error', 'Tidak ada file baru yang diunggah. Silakan pilih file PDF yang valid.');
@@ -296,38 +397,12 @@ class Mahasiswa extends CI_Controller {
         redirect('mahasiswa');
     }
 
-    // Fitur Geodata Mahasiswa
-    public function geodata() {
-        $nim = $this->_get_current_nim();
-        $data['title'] = 'Geodata Mahasiswa';
-        $data['mahasiswa'] = $this->Mahasiswa_model->get_mahasiswa($nim);
-
-        if ($this->input->post()) {
-            $update_data = array(
-                'alamat'    => $this->input->post('alamat'),
-                'latitude'  => $this->input->post('latitude'),
-                'longitude' => $this->input->post('longitude'),
-                'kota'      => $this->input->post('kota'),
-                'provinsi'  => $this->input->post('provinsi')
-            );
-            $this->Mahasiswa_model->update_geodata($nim, $update_data);
-            $this->session->set_flashdata('success', 'Geodata berhasil diperbarui!');
-            redirect('mahasiswa/geodata');
-        }
-
-        $this->load->view('mahasiswa/geodata', $data);
-    }
-
-    // Fitur Pendaftaran TA 6-Step Wizard
     public function pendaftaran_ta() {
-        $nim = method_exists($this, '_get_current_nim') 
-            ? $this->_get_current_nim() 
-            : ($this->session->userdata('nim') ?: '1301210001');
+        $nim = $this->_get_current_nim();
 
         $this->load->model('AdminLayanan_model');
         $student_berkas = $this->AdminLayanan_model->get_student_berkas_map($nim);
         $pendaftaran = $this->Mahasiswa_model->get_status_pendaftaran($nim);
-        // Form hanya terkunci jika sudah resmi dikirim (is_submitted = 1)
         $has_completed_submission = !empty($pendaftaran['is_submitted']);
 
         $has_revisi = false;
@@ -345,21 +420,16 @@ class Mahasiswa extends CI_Controller {
 
         $has_ta = !empty($pendaftaran['jenis_ta']) || !empty($pendaftaran['judul_1']) || !empty($pendaftaran['file_ksm']) || !empty($student_berkas);
 
-        // Hitung server_draft_step secara presisi untuk 3-Step Wizard
         $server_draft_step = 1;
         if (!empty($pendaftaran) || !empty($student_berkas)) {
             $saved_step = !empty($pendaftaran['draft_step']) ? (int)$pendaftaran['draft_step'] : 0;
-            // Normalisasi data lama skala 6 step ke 3 step
-            if ($saved_step >= 4) {
-                $saved_step = 2;
-            }
+            if ($saved_step >= 4) $saved_step = 2;
 
             if ($saved_step >= 1 && $saved_step <= 3) {
                 $server_draft_step = $saved_step;
             } else {
                 $has_any_file = !empty($pendaftaran['file_ksm']) || !empty($pendaftaran['file_transkrip']) || !empty($pendaftaran['file_pernyataan']) || !empty($pendaftaran['file_bebas_lab']) || !empty($student_berkas);
                 $has_step1 = !empty($pendaftaran['jenis_ta']) && !empty($pendaftaran['judul_1']);
-
                 if ($has_any_file) {
                     $server_draft_step = 2;
                 } elseif ($has_step1) {
@@ -384,10 +454,9 @@ class Mahasiswa extends CI_Controller {
         $data['student_berkas'] = $student_berkas;
 
         if ($this->input->post()) {
-            // Konfigurasi Upload File PDF
             $config['upload_path']   = './uploads/persyaratan_ta/';
             $config['allowed_types'] = 'pdf';
-            $config['max_size']      = 5120; // 5MB
+            $config['max_size']      = 5120;
 
             if (!is_dir($config['upload_path'])) {
                 mkdir($config['upload_path'], 0777, true);
@@ -395,7 +464,6 @@ class Mahasiswa extends CI_Controller {
 
             $this->load->library('upload', $config);
 
-            // Upload Dinamis per Syarat Berkas
             $active_syarat = $data['syarat_berkas'];
             $file_uploads = [];
 
@@ -420,30 +488,27 @@ class Mahasiswa extends CI_Controller {
             $file_step5 = $file_uploads['pernyataan'] ?? $this->_do_upload('file_pernyataan', $config);
             $file_step6 = $file_uploads['bebas_lab'] ?? $this->_do_upload('file_bebas_lab', $config);
 
-            // Ambil data pendaftaran_ta yang sudah ada untuk menjaga status yang sudah di-Approve
-            $existing_ta = $this->db->get_where('pendaftaran_ta', array('nim' => $nim))->row_array();
+            $existing_ta = $this->db->table_exists('pendaftaran_ta')
+                ? $this->db->get_where('pendaftaran_ta', array('nim' => $nim))->row_array()
+                : $this->Mahasiswa_model->get_status_pendaftaran($nim);
 
             $w_status  = isset($existing_ta['status_approval_wali']) ? $existing_ta['status_approval_wali'] : 'Pending';
             $a_status  = isset($existing_ta['status_approval_admin']) ? $existing_ta['status_approval_admin'] : 'Pending';
             $k_status  = isset($existing_ta['status_approval_koor']) ? $existing_ta['status_approval_koor'] : 'Pending';
             $kk_status = isset($existing_ta['status_approval_kk']) ? $existing_ta['status_approval_kk'] : 'Pending';
 
-            // Jika status Dosen Wali tadinya Rejected atau Draft, reset Dosen Wali ke Pending saat dikirim resmi
             if ($w_status === 'Rejected' || $w_status === 'Draft' || empty($w_status)) {
                 $w_status = 'Pending';
             }
 
-            // Jika status Admin LAA Rejected/Approved dan siswa mengedit/re-upload/unggah file baru, reset LAA ke Pending untuk re-verifikasi
             $has_new_uploads = !empty($file_step3) || !empty($file_step4) || !empty($file_step5) || !empty($file_step6);
             if ($a_status === 'Rejected' || ($a_status === 'Approved' && $has_new_uploads) || $has_new_uploads) {
                 $a_status = 'Pending';
             }
 
-            // Jika status Koor TA / Ketua KK Rejected, reset stage terkait ke Pending saat diedit
             if ($k_status === 'Rejected') $k_status = 'Pending';
             if ($kk_status === 'Rejected') $kk_status = 'Pending';
 
-            // Tentukan current_stage secara presisi berdasarkan rantai prasyarat
             if ($w_status !== 'Approved') {
                 $current_stage = 'Dosen Wali';
             } else if ($a_status !== 'Approved') {
@@ -456,7 +521,6 @@ class Mahasiswa extends CI_Controller {
                 $current_stage = 'Selesai Approval';
             }
 
-            // Lookup id_dosen_wali dari tabel dosen_wali berdasarkan nip_dosen_wali mahasiswa
             $mhs_data      = $this->db->get_where('mahasiswa', ['nim' => $nim])->row_array();
             $nip_dw        = !empty($mhs_data['nip_dosen_wali']) ? $mhs_data['nip_dosen_wali'] : null;
             $dw_row        = $nip_dw ? $this->db->get_where('dosen_wali', ['nip' => $nip_dw])->row_array() : null;
@@ -484,13 +548,11 @@ class Mahasiswa extends CI_Controller {
                 'created_at'           => isset($existing_ta['created_at']) ? $existing_ta['created_at'] : date('Y-m-d H:i:s')
             );
 
-            // Update individual document status columns if new files were uploaded
             if ($file_step3) $data_ta['status_ksm'] = 'Pending';
             if ($file_step4) $data_ta['status_transkrip'] = 'Pending';
             if ($file_step5) $data_ta['status_pernyataan'] = 'Pending';
             if ($file_step6) $data_ta['status_bebas_lab'] = 'Pending';
 
-            // Sync status_verifikasi di pendaftaran_berkas menjadi Pending jika berkas baru diunggah
             $file_updates = array(
                 'ksm'        => $file_step3,
                 'transkrip'  => $file_step4,
@@ -517,40 +579,9 @@ class Mahasiswa extends CI_Controller {
                             ]);
                         }
                     }
-
-                    // Sync juga ke file_pendaftaran
-                    if ($this->db->table_exists('file_pendaftaran') && !empty($f_name)) {
-                        $id_fp = 'fp_' . $nim . '_' . $f_code;
-                        $id_mhs_usr = 'usr_mhs_' . $nim;
-                        $ex_fp = $this->db->where('id', $id_fp)->or_where(['id_mhs' => $id_mhs_usr, 'nama' => $f_code])->get('file_pendaftaran')->row_array();
-                        $rel_path = 'uploads/persyaratan_ta/' . $f_name;
-                        if ($ex_fp) {
-                            $this->db->where('id', $ex_fp['id'])->update('file_pendaftaran', [
-                                'file'            => $rel_path,
-                                'status_doswal'   => 'Pending',
-                                'status_adminlaa' => 'Pending',
-                                'date_edit'       => date('Y-m-d H:i:s')
-                            ]);
-                        } else {
-                            $this->db->insert('file_pendaftaran', [
-                                'id'              => $id_fp,
-                                'id_mhs'          => $id_mhs_usr,
-                                'nama'            => $f_code,
-                                'file'            => $rel_path,
-                                'view_adminlaa'   => 0,
-                                'status_adminlaa' => 'Pending',
-                                'view_doswal'     => 0,
-                                'status_doswal'   => 'Pending',
-                                'komentar'        => '',
-                                'date'            => date('Y-m-d H:i:s'),
-                                'date_edit'       => date('Y-m-d H:i:s')
-                            ]);
-                        }
-                    }
                 }
             }
 
-            // Jika siswa mengunggah file baru saat LAA revisi, reset berkas_kurang setelah perbaikan
             if ($a_status === 'Pending' && !empty($existing_ta['berkas_kurang'])) {
                 $data_ta['berkas_kurang'] = NULL;
             }
@@ -563,99 +594,6 @@ class Mahasiswa extends CI_Controller {
         $this->load->view('mahasiswa/pendaftaran_ta', $data);
     }
 
-    // Helper Upload File PDF
-    private function _do_upload($field_name, $config) {
-        $this->upload->initialize($config);
-        if ($this->upload->do_upload($field_name)) {
-            $upload_data = $this->upload->data();
-            return $upload_data['file_name'];
-        }
-        return null;
-    }
-
-    // Fitur Ganti Password
-    public function ganti_password() {
-        $nim = $this->_get_current_nim();
-        $data['title'] = 'Ganti Password';
-
-        if ($this->input->post()) {
-            $this->form_validation->set_rules('password_baru', 'Password Baru', 'required|min_length[6]');
-            $this->form_validation->set_rules('konfirmasi_password', 'Konfirmasi Password', 'required|matches[password_baru]');
-
-            if ($this->form_validation->run() === TRUE) {
-                $password_hashed = password_hash($this->input->post('password_baru'), PASSWORD_BCRYPT);
-                $this->Mahasiswa_model->update_password($nim, $password_hashed);
-                $this->session->set_flashdata('success', 'Password berhasil diubah!');
-                redirect('mahasiswa');
-            }
-        }
-
-        $this->load->view('mahasiswa/ganti_password', $data);
-    }
-
-    // Endpoint Auto-Translate Judul ID -> EN
-    public function translate_judul() {
-        header('Content-Type: application/json');
-        $text = trim($this->input->post('text') ?? '');
-
-        if (empty($text)) {
-            echo json_encode(['status' => 'error', 'message' => 'Teks judul tidak boleh kosong!']);
-            return;
-        }
-
-        // 1. Coba Google Translate API (Timeout cepat 2.5s)
-        $url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=id&tl=en&dt=t&q=" . urlencode($text);
-        
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 3);
-        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
-        $response = curl_exec($ch);
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $err = curl_error($ch);
-        curl_close($ch);
-
-        if (!$err && $http_code === 200 && !empty($response)) {
-            $data = json_decode($response, true);
-            $translated_text = '';
-            if (isset($data[0]) && is_array($data[0])) {
-                foreach ($data[0] as $segment) {
-                    $translated_text .= $segment[0] ?? '';
-                }
-            }
-            if (!empty($translated_text)) {
-                echo json_encode(['status' => 'success', 'translated' => trim($translated_text)]);
-                return;
-            }
-        }
-
-        // 2. Fallback: MyMemory Translation API (Timeout 3s via cURL)
-        $url_fallback = "https://api.mymemory.translated.net/get?q=" . urlencode($text) . "&langpair=id|en";
-        $ch2 = curl_init();
-        curl_setopt($ch2, CURLOPT_URL, $url_fallback);
-        curl_setopt($ch2, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch2, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch2, CURLOPT_CONNECTTIMEOUT, 2);
-        curl_setopt($ch2, CURLOPT_TIMEOUT, 3);
-        $fallback_res = curl_exec($ch2);
-        curl_close($ch2);
-
-        if (!empty($fallback_res)) {
-            $json = json_decode($fallback_res, true);
-            $translated = $json['responseData']['translatedText'] ?? '';
-            if ($translated) {
-                echo json_encode(['status' => 'success', 'translated' => trim($translated)]);
-                return;
-            }
-        }
-
-        echo json_encode(['status' => 'error', 'message' => 'Gagal menerjemahkan secara online, silakan ketik judul Inggris secara manual.']);
-    }
-
-    // Fitur Reset Pengajuan TA
     public function reset_pendaftaran() {
         $nim = $this->_get_current_nim();
         $this->Mahasiswa_model->reset_pendaftaran_ta($nim);
@@ -663,348 +601,6 @@ class Mahasiswa extends CI_Controller {
         redirect('mahasiswa');
     }
 
-    // Modul Bimbingan TA & Upload Berkas Preview (Multi-Stage Hub)
-    public function bimbingan() {
-        $nim = $this->_get_current_nim();
-        $this->load->model('Rekomendasi_model');
-
-        $data['title'] = 'Bimbingan & Evaluasi Preview TA';
-        $data['mahasiswa'] = $this->Mahasiswa_model->get_mahasiswa($nim);
-        $data['pendaftaran'] = $this->Mahasiswa_model->get_status_pendaftaran($nim);
-        
-        $pembimbing_penguji = $this->Mahasiswa_model->get_pembimbing_penguji($nim);
-
-        // Riwayat tiap tahapan preview
-        $data['riwayat_preview1'] = $this->Mahasiswa_model->get_riwayat_preview($nim, 'Preview 1');
-        $data['riwayat_preview2'] = $this->Mahasiswa_model->get_riwayat_preview($nim, 'Preview 2');
-        $data['riwayat_preview3'] = $this->Mahasiswa_model->get_riwayat_preview($nim, 'Preview 3');
-        $data['riwayat_sidang']   = $this->Mahasiswa_model->get_riwayat_preview($nim, 'Sidang');
-
-        // Total upload count
-        $data['upload_count_p1'] = count($data['riwayat_preview1']);
-        $data['upload_count_p2'] = count($data['riwayat_preview2']);
-        $data['upload_count_p3'] = count($data['riwayat_preview3']);
-        $data['upload_count_sidang'] = count($data['riwayat_sidang']);
-
-        // Status terbaru
-        $data['latest_p1'] = $data['riwayat_preview1'][0] ?? null;
-        $data['latest_p2'] = $data['riwayat_preview2'][0] ?? null;
-        $data['latest_p3'] = $data['riwayat_preview3'][0] ?? null;
-        $data['latest_sidang'] = $data['riwayat_sidang'][0] ?? null;
-
-        // Ambil Data Pembimbing & Penguji Asli dari Database
-        $data['pembimbing_1'] = !empty($pembimbing_penguji['pembimbing_1']) ? $pembimbing_penguji['pembimbing_1'] : '';
-        $data['pembimbing_2'] = !empty($pembimbing_penguji['pembimbing_2']) ? $pembimbing_penguji['pembimbing_2'] : '';
-        $data['penguji_ta'] = !empty($pembimbing_penguji['penguji_1']) ? $pembimbing_penguji['penguji_1'] : '';
-        $data['penguji_1'] = !empty($pembimbing_penguji['penguji_1']) ? $pembimbing_penguji['penguji_1'] : '';
-        $data['penguji_2'] = !empty($pembimbing_penguji['penguji_2']) ? $pembimbing_penguji['penguji_2'] : '';
-
-        // Parsing data rincian rubrik penilaian sidang (jika ada dan valid JSON)
-        $detail_penilaian = null;
-        if (!empty($data['pendaftaran']['detail_penilaian_sidang'])) {
-            $raw_detail = $data['pendaftaran']['detail_penilaian_sidang'];
-            if (is_array($raw_detail)) {
-                $detail_penilaian = $raw_detail;
-            } elseif (is_string($raw_detail)) {
-                $dec = json_decode($raw_detail, true);
-                if (is_array($dec)) {
-                    $detail_penilaian = $dec;
-                }
-            }
-        }
-        $data['detail_penilaian'] = $detail_penilaian;
-
-        // Cek apakah minimal pembimbing 1 dan 2 sudah di-assign
-        $data['is_pembimbing_assigned'] = (!empty($data['pembimbing_1']) && !empty($data['pembimbing_2']));
-
-        $this->load->view('mahasiswa/bimbingan_preview1', $data);
-    }
-
-    // Alias route preview1
-    public function preview1() {
-        $this->bimbingan();
-    }
-
-    public function dosen_bimbingan() {
-        $dosen_id = $this->session->userdata('user_id');
-        $posisi = $this->input->get('posisi') ?: 1;
-        
-        $data['title'] = 'Dashboard Bimbingan Dosen';
-        $data['posisi'] = $posisi;
-        $data['students'] = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, $posisi);
-        
-        foreach ($data['students'] as &$student) {
-            $student['preview1'] = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], 'Preview 1');
-            $student['preview2'] = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], 'Preview 2');
-            $student['preview3'] = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], 'Preview 3');
-        }
-        
-        $this->load->view('mahasiswa/dosen_bimbingan', $data);
-    }
-
-    public function dosen_penguji() {
-        $dosen_id = $this->session->userdata('user_id');
-        $posisi = $this->input->get('posisi') ?: 1;
-        
-        $model_posisi = $posisi == 1 ? 3 : 4;
-
-        $data['title'] = 'Dashboard Dosen Penguji';
-        $data['posisi'] = $posisi;
-        $data['model_posisi'] = $model_posisi;
-        $data['students'] = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, $model_posisi);
-        
-        foreach ($data['students'] as &$student) {
-            $student['preview1'] = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], 'Preview 1');
-            $student['preview2'] = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], 'Preview 2');
-            $student['preview3'] = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], 'Preview 3');
-        }
-        
-        $this->load->view('mahasiswa/dosen_penguji', $data);
-    }
-
-    // Endpoint Upload Draft Berkas Preview (Preview 1 / 2 / 3)
-    public function upload_preview() {
-        $nim = $this->_get_current_nim();
-        $tahap = $this->input->post('tahap_preview') ?: 'Preview 1';
-
-        $upload_dir = './uploads/preview_ta/';
-        if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0777, true);
-        }
-
-        $config['upload_path']   = $upload_dir;
-        $config['allowed_types'] = 'pdf|docx|zip';
-        $config['max_size']      = 10240; // 10MB
-        $clean_tahap = str_replace(' ', '', strtoupper($tahap));
-        $config['file_name']     = $clean_tahap . '_' . $nim . '_' . time();
-
-        $this->load->library('upload', $config);
-
-        if (!$this->upload->do_upload('file_draft')) {
-            $error_msg = $this->upload->display_errors('', '');
-            $this->session->set_flashdata('error', 'Gagal mengunggah berkas: ' . $error_msg);
-        } else {
-            $upload_data = $this->upload->data();
-            $file_name = $upload_data['file_name'];
-            $catatan = trim($this->input->post('catatan_mahasiswa') ?? '');
-
-            $data_insert = array(
-                'nim'                => $nim,
-                'tahap_preview'      => $tahap,
-                'file_draft'         => $file_name,
-                'catatan_mahasiswa'  => $catatan,
-                'status_pembimbing'  => 'Pending',
-                'created_at'         => date('Y-m-d H:i:s')
-            );
-
-            $this->Mahasiswa_model->save_upload_preview($data_insert);
-
-            // Process optional Eviden Non-Sidang upload from student in Preview 3
-            if (!empty($_FILES['rekomen_eviden']['name'])) {
-                $ev_config['upload_path']   = './uploads/persyaratan_ta/';
-                $ev_config['allowed_types'] = 'pdf|docx|doc';
-                $ev_config['max_size']      = 10240;
-                $clean_tahap = str_replace(' ', '', strtoupper($tahap));
-                $ev_config['file_name']     = 'EVIDEN_' . $nim . '_' . time();
-
-                $this->upload->initialize($ev_config);
-                if ($this->upload->do_upload('rekomen_eviden')) {
-                    $ev_data = $this->upload->data();
-                    $ev_file = $ev_data['file_name'];
-                    $rek_title = trim($this->input->post('rekomen_title') ?? 'Jalur Ekuivalensi Prestasi');
-
-                    $this->load->model('Rekomendasi_model');
-                    $this->Rekomendasi_model->save_submission(array(
-                        'nim'                 => $nim,
-                        'recommendation_type' => 'non_sidang',
-                        'jalur_title'         => $rek_title,
-                        'form_data_json'      => json_encode(array('eviden' => $ev_file, 'uploaded_by' => 'mahasiswa')),
-                        'catatan_dosen'       => 'Mahasiswa mengajukan kelulusan jalur Non-Sidang dengan dokumen bukti pendukung.',
-                        'status'              => 'pending'
-                    ));
-                }
-            }
-
-            $this->session->set_flashdata('success', "Draft Berkas {$tahap} berhasil diunggah! Menunggu peninjauan dari Dosen Penilai.");
-        }
-
-        redirect('mahasiswa/bimbingan');
-    }
-
-
-    // Fallback handler upload_preview1
-    public function upload_preview1() {
-        $this->upload_preview();
-    }
-
-    // ============================================================
-    // UPLOAD PREVIEW 3 (3 FILE) - AJAX & FALLBACK
-    // ============================================================
-    public function upload_preview3() {
-        $this->upload_preview3_ajax();
-    }
-
-    public function upload_preview3_ajax() {
-        header('Content-Type: application/json');
-
-        $nim = $this->_get_current_nim();
-        $tahap = 'Preview 3';
-
-        $upload_dir = './uploads/preview_ta/';
-        if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0777, true);
-        }
-
-        $config = [
-            'upload_path'   => $upload_dir,
-            'allowed_types' => 'pdf|doc|docx',
-            'max_size'      => 10240, // 10MB
-        ];
-
-        $this->load->library('upload');
-
-        // Upload file sitasi
-        $config['file_name'] = 'PREVIEW3_SITASI_' . $nim . '_' . time();
-        $file_sitasi = $this->_do_upload('file_sitasi', $config);
-
-        // Upload file bimbingan
-        $config['file_name'] = 'PREVIEW3_BIMBINGAN_' . $nim . '_' . time();
-        $file_bimbingan = $this->_do_upload('file_bimbingan', $config);
-
-        // Upload file persyaratan
-        $config['file_name'] = 'PREVIEW3_PERSYARATAN_' . $nim . '_' . time();
-        $file_persyaratan = $this->_do_upload('file_persyaratan', $config);
-
-        if (!$file_sitasi || !$file_bimbingan || !$file_persyaratan) {
-            echo json_encode([
-                'status' => false,
-                'message' => 'Gagal upload. Pastikan ketiga file terisi dan format PDF/DOC/DOCX maksimal 10MB. ' . $this->upload->display_errors('', '')
-            ]);
-            return;
-        }
-
-        $catatan = trim($this->input->post('catatan_mahasiswa') ?? '');
-
-        $data_insert = [
-            'nim'                => $nim,
-            'tahap_preview'      => $tahap,
-            'file_draft'         => $file_sitasi, // WAJIB: kolom file_draft NOT NULL
-            'file_sitasi'        => $file_sitasi,
-            'file_bimbingan'     => $file_bimbingan,
-            'file_persyaratan'   => $file_persyaratan,
-            'catatan_mahasiswa'  => $catatan,
-            'status_pembimbing'  => 'Pending',
-            'created_at'         => date('Y-m-d H:i:s')
-        ];
-
-        $this->Mahasiswa_model->save_upload_preview($data_insert);
-
-        echo json_encode([
-            'status'  => true,
-            'message' => 'Berkas Preview 3 berhasil diunggah. Menunggu review Pembimbing 1.'
-        ]);
-    }
-
-    // ============================================================
-    // UPLOAD SIDANG (1 FILE) - AJAX & FALLBACK
-    // ============================================================
-    public function upload_sidang() {
-        $this->upload_sidang_ajax();
-    }
-
-    public function upload_sidang_ajax() {
-        header('Content-Type: application/json');
-
-        $nim = $this->_get_current_nim();
-
-        $upload_dir = './uploads/sidang/';
-        if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0777, true);
-        }
-
-        $config = [
-            'upload_path'   => $upload_dir,
-            'allowed_types' => 'pdf|doc|docx',
-            'max_size'      => 10240, // 10MB
-            'file_name'     => 'SIDANG_' . $nim . '_' . time(),
-        ];
-
-        $this->load->library('upload', $config);
-
-        if (!$this->upload->do_upload('file_sidang')) {
-            echo json_encode([
-                'status' => false,
-                'message' => 'Gagal upload berkas sidang: ' . $this->upload->display_errors('', '')
-            ]);
-            return;
-        }
-
-        $upload_data = $this->upload->data();
-        $file_sidang = $upload_data['file_name'];
-        $catatan = trim($this->input->post('catatan_sidang') ?? '');
-
-        $data_insert = [
-            'nim'                => $nim,
-            'tahap_preview'      => 'Sidang',
-            'file_draft'         => $file_sidang, // dipakai sebagai fallback di view
-            'catatan_mahasiswa'  => $catatan,
-            'status_pembimbing'  => 'Pending',
-            'created_at'         => date('Y-m-d H:i:s')
-        ];
-
-        $this->Mahasiswa_model->save_upload_preview($data_insert);
-
-        echo json_encode([
-            'status'  => true,
-            'message' => 'Berkas Sidang Akhir berhasil diunggah.'
-        ]);
-    }
-
-    // Endpoint for Dosen to submit review
-    public function review_preview() {
-        $role_id = (int) $this->session->userdata('role_id');
-        // Izinkan role_id 1 (Admin) dan role_id 3 (Dosen)
-        if ($role_id != 3 && $role_id != 4 && $role_id != 1) {
-            redirect('mahasiswa/bimbingan');
-            return;
-        }
-
-        $id = $this->input->post('id_preview');
-        $posisi = $this->input->post('posisi');
-        $catatan = $this->input->post('catatan_pembimbing');
-        $status = $this->input->post('status_pembimbing');
-
-        if ($posisi == 1) {
-            $data = array(
-                'status_pembimbing' => $status,
-                'catatan_pembimbing' => $catatan
-            );
-            $this->Mahasiswa_model->update_review_preview($id, $data);
-            $this->session->set_flashdata('success', 'Review Pembimbing 1 berhasil disimpan.');
-        } else if ($posisi == 2) {
-            $data = array(
-                'catatan_pembimbing_2' => $catatan
-            );
-            $this->Mahasiswa_model->update_review_preview($id, $data);
-            $this->session->set_flashdata('success', 'Komentar Pembimbing 2 berhasil disimpan.');
-        } else if ($posisi == 3) {
-            $data = array(
-                'catatan_penguji_1' => $catatan
-            );
-            $this->Mahasiswa_model->update_review_preview($id, $data);
-            $this->session->set_flashdata('success', 'Catatan Penguji 1 berhasil disimpan.');
-        } else if ($posisi == 4) {
-            $data = array(
-                'catatan_penguji_2' => $catatan
-            );
-            $this->Mahasiswa_model->update_review_preview($id, $data);
-            $this->session->set_flashdata('success', 'Catatan Penguji 2 berhasil disimpan.');
-        }
-
-        redirect('mahasiswa/bimbingan?posisi=' . $posisi);
-    }
-
-    // AJAX Endpoint: Realtime fetch status approval 4-tahap pendaftaran TA mahasiswa
     public function get_status_pendaftaran_ajax() {
         $nim = $this->_get_current_nim();
         $pendaftaran = $this->Mahasiswa_model->get_status_pendaftaran($nim);
@@ -1057,7 +653,6 @@ class Mahasiswa extends CI_Controller {
             ]));
     }
 
-    // AJAX Endpoint: Instant Background Auto-Upload berkas persyaratan TA
     public function ajax_upload_file_ta() {
         $nim = $this->input->post('nim') ?: $this->_get_current_nim();
         $field_name = $this->input->post('field_name');
@@ -1076,7 +671,7 @@ class Mahasiswa extends CI_Controller {
 
         $config['upload_path']   = $upload_dir;
         $config['allowed_types'] = 'pdf';
-        $config['max_size']      = 5120; // 5MB
+        $config['max_size']      = 5120;
         $config['file_name']     = $field_name . '_' . $nim . '_' . time();
 
         $this->load->library('upload', $config);
@@ -1092,41 +687,40 @@ class Mahasiswa extends CI_Controller {
 
             $kode_berkas = str_replace('file_', '', $field_name);
 
-            // 1. Simpan / update ke database pendaftaran_ta sebagai draft
-            $existing_ta = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
-            $upData = [];
-            if ($this->db->field_exists($field_name, 'pendaftaran_ta')) {
-                $upData[$field_name] = $file_name;
-            }
-            $upData['draft_step'] = 2; // Step berkas
-            $upData['updated_at'] = date('Y-m-d H:i:s');
-
-            if ($existing_ta) {
-                if (empty($existing_ta['konsentrasi_dkv'])) $upData['konsentrasi_dkv'] = $mhs_konsentrasi;
-                if (empty($existing_ta['id_kk'])) $upData['id_kk'] = $mhs_id_kk;
-                // Jika status LAA sudah Approved/Rejected sebelumnya, reset ke Pending karena ada re-upload / upload file baru
-                if (isset($existing_ta['status_approval_admin']) && in_array($existing_ta['status_approval_admin'], ['Approved', 'Rejected'])) {
-                    $upData['status_approval_admin'] = 'Pending';
-                    if (($existing_ta['status_approval_wali'] ?? '') === 'Approved') {
-                        $upData['current_stage'] = 'Admin Layanan';
-                    }
+            if ($this->db->table_exists('pendaftaran_ta')) {
+                $existing_ta = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
+                $upData = [];
+                if ($this->db->field_exists($field_name, 'pendaftaran_ta')) {
+                    $upData[$field_name] = $file_name;
                 }
-                $this->db->where('nim', $nim)->update('pendaftaran_ta', $upData);
-            } else {
-                $upData['nim']                  = $nim;
-                $upData['konsentrasi_dkv']      = $mhs_konsentrasi;
-                $upData['id_kk']                = $mhs_id_kk;
-                $upData['is_submitted']         = 0;
-                $upData['status_approval_wali'] = 'Draft';
-                $upData['status_approval_admin'] = 'Pending';
-                $upData['status_approval_koor'] = 'Pending';
-                $upData['status_approval_kk']   = 'Pending';
-                $upData['current_stage']        = 'Draft';
-                $upData['created_at']           = date('Y-m-d H:i:s');
-                $this->db->insert('pendaftaran_ta', $upData);
+                $upData['draft_step'] = 2;
+                $upData['updated_at'] = date('Y-m-d H:i:s');
+
+                if ($existing_ta) {
+                    if (empty($existing_ta['konsentrasi_dkv'])) $upData['konsentrasi_dkv'] = $mhs_konsentrasi;
+                    if (empty($existing_ta['id_kk'])) $upData['id_kk'] = $mhs_id_kk;
+                    if (isset($existing_ta['status_approval_admin']) && in_array($existing_ta['status_approval_admin'], ['Approved', 'Rejected'])) {
+                        $upData['status_approval_admin'] = 'Pending';
+                        if (($existing_ta['status_approval_wali'] ?? '') === 'Approved') {
+                            $upData['current_stage'] = 'Admin Layanan';
+                        }
+                    }
+                    $this->db->where('nim', $nim)->update('pendaftaran_ta', $upData);
+                } else {
+                    $upData['nim']                  = $nim;
+                    $upData['konsentrasi_dkv']      = $mhs_konsentrasi;
+                    $upData['id_kk']                = $mhs_id_kk;
+                    $upData['is_submitted']         = 0;
+                    $upData['status_approval_wali'] = 'Draft';
+                    $upData['status_approval_admin'] = 'Pending';
+                    $upData['status_approval_koor'] = 'Pending';
+                    $upData['status_approval_kk']   = 'Pending';
+                    $upData['current_stage']        = 'Draft';
+                    $upData['created_at']           = date('Y-m-d H:i:s');
+                    $this->db->insert('pendaftaran_ta', $upData);
+                }
             }
 
-            // 2. Simpan juga ke tabel pendaftaran_berkas via AdminLayanan_model
             $this->load->model('AdminLayanan_model');
             $req_nama_berkas = $this->input->post('nama_berkas');
             if (empty($req_nama_berkas)) {
@@ -1138,7 +732,6 @@ class Mahasiswa extends CI_Controller {
                 $this->AdminLayanan_model->save_student_berkas($nim, $kode_berkas, $file_name, 'Pending', $req_nama_berkas);
             }
 
-            // Sync ke pendaftaran_berkas agar status verifikasi Admin LAA di-reset ke Pending untuk berkas baru ini
             $kode_berkas = str_replace('file_', '', $field_name);
             if ($this->db->table_exists('pendaftaran_berkas')) {
                 $existing_berkas = $this->db->get_where('pendaftaran_berkas', ['nim' => $nim, 'kode_berkas' => $kode_berkas])->row_array();
@@ -1162,40 +755,43 @@ class Mahasiswa extends CI_Controller {
                 }
             }
 
-            // Sync langsung ke file_pendaftaran jika tabel tersedia
             if ($this->db->table_exists('file_pendaftaran')) {
-                $id_fp = 'fp_' . $nim . '_' . $kode_berkas;
-                $id_mhs_usr = 'usr_mhs_' . $nim;
-                $ex_fp = $this->db->group_start()
-                    ->where('id', $id_fp)
-                    ->or_group_start()
-                        ->where('id_mhs', $id_mhs_usr)
-                        ->where('nama', $kode_berkas)
+                try {
+                    $fp_fields = $this->db->list_fields('file_pendaftaran');
+                    $id_fp = 'fp_' . $nim . '_' . $kode_berkas;
+                    $id_mhs_usr = 'usr_mhs_' . $nim;
+                    $ex_fp = $this->db->group_start()
+                        ->where('id', $id_fp)
+                        ->or_group_start()
+                            ->where('id_mhs', $id_mhs_usr)
+                            ->where('nama', $kode_berkas)
+                        ->group_end()
                     ->group_end()
-                ->group_end()
-                ->get('file_pendaftaran')->row_array();
-                $rel_file_path = 'uploads/persyaratan_ta/' . $file_name;
-                if ($ex_fp) {
-                    $this->db->where('id', $ex_fp['id'])->update('file_pendaftaran', [
-                        'file'            => $rel_file_path,
-                        'status_doswal'   => 'Pending',
-                        'status_adminlaa' => 'Pending',
-                        'date_edit'       => date('Y-m-d H:i:s')
-                    ]);
-                } else {
-                    $this->db->insert('file_pendaftaran', [
-                        'id'              => $id_fp,
-                        'id_mhs'          => $id_mhs_usr,
-                        'nama'            => $kode_berkas,
-                        'file'            => $rel_file_path,
-                        'view_adminlaa'   => 0,
-                        'status_adminlaa' => 'Pending',
-                        'view_doswal'     => 0,
-                        'status_doswal'   => 'Pending',
-                        'komentar'        => '',
-                        'date'            => date('Y-m-d H:i:s'),
-                        'date_edit'       => date('Y-m-d H:i:s')
-                    ]);
+                    ->get('file_pendaftaran')->row_array();
+                    $rel_file_path = 'uploads/persyaratan_ta/' . $file_name;
+
+                    $fp_payload = array();
+                    if (in_array('file', $fp_fields)) $fp_payload['file'] = $rel_file_path;
+                    if (in_array('status_doswal', $fp_fields)) $fp_payload['status_doswal'] = 'Pending';
+                    if (in_array('status_adminlaa', $fp_fields)) $fp_payload['status_adminlaa'] = 'Pending';
+                    if (in_array('date_edit', $fp_fields)) $fp_payload['date_edit'] = date('Y-m-d H:i:s');
+
+                    if ($ex_fp) {
+                        if (!empty($fp_payload)) {
+                            $this->db->where('id', $ex_fp['id'])->update('file_pendaftaran', $fp_payload);
+                        }
+                    } else {
+                        if (in_array('id', $fp_fields)) $fp_payload['id'] = $id_fp;
+                        if (in_array('id_mhs', $fp_fields)) $fp_payload['id_mhs'] = $id_mhs_usr;
+                        if (in_array('nama', $fp_fields)) $fp_payload['nama'] = $kode_berkas;
+                        if (in_array('view_adminlaa', $fp_fields)) $fp_payload['view_adminlaa'] = 0;
+                        if (in_array('view_doswal', $fp_fields)) $fp_payload['view_doswal'] = 0;
+                        if (in_array('komentar', $fp_fields)) $fp_payload['komentar'] = '';
+                        if (in_array('date', $fp_fields)) $fp_payload['date'] = date('Y-m-d H:i:s');
+                        $this->db->insert('file_pendaftaran', $fp_payload);
+                    }
+                } catch (Exception $e) {
+                    log_message('error', 'Error syncing file_pendaftaran in ajax_upload: ' . $e->getMessage());
                 }
             }
 
@@ -1221,7 +817,6 @@ class Mahasiswa extends CI_Controller {
         }
     }
 
-    // AJAX Endpoint: Instant Background Delete berkas persyaratan TA
     public function ajax_delete_file_ta() {
         $nim = $this->input->post('nim') ?: $this->_get_current_nim();
         $field_name = $this->input->post('field_name');
@@ -1235,8 +830,9 @@ class Mahasiswa extends CI_Controller {
 
         $kode_berkas = str_replace('file_', '', $field_name);
 
-        // Cek jika pendaftaran sudah dikunci
-        $pendaftaran = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
+        $pendaftaran = $this->db->table_exists('pendaftaran_ta')
+            ? $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array()
+            : $this->Mahasiswa_model->get_status_pendaftaran($nim);
         if (!empty($pendaftaran['is_submitted'])) {
             $w_status  = $pendaftaran['status_approval_wali'] ?? 'Pending';
             $a_status  = $pendaftaran['status_approval_admin'] ?? 'Pending';
@@ -1252,12 +848,10 @@ class Mahasiswa extends CI_Controller {
             }
         }
 
-        // 1. Hapus dari pendaftaran_berkas
         if ($this->db->table_exists('pendaftaran_berkas')) {
             $this->db->where('nim', $nim)->where('kode_berkas', $kode_berkas)->delete('pendaftaran_berkas');
         }
 
-        // 2. Kosongkan kolom di pendaftaran_ta jika ada kolomnya
         if ($this->db->table_exists('pendaftaran_ta') && $this->db->field_exists($field_name, 'pendaftaran_ta')) {
             $this->db->where('nim', $nim)->update('pendaftaran_ta', [
                 $field_name => '',
@@ -1275,7 +869,6 @@ class Mahasiswa extends CI_Controller {
             ]));
     }
 
-    // AJAX Endpoint: Auto-Save / Manual Save Draft Teks & Berkas ke Database Server
     public function ajax_save_draft_ta() {
         $nim = $this->input->post('nim') ?: $this->_get_current_nim();
         $mhs = $this->Mahasiswa_model->get_mahasiswa($nim);
@@ -1301,7 +894,6 @@ class Mahasiswa extends CI_Controller {
         $data_update['konsentrasi_dkv'] = $konsentrasi_dkv;
         $data_update['id_kk'] = $mhs_id_kk;
 
-        // Tangkap seluruh berkas persyaratan (file_* dan file_*_old)
         $this->load->model('AdminLayanan_model');
         $post_data = $this->input->post(null, true);
         $has_any_file = false;
@@ -1335,7 +927,6 @@ class Mahasiswa extends CI_Controller {
                 $this->db->where('nim', $nim)->update('pendaftaran_ta', $data_update);
                 $db_saved = true;
             } else {
-                // Buat baris baru jika ada isian jenis_ta, judul_1, atau berkas terunggah
                 if (!empty($jenis_ta) || !empty($judul_1) || $has_any_file) {
                     $data_update['nim'] = $nim;
                     $data_update['created_at'] = date('Y-m-d H:i:s');
@@ -1360,351 +951,10 @@ class Mahasiswa extends CI_Controller {
             ]));
     }
 
-    // AJAX Endpoint: Ambil data mahasiswa bimbingan & preview secara efisien
-    public function ajax_get_dosen_bimbingan() {
-        header('Content-Type: application/json');
+    // =========================================================
+    // REKOMENDASI SIDANG / NON-SIDANG
+    // =========================================================
 
-        $dosen_id = $this->session->userdata('user_id');
-        $posisi = $this->input->get('posisi') ?: 1;
-        if ($this->input->get('model_posisi')) {
-            $posisi = $this->input->get('model_posisi');
-        }
-        $tahap = $this->input->get('tahap') ?: 'Preview 1';
-            
-        $students = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, $posisi);
-            
-        $data = [];
-        $total = count($students);
-            
-        $this->load->model('Rekomendasi_model');
-
-        foreach ($students as $student) {
-            $previews = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], $tahap);
-            $latest = !empty($previews) ? $previews[0] : null;
-            
-
-            $rekomen = $this->Rekomendasi_model->get_latest_submission($student['nim']);
-            
-            if ($latest && !empty($latest['file_draft'])) {
-                $filePath = FCPATH . 'uploads/preview_ta/' . $latest['file_draft'];
-                if (!file_exists($filePath)) {
-                    $latest['file_missing'] = true;
-                }
-            }
-            
-            $data[] = [
-                'nim' => $student['nim'],
-                'nama_mahasiswa' => $student['nama_mahasiswa'] ?? $student['nim'],
-                'judul' => $student['judul'] ?? '-',
-                'konsentrasi_dkv' => $student['konsentrasi_dkv'] ?? '',
-                'latest_preview' => $latest,
-                'riwayat_previews' => $previews,
-                'rekomendasi' => $rekomen
-            ];
-        }
-
-        echo json_encode([
-            'status' => true,
-            'data' => $data,
-            'stats' => [
-                'total' => $total
-            ]
-        ]);
-    }
-
-    // AJAX Endpoint: Get preview log for logged in Mahasiswa
-    public function ajax_get_preview_log() {
-        header('Content-Type: application/json');
-        
-        $nim = $this->_get_current_nim();
-        $tahap = $this->input->get('tahap');
-        
-        if (empty($tahap)) {
-            echo json_encode(['status' => false, 'message' => 'Tahap tidak valid']);
-            return;
-        }
-        
-        $riwayat = $this->Mahasiswa_model->get_riwayat_preview($nim, $tahap);
-        
-        echo json_encode([
-            'status' => true,
-            'data' => $riwayat
-        ]);
-    }
-    // AJAX Endpoint: Upload draft preview mahasiswa tanpa reload
-    public function upload_preview_ajax() {
-        header('Content-Type: application/json');
-        $nim = $this->_get_current_nim();
-        $tahap = $this->input->post('tahap_preview') ?: 'Preview 1';
-
-        $upload_dir = './uploads/preview_ta/';
-        if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0777, true);
-        }
-
-        $config['upload_path']   = $upload_dir;
-        $config['allowed_types'] = 'pdf|docx|zip';
-        $config['max_size']      = 10240;
-        $clean_tahap = str_replace(' ', '', strtoupper($tahap));
-        $config['file_name']     = $clean_tahap . '_' . $nim . '_' . time();
-
-        $this->load->library('upload', $config);
-
-        if (!$this->upload->do_upload('file_draft')) {
-            echo json_encode([
-                'status' => false,
-                'message' => $this->upload->display_errors('', '')
-            ]);
-            return;
-        }
-
-        $upload_data = $this->upload->data();
-        $file_name = $upload_data['file_name'];
-        $catatan = trim($this->input->post('catatan_mahasiswa') ?? '');
-
-        $data_insert = array(
-            'nim'                => $nim,
-            'tahap_preview'      => $tahap,
-            'file_draft'         => $file_name,
-            'catatan_mahasiswa'  => $catatan,
-            'status_pembimbing'  => 'Pending',
-            'created_at'         => date('Y-m-d H:i:s')
-        );
-
-        $this->Mahasiswa_model->save_upload_preview($data_insert);
-        
-        $riwayat = $this->Mahasiswa_model->get_riwayat_preview($nim, $tahap);
-        $latest = $riwayat[0] ?? null;
-
-        echo json_encode([
-            'status' => true,
-            'message' => "Draft Berkas {$tahap} berhasil diunggah!",
-            'tahap' => $tahap,
-            'upload_count' => count($riwayat),
-            'latest_preview' => $latest,
-            'riwayat' => $riwayat
-        ]);
-    }
-
-    // AJAX Endpoint: Review dosen tanpa reload
-    public function review_preview_ajax() {
-        header('Content-Type: application/json');
-        $role_id = (int) $this->session->userdata('role_id');
-        // Izinkan role_id 1 (Admin) dan 4 (Dosen)
-        if ($role_id != 4 && $role_id != 1) {
-            echo json_encode(['status' => false, 'message' => 'Unauthorized']);
-            return;
-        }
-
-        $id = $this->input->post('id_preview');
-        $posisi = $this->input->post('posisi');
-        $catatan = $this->input->post('catatan_pembimbing');
-        $status = $this->input->post('status_pembimbing');
-
-        if (empty($id)) {
-            echo json_encode(['status' => false, 'message' => 'ID preview tidak valid']);
-            return;
-        }
-
-        if ($posisi == 1) {
-            $data = [
-                'status_pembimbing' => $status,
-                'catatan_pembimbing' => $catatan
-            ];
-            $message = 'Review Pembimbing 1 berhasil disimpan.';
-        } else if ($posisi == 2) {
-            $data = [
-                'catatan_pembimbing_2' => $catatan
-            ];
-            $message = 'Catatan Pembimbing 2 berhasil disimpan.';
-        } else if ($posisi == 3) {
-            $data = [
-                'catatan_penguji_1' => $catatan
-            ];
-            $message = 'Catatan Penguji 1 berhasil disimpan.';
-        } else if ($posisi == 4) {
-            $data = [
-                'catatan_penguji_2' => $catatan
-            ];
-            $message = 'Catatan Penguji 2 berhasil disimpan.';
-        } else {
-            echo json_encode(['status' => false, 'message' => 'Posisi tidak valid']);
-            return;
-        }
-
-        $this->Mahasiswa_model->update_review_preview($id, $data);
-
-        echo json_encode([
-            'status' => true,
-            'message' => $message
-        ]);
-    }
-
-    // AJAX Endpoint: Review massal dosen
-    public function review_preview_batch_ajax() {
-        header('Content-Type: application/json');
-        $role_id = (int) $this->session->userdata('role_id');
-        // Izinkan role_id 1 (Admin) dan 4 (Dosen)
-        if ($role_id != 4 && $role_id != 1) {
-            echo json_encode(['status' => false, 'message' => 'Unauthorized']);
-            return;
-        }
-
-        $ids = $this->input->post('ids');
-        $posisi = $this->input->post('posisi');
-
-        if (empty($ids) || !is_array($ids)) {
-            echo json_encode(['status' => false, 'message' => 'Tidak ada data yang dipilih']);
-            return;
-        }
-
-        if ($posisi == 1) {
-            $data = [
-                'status_pembimbing' => 'Approved',
-                'catatan_pembimbing' => ''
-            ];
-            foreach ($ids as $id) {
-                $this->Mahasiswa_model->update_review_preview($id, $data);
-            }
-            $message = count($ids) . ' berkas berhasil disetujui (P1).';
-        } else if ($posisi == 2) {
-            $data = [
-                'catatan_pembimbing_2' => 'Telah ditinjau (massal)'
-            ];
-            foreach ($ids as $id) {
-                $this->Mahasiswa_model->update_review_preview($id, $data);
-            }
-            $message = count($ids) . ' berkas berhasil diberi catatan (P2).';
-        } else if ($posisi == 3) {
-            $data = [
-                'catatan_penguji_1' => 'Telah ditinjau (massal)'
-            ];
-            foreach ($ids as $id) {
-                $this->Mahasiswa_model->update_review_preview($id, $data);
-            }
-            $message = count($ids) . ' berkas berhasil diberi catatan (Penguji 1).';
-        } else if ($posisi == 4) {
-            $data = [
-                'catatan_penguji_2' => 'Telah ditinjau (massal)'
-            ];
-            foreach ($ids as $id) {
-                $this->Mahasiswa_model->update_review_preview($id, $data);
-            }
-            $message = count($ids) . ' berkas berhasil diberi catatan (Penguji 2).';
-        } else {
-            echo json_encode(['status' => false, 'message' => 'Posisi tidak valid']);
-            return;
-        }
-
-        echo json_encode([
-            'status' => true,
-            'message' => $message
-        ]);
-    }
-
-    public function sse_dosen_bimbingan() {
-        header('Content-Type: text/event-stream');
-        header('Cache-Control: no-cache');
-        header('Connection: keep-alive');
-        header('X-Accel-Buffering: no'); 
-        session_write_close(); // FIX FOR MAX EXECUTION TIME
-
-        $role_id = (int) $this->session->userdata('role_id');
-        // Izinkan role_id 1 (Admin) dan 4 (Dosen)
-        if ($role_id != 4 && $role_id != 1) {
-            echo "data: " . json_encode(['status' => false, 'message' => 'Unauthorized']) . "\n\n";
-            ob_flush(); flush(); exit;
-        }
-
-        $dosen_id = $this->session->userdata('user_id');
-        $posisi = $this->input->get('posisi') ?: 1;
-        if ($this->input->get('model_posisi')) {
-            $posisi = $this->input->get('model_posisi');
-        }
-        $lastData = null;
-
-        while (true) {
-            $students = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, $posisi);
-            $data = [];
-            foreach ($students as $student) {
-                $p1 = $this->Mahasiswa_model->get_latest_preview_status($student['nim'], 'Preview 1');
-                $p2 = $this->Mahasiswa_model->get_latest_preview_status($student['nim'], 'Preview 2');
-                $p3 = $this->Mahasiswa_model->get_latest_preview_status($student['nim'], 'Preview 3');
-                $data[] = [
-                    'nim' => $student['nim'],
-                    'nama_mahasiswa' => $student['nama_mahasiswa'] ?? $student['nim'],
-                    'judul' => $student['judul'] ?? '-',
-                    'preview1' => $p1,
-                    'preview2' => $p2,
-                    'preview3' => $p3
-                ];
-            }
-
-            $json = json_encode($data);
-            if ($json !== $lastData) {
-                echo "data: " . $json . "\n\n";
-                ob_flush(); flush();
-                $lastData = $json;
-            }
-
-            if (connection_aborted()) break;
-            sleep(3);
-        }
-        exit;
-    }
-
-    public function sse_mahasiswa_bimbingan() {
-        header('Content-Type: text/event-stream');
-        header('Cache-Control: no-cache');
-        header('Connection: keep-alive');
-        header('X-Accel-Buffering: no');
-        session_write_close(); // FIX FOR MAX EXECUTION TIME
-
-        $nim = $this->_get_current_nim();
-        $lastData = null;
-
-        while (true) {
-            $riwayat_p1 = $this->Mahasiswa_model->get_riwayat_preview($nim, 'Preview 1');
-            $riwayat_p2 = $this->Mahasiswa_model->get_riwayat_preview($nim, 'Preview 2');
-            $riwayat_p3 = $this->Mahasiswa_model->get_riwayat_preview($nim, 'Preview 3');
-            $riwayat_sidang = $this->Mahasiswa_model->get_riwayat_preview($nim, 'Sidang');
-
-            $data = [
-                'riwayat_p1' => $riwayat_p1,
-                'riwayat_p2' => $riwayat_p2,
-                'riwayat_p3' => $riwayat_p3,
-                'riwayat_sidang' => $riwayat_sidang,
-                'latest_p1' => $riwayat_p1[0] ?? null,
-                'latest_p2' => $riwayat_p2[0] ?? null,
-                'latest_p3' => $riwayat_p3[0] ?? null,
-                'latest_sidang' => $riwayat_sidang[0] ?? null,
-                'upload_count_p1' => count($riwayat_p1),
-                'upload_count_p2' => count($riwayat_p2),
-                'upload_count_p3' => count($riwayat_p3),
-                'upload_count_sidang' => count($riwayat_sidang),
-                'is_p1_app' => (bool)(($riwayat_p1[0]['status_pembimbing'] ?? null) == 'Approved'),
-                'is_p2_app' => (bool)(($riwayat_p2[0]['status_pembimbing'] ?? null) == 'Approved'),
-                'is_p3_app' => (bool)(($riwayat_p3[0]['status_pembimbing'] ?? null) == 'Approved'),
-            ];
-
-            $json = json_encode($data);
-            if ($json !== $lastData) {
-                echo "data: " . $json . "\n\n";
-                ob_flush(); flush();
-                $lastData = $json;
-            }
-
-            if (connection_aborted()) break;
-            sleep(3);
-        }
-        exit;
-    }
-
-    // ==========================================
-    // REKOMENDASI SIDANG / NON SIDANG ENDPOINTS
-    // ==========================================
-
-    // AJAX: Get active main options and non-sidang options dynamically
     public function ajax_get_rekomen_options() {
         $this->load->model('Rekomendasi_model');
         $main = $this->Rekomendasi_model->get_active_main_options();
@@ -1717,8 +967,6 @@ class Mahasiswa extends CI_Controller {
         exit;
     }
 
-
-    // Process Submission: Rekomendasi SIDANG (Reguler)
     public function submit_rekomendasi_sidang() {
         $this->load->model('Rekomendasi_model');
         $nim = $this->input->post('nim') ?: $this->_get_current_nim();
@@ -1739,7 +987,6 @@ class Mahasiswa extends CI_Controller {
 
         $sub_id = $this->Rekomendasi_model->save_submission($data_sub);
 
-        // Update status pendaftaran TA if exists
         if ($this->db->table_exists('pendaftaran_ta')) {
             $update_ta = ['current_stage' => 'Pendaftaran Sidang'];
             if ($this->db->field_exists('status_sidang', 'pendaftaran_ta')) {
@@ -1757,7 +1004,6 @@ class Mahasiswa extends CI_Controller {
         redirect('mahasiswa/bimbingan');
     }
 
-    // Process Submission: Rekomendasi NON SIDANG (Upload Berkas PDF/DOCX)
     public function submit_rekomendasi_nonsidang() {
         $this->load->model('Rekomendasi_model');
         $nim = $this->input->post('nim') ?: $this->_get_current_nim();
@@ -1775,7 +1021,6 @@ class Mahasiswa extends CI_Controller {
             redirect('mahasiswa/bimbingan');
         }
 
-        // Folder upload
         $upload_dir = './uploads/rekomendasi_ta/';
         if (!is_dir($upload_dir)) {
             mkdir($upload_dir, 0777, true);
@@ -1784,7 +1029,6 @@ class Mahasiswa extends CI_Controller {
         $form_data = [];
         $allowed_ext_array = ['pdf', 'docx', 'doc'];
 
-        // Loop through dynamic fields for this option
         if (!empty($option['fields'])) {
             foreach ($option['fields'] as $f) {
                 $fkey = $f['field_key'];
@@ -1792,7 +1036,7 @@ class Mahasiswa extends CI_Controller {
                     if (isset($_FILES[$fkey]) && $_FILES[$fkey]['error'] == UPLOAD_ERR_OK) {
                         $file_ext = strtolower(pathinfo($_FILES[$fkey]['name'], PATHINFO_EXTENSION));
                         if (!in_array($file_ext, $allowed_ext_array)) {
-                            $res = ['status' => 'error', 'message' => 'Format file "' . $f['field_label'] . '" harus PDF atau DOCX (.pdf, .docx, .doc).'];
+                            $res = ['status' => 'error', 'message' => 'Format file "' . $f['field_label'] . '" harus PDF atau DOCX.'];
                             if ($this->input->is_ajax_request()) { echo json_encode($res); exit; }
                             $this->session->set_flashdata('error', $res['message']);
                             redirect('mahasiswa/bimbingan');
@@ -1838,7 +1082,6 @@ class Mahasiswa extends CI_Controller {
 
         $sub_id = $this->Rekomendasi_model->save_submission($data_sub);
 
-        // Update status pendaftaran TA if exists
         if ($this->db->table_exists('pendaftaran_ta')) {
             $update_ta = ['current_stage' => 'Rekomendasi Non-Sidang (' . $option['title'] . ')'];
             if ($this->db->field_exists('status_sidang', 'pendaftaran_ta')) {
@@ -1846,7 +1089,6 @@ class Mahasiswa extends CI_Controller {
             }
             $this->db->where('nim', $nim)->update('pendaftaran_ta', $update_ta);
         }
-
 
         if ($this->input->is_ajax_request()) {
             echo json_encode(['status' => 'success', 'message' => 'Rekomendasi Non-Sidang (' . $option['title'] . ') dan berkas persyaratan berhasil disimpan!']);
@@ -1857,11 +1099,6 @@ class Mahasiswa extends CI_Controller {
         redirect('mahasiswa/bimbingan');
     }
 
-    // ==========================================
-    // DYNAMIC CRUD MANAGEMENT FOR RECOMMENDATIONS
-    // ==========================================
-
-    // Fetch all options & fields for dynamic management modal/page
     public function ajax_get_all_rekomen_crud() {
         $this->load->model('Rekomendasi_model');
         $options = $this->Rekomendasi_model->get_all_options();
@@ -1869,7 +1106,6 @@ class Mahasiswa extends CI_Controller {
         exit;
     }
 
-    // Add or Edit Option (Sidang / Non-Sidang Pathways)
     public function ajax_save_rekomen_option() {
         $this->load->model('Rekomendasi_model');
         $id = $this->input->post('id');
@@ -1893,7 +1129,6 @@ class Mahasiswa extends CI_Controller {
         exit;
     }
 
-    // Delete Option
     public function ajax_delete_rekomen_option() {
         $this->load->model('Rekomendasi_model');
         $id = $this->input->post('id');
@@ -1906,7 +1141,6 @@ class Mahasiswa extends CI_Controller {
         exit;
     }
 
-    // Delete Entire Category / Tab
     public function ajax_delete_rekomen_category() {
         $this->load->model('Rekomendasi_model');
         $category = $this->input->post('category');
@@ -1919,8 +1153,6 @@ class Mahasiswa extends CI_Controller {
         exit;
     }
 
-
-    // Add or Edit Form Field per Option
     public function ajax_save_rekomen_field() {
         $this->load->model('Rekomendasi_model');
         $id = $this->input->post('id');
@@ -1936,11 +1168,10 @@ class Mahasiswa extends CI_Controller {
         ];
 
         $res_id = $this->Rekomendasi_model->save_field($data, $id);
-        echo json_encode(['status' => 'success', 'message' => 'Field persyararan berhasil disimpan!', 'id' => $res_id]);
+        echo json_encode(['status' => 'success', 'message' => 'Field persyaratan berhasil disimpan!', 'id' => $res_id]);
         exit;
     }
 
-    // Delete Form Field
     public function ajax_delete_rekomen_field() {
         $this->load->model('Rekomendasi_model');
         $id = $this->input->post('id');
@@ -1953,13 +1184,10 @@ class Mahasiswa extends CI_Controller {
         exit;
     }
 
-    // =========================================================================
-    // LAYANAN TICKETING MAHASISWA (TERHUBUNG OTOMATIS KE PENGATURAN DINAMIS)
-    // =========================================================================
+    // =========================================================
+    // TICKETING
+    // =========================================================
 
-    /**
-     * Helper: Mendapatkan mapping Unit dan Kategori dinamis dari database (dikelola oleh Laboran)
-     */
     private function _get_dynamic_unit_kategori_map() {
         $map = [];
         if ($this->db->table_exists('ticketing_units')) {
@@ -1991,7 +1219,6 @@ class Mahasiswa extends CI_Controller {
             }
         }
 
-        // Fallback default unit & kategori jika tabel konfigurasi tidak ada atau kosong
         if (empty($map)) {
             $map = [
                 'Laboran (Fasilitas & Lab)' => [
@@ -2026,20 +1253,16 @@ class Mahasiswa extends CI_Controller {
         return $map;
     }
 
-    /**
-     * Formulir Buat Tiket Kendala Baru untuk Mahasiswa
-     */
     public function ticketing_input() {
         $nim = $this->_get_current_nim();
         $mhs = $this->Mahasiswa_model->get_mahasiswa($nim);
-        
+
         $userId = $this->session->userdata('user_id');
         $nama = !empty($mhs['nama_depan']) ? trim($mhs['nama_depan'] . ' ' . ($mhs['nama_belakang'] ?? '')) : ($this->session->userdata('name') ?: 'Mahasiswa');
         $email = $this->session->userdata('email');
 
         $unit_kategori_map = $this->_get_dynamic_unit_kategori_map();
 
-        // Load active dynamic custom fields for ticketing jika ada
         $custom_fields = [];
         if ($this->db->table_exists('laboran_ticketing_fields')) {
             $custom_fields = $this->db
@@ -2094,9 +1317,6 @@ class Mahasiswa extends CI_Controller {
         $this->load->view('mahasiswa/ticketing_input', $data);
     }
 
-    /**
-     * Proses Simpan Tiket Kendala yang diajukan oleh Mahasiswa
-     */
     public function ticketing_simpan() {
         $nim = $this->_get_current_nim();
         $mhs = $this->Mahasiswa_model->get_mahasiswa($nim);
@@ -2112,7 +1332,7 @@ class Mahasiswa extends CI_Controller {
         $kategori_lainnya = trim($this->input->post('kategori_lainnya', true));
         $prioritas        = trim($this->input->post('prioritas', true));
         $subjek           = trim($this->input->post('subjek', true));
-        $deskripsi        = $this->input->post('deskripsi'); // Rich text TinyMCE
+        $deskripsi        = $this->input->post('deskripsi');
 
         $textOnly = trim(strip_tags($deskripsi));
         if (empty($namaLengkap) || empty($tujuan_penerima) || empty($unit_terkait) || empty($kategori) || empty($subjek) || empty($textOnly)) {
@@ -2125,7 +1345,6 @@ class Mahasiswa extends CI_Controller {
             return;
         }
 
-        // Anti-Duplicate check (mencegah submit ganda akibat double-click)
         $this->load->model('DosenTicketing_model');
         $recentTickets = $this->DosenTicketing_model->get_tickets($userId, $nim);
         $recentTicket = null;
@@ -2152,7 +1371,6 @@ class Mahasiswa extends CI_Controller {
             return;
         }
 
-        // Cek jika kategori berupa 'Lainnya' / 'Lain-lain'
         if (preg_match('/lain/i', $kategori)) {
             if (!empty($kategori_lainnya)) {
                 $kategori = $kategori . ': ' . $kategori_lainnya;
@@ -2168,7 +1386,6 @@ class Mahasiswa extends CI_Controller {
             }
         }
 
-        // Upload lampiran jika ada
         $lampiran_name = null;
         if (!empty($_FILES['lampiran']['name'])) {
             $uploadPath = FCPATH . 'uploads/ticketing/';
@@ -2178,7 +1395,7 @@ class Mahasiswa extends CI_Controller {
 
             $config['upload_path']   = $uploadPath;
             $config['allowed_types'] = 'jpg|jpeg|png|pdf|doc|docx|zip|rar';
-            $config['max_size']      = 5120; // 5MB
+            $config['max_size']      = 5120;
             $config['encrypt_name']  = TRUE;
 
             $this->load->library('upload', $config);
@@ -2245,9 +1462,6 @@ class Mahasiswa extends CI_Controller {
         }
     }
 
-    /**
-     * Riwayat Tiket Kendala Mahasiswa
-     */
     public function ticketing_riwayat() {
         $nim = $this->_get_current_nim();
         $userId = $this->session->userdata('user_id');
@@ -2267,9 +1481,6 @@ class Mahasiswa extends CI_Controller {
         $this->load->view('mahasiswa/ticketing_riwayat', $data);
     }
 
-    /**
-     * AJAX Endpoint: Detail Tiket untuk Riwayat Mahasiswa
-     */
     public function ticketing_detail($id_or_kode) {
         $this->load->model('DosenTicketing_model');
         $ticket = $this->DosenTicketing_model->get_by_id($id_or_kode);
@@ -2288,7 +1499,6 @@ class Mahasiswa extends CI_Controller {
         $nim   = $this->_get_current_nim();
         $roleId = (int)$this->session->userdata('role_id');
 
-        // Access check: Superadmin (1) or Owner
         if ($roleId !== 1 && $ticket->id_user != $userId && $ticket->nidn != $nim) {
             return $this->output
                 ->set_content_type('application/json')
@@ -2327,5 +1537,68 @@ class Mahasiswa extends CI_Controller {
                     'updated_at'      => date('d M Y H:i', strtotime($ticket->updated_at))
                 ]
             ]));
+    }
+        // =========================================================
+    // PENILAIAN SIDANG (Preview 4) — P1 / P2 / U1 / U2
+    // =========================================================
+
+    /**
+     * GET ?nim=xxx
+     * Ambil detail nilai sidang + jadwal + dosen untuk modal.
+     */
+    public function get_detail_nilai_sidang_ajax() {
+        header('Content-Type: application/json');
+
+        $nim = $this->input->get('nim') ?: $this->input->post('nim');
+        if (empty($nim)) {
+            echo json_encode(['status' => false, 'message' => 'NIM wajib diisi.']);
+            return;
+        }
+
+        $detail = $this->Mahasiswa_model->get_detail_nilai_sidang($nim);
+        if (!$detail) {
+            echo json_encode(['status' => false, 'message' => 'Data mahasiswa tidak ditemukan.']);
+            return;
+        }
+
+        echo json_encode(['status' => true, 'data' => $detail]);
+    }
+
+    /**
+     * POST: nim, posisi (1=P1, 2=P2, 3=U1, 4=U2), nilai_akhir, detail_penilaian (JSON), catatan
+     */
+    public function simpan_nilai_sidang_ajax() {
+        header('Content-Type: application/json');
+
+        $nim         = $this->input->post('nim');
+        $posisi      = (int)$this->input->post('posisi');
+        $nilai       = $this->input->post('nilai_akhir');
+        $catatan     = $this->input->post('catatan');
+        $detail_raw  = $this->input->post('detail_penilaian');
+
+        if (empty($nim) || !in_array($posisi, [1, 2, 3, 4])) {
+            echo json_encode(['status' => false, 'message' => 'Parameter tidak lengkap atau posisi tidak valid.']);
+            return;
+        }
+
+        if ($nilai === null || $nilai === '' || !is_numeric($nilai)) {
+            echo json_encode(['status' => false, 'message' => 'Nilai akhir wajib diisi (0-100).']);
+            return;
+        }
+
+        $detail = null;
+        if (!empty($detail_raw)) {
+            $detail = is_string($detail_raw) ? json_decode($detail_raw, true) : $detail_raw;
+        }
+
+        $res = $this->Mahasiswa_model->save_nilai_sidang_by_posisi(
+            $nim,
+            $posisi,
+            (float)$nilai,
+            (string)$catatan,
+            $detail
+        );
+
+        echo json_encode($res);
     }
 }

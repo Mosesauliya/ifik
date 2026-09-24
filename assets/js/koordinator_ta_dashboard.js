@@ -2595,15 +2595,17 @@
         if (totalPages <= 1) return;
 
         const btnFirst = document.createElement('button');
-        btnFirst.className = `px-2.5 py-1 rounded-lg border text-xs font-bold transition ${state.currentPage === 1 ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'}`;
-        btnFirst.innerHTML = '&laquo; Awal';
+        btnFirst.className = `px-2 sm:px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-bold transition shrink-0 ${state.currentPage === 1 ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
+        btnFirst.innerHTML = '<span class="sm:hidden">&laquo;</span><span class="hidden sm:inline">&laquo; Awal</span>';
+        btnFirst.title = 'Halaman Pertama';
         btnFirst.disabled = (state.currentPage === 1);
         btnFirst.addEventListener('click', () => goToPage(1));
         navContainer.appendChild(btnFirst);
 
         const btnPrev = document.createElement('button');
-        btnPrev.className = `px-2.5 py-1 rounded-lg border text-xs font-bold transition ${state.currentPage === 1 ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'}`;
-        btnPrev.innerHTML = '&lsaquo; Prev';
+        btnPrev.className = `px-2 sm:px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-bold transition shrink-0 ${state.currentPage === 1 ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
+        btnPrev.innerHTML = '<span class="sm:hidden">&lsaquo;</span><span class="hidden sm:inline">&lsaquo; Prev</span>';
+        btnPrev.title = 'Halaman Sebelumnya';
         btnPrev.disabled = (state.currentPage === 1);
         btnPrev.addEventListener('click', () => goToPage(state.currentPage - 1));
         navContainer.appendChild(btnPrev);
@@ -2618,22 +2620,24 @@
         for (let p = startPage; p <= endPage; p++) {
             const btnPage = document.createElement('button');
             const isActive = (p === state.currentPage);
-            btnPage.className = `px-3 py-1 rounded-lg text-xs font-bold transition ${isActive ? 'bg-orange-600 text-white shadow-xs' : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'}`;
+            btnPage.className = `min-w-[28px] sm:min-w-[32px] px-2 sm:px-3 py-1 rounded-lg text-[11px] sm:text-xs font-bold transition shrink-0 cursor-pointer ${isActive ? 'bg-orange-600 text-white shadow-xs' : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'}`;
             btnPage.textContent = p;
             btnPage.addEventListener('click', () => goToPage(p));
             navContainer.appendChild(btnPage);
         }
 
         const btnNext = document.createElement('button');
-        btnNext.className = `px-2.5 py-1 rounded-lg border text-xs font-bold transition ${state.currentPage === totalPages ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'}`;
-        btnNext.innerHTML = 'Next &rsaquo;';
+        btnNext.className = `px-2 sm:px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-bold transition shrink-0 ${state.currentPage === totalPages ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
+        btnNext.innerHTML = '<span class="sm:hidden">&rsaquo;</span><span class="hidden sm:inline">Next &rsaquo;</span>';
+        btnNext.title = 'Halaman Selanjutnya';
         btnNext.disabled = (state.currentPage === totalPages);
         btnNext.addEventListener('click', () => goToPage(state.currentPage + 1));
         navContainer.appendChild(btnNext);
 
         const btnLast = document.createElement('button');
-        btnLast.className = `px-2.5 py-1 rounded-lg border text-xs font-bold transition ${state.currentPage === totalPages ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'}`;
-        btnLast.innerHTML = 'Akhir &raquo;';
+        btnLast.className = `px-2 sm:px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-bold transition shrink-0 ${state.currentPage === totalPages ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
+        btnLast.innerHTML = '<span class="sm:hidden">&raquo;</span><span class="hidden sm:inline">Akhir &raquo;</span>';
+        btnLast.title = 'Halaman Terakhir';
         btnLast.disabled = (state.currentPage === totalPages);
         btnLast.addEventListener('click', () => goToPage(totalPages));
         navContainer.appendChild(btnLast);
@@ -3352,15 +3356,17 @@
         if (totalPages <= 1) return;
 
         const btnFirst = document.createElement('button');
-        btnFirst.className = `px-2.5 py-1 rounded-lg border text-xs font-bold transition ${state.p2CurrentPage === 1 ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
-        btnFirst.innerHTML = '&laquo; Awal';
+        btnFirst.className = `px-2 sm:px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-bold transition shrink-0 ${state.p2CurrentPage === 1 ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
+        btnFirst.innerHTML = '<span class="sm:hidden">&laquo;</span><span class="hidden sm:inline">&laquo; Awal</span>';
+        btnFirst.title = 'Halaman Pertama';
         btnFirst.disabled = (state.p2CurrentPage === 1);
         btnFirst.addEventListener('click', () => goToP2Page(1));
         navContainer.appendChild(btnFirst);
 
         const btnPrev = document.createElement('button');
-        btnPrev.className = `px-2.5 py-1 rounded-lg border text-xs font-bold transition ${state.p2CurrentPage === 1 ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
-        btnPrev.innerHTML = '&lsaquo; Prev';
+        btnPrev.className = `px-2 sm:px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-bold transition shrink-0 ${state.p2CurrentPage === 1 ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
+        btnPrev.innerHTML = '<span class="sm:hidden">&lsaquo;</span><span class="hidden sm:inline">&lsaquo; Prev</span>';
+        btnPrev.title = 'Halaman Sebelumnya';
         btnPrev.disabled = (state.p2CurrentPage === 1);
         btnPrev.addEventListener('click', () => goToP2Page(state.p2CurrentPage - 1));
         navContainer.appendChild(btnPrev);
@@ -3375,22 +3381,24 @@
         for (let p = startPage; p <= endPage; p++) {
             const btnPage = document.createElement('button');
             const isActive = (p === state.p2CurrentPage);
-            btnPage.className = `px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${isActive ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'}`;
+            btnPage.className = `min-w-[28px] sm:min-w-[32px] px-2 sm:px-3 py-1 rounded-lg text-[11px] sm:text-xs font-bold transition shrink-0 cursor-pointer ${isActive ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'}`;
             btnPage.textContent = p;
             btnPage.addEventListener('click', () => goToP2Page(p));
             navContainer.appendChild(btnPage);
         }
 
         const btnNext = document.createElement('button');
-        btnNext.className = `px-2.5 py-1 rounded-lg border text-xs font-bold transition ${state.p2CurrentPage === totalPages ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
-        btnNext.innerHTML = 'Next &rsaquo;';
+        btnNext.className = `px-2 sm:px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-bold transition shrink-0 ${state.p2CurrentPage === totalPages ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
+        btnNext.innerHTML = '<span class="sm:hidden">&rsaquo;</span><span class="hidden sm:inline">Next &rsaquo;</span>';
+        btnNext.title = 'Halaman Selanjutnya';
         btnNext.disabled = (state.p2CurrentPage === totalPages);
         btnNext.addEventListener('click', () => goToP2Page(state.p2CurrentPage + 1));
         navContainer.appendChild(btnNext);
 
         const btnLast = document.createElement('button');
-        btnLast.className = `px-2.5 py-1 rounded-lg border text-xs font-bold transition ${state.p2CurrentPage === totalPages ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
-        btnLast.innerHTML = 'Akhir &raquo;';
+        btnLast.className = `px-2 sm:px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-bold transition shrink-0 ${state.p2CurrentPage === totalPages ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
+        btnLast.innerHTML = '<span class="sm:hidden">&raquo;</span><span class="hidden sm:inline">Akhir &raquo;</span>';
+        btnLast.title = 'Halaman Terakhir';
         btnLast.disabled = (state.p2CurrentPage === totalPages);
         btnLast.addEventListener('click', () => goToP2Page(totalPages));
         navContainer.appendChild(btnLast);
@@ -5343,9 +5351,9 @@
         const resetTab = (el, active) => {
             if (!el) return;
             if (active) {
-                el.className = 'px-3 py-1.5 rounded-lg transition cursor-pointer bg-white text-slate-900 shadow-2xs font-bold';
+                el.className = 'px-3 py-1.5 rounded-lg transition cursor-pointer bg-white text-slate-900 shadow-2xs font-bold whitespace-nowrap shrink-0';
             } else {
-                el.className = 'px-3 py-1.5 rounded-lg transition cursor-pointer text-slate-600 hover:text-slate-900 font-medium';
+                el.className = 'px-3 py-1.5 rounded-lg transition cursor-pointer text-slate-600 hover:text-slate-900 font-medium whitespace-nowrap shrink-0';
             }
         };
 
@@ -5375,9 +5383,12 @@
 
         if (logs.length === 0) {
             container.innerHTML = `
-                <div class="py-12 text-center text-slate-400">
-                    <i class="fa-solid fa-folder-open text-3xl mb-2 text-slate-300"></i>
-                    <p class="text-xs font-semibold text-slate-600">Tidak ada data histori yang sesuai.</p>
+                <div class="py-10 sm:py-12 text-center text-slate-400 p-4">
+                    <div class="w-12 h-12 mx-auto mb-3 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-300">
+                        <i class="fa-solid fa-folder-open text-2xl"></i>
+                    </div>
+                    <p class="text-xs font-bold text-slate-700">Tidak ada data histori yang sesuai</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Coba sesuaikan kata kunci pencarian atau tab filter kategori di atas.</p>
                 </div>
             `;
             return;
@@ -5389,48 +5400,48 @@
             const isPembimbing = (log.kategori === 'Pembimbing');
             const isPenguji = (log.kategori === 'Penguji');
 
-            let katBadgeClass = 'bg-indigo-100 text-indigo-800 border-indigo-200';
+            let katBadgeClass = 'bg-indigo-50 text-indigo-700 border-indigo-200';
             let katIcon = 'fa-solid fa-chalkboard-user';
             let katLabel = 'Dosen Penguji';
 
-            let aksiBadgeClass = 'bg-slate-100 text-slate-800 border-slate-300';
+            let aksiBadgeClass = 'bg-slate-100 text-slate-700 border-slate-300';
             let aksiIcon = 'fa-solid fa-pen-to-square';
 
             const aksiText = log.aksi || log.action || 'Perubahan Data';
 
             if (isPembimbing) {
-                katBadgeClass = 'bg-orange-100 text-orange-800 border-orange-200';
+                katBadgeClass = 'bg-orange-50 text-orange-700 border-orange-200';
                 katIcon = 'fa-solid fa-user-tie';
                 katLabel = 'Dosen Pembimbing';
-                aksiBadgeClass = aksiText.toLowerCase().includes('penetapan') ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-100 text-slate-800 border-slate-300';
+                aksiBadgeClass = aksiText.toLowerCase().includes('penetapan') ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-700 border-slate-200';
                 aksiIcon = aksiText.toLowerCase().includes('penetapan') ? 'fa-solid fa-check' : 'fa-solid fa-pen-to-square';
             } else if (isPenguji) {
-                katBadgeClass = 'bg-indigo-100 text-indigo-800 border-indigo-200';
+                katBadgeClass = 'bg-indigo-50 text-indigo-700 border-indigo-200';
                 katIcon = 'fa-solid fa-chalkboard-user';
                 katLabel = 'Dosen Penguji';
-                aksiBadgeClass = aksiText.toLowerCase().includes('penetapan') ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-100 text-slate-800 border-slate-300';
+                aksiBadgeClass = aksiText.toLowerCase().includes('penetapan') ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-700 border-slate-200';
                 aksiIcon = aksiText.toLowerCase().includes('penetapan') ? 'fa-solid fa-check' : 'fa-solid fa-pen-to-square';
             } else if (isSidang) {
                 if (aksiText.includes('Live') || aksiText.includes('Published')) {
-                    katBadgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                    katBadgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
                     katIcon = 'fa-solid fa-globe';
                     katLabel = 'Publikasi Nilai';
-                    aksiBadgeClass = 'bg-emerald-50 text-emerald-800 border-emerald-300';
+                    aksiBadgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
                     aksiIcon = 'fa-solid fa-check-double';
                 } else if (aksiText.includes('Terjadwal') || aksiText.includes('Scheduled')) {
-                    katBadgeClass = 'bg-sky-100 text-sky-800 border-sky-300';
+                    katBadgeClass = 'bg-sky-50 text-sky-700 border-sky-200';
                     katIcon = 'fa-solid fa-clock';
                     katLabel = 'Publikasi Nilai';
-                    aksiBadgeClass = 'bg-sky-50 text-sky-800 border-sky-300';
+                    aksiBadgeClass = 'bg-sky-50 text-sky-700 border-sky-200';
                     aksiIcon = 'fa-solid fa-calendar-day';
                 } else if (aksiText.includes('Ditolak') || aksiText.includes('Blocked')) {
-                    katBadgeClass = 'bg-rose-100 text-rose-800 border-rose-300';
+                    katBadgeClass = 'bg-rose-50 text-rose-700 border-rose-200';
                     katIcon = 'fa-solid fa-ban';
                     katLabel = 'Publikasi Nilai';
-                    aksiBadgeClass = 'bg-rose-50 text-rose-800 border-rose-300';
+                    aksiBadgeClass = 'bg-rose-50 text-rose-700 border-rose-200';
                     aksiIcon = 'fa-solid fa-shield-halved';
                 } else {
-                    katBadgeClass = 'bg-amber-100 text-amber-900 border-amber-300';
+                    katBadgeClass = 'bg-amber-50 text-amber-800 border-amber-200';
                     katIcon = 'fa-solid fa-calendar-check';
                     katLabel = 'Sidang TA';
                     aksiBadgeClass = 'bg-amber-50 text-amber-800 border-amber-200';
@@ -5468,20 +5479,20 @@
             const noteContent = log.catatan || log.keterangan || '';
 
             html += `
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs p-4 transition-all hover:shadow-md hover:border-amber-300 space-y-3 text-left">
-                    <div class="flex items-start justify-between gap-3 border-b border-slate-100 pb-2.5">
-                        <div class="flex items-center gap-2.5">
+                <div class="w-full min-w-0 bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-3.5 sm:p-4 transition-all hover:shadow-md hover:border-amber-300 space-y-3 text-left overflow-hidden">
+                    <div class="w-full min-w-0 flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-3 border-b border-slate-100 pb-2.5">
+                        <div class="flex items-center gap-2.5 min-w-0 flex-1">
                             <div class="w-8 h-8 rounded-xl ${isSidang ? 'bg-amber-50 text-amber-600 border border-amber-200' : (isPembimbing ? 'bg-orange-50 text-orange-600 border border-orange-200' : 'bg-indigo-50 text-indigo-600 border border-indigo-200')} flex items-center justify-center text-xs font-bold shrink-0">
                                 <i class="fa-solid ${isSidang ? 'fa-graduation-cap' : 'fa-user-graduate'}"></i>
                             </div>
-                            <div>
-                                <h4 class="text-xs font-bold text-slate-900">${escapeHtml(log.nama_mahasiswa || ('Mahasiswa NIM ' + log.nim))}</h4>
-                                <span class="text-[10px] font-mono text-slate-500 font-bold">${log.nim}</span>
+                            <div class="min-w-0 flex-1">
+                                <h4 class="text-xs font-bold text-slate-900 truncate">${escapeHtml(log.nama_mahasiswa || ('Mahasiswa NIM ' + log.nim))}</h4>
+                                <span class="text-[10px] font-mono text-slate-500 font-bold block sm:inline">${log.nim}</span>
                             </div>
                         </div>
 
-                        <div class="flex flex-col items-end gap-1">
-                            <div class="flex items-center gap-1.5 flex-wrap justify-end">
+                        <div class="w-full sm:w-auto min-w-0 flex items-center sm:items-end justify-between sm:justify-start gap-1.5 flex-wrap pt-1 sm:pt-0">
+                            <div class="flex items-center gap-1.5 flex-wrap">
                                 <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10px] font-bold ${katBadgeClass}">
                                     <i class="${katIcon} text-[9px]"></i>
                                     <span>${katLabel}</span>
@@ -5491,18 +5502,18 @@
                                     <span>${escapeHtml(aksiText)}</span>
                                 </span>
                             </div>
-                            <span class="text-[10px] text-slate-400 font-medium flex items-center gap-1">
+                            <span class="text-[10px] text-slate-400 font-medium flex items-center gap-1 shrink-0">
                                 <i class="fa-solid fa-calendar-day text-[9px]"></i>
                                 ${escapeHtml(log.waktu || log.created_at || '-')}
                             </span>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div class="w-full min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 text-xs">
                         <!-- Slot 1 -->
-                        <div class="p-2.5 bg-slate-50/80 rounded-xl border border-slate-100 space-y-1">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(d1Label)}:</span>
-                            <div class="font-bold text-slate-900 flex items-center gap-1.5">
+                        <div class="w-full min-w-0 p-2.5 bg-slate-50/80 rounded-xl border border-slate-100 space-y-1 overflow-hidden">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">${escapeHtml(d1Label)}:</span>
+                            <div class="font-bold text-slate-900 flex items-center gap-1.5 min-w-0">
                                 ${slot1Badge}
                                 <span class="truncate">${escapeHtml(d1Baru || '-')}</span>
                             </div>
@@ -5514,9 +5525,9 @@
                         </div>
 
                         <!-- Slot 2 -->
-                        <div class="p-2.5 bg-slate-50/80 rounded-xl border border-slate-100 space-y-1">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(d2Label)}:</span>
-                            <div class="font-bold text-slate-900 flex items-center gap-1.5">
+                        <div class="w-full min-w-0 p-2.5 bg-slate-50/80 rounded-xl border border-slate-100 space-y-1 overflow-hidden">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">${escapeHtml(d2Label)}:</span>
+                            <div class="font-bold text-slate-900 flex items-center gap-1.5 min-w-0">
                                 ${slot2Badge}
                                 <span class="truncate">${escapeHtml(d2Baru || '-')}</span>
                             </div>
@@ -5529,9 +5540,9 @@
                     </div>
 
                     ${noteContent ? `
-                        <div class="text-[11px] text-slate-600 bg-amber-50/80 border border-amber-200/80 p-2.5 rounded-xl flex items-start gap-2">
+                        <div class="w-full min-w-0 text-[11px] text-slate-600 bg-amber-50/80 border border-amber-200/80 p-2.5 rounded-xl flex items-start gap-2 break-words overflow-hidden">
                             <i class="fa-solid fa-note-sticky text-amber-600 mt-0.5 shrink-0 text-xs"></i>
-                            <div>
+                            <div class="min-w-0 flex-1">
                                 <strong>Catatan:</strong> ${escapeHtml(noteContent)}
                             </div>
                         </div>
@@ -6589,15 +6600,17 @@
         if (totalPages <= 1) return;
 
         const btnFirst = document.createElement('button');
-        btnFirst.className = `px-2.5 py-1 rounded-lg border text-xs font-bold transition ${state.sidangCurrentPage === 1 ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
-        btnFirst.innerHTML = '&laquo; Awal';
+        btnFirst.className = `px-2 sm:px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-bold transition shrink-0 ${state.sidangCurrentPage === 1 ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
+        btnFirst.innerHTML = '<span class="sm:hidden">&laquo;</span><span class="hidden sm:inline">&laquo; Awal</span>';
+        btnFirst.title = 'Halaman Pertama';
         btnFirst.disabled = (state.sidangCurrentPage === 1);
         btnFirst.addEventListener('click', () => goToSidangPage(1));
         navContainer.appendChild(btnFirst);
 
         const btnPrev = document.createElement('button');
-        btnPrev.className = `px-2.5 py-1 rounded-lg border text-xs font-bold transition ${state.sidangCurrentPage === 1 ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
-        btnPrev.innerHTML = '&lsaquo; Prev';
+        btnPrev.className = `px-2 sm:px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-bold transition shrink-0 ${state.sidangCurrentPage === 1 ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
+        btnPrev.innerHTML = '<span class="sm:hidden">&lsaquo;</span><span class="hidden sm:inline">&lsaquo; Prev</span>';
+        btnPrev.title = 'Halaman Sebelumnya';
         btnPrev.disabled = (state.sidangCurrentPage === 1);
         btnPrev.addEventListener('click', () => goToSidangPage(state.sidangCurrentPage - 1));
         navContainer.appendChild(btnPrev);
@@ -6612,22 +6625,24 @@
         for (let p = startPage; p <= endPage; p++) {
             const btnPage = document.createElement('button');
             const isActive = (p === state.sidangCurrentPage);
-            btnPage.className = `px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${isActive ? 'bg-amber-500 text-white shadow-xs' : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'}`;
+            btnPage.className = `min-w-[28px] sm:min-w-[32px] px-2 sm:px-3 py-1 rounded-lg text-[11px] sm:text-xs font-bold transition shrink-0 cursor-pointer ${isActive ? 'bg-amber-500 text-white shadow-xs' : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'}`;
             btnPage.textContent = p;
             btnPage.addEventListener('click', () => goToSidangPage(p));
             navContainer.appendChild(btnPage);
         }
 
         const btnNext = document.createElement('button');
-        btnNext.className = `px-2.5 py-1 rounded-lg border text-xs font-bold transition ${state.sidangCurrentPage === totalPages ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
-        btnNext.innerHTML = 'Next &rsaquo;';
+        btnNext.className = `px-2 sm:px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-bold transition shrink-0 ${state.sidangCurrentPage === totalPages ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
+        btnNext.innerHTML = '<span class="sm:hidden">&rsaquo;</span><span class="hidden sm:inline">Next &rsaquo;</span>';
+        btnNext.title = 'Halaman Selanjutnya';
         btnNext.disabled = (state.sidangCurrentPage === totalPages);
         btnNext.addEventListener('click', () => goToSidangPage(state.sidangCurrentPage + 1));
         navContainer.appendChild(btnNext);
 
         const btnLast = document.createElement('button');
-        btnLast.className = `px-2.5 py-1 rounded-lg border text-xs font-bold transition ${state.sidangCurrentPage === totalPages ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
-        btnLast.innerHTML = 'Akhir &raquo;';
+        btnLast.className = `px-2 sm:px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-bold transition shrink-0 ${state.sidangCurrentPage === totalPages ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
+        btnLast.innerHTML = '<span class="sm:hidden">&raquo;</span><span class="hidden sm:inline">Akhir &raquo;</span>';
+        btnLast.title = 'Halaman Terakhir';
         btnLast.disabled = (state.sidangCurrentPage === totalPages);
         btnLast.addEventListener('click', () => goToSidangPage(totalPages));
         navContainer.appendChild(btnLast);

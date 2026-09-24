@@ -1916,8 +1916,8 @@
                         <!-- Category Selector Dropdown -->
                         <div class="custom-dropdown-container">
                             <input type="hidden" id="mainCategoryVal" value="query">
-                            <button type="button" onclick="toggleCustomDropdown('main-cat', event)" style="display: flex; align-items: center; gap: 6px; background: none; border: none; cursor: pointer; font-weight: 700; font-size: 0.84rem; color: #1e293b; outline: none; padding: 4px 2px;">
-                                <span id="label-filter-main-cat">Cari Kata Kunci</span>
+                            <button type="button" onclick="toggleCustomDropdown('main-cat', event)" style="display: flex; align-items: center; gap: 6px; background: none; border: none; cursor: pointer; font-weight: 700; font-size: 0.84rem; color: #1e293b; outline: none; padding: 4px 2px;" title="Kategori Pencarian">
+                                <span id="label-filter-main-cat" class="text-sm sm:text-base leading-none block" style="font-size: 0.95rem; line-height: 1;">🔍</span>
                                 <i class="fa-solid fa-chevron-down dropdown-arrow" id="arrow-filter-main-cat" style="font-size: 0.65rem; color: #94a3b8; transition: transform 0.2s;"></i>
                             </button>
                             <div id="menu-filter-main-cat" class="custom-dropdown-menu">
@@ -2268,13 +2268,18 @@
         let pageSize = 10;
 
         const SEARCH_CATEGORIES = [
-            { key: 'query', label: '🔍 Kata Kunci (Semua)', placeholder: 'Ketik kata kunci lalu tekan Enter atau klik Cari...' },
-            { key: 'ruangan', label: '🚪 Ruangan Lab', placeholder: 'Cari nama / kode ruangan...' },
-            { key: 'agenda', label: '📝 Agenda / Keterangan', placeholder: 'Cari agenda / keperluan...' },
-            { key: 'tanggal', label: '📅 Tanggal Booking', placeholder: 'Pilih rentang tanggal...' },
-            { key: 'kategori', label: '🏷️ Kategori Pemakaian', placeholder: 'Cari kategori pemakaian...' },
-            { key: 'status', label: '⚡ Status Pengajuan', placeholder: 'Cari status (Menunggu / Disetujui / Ditolak)...' }
+            { key: 'query', emoji: '🔍', label: '🔍 Kata Kunci (Semua)', placeholder: 'Ketik kata kunci lalu tekan Enter atau klik Cari...' },
+            { key: 'ruangan', emoji: '🚪', label: '🚪 Ruangan Lab', placeholder: 'Cari nama / kode ruangan...' },
+            { key: 'agenda', emoji: '📝', label: '📝 Agenda / Keterangan', placeholder: 'Cari agenda / keperluan...' },
+            { key: 'tanggal', emoji: '📅', label: '📅 Tanggal Booking', placeholder: 'Pilih rentang tanggal...' },
+            { key: 'kategori', emoji: '🏷️', label: '🏷️ Kategori Pemakaian', placeholder: 'Cari kategori pemakaian...' },
+            { key: 'status', emoji: '⚡', label: '⚡ Status Pengajuan', placeholder: 'Cari status (Menunggu / Disetujui / Ditolak)...' }
         ];
+
+        function getCategoryEmoji(key) {
+            const found = SEARCH_CATEGORIES.find(c => c.key === key);
+            return found ? (found.emoji || '🔍') : '🔍';
+        }
 
         // Toggle Custom Dropdown Menu
         function toggleCustomDropdown(id, e) {
@@ -2377,7 +2382,7 @@
         // Select MultiSearch Category on Main Pill
         function selectMainCategory(cat, label, placeholder, el) {
             $('#mainCategoryVal').val(cat);
-            $('#label-filter-main-cat').text(label.replace(/^[^\s]+\s*/, ''));
+            $('#label-filter-main-cat').text(getCategoryEmoji(cat));
             
             $('#menu-filter-main-cat .dropdown-item').removeClass('active');
             if (el) $(el).addClass('active');
@@ -2525,8 +2530,7 @@
                 dropdownItems += `<div onclick="selectExtraCategory('${rowId}', '${c.key}', '${c.label}', this)" class="dropdown-item ${isActive}"><span>${c.label}</span></div>`;
             });
 
-            const catObj = SEARCH_CATEGORIES.find(c => c.key === defaultKey) || SEARCH_CATEGORIES[1];
-            const cleanLabel = catObj.label.replace(/^[^\s]+\s*/, '');
+            const emoji = getCategoryEmoji(defaultKey);
 
             const rowHtml = document.createElement('div');
             rowHtml.className = 'extra-filter-row';
@@ -2535,8 +2539,8 @@
                 <div class="unified-search-pill" style="height: 44px; flex: 1;">
                     <div class="custom-dropdown-container">
                         <input type="hidden" class="extra-category-val" value="${defaultKey}">
-                        <button type="button" onclick="toggleCustomDropdown('${rowId}', event)" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-weight:700;font-size:0.84rem;color:#1e293b;outline:none;padding:4px 2px;">
-                            <span class="extra-category-label">${cleanLabel}</span>
+                        <button type="button" onclick="toggleCustomDropdown('${rowId}', event)" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-weight:700;font-size:0.84rem;color:#1e293b;outline:none;padding:4px 2px;" title="Kategori Pencarian">
+                            <span class="extra-category-label" style="font-size: 0.95rem; line-height: 1; display: block;">${emoji}</span>
                             <i class="fa-solid fa-chevron-down dropdown-arrow" id="arrow-filter-${rowId}" style="font-size:0.65rem;color:#94a3b8;transition:transform 0.2s;"></i>
                         </button>
                         <div id="menu-filter-${rowId}" class="custom-dropdown-menu">
@@ -2567,7 +2571,7 @@
             if (!row) return;
 
             row.querySelector('.extra-category-val').value = catKey;
-            row.querySelector('.extra-category-label').innerText = catLabel.replace(/^[^\s]+\s*/, '');
+            row.querySelector('.extra-category-label').innerText = getCategoryEmoji(catKey);
             
             if (el) {
                 el.parentElement.querySelectorAll('.dropdown-item').forEach(d => d.classList.remove('active'));

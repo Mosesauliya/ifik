@@ -611,6 +611,18 @@
                     $default_img = base_url('assets/images/multimedia.jpg');
                     $detail_url = site_url('dashboard/lab_detail/' . $key);
 
+                    $foto_src = '';
+                    if (!empty($r->foto)) {
+                        $foto_src = $r->foto;
+                    } elseif (!empty($r->images)) {
+                        if (strpos($r->images, '|') !== false) {
+                            list($f,) = explode('|', $r->images, 2);
+                            $foto_src = $f;
+                        } else {
+                            $foto_src = $r->images;
+                        }
+                    }
+
                     $dyn_lab_data[$key] = [
                         'key'     => $key,
                         'id'      => $r->id,
@@ -618,7 +630,7 @@
                         'desc'    => !empty($r->tagline) ? $r->tagline : (!empty($r->deskripsi) ? substr($r->deskripsi, 0, 95) . '...' : 'Fasilitas Laboratorium Fakultas Industri Kreatif'),
                         'btnText' => 'Lihat Detail &rarr;',
                         'url'     => $detail_url,
-                        'img'     => !empty($r->foto) ? (strpos($r->foto, 'http') === 0 ? $r->foto : base_url($r->foto)) : $default_img,
+                        'img'     => !empty($foto_src) ? (strpos($foto_src, 'http') === 0 ? $foto_src : base_url($foto_src)) : $default_img,
                         'has_3d'  => !empty($r->model_3d)
                     ];
                 }

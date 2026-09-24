@@ -48,6 +48,34 @@
             border-color: #ea580c !important;
             box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.1) !important;
         }
+
+        .page-wrapper-for-sidebar {
+            width: 100%;
+            min-width: 0;
+            min-height: 100vh;
+            transition: margin-left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+            box-sizing: border-box;
+        }
+
+        @media (min-width: 1024px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 270px;
+                width: calc(100% - 270px);
+            }
+
+            body.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 1023.98px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding-top: 56px;
+            }
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 via-orange-50/20 to-slate-100 min-h-screen text-slate-800 antialiased">
@@ -55,6 +83,7 @@
     <!-- Include Dosen Sidebar -->
     <?php $this->load->view('partials/dosen_sidebar'); ?>
 
+    <div class="page-wrapper-for-sidebar">
     <!-- Main Content -->
     <main class="min-h-screen p-6 sm:p-8 lg:p-10 max-w-5xl mx-auto">
         
@@ -487,6 +516,7 @@
         </div>
 
     </main>
+    </div>
 
     <!-- MODAL: Progress Bar Pengiriman Tiket Kendala -->
     <div id="modalTicketingProgress" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300">

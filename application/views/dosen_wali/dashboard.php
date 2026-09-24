@@ -332,12 +332,52 @@
                 padding: 2.5rem 1rem !important;
             }
         }
+
+        .page-wrapper-for-sidebar {
+            width: 100%;
+            min-width: 0;
+            min-height: 100vh;
+            transition: margin-left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+            box-sizing: border-box;
+        }
+
+        @media (min-width: 1024px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 270px;
+                width: calc(100% - 270px);
+            }
+
+            body.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            #lihatBerkasContainer {
+                left: 270px !important;
+                width: calc(100% - 270px) !important;
+                transition: left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+            }
+
+            body.curved-sidebar-desktop-collapsed #lihatBerkasContainer {
+                left: 0 !important;
+                width: 100% !important;
+            }
+        }
+
+        @media (max-width: 1023.98px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding-top: 56px;
+            }
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-amber-100/80 via-orange-50 to-amber-100/90 text-slate-900 font-sans antialiased min-h-screen flex flex-col selection:bg-orange-500 selection:text-white relative">
 
     <?php $this->load->view('partials/dosen_sidebar'); ?>
 
+    <div class="page-wrapper-for-sidebar flex flex-col min-h-screen flex-grow">
     <!-- Main Container -->
     <main class="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-grow">
 
@@ -660,7 +700,7 @@
                             <th class="py-3 px-3 text-center">STATUS <?= !empty($syarat_berkas) ? count($syarat_berkas) : 4; ?> BERKAS</th>
                             <th class="py-3 px-3 text-center">DOSEN WALI</th>
                             <th class="py-3 px-3 text-center">TAHAP SAAT INI</th>
-                            <th class="py-3 px-3 pr-4 text-right">AKSI</th>
+                            <th class="py-3 px-3 text-center">AKSI</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-orange-100/80 font-medium bg-white" id="tableBodyMhs">
@@ -824,7 +864,7 @@
                                     </td>
 
                                     <!-- Aksi -->
-                                    <td class="py-3 px-3 pr-4 text-right whitespace-nowrap">
+                                    <td class="py-3 px-3 text-center whitespace-nowrap">
                                         <div class="inline-flex items-center gap-1.5">
                                             <a href="<?= site_url('dosen/wali/detail_mahasiswa/' . $mhs['nim']); ?>" 
                                                class="btn-3d-orange inline-flex items-center gap-1 text-white font-bold px-2.5 py-1.5 rounded-xl text-xs"
@@ -1119,6 +1159,7 @@
     <footer class="bg-white/90 border-t border-orange-100 py-5 text-center text-xs text-slate-400 font-medium mt-12">
         &copy; <?= date('Y'); ?> IFIK Portal — Fakultas Industri Kreatif, Telkom University
     </footer>
+    </div>
 
     <script>
     window.mhsDataMap = <?= json_encode(array_column($list_mahasiswa ?: array(), null, 'nim')); ?>;
@@ -1562,7 +1603,7 @@
                                 <td class="py-3 px-3 text-center whitespace-nowrap">
                                     <span class="px-2.5 py-0.5 font-semibold text-[11px] rounded-full bg-slate-100 text-slate-700 border border-slate-200 shadow-xs inline-block">${stageLabel}</span>
                                 </td>
-                                <td class="py-3 px-3 pr-4 text-right whitespace-nowrap">
+                                <td class="py-3 px-3 text-center whitespace-nowrap">
                                     <div class="inline-flex items-center gap-1.5">
                                         <a href="${mhs.detail_url}" 
                                            class="btn-3d-orange inline-flex items-center gap-1 text-white font-bold px-2.5 py-1.5 rounded-xl text-xs"

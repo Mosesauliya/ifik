@@ -46,8 +46,11 @@
     <!-- Include Curved Sidebar (Panel Mahasiswa) -->
     <?php $this->load->view('components/curved_sidebar'); ?>
 
-    <!-- Main Content Container with Left Padding for Sidebar Burger -->
-    <main class="min-h-screen p-6 sm:p-8 lg:p-10 max-w-7xl mx-auto pl-16">
+    <!-- Main Page Content Wrapper (Shrinks / Expands with Sidebar) -->
+    <div id="mainPageContent" class="page-wrapper-for-sidebar min-h-screen flex flex-col flex-grow">
+
+    <!-- Main Content Container -->
+    <main class="min-h-screen p-6 sm:p-8 lg:p-10 max-w-7xl mx-auto w-full">
         
         <!-- Header & Breadcrumb -->
         <div class="mb-8">
@@ -456,6 +459,7 @@
         </div>
 
     </main>
+    </div> <!-- /#mainPageContent -->
 
     <!-- Floating Tracking Popover Tooltip -->
     <div id="statusTrackingPopover" class="fixed z-50 hidden opacity-0 transition-all duration-200 pointer-events-none w-80 bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-4">
@@ -1263,5 +1267,6 @@
             }
         });
     </script>
+    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>

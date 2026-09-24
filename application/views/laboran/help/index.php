@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title><?= htmlspecialchars($title ?? 'Bantuan & Live Chat Lab - Panel Laboran') ?></title>
     
     <!-- Google Fonts & FontAwesome & SweetAlert2 -->
@@ -48,6 +48,7 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             height: 100vh;
+            height: 100dvh;
             margin: 0;
             padding: 0;
             overflow: hidden;
@@ -56,6 +57,7 @@
         .page-wrapper-for-sidebar {
             width: 100%;
             height: 100vh;
+            height: 100dvh;
             padding: 16px 24px;
             display: flex;
             flex-direction: column;
@@ -82,7 +84,9 @@
             .page-wrapper-for-sidebar {
                 margin-left: 0 !important;
                 width: 100% !important;
-                padding: 60px 16px 16px 16px;
+                padding: 56px 12px 12px 12px;
+                height: 100vh;
+                height: 100dvh;
             }
         }
 
@@ -774,7 +778,7 @@
             }
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
             body {
                 padding: 0;
                 overflow: hidden;
@@ -784,8 +788,8 @@
                 margin-left: 0 !important;
                 width: 100% !important;
                 padding: 56px 12px 12px 12px;
-                height: 100dvh;
                 height: 100vh;
+                height: 100dvh;
             }
 
             .page-header {
@@ -830,11 +834,39 @@
                 height: calc(100% - 4px);
                 position: relative;
                 border-radius: 16px;
+                overflow: hidden;
             }
 
             .chat-sidebar {
                 width: 100%;
                 height: 100%;
+            }
+
+            .chat-workspace.mobile-active .chat-sidebar,
+            body.mobile-chat-open .chat-sidebar {
+                display: none !important;
+            }
+
+            .chat-workspace:not(.mobile-active) .chat-main {
+                display: none !important;
+            }
+
+            .chat-workspace.mobile-active .chat-main,
+            body.mobile-chat-open .chat-main {
+                display: flex !important;
+                position: relative !important;
+                transform: none !important;
+                width: 100% !important;
+                height: 100% !important;
+                max-height: 100% !important;
+                min-height: 0 !important;
+                flex: 1 1 0% !important;
+                border-radius: 0 !important;
+                border: none !important;
+                overflow: hidden !important;
+                box-shadow: none !important;
+                flex-direction: column !important;
+                background: #ffffff;
             }
 
             .conversation-item {
@@ -863,48 +895,100 @@
                 font-size: 0.75rem;
             }
 
-            .chat-main {
-                position: absolute;
+            /* Fullscreen mobile active chat state */
+            body.mobile-chat-open {
+                position: fixed;
                 top: 0;
                 left: 0;
+                right: 0;
+                bottom: 0;
                 width: 100%;
                 height: 100%;
-                z-index: 20;
-                transform: translateX(100%);
-                transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-                background: #ffffff;
+                height: 100dvh;
+                overflow: hidden;
             }
 
-            .chat-workspace.mobile-active .chat-main {
-                transform: translateX(0);
-            }
-
-            /* Fullscreen mobile active chat state */
             body.mobile-chat-open .page-wrapper-for-sidebar {
-                padding: 0 !important;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
                 height: 100dvh !important;
-                height: 100vh !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                overflow: hidden !important;
+                z-index: 9999 !important;
             }
 
             body.mobile-chat-open .page-header {
                 display: none !important;
             }
 
-            body.mobile-chat-open #curvedSidebarToggle {
+            body.mobile-chat-open #curvedSidebarToggle,
+            body.mobile-chat-open .curved-sidebar-btn,
+            body.mobile-chat-open .floating-sidebar-toggle,
+            body.mobile-chat-open .curved-sidebar-nav,
+            body.mobile-chat-open .curved-sidebar-backdrop {
                 display: none !important;
             }
 
+            body.mobile-chat-open .main-container {
+                height: 100% !important;
+                max-height: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                flex: 1 1 0% !important;
+                min-height: 0 !important;
+                overflow: hidden !important;
+            }
+
             body.mobile-chat-open .chat-workspace {
-                height: 100dvh !important;
-                height: 100vh !important;
+                height: 100% !important;
+                max-height: 100% !important;
                 border-radius: 0 !important;
                 border: none !important;
+                display: flex !important;
+                flex-direction: column !important;
+                flex: 1 1 0% !important;
+                min-height: 0 !important;
+                overflow: hidden !important;
+                margin: 0 !important;
+                gap: 0 !important;
+            }
+
+            #activeChatWrap {
+                height: 100% !important;
+                max-height: 100% !important;
+                min-height: 0 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                flex: 1 1 0% !important;
+                width: 100% !important;
+                overflow: hidden !important;
+            }
+
+            body.mobile-chat-open .chat-messages {
+                flex: 1 1 0% !important;
+                min-height: 0 !important;
+                height: 0 !important;
+                overflow-y: auto !important;
+                display: flex !important;
+                flex-direction: column !important;
+                -webkit-overflow-scrolling: touch;
+                overscroll-behavior-y: contain;
             }
 
             /* Active Chat Header on Mobile */
             .chat-header {
                 padding: 10px 12px;
                 gap: 8px;
+                flex-shrink: 0 !important;
             }
 
             .chat-header-user {
@@ -1034,8 +1118,11 @@
                 gap: 8px;
                 background: #ffffff;
                 border-top: 1px solid #e2e8f0;
-                padding-bottom: max(10px, env(safe-area-inset-bottom));
+                padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
                 align-items: flex-end;
+                flex-shrink: 0 !important;
+                position: relative !important;
+                z-index: 20 !important;
             }
 
             .chat-textarea {
@@ -1043,7 +1130,7 @@
                 height: 42px;
                 max-height: 120px;
                 padding: 9px 12px;
-                font-size: 0.86rem;
+                font-size: 0.95rem;
                 border-radius: 12px;
                 line-height: 1.4;
                 box-sizing: border-box;
@@ -1141,6 +1228,7 @@
                                 <p id="headerUserSub">1301213001 &bull; Topik: Peminjaman Ruangan Lab</p>
                             </div>
                         </div>
+                        <!-- 
                         <div class="header-actions-wrap">
                             <button type="button" id="btnToggleStatus" class="btn-status-toggle resolve-btn" onclick="toggleActiveStatus()">
                                 <i class="fa-solid fa-check"></i>
@@ -1148,6 +1236,7 @@
                                 <span class="btn-text-short">Selesai</span>
                             </button>
                         </div>
+                        -->
                     </div>
 
                     <!-- Message Feed -->
@@ -1298,7 +1387,7 @@
                 renderedMessageIds.clear();
             }
             $('#chatWorkspace').addClass('mobile-active');
-            if (window.innerWidth <= 768) {
+            if (window.innerWidth <= 900) {
                 $('body').addClass('mobile-chat-open');
             }
             $('#emptyChatState').hide();
