@@ -2362,16 +2362,16 @@
 
             // 1. Status Badge Koordinator (with whitespace-nowrap)
             let statusBadgeHtml = '';
-            if (stKoor === 'Approved') {
+            if (!isWaliApproved) {
+                statusBadgeHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 font-medium text-[10px] rounded-full border border-sky-200 bg-sky-50 text-sky-700 whitespace-nowrap"><i class="fa-solid fa-clock text-[9px]"></i> Antre Wali</span>`;
+            } else if (!isAdminApproved) {
+                statusBadgeHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 font-medium text-[10px] rounded-full border border-indigo-200 bg-indigo-50 text-indigo-700 whitespace-nowrap"><i class="fa-solid fa-clock text-[9px]"></i> Antre Admin</span>`;
+            } else if (stKoor === 'Approved') {
                 statusBadgeHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 font-bold text-[10px] rounded-full border border-emerald-300 bg-emerald-50 text-emerald-700 shadow-2xs whitespace-nowrap"><i class="fa-solid fa-circle-check text-[10px]"></i> Disetujui</span>`;
             } else if (stKoor === 'Rejected') {
                 statusBadgeHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 font-bold text-[10px] rounded-full border border-rose-300 bg-rose-50 text-rose-700 shadow-2xs whitespace-nowrap"><i class="fa-solid fa-circle-xmark text-[10px]"></i> Perlu Revisi</span>`;
             } else if (isEligibleForKoor) {
                 statusBadgeHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 font-bold text-[10px] rounded-full border border-orange-400 bg-orange-100 text-orange-950 shadow-xs whitespace-nowrap"><i class="fa-solid fa-bell text-[10px] text-orange-600"></i> Siap Diproses</span>`;
-            } else if (!isWaliApproved) {
-                statusBadgeHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 font-medium text-[10px] rounded-full border border-sky-200 bg-sky-50 text-sky-700 whitespace-nowrap"><i class="fa-solid fa-clock text-[9px]"></i> Antre Wali</span>`;
-            } else if (!isAdminApproved) {
-                statusBadgeHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 font-medium text-[10px] rounded-full border border-indigo-200 bg-indigo-50 text-indigo-700 whitespace-nowrap"><i class="fa-solid fa-clock text-[9px]"></i> Antre Admin</span>`;
             } else {
                 statusBadgeHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 font-bold text-[10px] rounded-full border border-amber-300 bg-amber-50 text-amber-700 whitespace-nowrap">Pending</span>`;
             }
