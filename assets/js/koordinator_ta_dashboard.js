@@ -6227,15 +6227,14 @@
 
         let html = '';
         let mobileHtml = '';
-        let eligibleCountOnPage = 0;
-        let selectedEligibleOnPage = 0;
+        let countOnPage = 0;
+        let selectedOnPage = 0;
 
         pageItems.forEach((row, idx) => {
+            countOnPage++;
             const isNilaiLengkap = Boolean(row.is_nilai_lengkap);
-            if (isNilaiLengkap) eligibleCountOnPage++;
-
-            const isChecked = state.sidangSelectedStudents.has(row.nim);
-            if (isChecked && isNilaiLengkap) selectedEligibleOnPage++;
+            const isChecked = state.sidangSelectedStudents.has(String(row.nim)) || state.sidangSelectedStudents.has(row.nim);
+            if (isChecked) selectedOnPage++;
 
             const isTerjadwal = (row.status_sidang === 'Terjadwal' || Boolean(row.tgl_sidang || row.tanggal_sidang));
             const statusBadge = isTerjadwal
@@ -6403,20 +6402,13 @@
                 `;
             }
 
-            // Aturan Centang Checkbox: Hanya aktif jika isNilaiLengkap
-            const checkboxDisabledAttr = !isNilaiLengkap ? 'disabled cursor-not-allowed opacity-40' : 'cursor-pointer';
-            const checkboxTitle = !isNilaiLengkap 
-                ? `Centang dinonaktifkan: Nilai belum lengkap (${row.komponen_terisi_count || 0}/4 terisi). Publikasi hanya diizinkan jika seluruh 4 evaluator telah mengisi nilai.` 
-                : `Pilih mahasiswa NIM ${row.nim} untuk aksi publikasi massal`;
-
             html += `
                 <tr class="table-row-animate ${rowHighlight} transition-colors" style="--row-index: ${idx};">
-                    <td class="w-7 py-2.5 px-1 text-center" title="${escapeHtml(checkboxTitle)}">
+                    <td class="w-7 py-2.5 px-1 text-center" title="Pilih mahasiswa NIM ${escapeHtml(row.nim)} untuk aksi massal">
                         <input type="checkbox" 
-                            class="row-select-sidang w-3.5 h-3.5 rounded text-amber-600 focus:ring-amber-500 border-slate-300 ${checkboxDisabledAttr}" 
-                            value="${row.nim}" 
-                            ${isChecked && isNilaiLengkap ? 'checked' : ''}
-                            ${!isNilaiLengkap ? 'disabled' : ''}
+                            class="row-select-sidang w-3.5 h-3.5 rounded text-amber-600 focus:ring-amber-500 border-slate-300 cursor-pointer" 
+                            value="${escapeHtml(row.nim)}" 
+                            ${isChecked ? 'checked' : ''}
                             onchange="toggleRowSelectSidang(this)">
                     </td>
                     <td class="w-20 py-2.5 px-1.5 font-bold font-mono text-[10.5px] text-slate-900 truncate">${row.nim}</td>
@@ -6490,16 +6482,15 @@
 
             // Mobile Card Markup
             mobileHtml += `
-                <div class="mobile-sidang-card bg-white rounded-2xl border ${isChecked && isNilaiLengkap ? 'border-amber-500 ring-2 ring-amber-400 bg-amber-50/20' : 'border-slate-200/90'} p-4 shadow-sm space-y-3 transition-all">
+                <div class="mobile-sidang-card bg-white rounded-2xl border ${isChecked ? 'border-amber-500 ring-2 ring-amber-400 bg-amber-50/20' : 'border-slate-200/90'} p-4 shadow-sm space-y-3 transition-all">
                     <!-- Top Bar: Selection Checkbox + NIM & Name + Status Badge -->
                     <div class="flex items-start justify-between gap-2.5">
                         <div class="flex items-start gap-2.5 min-w-0 flex-1">
-                            <div class="pt-0.5 shrink-0" title="${escapeHtml(checkboxTitle)}">
+                            <div class="pt-0.5 shrink-0" title="Pilih mahasiswa NIM ${escapeHtml(row.nim)} untuk aksi massal">
                                 <input type="checkbox" 
-                                    class="row-select-sidang w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 ${checkboxDisabledAttr}" 
-                                    value="${row.nim}" 
-                                    ${isChecked && isNilaiLengkap ? 'checked' : ''}
-                                    ${!isNilaiLengkap ? 'disabled' : ''}
+                                    class="row-select-sidang w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 cursor-pointer" 
+                                    value="${escapeHtml(row.nim)}" 
+                                    ${isChecked ? 'checked' : ''}
                                     onchange="toggleRowSelectSidang(this)">
                             </div>
                             <div class="min-w-0 flex-1">
@@ -6579,8 +6570,8 @@
         if (mobileContainer) mobileContainer.innerHTML = mobileHtml;
 
         if (selectAllCheckbox) {
-            selectAllCheckbox.checked = (eligibleCountOnPage > 0 && selectedEligibleOnPage === eligibleCountOnPage);
-            selectAllCheckbox.indeterminate = (selectedEligibleOnPage > 0 && selectedEligibleOnPage < eligibleCountOnPage);
+            selectAllCheckbox.checked = (countOnPage > 0 && selectedOnPage === countOnPage);
+            selectAllCheckbox.indeterminate = (selectedOnPage > 0 && selectedOnPage < countOnPage);
         }
 
         const endIdx = Math.min(startIdx + state.sidangPageSize, totalItems);
@@ -10020,18 +10011,23 @@
     // MODAL BATCH PUBLISH NILAI MAHASISWA TERPILIH
     // =========================================================
     window.openModalBatchPublishNilai = function () {
-        const selectedNims = state.sidangSelectedStudents || [];
-        if (selectedNims.length === 0) {
+        let selectedObjs = [];
+        if (state.sidangSelectedStudents instanceof Map) {
+            selectedObjs = Array.from(state.sidangSelectedStudents.values());
+        } else if (Array.isArray(state.sidangSelectedStudents)) {
+            const allStudents = state.sidangList || [];
+            selectedObjs = allStudents.filter(s => state.sidangSelectedStudents.includes(String(s.nim)));
+        }
+
+        if (selectedObjs.length === 0) {
             Swal.fire({
                 icon: 'warning',
                 title: 'Tidak Ada Mahasiswa Terpilih',
-                text: 'Silakan pilih minimal 1 mahasiswa dari tabel sidang tugas akhir.'
+                text: 'Silakan pilih minimal 1 mahasiswa dari tabel sidang tugas akhir.',
+                confirmButtonColor: '#f59e0b'
             });
             return;
         }
-
-        const allStudents = state.sidangList || [];
-        const selectedObjs = allStudents.filter(s => selectedNims.includes(String(s.nim)));
 
         const validStudents = selectedObjs.filter(s => !!s.is_nilai_lengkap);
         const invalidStudents = selectedObjs.filter(s => !s.is_nilai_lengkap);
@@ -10040,7 +10036,8 @@
             Swal.fire({
                 icon: 'error',
                 title: 'Nilai Belum Lengkap',
-                html: `Seluruh (${selectedObjs.length}) mahasiswa terpilih belum memiliki nilai lengkap dari 4 evaluator.<br><span class="text-xs text-slate-500 mt-1 block">Publikasi hanya dapat dilakukan setelah seluruh komponen nilai (P1, P2, Penguji 1, Penguji 2) terisi.</span>`
+                html: `Seluruh (${selectedObjs.length}) mahasiswa terpilih belum memiliki nilai lengkap dari 4 evaluator.<br><span class="text-xs text-slate-500 mt-1 block">Publikasi hanya dapat dilakukan setelah seluruh komponen nilai (P1, P2, Penguji 1, Penguji 2) terisi.</span>`,
+                confirmButtonColor: '#f59e0b'
             });
             return;
         }
@@ -10057,7 +10054,7 @@
         if (badgeCount) {
             badgeCount.textContent = `${validStudents.length} Mahasiswa Siap Rilis`;
             if (invalidStudents.length > 0) {
-                badgeCount.innerHTML = `<span class="text-emerald-700">${validStudents.length} Siap</span> &bull; <span class="text-rose-600">${invalidStudents.length} Belum Lengkap (Dilewati)</span>`;
+                badgeCount.innerHTML = `<span class="text-emerald-700 font-bold">${validStudents.length} Siap</span> &bull; <span class="text-rose-600 font-semibold">${invalidStudents.length} Belum Lengkap (Dilewati)</span>`;
             }
         }
 
@@ -10141,15 +10138,21 @@
     };
 
     window.submitBatchPublishNilai = function () {
-        const selectedNims = state.sidangSelectedStudents || [];
-        const allStudents = state.sidangList || [];
-        const validStudents = allStudents.filter(s => selectedNims.includes(String(s.nim)) && !!s.is_nilai_lengkap);
+        let selectedObjs = [];
+        if (state.sidangSelectedStudents instanceof Map) {
+            selectedObjs = Array.from(state.sidangSelectedStudents.values());
+        } else if (Array.isArray(state.sidangSelectedStudents)) {
+            const allStudents = state.sidangList || [];
+            selectedObjs = allStudents.filter(s => state.sidangSelectedStudents.includes(String(s.nim)));
+        }
+        const validStudents = selectedObjs.filter(s => !s.is_nilai_lengkap ? false : true);
 
         if (validStudents.length === 0) {
             Swal.fire({
                 icon: 'warning',
                 title: 'Tidak Ada Mahasiswa yang Siap Dipublish',
-                text: 'Pastikan mahasiswa yang dipilih telah memiliki nilai lengkap dari 4 evaluator.'
+                text: 'Pastikan mahasiswa yang dipilih telah memiliki nilai lengkap dari 4 evaluator.',
+                confirmButtonColor: '#f59e0b'
             });
             return;
         }
@@ -10163,7 +10166,8 @@
             Swal.fire({
                 icon: 'warning',
                 title: 'Jadwal Publikasi Belum Dipilih',
-                text: 'Silakan tentukan tanggal dan jam publikasi serentak.'
+                text: 'Silakan tentukan tanggal dan jam publikasi serentak.',
+                confirmButtonColor: '#f59e0b'
             });
             return;
         }
@@ -10216,6 +10220,7 @@
             })
             .then(res => {
                 if (res && res.status) {
+                    const allStudents = state.sidangList || [];
                     const validNimStrings = validStudents.map(st => String(st.nim));
                     allStudents.forEach(st => {
                         if (validNimStrings.includes(String(st.nim))) {
@@ -10226,8 +10231,12 @@
                     });
 
                     // Clear selection
-                    state.sidangSelectedStudents = [];
-                    updateSidangBatchBar();
+                    if (typeof clearAllSidangSelection === 'function') {
+                        clearAllSidangSelection();
+                    } else if (state.sidangSelectedStudents instanceof Map) {
+                        state.sidangSelectedStudents.clear();
+                        if (typeof updateSidangSelectionUI === 'function') updateSidangSelectionUI();
+                    }
 
                     closeModalBatchPublishNilai();
                     renderSidangTable();
