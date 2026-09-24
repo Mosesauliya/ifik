@@ -5343,9 +5343,9 @@
         const resetTab = (el, active) => {
             if (!el) return;
             if (active) {
-                el.className = 'px-3 py-1.5 rounded-lg transition cursor-pointer bg-white text-slate-900 shadow-2xs font-bold';
+                el.className = 'px-3 py-1.5 rounded-lg transition cursor-pointer bg-white text-slate-900 shadow-2xs font-bold whitespace-nowrap shrink-0';
             } else {
-                el.className = 'px-3 py-1.5 rounded-lg transition cursor-pointer text-slate-600 hover:text-slate-900 font-medium';
+                el.className = 'px-3 py-1.5 rounded-lg transition cursor-pointer text-slate-600 hover:text-slate-900 font-medium whitespace-nowrap shrink-0';
             }
         };
 
@@ -5375,9 +5375,12 @@
 
         if (logs.length === 0) {
             container.innerHTML = `
-                <div class="py-12 text-center text-slate-400">
-                    <i class="fa-solid fa-folder-open text-3xl mb-2 text-slate-300"></i>
-                    <p class="text-xs font-semibold text-slate-600">Tidak ada data histori yang sesuai.</p>
+                <div class="py-10 sm:py-12 text-center text-slate-400 p-4">
+                    <div class="w-12 h-12 mx-auto mb-3 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-300">
+                        <i class="fa-solid fa-folder-open text-2xl"></i>
+                    </div>
+                    <p class="text-xs font-bold text-slate-700">Tidak ada data histori yang sesuai</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Coba sesuaikan kata kunci pencarian atau tab filter kategori di atas.</p>
                 </div>
             `;
             return;
@@ -5389,48 +5392,48 @@
             const isPembimbing = (log.kategori === 'Pembimbing');
             const isPenguji = (log.kategori === 'Penguji');
 
-            let katBadgeClass = 'bg-indigo-100 text-indigo-800 border-indigo-200';
+            let katBadgeClass = 'bg-indigo-50 text-indigo-700 border-indigo-200';
             let katIcon = 'fa-solid fa-chalkboard-user';
             let katLabel = 'Dosen Penguji';
 
-            let aksiBadgeClass = 'bg-slate-100 text-slate-800 border-slate-300';
+            let aksiBadgeClass = 'bg-slate-100 text-slate-700 border-slate-300';
             let aksiIcon = 'fa-solid fa-pen-to-square';
 
             const aksiText = log.aksi || log.action || 'Perubahan Data';
 
             if (isPembimbing) {
-                katBadgeClass = 'bg-orange-100 text-orange-800 border-orange-200';
+                katBadgeClass = 'bg-orange-50 text-orange-700 border-orange-200';
                 katIcon = 'fa-solid fa-user-tie';
                 katLabel = 'Dosen Pembimbing';
-                aksiBadgeClass = aksiText.toLowerCase().includes('penetapan') ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-100 text-slate-800 border-slate-300';
+                aksiBadgeClass = aksiText.toLowerCase().includes('penetapan') ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-700 border-slate-200';
                 aksiIcon = aksiText.toLowerCase().includes('penetapan') ? 'fa-solid fa-check' : 'fa-solid fa-pen-to-square';
             } else if (isPenguji) {
-                katBadgeClass = 'bg-indigo-100 text-indigo-800 border-indigo-200';
+                katBadgeClass = 'bg-indigo-50 text-indigo-700 border-indigo-200';
                 katIcon = 'fa-solid fa-chalkboard-user';
                 katLabel = 'Dosen Penguji';
-                aksiBadgeClass = aksiText.toLowerCase().includes('penetapan') ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-100 text-slate-800 border-slate-300';
+                aksiBadgeClass = aksiText.toLowerCase().includes('penetapan') ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-700 border-slate-200';
                 aksiIcon = aksiText.toLowerCase().includes('penetapan') ? 'fa-solid fa-check' : 'fa-solid fa-pen-to-square';
             } else if (isSidang) {
                 if (aksiText.includes('Live') || aksiText.includes('Published')) {
-                    katBadgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                    katBadgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
                     katIcon = 'fa-solid fa-globe';
                     katLabel = 'Publikasi Nilai';
-                    aksiBadgeClass = 'bg-emerald-50 text-emerald-800 border-emerald-300';
+                    aksiBadgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
                     aksiIcon = 'fa-solid fa-check-double';
                 } else if (aksiText.includes('Terjadwal') || aksiText.includes('Scheduled')) {
-                    katBadgeClass = 'bg-sky-100 text-sky-800 border-sky-300';
+                    katBadgeClass = 'bg-sky-50 text-sky-700 border-sky-200';
                     katIcon = 'fa-solid fa-clock';
                     katLabel = 'Publikasi Nilai';
-                    aksiBadgeClass = 'bg-sky-50 text-sky-800 border-sky-300';
+                    aksiBadgeClass = 'bg-sky-50 text-sky-700 border-sky-200';
                     aksiIcon = 'fa-solid fa-calendar-day';
                 } else if (aksiText.includes('Ditolak') || aksiText.includes('Blocked')) {
-                    katBadgeClass = 'bg-rose-100 text-rose-800 border-rose-300';
+                    katBadgeClass = 'bg-rose-50 text-rose-700 border-rose-200';
                     katIcon = 'fa-solid fa-ban';
                     katLabel = 'Publikasi Nilai';
-                    aksiBadgeClass = 'bg-rose-50 text-rose-800 border-rose-300';
+                    aksiBadgeClass = 'bg-rose-50 text-rose-700 border-rose-200';
                     aksiIcon = 'fa-solid fa-shield-halved';
                 } else {
-                    katBadgeClass = 'bg-amber-100 text-amber-900 border-amber-300';
+                    katBadgeClass = 'bg-amber-50 text-amber-800 border-amber-200';
                     katIcon = 'fa-solid fa-calendar-check';
                     katLabel = 'Sidang TA';
                     aksiBadgeClass = 'bg-amber-50 text-amber-800 border-amber-200';
@@ -5468,20 +5471,20 @@
             const noteContent = log.catatan || log.keterangan || '';
 
             html += `
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs p-4 transition-all hover:shadow-md hover:border-amber-300 space-y-3 text-left">
-                    <div class="flex items-start justify-between gap-3 border-b border-slate-100 pb-2.5">
-                        <div class="flex items-center gap-2.5">
+                <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-3.5 sm:p-4 transition-all hover:shadow-md hover:border-amber-300 space-y-3 text-left">
+                    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-3 border-b border-slate-100 pb-2.5">
+                        <div class="flex items-center gap-2.5 min-w-0">
                             <div class="w-8 h-8 rounded-xl ${isSidang ? 'bg-amber-50 text-amber-600 border border-amber-200' : (isPembimbing ? 'bg-orange-50 text-orange-600 border border-orange-200' : 'bg-indigo-50 text-indigo-600 border border-indigo-200')} flex items-center justify-center text-xs font-bold shrink-0">
                                 <i class="fa-solid ${isSidang ? 'fa-graduation-cap' : 'fa-user-graduate'}"></i>
                             </div>
-                            <div>
-                                <h4 class="text-xs font-bold text-slate-900">${escapeHtml(log.nama_mahasiswa || ('Mahasiswa NIM ' + log.nim))}</h4>
-                                <span class="text-[10px] font-mono text-slate-500 font-bold">${log.nim}</span>
+                            <div class="min-w-0 flex-1">
+                                <h4 class="text-xs font-bold text-slate-900 truncate">${escapeHtml(log.nama_mahasiswa || ('Mahasiswa NIM ' + log.nim))}</h4>
+                                <span class="text-[10px] font-mono text-slate-500 font-bold block sm:inline">${log.nim}</span>
                             </div>
                         </div>
 
-                        <div class="flex flex-col items-end gap-1">
-                            <div class="flex items-center gap-1.5 flex-wrap justify-end">
+                        <div class="flex items-center sm:items-end justify-between sm:justify-start gap-1.5 flex-wrap pt-1 sm:pt-0">
+                            <div class="flex items-center gap-1.5 flex-wrap">
                                 <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10px] font-bold ${katBadgeClass}">
                                     <i class="${katIcon} text-[9px]"></i>
                                     <span>${katLabel}</span>
@@ -5491,18 +5494,18 @@
                                     <span>${escapeHtml(aksiText)}</span>
                                 </span>
                             </div>
-                            <span class="text-[10px] text-slate-400 font-medium flex items-center gap-1">
+                            <span class="text-[10px] text-slate-400 font-medium flex items-center gap-1 shrink-0">
                                 <i class="fa-solid fa-calendar-day text-[9px]"></i>
                                 ${escapeHtml(log.waktu || log.created_at || '-')}
                             </span>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 text-xs">
                         <!-- Slot 1 -->
-                        <div class="p-2.5 bg-slate-50/80 rounded-xl border border-slate-100 space-y-1">
+                        <div class="p-2.5 bg-slate-50/80 rounded-xl border border-slate-100 space-y-1 min-w-0">
                             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(d1Label)}:</span>
-                            <div class="font-bold text-slate-900 flex items-center gap-1.5">
+                            <div class="font-bold text-slate-900 flex items-center gap-1.5 min-w-0">
                                 ${slot1Badge}
                                 <span class="truncate">${escapeHtml(d1Baru || '-')}</span>
                             </div>
@@ -5514,9 +5517,9 @@
                         </div>
 
                         <!-- Slot 2 -->
-                        <div class="p-2.5 bg-slate-50/80 rounded-xl border border-slate-100 space-y-1">
+                        <div class="p-2.5 bg-slate-50/80 rounded-xl border border-slate-100 space-y-1 min-w-0">
                             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(d2Label)}:</span>
-                            <div class="font-bold text-slate-900 flex items-center gap-1.5">
+                            <div class="font-bold text-slate-900 flex items-center gap-1.5 min-w-0">
                                 ${slot2Badge}
                                 <span class="truncate">${escapeHtml(d2Baru || '-')}</span>
                             </div>
@@ -5529,9 +5532,9 @@
                     </div>
 
                     ${noteContent ? `
-                        <div class="text-[11px] text-slate-600 bg-amber-50/80 border border-amber-200/80 p-2.5 rounded-xl flex items-start gap-2">
+                        <div class="text-[11px] text-slate-600 bg-amber-50/80 border border-amber-200/80 p-2.5 rounded-xl flex items-start gap-2 break-words">
                             <i class="fa-solid fa-note-sticky text-amber-600 mt-0.5 shrink-0 text-xs"></i>
-                            <div>
+                            <div class="min-w-0 flex-1">
                                 <strong>Catatan:</strong> ${escapeHtml(noteContent)}
                             </div>
                         </div>
