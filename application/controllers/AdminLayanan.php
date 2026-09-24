@@ -1252,5 +1252,16 @@ class AdminLayanan extends CI_Controller {
     public function cetak_bap($nim = '') {
         $this->cetak_bap_fakultas($nim);
     }
+
+    /**
+     * Routing Kelola Berita LAA -> News/newsroom
+     */
+    public function berita() {
+        redirect('news/newsroom');
+    }
+
+    public function newsroom() {
+        redirect('news/newsroom');
+    }
 }
 

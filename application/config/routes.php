@@ -201,6 +201,8 @@ $route['onboarding/(:any)'] = 'Onboarding/$1';
 // Admin Layanan (LAA) Routes
 $route['adminlayanan'] = 'AdminLayanan/index';
 $route['adminlayanan/ajax_get_table'] = 'AdminLayanan/ajax_get_table';
+$route['adminlayanan/berita'] = 'News/newsroom';
+$route['adminlayanan/newsroom'] = 'News/newsroom';
 $route['adminlayanan/pengaturan_berkas'] = 'AdminLayanan/pengaturan_berkas';
 $route['adminlayanan/pengaturan_jalur'] = 'AdminLayanan/pengaturan_jalur';
 $route['koordinatorta/pengaturan_jalur'] = 'KoordinatorTA/pengaturan_jalur';
