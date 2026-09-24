@@ -55,7 +55,7 @@ class AdminLayanan_model extends CI_Model {
         $prev_debug = $this->db->db_debug;
         $this->db->db_debug = FALSE;
         try {
-            $res = $this->db->select('id, kode_berkas, nama_berkas, is_required, is_active, urutan')
+            $res = $this->db->select('id, kode_berkas, nama_berkas, deskripsi, is_required, is_active, urutan')
                 ->order_by('urutan', 'ASC')
                 ->get('syarat_berkas_ta')
                 ->result_array();
@@ -69,16 +69,16 @@ class AdminLayanan_model extends CI_Model {
 
     public function get_active_syarat_berkas() {
         $fallback = [
-            ['id' => 1, 'kode_berkas' => 'ksm', 'nama_berkas' => 'KSM (Kartu Studi Mahasiswa)', 'is_required' => 1, 'is_active' => 1, 'urutan' => 1],
-            ['id' => 2, 'kode_berkas' => 'transkrip', 'nama_berkas' => 'Transkrip Nilai', 'is_required' => 1, 'is_active' => 1, 'urutan' => 2],
-            ['id' => 3, 'kode_berkas' => 'pernyataan', 'nama_berkas' => 'Surat Pernyataan', 'is_required' => 1, 'is_active' => 1, 'urutan' => 3],
-            ['id' => 4, 'kode_berkas' => 'bebas_lab', 'nama_berkas' => 'Surat Bebas Lab & Perpustakaan', 'is_required' => 1, 'is_active' => 1, 'urutan' => 4],
+            ['id' => 1, 'kode_berkas' => 'ksm', 'nama_berkas' => 'KSM (Kartu Studi Mahasiswa)', 'deskripsi' => 'Bukti KRS semester aktif yang memuat mata kuliah Tugas Akhir.', 'is_required' => 1, 'is_active' => 1, 'urutan' => 1],
+            ['id' => 2, 'kode_berkas' => 'transkrip', 'nama_berkas' => 'Transkrip Nilai Akademik Terakhir', 'deskripsi' => 'Transkrip nilai resmi yang sudah divalidasi.', 'is_required' => 1, 'is_active' => 1, 'urutan' => 2],
+            ['id' => 3, 'kode_berkas' => 'pernyataan', 'nama_berkas' => 'Surat Pernyataan Mahasiswa', 'deskripsi' => 'Surat kesanggupan menyelesaikan TA bermaterai.', 'is_required' => 1, 'is_active' => 1, 'urutan' => 3],
+            ['id' => 4, 'kode_berkas' => 'bebas_lab', 'nama_berkas' => 'Surat Bebas Lab & Perpustakaan', 'deskripsi' => 'Surat keterangan bebas pinjaman alat lab FIK.', 'is_required' => 1, 'is_active' => 1, 'urutan' => 4],
         ];
         if (!$this->db->table_exists('syarat_berkas_ta')) return $fallback;
         $prev_debug = $this->db->db_debug;
         $this->db->db_debug = FALSE;
         try {
-            $res = $this->db->select('id, kode_berkas, nama_berkas, is_required, is_active, urutan')
+            $res = $this->db->select('id, kode_berkas, nama_berkas, deskripsi, is_required, is_active, urutan')
                 ->where('is_active', 1)
                 ->order_by('urutan', 'ASC')
                 ->get('syarat_berkas_ta')
