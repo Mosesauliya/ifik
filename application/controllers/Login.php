@@ -37,23 +37,44 @@ class Login extends CI_Controller {
 		// Fetch user from database
 		$user = $this->User_model->get_by_email($identity);
 
-		if ($user && $user->status === 'active') {
+		if ($user) {
 			$isPasswordValid = password_verify($password, $user->password);
 			$isTokenLogin = false;
 
-			// If standard password didn't match, check user_token table for activation token
-			if (!$isPasswordValid && $this->db->table_exists('user_token')) {
-				$tokenRow = $this->db->get_where('user_token', ['email' => $user->email])->row();
-				if ($tokenRow && ($password === $tokenRow->token || password_verify($password, $tokenRow->token))) {
+			// 1. Direct plaintext match for legacy/unhashed password
+			if (!$isPasswordValid && $password === $user->password) {
+				$isPasswordValid = true;
+			}
+
+			// 2. Check user_token / user_tokens table for activation token
+			if (!$isPasswordValid) {
+				$tokenTables = ['user_token', 'user_tokens'];
+				foreach ($tokenTables as $tTbl) {
+					if ($this->db->table_exists($tTbl)) {
+						$tokenRow = $this->db->where('LOWER(email)', strtolower($user->email))->get($tTbl)->row();
+						if ($tokenRow && !empty($tokenRow->token)) {
+							if (trim($password) === trim($tokenRow->token) || password_verify($password, $tokenRow->token)) {
+								$isPasswordValid = true;
+								$isTokenLogin = true;
+								break;
+							}
+						}
+					}
+				}
+			}
+
+			// 3. Check user.token property / column
+			if (!$isPasswordValid && !empty($user->token)) {
+				if (trim($password) === trim($user->token) || password_verify($password, $user->token)) {
 					$isPasswordValid = true;
 					$isTokenLogin = true;
 				}
 			}
 
 			if ($isPasswordValid) {
-				// Master accounts (Admin, Kaur, LAA, Laboran, Dosen Wali, Koordinator TA) are ALWAYS password_changed = 1
-				$masterIds = ['admin-01', 'admin-laa-01', 'dsn-wali-01', 'kaur-01', 'koor-ta-01', 'laboran-01', 'mhs-1301210001'];
-				$isMasterAccount = in_array($user->id, $masterIds) || in_array((int)$user->role_id, [1, 2, 5, 21]);
+				// Master accounts (Admin, Kaur, LAA, Laboran, Dosen Wali, Koordinator TA, Ketua KK) are ALWAYS password_changed = 1
+				$masterIds = ['admin-01', 'admin-laa-01', 'dsn-wali-01', 'kaur-01', 'koor-ta-01', 'laboran-01', 'ketua-kk-01', 'mhs-1301210001'];
+				$isMasterAccount = in_array($user->id, $masterIds) || in_array((int)$user->role_id, [1, 2, 5, 9, 21]);
 
 				$passwordChanged = $isMasterAccount ? 1 : ($isTokenLogin ? 0 : (int)$user->password_changed);
 
@@ -65,7 +86,7 @@ class Login extends CI_Controller {
 					'email'            => $user->email,
 					'nidn_nim'         => $user->nidn_nim,
 					'nim'              => $user->nidn_nim,
-					'status'           => $user->status,
+					'status'           => 'active',
 					'password_changed' => $passwordChanged,
 					'logged_in'        => TRUE
 				);
@@ -94,40 +115,67 @@ class Login extends CI_Controller {
 	 */
 	public function activate()
 	{
-		$email = strtolower(trim($this->input->get('email', true)));
-		$token = trim($this->input->get('token', true));
+		$email = strtolower(trim((string)$this->input->get('email', true)));
+		$token = trim((string)$this->input->get('token', true));
+
+		// Fallback if webserver (Nginx/Apache proxy) strips query string into $_GET
+		if (empty($email) || empty($token)) {
+			$queryString = !empty($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : '';
+			if (empty($queryString) && !empty($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '?') !== false) {
+				$queryString = substr($_SERVER['REQUEST_URI'], strpos($_SERVER['REQUEST_URI'], '?') + 1);
+			}
+			if (!empty($queryString)) {
+				parse_str($queryString, $queryParams);
+				if (empty($email) && !empty($queryParams['email'])) {
+					$email = strtolower(trim($queryParams['email']));
+				}
+				if (empty($token) && !empty($queryParams['token'])) {
+					$token = trim($queryParams['token']);
+				}
+			}
+		}
 
 		if (empty($email) || empty($token)) {
-			$this->session->set_flashdata('error', 'Tautan aktivasi tidak valid atau telah kedaluwarsa.');
+			$this->session->set_flashdata('error', 'Tautan aktivasi tidak valid atau parameter tidak lengkap.');
 			redirect('login');
 			return;
 		}
 
 		$user = $this->User_model->get_by_email($email);
 		if (!$user) {
-			$this->session->set_flashdata('error', 'Akun pengguna tidak ditemukan.');
+			$this->session->set_flashdata('error', 'Akun dengan email ' . htmlspecialchars($email) . ' tidak ditemukan di sistem.');
 			redirect('login');
 			return;
 		}
 
-		// Verify token against user_token table or user.token
+		// Verify token against user_token / user_tokens table or user.token or user.password
 		$isValidToken = false;
-		if ($this->db->table_exists('user_token')) {
-			$tokenRow = $this->db->get_where('user_token', ['email' => $email])->row();
-			if ($tokenRow) {
-				if ($token === $tokenRow->token || password_verify($token, $tokenRow->token)) {
-					$isValidToken = true;
+		$tokenTables = ['user_token', 'user_tokens'];
+		foreach ($tokenTables as $tTbl) {
+			if ($this->db->table_exists($tTbl)) {
+				$tokenRow = $this->db->where('LOWER(email)', $email)->get($tTbl)->row();
+				if ($tokenRow && !empty($tokenRow->token)) {
+					if (trim($token) === trim($tokenRow->token) || password_verify($token, $tokenRow->token)) {
+						$isValidToken = true;
+						break;
+					}
 				}
 			}
 		}
 		if (!$isValidToken && !empty($user->token)) {
-			if ($token === $user->token || password_verify($token, $user->token)) {
+			if (trim($token) === trim($user->token) || password_verify($token, $user->token)) {
+				$isValidToken = true;
+			}
+		}
+		// Additional fallback if user inserted token into password field directly
+		if (!$isValidToken && !empty($user->password)) {
+			if (trim($token) === trim($user->password) || password_verify($token, $user->password)) {
 				$isValidToken = true;
 			}
 		}
 
 		if (!$isValidToken) {
-			$this->session->set_flashdata('error', 'Tautan aktivasi sudah tidak berlaku.');
+			$this->session->set_flashdata('error', 'Token aktivasi tidak cocok atau sudah tidak berlaku.');
 			redirect('login');
 			return;
 		}
@@ -140,7 +188,7 @@ class Login extends CI_Controller {
 			'email'            => $user->email,
 			'nidn_nim'         => $user->nidn_nim,
 			'nim'              => $user->nidn_nim,
-			'status'           => $user->status,
+			'status'           => 'active',
 			'password_changed' => 0, // Directs to onboarding to setup password
 			'logged_in'        => TRUE
 		);
