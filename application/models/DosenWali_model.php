@@ -643,15 +643,43 @@ class DosenWali_model extends CI_Model {
             if (in_array('catatan_file_' . $fk, $fields)) $data['catatan_file_' . $fk] = '';
         }
 
-        $this->db->where_in('nim', $nims);
-        if ($this->db->field_exists('is_submitted', 'pendaftaran_ta')) {
-            $this->db->where('is_submitted', 1);
+        foreach ($data as $k => $v) {
+            if (!in_array($k, $fields)) {
+                unset($data[$k]);
+            }
         }
+
+        $this->db->where_in('nim', $nims);
         $this->db->update('pendaftaran_ta', $data);
 
+        // Sync to pendaftaran_berkas table
+        if ($this->db->table_exists('pendaftaran_berkas')) {
+            $berkasData = ['status_verifikasi' => 'Valid', 'updated_at' => date('Y-m-d H:i:s')];
+            if ($this->db->field_exists('catatan', 'pendaftaran_berkas')) {
+                $berkasData['catatan'] = '';
+            }
+            $this->db->where_in('nim', $nims)->update('pendaftaran_berkas', $berkasData);
+        }
 
+        // Sync to file_pendaftaran table
+        if ($this->db->table_exists('file_pendaftaran')) {
+            foreach ($nims as $nim) {
+                $this->db->group_start()
+                    ->where('id_mhs', $nim)
+                    ->or_where('id_mhs', 'usr_mhs_' . $nim)
+                    ->or_where('id_mhs', 'mhs_' . $nim)
+                    ->or_like('id_mhs', $nim)
+                    ->group_end()
+                    ->update('file_pendaftaran', [
+                        'status_doswal' => 'Approved',
+                        'komentar'      => '',
+                        'date_edit'     => date('Y-m-d H:i:s'),
+                        'view_doswal'   => 1
+                    ]);
+            }
+        }
 
-        return $this->db->affected_rows();
+        return count($nims);
     }
 
     // Simpan keputusan massal detail per section dari popup review
