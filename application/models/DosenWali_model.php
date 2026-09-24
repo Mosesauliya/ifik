@@ -470,7 +470,7 @@ class DosenWali_model extends CI_Model {
 
     // Direct Batch Approve Dosen Wali untuk beberapa NIM sekaligus
     public function batch_approve_wali($nims = array()) {
-        if (!$this->db->table_exists('pendaftaran_ta') || empty($nims)) {
+        if (empty($nims)) {
             return 0;
         }
 
@@ -484,32 +484,34 @@ class DosenWali_model extends CI_Model {
             $file_keys = array_column($active_syarat, 'kode_berkas');
         }
 
-        $fields = $this->db->list_fields('pendaftaran_ta');
-        $data = array(
-            'status_approval_wali' => 'Approved',
-            'status_jenis_ta'      => 'Approved',
-            'status_judul'         => 'Approved',
-            'catatan_wali'         => '',
-            'catatan_judul'        => '',
-            'catatan_jenis_ta'     => '',
-            'current_stage'        => 'Admin Layanan',
-            'updated_at'           => date('Y-m-d H:i:s')
-        );
+        if ($this->db->table_exists('pendaftaran_ta')) {
+            $fields = $this->db->list_fields('pendaftaran_ta');
+            $data = array(
+                'status_approval_wali' => 'Approved',
+                'status_jenis_ta'      => 'Approved',
+                'status_judul'         => 'Approved',
+                'catatan_wali'         => '',
+                'catatan_judul'        => '',
+                'catatan_jenis_ta'     => '',
+                'current_stage'        => 'Admin Layanan',
+                'updated_at'           => date('Y-m-d H:i:s')
+            );
 
-        foreach ($file_keys as $fk) {
-            if (in_array('status_file_' . $fk, $fields)) $data['status_file_' . $fk] = 'Approved';
-            if (in_array('review_file_' . $fk, $fields)) $data['review_file_' . $fk] = 1;
-            if (in_array('catatan_file_' . $fk, $fields)) $data['catatan_file_' . $fk] = '';
-        }
-
-        foreach ($data as $k => $v) {
-            if (!in_array($k, $fields)) {
-                unset($data[$k]);
+            foreach ($file_keys as $fk) {
+                if (in_array('status_file_' . $fk, $fields)) $data['status_file_' . $fk] = 'Approved';
+                if (in_array('review_file_' . $fk, $fields)) $data['review_file_' . $fk] = 1;
+                if (in_array('catatan_file_' . $fk, $fields)) $data['catatan_file_' . $fk] = '';
             }
-        }
 
-        $this->db->where_in('nim', $nims);
-        $this->db->update('pendaftaran_ta', $data);
+            foreach ($data as $k => $v) {
+                if (!in_array($k, $fields)) {
+                    unset($data[$k]);
+                }
+            }
+
+            $this->db->where_in('nim', $nims);
+            $this->db->update('pendaftaran_ta', $data);
+        }
 
         // Sync to pendaftaran_berkas table
         if ($this->db->table_exists('pendaftaran_berkas')) {
@@ -522,6 +524,12 @@ class DosenWali_model extends CI_Model {
 
         // Sync to file_pendaftaran table
         if ($this->db->table_exists('file_pendaftaran')) {
+            $fp_fields = $this->db->list_fields('file_pendaftaran');
+            $fp_up = array('status_doswal' => 'Approved');
+            if (in_array('komentar', $fp_fields)) $fp_up['komentar'] = '';
+            if (in_array('date_edit', $fp_fields)) $fp_up['date_edit'] = date('Y-m-d H:i:s');
+            if (in_array('view_doswal', $fp_fields)) $fp_up['view_doswal'] = 1;
+
             foreach ($nims as $nim) {
                 $this->db->group_start()
                     ->where('id_mhs', $nim)
@@ -529,12 +537,23 @@ class DosenWali_model extends CI_Model {
                     ->or_where('id_mhs', 'mhs_' . $nim)
                     ->or_like('id_mhs', $nim)
                     ->group_end()
-                    ->update('file_pendaftaran', [
-                        'status_doswal' => 'Approved',
-                        'komentar'      => '',
-                        'date_edit'     => date('Y-m-d H:i:s'),
-                        'view_doswal'   => 1
-                    ]);
+                    ->update('file_pendaftaran', $fp_up);
+            }
+        }
+
+        // Sync to guidance table
+        if ($this->db->table_exists('guidance')) {
+            $g_fields = $this->db->list_fields('guidance');
+            $g_up = array();
+            if (in_array('keterangan', $g_fields)) $g_up['keterangan'] = 'Approved';
+            if (in_array('komentar', $g_fields)) $g_up['komentar'] = '';
+            if (in_array('date_edit', $g_fields)) $g_up['date_edit'] = date('Y-m-d H:i:s');
+
+            if (!empty($g_up)) {
+                foreach ($nims as $nim) {
+                    $target_ids = ['usr_mhs_' . $nim, 'mhs_' . $nim, $nim];
+                    $this->db->where_in('id_mhs', $target_ids)->update('guidance', $g_up);
+                }
             }
         }
 
