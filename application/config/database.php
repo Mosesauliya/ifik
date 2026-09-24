@@ -73,20 +73,13 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 $active_group = 'default';
 $query_builder = TRUE;
 
-$is_localhost = (
-	isset($_SERVER['HTTP_HOST']) && (
-		strpos($_SERVER['HTTP_HOST'], 'localhost') !== false ||
-		strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false
-	)
-);
-
-$is_nas = !$is_localhost && (
+$is_nas = (
 	(isset($_SERVER['HTTP_HOST']) && (
 		strpos($_SERVER['HTTP_HOST'], 'ifik.forzasoftwarehouse.com') !== false ||
 		strpos($_SERVER['HTTP_HOST'], 'nas') !== false ||
 		strpos($_SERVER['HTTP_HOST'], '192.168.') !== false
 	)) ||
-	(PHP_OS_FAMILY === 'Linux' && !file_exists('/.dockerenv'))
+	PHP_OS_FAMILY === 'Linux'
 );
 
 if ($is_nas) {
@@ -123,11 +116,11 @@ if ($is_nas) {
 		'dbdriver' => 'mysqli',
 		'dbprefix' => '',
 		'pconnect' => FALSE,
-		'db_debug' => FALSE,
+		'db_debug' => (ENVIRONMENT !== 'production'),
 		'cache_on' => FALSE,
 		'cachedir' => '',
-		'char_set' => 'utf8mb4',
-		'dbcollat' => 'utf8mb4_general_ci',
+		'char_set' => 'utf8',
+		'dbcollat' => 'utf8_general_ci',
 		'swap_pre' => '',
 		'encrypt' => FALSE,
 		'compress' => FALSE,
