@@ -138,14 +138,14 @@ class DosenWali_model extends CI_Model {
             $this->_update_file_approval_file_pendaftaran($nim, $file_type, $ver, $comment);
         }
 
-        // 2. Update juga pendaftaran_berkas jika ada
-        if ($this->db->table_exists('pendaftaran_berkas')) {
+        // 2. Update pendaftaran_berkas (hanya jika ada kolom status_doswal khusus doswal)
+        if ($this->db->table_exists('pendaftaran_berkas') && $this->db->field_exists('status_doswal', 'pendaftaran_berkas')) {
             $berkasUpdate = [
-                'status_verifikasi' => $pb_ver,
-                'updated_at'        => date('Y-m-d H:i:s')
+                'status_doswal' => $ver,
+                'updated_at'    => date('Y-m-d H:i:s')
             ];
-            if ($this->db->field_exists('catatan', 'pendaftaran_berkas')) {
-                $berkasUpdate['catatan'] = ($status === 'Rejected') ? $comment : '';
+            if ($this->db->field_exists('catatan_doswal', 'pendaftaran_berkas')) {
+                $berkasUpdate['catatan_doswal'] = ($status === 'Rejected') ? $comment : '';
             }
             $this->db->where('nim', $nim)->where('kode_berkas', $file_type)->update('pendaftaran_berkas', $berkasUpdate);
         }
@@ -238,12 +238,12 @@ class DosenWali_model extends CI_Model {
             }
         }
 
-        // Sync ke pendaftaran_berkas jika ada
-        if ($this->db->table_exists('pendaftaran_berkas')) {
-            $pb_ver = ($status === 'Approved') ? 'Valid' : (($status === 'Rejected') ? 'Invalid' : 'Pending');
+        // Sync ke pendaftaran_berkas jika ada (hanya jika ada kolom status_doswal)
+        if ($this->db->table_exists('pendaftaran_berkas') && $this->db->field_exists('status_doswal', 'pendaftaran_berkas')) {
+            $pb_ver = ($status === 'Approved') ? 'Approved' : (($status === 'Rejected') ? 'Rejected' : 'Pending');
             $this->db->where('nim', $nim)->update('pendaftaran_berkas', [
-                'status_verifikasi' => $pb_ver,
-                'updated_at'        => date('Y-m-d H:i:s')
+                'status_doswal' => $pb_ver,
+                'updated_at'    => date('Y-m-d H:i:s')
             ]);
         }
 
@@ -602,14 +602,14 @@ class DosenWali_model extends CI_Model {
                     $this->_update_file_approval_file_pendaftaran($nim, $fk, $fStatus, $fNote);
                 }
 
-                if ($this->db->table_exists('pendaftaran_berkas')) {
-                    $ver = ($fStatus === 'Approved') ? 'Valid' : (($fStatus === 'Rejected') ? 'Invalid' : 'Pending');
+                if ($this->db->table_exists('pendaftaran_berkas') && $this->db->field_exists('status_doswal', 'pendaftaran_berkas')) {
+                    $ver = ($fStatus === 'Approved') ? 'Approved' : (($fStatus === 'Rejected') ? 'Rejected' : 'Pending');
                     $berkasUpdate = [
-                        'status_verifikasi' => $ver,
-                        'updated_at'        => date('Y-m-d H:i:s')
+                        'status_doswal' => $ver,
+                        'updated_at'    => date('Y-m-d H:i:s')
                     ];
-                    if ($this->db->field_exists('catatan', 'pendaftaran_berkas')) {
-                        $berkasUpdate['catatan'] = $fNote;
+                    if ($this->db->field_exists('catatan_doswal', 'pendaftaran_berkas')) {
+                        $berkasUpdate['catatan_doswal'] = $fNote;
                     }
                     $this->db->where('nim', $nim)->where('kode_berkas', $fk)->update('pendaftaran_berkas', $berkasUpdate);
                 }
