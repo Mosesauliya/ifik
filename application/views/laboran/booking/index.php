@@ -1258,6 +1258,13 @@
             color: #ffffff;
         }
 
+        .floating-batch-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
         /* Modals */
         .modal-overlay {
             position: fixed;
@@ -2011,24 +2018,51 @@
                 left: 12px !important;
                 bottom: 16px !important;
                 transform: translateX(0) translateY(120px) !important;
-                padding: 10px 14px !important;
-                border-radius: 16px !important;
-                gap: 10px !important;
+                padding: 10px 12px !important;
+                border-radius: 18px !important;
+                gap: 8px !important;
                 box-sizing: border-box !important;
-                justify-content: space-between !important;
-                flex-wrap: wrap !important;
+                flex-direction: column !important;
+                align-items: stretch !important;
             }
             .floating-batch-bar.show {
                 transform: translateX(0) translateY(0) !important;
             }
             .floating-batch-bar .batch-count-badge {
                 font-size: 0.76rem !important;
+                justify-content: flex-start !important;
+                width: 100% !important;
+            }
+            .floating-batch-actions {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr 1fr auto !important;
+                gap: 5px !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            .floating-batch-bar .batch-btn-suffix {
+                display: none !important;
             }
             .floating-batch-bar .btn-batch-acc,
             .floating-batch-bar .btn-batch-rej,
             .floating-batch-bar .btn-batch-del {
-                padding: 6px 12px !important;
-                font-size: 0.75rem !important;
+                padding: 7px 4px !important;
+                font-size: 0.72rem !important;
+                border-radius: 10px !important;
+                justify-content: center !important;
+                gap: 4px !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+                white-space: nowrap !important;
+            }
+            .floating-batch-bar .btn-batch-cancel {
+                padding: 7px 8px !important;
+                font-size: 0.72rem !important;
+                border-radius: 10px !important;
+                white-space: nowrap !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
             }
 
             /* Pagination Bar Mobile */
@@ -2670,15 +2704,15 @@
             <i class="fa-solid fa-circle-check"></i>
             <span id="selectedCountBadge">0</span> Data Terpilih
         </div>
-        <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+        <div class="floating-batch-actions">
             <button type="button" id="btnBatchAcc" class="btn-batch-acc" onclick="submitBatchApprove()">
-                <i class="fa-solid fa-check"></i> Setujui Massal
+                <i class="fa-solid fa-check"></i> <span class="batch-btn-text">Setujui</span><span class="batch-btn-suffix"> Massal</span>
             </button>
             <button type="button" id="btnBatchRej" class="btn-batch-rej" onclick="openBatchRejectModal()">
-                <i class="fa-solid fa-ban"></i> Tolak Massal
+                <i class="fa-solid fa-ban"></i> <span class="batch-btn-text">Tolak</span><span class="batch-btn-suffix"> Massal</span>
             </button>
             <button type="button" class="btn-batch-del" onclick="openBatchDeleteConfirm()">
-                <i class="fa-solid fa-trash-can"></i> Hapus Massal
+                <i class="fa-solid fa-trash-can"></i> <span class="batch-btn-text">Hapus</span><span class="batch-btn-suffix"> Massal</span>
             </button>
             <button type="button" class="btn-batch-cancel" onclick="deselectAll()">
                 Batal
