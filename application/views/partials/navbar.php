@@ -34,14 +34,14 @@
         z-index: 101;
         display: flex;
         flex-direction: row;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         align-items: center;
         justify-content: center;
         list-style: none;
         margin: 0;
         padding: 0 24px;
         box-sizing: border-box;
-        gap: 34px;
+        gap: 22px;
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
@@ -208,18 +208,23 @@
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
-    @media (max-width: 1400px) {
-        .nav-list { gap: 22px; }
-        .nav-link { font-size: 0.74rem; letter-spacing: 0.2px; padding: 6px 3px; gap: 4px; }
+    @media (max-width: 1400px) and (min-width: 993px) {
+        .nav-list { gap: 14px; padding: 0 185px 0 20px; }
+        .nav-link { font-size: 0.72rem; letter-spacing: 0.2px; padding: 6px 3px; gap: 4px; }
         .nav-link-login { font-size: 0.75rem; padding: 6px 12px 6px 8px; }
     }
-    @media (max-width: 1200px) {
-        .nav-list { gap: 16px; }
-        .nav-link { font-size: 0.70rem; letter-spacing: 0px; padding: 5px 2px; gap: 3px; }
+    @media (max-width: 1200px) and (min-width: 993px) {
+        .nav-list { gap: 9px; padding: 0 165px 0 14px; }
+        .nav-link { font-size: 0.68rem; letter-spacing: 0px; padding: 5px 2px; gap: 3px; }
         .nav-link .btn-box { display: none; }
-        .nav-link-login { font-size: 0.72rem; padding: 6px 10px 6px 6px; }
+        .nav-link-login { font-size: 0.70rem; padding: 5px 10px 5px 6px; }
         .nav-dropdown { padding: 12px; gap: 8px; }
         .nav-dropdown a { padding: 8px 12px; }
+    }
+    @media (max-width: 1080px) and (min-width: 993px) {
+        .nav-list { gap: 6px; padding: 0 150px 0 10px; }
+        .nav-link { font-size: 0.64rem; padding: 4px 1px; gap: 2px; }
+        .nav-link-login { font-size: 0.67rem; padding: 5px 8px 5px 6px; }
     }
 
     /* ===== MOBILE: sidebar ===== */
@@ -465,7 +470,7 @@
 
     <?php if ($is_mahasiswa): ?>
         <li class="nav-item">
-            <a href="<?= site_url('mahasiswa') ?>" class="nav-link"><span>Portal Mahasiswa</span></a>
+            <a href="<?= site_url('mahasiswa') ?>" class="nav-link" style="color: #ea580c; font-weight: 800;"><span>Portal Mahasiswa</span></a>
         </li>
     <?php elseif ($this->session->userdata('logged_in') && !$is_mahasiswa): ?>
         <li class="nav-item">
@@ -522,6 +527,17 @@
                 <span><?php echo $this->session->userdata('name'); ?></span>
             </a>
             <div class="nav-dropdown user-dropdown">
+                <?php if ($is_mahasiswa): ?>
+                <a href="<?= site_url('mahasiswa') ?>">
+                    <span class="btn-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>
+                    <span>Portal Mahasiswa</span>
+                </a>
+                <?php else: ?>
+                <a href="<?= $panel_url ?>">
+                    <span class="btn-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span>
+                    <span><?= $panel_label ?></span>
+                </a>
+                <?php endif; ?>
                 <a href="<?php echo base_url('login/logout'); ?>">
                     <span class="btn-box"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></span>
                     <span>Logout</span>

@@ -52,15 +52,43 @@ class AdminLayanan_model extends CI_Model {
 
     public function get_all_syarat_berkas() {
         if (!$this->db->table_exists('syarat_berkas_ta')) return array();
-        $this->db->order_by('urutan', 'ASC');
-        return $this->db->get('syarat_berkas_ta')->result_array();
+        $prev_debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+        try {
+            $res = $this->db->select('id, kode_berkas, nama_berkas, deskripsi, is_required, is_active, urutan')
+                ->order_by('urutan', 'ASC')
+                ->get('syarat_berkas_ta')
+                ->result_array();
+            $this->db->db_debug = $prev_debug;
+            return $res ?: array();
+        } catch (Throwable $e) {
+            $this->db->db_debug = $prev_debug;
+            return array();
+        }
     }
 
     public function get_active_syarat_berkas() {
-        if (!$this->db->table_exists('syarat_berkas_ta')) return array();
-        $this->db->where('is_active', 1);
-        $this->db->order_by('urutan', 'ASC');
-        return $this->db->get('syarat_berkas_ta')->result_array();
+        $fallback = [
+            ['id' => 1, 'kode_berkas' => 'ksm', 'nama_berkas' => 'KSM (Kartu Studi Mahasiswa)', 'deskripsi' => 'Bukti KRS semester aktif yang memuat mata kuliah Tugas Akhir.', 'is_required' => 1, 'is_active' => 1, 'urutan' => 1],
+            ['id' => 2, 'kode_berkas' => 'transkrip', 'nama_berkas' => 'Transkrip Nilai Akademik Terakhir', 'deskripsi' => 'Transkrip nilai resmi yang sudah divalidasi.', 'is_required' => 1, 'is_active' => 1, 'urutan' => 2],
+            ['id' => 3, 'kode_berkas' => 'pernyataan', 'nama_berkas' => 'Surat Pernyataan Mahasiswa', 'deskripsi' => 'Surat kesanggupan menyelesaikan TA bermaterai.', 'is_required' => 1, 'is_active' => 1, 'urutan' => 3],
+            ['id' => 4, 'kode_berkas' => 'bebas_lab', 'nama_berkas' => 'Surat Bebas Lab & Perpustakaan', 'deskripsi' => 'Surat keterangan bebas pinjaman alat lab FIK.', 'is_required' => 1, 'is_active' => 1, 'urutan' => 4],
+        ];
+        if (!$this->db->table_exists('syarat_berkas_ta')) return $fallback;
+        $prev_debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+        try {
+            $res = $this->db->select('id, kode_berkas, nama_berkas, deskripsi, is_required, is_active, urutan')
+                ->where('is_active', 1)
+                ->order_by('urutan', 'ASC')
+                ->get('syarat_berkas_ta')
+                ->result_array();
+            $this->db->db_debug = $prev_debug;
+            return !empty($res) ? $res : $fallback;
+        } catch (Throwable $e) {
+            $this->db->db_debug = $prev_debug;
+            return $fallback;
+        }
     }
 
     public function save_syarat_berkas($data) {
@@ -92,12 +120,22 @@ class AdminLayanan_model extends CI_Model {
 
     public function get_student_berkas_map($nim) {
         if (!$this->db->table_exists('pendaftaran_berkas')) return array();
-        $rows = $this->db->get_where('pendaftaran_berkas', ['nim' => $nim])->result_array();
-        $map = [];
-        foreach ($rows as $r) {
-            $map[$r['kode_berkas']] = $r;
+        $prev_debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+        try {
+            $rows = $this->db->get_where('pendaftaran_berkas', ['nim' => $nim])->result_array();
+            $this->db->db_debug = $prev_debug;
+            $map = [];
+            if (!empty($rows)) {
+                foreach ($rows as $r) {
+                    $map[$r['kode_berkas']] = $r;
+                }
+            }
+            return $map;
+        } catch (Throwable $e) {
+            $this->db->db_debug = $prev_debug;
+            return array();
         }
-        return $map;
     }
 
     public function save_student_berkas($nim, $kode_berkas, $file_name, $status = 'Pending', $arg5 = null, $arg6 = null) {

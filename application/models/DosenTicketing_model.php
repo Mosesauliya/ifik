@@ -303,9 +303,9 @@ class DosenTicketing_model extends CI_Model {
     }
 
     /**
-     * Get tickets routed to specific recipient role (Laboran, Dosen Kaur, Admin LAA)
+     * Get tickets routed to specific recipient role (Laboran, Kaur, Admin LAA)
      */
-    public function get_respon_tickets($filterStatus = 'all', $search = '', $recipientRole = 'Dosen Kaur') {
+    public function get_respon_tickets($filterStatus = 'all', $search = '', $recipientRole = 'Kaur') {
         if ($this->table === 'tb_ticketing') {
             $this->db->from('tb_ticketing');
             
@@ -318,8 +318,12 @@ class DosenTicketing_model extends CI_Model {
                     $this->db->where('status', 'Dikirim');
                 } elseif ($filterStatus === 'Diproses') {
                     $this->db->where('status', 'Sedang Diproses');
-                } elseif (in_array($filterStatus, ['Selesai', 'Ditutup'])) {
+                } elseif ($filterStatus === 'Selesai') {
                     $this->db->where('status', 'Closed');
+                    $this->db->not_like('keterangan', '[DITUTUP]');
+                } elseif ($filterStatus === 'Ditutup') {
+                    $this->db->where('status', 'Closed');
+                    $this->db->like('keterangan', '[DITUTUP]');
                 }
             }
 
@@ -344,10 +348,9 @@ class DosenTicketing_model extends CI_Model {
         // Fallback for dosen_ticketing (if table exists)
         $this->db->from($this->table);
         $this->db->group_start();
-        $this->db->like('unit_tujuan', 'Dosen');
-        $this->db->or_like('unit_tujuan', 'Wali');
-        $this->db->or_like('unit_tujuan', 'Koordinator');
-        $this->db->or_like('unit_tujuan', 'Ketua KK');
+        $this->db->like('unit_tujuan', 'Kaur');
+        $this->db->or_like('unit_tujuan', 'Kepala Urusan');
+        $this->db->or_like('unit_tujuan', 'Ka. Ur');
         $this->db->group_end();
 
         if (!empty($filterStatus) && $filterStatus !== 'all') {
@@ -368,9 +371,9 @@ class DosenTicketing_model extends CI_Model {
     }
 
     /**
-     * Apply recipient role filter based on Laboran, Dosen Kaur, or Admin LAA
+     * Apply recipient role filter based on Laboran, Kaur, or Admin LAA
      */
-    private function _apply_recipient_filter($recipientRole = 'Dosen Kaur') {
+    private function _apply_recipient_filter($recipientRole = 'Kaur') {
         if ($recipientRole === 'Laboran') {
             $this->db->group_start();
             $this->db->where('tujuan_penerima', 'Laboran');
@@ -386,15 +389,15 @@ class DosenTicketing_model extends CI_Model {
             $this->db->or_like('unit', 'LAA');
             $this->db->or_like('unit', 'Layanan Akademik');
             $this->db->group_end();
-        } else { // Dosen Kaur
+        } else { // Kaur (Kepala Urusan) - Khusus Role Kaur, TIDAK dikirim ke Dosen biasa
             $this->db->group_start();
-            $this->db->where('tujuan_penerima', 'Dosen Kaur');
-            $this->db->or_like('tujuan_penerima', 'Dosen');
-            $this->db->or_like('tujuan_penerima', 'Kaur');
-            $this->db->or_like('unit', 'Dosen');
-            $this->db->or_like('unit', 'Wali');
-            $this->db->or_like('unit', 'Koordinator');
-            $this->db->or_like('unit', 'Ketua KK');
+            $this->db->where('tujuan_penerima', 'Kaur');
+            $this->db->or_where('tujuan_penerima', 'Kepala Urusan');
+            $this->db->or_where('tujuan_penerima', 'Dosen Kaur'); // Kompatibilitas data tiket yang sudah ada
+            $this->db->or_like('tujuan_penerima', 'Ka. Ur');
+            $this->db->or_like('unit', 'Kaur');
+            $this->db->or_like('unit', 'Kepala Urusan');
+            $this->db->or_like('unit', 'Ka. Ur');
             $this->db->group_end();
         }
     }
@@ -402,7 +405,7 @@ class DosenTicketing_model extends CI_Model {
     /**
      * Count tickets routed to specific recipient role by status
      */
-    public function count_respon_tickets($status = 'all', $recipientRole = 'Dosen Kaur') {
+    public function count_respon_tickets($status = 'all', $recipientRole = 'Kaur') {
         if ($this->table === 'tb_ticketing') {
             $this->db->from('tb_ticketing');
             $this->_apply_recipient_filter($recipientRole);
@@ -412,8 +415,12 @@ class DosenTicketing_model extends CI_Model {
                     $this->db->where('status', 'Dikirim');
                 } elseif ($status === 'Diproses') {
                     $this->db->where('status', 'Sedang Diproses');
-                } elseif (in_array($status, ['Selesai', 'Ditutup'])) {
+                } elseif ($status === 'Selesai') {
                     $this->db->where('status', 'Closed');
+                    $this->db->not_like('keterangan', '[DITUTUP]');
+                } elseif ($status === 'Ditutup') {
+                    $this->db->where('status', 'Closed');
+                    $this->db->like('keterangan', '[DITUTUP]');
                 }
             }
             return (int)$this->db->count_all_results();
@@ -438,6 +445,36 @@ class DosenTicketing_model extends CI_Model {
      */
     public function update_respon($id, $status, $tanggapan = '') {
         if ($this->table === 'tb_ticketing') {
+            // Ambil row saat ini untuk mempertahankan catatan dari tahap sebelumnya
+            $this->db->from('tb_ticketing');
+            $this->db->where('id', (string)$id);
+            $curr = $this->db->get()->row();
+            $currKet = $curr ? ($curr->keterangan ?? '') : '';
+
+            $prevProses = '';
+            $prevSelesai = '';
+            $prevTutup = '';
+
+            if (preg_match('/\[PROSES\]\s*(.*?)(?=\[(SELESAI|DITUTUP)\]|$)/is', $currKet, $mP)) {
+                $prevProses = trim($mP[1]);
+            }
+            if (preg_match('/\[SELESAI\]\s*(.*?)(?=\[(PROSES|DITUTUP)\]|$)/is', $currKet, $mS)) {
+                $prevSelesai = trim($mS[1]);
+            }
+            if (preg_match('/\[DITUTUP\]\s*(.*?)(?=\[(PROSES|SELESAI)\]|$)/is', $currKet, $mD)) {
+                $prevTutup = trim($mD[1]);
+            }
+
+            // Fallback untuk legacy record yang belum menggunakan tag [PROSES] / [SELESAI]
+            if (empty($prevProses) && empty($prevSelesai) && !empty($currKet)) {
+                $cleanOld = trim(str_replace('[DITUTUP]', '', $currKet));
+                if ($curr && $curr->status === 'Sedang Diproses') {
+                    $prevProses = $cleanOld;
+                } elseif ($curr && $curr->status === 'Closed') {
+                    $prevSelesai = $cleanOld;
+                }
+            }
+
             $statusMapped = 'Dikirim';
             if ($status === 'Diproses') {
                 $statusMapped = 'Sedang Diproses';
@@ -449,16 +486,46 @@ class DosenTicketing_model extends CI_Model {
             $now = date('Y-m-d H:i:s');
 
             if ($status === 'Diproses') {
-                $updateData['tgl_diproses'] = $now;
+                if (empty($curr->tgl_diproses) || in_array($curr->tgl_diproses, ['0000-00-00 00:00:00', '1970-01-01 00:00:00'])) {
+                    $updateData['tgl_diproses'] = $now;
+                }
             } elseif (in_array($status, ['Selesai', 'Ditutup'])) {
+                if (empty($curr->tgl_diproses) || in_array($curr->tgl_diproses, ['0000-00-00 00:00:00', '1970-01-01 00:00:00'])) {
+                    $updateData['tgl_diproses'] = $now;
+                }
                 $updateData['tgl_closed'] = $now;
             }
 
-            if ($status === 'Ditutup') {
-                $cleanTang = trim(str_replace('[DITUTUP]', '', $tanggapan));
-                $updateData['keterangan'] = '[DITUTUP] ' . $cleanTang;
-            } elseif ($tanggapan !== '') {
-                $updateData['keterangan'] = trim(str_replace('[DITUTUP]', '', $tanggapan));
+            $cleanInput = trim(str_replace(['[PROSES]', '[SELESAI]', '[DITUTUP]'], '', $tanggapan));
+
+            if ($status === 'Diproses') {
+                $activeProses = ($cleanInput !== '') ? $cleanInput : $prevProses;
+                $updateData['keterangan'] = ($activeProses !== '') ? ('[PROSES] ' . $activeProses) : '';
+            } elseif ($status === 'Selesai') {
+                $activeSelesai = ($cleanInput !== '') ? $cleanInput : $prevSelesai;
+                $parts = [];
+                if (!empty($prevProses)) {
+                    $parts[] = '[PROSES] ' . $prevProses;
+                }
+                if (!empty($activeSelesai)) {
+                    $parts[] = '[SELESAI] ' . $activeSelesai;
+                }
+                $updateData['keterangan'] = implode("\n", $parts);
+            } elseif ($status === 'Ditutup') {
+                $activeTutup = ($cleanInput !== '') ? $cleanInput : $prevTutup;
+                $parts = [];
+                if (!empty($prevProses)) {
+                    $parts[] = '[PROSES] ' . $prevProses;
+                }
+                if (!empty($prevSelesai)) {
+                    $parts[] = '[SELESAI] ' . $prevSelesai;
+                }
+                if (!empty($activeTutup)) {
+                    $parts[] = '[DITUTUP] ' . $activeTutup;
+                } else {
+                    $parts[] = '[DITUTUP]';
+                }
+                $updateData['keterangan'] = implode("\n", $parts);
             } elseif ($status === 'Menunggu') {
                 $updateData['keterangan'] = '';
             }
@@ -497,8 +564,11 @@ class DosenTicketing_model extends CI_Model {
         $r->id              = $row->id;
         $r->kode_tiket      = $row->id;
         $r->nama_dosen      = $row->nama ?? 'Dosen';
-        $r->nidn            = $row->id_user ?? '-';
-        $r->tujuan_penerima = !empty($row->tujuan_penerima) ? $row->tujuan_penerima : (!empty($row->unit) ? $row->unit : 'Laboran');
+        $rawPenerima        = !empty($row->tujuan_penerima) ? $row->tujuan_penerima : (!empty($row->unit) ? $row->unit : 'Laboran');
+        if ($rawPenerima === 'Dosen Kaur') {
+            $rawPenerima = 'Kaur';
+        }
+        $r->tujuan_penerima = $rawPenerima;
         $r->unit_terkait    = !empty($row->unit_terkait) ? $row->unit_terkait : (!empty($row->unit) ? $row->unit : 'Layanan IFIK');
         $r->unit_tujuan     = $r->unit_terkait;
         $r->kategori        = $row->kategori ?? 'Umum';
@@ -531,15 +601,55 @@ class DosenTicketing_model extends CI_Model {
 
         $r->lampiran      = !empty($row->file_pendukung) ? $row->file_pendukung : null;
         $rawKeterangan    = $row->keterangan ?? '';
-        $cleanKeterangan  = trim(str_replace('[DITUTUP]', '', $rawKeterangan));
-        $r->tanggapan     = !empty($cleanKeterangan) ? $cleanKeterangan : null;
+
+        // Ekstrak catatan terpisah untuk masing-masing tahap (Diproses vs Selesai vs Ditutup)
+        $catatan_proses  = '';
+        $catatan_selesai = '';
+        $catatan_tutup   = '';
+
+        if (preg_match('/\[PROSES\]\s*(.*?)(?=\[(SELESAI|DITUTUP)\]|$)/is', $rawKeterangan, $mP)) {
+            $catatan_proses = trim($mP[1]);
+        }
+        if (preg_match('/\[SELESAI\]\s*(.*?)(?=\[(PROSES|DITUTUP)\]|$)/is', $rawKeterangan, $mS)) {
+            $catatan_selesai = trim($mS[1]);
+        }
+        if (preg_match('/\[DITUTUP\]\s*(.*?)(?=\[(PROSES|SELESAI)\]|$)/is', $rawKeterangan, $mD)) {
+            $catatan_tutup = trim($mD[1]);
+        }
+
+        // Fallback untuk legacy data yang belum memiliki tag
+        if (empty($catatan_proses) && empty($catatan_selesai) && !empty($rawKeterangan)) {
+            $cleanOld = trim(str_replace('[DITUTUP]', '', $rawKeterangan));
+            if ($r->status === 'Diproses') {
+                $catatan_proses = $cleanOld;
+            } elseif ($r->status === 'Selesai' || $r->status === 'Ditutup') {
+                $catatan_selesai = $cleanOld;
+            }
+        }
+
+        $r->catatan_proses  = $catatan_proses ?: null;
+        $r->catatan_selesai = $catatan_selesai ?: null;
+        $r->catatan_tutup   = $catatan_tutup ?: null;
+
+        // Tanggapan aktif spesifik untuk tahap saat ini
+        if ($r->status === 'Diproses') {
+            $r->tanggapan = $catatan_proses ?: null;
+        } elseif ($r->status === 'Selesai') {
+            $r->tanggapan = $catatan_selesai ?: ($catatan_proses ?: null);
+        } elseif ($r->status === 'Ditutup') {
+            $r->tanggapan = $catatan_tutup ?: ($catatan_selesai ?: null);
+        } else {
+            $r->tanggapan = null;
+        }
+
+        $r->tgl_diproses = (!empty($row->tgl_diproses) && !in_array($row->tgl_diproses, ['0000-00-00 00:00:00', '1970-01-01 00:00:00'])) ? $row->tgl_diproses : null;
+        $r->tgl_closed   = (!empty($row->tgl_closed) && !in_array($row->tgl_closed, ['0000-00-00 00:00:00', '1970-01-01 00:00:00'])) ? $row->tgl_closed : null;
 
         $tglTanggapan = null;
-        if (!empty($row->tgl_diproses) && !in_array($row->tgl_diproses, ['0000-00-00 00:00:00', '1970-01-01 00:00:00'])) {
-            $tglTanggapan = $row->tgl_diproses;
-        }
-        if (!empty($row->tgl_closed) && !in_array($row->tgl_closed, ['0000-00-00 00:00:00', '1970-01-01 00:00:00'])) {
-            $tglTanggapan = $row->tgl_closed;
+        if ($r->status === 'Diproses') {
+            $tglTanggapan = $r->tgl_diproses;
+        } elseif ($r->status === 'Selesai' || $r->status === 'Ditutup') {
+            $tglTanggapan = $r->tgl_closed ?: $r->tgl_diproses;
         }
         $r->tgl_tanggapan = $tglTanggapan;
 

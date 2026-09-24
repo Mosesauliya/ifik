@@ -112,7 +112,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
 
                 ['category' => 'Layanan & Bantuan', 'has_divider' => true],
                 ['heading' => 'Bantuan & Live Chat', 'href' => site_url('kaur/help'), 'icon_3d' => 'assets/images/icons_3d/help_chat.png'],
-                ['heading' => 'Respon Ticketing', 'href' => site_url('dosen/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
+                ['heading' => 'Respon Ticketing Kaur', 'href' => site_url('kaur/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
                 ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
                 ['heading' => 'Riwayat Ticketing', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
 
@@ -152,7 +152,6 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['heading' => 'Tanda Tangan Digital', 'href' => site_url('dosen/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
 
                 ['category' => 'Layanan & Bantuan', 'has_divider' => true],
-                ['heading' => 'Respon Ticketing', 'href' => site_url('dosen/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
                 ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
                 ['heading' => 'Riwayat Ticketing', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
 
@@ -534,6 +533,28 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
         <path id="curvedSidebarPath" />
     </svg>
 </aside>
+
+<!-- Instant Pre-init to prevent flash when user preferred closed -->
+<script>
+(function() {
+    try {
+        var state = localStorage.getItem('ifik_curved_sidebar_state');
+        if (state === 'closed' || (state === null && window.innerWidth < 1024)) {
+            document.body.classList.add('curved-sidebar-desktop-collapsed');
+            document.body.classList.remove('curved-sidebar-desktop-open');
+            var btn = document.getElementById('curvedSidebarToggle');
+            if (btn) {
+                btn.classList.remove('is-active');
+                btn.setAttribute('aria-expanded', 'false');
+            }
+            var panel = document.getElementById('curvedSidebarPanel');
+            if (panel) {
+                panel.classList.remove('is-active');
+            }
+        }
+    } catch(e) {}
+})();
+</script>
 
 <!-- Curved Sidebar Core Script -->
 <script src="<?= base_url('assets/js/curved_sidebar.js?v=' . time()); ?>"></script>

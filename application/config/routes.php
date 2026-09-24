@@ -145,6 +145,12 @@ $route['dosen/respon-ticketing/detail/(:any)'] = 'DosenTicketing/respon_detail/$
 $route['dosen/respon-ticketing/simpan_tanggapan'] = 'DosenTicketing/respon_simpan_tanggapan';
 $route['dosen/respon-ticketing/(:any)'] = 'DosenTicketing/respon_$1';
 
+// Kaur (Kepala Urusan) Ticketing Routes
+$route['kaur/respon-ticketing'] = 'DosenTicketing/respon_index';
+$route['kaur/respon-ticketing/detail/(:any)'] = 'DosenTicketing/respon_detail/$1';
+$route['kaur/respon-ticketing/simpan_tanggapan'] = 'DosenTicketing/respon_simpan_tanggapan';
+$route['kaur/respon-ticketing/(:any)'] = 'DosenTicketing/respon_$1';
+
 // Koordinator TA Help Chat Routes (Harus sebelum wildcard)
 $route['koordinatorta/help'] = 'KoordinatorTA/help';
 $route['koordinator/help'] = 'KoordinatorTA/help';
@@ -235,6 +241,29 @@ $route['log-history'] = 'Admin/log_history';
 $route['adminfooter'] = 'AdminFooter/index';
 $route['adminfooter/update_settings'] = 'AdminFooter/update_settings';
 $route['adminfooter/reset_defaults'] = 'AdminFooter/reset_defaults';
+$route['admin/footer'] = 'AdminFooter/index';
+$route['admin/footer/update_settings'] = 'AdminFooter/update_settings';
+$route['admin/footer/reset_defaults'] = 'AdminFooter/reset_defaults';
+$route['admin/footer-settings'] = 'AdminFooter/index';
+
+// Admin Header Routes (Wajib didefinisikan agar tidak 404 di server Linux/NAS)
+$route['adminheader'] = 'AdminHeader/index';
+$route['adminheader/update_settings'] = 'AdminHeader/update_settings';
+$route['adminheader/add_slide'] = 'AdminHeader/add_slide';
+$route['adminheader/edit_slide_ajax'] = 'AdminHeader/edit_slide_ajax';
+$route['adminheader/edit_slide/(:any)'] = 'AdminHeader/edit_slide/$1';
+$route['adminheader/delete_slide/(:any)'] = 'AdminHeader/delete_slide/$1';
+$route['adminheader/(:any)'] = 'AdminHeader/$1';
+$route['adminheader/(:any)/(:any)'] = 'AdminHeader/$1/$2';
+$route['admin/header'] = 'AdminHeader/index';
+$route['admin/header/update_settings'] = 'AdminHeader/update_settings';
+$route['admin/header/add_slide'] = 'AdminHeader/add_slide';
+$route['admin/header/edit_slide_ajax'] = 'AdminHeader/edit_slide_ajax';
+$route['admin/header/edit_slide/(:any)'] = 'AdminHeader/edit_slide/$1';
+$route['admin/header/delete_slide/(:any)'] = 'AdminHeader/delete_slide/$1';
+$route['admin/header-settings'] = 'AdminHeader/index';
+$route['admin/header/(:any)'] = 'AdminHeader/$1';
+$route['admin/header/(:any)/(:any)'] = 'AdminHeader/$1/$2';
 
 // News / Berita Routes
 $route['news/detail/(:num)'] = 'News/detail/$1';
@@ -270,11 +299,12 @@ $route['laboran/tanda-tangan/hapus'] = 'Laboran/hapus_tanda_tangan';
 $route['laboran/tanda-tangan/download'] = 'Laboran/download_tanda_tangan';
 $route['laboran/signature'] = 'Laboran/tanda_tangan';
 
-// Kaur Digital Signature Routes Alias
-$route['kaur/tanda-tangan'] = 'DosenWali/tanda_tangan';
-$route['kaur/tanda-tangan/simpan'] = 'DosenWali/simpan_tanda_tangan';
-$route['kaur/tanda-tangan/hapus'] = 'DosenWali/hapus_tanda_tangan';
-$route['kaur/tanda-tangan/download'] = 'DosenWali/download_tanda_tangan';
+// Kaur Digital Signature Routes
+$route['kaur/tanda-tangan'] = 'Kaur/tanda_tangan';
+$route['kaur/tanda-tangan/simpan'] = 'Kaur/simpan_tanda_tangan';
+$route['kaur/tanda-tangan/hapus'] = 'Kaur/hapus_tanda_tangan';
+$route['kaur/tanda-tangan/download'] = 'Kaur/download_tanda_tangan';
+$route['kaur/signature'] = 'Kaur/tanda_tangan';
 
 // Laboran Ticketing & Respon Routes
 $route['laboran/respon-ticketing'] = 'LaboranTicketing/index';
