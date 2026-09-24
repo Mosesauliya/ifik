@@ -151,9 +151,9 @@ function renderClock() {
 let isDragging = false;
 
 function handleClockEvent(e) {
-    if(e.type === 'mousemove' && !isDragging) return;
+    if (!isDragging) return;
     
-    // Prevent default to avoid text selection while dragging
+    // Prevent default to avoid scrolling and text selection while dragging clock hand
     if (e.cancelable) e.preventDefault();
     
     // Support touch and mouse

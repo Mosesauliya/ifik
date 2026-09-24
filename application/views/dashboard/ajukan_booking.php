@@ -28,6 +28,14 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
 
+        html, body {
+            min-height: 100%;
+            height: auto;
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
@@ -37,19 +45,20 @@
                 radial-gradient(at 100% 100%, rgba(234, 88, 12, 0.08) 0px, transparent 50%);
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
         }
 
         .page-wrapper-for-sidebar {
             width: 100%;
             min-width: 0;
             min-height: 100vh;
+            height: auto;
             display: flex;
             justify-content: center;
             align-items: flex-start;
             padding: 40px 20px;
             transition: margin-left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
             box-sizing: border-box;
+            touch-action: pan-y;
         }
 
         @media (min-width: 1024px) {
