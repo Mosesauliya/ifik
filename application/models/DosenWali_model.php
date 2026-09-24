@@ -40,10 +40,14 @@ class DosenWali_model extends CI_Model {
     public function update_judul_approval($nim, $status_judul, $catatan_judul = '') {
         if ($this->db->table_exists('guidance')) {
             $target_ids = ['usr_mhs_' . $nim, 'mhs_' . $nim, $nim];
-            $this->db->where_in('id_mhs', $target_ids)->update('guidance', [
-                'keterangan' => ($status_judul === 'Approved') ? 'Approved' : (($status_judul === 'Rejected') ? 'Rejected' : 'Pending'),
-                'komentar'   => $catatan_judul
-            ]);
+            $g_fields = $this->db->list_fields('guidance');
+            $g_up = array();
+            if (in_array('keterangan', $g_fields)) $g_up['keterangan'] = ($status_judul === 'Approved') ? 'Approved' : (($status_judul === 'Rejected') ? 'Rejected' : 'Pending');
+            if (in_array('komentar', $g_fields)) $g_up['komentar'] = $catatan_judul;
+            if (in_array('date_edit', $g_fields)) $g_up['date_edit'] = date('Y-m-d H:i:s');
+            if (!empty($g_up)) {
+                $this->db->where_in('id_mhs', $target_ids)->update('guidance', $g_up);
+            }
         }
 
         if (!$this->db->table_exists('pendaftaran_ta')) return true;
@@ -283,10 +287,14 @@ class DosenWali_model extends CI_Model {
         if ($this->db->table_exists('guidance')) {
             $target_ids = ['usr_mhs_' . $nim, 'mhs_' . $nim, $nim];
             $g_status = ($status === 'Approved') ? 'Approved' : (($status === 'Rejected') ? 'Rejected' : 'Pending');
-            $this->db->where_in('id_mhs', $target_ids)->update('guidance', [
-                'keterangan' => $g_status,
-                'komentar'   => $catatan
-            ]);
+            $g_fields = $this->db->list_fields('guidance');
+            $g_up = array();
+            if (in_array('keterangan', $g_fields)) $g_up['keterangan'] = $g_status;
+            if (in_array('komentar', $g_fields)) $g_up['komentar'] = $catatan;
+            if (in_array('date_edit', $g_fields)) $g_up['date_edit'] = date('Y-m-d H:i:s');
+            if (!empty($g_up)) {
+                $this->db->where_in('id_mhs', $target_ids)->update('guidance', $g_up);
+            }
         }
 
         // Sync ke tabel file_pendaftaran & pendaftaran_berkas jika Approved atau eksplisit sync_files
@@ -431,14 +439,20 @@ class DosenWali_model extends CI_Model {
     public function approve_jenis_ta($nim, $status, $catatan = '') {
         if ($this->db->table_exists('guidance')) {
             $target_ids = ['usr_mhs_' . $nim, 'mhs_' . $nim, $nim];
-            $g_up = array('date_edit' => date('Y-m-d H:i:s'));
-            if ($status === 'Approved') {
-                $g_up['keterangan'] = 'Approved';
-            } elseif ($status === 'Rejected') {
-                $g_up['keterangan'] = 'Rejected';
-                if (!empty($catatan)) $g_up['komentar'] = $catatan;
+            $g_fields = $this->db->list_fields('guidance');
+            $g_up = array();
+            if (in_array('date_edit', $g_fields)) {
+                $g_up['date_edit'] = date('Y-m-d H:i:s');
             }
-            $this->db->where_in('id_mhs', $target_ids)->update('guidance', $g_up);
+            if (in_array('keterangan', $g_fields)) {
+                $g_up['keterangan'] = ($status === 'Approved') ? 'Approved' : 'Rejected';
+            }
+            if (in_array('komentar', $g_fields) && $status === 'Rejected' && !empty($catatan)) {
+                $g_up['komentar'] = $catatan;
+            }
+            if (!empty($g_up)) {
+                $this->db->where_in('id_mhs', $target_ids)->update('guidance', $g_up);
+            }
         }
 
         if (!$this->db->table_exists('pendaftaran_ta')) return true;
@@ -636,10 +650,20 @@ class DosenWali_model extends CI_Model {
             // Sync ke guidance
             if ($this->db->table_exists('guidance')) {
                 $target_ids = ['usr_mhs_' . $nim, 'mhs_' . $nim, $nim];
-                $this->db->where_in('id_mhs', $target_ids)->update('guidance', [
-                    'keterangan' => $updateData['status_approval_wali'],
-                    'komentar'   => $updateData['catatan_wali'] ?: $updateData['catatan_judul']
-                ]);
+                $g_fields = $this->db->list_fields('guidance');
+                $g_up = array();
+                if (in_array('keterangan', $g_fields)) {
+                    $g_up['keterangan'] = $updateData['status_approval_wali'];
+                }
+                if (in_array('komentar', $g_fields)) {
+                    $g_up['komentar'] = $updateData['catatan_wali'] ?: $updateData['catatan_judul'];
+                }
+                if (in_array('date_edit', $g_fields)) {
+                    $g_up['date_edit'] = date('Y-m-d H:i:s');
+                }
+                if (!empty($g_up)) {
+                    $this->db->where_in('id_mhs', $target_ids)->update('guidance', $g_up);
+                }
             }
 
             if ($this->db->table_exists('pendaftaran_ta')) {
@@ -1083,7 +1107,7 @@ class DosenWali_model extends CI_Model {
 
         $judul_1 = !empty($guidance['judul_1']) ? $guidance['judul_1'] : 'Usulan Judul Tugas Akhir';
         $judul_en = $guidance['judul_en'] ?? '';
-        $jenis_ta = !empty(trim($guidance['jenis_TA'] ?? '')) ? trim($guidance['jenis_TA']) : (!empty(trim($guidance['jenis_ta'] ?? '')) ? trim($guidance['jenis_ta']) : 'Pengkaryaan');
+        $jenis_ta = !empty(trim($guidance['jenis_TA'] ?? '')) ? trim($guidance['jenis_TA']) : (!empty(trim($guidance['jenis_ta'] ?? '')) ? trim($guidance['jenis_ta']) : '');
         $status_judul = !empty($guidance['keterangan']) ? $guidance['keterangan'] : 'Pending';
         $catatan_judul = $guidance['komentar'] ?? '';
         $konsentrasi = !empty($guidance['peminatan']) ? $guidance['peminatan'] : $prodiMhs;
