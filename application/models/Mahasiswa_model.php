@@ -212,6 +212,27 @@ class Mahasiswa_model extends CI_Model {
             }
         }
 
+        // 3. pendaftaran_ta
+        if ($this->db->table_exists('pendaftaran_ta')) {
+            $existing_pt = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
+            $pt_fields = $this->db->list_fields('pendaftaran_ta');
+            $pt_data = [];
+            foreach ($data_ta as $col => $val) {
+                if (in_array($col, $pt_fields)) {
+                    $pt_data[$col] = $val;
+                }
+            }
+            $pt_data['updated_at'] = date('Y-m-d H:i:s');
+            if ($existing_pt) {
+                $this->db->where('nim', $nim)->update('pendaftaran_ta', $pt_data);
+            } else {
+                if (in_array('created_at', $pt_fields) && empty($pt_data['created_at'])) {
+                    $pt_data['created_at'] = date('Y-m-d H:i:s');
+                }
+                $this->db->insert('pendaftaran_ta', $pt_data);
+            }
+        }
+
         return true;
     }
 
