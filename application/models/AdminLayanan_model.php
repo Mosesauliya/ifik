@@ -411,9 +411,12 @@ class AdminLayanan_model extends CI_Model {
     /**
      * Hitung total pengajuan untuk Paging
      */
+    /**
+     * Hitung total pengajuan untuk Paging
+     */
     public function get_count_pengajuan($filter_status = null, $search = null, $cat = null) {
-        if (!$this->db->table_exists('pendaftaran_ta')) {
-            return 0;
+        if (!$this->db->table_exists('pendaftaran_ta') || $this->db->count_all('pendaftaran_ta') == 0) {
+            return count($this->_filter_and_sort_legacy_pengajuan($filter_status, $search, $cat));
         }
 
         $has_mhs = $this->db->table_exists('mahasiswa');
@@ -460,8 +463,12 @@ class AdminLayanan_model extends CI_Model {
      * Ambil daftar pengajuan berkas mahasiswa untuk Admin Layanan dengan Paging (Limit & Offset)
      */
     public function get_all_pengajuan($filter_status = null, $search = null, $limit = 5, $offset = 0, $cat = null) {
-        if (!$this->db->table_exists('pendaftaran_ta')) {
-            return array();
+        if (!$this->db->table_exists('pendaftaran_ta') || $this->db->count_all('pendaftaran_ta') == 0) {
+            $list = $this->_filter_and_sort_legacy_pengajuan($filter_status, $search, $cat);
+            if ($limit > 0) {
+                return array_slice($list, $offset, $limit);
+            }
+            return $list;
         }
 
         $has_mhs   = $this->db->table_exists('mahasiswa');
@@ -654,6 +661,249 @@ class AdminLayanan_model extends CI_Model {
     }
 
     /**
+     * Helper: Constructs fallback pengajuan array directly from legacy tables (file_pendaftaran & guidance)
+     * when pendaftaran_ta table has 0 rows (e.g. NAS production database).
+     */
+    private function _get_fallback_pengajuan_from_legacy() {
+        $user_tbl = $this->db->table_exists('user') ? 'user' : ($this->db->table_exists('users') ? 'users' : null);
+        $has_fp   = $this->db->table_exists('file_pendaftaran');
+        $has_g    = $this->db->table_exists('guidance');
+        $has_mhs  = $this->db->table_exists('mahasiswa');
+
+        $student_map = array();
+
+        if ($has_fp) {
+            $fp_rows = $this->db->select('id, id_mhs, nama, file, status_doswal, status_admin, status_laa, status_admin_laa, komentar, date_edit')
+                ->get('file_pendaftaran')
+                ->result_array();
+            foreach ($fp_rows as $fp) {
+                $raw_id = $fp['id_mhs'] ?? '';
+                if (empty($raw_id)) continue;
+                $nim = preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', $raw_id);
+                if (!isset($student_map[$nim])) {
+                    $student_map[$nim] = array(
+                        'nim'           => $nim,
+                        'raw_ids'       => array($raw_id),
+                        'status_admin'  => array(),
+                        'status_doswal' => array(),
+                        'komentar'      => array(),
+                        'files'         => array(),
+                        'latest_date'   => $fp['date_edit'] ?? null,
+                        'name_from_fp'  => (!empty($fp['nama']) && $fp['nama'] !== 'Mahasiswa') ? $fp['nama'] : null,
+                    );
+                } else {
+                    if (!in_array($raw_id, $student_map[$nim]['raw_ids'])) {
+                        $student_map[$nim]['raw_ids'][] = $raw_id;
+                    }
+                    if (!empty($fp['nama']) && $fp['nama'] !== 'Mahasiswa' && empty($student_map[$nim]['name_from_fp'])) {
+                        $student_map[$nim]['name_from_fp'] = $fp['nama'];
+                    }
+                    if (!empty($fp['date_edit']) && ($student_map[$nim]['latest_date'] === null || $fp['date_edit'] > $student_map[$nim]['latest_date'])) {
+                        $student_map[$nim]['latest_date'] = $fp['date_edit'];
+                    }
+                }
+                
+                $st_adm = $fp['status_admin_laa'] ?? ($fp['status_admin'] ?? ($fp['status_laa'] ?? 'Pending'));
+                $student_map[$nim]['status_admin'][] = $st_adm;
+                if (isset($fp['status_doswal'])) {
+                    $student_map[$nim]['status_doswal'][] = $fp['status_doswal'];
+                }
+                if (!empty($fp['komentar'])) {
+                    $student_map[$nim]['komentar'][] = $fp['komentar'];
+                }
+                if (!empty($fp['file'])) {
+                    $student_map[$nim]['files'][] = $fp['file'];
+                }
+            }
+        }
+
+        if ($has_g) {
+            $g_cols = array('id', 'id_mhs');
+            if ($this->db->field_exists('judul_1', 'guidance')) $g_cols[] = 'judul_1';
+            if ($this->db->field_exists('judul_en', 'guidance')) $g_cols[] = 'judul_en';
+            if ($this->db->field_exists('peminatan', 'guidance')) $g_cols[] = 'peminatan';
+            if ($this->db->field_exists('jenis_TA', 'guidance')) $g_cols[] = 'jenis_TA';
+            if ($this->db->field_exists('nama', 'guidance')) $g_cols[] = 'nama';
+            if ($this->db->field_exists('date', 'guidance')) $g_cols[] = 'date';
+
+            $g_rows = $this->db->select(implode(', ', $g_cols))->get('guidance')->result_array();
+            foreach ($g_rows as $g) {
+                $raw_id = $g['id_mhs'] ?? '';
+                if (empty($raw_id)) continue;
+                $nim = preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', $raw_id);
+                if (!isset($student_map[$nim])) {
+                    $student_map[$nim] = array(
+                        'nim'           => $nim,
+                        'raw_ids'       => array($raw_id),
+                        'status_admin'  => array(),
+                        'status_doswal' => array(),
+                        'komentar'      => array(),
+                        'files'         => array(),
+                        'latest_date'   => $g['date'] ?? null,
+                        'name_from_fp'  => (!empty($g['nama']) && $g['nama'] !== 'Mahasiswa') ? $g['nama'] : null,
+                    );
+                }
+                $student_map[$nim]['guidance'] = $g;
+            }
+        }
+
+        if (empty($student_map)) {
+            return array();
+        }
+
+        $all_nims = array_keys($student_map);
+
+        $user_map = array();
+        if ($user_tbl) {
+            $name_col = $this->db->field_exists('name', $user_tbl) ? 'name' : ($this->db->field_exists('nama', $user_tbl) ? 'nama' : ($this->db->field_exists('nama_depan', $user_tbl) ? 'nama_depan' : null));
+            $nim_col  = $this->db->field_exists('nim', $user_tbl) ? 'nim' : ($this->db->field_exists('username', $user_tbl) ? 'username' : 'id');
+            if ($name_col) {
+                $u_rows = $this->db->select("{$nim_col} as nim, {$name_col} as full_name")
+                    ->where_in($nim_col, $all_nims)
+                    ->get($user_tbl)
+                    ->result_array();
+                foreach ($u_rows as $ur) {
+                    if (!empty($ur['nim'])) {
+                        $user_map[$ur['nim']] = $ur['full_name'];
+                    }
+                }
+            }
+        }
+
+        $mhs_map = array();
+        if ($has_mhs) {
+            $m_rows = $this->db->select('*')->where_in('nim', $all_nims)->get('mahasiswa')->result_array();
+            foreach ($m_rows as $mr) {
+                $mhs_map[$mr['nim']] = $mr;
+            }
+        }
+
+        $results = array();
+        foreach ($student_map as $nim => $info) {
+            $full_name = 'Mahasiswa';
+            if (!empty($user_map[$nim])) {
+                $full_name = $user_map[$nim];
+            } elseif (!empty($mhs_map[$nim]['nama_depan'])) {
+                $full_name = trim($mhs_map[$nim]['nama_depan'] . ' ' . ($mhs_map[$nim]['nama_belakang'] ?? ''));
+            } elseif (!empty($info['name_from_fp'])) {
+                $full_name = $info['name_from_fp'];
+            }
+
+            $parts = explode(' ', trim($full_name));
+            $nama_depan = array_shift($parts) ?: 'Mahasiswa';
+            $nama_belakang = implode(' ', $parts);
+
+            $admin_st_list = $info['status_admin'];
+            $st_admin = 'Pending';
+            if (in_array('Rejected', $admin_st_list) || in_array('Invalid', $admin_st_list)) {
+                $st_admin = 'Rejected';
+            } elseif (!empty($admin_st_list) && count(array_filter($admin_st_list, function($s) { return $s === 'Approved' || $s === 'Valid'; })) === count($admin_st_list)) {
+                $st_admin = 'Approved';
+            }
+
+            $doswal_st_list = $info['status_doswal'];
+            $st_wali = 'Approved';
+            if (in_array('Rejected', $doswal_st_list) || in_array('Invalid', $doswal_st_list)) {
+                $st_wali = 'Rejected';
+            } elseif (in_array('Pending', $doswal_st_list)) {
+                $st_wali = 'Pending';
+            }
+
+            $current_stage = ($st_admin === 'Approved') ? 'Koordinator TA' : 'Admin Layanan';
+            $g_data = $info['guidance'] ?? array();
+            $created_at = $info['latest_date'] ?? ($g_data['date'] ?? date('Y-m-d H:i:s'));
+
+            $results[] = array(
+                'id'                    => 'legacy_' . $nim,
+                'nim'                   => $nim,
+                'nama_depan'            => $nama_depan,
+                'nama_belakang'         => $nama_belakang,
+                'prodi'                 => $mhs_map[$nim]['prodi'] ?? 'Desain Komunikasi Visual',
+                'konsentrasi_dkv'       => $g_data['peminatan'] ?? ($mhs_map[$nim]['konsentrasi_dkv'] ?? 'Desain Komunikasi Visual'),
+                'email'                 => $mhs_map[$nim]['email'] ?? '',
+                'no_hp'                 => $mhs_map[$nim]['no_hp'] ?? '',
+                'alamat'                => $mhs_map[$nim]['alamat'] ?? '',
+                'judul_1'               => $g_data['judul_1'] ?? 'Perancangan Tugas Akhir Mahasiswa',
+                'judul_en'              => $g_data['judul_en'] ?? '',
+                'status_approval_wali'  => $st_wali,
+                'status_approval_admin' => $st_admin,
+                'catatan_admin'         => !empty($info['komentar']) ? implode('; ', array_unique($info['komentar'])) : null,
+                'berkas_kurang'         => ($st_admin === 'Rejected') ? 'Dokumen Persyaratan Perlu Revisi' : null,
+                'current_stage'         => $current_stage,
+                'is_submitted'          => 1,
+                'created_at'            => $created_at,
+                'updated_at'            => $created_at,
+                'status_ksm'            => $st_admin,
+                'status_transkrip'      => $st_admin,
+                'status_pernyataan'     => $st_admin,
+                'status_bebas_lab'      => $st_admin,
+                'file_ksm'              => $info['files'][0] ?? '',
+                'file_transkrip'        => $info['files'][1] ?? '',
+                'file_pernyataan'       => $info['files'][2] ?? '',
+                'file_bebas_lab'        => $info['files'][3] ?? '',
+            );
+        }
+
+        return $results;
+    }
+
+    /**
+     * Helper: Filter & sort legacy fallback pengajuan items
+     */
+    private function _filter_and_sort_legacy_pengajuan($filter_status = null, $search = null, $cat = null) {
+        $list = $this->_get_fallback_pengajuan_from_legacy();
+        if (empty($list)) return array();
+
+        $filtered = array();
+        foreach ($list as $item) {
+            if ($filter_status && $filter_status !== 'all') {
+                if ($item['status_approval_admin'] !== $filter_status) {
+                    continue;
+                }
+            }
+
+            if (!empty($search)) {
+                $search = strtolower(trim($search));
+                $full_name = strtolower($item['nama_depan'] . ' ' . $item['nama_belakang']);
+                $nim = strtolower($item['nim']);
+                $judul = strtolower($item['judul_1']);
+                $prodi = strtolower($item['prodi'] . ' ' . $item['konsentrasi_dkv']);
+
+                $matched = false;
+                if ($cat === 'nama') {
+                    $matched = (strpos($full_name, $search) !== false);
+                } elseif ($cat === 'nim') {
+                    $matched = (strpos($nim, $search) !== false);
+                } elseif ($cat === 'judul') {
+                    $matched = (strpos($judul, $search) !== false);
+                } elseif ($cat === 'prodi') {
+                    $matched = (strpos($prodi, $search) !== false);
+                } else {
+                    $matched = (strpos($full_name, $search) !== false ||
+                                strpos($nim, $search) !== false ||
+                                strpos($judul, $search) !== false ||
+                                strpos($prodi, $search) !== false);
+                }
+                if (!$matched) continue;
+            }
+
+            $filtered[] = $item;
+        }
+
+        usort($filtered, function($a, $b) {
+            $priority = array('Pending' => 1, 'Rejected' => 2, 'Approved' => 3);
+            $pA = $priority[$a['status_approval_admin']] ?? 4;
+            $pB = $priority[$b['status_approval_admin']] ?? 4;
+            if ($pA !== $pB) {
+                return ($pA < $pB) ? -1 : 1;
+            }
+            return strcmp($b['created_at'], $a['created_at']);
+        });
+
+        return $filtered;
+    }
+
+    /**
      * Autocomplete search untuk Admin Layanan LAA
      */
     public function autocomplete_search($term) {
@@ -687,8 +937,27 @@ class AdminLayanan_model extends CI_Model {
      * Hitung statistik berkas untuk kartu metrik Admin Layanan
      */
     public function get_stats() {
-        if (!$this->db->table_exists('pendaftaran_ta')) {
-            return array('total' => 0, 'pending' => 0, 'approved' => 0, 'rejected' => 0);
+        if (!$this->db->table_exists('pendaftaran_ta') || $this->db->count_all('pendaftaran_ta') == 0) {
+            $list = $this->_get_fallback_pengajuan_from_legacy();
+            $total = count($list);
+            $pending = 0;
+            $approved = 0;
+            $rejected = 0;
+            foreach ($list as $item) {
+                if ($item['status_approval_admin'] === 'Pending') {
+                    $pending++;
+                } elseif ($item['status_approval_admin'] === 'Approved') {
+                    $approved++;
+                } elseif ($item['status_approval_admin'] === 'Rejected') {
+                    $rejected++;
+                }
+            }
+            return array(
+                'total'    => $total,
+                'pending'  => $pending,
+                'approved' => $approved,
+                'rejected' => $rejected
+            );
         }
 
         $total = $this->db->count_all_results('pendaftaran_ta');
@@ -715,7 +984,11 @@ class AdminLayanan_model extends CI_Model {
      * Ambil detail lengkap pengajuan mahasiswa berdasarkan NIM
      */
     public function get_detail_pengajuan($nim) {
-        if (!$this->db->table_exists('pendaftaran_ta')) {
+        if (!$this->db->table_exists('pendaftaran_ta') || $this->db->count_all('pendaftaran_ta') == 0) {
+            $list = $this->_get_fallback_pengajuan_from_legacy();
+            foreach ($list as $item) {
+                if ($item['nim'] == $nim) return $item;
+            }
             return null;
         }
 
@@ -743,6 +1016,11 @@ class AdminLayanan_model extends CI_Model {
             $arr = array($row);
             $this->_resolve_student_names($arr);
             $row = $arr[0];
+        } else {
+            $list = $this->_get_fallback_pengajuan_from_legacy();
+            foreach ($list as $item) {
+                if ($item['nim'] == $nim) return $item;
+            }
         }
         return $row;
     }
