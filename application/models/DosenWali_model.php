@@ -326,8 +326,10 @@ class DosenWali_model extends CI_Model {
             if (in_array($col_catatan, $fields)) $data[$col_catatan] = $comment;
             if (in_array($col_review, $fields) && $status !== 'Pending') $data[$col_review] = 1;
 
-            if ($status !== 'Pending') {
-                $data[$col_review] = 1;
+            foreach ($data as $dk => $dv) {
+                if (!in_array($dk, $fields)) {
+                    unset($data[$dk]);
+                }
             }
 
             $this->db->where('nim', $nim);
