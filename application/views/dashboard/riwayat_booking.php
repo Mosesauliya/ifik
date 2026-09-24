@@ -74,7 +74,7 @@
             .page-wrapper-for-sidebar {
                 margin-left: 0 !important;
                 width: 100% !important;
-                padding-top: 56px;
+                padding: 56px 12px 32px 12px !important;
             }
         }
 
@@ -765,12 +765,12 @@
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            padding: 4px 10px;
+            padding: 3px 9px;
             border-radius: 9999px;
             font-size: 0.72rem;
-            font-weight: 800;
-            letter-spacing: 0.02em;
-            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            text-transform: none;
             white-space: nowrap;
         }
         .badge-status.menunggu {
@@ -1345,13 +1345,27 @@
         /* Media Query for Mobile Layout (<640px) */
         @media (max-width: 640px) {
             body {
-                padding: 16px 12px 40px;
+                padding: 0 !important;
+            }
+            .page-wrapper-for-sidebar {
+                padding: 56px 8px 32px 8px !important;
+            }
+            .main-wrapper {
+                width: 100% !important;
+                max-width: 100% !important;
+                gap: 12px !important;
             }
             .page-header-card {
-                padding: 20px 18px;
+                padding: 16px 14px !important;
+                border-radius: 18px !important;
             }
             .header-title-group h1 {
-                font-size: 1.3rem;
+                font-size: 1.22rem !important;
+                gap: 8px !important;
+            }
+            .header-title-group p {
+                font-size: 0.8rem !important;
+                margin-top: 3px !important;
             }
             .header-actions {
                 width: 100%;
@@ -1360,6 +1374,9 @@
             .header-actions .btn-action-main {
                 flex: 1;
                 justify-content: center;
+                padding: 9px 12px !important;
+                font-size: 0.82rem !important;
+                border-radius: 12px !important;
             }
             .stat-cards-grid {
                 display: flex !important;
@@ -1368,9 +1385,9 @@
                 overflow-y: hidden !important;
                 scroll-snap-type: x mandatory;
                 -webkit-overflow-scrolling: touch;
-                gap: 16px !important;
-                padding: 4px 2px 10px 2px;
-                margin-bottom: 6px !important;
+                gap: 12px !important;
+                padding: 2px 2px 8px 2px;
+                margin-bottom: 4px !important;
                 scrollbar-width: none;
                 -ms-overflow-style: none;
                 width: 100%;
@@ -1386,12 +1403,16 @@
                 box-sizing: border-box;
                 scroll-snap-align: start;
                 scroll-snap-stop: always;
+                padding: 16px 16px 14px 16px !important;
+                border-radius: 18px !important;
             }
             .stat-slider-dots {
                 display: flex;
             }
             .content-card {
-                padding: 16px;
+                padding: 14px 10px !important;
+                border-radius: 18px !important;
+                gap: 12px !important;
             }
 
             /* Filter Pills Horizontal Scroll & Dots */
@@ -1524,7 +1545,7 @@
             table.riwayat-table tbody {
                 display: flex !important;
                 flex-direction: column !important;
-                gap: 14px !important;
+                gap: 12px !important;
                 width: 100% !important;
                 min-width: 0 !important;
             }
@@ -1534,10 +1555,10 @@
                 flex-direction: column !important;
                 background: #ffffff !important;
                 border: 1.5px solid #e2e8f0 !important;
-                border-radius: 18px !important;
-                padding: 14px 14px 14px 14px !important;
+                border-radius: 16px !important;
+                padding: 12px 12px 12px 12px !important;
                 box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04) !important;
-                gap: 10px !important;
+                gap: 9px !important;
                 position: relative !important;
                 box-sizing: border-box !important;
                 width: 100% !important;
@@ -1575,16 +1596,22 @@
             /* TD 1: Checkbox (Top Left Absolute) */
             .booking-row td:nth-child(1) {
                 position: absolute !important;
-                top: 14px !important;
+                top: 13px !important;
                 left: 14px !important;
                 width: auto !important;
                 z-index: 2 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 0 !important;
+                margin: 0 !important;
             }
 
             .booking-row td:nth-child(1) .booking-checkbox {
                 margin: 0 !important;
-                width: 20px !important;
-                height: 20px !important;
+                padding: 0 !important;
+                width: 16px !important;
+                height: 16px !important;
                 cursor: pointer;
             }
 
@@ -1593,25 +1620,38 @@
                 order: 1 !important;
                 display: flex !important;
                 align-items: center !important;
-                padding-left: 32px !important;
-                padding-right: 76px !important;
-                min-height: 28px !important;
+                padding-left: 36px !important;
+                padding-right: 70px !important;
+                min-height: 24px !important;
             }
 
             .booking-row .badge-status {
+                display: inline-flex !important;
+                align-items: center !important;
+                gap: 5px !important;
                 width: auto !important;
-                max-width: 100% !important;
-                height: 26px !important;
-                padding: 2px 10px !important;
-                font-size: 0.72rem !important;
+                max-width: fit-content !important;
+                height: 22px !important;
+                padding: 2px 8px !important;
+                font-size: 0.68rem !important;
+                font-weight: 700 !important;
+                border-radius: 9999px !important;
+                text-transform: none !important;
+                letter-spacing: normal !important;
                 justify-content: flex-start !important;
+                white-space: nowrap !important;
+                line-height: 1 !important;
+            }
+
+            .booking-row .badge-status i {
+                font-size: 0.65rem !important;
             }
 
             /* TD 6: Aksi Dropdown (Top Right Absolute) */
             .booking-row td:nth-child(6) {
                 position: absolute !important;
                 top: 12px !important;
-                right: 12px !important;
+                right: 14px !important;
                 width: auto !important;
                 z-index: 20 !important;
                 padding: 0 !important;
@@ -1619,10 +1659,11 @@
             }
 
             .booking-row .btn-action-dropdown {
-                height: 30px !important;
-                padding: 4px 10px !important;
-                font-size: 0.76rem !important;
-                border-radius: 8px !important;
+                height: 24px !important;
+                padding: 2px 8px !important;
+                font-size: 0.72rem !important;
+                border-radius: 6px !important;
+                gap: 3px !important;
             }
 
             .booking-row .action-menu-popup {
@@ -1634,20 +1675,20 @@
             /* TD 2: Ruangan & ID (Order 2) */
             .booking-row td:nth-child(2) {
                 order: 2 !important;
-                margin-top: 4px !important;
+                margin-top: 2px !important;
             }
 
             .booking-row .room-pill {
                 display: inline-flex !important;
                 align-items: center !important;
-                gap: 8px !important;
-                font-size: 0.88rem !important;
-                font-weight: 800 !important;
-                padding: 4px 10px !important;
+                gap: 6px !important;
+                font-size: 0.78rem !important;
+                font-weight: 700 !important;
+                padding: 3px 8px !important;
                 background: #fff7ed !important;
                 color: #ea580c !important;
                 border: 1px solid #ffedd5 !important;
-                border-radius: 10px !important;
+                border-radius: 8px !important;
                 width: fit-content !important;
                 max-width: 100% !important;
             }
@@ -2551,9 +2592,6 @@
                     <div id="extraInputContainer_${rowId}" style="flex: 1; display: flex; align-items: center; min-width: 0;">
                         ${getExtraRowInputHtml(rowId, defaultKey, defaultVal)}
                     </div>
-                    <button type="button" onclick="applyFilterAndSearch()" class="btn-search-cari" style="padding: 5px 14px; font-size: 0.78rem;" title="Klik untuk melakukan pencarian">
-                        <i class="fa-solid fa-magnifying-glass" style="font-size: 0.7rem;"></i> Cari
-                    </button>
                 </div>
                 <button type="button" onclick="removeFilterRow('${rowId}')" class="btn-remove-row" title="Hapus kriteria ini">
                     <i class="fa-solid fa-xmark"></i>
