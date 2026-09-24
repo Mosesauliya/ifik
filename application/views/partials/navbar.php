@@ -244,9 +244,10 @@
             height: 100vh;
             width: 300px; max-width: 85vw;
             margin: 0;
-            background: #ffffff;
-            backdrop-filter: none;
-            -webkit-backdrop-filter: none;
+            /* ✅ Background lebih transparan + efek frosted glass */
+            background: rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(18px) saturate(160%);
+            -webkit-backdrop-filter: blur(18px) saturate(160%);
             flex-direction: column;
             align-items: stretch;
             justify-content: flex-start;
@@ -255,6 +256,7 @@
             padding: 90px 20px 24px;
             overflow-y: auto;
             box-shadow: 6px 0 30px rgba(0, 0, 0, 0.18);
+            border-right: 1px solid rgba(255, 255, 255, 0.4);
             border-bottom: none;
             transform: translateX(-100%);
             transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
@@ -267,7 +269,7 @@
             margin-left: 0;
             margin-top: auto;
             padding-top: 16px;
-            border-top: 1px solid #f1f5f9;
+            border-top: 1px solid rgba(148, 163, 184, 0.35);
         }
 
         .nav-link, .nav-link-login {
@@ -317,6 +319,9 @@
             box-shadow: none;
             min-width: 0;
             border-radius: 8px;
+            /* sedikit transparan agar menyatu dgn sidebar */
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.5);
         }
         .nav-dropdown a .btn-box { width: 30px; height: 30px; }
     }
@@ -349,6 +354,7 @@
     </li>
 
     <li class="nav-item">
+    <!-- <li class="nav-item">
         <a href="<?= site_url('welcome') ?>" class="nav-link"><span>Layanan LAB</span></a>
         <div class="nav-dropdown">
             <a href="<?= base_url('ajukan-booking') ?>">
@@ -394,7 +400,7 @@
                 <span>Perwalian</span>
             </a>
         </div>
-    </li>
+    </li> -->
 
     <li class="nav-item">
         <a href="<?= site_url('welcome') ?>" class="nav-link"><span>Center of Excelent</span></a>
@@ -417,7 +423,7 @@
             </a>
         </div>
     </li>
-
+<!-- 
     <li class="nav-item">
         <a href="<?= site_url('welcome') ?>" class="nav-link"><span>Ticketing</span></a>
         <div class="nav-dropdown">
@@ -426,40 +432,34 @@
                 <span>Research Group</span>
             </a>
         </div>
-    </li>
+    </li> -->
 
     <li class="nav-item">
         <a href="<?= site_url('welcome') ?>" class="nav-link"><span>Galeri Karya FIK</span></a>
     </li>
 
     <?php
-        $role_id       = (int)$this->session->userdata('role_id');
-        $user_email    = (string)($this->session->userdata('email') ?? '');
+        $role_id       = $this->session->userdata('role_id');
+        $user_email    = $this->session->userdata('email') ?? '';
         $user_name_top = $this->session->userdata('name') ?? '';
-        $is_mahasiswa  = ($role_id === 4 || strpos($user_email, '@student.') !== false);
+        $is_mahasiswa  = ($role_id == 4 || strpos($user_email, '@student.') !== false);
 
         // ====== Tentukan label & URL panel berdasarkan role ======
         $panel_label = 'Panel Admin';
         $panel_url   = base_url('admin');
 
-        if ($role_id === 21 || ($role_id === 2 && strpos(strtolower($user_email), 'laboran') !== false)) {
+        if ($role_id == 21) {
             $panel_label = 'Panel Laboran';
-            $panel_url   = base_url('laboran/booking');
-        } elseif ($role_id === 2) {
-            $panel_label = 'Panel Ka. Ur';
-            $panel_url   = base_url('kaur/approval');
-        } elseif ($role_id === 3) {
+            $panel_url   = base_url('laboran');
+        } elseif ($role_id == 2) {
+            $panel_label = 'Panel Kaur';
+            $panel_url   = base_url('kaur');
+        } elseif ($role_id == 3) {
             $panel_label = 'Panel Dosen';
-            $panel_url   = base_url('dosen/bimbingan');
-        } elseif ($role_id === 5) {
-            $panel_label = 'Admin Layanan (LAA)';
-            $panel_url   = base_url('adminlayanan');
-        } elseif ($role_id === 6) {
+            $panel_url   = base_url('dosen');
+        } elseif ($role_id == 6) {
             $panel_label = 'Panel Koordinator TA';
             $panel_url   = base_url('koordinatorta');
-        } elseif ($role_id === 7 || $role_id === 9) {
-            $panel_label = 'Portal Ketua KK';
-            $panel_url   = base_url('ketuakk');
         }
     ?>
 
@@ -467,11 +467,11 @@
         <li class="nav-item">
             <a href="<?= site_url('mahasiswa') ?>" class="nav-link"><span>Portal Mahasiswa</span></a>
         </li>
-    <?php elseif ($this->session->userdata('logged_in') && !$is_mahasiswa): ?>
+    <?php elseif ($this->session->userdata('logged_in') && $role_id != 5): ?>
         <li class="nav-item">
             <a href="<?= $panel_url ?>" class="nav-link"><span><?= $panel_label ?></span></a>
             <?php if ($role_id == 1): ?>
-            <div class="nav-dropdown nav-dropdown--right">
+            <!-- <div class="nav-dropdown nav-dropdown--right">
                 <a href="<?= site_url('admin') ?>">
                     <span class="btn-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span>
                     <span>Pusat Kendali Admin</span>
@@ -508,7 +508,7 @@
                     <span class="btn-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line></svg></span>
                     <span>Pengaturan Footer</span>
                 </a>
-            </div>
+            </div> -->
             <?php endif; ?>
         </li>
     <?php endif; ?>
