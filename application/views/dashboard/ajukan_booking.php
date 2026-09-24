@@ -268,7 +268,48 @@
         .select2-results__options::-webkit-scrollbar { width: 6px; }
         .select2-results__options::-webkit-scrollbar-track { background: #f8fafc; border-radius: 10px; }
         .select2-results__options::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .select2-results__options::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        /* ===== FLATPICKR BEAUTIFUL CUSTOM THEME ===== */
+        .flatpickr-calendar {
+            border-radius: 18px !important;
+            box-shadow: 0 16px 36px -6px rgba(15, 23, 42, 0.16), 0 4px 14px rgba(0,0,0,0.06) !important;
+            border: 1.5px solid #fed7aa !important;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            z-index: 99999 !important;
+            overflow: hidden !important;
+            background: #ffffff !important;
+        }
+        .flatpickr-calendar .flatpickr-day.selected,
+        .flatpickr-calendar .flatpickr-day.startRange,
+        .flatpickr-calendar .flatpickr-day.endRange {
+            background: #ea580c !important;
+            border-color: #ea580c !important;
+            color: #fff !important;
+            font-weight: 700 !important;
+        }
+        .flatpickr-calendar .flatpickr-day.inRange {
+            background: #ffedd5 !important;
+            border-color: #ffedd5 !important;
+            color: #ea580c !important;
+        }
+        .flatpickr-calendar .flatpickr-day:hover {
+            background: #fed7aa !important;
+            border-color: #fed7aa !important;
+            color: #9a3412 !important;
+        }
+        .flatpickr-months .flatpickr-month {
+            background: #fff7ed !important;
+            color: #1e293b !important;
+            border-top-left-radius: 16px !important;
+            border-top-right-radius: 16px !important;
+        }
+        .flatpickr-current-month .flatpickr-monthDropdown-months,
+        .flatpickr-current-month input.cur-year {
+            font-weight: 700 !important;
+            color: #1e293b !important;
+        }
+        .flatpickr-day.today {
+            border-color: #ea580c !important;
+        }
 
         .btn-submit-booking {
             width: 100%;
@@ -744,6 +785,7 @@
                 mode: fpMode,
                 dateFormat: "Y-m-d",
                 minDate: "today",
+                disableMobile: true,
                 onChange: function(selectedDates, dateStr, instance) {
                     if (selectedDates.length > 0) {
                         $('#timeSelectionGroup').slideDown();
