@@ -842,6 +842,33 @@
                 height: 100%;
             }
 
+            .chat-workspace.mobile-active .chat-sidebar,
+            body.mobile-chat-open .chat-sidebar {
+                display: none !important;
+            }
+
+            .chat-workspace:not(.mobile-active) .chat-main {
+                display: none !important;
+            }
+
+            .chat-workspace.mobile-active .chat-main,
+            body.mobile-chat-open .chat-main {
+                display: flex !important;
+                position: relative !important;
+                transform: none !important;
+                width: 100% !important;
+                height: 100% !important;
+                max-height: 100% !important;
+                min-height: 0 !important;
+                flex: 1 1 0% !important;
+                border-radius: 0 !important;
+                border: none !important;
+                overflow: hidden !important;
+                box-shadow: none !important;
+                flex-direction: column !important;
+                background: #ffffff;
+            }
+
             .conversation-item {
                 padding: 10px 12px;
                 margin-bottom: 5px;
@@ -866,25 +893,6 @@
 
             .conv-preview {
                 font-size: 0.75rem;
-            }
-
-            .chat-main {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                z-index: 20;
-                transform: translateX(100%);
-                transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-                background: #ffffff;
-                display: flex;
-                flex-direction: column;
-                overflow: hidden;
-            }
-
-            .chat-workspace.mobile-active .chat-main {
-                transform: translateX(0);
             }
 
             /* Fullscreen mobile active chat state */
@@ -952,22 +960,6 @@
                 overflow: hidden !important;
                 margin: 0 !important;
                 gap: 0 !important;
-            }
-
-            body.mobile-chat-open .chat-main {
-                border-radius: 0 !important;
-                border: none !important;
-                height: 100% !important;
-                max-height: 100% !important;
-                min-height: 0 !important;
-                display: flex !important;
-                flex-direction: column !important;
-                flex: 1 1 0% !important;
-                width: 100% !important;
-                overflow: hidden !important;
-                box-shadow: none !important;
-                position: relative !important;
-                transform: none !important;
             }
 
             #activeChatWrap {
