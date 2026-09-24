@@ -74,7 +74,7 @@
             .page-wrapper-for-sidebar {
                 margin-left: 0 !important;
                 width: 100% !important;
-                padding: 56px 16px 80px 16px;
+                padding: 12px 12px 90px 12px !important;
             }
         }
 
@@ -1417,15 +1417,18 @@
         /* Mobile Responsive Styles & Card Slider */
         @media (max-width: 900px) {
             body {
-                padding: 16px 14px 110px 14px;
+                padding: 0 !important;
+            }
+            .page-wrapper-for-sidebar {
+                padding: 12px 12px 90px 12px !important;
             }
             .page-header {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 10px;
-                padding-left: 48px; /* Clearance for fixed burger button */
-                margin-bottom: 20px;
-                min-height: 42px;
+                gap: 4px;
+                padding-left: 42px; /* Clearance for fixed burger button */
+                margin-bottom: 14px;
+                min-height: 38px;
             }
             .header-title-wrap h1 {
                 font-size: 1.25rem;
@@ -1775,25 +1778,51 @@
 
             .kaur-row .tr-user-time-col,
             .booking-row .tr-user-time-col {
-                display: flex !important;
-                flex-direction: row !important;
-                flex-wrap: wrap !important;
-                align-items: center !important;
-                gap: 8px !important;
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 6px !important;
                 width: 100% !important;
+                box-sizing: border-box !important;
             }
 
             .kaur-row .tr-pill-user,
             .kaur-row .tr-pill-time,
             .booking-row .tr-pill-user,
             .booking-row .tr-pill-time {
-                flex: 1 1 calc(50% - 4px) !important;
-                min-width: 120px !important;
-                width: auto !important;
-                height: 28px !important;
-                font-size: 0.76rem !important;
-                padding: 3px 10px !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                height: 26px !important;
+                font-size: 0.72rem !important;
+                padding: 2px 8px !important;
+                border-radius: 8px !important;
+                white-space: nowrap !important;
+                display: flex !important;
+                align-items: center !important;
+                gap: 4px !important;
                 box-sizing: border-box !important;
+                overflow: hidden !important;
+            }
+
+            .kaur-row .tr-pill-user,
+            .booking-row .tr-pill-user {
+                justify-content: flex-start !important;
+            }
+
+            .kaur-row .tr-pill-time,
+            .booking-row .tr-pill-time {
+                justify-content: center !important;
+            }
+
+            .kaur-row .tr-pill-user span,
+            .kaur-row .tr-pill-time span,
+            .booking-row .tr-pill-user span,
+            .booking-row .tr-pill-time span {
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                white-space: nowrap !important;
+                min-width: 0 !important;
+                flex: 1 !important;
             }
 
             /* TD 4: Tanggal (Order 4) */
@@ -2213,13 +2242,13 @@
                 <div id="extraRowsCard" class="extra-rows-card">
                     <div id="additionalFilterRowsContainer" style="display: flex; flex-direction: column; gap: 8px;"></div>
                     
-                    <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #f1f5f9; padding-top: 10px; margin-top: 10px; font-size: 0.72rem;">
-                        <span style="color: #94a3b8;">Gunakan kombinasi kriteria untuk mempersempit permohonan.</span>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <button type="button" onclick="resetMultiSearch()" style="background: none; border: none; color: #dc2626; font-weight: 700; cursor: pointer;">
+                    <div class="extra-rows-footer" style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #f1f5f9; padding-top: 8px; margin-top: 8px; font-size: 0.72rem; gap: 8px;">
+                        <span class="extra-rows-hint" style="color: #94a3b8; font-size: 0.7rem; line-height: 1.2;">Multi-kriteria filter</span>
+                        <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                            <button type="button" onclick="resetMultiSearch()" style="background: none; border: none; color: #dc2626; font-weight: 700; cursor: pointer; white-space: nowrap; font-size: 0.72rem; padding: 2px 4px;">
                                 Reset All
                             </button>
-                            <button type="button" onclick="filterTable()" style="padding: 5px 12px; background: #ea580c; color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                            <button type="button" onclick="filterTable()" style="padding: 4px 10px; height: 26px; background: #ea580c; color: #fff; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap; font-size: 0.72rem; box-shadow: 0 2px 6px rgba(234,88,12,0.2);">
                                 <i class="fa-solid fa-magnifying-glass text-[10px]"></i> Terapkan
                             </button>
                         </div>

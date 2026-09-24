@@ -81,7 +81,7 @@
             .page-wrapper-for-sidebar {
                 margin-left: 0 !important;
                 width: 100% !important;
-                padding: 56px 16px 80px 16px;
+                padding: 12px 12px 90px 12px !important;
             }
         }
 
@@ -1436,27 +1436,32 @@
         /* Mobile Responsive Styles & Card Slider */
         @media (max-width: 900px) {
             body {
-                padding: 16px 14px 110px 14px;
+                padding: 0 !important;
+            }
+            .page-wrapper-for-sidebar {
+                padding: 12px 12px 90px 12px !important;
             }
             .page-header {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 10px;
-                padding-left: 48px; /* Clearance for fixed burger button */
-                margin-bottom: 20px;
-                min-height: 42px;
+                gap: 4px;
+                padding-left: 42px; /* Clearance for fixed burger button */
+                margin-bottom: 14px;
+                min-height: 38px;
             }
             .header-title-wrap h1 {
-                font-size: 1.25rem;
-                gap: 8px;
+                font-size: 1.18rem;
+                gap: 6px;
+                line-height: 1.25;
             }
             .header-title-wrap h1 .role-badge {
-                font-size: 0.65rem;
-                padding: 2px 8px;
+                font-size: 0.62rem;
+                padding: 2px 7px;
             }
             .header-title-wrap p {
-                font-size: 0.8rem;
-                line-height: 1.4;
+                font-size: 0.76rem;
+                line-height: 1.35;
+                margin-top: 2px;
             }
             .stat-cards-grid {
                 display: flex !important;
@@ -1465,9 +1470,9 @@
                 overflow-y: hidden !important;
                 scroll-snap-type: x mandatory;
                 -webkit-overflow-scrolling: touch;
-                gap: 16px !important;
-                padding: 4px 2px 10px 2px;
-                margin-bottom: 6px !important;
+                gap: 10px !important;
+                padding: 2px 0 6px 0 !important;
+                margin-bottom: 4px !important;
                 scrollbar-width: none;
                 -ms-overflow-style: none;
                 width: 100%;
@@ -1480,12 +1485,31 @@
                 width: 100% !important;
                 min-width: 100% !important;
                 max-width: 100% !important;
+                padding: 12px 14px !important;
+                border-radius: 14px !important;
                 box-sizing: border-box;
                 scroll-snap-align: start;
                 scroll-snap-stop: always;
             }
+            .stat-card-highlight .stat-card-label {
+                font-size: 0.68rem !important;
+            }
+            .stat-card-highlight .stat-card-val {
+                font-size: 1.45rem !important;
+                margin: 2px 0 !important;
+            }
+            .stat-card-highlight .stat-card-desc {
+                font-size: 0.72rem !important;
+            }
+            .stat-card-highlight .stat-card-3d-icon {
+                width: 36px !important;
+                height: 36px !important;
+                font-size: 0.95rem !important;
+                border-radius: 10px !important;
+            }
             .stat-slider-dots {
                 display: flex;
+                margin-bottom: 10px;
             }
             .filter-pills-wrap {
                 flex-wrap: nowrap !important;
@@ -1493,9 +1517,9 @@
                 -webkit-overflow-scrolling: touch;
                 scrollbar-width: none;
                 -ms-overflow-style: none;
-                padding: 2px 2px 6px 2px;
+                padding: 2px 0 4px 0 !important;
                 width: 100%;
-                gap: 8px;
+                gap: 6px !important;
             }
             .filter-pills-wrap::-webkit-scrollbar {
                 display: none;
@@ -1503,25 +1527,29 @@
             .filter-pill {
                 flex-shrink: 0 !important;
                 white-space: nowrap !important;
+                padding: 5px 11px !important;
+                font-size: 0.74rem !important;
+                border-radius: 9999px !important;
             }
             .filter-pills-dots {
                 display: flex;
+                margin-bottom: 10px;
             }
 
             /* Multi-Search Mobile Optimization */
             .search-pill-container {
                 flex-direction: column !important;
                 align-items: stretch !important;
-                gap: 10px !important;
+                gap: 8px !important;
                 width: 100% !important;
             }
 
             .unified-search-pill {
                 width: 100% !important;
                 max-width: 100% !important;
-                height: 48px !important;
-                padding: 4px 6px 4px 12px !important;
-                border-radius: 14px !important;
+                height: 42px !important;
+                padding: 3px 6px 3px 10px !important;
+                border-radius: 12px !important;
                 box-sizing: border-box !important;
             }
 
@@ -1536,11 +1564,11 @@
             }
 
             .btn-search-cari {
-                margin-left: 6px !important;
-                padding: 6px 14px !important;
-                font-size: 0.78rem !important;
+                margin-left: 4px !important;
+                padding: 5px 12px !important;
+                font-size: 0.75rem !important;
                 gap: 4px !important;
-                border-radius: 10px !important;
+                border-radius: 8px !important;
                 white-space: nowrap !important;
             }
 
@@ -1550,13 +1578,13 @@
 
             .btn-standalone-add {
                 width: 100% !important;
-                height: 44px !important;
+                height: 38px !important;
                 display: flex !important;
                 justify-content: space-between !important;
                 align-items: center !important;
-                padding: 0 16px !important;
-                font-size: 0.84rem !important;
-                border-radius: 14px !important;
+                padding: 0 12px !important;
+                font-size: 0.78rem !important;
+                border-radius: 10px !important;
                 box-sizing: border-box !important;
             }
 
@@ -1566,9 +1594,9 @@
                 left: auto !important;
                 right: auto !important;
                 width: 100% !important;
-                border-radius: 16px !important;
-                margin-top: 6px !important;
-                padding: 14px 12px !important;
+                border-radius: 14px !important;
+                margin-top: 4px !important;
+                padding: 10px 10px !important;
                 box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
                 z-index: 50 !important;
                 box-sizing: border-box !important;
@@ -1578,21 +1606,21 @@
                 width: 100% !important;
                 display: flex !important;
                 align-items: center !important;
-                gap: 8px !important;
-                margin-bottom: 8px !important;
+                gap: 6px !important;
+                margin-bottom: 6px !important;
             }
 
             .extra-filter-row .unified-search-pill {
                 flex: 1 !important;
                 width: auto !important;
                 min-width: 0 !important;
-                height: 46px !important;
+                height: 42px !important;
             }
 
             .extra-filter-row .btn-remove-row {
-                width: 44px !important;
-                height: 44px !important;
-                border-radius: 12px !important;
+                width: 38px !important;
+                height: 38px !important;
+                border-radius: 10px !important;
                 flex-shrink: 0 !important;
             }
 
@@ -1610,7 +1638,7 @@
                 overflow: visible !important;
             }
 
-            table.laboran-table {
+            table.laboran-table, table.admin-table {
                 display: block !important;
                 width: 100% !important;
                 max-width: 100% !important;
@@ -1618,15 +1646,15 @@
                 border: none !important;
             }
 
-            table.laboran-table colgroup,
-            table.laboran-table thead {
+            table.laboran-table colgroup, table.admin-table colgroup,
+            table.laboran-table thead, table.admin-table thead {
                 display: none !important;
             }
 
-            table.laboran-table tbody {
+            table.laboran-table tbody, table.admin-table tbody {
                 display: flex !important;
                 flex-direction: column !important;
-                gap: 12px !important;
+                gap: 10px !important;
                 width: 100% !important;
                 min-width: 0 !important;
             }
@@ -1636,10 +1664,10 @@
                 flex-direction: column !important;
                 background: #ffffff !important;
                 border: 1.5px solid #e2e8f0 !important;
-                border-radius: 16px !important;
-                padding: 14px 14px 14px 14px !important;
-                box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04) !important;
-                gap: 10px !important;
+                border-radius: 14px !important;
+                padding: 12px 12px 10px 12px !important;
+                box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+                gap: 7px !important;
                 position: relative !important;
                 box-sizing: border-box !important;
                 width: 100% !important;
@@ -1654,13 +1682,13 @@
 
             .booking-row:hover {
                 border-color: #cbd5e1 !important;
-                box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08) !important;
+                box-shadow: 0 4px 14px rgba(15, 23, 42, 0.07) !important;
             }
 
             .booking-row:has(.row-checkbox:checked) {
                 border-color: #fdba74 !important;
                 background: #fffbf7 !important;
-                box-shadow: 0 4px 16px rgba(234, 88, 12, 0.09) !important;
+                box-shadow: 0 4px 14px rgba(234, 88, 12, 0.09) !important;
             }
 
             .booking-row td {
@@ -1676,16 +1704,16 @@
             /* TD 1: Checkbox (Top Left Absolute) */
             .booking-row td:nth-child(1) {
                 position: absolute !important;
-                top: 14px !important;
-                left: 14px !important;
+                top: 12px !important;
+                left: 12px !important;
                 width: auto !important;
                 z-index: 2 !important;
             }
 
             .booking-row td:nth-child(1) .custom-checkbox {
                 margin: 0 !important;
-                width: 20px !important;
-                height: 20px !important;
+                width: 16px !important;
+                height: 16px !important;
             }
 
             /* TD 6: Status Badge (Top Bar, Next to Checkbox) */
@@ -1693,24 +1721,28 @@
                 order: 1 !important;
                 display: flex !important;
                 align-items: center !important;
-                padding-left: 30px !important;
-                padding-right: 80px !important;
-                min-height: 28px !important;
+                padding-left: 28px !important;
+                padding-right: 64px !important;
+                min-height: 24px !important;
             }
 
             .booking-row .status-badge {
                 width: auto !important;
                 max-width: 100% !important;
-                height: 26px !important;
-                padding: 2px 10px !important;
-                font-size: 0.72rem !important;
+                height: 22px !important;
+                padding: 2px 8px !important;
+                font-size: 0.68rem !important;
+                font-weight: 700 !important;
+                border-radius: 9999px !important;
                 justify-content: flex-start !important;
+                white-space: nowrap !important;
+                line-height: 1 !important;
             }
 
             /* TD 7: Aksi (Top Right Absolute) */
             .booking-row td:nth-child(7) {
                 position: absolute !important;
-                top: 12px !important;
+                top: 10px !important;
                 right: 12px !important;
                 width: auto !important;
                 z-index: 20 !important;
@@ -1718,10 +1750,11 @@
             }
 
             .booking-row .btn-action-dots {
-                height: 30px !important;
-                padding: 4px 10px !important;
-                font-size: 0.76rem !important;
-                border-radius: 8px !important;
+                height: 24px !important;
+                padding: 2px 8px !important;
+                font-size: 0.72rem !important;
+                border-radius: 6px !important;
+                gap: 3px !important;
             }
 
             .booking-row .action-dropdown-menu {
@@ -1733,21 +1766,22 @@
             /* TD 2: Ruangan (Order 2) */
             .booking-row td:nth-child(2) {
                 order: 2 !important;
-                margin-top: 4px !important;
+                margin-top: 1px !important;
             }
 
             .booking-row .tr-room-col {
                 display: flex !important;
                 align-items: center !important;
-                gap: 10px !important;
+                gap: 8px !important;
                 width: 100% !important;
             }
 
             .booking-row .tr-room-icon {
-                width: 38px !important;
-                height: 38px !important;
-                border-radius: 10px !important;
+                width: 32px !important;
+                height: 32px !important;
+                border-radius: 8px !important;
                 flex-shrink: 0 !important;
+                font-size: 0.85rem !important;
             }
 
             .booking-row .tr-room-info {
@@ -1756,19 +1790,19 @@
             }
 
             .booking-row .tr-room-code {
-                font-size: 0.92rem !important;
+                font-size: 0.88rem !important;
                 font-weight: 800 !important;
                 white-space: normal !important;
                 word-break: break-word !important;
-                line-height: 1.3 !important;
+                line-height: 1.25 !important;
             }
 
             .booking-row .tr-room-name {
-                font-size: 0.78rem !important;
+                font-size: 0.74rem !important;
                 font-weight: 500 !important;
                 color: #64748b !important;
                 white-space: normal !important;
-                line-height: 1.3 !important;
+                line-height: 1.25 !important;
             }
 
             /* TD 3: Peminjam & Waktu (Order 3) */
@@ -1777,23 +1811,45 @@
             }
 
             .booking-row .tr-user-time-col {
-                display: flex !important;
-                flex-direction: row !important;
-                flex-wrap: wrap !important;
-                align-items: center !important;
-                gap: 8px !important;
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 6px !important;
                 width: 100% !important;
+                box-sizing: border-box !important;
             }
 
             .booking-row .tr-pill-user,
             .booking-row .tr-pill-time {
-                flex: 1 1 calc(50% - 4px) !important;
-                min-width: 120px !important;
-                width: auto !important;
-                height: 28px !important;
-                font-size: 0.76rem !important;
-                padding: 3px 10px !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                height: 26px !important;
+                font-size: 0.72rem !important;
+                padding: 2px 8px !important;
+                border-radius: 8px !important;
+                white-space: nowrap !important;
+                display: flex !important;
+                align-items: center !important;
+                gap: 4px !important;
                 box-sizing: border-box !important;
+                overflow: hidden !important;
+            }
+
+            .booking-row .tr-pill-user {
+                justify-content: flex-start !important;
+            }
+
+            .booking-row .tr-pill-time {
+                justify-content: center !important;
+            }
+
+            .booking-row .tr-pill-user span,
+            .booking-row .tr-pill-time span {
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                white-space: nowrap !important;
+                min-width: 0 !important;
+                flex: 1 !important;
             }
 
             /* TD 4: Tanggal (Order 4) */
@@ -1804,20 +1860,20 @@
             .booking-row .tr-date-col {
                 display: flex !important;
                 align-items: center !important;
-                gap: 6px !important;
-                font-size: 0.78rem !important;
+                gap: 5px !important;
+                font-size: 0.74rem !important;
                 font-weight: 700 !important;
                 color: #334155 !important;
                 background: #f8fafc !important;
                 border: 1px solid #e2e8f0 !important;
-                border-radius: 10px !important;
-                padding: 6px 12px !important;
+                border-radius: 8px !important;
+                padding: 4px 10px !important;
                 width: 100% !important;
                 box-sizing: border-box !important;
             }
             .booking-row .tr-date-col::before {
                 content: '📅';
-                font-size: 0.85rem;
+                font-size: 0.78rem;
                 flex-shrink: 0;
             }
 
@@ -1830,17 +1886,17 @@
                 display: block !important;
                 width: 100% !important;
                 background: #f8fafc !important;
-                border-left: 3.5px solid #ea580c !important;
-                border-radius: 0 10px 10px 0 !important;
-                padding: 8px 12px !important;
+                border-left: 3px solid #ea580c !important;
+                border-radius: 0 8px 8px 0 !important;
+                padding: 6px 10px !important;
                 box-sizing: border-box !important;
             }
 
             .booking-row .tr-desc-text {
                 white-space: normal !important;
-                font-size: 0.78rem !important;
+                font-size: 0.74rem !important;
                 color: #334155 !important;
-                line-height: 1.4 !important;
+                line-height: 1.35 !important;
                 word-break: break-word !important;
             }
 
@@ -2248,13 +2304,13 @@
                 <div id="extraRowsCard" class="extra-rows-card">
                     <div id="additionalFilterRowsContainer" style="display: flex; flex-direction: column; gap: 8px;"></div>
                     
-                    <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #f1f5f9; padding-top: 10px; margin-top: 10px; font-size: 0.72rem;">
-                        <span style="color: #94a3b8;">Gunakan kombinasi kriteria untuk mempersempit pencarian data.</span>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <button type="button" onclick="resetMultiSearch()" style="background: none; border: none; color: #dc2626; font-weight: 700; cursor: pointer;">
+                    <div class="extra-rows-footer" style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #f1f5f9; padding-top: 8px; margin-top: 8px; font-size: 0.72rem; gap: 8px;">
+                        <span class="extra-rows-hint" style="color: #94a3b8; font-size: 0.7rem; line-height: 1.2;">Multi-kriteria filter</span>
+                        <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                            <button type="button" onclick="resetMultiSearch()" style="background: none; border: none; color: #dc2626; font-weight: 700; cursor: pointer; white-space: nowrap; font-size: 0.72rem; padding: 2px 4px;">
                                 Reset All
                             </button>
-                            <button type="button" onclick="filterTable()" style="padding: 5px 12px; background: #ea580c; color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                            <button type="button" onclick="filterTable()" style="padding: 4px 10px; height: 26px; background: #ea580c; color: #fff; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap; font-size: 0.72rem; box-shadow: 0 2px 6px rgba(234,88,12,0.2);">
                                 <i class="fa-solid fa-magnifying-glass text-[10px]"></i> Terapkan
                             </button>
                         </div>
