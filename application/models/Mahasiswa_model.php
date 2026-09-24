@@ -44,9 +44,16 @@ class Mahasiswa_model extends CI_Model {
             ->group_start()
                 ->where('id_mhs', $userId)
                 ->or_where('id_mhs', $nim)
+                ->or_where('id_mhs', 'usr_mhs_' . $nim)
             ->group_end()
             ->limit(1)
             ->get('guidance')->row_array();
+
+        if (!$g) {
+            $g = $this->db->select('id')
+                ->get_where('guidance', ['id' => 'gdn_' . $nim])
+                ->row_array();
+        }
 
         return $g ? $g['id'] : null;
     }
@@ -162,7 +169,14 @@ class Mahasiswa_model extends CI_Model {
             $existing_g = $this->db->group_start()
                 ->where('id_mhs', $userId)
                 ->or_where('id_mhs', $nim)
+                ->or_where('id_mhs', 'usr_mhs_' . $nim)
             ->group_end()->get('guidance')->row_array();
+            // Fallback: baris guidance bisa saja tersimpan dengan id_mhs format lain
+            // (mis. 'usr_mhs_<NIM>'), pastikan ketemu lewat primary key supaya
+            // tidak di-INSERT ulang dan memicu error Duplicate entry.
+            if (!$existing_g) {
+                $existing_g = $this->db->get_where('guidance', ['id' => 'gdn_' . $nim])->row_array();
+            }
 
             $g_fields = $this->db->list_fields('guidance');
             $g_data   = [];
