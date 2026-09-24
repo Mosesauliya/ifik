@@ -1099,7 +1099,14 @@ class DosenWali_model extends CI_Model {
                 $status_wali = $has_rejected ? 'Rejected' : 'Pending';
             }
 
-            $stage = ($status_wali === 'Approved') ? 'Admin Layanan' : ($status_wali === 'Rejected' ? 'Dosen Wali (Ditolak)' : 'Dosen Wali');
+            $pt_info = null;
+            if ($this->db->table_exists('pendaftaran_ta')) {
+                $pt_info = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
+            }
+            $st_admin  = $pt_info['status_approval_admin'] ?? 'Pending';
+            $st_koor   = $pt_info['status_approval_koor'] ?? 'Pending';
+            $st_kk     = $pt_info['status_approval_kk'] ?? 'Pending';
+            $cur_stage = !empty($pt_info['current_stage']) ? $pt_info['current_stage'] : (($status_wali === 'Approved') ? 'Admin Layanan' : ($status_wali === 'Rejected' ? 'Dosen Wali (Ditolak)' : 'Dosen Wali'));
 
             $results[] = [
                 'id'                     => $idMhs,
@@ -1112,10 +1119,10 @@ class DosenWali_model extends CI_Model {
                 'status_judul'           => $status_judul,
                 'catatan_judul'          => $catatan_judul,
                 'status_approval_wali'   => $status_wali,
-                'status_approval_admin'  => 'Pending',
-                'status_approval_koor'   => 'Pending',
-                'status_approval_kk'     => 'Pending',
-                'current_stage'          => $stage,
+                'status_approval_admin'  => $st_admin,
+                'status_approval_koor'   => $st_koor,
+                'status_approval_kk'     => $st_kk,
+                'current_stage'          => $cur_stage,
                 'tgl_daftar'             => $tgl_daftar,
                 'created_at'             => $tgl_daftar,
                 'file_ksm'               => $file_ksm,
@@ -1251,7 +1258,14 @@ class DosenWali_model extends CI_Model {
             $status_wali = $has_rejected ? 'Rejected' : 'Pending';
         }
 
-        $stage = ($status_wali === 'Approved') ? 'Admin Layanan' : ($status_wali === 'Rejected' ? 'Dosen Wali (Ditolak)' : 'Dosen Wali');
+        $pt_info = null;
+        if ($this->db->table_exists('pendaftaran_ta')) {
+            $pt_info = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
+        }
+        $st_admin  = $pt_info['status_approval_admin'] ?? 'Pending';
+        $st_koor   = $pt_info['status_approval_koor'] ?? 'Pending';
+        $st_kk     = $pt_info['status_approval_kk'] ?? 'Pending';
+        $cur_stage = !empty($pt_info['current_stage']) ? $pt_info['current_stage'] : (($status_wali === 'Approved') ? 'Admin Layanan' : ($status_wali === 'Rejected' ? 'Dosen Wali (Ditolak)' : 'Dosen Wali'));
 
         return [
             'id'                     => 'usr_mhs_' . $nim,
@@ -1266,10 +1280,10 @@ class DosenWali_model extends CI_Model {
             'status_judul'           => $status_judul,
             'catatan_judul'          => $catatan_judul,
             'status_approval_wali'   => $status_wali,
-            'status_approval_admin'  => 'Pending',
-            'status_approval_koor'   => 'Pending',
-            'status_approval_kk'     => 'Pending',
-            'current_stage'          => $stage,
+            'status_approval_admin'  => $st_admin,
+            'status_approval_koor'   => $st_koor,
+            'status_approval_kk'     => $st_kk,
+            'current_stage'          => $cur_stage,
             'tgl_daftar'             => $tgl_daftar,
             'created_at'             => $tgl_daftar,
             'file_ksm'               => $file_ksm,
