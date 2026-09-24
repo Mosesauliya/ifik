@@ -220,6 +220,8 @@ $route['adminlayanan/detail_berkas/(:any)'] = 'AdminLayanan/detail_berkas/$1';
 $route['adminlayanan/submit_verifikasi/(:any)'] = 'AdminLayanan/submit_verifikasi/$1';
 $route['adminlayanan/submit_verifikasi_batch'] = 'AdminLayanan/submit_verifikasi_batch';
 $route['adminlayanan/get_batch_details'] = 'AdminLayanan/get_batch_details';
+$route['adminlayanan/(:any)'] = 'AdminLayanan/$1';
+$route['adminlayanan/(:any)/(:any)'] = 'AdminLayanan/$1/$2';
 
 // [TEMPORARY SIMULASI] Admin Layanan (LAA) Ticketing Simulation Routes
 $route['adminlayanan/ticketing'] = 'AdminLayananTicketing/index';
