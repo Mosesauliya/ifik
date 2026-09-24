@@ -1156,11 +1156,11 @@
         </div>
 
         <!-- Table Bottom Pagination Bar -->
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 text-xs text-slate-500 font-medium">
-            <div>
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 text-xs text-slate-500 font-medium w-full overflow-hidden">
+            <div class="text-center sm:text-left">
                 Menampilkan data <strong id="pageStart" class="text-slate-800 font-bold">1</strong> - <strong id="pageEnd" class="text-slate-800 font-bold">10</strong> dari total <strong id="totalRecordsBottom" class="text-slate-800 font-bold">0</strong> mahasiswa
             </div>
-            <div class="pagination-controls-bottom flex items-center gap-1" id="paginationNav">
+            <div class="pagination-controls-bottom flex items-center justify-center sm:justify-end gap-1 max-w-full overflow-x-auto scrollbar-none py-1" id="paginationNav" style="-webkit-overflow-scrolling: touch;">
                 <!-- Pagination buttons rendered via JS -->
             </div>
         </div>
@@ -1536,11 +1536,11 @@
             </div>
 
             <!-- Table Bottom Pagination Bar -->
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 text-xs text-slate-500 font-medium">
-                <div>
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 text-xs text-slate-500 font-medium w-full overflow-hidden">
+                <div class="text-center sm:text-left">
                     Menampilkan data <strong id="p2PageStart" class="text-slate-800 font-bold">1</strong> - <strong id="p2PageEnd" class="text-slate-800 font-bold">10</strong> dari total <strong id="p2TotalRecords" class="text-slate-800 font-bold">0</strong> mahasiswa
                 </div>
-                <div class="pagination-controls-bottom flex items-center gap-1" id="p2PaginationNav">
+                <div class="pagination-controls-bottom flex items-center justify-center sm:justify-end gap-1 max-w-full overflow-x-auto scrollbar-none py-1" id="p2PaginationNav" style="-webkit-overflow-scrolling: touch;">
                     <!-- Pagination buttons rendered via JS -->
                 </div>
             </div>
@@ -1905,11 +1905,11 @@
             </div>
 
             <!-- Table Bottom Pagination Bar -->
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 text-xs text-slate-500 font-medium">
-                <div>
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 text-xs text-slate-500 font-medium w-full overflow-hidden">
+                <div class="text-center sm:text-left">
                     Menampilkan data <strong id="sidangPageStart" class="text-slate-800 font-bold">1</strong> - <strong id="sidangPageEnd" class="text-slate-800 font-bold">10</strong> dari total <strong id="sidangTotalRecords" class="text-slate-800 font-bold"><?= $totalSidang; ?></strong> mahasiswa
                 </div>
-                <div class="pagination-controls-bottom flex items-center gap-1" id="sidangPaginationNav">
+                <div class="pagination-controls-bottom flex items-center justify-center sm:justify-end gap-1 max-w-full overflow-x-auto scrollbar-none py-1" id="sidangPaginationNav" style="-webkit-overflow-scrolling: touch;">
                     <!-- Dynamic pagination buttons -->
                 </div>
             </div>
@@ -3159,15 +3159,15 @@
     </div>
 
     <!-- MODAL RIWAYAT HISTORI PLOTTING TERPADU (PEMBIMBING & PENGUJI) -->
-    <div id="modalHistoryPlotting" class="fixed inset-0 z-[100000] bg-slate-900/80 backdrop-blur-xs hidden items-center justify-center p-2.5 sm:p-5 overflow-hidden select-none" style="touch-action: pan-y;" onclick="if(event.target===this)closeHistoryPlottingModal()">
-        <div class="bg-white rounded-2xl sm:rounded-3xl max-h-[92vh] sm:max-h-[88vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200" style="width: calc(100vw - 1.25rem); max-width: min(56rem, calc(100vw - 1.25rem)); box-sizing: border-box;">
+    <div id="modalHistoryPlotting" class="fixed inset-0 z-[100000] bg-slate-900/80 backdrop-blur-xs hidden items-center justify-center p-2.5 sm:p-5" onclick="if(event.target===this)closeHistoryPlottingModal()">
+        <div class="bg-white rounded-2xl sm:rounded-3xl max-w-4xl w-full max-h-[92vh] sm:max-h-[88vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
             <!-- Modal Header -->
-            <div class="w-full min-w-0 p-3.5 sm:p-4 px-4 sm:px-6 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-between shrink-0 border-b border-slate-700/60 overflow-hidden box-border">
-                <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 pr-2">
+            <div class="p-3.5 sm:p-4 px-4 sm:px-6 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-between shrink-0 border-b border-slate-700/60">
+                <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 pr-2">
                     <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-orange-500/20 border border-orange-500/30 text-orange-400 flex items-center justify-center font-bold text-sm sm:text-base shadow-inner shrink-0">
                         <i class="fa-solid fa-clock-rotate-left"></i>
                     </div>
-                    <div class="min-w-0 flex-1">
+                    <div class="min-w-0">
                         <h3 class="text-xs sm:text-sm font-bold text-white leading-tight truncate" id="historyModalTitle">
                             Riwayat Histori Plotting &amp; Perubahan Dosen
                         </h3>
@@ -3180,26 +3180,24 @@
             </div>
 
             <!-- Modal Category Filter & Search Bar -->
-            <div class="w-full min-w-0 p-2.5 sm:p-3.5 px-3 sm:px-6 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-2.5 sm:gap-3 shrink-0 overflow-hidden box-border">
+            <div class="p-2.5 sm:p-3.5 px-3 sm:px-6 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-2.5 sm:gap-3 shrink-0">
                 <!-- Category Tabs (Smooth touch horizontal scroll on mobile) -->
-                <div class="w-full min-w-0 overflow-hidden">
-                    <div class="w-full flex items-center bg-slate-200/80 p-1 rounded-xl gap-1 text-xs font-bold text-slate-600 overflow-x-auto scrollbar-none" style="-webkit-overflow-scrolling: touch;">
-                        <button type="button" id="tabHistoryFilterAll" onclick="switchHistoryCategoryTab('All')" class="px-3 py-1.5 rounded-lg transition cursor-pointer bg-white text-slate-900 shadow-2xs whitespace-nowrap shrink-0">
-                            Semua
-                        </button>
-                        <button type="button" id="tabHistoryFilterPembimbing" onclick="switchHistoryCategoryTab('Pembimbing')" class="px-3 py-1.5 rounded-lg transition cursor-pointer hover:text-orange-600 text-slate-600 whitespace-nowrap shrink-0">
-                            👨‍🏫 Pembimbing (TA)
-                        </button>
-                        <button type="button" id="tabHistoryFilterPenguji" onclick="switchHistoryCategoryTab('Penguji')" class="px-3 py-1.5 rounded-lg transition cursor-pointer hover:text-indigo-600 text-slate-600 whitespace-nowrap shrink-0">
-                            👔 Penguji (Preview 2)
-                        </button>
-                        <button type="button" id="tabHistoryFilterSidang" onclick="switchHistoryCategoryTab('Sidang TA')" class="px-3 py-1.5 rounded-lg transition cursor-pointer hover:text-amber-600 text-slate-600 whitespace-nowrap shrink-0">
-                            🎓 Sidang TA &amp; Nilai
-                        </button>
-                    </div>
+                <div class="flex items-center bg-slate-200/80 p-1 rounded-xl gap-1 text-xs font-bold text-slate-600 overflow-x-auto scrollbar-none max-w-full shrink-0" style="-webkit-overflow-scrolling: touch;">
+                    <button type="button" id="tabHistoryFilterAll" onclick="switchHistoryCategoryTab('All')" class="px-3 py-1.5 rounded-lg transition cursor-pointer bg-white text-slate-900 shadow-2xs whitespace-nowrap shrink-0">
+                        Semua
+                    </button>
+                    <button type="button" id="tabHistoryFilterPembimbing" onclick="switchHistoryCategoryTab('Pembimbing')" class="px-3 py-1.5 rounded-lg transition cursor-pointer hover:text-orange-600 text-slate-600 whitespace-nowrap shrink-0">
+                        👨‍🏫 Pembimbing (TA)
+                    </button>
+                    <button type="button" id="tabHistoryFilterPenguji" onclick="switchHistoryCategoryTab('Penguji')" class="px-3 py-1.5 rounded-lg transition cursor-pointer hover:text-indigo-600 text-slate-600 whitespace-nowrap shrink-0">
+                        👔 Penguji (Preview 2)
+                    </button>
+                    <button type="button" id="tabHistoryFilterSidang" onclick="switchHistoryCategoryTab('Sidang TA')" class="px-3 py-1.5 rounded-lg transition cursor-pointer hover:text-amber-600 text-slate-600 whitespace-nowrap shrink-0">
+                        🎓 Sidang TA &amp; Nilai
+                    </button>
                 </div>
 
-                <div class="w-full min-w-0 flex items-center gap-2 sm:gap-3 md:w-auto md:flex-1 md:max-w-xs shrink-0">
+                <div class="flex items-center gap-2 sm:gap-3 w-full md:w-auto md:flex-1 md:max-w-xs">
                     <div class="flex items-center gap-2 flex-1 min-w-0 bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-2xs focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-100 transition">
                         <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs shrink-0"></i>
                         <input type="text" id="inputSearchHistoryPlotting" oninput="filterHistoryPlottingRows(this.value)" placeholder="Cari nama, NIM, atau dosen..." class="w-full min-w-0 text-xs font-medium bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400">
@@ -3209,7 +3207,7 @@
             </div>
 
             <!-- Modal Body (Timeline List) -->
-            <div class="w-full min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 space-y-3 sm:space-y-3.5 custom-scrollbar bg-slate-50/50 box-border" id="historyPlottingTimelineContainer">
+            <div class="flex-1 overflow-y-auto p-3 sm:p-6 space-y-3 sm:space-y-3.5 custom-scrollbar bg-slate-50/50" id="historyPlottingTimelineContainer">
                 <div class="py-12 text-center text-slate-400">
                     <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-indigo-600"></i>
                     <p class="text-xs">Memuat data histori...</p>
@@ -3217,7 +3215,7 @@
             </div>
 
             <!-- Modal Footer -->
-            <div class="w-full min-w-0 p-3 sm:p-3.5 px-4 sm:px-6 bg-white border-t border-slate-200 flex items-center justify-end shrink-0 box-border">
+            <div class="p-3 sm:p-3.5 px-4 sm:px-6 bg-white border-t border-slate-200 flex items-center justify-end shrink-0">
                 <button type="button" onclick="closeHistoryPlottingModal()" class="w-full sm:w-auto px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer text-center">
                     Tutup
                 </button>
