@@ -244,6 +244,25 @@ $route['admin/footer/update_settings'] = 'AdminFooter/update_settings';
 $route['admin/footer/reset_defaults'] = 'AdminFooter/reset_defaults';
 $route['admin/footer-settings'] = 'AdminFooter/index';
 
+// Admin Header Routes (Wajib didefinisikan agar tidak 404 di server Linux/NAS)
+$route['adminheader'] = 'AdminHeader/index';
+$route['adminheader/update_settings'] = 'AdminHeader/update_settings';
+$route['adminheader/add_slide'] = 'AdminHeader/add_slide';
+$route['adminheader/edit_slide_ajax'] = 'AdminHeader/edit_slide_ajax';
+$route['adminheader/edit_slide/(:any)'] = 'AdminHeader/edit_slide/$1';
+$route['adminheader/delete_slide/(:any)'] = 'AdminHeader/delete_slide/$1';
+$route['adminheader/(:any)'] = 'AdminHeader/$1';
+$route['adminheader/(:any)/(:any)'] = 'AdminHeader/$1/$2';
+$route['admin/header'] = 'AdminHeader/index';
+$route['admin/header/update_settings'] = 'AdminHeader/update_settings';
+$route['admin/header/add_slide'] = 'AdminHeader/add_slide';
+$route['admin/header/edit_slide_ajax'] = 'AdminHeader/edit_slide_ajax';
+$route['admin/header/edit_slide/(:any)'] = 'AdminHeader/edit_slide/$1';
+$route['admin/header/delete_slide/(:any)'] = 'AdminHeader/delete_slide/$1';
+$route['admin/header-settings'] = 'AdminHeader/index';
+$route['admin/header/(:any)'] = 'AdminHeader/$1';
+$route['admin/header/(:any)/(:any)'] = 'AdminHeader/$1/$2';
+
 // News / Berita Routes
 $route['news/detail/(:num)'] = 'News/detail/$1';
 $route['news/newsroom'] = 'News/index';
