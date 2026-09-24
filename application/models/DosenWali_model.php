@@ -48,14 +48,15 @@ class DosenWali_model extends CI_Model {
 
         if (!$this->db->table_exists('pendaftaran_ta')) return true;
 
-        $data = array(
-            'status_judul'    => $status_judul,
-            'catatan_judul'   => $catatan_judul,
-            'updated_at'      => date('Y-m-d H:i:s')
-        );
+        $fields = $this->db->list_fields('pendaftaran_ta');
+        $data = array('updated_at' => date('Y-m-d H:i:s'));
+        if (in_array('status_judul', $fields)) $data['status_judul'] = $status_judul;
+        if (in_array('catatan_judul', $fields)) $data['catatan_judul'] = $catatan_judul;
 
-        $this->db->where('nim', $nim);
-        return $this->db->update('pendaftaran_ta', $data);
+        if (count($data) > 1) {
+            $this->db->where('nim', $nim)->update('pendaftaran_ta', $data);
+        }
+        return true;
     }
 
     public function get_mahasiswa_bimbingan($nip_dosen = null) {
@@ -428,16 +429,29 @@ class DosenWali_model extends CI_Model {
 
     // Update status approval Jenis TA oleh Dosen Wali
     public function approve_jenis_ta($nim, $status, $catatan = '') {
-        if (!$this->db->table_exists('pendaftaran_ta')) return false;
+        if ($this->db->table_exists('guidance')) {
+            $target_ids = ['usr_mhs_' . $nim, 'mhs_' . $nim, $nim];
+            $g_up = array('date_edit' => date('Y-m-d H:i:s'));
+            if ($status === 'Approved') {
+                $g_up['keterangan'] = 'Approved';
+            } elseif ($status === 'Rejected') {
+                $g_up['keterangan'] = 'Rejected';
+                if (!empty($catatan)) $g_up['komentar'] = $catatan;
+            }
+            $this->db->where_in('id_mhs', $target_ids)->update('guidance', $g_up);
+        }
 
-        $data = array(
-            'status_jenis_ta'  => $status,
-            'catatan_jenis_ta' => ($status === 'Approved') ? '' : $catatan,
-            'updated_at'       => date('Y-m-d H:i:s')
-        );
+        if (!$this->db->table_exists('pendaftaran_ta')) return true;
 
-        $this->db->where('nim', $nim);
-        return $this->db->update('pendaftaran_ta', $data);
+        $fields = $this->db->list_fields('pendaftaran_ta');
+        $data = array('updated_at' => date('Y-m-d H:i:s'));
+        if (in_array('status_jenis_ta', $fields)) $data['status_jenis_ta'] = $status;
+        if (in_array('catatan_jenis_ta', $fields)) $data['catatan_jenis_ta'] = ($status === 'Approved') ? '' : $catatan;
+
+        if (count($data) > 1) {
+            $this->db->where('nim', $nim)->update('pendaftaran_ta', $data);
+        }
+        return true;
     }
 
     // Direct Batch Approve Dosen Wali untuk beberapa NIM sekaligus
