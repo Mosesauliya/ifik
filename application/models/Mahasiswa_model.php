@@ -605,6 +605,22 @@ class Mahasiswa_model extends CI_Model {
             $this->db->where('nim', $nim)->delete('pendaftaran_berkas');
         }
 
+        // 6. pendaftaran_ta
+        if ($this->db->table_exists('pendaftaran_ta')) {
+            $pt_row = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
+            if ($pt_row) {
+                foreach (['file_ksm', 'file_transkrip', 'file_pernyataan', 'file_bebas_lab'] as $col) {
+                    if (!empty($pt_row[$col])) {
+                        $fp = FCPATH . $pt_row[$col];
+                        if (file_exists($fp) && is_file($fp)) @unlink($fp);
+                        $fp2 = $upload_path . basename($pt_row[$col]);
+                        if (file_exists($fp2) && is_file($fp2)) @unlink($fp2);
+                    }
+                }
+            }
+            $this->db->where('nim', $nim)->delete('pendaftaran_ta');
+        }
+
         return true;
     }
 

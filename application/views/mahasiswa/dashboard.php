@@ -1312,48 +1312,56 @@
     <script src="<?= base_url('assets/js/navbar_animated.js'); ?>?v=<?= time(); ?>"></script>
     <script>
     function openResetModal() {
-        Swal.fire({
-            title: 'Reset Pengajuan Tugas Akhir?',
-            html: '<p class="text-xs text-slate-600 leading-relaxed mt-1">Tindakan ini akan <strong>menghapus data pendaftaran TA</strong> yang telah Anda kirimkan. Anda harus mengisi ulang dari formulir Langkah 1.</p>',
-            icon: 'warning',
-            iconColor: '#e11d48',
-            showCancelButton: true,
-            confirmButtonColor: '#e11d48',
-            cancelButtonColor: '#94a3b8',
-            confirmButtonText: '<i class="bi bi-trash3-fill"></i> Ya, Reset Pengajuan',
-            cancelButtonText: 'Batal',
-            reverseButtons: true,
-            customClass: {
-                popup: 'rounded-2xl shadow-2xl border border-rose-100',
-                confirmButton: 'rounded-xl font-bold px-4 py-2.5 text-xs shadow-md cursor-pointer',
-                cancelButton: 'rounded-xl font-semibold px-4 py-2.5 text-xs cursor-pointer'
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Bersihkan cache draft client-side seketika
-                const userNim = "<?= htmlspecialchars($mahasiswa['nim'] ?? ($this->session->userdata('nim') ?: ($this->session->userdata('nidn_nim') ?: ''))); ?>";
-                if (userNim) {
-                    try {
-                        localStorage.removeItem('ifik_ta_active_step_' + userNim);
-                        localStorage.removeItem('ifik_ta_draft_' + userNim);
-                        localStorage.removeItem('ifik_ta_form_draft_' + userNim);
-                        sessionStorage.removeItem('ifik_ta_active_step_' + userNim);
-                        sessionStorage.removeItem('ifik_ta_draft_' + userNim);
-                        sessionStorage.removeItem('ifik_ta_form_draft_' + userNim);
-                    } catch (e) {}
-                }
+        const doReset = () => {
+            const userNim = "<?= htmlspecialchars($mahasiswa['nim'] ?? ($this->session->userdata('nim') ?: ($this->session->userdata('nidn_nim') ?: ''))); ?>";
+            if (userNim) {
                 try {
-                    localStorage.removeItem('ifik_ta_active_step');
-                    localStorage.removeItem('ifik_ta_draft');
-                    localStorage.removeItem('ifik_ta_form_draft');
-                    sessionStorage.removeItem('ifik_ta_active_step');
-                    sessionStorage.removeItem('ifik_ta_draft');
-                    sessionStorage.removeItem('ifik_ta_form_draft');
+                    localStorage.removeItem('ifik_ta_active_step_' + userNim);
+                    localStorage.removeItem('ifik_ta_draft_' + userNim);
+                    localStorage.removeItem('ifik_ta_form_draft_' + userNim);
+                    sessionStorage.removeItem('ifik_ta_active_step_' + userNim);
+                    sessionStorage.removeItem('ifik_ta_draft_' + userNim);
+                    sessionStorage.removeItem('ifik_ta_form_draft_' + userNim);
                 } catch (e) {}
-
-                window.location.href = '<?= site_url("mahasiswa/reset_pendaftaran"); ?>';
             }
-        });
+            try {
+                localStorage.removeItem('ifik_ta_active_step');
+                localStorage.removeItem('ifik_ta_draft');
+                localStorage.removeItem('ifik_ta_form_draft');
+                sessionStorage.removeItem('ifik_ta_active_step');
+                sessionStorage.removeItem('ifik_ta_draft');
+                sessionStorage.removeItem('ifik_ta_form_draft');
+            } catch (e) {}
+            window.location.href = '<?= site_url("mahasiswa/reset_pendaftaran"); ?>';
+        };
+
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Reset Pengajuan Tugas Akhir?',
+                html: '<p class="text-xs text-slate-600 leading-relaxed mt-1">Tindakan ini akan <strong>menghapus data pendaftaran TA</strong> yang telah Anda kirimkan. Anda harus mengisi ulang dari formulir Langkah 1.</p>',
+                icon: 'warning',
+                iconColor: '#e11d48',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: '<i class="bi bi-trash3-fill"></i> Ya, Reset Pengajuan',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                customClass: {
+                    popup: 'rounded-2xl shadow-2xl border border-rose-100',
+                    confirmButton: 'rounded-xl font-bold px-4 py-2.5 text-xs shadow-md cursor-pointer',
+                    cancelButton: 'rounded-xl font-semibold px-4 py-2.5 text-xs cursor-pointer'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    doReset();
+                }
+            });
+        } else {
+            if (confirm('Apakah Anda yakin ingin me-reset pengajuan Tugas Akhir? Tindakan ini akan menghapus data pendaftaran TA yang telah Anda kirimkan.')) {
+                doReset();
+            }
+        }
     }
 
     function openFileBreakdownModal() {
