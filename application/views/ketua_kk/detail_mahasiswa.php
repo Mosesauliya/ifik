@@ -252,6 +252,14 @@
                     </a>
 
                     <div class="flex items-center gap-3 w-full sm:w-auto order-1 sm:order-2">
+                        <!-- Restore Status / Reset ke Pending Button -->
+                        <?php if (($detail['status_approval_kk'] ?? 'Pending') !== 'Pending'): ?>
+                        <button type="button" id="btnRestoreKK" 
+                                class="w-full sm:w-auto px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer" title="Kembalikan status ke Pending agar dapat direview ulang">
+                            <i class="bi bi-arrow-counterclockwise"></i> Restore / Reset ke Pending
+                        </button>
+                        <?php endif; ?>
+
                         <!-- Reject Button -->
                         <button type="button" id="btnRejectKK" 
                                 class="w-full sm:w-auto px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer">
@@ -271,7 +279,8 @@
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 const btnApprove = document.getElementById('btnApproveKK');
-                const btnReject = document.getElementById('btnRejectKK');
+                const btnReject  = document.getElementById('btnRejectKK');
+                const btnRestore = document.getElementById('btnRestoreKK');
                 const inputStatus = document.getElementById('inputActionStatus');
                 const formApproval = document.getElementById('formApprovalKK');
                 const catatanInput = document.getElementById('catatan_kk');
@@ -296,6 +305,16 @@
                         }
                         if (confirm('Yakin ingin menolak pengajuan TA ini di tingkat Kelompok Keahlian?')) {
                             if (inputStatus) inputStatus.value = 'Rejected';
+                            formApproval.submit();
+                        }
+                    });
+                }
+
+                if (btnRestore && formApproval) {
+                    btnRestore.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        if (confirm('Yakin ingin mereset/mengembalikan status approval Ketua KK ke Pending? Modul bimbingan TA akan dikunci kembali sampai disetujui ulang.')) {
+                            if (inputStatus) inputStatus.value = 'Pending';
                             formApproval.submit();
                         }
                     });
