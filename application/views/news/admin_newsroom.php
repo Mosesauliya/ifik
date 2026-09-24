@@ -1014,17 +1014,28 @@
     </style>
 </head>
 <body>
+<?php 
+    $role_id = (int)$this->session->userdata('role_id');
+    if ($role_id === 5) {
+        $this->load->view('admin_layanan/sidebar');
+        $back_url = site_url('adminlayanan');
+        $back_label = '← Kembali ke Portal LAA';
+    } else {
+        $back_url = site_url('dashboard');
+        $back_label = '← Kembali ke Dashboard';
+    }
+?>
 
     <!-- TOPBAR -->
     <header class="topbar">
-        <a href="<?= base_url('index.php/news') ?>" class="topbar-logo">
+        <a href="<?= site_url('news/newsroom') ?>" class="topbar-logo">
             <span class="icon-badge">📰</span>
             IFIK
         </a>
         <div class="topbar-sep"></div>
         <span class="topbar-title">NEWSROOM</span>
-        <a href="<?= base_url('index.php/dashboard') ?>" class="topbar-back">
-            ← Kembali ke Dashboard
+        <a href="<?= $back_url ?>" class="topbar-back">
+            <?= $back_label ?>
         </a>
     </header>
 
