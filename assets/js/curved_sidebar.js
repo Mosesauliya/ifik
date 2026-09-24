@@ -26,7 +26,20 @@
             this.svgId = options.svgId || 'curvedSidebarSvg';
             
             this.isDesktop = window.innerWidth >= 1024;
-            this.isOpen = typeof options.defaultOpen !== 'undefined' ? options.defaultOpen : (this.isDesktop ? true : false);
+            let savedState = null;
+            try {
+                savedState = localStorage.getItem('ifik_curved_sidebar_state');
+            } catch (e) {}
+
+            if (typeof options.defaultOpen !== 'undefined') {
+                this.isOpen = options.defaultOpen;
+            } else if (savedState === 'closed') {
+                this.isOpen = false;
+            } else if (savedState === 'open') {
+                this.isOpen = true;
+            } else {
+                this.isOpen = this.isDesktop ? true : false;
+            }
             this.animFrameId = null;
             this.animDuration = 750; // ms
 
@@ -251,6 +264,9 @@
         open() {
             if (this.isOpen) return;
             this.isOpen = true;
+            try {
+                localStorage.setItem('ifik_curved_sidebar_state', 'open');
+            } catch (e) {}
             this.isDesktop = window.innerWidth >= 1024;
 
             // Update DOM classes
@@ -281,6 +297,9 @@
         close() {
             if (!this.isOpen) return;
             this.isOpen = false;
+            try {
+                localStorage.setItem('ifik_curved_sidebar_state', 'closed');
+            } catch (e) {}
             this.isDesktop = window.innerWidth >= 1024;
 
             // Update DOM classes

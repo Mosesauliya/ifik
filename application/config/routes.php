@@ -123,6 +123,12 @@ $route['dosen/respon-ticketing/detail/(:any)'] = 'DosenTicketing/respon_detail/$
 $route['dosen/respon-ticketing/simpan_tanggapan'] = 'DosenTicketing/respon_simpan_tanggapan';
 $route['dosen/respon-ticketing/(:any)'] = 'DosenTicketing/respon_$1';
 
+// Kaur (Kepala Urusan) Ticketing Routes
+$route['kaur/respon-ticketing'] = 'DosenTicketing/respon_index';
+$route['kaur/respon-ticketing/detail/(:any)'] = 'DosenTicketing/respon_detail/$1';
+$route['kaur/respon-ticketing/simpan_tanggapan'] = 'DosenTicketing/respon_simpan_tanggapan';
+$route['kaur/respon-ticketing/(:any)'] = 'DosenTicketing/respon_$1';
+
 // Koordinator TA Routes
 $route['koordinatorta'] = 'KoordinatorTA';
 $route['koordinatorta/detail_mahasiswa/(:any)'] = 'KoordinatorTA/detail_mahasiswa/$1';

@@ -3747,7 +3747,7 @@
                         </div>
                     </div>
                     <div class="flex-1 rounded-2xl border border-slate-300 bg-white overflow-hidden shadow-inner relative min-h-[380px]">
-                        <iframe id="laaDocIframe" src="about:blank" class="w-full h-full border-0 pointer-events-none"></iframe>
+                        <iframe id="laaDocIframe" src="about:blank" class="w-full h-full border-0 pointer-events-auto"></iframe>
                     </div>
                 </div>
 

@@ -2284,8 +2284,7 @@
 
                         <!-- Body Frame Pratinjau PDF -->
                         <div class="${isMobile ? 'h-[300px] sm:h-[340px]' : 'h-[380px] sm:h-[410px] md:h-[430px]'} bg-slate-200 relative border-b border-slate-200 overflow-hidden cursor-default select-none">
-                            <iframe id="iframePreviewBerkas_${p.nim}_${p.docKey}" src="${pdfUrl}#toolbar=0&navpanes=0" class="w-full h-full border-0 ${isFocused ? 'pointer-events-auto' : 'pointer-events-none'}" title="Pratinjau Dokumen PDF"></iframe>
-                            <div id="previewOverlay_${p.nim}_${p.docKey}" class="absolute inset-0 cursor-pointer ${isFocused ? 'hidden' : ''}" onclick="event.stopPropagation(); focusPreviewCard('${p.nim}', '${p.docKey}')" title="Klik untuk fokus dan scroll berkas ini"></div>
+                            <iframe id="iframePreviewBerkas_${p.nim}_${p.docKey}" src="${pdfUrl}#toolbar=0&navpanes=0" class="w-full h-full border-0 pointer-events-auto" title="Pratinjau Dokumen PDF"></iframe>
                         </div>
 
                         <!-- Footer Pratinjau dengan Status & Unduh -->

@@ -175,7 +175,24 @@ class Mahasiswa extends CI_Controller {
                     // 1. Simpan ke pendaftaran_berkas
                     $this->AdminLayanan_model->save_student_berkas($nim, $k, $new_file, 'Pending');
 
-                    // 2. Simpan ke pendaftaran_ta jika tabel dan kolomnya ada
+                    // 2. Simpan ke file_pendaftaran jika ada
+                    if ($this->db->table_exists('file_pendaftaran')) {
+                        $target_ids = ['usr_mhs_' . $nim, 'mhs_' . $nim, $nim];
+                        $this->db->group_start()
+                            ->where_in('id_mhs', $target_ids)
+                            ->or_like('id_mhs', $nim)
+                            ->group_end()
+                            ->like('nama', $k)
+                            ->update('file_pendaftaran', [
+                                'file'            => 'uploads/persyaratan_ta/' . $new_file,
+                                'status_doswal'   => 'Pending',
+                                'status_adminlaa' => 'Pending',
+                                'komentar'        => '',
+                                'date_edit'       => date('Y-m-d H:i:s')
+                            ]);
+                    }
+
+                    // 3. Simpan ke pendaftaran_ta jika tabel dan kolomnya ada
                     if ($this->db->table_exists('pendaftaran_ta')) {
                         if ($this->db->field_exists($f, 'pendaftaran_ta')) {
                             $updated_data[$f] = $new_file;
@@ -202,15 +219,33 @@ class Mahasiswa extends CI_Controller {
         }
 
         if ($this->input->post('judul_1')) {
-            $updated_data['judul_1'] = $this->input->post('judul_1');
-            $updated_data['status_judul'] = 'Pending';
-            $updated_data['catatan_judul'] = '';
+            $new_j = trim($this->input->post('judul_1'));
+            if (!empty($new_j)) {
+                $updated_data['judul_1'] = $new_j;
+                $updated_data['status_judul'] = 'Pending';
+                $updated_data['catatan_judul'] = '';
+                if ($this->db->table_exists('guidance')) {
+                    $target_ids = ['usr_mhs_' . $nim, 'mhs_' . $nim, $nim];
+                    $this->db->where_in('id_mhs', $target_ids)->update('guidance', [
+                        'judul_1'    => $new_j,
+                        'keterangan' => 'Pending',
+                        'komentar'   => ''
+                    ]);
+                }
+            }
         }
 
         if ($this->input->post('jenis_ta')) {
-            $updated_data['jenis_ta'] = $this->input->post('jenis_ta');
+            $new_jen = trim($this->input->post('jenis_ta'));
+            $updated_data['jenis_ta'] = $new_jen;
             $updated_data['status_jenis_ta'] = 'Pending';
             $updated_data['catatan_jenis_ta'] = '';
+            if ($this->db->table_exists('guidance')) {
+                $target_ids = ['usr_mhs_' . $nim, 'mhs_' . $nim, $nim];
+                $this->db->where_in('id_mhs', $target_ids)->update('guidance', [
+                    'jenis_TA' => $new_jen
+                ]);
+            }
         }
 
         if (!empty($updated_data) || $uploaded_count > 0) {
@@ -287,6 +322,12 @@ class Mahasiswa extends CI_Controller {
 
             if (!$has_any_rejected_left) {
                 $updated_data['catatan_wali'] = '';
+                if ($this->db->table_exists('guidance')) {
+                    $target_ids = ['usr_mhs_' . $nim, 'mhs_' . $nim, $nim];
+                    $this->db->where_in('id_mhs', $target_ids)->update('guidance', [
+                        'komentar' => ''
+                    ]);
+                }
             }
 
             if ($this->db->table_exists('pendaftaran_ta')) {
@@ -1335,6 +1376,40 @@ class Mahasiswa extends CI_Controller {
             }
         }
 
+        // Sinkronkan juga ke tabel guidance (legacy / active db)
+        if ($this->db->table_exists('guidance')) {
+            $existing_g = $this->db->group_start()
+                ->where('id_mhs', 'usr_mhs_' . $nim)
+                ->or_where('id_mhs', $nim)
+            ->group_end()->get('guidance')->row_array();
+
+            $g_fields = $this->db->list_fields('guidance');
+            $g_data = array();
+
+            if (!empty($judul_1) && in_array('judul_1', $g_fields)) $g_data['judul_1'] = $judul_1;
+            if (!empty($judul_2) && in_array('judul_2', $g_fields)) $g_data['judul_2'] = $judul_2;
+            if (!empty($judul_3) && in_array('judul_3', $g_fields)) $g_data['judul_3'] = $judul_3;
+            if (!empty($judul_en) && in_array('judul_en', $g_fields)) $g_data['judul_en'] = $judul_en;
+            if (!empty($jenis_ta) && in_array('jenis_TA', $g_fields)) $g_data['jenis_TA'] = $jenis_ta;
+            if (!empty($konsentrasi_dkv) && in_array('peminatan', $g_fields)) $g_data['peminatan'] = $konsentrasi_dkv;
+            if (in_array('date_edit', $g_fields)) $g_data['date_edit'] = date('Y-m-d H:i:s');
+
+            if (!empty($g_data)) {
+                if ($existing_g) {
+                    $this->db->where('id', $existing_g['id'])->update('guidance', $g_data);
+                    $db_saved = true;
+                } else if (!empty($jenis_ta) || !empty($judul_1)) {
+                    if (in_array('id', $g_fields)) $g_data['id'] = 'gdn_' . $nim;
+                    if (in_array('id_mhs', $g_fields)) $g_data['id_mhs'] = 'usr_mhs_' . $nim;
+                    if (in_array('date', $g_fields)) $g_data['date'] = date('Y-m-d H:i:s');
+                    if (in_array('tahun', $g_fields)) $g_data['tahun'] = date('Y');
+                    if (in_array('keterangan', $g_fields)) $g_data['keterangan'] = 'Pending';
+                    $this->db->insert('guidance', $g_data);
+                    $db_saved = true;
+                }
+            }
+        }
+
         $this->output
             ->set_content_type('application/json')
             ->set_output(json_encode([
@@ -2052,11 +2127,11 @@ class Mahasiswa extends CI_Controller {
                     'desc'  => 'Fasilitas Lab, Hardware, Software, Jaringan & Sarpras',
                     'icon'  => 'bi-pc-display-horizontal'
                 ],
-                'Dosen Kaur' => [
-                    'id'    => 'Dosen Kaur',
-                    'title' => 'Dosen Kaur',
-                    'desc'  => 'Kepala Urusan, Dosen Wali, Bimbingan & Perkuliahan',
-                    'icon'  => 'bi-person-video3'
+                'Kaur'       => [
+                    'id'    => 'Kaur',
+                    'title' => 'Kaur (Kepala Urusan)',
+                    'desc'  => 'Kepala Urusan, Fasilitas Akademik, Perkuliahan & Pengesahan',
+                    'icon'  => 'bi-person-badge'
                 ],
                 'Admin LAA'  => [
                     'id'    => 'Admin LAA',
@@ -2306,6 +2381,11 @@ class Mahasiswa extends CI_Controller {
                     'lampiran_url'    => $ticket->lampiran ? base_url('uploads/ticketing/' . $ticket->lampiran) : null,
                     'status'          => $ticket->status,
                     'tanggapan'       => $ticket->tanggapan ? nl2br(htmlspecialchars($ticket->tanggapan)) : null,
+                    'catatan_proses'  => !empty($ticket->catatan_proses) ? nl2br(htmlspecialchars($ticket->catatan_proses)) : null,
+                    'catatan_selesai' => !empty($ticket->catatan_selesai) ? nl2br(htmlspecialchars($ticket->catatan_selesai)) : null,
+                    'catatan_tutup'   => !empty($ticket->catatan_tutup) ? nl2br(htmlspecialchars($ticket->catatan_tutup)) : null,
+                    'tgl_diproses'    => !empty($ticket->tgl_diproses) ? date('d M Y H:i', strtotime($ticket->tgl_diproses)) : null,
+                    'tgl_closed'      => !empty($ticket->tgl_closed) ? date('d M Y H:i', strtotime($ticket->tgl_closed)) : null,
                     'tgl_tanggapan'   => $ticket->tgl_tanggapan ? date('d M Y H:i', strtotime($ticket->tgl_tanggapan)) : null,
                     'created_at'      => date('d M Y H:i', strtotime($ticket->created_at)),
                     'updated_at'      => date('d M Y H:i', strtotime($ticket->updated_at))

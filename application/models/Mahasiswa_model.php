@@ -105,8 +105,12 @@ class Mahasiswa_model extends CI_Model {
             if (in_array('judul_2', $g_fields)) $g_data['judul_2'] = $data_ta['judul_2'] ?? '';
             if (in_array('judul_3', $g_fields)) $g_data['judul_3'] = $data_ta['judul_3'] ?? '';
             if (in_array('judul_en', $g_fields)) $g_data['judul_en'] = $data_ta['judul_en'] ?? '';
-            if (in_array('jenis_TA', $g_fields)) $g_data['jenis_TA'] = $data_ta['jenis_ta'] ?? 'Pengkaryaan';
-            if (in_array('peminatan', $g_fields)) $g_data['peminatan'] = $data_ta['konsentrasi_dkv'] ?? 'Desain Komunikasi Visual';
+            if (in_array('jenis_TA', $g_fields)) {
+                $g_data['jenis_TA'] = !empty(trim($data_ta['jenis_ta'] ?? '')) ? trim($data_ta['jenis_ta']) : 'Pengkaryaan';
+            }
+            if (in_array('peminatan', $g_fields)) {
+                $g_data['peminatan'] = !empty(trim($data_ta['konsentrasi_dkv'] ?? '')) ? trim($data_ta['konsentrasi_dkv']) : 'Desain Komunikasi Visual';
+            }
             if (in_array('tahun', $g_fields)) $g_data['tahun'] = date('Y');
             if (in_array('keterangan', $g_fields)) $g_data['keterangan'] = $data_ta['status_approval_wali'] ?? 'Pending';
             if (in_array('date', $g_fields) && empty($existing_g)) $g_data['date'] = date('Y-m-d H:i:s');
@@ -168,12 +172,20 @@ class Mahasiswa_model extends CI_Model {
         return true;
     }
 
-    // Get Status Pendaftaran & Approval Chain langsung dari guidance & file_pendaftaran
+    // Get Status Pendaftaran & Approval Chain langsung dari guidance, file_pendaftaran, pendaftaran_berkas & pendaftaran_ta
     public function get_status_pendaftaran($nim) {
+        $pt_data = array();
+        if ($this->db->table_exists('pendaftaran_ta')) {
+            $pt_row = $this->db->get_where('pendaftaran_ta', array('nim' => $nim))->row_array();
+            if ($pt_row) {
+                $pt_data = $pt_row;
+            }
+        }
+
         $user = null;
         if ($this->db->table_exists('user')) {
-            $user = $this->db->get_where('user', ['nim' => $nim])->row_array() 
-                 ?: $this->db->get_where('user', ['username' => $nim])->row_array();
+            $user = $this->db->get_where('user', array('nim' => $nim))->row_array() 
+                 ?: $this->db->get_where('user', array('username' => $nim))->row_array();
         }
         $userId = $user ? $user['id'] : ('usr_mhs_' . $nim);
 
@@ -182,7 +194,7 @@ class Mahasiswa_model extends CI_Model {
             $guidance = $this->db->group_start()
                 ->where('id_mhs', $userId)
                 ->or_where('id_mhs', $nim)
-            ->group_end()->get('guidance')->row_array();
+            ->group_end()->order_by('date', 'DESC')->get('guidance')->row_array();
         }
 
         $files = array();
@@ -197,49 +209,176 @@ class Mahasiswa_model extends CI_Model {
             }
         }
 
-        // Tentukan status approval dari file_pendaftaran & guidance
-        $status_doswal = 'Pending';
-        $status_laa = 'Pending';
-        $catatan_wali = '';
-        $catatan_laa = '';
-
-        foreach ($files as $fKey => $fRow) {
-            if (!empty($fRow['status_doswal']) && $fRow['status_doswal'] === 'Rejected') {
-                $status_doswal = 'Rejected';
-                if (!empty($fRow['komentar'])) $catatan_wali .= $fRow['komentar'] . ' ';
-            }
-            if (!empty($fRow['status_adminlaa']) && $fRow['status_adminlaa'] === 'Rejected') {
-                $status_laa = 'Rejected';
-                if (!empty($fRow['komentar'])) $catatan_laa .= $fRow['komentar'] . ' ';
+        $berkas_rows = array();
+        if ($this->db->table_exists('pendaftaran_berkas')) {
+            $pb_rows = $this->db->get_where('pendaftaran_berkas', array('nim' => $nim))->result_array();
+            foreach ($pb_rows as $pbr) {
+                $berkas_rows[$pbr['kode_berkas']] = $pbr;
             }
         }
 
-        $is_submitted = ($guidance !== null || !empty($files)) ? 1 : 0;
-        $current_stage = ($status_doswal !== 'Approved') ? 'Dosen Wali' : (($status_laa !== 'Approved') ? 'Admin Layanan' : 'Koordinator TA');
+        $active_keys = array('ksm', 'transkrip', 'pernyataan', 'bebas_lab');
+        if ($this->db->table_exists('syarat_berkas_ta')) {
+            $sb_rows = $this->db->get_where('syarat_berkas_ta', array('is_active' => 1))->result_array();
+            if (!empty($sb_rows)) {
+                $active_keys = array_column($sb_rows, 'kode_berkas');
+            }
+        }
 
-        return array(
+        $is_submitted = ($guidance !== null || !empty($files) || !empty($berkas_rows) || !empty($pt_data['judul_1'])) ? 1 : 0;
+
+        // 1. Status Judul & Catatan Judul
+        $status_judul = $pt_data['status_judul'] ?? null;
+        $catatan_judul = $pt_data['catatan_judul'] ?? null;
+
+        if (empty($status_judul) && $guidance) {
+            $g_ket = $guidance['keterangan'] ?? 'Pending';
+            if ($g_ket === 'Approved' || $g_ket === 'Rejected') {
+                $status_judul = $g_ket;
+                if (empty($catatan_judul)) $catatan_judul = $guidance['komentar'] ?? '';
+            } else {
+                $status_judul = 'Pending';
+            }
+        }
+        if (empty($status_judul)) $status_judul = 'Pending';
+        if ($catatan_judul === null) $catatan_judul = $guidance['komentar'] ?? '';
+
+        // 2. Status Jenis TA & Catatan Jenis TA
+        $status_jenis_ta = $pt_data['status_jenis_ta'] ?? null;
+        $catatan_jenis_ta = $pt_data['catatan_jenis_ta'] ?? null;
+        if (empty($status_jenis_ta)) {
+            if ($status_judul === 'Approved') {
+                $status_jenis_ta = 'Approved';
+            } else {
+                $status_jenis_ta = 'Pending';
+            }
+        }
+        if ($catatan_jenis_ta === null) $catatan_jenis_ta = '';
+
+        // 3. Per-File Status & Catatan
+        $files_result = array();
+        $has_any_file_rej_wali = false;
+        $has_any_file_rej_admin = false;
+        $all_files_app_wali = true;
+        $file_count = 0;
+
+        $catatan_wali = !empty($pt_data['catatan_wali']) ? $pt_data['catatan_wali'] : ($guidance['komentar'] ?? '');
+        $catatan_admin = !empty($pt_data['catatan_admin']) ? $pt_data['catatan_admin'] : '';
+
+        foreach ($active_keys as $k) {
+            $file_count++;
+            $f_obj = $files[$k] ?? null;
+            $b_obj = $berkas_rows[$k] ?? null;
+
+            // Filename
+            $fname = '';
+            if (!empty($pt_data['file_' . $k])) {
+                $fname = $pt_data['file_' . $k];
+            } elseif ($b_obj && !empty($b_obj['file_name'])) {
+                $fname = $b_obj['file_name'];
+            } elseif ($f_obj && !empty($f_obj['file'])) {
+                $fname = basename($f_obj['file']);
+            }
+            $files_result['file_' . $k] = $fname;
+
+            // Status Dosen Wali per berkas
+            $st_dw = $pt_data['status_file_' . $k] ?? null;
+            if (empty($st_dw)) {
+                if ($f_obj && !empty($f_obj['status_doswal'])) {
+                    $st_dw = $f_obj['status_doswal'];
+                } elseif ($b_obj && !empty($b_obj['status_verifikasi'])) {
+                    $st_dw = ($b_obj['status_verifikasi'] === 'Valid') ? 'Approved' : (($b_obj['status_verifikasi'] === 'Invalid') ? 'Rejected' : 'Pending');
+                } else {
+                    $st_dw = 'Pending';
+                }
+            }
+            $files_result['status_file_' . $k] = $st_dw;
+
+            if ($st_dw === 'Rejected') {
+                $has_any_file_rej_wali = true;
+                $all_files_app_wali = false;
+            } elseif ($st_dw !== 'Approved') {
+                $all_files_app_wali = false;
+            }
+
+            // Catatan Dosen Wali per berkas
+            $c_dw = $pt_data['catatan_file_' . $k] ?? null;
+            if (empty($c_dw)) {
+                if ($f_obj && !empty($f_obj['komentar'])) {
+                    $c_dw = $f_obj['komentar'];
+                } elseif ($b_obj && !empty($b_obj['catatan'])) {
+                    $c_dw = $b_obj['catatan'];
+                } else {
+                    $c_dw = '';
+                }
+            }
+            $files_result['catatan_file_' . $k] = $c_dw;
+
+            // Status Admin LAA per berkas
+            $st_laa = $b_obj['status_verifikasi'] ?? ($f_obj['status_adminlaa'] ?? 'Pending');
+            $files_result['status_' . $k] = $st_laa;
+            if ($st_laa === 'Invalid' || $st_laa === 'Rejected') {
+                $has_any_file_rej_admin = true;
+            }
+        }
+
+        // Tentukan Overall Status Approval Dosen Wali
+        if (!empty($pt_data['status_approval_wali'])) {
+            $status_doswal = $pt_data['status_approval_wali'];
+        } else {
+            if ($has_any_file_rej_wali || $status_judul === 'Rejected' || $status_jenis_ta === 'Rejected') {
+                $status_doswal = 'Rejected';
+            } elseif ($all_files_app_wali && $file_count > 0 && $status_judul === 'Approved') {
+                $status_doswal = 'Approved';
+            } else {
+                $status_doswal = 'Pending';
+            }
+        }
+
+        // Tentukan Overall Status Admin LAA
+        if (!empty($pt_data['status_approval_admin'])) {
+            $status_laa = $pt_data['status_approval_admin'];
+        } else {
+            $status_laa = $has_any_file_rej_admin ? 'Rejected' : 'Pending';
+        }
+
+        $current_stage = $pt_data['current_stage'] ?? (
+            ($status_doswal !== 'Approved') 
+                ? ($status_doswal === 'Rejected' ? 'Dosen Wali (Revisi)' : 'Dosen Wali') 
+                : (($status_laa !== 'Approved') ? 'Admin Layanan' : 'Koordinator TA')
+        );
+
+        $res = array_merge(array(
             'nim'                   => $nim,
             'is_submitted'          => $is_submitted,
-            'jenis_ta'              => $guidance['jenis_TA'] ?? ($guidance['jenis_ta'] ?? ''),
-            'judul_1'               => $guidance['judul_1'] ?? '',
-            'judul_2'               => $guidance['judul_2'] ?? '',
-            'judul_3'               => $guidance['judul_3'] ?? '',
-            'judul_en'              => $guidance['judul_en'] ?? '',
-            'konsentrasi_dkv'       => $guidance['peminatan'] ?? '',
-            'file_ksm'              => basename($files['ksm']['file'] ?? ''),
-            'file_transkrip'        => basename($files['transkrip']['file'] ?? ''),
-            'file_pernyataan'       => basename($files['pernyataan']['file'] ?? ''),
-            'file_bebas_lab'        => basename($files['bebas_lab']['file'] ?? ''),
+            'jenis_ta'              => !empty(trim($pt_data['jenis_ta'] ?? '')) 
+                                        ? trim($pt_data['jenis_ta']) 
+                                        : (!empty(trim($guidance['jenis_TA'] ?? '')) 
+                                            ? trim($guidance['jenis_TA']) 
+                                            : (!empty(trim($guidance['jenis_ta'] ?? '')) ? trim($guidance['jenis_ta']) : 'Pengkaryaan')),
+            'judul_1'               => $pt_data['judul_1'] ?? ($guidance['judul_1'] ?? ''),
+            'judul_2'               => $pt_data['judul_2'] ?? ($guidance['judul_2'] ?? ''),
+            'judul_3'               => $pt_data['judul_3'] ?? ($guidance['judul_3'] ?? ''),
+            'judul_en'              => $pt_data['judul_en'] ?? ($guidance['judul_en'] ?? ''),
+            'konsentrasi_dkv'       => $pt_data['konsentrasi_dkv'] ?? ($guidance['peminatan'] ?? 'Informatika'),
             'status_approval_wali'  => $status_doswal,
             'status_approval_admin' => $status_laa,
-            'status_approval_koor'  => $guidance['keterangan'] ?? 'Pending',
-            'status_approval_kk'    => 'Pending',
+            'status_approval_koor'  => $pt_data['status_approval_koor'] ?? 'Pending',
+            'status_approval_kk'    => $pt_data['status_approval_kk'] ?? 'Pending',
+            'status_judul'          => $status_judul,
+            'catatan_judul'         => $catatan_judul,
+            'status_jenis_ta'       => $status_jenis_ta,
+            'catatan_jenis_ta'      => $catatan_jenis_ta,
             'current_stage'         => $current_stage,
-            'catatan_wali'          => trim($catatan_wali ?: ($guidance['komentar'] ?? '')),
-            'catatan_admin'         => trim($catatan_laa),
-            'catatan_koor'          => $guidance['komentar'] ?? '',
-            'created_at'            => $guidance['date'] ?? date('Y-m-d H:i:s')
-        );
+            'catatan_wali'          => trim($catatan_wali),
+            'catatan_admin'         => trim($catatan_admin),
+            'catatan_koor'          => $pt_data['catatan_koor'] ?? '',
+            'berkas_kurang'         => $pt_data['berkas_kurang'] ?? null,
+            'created_at'            => $pt_data['created_at'] ?? ($guidance['date'] ?? null),
+            'updated_at'            => $pt_data['updated_at'] ?? ($guidance['date'] ?? null)
+        ), $files_result);
+
+        return $res;
     }
 
     // Update Ganti Password Mahasiswa
