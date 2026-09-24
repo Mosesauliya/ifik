@@ -516,7 +516,115 @@ class AdminLayanan_model extends CI_Model {
         }
         
         $query = $this->db->get();
-        return $query ? $query->result_array() : array();
+        $res = $query ? $query->result_array() : array();
+        $this->_resolve_student_names($res);
+        return $res;
+    }
+
+    /**
+     * Helper: Resolve student names & details from user/users, guidance, or file_pendaftaran tables
+     * when student names are missing or set to fallback "Mahasiswa" in table `mahasiswa`.
+     */
+    private function _resolve_student_names(&$list) {
+        if (empty($list)) return;
+
+        $user_tbl  = $this->db->table_exists('user') ? 'user' : ($this->db->table_exists('users') ? 'users' : null);
+        $has_guid  = $this->db->table_exists('guidance');
+        $has_fp    = $this->db->table_exists('file_pendaftaran');
+
+        $nims = array();
+        foreach ($list as $r) {
+            if (!empty($r['nim'])) $nims[] = $r['nim'];
+        }
+        $nims = array_unique($nims);
+        if (empty($nims)) return;
+
+        $target_ids = array();
+        foreach ($nims as $n) {
+            $target_ids[] = $n;
+            $target_ids[] = 'usr_mhs_' . $n;
+        }
+
+        // 1. Fetch from user / users table
+        $user_map = array();
+        if ($user_tbl) {
+            $name_col = $this->db->field_exists('name', $user_tbl) ? 'name' : ($this->db->field_exists('nama', $user_tbl) ? 'nama' : ($this->db->field_exists('nama_depan', $user_tbl) ? 'nama_depan' : null));
+            $nim_col  = $this->db->field_exists('nim', $user_tbl) ? 'nim' : ($this->db->field_exists('username', $user_tbl) ? 'username' : 'id');
+
+            if ($name_col) {
+                $u_rows = $this->db->select("id, {$nim_col}, {$name_col}")
+                    ->group_start()
+                        ->where_in($nim_col, $nims)
+                        ->or_where_in('id', $target_ids)
+                    ->group_end()
+                    ->get($user_tbl)
+                    ->result_array();
+                foreach ($u_rows as $ur) {
+                    $c_nim = !empty($ur[$nim_col]) ? $ur[$nim_col] : preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', $ur['id']);
+                    if (!empty($c_nim) && !empty($ur[$name_col])) {
+                        $user_map[$c_nim] = $ur[$name_col];
+                        $user_map[$ur['id']] = $ur[$name_col];
+                        $user_map['usr_mhs_' . $c_nim] = $ur[$name_col];
+                    }
+                }
+            }
+        }
+
+        // 2. Fetch from guidance table
+        $guidance_map = array();
+        if ($has_guid && $this->db->field_exists('nama', 'guidance')) {
+            $g_rows = $this->db->select('id_mhs, nama')
+                ->where_in('id_mhs', $target_ids)
+                ->get('guidance')
+                ->result_array();
+            foreach ($g_rows as $gr) {
+                $c_nim = preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', $gr['id_mhs']);
+                if (!empty($gr['nama'])) {
+                    $guidance_map[$c_nim] = $gr['nama'];
+                }
+            }
+        }
+
+        // 3. Fetch from file_pendaftaran table
+        $fp_map = array();
+        if ($has_fp && $this->db->field_exists('nama', 'file_pendaftaran')) {
+            $fp_rows = $this->db->select('id_mhs, nama')
+                ->where_in('id_mhs', $target_ids)
+                ->get('file_pendaftaran')
+                ->result_array();
+            foreach ($fp_rows as $fpr) {
+                $c_nim = preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', $fpr['id_mhs']);
+                if (!empty($fpr['nama']) && $fpr['nama'] !== 'Mahasiswa') {
+                    $fp_map[$c_nim] = $fpr['nama'];
+                }
+            }
+        }
+
+        // Apply resolved names
+        foreach ($list as &$r) {
+            $nim = $r['nim'] ?? '';
+            $nd  = $r['nama_depan'] ?? '';
+            $nb  = $r['nama_belakang'] ?? '';
+
+            $full = trim($nd . ' ' . $nb);
+            if (empty($full) || $full === 'Mahasiswa' || $nd === 'Mahasiswa') {
+                $resolved_name = null;
+                if (!empty($user_map[$nim])) {
+                    $resolved_name = $user_map[$nim];
+                } elseif (!empty($guidance_map[$nim])) {
+                    $resolved_name = $guidance_map[$nim];
+                } elseif (!empty($fp_map[$nim])) {
+                    $resolved_name = $fp_map[$nim];
+                }
+
+                if ($resolved_name) {
+                    $parts = explode(' ', trim($resolved_name));
+                    $r['nama_depan'] = array_shift($parts);
+                    $r['nama_belakang'] = implode(' ', $parts);
+                }
+            }
+        }
+        unset($r);
     }
 
     /**
@@ -604,7 +712,13 @@ class AdminLayanan_model extends CI_Model {
         $this->db->where('p.nim', $nim);
         
         $query = $this->db->get();
-        return $query ? $query->row_array() : null;
+        $row = $query ? $query->row_array() : null;
+        if ($row) {
+            $arr = array($row);
+            $this->_resolve_student_names($arr);
+            $row = $arr[0];
+        }
+        return $row;
     }
 
     /**
