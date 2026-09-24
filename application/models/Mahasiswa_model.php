@@ -501,16 +501,16 @@ class Mahasiswa_model extends CI_Model {
         $res = array_merge(array(
             'nim'                   => $nim,
             'is_submitted'          => $is_submitted,
-            'jenis_ta'              => !empty(trim($pt_data['jenis_ta'] ?? '')) 
-                                        ? trim($pt_data['jenis_ta']) 
-                                        : (!empty(trim($guidance['jenis_TA'] ?? '')) 
-                                            ? trim($guidance['jenis_TA']) 
-                                            : (!empty(trim($guidance['jenis_ta'] ?? '')) ? trim($guidance['jenis_ta']) : '')),
-            'judul_1'               => $pt_data['judul_1'] ?? ($guidance['judul_1'] ?? ''),
-            'judul_2'               => $pt_data['judul_2'] ?? ($guidance['judul_2'] ?? ''),
-            'judul_3'               => $pt_data['judul_3'] ?? ($guidance['judul_3'] ?? ''),
-            'judul_en'              => $pt_data['judul_en'] ?? ($guidance['judul_en'] ?? ''),
-            'konsentrasi_dkv'       => $pt_data['konsentrasi_dkv'] ?? ($guidance['peminatan'] ?? 'Informatika'),
+            'jenis_ta'              => !empty(trim($guidance['jenis_TA'] ?? '')) 
+                                        ? trim($guidance['jenis_TA']) 
+                                        : (!empty(trim($guidance['jenis_ta'] ?? '')) 
+                                            ? trim($guidance['jenis_ta']) 
+                                            : (!empty(trim($pt_data['jenis_ta'] ?? '')) ? trim($pt_data['jenis_ta']) : '')),
+            'judul_1'               => $guidance['judul_1'] ?? ($pt_data['judul_1'] ?? ''),
+            'judul_2'               => $guidance['judul_2'] ?? ($pt_data['judul_2'] ?? ''),
+            'judul_3'               => $guidance['judul_3'] ?? ($pt_data['judul_3'] ?? ''),
+            'judul_en'              => $guidance['judul_en'] ?? ($pt_data['judul_en'] ?? ''),
+            'konsentrasi_dkv'       => $guidance['peminatan'] ?? ($pt_data['konsentrasi_dkv'] ?? 'Informatika'),
             'status_approval_wali'  => $status_doswal,
             'status_approval_admin' => $status_laa,
             'status_approval_koor'  => $pt_data['status_approval_koor'] ?? 'Pending',
