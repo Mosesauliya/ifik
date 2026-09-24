@@ -307,15 +307,33 @@ class AdminLayanan_model extends CI_Model {
         if ($this->db->table_exists('file_pendaftaran')) {
             $target_ids = array_unique(['usr_mhs_' . $nim, 'mhs_' . $nim, $nim]);
             $fp_status = ($enum_status === 'Valid') ? 'Approved' : (($enum_status === 'Invalid') ? 'Rejected' : 'Pending');
-            $fp_update = array('status_doswal' => $fp_status);
-            if (!empty($catatan)) {
+            $fp_update = array();
+            if ($this->db->field_exists('status_doswal', 'file_pendaftaran')) {
+                $fp_update['status_doswal'] = $fp_status;
+            }
+            if ($this->db->field_exists('status_admin', 'file_pendaftaran')) {
+                $fp_update['status_admin'] = $fp_status;
+            }
+            if ($this->db->field_exists('status_laa', 'file_pendaftaran')) {
+                $fp_update['status_laa'] = $fp_status;
+            }
+            if ($this->db->field_exists('status_admin_laa', 'file_pendaftaran')) {
+                $fp_update['status_admin_laa'] = $fp_status;
+            }
+            if ($catatan !== null && $this->db->field_exists('komentar', 'file_pendaftaran')) {
                 $fp_update['komentar'] = $catatan;
             }
-            $this->db->where_in('id_mhs', $target_ids)
-                     ->group_start()
-                        ->like('nama', $kode_berkas)
-                     ->group_end()
-                     ->update('file_pendaftaran', $fp_update);
+            if ($this->db->field_exists('date_edit', 'file_pendaftaran')) {
+                $fp_update['date_edit'] = date('Y-m-d H:i:s');
+            }
+
+            if (!empty($fp_update)) {
+                $this->db->where_in('id_mhs', $target_ids)
+                         ->group_start()
+                            ->like('nama', $kode_berkas)
+                         ->group_end()
+                         ->update('file_pendaftaran', $fp_update);
+            }
         }
 
         // Fail-safe sync: If a berkas is uploaded/set to Pending, ensure pendaftaran_ta's status_approval_admin resets to Pending
