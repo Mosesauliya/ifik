@@ -156,22 +156,27 @@ class LaboranTicketing extends CI_Controller {
             $response = [
                 'status' => true,
                 'data'   => [
-                    'id'             => $ticket->id,
-                    'kode_tiket'     => $ticket->kode_tiket,
-                    'nama_dosen'     => $ticket->nama_dosen,
-                    'nidn'           => $ticket->nidn ?: '-',
-                    'unit_tujuan'    => $ticket->unit_tujuan,
-                    'kategori'       => $ticket->kategori,
-                    'prioritas'      => $ticket->prioritas,
-                    'subjek'         => $ticket->subjek,
-                    'deskripsi'      => $ticket->deskripsi,
-                    'custom_fields'  => !empty($ticket->custom_fields_data) ? json_decode($ticket->custom_fields_data, true) : [],
-                    'lampiran'       => $ticket->lampiran ? base_url('uploads/ticketing/' . $ticket->lampiran) : null,
-                    'lampiran_name'  => $ticket->lampiran,
-                    'status'         => $ticket->status,
-                    'tanggapan'      => $ticket->tanggapan,
-                    'tgl_tanggapan'  => $ticket->tgl_tanggapan ? date('d M Y - H:i', strtotime($ticket->tgl_tanggapan)) : null,
-                    'created_at_fmt' => date('d M Y - H:i', strtotime($ticket->created_at))
+                    'id'              => $ticket->id,
+                    'kode_tiket'      => $ticket->kode_tiket,
+                    'nama_dosen'      => $ticket->nama_dosen,
+                    'nidn'            => $ticket->nidn ?: '-',
+                    'unit_tujuan'     => $ticket->unit_tujuan,
+                    'kategori'        => $ticket->kategori,
+                    'prioritas'       => $ticket->prioritas,
+                    'subjek'          => $ticket->subjek,
+                    'deskripsi'       => $ticket->deskripsi,
+                    'custom_fields'   => !empty($ticket->custom_fields_data) ? json_decode($ticket->custom_fields_data, true) : [],
+                    'lampiran'        => $ticket->lampiran ? base_url('uploads/ticketing/' . $ticket->lampiran) : null,
+                    'lampiran_name'   => $ticket->lampiran,
+                    'status'          => $ticket->status,
+                    'tanggapan'       => $ticket->tanggapan,
+                    'catatan_proses'  => $ticket->catatan_proses ?? null,
+                    'catatan_selesai' => $ticket->catatan_selesai ?? null,
+                    'catatan_tutup'   => $ticket->catatan_tutup ?? null,
+                    'tgl_diproses'    => !empty($ticket->tgl_diproses) ? date('d M Y - H:i', strtotime($ticket->tgl_diproses)) : null,
+                    'tgl_closed'      => !empty($ticket->tgl_closed) ? date('d M Y - H:i', strtotime($ticket->tgl_closed)) : null,
+                    'tgl_tanggapan'   => $ticket->tgl_tanggapan ? date('d M Y - H:i', strtotime($ticket->tgl_tanggapan)) : null,
+                    'created_at_fmt'  => date('d M Y - H:i', strtotime($ticket->created_at))
                 ]
             ];
 
@@ -200,22 +205,27 @@ class LaboranTicketing extends CI_Controller {
         $response = [
             'status' => true,
             'data'   => [
-                'id'             => $ticket->id,
-                'kode_tiket'     => $ticket->kode_tiket,
-                'nama_dosen'     => $ticket->nama_dosen,
-                'nidn'           => $ticket->nidn ?: '-',
-                'unit_tujuan'    => $ticket->unit_tujuan,
-                'kategori'       => $ticket->kategori,
-                'prioritas'      => $ticket->prioritas,
-                'subjek'         => $ticket->subjek,
-                'deskripsi'      => $ticket->deskripsi,
-                'custom_fields'  => !empty($ticket->custom_fields_data) ? json_decode($ticket->custom_fields_data, true) : [],
-                'lampiran'       => $ticket->lampiran ? base_url('uploads/ticketing/' . $ticket->lampiran) : null,
-                'lampiran_name'  => $ticket->lampiran,
-                'status'         => $ticket->status,
-                'tanggapan'      => $ticket->tanggapan,
-                'tgl_tanggapan'  => $ticket->tgl_tanggapan ? date('d M Y - H:i', strtotime($ticket->tgl_tanggapan)) : null,
-                'created_at_fmt' => date('d M Y - H:i', strtotime($ticket->created_at))
+                'id'              => $ticket->id,
+                'kode_tiket'      => $ticket->kode_tiket,
+                'nama_dosen'      => $ticket->nama_dosen,
+                'nidn'            => $ticket->nidn ?: '-',
+                'unit_tujuan'     => $ticket->unit_tujuan,
+                'kategori'        => $ticket->kategori,
+                'prioritas'       => $ticket->prioritas,
+                'subjek'          => $ticket->subjek,
+                'deskripsi'       => $ticket->deskripsi,
+                'custom_fields'   => !empty($ticket->custom_fields_data) ? json_decode($ticket->custom_fields_data, true) : [],
+                'lampiran'        => $ticket->lampiran ? base_url('uploads/ticketing/' . $ticket->lampiran) : null,
+                'lampiran_name'   => $ticket->lampiran,
+                'status'          => $ticket->status,
+                'tanggapan'       => $ticket->tanggapan,
+                'catatan_proses'  => $ticket->catatan_proses ?? null,
+                'catatan_selesai' => $ticket->catatan_selesai ?? null,
+                'catatan_tutup'   => $ticket->catatan_tutup ?? null,
+                'tgl_diproses'    => !empty($ticket->tgl_diproses) ? date('d M Y - H:i', strtotime($ticket->tgl_diproses)) : null,
+                'tgl_closed'      => !empty($ticket->tgl_closed) ? date('d M Y - H:i', strtotime($ticket->tgl_closed)) : null,
+                'tgl_tanggapan'   => $ticket->tgl_tanggapan ? date('d M Y - H:i', strtotime($ticket->tgl_tanggapan)) : null,
+                'created_at_fmt'  => date('d M Y - H:i', strtotime($ticket->created_at))
             ]
         ];
 
@@ -243,6 +253,23 @@ class LaboranTicketing extends CI_Controller {
             $ticket = $this->DosenTicketing_model->get_by_id($id);
             if (!$ticket) {
                 $this->session->set_flashdata('error', 'Tiket tidak ditemukan atau Anda tidak memiliki akses.');
+                redirect('laboran/respon-ticketing');
+                return;
+            }
+
+            // Backend Guard: Status Stepper Satu Arah (Non-reversible)
+            $statusWeight = [
+                'Menunggu' => 1,
+                'Diproses' => 2,
+                'Selesai'  => 3,
+                'Ditutup'  => 4
+            ];
+            $currentStatus = $ticket->status ?? 'Menunggu';
+            $curW = $statusWeight[$currentStatus] ?? 1;
+            $newW = $statusWeight[$status] ?? 1;
+
+            if ($newW < $curW) {
+                $this->session->set_flashdata('error', "Status tiket tidak dapat dimundurkan kembali dari {$currentStatus} ke {$status}.");
                 redirect('laboran/respon-ticketing');
                 return;
             }
@@ -355,11 +382,11 @@ class LaboranTicketing extends CI_Controller {
                     'desc'  => 'Fasilitas Lab, Hardware, Software, Jaringan & Sarpras',
                     'icon'  => 'bi-pc-display-horizontal'
                 ],
-                'Dosen Kaur' => [
-                    'id'    => 'Dosen Kaur',
-                    'title' => 'Dosen Kaur',
-                    'desc'  => 'Kepala Urusan, Dosen Wali, Bimbingan & Perkuliahan',
-                    'icon'  => 'bi-person-video3'
+                'Kaur'       => [
+                    'id'    => 'Kaur',
+                    'title' => 'Kaur (Kepala Urusan)',
+                    'desc'  => 'Kepala Urusan, Fasilitas Akademik, Perkuliahan & Pengesahan',
+                    'icon'  => 'bi-person-badge'
                 ],
                 'Admin LAA'  => [
                     'id'    => 'Admin LAA',

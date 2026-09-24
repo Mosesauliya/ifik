@@ -686,6 +686,89 @@
             color: #ea580c;
             font-weight: 700;
         }
+
+        /* =========================================================================
+           Custom Instant Interactive Hover Detail Popovers (Table Rows)
+           ========================================================================= */
+        .hover-popover-parent {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .hover-popover-card {
+            position: absolute;
+            left: 0;
+            top: calc(100% + 8px);
+            background: rgba(15, 23, 42, 0.97);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: 0 20px 40px -4px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 12px 14px;
+            z-index: 99999;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(6px) scale(0.97);
+            transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.18s;
+            pointer-events: none;
+            min-width: 260px;
+            max-width: 380px;
+            white-space: normal;
+            line-height: 1.45;
+            font-size: 0.78rem;
+            text-align: left;
+        }
+
+        /* Triangular pointer on top */
+        .hover-popover-card::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 18px;
+            width: 10px;
+            height: 10px;
+            background: rgba(15, 23, 42, 0.97);
+            border-left: 1px solid rgba(255, 255, 255, 0.14);
+            border-top: 1px solid rgba(255, 255, 255, 0.14);
+            transform: rotate(45deg);
+        }
+
+        .hover-popover-card.align-right {
+            left: auto;
+            right: 0;
+        }
+
+        .hover-popover-card.align-right::before {
+            left: auto;
+            right: 18px;
+        }
+
+        .hover-popover-parent:hover .hover-popover-card {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
+        /* If popover is near bottom of table, float upwards */
+        tr:nth-last-child(-n+3) .hover-popover-card {
+            top: auto;
+            bottom: calc(100% + 8px);
+            transform: translateY(-6px) scale(0.97);
+        }
+        tr:nth-last-child(-n+3) .hover-popover-card::before {
+            top: auto;
+            bottom: -6px;
+            border-left: none;
+            border-top: none;
+            border-right: 1px solid rgba(255, 255, 255, 0.14);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+        }
+        tr:nth-last-child(-n+3) .hover-popover-parent:hover .hover-popover-card {
+            transform: translateY(0) scale(1);
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased pb-24">
@@ -1081,7 +1164,7 @@
 
             <!-- Table View Desktop with Rotating Conic-Gradient Border -->
             <div class="table-rotating-border-wrap hidden sm:block">
-                <div class="table-rotating-border-inner overflow-hidden">
+                <div class="table-rotating-border-inner">
                     <table class="table-fixed w-full text-left text-xs border-collapse">
                         <colgroup>
                             <col style="width: 38px;">
@@ -1150,6 +1233,16 @@
         let currentPage = 1;
         let pageSize = 20;
         let extraRowCounter = 0;
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
 
         const SEARCH_CATEGORIES = [
             { key: 'query', label: '🔍 Kata Kunci (Semua)', emoji: '🔍', placeholder: 'Cari kata kunci...' },
@@ -1693,42 +1786,136 @@
                         <tr class="hover:bg-slate-50/70 transition-colors">
                             <td class="py-3 px-1 text-center text-slate-400 font-bold text-xs">${rowNo}</td>
                             <td class="py-3 px-2 min-w-0">
-                                <div class="flex items-center gap-2 min-w-0">
+                                <div class="hover-popover-parent flex items-center gap-2 min-w-0">
                                     <div class="w-7 h-7 rounded-xl bg-orange-100 text-orange-700 font-black text-xs flex items-center justify-center shrink-0">
                                         ${initial}
                                     </div>
                                     <div class="min-w-0 flex-1">
-                                        <div class="font-bold text-slate-900 text-xs truncate" title="${item.nama || item.name || ''}">${item.nama || item.name || 'Mahasiswa'}</div>
-                                        <div class="text-[10px] font-mono font-semibold text-slate-500 truncate">${item.nim || '-'} • <span class="text-orange-600 font-sans font-bold">${item.prodi || 'Informatika'}</span></div>
+                                        <div class="font-bold text-slate-900 text-xs truncate">${escapeHtml(item.nama || item.name || 'Mahasiswa')}</div>
+                                        <div class="text-[10px] font-mono font-semibold text-slate-500 truncate">${escapeHtml(item.nim || '-')} • <span class="text-orange-600 font-sans font-bold">${escapeHtml(item.prodi || 'Informatika')}</span></div>
+                                    </div>
+
+                                    <!-- Floating Detail Popover on Hover (Nama Mahasiswa) -->
+                                    <div class="hover-popover-card">
+                                        <div class="flex items-center gap-2.5 pb-2 mb-2 border-b border-white/10">
+                                            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-orange-600 to-amber-500 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-xs">
+                                                ${initial}
+                                            </div>
+                                            <div class="min-w-0 flex-1">
+                                                <div class="font-extrabold text-white text-xs leading-tight">${escapeHtml(item.nama || item.name || 'Mahasiswa')}</div>
+                                                <div class="text-[10.5px] font-mono text-orange-300 font-bold mt-0.5">${escapeHtml(item.nim || '-')}</div>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-1.5 text-[11px] text-slate-300">
+                                            <div class="flex items-center justify-between gap-2">
+                                                <span class="text-slate-400 font-medium">Program Studi:</span>
+                                                <strong class="text-white text-right">${escapeHtml(item.prodi || 'Informatika')}</strong>
+                                            </div>
+                                            ${item.peminatan ? `
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <span class="text-slate-400 font-medium">Peminatan:</span>
+                                                    <strong class="text-amber-300 text-right">${escapeHtml(item.peminatan)}</strong>
+                                                </div>
+                                            ` : ''}
+                                            ${item.dosen_wali ? `
+                                                <div class="flex items-start justify-between gap-2 pt-1 border-t border-white/10">
+                                                    <span class="text-slate-400 font-medium shrink-0">Dosen Wali:</span>
+                                                    <span class="text-slate-200 text-right font-medium">${escapeHtml(item.dosen_wali)}</span>
+                                                </div>
+                                            ` : ''}
+                                        </div>
                                     </div>
                                 </div>
                             </td>
                             <td class="py-3 px-2 min-w-0">
-                                <div class="font-semibold text-slate-800 text-xs line-clamp-2 leading-snug" title="${item.judul_1 || '-'}">
-                                    ${item.judul_1 || '<span class="text-slate-400 italic">Belum mengisi judul</span>'}
+                                <div class="hover-popover-parent">
+                                    <div class="font-semibold text-slate-800 text-xs line-clamp-2 leading-snug">
+                                        ${item.judul_1 ? escapeHtml(item.judul_1) : '<span class="text-slate-400 italic">Belum mengisi judul</span>'}
+                                    </div>
+
+                                    <!-- Floating Detail Popover on Hover (Usulan Judul) -->
+                                    ${item.judul_1 ? `
+                                        <div class="hover-popover-card" style="min-width: 320px; max-width: 460px;">
+                                            <div class="flex items-center gap-1.5 pb-1.5 mb-1.5 border-b border-white/10 text-[10px] font-extrabold uppercase tracking-wider text-orange-400">
+                                                <i class="fa-solid fa-book-bookmark text-xs"></i>
+                                                <span>Usulan Judul Tugas Akhir</span>
+                                            </div>
+                                            <p class="text-xs font-bold text-white leading-relaxed">${escapeHtml(item.judul_1)}</p>
+                                            ${(item.lab_riset || item.bidang_minat) ? `
+                                                <div class="mt-2 pt-1.5 border-t border-white/10 flex items-center gap-1.5 flex-wrap text-[10px]">
+                                                    ${item.lab_riset ? `<span class="px-2 py-0.5 rounded-md bg-white/10 text-orange-300 font-bold">🔬 Lab: ${escapeHtml(item.lab_riset)}</span>` : ''}
+                                                    ${item.bidang_minat ? `<span class="px-2 py-0.5 rounded-md bg-white/10 text-amber-200 font-medium">🏷️ ${escapeHtml(item.bidang_minat)}</span>` : ''}
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    ` : ''}
                                 </div>
                             </td>
                             <td class="py-3 px-1 text-center">
                                 ${getBerkasBadgeHTML(item)}
                             </td>
                             <td class="py-3 px-2 min-w-0">
-                                <div class="space-y-0.5 text-[10.5px]">
-                                    <div class="truncate text-slate-700" title="Pembimbing 1: ${p1 || 'Belum diplot'}">
-                                        <span class="text-[9.5px] font-bold text-orange-600">P1:</span> ${p1 ? p1 : '<span class="text-slate-400 italic">Belum diplot</span>'}
-                                    </div>
-                                    <div class="truncate text-slate-700" title="Pembimbing 2: ${p2 || 'Belum diplot'}">
-                                        <span class="text-[9.5px] font-bold text-amber-600">P2:</span> ${p2 ? p2 : '<span class="text-slate-400 italic">Belum diplot</span>'}
-                                    </div>
-                                    ${u1 ? `
-                                        <div class="truncate text-slate-700 pt-0.5 border-t border-slate-100" title="Penguji 1: ${u1}">
-                                            <span class="text-[9.5px] font-bold text-indigo-600">U1:</span> ${u1}
+                                <div class="hover-popover-parent">
+                                    <div class="space-y-0.5 text-[10.5px]">
+                                        <div class="truncate text-slate-700">
+                                            <span class="text-[9.5px] font-bold text-orange-600">P1:</span> ${p1 ? escapeHtml(p1) : '<span class="text-slate-400 italic">Belum diplot</span>'}
                                         </div>
-                                    ` : ''}
-                                    ${u2 ? `
-                                        <div class="truncate text-slate-700" title="Penguji 2: ${u2}">
-                                            <span class="text-[9.5px] font-bold text-indigo-600">U2:</span> ${u2}
+                                        <div class="truncate text-slate-700">
+                                            <span class="text-[9.5px] font-bold text-amber-600">P2:</span> ${p2 ? escapeHtml(p2) : '<span class="text-slate-400 italic">Belum diplot</span>'}
                                         </div>
-                                    ` : ''}
+                                        ${u1 ? `
+                                            <div class="truncate text-slate-700 pt-0.5 border-t border-slate-100">
+                                                <span class="text-[9.5px] font-bold text-indigo-600">U1:</span> ${escapeHtml(u1)}
+                                            </div>
+                                        ` : ''}
+                                        ${u2 ? `
+                                            <div class="truncate text-slate-700">
+                                                <span class="text-[9.5px] font-bold text-indigo-600">U2:</span> ${escapeHtml(u2)}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+
+                                    <!-- Floating Detail Popover on Hover (Pembimbing & Penguji) -->
+                                    <div class="hover-popover-card align-right" style="min-width: 290px; max-width: 380px;">
+                                        <div class="flex items-center gap-1.5 pb-2 mb-2 border-b border-white/10 text-[10px] font-extrabold uppercase tracking-wider text-orange-400">
+                                            <i class="fa-solid fa-users-gear text-xs"></i>
+                                            <span>Tim Pembimbing &amp; Penguji TA</span>
+                                        </div>
+                                        <div class="space-y-2 text-xs">
+                                            <!-- P1 -->
+                                            <div class="flex items-start gap-2">
+                                                <span class="w-5 h-5 rounded-md bg-orange-500/30 text-orange-300 font-extrabold text-[10px] flex items-center justify-center shrink-0 mt-0.5">P1</span>
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="text-[9.5px] font-bold uppercase tracking-wide text-orange-300">Pembimbing 1</div>
+                                                    <div class="font-bold text-white">${p1 ? escapeHtml(p1) : '<span class="text-slate-400 italic">Belum ditetapkan</span>'}</div>
+                                                </div>
+                                            </div>
+                                            <!-- P2 -->
+                                            <div class="flex items-start gap-2">
+                                                <span class="w-5 h-5 rounded-md bg-amber-500/30 text-amber-300 font-extrabold text-[10px] flex items-center justify-center shrink-0 mt-0.5">P2</span>
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="text-[9.5px] font-bold uppercase tracking-wide text-amber-300">Pembimbing 2</div>
+                                                    <div class="font-bold text-white">${p2 ? escapeHtml(p2) : '<span class="text-slate-400 italic">Belum ditetapkan</span>'}</div>
+                                                </div>
+                                            </div>
+                                            <!-- U1 -->
+                                            <div class="flex items-start gap-2 pt-1.5 border-t border-white/10">
+                                                <span class="w-5 h-5 rounded-md bg-indigo-500/30 text-indigo-300 font-extrabold text-[10px] flex items-center justify-center shrink-0 mt-0.5">U1</span>
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="text-[9.5px] font-bold uppercase tracking-wide text-indigo-300">Penguji 1 (Preview 2 / Sidang)</div>
+                                                    <div class="font-bold text-white">${u1 ? escapeHtml(u1) : '<span class="text-slate-400 italic">Belum diplot</span>'}</div>
+                                                </div>
+                                            </div>
+                                            <!-- U2 -->
+                                            <div class="flex items-start gap-2">
+                                                <span class="w-5 h-5 rounded-md bg-indigo-500/30 text-indigo-300 font-extrabold text-[10px] flex items-center justify-center shrink-0 mt-0.5">U2</span>
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="text-[9.5px] font-bold uppercase tracking-wide text-indigo-300">Penguji 2 (Preview 2 / Sidang)</div>
+                                                    <div class="font-bold text-white">${u2 ? escapeHtml(u2) : '<span class="text-slate-400 italic">Belum diplot</span>'}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </td>
                             <td class="py-3 px-1 text-center">
@@ -2284,8 +2471,7 @@
 
                         <!-- Body Frame Pratinjau PDF -->
                         <div class="${isMobile ? 'h-[300px] sm:h-[340px]' : 'h-[380px] sm:h-[410px] md:h-[430px]'} bg-slate-200 relative border-b border-slate-200 overflow-hidden cursor-default select-none">
-                            <iframe id="iframePreviewBerkas_${p.nim}_${p.docKey}" src="${pdfUrl}#toolbar=0&navpanes=0" class="w-full h-full border-0 ${isFocused ? 'pointer-events-auto' : 'pointer-events-none'}" title="Pratinjau Dokumen PDF"></iframe>
-                            <div id="previewOverlay_${p.nim}_${p.docKey}" class="absolute inset-0 cursor-pointer ${isFocused ? 'hidden' : ''}" onclick="event.stopPropagation(); focusPreviewCard('${p.nim}', '${p.docKey}')" title="Klik untuk fokus dan scroll berkas ini"></div>
+                            <iframe id="iframePreviewBerkas_${p.nim}_${p.docKey}" src="${pdfUrl}#toolbar=0&navpanes=0" class="w-full h-full border-0 pointer-events-auto" title="Pratinjau Dokumen PDF"></iframe>
                         </div>
 
                         <!-- Footer Pratinjau dengan Status & Unduh -->

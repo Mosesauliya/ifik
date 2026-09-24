@@ -124,11 +124,11 @@ class DosenTicketing extends CI_Controller {
                     'desc'  => 'Fasilitas Lab, Hardware, Software, Jaringan & Sarpras',
                     'icon'  => 'bi-pc-display-horizontal'
                 ],
-                'Dosen Kaur' => [
-                    'id'    => 'Dosen Kaur',
-                    'title' => 'Dosen Kaur',
-                    'desc'  => 'Kepala Urusan, Dosen Wali, Bimbingan & Perkuliahan',
-                    'icon'  => 'bi-person-video3'
+                'Kaur' => [
+                    'id'    => 'Kaur',
+                    'title' => 'Kaur (Kepala Urusan)',
+                    'desc'  => 'Kepala Urusan, Fasilitas Akademik, Perkuliahan & Pengesahan',
+                    'icon'  => 'bi-person-badge'
                 ],
                 'Admin LAA'  => [
                     'id'    => 'Admin LAA',
@@ -156,7 +156,7 @@ class DosenTicketing extends CI_Controller {
         $userId      = $this->session->userdata('user_id');
         $nidn        = $this->session->userdata('nidn_nim') ?: $this->session->userdata('nim');
         $namaLengkap = trim($this->input->post('nama_lengkap', true)) ?: ($this->session->userdata('name') ?: 'Dosen');
-        $tujuanPenerima  = trim($this->input->post('tujuan_penerima', true)) ?: 'Dosen Kaur';
+        $tujuanPenerima  = trim($this->input->post('tujuan_penerima', true)) ?: 'Kaur';
         $unitTerkait     = trim($this->input->post('unit_terkait', true)) ?: (trim($this->input->post('unit_tujuan', true)) ?: 'Layanan Umum');
         $unitTujuan      = $unitTerkait;
         $kategori        = trim($this->input->post('kategori', true));
@@ -402,7 +402,7 @@ class DosenTicketing extends CI_Controller {
                     'kode_tiket'      => $ticket->kode_tiket,
                     'nama_dosen'      => $ticket->nama_dosen,
                     'nidn'            => $ticket->nidn,
-                    'tujuan_penerima' => $ticket->tujuan_penerima ?? 'Dosen Kaur',
+                    'tujuan_penerima' => ($ticket->tujuan_penerima === 'Dosen Kaur') ? 'Kaur' : ($ticket->tujuan_penerima ?? 'Kaur'),
                     'unit_terkait'    => $ticket->unit_terkait ?? ($ticket->unit_tujuan ?: 'Layanan IFIK'),
                     'unit_tujuan'     => $ticket->unit_terkait ?? ($ticket->unit_tujuan ?: 'Layanan IFIK'),
                     'kategori'        => $ticket->kategori,
@@ -413,6 +413,11 @@ class DosenTicketing extends CI_Controller {
                     'lampiran_url'    => $ticket->lampiran ? base_url('uploads/ticketing/' . $ticket->lampiran) : null,
                     'status'          => $ticket->status,
                     'tanggapan'       => $ticket->tanggapan ? nl2br(htmlspecialchars($ticket->tanggapan)) : null,
+                    'catatan_proses'  => $ticket->catatan_proses ?? null,
+                    'catatan_selesai' => $ticket->catatan_selesai ?? null,
+                    'catatan_tutup'   => $ticket->catatan_tutup ?? null,
+                    'tgl_diproses'    => !empty($ticket->tgl_diproses) ? date('d M Y H:i', strtotime($ticket->tgl_diproses)) : null,
+                    'tgl_closed'      => !empty($ticket->tgl_closed) ? date('d M Y H:i', strtotime($ticket->tgl_closed)) : null,
                     'tgl_tanggapan'   => $ticket->tgl_tanggapan ? date('d M Y H:i', strtotime($ticket->tgl_tanggapan)) : null,
                     'created_at'      => date('d M Y H:i', strtotime($ticket->created_at)),
                     'updated_at'      => date('d M Y H:i', strtotime($ticket->updated_at))
@@ -421,39 +426,61 @@ class DosenTicketing extends CI_Controller {
     }
 
     /**
-     * Halaman Inbox Respon Ticketing khusus Role Dosen Kaur
+     * Halaman Inbox Respon Ticketing khusus Role Kaur (Kepala Urusan)
      */
     public function respon_index() {
+        $roleId = (int)$this->session->userdata('role_id');
+        // Hanya role Kaur (2) atau Superadmin (1) yang dapat merespon tiket Kaur
+        if (!in_array($roleId, [1, 2])) {
+            $this->session->set_flashdata('error', 'Akses ditolak. Halaman Respon Tiket khusus untuk Kepala Urusan (Kaur).');
+            redirect('dosen/ticketing/riwayat');
+            return;
+        }
+
         $filterStatus = $this->input->get('status', true) ?: 'all';
         $search = trim($this->input->get('q', true) ?? '');
 
-        // 1. Query Tiket Masuk Khusus Dosen Kaur dari Model
-        $tickets = $this->DosenTicketing_model->get_respon_tickets($filterStatus, $search, 'Dosen Kaur');
+        // 1. Query Tiket Masuk Khusus Kaur dari Model
+        $tickets = $this->DosenTicketing_model->get_respon_tickets($filterStatus, $search, 'Kaur');
 
-        // 2. Hitung Statistik Khusus Unit Dosen Kaur
+        // 2. Hitung Statistik Khusus Unit Kaur
         $stats = [
-            'total'    => $this->DosenTicketing_model->count_respon_tickets('all', 'Dosen Kaur'),
-            'menunggu' => $this->DosenTicketing_model->count_respon_tickets('Menunggu', 'Dosen Kaur'),
-            'diproses' => $this->DosenTicketing_model->count_respon_tickets('Diproses', 'Dosen Kaur'),
-            'selesai'  => $this->DosenTicketing_model->count_respon_tickets('Selesai', 'Dosen Kaur'),
-            'ditutup'  => $this->DosenTicketing_model->count_respon_tickets('Ditutup', 'Dosen Kaur')
+            'total'    => $this->DosenTicketing_model->count_respon_tickets('all', 'Kaur'),
+            'menunggu' => $this->DosenTicketing_model->count_respon_tickets('Menunggu', 'Kaur'),
+            'diproses' => $this->DosenTicketing_model->count_respon_tickets('Diproses', 'Kaur'),
+            'selesai'  => $this->DosenTicketing_model->count_respon_tickets('Selesai', 'Kaur'),
+            'ditutup'  => $this->DosenTicketing_model->count_respon_tickets('Ditutup', 'Kaur')
         ];
 
+        $baseResponUrl = ($roleId === 2) ? 'kaur/respon-ticketing' : 'dosen/respon-ticketing';
+
         $data = [
-            'title'        => 'Inbox Respon Tiket Dosen & Kaur — IFIK Portal',
-            'tickets'      => $tickets,
-            'stats'        => $stats,
-            'filterStatus' => $filterStatus,
-            'search'       => $search
+            'title'         => 'Inbox Respon Tiket Kepala Urusan (Kaur) — IFIK Portal',
+            'tickets'       => $tickets,
+            'stats'         => $stats,
+            'filterStatus'  => $filterStatus,
+            'search'        => $search,
+            'baseResponUrl' => $baseResponUrl
         ];
 
         $this->load->view('dosen/ticketing_respon', $data);
     }
 
     /**
-     * AJAX Endpoint: Detail Tiket untuk Modal Respon Dosen
+     * AJAX Endpoint: Detail Tiket untuk Modal Respon Kaur
      */
     public function respon_detail($id_or_kode) {
+        $roleId = (int)$this->session->userdata('role_id');
+        if (!in_array($roleId, [1, 2])) {
+            return $this->output
+                ->set_content_type('application/json')
+                ->set_status_header(403)
+                ->set_output(json_encode([
+                    'status'  => false,
+                    'message' => 'Akses ditolak. Khusus untuk Kepala Urusan (Kaur).'
+                ]));
+        }
+
         $ticket = $this->DosenTicketing_model->get_by_id($id_or_kode);
 
         if (!$ticket) {
@@ -472,21 +499,26 @@ class DosenTicketing extends CI_Controller {
         $response = [
             'status' => true,
             'data'   => [
-                'id'            => $ticket->id,
-                'kode_tiket'    => $ticket->kode_tiket,
-                'nama_dosen'    => $ticket->nama_dosen,
-                'nidn'          => $ticket->nidn ?: '-',
-                'unit_tujuan'   => $ticket->unit_tujuan,
-                'kategori'      => $ticket->kategori,
-                'prioritas'     => $ticket->prioritas,
-                'subjek'        => $ticket->subjek,
-                'deskripsi'     => $deskripsiFormatted,
-                'lampiran'      => $ticket->lampiran,
-                'lampiran_url'  => $ticket->lampiran ? base_url('uploads/ticketing/' . $ticket->lampiran) : null,
-                'status'        => $ticket->status,
-                'tanggapan'     => $ticket->tanggapan,
-                'tgl_tanggapan' => $ticket->tgl_tanggapan ? date('d M Y H:i', strtotime($ticket->tgl_tanggapan)) : null,
-                'created_at'    => date('d M Y H:i', strtotime($ticket->created_at))
+                'id'              => $ticket->id,
+                'kode_tiket'      => $ticket->kode_tiket,
+                'nama_dosen'      => $ticket->nama_dosen,
+                'nidn'            => $ticket->nidn ?: '-',
+                'unit_tujuan'     => $ticket->unit_tujuan,
+                'kategori'        => $ticket->kategori,
+                'prioritas'       => $ticket->prioritas,
+                'subjek'          => $ticket->subjek,
+                'deskripsi'       => $deskripsiFormatted,
+                'lampiran'        => $ticket->lampiran,
+                'lampiran_url'    => $ticket->lampiran ? base_url('uploads/ticketing/' . $ticket->lampiran) : null,
+                'status'          => $ticket->status,
+                'tanggapan'       => $ticket->tanggapan,
+                'catatan_proses'  => $ticket->catatan_proses ?? null,
+                'catatan_selesai' => $ticket->catatan_selesai ?? null,
+                'catatan_tutup'   => $ticket->catatan_tutup ?? null,
+                'tgl_diproses'    => !empty($ticket->tgl_diproses) ? date('d M Y H:i', strtotime($ticket->tgl_diproses)) : null,
+                'tgl_closed'      => !empty($ticket->tgl_closed) ? date('d M Y H:i', strtotime($ticket->tgl_closed)) : null,
+                'tgl_tanggapan'   => $ticket->tgl_tanggapan ? date('d M Y H:i', strtotime($ticket->tgl_tanggapan)) : null,
+                'created_at'      => date('d M Y H:i', strtotime($ticket->created_at))
             ]
         ];
 
@@ -496,16 +528,25 @@ class DosenTicketing extends CI_Controller {
     }
 
     /**
-     * Simpan Tanggapan & Perubahan Status oleh Dosen
+     * Simpan Tanggapan & Perubahan Status oleh Kaur
      */
     public function respon_simpan_tanggapan() {
+        $roleId = (int)$this->session->userdata('role_id');
+        if (!in_array($roleId, [1, 2])) {
+            $this->session->set_flashdata('error', 'Akses ditolak. Khusus untuk Kepala Urusan (Kaur).');
+            redirect('dosen/ticketing/riwayat');
+            return;
+        }
+
         $idTiket   = trim($this->input->post('id_tiket') ?: $this->input->post('ticket_id'));
         $status    = trim($this->input->post('status', true));
         $tanggapan = trim($this->input->post('tanggapan') ?? '');
 
+        $redirectUrl = ($roleId === 2) ? 'kaur/respon-ticketing' : 'dosen/respon-ticketing';
+
         if (empty($idTiket)) {
             $this->session->set_flashdata('error', 'ID Tiket tidak valid.');
-            redirect('dosen/respon-ticketing');
+            redirect($redirectUrl);
             return;
         }
 
@@ -529,7 +570,7 @@ class DosenTicketing extends CI_Controller {
 
             if ($newW < $curW) {
                 $this->session->set_flashdata('error', "Status tiket tidak dapat dimundurkan kembali dari {$currentStatus} ke {$status}.");
-                redirect('dosen/respon-ticketing');
+                redirect($redirectUrl);
                 return;
             }
         }
@@ -541,7 +582,7 @@ class DosenTicketing extends CI_Controller {
             : "Status tiket berhasil diperbarui menjadi <strong>{$status}</strong>.";
 
         $this->session->set_flashdata('success', $msg);
-        redirect('dosen/respon-ticketing');
+        redirect($redirectUrl);
     }
 }
 

@@ -49,7 +49,7 @@ $laaNavItems = [
     ],
     [
         'heading' => 'Kelola Berita',
-        'href'    => site_url('news/newsroom'),
+        'href'    => site_url('adminlayanan/berita'),
         'icon_3d' => 'assets/images/icons_3d/email_token.png'
     ],
     [
@@ -163,7 +163,7 @@ $laaNavItems = [
                             </div>
                         </div>
                     <?php else: 
-                        $isItemActive = (rtrim($item['href'], '/') === $current_full);
+                        $isItemActive = (rtrim($item['href'], '/') === $current_full || (strpos($item['href'], 'berita') !== false && (strpos($current_full, 'news') !== false || strpos($current_full, 'berita') !== false)));
                     ?>
                         <a href="<?= htmlspecialchars($item['href']); ?>" class="curved-nav-item <?= $isItemActive ? 'active' : ''; ?>">
                             <div class="curved-nav-content">

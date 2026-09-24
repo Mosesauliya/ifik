@@ -28,6 +28,14 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
 
+        html, body {
+            min-height: 100%;
+            height: auto;
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
@@ -37,19 +45,20 @@
                 radial-gradient(at 100% 100%, rgba(234, 88, 12, 0.08) 0px, transparent 50%);
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
         }
 
         .page-wrapper-for-sidebar {
             width: 100%;
             min-width: 0;
             min-height: 100vh;
+            height: auto;
             display: flex;
             justify-content: center;
             align-items: flex-start;
             padding: 40px 20px;
             transition: margin-left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
             box-sizing: border-box;
+            touch-action: pan-y;
         }
 
         @media (min-width: 1024px) {
@@ -259,7 +268,48 @@
         .select2-results__options::-webkit-scrollbar { width: 6px; }
         .select2-results__options::-webkit-scrollbar-track { background: #f8fafc; border-radius: 10px; }
         .select2-results__options::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .select2-results__options::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        /* ===== FLATPICKR BEAUTIFUL CUSTOM THEME ===== */
+        .flatpickr-calendar {
+            border-radius: 18px !important;
+            box-shadow: 0 16px 36px -6px rgba(15, 23, 42, 0.16), 0 4px 14px rgba(0,0,0,0.06) !important;
+            border: 1.5px solid #fed7aa !important;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            z-index: 99999 !important;
+            overflow: hidden !important;
+            background: #ffffff !important;
+        }
+        .flatpickr-calendar .flatpickr-day.selected,
+        .flatpickr-calendar .flatpickr-day.startRange,
+        .flatpickr-calendar .flatpickr-day.endRange {
+            background: #ea580c !important;
+            border-color: #ea580c !important;
+            color: #fff !important;
+            font-weight: 700 !important;
+        }
+        .flatpickr-calendar .flatpickr-day.inRange {
+            background: #ffedd5 !important;
+            border-color: #ffedd5 !important;
+            color: #ea580c !important;
+        }
+        .flatpickr-calendar .flatpickr-day:hover {
+            background: #fed7aa !important;
+            border-color: #fed7aa !important;
+            color: #9a3412 !important;
+        }
+        .flatpickr-months .flatpickr-month {
+            background: #fff7ed !important;
+            color: #1e293b !important;
+            border-top-left-radius: 16px !important;
+            border-top-right-radius: 16px !important;
+        }
+        .flatpickr-current-month .flatpickr-monthDropdown-months,
+        .flatpickr-current-month input.cur-year {
+            font-weight: 700 !important;
+            color: #1e293b !important;
+        }
+        .flatpickr-day.today {
+            border-color: #ea580c !important;
+        }
 
         .btn-submit-booking {
             width: 100%;
@@ -350,6 +400,19 @@
             font-weight: 800 !important;
             box-shadow: 0 2px 10px rgba(124, 58, 237, 0.45) !important;
             z-index: 20 !important;
+        }
+
+        #tpClockContainer,
+        .tp-clock-container,
+        #tpClockNumbers,
+        .tp-clock-number,
+        #tpClockHand,
+        #tpTimeSlots,
+        .tp-slot {
+            touch-action: none !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            -webkit-touch-callout: none !important;
         }
 
         .swal2-container { z-index: 99999 !important; }
@@ -511,7 +574,7 @@
                         Tanggal Peminjaman
                     </label>
                     <input type="text" class="form-control" name="tanggal_peminjaman"
-                           id="tanggalPeminjaman" placeholder="Pilih Tanggal..." required>
+                           id="tanggalPeminjaman" placeholder="Pilih Tanggal..." readonly inputmode="none" onfocus="this.blur()" style="cursor: pointer; background-color: #fff;" required>
                 </div>
 
                 <!-- Keterangan / Keperluan Peminjaman (Full Width Row 3) -->
@@ -535,13 +598,13 @@
                         <div>
                             <label style="font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 4px; display: block;">JAM MULAI</label>
                             <input type="text" class="form-control" name="jam_mulai" id="inputJamMulai"
-                                   placeholder="-- : --" readonly style="cursor: pointer; background: #fff;"
+                                   placeholder="-- : --" readonly inputmode="none" onfocus="this.blur()" style="cursor: pointer; background: #fff;"
                                    onclick="openInlinePicker('mulai')" required>
                         </div>
                         <div>
                             <label style="font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 4px; display: block;">JAM SELESAI</label>
                             <input type="text" class="form-control" name="jam_selesai" id="inputJamSelesai"
-                                   placeholder="-- : --" readonly style="cursor: pointer; background: #fff;"
+                                   placeholder="-- : --" readonly inputmode="none" onfocus="this.blur()" style="cursor: pointer; background: #fff;"
                                    onclick="openInlinePicker('selesai')" required>
                         </div>
                     </div>
@@ -562,17 +625,17 @@
                                     <span>⚡ Slot Waktu Cepat</span>
                                     <span style="font-size:0.68rem; color:#94a3b8; font-weight:500;">(drag untuk rentang)</span>
                                 </div>
-                                <div id="tpTimeSlots" style="display:grid; grid-template-columns:1fr 1fr; gap:6px; user-select:none; width:100%;">
-                                    <div class="tp-slot" data-start="08:00" data-end="09:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;">08:00 – 09:00</div>
-                                    <div class="tp-slot" data-start="09:00" data-end="10:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;">09:00 – 10:00</div>
-                                    <div class="tp-slot" data-start="10:00" data-end="11:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;">10:00 – 11:00</div>
-                                    <div class="tp-slot" data-start="11:00" data-end="12:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;">11:00 – 12:00</div>
-                                    <div class="tp-slot" data-start="12:00" data-end="13:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;">12:00 – 13:00</div>
-                                    <div class="tp-slot" data-start="13:00" data-end="14:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;">13:00 – 14:00</div>
-                                    <div class="tp-slot" data-start="14:00" data-end="15:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;">14:00 – 15:00</div>
-                                    <div class="tp-slot" data-start="15:00" data-end="16:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;">15:00 – 16:00</div>
-                                    <div class="tp-slot" data-start="16:00" data-end="17:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;">16:00 – 17:00</div>
-                                    <div class="tp-slot" data-start="17:00" data-end="18:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;">17:00 – 18:00</div>
+                                <div id="tpTimeSlots" style="display:grid; grid-template-columns:1fr 1fr; gap:6px; user-select:none; width:100%; touch-action:none;">
+                                    <div class="tp-slot" data-start="08:00" data-end="09:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;touch-action:none;">08:00 – 09:00</div>
+                                    <div class="tp-slot" data-start="09:00" data-end="10:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;touch-action:none;">09:00 – 10:00</div>
+                                    <div class="tp-slot" data-start="10:00" data-end="11:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;touch-action:none;">10:00 – 11:00</div>
+                                    <div class="tp-slot" data-start="11:00" data-end="12:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;touch-action:none;">11:00 – 12:00</div>
+                                    <div class="tp-slot" data-start="12:00" data-end="13:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;touch-action:none;">12:00 – 13:00</div>
+                                    <div class="tp-slot" data-start="13:00" data-end="14:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;touch-action:none;">13:00 – 14:00</div>
+                                    <div class="tp-slot" data-start="14:00" data-end="15:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;touch-action:none;">14:00 – 15:00</div>
+                                    <div class="tp-slot" data-start="15:00" data-end="16:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;touch-action:none;">15:00 – 16:00</div>
+                                    <div class="tp-slot" data-start="16:00" data-end="17:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;touch-action:none;">16:00 – 17:00</div>
+                                    <div class="tp-slot" data-start="17:00" data-end="18:00" style="padding:9px 4px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:0.72rem;font-weight:700;color:#475569;text-align:center;cursor:pointer;touch-action:none;">17:00 – 18:00</div>
                                 </div>
                             </div>
 
@@ -582,7 +645,7 @@
                                     <div id="tpTabHour" class="active" onclick="setMode('hour')">🕐 Jam</div>
                                     <div id="tpTabMinute" onclick="setMode('minute')">⏱ Menit</div>
                                 </div>
-                                <div id="tpClockContainer" style="position:relative; width:240px; height:240px; border-radius:50%; background:#f8fafc; border:2px solid #e2e8f0; box-shadow:inset 0 2px 6px rgba(0,0,0,0.03); flex-shrink:0; margin:0 auto;">
+                                <div id="tpClockContainer" style="position:relative; width:240px; height:240px; border-radius:50%; background:#f8fafc; border:2px solid #e2e8f0; box-shadow:inset 0 2px 6px rgba(0,0,0,0.03); flex-shrink:0; margin:0 auto; touch-action: none !important; user-select: none !important; -webkit-user-select: none !important;">
                                     <div id="tpClockHand" style="position:absolute; bottom:50%; left:50%; width:2px; height:95px; background:#7c3aed; border-radius:2px; transform-origin:bottom center; transform:translateX(-50%) rotate(0deg); transition:transform 0.15s ease; z-index:5;"></div>
                                     <div style="position:absolute; top:50%; left:50%; width:10px; height:10px; background:#7c3aed; border-radius:50%; transform:translate(-50%,-50%); z-index:10;"></div>
                                     <div id="tpClockNumbers"></div>
@@ -618,6 +681,9 @@
         var inlinePickerTarget = 'mulai';
 
         function openInlinePicker(target) {
+            if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                document.activeElement.blur();
+            }
             inlinePickerTarget = target;
             document.getElementById('inlineTpLabel').innerText = (target === 'mulai') ? 'PILIH JAM MULAI' : 'PILIH JAM SELESAI';
 
@@ -642,6 +708,9 @@
             document.getElementById('inlineClockPanel').style.display = 'block';
 
             setTimeout(function() {
+                if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                    document.activeElement.blur();
+                }
                 document.getElementById('inlineClockPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }, 50);
         }
@@ -735,7 +804,28 @@
                 mode: fpMode,
                 dateFormat: "Y-m-d",
                 minDate: "today",
+                disableMobile: true,
+                allowInput: false,
+                onOpen: function(selectedDates, dateStr, instance) {
+                    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                        document.activeElement.blur();
+                    }
+                    if (instance && instance._input) {
+                        instance._input.blur();
+                        instance._input.setAttribute('readonly', 'readonly');
+                        instance._input.setAttribute('inputmode', 'none');
+                    }
+                },
+                onReady: function(selectedDates, dateStr, instance) {
+                    if (instance && instance._input) {
+                        instance._input.setAttribute('readonly', 'readonly');
+                        instance._input.setAttribute('inputmode', 'none');
+                    }
+                },
                 onChange: function(selectedDates, dateStr, instance) {
+                    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                        document.activeElement.blur();
+                    }
                     if (selectedDates.length > 0) {
                         $('#timeSelectionGroup').slideDown();
                     } else {

@@ -219,18 +219,19 @@
         .custom-cat-trigger {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
             background: transparent;
             border: none;
-            font-size: 0.82rem;
-            font-weight: 700;
+            font-size: 0.95rem;
+            line-height: 1;
             color: #1e293b;
             cursor: pointer;
-            padding: 5px 8px;
+            padding: 4px 6px;
             border-radius: 8px;
             outline: none;
             transition: background 0.15s ease;
             white-space: nowrap;
+            flex-shrink: 0;
         }
         .custom-cat-trigger:hover {
             background: #f1f5f9;
@@ -1478,42 +1479,57 @@
                 width: 100%;
                 min-width: 0;
                 max-width: 100%;
-                gap: 4px;
+                gap: 5px;
             }
             .unified-search-pill {
                 width: 100%;
                 height: 38px;
                 padding: 2px 4px 2px 6px;
+                border-radius: 12px;
+                box-sizing: border-box;
             }
             .custom-cat-trigger {
-                padding: 0 4px;
-                font-size: 0.72rem;
-                gap: 3px;
-                max-width: 95px;
+                padding: 2px 4px;
+                font-size: 0.95rem;
+                gap: 2px;
+                max-width: none;
             }
             .custom-cat-trigger span {
-                max-width: 75px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
+                max-width: none;
+                line-height: 1;
             }
-            .unified-search-input {
+            .unified-divider {
+                height: 18px;
+                margin: 0 4px;
+            }
+            .unified-input-key {
                 font-size: 0.76rem;
                 padding: 2px 4px;
                 min-width: 0;
             }
-            .btn-search-trigger {
+            .btn-submit-search-pill {
                 height: 30px;
-                padding: 0 8px;
+                padding: 0 9px;
                 font-size: 0.72rem;
                 border-radius: 8px;
                 gap: 4px;
+                margin-left: 2px;
+            }
+            .btn-submit-search-pill svg {
+                width: 11px;
+                height: 11px;
             }
             .btn-standalone-add {
                 height: 38px;
-                padding: 0 8px;
-                font-size: 0.72rem;
+                padding: 0 9px;
+                font-size: 0.75rem;
+                border-radius: 10px;
+                gap: 3px;
                 flex-shrink: 0;
+            }
+            .btn-standalone-add svg {
+                width: 13px;
+                height: 13px;
             }
             #extraRowsCard {
                 width: calc(100vw - 20px);
@@ -2150,13 +2166,19 @@
 
     <?php
     $sessionRoleId = (int)$this->session->userdata('role_id');
-    $currentUri = trim(uri_string(), '/');
-    $isLoggedIn = (bool)$this->session->userdata('logged_in');
+    $sessionEmail  = (string)$this->session->userdata('email');
+    $currentUri    = trim(uri_string(), '/');
+    $isLoggedIn    = (bool)$this->session->userdata('logged_in');
 
     // Tentukan active role ID (utamakan session role jika user sudah login)
     $activeRoleId = $isLoggedIn ? $sessionRoleId : 0;
 
-    if ($isLoggedIn) {
+    // Jika role 2 tapi akun khusus laboran, arahkan ke role 21 (Laboran)
+    if ($isLoggedIn && $sessionRoleId === 2 && strpos(strtolower($sessionEmail), 'laboran') !== false) {
+        $activeRoleId = 21;
+    }
+
+    if ($isLoggedIn && $activeRoleId === 0) {
         if (strpos($currentUri, 'laboran') === 0) {
             $activeRoleId = 21; // Laboran
         } elseif (strpos($currentUri, 'kaur') === 0) {
@@ -2238,6 +2260,7 @@
                 ['heading' => 'Dosen Wali', 'href' => site_url('dosen/wali'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
 
                 ['category' => 'Layanan & Bantuan', 'has_divider' => true],
+                ['heading' => 'Bantuan & Live Chat', 'href' => site_url('kaur/help'), 'icon_3d' => 'assets/images/icons_3d/help_chat.png'],
                 ['heading' => 'Respon Ticketing', 'href' => site_url('dosen/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
                 ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
                 ['heading' => 'Riwayat Ticketing', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
@@ -2259,6 +2282,7 @@
                 ['heading' => 'Monitoring Status Peserta', 'href' => site_url('koordinatorta/monitoring'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
 
                 ['category' => 'Layanan Ticketing & Bantuan', 'has_divider' => true],
+                ['heading' => 'Bantuan & Live Chat', 'href' => site_url('koordinatorta/help'), 'icon_3d' => 'assets/images/icons_3d/help_chat.png'],
                 ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
                 ['heading' => 'Riwayat Tiket Saya', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
 
@@ -2325,6 +2349,7 @@
                 ['heading' => 'Pengaturan Jalur TA', 'href' => site_url('adminlayanan/pengaturan_jalur'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
 
                 ['category' => 'Layanan Ticketing & Bantuan', 'has_divider' => true],
+                ['heading' => 'Bantuan & Live Chat', 'href' => site_url('adminlayanan/help'), 'icon_3d' => 'assets/images/icons_3d/help_chat.png'],
                 ['heading' => 'Respon Ticketing LAA', 'href' => site_url('adminlayanan/ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
                 ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
                 ['heading' => 'Riwayat Tiket Saya', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
@@ -2714,9 +2739,9 @@
                     
                     <!-- CUSTOM STYLED CATEGORY DROPDOWN -->
                     <div class="custom-cat-dropdown" id="mainCatWrap">
-                        <button type="button" class="custom-cat-trigger" onclick="toggleCatDropdown('main', event)">
-                            <span id="mainCatLabel">Key / Kata Kunci</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        <button type="button" class="custom-cat-trigger" onclick="toggleCatDropdown('main', event)" title="Kategori Pencarian">
+                            <span id="mainCatLabel">🔑</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </button>
 
                         <input type="hidden" id="mainCategorySelect" class="extra-cat-select" value="keyword">
@@ -2744,7 +2769,7 @@
 
                     <!-- Text Search Container -->
                     <div style="position: relative; flex: 1; display: flex; align-items: center;" id="mainValueContainer">
-                        <input type="text" id="mainSearchInput" placeholder="Ketik kata kunci lalu tekan Enter atau klik Cari..." 
+                        <input type="text" id="mainSearchInput" placeholder="Cari agenda, lab, peminjam..." 
                                oninput="handleUnifiedMultiSearch(this)" 
                                onkeydown="if(event.key === 'Enter') { triggerSearchSubmit(); }"
                                onfocus="onMainInputFocused()"
@@ -3056,9 +3081,9 @@
             rowDiv.innerHTML = `
                 <!-- CUSTOM STYLED CATEGORY DROPDOWN FOR EXTRA ROW -->
                 <div class="custom-cat-dropdown" id="catWrap_${rowId}">
-                    <button type="button" class="custom-cat-trigger" onclick="toggleCatDropdown('${rowId}', event)">
-                        <span id="catLabel_${rowId}">Pilih Ruangan</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    <button type="button" class="custom-cat-trigger" onclick="toggleCatDropdown('${rowId}', event)" title="Kategori Pencarian">
+                        <span id="catLabel_${rowId}">🏢</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
 
                     <input type="hidden" id="catSelect_${rowId}" class="extra-cat-select" value="ruangan">
@@ -3192,7 +3217,7 @@
             const lblSpan = document.getElementById(id === 'main' ? 'mainCatLabel' : `catLabel_${id}`);
 
             if (select) select.value = val;
-            if (lblSpan) lblSpan.innerText = label;
+            if (lblSpan) lblSpan.innerText = icon || '🔑';
 
             // Highlight active option
             if (wrap) {
@@ -3219,9 +3244,9 @@
 
             if (inputField) {
                 inputField.value = '';
-                if (val === 'keyword') inputField.placeholder = "Ketik kata kunci lalu tekan Enter atau klik Cari...";
-                else if (val === 'kategori') inputField.placeholder = "Ketik nama kategori lalu tekan Enter atau klik Cari...";
-                else if (val === 'ruangan') inputField.placeholder = "Ketik kode/nama ruangan lalu tekan Enter atau klik Cari...";
+                if (val === 'keyword') inputField.placeholder = "Cari agenda, lab, peminjam...";
+                else if (val === 'kategori') inputField.placeholder = "Cari nama kategori...";
+                else if (val === 'ruangan') inputField.placeholder = "Cari nama / kode ruangan...";
                 else if (val === 'tanggal') inputField.placeholder = "Pilih 1 tanggal / rentang tanggal...";
 
                 setupDatePickerIfNeeded(inputField, val);

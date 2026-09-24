@@ -633,8 +633,19 @@
                     </h2>
                     <p class="text-xs text-slate-500 font-normal mt-0.5">Pilih mahasiswa untuk meninjau berkas dan melakukan persetujuan massal.</p>
                 </div>
-                <!-- Controls -->
-                <div class="flex flex-wrap items-center gap-2 shrink-0">
+                <!-- Controls & Direct Search -->
+                <div class="flex flex-wrap items-center gap-2 shrink-0 w-full md:w-auto">
+                    <!-- Direct Search Input Bar -->
+                    <div class="relative flex-1 min-w-[210px] max-w-full sm:max-w-xs">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <i class="bi bi-search text-xs"></i>
+                        </div>
+                        <input type="text" id="directSearchInput" placeholder="Cari Nama, NIM, Judul TA..." class="w-full pl-8 pr-8 py-2 bg-white border border-orange-200 rounded-xl text-xs font-semibold text-slate-800 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition shadow-2xs">
+                        <button type="button" id="btnClearDirectSearch" onclick="clearDirectSearch()" class="hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-rose-600 transition cursor-pointer" title="Hapus Pencarian">
+                            <i class="bi bi-x-circle-fill text-xs"></i>
+                        </button>
+                    </div>
+
                     <div class="flex items-center gap-2 bg-white border border-orange-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-600">
                         <i class="bi bi-list-ul text-slate-400"></i>
                         <span>Tampilkan</span>
@@ -646,11 +657,11 @@
                         </select>
                         <span>data / hal</span>
                     </div>
-                    <button id="btnAddFilter" class="btn-3d-orange flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white">
+                    <button id="btnAddFilter" class="btn-3d-orange flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-white">
                         <i class="bi bi-plus-lg"></i> Tambah Filter
                         <span id="filterCountBadge" class="bg-white/30 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">1/4</span>
                     </button>
-                    <button id="btnReset" class="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-orange-300 bg-white text-xs font-semibold text-slate-600 hover:bg-orange-50 transition">
+                    <button id="btnReset" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-orange-300 bg-white text-xs font-semibold text-slate-600 hover:bg-orange-50 transition">
                         <i class="bi bi-arrow-counterclockwise"></i> Reset
                     </button>
                 </div>
@@ -1256,7 +1267,47 @@
             btnAdd.style.pointerEvents = filters.length >= 4 ? 'none' : 'auto';
         }
 
+        const directSearchInput = document.getElementById('directSearchInput');
+        const btnClearDirectSearch = document.getElementById('btnClearDirectSearch');
+
+        if (directSearchInput) {
+            directSearchInput.addEventListener('input', () => {
+                if (btnClearDirectSearch) {
+                    if (directSearchInput.value.trim()) {
+                        btnClearDirectSearch.classList.remove('hidden');
+                    } else {
+                        btnClearDirectSearch.classList.add('hidden');
+                    }
+                }
+                currentPage = 1;
+                applyAll();
+            });
+        }
+
+        window.clearDirectSearch = function() {
+            if (directSearchInput) {
+                directSearchInput.value = '';
+                if (btnClearDirectSearch) btnClearDirectSearch.classList.add('hidden');
+                currentPage = 1;
+                applyAll();
+            }
+        };
+
         function rowMatches(row) {
+            if (directSearchInput && directSearchInput.value.trim()) {
+                const dq = directSearchInput.value.trim().toLowerCase();
+                const dh = [
+                    row.dataset.nim || '',
+                    row.dataset.nama || '',
+                    row.dataset.judul || '',
+                    row.dataset.status || '',
+                    row.dataset.statusLabel || '',
+                    row.dataset.stage || '',
+                    row.dataset.stageLabel || ''
+                ].join(' ');
+                if (!dh.toLowerCase().includes(dq)) return false;
+            }
+
             if (pintasStatus !== 'all') {
                 const rowSt = (row.dataset.status || '').trim().toLowerCase();
                 if (rowSt !== pintasStatus.toLowerCase()) return false;
@@ -1353,6 +1404,10 @@
             pintasStatus = 'all';
             currentPage = 1;
             filterRows.innerHTML = '';
+            if (directSearchInput) {
+                directSearchInput.value = '';
+                if (btnClearDirectSearch) btnClearDirectSearch.classList.add('hidden');
+            }
             document.querySelectorAll('.btn-pintas').forEach((b, i) => {
                 b.className = `btn-pintas px-3 py-1 rounded-full transition text-[11px] font-semibold cursor-pointer ${i === 0 ? 'bg-slate-800 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-orange-50'}`;
             });
@@ -3619,7 +3674,7 @@
 
                     <!-- Body Frame Pratinjau PDF -->
                     <div class="${isMobile ? 'h-[310px] sm:h-[360px]' : 'h-[390px] sm:h-[430px] md:h-[450px]'} bg-slate-200 relative border-b border-slate-200 overflow-hidden cursor-default select-none">
-                        <iframe id="iframePreviewBerkas_${p.nim}_${p.docKey}" src="${pdfUrl}#toolbar=0&navpanes=0" class="w-full h-full border-0 pointer-events-none" title="Pratinjau Dokumen PDF"></iframe>
+                        <iframe id="iframePreviewBerkas_${p.nim}_${p.docKey}" src="${pdfUrl}#toolbar=0&navpanes=0" class="w-full h-full border-0 pointer-events-auto" title="Pratinjau Dokumen PDF"></iframe>
                     </div>
 
                     <!-- Footer Pratinjau dengan Aksi Approve & Reject Berkas -->
@@ -3747,6 +3802,7 @@
     }
 
     function submitPreviewDocApproval(nim, docKey, status) {
+        console.log('[DW] submitPreviewDocApproval DIPANGGIL:', nim, docKey, status);
         if (isMhsStageLocked(nim)) {
             showDWToast('Pendaftaran telah disetujui di tahap berikutnya. Perubahan dikunci.', false);
             return;
@@ -3796,9 +3852,10 @@
             if (btnApprove) btnApprove.disabled = false;
             if (btnReject) btnReject.disabled = false;
             if (btnSubmitReject) btnSubmitReject.disabled = false;
+            console.log('[DW] fetch response:', res);
 
             if (res.success) {
-                // Update local state in window.mhsDataMap
+                // 1. Update local state di window.mhsDataMap
                 if (window.mhsDataMap && window.mhsDataMap[nim]) {
                     window.mhsDataMap[nim][`status_file_${docKey}`] = status;
                     window.mhsDataMap[nim][`catatan_file_${docKey}`] = comment;
@@ -3812,30 +3869,44 @@
                     }
                 }
 
-                // 1. Tutup / hilangkan tab preview berkas yang baru saja di-aksi
+                // 2. Tutup tab sub-pratinjau — pakai closeSinglePreview persis seperti tombol Tutup manual
                 const pIdx = (window.activePreviews || []).findIndex(p => String(p.nim).trim() === String(nim).trim() && String(p.docKey).trim() === String(docKey).trim());
+                console.log('[DW] pIdx to close:', pIdx, '| nim:', nim, '| docKey:', docKey);
                 if (pIdx > -1) {
-                    window.activePreviews.splice(pIdx, 1);
+                    closeSinglePreview(pIdx);
+                } else {
+                    console.warn('[DW] Entry tidak ditemukan di activePreviews:', window.activePreviews);
+                    // Fallback: tutup semua preview NIM ini
+                    window.activePreviews = (window.activePreviews || []).filter(p => !(String(p.nim).trim() === String(nim).trim() && String(p.docKey).trim() === String(docKey).trim()));
+                    refreshLihatBerkasView();
                 }
 
-                // 2. Refresh tampilan panel berkas & sisa kartu preview
-                refreshLihatBerkasView();
+                // 3. Render ulang panel kiri untuk update badge
 
-                // 3. Update Main Table Badge & Summary Badges
+                // 4. Update Main Table Badge & Summary Badges
                 const tableBadge = document.getElementById(`badge_doc_${nim}_${docKey}`);
                 if (tableBadge) {
                     if (status === 'Approved') {
                         tableBadge.className = 'px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer bg-emerald-100/90 text-emerald-700 hover:bg-emerald-200';
+                        tableBadge.innerText = 'Valid';
                     } else if (status === 'Rejected') {
                         tableBadge.className = 'px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer bg-rose-100/90 text-rose-700 hover:bg-rose-200';
+                        tableBadge.innerText = 'Revisi';
                     } else {
                         tableBadge.className = 'px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60';
+                        tableBadge.innerText = 'Pending';
                     }
                 }
                 updateTableBerkasSummaryBadges(nim);
 
+                // 5. Trigger polling / refresh hash
+                if (typeof pollRealtimeData === 'function') {
+                    lastDataHash = '';
+                    pollRealtimeData();
+                }
+
                 const docTitle = docKey.toUpperCase();
-                showDWToast((status === 'Approved') ? `Berkas ${docTitle} disetujui (Valid)! Tab pratinjau ditutup.` : `Catatan revisi berkas ${docTitle} berhasil dikirim! Tab pratinjau ditutup.`, true);
+                showDWToast((status === 'Approved') ? `Berkas ${docTitle} disetujui (Valid)!` : `Catatan revisi berkas ${docTitle} berhasil dikirim!`, true);
             } else {
                 showDWToast(res.message || 'Gagal memperbarui status berkas.', false);
             }

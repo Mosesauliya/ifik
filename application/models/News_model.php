@@ -6,6 +6,29 @@ class News_model extends CI_Model {
     public function __construct()
     {
         parent::__construct();
+        $this->_check_table();
+    }
+
+    /** Auto create table 'berita' if it does not exist in DB */
+    private function _check_table()
+    {
+        if (!$this->db->table_exists('berita')) {
+            $sql = "CREATE TABLE IF NOT EXISTS `berita` (
+                `id` INT(11) NOT NULL AUTO_INCREMENT,
+                `judul` VARCHAR(255) NOT NULL,
+                `kategori` VARCHAR(100) DEFAULT 'Berita Acara',
+                `excerpt` TEXT NULL,
+                `konten` LONGTEXT NULL,
+                `tanggal` DATE NULL,
+                `gambar` VARCHAR(255) NULL,
+                `published` TINYINT(1) NOT NULL DEFAULT 1,
+                `border_style` VARCHAR(50) DEFAULT 'none',
+                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (`id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+            $this->db->query($sql);
+        }
     }
 
     // ─── READ ─────────────────────────────────────────────────────────────────

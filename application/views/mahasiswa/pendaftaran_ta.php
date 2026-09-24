@@ -172,10 +172,15 @@
                 <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-xl font-bold box-3d shrink-0">
                     <i class="bi bi-lock-fill"></i>
                 </div>
-                <div>
-                    <span class="text-xs font-extrabold uppercase tracking-wider text-amber-800 block">STATUS: FORMULIR TERKUNCI (SEDANG DITINJAU)</span>
+                <div class="flex-1">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <span class="text-xs font-extrabold uppercase tracking-wider text-amber-800 block">STATUS: FORMULIR TERKUNCI (SEDANG DITINJAU)</span>
+                        <a href="<?= site_url('mahasiswa/reset_pendaftaran'); ?>" onclick="return confirm('Apakah Anda yakin ingin me-reset pengajuan Tugas Akhir ini? Semua berkas dan usulan judul yang diunggah akan dihapus dan Anda dapat mengisi ulang dari awal.');" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition shadow-xs cursor-pointer self-start sm:self-auto">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reset / Batalkan Pengajuan
+                        </a>
+                    </div>
                     <p class="text-xs sm:text-sm font-semibold text-slate-800 leading-relaxed mt-1">
-                        Pengajuan Tugas Akhir Anda saat ini sedang dalam proses peninjauan berjenjang. Kolom formulir berstatus <strong>hanya lihat (tidak dapat diedit)</strong>. Anda dapat menelusuri tiap langkah untuk memeriksa berkas yang telah dikirim. Kolom formulir akan otomatis aktif kembali jika terdapat catatan revisi.
+                        Pengajuan Tugas Akhir Anda saat ini sedang dalam proses peninjauan berjenjang. Kolom formulir berstatus <strong>hanya lihat (tidak dapat diedit)</strong>. Jika Anda ingin membatalkan pengajuan dan mengisi ulang dari awal, silakan klik tombol <strong>Reset / Batalkan Pengajuan</strong>.
                     </p>
                 </div>
             </div>

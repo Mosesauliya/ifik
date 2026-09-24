@@ -247,6 +247,11 @@
                                     $cleanSnippet = preg_replace('/\s+/u', ' ', html_entity_decode($cleanSnippet, ENT_QUOTES, 'UTF-8'));
                                     $tanggapanClean = trim(strip_tags(str_ireplace(['&nbsp;', '&amp;nbsp;'], ' ', $t->tanggapan ?? '')));
                                     $tanggapanClean = preg_replace('/\s+/u', ' ', html_entity_decode($tanggapanClean, ENT_QUOTES, 'UTF-8'));
+                                    $cleanCatatanProses = !empty($t->catatan_proses) ? htmlspecialchars(preg_replace('/\s+/u', ' ', html_entity_decode(trim(strip_tags(str_ireplace(['&nbsp;', '&amp;nbsp;'], ' ', $t->catatan_proses))), ENT_QUOTES, 'UTF-8'))) : '';
+                                    $cleanCatatanSelesai = !empty($t->catatan_selesai) ? htmlspecialchars(preg_replace('/\s+/u', ' ', html_entity_decode(trim(strip_tags(str_ireplace(['&nbsp;', '&amp;nbsp;'], ' ', $t->catatan_selesai))), ENT_QUOTES, 'UTF-8'))) : '';
+                                    $cleanCatatanTutup = !empty($t->catatan_tutup) ? htmlspecialchars(preg_replace('/\s+/u', ' ', html_entity_decode(trim(strip_tags(str_ireplace(['&nbsp;', '&amp;nbsp;'], ' ', $t->catatan_tutup))), ENT_QUOTES, 'UTF-8'))) : '';
+                                    $tglDiprosesFmt = !empty($t->tgl_diproses) ? date('d M Y, H:i', strtotime($t->tgl_diproses)) . ' WIB' : '';
+                                    $tglSelesaiFmt = !empty($t->tgl_closed) ? date('d M Y, H:i', strtotime($t->tgl_closed)) . ' WIB' : '';
                                 ?>
                                 <tr class="ticket-row hover:bg-slate-50/70 transition-colors" data-status="<?= htmlspecialchars($t->status); ?>">
                                     
@@ -303,6 +308,11 @@
                                                   data-unit="<?= htmlspecialchars($t->unit_tujuan); ?>"
                                                   data-created="<?= date('d M Y, H:i', strtotime($t->created_at)); ?>"
                                                   data-updated="<?= !empty($t->updated_at) ? date('d M Y, H:i', strtotime($t->updated_at)) : '-'; ?>"
+                                                  data-tgl-diproses="<?= $tglDiprosesFmt; ?>"
+                                                  data-tgl-selesai="<?= $tglSelesaiFmt; ?>"
+                                                  data-catatan-proses="<?= $cleanCatatanProses; ?>"
+                                                  data-catatan-selesai="<?= $cleanCatatanSelesai; ?>"
+                                                  data-catatan-tutup="<?= $cleanCatatanTutup; ?>"
                                                   data-tgl-tanggapan="<?= !empty($t->tgl_tanggapan) ? date('d M Y, H:i', strtotime($t->tgl_tanggapan)) : ''; ?>"
                                                   data-tanggapan="<?= htmlspecialchars($tanggapanClean); ?>">
                                                 <?= $waTickIcon; ?>
@@ -377,6 +387,11 @@
                             $cleanSnippet = preg_replace('/\s+/u', ' ', html_entity_decode($cleanSnippet, ENT_QUOTES, 'UTF-8'));
                             $tanggapanClean = trim(strip_tags(str_ireplace(['&nbsp;', '&amp;nbsp;'], ' ', $t->tanggapan ?? '')));
                             $tanggapanClean = preg_replace('/\s+/u', ' ', html_entity_decode($tanggapanClean, ENT_QUOTES, 'UTF-8'));
+                            $cleanCatatanProses = !empty($t->catatan_proses) ? htmlspecialchars(preg_replace('/\s+/u', ' ', html_entity_decode(trim(strip_tags(str_ireplace(['&nbsp;', '&amp;nbsp;'], ' ', $t->catatan_proses))), ENT_QUOTES, 'UTF-8'))) : '';
+                            $cleanCatatanSelesai = !empty($t->catatan_selesai) ? htmlspecialchars(preg_replace('/\s+/u', ' ', html_entity_decode(trim(strip_tags(str_ireplace(['&nbsp;', '&amp;nbsp;'], ' ', $t->catatan_selesai))), ENT_QUOTES, 'UTF-8'))) : '';
+                            $cleanCatatanTutup = !empty($t->catatan_tutup) ? htmlspecialchars(preg_replace('/\s+/u', ' ', html_entity_decode(trim(strip_tags(str_ireplace(['&nbsp;', '&amp;nbsp;'], ' ', $t->catatan_tutup))), ENT_QUOTES, 'UTF-8'))) : '';
+                            $tglDiprosesFmt = !empty($t->tgl_diproses) ? date('d M Y, H:i', strtotime($t->tgl_diproses)) . ' WIB' : '';
+                            $tglSelesaiFmt = !empty($t->tgl_closed) ? date('d M Y, H:i', strtotime($t->tgl_closed)) . ' WIB' : '';
                         ?>
                         <div class="ticket-card bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs flex flex-col space-y-3"
                              data-status="<?= htmlspecialchars($t->status); ?>">
@@ -398,6 +413,11 @@
                                           data-unit="<?= htmlspecialchars($t->unit_tujuan); ?>"
                                           data-created="<?= date('d M Y, H:i', strtotime($t->created_at)); ?>"
                                           data-updated="<?= !empty($t->updated_at) ? date('d M Y, H:i', strtotime($t->updated_at)) : '-'; ?>"
+                                          data-tgl-diproses="<?= $tglDiprosesFmt; ?>"
+                                          data-tgl-selesai="<?= $tglSelesaiFmt; ?>"
+                                          data-catatan-proses="<?= $cleanCatatanProses; ?>"
+                                          data-catatan-selesai="<?= $cleanCatatanSelesai; ?>"
+                                          data-catatan-tutup="<?= $cleanCatatanTutup; ?>"
                                           data-tgl-tanggapan="<?= !empty($t->tgl_tanggapan) ? date('d M Y, H:i', strtotime($t->tgl_tanggapan)) : ''; ?>"
                                           data-tanggapan="<?= htmlspecialchars($tanggapanClean); ?>">
                                         <?= $waTickIcon; ?>
@@ -489,6 +509,10 @@
                 <div id="step2Title" class="font-bold text-[11px] text-slate-600">2. Diproses</div>
                 <div id="step2Time" class="text-[10px] font-mono text-slate-400">-</div>
                 <div id="step2Desc" class="text-[11px] text-slate-500 mt-0.5">Kendala sedang diinvestigasi & dikerjakan.</div>
+                <div id="step2TanggapanBox" class="hidden mt-2 p-2.5 rounded-xl bg-blue-50 border border-blue-200 text-[11px] text-blue-900 leading-snug">
+                    <span class="font-bold block text-blue-800 mb-0.5">Catatan Pengerjaan Unit:</span>
+                    <span id="step2TanggapanText" class="italic line-clamp-3"></span>
+                </div>
             </div>
 
             <!-- Step 3: Selesai -->
@@ -500,7 +524,7 @@
                 <div id="step3Time" class="text-[10px] font-mono text-slate-400">-</div>
                 <div id="step3Desc" class="text-[11px] text-slate-500 mt-0.5">Solusi telah diberikan, kendala selesai ditangani.</div>
                 <div id="step3TanggapanBox" class="hidden mt-2 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-900 leading-snug">
-                    <span class="font-bold block text-emerald-800 mb-0.5">Tanggapan Unit:</span>
+                    <span class="font-bold block text-emerald-800 mb-0.5">Solusi & Hasil Penyelesaian:</span>
                     <span id="step3TanggapanText" class="italic line-clamp-3"></span>
                 </div>
             </div>
@@ -513,6 +537,10 @@
                 <div id="step4Title" class="font-bold text-[11px] text-slate-600">4. Ditutup</div>
                 <div id="step4Time" class="text-[10px] font-mono text-slate-400">-</div>
                 <div id="step4Desc" class="text-[11px] text-slate-500 mt-0.5">Tiket ditutup secara permanen & diarsipkan.</div>
+                <div id="step4TanggapanBox" class="hidden mt-2 p-2.5 rounded-xl bg-purple-50 border border-purple-200 text-[11px] text-purple-900 leading-snug">
+                    <span class="font-bold block text-purple-800 mb-0.5">Catatan Arsip Penutupan:</span>
+                    <span id="step4TanggapanText" class="italic line-clamp-3"></span>
+                </div>
             </div>
         </div>
 
@@ -636,13 +664,47 @@
                     </div>
                 </div>
 
-                <!-- Tanggapan Admin Support -->
-                <div>
-                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Tanggapan / Solusi Unit Terkait</h4>
-                    <div id="modalTanggapan" class="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100 text-xs text-emerald-900 leading-relaxed">
-                        <p class="text-slate-400 italic">Belum ada tanggapan dari unit terkait. Tiket Anda sedang dalam antrean penanganan.</p>
+                <!-- Riwayat & Tanggapan Unit Terkait Berdasarkan Tahap -->
+                <div class="space-y-3">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Tanggapan & Progres Unit Terkait</h4>
+                    
+                    <!-- Catatan Tahap Diproses -->
+                    <div id="modalRiwayatProsesBox" class="hidden p-4 rounded-2xl bg-blue-50/70 border border-blue-200/80 text-xs text-blue-950 leading-relaxed">
+                        <div class="flex items-center justify-between mb-1.5 pb-1 border-b border-blue-200/50">
+                            <span class="font-extrabold text-blue-800 flex items-center gap-1.5">
+                                <i class="bi bi-gear-wide-connected text-blue-600"></i> Catatan Pengerjaan (Tahap Diproses)
+                            </span>
+                            <span id="modalTglDiproses" class="text-[10px] font-mono text-blue-600 font-semibold"></span>
+                        </div>
+                        <div id="modalCatatanProses" class="text-slate-700 whitespace-pre-wrap"></div>
                     </div>
-                    <span id="modalTglTanggapan" class="text-[11px] text-slate-400 mt-1 block"></span>
+
+                    <!-- Solusi Tahap Selesai -->
+                    <div id="modalRiwayatSelesaiBox" class="hidden p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 text-xs text-emerald-950 leading-relaxed">
+                        <div class="flex items-center justify-between mb-1.5 pb-1 border-b border-emerald-200/50">
+                            <span class="font-extrabold text-emerald-800 flex items-center gap-1.5">
+                                <i class="bi bi-check2-circle text-emerald-600"></i> Solusi & Tanggapan Akhir (Tahap Selesai)
+                            </span>
+                            <span id="modalTglSelesai" class="text-[10px] font-mono text-emerald-600 font-semibold"></span>
+                        </div>
+                        <div id="modalCatatanSelesai" class="text-slate-700 whitespace-pre-wrap"></div>
+                    </div>
+
+                    <!-- Catatan Tahap Ditutup -->
+                    <div id="modalRiwayatTutupBox" class="hidden p-4 rounded-2xl bg-purple-50/70 border border-purple-200/80 text-xs text-purple-950 leading-relaxed">
+                        <div class="flex items-center justify-between mb-1.5 pb-1 border-b border-purple-200/50">
+                            <span class="font-extrabold text-purple-800 flex items-center gap-1.5">
+                                <i class="bi bi-archive-fill text-purple-600"></i> Catatan Arsip Penutupan
+                            </span>
+                            <span id="modalTglClosed" class="text-[10px] font-mono text-purple-600 font-semibold"></span>
+                        </div>
+                        <div id="modalCatatanTutup" class="text-slate-700 whitespace-pre-wrap"></div>
+                    </div>
+
+                    <!-- Fallback Belum Ada Tanggapan -->
+                    <div id="modalEmptyTanggapanBox" class="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-xs text-slate-400 italic">
+                        Belum ada tanggapan atau catatan dari unit terkait. Tiket Anda sedang dalam antrean penanganan.
+                    </div>
                 </div>
 
             </div>
@@ -815,15 +877,57 @@
                             currentLampiranFilename = '';
                         }
 
-                        // Tanggapan
-                        const respBox = document.getElementById('modalTanggapan');
-                        const respTime = document.getElementById('modalTglTanggapan');
-                        if (d.tanggapan) {
-                            respBox.innerHTML = d.tanggapan;
-                            respTime.textContent = 'Ditanggapi pada: ' + (d.tgl_tanggapan || '-');
+                        // Tanggapan Terpisah Berdasarkan Tahap
+                        const prosesBox = document.getElementById('modalRiwayatProsesBox');
+                        const selesaiBox = document.getElementById('modalRiwayatSelesaiBox');
+                        const tutupBox = document.getElementById('modalRiwayatTutupBox');
+                        const emptyBox = document.getElementById('modalEmptyTanggapanBox');
+
+                        let hasAnyNote = false;
+
+                        // Tahap Diproses
+                        if (d.catatan_proses && d.catatan_proses.trim()) {
+                            prosesBox.classList.remove('hidden');
+                            document.getElementById('modalCatatanProses').innerHTML = d.catatan_proses;
+                            document.getElementById('modalTglDiproses').textContent = d.tgl_diproses ? ('Pada: ' + d.tgl_diproses) : '';
+                            hasAnyNote = true;
                         } else {
-                            respBox.innerHTML = '<span class="text-slate-400 italic">Belum ada tanggapan dari unit terkait. Tiket Anda sedang dalam antrean penanganan.</span>';
-                            respTime.textContent = '';
+                            prosesBox.classList.add('hidden');
+                        }
+
+                        // Tahap Selesai
+                        const solNote = d.catatan_selesai || (!d.catatan_proses ? d.tanggapan : '');
+                        if (solNote && solNote.trim() && (d.status === 'Selesai' || d.status === 'Ditutup')) {
+                            selesaiBox.classList.remove('hidden');
+                            document.getElementById('modalCatatanSelesai').innerHTML = solNote;
+                            document.getElementById('modalTglSelesai').textContent = d.tgl_tanggapan ? ('Pada: ' + d.tgl_tanggapan) : (d.updated_at ? ('Pada: ' + d.updated_at) : '');
+                            hasAnyNote = true;
+                        } else {
+                            selesaiBox.classList.add('hidden');
+                        }
+
+                        // Tahap Ditutup
+                        if (d.catatan_tutup && d.catatan_tutup.trim()) {
+                            tutupBox.classList.remove('hidden');
+                            document.getElementById('modalCatatanTutup').innerHTML = d.catatan_tutup;
+                            document.getElementById('modalTglClosed').textContent = d.tgl_closed ? ('Pada: ' + d.tgl_closed) : '';
+                            hasAnyNote = true;
+                        } else {
+                            tutupBox.classList.add('hidden');
+                        }
+
+                        // Fallback jika status Diproses tapi belum ada catatan khusus
+                        if (!hasAnyNote && d.status === 'Diproses' && d.tanggapan && d.tanggapan.trim()) {
+                            prosesBox.classList.remove('hidden');
+                            document.getElementById('modalCatatanProses').innerHTML = d.tanggapan;
+                            document.getElementById('modalTglDiproses').textContent = d.tgl_diproses ? ('Pada: ' + d.tgl_diproses) : '';
+                            hasAnyNote = true;
+                        }
+
+                        if (hasAnyNote) {
+                            emptyBox.classList.add('hidden');
+                        } else {
+                            emptyBox.classList.remove('hidden');
                         }
 
                         // Render Card Stepper Progress
@@ -1011,8 +1115,13 @@
             const unit = triggerEl.getAttribute('data-unit');
             const created = triggerEl.getAttribute('data-created');
             const updated = triggerEl.getAttribute('data-updated');
-            const tglTanggapan = triggerEl.getAttribute('data-tgl-tanggapan');
-            const tanggapan = triggerEl.getAttribute('data-tanggapan');
+            const tglDiproses = triggerEl.getAttribute('data-tgl-diproses') || '';
+            const tglSelesai = triggerEl.getAttribute('data-tgl-selesai') || '';
+            const tglTanggapan = triggerEl.getAttribute('data-tgl-tanggapan') || '';
+            const catatanProses = (triggerEl.getAttribute('data-catatan-proses') || '').trim();
+            const catatanSelesai = (triggerEl.getAttribute('data-catatan-selesai') || '').trim();
+            const catatanTutup = (triggerEl.getAttribute('data-catatan-tutup') || '').trim();
+            const tanggapan = (triggerEl.getAttribute('data-tanggapan') || '').trim();
 
             const popKode = document.getElementById('popKode');
             if (popKode) popKode.textContent = kode;
@@ -1028,6 +1137,8 @@
             const step2Title = document.getElementById('step2Title');
             const step2Time = document.getElementById('step2Time');
             const step2Desc = document.getElementById('step2Desc');
+            const step2Box = document.getElementById('step2TanggapanBox');
+            const step2Text = document.getElementById('step2TanggapanText');
 
             const step3Icon = document.getElementById('step3Icon');
             const step3Title = document.getElementById('step3Title');
@@ -1040,6 +1151,8 @@
             const step4Title = document.getElementById('step4Title');
             const step4Time = document.getElementById('step4Time');
             const step4Desc = document.getElementById('step4Desc');
+            const step4Box = document.getElementById('step4TanggapanBox');
+            const step4Text = document.getElementById('step4TanggapanText');
 
             const stepperLine = document.getElementById('stepperLine');
 
@@ -1049,9 +1162,10 @@
             if (step3Title) step3Title.textContent = '3. Selesai';
             if (step4Title) step4Title.textContent = '4. Ditutup';
 
-            // Reset step 3 quote
-            step3Box.classList.add('hidden');
-            step3Text.textContent = '';
+            // Reset notes boxes
+            if (step2Box) { step2Box.classList.add('hidden'); step2Text.textContent = ''; }
+            if (step3Box) { step3Box.classList.add('hidden'); step3Text.textContent = ''; }
+            if (step4Box) { step4Box.classList.add('hidden'); step4Text.textContent = ''; }
 
             if (status === 'Menunggu') {
                 popWaBadge.className = 'inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border bg-amber-50 text-amber-700 border-amber-200';
@@ -1104,25 +1218,23 @@
                 step2Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-blue-600 text-white shadow-xs';
                 step2Icon.innerHTML = '<i class="bi bi-gear-wide-connected text-xs animate-spin"></i>';
                 step2Title.className = 'font-bold text-[11px] text-blue-800';
-                step2Time.textContent = updated || created;
+                step2Time.textContent = tglDiproses || updated || created;
                 step2Desc.textContent = 'Kendala sedang diinvestigasi & dikerjakan staf ' + (unit || 'unit') + '.';
 
-                // Step 3: Notes / In progress
-                if (tanggapan && tanggapan.trim()) {
-                    step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-blue-100 text-blue-600 border border-blue-300';
-                    step3Icon.innerHTML = '<i class="bi bi-chat-dots-fill text-[9px]"></i>';
-                    step3Title.className = 'font-bold text-[11px] text-blue-800';
-                    step3Time.textContent = tglTanggapan || updated;
-                    step3Desc.textContent = 'Staf telah memberikan catatan tanggapan.';
-                    step3Box.classList.remove('hidden');
-                    step3Text.textContent = '"' + tanggapan.trim() + '"';
-                } else {
-                    step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200';
-                    step3Icon.innerHTML = '<i class="bi bi-hourglass text-[9px]"></i>';
-                    step3Title.className = 'font-bold text-[11px] text-slate-400';
-                    step3Time.textContent = 'Sedang Disiapkan';
-                    step3Desc.textContent = 'Solusi atau jawaban sedang disiapkan staf.';
+                // Catatan pengerjaan tahap Diproses
+                const noteDiproses = catatanProses || tanggapan;
+                if (noteDiproses && step2Box && step2Text) {
+                    step2Box.classList.remove('hidden');
+                    step2Text.textContent = '"' + noteDiproses + '"';
                 }
+
+                // Step 3: Strictly Pending (TIDAK DITAMPILKAN TANGGAPAN DI SINI)
+                step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200';
+                step3Icon.innerHTML = '<i class="bi bi-dash"></i>';
+                step3Title.className = 'font-bold text-[11px] text-slate-400';
+                step3Time.textContent = 'Sedang Disiapkan';
+                step3Desc.textContent = 'Solusi dan jawaban sedang dirumuskan oleh staf.';
+                if (step3Box) step3Box.classList.add('hidden');
 
                 // Step 4: Pending
                 step4Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200';
@@ -1149,18 +1261,23 @@
                 step2Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-emerald-500 text-white shadow-xs';
                 step2Icon.innerHTML = '<i class="bi bi-check-lg"></i>';
                 step2Title.className = 'font-bold text-[11px] text-slate-700';
-                step2Time.textContent = updated;
+                step2Time.textContent = tglDiproses || updated;
                 step2Desc.textContent = 'Kendala telah selesai ditindaklanjuti staf.';
+                if (catatanProses && step2Box && step2Text) {
+                    step2Box.classList.remove('hidden');
+                    step2Text.textContent = '"' + catatanProses + '"';
+                }
 
                 // Step 3: Active
                 step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-emerald-600 text-white shadow-xs';
                 step3Icon.innerHTML = '<i class="bi bi-check2-all text-xs"></i>';
                 step3Title.className = 'font-bold text-[11px] text-emerald-800';
-                step3Time.textContent = tglTanggapan || updated;
+                step3Time.textContent = tglSelesai || tglTanggapan || updated;
                 step3Desc.textContent = 'Solusi telah diberikan, kendala selesai ditangani.';
-                if (tanggapan && tanggapan.trim()) {
+                const noteSelesai = catatanSelesai || (!catatanProses ? tanggapan : '');
+                if (noteSelesai && step3Box && step3Text) {
                     step3Box.classList.remove('hidden');
-                    step3Text.textContent = '"' + tanggapan.trim() + '"';
+                    step3Text.textContent = '"' + noteSelesai + '"';
                 }
 
                 // Step 4: Pending
@@ -1188,18 +1305,23 @@
                 step2Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-emerald-500 text-white shadow-xs';
                 step2Icon.innerHTML = '<i class="bi bi-check-lg"></i>';
                 step2Title.className = 'font-bold text-[11px] text-slate-700';
-                step2Time.textContent = updated;
+                step2Time.textContent = tglDiproses || updated;
                 step2Desc.textContent = 'Proses penanganan selesai.';
+                if (catatanProses && step2Box && step2Text) {
+                    step2Box.classList.remove('hidden');
+                    step2Text.textContent = '"' + catatanProses + '"';
+                }
 
                 // Step 3: Completed
                 step3Icon.className = 'absolute -left-7 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-emerald-600 text-white shadow-xs';
                 step3Icon.innerHTML = '<i class="bi bi-check2-all text-xs"></i>';
                 step3Title.className = 'font-bold text-[11px] text-emerald-800';
-                step3Time.textContent = tglTanggapan || updated;
+                step3Time.textContent = tglSelesai || tglTanggapan || updated;
                 step3Desc.textContent = 'Solusi telah diterima & kendala teratasi.';
-                if (tanggapan && tanggapan.trim()) {
+                const noteSelesai = catatanSelesai || (!catatanProses ? tanggapan : '');
+                if (noteSelesai && step3Box && step3Text) {
                     step3Box.classList.remove('hidden');
-                    step3Text.textContent = '"' + tanggapan.trim() + '"';
+                    step3Text.textContent = '"' + noteSelesai + '"';
                 }
 
                 // Step 4: Active
@@ -1208,6 +1330,10 @@
                 step4Title.className = 'font-bold text-[11px] text-purple-800';
                 step4Time.textContent = updated;
                 step4Desc.textContent = 'Tiket telah ditutup secara permanen & diarsipkan.';
+                if (catatanTutup && step4Box && step4Text) {
+                    step4Box.classList.remove('hidden');
+                    step4Text.textContent = '"' + catatanTutup + '"';
+                }
 
                 stepperLine.className = 'absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-purple-400';
             }

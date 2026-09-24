@@ -175,15 +175,15 @@
                             </div>
                         </label>
 
-                        <!-- 2. Dosen Kaur -->
-                        <label id="card_penerima_Dosen_Kaur" onclick="selectPenerima('Dosen Kaur')" class="relative flex items-start gap-3.5 p-3.5 rounded-2xl border border-slate-200 bg-white hover:border-orange-300 hover:bg-orange-50/20 shadow-2xs cursor-pointer transition-all select-none">
-                            <input type="radio" name="tujuan_penerima" id="radio_penerima_Dosen_Kaur" value="Dosen Kaur" onchange="updatePenerimaUI(this.value)" class="sr-only">
+                        <!-- 2. Kaur (Kepala Urusan) -->
+                        <label id="card_penerima_Kaur" onclick="selectPenerima('Kaur')" class="relative flex items-start gap-3.5 p-3.5 rounded-2xl border border-slate-200 bg-white hover:border-orange-300 hover:bg-orange-50/20 shadow-2xs cursor-pointer transition-all select-none">
+                            <input type="radio" name="tujuan_penerima" id="radio_penerima_Kaur" value="Kaur" onchange="updatePenerimaUI(this.value)" class="sr-only">
                             <div class="penerima-icon-box w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center text-base shrink-0 transition-all">
-                                <i class="bi bi-person-video3"></i>
+                                <i class="bi bi-person-badge"></i>
                             </div>
                             <div class="flex-1 min-w-0">
-                                <span class="penerima-title text-xs font-semibold text-slate-700 block">Dosen Kaur</span>
-                                <span class="text-[11px] text-slate-400 leading-tight block mt-0.5">Kepala Urusan, Dosen Wali, Bimbingan & Masalah Perkuliahan</span>
+                                <span class="penerima-title text-xs font-semibold text-slate-700 block">Kaur (Kepala Urusan)</span>
+                                <span class="text-[11px] text-slate-400 leading-tight block mt-0.5">Kepala Urusan, Kebijakan Akademik, Perkuliahan & Pengesahan</span>
                             </div>
                         </label>
 
@@ -481,8 +481,9 @@
         }
 
         function updatePenerimaUI(val) {
-            const penerimaKeys = ['Laboran', 'Dosen_Kaur', 'Admin_LAA'];
-            const valKey = (val || 'Laboran').replace(/\s+/g, '_');
+            const penerimaKeys = ['Laboran', 'Kaur', 'Admin_LAA', 'Dosen_Kaur'];
+            let valKey = (val || 'Laboran').replace(/\s+/g, '_');
+            if (valKey === 'Dosen_Kaur') valKey = 'Kaur';
 
             penerimaKeys.forEach(function(key) {
                 const card = document.getElementById('card_penerima_' + key);

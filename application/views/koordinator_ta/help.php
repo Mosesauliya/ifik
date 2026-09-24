@@ -629,6 +629,152 @@
             transform: scale(0.95);
         }
 
+        /* Emoji Picker Button & Floating Popover */
+        .emoji-picker-container {
+            position: relative;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .btn-emoji-trigger {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: #f8fafc;
+            color: #64748b;
+            border: 1px solid #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            outline: none;
+        }
+
+        .btn-emoji-trigger:hover, .btn-emoji-trigger.active {
+            background: #fff7ed;
+            color: #ea580c;
+            border-color: #fdba74;
+            transform: scale(1.05);
+        }
+
+        .emoji-popover {
+            position: absolute;
+            bottom: calc(100% + 12px);
+            left: 0;
+            width: 320px;
+            max-width: 90vw;
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 18px;
+            box-shadow: 0 16px 36px -6px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(0,0,0,0.03);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: emojiFadeIn 0.2s ease-out;
+        }
+
+        .emoji-popover.show {
+            display: flex !important;
+        }
+
+        @keyframes emojiFadeIn {
+            from { opacity: 0; transform: translateY(8px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .emoji-header {
+            padding: 10px 12px 8px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8fafc;
+        }
+
+        .emoji-search-input {
+            width: 100%;
+            padding: 6px 10px;
+            font-size: 0.8rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            outline: none;
+            background: #ffffff;
+            font-family: inherit;
+        }
+        .emoji-search-input:focus {
+            border-color: #ea580c;
+        }
+
+        .emoji-categories {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 6px 8px;
+            background: #ffffff;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .emoji-cat-btn {
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: all 0.15s;
+            opacity: 0.55;
+            outline: none;
+        }
+        .emoji-cat-btn:hover, .emoji-cat-btn.active {
+            opacity: 1;
+            background: #fff7ed;
+            transform: scale(1.15);
+        }
+
+        .emoji-grid-wrap {
+            height: 190px;
+            overflow-y: auto;
+            padding: 8px 10px;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
+        }
+
+        .emoji-item-btn {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            line-height: 1.2;
+            padding: 5px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.12s, background 0.12s;
+            user-select: none;
+            outline: none;
+        }
+
+        .emoji-item-btn:hover {
+            background: #f1f5f9;
+            transform: scale(1.28);
+        }
+
+        .emoji-empty-msg {
+            grid-column: 1 / -1;
+            padding: 24px 10px;
+            text-align: center;
+            font-size: 0.78rem;
+            color: #94a3b8;
+        }
+
         /* Fullscreen Mobile View & Responsive Layout */
         @media (max-width: 900px) {
             body {
@@ -997,6 +1143,25 @@
 
                     <!-- Bottom Direct Input Area -->
                     <div class="chat-input-area">
+                        <div class="emoji-picker-container">
+                            <button type="button" class="btn-emoji-trigger" id="btnEmojiToggle" onclick="toggleEmojiPicker(event)" title="Pilih Emoji">
+                                😊
+                            </button>
+                            <div class="emoji-popover" id="emojiPickerPanel">
+                                <div class="emoji-header">
+                                    <input type="text" class="emoji-search-input" id="emojiSearchInput" placeholder="Cari emoji..." oninput="filterEmojis(this.value)">
+                                </div>
+                                <div class="emoji-categories">
+                                    <button type="button" class="emoji-cat-btn active" data-cat="smileys" onclick="selectEmojiCategory('smileys', this)" title="Smileys">😀</button>
+                                    <button type="button" class="emoji-cat-btn" data-cat="gestures" onclick="selectEmojiCategory('gestures', this)" title="Gestures">👍</button>
+                                    <button type="button" class="emoji-cat-btn" data-cat="objects" onclick="selectEmojiCategory('objects', this)" title="Objects">💼</button>
+                                    <button type="button" class="emoji-cat-btn" data-cat="symbols" onclick="selectEmojiCategory('symbols', this)" title="Symbols">❤️</button>
+                                </div>
+                                <div class="emoji-grid-wrap" id="emojiGrid">
+                                    <!-- Emojis dynamically populated -->
+                                </div>
+                            </div>
+                        </div>
                         <textarea id="composerInput" class="chat-textarea" placeholder="Tulis balasan pesan..." rows="1" onkeydown="handleComposerKey(event)"></textarea>
                         <button type="button" class="btn-send" id="btnSendChat" onclick="sendDirectMessage()" title="Kirim Balasan">
                             <i class="fa-solid fa-paper-plane"></i>
@@ -1076,6 +1241,9 @@
                     this.style.overflowY = this.scrollHeight > 120 ? 'auto' : 'hidden';
                 });
             }
+
+            // Initialize emoji picker
+            initEmojiPicker();
         });
 
         function isFeedAtBottom() {
@@ -1340,6 +1508,151 @@
         function closeMobileChat() {
             $('body').removeClass('mobile-chat-open');
             $('#chatWorkspace').removeClass('mobile-active');
+        }
+
+        // --- EMOJI PICKER ENGINE ---
+        const EMOJI_SETS = {
+            smileys: [
+                { emoji: '😀', name: 'grinning' }, { emoji: '😃', name: 'smiley' }, { emoji: '😄', name: 'smile' }, { emoji: '😁', name: 'beam' }, { emoji: '😆', name: 'laughing' },
+                { emoji: '😅', name: 'sweat smile' }, { emoji: '😂', name: 'joy tears' }, { emoji: '🤣', name: 'rofl' }, { emoji: '😊', name: 'blush' }, { emoji: '😇', name: 'halo angel' },
+                { emoji: '🙂', name: 'slight smile' }, { emoji: '🙃', name: 'upside down' }, { emoji: '😉', name: 'wink' }, { emoji: '😌', name: 'relieved' }, { emoji: '😍', name: 'heart eyes love' },
+                { emoji: '🥰', name: 'smiling hearts' }, { emoji: '😘', name: 'blowing kiss' }, { emoji: '😋', name: 'yum delicious' }, { emoji: '😛', name: 'tongue' }, { emoji: '😜', name: 'wink tongue' },
+                { emoji: '🤪', name: 'zany crazy' }, { emoji: '🤨', name: 'raised eyebrow' }, { emoji: '🧐', name: 'monocle' }, { emoji: '🤓', name: 'nerd glasses' }, { emoji: '😎', name: 'sunglasses cool' },
+                { emoji: '🤩', name: 'star struck' }, { emoji: '🥳', name: 'partying' }, { emoji: '😏', name: 'smirk' }, { emoji: '😒', name: 'unamused' }, { emoji: '😞', name: 'disappointed' },
+                { emoji: '😔', name: 'pensive' }, { emoji: '😟', name: 'worried' }, { emoji: '😕', name: 'confused' }, { emoji: '🙁', name: 'frown' }, { emoji: '😣', name: 'persevere' },
+                { emoji: '😖', name: 'confounded' }, { emoji: '😫', name: 'tired' }, { emoji: '😩', name: 'weary' }, { emoji: '🥺', name: 'pleading' }, { emoji: '😢', name: 'cry' },
+                { emoji: '😭', name: 'sob loud crying' }, { emoji: '😤', name: 'triumph steam' }, { emoji: '😠', name: 'angry' }, { emoji: '😡', name: 'rage pouting' }, { emoji: '🤬', name: 'cursing' },
+                { emoji: '🤯', name: 'exploding head' }, { emoji: '😳', name: 'flushed' }, { emoji: '🥵', name: 'hot face' }, { emoji: '🥶', name: 'cold face' }, { emoji: '😱', name: 'screaming' },
+                { emoji: '😨', name: 'fearful' }, { emoji: '😰', name: 'cold sweat' }, { emoji: '😥', name: 'sad relieved' }, { emoji: '😴', name: 'sleeping' }, { emoji: '😷', name: 'mask' }
+            ],
+            gestures: [
+                { emoji: '👍', name: 'thumbs up like oke sip' }, { emoji: '👎', name: 'thumbs down dislike' }, { emoji: '👌', name: 'ok hand' }, { emoji: '🤌', name: 'pinched fingers' },
+                { emoji: '✌️', name: 'peace victory' }, { emoji: '🤞', name: 'crossed fingers' }, { emoji: '🤟', name: 'love you hand' }, { emoji: '🤘', name: 'rock on' },
+                { emoji: '🤙', name: 'call me' }, { emoji: '👈', name: 'point left' }, { emoji: '👉', name: 'point right' }, { emoji: '👆', name: 'point up' },
+                { emoji: '👇', name: 'point down' }, { emoji: '☝️', name: 'index up' }, { emoji: '✋', name: 'hand stop' }, { emoji: '🤚', name: 'backhand' },
+                { emoji: '🖐️', name: 'fingers splayed' }, { emoji: '🖖', name: 'vulcan' }, { emoji: '👋', name: 'wave hello hai' }, { emoji: '🤝', name: 'handshake deal' },
+                { emoji: '🙏', name: 'pray thanks terima kasih tolong' }, { emoji: '✍️', name: 'writing tulis' }, { emoji: '👏', name: 'applause tepuk tangan' }, { emoji: '🙌', name: 'raising hands' },
+                { emoji: '👐', name: 'open hands' }, { emoji: '🤲', name: 'palms up' }, { emoji: '💪', name: 'muscle strong semangat' }, { emoji: '🦾', name: 'mechanical arm' }
+            ],
+            objects: [
+                { emoji: '💻', name: 'laptop computer pc' }, { emoji: '🖥️', name: 'desktop screen monitor' }, { emoji: '📱', name: 'phone mobile hp' }, { emoji: '⌨️', name: 'keyboard' },
+                { emoji: '🖨️', name: 'printer print cetak' }, { emoji: '💾', name: 'floppy disk save' }, { emoji: '📁', name: 'folder berkas' }, { emoji: '📂', name: 'open folder' },
+                { emoji: '📄', name: 'page document dokumen' }, { emoji: '📑', name: 'tabs bookmark' }, { emoji: '📊', name: 'bar chart grafik' }, { emoji: '📈', name: 'chart increasing naik' },
+                { emoji: '📉', name: 'chart decreasing turun' }, { emoji: '📋', name: 'clipboard catatan' }, { emoji: '📌', name: 'pin' }, { emoji: '📍', name: 'round pin lokasi' },
+                { emoji: '📎', name: 'paperclip lampiran file' }, { emoji: '📅', name: 'calendar tanggal jadwal' }, { emoji: '📆', name: 'tear off calendar' }, { emoji: '⏰', name: 'alarm clock jam' },
+                { emoji: '⏱️', name: 'stopwatch waktu' }, { emoji: '📚', name: 'books buku perpustakaan' }, { emoji: '📖', name: 'open book baca' }, { emoji: '🎓', name: 'graduation cap wisuda sarjana ta sidang' },
+                { emoji: '🔬', name: 'microscope riset lab' }, { emoji: '🔍', name: 'magnifying search cari' }, { emoji: '🔎', name: 'search right' }, { emoji: '💡', name: 'idea bulb lampu ide' },
+                { emoji: '✉️', name: 'envelope email surat' }, { emoji: '📦', name: 'package box paket' }
+            ],
+            symbols: [
+                { emoji: '❤️', name: 'red heart cinta love' }, { emoji: '🧡', name: 'orange heart' }, { emoji: '💛', name: 'yellow heart' }, { emoji: '💚', name: 'green heart' },
+                { emoji: '💙', name: 'blue heart' }, { emoji: '💜', name: 'purple heart' }, { emoji: '🖤', name: 'black heart' }, { emoji: '🤍', name: 'white heart' },
+                { emoji: '💔', name: 'broken heart' }, { emoji: '✨', name: 'sparkles bintang kilau' }, { emoji: '⭐', name: 'star bintang' }, { emoji: '🌟', name: 'glowing star' },
+                { emoji: '🔥', name: 'fire api hot keren' }, { emoji: '🚀', name: 'rocket roket gas lancar' }, { emoji: '🎉', name: 'party popper selamat hore' }, { emoji: '🎊', name: 'confetti ball' },
+                { emoji: '✅', name: 'check centang sukses aman benar' }, { emoji: '✔️', name: 'bold check' }, { emoji: '❌', name: 'cross silang salah batalkan' }, { emoji: '❎', name: 'cross mark button' },
+                { emoji: '⚠️', name: 'warning peringatan awas hati-hati' }, { emoji: 'ℹ️', name: 'information info' }, { emoji: '❓', name: 'question mark tanya' }, { emoji: '❗', name: 'exclamation seru' },
+                { emoji: '💯', name: '100 points sempurna mantap' }, { emoji: '🆗', name: 'ok button oke' }, { emoji: '🆕', name: 'new baru' }, { emoji: '🆙', name: 'up button' }
+            ]
+        };
+
+        let currentEmojiCat = 'smileys';
+
+        function initEmojiPicker() {
+            renderEmojiList(EMOJI_SETS[currentEmojiCat]);
+            
+            // Close emoji picker when clicked outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.emoji-picker-container').length) {
+                    $('#emojiPickerPanel').removeClass('show');
+                    $('#btnEmojiToggle').removeClass('active');
+                }
+            });
+        }
+
+        function toggleEmojiPicker(e) {
+            e.stopPropagation();
+            const panel = $('#emojiPickerPanel');
+            const btn = $('#btnEmojiToggle');
+            const isOpen = panel.hasClass('show');
+            
+            if (isOpen) {
+                panel.removeClass('show');
+                btn.removeClass('active');
+            } else {
+                panel.addClass('show');
+                btn.addClass('active');
+                $('#emojiSearchInput').val('');
+                renderEmojiList(EMOJI_SETS[currentEmojiCat]);
+                setTimeout(() => $('#emojiSearchInput').focus(), 50);
+            }
+        }
+
+        function selectEmojiCategory(cat, btnElem) {
+            currentEmojiCat = cat;
+            $('.emoji-cat-btn').removeClass('active');
+            $(btnElem).addClass('active');
+            $('#emojiSearchInput').val('');
+            renderEmojiList(EMOJI_SETS[cat]);
+        }
+
+        function filterEmojis(query) {
+            const q = query.toLowerCase().trim();
+            if (!q) {
+                renderEmojiList(EMOJI_SETS[currentEmojiCat]);
+                return;
+            }
+            
+            let filtered = [];
+            Object.values(EMOJI_SETS).forEach(list => {
+                list.forEach(item => {
+                    if (item.name.toLowerCase().includes(q) || item.emoji.includes(q)) {
+                        if (!filtered.some(f => f.emoji === item.emoji)) {
+                            filtered.push(item);
+                        }
+                    }
+                });
+            });
+            renderEmojiList(filtered);
+        }
+
+        function renderEmojiList(list) {
+            const grid = $('#emojiGrid');
+            grid.empty();
+            
+            if (!list || list.length === 0) {
+                grid.html('<div class="emoji-empty-msg">Tidak ada emoji ditemukan</div>');
+                return;
+            }
+            
+            list.forEach(item => {
+                const btn = $('<button type="button" class="emoji-item-btn">')
+                    .text(item.emoji)
+                    .attr('title', item.name)
+                    .on('click', function(e) {
+                        e.stopPropagation();
+                        insertEmoji(item.emoji);
+                    });
+                grid.append(btn);
+            });
+        }
+
+        function insertEmoji(emoji) {
+            const textarea = document.getElementById('composerInput') || document.getElementById('chatInput');
+            if (!textarea) return;
+            
+            const start = textarea.selectionStart || 0;
+            const end = textarea.selectionEnd || 0;
+            const val = textarea.value;
+            
+            textarea.value = val.substring(0, start) + emoji + val.substring(end);
+            textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
+            textarea.focus();
+            
+            // Adjust height if needed
+            textarea.style.height = 'auto';
+            const newHeight = Math.min(Math.max(textarea.scrollHeight, 42), 120);
+            textarea.style.height = newHeight + 'px';
+            textarea.style.overflowY = textarea.scrollHeight > 120 ? 'auto' : 'hidden';
         }
     </script>
 </body>

@@ -18,21 +18,21 @@
         $has_ta = !empty($pendaftaran['judul_1']);
 
         $w_status = $has_ta ? ($pendaftaran['status_approval_wali'] ?? 'Pending') : 'Belum Diajukan';
-        $a_status = $has_ta ? ($pendaftaran['status_approval_admin'] ?? 'Pending') : 'Belum Diajukan';
-        $k_status = $has_ta ? ($pendaftaran['status_approval_koor'] ?? 'Pending') : 'Belum Diajukan';
-        $kk_status = $has_ta ? ($pendaftaran['status_approval_kk'] ?? 'Pending') : 'Belum Diajukan';
+        $a_status = ($has_ta && $w_status === 'Approved') ? ($pendaftaran['status_approval_admin'] ?? 'Pending') : ($has_ta ? 'Pending' : 'Belum Diajukan');
+        $k_status = ($has_ta && $w_status === 'Approved' && $a_status === 'Approved') ? ($pendaftaran['status_approval_koor'] ?? 'Pending') : ($has_ta ? 'Pending' : 'Belum Diajukan');
+        $kk_status = ($has_ta && $w_status === 'Approved' && $a_status === 'Approved' && $k_status === 'Approved') ? ($pendaftaran['status_approval_kk'] ?? 'Pending') : ($has_ta ? 'Pending' : 'Belum Diajukan');
 
         $w_is_app = $has_ta && ($w_status === 'Approved');
         $w_is_rej = $has_ta && ($w_status === 'Rejected');
 
-        $a_is_app = $has_ta && ($a_status === 'Approved');
-        $a_is_rej = $has_ta && ($a_status === 'Rejected');
+        $a_is_app = $has_ta && ($w_status === 'Approved') && ($a_status === 'Approved');
+        $a_is_rej = $has_ta && ($w_status === 'Approved') && ($a_status === 'Rejected');
 
-        $k_is_app = $has_ta && ($k_status === 'Approved');
-        $k_is_rej = $has_ta && ($k_status === 'Rejected');
+        $k_is_app = $has_ta && ($w_status === 'Approved') && ($a_status === 'Approved') && ($k_status === 'Approved');
+        $k_is_rej = $has_ta && ($w_status === 'Approved') && ($a_status === 'Approved') && ($k_status === 'Rejected');
 
-        $kk_is_app = $has_ta && ($kk_status === 'Approved');
-        $kk_is_rej = $has_ta && ($kk_status === 'Rejected');
+        $kk_is_app = $has_ta && ($w_status === 'Approved') && ($a_status === 'Approved') && ($k_status === 'Approved') && ($kk_status === 'Approved');
+        $kk_is_rej = $has_ta && ($w_status === 'Approved') && ($a_status === 'Approved') && ($k_status === 'Approved') && ($kk_status === 'Rejected');
 
         $approved_count = 0;
         if ($has_ta) {
@@ -756,37 +756,44 @@
                                     $a_is_rej  = ($a_st === 'Rejected' || !empty($bk_raw));
                                     $kk_is_rej = ($kk_st === 'Rejected');
 
-                                    $app_items = 0;
-                                    if ($s_jud === 'Approved') $app_items++;
-                                    if ($s_jen === 'Approved') $app_items++;
+                                    // Hitung rincian khusus BERKAS (PDF) - Judul & Jenis TA terpisah
+                                    $file_rej_count = 0;
+                                    $file_app_count = 0;
+                                    $file_pen_count = 0;
+                                    $total_files_count = count($files_list);
 
-                                    $rej_items = 0;
-                                    if ($s_jud === 'Rejected') $rej_items++;
-                                    if ($s_jen === 'Rejected') $rej_items++;
-
-                                    $rej_files_count = 0;
                                     foreach ($files_list as $f) {
-                                        if ($f['status'] === 'Approved') $app_items++;
-                                        elseif ($f['status'] === 'Rejected') {
-                                            $rej_items++;
-                                            $rej_files_count++;
+                                        if ($f['status'] === 'Approved') {
+                                            $file_app_count++;
+                                        } elseif ($f['status'] === 'Rejected') {
+                                            $file_rej_count++;
+                                        } else {
+                                            $file_pen_count++;
                                         }
                                     }
 
+                                    // Evaluasi item keseluruhan untuk modal & status
+                                    $app_items = ($s_jud === 'Approved' ? 1 : 0) + ($s_jen === 'Approved' ? 1 : 0) + $file_app_count;
+                                    $rej_items = ($s_jud === 'Rejected' ? 1 : 0) + ($s_jen === 'Rejected' ? 1 : 0) + $file_rej_count;
                                     if ($kk_is_rej && $s_jud !== 'Rejected') {
                                         $rej_items++;
                                     }
 
-                                    $total_eval_items = 2 + count($files_list);
+                                    if ($w_is_rej && $rej_items === 0) {
+                                        $s_jud = 'Rejected';
+                                        $rej_items++;
+                                    }
+
+                                    $total_eval_items = 2 + $total_files_count;
                                     $pen_items = max(0, $total_eval_items - $app_items - $rej_items);
 
                                     $active_reviewer_rej = null;
-                                    if ($w_is_rej || ($w_st !== 'Approved' && ($s_jud === 'Rejected' || $s_jen === 'Rejected' || $rej_files_count > 0))) {
+                                    if ($w_is_rej || ($w_st !== 'Approved' && ($s_jud === 'Rejected' || $s_jen === 'Rejected' || $file_rej_count > 0))) {
                                         $overall_badge_text = 'Perlu Revisi (Dosen Wali)';
                                         $overall_badge_cls  = 'bg-rose-100 text-rose-800 border-rose-300';
                                         $overall_dot_cls    = 'bg-rose-500 animate-pulse';
                                         $active_reviewer_rej = 'wali';
-                                    } elseif ($a_is_rej || ($a_st !== 'Approved' && $rej_files_count > 0 && $w_st === 'Approved')) {
+                                    } elseif ($a_is_rej || ($a_st !== 'Approved' && $file_rej_count > 0 && $w_st === 'Approved')) {
                                         $overall_badge_text = 'Perlu Revisi (Admin Layanan)';
                                         $overall_badge_cls  = 'bg-rose-100 text-rose-800 border-rose-300';
                                         $overall_dot_cls    = 'bg-rose-500 animate-pulse';
@@ -814,19 +821,26 @@
                                     </span>
                                 </td>
 
-                                <!-- Kolom Rincian Review Berkas (Di Kanan Status) -->
+                                <!-- Kolom Rincian Review Berkas (Khusus Dokumen Berkas) -->
                                 <td class="py-4 px-4 text-center whitespace-nowrap align-middle">
-                                    <button type="button" onclick="openFileBreakdownModal()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-bold <?= ($rej_items > 0) ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'; ?> transition shadow-2xs cursor-pointer group" title="Klik untuk melihat rincian status berkas & catatan dosen">
-                                        <?php if($rej_items > 0): ?>
-                                            <i class="bi bi-exclamation-triangle-fill text-rose-500"></i>
-                                            <span><?= $rej_items; ?> Revisi</span>
-                                        <?php elseif($app_items >= $total_eval_items): ?>
-                                            <i class="bi bi-check-all text-emerald-600 font-bold text-sm"></i>
-                                            <span class="text-emerald-800">Semua Valid (<?= $app_items; ?>/<?= $total_eval_items; ?>)</span>
-                                        <?php else: ?>
-                                            <i class="bi bi-clock text-slate-500"></i>
-                                            <span><?= $app_items > 0 ? $app_items . ' Valid, ' : ''; ?><?= $pen_items; ?> Menunggu</span>
-                                        <?php endif; ?>
+                                    <?php
+                                        if ($file_rej_count > 0) {
+                                            $btn_summary_text = $file_rej_count . ' Revisi';
+                                            $btn_badge_cls = 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200';
+                                            $btn_icon = '<i class="bi bi-exclamation-triangle-fill text-rose-500"></i>';
+                                        } elseif ($file_app_count === $total_files_count) {
+                                            $btn_summary_text = 'Valid';
+                                            $btn_badge_cls = 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200';
+                                            $btn_icon = '<i class="bi bi-check-all text-emerald-600 font-bold text-sm"></i>';
+                                        } else {
+                                            $btn_summary_text = 'Menunggu';
+                                            $btn_badge_cls = 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200';
+                                            $btn_icon = '<i class="bi bi-clock text-slate-500"></i>';
+                                        }
+                                    ?>
+                                    <button type="button" onclick="openFileBreakdownModal()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-bold <?= $btn_badge_cls; ?> transition shadow-2xs cursor-pointer group" title="Klik untuk melihat rincian status berkas & catatan dosen">
+                                        <?= $btn_icon; ?>
+                                        <span><?= $btn_summary_text; ?></span>
                                         <i class="bi bi-chevron-right text-[9px] opacity-60 group-hover:translate-x-0.5 transition-transform"></i>
                                     </button>
                                 </td>
@@ -869,8 +883,18 @@
 
     <?php if($has_ta): ?>
         <!-- Modal Rincian Status Berkas Persyaratan & Catatan Dosen -->
-
-        <div id="modalFileBreakdown" style="display: none;" onclick="if(event.target === this) closeFileBreakdownModal()" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 sm:p-6 md:p-8 overflow-hidden">
+        <style>
+            #modalFileBreakdown {
+                z-index: 100050 !important;
+            }
+            #modalFileBreakdown > div {
+                z-index: 100051 !important;
+            }
+            .swal2-container {
+                z-index: 100060 !important;
+            }
+        </style>
+        <div id="modalFileBreakdown" style="display: none; z-index: 100050 !important;" onclick="if(event.target === this) closeFileBreakdownModal()" class="fixed inset-0 z-[100050] flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 sm:p-6 md:p-8 overflow-hidden">
             <div class="bg-white rounded-3xl max-w-3xl lg:max-w-4xl w-full shadow-2xl border border-orange-100 max-h-[88vh] flex flex-col overflow-hidden my-auto mx-auto">
                 <form action="<?= site_url('mahasiswa/upload_revisi_berkas'); ?>" method="POST" enctype="multipart/form-data" class="flex flex-col flex-1 min-h-0">
                     <!-- Header Modal (Fixed) -->
@@ -884,7 +908,9 @@
                                     <?= ($rej_items > 0) ? 'Perbaikan Tugas Akhir (' . $rej_items . ' Bagian Perlu Revisi)' : 'Rincian Verifikasi Berkas & Usulan Judul'; ?>
                                 </h3>
                                 <p class="text-xs text-slate-500 font-medium">
-                                    <?php if($active_reviewer_rej === 'admin'): ?>
+                                    <?php if($rej_items > 0): ?>
+                                        Menampilkan berkas/komponen yang perlu perbaikan. Silakan unggah perbaikan berkas di bawah ini.
+                                    <?php elseif($active_reviewer_rej === 'admin'): ?>
                                         Silakan periksa catatan dari Admin Layanan dan unggah berkas PDF perbaikan di bawah ini.
                                     <?php elseif($active_reviewer_rej === 'kk'): ?>
                                         Silakan periksa catatan arahan dari Ketua KK dan perbarui usulan judul tugas akhir Anda.
@@ -903,17 +929,36 @@
 
                     <!-- Scrollable Modal Body -->
                     <div class="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1">
-                        <!-- Summary Chips -->
+                        <!-- Summary Chips & Filter Tabs -->
                         <div class="flex flex-wrap items-center gap-2 text-xs">
-                            <span class="px-3 py-1 bg-emerald-50 text-emerald-800 font-bold rounded-lg border border-emerald-200 flex items-center gap-1.5">
-                                <i class="bi bi-check-circle-fill text-emerald-600"></i> <?= $app_items; ?> Disetujui
-                            </span>
-                            <span class="px-3 py-1 <?= ($rej_items > 0) ? 'bg-rose-50 text-rose-800 border-rose-200 font-bold' : 'bg-slate-50 text-slate-500 border-slate-200'; ?> rounded-lg border flex items-center gap-1.5">
-                                <i class="bi <?= ($rej_items > 0) ? 'bi-x-circle-fill text-rose-600' : 'bi-dash-circle text-slate-400'; ?>"></i> <?= $rej_items; ?> Ditolak / Revisi
-                            </span>
-                            <span class="px-3 py-1 bg-slate-100 text-slate-700 font-bold rounded-lg border border-slate-200 flex items-center gap-1.5">
-                                <i class="bi bi-clock-history text-slate-500"></i> <?= $pen_items; ?> Menunggu Review
-                            </span>
+                            <?php if($rej_items > 0): ?>
+                                <button type="button" onclick="setModalFilter('rejected')" id="chipModalRej" class="px-3 py-1 bg-rose-500 text-white font-bold rounded-lg border border-rose-600 shadow-2xs flex items-center gap-1.5 cursor-pointer transition text-xs">
+                                    <i class="bi bi-exclamation-octagon-fill"></i> <?= $rej_items; ?> Perlu Revisi
+                                </button>
+                                <?php if($app_items > 0): ?>
+                                    <button type="button" onclick="setModalFilter('approved')" id="chipModalApp" class="px-3 py-1 bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 font-bold rounded-lg border border-slate-200 flex items-center gap-1.5 cursor-pointer transition text-xs">
+                                        <i class="bi bi-check-circle-fill text-emerald-600"></i> <?= $app_items; ?> Disetujui
+                                    </button>
+                                <?php endif; ?>
+                                <?php if($pen_items > 0): ?>
+                                    <button type="button" onclick="setModalFilter('pending')" id="chipModalPen" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg border border-slate-200 flex items-center gap-1.5 cursor-pointer transition text-xs">
+                                        <i class="bi bi-clock-history text-slate-500"></i> <?= $pen_items; ?> Menunggu
+                                    </button>
+                                <?php endif; ?>
+                                <button type="button" onclick="setModalFilter('all')" id="chipModalAll" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg border border-slate-200 flex items-center gap-1.5 cursor-pointer transition text-xs">
+                                    <i class="bi bi-grid-fill text-slate-500"></i> Semua (<?= $total_eval_items; ?>)
+                                </button>
+                            <?php else: ?>
+                                <span class="px-3 py-1 bg-emerald-50 text-emerald-800 font-bold rounded-lg border border-emerald-200 flex items-center gap-1.5">
+                                    <i class="bi bi-check-circle-fill text-emerald-600"></i> <?= $app_items; ?> Disetujui
+                                </span>
+                                <span class="px-3 py-1 bg-slate-50 text-slate-500 border-slate-200 rounded-lg border flex items-center gap-1.5">
+                                    <i class="bi bi-dash-circle text-slate-400"></i> 0 Perlu Revisi
+                                </span>
+                                <span class="px-3 py-1 bg-slate-100 text-slate-700 font-bold rounded-lg border border-slate-200 flex items-center gap-1.5">
+                                    <i class="bi bi-clock-history text-slate-500"></i> <?= $pen_items; ?> Menunggu Review
+                                </span>
+                            <?php endif; ?>
                         </div>
 
                         <?php
@@ -967,7 +1012,7 @@
                             <?php if($rej_items > 0): ?>
                                 <!-- 1. HANYA MENAMPILKAN KOMPONEN YANG PERLU REVISI (SALAH) -->
                                 <?php if($st_jen === 'Rejected'): ?>
-                                    <div class="p-5 rounded-2xl border-2 border-rose-400 bg-rose-50/70 shadow-sm space-y-3.5 transition-all">
+                                    <div class="card-revisi-item p-5 rounded-2xl border-2 border-rose-400 bg-rose-50/70 shadow-sm space-y-3.5 transition-all">
                                         <div class="flex items-start justify-between gap-3">
                                             <div class="flex items-center gap-3 min-w-0">
                                                 <div class="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center text-lg font-bold shrink-0 box-3d shadow-xs">
@@ -1002,7 +1047,7 @@
                                 <?php endif; ?>
 
                                 <?php if($st_j === 'Rejected' || $kk_is_rej): ?>
-                                    <div class="p-5 rounded-2xl border-2 border-rose-400 bg-rose-50/70 shadow-sm space-y-3.5 transition-all">
+                                    <div class="card-revisi-item p-5 rounded-2xl border-2 border-rose-400 bg-rose-50/70 shadow-sm space-y-3.5 transition-all">
                                         <div class="flex items-start justify-between gap-3">
                                             <div class="flex items-center gap-3 min-w-0">
                                                 <div class="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center text-lg font-bold shrink-0 box-3d shadow-xs">
@@ -1054,7 +1099,7 @@
 
                                 <?php foreach($files_list as $f): ?>
                                     <?php if($f['status'] === 'Rejected'): ?>
-                                        <div class="p-5 rounded-2xl border-2 border-rose-400 bg-rose-50/70 shadow-sm space-y-3.5 transition-all">
+                                        <div class="card-revisi-item p-5 rounded-2xl border-2 border-rose-400 bg-rose-50/70 shadow-sm space-y-3.5 transition-all">
                                             <div class="flex items-start justify-between gap-3">
                                                 <div class="flex items-center gap-3 min-w-0">
                                                     <div class="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center text-lg font-bold shrink-0 box-3d shadow-xs">
@@ -1099,13 +1144,13 @@
 
                                 <?php if($app_items > 0 || $pen_items > 0): ?>
                                     <!-- Accordion Bagian Yang Sudah Valid / Masih Menunggu -->
-                                    <div class="pt-2">
-                                        <button type="button" onclick="document.getElementById('accordionApprovedDocs').classList.toggle('hidden')" class="text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1.5 py-1.5 cursor-pointer transition">
-                                            <i class="bi bi-check-circle-fill text-emerald-600"></i> Lihat Bagian Lainnya yang Sudah Valid / Menunggu (<?= $app_items + $pen_items; ?> Bagian) <i class="bi bi-chevron-down text-[10px]"></i>
+                                    <div id="wrapperApprovedDocs" class="pt-2">
+                                        <button type="button" onclick="toggleApprovedDocs()" id="btnToggleApprovedDocs" class="text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1.5 py-1.5 cursor-pointer transition">
+                                            <i class="bi bi-info-circle-fill text-slate-400"></i> Lihat Berkas Lainnya yang Valid / Menunggu (<?= $app_items + $pen_items; ?> Berkas) <i class="bi bi-chevron-down text-[10px]" id="iconApprovedDocs"></i>
                                         </button>
                                         <div id="accordionApprovedDocs" class="hidden mt-2 space-y-2 p-3 bg-slate-50 rounded-2xl border border-slate-200">
                                             <?php if($st_jen !== 'Rejected'): ?>
-                                                <div class="flex items-center justify-between p-2.5 bg-white rounded-xl border border-slate-200 text-xs">
+                                                <div class="flex items-center justify-between p-2.5 bg-white rounded-xl border border-slate-200 text-xs item-other-doc" data-doc-status="<?= ($st_jen === 'Approved') ? 'approved' : 'pending'; ?>">
                                                     <div class="flex items-center gap-2">
                                                         <i class="bi <?= ($st_jen === 'Approved') ? 'bi-check-circle-fill text-emerald-600' : 'bi-clock-history text-slate-400'; ?> text-sm"></i>
                                                         <span class="font-bold text-slate-800">Jenis &amp; Skema TA (<?= htmlspecialchars($pendaftaran['jenis_ta'] ?? 'Pengkaryaan'); ?>)</span>
@@ -1114,7 +1159,7 @@
                                                 </div>
                                             <?php endif; ?>
                                             <?php if($st_j !== 'Rejected'): ?>
-                                                <div class="flex items-center justify-between p-2.5 bg-white rounded-xl border border-slate-200 text-xs">
+                                                <div class="flex items-center justify-between p-2.5 bg-white rounded-xl border border-slate-200 text-xs item-other-doc" data-doc-status="<?= ($st_j === 'Approved') ? 'approved' : 'pending'; ?>">
                                                     <div class="flex items-center gap-2">
                                                         <i class="bi <?= ($st_j === 'Approved') ? 'bi-check-circle-fill text-emerald-600' : 'bi-clock-history text-slate-400'; ?> text-sm"></i>
                                                         <span class="font-bold text-slate-800">Usulan Judul TA (Utama)</span>
@@ -1124,7 +1169,7 @@
                                             <?php endif; ?>
                                             <?php foreach($files_list as $f): ?>
                                                 <?php if($f['status'] !== 'Rejected'): ?>
-                                                    <div class="flex items-center justify-between p-2.5 bg-white rounded-xl border border-slate-200 text-xs">
+                                                    <div class="flex items-center justify-between p-2.5 bg-white rounded-xl border border-slate-200 text-xs item-other-doc" data-doc-status="<?= ($f['status'] === 'Approved') ? 'approved' : 'pending'; ?>">
                                                         <div class="flex items-center gap-2">
                                                             <i class="bi <?= ($f['status'] === 'Approved') ? 'bi-check-circle-fill text-emerald-600' : 'bi-clock-history text-slate-400'; ?> text-sm"></i>
                                                             <span class="font-bold text-slate-800"><?= $f['title']; ?></span>
@@ -1267,58 +1312,76 @@
     <script src="<?= base_url('assets/js/navbar_animated.js'); ?>?v=<?= time(); ?>"></script>
     <script>
     function openResetModal() {
-        Swal.fire({
-            title: 'Reset Pengajuan Tugas Akhir?',
-            html: '<p class="text-xs text-slate-600 leading-relaxed mt-1">Tindakan ini akan <strong>menghapus data pendaftaran TA</strong> yang telah Anda kirimkan. Anda harus mengisi ulang dari formulir Langkah 1.</p>',
-            icon: 'warning',
-            iconColor: '#e11d48',
-            showCancelButton: true,
-            confirmButtonColor: '#e11d48',
-            cancelButtonColor: '#94a3b8',
-            confirmButtonText: '<i class="bi bi-trash3-fill"></i> Ya, Reset Pengajuan',
-            cancelButtonText: 'Batal',
-            reverseButtons: true,
-            customClass: {
-                popup: 'rounded-2xl shadow-2xl border border-rose-100',
-                confirmButton: 'rounded-xl font-bold px-4 py-2.5 text-xs shadow-md cursor-pointer',
-                cancelButton: 'rounded-xl font-semibold px-4 py-2.5 text-xs cursor-pointer'
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Bersihkan cache draft client-side seketika
-                const userNim = "<?= htmlspecialchars($mahasiswa['nim'] ?? ($this->session->userdata('nim') ?: ($this->session->userdata('nidn_nim') ?: ''))); ?>";
-                if (userNim) {
-                    try {
-                        localStorage.removeItem('ifik_ta_active_step_' + userNim);
-                        localStorage.removeItem('ifik_ta_draft_' + userNim);
-                        localStorage.removeItem('ifik_ta_form_draft_' + userNim);
-                        sessionStorage.removeItem('ifik_ta_active_step_' + userNim);
-                        sessionStorage.removeItem('ifik_ta_draft_' + userNim);
-                        sessionStorage.removeItem('ifik_ta_form_draft_' + userNim);
-                    } catch (e) {}
-                }
+        const doReset = () => {
+            const userNim = "<?= htmlspecialchars($mahasiswa['nim'] ?? ($this->session->userdata('nim') ?: ($this->session->userdata('nidn_nim') ?: ''))); ?>";
+            if (userNim) {
                 try {
-                    localStorage.removeItem('ifik_ta_active_step');
-                    localStorage.removeItem('ifik_ta_draft');
-                    localStorage.removeItem('ifik_ta_form_draft');
-                    sessionStorage.removeItem('ifik_ta_active_step');
-                    sessionStorage.removeItem('ifik_ta_draft');
-                    sessionStorage.removeItem('ifik_ta_form_draft');
+                    localStorage.removeItem('ifik_ta_active_step_' + userNim);
+                    localStorage.removeItem('ifik_ta_draft_' + userNim);
+                    localStorage.removeItem('ifik_ta_form_draft_' + userNim);
+                    sessionStorage.removeItem('ifik_ta_active_step_' + userNim);
+                    sessionStorage.removeItem('ifik_ta_draft_' + userNim);
+                    sessionStorage.removeItem('ifik_ta_form_draft_' + userNim);
                 } catch (e) {}
-
-                window.location.href = '<?= site_url("mahasiswa/reset_pendaftaran"); ?>';
             }
-        });
+            try {
+                localStorage.removeItem('ifik_ta_active_step');
+                localStorage.removeItem('ifik_ta_draft');
+                localStorage.removeItem('ifik_ta_form_draft');
+                sessionStorage.removeItem('ifik_ta_active_step');
+                sessionStorage.removeItem('ifik_ta_draft');
+                sessionStorage.removeItem('ifik_ta_form_draft');
+            } catch (e) {}
+            window.location.href = '<?= site_url("mahasiswa/reset_pendaftaran"); ?>';
+        };
+
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Reset Pengajuan Tugas Akhir?',
+                html: '<p class="text-xs text-slate-600 leading-relaxed mt-1">Tindakan ini akan <strong>menghapus data pendaftaran TA</strong> yang telah Anda kirimkan. Anda harus mengisi ulang dari formulir Langkah 1.</p>',
+                icon: 'warning',
+                iconColor: '#e11d48',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: '<i class="bi bi-trash3-fill"></i> Ya, Reset Pengajuan',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                customClass: {
+                    popup: 'rounded-2xl shadow-2xl border border-rose-100',
+                    confirmButton: 'rounded-xl font-bold px-4 py-2.5 text-xs shadow-md cursor-pointer',
+                    cancelButton: 'rounded-xl font-semibold px-4 py-2.5 text-xs cursor-pointer'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    doReset();
+                }
+            });
+        } else {
+            if (confirm('Apakah Anda yakin ingin me-reset pengajuan Tugas Akhir? Tindakan ini akan menghapus data pendaftaran TA yang telah Anda kirimkan.')) {
+                doReset();
+            }
+        }
     }
 
     function openFileBreakdownModal() {
+        // Otomatis tutup curved sidebar jika terbuka agar tidak menutupi modal
+        if (window.curvedSidebarInstance && typeof window.curvedSidebarInstance.close === 'function') {
+            window.curvedSidebarInstance.close();
+        }
         const modal = document.getElementById('modalFileBreakdown');
         if (modal) {
             modal.style.display = 'flex';
             modal.classList.remove('hidden');
         }
         document.body.style.overflow = 'hidden';
+
+        // Jika terdapat revisi, default fokuskan hanya pada berkas yang perlu direvisi
+        <?php if(!empty($rej_items) && $rej_items > 0): ?>
+            setModalFilter('rejected');
+        <?php endif; ?>
     }
+
     function closeFileBreakdownModal() {
         const modal = document.getElementById('modalFileBreakdown');
         if (modal) {
@@ -1326,6 +1389,62 @@
             modal.classList.add('hidden');
         }
         document.body.style.overflow = '';
+    }
+
+    function toggleApprovedDocs() {
+        const acc = document.getElementById('accordionApprovedDocs');
+        const iconAcc = document.getElementById('iconApprovedDocs');
+        if (!acc) return;
+        const isHidden = acc.classList.toggle('hidden');
+        if (iconAcc) {
+            iconAcc.className = isHidden ? 'bi bi-chevron-down text-[10px]' : 'bi bi-chevron-up text-[10px]';
+        }
+    }
+
+    function setModalFilter(type) {
+        const acc = document.getElementById('accordionApprovedDocs');
+        const rejCards = document.querySelectorAll('.card-revisi-item');
+        const otherDocs = document.querySelectorAll('.item-other-doc');
+        const chipRej = document.getElementById('chipModalRej');
+        const chipApp = document.getElementById('chipModalApp');
+        const chipPen = document.getElementById('chipModalPen');
+        const chipAll = document.getElementById('chipModalAll');
+        const iconAcc = document.getElementById('iconApprovedDocs');
+
+        // Reset semua class tombol chip
+        [chipRej, chipApp, chipPen, chipAll].forEach(c => {
+            if (!c) return;
+            c.className = 'px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg border border-slate-200 flex items-center gap-1.5 cursor-pointer transition text-xs';
+        });
+
+        if (type === 'rejected') {
+            if (chipRej) chipRej.className = 'px-3 py-1 bg-rose-500 text-white font-bold rounded-lg border border-rose-600 shadow-2xs flex items-center gap-1.5 cursor-pointer transition text-xs';
+            rejCards.forEach(c => c.style.display = '');
+            if (acc) acc.classList.add('hidden');
+            if (iconAcc) iconAcc.className = 'bi bi-chevron-down text-[10px]';
+        } else if (type === 'all') {
+            if (chipAll) chipAll.className = 'px-3 py-1 bg-slate-700 text-white font-bold rounded-lg border border-slate-800 shadow-2xs flex items-center gap-1.5 cursor-pointer transition text-xs';
+            rejCards.forEach(c => c.style.display = '');
+            if (acc) acc.classList.remove('hidden');
+            otherDocs.forEach(d => d.style.display = '');
+            if (iconAcc) iconAcc.className = 'bi bi-chevron-up text-[10px]';
+        } else if (type === 'approved') {
+            if (chipApp) chipApp.className = 'px-3 py-1 bg-emerald-600 text-white font-bold rounded-lg border border-emerald-700 shadow-2xs flex items-center gap-1.5 cursor-pointer transition text-xs';
+            rejCards.forEach(c => c.style.display = 'none');
+            if (acc) acc.classList.remove('hidden');
+            otherDocs.forEach(d => {
+                d.style.display = (d.getAttribute('data-doc-status') === 'approved') ? '' : 'none';
+            });
+            if (iconAcc) iconAcc.className = 'bi bi-chevron-up text-[10px]';
+        } else if (type === 'pending') {
+            if (chipPen) chipPen.className = 'px-3 py-1 bg-slate-600 text-white font-bold rounded-lg border border-slate-700 shadow-2xs flex items-center gap-1.5 cursor-pointer transition text-xs';
+            rejCards.forEach(c => c.style.display = 'none');
+            if (acc) acc.classList.remove('hidden');
+            otherDocs.forEach(d => {
+                d.style.display = (d.getAttribute('data-doc-status') === 'pending') ? '' : 'none';
+            });
+            if (iconAcc) iconAcc.className = 'bi bi-chevron-up text-[10px]';
+        }
     }
 
     // AJAX Polling: Cek perubahan status approval pengajuan TA & verifikasi berkas mahasiswa secara real-time
@@ -1340,8 +1459,7 @@
             $pendaftaran['status_file_ksm'] ?? 'Pending',
             $pendaftaran['status_file_transkrip'] ?? 'Pending',
             $pendaftaran['status_file_pernyataan'] ?? 'Pending',
-            $pendaftaran['status_file_bebas_lab'] ?? 'Pending',
-            $pendaftaran['updated_at'] ?? ''
+            $pendaftaran['status_file_bebas_lab'] ?? 'Pending'
         ]); ?>';
 
         async function checkStudentTAStatus() {
@@ -1353,7 +1471,7 @@
                 const json = await res.json();
                 if (!json || !json.success || !json.has_ta) return;
 
-                const newStatusKey = `${json.status_wali}_${json.status_admin}_${json.status_koor}_${json.status_kk}_${json.status_jenis_ta}_${json.status_judul}_${json.status_file_ksm}_${json.status_file_transkrip}_${json.status_file_pernyataan}_${json.status_file_bebas_lab}_${json.updated_at || ''}`;
+                const newStatusKey = `${json.status_wali}_${json.status_admin}_${json.status_koor}_${json.status_kk}_${json.status_jenis_ta}_${json.status_judul}_${json.status_file_ksm}_${json.status_file_transkrip}_${json.status_file_pernyataan}_${json.status_file_bebas_lab}`;
                 
                 if (lastStatusKey && newStatusKey !== lastStatusKey) {
                     console.log('Status TA atau review berkas berubah, memperbarui tampilan...');
@@ -1366,8 +1484,8 @@
             }
         }
 
-        // Jalankan polling otomatis setiap 4 detik
-        setInterval(checkStudentTAStatus, 4000);
+        // Jalankan polling otomatis setiap 6 detik
+        setInterval(checkStudentTAStatus, 6000);
     })();
     </script>
     <?php $this->load->view('partials/custom_cursor'); ?>
