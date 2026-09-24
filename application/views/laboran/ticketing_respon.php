@@ -203,7 +203,7 @@
                     <thead>
                         <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-extrabold uppercase text-slate-500 tracking-wider">
                             <th class="py-3.5 px-4 font-extrabold">Kode Tiket</th>
-                            <th class="py-3.5 px-4 font-extrabold">Pengirim / Dosen</th>
+                            <th class="py-3.5 px-4 font-extrabold">Pengirim</th>
                             <th class="py-3.5 px-4 font-extrabold">Kendala & Kategori</th>
                             <th class="py-3.5 px-4 font-extrabold">Prioritas</th>
                             <th class="py-3.5 px-4 font-extrabold">Status</th>
@@ -244,10 +244,10 @@
                                         </span>
                                     </td>
 
-                                    <!-- Pengirim / Dosen -->
+                                    <!-- Pengirim -->
                                     <td class="py-3.5 px-4">
                                         <div class="font-bold text-slate-900"><?= htmlspecialchars($t->nama_dosen); ?></div>
-                                        <div class="text-[11px] text-slate-400 font-mono mt-0.5">NIDN: <?= htmlspecialchars($t->nidn ?: '-'); ?></div>
+                                        <div class="text-[11px] text-slate-400 font-mono mt-0.5"><?= htmlspecialchars(!empty($t->label_identitas) ? $t->label_identitas : 'NIDN/NIM'); ?>: <?= htmlspecialchars($t->nidn ?? '-'); ?></div>
                                     </td>
 
                                     <!-- Kendala & Kategori -->
@@ -402,7 +402,7 @@
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <p class="font-bold text-slate-800 truncate"><?= htmlspecialchars($t->nama_dosen); ?></p>
-                                    <p class="text-[10px] text-slate-400 font-mono">NIDN: <?= htmlspecialchars($t->nidn ?: '-'); ?></p>
+                                    <p class="text-[10px] text-slate-400 font-mono"><?= htmlspecialchars(!empty($t->label_identitas) ? $t->label_identitas : 'NIDN/NIM'); ?>: <?= htmlspecialchars($t->nidn ?? '-'); ?></p>
                                 </div>
                             </div>
 
@@ -1051,7 +1051,7 @@
                         document.getElementById('modalKodeTiket').innerText = d.kode_tiket;
                         document.getElementById('modalCreatedAt').innerText = 'Dibuat pada: ' + d.created_at_fmt;
                         document.getElementById('modalNamaDosen').innerText = d.nama_dosen;
-                        document.getElementById('modalNidn').innerText = 'NIDN/ID: ' + d.nidn;
+                        document.getElementById('modalNidn').innerText = (d.label_identitas || 'NIDN/NIM') + ': ' + (d.nidn || '-');
                         if (document.getElementById('modalTujuanPenerima')) document.getElementById('modalTujuanPenerima').innerText = d.tujuan_penerima || 'Laboran';
                         if (document.getElementById('modalUnitTerkait')) document.getElementById('modalUnitTerkait').innerText = d.unit_terkait || d.unit_tujuan || '-';
                         document.getElementById('modalKategori').innerText = d.kategori;

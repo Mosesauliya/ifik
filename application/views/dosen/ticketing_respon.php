@@ -281,7 +281,7 @@ $baseResponUrl = $baseResponUrl ?? 'kaur/respon-ticketing';
                                     <!-- Pengirim -->
                                     <td class="py-3.5 px-4">
                                         <div class="font-bold text-slate-900"><?= htmlspecialchars($t->nama_dosen); ?></div>
-                                        <div class="text-[11px] text-slate-400 font-mono mt-0.5">NIDN/ID: <?= htmlspecialchars($t->nidn ?: '-'); ?></div>
+                                        <div class="text-[11px] text-slate-400 font-mono mt-0.5"><?= htmlspecialchars(!empty($t->label_identitas) ? $t->label_identitas : 'NIDN/ID'); ?>: <?= htmlspecialchars($t->nidn ?? '-'); ?></div>
                                     </td>
 
                                     <!-- Kendala & Kategori -->
@@ -430,7 +430,7 @@ $baseResponUrl = $baseResponUrl ?? 'kaur/respon-ticketing';
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <p class="font-bold text-slate-800 truncate"><?= htmlspecialchars($t->nama_dosen); ?></p>
-                                    <p class="text-[10px] text-slate-400 font-mono">NIDN/ID: <?= htmlspecialchars($t->nidn ?: '-'); ?></p>
+                                    <p class="text-[10px] text-slate-400 font-mono"><?= htmlspecialchars(!empty($t->label_identitas) ? $t->label_identitas : 'NIDN/ID'); ?>: <?= htmlspecialchars($t->nidn ?? '-'); ?></p>
                                 </div>
                             </div>
 

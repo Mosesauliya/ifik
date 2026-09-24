@@ -268,7 +268,7 @@
                                     <td class="py-4 px-6">
                                         <p class="font-bold text-slate-800 text-xs leading-snug"><?= htmlspecialchars($t->nama_dosen); ?></p>
                                         <p class="text-[10px] text-slate-400 font-mono mt-0.5">
-                                            <?= htmlspecialchars($t->nidn ?: '-'); ?>
+                                            <?= htmlspecialchars(!empty($t->label_identitas) ? ($t->label_identitas . ': ') : '') . htmlspecialchars($t->nidn ?? '-'); ?>
                                         </p>
                                     </td>
 
@@ -383,7 +383,7 @@
                             <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 text-xs">
                                 <div class="min-w-0">
                                     <p class="font-bold text-slate-800 text-xs truncate"><?= htmlspecialchars($t->nama_dosen); ?></p>
-                                    <p class="text-[10px] text-slate-400 font-mono"><?= htmlspecialchars($t->nidn ?: '-'); ?></p>
+                                    <p class="text-[10px] text-slate-400 font-mono"><?= htmlspecialchars(!empty($t->label_identitas) ? ($t->label_identitas . ': ') : '') . htmlspecialchars($t->nidn ?? '-'); ?></p>
                                 </div>
                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-orange-50 text-orange-700 text-[10px] font-bold border border-orange-100 shrink-0">
                                     <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span>

@@ -249,10 +249,11 @@
             <?php
                 $st_jenis = $detail['status_jenis_ta'] ?? 'Pending';
                 $st_judul = $detail['status_judul'] ?? 'Pending';
-                if ($st_jenis === 'Approved' && $st_judul === 'Approved') {
-                    $jj_status = 'Approved';
-                } elseif ($st_jenis === 'Rejected' || $st_judul === 'Rejected') {
+                $st_wali  = $detail['status_approval_wali'] ?? 'Pending';
+                if ($st_jenis === 'Rejected' || $st_judul === 'Rejected') {
                     $jj_status = 'Rejected';
+                } elseif ($st_jenis === 'Approved' || $st_judul === 'Approved' || $st_wali === 'Approved') {
+                    $jj_status = 'Approved';
                 } else {
                     $jj_status = 'Pending';
                 }
@@ -1826,10 +1827,14 @@
                 fd.append('nim', '<?= $detail['nim']; ?>');
                 fd.append('status', status);
                 fd.append('catatan', catatan);
-                fetch('<?= site_url("dosenwali/update_judul_jenis_ajax"); ?>', {
+                fetch('<?= site_url("dosen/wali/update_judul_jenis_ajax"); ?>', {
                     method: 'POST',
                     body: fd
-                }).then(r => r.json()).then(d => {}).catch(e => {});
+                }).then(r => r.json()).then(d => {
+                    if (d && d.success && typeof showToast === 'function') {
+                        showToast(d.message || ('Status Usulan Judul & Skema TA berhasil diperbarui ke ' + status));
+                    }
+                }).catch(e => {});
             } catch(e) {}
         }
 
@@ -2271,6 +2276,13 @@
             }
 
             if (confirm('Yakin seluruh <?= $total_berkas_count; ?> berkas mahasiswa ini telah lengkap dan valid? Pengajuan akan disetujui dan diteruskan ke tahap Admin Layanan (LAA).')) {
+                const cbJudulValid = document.getElementById('cbJudulJenisValid');
+                if (cbJudulValid) {
+                    cbJudulValid.checked = true;
+                    handleJudulJenisCheck(cbJudulValid, 'valid');
+                }
+                const inputJJ = document.getElementById('inputStatusJudulJenis');
+                if (inputJJ) inputJJ.value = 'Approved';
                 document.getElementById('formStatus').value = 'Approved';
                 return true;
             }

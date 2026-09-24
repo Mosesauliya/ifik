@@ -379,7 +379,7 @@ class DosenTicketing extends CI_Controller {
         $roleId = (int)$this->session->userdata('role_id');
 
         // Access check: Only owner or superadmin
-        if ($roleId !== 1 && $ticket->id_user != $userId && $ticket->nidn != $nidn) {
+        if ($roleId !== 1 && $ticket->id_user != $userId && ($ticket->nidn ?? '') != $nidn) {
             $this->output
                 ->set_content_type('application/json')
                 ->set_status_header(403)
@@ -401,7 +401,8 @@ class DosenTicketing extends CI_Controller {
                     'id'              => $ticket->id,
                     'kode_tiket'      => $ticket->kode_tiket,
                     'nama_dosen'      => $ticket->nama_dosen,
-                    'nidn'            => $ticket->nidn,
+                    'nidn'            => $ticket->nidn ?? '-',
+                    'label_identitas' => $ticket->label_identitas ?? 'NIDN/ID',
                     'tujuan_penerima' => ($ticket->tujuan_penerima === 'Dosen Kaur') ? 'Kaur' : ($ticket->tujuan_penerima ?? 'Kaur'),
                     'unit_terkait'    => $ticket->unit_terkait ?? ($ticket->unit_tujuan ?: 'Layanan IFIK'),
                     'unit_tujuan'     => $ticket->unit_terkait ?? ($ticket->unit_tujuan ?: 'Layanan IFIK'),
@@ -502,7 +503,8 @@ class DosenTicketing extends CI_Controller {
                 'id'              => $ticket->id,
                 'kode_tiket'      => $ticket->kode_tiket,
                 'nama_dosen'      => $ticket->nama_dosen,
-                'nidn'            => $ticket->nidn ?: '-',
+                'nidn'            => $ticket->nidn ?? '-',
+                'label_identitas' => $ticket->label_identitas ?? 'NIDN/ID',
                 'unit_tujuan'     => $ticket->unit_tujuan,
                 'kategori'        => $ticket->kategori,
                 'prioritas'       => $ticket->prioritas,

@@ -1575,7 +1575,7 @@ class Mahasiswa extends CI_Controller {
         $nim   = $this->_get_current_nim();
         $roleId = (int)$this->session->userdata('role_id');
 
-        if ($roleId !== 1 && $ticket->id_user != $userId && $ticket->nidn != $nim) {
+        if ($roleId !== 1 && $ticket->id_user != $userId && ($ticket->nidn ?? '') != $nim) {
             return $this->output
                 ->set_content_type('application/json')
                 ->set_status_header(403)
@@ -1596,7 +1596,8 @@ class Mahasiswa extends CI_Controller {
                     'id'              => $ticket->id,
                     'kode_tiket'      => $ticket->kode_tiket,
                     'nama_dosen'      => $ticket->nama_dosen,
-                    'nidn'            => $ticket->nidn,
+                    'nidn'            => $ticket->nidn ?? '-',
+                    'label_identitas' => $ticket->label_identitas ?? 'NIM',
                     'tujuan_penerima' => $ticket->tujuan_penerima ?? 'Laboran',
                     'unit_terkait'    => $ticket->unit_terkait ?? ($ticket->unit_tujuan ?: 'Layanan IFIK'),
                     'unit_tujuan'     => $ticket->unit_terkait ?? ($ticket->unit_tujuan ?: 'Layanan IFIK'),
