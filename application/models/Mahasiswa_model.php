@@ -15,13 +15,21 @@ class Mahasiswa_model extends CI_Model {
         if (empty($nim)) return $nim;
         if (!$this->db->table_exists('user')) return $nim;
 
-        $u = $this->db->select('id, nim, username')
-            ->group_start()
-                ->where('nim', $nim)
-                ->or_where('username', $nim)
-            ->group_end()
-            ->limit(1)
-            ->get('user')->row_array();
+        $prev_debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+        $u = null;
+        try {
+            $u = $this->db->select('id, nim, username')
+                ->group_start()
+                    ->where('nim', $nim)
+                    ->or_where('username', $nim)
+                ->group_end()
+                ->limit(1)
+                ->get('user')->row_array();
+        } catch (Throwable $e) {
+            $u = null;
+        }
+        $this->db->db_debug = $prev_debug;
 
         return $u ? $u['id'] : $nim;
     }
@@ -65,25 +73,32 @@ class Mahasiswa_model extends CI_Model {
         $session_name = $this->session->userdata('name');
         $session_nim  = $this->session->userdata('nim') ?: $this->session->userdata('nidn_nim');
 
+        $prev_debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+
         $user_row = null;
-        if (!empty($nim) && $this->db->table_exists('user')) {
-            $user_row = $this->db
-                ->select('id, name, username, email')
-                ->group_start()
-                    ->where('nim', $nim)
-                    ->or_where('username', $nim)
-                ->group_end()
-                ->limit(1)
-                ->get('user')
-                ->row_array();
-        }
-        if (!$user_row && $this->session->userdata('user_id') && $this->db->table_exists('user')) {
-            $user_row = $this->db
-                ->select('id, name, username, email')
-                ->where('id', $this->session->userdata('user_id'))
-                ->limit(1)
-                ->get('user')
-                ->row_array();
+        try {
+            if (!empty($nim) && $this->db->table_exists('user')) {
+                $user_row = $this->db
+                    ->select('id, name, username, email')
+                    ->group_start()
+                        ->where('nim', $nim)
+                        ->or_where('username', $nim)
+                    ->group_end()
+                    ->limit(1)
+                    ->get('user')
+                    ->row_array();
+            }
+            if (!$user_row && $this->session->userdata('user_id') && $this->db->table_exists('user')) {
+                $user_row = $this->db
+                    ->select('id, name, username, email')
+                    ->where('id', $this->session->userdata('user_id'))
+                    ->limit(1)
+                    ->get('user')
+                    ->row_array();
+            }
+        } catch (Throwable $e) {
+            $user_row = null;
         }
 
         $full_name = !empty($user_row['name']) ? $user_row['name'] : ($session_name ?: 'Mahasiswa');
@@ -92,9 +107,14 @@ class Mahasiswa_model extends CI_Model {
         $nama_belakang_default = $parts[1] ?? '';
 
         $data_mhs = null;
-        if ($this->db->table_exists('mahasiswa') && !empty($nim)) {
-            $data_mhs = $this->db->get_where('mahasiswa', ['nim' => $nim])->row_array();
+        try {
+            if ($this->db->table_exists('mahasiswa') && !empty($nim)) {
+                $data_mhs = $this->db->get_where('mahasiswa', ['nim' => $nim])->row_array();
+            }
+        } catch (Throwable $e) {
+            $data_mhs = null;
         }
+        $this->db->db_debug = $prev_debug;
 
         if ($data_mhs) {
             if (empty($data_mhs['nama_depan'])) {
@@ -239,19 +259,22 @@ class Mahasiswa_model extends CI_Model {
     // Get Status Pendaftaran & Approval Chain langsung dari guidance, file_pendaftaran, pendaftaran_berkas & pendaftaran_ta
     public function get_status_pendaftaran($nim) {
         $pt_data = array();
+        $prev_debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+
         if ($this->db->table_exists('pendaftaran_ta')) {
-            $pt_row = $this->db->get_where('pendaftaran_ta', array('nim' => $nim))->row_array();
-            if ($pt_row) {
-                $pt_data = $pt_row;
+            try {
+                $pt_row = $this->db->get_where('pendaftaran_ta', array('nim' => $nim))->row_array();
+                if ($pt_row) {
+                    $pt_data = $pt_row;
+                }
+            } catch (Throwable $e) {
+                log_message('error', 'Error fetching pendaftaran_ta: ' . $e->getMessage());
             }
         }
 
-        $user = null;
-        if ($this->db->table_exists('user')) {
-            $user = $this->db->get_where('user', array('nim' => $nim))->row_array() 
-                 ?: $this->db->get_where('user', array('username' => $nim))->row_array();
-        }
-        $userId = $user ? $user['id'] : ('usr_mhs_' . $nim);
+        $userId = $this->_get_user_id_by_nim($nim);
+        $this->db->db_debug = $prev_debug;
 
         $guidance = null;
         if ($this->db->table_exists('guidance')) {
@@ -300,20 +323,31 @@ class Mahasiswa_model extends CI_Model {
         }
 
         $berkas_rows = array();
-        if ($this->db->table_exists('pendaftaran_berkas')) {
-            $pb_rows = $this->db->get_where('pendaftaran_berkas', array('nim' => $nim))->result_array();
-            foreach ($pb_rows as $pbr) {
-                $berkas_rows[$pbr['kode_berkas']] = $pbr;
+        $prev_debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+        try {
+            if ($this->db->table_exists('pendaftaran_berkas')) {
+                $pb_rows = $this->db->get_where('pendaftaran_berkas', array('nim' => $nim))->result_array();
+                foreach ($pb_rows as $pbr) {
+                    $berkas_rows[$pbr['kode_berkas']] = $pbr;
+                }
             }
+        } catch (Throwable $e) {
+            log_message('error', 'Error fetching pendaftaran_berkas: ' . $e->getMessage());
         }
 
         $active_keys = array('ksm', 'transkrip', 'pernyataan', 'bebas_lab');
-        if ($this->db->table_exists('syarat_berkas_ta')) {
-            $sb_rows = $this->db->get_where('syarat_berkas_ta', array('is_active' => 1))->result_array();
-            if (!empty($sb_rows)) {
-                $active_keys = array_column($sb_rows, 'kode_berkas');
+        try {
+            if ($this->db->table_exists('syarat_berkas_ta')) {
+                $sb_rows = $this->db->get_where('syarat_berkas_ta', array('is_active' => 1))->result_array();
+                if (!empty($sb_rows)) {
+                    $active_keys = array_column($sb_rows, 'kode_berkas');
+                }
             }
+        } catch (Throwable $e) {
+            log_message('error', 'Error fetching syarat_berkas_ta: ' . $e->getMessage());
         }
+        $this->db->db_debug = $prev_debug;
 
         $is_submitted = ($guidance !== null || !empty($files) || !empty($berkas_rows) || !empty($pt_data['judul_1'])) ? 1 : 0;
 
