@@ -130,7 +130,7 @@ if ($is_nas) {
 		'dbcollat' => 'utf8mb4_general_ci',
 		'swap_pre' => '',
 		'encrypt' => FALSE,
-		'compress' => TRUE,
+		'compress' => FALSE,
 		'stricton' => FALSE,
 		'failover' => array(),
 		'save_queries' => TRUE

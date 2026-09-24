@@ -234,22 +234,48 @@ class Mahasiswa_model extends CI_Model {
 
         $guidance = null;
         if ($this->db->table_exists('guidance')) {
-            $guidance = $this->db->group_start()
-                ->where('id_mhs', $userId)
-                ->or_where('id_mhs', $nim)
-            ->group_end()->order_by('date', 'DESC')->get('guidance')->row_array();
+            $prev_debug = $this->db->db_debug;
+            $this->db->db_debug = FALSE;
+            try {
+                $q_g = $this->db->select('id, id_mhs, judul_1, judul_2, judul_3, judul_en, jenis_TA, peminatan, komentar, keterangan, date')
+                    ->group_start()
+                        ->where('id_mhs', $userId)
+                        ->or_where('id_mhs', $nim)
+                    ->group_end()
+                    ->order_by('date', 'DESC')
+                    ->limit(1)
+                    ->get('guidance');
+                if ($q_g) {
+                    $guidance = $q_g->row_array();
+                }
+            } catch (Throwable $e) {
+                log_message('error', 'Error fetching guidance: ' . $e->getMessage());
+                $guidance = null;
+            }
+            $this->db->db_debug = $prev_debug;
         }
 
         $files = [];
         if ($this->db->table_exists('file_pendaftaran')) {
-            $fileRows = $this->db->group_start()
-                ->where('id_mhs', $userId)
-                ->or_where('id_mhs', $nim)
-            ->group_end()->get('file_pendaftaran')->result_array();
-
-            foreach ($fileRows as $fr) {
-                $files[$fr['nama']] = $fr;
+            $prev_debug = $this->db->db_debug;
+            $this->db->db_debug = FALSE;
+            try {
+                $q_f = $this->db->select('id, id_mhs, nama, file, status_doswal, status_adminlaa, komentar')
+                    ->group_start()
+                        ->where('id_mhs', $userId)
+                        ->or_where('id_mhs', $nim)
+                    ->group_end()
+                    ->get('file_pendaftaran');
+                if ($q_f) {
+                    $fileRows = $q_f->result_array();
+                    foreach ($fileRows as $fr) {
+                        $files[$fr['nama']] = $fr;
+                    }
+                }
+            } catch (Throwable $e) {
+                log_message('error', 'Error fetching file_pendaftaran: ' . $e->getMessage());
             }
+            $this->db->db_debug = $prev_debug;
         }
 
         $berkas_rows = array();
