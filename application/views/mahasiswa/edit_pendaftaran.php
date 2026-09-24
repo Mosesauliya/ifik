@@ -316,9 +316,30 @@
                         </div>
 
                         <?php if(!empty($pendaftaran['file_ksm'])): ?>
-                            <div class="p-2.5 rounded-xl bg-white border border-slate-200 text-[11px] text-slate-600 flex items-center justify-between gap-2">
-                                <span class="truncate font-mono font-semibold text-slate-800"><?= htmlspecialchars($pendaftaran['file_ksm']); ?></span>
-                                <span class="text-[9px] font-bold text-emerald-600 uppercase shrink-0">Tersimpan</span>
+                            <div class="p-3 rounded-xl <?= ($st_ksm === 'Rejected') ? 'bg-white border-2 border-rose-300 shadow-2xs' : 'bg-white border border-slate-200'; ?> text-xs flex items-center justify-between gap-3">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <div class="w-8 h-8 rounded-lg <?= ($st_ksm === 'Rejected') ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-500'; ?> flex items-center justify-center shrink-0">
+                                        <i class="bi bi-file-earmark-pdf-fill text-base"></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <?php if($st_ksm === 'Rejected'): ?>
+                                            <span class="text-[9px] font-black uppercase tracking-wider text-rose-600 block">File Lama Bermasalah:</span>
+                                        <?php else: ?>
+                                            <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">File Terlampir:</span>
+                                        <?php endif; ?>
+                                        <span class="truncate font-mono <?= ($st_ksm === 'Rejected') ? 'font-black text-rose-950 underline decoration-rose-300' : 'font-semibold text-slate-800'; ?> text-xs block">
+                                            <?= htmlspecialchars($pendaftaran['file_ksm']); ?>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <a href="<?= base_url('uploads/berkas_mahasiswa/' . $pendaftaran['file_ksm']); ?>" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold <?= ($st_ksm === 'Rejected') ? 'bg-rose-100 text-rose-800 hover:bg-rose-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'; ?> transition">
+                                        <i class="bi bi-eye-fill"></i> Pratinjau
+                                    </a>
+                                    <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded <?= ($st_ksm === 'Rejected') ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'; ?>">
+                                        <?= ($st_ksm === 'Rejected') ? 'Ditolak' : 'Tersimpan'; ?>
+                                    </span>
+                                </div>
                             </div>
                         <?php endif; ?>
 
@@ -335,9 +356,33 @@
                         <?php endif; ?>
 
                         <input type="hidden" name="file_ksm_old" value="<?= htmlspecialchars($pendaftaran['file_ksm'] ?? ''); ?>">
-                        <div class="pt-1">
-                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Ganti File KSM (.pdf baru):</label>
-                            <input type="file" name="file_ksm" accept=".pdf" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 cursor-pointer">
+                        <div class="p-3.5 bg-slate-50/90 rounded-2xl border-2 border-dashed <?= ($st_ksm === 'Rejected') ? 'border-rose-300 hover:border-rose-400 bg-rose-50/20' : 'border-slate-300 hover:border-orange-400'; ?> transition-all space-y-2.5">
+                            <div class="flex items-center justify-between gap-2">
+                                <label class="block text-xs font-black text-slate-800 flex items-center gap-1.5">
+                                    <i class="bi bi-cloud-arrow-up-fill text-orange-600 text-sm"></i> <?= ($st_ksm === 'Rejected') ? 'Unggah File KSM Baru (Revisi):' : 'Ganti File KSM (.pdf baru):'; ?>
+                                </label>
+                                <span class="text-[10px] font-bold text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full">PDF &bull; Maks 5MB</span>
+                            </div>
+                            <input type="file" name="file_ksm" accept=".pdf" 
+                                   onchange="highlightSelectedRevisiFile(this, 'badge_edit_ksm')"
+                                   class="block w-full text-xs text-slate-700 font-bold file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:uppercase file:tracking-wider file:bg-gradient-to-r file:from-orange-600 file:to-amber-600 file:text-white hover:file:from-orange-700 hover:file:to-amber-700 cursor-pointer border-2 border-slate-200 rounded-xl p-1 bg-white hover:bg-orange-50/20 transition shadow-2xs">
+
+                            <!-- Highlight Box Preview Saat File Baru Dipilih -->
+                            <div id="badge_edit_ksm" class="hidden p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-400 text-emerald-950 flex items-center gap-2.5 shadow-xs transition-all">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-base font-bold shrink-0 shadow-xs">
+                                    <i class="bi bi-file-earmark-check-fill"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-[9px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-200/80 px-2 py-0.5 rounded-full">File Baru Terpilih</span>
+                                        <span class="text-[10px] font-bold text-emerald-700 file-size-label"></span>
+                                    </div>
+                                    <p class="text-xs font-mono font-black text-emerald-950 truncate mt-1 file-name-label"></p>
+                                </div>
+                                <span class="text-emerald-700 text-xs font-black shrink-0 hidden sm:flex items-center gap-1">
+                                    <i class="bi bi-check-circle-fill text-emerald-600 text-sm"></i> Siap Diunggah
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -356,9 +401,30 @@
                         </div>
 
                         <?php if(!empty($pendaftaran['file_transkrip'])): ?>
-                            <div class="p-2.5 rounded-xl bg-white border border-slate-200 text-[11px] text-slate-600 flex items-center justify-between gap-2">
-                                <span class="truncate font-mono font-semibold text-slate-800"><?= htmlspecialchars($pendaftaran['file_transkrip']); ?></span>
-                                <span class="text-[9px] font-bold text-emerald-600 uppercase shrink-0">Tersimpan</span>
+                            <div class="p-3 rounded-xl <?= ($st_trn === 'Rejected') ? 'bg-white border-2 border-rose-300 shadow-2xs' : 'bg-white border border-slate-200'; ?> text-xs flex items-center justify-between gap-3">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <div class="w-8 h-8 rounded-lg <?= ($st_trn === 'Rejected') ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-500'; ?> flex items-center justify-center shrink-0">
+                                        <i class="bi bi-file-earmark-pdf-fill text-base"></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <?php if($st_trn === 'Rejected'): ?>
+                                            <span class="text-[9px] font-black uppercase tracking-wider text-rose-600 block">File Lama Bermasalah:</span>
+                                        <?php else: ?>
+                                            <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">File Terlampir:</span>
+                                        <?php endif; ?>
+                                        <span class="truncate font-mono <?= ($st_trn === 'Rejected') ? 'font-black text-rose-950 underline decoration-rose-300' : 'font-semibold text-slate-800'; ?> text-xs block">
+                                            <?= htmlspecialchars($pendaftaran['file_transkrip']); ?>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <a href="<?= base_url('uploads/berkas_mahasiswa/' . $pendaftaran['file_transkrip']); ?>" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold <?= ($st_trn === 'Rejected') ? 'bg-rose-100 text-rose-800 hover:bg-rose-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'; ?> transition">
+                                        <i class="bi bi-eye-fill"></i> Pratinjau
+                                    </a>
+                                    <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded <?= ($st_trn === 'Rejected') ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'; ?>">
+                                        <?= ($st_trn === 'Rejected') ? 'Ditolak' : 'Tersimpan'; ?>
+                                    </span>
+                                </div>
                             </div>
                         <?php endif; ?>
 
@@ -375,9 +441,33 @@
                         <?php endif; ?>
 
                         <input type="hidden" name="file_transkrip_old" value="<?= htmlspecialchars($pendaftaran['file_transkrip'] ?? ''); ?>">
-                        <div class="pt-1">
-                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Ganti File Transkrip (.pdf baru):</label>
-                            <input type="file" name="file_transkrip" accept=".pdf" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 cursor-pointer">
+                        <div class="p-3.5 bg-slate-50/90 rounded-2xl border-2 border-dashed <?= ($st_trn === 'Rejected') ? 'border-rose-300 hover:border-rose-400 bg-rose-50/20' : 'border-slate-300 hover:border-orange-400'; ?> transition-all space-y-2.5">
+                            <div class="flex items-center justify-between gap-2">
+                                <label class="block text-xs font-black text-slate-800 flex items-center gap-1.5">
+                                    <i class="bi bi-cloud-arrow-up-fill text-orange-600 text-sm"></i> <?= ($st_trn === 'Rejected') ? 'Unggah File Transkrip Baru (Revisi):' : 'Ganti File Transkrip (.pdf baru):'; ?>
+                                </label>
+                                <span class="text-[10px] font-bold text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full">PDF &bull; Maks 5MB</span>
+                            </div>
+                            <input type="file" name="file_transkrip" accept=".pdf" 
+                                   onchange="highlightSelectedRevisiFile(this, 'badge_edit_transkrip')"
+                                   class="block w-full text-xs text-slate-700 font-bold file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:uppercase file:tracking-wider file:bg-gradient-to-r file:from-orange-600 file:to-amber-600 file:text-white hover:file:from-orange-700 hover:file:to-amber-700 cursor-pointer border-2 border-slate-200 rounded-xl p-1 bg-white hover:bg-orange-50/20 transition shadow-2xs">
+
+                            <!-- Highlight Box Preview Saat File Baru Dipilih -->
+                            <div id="badge_edit_transkrip" class="hidden p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-400 text-emerald-950 flex items-center gap-2.5 shadow-xs transition-all">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-base font-bold shrink-0 shadow-xs">
+                                    <i class="bi bi-file-earmark-check-fill"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-[9px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-200/80 px-2 py-0.5 rounded-full">File Baru Terpilih</span>
+                                        <span class="text-[10px] font-bold text-emerald-700 file-size-label"></span>
+                                    </div>
+                                    <p class="text-xs font-mono font-black text-emerald-950 truncate mt-1 file-name-label"></p>
+                                </div>
+                                <span class="text-emerald-700 text-xs font-black shrink-0 hidden sm:flex items-center gap-1">
+                                    <i class="bi bi-check-circle-fill text-emerald-600 text-sm"></i> Siap Diunggah
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -396,9 +486,30 @@
                         </div>
 
                         <?php if(!empty($pendaftaran['file_pernyataan'])): ?>
-                            <div class="p-2.5 rounded-xl bg-white border border-slate-200 text-[11px] text-slate-600 flex items-center justify-between gap-2">
-                                <span class="truncate font-mono font-semibold text-slate-800"><?= htmlspecialchars($pendaftaran['file_pernyataan']); ?></span>
-                                <span class="text-[9px] font-bold text-emerald-600 uppercase shrink-0">Tersimpan</span>
+                            <div class="p-3 rounded-xl <?= ($st_prn === 'Rejected') ? 'bg-white border-2 border-rose-300 shadow-2xs' : 'bg-white border border-slate-200'; ?> text-xs flex items-center justify-between gap-3">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <div class="w-8 h-8 rounded-lg <?= ($st_prn === 'Rejected') ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-500'; ?> flex items-center justify-center shrink-0">
+                                        <i class="bi bi-file-earmark-pdf-fill text-base"></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <?php if($st_prn === 'Rejected'): ?>
+                                            <span class="text-[9px] font-black uppercase tracking-wider text-rose-600 block">File Lama Bermasalah:</span>
+                                        <?php else: ?>
+                                            <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">File Terlampir:</span>
+                                        <?php endif; ?>
+                                        <span class="truncate font-mono <?= ($st_prn === 'Rejected') ? 'font-black text-rose-950 underline decoration-rose-300' : 'font-semibold text-slate-800'; ?> text-xs block">
+                                            <?= htmlspecialchars($pendaftaran['file_pernyataan']); ?>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <a href="<?= base_url('uploads/berkas_mahasiswa/' . $pendaftaran['file_pernyataan']); ?>" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold <?= ($st_prn === 'Rejected') ? 'bg-rose-100 text-rose-800 hover:bg-rose-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'; ?> transition">
+                                        <i class="bi bi-eye-fill"></i> Pratinjau
+                                    </a>
+                                    <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded <?= ($st_prn === 'Rejected') ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'; ?>">
+                                        <?= ($st_prn === 'Rejected') ? 'Ditolak' : 'Tersimpan'; ?>
+                                    </span>
+                                </div>
                             </div>
                         <?php endif; ?>
 
@@ -415,9 +526,33 @@
                         <?php endif; ?>
 
                         <input type="hidden" name="file_pernyataan_old" value="<?= htmlspecialchars($pendaftaran['file_pernyataan'] ?? ''); ?>">
-                        <div class="pt-1">
-                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Ganti File Pernyataan (.pdf baru):</label>
-                            <input type="file" name="file_pernyataan" accept=".pdf" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 cursor-pointer">
+                        <div class="p-3.5 bg-slate-50/90 rounded-2xl border-2 border-dashed <?= ($st_prn === 'Rejected') ? 'border-rose-300 hover:border-rose-400 bg-rose-50/20' : 'border-slate-300 hover:border-orange-400'; ?> transition-all space-y-2.5">
+                            <div class="flex items-center justify-between gap-2">
+                                <label class="block text-xs font-black text-slate-800 flex items-center gap-1.5">
+                                    <i class="bi bi-cloud-arrow-up-fill text-orange-600 text-sm"></i> <?= ($st_prn === 'Rejected') ? 'Unggah File Surat Pernyataan Baru (Revisi):' : 'Ganti File Pernyataan (.pdf baru):'; ?>
+                                </label>
+                                <span class="text-[10px] font-bold text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full">PDF &bull; Maks 5MB</span>
+                            </div>
+                            <input type="file" name="file_pernyataan" accept=".pdf" 
+                                   onchange="highlightSelectedRevisiFile(this, 'badge_edit_pernyataan')"
+                                   class="block w-full text-xs text-slate-700 font-bold file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:uppercase file:tracking-wider file:bg-gradient-to-r file:from-orange-600 file:to-amber-600 file:text-white hover:file:from-orange-700 hover:file:to-amber-700 cursor-pointer border-2 border-slate-200 rounded-xl p-1 bg-white hover:bg-orange-50/20 transition shadow-2xs">
+
+                            <!-- Highlight Box Preview Saat File Baru Dipilih -->
+                            <div id="badge_edit_pernyataan" class="hidden p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-400 text-emerald-950 flex items-center gap-2.5 shadow-xs transition-all">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-base font-bold shrink-0 shadow-xs">
+                                    <i class="bi bi-file-earmark-check-fill"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-[9px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-200/80 px-2 py-0.5 rounded-full">File Baru Terpilih</span>
+                                        <span class="text-[10px] font-bold text-emerald-700 file-size-label"></span>
+                                    </div>
+                                    <p class="text-xs font-mono font-black text-emerald-950 truncate mt-1 file-name-label"></p>
+                                </div>
+                                <span class="text-emerald-700 text-xs font-black shrink-0 hidden sm:flex items-center gap-1">
+                                    <i class="bi bi-check-circle-fill text-emerald-600 text-sm"></i> Siap Diunggah
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -436,9 +571,30 @@
                         </div>
 
                         <?php if(!empty($pendaftaran['file_bebas_lab'])): ?>
-                            <div class="p-2.5 rounded-xl bg-white border border-slate-200 text-[11px] text-slate-600 flex items-center justify-between gap-2">
-                                <span class="truncate font-mono font-semibold text-slate-800"><?= htmlspecialchars($pendaftaran['file_bebas_lab']); ?></span>
-                                <span class="text-[9px] font-bold text-emerald-600 uppercase shrink-0">Tersimpan</span>
+                            <div class="p-3 rounded-xl <?= ($st_lab === 'Rejected') ? 'bg-white border-2 border-rose-300 shadow-2xs' : 'bg-white border border-slate-200'; ?> text-xs flex items-center justify-between gap-3">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <div class="w-8 h-8 rounded-lg <?= ($st_lab === 'Rejected') ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-500'; ?> flex items-center justify-center shrink-0">
+                                        <i class="bi bi-file-earmark-pdf-fill text-base"></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <?php if($st_lab === 'Rejected'): ?>
+                                            <span class="text-[9px] font-black uppercase tracking-wider text-rose-600 block">File Lama Bermasalah:</span>
+                                        <?php else: ?>
+                                            <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">File Terlampir:</span>
+                                        <?php endif; ?>
+                                        <span class="truncate font-mono <?= ($st_lab === 'Rejected') ? 'font-black text-rose-950 underline decoration-rose-300' : 'font-semibold text-slate-800'; ?> text-xs block">
+                                            <?= htmlspecialchars($pendaftaran['file_bebas_lab']); ?>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <a href="<?= base_url('uploads/berkas_mahasiswa/' . $pendaftaran['file_bebas_lab']); ?>" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold <?= ($st_lab === 'Rejected') ? 'bg-rose-100 text-rose-800 hover:bg-rose-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'; ?> transition">
+                                        <i class="bi bi-eye-fill"></i> Pratinjau
+                                    </a>
+                                    <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded <?= ($st_lab === 'Rejected') ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'; ?>">
+                                        <?= ($st_lab === 'Rejected') ? 'Ditolak' : 'Tersimpan'; ?>
+                                    </span>
+                                </div>
                             </div>
                         <?php endif; ?>
 
@@ -455,9 +611,33 @@
                         <?php endif; ?>
 
                         <input type="hidden" name="file_bebas_lab_old" value="<?= htmlspecialchars($pendaftaran['file_bebas_lab'] ?? ''); ?>">
-                        <div class="pt-1">
-                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Ganti File Bebas Lab (.pdf baru):</label>
-                            <input type="file" name="file_bebas_lab" accept=".pdf" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 cursor-pointer">
+                        <div class="p-3.5 bg-slate-50/90 rounded-2xl border-2 border-dashed <?= ($st_lab === 'Rejected') ? 'border-rose-300 hover:border-rose-400 bg-rose-50/20' : 'border-slate-300 hover:border-orange-400'; ?> transition-all space-y-2.5">
+                            <div class="flex items-center justify-between gap-2">
+                                <label class="block text-xs font-black text-slate-800 flex items-center gap-1.5">
+                                    <i class="bi bi-cloud-arrow-up-fill text-orange-600 text-sm"></i> <?= ($st_lab === 'Rejected') ? 'Unggah File Bebas Lab Baru (Revisi):' : 'Ganti File Bebas Lab (.pdf baru):'; ?>
+                                </label>
+                                <span class="text-[10px] font-bold text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full">PDF &bull; Maks 5MB</span>
+                            </div>
+                            <input type="file" name="file_bebas_lab" accept=".pdf" 
+                                   onchange="highlightSelectedRevisiFile(this, 'badge_edit_bebas_lab')"
+                                   class="block w-full text-xs text-slate-700 font-bold file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:uppercase file:tracking-wider file:bg-gradient-to-r file:from-orange-600 file:to-amber-600 file:text-white hover:file:from-orange-700 hover:file:to-amber-700 cursor-pointer border-2 border-slate-200 rounded-xl p-1 bg-white hover:bg-orange-50/20 transition shadow-2xs">
+
+                            <!-- Highlight Box Preview Saat File Baru Dipilih -->
+                            <div id="badge_edit_bebas_lab" class="hidden p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-400 text-emerald-950 flex items-center gap-2.5 shadow-xs transition-all">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-base font-bold shrink-0 shadow-xs">
+                                    <i class="bi bi-file-earmark-check-fill"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-[9px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-200/80 px-2 py-0.5 rounded-full">File Baru Terpilih</span>
+                                        <span class="text-[10px] font-bold text-emerald-700 file-size-label"></span>
+                                    </div>
+                                    <p class="text-xs font-mono font-black text-emerald-950 truncate mt-1 file-name-label"></p>
+                                </div>
+                                <span class="text-emerald-700 text-xs font-black shrink-0 hidden sm:flex items-center gap-1">
+                                    <i class="bi bi-check-circle-fill text-emerald-600 text-sm"></i> Siap Diunggah
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -651,6 +831,24 @@
                 btnAutoTranslate.disabled = false;
             });
         });
+    }
+
+    function highlightSelectedRevisiFile(input, badgeId) {
+        const badge = document.getElementById(badgeId);
+        if (!badge) return;
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const nameEl = badge.querySelector('.file-name-label');
+            const sizeEl = badge.querySelector('.file-size-label');
+            if (nameEl) nameEl.textContent = file.name;
+            if (sizeEl) {
+                const sizeKB = (file.size / 1024).toFixed(1);
+                sizeEl.textContent = `(${sizeKB} KB)`;
+            }
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
     }
 
     function showToast(msg) {

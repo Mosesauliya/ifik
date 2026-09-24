@@ -116,6 +116,12 @@ $route['dosen/wali/log_review_ajax'] = 'DosenWali/log_review_ajax';
 $route['dosenwali/log_review_ajax'] = 'DosenWali/log_review_ajax';
 $route['dosen/wali/update_file_approval_ajax'] = 'DosenWali/update_file_approval_ajax';
 $route['dosenwali/update_file_approval_ajax'] = 'DosenWali/update_file_approval_ajax';
+$route['dosen/wali/update_judul_jenis_ajax']    = 'DosenWali/update_judul_jenis_ajax';
+$route['dosenwali/update_judul_jenis_ajax']     = 'DosenWali/update_judul_jenis_ajax';
+$route['dosen/wali/update_judul_approval_ajax'] = 'DosenWali/update_judul_approval_ajax';
+$route['dosenwali/update_judul_approval_ajax']  = 'DosenWali/update_judul_approval_ajax';
+$route['dosen/wali/update_jenis_approval_ajax'] = 'DosenWali/update_jenis_approval_ajax';
+$route['dosenwali/update_jenis_approval_ajax']  = 'DosenWali/update_jenis_approval_ajax';
 $route['dosen/wali/(:any)'] = 'DosenWali/$1';
 $route['dosen/wali/(:any)/(:any)'] = 'DosenWali/$1/$2';
 

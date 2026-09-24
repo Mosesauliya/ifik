@@ -622,10 +622,6 @@
                                             <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
                                                 <i class="bi bi-check-circle-fill text-emerald-600"></i> Judul Disetujui
                                             </span>
-                                        <?php elseif($st_j === 'Rejected'): ?>
-                                            <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-300">
-                                                <i class="bi bi-x-circle-fill text-rose-600"></i> Judul Ditolak / Revisi
-                                            </span>
                                         <?php endif; ?>
                                         <?php if(!empty($pendaftaran['judul_en'])): ?>
                                             <span class="text-slate-500 italic flex items-center gap-1 font-normal text-xs">
@@ -749,6 +745,7 @@
                                             'status'      => $status,
                                             'rejected_by' => $file_rej_by,
                                             'note'        => $note,
+                                            'url'         => !empty($filename) ? base_url('uploads/berkas_mahasiswa/' . $filename) : '',
                                         ];
                                     }
 
@@ -1109,9 +1106,21 @@
                                                         <h4 class="font-black text-sm text-rose-950 truncate">
                                                             <?= $f['title']; ?>
                                                         </h4>
-                                                        <p class="text-[11px] text-slate-500 font-mono truncate mt-0.5">
-                                                            File Sebelumnya: <?= !empty($f['filename']) ? htmlspecialchars($f['filename']) : 'Belum diunggah'; ?>
-                                                        </p>
+                                                        <!-- Highlight Nama File Sebelumnya -->
+                                                        <div class="mt-1.5 flex flex-wrap items-center gap-2">
+                                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-rose-300 text-[11px] font-bold text-rose-900 shadow-2xs">
+                                                                <i class="bi bi-file-earmark-pdf-fill text-rose-600 text-sm"></i>
+                                                                <span class="text-rose-600 font-extrabold uppercase text-[9px] tracking-wider">File Lama Bermasalah:</span>
+                                                                <span class="font-mono font-black text-xs text-rose-950 underline decoration-rose-300 truncate max-w-[240px] sm:max-w-md">
+                                                                    <?= !empty($f['filename']) ? htmlspecialchars($f['filename']) : 'Belum diunggah'; ?>
+                                                                </span>
+                                                            </span>
+                                                            <?php if(!empty($f['url'])): ?>
+                                                                <a href="<?= $f['url']; ?>" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-800 text-[11px] font-bold transition">
+                                                                    <i class="bi bi-eye-fill text-xs"></i> Pratinjau
+                                                                </a>
+                                                            <?php endif; ?>
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-300 shrink-0">
@@ -1131,12 +1140,34 @@
                                             </div>
 
                                             <!-- Form Upload File Pengganti -->
-                                            <div class="p-3.5 bg-white rounded-xl border border-dashed border-rose-300 space-y-2">
-                                                <label class="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                                    <i class="bi bi-cloud-arrow-up-fill text-orange-600 text-sm"></i> Unggah File PDF Pengganti:
-                                                </label>
-                                                <input type="file" name="<?= $f['field']; ?>" accept=".pdf" class="block w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:uppercase file:tracking-wider file:bg-orange-600 file:text-white hover:file:bg-orange-700 cursor-pointer border border-slate-200 rounded-xl p-1 bg-slate-50">
-                                                <p class="text-[10px] text-slate-400">Format: PDF (Ukuran Maksimal 5MB)</p>
+                                            <div class="p-4 bg-white rounded-2xl border-2 border-dashed border-orange-300 hover:border-orange-500 transition-all space-y-2.5 shadow-2xs">
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <label class="block text-xs font-black text-slate-900 flex items-center gap-1.5">
+                                                        <i class="bi bi-cloud-arrow-up-fill text-orange-600 text-sm"></i> Masukkan File PDF Baru (Revisi):
+                                                    </label>
+                                                    <span class="text-[10px] font-bold text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full">PDF &bull; Maks 5MB</span>
+                                                </div>
+
+                                                <input type="file" name="<?= $f['field']; ?>" accept=".pdf" 
+                                                       onchange="highlightSelectedRevisiFile(this, 'badge_revisi_<?= $f['field']; ?>')"
+                                                       class="block w-full text-xs text-slate-700 font-bold file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:uppercase file:tracking-wider file:bg-gradient-to-r file:from-orange-600 file:to-amber-600 file:text-white hover:file:from-orange-700 hover:file:to-amber-700 cursor-pointer border-2 border-slate-200 rounded-xl p-1.5 bg-slate-50 hover:bg-orange-50/30 transition shadow-2xs">
+
+                                                <!-- Highlight Box Preview Saat File Baru Dipilih -->
+                                                <div id="badge_revisi_<?= $f['field']; ?>" class="hidden p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-400 text-emerald-950 flex items-center gap-2.5 shadow-xs transition-all">
+                                                    <div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-base font-bold shrink-0 shadow-xs">
+                                                        <i class="bi bi-file-earmark-check-fill"></i>
+                                                    </div>
+                                                    <div class="min-w-0 flex-1">
+                                                        <div class="flex items-center gap-1.5">
+                                                            <span class="text-[9px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-200/80 px-2 py-0.5 rounded-full">File Baru Siap Diunggah</span>
+                                                            <span class="text-[10px] font-bold text-emerald-700 file-size-label"></span>
+                                                        </div>
+                                                        <p class="text-xs font-mono font-black text-emerald-950 truncate mt-1 file-name-label"></p>
+                                                    </div>
+                                                    <span class="text-emerald-700 text-xs font-black shrink-0 hidden sm:flex items-center gap-1">
+                                                        <i class="bi bi-check-circle-fill text-emerald-600 text-sm"></i> Terpilih
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     <?php endif; ?>
@@ -1398,6 +1429,24 @@
         const isHidden = acc.classList.toggle('hidden');
         if (iconAcc) {
             iconAcc.className = isHidden ? 'bi bi-chevron-down text-[10px]' : 'bi bi-chevron-up text-[10px]';
+        }
+    }
+
+    function highlightSelectedRevisiFile(input, badgeId) {
+        const badge = document.getElementById(badgeId);
+        if (!badge) return;
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const nameEl = badge.querySelector('.file-name-label');
+            const sizeEl = badge.querySelector('.file-size-label');
+            if (nameEl) nameEl.textContent = file.name;
+            if (sizeEl) {
+                const sizeKB = (file.size / 1024).toFixed(1);
+                sizeEl.textContent = `(${sizeKB} KB)`;
+            }
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
         }
     }
 

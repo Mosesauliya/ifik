@@ -370,8 +370,8 @@ class Mahasiswa_model extends CI_Model {
         // 2. Status Jenis TA & Catatan Jenis TA
         $status_jenis_ta = $pt_data['status_jenis_ta'] ?? null;
         $catatan_jenis_ta = $pt_data['catatan_jenis_ta'] ?? null;
-        if (empty($status_jenis_ta)) {
-            if ($status_judul === 'Approved') {
+        if (empty($status_jenis_ta) || $status_jenis_ta === 'Pending') {
+            if ($status_judul === 'Approved' || ($pt_data['status_approval_wali'] ?? '') === 'Approved') {
                 $status_jenis_ta = 'Approved';
             } else {
                 $status_jenis_ta = 'Pending';

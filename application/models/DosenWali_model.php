@@ -146,6 +146,20 @@ class DosenWali_model extends CI_Model {
             }
         }
 
+        foreach ($results as &$row) {
+            $st_wali = $row['status_approval_wali'] ?? '';
+            $st_jud  = $row['status_judul'] ?? '';
+            $st_jen  = $row['status_jenis_ta'] ?? '';
+            
+            if ($st_jud === 'Rejected' || $st_jen === 'Rejected') {
+                // Biarkan status tetap Rejected
+            } elseif ($st_wali === 'Approved' || $st_jud === 'Approved' || $st_jen === 'Approved') {
+                $row['status_judul']    = 'Approved';
+                $row['status_jenis_ta'] = 'Approved';
+            }
+        }
+        unset($row);
+
         return $results;
     }
 
@@ -207,6 +221,19 @@ class DosenWali_model extends CI_Model {
                 }
             }
             $row['berkas_map'] = $berkas_map;
+        }
+
+        if ($row) {
+            $st_wali = $row['status_approval_wali'] ?? '';
+            $st_jud  = $row['status_judul'] ?? '';
+            $st_jen  = $row['status_jenis_ta'] ?? '';
+            
+            if ($st_jud === 'Rejected' || $st_jen === 'Rejected') {
+                // Pertahankan status Rejected jika salah satu ditolak
+            } elseif ($st_wali === 'Approved' || $st_jud === 'Approved' || $st_jen === 'Approved') {
+                $row['status_judul']    = 'Approved';
+                $row['status_jenis_ta'] = 'Approved';
+            }
         }
 
         return $row;
@@ -548,6 +575,20 @@ class DosenWali_model extends CI_Model {
             }
             unset($row);
         }
+
+        foreach ($results as &$row) {
+            $st_wali = $row['status_approval_wali'] ?? '';
+            $st_jud  = $row['status_judul'] ?? '';
+            $st_jen  = $row['status_jenis_ta'] ?? '';
+            
+            if ($st_jud === 'Rejected' || $st_jen === 'Rejected') {
+                // Biarkan status tetap Rejected
+            } elseif ($st_wali === 'Approved' || $st_jud === 'Approved' || $st_jen === 'Approved') {
+                $row['status_judul']    = 'Approved';
+                $row['status_jenis_ta'] = 'Approved';
+            }
+        }
+        unset($row);
 
         return $results;
     }
