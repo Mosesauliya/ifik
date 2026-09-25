@@ -207,7 +207,8 @@
                     <th class="py-3 px-4">MAHASISWA</th>
                     <th class="py-3 px-4">PROGRAM STUDI & KK</th>
                     <th class="py-3 px-4">JUDUL RENCANA TA</th>
-                    <th class="py-3 px-4">STATUS LAA</th>
+                    <th class="py-3 px-4 text-center">TAHAPAN FILE</th>
+                    <th class="py-3 px-4 text-center">STATUS LAA</th>
                     <th class="py-3 px-4 text-right">AKSI</th>
                 </tr>
             </thead>
@@ -231,7 +232,29 @@
                         <td class="py-3.5 px-4 text-slate-700 max-w-xs truncate" title="<?= htmlspecialchars($row['judul_1'] ?? '-') ?>">
                             <?= htmlspecialchars($row['judul_1'] ?? '-') ?>
                         </td>
-                        <td class="py-3.5 px-4">
+                        <td class="py-3.5 px-4 text-center">
+                            <?php 
+                            $stg = $row['current_stage'] ?? 'Mahasiswa';
+                            $stgLower = strtolower($stg);
+                            if ($stgLower === 'mahasiswa') {
+                                $stgBadge = 'bg-slate-100 text-slate-700 border-slate-200';
+                            } elseif (strpos($stgLower, 'wali') !== false) {
+                                $stgBadge = 'bg-amber-100 text-amber-700 border-amber-200';
+                            } elseif (strpos($stgLower, 'admin') !== false || strpos($stgLower, 'laa') !== false) {
+                                $stgBadge = 'bg-blue-100 text-blue-700 border-blue-200';
+                            } elseif (strpos($stgLower, 'koordinator') !== false || strpos($stgLower, 'koor') !== false) {
+                                $stgBadge = 'bg-purple-100 text-purple-700 border-purple-200';
+                            } elseif (strpos($stgLower, 'approved') !== false || strpos($stgLower, 'selesai') !== false) {
+                                $stgBadge = 'bg-green-100 text-green-700 border-green-200';
+                            } else {
+                                $stgBadge = 'bg-slate-100 text-slate-700 border-slate-200';
+                            }
+                            ?>
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border <?= $stgBadge ?>">
+                                <i class="bi bi-clock-history text-[9px]"></i> <?= htmlspecialchars($stg) ?>
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4 text-center">
                             <?php 
                             $sa = $row['status_approval_admin'] ?? 'Pending'; 
                             $bc = ($sa === 'Approved') ? 'bg-green-100 text-green-700 border-green-200' : (($sa === 'Rejected') ? 'bg-red-100 text-red-700 border-red-200' : 'bg-amber-100 text-amber-700 border-amber-200'); 
