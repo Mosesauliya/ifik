@@ -699,6 +699,28 @@ class AdminLayanan_model extends CI_Model {
             }
         }
 
+        // 4. Fetch status_doswal from file_pendaftaran to resolve Dosen Wali approval status directly
+        if ($has_fp && $this->db->field_exists('status_doswal', 'file_pendaftaran')) {
+            $fp_dos_rows = $this->db->select('id_mhs, status_doswal')
+                ->where_in('id_mhs', $target_ids)
+                ->where_in('status_doswal', array('Approved', 'Valid'))
+                ->get('file_pendaftaran')
+                ->result_array();
+            $approved_doswal_nims = array();
+            foreach ($fp_dos_rows as $fdr) {
+                $c_nim = preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', $fdr['id_mhs']);
+                $approved_doswal_nims[$c_nim] = true;
+                $approved_doswal_nims['usr_mhs_' . $c_nim] = true;
+            }
+            foreach ($list as &$r) {
+                $nim = $r['nim'] ?? '';
+                if (!empty($approved_doswal_nims[$nim])) {
+                    $r['status_approval_wali'] = 'Approved';
+                }
+            }
+            unset($r);
+        }
+
         // Apply resolved names & guidance details
         foreach ($list as &$r) {
             $nim = $r['nim'] ?? '';
@@ -900,6 +922,7 @@ class AdminLayanan_model extends CI_Model {
             $active_syarat = $this->get_active_syarat_berkas();
             $required_kodes = !empty($active_syarat) ? array_column($active_syarat, 'kode_berkas') : array('ksm', 'transkrip', 'pernyataan', 'bebas_lab');
             $fp_doswal_map = $info['fp_doswal_map'] ?? array();
+            $status_doswal_list = $info['status_doswal'] ?? array();
 
             $all_files_approved = true;
             $has_file_rejected = false;
@@ -918,9 +941,11 @@ class AdminLayanan_model extends CI_Model {
                 }
             }
 
+            $has_fp_doswal_approved = in_array('Approved', $status_doswal_list) || in_array('Valid', $status_doswal_list);
+
             if ($g_ket === 'Rejected' || $has_file_rejected) {
                 $st_wali = 'Rejected';
-            } elseif ($all_files_approved && $g_ket === 'Approved') {
+            } elseif ($has_fp_doswal_approved || ($all_files_approved && $g_ket === 'Approved')) {
                 $st_wali = 'Approved';
             } else {
                 $st_wali = 'Pending';
