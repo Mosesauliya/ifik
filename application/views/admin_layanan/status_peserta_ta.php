@@ -506,8 +506,21 @@
 
                                         <!-- Tahapan -->
                                         <td class="py-4 px-5 text-center">
-                                            <span class="inline-block px-2.5 py-1 rounded-xl text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                                                <?= htmlspecialchars($r['tahapan_display'] ?? '-'); ?>
+                                            <?php
+                                            $td = $r['tahapan_display'] ?? 'Preview 1';
+                                            $td_stg = strtolower($td);
+                                            if (strpos($td_stg, 'preview 3') !== false || strpos($td_stg, 'preview3') !== false) {
+                                                $badge_tahap = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+                                            } elseif (strpos($td_stg, 'preview 2') !== false || strpos($td_stg, 'preview2') !== false) {
+                                                $badge_tahap = 'bg-amber-50 text-amber-700 border-amber-200';
+                                            } elseif (strpos($td_stg, 'sidang') !== false) {
+                                                $badge_tahap = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                                            } else {
+                                                $badge_tahap = 'bg-orange-50 text-orange-700 border-orange-200';
+                                            }
+                                            ?>
+                                            <span class="inline-block px-2.5 py-1 rounded-xl text-[11px] font-bold border <?= $badge_tahap; ?>">
+                                                <?= htmlspecialchars($td); ?>
                                             </span>
                                         </td>
 
@@ -559,6 +572,19 @@
                         </div>
                     <?php else: ?>
                         <?php foreach ($list_peserta as $idx => $r): ?>
+                            <?php
+                            $td_m = $r['tahapan_display'] ?? 'Preview 1';
+                            $td_stg_m = strtolower($td_m);
+                            if (strpos($td_stg_m, 'preview 3') !== false || strpos($td_stg_m, 'preview3') !== false) {
+                                $badge_tahap_m = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+                            } elseif (strpos($td_stg_m, 'preview 2') !== false || strpos($td_stg_m, 'preview2') !== false) {
+                                $badge_tahap_m = 'bg-amber-50 text-amber-700 border-amber-200';
+                            } elseif (strpos($td_stg_m, 'sidang') !== false) {
+                                $badge_tahap_m = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                            } else {
+                                $badge_tahap_m = 'bg-orange-50 text-orange-700 border-orange-200';
+                            }
+                            ?>
                             <div class="peserta-item peserta-card bg-white rounded-2xl border border-slate-200 p-4 shadow-xs space-y-3 transition-all"
                                  data-nim="<?= strtolower($r['nim']); ?>"
                                  data-nama="<?= strtolower($r['nama_lengkap']); ?>"
@@ -575,8 +601,8 @@
                                             <?= htmlspecialchars($r['nim']); ?>
                                         </span>
                                     </div>
-                                    <span class="inline-block px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                                        <?= htmlspecialchars($r['tahapan_display'] ?? '-'); ?>
+                                    <span class="inline-block px-2.5 py-0.5 rounded-lg text-[11px] font-bold border <?= $badge_tahap_m; ?>">
+                                        <?= htmlspecialchars($td_m); ?>
                                     </span>
                                 </div>
 
