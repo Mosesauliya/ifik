@@ -105,6 +105,7 @@
     <p class="text-red-700 font-semibold">Mahasiswa dengan kata kunci <strong>"<?= htmlspecialchars($search) ?>"</strong> tidak ditemukan dalam data pendaftaran TA.</p>
 </div>
 <?php endif; ?>
+
 <?php if($detail): ?>
 <div class="bg-white/80 backdrop-blur-sm border border-slate-200/80 rounded-2xl shadow-sm p-5 sm:p-6 mb-6">
     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -160,6 +161,70 @@
 </div>
 <?php else: ?>
 <div class="bg-slate-50 border border-slate-200 rounded-2xl p-8 text-center"><i class="bi bi-folder-x text-slate-300 text-4xl mb-2"></i><p class="text-slate-500 font-semibold text-sm">Mahasiswa ini belum mengupload file apapun.</p></div>
+<?php endif; ?>
+
+<?php else: ?>
+<!-- Default view when no search filter active: Table of all TA applicants -->
+<?php if(!empty($allPengajuan)): ?>
+<div class="bg-white/80 backdrop-blur-sm border border-slate-200/80 rounded-2xl shadow-sm p-5 sm:p-6 mb-6">
+    <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+        <div>
+            <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <i class="bi bi-people-fill text-orange-500"></i> Daftar Mahasiswa Pendaftar TA (<?= count($allPengajuan) ?> Mahasiswa)
+            </h2>
+            <span class="text-xs text-slate-500">Pilih mahasiswa di bawah ini untuk mengelola atau mereset file TA mereka.</span>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+            <thead>
+                <tr class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
+                    <th class="py-3 px-4">MAHASISWA</th>
+                    <th class="py-3 px-4">PROGRAM STUDI & KK</th>
+                    <th class="py-3 px-4">JUDUL RENCANA TA</th>
+                    <th class="py-3 px-4">STATUS LAA</th>
+                    <th class="py-3 px-4 text-right">AKSI</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                <?php foreach($allPengajuan as $row): ?>
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="py-3.5 px-4">
+                            <div class="font-bold text-slate-800"><?= htmlspecialchars(trim(($row['nama_depan'] ?? '') . ' ' . ($row['nama_belakang'] ?? ''))) ?></div>
+                            <div class="text-[11px] font-mono text-orange-600 font-semibold"><?= htmlspecialchars($row['nim'] ?? '') ?></div>
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-600">
+                            <div><?= htmlspecialchars($row['prodi'] ?? '-') ?></div>
+                            <div class="text-[11px] text-slate-400"><?= htmlspecialchars($row['konsentrasi_dkv'] ?? '-') ?></div>
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-700 max-w-xs truncate" title="<?= htmlspecialchars($row['judul_1'] ?? '-') ?>">
+                            <?= htmlspecialchars($row['judul_1'] ?? '-') ?>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <?php 
+                            $sa = $row['status_approval_admin'] ?? 'Pending'; 
+                            $bc = ($sa === 'Approved') ? 'bg-green-100 text-green-700 border-green-200' : (($sa === 'Rejected') ? 'bg-red-100 text-red-700 border-red-200' : 'bg-amber-100 text-amber-700 border-amber-200'); 
+                            ?>
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border <?= $bc ?>"><?= $sa ?></span>
+                        </td>
+                        <td class="py-3.5 px-4 text-right">
+                            <a href="<?= site_url('adminlayanan/reset_file_ta?q=' . urlencode($row['nim'] ?? '') . '&cat=nim') ?>" 
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-bold transition-all active:scale-95">
+                                <i class="bi bi-arrow-counterclockwise"></i> Kelola & Reset File
+                            </a>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<?php else: ?>
+<div class="bg-slate-50 border border-slate-200 rounded-2xl p-8 text-center">
+    <i class="bi bi-folder-x text-slate-300 text-4xl mb-2"></i>
+    <p class="text-slate-500 font-semibold text-sm">Belum ada mahasiswa yang mendaftar TA.</p>
+</div>
 <?php endif; ?>
 <?php endif; ?>
 </main>
