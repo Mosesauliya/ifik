@@ -679,6 +679,7 @@
                                 <th class="py-3.5 px-5 text-center w-10">No</th>
                                 <th class="py-3.5 px-5">Mahasiswa</th>
                                 <th class="py-3.5 px-5">Prodi</th>
+                                <th class="py-3.5 px-5 text-center">Tahapan File</th>
                                 <th class="py-3.5 px-5 text-center">KSM</th>
                                 <th class="py-3.5 px-5 text-center">Transkrip</th>
                                 <th class="py-3.5 px-5 text-center">Surat Pernyataan</th>
@@ -690,7 +691,7 @@
                         <tbody class="divide-y divide-slate-100 text-sm" id="pesertaTableBody">
                             <?php if (empty($list_peserta)): ?>
                                 <tr id="emptyRow">
-                                    <td colspan="9" class="py-12 text-center text-slate-400">
+                                    <td colspan="10" class="py-12 text-center text-slate-400">
                                         <div class="w-16 h-16 rounded-3xl bg-orange-50 text-orange-400 flex items-center justify-center mx-auto mb-3 text-2xl">
                                             <i class="bi bi-folder-x"></i>
                                         </div>
@@ -726,6 +727,30 @@
                                         <td class="py-4 px-5">
                                             <span class="text-xs font-bold text-slate-800 block truncate max-w-[120px]">
                                                 <?= htmlspecialchars($r['prodi'] ?? 'DKV'); ?>
+                                            </span>
+                                        </td>
+
+                                        <!-- Tahapan File -->
+                                        <td class="py-4 px-5 text-center">
+                                            <?php 
+                                            $stgFile = $r['current_stage'] ?? 'Mahasiswa';
+                                            $stgFileLower = strtolower($stgFile);
+                                            if ($stgFileLower === 'mahasiswa') {
+                                                $stgBadgeFile = 'bg-slate-100 text-slate-700 border-slate-200';
+                                            } elseif (strpos($stgFileLower, 'wali') !== false) {
+                                                $stgBadgeFile = 'bg-amber-100 text-amber-700 border-amber-200';
+                                            } elseif (strpos($stgFileLower, 'admin') !== false || strpos($stgFileLower, 'laa') !== false) {
+                                                $stgBadgeFile = 'bg-blue-100 text-blue-700 border-blue-200';
+                                            } elseif (strpos($stgFileLower, 'koordinator') !== false || strpos($stgFileLower, 'koor') !== false) {
+                                                $stgBadgeFile = 'bg-purple-100 text-purple-700 border-purple-200';
+                                            } elseif (strpos($stgFileLower, 'approved') !== false || strpos($stgFileLower, 'selesai') !== false) {
+                                                $stgBadgeFile = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+                                            } else {
+                                                $stgBadgeFile = 'bg-slate-100 text-slate-700 border-slate-200';
+                                            }
+                                            ?>
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border <?= $stgBadgeFile ?>">
+                                                <i class="bi bi-clock-history text-[9px]"></i> <?= htmlspecialchars($stgFile) ?>
                                             </span>
                                         </td>
 
@@ -785,7 +810,7 @@
                                     </tr>
                                 <?php endforeach; ?>
                                 <tr id="noResultsDesktopPeserta" style="display: none;">
-                                    <td colspan="9" class="py-10 text-center text-slate-400">
+                                    <td colspan="10" class="py-10 text-center text-slate-400">
                                         <i class="bi bi-search text-2xl text-slate-300 block mb-2"></i>
                                         <p class="font-bold text-slate-600 text-xs">Tidak ada data berkas yang cocok dengan pencarian</p>
                                     </td>
