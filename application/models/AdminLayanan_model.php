@@ -253,9 +253,6 @@ class AdminLayanan_model extends CI_Model {
             if ($this->db->field_exists('view_adminlaa', 'file_pendaftaran')) {
                 $fp_update['view_adminlaa'] = 1;
             }
-            if ($this->db->field_exists('status_doswal', 'file_pendaftaran')) {
-                $fp_update['status_doswal'] = $fp_status;
-            }
             if ($this->db->field_exists('status_admin', 'file_pendaftaran')) {
                 $fp_update['status_admin'] = $fp_status;
             }
