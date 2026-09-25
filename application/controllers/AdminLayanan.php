@@ -783,106 +783,122 @@ class AdminLayanan extends CI_Controller {
      * POST: nim, kode_berkas (optional — kosong = reset semua)
      */
     public function ajax_reset_file_ta() {
-        $nim         = trim($this->input->post('nim') ?? '');
-        $kode_berkas = trim($this->input->post('kode_berkas') ?? ''); // kosong = reset semua
+        $nims_input  = $this->input->post('nims');
+        $nim_single  = trim($this->input->post('nim') ?? '');
+        $kode_berkas = trim($this->input->post('kode_berkas') ?? '');
 
-        if (empty($nim)) {
+        $nims = [];
+        if (is_array($nims_input)) {
+            $nims = array_filter(array_map('trim', $nims_input));
+        } elseif (!empty($nims_input)) {
+            $decoded = json_decode($nims_input, true);
+            if (is_array($decoded)) {
+                $nims = array_filter(array_map('trim', $decoded));
+            } else {
+                $nims = array_filter(array_map('trim', explode(',', $nims_input)));
+            }
+        } elseif (!empty($nim_single)) {
+            $nims = [$nim_single];
+        }
+
+        if (empty($nims)) {
             $this->output->set_content_type('application/json')
                          ->set_output(json_encode(['success' => false, 'message' => 'NIM tidak boleh kosong.']));
             return;
         }
 
-        $detail = $this->AdminLayanan_model->get_detail_pengajuan($nim);
-        if (!$detail) {
-            $this->output->set_content_type('application/json')
-                         ->set_output(json_encode(['success' => false, 'message' => 'Mahasiswa dengan NIM ' . $nim . ' tidak ditemukan.']));
-            return;
-        }
+        $reset_count = 0;
+        foreach ($nims as $nim) {
+            $detail = $this->AdminLayanan_model->get_detail_pengajuan($nim);
+            if (!$detail) continue;
 
-        $target_ids = ['usr_mhs_' . $nim, 'mhs_' . $nim, $nim];
+            $target_ids = ['usr_mhs_' . $nim, 'mhs_' . $nim, $nim];
 
-        if (!empty($kode_berkas)) {
-            // Reset satu file
-            $this->db->where('nim', $nim)
-                     ->where('kode_berkas', $kode_berkas)
-                     ->delete('pendaftaran_berkas');
+            if (!empty($kode_berkas) && count($nims) === 1) {
+                // Reset satu file
+                $this->db->where('nim', $nim)
+                         ->where('kode_berkas', $kode_berkas)
+                         ->delete('pendaftaran_berkas');
 
-            // Hapus dari file_pendaftaran jika ada
-            if ($this->db->table_exists('file_pendaftaran')) {
-                $this->db->where_in('id_mhs', $target_ids)
-                         ->group_start()
-                            ->like('nama', $kode_berkas)
-                         ->group_end()
-                         ->delete('file_pendaftaran');
-            }
+                // Hapus dari file_pendaftaran jika ada
+                if ($this->db->table_exists('file_pendaftaran')) {
+                    $this->db->where_in('id_mhs', $target_ids)
+                             ->group_start()
+                                ->like('nama', $kode_berkas)
+                             ->group_end()
+                             ->delete('file_pendaftaran');
+                }
 
-            // Reset status & file_path di pendaftaran_ta jika ada
-            if ($this->db->table_exists('pendaftaran_ta')) {
-                $ta_up = [];
-                if ($this->db->field_exists('file_' . $kode_berkas, 'pendaftaran_ta')) $ta_up['file_' . $kode_berkas] = null;
-                if ($this->db->field_exists('status_' . $kode_berkas, 'pendaftaran_ta')) $ta_up['status_' . $kode_berkas] = 'Pending';
-                if ($this->db->field_exists('status_file_' . $kode_berkas, 'pendaftaran_ta')) $ta_up['status_file_' . $kode_berkas] = 'Pending';
-                
-                if (!empty($ta_up)) {
+                // Reset status & file_path di pendaftaran_ta jika ada
+                if ($this->db->table_exists('pendaftaran_ta')) {
+                    $ta_up = [];
+                    if ($this->db->field_exists('file_' . $kode_berkas, 'pendaftaran_ta')) $ta_up['file_' . $kode_berkas] = null;
+                    if ($this->db->field_exists('status_' . $kode_berkas, 'pendaftaran_ta')) $ta_up['status_' . $kode_berkas] = 'Pending';
+                    if ($this->db->field_exists('status_file_' . $kode_berkas, 'pendaftaran_ta')) $ta_up['status_file_' . $kode_berkas] = 'Pending';
+                    
+                    if (!empty($ta_up)) {
+                        $this->db->where('nim', $nim)->update('pendaftaran_ta', $ta_up);
+                    }
+                }
+            } else {
+                // Reset semua file untuk NIM ini
+                $this->db->where('nim', $nim)->delete('pendaftaran_berkas');
+
+                // Hapus SEMUA file milik mahasiswa dari file_pendaftaran
+                if ($this->db->table_exists('file_pendaftaran')) {
+                    $this->db->where_in('id_mhs', $target_ids)->delete('file_pendaftaran');
+                }
+
+                // Reset pendaftaran_ta sepenuhnya agar mahasiswa harus upload ulang
+                if ($this->db->table_exists('pendaftaran_ta')) {
+                    $ta_fields = $this->db->list_fields('pendaftaran_ta');
+                    $ta_up = [
+                        'status_approval_admin' => 'Pending',
+                        'status_approval_wali'  => 'Pending',
+                        'berkas_kurang'         => null,
+                        'catatan_admin'         => null,
+                        'catatan_wali'          => null,
+                        'current_stage'         => 'Mahasiswa',
+                    ];
+                    if (in_array('is_submitted', $ta_fields)) $ta_up['is_submitted'] = 0;
+                    foreach (['ksm', 'transkrip', 'pernyataan', 'bebas_lab'] as $k) {
+                        if (in_array('file_' . $k, $ta_fields)) $ta_up['file_' . $k] = null;
+                        if (in_array('status_' . $k, $ta_fields)) $ta_up['status_' . $k] = 'Pending';
+                        if (in_array('status_file_' . $k, $ta_fields)) $ta_up['status_file_' . $k] = 'Pending';
+                    }
                     $this->db->where('nim', $nim)->update('pendaftaran_ta', $ta_up);
                 }
-            }
 
-            $msg = 'File ' . strtoupper($kode_berkas) . ' mahasiswa NIM ' . $nim . ' berhasil direset.';
-        } else {
-            // Reset semua file
-            $this->db->where('nim', $nim)->delete('pendaftaran_berkas');
-
-            // Hapus SEMUA file milik mahasiswa dari file_pendaftaran
-            if ($this->db->table_exists('file_pendaftaran')) {
-                $this->db->where_in('id_mhs', $target_ids)->delete('file_pendaftaran');
-            }
-
-            // Reset pendaftaran_ta sepenuhnya agar mahasiswa harus upload ulang
-            if ($this->db->table_exists('pendaftaran_ta')) {
-                $ta_fields = $this->db->list_fields('pendaftaran_ta');
-                $ta_up = [
-                    'status_approval_admin' => 'Pending',
-                    'status_approval_wali'  => 'Pending',
-                    'berkas_kurang'         => null,
-                    'catatan_admin'         => null,
-                    'catatan_wali'          => null,
-                    'current_stage'         => 'Mahasiswa',
-                ];
-                if (in_array('is_submitted', $ta_fields)) $ta_up['is_submitted'] = 0;
-                foreach (['ksm', 'transkrip', 'pernyataan', 'bebas_lab'] as $k) {
-                    if (in_array('file_' . $k, $ta_fields)) $ta_up['file_' . $k] = null;
-                    if (in_array('status_' . $k, $ta_fields)) $ta_up['status_' . $k] = 'Pending';
-                    if (in_array('status_file_' . $k, $ta_fields)) $ta_up['status_file_' . $k] = 'Pending';
-                }
-                $this->db->where('nim', $nim)->update('pendaftaran_ta', $ta_up);
-            }
-
-            // Reset status di guidance jika ada
-            if ($this->db->table_exists('guidance')) {
-                $g_up = [];
-                if ($this->db->field_exists('keterangan', 'guidance')) $g_up['keterangan'] = 'Pending';
-                if (!empty($g_up)) {
-                    $this->db->where_in('id_mhs', $target_ids)->update('guidance', $g_up);
+                // Reset status di guidance jika ada
+                if ($this->db->table_exists('guidance')) {
+                    $g_up = [];
+                    if ($this->db->field_exists('keterangan', 'guidance')) $g_up['keterangan'] = 'Pending';
+                    if (!empty($g_up)) {
+                        $this->db->where_in('id_mhs', $target_ids)->update('guidance', $g_up);
+                    }
                 }
             }
 
-            $msg = 'Semua file TA mahasiswa NIM ' . $nim . ' berhasil direset. Mahasiswa dapat mengupload ulang.';
+            // Log aksi
+            $this->load->model('Approval_log_model');
+            $mhs_name = trim(($detail['nama_depan'] ?? '') . ' ' . ($detail['nama_belakang'] ?? ''));
+            $this->Approval_log_model->log([
+                'modul'       => 'Admin Layanan',
+                'ref_id'      => $nim,
+                'target_name' => $mhs_name,
+                'action'      => !empty($kode_berkas) ? 'Reset File (' . strtoupper($kode_berkas) . ')' : 'Reset Semua File TA',
+                'catatan'     => 'Reset dilakukan oleh Admin LAA'
+            ]);
+
+            $reset_count++;
         }
 
-        // Log aksi
-        $this->load->model('Approval_log_model');
-        $mhs_name = trim(($detail['nama_depan'] ?? '') . ' ' . ($detail['nama_belakang'] ?? ''));
-        $this->Approval_log_model->log([
-            'modul'       => 'Admin Layanan',
-            'ref_id'      => $nim,
-            'target_name' => $mhs_name,
-            'action'      => !empty($kode_berkas) ? 'Reset File (' . strtoupper($kode_berkas) . ')' : 'Reset Semua File TA',
-            'catatan'     => 'Reset dilakukan oleh Admin LAA'
-        ]);
+        $msg = (count($nims) > 1)
+            ? 'Berhasil mereset file TA dari ' . $reset_count . ' mahasiswa sekaligus!'
+            : (!empty($kode_berkas) ? 'File ' . strtoupper($kode_berkas) . ' mahasiswa NIM ' . $nims[0] . ' berhasil direset.' : 'Semua file TA mahasiswa NIM ' . $nims[0] . ' berhasil direset.');
 
         $this->output->set_content_type('application/json')
-                     ->set_output(json_encode(['success' => true, 'message' => $msg]));
+                     ->set_output(json_encode(['success' => true, 'count' => $reset_count, 'message' => $msg]));
     }
 
     // =========================================================================
