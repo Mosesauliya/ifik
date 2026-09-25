@@ -167,21 +167,21 @@
 <!-- Default view when no search filter active: Table of all TA applicants -->
 <?php if(!empty($allPengajuan)): ?>
 
-<!-- Batch Reset Floating Action Bar -->
-<div id="batchResetBar" class="hidden flex flex-col sm:flex-row items-center justify-between bg-gradient-to-r from-red-600 to-rose-600 text-white px-5 py-3.5 rounded-2xl shadow-xl mb-6 transition-all">
-    <div class="flex items-center gap-3 mb-2 sm:mb-0">
-        <span class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center font-extrabold text-sm shadow-inner">
-            <i class="bi bi-check2-square text-base"></i>
+<!-- Sticky Floating Batch Reset Action Bar at Bottom -->
+<div id="batchResetBar" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[999] w-[calc(100%-2rem)] max-w-xl flex items-center justify-between bg-gradient-to-r from-red-600 to-rose-600 text-white px-4 py-2.5 rounded-2xl shadow-2xl border border-white/20 transition-all duration-300">
+    <div class="flex items-center gap-2.5">
+        <span class="w-7 h-7 rounded-xl bg-white/20 flex items-center justify-center font-extrabold text-xs shadow-inner shrink-0">
+            <i class="bi bi-check2-square text-sm"></i>
         </span>
         <div>
-            <h4 id="batchResetCountText" class="font-extrabold text-xs sm:text-sm">0 Mahasiswa Dipilih</h4>
-            <span class="text-[11px] text-red-100">Klik tombol di kanan untuk mereset semua file TA mahasiswa terpilih sekaligus.</span>
+            <h4 id="batchResetCountText" class="font-bold text-xs">0 Mahasiswa Dipilih</h4>
+            <span class="text-[10px] text-red-100 block sm:inline">Terpilih untuk reset file TA</span>
         </div>
     </div>
-    <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+    <div class="flex items-center gap-2 shrink-0 ml-3">
         <button type="button" onclick="confirmBatchReset()" 
-                class="w-full sm:w-auto px-4 py-2 bg-white text-red-600 hover:bg-red-50 rounded-xl text-xs font-black shadow-sm transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer">
-            <i class="bi bi-arrow-counterclockwise text-sm"></i> Reset File Mahasiswa Terpilih
+                class="px-3.5 py-1.5 bg-white text-red-600 hover:bg-red-50 rounded-xl text-xs font-black shadow-md transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer">
+            <i class="bi bi-arrow-counterclockwise text-xs"></i> Reset Terpilih
         </button>
     </div>
 </div>
