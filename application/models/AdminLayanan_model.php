@@ -245,9 +245,15 @@ class AdminLayanan_model extends CI_Model {
         // Sync back to file_pendaftaran table if present
         if ($this->db->table_exists('file_pendaftaran')) {
             $target_ids = array_unique(['usr_mhs_' . $nim, 'mhs_' . $nim, $nim]);
+            $fp_status = ($enum_status === 'Valid') ? 'Approved' : (($enum_status === 'Invalid') ? 'Rejected' : 'Pending');
+            $fp_update = array();
             if ($this->db->field_exists('status_adminlaa', 'file_pendaftaran')) {
                 $fp_update['status_adminlaa'] = $fp_status;
-            } elseif ($this->db->field_exists('status_admin', 'file_pendaftaran')) {
+            }
+            if ($this->db->field_exists('view_adminlaa', 'file_pendaftaran')) {
+                $fp_update['view_adminlaa'] = 1;
+            }
+            if ($this->db->field_exists('status_admin', 'file_pendaftaran')) {
                 $fp_update['status_admin'] = $fp_status;
             }
             if ($this->db->field_exists('status_laa', 'file_pendaftaran')) {
@@ -1619,7 +1625,19 @@ class AdminLayanan_model extends CI_Model {
         }
 
         if ($filter_stage && $filter_stage !== 'all') {
-            $this->db->like('p.current_stage', $filter_stage);
+            $f_stage = strtolower($filter_stage);
+            if ($f_stage === 'preview1') {
+                $this->db->group_start();
+                $this->db->like('p.current_stage', 'preview1');
+                $this->db->or_like('p.current_stage', 'Mahasiswa');
+                $this->db->or_like('p.current_stage', 'Dosen Wali');
+                $this->db->or_like('p.current_stage', 'Admin Layanan');
+                $this->db->or_like('p.current_stage', 'Koordinator TA');
+                $this->db->or_like('p.current_stage', 'Draft');
+                $this->db->group_end();
+            } else {
+                $this->db->like('p.current_stage', $filter_stage);
+            }
         }
 
         $this->db->order_by('p.updated_at', 'DESC');
@@ -1631,20 +1649,22 @@ class AdminLayanan_model extends CI_Model {
         foreach ($rows as &$r) {
             $nim = $r['nim'];
             
-            // Map stage name to display tag
+            // Map stage name to Bimbingan TA evaluation display tag (Preview 1, Preview 2, Preview 3, Pendaftaran Sidang)
             $stg = strtolower($r['current_stage'] ?? '');
             if (strpos($stg, 'preview 3') !== false || strpos($stg, 'preview3') !== false || strpos($stg, 'pra-sidang') !== false) {
-                $r['tahapan_display'] = 'preview3';
+                $r['tahapan_display'] = 'Preview 3';
             } elseif (strpos($stg, 'preview 2') !== false || strpos($stg, 'preview2') !== false) {
-                $r['tahapan_display'] = 'preview2';
+                $r['tahapan_display'] = 'Preview 2';
             } elseif (strpos($stg, 'preview 1') !== false || strpos($stg, 'preview1') !== false) {
-                $r['tahapan_display'] = 'preview1';
+                $r['tahapan_display'] = 'Preview 1';
             } elseif (strpos($stg, 'sidang') !== false) {
                 $r['tahapan_display'] = 'Pendaftaran Sidang';
             } elseif (strpos($stg, 'lulus') !== false || strpos($stg, 'selesai') !== false) {
                 $r['tahapan_display'] = 'Lulus Sidang';
             } else {
-                $r['tahapan_display'] = !empty($r['current_stage']) ? $r['current_stage'] : 'preview1';
+                // Fallback for document verification stages (Mahasiswa, Dosen Wali, Admin Layanan, etc.)
+                // Bimbingan TA evaluation stage starts at Preview 1
+                $r['tahapan_display'] = 'Preview 1';
             }
 
             // Dosen wali display
