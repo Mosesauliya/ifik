@@ -186,13 +186,16 @@ class Mahasiswa_model extends CI_Model {
             if (in_array('judul_3', $g_fields)) $g_data['judul_3'] = $data_ta['judul_3'] ?? '';
             if (in_array('judul_en', $g_fields)) $g_data['judul_en'] = $data_ta['judul_en'] ?? '';
             if (in_array('jenis_TA', $g_fields)) {
-                $g_data['jenis_TA'] = !empty(trim($data_ta['jenis_ta'] ?? '')) ? trim($data_ta['jenis_ta']) : 'Pengkaryaan';
+                $g_data['jenis_TA'] = !empty(trim($data_ta['jenis_ta'] ?? '')) ? trim($data_ta['jenis_ta']) : '';
             }
             if (in_array('peminatan', $g_fields)) {
                 $g_data['peminatan'] = !empty(trim($data_ta['konsentrasi_dkv'] ?? '')) ? trim($data_ta['konsentrasi_dkv']) : 'Desain Komunikasi Visual';
             }
             if (in_array('tahun', $g_fields)) $g_data['tahun'] = date('Y');
-            if (in_array('keterangan', $g_fields)) $g_data['keterangan'] = $data_ta['status_approval_wali'] ?? 'Pending';
+            $is_sub_flag = !empty($data_ta['is_submitted']);
+            if (in_array('keterangan', $g_fields)) {
+                $g_data['keterangan'] = $is_sub_flag ? ($data_ta['status_approval_wali'] ?? 'Pending') : 'Draft';
+            }
             if (in_array('date',       $g_fields) && empty($existing_g)) $g_data['date'] = date('Y-m-d H:i:s');
 
             if ($existing_g) {
@@ -217,13 +220,19 @@ class Mahasiswa_model extends CI_Model {
             foreach ($files as $kode => $fileName) {
                 if (empty($fileName)) continue;
                 $relPath = (strpos($fileName, 'uploads/') === 0) ? $fileName : ('uploads/persyaratan_ta/' . $fileName);
+                $targetFpId = 'fp_' . $nim . '_' . $kode;
 
-                $exFp = $this->db->group_start()
-                    ->where('id_mhs', $userId)
-                    ->or_where('id_mhs', $nim)
-                ->group_end()
-                ->where('nama', $kode)
-                ->get('file_pendaftaran')->row_array();
+                // Check existing record by primary key ID or by id_mhs + nama
+                $exFp = $this->db->get_where('file_pendaftaran', ['id' => $targetFpId])->row_array();
+                if (!$exFp) {
+                    $exFp = $this->db->group_start()
+                        ->where('id_mhs', $userId)
+                        ->or_where('id_mhs', $nim)
+                        ->or_where('id_mhs', 'usr_mhs_' . $nim)
+                    ->group_end()
+                    ->where('nama', $kode)
+                    ->get('file_pendaftaran')->row_array();
+                }
 
                 $fpData = [];
                 if (in_array('file',            $fp_fields)) $fpData['file']            = $relPath;
@@ -234,61 +243,31 @@ class Mahasiswa_model extends CI_Model {
                 if ($exFp) {
                     $this->db->where('id', $exFp['id'])->update('file_pendaftaran', $fpData);
                 } else {
-                    if (in_array('id',            $fp_fields)) $fpData['id']            = 'fp_' . $nim . '_' . $kode;
+                    if (in_array('id',            $fp_fields)) $fpData['id']            = $targetFpId;
                     if (in_array('id_mhs',        $fp_fields)) $fpData['id_mhs']        = $userId;
                     if (in_array('nama',          $fp_fields)) $fpData['nama']          = $kode;
                     if (in_array('view_adminlaa', $fp_fields)) $fpData['view_adminlaa'] = 0;
                     if (in_array('view_doswal',   $fp_fields)) $fpData['view_doswal']   = 0;
                     if (in_array('komentar',      $fp_fields)) $fpData['komentar']      = '';
                     if (in_array('date',          $fp_fields)) $fpData['date']          = date('Y-m-d H:i:s');
-                    $this->db->insert('file_pendaftaran', $fpData);
-                }
-            }
-        }
 
-        // 3. pendaftaran_ta
-        if ($this->db->table_exists('pendaftaran_ta')) {
-            $existing_pt = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
-            $pt_fields = $this->db->list_fields('pendaftaran_ta');
-            $pt_data = [];
-            foreach ($data_ta as $col => $val) {
-                if (in_array($col, $pt_fields)) {
-                    $pt_data[$col] = $val;
+                    $checkFpAgain = $this->db->get_where('file_pendaftaran', ['id' => $targetFpId])->row_array();
+                    if ($checkFpAgain) {
+                        $this->db->where('id', $targetFpId)->update('file_pendaftaran', $fpData);
+                    } else {
+                        $this->db->insert('file_pendaftaran', $fpData);
+                    }
                 }
-            }
-            $pt_data['updated_at'] = date('Y-m-d H:i:s');
-            if ($existing_pt) {
-                $this->db->where('nim', $nim)->update('pendaftaran_ta', $pt_data);
-            } else {
-                if (in_array('created_at', $pt_fields) && empty($pt_data['created_at'])) {
-                    $pt_data['created_at'] = date('Y-m-d H:i:s');
-                }
-                $this->db->insert('pendaftaran_ta', $pt_data);
             }
         }
 
         return true;
     }
 
-    // Get Status Pendaftaran & Approval Chain langsung dari guidance, file_pendaftaran, pendaftaran_berkas & pendaftaran_ta
+    // Get Status Pendaftaran & Approval Chain langsung dari guidance, file_pendaftaran, pendaftaran_berkas
     public function get_status_pendaftaran($nim) {
         $pt_data = array();
-        $prev_debug = $this->db->db_debug;
-        $this->db->db_debug = FALSE;
-
-        if ($this->db->table_exists('pendaftaran_ta')) {
-            try {
-                $pt_row = $this->db->get_where('pendaftaran_ta', array('nim' => $nim))->row_array();
-                if ($pt_row) {
-                    $pt_data = $pt_row;
-                }
-            } catch (Throwable $e) {
-                log_message('error', 'Error fetching pendaftaran_ta: ' . $e->getMessage());
-            }
-        }
-
         $userId = $this->_get_user_id_by_nim($nim);
-        $this->db->db_debug = $prev_debug;
 
         $guidance = null;
         if ($this->db->table_exists('guidance')) {
@@ -363,7 +342,13 @@ class Mahasiswa_model extends CI_Model {
         }
         $this->db->db_debug = $prev_debug;
 
-        $is_submitted = ($guidance !== null || !empty($files) || !empty($berkas_rows) || !empty($pt_data['judul_1'])) ? 1 : 0;
+        $g_ket = $guidance['keterangan'] ?? 'Draft';
+        $is_submitted = 0;
+        if (!empty($pt_data['is_submitted'])) {
+            $is_submitted = 1;
+        } elseif ($guidance && !empty($g_ket) && strtolower($g_ket) !== 'draft') {
+            $is_submitted = 1;
+        }
 
         // 1. Status Judul & Catatan Judul
         $status_judul = $pt_data['status_judul'] ?? null;
@@ -489,16 +474,16 @@ class Mahasiswa_model extends CI_Model {
         $res = array_merge(array(
             'nim'                   => $nim,
             'is_submitted'          => $is_submitted,
-            'jenis_ta'              => !empty(trim($pt_data['jenis_ta'] ?? '')) 
-                                        ? trim($pt_data['jenis_ta']) 
-                                        : (!empty(trim($guidance['jenis_TA'] ?? '')) 
-                                            ? trim($guidance['jenis_TA']) 
-                                            : (!empty(trim($guidance['jenis_ta'] ?? '')) ? trim($guidance['jenis_ta']) : 'Pengkaryaan')),
-            'judul_1'               => $pt_data['judul_1'] ?? ($guidance['judul_1'] ?? ''),
-            'judul_2'               => $pt_data['judul_2'] ?? ($guidance['judul_2'] ?? ''),
-            'judul_3'               => $pt_data['judul_3'] ?? ($guidance['judul_3'] ?? ''),
-            'judul_en'              => $pt_data['judul_en'] ?? ($guidance['judul_en'] ?? ''),
-            'konsentrasi_dkv'       => $pt_data['konsentrasi_dkv'] ?? ($guidance['peminatan'] ?? 'Informatika'),
+            'jenis_ta'              => !empty(trim($guidance['jenis_TA'] ?? '')) 
+                                        ? trim($guidance['jenis_TA']) 
+                                        : (!empty(trim($guidance['jenis_ta'] ?? '')) 
+                                            ? trim($guidance['jenis_ta']) 
+                                            : (!empty(trim($pt_data['jenis_ta'] ?? '')) ? trim($pt_data['jenis_ta']) : '')),
+            'judul_1'               => $guidance['judul_1'] ?? ($pt_data['judul_1'] ?? ''),
+            'judul_2'               => $guidance['judul_2'] ?? ($pt_data['judul_2'] ?? ''),
+            'judul_3'               => $guidance['judul_3'] ?? ($pt_data['judul_3'] ?? ''),
+            'judul_en'              => $guidance['judul_en'] ?? ($pt_data['judul_en'] ?? ''),
+            'konsentrasi_dkv'       => $guidance['peminatan'] ?? ($pt_data['konsentrasi_dkv'] ?? 'Informatika'),
             'status_approval_wali'  => $status_doswal,
             'status_approval_admin' => $status_laa,
             'status_approval_koor'  => $pt_data['status_approval_koor'] ?? 'Pending',
@@ -617,22 +602,6 @@ class Mahasiswa_model extends CI_Model {
                 }
             }
             $this->db->where('nim', $nim)->delete('pendaftaran_berkas');
-        }
-
-        // 6. pendaftaran_ta
-        if ($this->db->table_exists('pendaftaran_ta')) {
-            $pt_row = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
-            if ($pt_row) {
-                foreach (['file_ksm', 'file_transkrip', 'file_pernyataan', 'file_bebas_lab'] as $col) {
-                    if (!empty($pt_row[$col])) {
-                        $fp = FCPATH . $pt_row[$col];
-                        if (file_exists($fp) && is_file($fp)) @unlink($fp);
-                        $fp2 = $upload_path . basename($pt_row[$col]);
-                        if (file_exists($fp2) && is_file($fp2)) @unlink($fp2);
-                    }
-                }
-            }
-            $this->db->where('nim', $nim)->delete('pendaftaran_ta');
         }
 
         return true;
