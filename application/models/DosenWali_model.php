@@ -101,7 +101,6 @@ class DosenWali_model extends CI_Model {
             $this->_update_file_approval_file_pendaftaran($nim, $file_type, $ver, $comment);
         }
 
-        // 2. Note: pendaftaran_berkas status_verifikasi is reserved for Admin LAA verification
         return true;
     }
 
