@@ -731,7 +731,7 @@
                                         </td>
 
                                         <!-- Tahapan File -->
-                                        <td class="py-4 px-5 text-center">
+                                        <td class="py-4 px-5 text-center whitespace-nowrap">
                                             <?php 
                                             $stgFile = $r['current_stage'] ?? 'Mahasiswa';
                                             $stgFileLower = strtolower($stgFile);
@@ -749,7 +749,7 @@
                                                 $stgBadgeFile = 'bg-slate-100 text-slate-700 border-slate-200';
                                             }
                                             ?>
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border <?= $stgBadgeFile ?>">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border whitespace-nowrap <?= $stgBadgeFile ?>">
                                                 <i class="bi bi-clock-history text-[9px]"></i> <?= htmlspecialchars($stgFile) ?>
                                             </span>
                                         </td>

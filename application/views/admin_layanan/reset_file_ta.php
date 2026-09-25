@@ -232,7 +232,7 @@
                         <td class="py-3.5 px-4 text-slate-700 max-w-xs truncate" title="<?= htmlspecialchars($row['judul_1'] ?? '-') ?>">
                             <?= htmlspecialchars($row['judul_1'] ?? '-') ?>
                         </td>
-                        <td class="py-3.5 px-4 text-center">
+                        <td class="py-3.5 px-4 text-center whitespace-nowrap">
                             <?php 
                             $stg = $row['current_stage'] ?? 'Mahasiswa';
                             $stgLower = strtolower($stg);
@@ -250,7 +250,7 @@
                                 $stgBadge = 'bg-slate-100 text-slate-700 border-slate-200';
                             }
                             ?>
-                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border <?= $stgBadge ?>">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap <?= $stgBadge ?>">
                                 <i class="bi bi-clock-history text-[9px]"></i> <?= htmlspecialchars($stg) ?>
                             </span>
                         </td>
