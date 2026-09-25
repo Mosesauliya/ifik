@@ -247,6 +247,12 @@ class AdminLayanan_model extends CI_Model {
             $target_ids = array_unique(['usr_mhs_' . $nim, 'mhs_' . $nim, $nim]);
             $fp_status = ($enum_status === 'Valid') ? 'Approved' : (($enum_status === 'Invalid') ? 'Rejected' : 'Pending');
             $fp_update = array();
+            if ($this->db->field_exists('status_adminlaa', 'file_pendaftaran')) {
+                $fp_update['status_adminlaa'] = $fp_status;
+            }
+            if ($this->db->field_exists('view_adminlaa', 'file_pendaftaran')) {
+                $fp_update['view_adminlaa'] = 1;
+            }
             if ($this->db->field_exists('status_doswal', 'file_pendaftaran')) {
                 $fp_update['status_doswal'] = $fp_status;
             }

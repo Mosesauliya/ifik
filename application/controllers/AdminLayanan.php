@@ -404,6 +404,15 @@ class AdminLayanan extends CI_Controller {
             return;
         }
 
+        // Mark view_adminlaa = 1 in file_pendaftaran when Admin LAA views student's berkas
+        if ($this->db->table_exists('file_pendaftaran')) {
+            $target_ids = array_unique(['usr_mhs_' . $nim, 'mhs_' . $nim, $nim]);
+            if ($this->db->field_exists('view_adminlaa', 'file_pendaftaran')) {
+                $this->db->where_in('id_mhs', $target_ids)
+                         ->update('file_pendaftaran', ['view_adminlaa' => 1]);
+            }
+        }
+
         $data['title']          = 'Verifikasi Berkas Mahasiswa - ' . ($detail['nama_depan'] ?? '') . ' ' . ($detail['nama_belakang'] ?? '');
         $data['detail']         = $detail;
         $data['syarat_berkas']  = $this->AdminLayanan_model->get_active_syarat_berkas();
