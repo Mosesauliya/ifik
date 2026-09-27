@@ -2937,7 +2937,7 @@
                         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 16px;">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 10px; flex-wrap: wrap;">
                                 <div>
-                                    <span id="detailKodeRuangan" style="display: inline-block; background: #ede9fe; color: #7c3aed; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-bottom: 4px;"></span>
+                                    <div id="detailKodeRuangan" style="display: none; margin-bottom: 4px;"></div>
                                     <h3 id="detailNamaRuangan" style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #0f172a;"></h3>
                                 </div>
                                 <div id="detailStatusBadge"></div>
@@ -4312,6 +4312,15 @@
             document.getElementById('detailBookingModal').classList.add('show');
         }
 
+        function formatRoomCodeCompact(rawCodes) {
+            if (!rawCodes) return '-';
+            const codes = String(rawCodes).split(',').map(c => c.trim()).filter(Boolean);
+            if (codes.length === 0) return '-';
+            if (codes.length === 1) return codes[0];
+            if (codes.length === 2) return `${codes[0]}, ${codes[1]}`;
+            return `${codes[0]} (+${codes.length - 1} Ruang)`;
+        }
+
         function renderDailyModalList(list, activeId) {
             const listEl = document.getElementById('modalDailyList');
             const countEl = document.getElementById('modalDailyCountBadge');
@@ -4341,10 +4350,10 @@
                 html += `
                     <div class="modal-daily-item ${isActive ? 'active' : ''}" onclick="selectBookingInDailyModal('${b.id}')">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; gap: 6px;">
-                            <span style="font-size: 0.72rem; font-weight: 700; color: #7c3aed; background: #ede9fe; padding: 2px 7px; border-radius: 6px;">
-                                ${b.kode_ruangan || '-'}
+                            <span style="font-size: 0.72rem; font-weight: 700; color: #7c3aed; background: #ede9fe; padding: 2px 7px; border-radius: 6px; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block;" title="${b.kode_ruangan || '-'}">
+                                ${formatRoomCodeCompact(b.kode_ruangan)}
                             </span>
-                            <span style="display:inline-flex; align-items:center; gap:4px; font-size:0.7rem; font-weight:700; color:${st.badgeColor};">
+                            <span style="display:inline-flex; align-items:center; gap:4px; font-size:0.7rem; font-weight:700; color:${st.badgeColor}; flex-shrink:0;">
                                 <span style="width:6px; height:6px; border-radius:50%; background:${st.dot};"></span>
                                 ${st.label}
                             </span>
@@ -4404,8 +4413,26 @@
 
             // Populate detail pane
             document.getElementById('detailBookingId').value = booking.id;
-            document.getElementById('detailKodeRuangan').innerText = booking.kode_ruangan ? 'Ruang: ' + booking.kode_ruangan : '';
-            document.getElementById('detailKodeRuangan').style.display = booking.kode_ruangan ? 'inline-block' : 'none';
+            
+            const detailKodeEl = document.getElementById('detailKodeRuangan');
+            const rawCodes = String(booking.kode_ruangan || '').split(',').map(c => c.trim()).filter(Boolean);
+            if (rawCodes.length > 0) {
+                if (rawCodes.length === 1) {
+                    detailKodeEl.innerHTML = `<span style="display:inline-block; background:#ede9fe; color:#7c3aed; font-size:0.75rem; font-weight:700; padding:3px 10px; border-radius:20px; border:1px solid #ddd6fe; margin-bottom:4px;">Ruang: ${rawCodes[0]}</span>`;
+                } else {
+                    const badges = rawCodes.map(c => `<span style="display:inline-block; background:#ede9fe; color:#7c3aed; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:6px; border:1px solid #ddd6fe;">${c}</span>`).join('');
+                    detailKodeEl.innerHTML = `
+                        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:5px; margin-bottom:6px;">
+                            <span style="font-size:0.74rem; font-weight:700; color:#64748b;">Sub Ruangan (${rawCodes.length}):</span>
+                            ${badges}
+                        </div>
+                    `;
+                }
+                detailKodeEl.style.display = 'block';
+            } else {
+                detailKodeEl.style.display = 'none';
+            }
+
             document.getElementById('detailNamaRuangan').innerText = booking.nama_ruangan || '';
             document.getElementById('detailNamaLengkap').innerText = booking.nama_lengkap || '-';
 

@@ -219,7 +219,7 @@
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 10px;">
                     <div>
-                        <span id="detailKodeRuangan" style="display: inline-block; background: #ede9fe; color: #7c3aed; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-bottom: 4px;"></span>
+                        <div id="detailKodeRuangan" style="display: none; margin-bottom: 4px;"></div>
                         <h3 id="detailNamaRuangan" style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #0f172a;"></h3>
                     </div>
                     <div id="detailStatusBadge"></div>
