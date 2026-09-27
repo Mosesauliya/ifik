@@ -152,8 +152,8 @@ class Booking_model extends CI_Model {
                 NULLIF(TRIM(CONCAT(m.nama_depan, ' ', COALESCE(m.nama_belakang, ''))), ''),
                 'Mahasiswa / Civitas IFIK'
             ) AS nama_lengkap,
-            COALESCE(ruangan.ruangan, booking.id_ruangan) AS nama_ruangan,
-            ruangan.id AS kode_ruangan,
+            COALESCE(ruangan.ruangan, 'Ruangan Lab') AS nama_ruangan,
+            COALESCE(booking.id_ruangan, ruangan.id, '-') AS kode_ruangan,
             'Gedung Sebatik (FIK)' AS lokasi,
             COALESCE(ruangan.kapasitas, 30) AS kapasitas,
             ruangan.foto,
@@ -179,7 +179,9 @@ class Booking_model extends CI_Model {
         $this->db->join('user u2', 'u2.nim = booking.id_peminjam', 'left');
         $this->db->join('user u3', 'u3.nip = booking.id_peminjam', 'left');
         $this->db->join('mahasiswa m', 'm.nim = booking.id_peminjam', 'left');
-        $this->db->join('ruangan', 'ruangan.id = booking.id_ruangan', 'left');
+        $this->db->join('ruangan', 'ruangan.id = booking.id_ruangan 
+            OR (FIND_IN_SET(booking.id_ruangan, REPLACE(COALESCE(ruangan.id, ""), " ", "")) > 0)
+            OR ruangan.ruangan = booking.id_ruangan', 'left');
         $this->db->join('kategori_ruangan', 'kategori_ruangan.id = ruangan.id_kategori', 'left');
     }
 
@@ -201,8 +203,8 @@ class Booking_model extends CI_Model {
                 peminjaman.id_user,
                 peminjaman.id_ruangan,
                 peminjaman.nama_lengkap,
-                COALESCE(ruangan.ruangan, peminjaman.id_ruangan) AS nama_ruangan,
-                ruangan.id AS kode_ruangan,
+                COALESCE(ruangan.ruangan, 'Ruangan Lab') AS nama_ruangan,
+                COALESCE(peminjaman.id_ruangan, ruangan.id, '-') AS kode_ruangan,
                 ruangan.id_kategori,
                 'Gedung Sebatik (FIK)' AS lokasi,
                 COALESCE(ruangan.kapasitas, 30) AS kapasitas,
@@ -221,7 +223,9 @@ class Booking_model extends CI_Model {
                 peminjaman.created_at AS date_created
             ", FALSE);
             $this->db->from('peminjaman');
-            $this->db->join('ruangan', 'ruangan.id = peminjaman.id_ruangan', 'left');
+            $this->db->join('ruangan', 'ruangan.id = peminjaman.id_ruangan 
+                OR (FIND_IN_SET(peminjaman.id_ruangan, REPLACE(COALESCE(ruangan.id, ""), " ", "")) > 0)
+                OR ruangan.ruangan = peminjaman.id_ruangan', 'left');
             $this->db->join('kategori_ruangan', 'kategori_ruangan.id = ruangan.id_kategori', 'left');
             $this->db->where('peminjaman.id', $id);
             $res = $this->db->get()->row();
