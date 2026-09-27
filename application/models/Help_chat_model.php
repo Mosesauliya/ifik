@@ -74,12 +74,17 @@ class Help_chat_model extends CI_Model {
             $this->db->query("ALTER TABLE `{$this->table_messages}` MODIFY COLUMN `sender_role` VARCHAR(50) NOT NULL;");
         }
 
-        // Pastikan tabel mendukung 4-byte UTF-8 emoji (utf8mb4)
+        // Pastikan tabel dan kolom mendukung 4-byte UTF-8 emoji (utf8mb4)
         if ($this->db->table_exists($this->table_conversations)) {
             @$this->db->query("ALTER TABLE `{$this->table_conversations}` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
+            @$this->db->query("ALTER TABLE `{$this->table_conversations}` MODIFY `last_message` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL;");
+            @$this->db->query("ALTER TABLE `{$this->table_conversations}` MODIFY `topik` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;");
+            @$this->db->query("ALTER TABLE `{$this->table_conversations}` MODIFY `user_nama` VARCHAR(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;");
         }
         if ($this->db->table_exists($this->table_messages)) {
             @$this->db->query("ALTER TABLE `{$this->table_messages}` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
+            @$this->db->query("ALTER TABLE `{$this->table_messages}` MODIFY `message` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;");
+            @$this->db->query("ALTER TABLE `{$this->table_messages}` MODIFY `sender_name` VARCHAR(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;");
         }
     }
 
@@ -369,6 +374,8 @@ class Help_chat_model extends CI_Model {
     public function send_message($conversation_id, $sender_id, $sender_name, $sender_role, $message, $attachment = null) {
         $now = date('Y-m-d H:i:s');
         $conversation_id = (int)$conversation_id;
+
+        @$this->db->query("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
 
         $isStaff = in_array(strtolower($sender_role), ['laboran', 'kaur', 'admin_layanan', 'staff', 'admin']);
 
