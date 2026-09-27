@@ -73,6 +73,14 @@ class Help_chat_model extends CI_Model {
             // Pastikan kolom sender_role bisa menyimpan string panjang seperti 'koordinator_ta', 'admin_layanan', 'laboran', 'kaur'
             $this->db->query("ALTER TABLE `{$this->table_messages}` MODIFY COLUMN `sender_role` VARCHAR(50) NOT NULL;");
         }
+
+        // Pastikan tabel mendukung 4-byte UTF-8 emoji (utf8mb4)
+        if ($this->db->table_exists($this->table_conversations)) {
+            @$this->db->query("ALTER TABLE `{$this->table_conversations}` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
+        }
+        if ($this->db->table_exists($this->table_messages)) {
+            @$this->db->query("ALTER TABLE `{$this->table_messages}` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
+        }
     }
 
     /**
