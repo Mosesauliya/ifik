@@ -1265,6 +1265,10 @@
             flex-shrink: 0;
         }
 
+        .swal2-container {
+            z-index: 9999999 !important;
+        }
+
         /* Modals */
         .modal-overlay {
             position: fixed;
@@ -4164,46 +4168,39 @@
                 return;
             }
 
-            const count = ids.length;
+            closeRejectModal();
+
             Swal.fire({
-                title: isBatch ? `Tolak ${count} Permohonan Sekaligus?` : 'Tolak Permohonan Peminjaman?',
-                text: isBatch 
-                    ? `Sebanyak ${count} permohonan peminjaman akan ditolak dengan alasan yang Anda masukkan.`
-                    : `Permohonan peminjaman ini akan ditolak dengan alasan: "${alasan}".`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc2626',
-                cancelButtonColor: '#94a3b8',
-                confirmButtonText: isBatch ? `Ya, Tolak ${count} Permohonan` : 'Ya, Tolak',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    if (isBatch) {
-                        $.post(BASE_URL + 'laboran/batch_reject', { ids: ids, alasan_penolakan: alasan }, function(resp) {
-                            if (resp.status === 'success') {
-                                closeRejectModal();
-                                triggerLiveLaboranSync();
-                                deselectAll();
-                                Swal.fire({ title: 'Ditolak!', text: resp.message, icon: 'success', confirmButtonColor: '#dc2626' });
-                            } else {
-                                Swal.fire('Gagal', resp.message, 'error');
-                            }
-                        }, 'json').fail(() => Swal.fire('Error', 'Terjadi kesalahan pada server', 'error'));
-                    } else {
-                        const singleId = ids[0];
-                        $.post(BASE_URL + 'laboran/reject/' + singleId, { alasan_penolakan: alasan }, function(resp) {
-                            if (resp.status === 'success') {
-                                closeRejectModal();
-                                triggerLiveLaboranSync();
-                                deselectAll();
-                                Swal.fire({ title: 'Ditolak!', text: resp.message, icon: 'success', confirmButtonColor: '#dc2626' });
-                            } else {
-                                Swal.fire('Gagal', resp.message, 'error');
-                            }
-                        }, 'json').fail(() => Swal.fire('Error', 'Terjadi kesalahan pada server', 'error'));
-                    }
+                title: 'Memproses Penolakan...',
+                text: 'Mohon tunggu sebentar',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
                 }
             });
+
+            if (isBatch) {
+                $.post(BASE_URL + 'laboran/batch_reject', { ids: ids, alasan_penolakan: alasan }, function(resp) {
+                    if (resp.status === 'success') {
+                        triggerLiveLaboranSync();
+                        deselectAll();
+                        Swal.fire({ title: 'Ditolak!', text: resp.message, icon: 'success', confirmButtonColor: '#dc2626' });
+                    } else {
+                        Swal.fire('Gagal', resp.message, 'error');
+                    }
+                }, 'json').fail(() => Swal.fire('Error', 'Terjadi kesalahan pada server', 'error'));
+            } else {
+                const singleId = ids[0];
+                $.post(BASE_URL + 'laboran/reject/' + singleId, { alasan_penolakan: alasan }, function(resp) {
+                    if (resp.status === 'success') {
+                        triggerLiveLaboranSync();
+                        deselectAll();
+                        Swal.fire({ title: 'Ditolak!', text: resp.message, icon: 'success', confirmButtonColor: '#dc2626' });
+                    } else {
+                        Swal.fire('Gagal', resp.message, 'error');
+                    }
+                }, 'json').fail(() => Swal.fire('Error', 'Terjadi kesalahan pada server', 'error'));
+            }
         }
 
         // ==========================================
