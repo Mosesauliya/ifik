@@ -74,6 +74,76 @@ class KoordinatorTA extends CI_Controller {
         $this->monitoring();
     }
 
+    // AJAX Endpoint: Realtime Monitoring Sync (Background Polling for Monitoring Peserta TA)
+    public function ajax_realtime_monitoring() {
+        header('Content-Type: application/json');
+
+        $list = $this->KoordinatorTA_model->get_monitoring_peserta_ta();
+        $totalPeserta = count($list);
+
+        $countWali    = 0;
+        $countAdmin   = 0;
+        $countKoor    = 0;
+        $countKk      = 0;
+        $countP1      = 0;
+        $countP2      = 0;
+        $countP3      = 0;
+        $countSidang  = 0;
+        $countLulus   = 0;
+
+        $countBerkasLengkap = 0;
+        $countBerkasRevisi  = 0;
+        $countBerkasProses  = 0;
+        $countBerkasKosong  = 0;
+
+        foreach ($list as $p) {
+            $stKey = $p['stage_key'] ?? '';
+            if ($stKey === 'dosen_wali')        $countWali++;
+            elseif ($stKey === 'admin_layanan') $countAdmin++;
+            elseif ($stKey === 'koordinator_ta')$countKoor++;
+            elseif ($stKey === 'ketua_kk')      $countKk++;
+            elseif ($stKey === 'preview1')      $countP1++;
+            elseif ($stKey === 'preview2')      $countP2++;
+            elseif ($stKey === 'preview3')      $countP3++;
+            elseif ($stKey === 'sidang')        $countSidang++;
+            elseif ($stKey === 'lulus')         $countLulus++;
+
+            $bCode = $p['berkas_status_code'] ?? 'kosong';
+            if ($bCode === 'lengkap')       $countBerkasLengkap++;
+            elseif ($bCode === 'revisi')    $countBerkasRevisi++;
+            elseif ($bCode === 'proses')    $countBerkasProses++;
+            else                            $countBerkasKosong++;
+        }
+
+        $totalPendaftaran = $countWali + $countAdmin + $countKoor + $countKk;
+        $totalBimbingan   = $countP1 + $countP2 + $countP3;
+        $totalSidangLulus = $countSidang + $countLulus;
+
+        echo json_encode(array(
+            'status' => true,
+            'data'   => $list,
+            'stats'  => array(
+                'total'               => $totalPeserta,
+                'pendaftaran'         => $totalPendaftaran,
+                'bimbingan'           => $totalBimbingan,
+                'sidang_lulus'        => $totalSidangLulus,
+                'count_wali'          => $countWali,
+                'count_admin'         => $countAdmin,
+                'count_koor'          => $countKoor,
+                'count_kk'            => $countKk,
+                'count_p1'            => $countP1,
+                'count_p2'            => $countP2,
+                'count_p3'            => $countP3,
+                'count_sidang'        => $countSidang,
+                'count_lulus'         => $countLulus,
+                'berkas_lengkap'      => $countBerkasLengkap,
+                'berkas_revisi'       => $countBerkasRevisi,
+                'berkas_proses'       => $countBerkasProses,
+                'berkas_kosong'       => $countBerkasKosong,
+            )
+        ));
+    }
+
     public function pengaturan_jalur() {
         $data['title'] = 'Pengaturan Jalur Sidang & Non-Sidang (Dinamis)';
         $this->load->model('Rekomendasi_model');

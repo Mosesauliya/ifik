@@ -1848,7 +1848,15 @@ class KoordinatorTA_model extends CI_Model {
             $np2 = (float)($gRow['nilaisidang_penguji2'] ?? 0);
             $isNilaiLengkap = ($n1 > 0 && $n2 > 0 && $np1 > 0 && $np2 > 0);
             $avgScore = $isNilaiLengkap ? round(($n1 + $n2 + $np1 + $np2) / 4, 2) : 0;
-            $isLulus = ($isNilaiLengkap && $avgScore >= 55) || (strcasecmp($gRow['status_bap'] ?? '', 'Approved') === 0) || ($statusPrev === 'lulus' || $statusPrev === 'selesai') || (!empty($tInfo['sidang_app']));
+
+            // Status publikasi nilai sidang
+            $statusPublish = $item['status_publish_sidang'] ?? 'Draft';
+            $tglPublish    = $item['tgl_publish_sidang'] ?? null;
+            $isPublished   = ($statusPublish === 'Published') || ($statusPublish === 'Scheduled' && !empty($tglPublish) && strtotime($tglPublish) <= time());
+
+            // Mahasiswa baru sah berstatus "Lulus" (Tahap 9) jika nilainya sudah di-PUBLISH oleh Koordinator TA dan memenuhi syarat kelulusan
+            $isScorePassed = ($isNilaiLengkap && $avgScore >= 55) || (strcasecmp($gRow['status_bap'] ?? '', 'Approved') === 0);
+            $isLulus = $isPublished && $isScorePassed;
 
             // Ringkasan Berkas Mahasiswa
             $nim = $item['nim'];
@@ -1875,11 +1883,11 @@ class KoordinatorTA_model extends CI_Model {
                 $stageIndex   = 9;
                 $stageDesc    = 'Lulus Sidang Tugas Akhir';
                 $stageColor   = 'emerald';
-            } elseif ($hasSidang || $statusPrev === 'sidang' || !empty($tInfo['has_sidang']) || !empty($tInfo['p3_app'])) {
+            } elseif ($hasSidang || $statusPrev === 'sidang' || $statusPrev === 'lulus' || $statusPrev === 'selesai' || !empty($tInfo['has_sidang']) || !empty($tInfo['p3_app']) || $isNilaiLengkap) {
                 $progresStage = 'Sidang TA';
                 $stageKey     = 'sidang';
                 $stageIndex   = 8;
-                $stageDesc    = 'Pelaksanaan Sidang Akhir';
+                $stageDesc    = $isNilaiLengkap ? ($isPublished ? 'Sidang Selesai' : 'Nilai Masuk (Menunggu Publish)') : 'Pelaksanaan Sidang Akhir';
                 $stageColor   = 'rose';
             } elseif ($statusPrev === 'preview3' || !empty($tInfo['has_p3']) || !empty($tInfo['p2_app'])) {
                 $progresStage = 'Preview 3';
