@@ -1874,13 +1874,13 @@ class KoordinatorTA_model extends CI_Model {
                 $stageIndex   = 6;
                 $stageDesc    = 'Evaluasi Progres & Presentasi Penguji';
                 $stageColor   = 'indigo';
-            } elseif ($statusPrev === 'preview1' || !empty($tInfo['has_p1']) || (strcasecmp($statusKoor, 'Approved') === 0 && $hasPembimbing) || strcasecmp($statusKk, 'Approved') === 0) {
+            } elseif ($statusPrev === 'preview1' || !empty($tInfo['has_p1']) || strcasecmp($statusKk, 'Approved') === 0) {
                 $progresStage = 'Preview 1';
                 $stageKey     = 'preview1';
                 $stageIndex   = 5;
                 $stageDesc    = 'Bimbingan Bab 1-3 Bersama Pembimbing';
                 $stageColor   = 'teal';
-            } elseif (strcasecmp($statusKoor, 'Approved') === 0) {
+            } elseif ((strcasecmp($statusKoor, 'Approved') === 0 && $hasPembimbing) || strcasecmp($statusKoor, 'Approved') === 0) {
                 $progresStage = 'Ketua KK';
                 $stageKey     = 'ketua_kk';
                 $stageIndex   = 4;
