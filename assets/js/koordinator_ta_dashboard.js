@@ -10366,9 +10366,33 @@
                     const actionTitle = logItem.aksi || logItem.action_type || logItem.modul || `Log #${res.data.length - idx}`;
                     const createdAt = logItem.waktu || logItem.created_at || '-';
                     const actor = logItem.actor_name || logItem.dinilai_oleh || 'Koordinator TA';
-                    const notes = logItem.catatan || logItem.notes || logItem.alasan_blokir || '';
+                    
+                    let rawNotes = logItem.catatan || logItem.notes || logItem.alasan_blokir || '';
+                    let notes = '';
+                    if (rawNotes && typeof rawNotes === 'object') {
+                        notes = rawNotes.catatan_koor || rawNotes.catatan || rawNotes.keterangan || '';
+                    } else if (rawNotes && typeof rawNotes === 'string') {
+                        const trimmed = rawNotes.trim();
+                        if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+                            try {
+                                const parsed = JSON.parse(trimmed);
+                                notes = parsed.catatan_koor || parsed.catatan || parsed.keterangan || '';
+                            } catch (e) {
+                                notes = '';
+                            }
+                        } else {
+                            notes = trimmed;
+                        }
+                    }
+
+                    const tglSidang = logItem.tanggal_sidang || '';
+                    const waktuSidang = logItem.waktu_sidang || '';
+                    const ruangSidang = logItem.ruang_sidang || '';
                     const pubStatus = logItem.status_publish || '';
                     const tglPub = logItem.tgl_publish || '';
+                    const nilaiAkhir = logItem.nilai_akhir;
+                    const grade = logItem.grade;
+                    const statusLulus = logItem.status_kelulusan;
 
                     let badgeColor = 'bg-indigo-100 text-indigo-800 border-indigo-200';
                     let icon = 'fa-solid fa-bullhorn';
@@ -10376,7 +10400,7 @@
                     if (pubStatus === 'Published' || actionTitle.includes('Live') || actionTitle.includes('Published')) {
                         badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
                         icon = 'fa-solid fa-globe';
-                    } else if (pubStatus === 'Scheduled' || actionTitle.includes('Jadwal') || actionTitle.includes('Scheduled')) {
+                    } else if (pubStatus === 'Scheduled' || actionTitle.includes('Jadwal') || actionTitle.includes('Scheduled') || actionTitle.includes('Penjadwalan')) {
                         badgeColor = 'bg-sky-100 text-sky-800 border-sky-300';
                         icon = 'fa-solid fa-clock';
                     } else if (actionTitle.includes('Blokir') || actionTitle.includes('Blocked') || actionTitle.includes('Tolak')) {
@@ -10400,6 +10424,34 @@
                                     Oleh: <strong class="text-slate-900">${escapeHtml(actor)}</strong>
                                 </div>
                             </div>
+
+                            ${(tglSidang || ruangSidang) ? `
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
+                                    <div>
+                                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-0.5">Jadwal Sidang:</span>
+                                        <span class="font-bold text-slate-800 text-[11px]"><i class="fa-solid fa-calendar-day text-indigo-500 mr-1"></i> ${escapeHtml(tglSidang)} ${waktuSidang ? `(Pukul ${escapeHtml(waktuSidang)} WIB)` : ''}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-0.5">Ruangan:</span>
+                                        <span class="font-bold text-slate-800 text-[11px]"><i class="fa-solid fa-door-open text-amber-500 mr-1"></i> ${escapeHtml(ruangSidang || '-')}</span>
+                                    </div>
+                                </div>
+                            ` : ''}
+
+                            ${(nilaiAkhir !== null && nilaiAkhir !== undefined) ? `
+                                <div class="flex items-center gap-3 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
+                                    <div>
+                                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-0.5">Nilai Akhir:</span>
+                                        <span class="font-bold text-slate-900 font-mono text-xs">${parseFloat(nilaiAkhir).toFixed(2)} ${grade ? `(${escapeHtml(grade)})` : ''}</span>
+                                    </div>
+                                    ${statusLulus ? `
+                                        <div>
+                                            <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-0.5">Status Kelulusan:</span>
+                                            <span class="font-bold text-emerald-700 text-[11px]">${escapeHtml(statusLulus)}</span>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            ` : ''}
 
                             ${tglPub ? `
                                 <div class="text-xs">

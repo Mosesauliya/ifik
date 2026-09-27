@@ -1422,14 +1422,33 @@ class KoordinatorTA_model extends CI_Model {
                     $parsedCatatan = json_decode($rawCatatan, true) ?: array();
                 }
 
+                $modul = $row['modul'];
+                $aksi = $row['action'];
+                $tglSidang = $parsedCatatan['tanggal_sidang'] ?? null;
+                $waktuSidang = $parsedCatatan['waktu_sidang'] ?? null;
+                $ruangSidang = $parsedCatatan['ruang_sidang'] ?? null;
+
+                $cleanCatatan = $parsedCatatan['catatan_koor'] ?? ($parsedCatatan['catatan'] ?? ($parsedCatatan['keterangan'] ?? ''));
+                if (empty($cleanCatatan) && !empty($rawCatatan) && $rawCatatan[0] !== '{') {
+                    $cleanCatatan = $rawCatatan;
+                }
+
+                $displayAksi = $aksi;
+                if ($modul === 'Sidang TA' || ($aksi === 'Scheduled' && !empty($tglSidang))) {
+                    $displayAksi = 'Penjadwalan Sidang';
+                }
+
                 $results[] = array(
                     'id'               => $row['id'],
                     'nim'              => $row['ref_id'],
                     'nama_mahasiswa'   => $row['target_name'] ?: ('Mahasiswa NIM ' . $row['ref_id']),
-                    'modul'            => $row['modul'],
-                    'aksi'             => $row['action'],
+                    'modul'            => $modul,
+                    'aksi'             => $displayAksi,
                     'status_publish'   => $parsedCatatan['status_publish'] ?? $row['action'],
                     'tgl_publish'      => $parsedCatatan['tgl_publish'] ?? null,
+                    'tanggal_sidang'   => $tglSidang,
+                    'waktu_sidang'     => $waktuSidang,
+                    'ruang_sidang'     => $ruangSidang,
                     'nilai_akhir'      => $parsedCatatan['nilai_akhir'] ?? null,
                     'grade'            => $parsedCatatan['grade'] ?? null,
                     'status_kelulusan' => $parsedCatatan['status_kelulusan'] ?? null,
@@ -1437,7 +1456,7 @@ class KoordinatorTA_model extends CI_Model {
                     'komponen_belum'   => $parsedCatatan['komponen_belum_terisi'] ?? null,
                     'actor_name'       => $row['actor_name'] ?: 'Koordinator TA',
                     'actor_role'       => $row['actor_role'] ?: 'Koordinator TA',
-                    'catatan'          => $parsedCatatan['catatan_koor'] ?? ($row['catatan'] ?? ''),
+                    'catatan'          => $cleanCatatan,
                     'created_at'       => $row['created_at'],
                     'waktu'            => date('d M Y, H:i', strtotime($row['created_at']))
                 );
