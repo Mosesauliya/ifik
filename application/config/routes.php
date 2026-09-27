@@ -238,10 +238,13 @@ $route['adminlayanan/ticketing/simpan_tanggapan'] = 'AdminLayananTicketing/simpa
 
 // Ketua KK Routes
 $route['ketuakk'] = 'KetuaKK/index';
+$route['ketuakk/ajax_get_table'] = 'KetuaKK/ajax_get_table';
 $route['ketuakk/autocomplete'] = 'KetuaKK/autocomplete';
 $route['ketuakk/detail/(:any)'] = 'KetuaKK/detail/$1';
 $route['ketuakk/submit_approval/(:any)'] = 'KetuaKK/submit_approval/$1';
 $route['ketuakk/submit_bulk_approval'] = 'KetuaKK/submit_bulk_approval';
+$route['ketuakk/(:any)'] = 'KetuaKK/$1';
+$route['ketuakk/(:any)/(:any)'] = 'KetuaKK/$1/$2';
 
 // Central Admin Panel Routes
 $route['admin'] = 'Admin/index';
