@@ -4302,16 +4302,18 @@
                     success: function(data){
                         var html = '<option value="">Pilih Ruangan</option>';
                         for(var i=0; i<data.length; i++){
-                            if (data[i].kode_ruangan && data[i].kode_ruangan.indexOf(',') > -1) {
-                                var codes = data[i].kode_ruangan.split(',');
+                            var rawCodes = data[i].kode_ruangan || data[i].id || '';
+                            if (rawCodes && rawCodes.indexOf(',') > -1) {
+                                var codes = rawCodes.split(',');
                                 for(var c=0; c<codes.length; c++){
                                     var codeTrim = codes[c].trim();
                                     if(codeTrim) {
-                                        html += '<option value="'+data[i].id+'">'+codeTrim+' - '+data[i].nama_ruangan+'</option>';
+                                        html += '<option value="'+codeTrim+'">'+codeTrim+' - '+data[i].nama_ruangan+'</option>';
                                     }
                                 }
                             } else {
-                                html += '<option value="'+data[i].id+'">'+(data[i].kode_ruangan ? data[i].kode_ruangan + ' - ' : '')+data[i].nama_ruangan+'</option>';
+                                var codeVal = data[i].kode_ruangan || data[i].id;
+                                html += '<option value="'+(data[i].id || codeVal)+'">'+(codeVal ? codeVal + ' - ' : '')+data[i].nama_ruangan+'</option>';
                             }
                         }
                         $('#ruanganSelect').html(html);

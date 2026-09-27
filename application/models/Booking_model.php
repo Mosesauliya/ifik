@@ -99,7 +99,31 @@ class Booking_model extends CI_Model {
     {
         $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan');
         $this->db->where('id_kategori', $id_kategori);
-        return $this->db->get('ruangan')->result();
+        $raw = $this->db->get('ruangan')->result();
+
+        $flattened = [];
+        foreach ($raw as $r) {
+            $nama = !empty($r->nama_ruangan) ? $r->nama_ruangan : (!empty($r->ruangan) ? $r->ruangan : 'Ruangan');
+            $rawCodes = !empty($r->kode_ruangan) ? $r->kode_ruangan : (!empty($r->id) ? $r->id : '');
+
+            if (strpos((string)$rawCodes, ',') !== false) {
+                $codes = array_filter(array_map('trim', explode(',', (string)$rawCodes)));
+                foreach ($codes as $c) {
+                    $item = clone $r;
+                    $item->id = $c;
+                    $item->kode_ruangan = $c;
+                    $item->nama_ruangan = $nama;
+                    $flattened[] = $item;
+                }
+            } else {
+                $item = clone $r;
+                $item->id = !empty($r->id) ? $r->id : $rawCodes;
+                $item->kode_ruangan = !empty($r->kode_ruangan) ? $r->kode_ruangan : (!empty($r->id) ? $r->id : '');
+                $item->nama_ruangan = $nama;
+                $flattened[] = $item;
+            }
+        }
+        return $flattened;
     }
 
     public function get_all_slot_waktu()

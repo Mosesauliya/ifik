@@ -845,28 +845,23 @@
                         data: {id_kategori: id_kategori},
                         dataType: "json",
                         success: function(data) {
-                            var html = '';
-                            if (data.length === 1 && (!data[0].kode_ruangan || data[0].kode_ruangan.indexOf(',') === -1)) {
-                                var room = data[0];
-                                var roomLabel = room.kode_ruangan ? (room.nama_ruangan + ' (Ruang: ' + room.kode_ruangan + ')') : room.nama_ruangan;
-                                html = '<option value="' + room.id + '" selected>' + roomLabel + '</option>';
-                            } else {
-                                html = '<option value="">Pilih Ruangan</option>';
-                                $.each(data, function(i, room) {
-                                    if (room.kode_ruangan && room.kode_ruangan.indexOf(',') > -1) {
-                                        var codes = room.kode_ruangan.split(',');
-                                        $.each(codes, function(ci, c) {
-                                            var codeTrim = c.trim();
-                                            if (codeTrim) {
-                                                html += '<option value="' + room.id + '">' + room.nama_ruangan + ' (Ruang: ' + codeTrim + ')</option>';
-                                            }
-                                        });
-                                    } else {
-                                        var roomLabel = room.kode_ruangan ? (room.nama_ruangan + ' (Ruang: ' + room.kode_ruangan + ')') : room.nama_ruangan;
-                                        html += '<option value="' + room.id + '">' + roomLabel + '</option>';
-                                    }
-                                });
-                            }
+                            var html = '<option value="">Pilih Ruangan</option>';
+                            $.each(data, function(i, room) {
+                                var rawCodes = room.kode_ruangan || room.id || '';
+                                if (rawCodes && rawCodes.indexOf(',') > -1) {
+                                    var codes = rawCodes.split(',');
+                                    $.each(codes, function(ci, c) {
+                                        var codeTrim = c.trim();
+                                        if (codeTrim) {
+                                            html += '<option value="' + codeTrim + '">' + room.nama_ruangan + ' (Ruang: ' + codeTrim + ')</option>';
+                                        }
+                                    });
+                                } else {
+                                    var codeVal = room.kode_ruangan || room.id;
+                                    var roomLabel = codeVal ? (room.nama_ruangan + ' (Ruang: ' + codeVal + ')') : room.nama_ruangan;
+                                    html += '<option value="' + (room.id || codeVal) + '">' + roomLabel + '</option>';
+                                }
+                            });
                             $('#ruanganSelectPublic').html(html).trigger('change');
                         }
                     });
