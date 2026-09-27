@@ -1546,6 +1546,18 @@ class AdminLayanan_model extends CI_Model {
                 elseif ($r['status'] === 'Dikirim') $st = 'Pending';
                 else $st = $r['status'];
 
+                $createdAtReal = null;
+                if (preg_match('/\[CREATED:\s*([^\]]+)\]/is', $r['keterangan'] ?? '', $mC)) {
+                    $createdAtReal = trim($mC[1]);
+                } elseif (!empty($r['tgl_ticketing']) && strlen(trim($r['tgl_ticketing'])) > 10 && $r['tgl_ticketing'] !== '0000-00-00 00:00:00') {
+                    $createdAtReal = $r['tgl_ticketing'];
+                }
+
+                $prioritasParsed = null;
+                if (preg_match('/\[PRIORITAS:\s*([^\]]+)\]/is', $r['keterangan'] ?? '', $mPrio)) {
+                    $prioritasParsed = trim($mPrio[1]);
+                }
+
                 $formatted[] = [
                     'id'            => $r['id'],
                     'ticket_number' => $r['id'],
@@ -1557,10 +1569,10 @@ class AdminLayanan_model extends CI_Model {
                     'kategori'      => $r['kategori'] ?? 'Layanan Umum',
                     'perihal'       => $subjek,
                     'deskripsi'     => $deskripsi,
-                    'prioritas'     => 'Normal',
+                    'prioritas'     => $prioritasParsed ?: (!empty($r['prioritas']) ? $r['prioritas'] : 'Normal'),
                     'status'        => $st,
                     'catatan'       => $r['keterangan'] ?? '',
-                    'created_at'    => !empty($r['tgl_ticketing']) ? ($r['tgl_ticketing'] . ' 08:00:00') : date('Y-m-d H:i:s'),
+                    'created_at'    => $createdAtReal ?: (!empty($r['tgl_ticketing']) ? ($r['tgl_ticketing'] . ' 08:00:00') : date('Y-m-d H:i:s')),
                     'updated_at'    => $r['tgl_closed'] ?? ($r['tgl_diproses'] ?? date('Y-m-d H:i:s'))
                 ];
             }
