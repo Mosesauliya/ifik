@@ -153,8 +153,8 @@ body.curved-sidebar-open {
     min-height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
-    padding: 46px 14px 18px 14px;
+    justify-content: space-between;
+    padding: 58px 14px 18px 14px;
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
@@ -178,6 +178,7 @@ body.curved-sidebar-open {
     border-bottom: 1px solid rgba(226, 232, 240, 0.8);
     padding-bottom: 6px;
     margin-bottom: 8px;
+    margin-top: 2px;
 }
 
 .curved-sidebar-header p {

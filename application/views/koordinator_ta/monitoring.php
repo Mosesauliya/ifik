@@ -1212,7 +1212,7 @@
     </div>
 
     <!-- Floating Non-Blocking Container: Lihat & Pratinjau Berkas (Identik Dosen Wali Multi-Sub-Pratinjau) -->
-    <div id="lihatBerkasContainer" class="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 gap-2.5 sm:gap-3.5 overflow-x-auto scrollbar-none bg-slate-900/60 backdrop-blur-xs transition-opacity duration-200 select-none" style="display: none;" onclick="if(event.target === this) closeLihatBerkasPanel()">
+    <div id="lihatBerkasContainer" class="fixed inset-0 z-[100000] flex items-center justify-center p-2 sm:p-4 gap-2.5 sm:gap-3.5 overflow-x-auto scrollbar-none bg-slate-900/60 backdrop-blur-xs transition-opacity duration-200 select-none" style="display: none;" onclick="if(event.target === this) closeLihatBerkasPanel()">
         
         <!-- Left: Kartu Mahasiswa (Daftar Berkas) -->
         <div id="wrapperDaftarMhs" class="flex flex-row items-center gap-3 shrink-0 max-h-[94vh] overflow-y-auto scrollbar-none" onclick="event.stopPropagation()">
@@ -2207,23 +2207,23 @@
 
             if (isMobile) {
                 if (isPreviewActive) {
-                    container.className = 'fixed inset-0 pointer-events-none z-[60] flex flex-col items-center justify-start p-2.5 sm:p-4 gap-3 overflow-y-auto bg-slate-900/60 backdrop-blur-xs pointer-events-auto';
+                    container.className = 'fixed inset-0 pointer-events-none z-[100000] flex flex-col items-center justify-start p-2.5 sm:p-4 gap-3 overflow-y-auto bg-slate-900/60 backdrop-blur-xs pointer-events-auto';
                     wrapper.className = 'flex flex-col items-center gap-2.5 w-full max-w-[94vw] sm:max-w-md shrink-0';
                     if (previewWrapper) {
                         previewWrapper.className = 'flex flex-row items-start gap-3 w-full max-w-[94vw] sm:max-w-md overflow-x-auto p-1 shrink-0 scroll-smooth scrollbar-none pb-8';
                     }
                 } else {
-                    container.className = 'fixed inset-0 pointer-events-none z-[60] flex items-center justify-center p-3 sm:p-5 gap-4 overflow-y-auto bg-slate-900/60 backdrop-blur-xs pointer-events-auto';
+                    container.className = 'fixed inset-0 pointer-events-none z-[100000] flex items-center justify-center p-3 sm:p-5 gap-4 overflow-y-auto bg-slate-900/60 backdrop-blur-xs pointer-events-auto';
                     wrapper.className = 'flex flex-col items-center justify-center w-full max-w-[94vw] sm:max-w-md max-h-[90vh] overflow-y-auto shrink-0 my-auto scrollbar-none';
                 }
             } else if (isPreviewActive) {
-                container.className = 'fixed inset-0 pointer-events-none z-[60] flex flex-row items-center justify-start p-4 sm:p-6 gap-4 sm:gap-5 overflow-x-auto scrollbar-none bg-slate-900/60 backdrop-blur-xs pointer-events-auto';
+                container.className = 'fixed inset-0 pointer-events-none z-[100000] flex flex-row items-center justify-start p-4 sm:p-6 gap-4 sm:gap-5 overflow-x-auto scrollbar-none bg-slate-900/60 backdrop-blur-xs pointer-events-auto';
                 wrapper.className = 'flex flex-col gap-3 max-h-[92vh] overflow-y-auto pr-1 shrink-0 w-[380px] sm:w-[410px] scrollbar-none';
                 if (previewWrapper) {
                     previewWrapper.className = 'flex items-center gap-3 shrink-0 max-w-[calc(100vw-460px)] overflow-x-auto p-1.5 scroll-smooth scrollbar-none';
                 }
             } else {
-                container.className = 'fixed inset-0 pointer-events-none z-[60] flex flex-row items-center justify-center p-4 sm:p-6 gap-4 sm:gap-5 overflow-x-auto scrollbar-none bg-slate-900/60 backdrop-blur-xs pointer-events-auto';
+                container.className = 'fixed inset-0 pointer-events-none z-[100000] flex flex-row items-center justify-center p-4 sm:p-6 gap-4 sm:gap-5 overflow-x-auto scrollbar-none bg-slate-900/60 backdrop-blur-xs pointer-events-auto';
                 wrapper.className = 'flex flex-row items-center gap-4 max-h-[92vh] overflow-x-auto p-1 shrink-0 scrollbar-none w-[380px] sm:w-[410px]';
             }
         }
