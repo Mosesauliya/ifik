@@ -74,35 +74,57 @@ class KoordinatorTA_model extends CI_Model {
                             'status_doswal'     => 'Pending',
                             'status_adminlaa'   => 'Pending',
                             'catatan_wali'      => '',
-                            'catatan_admin'     => ''
+                            'catatan_admin'     => '',
+                            '_admin_valid'      => 0,
+                            '_admin_invalid'    => 0,
+                            '_admin_pending'    => 0,
+                            '_admin_total'      => 0,
+                            '_doswal_valid'     => 0,
+                            '_doswal_invalid'   => 0,
+                            '_doswal_pending'   => 0,
+                            '_doswal_total'     => 0,
                         );
                     }
 
+                    $cleanAdmin = strtolower(trim($st_admin));
+                    $isAdminValid = ($cleanAdmin === 'valid' || strpos($cleanAdmin, 'setuju') !== false || strpos($cleanAdmin, 'approved') !== false || $cleanAdmin === 'acc');
+                    $isAdminInvalid = ($cleanAdmin === 'invalid' || strpos($cleanAdmin, 'revisi') !== false || strpos($cleanAdmin, 'tolak') !== false || strpos($cleanAdmin, 'rejected') !== false);
+
+                    $cleanDoswal = strtolower(trim($st_doswal));
+                    $isDoswalValid = ($cleanDoswal === 'valid' || strpos($cleanDoswal, 'setuju') !== false || strpos($cleanDoswal, 'approved') !== false || $cleanDoswal === 'acc');
+                    $isDoswalInvalid = ($cleanDoswal === 'invalid' || strpos($cleanDoswal, 'revisi') !== false || strpos($cleanDoswal, 'tolak') !== false || strpos($cleanDoswal, 'rejected') !== false);
+
                     if (strpos($namaJenis, 'ksm') !== false) {
                         $files_map[$k]['file_ksm'] = $f['file'];
-                        $files_map[$k]['status_ksm'] = $st_doswal ?: 'Valid';
+                        $files_map[$k]['status_ksm'] = $isAdminValid ? 'Valid' : ($isAdminInvalid ? 'Invalid' : ($st_doswal ?: 'Pending'));
                     } elseif (strpos($namaJenis, 'transkrip') !== false) {
                         $files_map[$k]['file_transkrip'] = $f['file'];
-                        $files_map[$k]['status_transkrip'] = $st_doswal ?: 'Valid';
+                        $files_map[$k]['status_transkrip'] = $isAdminValid ? 'Valid' : ($isAdminInvalid ? 'Invalid' : ($st_doswal ?: 'Pending'));
                     } elseif (strpos($namaJenis, 'pernyataan') !== false) {
                         $files_map[$k]['file_pernyataan'] = $f['file'];
-                        $files_map[$k]['status_pernyataan'] = $st_doswal ?: 'Valid';
+                        $files_map[$k]['status_pernyataan'] = $isAdminValid ? 'Valid' : ($isAdminInvalid ? 'Invalid' : ($st_doswal ?: 'Pending'));
                     } elseif (strpos($namaJenis, 'bebas') !== false || strpos($namaJenis, 'lab') !== false) {
                         $files_map[$k]['file_bebas_lab'] = $f['file'];
-                        $files_map[$k]['status_bebas_lab'] = $st_doswal ?: 'Valid';
+                        $files_map[$k]['status_bebas_lab'] = $isAdminValid ? 'Valid' : ($isAdminInvalid ? 'Invalid' : ($st_doswal ?: 'Pending'));
                     }
 
-                    if (!empty($st_doswal) && $st_doswal !== 'Pending') {
-                        $files_map[$k]['status_doswal'] = $st_doswal;
-                    } elseif (empty($files_map[$k]['status_doswal']) || $files_map[$k]['status_doswal'] === 'Pending') {
-                        $files_map[$k]['status_doswal'] = $st_doswal;
+                    if ($isAdminValid) {
+                        $files_map[$k]['_admin_valid']++;
+                    } elseif ($isAdminInvalid) {
+                        $files_map[$k]['_admin_invalid']++;
+                    } else {
+                        $files_map[$k]['_admin_pending']++;
                     }
+                    $files_map[$k]['_admin_total']++;
 
-                    if (!empty($st_admin) && $st_admin !== 'Pending') {
-                        $files_map[$k]['status_adminlaa'] = $st_admin;
-                    } elseif (empty($files_map[$k]['status_adminlaa']) || $files_map[$k]['status_adminlaa'] === 'Pending') {
-                        $files_map[$k]['status_adminlaa'] = $st_admin;
+                    if ($isDoswalValid) {
+                        $files_map[$k]['_doswal_valid']++;
+                    } elseif ($isDoswalInvalid) {
+                        $files_map[$k]['_doswal_invalid']++;
+                    } else {
+                        $files_map[$k]['_doswal_pending']++;
                     }
+                    $files_map[$k]['_doswal_total']++;
 
                     if (!empty($f['komentar'])) {
                         $files_map[$k]['catatan_wali'] = $f['komentar'];
@@ -110,6 +132,28 @@ class KoordinatorTA_model extends CI_Model {
                     }
                 }
             }
+
+            foreach ($files_map as $k => &$v) {
+                // Admin LAA overall status:
+                // Only Approved when at least 4 files are valid and 0 invalid/pending
+                if ($v['_admin_invalid'] > 0) {
+                    $v['status_adminlaa'] = 'Rejected';
+                } elseif ($v['_admin_valid'] >= 4 && $v['_admin_invalid'] === 0 && $v['_admin_pending'] === 0) {
+                    $v['status_adminlaa'] = 'Approved';
+                } else {
+                    $v['status_adminlaa'] = 'Pending';
+                }
+
+                // Doswal overall status:
+                if ($v['_doswal_invalid'] > 0) {
+                    $v['status_doswal'] = 'Rejected';
+                } elseif ($v['_doswal_valid'] >= 4 || ($v['_doswal_valid'] > 0 && $v['_doswal_invalid'] === 0 && $v['_doswal_pending'] === 0)) {
+                    $v['status_doswal'] = 'Approved';
+                } else {
+                    $v['status_doswal'] = 'Pending';
+                }
+            }
+            unset($v);
         }
 
         return $files_map;
@@ -1787,6 +1831,23 @@ class KoordinatorTA_model extends CI_Model {
             $avgScore = $isNilaiLengkap ? round(($n1 + $n2 + $np1 + $np2) / 4, 2) : 0;
             $isLulus = ($isNilaiLengkap && $avgScore >= 55) || (strcasecmp($gRow['status_bap'] ?? '', 'Approved') === 0) || ($statusPrev === 'lulus' || $statusPrev === 'selesai') || (!empty($tInfo['sidang_app']));
 
+            // Ringkasan Berkas Mahasiswa
+            $nim = $item['nim'];
+            $bSummary = $berkasSummaries[$nim] ?? array(
+                'valid_count'   => 0,
+                'invalid_count' => 0,
+                'pending_count' => 0,
+                'total_count'   => 0,
+                'items'         => array()
+            );
+
+            $totalBerkas   = (int)($bSummary['total_count'] ?? 0);
+            $validBerkas   = (int)($bSummary['valid_count'] ?? 0);
+            $invalidBerkas = (int)($bSummary['invalid_count'] ?? 0);
+            $pendingBerkas = (int)($bSummary['pending_count'] ?? 0);
+
+            $isAdminFullyApproved = ($validBerkas >= 4 || ($validBerkas === $totalBerkas && $totalBerkas > 0)) && ($invalidBerkas === 0 && $pendingBerkas === 0) && (strcasecmp($statusAdmin, 'Approved') === 0 || strcasecmp($statusAdmin, 'Valid') === 0);
+
             // Deteksi Tahap Progres Terkini (Pipeline 1 s/d 9)
             // Prioritas tertinggi: Deteksi tahap bimbingan/preview/sidang terlebih dahulu bila mahasiswa sudah masuk ke tahapan tersebut
             if ($isLulus) {
@@ -1825,7 +1886,7 @@ class KoordinatorTA_model extends CI_Model {
                 $stageIndex   = 4;
                 $stageDesc    = 'Konfirmasi Distribusi Riset KK';
                 $stageColor   = 'purple';
-            } elseif (strcasecmp($statusAdmin, 'Approved') === 0) {
+            } elseif ($isAdminFullyApproved || (strcasecmp($statusAdmin, 'Approved') === 0 && $validBerkas >= 4 && $pendingBerkas === 0)) {
                 $progresStage = 'Koordinator TA';
                 $stageKey     = 'koordinator_ta';
                 $stageIndex   = 3;
@@ -1844,21 +1905,6 @@ class KoordinatorTA_model extends CI_Model {
                 $stageDesc    = 'Verifikasi Prasyarat Akademik & SKS';
                 $stageColor   = 'blue';
             }
-
-            // Ringkasan Berkas Mahasiswa
-            $nim = $item['nim'];
-            $bSummary = $berkasSummaries[$nim] ?? array(
-                'valid_count'   => 0,
-                'invalid_count' => 0,
-                'pending_count' => 0,
-                'total_count'   => 0,
-                'items'         => array()
-            );
-
-            $totalBerkas   = (int)($bSummary['total_count'] ?? 0);
-            $validBerkas   = (int)($bSummary['valid_count'] ?? 0);
-            $invalidBerkas = (int)($bSummary['invalid_count'] ?? 0);
-            $pendingBerkas = (int)($bSummary['pending_count'] ?? 0);
 
             if ($totalBerkas > 0 && $validBerkas >= $totalBerkas) {
                 $berkasStatusLabel = 'Lengkap (' . $validBerkas . '/' . $totalBerkas . ')';
