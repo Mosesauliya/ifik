@@ -191,6 +191,18 @@ class Laboran extends CI_Controller {
     public function approve($id)
     {
         header('Content-Type: application/json');
+
+        // Validasi: Cek apakah akun Laboran sudah memiliki Tanda Tangan Digital yang tersimpan
+        if (!$this->Booking_model->has_signature($this->session->userdata('user_id'), 21)) {
+            echo json_encode([
+                'status'          => 'error',
+                'needs_signature' => true,
+                'signature_url'   => site_url('laboran/tanda-tangan'),
+                'message'         => 'Anda belum memiliki Tanda Tangan Digital! Silakan buat atau unggah tanda tangan terlebih dahulu sebelum menyetujui peminjaman agar surat izin resmi dapat disahkan dan diterbitkan.'
+            ]);
+            return;
+        }
+
         $status = 'Disetujui Laboran';
 
         $update = $this->Booking_model->update_status($id, $status);
@@ -249,6 +261,17 @@ class Laboran extends CI_Controller {
         $ids = $this->input->post('ids');
         if (empty($ids) || !is_array($ids)) {
             echo json_encode(['status' => 'error', 'message' => 'Pilih setidaknya satu data peminjaman!']);
+            return;
+        }
+
+        // Validasi: Cek apakah akun Laboran sudah memiliki Tanda Tangan Digital yang tersimpan
+        if (!$this->Booking_model->has_signature($this->session->userdata('user_id'), 21)) {
+            echo json_encode([
+                'status'          => 'error',
+                'needs_signature' => true,
+                'signature_url'   => site_url('laboran/tanda-tangan'),
+                'message'         => 'Anda belum memiliki Tanda Tangan Digital! Silakan buat atau unggah tanda tangan terlebih dahulu sebelum menyetujui peminjaman agar surat izin resmi dapat disahkan dan diterbitkan.'
+            ]);
             return;
         }
 

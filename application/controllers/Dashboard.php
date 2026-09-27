@@ -173,11 +173,25 @@ class Dashboard extends CI_Controller {
     {
         header('Content-Type: application/json');
         $this->load->model('Booking_model');
-        $role_id = $this->session->userdata('role_id');
+        $role_id = (int)$this->session->userdata('role_id');
 
         if (!in_array($role_id, [1, 2, 21])) {
             echo json_encode(['status' => 'error', 'message' => 'Anda tidak memiliki hak akses untuk menyetujui peminjaman ini.']);
             return;
+        }
+
+        // Validasi: Cek tanda tangan jika Laboran atau Ka. Ur
+        if (in_array($role_id, [2, 21])) {
+            if (!$this->Booking_model->has_signature($this->session->userdata('user_id'), $role_id)) {
+                $targetUrl = ($role_id == 2) ? site_url('kaur/tanda-tangan') : site_url('laboran/tanda-tangan');
+                echo json_encode([
+                    'status'          => 'error',
+                    'needs_signature' => true,
+                    'signature_url'   => $targetUrl,
+                    'message'         => 'Anda belum memiliki Tanda Tangan Digital! Silakan buat atau unggah tanda tangan terlebih dahulu sebelum menyetujui peminjaman.'
+                ]);
+                return;
+            }
         }
 
         if ($role_id == 2) {

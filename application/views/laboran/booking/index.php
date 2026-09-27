@@ -3945,6 +3945,21 @@
                                     openSuratModal(id);
                                 }
                             });
+                        } else if (resp.needs_signature) {
+                            Swal.fire({
+                                title: 'Tanda Tangan Belum Tersedia',
+                                text: resp.message,
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#ea580c',
+                                cancelButtonColor: '#94a3b8',
+                                confirmButtonText: '<i class="fa-solid fa-signature"></i> Buat TTD Sekarang',
+                                cancelButtonText: 'Nanti Saja'
+                            }).then((action) => {
+                                if (action.isConfirmed) {
+                                    window.location.href = resp.signature_url || (BASE_URL + 'laboran/tanda-tangan');
+                                }
+                            });
                         } else {
                             Swal.fire('Gagal', resp.message, 'error');
                         }
@@ -4046,6 +4061,21 @@
                             triggerLiveLaboranSync();
                             deselectAll();
                             Swal.fire({ title: 'Berhasil!', text: resp.message, icon: 'success', confirmButtonColor: '#16a34a' });
+                        } else if (resp.needs_signature) {
+                            Swal.fire({
+                                title: 'Tanda Tangan Belum Tersedia',
+                                text: resp.message,
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#ea580c',
+                                cancelButtonColor: '#94a3b8',
+                                confirmButtonText: '<i class="fa-solid fa-signature"></i> Buat TTD Sekarang',
+                                cancelButtonText: 'Nanti Saja'
+                            }).then((action) => {
+                                if (action.isConfirmed) {
+                                    window.location.href = resp.signature_url || (BASE_URL + 'laboran/tanda-tangan');
+                                }
+                            });
                         } else {
                             Swal.fire('Gagal', resp.message, 'error');
                         }

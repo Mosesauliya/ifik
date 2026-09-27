@@ -510,5 +510,40 @@ class Booking_model extends CI_Model {
 
         return $penandatangan;
     }
+
+    /**
+     * Memeriksa apakah user tertentu (atau role terkait) memiliki file tanda tangan digital yang valid
+     */
+    public function has_signature($user_id = null, $role_id = null)
+    {
+        if (empty($user_id)) {
+            $user_id = $this->session->userdata('user_id');
+        }
+        if ($role_id === null) {
+            $role_id = (int)$this->session->userdata('role_id');
+        }
+
+        $user = null;
+        $user_tbl = $this->db->table_exists('user') ? 'user' : ($this->db->table_exists('users') ? 'users' : null);
+
+        if ($user_tbl && !empty($user_id)) {
+            $user = $this->db->get_where($user_tbl, ['id' => $user_id])->row();
+            if (!$user && $this->db->field_exists('nim', $user_tbl)) {
+                $user = $this->db->get_where($user_tbl, ['nim' => $user_id])->row();
+            }
+        }
+
+        if (!$user && $user_tbl && !empty($role_id)) {
+            $user = $this->db->get_where($user_tbl, ['role_id' => $role_id])->row();
+        }
+
+        $ttd = $user ? ($user->ttd ?? ($user->tanda_tangan ?? null)) : null;
+        if (empty($ttd)) {
+            return false;
+        }
+
+        $filePath = FCPATH . 'uploads/signatures/' . $ttd;
+        return file_exists($filePath);
+    }
 }
 
