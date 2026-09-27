@@ -1051,9 +1051,9 @@ class KoordinatorTA extends CI_Controller {
         header('Content-Type: application/json');
         $this->load->model('Help_chat_model');
 
-        $target_role = strtolower(trim($this->input->post('target_role', true) ?? 'laboran'));
-        $topik       = trim($this->input->post('topik', true) ?? '');
-        $message     = trim($this->input->post('message', true) ?? '');
+        $target_role = strtolower(trim($this->input->post('target_role') ?? 'laboran'));
+        $topik       = trim($this->input->post('topik') ?? '');
+        $message     = trim($this->input->post('message') ?? '');
 
         if (!in_array($target_role, ['laboran', 'kaur', 'admin_layanan'])) {
             $target_role = 'laboran';
@@ -1106,8 +1106,8 @@ class KoordinatorTA extends CI_Controller {
         header('Content-Type: application/json');
         $this->load->model('Help_chat_model');
 
-        $conversation_id = $this->input->post('conversation_id', true);
-        $message         = trim($this->input->post('message', true) ?? '');
+        $conversation_id = $this->input->post('conversation_id');
+        $message         = trim($this->input->post('message') ?? '');
 
         if (empty($conversation_id) || empty($message)) {
             echo json_encode([

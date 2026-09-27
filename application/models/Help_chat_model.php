@@ -9,6 +9,7 @@ class Help_chat_model extends CI_Model {
     public function __construct() {
         parent::__construct();
         date_default_timezone_set('Asia/Jakarta');
+        @$this->db->query("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
         $this->_ensure_tables();
     }
 
@@ -281,6 +282,7 @@ class Help_chat_model extends CI_Model {
      * Ambil list percakapan dengan filter status, target role, user_id, dan pencarian
      */
     public function get_conversations($status = 'all', $search = '', $target_role = null, $user_id = null) {
+        @$this->db->query("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
         $this->db->from($this->table_conversations);
 
         if (!empty($status) && $status !== 'all') {
@@ -314,6 +316,7 @@ class Help_chat_model extends CI_Model {
      * Ambil single percakapan berdasarkan ID
      */
     public function get_conversation_by_id($id) {
+        @$this->db->query("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
         $this->db->from($this->table_conversations);
         $this->db->where('id', (int)$id);
         return $this->db->get()->row();
@@ -323,6 +326,7 @@ class Help_chat_model extends CI_Model {
      * Ambil daftar pesan dalam sebuah percakapan
      */
     public function get_messages($conversation_id) {
+        @$this->db->query("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
         $this->db->from($this->table_messages);
         $this->db->where('conversation_id', (int)$conversation_id);
         $this->db->order_by('created_at', 'ASC');
@@ -483,6 +487,7 @@ class Help_chat_model extends CI_Model {
      */
     public function create_conversation($data) {
         $now = date('Y-m-d H:i:s');
+        @$this->db->query("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
         $targetRole = strtolower($data['target_role'] ?? 'laboran');
         if (!in_array($targetRole, ['laboran', 'kaur', 'admin_layanan'])) {
             $targetRole = 'laboran';

@@ -168,8 +168,8 @@ class LaboranHelp extends CI_Controller {
     public function send_message_ajax() {
         header('Content-Type: application/json');
 
-        $conversation_id = $this->input->post('conversation_id', true);
-        $message = trim($this->input->post('message', true) ?? '');
+        $conversation_id = $this->input->post('conversation_id');
+        $message = trim($this->input->post('message') ?? '');
 
         if (empty($conversation_id) || empty($message)) {
             echo json_encode([
@@ -336,8 +336,8 @@ class LaboranHelp extends CI_Controller {
     public function create_chat_user_ajax() {
         header('Content-Type: application/json');
 
-        $topik = trim($this->input->post('topik', true) ?? '');
-        $message = trim($this->input->post('message', true) ?? '');
+        $topik = trim($this->input->post('topik') ?? '');
+        $message = trim($this->input->post('message') ?? '');
 
         if (empty($topik) || empty($message)) {
             echo json_encode([
@@ -348,10 +348,10 @@ class LaboranHelp extends CI_Controller {
         }
 
         // Ambil data user dari session atau POST data
-        $userId = $this->session->userdata('user_id') ?: ($this->input->post('user_id', true) ?: null);
-        $userNama = $this->session->userdata('name') ?: ($this->input->post('user_nama', true) ?: 'Pengguna IFIK');
-        $userEmail = $this->session->userdata('email') ?: ($this->input->post('user_email', true) ?: null);
-        $userNimNip = $this->session->userdata('nidn_nim') ?: ($this->session->userdata('nim') ?: ($this->input->post('user_nim_nip', true) ?: '-'));
+        $userId = $this->session->userdata('user_id') ?: ($this->input->post('user_id') ?: null);
+        $userNama = $this->session->userdata('name') ?: ($this->input->post('user_nama') ?: 'Pengguna IFIK');
+        $userEmail = $this->session->userdata('email') ?: ($this->input->post('user_email') ?: null);
+        $userNimNip = $this->session->userdata('nidn_nim') ?: ($this->session->userdata('nim') ?: ($this->input->post('user_nim_nip') ?: '-'));
         
         $roleId = (int)($this->session->userdata('role_id') ?? 4);
         $roleMap = [
@@ -364,7 +364,7 @@ class LaboranHelp extends CI_Controller {
             9 => 'Ketua KK',
             21 => 'Laboran'
         ];
-        $userRole = $this->input->post('user_role', true) ?: ($roleMap[$roleId] ?? 'Mahasiswa');
+        $userRole = $this->input->post('user_role') ?: ($roleMap[$roleId] ?? 'Mahasiswa');
 
         $conv_id = $this->Help_chat_model->create_conversation([
             'user_id'      => $userId,
@@ -397,8 +397,8 @@ class LaboranHelp extends CI_Controller {
     public function send_user_message_ajax() {
         header('Content-Type: application/json');
 
-        $conversation_id = $this->input->post('conversation_id', true);
-        $message = trim($this->input->post('message', true) ?? '');
+        $conversation_id = $this->input->post('conversation_id');
+        $message = trim($this->input->post('message') ?? '');
 
         if (empty($conversation_id) || empty($message)) {
             echo json_encode([
