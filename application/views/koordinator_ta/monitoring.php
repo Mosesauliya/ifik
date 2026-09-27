@@ -795,14 +795,9 @@
                     </div>
                 </div>
 
-                <!-- Profile Badge & Realtime Indicator Right -->
+                <!-- Profile Badge & Sync Button Right -->
                 <div class="flex items-center gap-2 sm:gap-3 shrink-0">
-                    <div id="realtimeSyncBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold shadow-2xs transition-all">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span id="realtimeStatusText" class="hidden sm:inline">Realtime Active</span>
-                        <span id="realtimeStatusTextMobile" class="sm:hidden">Live</span>
-                    </div>
-                    <button type="button" id="btnManualSync" onclick="manualSyncMonitoring()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-orange-600 hover:border-orange-300 flex items-center justify-center font-bold text-sm sm:text-base shadow-2xs transition active:scale-95 cursor-pointer" title="Refresh Data Realtime">
+                    <button type="button" id="btnManualSync" onclick="manualSyncMonitoring()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-orange-600 hover:border-orange-300 flex items-center justify-center font-bold text-sm sm:text-base shadow-2xs transition active:scale-95 cursor-pointer" title="Perbarui Data">
                         <i id="syncIcon" class="fa-solid fa-arrows-rotate"></i>
                     </button>
                     <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-orange-50 border border-orange-200 text-brand-600 flex items-center justify-center font-bold text-sm sm:text-base shadow-xs" title="Koordinator TA">
@@ -2612,13 +2607,7 @@
             isMonitoringPollingActive = true;
 
             const syncIcon = document.getElementById('syncIcon');
-            const statusText = document.getElementById('realtimeStatusText');
-            const statusTextMobile = document.getElementById('realtimeStatusTextMobile');
-            const badge = document.getElementById('realtimeSyncBadge');
-
-            if (syncIcon) syncIcon.classList.add('fa-spin');
-            if (statusText && isManual) statusText.innerText = 'Syncing...';
-            if (statusTextMobile && isManual) statusTextMobile.innerText = 'Sync...';
+            if (syncIcon && isManual) syncIcon.classList.add('fa-spin');
 
             try {
                 const res = await fetch(AJAX_REALTIME_MONITORING_URL, {
@@ -2641,22 +2630,9 @@
                         // Update Table preserving current filters
                         renderTable();
                     }
-
-                    const d = new Date();
-                    const timeStr = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                    if (statusText) statusText.innerText = 'Live ' + timeStr;
-                    if (statusTextMobile) statusTextMobile.innerText = timeStr;
-                    if (badge) {
-                        badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold shadow-2xs transition-all';
-                    }
                 }
             } catch (err) {
                 console.warn('Realtime monitoring sync paused:', err);
-                if (statusText) statusText.innerText = 'Reconnecting...';
-                if (statusTextMobile) statusTextMobile.innerText = 'Offline';
-                if (badge) {
-                    badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold shadow-2xs transition-all';
-                }
             } finally {
                 isMonitoringPollingActive = false;
                 if (syncIcon) syncIcon.classList.remove('fa-spin');
