@@ -244,6 +244,10 @@ class DosenTicketing extends CI_Controller {
                 $lampiranFile = $uploadData['file_name'];
             } else {
                 $uploadError = $this->upload->display_errors('', '');
+                if ($this->input->is_ajax_request()) {
+                    echo json_encode(['status' => 'error', 'message' => 'Gagal mengunggah lampiran: ' . $uploadError]);
+                    return;
+                }
                 $this->session->set_flashdata('error', 'Gagal mengunggah lampiran: ' . $uploadError);
                 redirect('dosen/ticketing/input');
                 return;

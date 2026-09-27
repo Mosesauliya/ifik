@@ -99,6 +99,12 @@ class DosenTicketing_model extends CI_Model {
                 'keterangan'      => ''
             ];
 
+            // Defensive filtering: hanya masukkan field yang benar-benar ada di tabel (mencegah error jika schema di NAS berbeda)
+            $existingFields = $this->db->list_fields('tb_ticketing');
+            if (!empty($existingFields)) {
+                $insertData = array_intersect_key($insertData, array_flip($existingFields));
+            }
+
             $this->db->insert('tb_ticketing', $insertData);
             return $kode;
         } else {
@@ -586,11 +592,11 @@ class DosenTicketing_model extends CI_Model {
             if (!array_key_exists($uid, $userMapCache)) {
                 $userRec = null;
                 if ($this->db->table_exists('user')) {
-                    $userRec = $this->db->select('id, nidn_nim, nim, nip, role_id, name')
+                    $userRec = $this->db->select('id, nim, nip, kode_dosen, role_id, name')
                         ->get_where('user', ['id' => $row->id_user])
                         ->row();
                     if (!$userRec && is_numeric($row->id_user)) {
-                        $userRec = $this->db->select('id, nidn_nim, nim, nip, role_id, name')
+                        $userRec = $this->db->select('id, nim, nip, kode_dosen, role_id, name')
                             ->get_where('user', ['role_id' => $row->id_user])
                             ->row();
                     }
@@ -601,7 +607,7 @@ class DosenTicketing_model extends CI_Model {
             }
 
             if ($userRec) {
-                $resolvedNidn = !empty($userRec->nidn_nim) ? $userRec->nidn_nim : (!empty($userRec->nim) ? $userRec->nim : (!empty($userRec->nip) ? $userRec->nip : ''));
+                $resolvedNidn = !empty($userRec->nim) ? $userRec->nim : (!empty($userRec->nip) ? $userRec->nip : (!empty($userRec->kode_dosen) ? $userRec->kode_dosen : ''));
                 if ((int)$userRec->role_id === 3) {
                     $roleSender     = 'Mahasiswa';
                     $labelIdentitas = 'NIM';
