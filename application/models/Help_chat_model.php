@@ -73,10 +73,6 @@ class Help_chat_model extends CI_Model {
             // Pastikan kolom sender_role bisa menyimpan string panjang seperti 'koordinator_ta', 'admin_layanan', 'laboran', 'kaur'
             $this->db->query("ALTER TABLE `{$this->table_messages}` MODIFY COLUMN `sender_role` VARCHAR(50) NOT NULL;");
         }
-
-        // Bersihkan karakter ???? pada pesan yang sudah ada jika ada
-        $this->db->query("UPDATE `{$this->table_messages}` SET `message` = REPLACE(`message`, '????', '[Sistem]') WHERE `message` LIKE '%????%';");
-        $this->db->query("UPDATE `{$this->table_conversations}` SET `last_message` = REPLACE(`last_message`, '????', '[Sistem]') WHERE `last_message` LIKE '%????%';");
     }
 
     /**
