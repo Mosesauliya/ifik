@@ -1823,6 +1823,35 @@ class KoordinatorTA_model extends CI_Model {
             }
         }
 
+        // Ambil riwayat log publikasi nilai terbaru per NIM dari log_approval_history
+        $publishMap = array();
+        if ($this->db->table_exists('log_approval_history')) {
+            $allNims = array_unique(array_filter(array_column($all, 'nim')));
+            if (!empty($allNims)) {
+                $this->db->from('log_approval_history');
+                $this->db->where('modul', 'Publish Nilai Sidang');
+                $this->db->where_in('ref_id', $allNims);
+                $this->db->order_by('id', 'DESC');
+                $pubLogs = $this->db->get()->result_array();
+
+                foreach ($pubLogs as $pl) {
+                    $nimKey = (string)$pl['ref_id'];
+                    if (!isset($publishMap[$nimKey])) {
+                        $parsed = array();
+                        if (!empty($pl['catatan']) && $pl['catatan'][0] === '{') {
+                            $parsed = json_decode($pl['catatan'], true) ?: array();
+                        }
+                        $publishMap[$nimKey] = array(
+                            'action'      => $pl['action'],
+                            'status'      => $parsed['status_publish'] ?? $pl['action'],
+                            'tgl_publish' => $parsed['tgl_publish'] ?? null,
+                            'created_at'  => $pl['created_at']
+                        );
+                    }
+                }
+            }
+        }
+
         $this->load->model('AdminLayanan_model');
         $berkasSummaries = $this->AdminLayanan_model->get_batch_student_berkas_summaries($all);
 
@@ -1850,9 +1879,26 @@ class KoordinatorTA_model extends CI_Model {
             $avgScore = $isNilaiLengkap ? round(($n1 + $n2 + $np1 + $np2) / 4, 2) : 0;
 
             // Status publikasi nilai sidang
-            $statusPublish = $item['status_publish_sidang'] ?? 'Draft';
-            $tglPublish    = $item['tgl_publish_sidang'] ?? null;
-            $isPublished   = ($statusPublish === 'Published') || ($statusPublish === 'Scheduled' && !empty($tglPublish) && strtotime($tglPublish) <= time());
+            $nimKey = (string)$item['nim'];
+            $pubInfo = $publishMap[$nimKey] ?? null;
+            $statusPublish = 'Draft';
+            $tglPublish = null;
+
+            if ($pubInfo) {
+                if ($pubInfo['action'] === 'Published' || $pubInfo['status'] === 'Published') {
+                    $statusPublish = 'Published';
+                    $tglPublish = $pubInfo['tgl_publish'] ?: $pubInfo['created_at'];
+                } elseif ($pubInfo['action'] === 'Scheduled' || $pubInfo['status'] === 'Scheduled') {
+                    $statusPublish = 'Scheduled';
+                    $tglPublish = $pubInfo['tgl_publish'];
+                }
+            }
+
+            if (!$isNilaiLengkap) {
+                $statusPublish = 'Belum Lengkap';
+            }
+
+            $isPublished = ($statusPublish === 'Published') || ($statusPublish === 'Scheduled' && !empty($tglPublish) && strtotime($tglPublish) <= time());
 
             // Mahasiswa baru sah berstatus "Lulus" (Tahap 9) jika nilainya sudah di-PUBLISH oleh Koordinator TA dan memenuhi syarat kelulusan
             $isScorePassed = ($isNilaiLengkap && $avgScore >= 55) || (strcasecmp($gRow['status_bap'] ?? '', 'Approved') === 0);
@@ -1968,6 +2014,9 @@ class KoordinatorTA_model extends CI_Model {
             $item['link_sidang']         = $gRow['link_sidang'] ?? null;
             $item['status_bap']          = $gRow['status_bap'] ?? 'Pending';
             $item['avg_score']           = $avgScore;
+            $item['status_publish_sidang'] = $statusPublish;
+            $item['tgl_publish_sidang']    = $tglPublish;
+            $item['is_published']          = $isPublished;
             $item['berkas_summary']      = $bSummary;
             $item['berkas_status_label'] = $berkasStatusLabel;
             $item['berkas_status_code']  = $berkasStatusCode;
