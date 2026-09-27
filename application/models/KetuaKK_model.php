@@ -118,6 +118,7 @@ class KetuaKK_model extends CI_Model {
         }
 
         // --- DECOUPLED ARCHITECTURE (user + file_pendaftaran + guidance) ---
+        $has_tl = $this->db->table_exists('thesis_lecturers');
         $this->db->select('
             u.id as user_id,
             u.username as nim,
@@ -131,10 +132,13 @@ class KetuaKK_model extends CI_Model {
             g.judul_3,
             g.keterangan as status_approval_koor,
             g.komentar as catatan_koor,
-            g.peminatan
+            g.peminatan' . ($has_tl ? ', tl.status as status_tl_kk' : '') . '
         ');
         $this->db->from('user u');
         $this->db->join('guidance g', 'g.id_mhs = u.id OR g.id_mhs = u.username', 'left');
+        if ($has_tl) {
+            $this->db->join('thesis_lecturers tl', 'tl.id_guidance = g.id', 'left');
+        }
         $this->db->where('u.role_id', 4); // Mahasiswa
 
         if ($search) {
@@ -196,8 +200,10 @@ class KetuaKK_model extends CI_Model {
                         $fp_map[$k]['status_adminlaa'] = 'Approved';
                     }
 
-                    if (isset($f['status_kk']) && in_array(strtolower($f['status_kk']), array('approved', 'valid', '1'))) {
+                    if (isset($f['status_kk']) && in_array(strtolower(trim($f['status_kk'])), array('approved', 'valid', '1', 'disetujui'))) {
                         $fp_map[$k]['status_kk'] = 'Approved';
+                    } elseif (isset($f['status_kk']) && in_array(strtolower(trim($f['status_kk'])), array('rejected', 'ditolak', '0'))) {
+                        $fp_map[$k]['status_kk'] = 'Rejected';
                     }
                 }
             }
@@ -232,6 +238,19 @@ class KetuaKK_model extends CI_Model {
             $s_koor_raw = strtolower(trim($row['status_approval_koor'] ?? ($row['status_file'] ?? '')));
             $status_koor = (in_array($s_koor_raw, array('approved', 'disetujui', 'valid', '1', 'ok'))) ? 'Approved' : 'Pending';
 
+            // Resolve Status Approval Ketua KK (check thesis_lecturers.status first, fallback to file_pendaftaran.status_kk)
+            $status_kk = 'Pending';
+            $s_tl_raw = strtolower(trim($row['status_tl_kk'] ?? ''));
+            if (in_array($s_tl_raw, array('approved', 'disetujui', 'valid', '1', 'ok'))) {
+                $status_kk = 'Approved';
+            } elseif (in_array($s_tl_raw, array('rejected', 'ditolak', '0'))) {
+                $status_kk = 'Rejected';
+            } elseif (isset($fData['status_kk']) && in_array(strtolower(trim($fData['status_kk'])), array('approved', 'disetujui', 'valid', '1', 'ok'))) {
+                $status_kk = 'Approved';
+            } elseif (isset($fData['status_kk']) && in_array(strtolower(trim($fData['status_kk'])), array('rejected', 'ditolak', '0'))) {
+                $status_kk = 'Rejected';
+            }
+
             $item = array(
                 'id'                   => $uId,
                 'nim'                  => $nim,
@@ -247,8 +266,8 @@ class KetuaKK_model extends CI_Model {
                 'status_approval_wali' => $fData['status_doswal'] ?? 'Pending',
                 'status_approval_admin'=> $fData['status_adminlaa'] ?? 'Pending',
                 'status_approval_koor' => $status_koor,
-                'status_approval_kk'   => $fData['status_kk'] ?? 'Pending',
-                'is_bimbingan_unlocked'=> (($fData['status_kk'] ?? '') === 'Approved') ? 1 : 0,
+                'status_approval_kk'   => $status_kk,
+                'is_bimbingan_unlocked'=> ($status_kk === 'Approved') ? 1 : 0,
                 'is_submitted'         => 1
             );
 
@@ -333,7 +352,7 @@ class KetuaKK_model extends CI_Model {
      * Update Approval Ketua KK & Unlock Tahap Bimbingan
      */
     public function update_approval_kk($nim, $status, $catatan = '') {
-        // 1. Update pendaftaran_ta dynamically if table & fields exist
+        // 1. Update legacy pendaftaran_ta dynamically if table & fields exist
         if ($this->db->table_exists('pendaftaran_ta')) {
             $data = array();
             if ($this->db->field_exists('status_approval_kk', 'pendaftaran_ta')) {
@@ -355,7 +374,57 @@ class KetuaKK_model extends CI_Model {
             }
         }
 
-        // 2. Sync to file_pendaftaran & guidance / thesis_lecturers if present
+        // 2. Resolve target student IDs (NIM, usr_mhs_NIM, mhs_NIM, user.id)
+        $target_mhs_ids = array($nim, 'usr_mhs_' . $nim, 'mhs_' . $nim, 'usr_' . $nim);
+        if ($this->db->table_exists('user')) {
+            $u = $this->db->group_start()
+                ->where('username', $nim)
+                ->or_where('id', $nim)
+                ->group_end()
+                ->get('user')->row_array();
+            if ($u && !empty($u['id'])) {
+                $target_mhs_ids[] = $u['id'];
+            }
+            if ($u && !empty($u['username'])) {
+                $target_mhs_ids[] = $u['username'];
+            }
+        }
+        $target_mhs_ids = array_unique(array_filter($target_mhs_ids));
+
+        // 3. Resolve guidance record(s)
+        $guidance_ids = array();
+        if ($this->db->table_exists('guidance')) {
+            $g_rows = $this->db->select('id')
+                ->from('guidance')
+                ->where_in('id_mhs', $target_mhs_ids)
+                ->get()->result_array();
+            foreach ($g_rows as $g) {
+                $guidance_ids[] = $g['id'];
+            }
+        }
+
+        // 4. Upsert/Sync thesis_lecturers (plotting status / status KK)
+        if (!empty($guidance_ids) && $this->db->table_exists('thesis_lecturers')) {
+            foreach ($guidance_ids as $gId) {
+                $tl = $this->db->get_where('thesis_lecturers', array('id_guidance' => $gId))->row_array();
+                if ($tl) {
+                    $tl_up = array('status' => $status);
+                    if ($this->db->field_exists('date_edit', 'thesis_lecturers')) {
+                        $tl_up['date_edit'] = date('Y-m-d H:i:s');
+                    }
+                    $this->db->where('id', $tl['id'])->update('thesis_lecturers', $tl_up);
+                } else {
+                    $tl_data = array(
+                        'id_guidance' => $gId,
+                        'status'      => $status,
+                        'created_at'  => date('Y-m-d H:i:s')
+                    );
+                    $this->db->insert('thesis_lecturers', $tl_data);
+                }
+            }
+        }
+
+        // 5. Sync to file_pendaftaran
         if ($this->db->table_exists('file_pendaftaran')) {
             $fp_update = array('date_edit' => date('Y-m-d H:i:s'));
             if ($this->db->field_exists('status_kk', 'file_pendaftaran')) {
@@ -365,15 +434,8 @@ class KetuaKK_model extends CI_Model {
                 $fp_update['komentar'] = $catatan;
             }
 
-            if (count($fp_update) > 1) {
-                $this->db->where('id_mhs', $nim)->or_where('id_mhs', 'usr_mhs_' . $nim);
-                $this->db->update('file_pendaftaran', $fp_update);
-            }
-        }
-
-        if ($this->db->table_exists('thesis_lecturers') && $this->db->field_exists('status', 'thesis_lecturers')) {
-            $this->db->where('id_guidance', 'gdn_' . $nim)->or_where('id_guidance', $nim);
-            $this->db->update('thesis_lecturers', array('status' => $status));
+            $this->db->where_in('id_mhs', $target_mhs_ids);
+            $this->db->update('file_pendaftaran', $fp_update);
         }
 
         return true;
