@@ -151,27 +151,54 @@ class KetuaKK_model extends CI_Model {
         }
 
         $mhs_rows = $query->result_array();
-        $user_ids = array_filter(array_column($mhs_rows, 'user_id'));
+        
+        // Build target_ids with all ID variants (uId, nim, usr_mhs_nim, mhs_nim)
+        $target_ids = array();
+        foreach ($mhs_rows as $r) {
+            $uId = $r['user_id'] ?? '';
+            $nim = $r['nim'] ?? '';
+            if (!empty($uId)) $target_ids[] = $uId;
+            if (!empty($nim)) {
+                $target_ids[] = $nim;
+                $target_ids[] = 'usr_mhs_' . $nim;
+                $target_ids[] = 'usr_' . $nim;
+                $target_ids[] = 'mhs_' . $nim;
+            }
+        }
+        $target_ids = array_unique(array_filter($target_ids));
 
         // Load file_pendaftaran details
         $fp_map = array();
-        if (!empty($user_ids) && $this->db->table_exists('file_pendaftaran')) {
-            $fp_rows = $this->db->where_in('id_mhs', $user_ids)->get('file_pendaftaran')->result_array();
+        if (!empty($target_ids) && $this->db->table_exists('file_pendaftaran')) {
+            $fp_rows = $this->db->where_in('id_mhs', $target_ids)->get('file_pendaftaran')->result_array();
             foreach ($fp_rows as $f) {
-                $uId = $f['id_mhs'];
-                if (!isset($fp_map[$uId])) {
-                    $fp_map[$uId] = array(
-                        'status_doswal' => 'Pending',
-                        'status_adminlaa' => 'Pending',
-                        'status_kk' => 'Pending',
-                        'catatan_kk' => '',
-                    );
-                }
-                if (isset($f['status_doswal']) && $f['status_doswal'] === 'Approved') {
-                    $fp_map[$uId]['status_doswal'] = 'Approved';
-                }
-                if (isset($f['status_adminlaa']) && $f['status_adminlaa'] === 'Approved') {
-                    $fp_map[$uId]['status_adminlaa'] = 'Approved';
+                $raw_id = $f['id_mhs'];
+                $clean_nim = preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', $raw_id);
+                
+                $keys = array($raw_id, $clean_nim, 'usr_mhs_' . $clean_nim);
+                foreach ($keys as $k) {
+                    if (!isset($fp_map[$k])) {
+                        $fp_map[$k] = array(
+                            'status_doswal'   => 'Pending',
+                            'status_adminlaa' => 'Pending',
+                            'status_kk'       => 'Pending',
+                            'catatan_kk'      => '',
+                        );
+                    }
+
+                    $s_dos = strtolower(trim($f['status_doswal'] ?? ''));
+                    if (in_array($s_dos, array('approved', 'valid', '1')) || (!empty($f['view_doswal']) && $f['view_doswal'] == 1)) {
+                        $fp_map[$k]['status_doswal'] = 'Approved';
+                    }
+
+                    $s_adm = strtolower(trim($f['status_adminlaa'] ?? ''));
+                    if (in_array($s_adm, array('approved', 'valid', '1')) || (!empty($f['view_adminlaa']) && $f['view_adminlaa'] == 1)) {
+                        $fp_map[$k]['status_adminlaa'] = 'Approved';
+                    }
+
+                    if (isset($f['status_kk']) && in_array(strtolower($f['status_kk']), array('approved', 'valid', '1'))) {
+                        $fp_map[$k]['status_kk'] = 'Approved';
+                    }
                 }
             }
         }
@@ -182,8 +209,10 @@ class KetuaKK_model extends CI_Model {
 
         $results = array();
         foreach ($mhs_rows as $row) {
-            $uId = $row['user_id'];
-            $fData = $fp_map[$uId] ?? array('status_doswal' => 'Pending', 'status_adminlaa' => 'Pending', 'status_kk' => 'Pending', 'catatan_kk' => '');
+            $uId = $row['user_id'] ?? '';
+            $nim = $row['nim'] ?? '';
+            
+            $fData = $fp_map[$uId] ?? ($fp_map[$nim] ?? ($fp_map['usr_mhs_' . $nim] ?? array('status_doswal' => 'Pending', 'status_adminlaa' => 'Pending', 'status_kk' => 'Pending', 'catatan_kk' => '')));
 
             $nameParts = explode(' ', trim($row['name'] ?? 'Mahasiswa'));
             $nama_depan = array_shift($nameParts);
@@ -199,9 +228,13 @@ class KetuaKK_model extends CI_Model {
                 }
             }
 
+            // Resolve Koordinator TA Approval Status
+            $s_koor_raw = strtolower(trim($row['status_approval_koor'] ?? ($row['status_file'] ?? '')));
+            $status_koor = (in_array($s_koor_raw, array('approved', 'disetujui', 'valid', '1', 'ok'))) ? 'Approved' : 'Pending';
+
             $item = array(
                 'id'                   => $uId,
-                'nim'                  => $row['nim'] ?? '',
+                'nim'                  => $nim,
                 'id_kk'                => $kk_item['id'] ?? 1,
                 'kode_kk'              => $kk_item['kode_kk'] ?? 'DKV',
                 'nama_kk'              => $kk_item['nama_kk'] ?? 'Visual Communication',
@@ -213,7 +246,7 @@ class KetuaKK_model extends CI_Model {
                 'judul_1'              => !empty($row['judul_1']) ? $row['judul_1'] : 'Perancangan Antarmuka dan Pengalaman Pengguna Platform Layanan Akademik',
                 'status_approval_wali' => $fData['status_doswal'] ?? 'Pending',
                 'status_approval_admin'=> $fData['status_adminlaa'] ?? 'Pending',
-                'status_approval_koor' => !empty($row['status_approval_koor']) ? $row['status_approval_koor'] : 'Pending',
+                'status_approval_koor' => $status_koor,
                 'status_approval_kk'   => $fData['status_kk'] ?? 'Pending',
                 'is_bimbingan_unlocked'=> (($fData['status_kk'] ?? '') === 'Approved') ? 1 : 0,
                 'is_submitted'         => 1
@@ -231,6 +264,16 @@ class KetuaKK_model extends CI_Model {
 
             $results[] = $item;
         }
+
+        // Sort results: Put 'Ready for KK' students at the top
+        usort($results, function($a, $b) {
+            $ready_a = ($a['status_approval_wali'] === 'Approved' && $a['status_approval_admin'] === 'Approved' && $a['status_approval_koor'] === 'Approved');
+            $ready_b = ($b['status_approval_wali'] === 'Approved' && $b['status_approval_admin'] === 'Approved' && $b['status_approval_koor'] === 'Approved');
+            if ($ready_a !== $ready_b) {
+                return $ready_a ? -1 : 1;
+            }
+            return 0;
+        });
 
         // Limit & Offset
         if ($limit > 0) {
