@@ -795,8 +795,11 @@
                     </div>
                 </div>
 
-                <!-- Profile Badge Right -->
-                <div class="flex items-center gap-2.5 sm:gap-3 shrink-0">
+                <!-- Profile Badge & Sync Button Right -->
+                <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                    <button type="button" id="btnManualSync" onclick="manualSyncMonitoring()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-orange-600 hover:border-orange-300 flex items-center justify-center font-bold text-sm sm:text-base shadow-2xs transition active:scale-95 cursor-pointer" title="Perbarui Data">
+                        <i id="syncIcon" class="fa-solid fa-arrows-rotate"></i>
+                    </button>
                     <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-orange-50 border border-orange-200 text-brand-600 flex items-center justify-center font-bold text-sm sm:text-base shadow-xs" title="Koordinator TA">
                         <i class="fa-solid fa-user-tie"></i>
                     </div>
@@ -859,8 +862,8 @@
                     <div class="stat-card-top">
                         <div class="stat-card-meta">
                             <div class="stat-card-label">Total Peserta TA</div>
-                            <div class="stat-card-val"><?= $totalPeserta; ?></div>
-                            <div class="stat-card-desc">Seluruh mahasiswa aktif TA</div>
+                            <div class="stat-card-val" id="statTotalPesertaVal"><?= $totalPeserta; ?></div>
+                            <div class="stat-card-desc" id="statTotalPesertaDesc">Seluruh mahasiswa aktif TA</div>
                         </div>
                         <div class="stat-card-3d-icon">
                             <i class="fa-solid fa-users"></i>
@@ -878,13 +881,13 @@
                     <div class="stat-card-top">
                         <div class="stat-card-meta">
                             <div class="stat-card-label">Proses Pendaftaran</div>
-                            <div class="stat-card-val">
+                            <div class="stat-card-val" id="statPendaftaranVal">
                                 <?= $totalPendaftaran; ?>
                                 <?php if ($totalPeserta > 0): ?>
                                     <span class="stat-card-percent">(<?= round(($totalPendaftaran / $totalPeserta) * 100); ?>%)</span>
                                 <?php endif; ?>
                             </div>
-                            <div class="stat-card-desc">Wali (<?= $countWali ?>), LAA (<?= $countAdmin ?>), Koor (<?= $countKoor ?>), KK (<?= $countKk ?>)</div>
+                            <div class="stat-card-desc" id="statPendaftaranDesc">Wali (<?= $countWali ?>), LAA (<?= $countAdmin ?>), Koor (<?= $countKoor ?>), KK (<?= $countKk ?>)</div>
                         </div>
                         <div class="stat-card-3d-icon">
                             <i class="fa-solid fa-file-signature"></i>
@@ -902,13 +905,13 @@
                     <div class="stat-card-top">
                         <div class="stat-card-meta">
                             <div class="stat-card-label">Bimbingan &amp; Evaluasi</div>
-                            <div class="stat-card-val">
+                            <div class="stat-card-val" id="statBimbinganVal">
                                 <?= $totalBimbingan; ?>
                                 <?php if ($totalPeserta > 0): ?>
                                     <span class="stat-card-percent">(<?= round(($totalBimbingan / $totalPeserta) * 100); ?>%)</span>
                                 <?php endif; ?>
                             </div>
-                            <div class="stat-card-desc">P1 (<?= $countP1 ?>), P2 (<?= $countP2 ?>), P3 (<?= $countP3 ?>)</div>
+                            <div class="stat-card-desc" id="statBimbinganDesc">P1 (<?= $countP1 ?>), P2 (<?= $countP2 ?>), P3 (<?= $countP3 ?>)</div>
                         </div>
                         <div class="stat-card-3d-icon">
                             <i class="fa-solid fa-chalkboard-user"></i>
@@ -926,13 +929,13 @@
                     <div class="stat-card-top">
                         <div class="stat-card-meta">
                             <div class="stat-card-label">Sidang &amp; Lulus</div>
-                            <div class="stat-card-val">
+                            <div class="stat-card-val" id="statSidangLulusVal">
                                 <?= $totalSidangLulus; ?>
                                 <?php if ($totalPeserta > 0): ?>
                                     <span class="stat-card-percent">(<?= round(($totalSidangLulus / $totalPeserta) * 100); ?>%)</span>
                                 <?php endif; ?>
                             </div>
-                            <div class="stat-card-desc">Sidang (<?= $countSidang ?>), Lulus (<?= $countLulus ?>)</div>
+                            <div class="stat-card-desc" id="statSidangLulusDesc">Sidang (<?= $countSidang ?>), Lulus (<?= $countLulus ?>)</div>
                         </div>
                         <div class="stat-card-3d-icon">
                             <i class="fa-solid fa-graduation-cap"></i>
@@ -965,61 +968,61 @@
                 <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none" id="stageChipsWrap">
                     <button type="button" class="stage-chip active" data-stage="all" onclick="filterByStage('all', this)">
                         <span>Semua Tahap</span>
-                        <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-100 text-slate-700 font-black"><?= $totalPeserta ?></span>
+                        <span id="chipCountAll" class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-100 text-slate-700 font-black"><?= $totalPeserta ?></span>
                     </button>
 
                     <button type="button" class="stage-chip" data-stage="dosen_wali" onclick="filterByStage('dosen_wali', this)">
                         <span class="w-2 h-2 rounded-full bg-blue-500"></span>
                         <span>1. Dosen Wali</span>
-                        <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-blue-100 text-blue-800 font-bold"><?= $countWali ?></span>
+                        <span id="chipCountWali" class="px-1.5 py-0.2 rounded-full text-[10px] bg-blue-100 text-blue-800 font-bold"><?= $countWali ?></span>
                     </button>
 
                     <button type="button" class="stage-chip" data-stage="admin_layanan" onclick="filterByStage('admin_layanan', this)">
                         <span class="w-2 h-2 rounded-full bg-amber-500"></span>
                         <span>2. Admin Layanan</span>
-                        <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-amber-800 font-bold"><?= $countAdmin ?></span>
+                        <span id="chipCountAdmin" class="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-amber-800 font-bold"><?= $countAdmin ?></span>
                     </button>
 
                     <button type="button" class="stage-chip" data-stage="koordinator_ta" onclick="filterByStage('koordinator_ta', this)">
                         <span class="w-2 h-2 rounded-full bg-orange-500"></span>
                         <span>3. Koordinator TA</span>
-                        <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-orange-100 text-orange-800 font-bold"><?= $countKoor ?></span>
+                        <span id="chipCountKoor" class="px-1.5 py-0.2 rounded-full text-[10px] bg-orange-100 text-orange-800 font-bold"><?= $countKoor ?></span>
                     </button>
 
                     <button type="button" class="stage-chip" data-stage="ketua_kk" onclick="filterByStage('ketua_kk', this)">
                         <span class="w-2 h-2 rounded-full bg-purple-500"></span>
                         <span>4. Ketua KK</span>
-                        <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-purple-100 text-purple-800 font-bold"><?= $countKk ?></span>
+                        <span id="chipCountKk" class="px-1.5 py-0.2 rounded-full text-[10px] bg-purple-100 text-purple-800 font-bold"><?= $countKk ?></span>
                     </button>
 
                     <button type="button" class="stage-chip" data-stage="preview1" onclick="filterByStage('preview1', this)">
                         <span class="w-2 h-2 rounded-full bg-teal-500"></span>
                         <span>5. Preview 1</span>
-                        <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-teal-100 text-teal-800 font-bold"><?= $countP1 ?></span>
+                        <span id="chipCountP1" class="px-1.5 py-0.2 rounded-full text-[10px] bg-teal-100 text-teal-800 font-bold"><?= $countP1 ?></span>
                     </button>
 
                     <button type="button" class="stage-chip" data-stage="preview2" onclick="filterByStage('preview2', this)">
                         <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
                         <span>6. Preview 2</span>
-                        <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-100 text-indigo-800 font-bold"><?= $countP2 ?></span>
+                        <span id="chipCountP2" class="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-100 text-indigo-800 font-bold"><?= $countP2 ?></span>
                     </button>
 
                     <button type="button" class="stage-chip" data-stage="preview3" onclick="filterByStage('preview3', this)">
                         <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
                         <span>7. Preview 3</span>
-                        <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-cyan-100 text-cyan-800 font-bold"><?= $countP3 ?></span>
+                        <span id="chipCountP3" class="px-1.5 py-0.2 rounded-full text-[10px] bg-cyan-100 text-cyan-800 font-bold"><?= $countP3 ?></span>
                     </button>
 
                     <button type="button" class="stage-chip" data-stage="sidang" onclick="filterByStage('sidang', this)">
                         <span class="w-2 h-2 rounded-full bg-rose-500"></span>
                         <span>8. Sidang TA</span>
-                        <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-100 text-rose-800 font-bold"><?= $countSidang ?></span>
+                        <span id="chipCountSidang" class="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-100 text-rose-800 font-bold"><?= $countSidang ?></span>
                     </button>
 
                     <button type="button" class="stage-chip" data-stage="lulus" onclick="filterByStage('lulus', this)">
                         <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                         <span>9. Lulus</span>
-                        <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-bold"><?= $countLulus ?></span>
+                        <span id="chipCountLulus" class="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-bold"><?= $countLulus ?></span>
                     </button>
                 </div>
 
@@ -1212,7 +1215,7 @@
     </div>
 
     <!-- Floating Non-Blocking Container: Lihat & Pratinjau Berkas (Identik Dosen Wali Multi-Sub-Pratinjau) -->
-    <div id="lihatBerkasContainer" class="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 gap-2.5 sm:gap-3.5 overflow-x-auto scrollbar-none bg-slate-900/60 backdrop-blur-xs transition-opacity duration-200 select-none" style="display: none;" onclick="if(event.target === this) closeLihatBerkasPanel()">
+    <div id="lihatBerkasContainer" class="fixed inset-0 z-[100000] flex items-center justify-center p-2 sm:p-4 gap-2.5 sm:gap-3.5 overflow-x-auto scrollbar-none bg-slate-900/60 backdrop-blur-xs transition-opacity duration-200 select-none" style="display: none;" onclick="if(event.target === this) closeLihatBerkasPanel()">
         
         <!-- Left: Kartu Mahasiswa (Daftar Berkas) -->
         <div id="wrapperDaftarMhs" class="flex flex-row items-center gap-3 shrink-0 max-h-[94vh] overflow-y-auto scrollbar-none" onclick="event.stopPropagation()">
@@ -1228,7 +1231,11 @@
 
     <!-- Pass backend data to JavaScript -->
     <script>
-        const RAW_PESERTA_DATA = <?= json_encode($pesertaList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
+        let RAW_PESERTA_DATA = <?= json_encode($pesertaList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
+        const AJAX_REALTIME_MONITORING_URL = "<?= site_url('koordinatorta/ajax_realtime_monitoring'); ?>";
+        let lastMonitoringHash = JSON.stringify(RAW_PESERTA_DATA);
+        let monitoringPollingTimer = null;
+        let isMonitoringPollingActive = false;
         let currentStageFilter = 'all';
         let currentPage = 1;
         let pageSize = 20;
@@ -2207,23 +2214,23 @@
 
             if (isMobile) {
                 if (isPreviewActive) {
-                    container.className = 'fixed inset-0 pointer-events-none z-[60] flex flex-col items-center justify-start p-2.5 sm:p-4 gap-3 overflow-y-auto bg-slate-900/60 backdrop-blur-xs pointer-events-auto';
+                    container.className = 'fixed inset-0 pointer-events-none z-[100000] flex flex-col items-center justify-start p-2.5 sm:p-4 gap-3 overflow-y-auto bg-slate-900/60 backdrop-blur-xs pointer-events-auto';
                     wrapper.className = 'flex flex-col items-center gap-2.5 w-full max-w-[94vw] sm:max-w-md shrink-0';
                     if (previewWrapper) {
                         previewWrapper.className = 'flex flex-row items-start gap-3 w-full max-w-[94vw] sm:max-w-md overflow-x-auto p-1 shrink-0 scroll-smooth scrollbar-none pb-8';
                     }
                 } else {
-                    container.className = 'fixed inset-0 pointer-events-none z-[60] flex items-center justify-center p-3 sm:p-5 gap-4 overflow-y-auto bg-slate-900/60 backdrop-blur-xs pointer-events-auto';
+                    container.className = 'fixed inset-0 pointer-events-none z-[100000] flex items-center justify-center p-3 sm:p-5 gap-4 overflow-y-auto bg-slate-900/60 backdrop-blur-xs pointer-events-auto';
                     wrapper.className = 'flex flex-col items-center justify-center w-full max-w-[94vw] sm:max-w-md max-h-[90vh] overflow-y-auto shrink-0 my-auto scrollbar-none';
                 }
             } else if (isPreviewActive) {
-                container.className = 'fixed inset-0 pointer-events-none z-[60] flex flex-row items-center justify-start p-4 sm:p-6 gap-4 sm:gap-5 overflow-x-auto scrollbar-none bg-slate-900/60 backdrop-blur-xs pointer-events-auto';
+                container.className = 'fixed inset-0 pointer-events-none z-[100000] flex flex-row items-center justify-start p-4 sm:p-6 gap-4 sm:gap-5 overflow-x-auto scrollbar-none bg-slate-900/60 backdrop-blur-xs pointer-events-auto';
                 wrapper.className = 'flex flex-col gap-3 max-h-[92vh] overflow-y-auto pr-1 shrink-0 w-[380px] sm:w-[410px] scrollbar-none';
                 if (previewWrapper) {
                     previewWrapper.className = 'flex items-center gap-3 shrink-0 max-w-[calc(100vw-460px)] overflow-x-auto p-1.5 scroll-smooth scrollbar-none';
                 }
             } else {
-                container.className = 'fixed inset-0 pointer-events-none z-[60] flex flex-row items-center justify-center p-4 sm:p-6 gap-4 sm:gap-5 overflow-x-auto scrollbar-none bg-slate-900/60 backdrop-blur-xs pointer-events-auto';
+                container.className = 'fixed inset-0 pointer-events-none z-[100000] flex flex-row items-center justify-center p-4 sm:p-6 gap-4 sm:gap-5 overflow-x-auto scrollbar-none bg-slate-900/60 backdrop-blur-xs pointer-events-auto';
                 wrapper.className = 'flex flex-row items-center gap-4 max-h-[92vh] overflow-x-auto p-1 shrink-0 scrollbar-none w-[380px] sm:w-[410px]';
             }
         }
@@ -2594,11 +2601,113 @@
             updateDots();
         }
 
+        // Realtime Polling & Live Data Sync
+        async function fetchRealtimeMonitoring(isManual = false) {
+            if (isMonitoringPollingActive && !isManual) return;
+            isMonitoringPollingActive = true;
+
+            const syncIcon = document.getElementById('syncIcon');
+            if (syncIcon && isManual) syncIcon.classList.add('fa-spin');
+
+            try {
+                const res = await fetch(AJAX_REALTIME_MONITORING_URL, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!res.ok) throw new Error('Network response was not ok');
+                const json = await res.json();
+
+                if (json && json.status && Array.isArray(json.data)) {
+                    const newHash = JSON.stringify(json.data);
+                    if (newHash !== lastMonitoringHash || isManual) {
+                        lastMonitoringHash = newHash;
+                        RAW_PESERTA_DATA = json.data;
+
+                        // Update Stats & Counter Cards
+                        if (json.stats) {
+                            updateMonitoringStats(json.stats);
+                        }
+
+                        // Update Table preserving current filters
+                        renderTable();
+                    }
+                }
+            } catch (err) {
+                console.warn('Realtime monitoring sync paused:', err);
+            } finally {
+                isMonitoringPollingActive = false;
+                if (syncIcon) syncIcon.classList.remove('fa-spin');
+            }
+        }
+
+        function updateMonitoringStats(stats) {
+            const total = stats.total || 0;
+            const pendaftaran = stats.pendaftaran || 0;
+            const bimbingan = stats.bimbingan || 0;
+            const sidangLulus = stats.sidang_lulus || 0;
+
+            const pctPendaftaran = total > 0 ? Math.round((pendaftaran / total) * 100) : 0;
+            const pctBimbingan   = total > 0 ? Math.round((bimbingan / total) * 100) : 0;
+            const pctSidangLulus = total > 0 ? Math.round((sidangLulus / total) * 100) : 0;
+
+            // Stat Card Numbers
+            const elTot = document.getElementById('statTotalPesertaVal');
+            if (elTot) elTot.innerText = total;
+
+            const elPendVal = document.getElementById('statPendaftaranVal');
+            if (elPendVal) elPendVal.innerHTML = `${pendaftaran} <span class="stat-card-percent">(${pctPendaftaran}%)</span>`;
+            const elPendDesc = document.getElementById('statPendaftaranDesc');
+            if (elPendDesc) elPendDesc.innerText = `Wali (${stats.count_wali || 0}), LAA (${stats.count_admin || 0}), Koor (${stats.count_koor || 0}), KK (${stats.count_kk || 0})`;
+
+            const elBimbVal = document.getElementById('statBimbinganVal');
+            if (elBimbVal) elBimbVal.innerHTML = `${bimbingan} <span class="stat-card-percent">(${pctBimbingan}%)</span>`;
+            const elBimbDesc = document.getElementById('statBimbinganDesc');
+            if (elBimbDesc) elBimbDesc.innerText = `P1 (${stats.count_p1 || 0}), P2 (${stats.count_p2 || 0}), P3 (${stats.count_p3 || 0})`;
+
+            const elSidVal = document.getElementById('statSidangLulusVal');
+            if (elSidVal) elSidVal.innerHTML = `${sidangLulus} <span class="stat-card-percent">(${pctSidangLulus}%)</span>`;
+            const elSidDesc = document.getElementById('statSidangLulusDesc');
+            if (elSidDesc) elSidDesc.innerText = `Sidang (${stats.count_sidang || 0}), Lulus (${stats.count_lulus || 0})`;
+
+            // Stage Chips
+            const setChip = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+            setChip('chipCountAll', total);
+            setChip('chipCountWali', stats.count_wali || 0);
+            setChip('chipCountAdmin', stats.count_admin || 0);
+            setChip('chipCountKoor', stats.count_koor || 0);
+            setChip('chipCountKk', stats.count_kk || 0);
+            setChip('chipCountP1', stats.count_p1 || 0);
+            setChip('chipCountP2', stats.count_p2 || 0);
+            setChip('chipCountP3', stats.count_p3 || 0);
+            setChip('chipCountSidang', stats.count_sidang || 0);
+            setChip('chipCountLulus', stats.count_lulus || 0);
+        }
+
+        function manualSyncMonitoring() {
+            fetchRealtimeMonitoring(true);
+        }
+
+        function startRealtimePolling() {
+            if (monitoringPollingTimer) clearInterval(monitoringPollingTimer);
+            // Polling interval setiap 5 detik
+            monitoringPollingTimer = setInterval(() => {
+                if (document.visibilityState === 'visible') {
+                    fetchRealtimeMonitoring(false);
+                }
+            }, 5000);
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    fetchRealtimeMonitoring(false);
+                }
+            });
+        }
+
         // Init render on page load
         function initMonitoringPage() {
             renderTable();
             initStatSliderDots();
             initStageChipsDots();
+            startRealtimePolling();
         }
 
         if (document.readyState === 'loading') {

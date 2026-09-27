@@ -38,8 +38,8 @@ class DosenWali extends CI_Controller {
         $detail = $this->DosenWali_model->get_detail_pendaftaran_mahasiswa($nim);
         if (!$detail) return false;
         $current_stage = $detail['current_stage'] ?? 'Dosen Wali';
-        // Hanya kunci jika berkas sudah diproses lebih lanjut oleh Koordinator TA ke atas
-        return in_array($current_stage, ['Koordinator TA', 'Ketua KK', 'Selesai Approval']);
+        $status_wali = $detail['status_approval_wali'] ?? 'Pending';
+        return ($status_wali === 'Approved' || in_array($current_stage, ['Admin Layanan', 'Koordinator TA', 'Ketua KK', 'Selesai Approval', 'Selesai']));
     }
 
     // Detail Mahasiswa Bimbingan & Approval
@@ -48,8 +48,47 @@ class DosenWali extends CI_Controller {
         $this->load->model('AdminLayanan_model');
 
         $data['title']          = 'Detail Mahasiswa & Approval Pendaftaran TA';
+        $data['nim']            = $nim;
         $data['dosen_info']     = $this->DosenWali_model->get_dosen_wali_info($nip_dosen);
         $data['detail']         = $this->DosenWali_model->get_detail_pendaftaran_mahasiswa($nim);
+        if (empty($data['detail'])) {
+            $data['detail'] = [
+                'id'                     => 'usr_mhs_' . $nim,
+                'nim'                    => $nim,
+                'nama_depan'             => 'Mahasiswa ' . $nim,
+                'nama_belakang'          => '',
+                'mhs_konsentrasi'        => 'Desain Komunikasi Visual',
+                'prodi'                  => 'Desain Komunikasi Visual',
+                'email'                  => '-',
+                'no_hp'                  => '-',
+                'judul_1'                => 'Usulan Judul Tugas Akhir',
+                'judul_en'               => '',
+                'jenis_ta'               => 'Pengkaryaan',
+                'status_judul'           => 'Pending',
+                'catatan_judul'          => '',
+                'status_approval_wali'   => 'Pending',
+                'status_approval_admin'  => 'Pending',
+                'status_approval_koor'   => 'Pending',
+                'status_approval_kk'     => 'Pending',
+                'current_stage'          => 'Dosen Wali',
+                'tgl_daftar'             => date('Y-m-d H:i:s'),
+                'created_at'             => date('Y-m-d H:i:s'),
+                'file_ksm'               => '',
+                'status_file_ksm'        => 'Pending',
+                'catatan_file_ksm'       => '',
+                'file_transkrip'         => '',
+                'status_file_transkrip'  => 'Pending',
+                'catatan_file_transkrip' => '',
+                'file_pernyataan'        => '',
+                'status_file_pernyataan' => 'Pending',
+                'catatan_file_pernyataan'=> '',
+                'file_bebas_lab'         => '',
+                'status_file_bebas_lab'  => 'Pending',
+                'catatan_file_bebas_lab' => '',
+                'berkas_map'             => [],
+                'total_berkas'           => 0
+            ];
+        }
         $data['syarat_berkas']  = $this->AdminLayanan_model->get_active_syarat_berkas();
         $data['student_berkas'] = $this->AdminLayanan_model->get_student_berkas_map($nim);
 
@@ -385,6 +424,13 @@ class DosenWali extends CI_Controller {
                 'nama'                   => $nama,
                 'konsentrasi'            => $m['mhs_konsentrasi'] ?? '',
                 'judul'                  => $m['judul_1'] ?? '',
+                'judul_1'                => $m['judul_1'] ?? '',
+                'judul_en'               => $m['judul_en'] ?? '',
+                'jenis_ta'               => $m['jenis_ta'] ?? '',
+                'status_judul'           => $m['status_judul'] ?? 'Pending',
+                'catatan_judul'          => $m['catatan_judul'] ?? '',
+                'status_jenis_ta'        => $m['status_jenis_ta'] ?? 'Pending',
+                'catatan_jenis_ta'       => $m['catatan_jenis_ta'] ?? '',
                 'status_approval_wali'   => $st,
                 'current_stage'          => $m['current_stage'] ?? 'Dosen Wali',
                 'detail_url'             => site_url('dosen/wali/detail_mahasiswa/' . $m['nim']),

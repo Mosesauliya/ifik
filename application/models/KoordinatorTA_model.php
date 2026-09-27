@@ -44,57 +44,116 @@ class KoordinatorTA_model extends CI_Model {
         $files_map = array();
         if (empty($id_mhs_list)) return $files_map;
 
-        $this->db->select('id_mhs, nama, file, status_adminlaa, status_doswal, komentar');
+        $this->db->select('*');
         $this->db->from('file_pendaftaran');
         $this->db->where_in('id_mhs', $id_mhs_list);
         $query = $this->db->get();
 
         if ($query && $query->num_rows() > 0) {
             foreach ($query->result_array() as $f) {
-                $mId = $f['id_mhs'];
-                $namaJenis = strtolower(trim($f['nama']));
-                if (!isset($files_map[$mId])) {
-                    $files_map[$mId] = array(
-                        'file_ksm'          => null,
-                        'status_ksm'        => 'Pending',
-                        'file_transkrip'    => null,
-                        'status_transkrip'  => 'Pending',
-                        'file_pernyataan'   => null,
-                        'status_pernyataan' => 'Pending',
-                        'file_bebas_lab'    => null,
-                        'status_bebas_lab'  => 'Pending',
-                        'status_doswal'     => 'Pending',
-                        'status_adminlaa'   => 'Pending',
-                        'catatan_wali'      => '',
-                        'catatan_admin'     => ''
-                    );
-                }
+                $rawId = $f['id_mhs'];
+                $cleanNim = preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', $rawId);
+                $namaJenis = strtolower(trim($f['nama'] ?? ''));
 
-                if (strpos($namaJenis, 'ksm') !== false) {
-                    $files_map[$mId]['file_ksm'] = $f['file'];
-                    $files_map[$mId]['status_ksm'] = $f['status_doswal'] ?: 'Valid';
-                } elseif (strpos($namaJenis, 'transkrip') !== false) {
-                    $files_map[$mId]['file_transkrip'] = $f['file'];
-                    $files_map[$mId]['status_transkrip'] = $f['status_doswal'] ?: 'Valid';
-                } elseif (strpos($namaJenis, 'pernyataan') !== false) {
-                    $files_map[$mId]['file_pernyataan'] = $f['file'];
-                    $files_map[$mId]['status_pernyataan'] = $f['status_doswal'] ?: 'Valid';
-                } elseif (strpos($namaJenis, 'bebas') !== false || strpos($namaJenis, 'lab') !== false) {
-                    $files_map[$mId]['file_bebas_lab'] = $f['file'];
-                    $files_map[$mId]['status_bebas_lab'] = $f['status_doswal'] ?: 'Valid';
-                }
+                $st_doswal = $f['status_doswal'] ?? ($f['status_wali'] ?? 'Pending');
+                $st_admin  = $f['status_adminlaa'] ?? ($f['status_admin_laa'] ?? ($f['status_admin'] ?? ($f['status_laa'] ?? 'Pending')));
 
-                if (!empty($f['status_doswal'])) {
-                    $files_map[$mId]['status_doswal'] = $f['status_doswal'];
-                }
-                if (!empty($f['status_adminlaa'])) {
-                    $files_map[$mId]['status_adminlaa'] = $f['status_adminlaa'];
-                }
-                if (!empty($f['komentar'])) {
-                    $files_map[$mId]['catatan_wali'] = $f['komentar'];
-                    $files_map[$mId]['catatan_admin'] = $f['komentar'];
+                $keysToMap = array_unique(array_filter([$rawId, $cleanNim, 'usr_mhs_' . $cleanNim, 'mhs_' . $cleanNim]));
+
+                foreach ($keysToMap as $k) {
+                    if (!isset($files_map[$k])) {
+                        $files_map[$k] = array(
+                            'file_ksm'          => null,
+                            'status_ksm'        => 'Pending',
+                            'file_transkrip'    => null,
+                            'status_transkrip'  => 'Pending',
+                            'file_pernyataan'   => null,
+                            'status_pernyataan' => 'Pending',
+                            'file_bebas_lab'    => null,
+                            'status_bebas_lab'  => 'Pending',
+                            'status_doswal'     => 'Pending',
+                            'status_adminlaa'   => 'Pending',
+                            'catatan_wali'      => '',
+                            'catatan_admin'     => '',
+                            '_admin_valid'      => 0,
+                            '_admin_invalid'    => 0,
+                            '_admin_pending'    => 0,
+                            '_admin_total'      => 0,
+                            '_doswal_valid'     => 0,
+                            '_doswal_invalid'   => 0,
+                            '_doswal_pending'   => 0,
+                            '_doswal_total'     => 0,
+                        );
+                    }
+
+                    $cleanAdmin = strtolower(trim($st_admin));
+                    $isAdminValid = ($cleanAdmin === 'valid' || strpos($cleanAdmin, 'setuju') !== false || strpos($cleanAdmin, 'approved') !== false || $cleanAdmin === 'acc');
+                    $isAdminInvalid = ($cleanAdmin === 'invalid' || strpos($cleanAdmin, 'revisi') !== false || strpos($cleanAdmin, 'tolak') !== false || strpos($cleanAdmin, 'rejected') !== false);
+
+                    $cleanDoswal = strtolower(trim($st_doswal));
+                    $isDoswalValid = ($cleanDoswal === 'valid' || strpos($cleanDoswal, 'setuju') !== false || strpos($cleanDoswal, 'approved') !== false || $cleanDoswal === 'acc');
+                    $isDoswalInvalid = ($cleanDoswal === 'invalid' || strpos($cleanDoswal, 'revisi') !== false || strpos($cleanDoswal, 'tolak') !== false || strpos($cleanDoswal, 'rejected') !== false);
+
+                    if (strpos($namaJenis, 'ksm') !== false) {
+                        $files_map[$k]['file_ksm'] = $f['file'];
+                        $files_map[$k]['status_ksm'] = $isAdminValid ? 'Valid' : ($isAdminInvalid ? 'Invalid' : ($st_doswal ?: 'Pending'));
+                    } elseif (strpos($namaJenis, 'transkrip') !== false) {
+                        $files_map[$k]['file_transkrip'] = $f['file'];
+                        $files_map[$k]['status_transkrip'] = $isAdminValid ? 'Valid' : ($isAdminInvalid ? 'Invalid' : ($st_doswal ?: 'Pending'));
+                    } elseif (strpos($namaJenis, 'pernyataan') !== false) {
+                        $files_map[$k]['file_pernyataan'] = $f['file'];
+                        $files_map[$k]['status_pernyataan'] = $isAdminValid ? 'Valid' : ($isAdminInvalid ? 'Invalid' : ($st_doswal ?: 'Pending'));
+                    } elseif (strpos($namaJenis, 'bebas') !== false || strpos($namaJenis, 'lab') !== false) {
+                        $files_map[$k]['file_bebas_lab'] = $f['file'];
+                        $files_map[$k]['status_bebas_lab'] = $isAdminValid ? 'Valid' : ($isAdminInvalid ? 'Invalid' : ($st_doswal ?: 'Pending'));
+                    }
+
+                    if ($isAdminValid) {
+                        $files_map[$k]['_admin_valid']++;
+                    } elseif ($isAdminInvalid) {
+                        $files_map[$k]['_admin_invalid']++;
+                    } else {
+                        $files_map[$k]['_admin_pending']++;
+                    }
+                    $files_map[$k]['_admin_total']++;
+
+                    if ($isDoswalValid) {
+                        $files_map[$k]['_doswal_valid']++;
+                    } elseif ($isDoswalInvalid) {
+                        $files_map[$k]['_doswal_invalid']++;
+                    } else {
+                        $files_map[$k]['_doswal_pending']++;
+                    }
+                    $files_map[$k]['_doswal_total']++;
+
+                    if (!empty($f['komentar'])) {
+                        $files_map[$k]['catatan_wali'] = $f['komentar'];
+                        $files_map[$k]['catatan_admin'] = $f['komentar'];
+                    }
                 }
             }
+
+            foreach ($files_map as $k => &$v) {
+                // Admin LAA overall status:
+                // Only Approved when at least 4 files are valid and 0 invalid/pending
+                if ($v['_admin_invalid'] > 0) {
+                    $v['status_adminlaa'] = 'Rejected';
+                } elseif ($v['_admin_valid'] >= 4 && $v['_admin_invalid'] === 0 && $v['_admin_pending'] === 0) {
+                    $v['status_adminlaa'] = 'Approved';
+                } else {
+                    $v['status_adminlaa'] = 'Pending';
+                }
+
+                // Doswal overall status:
+                if ($v['_doswal_invalid'] > 0) {
+                    $v['status_doswal'] = 'Rejected';
+                } elseif ($v['_doswal_valid'] >= 4 || ($v['_doswal_valid'] > 0 && $v['_doswal_invalid'] === 0 && $v['_doswal_pending'] === 0)) {
+                    $v['status_doswal'] = 'Approved';
+                } else {
+                    $v['status_doswal'] = 'Pending';
+                }
+            }
+            unset($v);
         }
 
         return $files_map;
@@ -160,18 +219,31 @@ class KoordinatorTA_model extends CI_Model {
         $rawList = $query->result_array();
         $id_mhs_list = array();
         foreach ($rawList as $row) {
-            if (!empty($row['user_id'])) $id_mhs_list[] = $row['user_id'];
-            if (!empty($row['nim'])) $id_mhs_list[] = $row['nim'];
-            if (!empty($row['id_mhs'])) $id_mhs_list[] = $row['id_mhs'];
+            if (!empty($row['user_id'])) {
+                $id_mhs_list[] = $row['user_id'];
+                $id_mhs_list[] = 'usr_' . $row['user_id'];
+            }
+            if (!empty($row['nim'])) {
+                $id_mhs_list[] = $row['nim'];
+                $id_mhs_list[] = 'usr_mhs_' . $row['nim'];
+                $id_mhs_list[] = 'mhs_' . $row['nim'];
+            }
+            if (!empty($row['id_mhs'])) {
+                $id_mhs_list[] = $row['id_mhs'];
+                $cNim = preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', $row['id_mhs']);
+                $id_mhs_list[] = $cNim;
+                $id_mhs_list[] = 'usr_mhs_' . $cNim;
+                $id_mhs_list[] = 'mhs_' . $cNim;
+            }
         }
-        $id_mhs_list = array_unique($id_mhs_list);
+        $id_mhs_list = array_values(array_unique(array_filter($id_mhs_list)));
         $files_map = $this->_get_mhs_files($id_mhs_list);
 
         $result = array();
         foreach ($rawList as $row) {
             $uId = $row['user_id'] ?: $row['id_mhs'];
             $nim = $row['nim'] ?: $uId;
-            $fData = $files_map[$uId] ?? ($files_map[$nim] ?? ($files_map[$row['id_mhs']] ?? array()));
+            $fData = $files_map[$nim] ?? ($files_map['usr_mhs_' . $nim] ?? ($files_map['mhs_' . $nim] ?? ($files_map[$uId] ?? ($files_map[$row['id_mhs']] ?? array()))));
 
             $nameParts = explode(' ', trim($row['name'] ?? 'Mahasiswa'));
             $nama_depan = array_shift($nameParts);
@@ -179,8 +251,20 @@ class KoordinatorTA_model extends CI_Model {
 
             $status_wali  = $fData['status_doswal'] ?? 'Pending';
             $status_admin = $fData['status_adminlaa'] ?? 'Pending';
-            $status_koor  = !empty($row['status_approval_koor']) ? $row['status_approval_koor'] : 'Pending';
-            $status_kk    = !empty($row['status_plotting']) ? $row['status_plotting'] : 'Pending';
+
+            // Dosen Pembimbing lengkap jika P1 dan P2 ada di thesis_lecturers
+            $has_pembimbing = (!empty($row['pembimbing_1']) && !empty($row['pembimbing_2']));
+
+            // Status koordinator dianggap Approved hanya jika Dosen Pembimbing sudah diplot DAN keterangan/status_file Approved
+            $raw_status_koor = !empty($row['status_approval_koor']) ? $row['status_approval_koor'] : 'Pending';
+            if ($raw_status_koor === 'Approved' && !$has_pembimbing) {
+                // Jika pembimbing belum diplot, status Koordinator TA masih Pending (Siap Diplot)
+                $status_koor = 'Pending';
+            } else {
+                $status_koor = $raw_status_koor;
+            }
+
+            $status_kk = !empty($row['status_plotting']) ? $row['status_plotting'] : 'Pending';
 
             // Alur Tahapan Resmi:
             // 1. Dosen Wali -> 2. Admin Layanan -> 3. Koordinator TA -> 4. Ketua KK -> 5. Selesai
@@ -189,7 +273,7 @@ class KoordinatorTA_model extends CI_Model {
                 $stage = 'Admin Layanan';
                 if (strcasecmp($status_admin, 'Approved') === 0) {
                     $stage = 'Koordinator TA';
-                    if (strcasecmp($status_koor, 'Approved') === 0) {
+                    if (strcasecmp($status_koor, 'Approved') === 0 && $has_pembimbing) {
                         $stage = 'Ketua KK';
                         if (strcasecmp($status_kk, 'Approved') === 0) {
                             $stage = 'Selesai';
@@ -308,8 +392,8 @@ class KoordinatorTA_model extends CI_Model {
             );
         }
 
-        $this->db->where('id_mhs', $userId);
-        $this->db->or_where('id_mhs', $mhs['nim']);
+        $target_ids = array_unique([$userId, $mhs['nim'], 'usr_mhs_' . $mhs['nim'], 'mhs_' . $mhs['nim']]);
+        $this->db->where_in('id_mhs', $target_ids);
         $guidance = $this->db->get('guidance')->row_array();
 
         $guidanceId = $guidance ? $guidance['id'] : ('gdn_' . ($mhs['nim'] ?: uniqid()));
@@ -464,21 +548,60 @@ class KoordinatorTA_model extends CI_Model {
     }
 
     /**
-     * Ambil daftar ruangan yang tersedia dari tabel ruangan
+     * Ambil daftar ruangan yang tersedia dari tabel ruangan (di-split per sub-ruangan/kode ruangan jika ada koma)
      */
     public function get_available_ruangan() {
         $this->db->select('id, ruangan as nama_ruangan, kapasitas, akses as status, spesifikasi_fasilitas as fasilitas, date as tanggal_dibuat');
         $this->db->from('ruangan');
+        $this->db->order_by('id', 'ASC');
         $this->db->order_by('ruangan', 'ASC');
         $query = $this->db->get();
 
+        $result = array();
         if ($query && $query->num_rows() > 0) {
-            return $query->result_array();
+            $rows = $query->result_array();
+            foreach ($rows as $r) {
+                $rawId = (string)($r['id'] ?? '');
+                $namaRuang = trim((string)($r['nama_ruangan'] ?? ''));
+
+                if (strpos($rawId, ',') !== false) {
+                    $codes = explode(',', $rawId);
+                    foreach ($codes as $c) {
+                        $codeTrim = trim($c);
+                        if (!empty($codeTrim)) {
+                            $result[] = array(
+                                'id'           => $codeTrim,
+                                'kode_ruangan' => $codeTrim,
+                                'nama_ruangan' => $namaRuang,
+                                'nama_lengkap' => $namaRuang . ' (Ruang: ' . $codeTrim . ')',
+                                'kapasitas'    => $r['kapasitas'] ?? 30,
+                                'status'       => $r['status'] ?? 'Tersedia',
+                                'fasilitas'    => $r['fasilitas'] ?? ''
+                            );
+                        }
+                    }
+                } else {
+                    $codeTrim = trim($rawId);
+                    $result[] = array(
+                        'id'           => !empty($codeTrim) ? $codeTrim : $namaRuang,
+                        'kode_ruangan' => $codeTrim,
+                        'nama_ruangan' => $namaRuang,
+                        'nama_lengkap' => !empty($codeTrim) ? ($namaRuang . ' (Ruang: ' . $codeTrim . ')') : $namaRuang,
+                        'kapasitas'    => $r['kapasitas'] ?? 30,
+                        'status'       => $r['status'] ?? 'Tersedia',
+                        'fasilitas'    => $r['fasilitas'] ?? ''
+                    );
+                }
+            }
+            return $result;
         }
 
         return array(
-            array('id' => 'LK.01.01', 'nama_ruangan' => 'AULA Utama', 'kapasitas' => 94, 'status' => 'Tersedia', 'fasilitas' => 'Proyektor, AC, Sound System'),
-            array('id' => 'LK.01.02', 'nama_ruangan' => 'green screen', 'kapasitas' => 100, 'status' => 'Tersedia', 'fasilitas' => 'Proyektor, AC')
+            array('id' => 'LK.01.01', 'kode_ruangan' => 'LK.01.01', 'nama_ruangan' => 'AULA Utama', 'nama_lengkap' => 'AULA Utama (Ruang: LK.01.01)', 'kapasitas' => 94, 'status' => 'Tersedia', 'fasilitas' => 'Proyektor, AC, Sound System'),
+            array('id' => 'LK.01.02', 'kode_ruangan' => 'LK.01.02', 'nama_ruangan' => 'green screen', 'nama_lengkap' => 'green screen (Ruang: LK.01.02)', 'kapasitas' => 100, 'status' => 'Tersedia', 'fasilitas' => 'Proyektor, AC'),
+            array('id' => 'LK.01.03', 'kode_ruangan' => 'LK.01.03', 'nama_ruangan' => 'Lab Incubator', 'nama_lengkap' => 'Lab Incubator (Ruang: LK.01.03)', 'kapasitas' => 30, 'status' => 'Tersedia', 'fasilitas' => 'Proyektor, AC'),
+            array('id' => 'LK.01.04', 'kode_ruangan' => 'LK.01.04', 'nama_ruangan' => 'Lab Incubator', 'nama_lengkap' => 'Lab Incubator (Ruang: LK.01.04)', 'kapasitas' => 30, 'status' => 'Tersedia', 'fasilitas' => 'Proyektor, AC'),
+            array('id' => 'LK.01.05', 'kode_ruangan' => 'LK.01.05', 'nama_ruangan' => 'Lab Incubator', 'nama_lengkap' => 'Lab Incubator (Ruang: LK.01.05)', 'kapasitas' => 30, 'status' => 'Tersedia', 'fasilitas' => 'Proyektor, AC')
         );
     }
 
@@ -509,7 +632,7 @@ class KoordinatorTA_model extends CI_Model {
     }
 
     /**
-     * TAHAP 2: Ambil mahasiswa untuk Tahap Preview 2 (Hanya yang sudah di-approve Koordinator TA & masuk tahap Preview 2)
+     * TAHAP 2: Ambil mahasiswa untuk Tahap Preview 2 (Siap diplot Penguji & Jadwal Sidang Preview 2)
      */
     public function get_all_mahasiswa_preview2() {
         $all = $this->get_all_mahasiswa_ta();
@@ -517,56 +640,79 @@ class KoordinatorTA_model extends CI_Model {
             return array();
         }
 
-        $guidanceIds = array_column($all, 'guidance_id');
-        $this->db->select('id, tanggal_presentasi, waktu_presentasi, ruang_sidang, status_preview');
-        $this->db->from('guidance');
-        $this->db->where_in('id', $guidanceIds);
-        $gQuery = $this->db->get();
+        $guidanceIds = array_filter(array_column($all, 'guidance_id'));
         $gMap = array();
-        if ($gQuery && $gQuery->num_rows() > 0) {
-            foreach ($gQuery->result_array() as $gr) {
-                $gMap[$gr['id']] = $gr;
+        if (!empty($guidanceIds)) {
+            $this->db->select('id, id_mhs, tanggal_presentasi, waktu_presentasi, ruang_sidang, status_preview');
+            $this->db->from('guidance');
+            $this->db->where_in('id', $guidanceIds);
+            $gQuery = $this->db->get();
+            if ($gQuery && $gQuery->num_rows() > 0) {
+                foreach ($gQuery->result_array() as $gr) {
+                    $gMap[$gr['id']] = $gr;
+                }
             }
         }
 
         $filtered = array();
         foreach ($all as $item) {
-            // Syarat masuk Preview 2: Proposal TA sudah disetujui Koordinator TA & sudah ada Dosen Pembimbing
-            $isApprovedKoor = (strcasecmp($item['status_approval_koor'] ?? '', 'Approved') === 0);
-            $hasPembimbing  = !empty($item['pembimbing_1']) && !empty($item['pembimbing_2']);
-
-            if (!$isApprovedKoor || !$hasPembimbing) {
-                continue;
-            }
-
-            $gId = $item['guidance_id'];
+            $gId = $item['guidance_id'] ?? '';
             $gRow = $gMap[$gId] ?? array();
             $statusPreview = strtolower(trim($gRow['status_preview'] ?? ''));
 
-            // Syarat Preview 2: Sudah berada di tahap preview2 (atau kelanjutannya preview3/sidang/selesai), atau sudah ada penguji/jadwal presentasi
-            $hasPenguji = (!empty($item['penguji_1']) && !empty($item['penguji_2']));
+            $hasPembimbing = (!empty($item['pembimbing_1']) || !empty($item['pembimbing_2']));
+            $hasPenguji    = (!empty($item['penguji_1']) && !empty($item['penguji_2']));
+            $hasAnyPenguji = (!empty($item['penguji_1']) || !empty($item['penguji_2']));
             $hasJadwalPresentasi = !empty($gRow['tanggal_presentasi']);
-            $isInPreview2 = in_array($statusPreview, ['preview2', 'preview3', 'sidang', 'selesai']) || $hasPenguji || $hasJadwalPresentasi;
 
-            if ($isInPreview2) {
-                $item['tgl_sidang']         = $gRow['tanggal_presentasi'] ?? null;
-                $item['jam_mulai_sidang']   = $gRow['waktu_presentasi'] ?? null;
-                $item['jam_selesai_sidang'] = null;
-                $item['ruangan_sidang']     = $gRow['ruang_sidang'] ?? null;
-                $item['status_preview']     = !empty($gRow['status_preview']) ? $gRow['status_preview'] : 'preview2';
+            $isApprovedKoor = (strcasecmp($item['status_approval_koor'] ?? '', 'Approved') === 0);
+            $isApprovedDoswalAdmin = (strcasecmp($item['status_approval_wali'] ?? '', 'Approved') === 0 && strcasecmp($item['status_adminlaa'] ?? '', 'Approved') === 0);
 
-                $hasJadwal = (!empty($item['tgl_sidang']) && !empty($item['jam_mulai_sidang']));
+            // Syarat masuk Preview 2:
+            // 1. Sudah berada di pipeline preview/sidang/selesai/lulus, ATAU
+            // 2. Pembimbing sudah diplot, ATAU
+            // 3. Proposal sudah di-approve Koordinator TA, ATAU
+            // 4. Sudah di-approve Dosen Wali & Admin Layanan (siap masuk proses Koordinator TA / Bimbingan), ATAU
+            // 5. Sudah ada penguji / jadwal yang tersimpan
+            $isEligible = in_array($statusPreview, ['preview1', 'preview2', 'preview3', 'sidang', 'selesai', 'lulus'])
+                || $hasPembimbing
+                || $isApprovedKoor
+                || $isApprovedDoswalAdmin
+                || $hasAnyPenguji
+                || $hasJadwalPresentasi;
 
-                if ($hasPenguji && $hasJadwal) {
-                    $item['status_preview2'] = 'Terjadwal';
-                } elseif ($hasPenguji) {
-                    $item['status_preview2'] = 'Penguji Ditetapkan';
-                } else {
-                    $item['status_preview2'] = 'Belum Diplot';
+            // Jika status proposal secara eksplisit ditolak dan belum ada penguji/jadwal, abaikan
+            if (strcasecmp($item['status_approval_koor'] ?? '', 'Rejected') === 0 ||
+                strcasecmp($item['status_approval_wali'] ?? '', 'Rejected') === 0 ||
+                strcasecmp($item['status_adminlaa'] ?? '', 'Rejected') === 0) {
+                if (!$hasAnyPenguji && !$hasJadwalPresentasi) {
+                    continue;
                 }
-
-                $filtered[] = $item;
             }
+
+            if (!$isEligible) {
+                continue;
+            }
+
+            $item['tgl_sidang']         = $gRow['tanggal_presentasi'] ?? null;
+            $item['jam_mulai_sidang']   = $gRow['waktu_presentasi'] ?? null;
+            $item['jam_selesai_sidang'] = null;
+            $item['ruangan_sidang']     = $gRow['ruang_sidang'] ?? null;
+            $item['status_preview']     = !empty($gRow['status_preview']) ? $gRow['status_preview'] : 'preview2';
+
+            $hasJadwal = (!empty($item['tgl_sidang']) && !empty($item['jam_mulai_sidang']));
+
+            if ($hasPenguji && $hasJadwal) {
+                $item['status_preview2'] = 'Terjadwal';
+            } elseif ($hasPenguji) {
+                $item['status_preview2'] = 'Penguji Ditetapkan';
+            } elseif ($hasAnyPenguji) {
+                $item['status_preview2'] = 'Sebagian Diplot';
+            } else {
+                $item['status_preview2'] = 'Belum Diplot';
+            }
+
+            $filtered[] = $item;
         }
 
         return $filtered;
@@ -584,24 +730,44 @@ class KoordinatorTA_model extends CI_Model {
             return array('status' => false, 'message' => 'Mahasiswa tidak ditemukan.');
         }
 
-        $this->db->where('id_mhs', $mhs['id']);
-        $this->db->or_where('id_mhs', $mhs['nim']);
+        $userId = $mhs['id'];
+        $mhsNim = $mhs['nim'] ?: $nim;
+        $target_ids = array_values(array_unique(array_filter([$userId, $mhsNim, 'usr_mhs_' . $mhsNim, 'mhs_' . $mhsNim, 'usr_' . $userId])));
+
+        $this->db->where_in('id_mhs', $target_ids);
+        $this->db->or_where('id', 'gdn_' . $mhsNim);
         $g = $this->db->get('guidance')->row_array();
 
         if (!$g) {
-            return array('status' => false, 'message' => 'Data bimbingan mahasiswa belum terdaftar.');
+            $gId = 'gdn_' . $mhsNim;
+            $gInsert = array(
+                'id'                 => $gId,
+                'id_mhs'             => $userId,
+                'judul_1'            => 'Tugas Akhir Mahasiswa ' . $mhs['name'],
+                'peminatan'          => 'Informatika',
+                'tahun'              => date('Y'),
+                'jenis_TA'           => 'TA Reguler',
+                'tanggal_presentasi' => $tgl_sidang,
+                'waktu_presentasi'   => $jam_mulai,
+                'ruang_sidang'       => $ruangan,
+                'status_preview'     => 'preview2',
+                'date'               => date('Y-m-d H:i:s')
+            );
+            $this->db->insert('guidance', $gInsert);
+        } else {
+            $gId = $g['id'];
+            $currentStatusPreview = strtolower(trim($g['status_preview'] ?? ''));
+            $newStatusPreview = in_array($currentStatusPreview, ['preview3', 'sidang', 'selesai', 'lulus']) ? $currentStatusPreview : 'preview2';
+
+            $gUpdate = array(
+                'tanggal_presentasi' => $tgl_sidang,
+                'waktu_presentasi'   => $jam_mulai,
+                'ruang_sidang'       => $ruangan,
+                'status_preview'     => $newStatusPreview
+            );
+            $this->db->where('id', $gId);
+            $this->db->update('guidance', $gUpdate);
         }
-
-        $gId = $g['id'];
-
-        $gUpdate = array(
-            'tanggal_presentasi' => $tgl_sidang,
-            'waktu_presentasi'   => $jam_mulai,
-            'ruang_sidang'       => $ruangan,
-            'status_preview'     => 'preview2'
-        );
-        $this->db->where('id', $gId);
-        $this->db->update('guidance', $gUpdate);
 
         $this->db->where('id_guidance', $gId);
         $tl = $this->db->get('thesis_lecturers')->row_array();
@@ -715,36 +881,60 @@ class KoordinatorTA_model extends CI_Model {
             return array();
         }
 
-        $guidanceIds = array_column($all, 'guidance_id');
-        $this->db->select('
-            id,
-            tanggal_sidang,
-            waktu_sidang,
-            ruang_sidang,
-            link_sidang,
-            nilaisidang_pembimbing1,
-            nilaisidang_pembimbing2,
-            nilaisidang_penguji1,
-            nilaisidang_penguji2,
-            penilaiansidang_pembimbing1,
-            penilaiansidang_pembimbing2,
-            penilaiansidang_penguji1,
-            penilaiansidang_penguji2,
-            evaluasi_pembimbing1,
-            evaluasi_pembimbing2,
-            evaluasi_penguji1,
-            evaluasi_penguji2,
-            bap,
-            status_bap
-        ');
-        $this->db->from('guidance');
-        $this->db->where_in('id', $guidanceIds);
-        $gQuery = $this->db->get();
-
+        $guidanceIds = array_filter(array_column($all, 'guidance_id'));
         $gMap = array();
-        if ($gQuery && $gQuery->num_rows() > 0) {
-            foreach ($gQuery->result_array() as $gr) {
-                $gMap[$gr['id']] = $gr;
+        if (!empty($guidanceIds)) {
+            $this->db->select('
+                id,
+                tanggal_sidang,
+                waktu_sidang,
+                ruang_sidang,
+                link_sidang,
+                status_preview,
+                nilaisidang_pembimbing1,
+                nilaisidang_pembimbing2,
+                nilaisidang_penguji1,
+                nilaisidang_penguji2,
+                penilaiansidang_pembimbing1,
+                penilaiansidang_pembimbing2,
+                penilaiansidang_penguji1,
+                penilaiansidang_penguji2,
+                evaluasi_pembimbing1,
+                evaluasi_pembimbing2,
+                evaluasi_penguji1,
+                evaluasi_penguji2,
+                bap,
+                status_bap
+            ');
+            $this->db->from('guidance');
+            $this->db->where_in('id', $guidanceIds);
+            $gQuery = $this->db->get();
+
+            if ($gQuery && $gQuery->num_rows() > 0) {
+                foreach ($gQuery->result_array() as $gr) {
+                    $gMap[$gr['id']] = $gr;
+                }
+            }
+        }
+
+        // Ambil riwayat aktivitas dari tabel thesis
+        $thesisMap = array();
+        if (!empty($guidanceIds) && $this->db->table_exists('thesis')) {
+            $this->db->select('id_guidance, tahapan_preview, status');
+            $this->db->where_in('id_guidance', $guidanceIds);
+            $tQuery = $this->db->get('thesis');
+            if ($tQuery && $tQuery->num_rows() > 0) {
+                foreach ($tQuery->result_array() as $tr) {
+                    $tGid = $tr['id_guidance'];
+                    $thp = strtolower(trim($tr['tahapan_preview'] ?? ''));
+                    $isApp = (strcasecmp($tr['status'] ?? '', 'Approved') === 0);
+                    if (!isset($thesisMap[$tGid])) {
+                        $thesisMap[$tGid] = array('has_p3' => false, 'p2_app' => false, 'has_sidang' => false, 'p3_app' => false);
+                    }
+                    if ($thp === 'preview2' && $isApp) $thesisMap[$tGid]['p2_app'] = true;
+                    if ($thp === 'preview3') { $thesisMap[$tGid]['has_p3'] = true; if ($isApp) $thesisMap[$tGid]['p3_app'] = true; }
+                    if ($thp === 'sidang')   { $thesisMap[$tGid]['has_sidang'] = true; if ($isApp) $thesisMap[$tGid]['p3_app'] = true; }
+                }
             }
         }
 
@@ -781,16 +971,22 @@ class KoordinatorTA_model extends CI_Model {
         foreach ($all as $item) {
             $gId = $item['guidance_id'];
             $gRow = $gMap[$gId] ?? array();
+            $tInfo = $thesisMap[$gId] ?? array();
 
             $statusPreview = strtolower(trim($gRow['status_preview'] ?? ($item['status_preview'] ?? '')));
             $hasPenguji = !empty($item['penguji_1']) && !empty($item['penguji_2']);
             $hasJadwalSidang = !empty($gRow['tanggal_sidang']);
 
             // Syarat masuk Tab 3 (Jadwal Sidang & Penilaian Sidang):
-            // Mahasiswa harus sudah memiliki Penguji dan sudah masuk ke tahap Preview 3 / Sidang / Terjadwal Sidang
-            $isInPreview3OrSidang = in_array($statusPreview, ['preview3', 'sidang', 'selesai']) || $hasJadwalSidang || !empty($gRow['nilaisidang_pembimbing1']);
+            // Mahasiswa sudah masuk ke tahap Preview 3 / Pra-Sidang / Sidang / Terjadwal Sidang
+            $isInPreview3OrSidang = in_array($statusPreview, ['preview3', 'sidang', 'selesai', 'lulus'])
+                || $hasJadwalSidang
+                || !empty($gRow['nilaisidang_pembimbing1'])
+                || !empty($tInfo['has_p3'])
+                || !empty($tInfo['p2_app'])
+                || !empty($tInfo['has_sidang']);
 
-            if (!$hasPenguji || !$isInPreview3OrSidang) {
+            if (!$isInPreview3OrSidang) {
                 continue;
             }
 
@@ -1226,14 +1422,33 @@ class KoordinatorTA_model extends CI_Model {
                     $parsedCatatan = json_decode($rawCatatan, true) ?: array();
                 }
 
+                $modul = $row['modul'];
+                $aksi = $row['action'];
+                $tglSidang = $parsedCatatan['tanggal_sidang'] ?? null;
+                $waktuSidang = $parsedCatatan['waktu_sidang'] ?? null;
+                $ruangSidang = $parsedCatatan['ruang_sidang'] ?? null;
+
+                $cleanCatatan = $parsedCatatan['catatan_koor'] ?? ($parsedCatatan['catatan'] ?? ($parsedCatatan['keterangan'] ?? ''));
+                if (empty($cleanCatatan) && !empty($rawCatatan) && $rawCatatan[0] !== '{') {
+                    $cleanCatatan = $rawCatatan;
+                }
+
+                $displayAksi = $aksi;
+                if ($modul === 'Sidang TA' || ($aksi === 'Scheduled' && !empty($tglSidang))) {
+                    $displayAksi = 'Penjadwalan Sidang';
+                }
+
                 $results[] = array(
                     'id'               => $row['id'],
                     'nim'              => $row['ref_id'],
                     'nama_mahasiswa'   => $row['target_name'] ?: ('Mahasiswa NIM ' . $row['ref_id']),
-                    'modul'            => $row['modul'],
-                    'aksi'             => $row['action'],
+                    'modul'            => $modul,
+                    'aksi'             => $displayAksi,
                     'status_publish'   => $parsedCatatan['status_publish'] ?? $row['action'],
                     'tgl_publish'      => $parsedCatatan['tgl_publish'] ?? null,
+                    'tanggal_sidang'   => $tglSidang,
+                    'waktu_sidang'     => $waktuSidang,
+                    'ruang_sidang'     => $ruangSidang,
                     'nilai_akhir'      => $parsedCatatan['nilai_akhir'] ?? null,
                     'grade'            => $parsedCatatan['grade'] ?? null,
                     'status_kelulusan' => $parsedCatatan['status_kelulusan'] ?? null,
@@ -1241,7 +1456,7 @@ class KoordinatorTA_model extends CI_Model {
                     'komponen_belum'   => $parsedCatatan['komponen_belum_terisi'] ?? null,
                     'actor_name'       => $row['actor_name'] ?: 'Koordinator TA',
                     'actor_role'       => $row['actor_role'] ?: 'Koordinator TA',
-                    'catatan'          => $parsedCatatan['catatan_koor'] ?? ($row['catatan'] ?? ''),
+                    'catatan'          => $cleanCatatan,
                     'created_at'       => $row['created_at'],
                     'waktu'            => date('d M Y, H:i', strtotime($row['created_at']))
                 );
@@ -1429,6 +1644,24 @@ class KoordinatorTA_model extends CI_Model {
 
         $history = $this->get_history_penilaian_sidang($nim);
 
+        $extract_clean_note = function($raw) {
+            if (empty($raw)) return '';
+            if (is_array($raw)) {
+                return trim($raw['catatan'] ?? ($raw['komentar'] ?? ($raw['evaluasi'] ?? ($raw['feedback'] ?? ''))));
+            }
+            if (is_string($raw)) {
+                $trimmed = trim($raw);
+                if ((substr($trimmed, 0, 1) === '{' && substr($trimmed, -1) === '}') || (substr($trimmed, 0, 1) === '[' && substr($trimmed, -1) === ']')) {
+                    $decoded = json_decode($trimmed, true);
+                    if (is_array($decoded)) {
+                        return trim($decoded['catatan'] ?? ($decoded['komentar'] ?? ($decoded['evaluasi'] ?? ($decoded['feedback'] ?? ''))));
+                    }
+                }
+                return $trimmed;
+            }
+            return '';
+        };
+
         return array(
             'nim'                       => $student['nim'],
             'nama_mahasiswa'            => $student['nama'] ?? ($student['nama_lengkap'] ?? $student['nim']),
@@ -1463,10 +1696,10 @@ class KoordinatorTA_model extends CI_Model {
             'evaluasi_pembimbing2'      => $student['penilaiansidang_pembimbing2'] ?? ($student['evaluasi_pembimbing2'] ?? ''),
             'evaluasi_penguji1'         => $student['penilaiansidang_penguji1'] ?? ($student['evaluasi_penguji1'] ?? ''),
             'evaluasi_penguji2'         => $student['penilaiansidang_penguji2'] ?? ($student['evaluasi_penguji2'] ?? ''),
-            'catatan_pembimbing_1'      => $student['penilaiansidang_pembimbing1'] ?? ($student['evaluasi_pembimbing1'] ?? ''),
-            'catatan_pembimbing_2'      => $student['penilaiansidang_pembimbing2'] ?? ($student['evaluasi_pembimbing2'] ?? ''),
-            'catatan_penguji_1'         => $student['penilaiansidang_penguji1'] ?? ($student['evaluasi_penguji1'] ?? ''),
-            'catatan_penguji_2'         => $student['penilaiansidang_penguji2'] ?? ($student['evaluasi_penguji2'] ?? ''),
+            'catatan_pembimbing_1'      => $extract_clean_note($student['penilaiansidang_pembimbing1'] ?? ($student['evaluasi_pembimbing1'] ?? '')),
+            'catatan_pembimbing_2'      => $extract_clean_note($student['penilaiansidang_pembimbing2'] ?? ($student['evaluasi_pembimbing2'] ?? '')),
+            'catatan_penguji_1'         => $extract_clean_note($student['penilaiansidang_penguji1'] ?? ($student['evaluasi_penguji1'] ?? '')),
+            'catatan_penguji_2'         => $extract_clean_note($student['penilaiansidang_penguji2'] ?? ($student['evaluasi_penguji2'] ?? '')),
 
             // Rekap Nilai Akhir
             'is_nilai_lengkap'          => $student['is_nilai_lengkap'] ?? false,
@@ -1525,33 +1758,97 @@ class KoordinatorTA_model extends CI_Model {
             return array();
         }
 
-        $guidanceIds = array_column($all, 'guidance_id');
-        $this->db->select('
-            id,
-            tanggal_presentasi,
-            waktu_presentasi,
-            ruang_sidang,
-            status_preview,
-            kelayakan,
-            kelayakan2,
-            kelayakan3,
-            tanggal_sidang,
-            waktu_sidang,
-            link_sidang,
-            nilaisidang_pembimbing1,
-            nilaisidang_pembimbing2,
-            nilaisidang_penguji1,
-            nilaisidang_penguji2,
-            bap,
-            status_bap
-        ');
-        $this->db->from('guidance');
-        $this->db->where_in('id', $guidanceIds);
-        $gQuery = $this->db->get();
+        $guidanceIds = array_filter(array_column($all, 'guidance_id'));
         $gMap = array();
-        if ($gQuery && $gQuery->num_rows() > 0) {
-            foreach ($gQuery->result_array() as $gr) {
-                $gMap[$gr['id']] = $gr;
+        if (!empty($guidanceIds)) {
+            $this->db->select('
+                id,
+                tanggal_presentasi,
+                waktu_presentasi,
+                ruang_sidang,
+                status_preview,
+                kelayakan,
+                kelayakan2,
+                kelayakan3,
+                tanggal_sidang,
+                waktu_sidang,
+                link_sidang,
+                nilaisidang_pembimbing1,
+                nilaisidang_pembimbing2,
+                nilaisidang_penguji1,
+                nilaisidang_penguji2,
+                bap,
+                status_bap
+            ');
+            $this->db->from('guidance');
+            $this->db->where_in('id', $guidanceIds);
+            $gQuery = $this->db->get();
+            if ($gQuery && $gQuery->num_rows() > 0) {
+                foreach ($gQuery->result_array() as $gr) {
+                    $gMap[$gr['id']] = $gr;
+                }
+            }
+        }
+
+        // Ambil riwayat aktivitas dari tabel thesis
+        $thesisMap = array();
+        if (!empty($guidanceIds) && $this->db->table_exists('thesis')) {
+            $this->db->select('id_guidance, tahapan_preview, status, date, created_at');
+            $this->db->where_in('id_guidance', $guidanceIds);
+            $this->db->order_by('created_at', 'DESC');
+            $this->db->order_by('date', 'DESC');
+            $tQuery = $this->db->get('thesis');
+            if ($tQuery && $tQuery->num_rows() > 0) {
+                foreach ($tQuery->result_array() as $tr) {
+                    $tGid = $tr['id_guidance'];
+                    if (!isset($thesisMap[$tGid])) {
+                        $thesisMap[$tGid] = array(
+                            'has_p1'     => false,
+                            'has_p2'     => false,
+                            'has_p3'     => false,
+                            'has_sidang' => false,
+                            'p1_app'     => false,
+                            'p2_app'     => false,
+                            'p3_app'     => false,
+                            'sidang_app' => false,
+                        );
+                    }
+                    $thp = strtolower(trim($tr['tahapan_preview'] ?? ''));
+                    $isApp = (strcasecmp($tr['status'] ?? '', 'Approved') === 0);
+                    if ($thp === 'preview1') { $thesisMap[$tGid]['has_p1'] = true; if ($isApp) $thesisMap[$tGid]['p1_app'] = true; }
+                    if ($thp === 'preview2') { $thesisMap[$tGid]['has_p2'] = true; if ($isApp) $thesisMap[$tGid]['p2_app'] = true; }
+                    if ($thp === 'preview3') { $thesisMap[$tGid]['has_p3'] = true; if ($isApp) $thesisMap[$tGid]['p3_app'] = true; }
+                    if ($thp === 'sidang')   { $thesisMap[$tGid]['has_sidang'] = true; if ($isApp) $thesisMap[$tGid]['sidang_app'] = true; }
+                }
+            }
+        }
+
+        // Ambil riwayat log publikasi nilai terbaru per NIM dari log_approval_history
+        $publishMap = array();
+        if ($this->db->table_exists('log_approval_history')) {
+            $allNims = array_unique(array_filter(array_column($all, 'nim')));
+            if (!empty($allNims)) {
+                $this->db->from('log_approval_history');
+                $this->db->where('modul', 'Publish Nilai Sidang');
+                $this->db->where_in('ref_id', $allNims);
+                $this->db->order_by('id', 'DESC');
+                $pubLogs = $this->db->get()->result_array();
+
+                foreach ($pubLogs as $pl) {
+                    $nimKey = (string)$pl['ref_id'];
+                    if (!isset($publishMap[$nimKey])) {
+                        $parsed = array();
+                        if (!empty($pl['catatan']) && $pl['catatan'][0] === '{') {
+                            $parsed = json_decode($pl['catatan'], true) ?: array();
+                        }
+                        $publishMap[$nimKey] = array(
+                            'action'      => $pl['action'],
+                            'status'      => $parsed['status_publish'] ?? $pl['action'],
+                            'tgl_publish' => $parsed['tgl_publish'] ?? null,
+                            'created_at'  => $pl['created_at']
+                        );
+                    }
+                }
             }
         }
 
@@ -1562,6 +1859,7 @@ class KoordinatorTA_model extends CI_Model {
         foreach ($all as $item) {
             $gId = $item['guidance_id'];
             $gRow = $gMap[$gId] ?? array();
+            $tInfo = $thesisMap[$gId] ?? array();
 
             $statusWali   = $item['status_approval_wali'] ?? 'Pending';
             $statusAdmin  = $item['status_approval_admin'] ?? 'Pending';
@@ -1579,76 +1877,32 @@ class KoordinatorTA_model extends CI_Model {
             $np2 = (float)($gRow['nilaisidang_penguji2'] ?? 0);
             $isNilaiLengkap = ($n1 > 0 && $n2 > 0 && $np1 > 0 && $np2 > 0);
             $avgScore = $isNilaiLengkap ? round(($n1 + $n2 + $np1 + $np2) / 4, 2) : 0;
-            $isLulus = ($isNilaiLengkap && $avgScore >= 55) || (strcasecmp($gRow['status_bap'] ?? '', 'Approved') === 0) || ($statusPrev === 'lulus' || $statusPrev === 'selesai');
 
-            // Deteksi Tahap Progres Terkini:
-            // 1. Dosen Wali
-            // 2. Admin Layanan
-            // 3. Koordinator TA
-            // 4. Ketua KK
-            // 5. Preview 1
-            // 6. Preview 2
-            // 7. Preview 3
-            // 8. Sidang TA
-            // 9. Lulus
-            if (strcasecmp($statusWali, 'Approved') !== 0) {
-                $progresStage = 'Dosen Wali';
-                $stageKey     = 'dosen_wali';
-                $stageIndex   = 1;
-                $stageDesc    = 'Verifikasi Prasyarat Akademik & SKS';
-                $stageColor   = 'blue';
-            } elseif (strcasecmp($statusAdmin, 'Approved') !== 0) {
-                $progresStage = 'Admin Layanan';
-                $stageKey     = 'admin_layanan';
-                $stageIndex   = 2;
-                $stageDesc    = 'Pemeriksaan Berkas & Administrasi LAA';
-                $stageColor   = 'amber';
-            } elseif (strcasecmp($statusKoor, 'Approved') !== 0) {
-                $progresStage = 'Koordinator TA';
-                $stageKey     = 'koordinator_ta';
-                $stageIndex   = 3;
-                $stageDesc    = 'Persetujuan Proposal & Plot Pembimbing';
-                $stageColor   = 'orange';
-            } elseif (strcasecmp($statusKk, 'Approved') !== 0) {
-                $progresStage = 'Ketua KK';
-                $stageKey     = 'ketua_kk';
-                $stageIndex   = 4;
-                $stageDesc    = 'Konfirmasi Distribusi Riset KK';
-                $stageColor   = 'purple';
-            } else {
-                // Pendaftaran sudah selesai, masuk ke tahapan riset & bimbingan:
-                if ($isLulus) {
-                    $progresStage = 'Lulus';
-                    $stageKey     = 'lulus';
-                    $stageIndex   = 9;
-                    $stageDesc    = 'Lulus Sidang Tugas Akhir';
-                    $stageColor   = 'emerald';
-                } elseif ($hasSidang || $statusPrev === 'sidang') {
-                    $progresStage = 'Sidang TA';
-                    $stageKey     = 'sidang';
-                    $stageIndex   = 8;
-                    $stageDesc    = 'Pelaksanaan Sidang Akhir';
-                    $stageColor   = 'rose';
-                } elseif ($statusPrev === 'preview3') {
-                    $progresStage = 'Preview 3';
-                    $stageKey     = 'preview3';
-                    $stageIndex   = 7;
-                    $stageDesc    = 'Pra-Sidang & Finalisasi Dokumen TA';
-                    $stageColor   = 'cyan';
-                } elseif ($statusPrev === 'preview2' || $hasPenguji || !empty($gRow['tanggal_presentasi'])) {
-                    $progresStage = 'Preview 2';
-                    $stageKey     = 'preview2';
-                    $stageIndex   = 6;
-                    $stageDesc    = 'Evaluasi Progres & Presentasi Penguji';
-                    $stageColor   = 'indigo';
-                } else {
-                    $progresStage = 'Preview 1';
-                    $stageKey     = 'preview1';
-                    $stageIndex   = 5;
-                    $stageDesc    = 'Bimbingan Bab 1-3 Bersama Pembimbing';
-                    $stageColor   = 'teal';
+            // Status publikasi nilai sidang
+            $nimKey = (string)$item['nim'];
+            $pubInfo = $publishMap[$nimKey] ?? null;
+            $statusPublish = 'Draft';
+            $tglPublish = null;
+
+            if ($pubInfo) {
+                if ($pubInfo['action'] === 'Published' || $pubInfo['status'] === 'Published') {
+                    $statusPublish = 'Published';
+                    $tglPublish = $pubInfo['tgl_publish'] ?: $pubInfo['created_at'];
+                } elseif ($pubInfo['action'] === 'Scheduled' || $pubInfo['status'] === 'Scheduled') {
+                    $statusPublish = 'Scheduled';
+                    $tglPublish = $pubInfo['tgl_publish'];
                 }
             }
+
+            if (!$isNilaiLengkap) {
+                $statusPublish = 'Belum Lengkap';
+            }
+
+            $isPublished = ($statusPublish === 'Published') || ($statusPublish === 'Scheduled' && !empty($tglPublish) && strtotime($tglPublish) <= time());
+
+            // Mahasiswa baru sah berstatus "Lulus" (Tahap 9) jika nilainya sudah di-PUBLISH oleh Koordinator TA dan memenuhi syarat kelulusan
+            $isScorePassed = ($isNilaiLengkap && $avgScore >= 55) || (strcasecmp($gRow['status_bap'] ?? '', 'Approved') === 0);
+            $isLulus = $isPublished && $isScorePassed;
 
             // Ringkasan Berkas Mahasiswa
             $nim = $item['nim'];
@@ -1664,6 +1918,66 @@ class KoordinatorTA_model extends CI_Model {
             $validBerkas   = (int)($bSummary['valid_count'] ?? 0);
             $invalidBerkas = (int)($bSummary['invalid_count'] ?? 0);
             $pendingBerkas = (int)($bSummary['pending_count'] ?? 0);
+
+            $isAdminFullyApproved = ($validBerkas >= 4 || ($validBerkas === $totalBerkas && $totalBerkas > 0)) && ($invalidBerkas === 0 && $pendingBerkas === 0) && (strcasecmp($statusAdmin, 'Approved') === 0 || strcasecmp($statusAdmin, 'Valid') === 0);
+
+            // Deteksi Tahap Progres Terkini (Pipeline 1 s/d 9)
+            // Prioritas tertinggi: Deteksi tahap bimbingan/preview/sidang terlebih dahulu bila mahasiswa sudah masuk ke tahapan tersebut
+            if ($isLulus) {
+                $progresStage = 'Lulus';
+                $stageKey     = 'lulus';
+                $stageIndex   = 9;
+                $stageDesc    = 'Lulus Sidang Tugas Akhir';
+                $stageColor   = 'emerald';
+            } elseif ($hasSidang || $statusPrev === 'sidang' || $statusPrev === 'lulus' || $statusPrev === 'selesai' || !empty($tInfo['has_sidang']) || !empty($tInfo['p3_app']) || $isNilaiLengkap) {
+                $progresStage = 'Sidang TA';
+                $stageKey     = 'sidang';
+                $stageIndex   = 8;
+                $stageDesc    = $isNilaiLengkap ? ($isPublished ? 'Sidang Selesai' : 'Nilai Masuk (Menunggu Publish)') : 'Pelaksanaan Sidang Akhir';
+                $stageColor   = 'rose';
+            } elseif ($statusPrev === 'preview3' || !empty($tInfo['has_p3']) || !empty($tInfo['p2_app'])) {
+                $progresStage = 'Preview 3';
+                $stageKey     = 'preview3';
+                $stageIndex   = 7;
+                $stageDesc    = 'Pra-Sidang & Finalisasi Dokumen TA';
+                $stageColor   = 'cyan';
+            } elseif ($statusPrev === 'preview2' || !empty($tInfo['has_p2']) || !empty($tInfo['p1_app']) || $hasPenguji || !empty($gRow['tanggal_presentasi'])) {
+                $progresStage = 'Preview 2';
+                $stageKey     = 'preview2';
+                $stageIndex   = 6;
+                $stageDesc    = 'Evaluasi Progres & Presentasi Penguji';
+                $stageColor   = 'indigo';
+            } elseif ($statusPrev === 'preview1' || !empty($tInfo['has_p1']) || strcasecmp($statusKk, 'Approved') === 0) {
+                $progresStage = 'Preview 1';
+                $stageKey     = 'preview1';
+                $stageIndex   = 5;
+                $stageDesc    = 'Bimbingan Bab 1-3 Bersama Pembimbing';
+                $stageColor   = 'teal';
+            } elseif ((strcasecmp($statusKoor, 'Approved') === 0 && $hasPembimbing) || strcasecmp($statusKoor, 'Approved') === 0) {
+                $progresStage = 'Ketua KK';
+                $stageKey     = 'ketua_kk';
+                $stageIndex   = 4;
+                $stageDesc    = 'Konfirmasi Distribusi Riset KK';
+                $stageColor   = 'purple';
+            } elseif ($isAdminFullyApproved || (strcasecmp($statusAdmin, 'Approved') === 0 && $validBerkas >= 4 && $pendingBerkas === 0)) {
+                $progresStage = 'Koordinator TA';
+                $stageKey     = 'koordinator_ta';
+                $stageIndex   = 3;
+                $stageDesc    = 'Persetujuan Proposal & Plot Pembimbing';
+                $stageColor   = 'orange';
+            } elseif (strcasecmp($statusWali, 'Approved') === 0) {
+                $progresStage = 'Admin Layanan';
+                $stageKey     = 'admin_layanan';
+                $stageIndex   = 2;
+                $stageDesc    = 'Pemeriksaan Berkas & Administrasi LAA';
+                $stageColor   = 'amber';
+            } else {
+                $progresStage = 'Dosen Wali';
+                $stageKey     = 'dosen_wali';
+                $stageIndex   = 1;
+                $stageDesc    = 'Verifikasi Prasyarat Akademik & SKS';
+                $stageColor   = 'blue';
+            }
 
             if ($totalBerkas > 0 && $validBerkas >= $totalBerkas) {
                 $berkasStatusLabel = 'Lengkap (' . $validBerkas . '/' . $totalBerkas . ')';
@@ -1700,6 +2014,9 @@ class KoordinatorTA_model extends CI_Model {
             $item['link_sidang']         = $gRow['link_sidang'] ?? null;
             $item['status_bap']          = $gRow['status_bap'] ?? 'Pending';
             $item['avg_score']           = $avgScore;
+            $item['status_publish_sidang'] = $statusPublish;
+            $item['tgl_publish_sidang']    = $tglPublish;
+            $item['is_published']          = $isPublished;
             $item['berkas_summary']      = $bSummary;
             $item['berkas_status_label'] = $berkasStatusLabel;
             $item['berkas_status_code']  = $berkasStatusCode;

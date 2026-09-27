@@ -43,7 +43,7 @@
     <!-- Koordinator TA Custom Stylesheet -->
     <link rel="stylesheet" href="<?= base_url('assets/css/koordinator_ta.css?v=' . time()); ?>">
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased pb-20">
+<body class="bg-slate-50 text-slate-800 antialiased pb-28 sm:pb-20">
 
     <!-- Top Navigation Header -->
     <header class="sticky top-0 z-40 glass-header px-4 sm:px-6 py-3 sm:py-4 mb-6">
@@ -54,7 +54,7 @@
                 </div>
                 <div class="min-w-0">
                     <h1 class="text-sm sm:text-base md:text-xl font-bold text-slate-900 tracking-tight truncate sm:whitespace-normal">Detail Mahasiswa &amp; Plotting Tugas Akhir</h1>
-                    <p class="text-[10px] sm:text-xs text-slate-500 font-normal line-clamp-1 sm:line-clamp-none">Gunakan menu dock di sebelah kiri untuk berpindah tab peninjauan.</p>
+                    <p class="text-[10px] sm:text-xs text-slate-500 font-normal line-clamp-1 sm:line-clamp-none">Gunakan menu dock untuk berpindah tab peninjauan data.</p>
                 </div>
             </div>
 
@@ -73,13 +73,15 @@
             $stKoor  = $detail['status_approval_koor'] ?? 'Pending';
             $stKk    = $detail['status_approval_kk'] ?? 'Pending';
 
+            $hasPembimbing = (!empty($detail['pembimbing_1']) && !empty($detail['pembimbing_2']));
+
             // Hitung nomor tahap yang sedang aktif (1: Dosen Wali, 2: Admin Layanan, 3: Koordinator TA, 4: Ketua KK, 5: Selesai Approval)
             $activeStageNum = 1;
             if (strcasecmp($stWali, 'Approved') === 0) {
                 $activeStageNum = 2;
                 if (strcasecmp($stAdmin, 'Approved') === 0) {
                     $activeStageNum = 3;
-                    if (strcasecmp($stKoor, 'Approved') === 0) {
+                    if (strcasecmp($stKoor, 'Approved') === 0 && $hasPembimbing) {
                         $activeStageNum = 4;
                         if (strcasecmp($stKk, 'Approved') === 0) {
                             $activeStageNum = 5;
@@ -123,8 +125,8 @@
         </div>
 
         <!-- 1. STATUS PERSETUJUAN BERJENJANG (DI ATAS SEBAGAI BANNER UTAMA) -->
-        <div class="card-custom p-6 sm:p-7">
-            <div class="flex items-center justify-between mb-5 pb-3.5 border-b border-slate-200 gap-3">
+        <div class="card-custom p-4 sm:p-7">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-5 pb-3.5 border-b border-slate-200 gap-3">
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-xl bg-orange-600 text-white flex items-center justify-center text-base font-bold shrink-0 shadow-md shadow-orange-500/20">
                         <i class="fa-solid fa-timeline"></i>
@@ -252,10 +254,10 @@
         </div>
 
         <!-- 2. MAIN WORKSPACE: VERTICAL FLOATING DOCK (LEFT) + TAB CONTENT (RIGHT) -->
-        <div class="flex flex-col md:flex-row items-start gap-8 relative">
+        <div class="flex flex-col md:flex-row items-start gap-6 md:gap-8 relative">
             
-            <!-- VERTICAL FLOATING DOCK (LEFT) -->
-            <div class="w-full md:w-[84px] md:min-w-[84px] md:max-w-[84px] flex md:flex-col justify-center items-center shrink-0">
+            <!-- VERTICAL FLOATING DOCK (DESKTOP: LEFT SIDEBAR / MOBILE: FIXED BOTTOM BAR) -->
+            <div class="w-full md:w-[84px] md:min-w-[84px] md:max-w-[84px] flex md:flex-col justify-center items-center shrink-0 h-0 md:h-auto overflow-visible">
                 <nav class="vertical-floating-dock flex-row md:flex-col" aria-label="Tab Navigation Dock">
                     
                     <!-- Dock 1: Profil Mahasiswa (Default Open) -->
@@ -289,18 +291,18 @@
             <div class="flex-1 w-full min-w-0">
 
                 <!-- TAB 1: PROFIL MAHASISWA (DEFAULT OPEN) -->
-                <section id="tabPanel-0" class="tab-panel active card-custom p-6 sm:p-8 space-y-6">
-                    <div class="flex items-center justify-between pb-5 border-b border-slate-200">
+                <section id="tabPanel-0" class="tab-panel active card-custom p-4 sm:p-7 md:p-8 space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 sm:pb-5 border-b border-slate-200">
                         <div class="flex items-center gap-3.5">
-                            <div class="w-10 h-10 rounded-2xl bg-orange-500 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-orange-500/20">
+                            <div class="w-10 h-10 rounded-2xl bg-orange-500 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-orange-500/20 shrink-0">
                                 <i class="fa-solid fa-id-card"></i>
                             </div>
                             <div>
-                                <h3 class="text-lg font-bold text-slate-900 tracking-tight">1. Profil Mahasiswa</h3>
+                                <h3 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight">1. Profil Mahasiswa</h3>
                                 <p class="text-xs text-slate-500">Informasi identitas akademik dan kontak mahasiswa pendaftar.</p>
                             </div>
                         </div>
-                        <span class="px-3.5 py-1.5 bg-orange-50 text-orange-700 text-xs font-bold rounded-full border border-orange-200">
+                        <span class="self-start sm:self-auto px-3.5 py-1.5 bg-orange-50 text-orange-700 text-xs font-bold rounded-full border border-orange-200">
                             <?= $detail['konsentrasi_dkv'] ?? 'Informatika'; ?>
                         </span>
                     </div>
@@ -334,8 +336,8 @@
 
                             <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Email Telkom University:</span>
-                                <span class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                                    <i class="fa-regular fa-envelope text-orange-600"></i>
+                                <span class="font-bold text-slate-800 text-xs flex items-center gap-1.5 break-all">
+                                    <i class="fa-regular fa-envelope text-orange-600 shrink-0"></i>
                                     <?= $detail['email'] ?? strtolower(($detail['nama_depan'] ?? 'mhs') . '.' . ($detail['nim'] ?? '1301210001')) . '@student.telkomuniversity.ac.id'; ?>
                                 </span>
                             </div>
@@ -352,7 +354,7 @@
 
                     <!-- Next Step Action -->
                     <div class="pt-4 border-t border-slate-200 flex justify-end">
-                        <button type="button" onclick="switchDockTab(1)" class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md inline-flex items-center gap-2 transition hover:-translate-y-0.5">
+                        <button type="button" onclick="switchDockTab(1)" class="w-full sm:w-auto justify-center bg-slate-900 hover:bg-slate-800 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md inline-flex items-center gap-2 transition hover:-translate-y-0.5">
                             <span>Lanjut ke Usulan Judul</span>
                             <i class="fa-solid fa-arrow-right text-xs"></i>
                         </button>
@@ -360,14 +362,14 @@
                 </section>
 
                 <!-- TAB 2: USULAN JUDUL TA -->
-                <section id="tabPanel-1" class="tab-panel card-custom p-6 sm:p-8 space-y-6">
-                    <div class="flex items-center justify-between pb-5 border-b border-slate-200">
+                <section id="tabPanel-1" class="tab-panel card-custom p-4 sm:p-7 md:p-8 space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 sm:pb-5 border-b border-slate-200">
                         <div class="flex items-center gap-3.5">
-                            <div class="w-10 h-10 rounded-2xl bg-orange-500 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-orange-500/20">
+                            <div class="w-10 h-10 rounded-2xl bg-orange-500 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-orange-500/20 shrink-0">
                                 <i class="fa-solid fa-book-open"></i>
                             </div>
                             <div>
-                                <h3 class="text-lg font-bold text-slate-900 tracking-tight">2. Usulan Judul Tugas Akhir</h3>
+                                <h3 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight">2. Usulan Judul Tugas Akhir</h3>
                                 <p class="text-xs text-slate-500">Daftar usulan judul utama dan alternatif yang diajukan oleh mahasiswa.</p>
                             </div>
                         </div>
@@ -406,12 +408,12 @@
                     </div>
 
                     <!-- Step Actions Navigation -->
-                    <div class="pt-4 border-t border-slate-200 flex items-center justify-between">
-                        <button type="button" onclick="switchDockTab(0)" class="bg-white hover:bg-slate-100 text-slate-700 font-bold px-4 py-2.5 rounded-xl text-xs border border-slate-200 shadow-xs inline-flex items-center gap-2 transition">
+                    <div class="pt-4 border-t border-slate-200 flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-3">
+                        <button type="button" onclick="switchDockTab(0)" class="w-full sm:w-auto justify-center bg-white hover:bg-slate-100 text-slate-700 font-bold px-4 py-2.5 rounded-xl text-xs border border-slate-200 shadow-xs inline-flex items-center gap-2 transition">
                             <i class="fa-solid fa-arrow-left text-xs"></i>
                             <span>Kembali ke Profil</span>
                         </button>
-                        <button type="button" onclick="switchDockTab(2)" class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md inline-flex items-center gap-2 transition hover:-translate-y-0.5">
+                        <button type="button" onclick="switchDockTab(2)" class="w-full sm:w-auto justify-center bg-slate-900 hover:bg-slate-800 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md inline-flex items-center gap-2 transition hover:-translate-y-0.5">
                             <span>Lanjut ke Berkas Persyaratan</span>
                             <i class="fa-solid fa-arrow-right text-xs"></i>
                         </button>
@@ -419,20 +421,20 @@
                 </section>
 
                 <!-- TAB 3: BERKAS PERSYARATAN PDF -->
-                <section id="tabPanel-2" class="tab-panel card-custom p-6 sm:p-8 space-y-6">
-                    <div class="flex items-center justify-between pb-5 border-b border-slate-200">
+                <section id="tabPanel-2" class="tab-panel card-custom p-4 sm:p-7 md:p-8 space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 sm:pb-5 border-b border-slate-200">
                         <div class="flex items-center gap-3.5">
-                            <div class="w-10 h-10 rounded-2xl bg-orange-500 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-orange-500/20">
+                            <div class="w-10 h-10 rounded-2xl bg-orange-500 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-orange-500/20 shrink-0">
                                 <i class="fa-solid fa-file-lines"></i>
                             </div>
                             <div>
-                                <h3 class="text-lg font-bold text-slate-900 tracking-tight">3. Berkas Persyaratan (PDF)</h3>
+                                <h3 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight">3. Berkas Persyaratan (PDF)</h3>
                                 <p class="text-xs text-slate-500">Pratinjau dan unduh berkas akademik yang diunggah oleh mahasiswa.</p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
                         <?php
                             $files = array(
                                 'Kartu Studi Mahasiswa (KSM)' => $detail['file_ksm'] ?? '',
@@ -442,35 +444,38 @@
                             );
                         ?>
                         <?php foreach($files as $title => $filename): ?>
-                            <?php $url = !empty($filename) ? base_url('uploads/persyaratan_ta/' . $filename) : ''; ?>
-                            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between shadow-2xs hover:border-orange-400 transition">
-                                <div class="flex items-center gap-3.5">
-                                    <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center text-base font-bold shrink-0">
+                            <?php 
+                                $cleanFile = !empty($filename) ? basename($filename) : '';
+                                $url = !empty($cleanFile) ? base_url('uploads/persyaratan_ta/' . $cleanFile) : ''; 
+                            ?>
+                            <div class="p-3.5 sm:p-4 bg-slate-50/90 hover:bg-orange-50/20 rounded-2xl border border-slate-200 hover:border-orange-300 flex items-center justify-between gap-3.5 shadow-2xs transition">
+                                <div class="flex items-center gap-3.5 min-w-0 flex-1">
+                                    <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center text-base font-bold shrink-0 shadow-2xs">
                                         <i class="fa-solid fa-file-pdf"></i>
                                     </div>
-                                    <div>
-                                        <span class="font-bold text-xs text-slate-900 block"><?= $title; ?></span>
-                                        <span class="text-[10px] text-slate-400 font-mono"><?= !empty($filename) ? $filename : 'Belum diunggah'; ?></span>
+                                    <div class="min-w-0 flex-1">
+                                        <span class="font-bold text-xs text-slate-900 block truncate" title="<?= htmlspecialchars($title); ?>"><?= $title; ?></span>
+                                        <span class="text-[10px] text-slate-400 font-mono block truncate" title="<?= htmlspecialchars($cleanFile); ?>"><?= !empty($cleanFile) ? $cleanFile : 'Belum diunggah'; ?></span>
                                     </div>
                                 </div>
                                 <?php if(!empty($url)): ?>
-                                    <button type="button" onclick="openPdfPreviewModal('<?= $url; ?>', '<?= addslashes($title); ?> - <?= addslashes($detail['nama'] ?? ''); ?>')" class="text-xs bg-white hover:bg-orange-50 text-orange-600 hover:text-orange-700 border border-slate-200 hover:border-orange-300 font-bold px-3.5 py-2 rounded-xl shadow-2xs transition inline-flex items-center gap-1.5 cursor-pointer">
-                                        <i class="fa-solid fa-eye text-xs"></i> Lihat PDF
+                                    <button type="button" onclick="openPdfPreviewModal('<?= $url; ?>', '<?= addslashes($title); ?> - <?= addslashes($detail['nama_depan'] ?? 'Mahasiswa'); ?>')" class="text-xs bg-white hover:bg-orange-50 text-orange-600 hover:text-orange-700 border border-slate-200 hover:border-orange-300 font-bold px-3.5 py-2 rounded-xl shadow-2xs transition inline-flex items-center justify-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap">
+                                        <i class="fa-solid fa-eye text-xs"></i> <span>Lihat PDF</span>
                                     </button>
                                 <?php else: ?>
-                                    <span class="text-[11px] text-slate-400 italic">Tidak Ada</span>
+                                    <span class="text-[11px] text-slate-400 italic shrink-0 whitespace-nowrap">Tidak Ada</span>
                                 <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                     </div>
 
                     <!-- Step Actions Navigation -->
-                    <div class="pt-4 border-t border-slate-200 flex items-center justify-between">
-                        <button type="button" onclick="switchDockTab(1)" class="bg-white hover:bg-slate-100 text-slate-700 font-bold px-4 py-2.5 rounded-xl text-xs border border-slate-200 shadow-xs inline-flex items-center gap-2 transition">
+                    <div class="pt-4 border-t border-slate-200 flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-3">
+                        <button type="button" onclick="switchDockTab(1)" class="w-full sm:w-auto justify-center bg-white hover:bg-slate-100 text-slate-700 font-bold px-4 py-2.5 rounded-xl text-xs border border-slate-200 shadow-xs inline-flex items-center gap-2 transition">
                             <i class="fa-solid fa-arrow-left text-xs"></i>
                             <span>Kembali ke Usulan Judul</span>
                         </button>
-                        <button type="button" onclick="switchDockTab(3)" class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md inline-flex items-center gap-2 transition hover:-translate-y-0.5">
+                        <button type="button" onclick="switchDockTab(3)" class="w-full sm:w-auto justify-center bg-slate-900 hover:bg-slate-800 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md inline-flex items-center gap-2 transition hover:-translate-y-0.5">
                             <span>Lanjut ke Keputusan Approval</span>
                             <i class="fa-solid fa-arrow-right text-xs"></i>
                         </button>
@@ -499,26 +504,26 @@
                     }
                     $isAlreadyApproved = (strcasecmp($stKoor, 'Approved') === 0);
                 ?>
-                <section id="tabPanel-3" class="tab-panel card-custom p-6 sm:p-8 space-y-6">
-                    <div class="flex items-center justify-between pb-5 border-b border-slate-200">
+                <section id="tabPanel-3" class="tab-panel card-custom p-4 sm:p-7 md:p-8 space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 sm:pb-5 border-b border-slate-200">
                         <div class="flex items-center gap-3.5">
-                            <div class="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-emerald-500/20">
+                            <div class="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-emerald-500/20 shrink-0">
                                 <i class="fa-solid fa-user-check"></i>
                             </div>
                             <div>
-                                <h3 class="text-lg font-bold text-slate-900 tracking-tight">4. Keputusan Approval & Plotting Dosen Pembimbing</h3>
+                                <h3 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight">4. Keputusan Approval & Plotting Dosen Pembimbing</h3>
                                 <p class="text-xs text-slate-500">Tentukan keputusan persetujuan dan pilih Dosen Pembimbing 1 & 2.</p>
                             </div>
                         </div>
 
-                        <span class="px-3.5 py-1.5 text-xs font-bold rounded-full border shadow-2xs <?= ($stKoor === 'Approved') ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : (($stKoor === 'Rejected') ? 'bg-rose-50 text-rose-700 border-rose-300' : 'bg-amber-50 text-amber-700 border-amber-300'); ?>">
+                        <span class="self-start sm:self-auto px-3.5 py-1.5 text-xs font-bold rounded-full border shadow-2xs <?= ($stKoor === 'Approved') ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : (($stKoor === 'Rejected') ? 'bg-rose-50 text-rose-700 border-rose-300' : 'bg-amber-50 text-amber-700 border-amber-300'); ?>">
                             Status: <?= $stKoor; ?>
                         </span>
                     </div>
 
                     <?php if ($isAlreadyApproved): ?>
                         <!-- INFO BANNER: SUDAH DISETUJUI TAPI TETAP BISA DIEDIT -->
-                        <div class="p-4 bg-emerald-50 border border-emerald-300 rounded-2xl flex items-center justify-between gap-3 shadow-2xs">
+                        <div class="p-4 bg-emerald-50 border border-emerald-300 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
                             <div class="flex items-center gap-3.5">
                                 <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
                                     <i class="fa-solid fa-circle-check"></i>
@@ -541,7 +546,7 @@
 
                             <!-- 1. Plotting Dosen Pembimbing 1 & 2 -->
                             <div id="sectionPembimbing" class="space-y-5">
-                                <div class="flex items-center justify-between">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                                     <span class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                                         <i class="fa-solid fa-chalkboard-user text-orange-600 text-sm"></i> Plotting Dosen Pembimbing <span class="text-rose-500">*</span>
                                     </span>
@@ -679,13 +684,13 @@
                             </div>
 
                             <!-- 4. Tombol Submit Approval via AJAX -->
-                            <div class="pt-3 border-t border-slate-200 flex items-center justify-between gap-4">
-                                <button type="button" onclick="switchDockTab(2)" class="bg-white hover:bg-slate-100 text-slate-700 font-bold px-4 py-2.5 rounded-xl text-xs border border-slate-200 shadow-xs inline-flex items-center gap-2 transition">
+                            <div class="pt-3 border-t border-slate-200 flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                                <button type="button" onclick="switchDockTab(2)" class="w-full sm:w-auto justify-center bg-white hover:bg-slate-100 text-slate-700 font-bold px-4 py-2.5 rounded-xl text-xs border border-slate-200 shadow-xs inline-flex items-center gap-2 transition">
                                     <i class="fa-solid fa-arrow-left text-xs"></i>
                                     <span>Kembali ke Berkas</span>
                                 </button>
 
-                                <button type="submit" id="btnSubmitApproval" class="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-bold px-6 py-3 rounded-xl text-xs shadow-md shadow-orange-600/20 inline-flex items-center gap-2 transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer">
+                                <button type="submit" id="btnSubmitApproval" class="w-full sm:w-auto justify-center bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-bold px-6 py-3 rounded-xl text-xs shadow-md shadow-orange-600/20 inline-flex items-center gap-2 transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer">
                                     <i class="fa-solid fa-paper-plane text-xs"></i>
                                     <span id="btnSubmitText">Simpan Keputusan Approval & Pembimbing</span>
                                 </button>
@@ -694,23 +699,23 @@
                 </section>
 
             </div>
-
         </div>
+    </main>
 
     <!-- DOCUMENT PDF PREVIEW MODAL -->
-    <div id="pdfPreviewModal" class="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-xs hidden items-center justify-center p-3 sm:p-5">
-        <div class="bg-white rounded-2xl max-w-5xl w-full h-[88vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
+    <div id="pdfPreviewModal" class="fixed inset-0 z-[100000] bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-2.5 sm:p-5 transition-opacity" onclick="if(event.target === this) closePdfPreviewModal()">
+        <div class="bg-white rounded-2xl sm:rounded-3xl max-w-5xl w-full h-[90vh] sm:h-[88vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200" onclick="event.stopPropagation()">
             <div class="p-3.5 px-5 bg-slate-900 text-white flex items-center justify-between shrink-0">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-xl bg-orange-600/30 border border-orange-500/50 text-orange-400 flex items-center justify-center font-bold text-sm">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-8 h-8 rounded-xl bg-orange-600/30 border border-orange-500/50 text-orange-400 flex items-center justify-center font-bold text-sm shrink-0">
                         <i class="fa-solid fa-file-pdf"></i>
                     </div>
-                    <div>
-                        <h3 class="text-xs font-bold text-white flex items-center gap-2" id="pdfModalTitle">Pratinjau Dokumen PDF</h3>
-                        <p class="text-[10px] text-slate-400" id="pdfModalSubtitle">Memuat tampilan dokumen...</p>
+                    <div class="min-w-0">
+                        <h3 class="text-xs font-bold text-white flex items-center gap-2 truncate" id="pdfModalTitle">Pratinjau Dokumen PDF</h3>
+                        <p class="text-[10px] text-slate-400 truncate" id="pdfModalSubtitle">Memuat tampilan dokumen...</p>
                     </div>
                 </div>
-                <button type="button" onclick="closePdfPreviewModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer">
+                <button type="button" onclick="closePdfPreviewModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer shrink-0 ml-2">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>

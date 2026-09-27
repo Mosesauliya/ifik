@@ -9,6 +9,7 @@ class Help_chat_model extends CI_Model {
     public function __construct() {
         parent::__construct();
         date_default_timezone_set('Asia/Jakarta');
+        @$this->db->query("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
         $this->_ensure_tables();
     }
 
@@ -74,9 +75,18 @@ class Help_chat_model extends CI_Model {
             $this->db->query("ALTER TABLE `{$this->table_messages}` MODIFY COLUMN `sender_role` VARCHAR(50) NOT NULL;");
         }
 
-        // Bersihkan karakter ???? pada pesan yang sudah ada jika ada
-        $this->db->query("UPDATE `{$this->table_messages}` SET `message` = REPLACE(`message`, '????', '[Sistem]') WHERE `message` LIKE '%????%';");
-        $this->db->query("UPDATE `{$this->table_conversations}` SET `last_message` = REPLACE(`last_message`, '????', '[Sistem]') WHERE `last_message` LIKE '%????%';");
+        // Pastikan tabel dan kolom mendukung 4-byte UTF-8 emoji (utf8mb4)
+        if ($this->db->table_exists($this->table_conversations)) {
+            @$this->db->query("ALTER TABLE `{$this->table_conversations}` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
+            @$this->db->query("ALTER TABLE `{$this->table_conversations}` MODIFY `last_message` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL;");
+            @$this->db->query("ALTER TABLE `{$this->table_conversations}` MODIFY `topik` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;");
+            @$this->db->query("ALTER TABLE `{$this->table_conversations}` MODIFY `user_nama` VARCHAR(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;");
+        }
+        if ($this->db->table_exists($this->table_messages)) {
+            @$this->db->query("ALTER TABLE `{$this->table_messages}` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
+            @$this->db->query("ALTER TABLE `{$this->table_messages}` MODIFY `message` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;");
+            @$this->db->query("ALTER TABLE `{$this->table_messages}` MODIFY `sender_name` VARCHAR(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;");
+        }
     }
 
     /**
@@ -272,6 +282,7 @@ class Help_chat_model extends CI_Model {
      * Ambil list percakapan dengan filter status, target role, user_id, dan pencarian
      */
     public function get_conversations($status = 'all', $search = '', $target_role = null, $user_id = null) {
+        @$this->db->query("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
         $this->db->from($this->table_conversations);
 
         if (!empty($status) && $status !== 'all') {
@@ -305,6 +316,7 @@ class Help_chat_model extends CI_Model {
      * Ambil single percakapan berdasarkan ID
      */
     public function get_conversation_by_id($id) {
+        @$this->db->query("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
         $this->db->from($this->table_conversations);
         $this->db->where('id', (int)$id);
         return $this->db->get()->row();
@@ -314,6 +326,7 @@ class Help_chat_model extends CI_Model {
      * Ambil daftar pesan dalam sebuah percakapan
      */
     public function get_messages($conversation_id) {
+        @$this->db->query("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
         $this->db->from($this->table_messages);
         $this->db->where('conversation_id', (int)$conversation_id);
         $this->db->order_by('created_at', 'ASC');
@@ -365,6 +378,8 @@ class Help_chat_model extends CI_Model {
     public function send_message($conversation_id, $sender_id, $sender_name, $sender_role, $message, $attachment = null) {
         $now = date('Y-m-d H:i:s');
         $conversation_id = (int)$conversation_id;
+
+        @$this->db->query("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
 
         $isStaff = in_array(strtolower($sender_role), ['laboran', 'kaur', 'admin_layanan', 'staff', 'admin']);
 
@@ -472,6 +487,7 @@ class Help_chat_model extends CI_Model {
      */
     public function create_conversation($data) {
         $now = date('Y-m-d H:i:s');
+        @$this->db->query("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
         $targetRole = strtolower($data['target_role'] ?? 'laboran');
         if (!in_array($targetRole, ['laboran', 'kaur', 'admin_layanan'])) {
             $targetRole = 'laboran';

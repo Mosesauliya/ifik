@@ -56,6 +56,45 @@ class Booking_model extends CI_Model {
         return $ruangan_list;
     }
 
+    /**
+     * Mengambil seluruh data ruangan yang digrupkan per fasilitas/nama ruangan
+     * untuk tampilan halaman web Admin & Landing Page (1 baris per fasilitas dengan daftar badge kode ruangan)
+     */
+    public function get_all_ruangan_grouped()
+    {
+        $raw_list = $this->get_all_ruangan();
+        if (empty($raw_list)) return [];
+
+        $grouped = [];
+        foreach ($raw_list as $r) {
+            $nameKey = strtolower(trim((string)$r->nama_ruangan));
+            if (!isset($grouped[$nameKey])) {
+                $clone = clone $r;
+                $clone->kode_ruangan_list = [$r->kode_ruangan ?: $r->id];
+                $clone->all_ids = [$r->id];
+                $grouped[$nameKey] = $clone;
+            } else {
+                $code = $r->kode_ruangan ?: $r->id;
+                if (!in_array($code, $grouped[$nameKey]->kode_ruangan_list)) {
+                    $grouped[$nameKey]->kode_ruangan_list[] = $code;
+                }
+                if (!in_array($r->id, $grouped[$nameKey]->all_ids)) {
+                    $grouped[$nameKey]->all_ids[] = $r->id;
+                }
+                if (empty($grouped[$nameKey]->foto) && !empty($r->foto)) $grouped[$nameKey]->foto = $r->foto;
+                if (empty($grouped[$nameKey]->model_3d) && !empty($r->model_3d)) $grouped[$nameKey]->model_3d = $r->model_3d;
+                if (empty($grouped[$nameKey]->tagline) && !empty($r->tagline)) $grouped[$nameKey]->tagline = $r->tagline;
+                if (empty($grouped[$nameKey]->deskripsi) && !empty($r->deskripsi)) $grouped[$nameKey]->deskripsi = $r->deskripsi;
+            }
+        }
+
+        foreach ($grouped as &$g) {
+            $g->kode_ruangan = implode(', ', $g->kode_ruangan_list);
+        }
+
+        return array_values($grouped);
+    }
+
     public function get_ruangan_by_kategori($id_kategori)
     {
         $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan');
@@ -470,6 +509,41 @@ class Booking_model extends CI_Model {
         }
 
         return $penandatangan;
+    }
+
+    /**
+     * Memeriksa apakah user tertentu (atau role terkait) memiliki file tanda tangan digital yang valid
+     */
+    public function has_signature($user_id = null, $role_id = null)
+    {
+        if (empty($user_id)) {
+            $user_id = $this->session->userdata('user_id');
+        }
+        if ($role_id === null) {
+            $role_id = (int)$this->session->userdata('role_id');
+        }
+
+        $user = null;
+        $user_tbl = $this->db->table_exists('user') ? 'user' : ($this->db->table_exists('users') ? 'users' : null);
+
+        if ($user_tbl && !empty($user_id)) {
+            $user = $this->db->get_where($user_tbl, ['id' => $user_id])->row();
+            if (!$user && $this->db->field_exists('nim', $user_tbl)) {
+                $user = $this->db->get_where($user_tbl, ['nim' => $user_id])->row();
+            }
+        }
+
+        if (!$user && $user_tbl && !empty($role_id)) {
+            $user = $this->db->get_where($user_tbl, ['role_id' => $role_id])->row();
+        }
+
+        $ttd = $user ? ($user->ttd ?? ($user->tanda_tangan ?? null)) : null;
+        if (empty($ttd)) {
+            return false;
+        }
+
+        $filePath = FCPATH . 'uploads/signatures/' . $ttd;
+        return file_exists($filePath);
     }
 }
 

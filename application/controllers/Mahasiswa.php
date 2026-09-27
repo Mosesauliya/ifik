@@ -23,7 +23,14 @@ class Mahasiswa extends CI_Controller {
     }
 
     private function _get_current_nim() {
-        return $this->session->userdata('nim') ?: ($this->session->userdata('nidn_nim') ?: '1301210001');
+        $nim = $this->session->userdata('nim') ?: ($this->session->userdata('nidn_nim') ?: ($this->session->userdata('username') ?: ''));
+        if (empty($nim) && $this->session->userdata('user_id') && $this->db->table_exists('user')) {
+            $u = $this->db->select('nim, nidn_nim, username')->get_where('user', ['id' => $this->session->userdata('user_id')])->row_array();
+            if ($u) {
+                $nim = !empty($u['nim']) ? $u['nim'] : (!empty($u['nidn_nim']) ? $u['nidn_nim'] : ($u['username'] ?? ''));
+            }
+        }
+        return $nim;
     }
 
     private function _do_upload($field_name, $config) {
@@ -214,14 +221,28 @@ class Mahasiswa extends CI_Controller {
             $new_k_status  = ($k_status === 'Rejected') ? 'Pending' : $k_status;
             $new_kk_status = ($kk_status === 'Rejected') ? 'Pending' : $kk_status;
 
+            $posted_jenis_ta = $this->input->post('jenis_ta');
+            if (empty($posted_jenis_ta) && !empty($pendaftaran['jenis_ta'])) {
+                $posted_jenis_ta = $pendaftaran['jenis_ta'];
+            }
+            $posted_judul_1 = $this->input->post('judul_1');
+            if (empty($posted_judul_1) && !empty($pendaftaran['judul_1'])) {
+                $posted_judul_1 = $pendaftaran['judul_1'];
+            }
+            $posted_judul_2 = $this->input->post('judul_2') ?: ($pendaftaran['judul_2'] ?? '');
+            $posted_judul_3 = $this->input->post('judul_3') ?: ($pendaftaran['judul_3'] ?? '');
+            $posted_judul_en = $this->input->post('judul_en') ?: ($pendaftaran['judul_en'] ?? '');
+            $posted_konsentrasi = $this->input->post('konsentrasi_dkv') ?: ($pendaftaran['konsentrasi_dkv'] ?? '');
+
             $data_ta = array(
                 'nim'                  => $nim,
-                'jenis_ta'             => $this->input->post('jenis_ta'),
-                'judul_1'              => $this->input->post('judul_1'),
-                'judul_2'              => $this->input->post('judul_2'),
-                'judul_3'              => $this->input->post('judul_3'),
-                'judul_en'             => $this->input->post('judul_en'),
-                'konsentrasi_dkv'      => $this->input->post('konsentrasi_dkv'),
+                'is_submitted'         => 1,
+                'jenis_ta'             => $posted_jenis_ta,
+                'judul_1'              => $posted_judul_1,
+                'judul_2'              => $posted_judul_2,
+                'judul_3'              => $posted_judul_3,
+                'judul_en'             => $posted_judul_en,
+                'konsentrasi_dkv'      => $posted_konsentrasi,
                 'file_ksm'             => $file_step3 ? $file_step3 : $this->input->post('file_ksm_old'),
                 'file_transkrip'       => $file_step4 ? $file_step4 : $this->input->post('file_transkrip_old'),
                 'file_pernyataan'      => $file_step5 ? $file_step5 : $this->input->post('file_pernyataan_old'),
@@ -288,18 +309,21 @@ class Mahasiswa extends CI_Controller {
                     // 2. Simpan ke file_pendaftaran jika ada
                     if ($this->db->table_exists('file_pendaftaran')) {
                         $target_ids = ['usr_mhs_' . $nim, 'mhs_' . $nim, $nim];
+                        $update_fp = [
+                            'file'            => 'uploads/persyaratan_ta/' . $new_file,
+                            'status_adminlaa' => 'Pending',
+                            'date_edit'       => date('Y-m-d H:i:s')
+                        ];
+                        if (($pendaftaran['status_approval_wali'] ?? '') !== 'Approved') {
+                            $update_fp['status_doswal'] = 'Pending';
+                            $update_fp['komentar']      = '';
+                        }
                         $this->db->group_start()
                             ->where_in('id_mhs', $target_ids)
                             ->or_like('id_mhs', $nim)
                             ->group_end()
                             ->like('nama', $k)
-                            ->update('file_pendaftaran', [
-                                'file'            => 'uploads/persyaratan_ta/' . $new_file,
-                                'status_doswal'   => 'Pending',
-                                'status_adminlaa' => 'Pending',
-                                'komentar'        => '',
-                                'date_edit'       => date('Y-m-d H:i:s')
-                            ]);
+                            ->update('file_pendaftaran', $update_fp);
                     }
 
                     // 3. Simpan ke pendaftaran_ta jika tabel dan kolomnya ada
@@ -310,18 +334,20 @@ class Mahasiswa extends CI_Controller {
                         $col_status  = 'status_file_' . $k;
                         $col_review  = 'review_file_' . $k;
                         $col_catatan = 'catatan_file_' . $k;
-                        if ($this->db->field_exists($col_status, 'pendaftaran_ta')) {
-                            $updated_data[$col_status] = 'Pending';
+                        if (($pendaftaran['status_approval_wali'] ?? '') !== 'Approved') {
+                            if ($this->db->field_exists($col_status, 'pendaftaran_ta')) {
+                                $updated_data[$col_status] = 'Pending';
+                            }
+                            if ($this->db->field_exists($col_review, 'pendaftaran_ta')) {
+                                $updated_data[$col_review] = 0;
+                            }
+                            if ($this->db->field_exists($col_catatan, 'pendaftaran_ta')) {
+                                $updated_data[$col_catatan] = '';
+                            }
                         }
                         $col_legacy_status = 'status_' . $k;
                         if ($this->db->field_exists($col_legacy_status, 'pendaftaran_ta')) {
                             $updated_data[$col_legacy_status] = 'Pending';
-                        }
-                        if ($this->db->field_exists($col_review, 'pendaftaran_ta')) {
-                            $updated_data[$col_review] = 0;
-                        }
-                        if ($this->db->field_exists($col_catatan, 'pendaftaran_ta')) {
-                            $updated_data[$col_catatan] = '';
                         }
                     }
                 }
@@ -576,16 +602,29 @@ class Mahasiswa extends CI_Controller {
             $dw_row        = $nip_dw ? $this->db->get_where('dosen_wali', ['nip' => $nip_dw])->row_array() : null;
             $id_dosen_wali = $dw_row ? $dw_row['id'] : null;
 
+            $posted_jenis_ta = $this->input->post('jenis_ta');
+            if (empty($posted_jenis_ta) && !empty($existing_ta['jenis_ta'])) {
+                $posted_jenis_ta = $existing_ta['jenis_ta'];
+            }
+            $posted_judul_1 = $this->input->post('judul_1');
+            if (empty($posted_judul_1) && !empty($existing_ta['judul_1'])) {
+                $posted_judul_1 = $existing_ta['judul_1'];
+            }
+            $posted_judul_2 = $this->input->post('judul_2') ?: ($existing_ta['judul_2'] ?? '');
+            $posted_judul_3 = $this->input->post('judul_3') ?: ($existing_ta['judul_3'] ?? '');
+            $posted_judul_en = $this->input->post('judul_en') ?: ($existing_ta['judul_en'] ?? '');
+            $posted_konsentrasi = $this->input->post('konsentrasi_dkv') ?: ($existing_ta['konsentrasi_dkv'] ?? '');
+
             $data_ta = array(
                 'nim'                  => $nim,
                 'id_dosen_wali'        => $id_dosen_wali,
                 'is_submitted'         => $is_final_submit ? 1 : 0,
-                'jenis_ta'             => $this->input->post('jenis_ta'),
-                'judul_1'              => $this->input->post('judul_1'),
-                'judul_2'              => $this->input->post('judul_2'),
-                'judul_3'              => $this->input->post('judul_3'),
-                'judul_en'             => $this->input->post('judul_en'),
-                'konsentrasi_dkv'      => $this->input->post('konsentrasi_dkv'),
+                'jenis_ta'             => $posted_jenis_ta,
+                'judul_1'              => $posted_judul_1,
+                'judul_2'              => $posted_judul_2,
+                'judul_3'              => $posted_judul_3,
+                'judul_en'             => $posted_judul_en,
+                'konsentrasi_dkv'      => $posted_konsentrasi,
                 'file_ksm'             => $file_step3 ? $file_step3 : $this->input->post('file_ksm_old'),
                 'file_transkrip'       => $file_step4 ? $file_step4 : $this->input->post('file_transkrip_old'),
                 'file_pernyataan'      => $file_step5 ? $file_step5 : $this->input->post('file_pernyataan_old'),
@@ -654,8 +693,9 @@ class Mahasiswa extends CI_Controller {
     public function get_status_pendaftaran_ajax() {
         $nim = $this->_get_current_nim();
         $pendaftaran = $this->Mahasiswa_model->get_status_pendaftaran($nim);
+        $has_ta = !empty($pendaftaran['judul_1']) || !empty($pendaftaran['jenis_ta']) || !empty($pendaftaran['is_submitted']) || !empty($pendaftaran['file_ksm']);
 
-        if (!$pendaftaran || empty($pendaftaran['judul_1'])) {
+        if (!$pendaftaran || !$has_ta) {
             $this->output
                 ->set_content_type('application/json')
                 ->set_output(json_encode([
@@ -924,13 +964,29 @@ class Mahasiswa extends CI_Controller {
         $mhs = $this->Mahasiswa_model->get_mahasiswa($nim);
         $mhs_konsentrasi = !empty($mhs['konsentrasi_dkv']) ? $mhs['konsentrasi_dkv'] : 'Desain Komunikasi Visual';
         $mhs_id_kk = !empty($mhs['id_kk']) ? $mhs['id_kk'] : 1;
+        $existing_status = $this->Mahasiswa_model->get_status_pendaftaran($nim);
 
         $jenis_ta = $this->input->post('jenis_ta', true);
+        if (empty($jenis_ta) && !empty($existing_status['jenis_ta'])) {
+            $jenis_ta = $existing_status['jenis_ta'];
+        }
         $judul_1  = $this->input->post('judul_1', true);
+        if (empty($judul_1) && !empty($existing_status['judul_1'])) {
+            $judul_1 = $existing_status['judul_1'];
+        }
         $judul_2  = $this->input->post('judul_2', true);
+        if (empty($judul_2) && !empty($existing_status['judul_2'])) {
+            $judul_2 = $existing_status['judul_2'];
+        }
         $judul_3  = $this->input->post('judul_3', true);
+        if (empty($judul_3) && !empty($existing_status['judul_3'])) {
+            $judul_3 = $existing_status['judul_3'];
+        }
         $judul_en = $this->input->post('judul_en', true);
-        $konsentrasi_dkv = $this->input->post('konsentrasi_dkv', true) ?: $mhs_konsentrasi;
+        if (empty($judul_en) && !empty($existing_status['judul_en'])) {
+            $judul_en = $existing_status['judul_en'];
+        }
+        $konsentrasi_dkv = $this->input->post('konsentrasi_dkv', true) ?: ($existing_status['konsentrasi_dkv'] ?? $mhs_konsentrasi);
 
         $draft_step = (int)$this->input->post('draft_step', true);
 
@@ -1001,10 +1057,21 @@ class Mahasiswa extends CI_Controller {
 
         // Sinkronkan juga ke tabel guidance (legacy / active db)
         if ($this->db->table_exists('guidance')) {
-            $existing_g = $this->db->group_start()
-                ->where('id_mhs', 'usr_mhs_' . $nim)
-                ->or_where('id_mhs', $nim)
-            ->group_end()->get('guidance')->row_array();
+            $user_id = $this->_get_current_user_id() ?: ('usr_mhs_' . $nim);
+            $target_ids = array_values(array_unique(array_filter([$user_id, $nim, 'usr_mhs_' . $nim, 'mhs_' . $nim])));
+            $existing_g = $this->db->where_in('id_mhs', $target_ids)
+                ->order_by('date', 'DESC')
+                ->limit(1)
+                ->get('guidance')->row_array();
+            if (!$existing_g) {
+                $existing_g = $this->db->get_where('guidance', ['id' => 'gdn_' . $nim])->row_array();
+            }
+
+            // Pastikan kolom jenis_TA di tabel guidance berupa VARCHAR agar dapat menampung 'Pengkaryaan' & 'Penulisan' tanpa truncated oleh ENUM legacy
+            $prev_dbg = $this->db->db_debug;
+            $this->db->db_debug = FALSE;
+            @$this->db->query("ALTER TABLE `guidance` MODIFY COLUMN `jenis_TA` VARCHAR(100) DEFAULT 'TA Reguler'");
+            $this->db->db_debug = $prev_dbg;
 
             $g_fields = $this->db->list_fields('guidance');
             $g_data = array();
@@ -1023,7 +1090,7 @@ class Mahasiswa extends CI_Controller {
                     $db_saved = true;
                 } else if (!empty($jenis_ta) || !empty($judul_1)) {
                     if (in_array('id', $g_fields)) $g_data['id'] = 'gdn_' . $nim;
-                    if (in_array('id_mhs', $g_fields)) $g_data['id_mhs'] = 'usr_mhs_' . $nim;
+                    if (in_array('id_mhs', $g_fields)) $g_data['id_mhs'] = $user_id;
                     if (in_array('date', $g_fields)) $g_data['date'] = date('Y-m-d H:i:s');
                     if (in_array('tahun', $g_fields)) $g_data['tahun'] = date('Y');
                     if (in_array('keterangan', $g_fields)) $g_data['keterangan'] = 'Draft';
