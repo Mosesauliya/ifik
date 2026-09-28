@@ -1295,7 +1295,13 @@
 <body>
 
     <!-- Sidebar Integration -->
-    <?php $this->load->view('components/curved_sidebar'); ?>
+    <?php 
+    if (isset($targetRole) && $targetRole === 'admin_layanan') {
+        $this->load->view('admin_layanan/sidebar');
+    } else {
+        $this->load->view('components/curved_sidebar');
+    }
+    ?>
 
     <div class="page-wrapper-for-sidebar">
         <div class="main-container">
