@@ -1639,9 +1639,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let touchCurrentY = 0;
     let isTouchDragging = false;
     let isHorizontalSwipe = false;
+    let isShuffleLock = false;
 
     container.addEventListener('touchstart', (e) => {
-        if (window.innerWidth > 768) return;
+        if (window.innerWidth > 768 || isShuffleLock) return;
         if (!e.touches || e.touches.length === 0) return;
 
         touchStartX = e.touches[0].clientX;
@@ -1658,7 +1659,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: true });
 
     container.addEventListener('touchmove', (e) => {
-        if (!isTouchDragging || window.innerWidth > 768) return;
+        if (!isTouchDragging || isShuffleLock || window.innerWidth > 768) return;
         if (!e.touches || e.touches.length === 0) return;
 
         touchCurrentX = e.touches[0].clientX;
@@ -1695,7 +1696,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: false });
 
     function finishTouchSwipe() {
-        if (!isTouchDragging || window.innerWidth > 768) return;
+        if (!isTouchDragging || isShuffleLock || window.innerWidth > 768) return;
         isTouchDragging = false;
 
         const diffX = touchCurrentX - touchStartX;
@@ -1703,6 +1704,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const card2   = container.querySelector('.news-card[data-stack-idx="1"]');
 
         if (isHorizontalSwipe && Math.abs(diffX) > 40) {
+            isShuffleLock = true;
             if (topCard) {
                 topCard.style.transition = 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease';
                 topCard.style.transform = ''; // Clear inline drag transform so CSS shuffle applies
@@ -1718,8 +1720,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cards = Array.from(container.querySelectorAll('.news-card'));
                 const totalInDeck = cards.length;
                 cards.forEach(card => {
-                    const currentIdx = card.getAttribute('data-stack-idx');
+                    card.style.transform = '';
+                    card.style.opacity = '';
                     card.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease';
+                    const currentIdx = card.getAttribute('data-stack-idx');
                     if (currentIdx === 'shuffle' || currentIdx === 'shuffle-right') {
                         card.setAttribute('data-stack-idx', totalInDeck - 1);
                     } else {
@@ -1729,16 +1733,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                 });
+                isShuffleLock = false;
             }, 260);
         } else {
-            if (topCard) {
-                topCard.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                topCard.style.transform = '';
-            }
-            if (card2) {
-                card2.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                card2.style.transform = '';
-            }
+            const allCards = container.querySelectorAll('.news-card');
+            allCards.forEach(card => {
+                card.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease';
+                card.style.transform = '';
+                card.style.opacity = '';
+            });
         }
 
         isHorizontalSwipe = false;
