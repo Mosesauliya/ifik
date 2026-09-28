@@ -1023,6 +1023,12 @@
             opacity: 0.2 !important;
             pointer-events: none !important;
         }
+        .news-card[data-stack-idx="shuffle-right"] {
+            transform: translate(calc(-50% + 150vw), -50%) rotate(25deg) scale(0.8) !important;
+            z-index: 1 !important;
+            opacity: 0.2 !important;
+            pointer-events: none !important;
+        }
 
         /* Dimatikan fanning hover di mobile agar murni stack deck shuffle */
         .news-card:hover {
@@ -1389,7 +1395,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ===== KONFIGURASI =====
     function getCardsPerPage() {
-        return window.innerWidth <= 768 ? 1 : 5; // Mobile: 1 fokus aktif per slide (memungkinkan swipe per kartu)
+        return 5; // Selalu 5 kartu per halaman (1 page = 5 cards)
     }
 
     let CARDS_PER_PAGE = getCardsPerPage();
@@ -1440,30 +1446,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===== RENDER KARTU =====
     function renderPage(pageIndex) {
         container.innerHTML = '';
-        const isMobile = window.innerWidth <= 768;
+        const start  = pageIndex * CARDS_PER_PAGE;
+        const slice  = allNews.slice(start, start + CARDS_PER_PAGE);
+        const total  = slice.length;
 
-        if (isMobile) {
-            const totalNews = allNews.length;
-            const maxStack = Math.min(5, totalNews);
-            for (let i = 0; i < maxStack; i++) {
-                let newsIndex = (pageIndex + i) % totalNews;
-                const news = allNews[newsIndex];
-                if (news) {
-                    const card = createCard(news, i, maxStack);
-                    card.setAttribute('data-stack-idx', i); // 0 (paling atas), 1, 2, 3, 4 (paling bawah di deck)
-                    container.appendChild(card);
-                }
+        slice.forEach((news, i) => {
+            const card = createCard(news, i, total);
+            if (window.innerWidth <= 768) {
+                card.setAttribute('data-stack-idx', i);
             }
-        } else {
-            const start  = pageIndex * CARDS_PER_PAGE;
-            const slice  = allNews.slice(start, start + CARDS_PER_PAGE);
-            const total  = slice.length;
-
-            slice.forEach((news, i) => {
-                const card = createCard(news, i, total);
-                container.appendChild(card);
-            });
-        }
+            container.appendChild(card);
+        });
     }
 
     // ===== BUAT ELEMEN KARTU =====
@@ -1712,18 +1705,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (card2) card2.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease';
 
         if (isHorizontalSwipe && Math.abs(diffX) > 40) {
-            if (diffX < 0) {
-                if (topCard) {
-                    topCard.setAttribute('data-stack-idx', 'shuffle');
-                }
-                setTimeout(() => {
-                    const nextPage = (currentPage + 1) % totalPages;
-                    goToPage(nextPage, 'next');
-                }, 120);
-            } else if (diffX > 0) {
-                const prevPage = (currentPage - 1 + totalPages) % totalPages;
-                goToPage(prevPage, 'prev');
+            if (topCard) {
+                topCard.style.transform = '';
+                const shuffleState = diffX > 0 ? 'shuffle-right' : 'shuffle';
+                topCard.setAttribute('data-stack-idx', shuffleState);
             }
+            setTimeout(() => {
+                const cards = Array.from(container.querySelectorAll('.news-card'));
+                const totalInDeck = cards.length;
+                cards.forEach(card => {
+                    const currentIdx = card.getAttribute('data-stack-idx');
+                    if (currentIdx === 'shuffle' || currentIdx === 'shuffle-right') {
+                        card.setAttribute('data-stack-idx', totalInDeck - 1);
+                    } else {
+                        const num = parseInt(currentIdx, 10);
+                        if (!isNaN(num) && num > 0) {
+                            card.setAttribute('data-stack-idx', num - 1);
+                        }
+                    }
+                });
+            }, 150);
         } else {
             if (topCard) topCard.style.transform = '';
             if (card2) card2.style.transform = '';
