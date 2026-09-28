@@ -137,7 +137,7 @@ class Dashboard extends CI_Controller {
         $this->load->model('Booking_model');
         $role_id = (int)$this->session->userdata('role_id');
 
-        if (!in_array($role_id, [1, 2, 21])) {
+        if (!in_array($role_id, [1, 2, 21, 99])) {
             echo json_encode(['status' => 'error', 'message' => 'Anda tidak memiliki hak akses untuk menyetujui peminjaman ini.']);
             return;
         }
@@ -178,7 +178,7 @@ class Dashboard extends CI_Controller {
         $this->load->model('Booking_model');
         $role_id = (int)$this->session->userdata('role_id');
 
-        if (!in_array($role_id, [1, 2, 21])) {
+        if (!in_array($role_id, [1, 2, 21, 99])) {
             echo json_encode(['status' => 'error', 'message' => 'Anda tidak memiliki hak akses untuk menolak peminjaman ini.']);
             return;
         }
@@ -198,7 +198,7 @@ class Dashboard extends CI_Controller {
         $this->load->model('Booking_model');
         $role_id = (int)$this->session->userdata('role_id');
 
-        if (!in_array($role_id, [1, 2, 21])) {
+        if (!in_array($role_id, [1, 2, 21, 99])) {
             echo json_encode(['status' => 'error', 'message' => 'Anda tidak memiliki hak akses untuk menghapus jadwal ini.']);
             return;
         }
@@ -224,7 +224,7 @@ class Dashboard extends CI_Controller {
         header('Content-Type: application/json');
         $role_id = $this->session->userdata('role_id');
 
-        if ($role_id != 1) {
+        if ($role_id != 1 && $role_id != 99) {
             echo json_encode(['status' => 'error', 'message' => 'Hanya Admin System yang dapat menambahkan ruangan baru!']);
             return;
         }

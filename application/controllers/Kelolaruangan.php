@@ -41,7 +41,7 @@ class Kelolaruangan extends CI_Controller {
         }
         
         $role_id = (int)$this->session->userdata('role_id');
-        if ($role_id !== 1 && $role_id !== 2 && $role_id !== 21) {
+        if ($role_id !== 1 && $role_id !== 2 && $role_id !== 21 && $role_id !== 99) {
             if ($is_ajax) {
                 if (ob_get_length()) ob_clean();
                 header('Content-Type: application/json');
