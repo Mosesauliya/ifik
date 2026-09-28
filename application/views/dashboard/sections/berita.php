@@ -1018,15 +1018,15 @@
             pointer-events: none !important;
         }
         .news-card[data-stack-idx="shuffle"] {
-            transform: translate(calc(-50% - 240px), calc(-50% + 15px)) rotate(-18deg) scale(0.92) !important;
-            z-index: 60 !important;
-            opacity: 0.75 !important;
+            transform: translate(calc(-50% - 150vw), -50%) rotate(-25deg) scale(0.8) !important;
+            z-index: 1 !important;
+            opacity: 0.2 !important;
             pointer-events: none !important;
         }
         .news-card[data-stack-idx="shuffle-right"] {
-            transform: translate(calc(-50% + 240px), calc(-50% + 15px)) rotate(18deg) scale(0.92) !important;
-            z-index: 60 !important;
-            opacity: 0.75 !important;
+            transform: translate(calc(-50% + 150vw), -50%) rotate(25deg) scale(0.8) !important;
+            z-index: 1 !important;
+            opacity: 0.2 !important;
             pointer-events: none !important;
         }
 
@@ -1395,7 +1395,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ===== KONFIGURASI =====
     function getCardsPerPage() {
-        return 5; // Selalu 5 kartu per halaman (1 page = 5 cards)
+        return window.innerWidth <= 768 ? 1 : 5; // Mobile: 1 fokus aktif per slide (memungkinkan swipe per kartu)
     }
 
     let CARDS_PER_PAGE = getCardsPerPage();
@@ -1412,16 +1412,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===== BUILD DOTS =====
     function buildDots() {
         dotsEl.innerHTML = '';
-        for (let i = 0; i < totalPages; i++) {
+        const dotsCount = window.innerWidth <= 768 ? Math.ceil(allNews.length / 5) : totalPages;
+        const activeDotIndex = window.innerWidth <= 768 ? Math.floor(currentPage / 5) : currentPage;
+
+        for (let i = 0; i < dotsCount; i++) {
             const dot = document.createElement('div');
-            dot.className = 'news-dot' + (i === currentPage ? ' active' : '');
+            dot.className = 'news-dot' + (i === activeDotIndex ? ' active' : '');
             
             const fill = document.createElement('div');
             fill.className = 'news-dot-fill';
             dot.appendChild(fill);
 
             dot.addEventListener('click', () => {
-                goToPage(i);
+                const targetPage = window.innerWidth <= 768 ? i * 5 : i;
+                goToPage(targetPage);
             });
             dotsEl.appendChild(dot);
         }
@@ -1429,34 +1433,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ===== UPDATE UI =====
     function updateControls() {
-        prevBtn.disabled = currentPage === 0;
-        nextBtn.disabled = currentPage === totalPages - 1;
-        pageInfoEl.textContent = `${currentPage + 1} / ${totalPages}`;
-        // Update dots
-        dotsEl.querySelectorAll('.news-dot').forEach((d, i) => {
-            const isActive = i === currentPage;
-            d.classList.toggle('active', isActive);
-            const fill = d.querySelector('.news-dot-fill');
-            if (fill) {
-                fill.style.height = '0%';
-            }
-        });
+        if (window.innerWidth <= 768) {
+            prevBtn.disabled = false;
+            nextBtn.disabled = false;
+            const displayTotal = Math.ceil(allNews.length / 5);
+            const displayCurrent = Math.min(displayTotal, Math.floor(currentPage / 5) + 1);
+            pageInfoEl.textContent = `${displayCurrent} / ${displayTotal}`;
+            const activeDotIndex = Math.floor(currentPage / 5);
+            dotsEl.querySelectorAll('.news-dot').forEach((d, i) => {
+                const isActive = i === activeDotIndex;
+                d.classList.toggle('active', isActive);
+                const fill = d.querySelector('.news-dot-fill');
+                if (fill) fill.style.height = '0%';
+            });
+        } else {
+            prevBtn.disabled = currentPage === 0;
+            nextBtn.disabled = currentPage === totalPages - 1;
+            pageInfoEl.textContent = `${currentPage + 1} / ${totalPages}`;
+            dotsEl.querySelectorAll('.news-dot').forEach((d, i) => {
+                const isActive = i === currentPage;
+                d.classList.toggle('active', isActive);
+                const fill = d.querySelector('.news-dot-fill');
+                if (fill) fill.style.height = '0%';
+            });
+        }
     }
 
     // ===== RENDER KARTU =====
     function renderPage(pageIndex) {
         container.innerHTML = '';
-        const start  = pageIndex * CARDS_PER_PAGE;
-        const slice  = allNews.slice(start, start + CARDS_PER_PAGE);
-        const total  = slice.length;
+        const isMobile = window.innerWidth <= 768;
 
-        slice.forEach((news, i) => {
-            const card = createCard(news, i, total);
-            if (window.innerWidth <= 768) {
-                card.setAttribute('data-stack-idx', i);
+        if (isMobile) {
+            const totalNews = allNews.length;
+            const maxStack = Math.min(5, totalNews);
+            for (let i = 0; i < maxStack; i++) {
+                let newsIndex = (pageIndex + i) % totalNews;
+                const news = allNews[newsIndex];
+                if (news) {
+                    const card = createCard(news, i, maxStack);
+                    card.setAttribute('data-stack-idx', i); // 0 (paling atas), 1, 2, 3, 4 (paling bawah di deck)
+                    container.appendChild(card);
+                }
             }
-            container.appendChild(card);
-        });
+        } else {
+            const start  = pageIndex * CARDS_PER_PAGE;
+            const slice  = allNews.slice(start, start + CARDS_PER_PAGE);
+            const total  = slice.length;
+
+            slice.forEach((news, i) => {
+                const card = createCard(news, i, total);
+                container.appendChild(card);
+            });
+        }
     }
 
     // ===== BUAT ELEMEN KARTU =====
@@ -1639,10 +1668,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let touchCurrentY = 0;
     let isTouchDragging = false;
     let isHorizontalSwipe = false;
-    let isShuffleLock = false;
 
     container.addEventListener('touchstart', (e) => {
-        if (window.innerWidth > 768 || isShuffleLock) return;
+        if (window.innerWidth > 768) return;
         if (!e.touches || e.touches.length === 0) return;
 
         touchStartX = e.touches[0].clientX;
@@ -1659,7 +1687,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: true });
 
     container.addEventListener('touchmove', (e) => {
-        if (!isTouchDragging || isShuffleLock || window.innerWidth > 768) return;
+        if (!isTouchDragging || window.innerWidth > 768) return;
         if (!e.touches || e.touches.length === 0) return;
 
         touchCurrentX = e.touches[0].clientX;
@@ -1679,69 +1707,53 @@ document.addEventListener('DOMContentLoaded', () => {
             const card2   = container.querySelector('.news-card[data-stack-idx="1"]');
 
             if (topCard) {
-                const rotation = diffX * 0.1;
-                topCard.style.transform = `translate(calc(-50% + ${diffX}px), calc(-50% + ${diffY * 0.2}px)) rotate(${rotation}deg)`;
+                const rotation = diffX * 0.08;
+                topCard.style.transform = `translate(calc(-50% + ${diffX}px), calc(-50% + ${diffY * 0.15}px)) rotate(${rotation}deg)`;
             }
 
             if (card2) {
-                const progress = Math.min(Math.abs(diffX) / 180, 1);
+                const progress = Math.min(Math.abs(diffX) / 200, 1);
                 const scaleVal = 0.96 + (progress * 0.04);
                 const rotVal   = 3.5 - (progress * 3.5);
                 const posXVal  = 14 - (progress * 14);
                 const posYVal  = 8 - (progress * 8);
                 card2.style.transform = `translate(calc(-50% + ${posXVal}px), calc(-50% + ${posYVal}px)) rotate(${rotVal}deg) scale(${scaleVal})`;
-                card2.style.opacity   = 0.94 + (progress * 0.06);
             }
         }
     }, { passive: false });
 
     function finishTouchSwipe() {
-        if (!isTouchDragging || isShuffleLock || window.innerWidth > 768) return;
+        if (!isTouchDragging || window.innerWidth > 768) return;
         isTouchDragging = false;
 
         const diffX = touchCurrentX - touchStartX;
         const topCard = container.querySelector('.news-card[data-stack-idx="0"]');
         const card2   = container.querySelector('.news-card[data-stack-idx="1"]');
 
-        if (isHorizontalSwipe && Math.abs(diffX) > 40) {
-            isShuffleLock = true;
-            if (topCard) {
-                topCard.style.transition = 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease';
-                topCard.style.transform = ''; // Clear inline drag transform so CSS shuffle applies
-                const shuffleState = diffX > 0 ? 'shuffle-right' : 'shuffle';
-                topCard.setAttribute('data-stack-idx', shuffleState);
-            }
-            if (card2) {
-                card2.style.transition = 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease';
-                card2.style.transform = '';
-            }
+        if (topCard) topCard.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease';
+        if (card2) card2.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease';
 
-            setTimeout(() => {
-                const cards = Array.from(container.querySelectorAll('.news-card'));
-                const totalInDeck = cards.length;
-                cards.forEach(card => {
-                    card.style.transform = '';
-                    card.style.opacity = '';
-                    card.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease';
-                    const currentIdx = card.getAttribute('data-stack-idx');
-                    if (currentIdx === 'shuffle' || currentIdx === 'shuffle-right') {
-                        card.setAttribute('data-stack-idx', totalInDeck - 1);
-                    } else {
-                        const num = parseInt(currentIdx, 10);
-                        if (!isNaN(num) && num > 0) {
-                            card.setAttribute('data-stack-idx', num - 1);
-                        }
-                    }
-                });
-                isShuffleLock = false;
-            }, 260);
+        if (isHorizontalSwipe && Math.abs(diffX) > 40) {
+            if (diffX < 0) {
+                if (topCard) {
+                    topCard.setAttribute('data-stack-idx', 'shuffle');
+                }
+                setTimeout(() => {
+                    const nextPage = (currentPage + 1) % totalPages;
+                    goToPage(nextPage, 'next');
+                }, 120);
+            } else if (diffX > 0) {
+                if (topCard) {
+                    topCard.setAttribute('data-stack-idx', 'shuffle-right');
+                }
+                setTimeout(() => {
+                    const prevPage = (currentPage - 1 + totalPages) % totalPages;
+                    goToPage(prevPage, 'prev');
+                }, 120);
+            }
         } else {
-            const allCards = container.querySelectorAll('.news-card');
-            allCards.forEach(card => {
-                card.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease';
-                card.style.transform = '';
-                card.style.opacity = '';
-            });
+            if (topCard) topCard.style.transform = '';
+            if (card2) card2.style.transform = '';
         }
 
         isHorizontalSwipe = false;
