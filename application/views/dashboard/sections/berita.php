@@ -975,28 +975,58 @@
             touch-action: pan-y;
         }
         .news-card {
-            width: 205px;
-            max-width: 68vw;
-            height: 335px;
+            width: 245px;
+            max-width: 82vw;
+            height: 350px;
             position: absolute !important;
             left: 50% !important;
             top: 50% !important;
-            border-radius: 20px;
-            --angle-per-card: 5.5deg;
-            --spread-x: calc(var(--offset) * 32px);
-            --arc-y: calc(var(--offset) * var(--offset) * 3.2px);
-            --angle: calc(var(--offset) * var(--angle-per-card));
-            transform: translate(calc(-50% + var(--spread-x)), calc(-50% + var(--arc-y))) rotate(var(--angle)) !important;
-            box-shadow: -4px 10px 30px rgba(0, 0, 0, 0.14) !important;
+            border-radius: 22px;
+            box-shadow: -6px 12px 35px rgba(0, 0, 0, 0.16) !important;
             transition: transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.45s ease, opacity 0.45s ease;
-            z-index: calc(10 + var(--index)) !important;
-            opacity: 1 !important;
-            filter: none !important;
         }
 
-        /* Dimatikan hover effect fanning di mobile agar murni swipe jari */
+        /* Position Stack Card Numpuk (keluar dikit di kanan-bawah) khusus Mobile */
+        .news-card[data-stack-idx="0"] {
+            transform: translate(-50%, -50%) rotate(0deg) scale(1) !important;
+            z-index: 50 !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+        .news-card[data-stack-idx="1"] {
+            transform: translate(calc(-50% + 14px), calc(-50% + 8px)) rotate(3.5deg) scale(0.96) !important;
+            z-index: 40 !important;
+            opacity: 0.94 !important;
+            pointer-events: none !important;
+        }
+        .news-card[data-stack-idx="2"] {
+            transform: translate(calc(-50% + 28px), calc(-50% + 16px)) rotate(7deg) scale(0.92) !important;
+            z-index: 30 !important;
+            opacity: 0.86 !important;
+            pointer-events: none !important;
+        }
+        .news-card[data-stack-idx="3"] {
+            transform: translate(calc(-50% + 42px), calc(-50% + 24px)) rotate(10.5deg) scale(0.88) !important;
+            z-index: 20 !important;
+            opacity: 0.74 !important;
+            pointer-events: none !important;
+        }
+        .news-card[data-stack-idx="4"] {
+            transform: translate(calc(-50% + 56px), calc(-50% + 32px)) rotate(14deg) scale(0.84) !important;
+            z-index: 10 !important;
+            opacity: 0.60 !important;
+            pointer-events: none !important;
+        }
+        .news-card[data-stack-idx="shuffle"] {
+            transform: translate(calc(-50% - 150vw), -50%) rotate(-25deg) scale(0.8) !important;
+            z-index: 1 !important;
+            opacity: 0.2 !important;
+            pointer-events: none !important;
+        }
+
+        /* Dimatikan fanning hover di mobile agar murni stack deck shuffle */
         .news-card:hover {
-            box-shadow: -4px 10px 30px rgba(0, 0, 0, 0.14) !important;
+            box-shadow: -6px 12px 35px rgba(0, 0, 0, 0.16) !important;
         }
         .news-fan-container:has(.news-card:hover) .news-card:not(:hover) {
             opacity: 1 !important;
@@ -1414,17 +1444,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isMobile) {
             const totalNews = allNews.length;
-            const offsets = [-2, -1, 0, 1, 2];
-            offsets.forEach((offset, i) => {
-                let newsIndex = (pageIndex + offset + totalNews * 10) % totalNews;
+            const maxStack = Math.min(5, totalNews);
+            for (let i = 0; i < maxStack; i++) {
+                let newsIndex = (pageIndex + i) % totalNews;
                 const news = allNews[newsIndex];
                 if (news) {
-                    const card = createCard(news, i, 5);
-                    card.style.setProperty('--offset', offset);
-                    card.style.setProperty('--index', i);
+                    const card = createCard(news, i, maxStack);
+                    card.setAttribute('data-stack-idx', i); // 0 (paling atas), 1, 2, 3, 4 (paling bawah di deck)
                     container.appendChild(card);
                 }
-            });
+            }
         } else {
             const start  = pageIndex * CARDS_PER_PAGE;
             const slice  = allNews.slice(start, start + CARDS_PER_PAGE);
@@ -1491,47 +1520,44 @@ document.addEventListener('DOMContentLoaded', () => {
         isAnimating = true;
         resetAutoScroll();
 
-        // Tentukan arah animasi
         const goingForward = direction !== null ? direction === 'next' : targetPage > currentPage;
         const exitClass   = goingForward ? 'anim-exit'       : 'anim-exit-up';
         const enterClass  = goingForward ? 'anim-enter'      : 'anim-enter-down';
 
-        // Ambil kartu-kartu yang sedang tampil
         const currentCards = Array.from(container.querySelectorAll('.news-card'));
 
-        // 1. Animasikan kartu lama keluar
         currentCards.forEach(card => {
-            card.classList.add(exitClass);
+            if (window.innerWidth > 768) {
+                card.classList.add(exitClass);
+            }
         });
 
-        // 2. Setelah animasi keluar selesai, render halaman baru
         setTimeout(() => {
             currentPage = targetPage;
             renderPage(currentPage);
             updateControls();
 
-            // 3. Animasikan kartu baru masuk
             const newCards = Array.from(container.querySelectorAll('.news-card'));
-            newCards.forEach((card, i) => {
-                // Stagger: kartu masuk satu per satu dengan delay
-                card.style.animationDelay = `${i * 60}ms`;
-                card.classList.add(enterClass);
-            });
+            if (window.innerWidth > 768) {
+                newCards.forEach((card, i) => {
+                    card.style.animationDelay = `${i * 50}ms`;
+                    card.classList.add(enterClass);
+                });
+            }
 
-            // 4. Lepas class animasi setelah selesai
             setTimeout(() => {
                 newCards.forEach(card => {
                     card.classList.remove(enterClass);
                     card.style.animationDelay = '';
                 });
                 isAnimating = false;
-            }, 650 + (newCards.length * 60));
+            }, window.innerWidth <= 768 ? 50 : 550);
 
-        }, 480);
+        }, window.innerWidth <= 768 ? 10 : 480);
     }
 
     // ===== AUTO SCROLL (OTOMATIS PINDAH HALAMAN DENGAN PROGRESS DOT) =====
-    const AUTO_SCROLL_DELAY = 10000; // 10000ms (10 detik per slide)
+    const AUTO_SCROLL_DELAY = 10000;
     let autoScrollRaf = null;
     let lastTimestamp = null;
     let elapsedMs = 0;
@@ -1613,7 +1639,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ===== TOUCH SWIPE INTERAKSI JARI FOR 5-CARD FANNED OVERLAPPING (KHUSUS MOBILE) =====
+    // ===== TOUCH SWIPE INTERAKSI STACK DECK SHUFFLE (KHUSUS MOBILE) =====
     let touchStartX = 0;
     let touchStartY = 0;
     let touchCurrentX = 0;
@@ -1632,10 +1658,10 @@ document.addEventListener('DOMContentLoaded', () => {
         isTouchDragging = true;
         isHorizontalSwipe = false;
 
-        const allCards = container.querySelectorAll('.news-card');
-        allCards.forEach(card => {
-            card.style.transition = 'none'; // Matikan transisi CSS saat ditarik jari
-        });
+        const topCard = container.querySelector('.news-card[data-stack-idx="0"]');
+        if (topCard) {
+            topCard.style.transition = 'none';
+        }
     }, { passive: true });
 
     container.addEventListener('touchmove', (e) => {
@@ -1648,32 +1674,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const diffX = touchCurrentX - touchStartX;
         const diffY = touchCurrentY - touchStartY;
 
-        // Deteksi gesture horizontal
         if (!isHorizontalSwipe && Math.abs(diffX) > 8 && Math.abs(diffX) > Math.abs(diffY)) {
             isHorizontalSwipe = true;
         }
 
         if (isHorizontalSwipe) {
-            if (e.cancelable) e.preventDefault(); // Mencegah scroll vertikal saat swipe horizontal
+            if (e.cancelable) e.preventDefault();
 
-            const allCards = container.querySelectorAll('.news-card');
-            let moveX = diffX;
-            if ((currentPage === 0 && diffX > 0) || (currentPage === totalPages - 1 && diffX < 0)) {
-                moveX = diffX * 0.3; // Tahanan halus di ujung
+            const topCard = container.querySelector('.news-card[data-stack-idx="0"]');
+            const card2   = container.querySelector('.news-card[data-stack-idx="1"]');
+
+            if (topCard) {
+                const rotation = diffX * 0.08;
+                topCard.style.transform = `translate(calc(-50% + ${diffX}px), calc(-50% + ${diffY * 0.15}px)) rotate(${rotation}deg)`;
             }
 
-            allCards.forEach(card => {
-                const index = parseInt(card.style.getPropertyValue('--index') || '0');
-                const total = parseInt(card.style.getPropertyValue('--total') || '5');
-                const centerIndex = (total - 1) / 2;
-                const offset = index - centerIndex;
-                const spreadStep = window.innerWidth <= 360 ? 20 : (window.innerWidth <= 480 ? 26 : 32);
-                const angleStep = window.innerWidth <= 360 ? 4 : (window.innerWidth <= 480 ? 4.5 : 5.5);
-                const spreadX = (offset * spreadStep) + moveX;
-                const arcY = offset * offset * 3.2;
-                const angle = (offset * angleStep) + (moveX * 0.04);
-                card.style.transform = `translate(calc(-50% + ${spreadX}px), calc(-50% + ${arcY}px)) rotate(${angle}deg)`;
-            });
+            if (card2) {
+                const progress = Math.min(Math.abs(diffX) / 200, 1);
+                const scaleVal = 0.96 + (progress * 0.04);
+                const rotVal   = 3.5 - (progress * 3.5);
+                const posXVal  = 14 - (progress * 14);
+                const posYVal  = 8 - (progress * 8);
+                card2.style.transform = `translate(calc(-50% + ${posXVal}px), calc(-50% + ${posYVal}px)) rotate(${rotVal}deg) scale(${scaleVal})`;
+            }
         }
     }, { passive: false });
 
@@ -1682,21 +1705,28 @@ document.addEventListener('DOMContentLoaded', () => {
         isTouchDragging = false;
 
         const diffX = touchCurrentX - touchStartX;
-        const allCards = container.querySelectorAll('.news-card');
+        const topCard = container.querySelector('.news-card[data-stack-idx="0"]');
+        const card2   = container.querySelector('.news-card[data-stack-idx="1"]');
 
-        allCards.forEach(card => {
-            card.style.transition = 'transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.45s ease, opacity 0.45s ease';
-            card.style.transform = ''; // Reset transform inline agar kembali mengikuti CSS default
-        });
+        if (topCard) topCard.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease';
+        if (card2) card2.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease';
 
-        if (isHorizontalSwipe && Math.abs(diffX) > 35) {
+        if (isHorizontalSwipe && Math.abs(diffX) > 40) {
             if (diffX < 0) {
-                const nextPage = (currentPage + 1) % totalPages;
-                goToPage(nextPage, 'next');
+                if (topCard) {
+                    topCard.setAttribute('data-stack-idx', 'shuffle');
+                }
+                setTimeout(() => {
+                    const nextPage = (currentPage + 1) % totalPages;
+                    goToPage(nextPage, 'next');
+                }, 120);
             } else if (diffX > 0) {
                 const prevPage = (currentPage - 1 + totalPages) % totalPages;
                 goToPage(prevPage, 'prev');
             }
+        } else {
+            if (topCard) topCard.style.transform = '';
+            if (card2) card2.style.transform = '';
         }
 
         isHorizontalSwipe = false;
