@@ -31,20 +31,6 @@ class User_model extends CI_Model {
             $user->status = (!empty($user->is_active) && (int)$user->is_active === 1) ? 'active' : 'inactive';
         }
 
-        // Auto-heal: Deteksi dan perbaiki otomatis jika password dan salt tertukar di database (salt diawali $2y$, $2a$, $2b$)
-        if (!empty($user->salt) && (strpos($user->salt, '$2y$') === 0 || strpos($user->salt, '$2a$') === 0 || strpos($user->salt, '$2b$') === 0)) {
-            $correctPassword = $user->salt;
-            $correctSalt = $user->password;
-            $user->password = $correctPassword;
-            $user->salt = $correctSalt;
-
-            if (!empty($user->id) && $this->db->table_exists($this->tbl_user)) {
-                $this->db->where('id', $user->id)->update($this->tbl_user, [
-                    'password' => $correctPassword,
-                    'salt'     => $correctSalt
-                ]);
-            }
-        }
 
         // Master accounts (Admin, Kaur, LAA, Laboran, Dosen Wali, Koordinator TA, Ketua KK) are ALWAYS password_changed = 1
         $masterIds = ['admin-01', 'admin-laa-01', 'dsn-wali-01', 'kaur-01', 'koor-ta-01', 'laboran-01', 'ketua-kk-01', 'mhs-1301210001'];

@@ -38,28 +38,44 @@ class Login extends CI_Controller {
 		$user = $this->User_model->get_by_email($identity);
 
 		if ($user) {
-			$isPasswordValid = password_verify($password, $user->password);
+			$isPasswordValid = false;
 			$isTokenLogin = false;
+			$shouldUpgradeHash = false;
 
-			// Fallback & Auto-Heal: jika hash bcrypt berada di kolom salt (karena data import database lama tertukar posisi)
-			if (!$isPasswordValid && !empty($user->salt) && (strpos($user->salt, '$2y$') === 0 || strpos($user->salt, '$2a$') === 0 || strpos($user->salt, '$2b$') === 0)) {
-				if (password_verify($password, $user->salt)) {
-					$isPasswordValid = true;
-					// Auto-heal: otomatis perbaiki posisi kolom di database secara permanen
-					$userTbl = $this->db->table_exists('user') ? 'user' : 'users';
-					$this->db->where('id', $user->id)->update($userTbl, [
-						'password' => $user->salt,
-						'salt'     => $user->password
-					]);
-				}
-			}
-
-			// 1. Direct plaintext match for legacy/unhashed password
-			if (!$isPasswordValid && $password === $user->password) {
+			// 1. Modern Bcrypt Hash in password column
+			if (password_verify($password, $user->password)) {
 				$isPasswordValid = true;
 			}
 
-			// 2. Check user_token / user_tokens table for activation token
+			// 2. Legacy SHA-256 with Salt (database import format: sha256(password + salt))
+			if (!$isPasswordValid && !empty($user->salt)) {
+				if (hash('sha256', $password . $user->salt) === $user->password || hash('sha256', $user->salt . $password) === $user->password) {
+					$isPasswordValid = true;
+					$shouldUpgradeHash = true;
+				}
+			}
+
+			// 3. Legacy SHA-256 Unsalted
+			if (!$isPasswordValid && hash('sha256', $password) === $user->password) {
+				$isPasswordValid = true;
+				$shouldUpgradeHash = true;
+			}
+
+			// 4. Fallback if bcrypt hash was stored in salt column (swapped data)
+			if (!$isPasswordValid && !empty($user->salt) && (strpos($user->salt, '$2y$') === 0 || strpos($user->salt, '$2a$') === 0 || strpos($user->salt, '$2b$') === 0)) {
+				if (password_verify($password, $user->salt)) {
+					$isPasswordValid = true;
+					$shouldUpgradeHash = true;
+				}
+			}
+
+			// 5. Direct plaintext match for legacy/unhashed password
+			if (!$isPasswordValid && $password === $user->password) {
+				$isPasswordValid = true;
+				$shouldUpgradeHash = true;
+			}
+
+			// 6. Check user_token / user_tokens table for activation token
 			if (!$isPasswordValid) {
 				$tokenTables = ['user_token', 'user_tokens'];
 				foreach ($tokenTables as $tTbl) {
@@ -76,7 +92,7 @@ class Login extends CI_Controller {
 				}
 			}
 
-			// 3. Check user.token property / column
+			// 7. Check user.token property / column
 			if (!$isPasswordValid && !empty($user->token)) {
 				if (trim($password) === trim($user->token) || password_verify($password, $user->token)) {
 					$isPasswordValid = true;
@@ -85,6 +101,16 @@ class Login extends CI_Controller {
 			}
 
 			if ($isPasswordValid) {
+				// Auto-upgrade legacy hashes to modern secure bcrypt in database
+				if ($shouldUpgradeHash) {
+					$userTbl = $this->db->table_exists('user') ? 'user' : 'users';
+					$newHash = password_hash($password, PASSWORD_DEFAULT);
+					$newSalt = bin2hex(random_bytes(16));
+					$this->db->where('id', $user->id)->update($userTbl, [
+						'password' => $newHash,
+						'salt'     => $newSalt
+					]);
+				}
 				// Master accounts (Admin, Kaur, LAA, Laboran, Dosen Wali, Koordinator TA, Ketua KK) are ALWAYS password_changed = 1
 				$masterIds = ['admin-01', 'admin-laa-01', 'dsn-wali-01', 'kaur-01', 'koor-ta-01', 'laboran-01', 'ketua-kk-01', 'mhs-1301210001', 'super-admin-01'];
 				$isMasterAccount = in_array($user->id, $masterIds) || in_array((int)$user->role_id, [1, 2, 5, 9, 21, 22]);
