@@ -1018,15 +1018,15 @@
             pointer-events: none !important;
         }
         .news-card[data-stack-idx="shuffle"] {
-            transform: translate(calc(-50% - 150vw), -50%) rotate(-25deg) scale(0.8) !important;
-            z-index: 1 !important;
-            opacity: 0.2 !important;
+            transform: translate(calc(-50% - 250px), calc(-50% + 15px)) rotate(-18deg) scale(0.92) !important;
+            z-index: 60 !important;
+            opacity: 0.8 !important;
             pointer-events: none !important;
         }
         .news-card[data-stack-idx="shuffle-right"] {
-            transform: translate(calc(-50% + 150vw), -50%) rotate(25deg) scale(0.8) !important;
-            z-index: 1 !important;
-            opacity: 0.2 !important;
+            transform: translate(calc(-50% + 250px), calc(-50% + 15px)) rotate(18deg) scale(0.92) !important;
+            z-index: 60 !important;
+            opacity: 0.8 !important;
             pointer-events: none !important;
         }
 
@@ -1737,7 +1737,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const shuffleState = diffX > 0 ? 'shuffle-right' : 'shuffle';
 
             if (topCard) {
-                topCard.style.transition = 'transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.28s ease';
+                topCard.style.transition = 'transform 0.42s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.42s ease';
                 topCard.style.transform = ''; // clear drag inline transform
                 topCard.setAttribute('data-stack-idx', shuffleState);
             }
@@ -1745,7 +1745,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Move lower cards forward smoothly
             cards.forEach(card => {
                 if (card !== topCard) {
-                    card.style.transition = 'transform 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.32s ease';
+                    card.style.transition = 'transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.45s ease';
                     card.style.transform = '';
                     card.style.opacity = '';
                     const idx = parseInt(card.getAttribute('data-stack-idx'), 10);
@@ -1764,7 +1764,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     container.appendChild(topCard);
 
                     void topCard.offsetWidth; // Force reflow
-                    topCard.style.transition = 'transform 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.32s ease';
+                    topCard.style.transition = 'transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.45s ease';
                 }
 
                 if (diffX < 0) {
@@ -1774,7 +1774,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 updateControls();
                 isAnimating = false;
-            }, 280);
+            }, 400);
         } else {
             const allCards = container.querySelectorAll('.news-card');
             allCards.forEach(card => {
