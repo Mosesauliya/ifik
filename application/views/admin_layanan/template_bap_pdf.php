@@ -111,16 +111,19 @@
             border-collapse: collapse;
         }
         .signatures-table td {
-            vertical-align: top;
-            padding: 4px 0;
+            vertical-align: middle;
+            padding: 4px 6px;
+            height: 44px;
         }
         .sig-box {
             font-family: 'Brush Script MT', cursive, sans-serif;
-            font-size: 18pt;
+            font-size: 16pt;
             color: #0284c7;
-            height: 38px;
+            height: 40px;
             display: flex;
             align-items: center;
+            justify-content: center;
+            white-space: nowrap;
         }
         /* Page 2 Styles */
         .eval-table {
@@ -244,9 +247,9 @@
             <!-- Tim Penguji Signatures Table (Matching Photo 5) -->
             <table class="signatures-table">
                 <tr>
-                    <td style="width:160px;"><strong>Tim Penguji</strong></td>
-                    <td style="width:280px;"><strong>Nama</strong></td>
-                    <td style="width:160px; text-align:center;"><strong>Tanda Tangan</strong></td>
+                    <td style="width:160px; height:auto;"><strong>Tim Penguji</strong></td>
+                    <td style="width:260px; height:auto;"><strong>Nama</strong></td>
+                    <td style="width:200px; text-align:center; height:auto;"><strong>Tanda Tangan</strong></td>
                 </tr>
                 <tr>
                     <td>Pembimbing 1</td>
