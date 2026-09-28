@@ -41,10 +41,16 @@ class Login extends CI_Controller {
 			$isPasswordValid = password_verify($password, $user->password);
 			$isTokenLogin = false;
 
-			// Fallback: jika hash bcrypt berada di kolom salt (karena data import tertukar posisi)
+			// Fallback & Auto-Heal: jika hash bcrypt berada di kolom salt (karena data import database lama tertukar posisi)
 			if (!$isPasswordValid && !empty($user->salt) && (strpos($user->salt, '$2y$') === 0 || strpos($user->salt, '$2a$') === 0 || strpos($user->salt, '$2b$') === 0)) {
 				if (password_verify($password, $user->salt)) {
 					$isPasswordValid = true;
+					// Auto-heal: otomatis perbaiki posisi kolom di database secara permanen
+					$userTbl = $this->db->table_exists('user') ? 'user' : 'users';
+					$this->db->where('id', $user->id)->update($userTbl, [
+						'password' => $user->salt,
+						'salt'     => $user->password
+					]);
 				}
 			}
 
