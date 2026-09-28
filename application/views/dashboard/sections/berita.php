@@ -941,34 +941,13 @@
         .news-excerpt { font-size: 0.8rem; -webkit-line-clamp: 2; }
     }
 
+    /* ===== RESPONSIVE MOBILE SLIDER SELECTOR MODE ===== */
     @media (max-width: 768px) {
         #section-contact {
             height: auto !important;
             min-height: 100vh;
-            padding-top: 85px !important;
-            padding-bottom: 40px !important;
-            justify-content: center !important;
-            overflow-x: hidden !important;
-        }
-        .news-header {
-            margin-top: 0;
-            margin-bottom: 14px;
-            padding: 0 16px;
-        }
-        .news-header h1 {
-            font-size: 1.55rem;
-            line-height: 1.2;
-        }
-        .news-header p {
-            font-size: 0.84rem;
-            padding: 0 12px;
-        }
-    @media (max-width: 768px) {
-        #section-contact {
-            height: auto !important;
-            min-height: 100vh;
-            padding-top: 80px !important;
-            padding-bottom: 35px !important;
+            padding-top: 75px !important;
+            padding-bottom: 30px !important;
             justify-content: center !important;
             overflow-x: hidden !important;
         }
@@ -978,35 +957,66 @@
             padding: 0 16px;
         }
         .news-header h1 {
-            font-size: 1.5rem;
-            line-height: 1.2;
+            font-size: 1.55rem;
+            line-height: 1.25;
         }
         .news-header p {
-            font-size: 0.82rem;
+            font-size: 0.84rem;
             padding: 0 12px;
         }
         .news-fan-container {
-            height: 335px;
-            max-width: 100%;
+            height: 380px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: visible !important;
         }
         .news-card {
-            width: 215px;
-            height: 315px;
-            --spread-x: calc(var(--offset) * 36px);
-            --arc-y: calc(var(--offset) * var(--offset) * 3.5px);
-            --angle-per-card: 6deg;
+            width: 280px;
+            max-width: 84vw;
+            height: 375px;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            --spread-x: 0px !important;
+            --arc-y: 0px !important;
+            --angle: 0deg !important;
+            transform: translate(-50%, -50%) rotate(0deg) !important;
+            border-radius: 24px;
+            box-shadow: 0 14px 40px rgba(0, 0, 0, 0.12);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
         }
         .news-card:hover {
-            --hover-shift-x: calc(var(--offset) * 10px);
-            transform: translate(calc(-50% + var(--spread-x) + var(--hover-shift-x)), calc(-50% - 18px)) rotate(0deg) scale(1.02) !important;
+            --hover-shift-x: 0px;
+            transform: translate(-50%, -50%) rotate(0deg) scale(1) !important;
+            box-shadow: 0 14px 40px rgba(0, 0, 0, 0.12) !important;
+            z-index: 10 !important;
         }
         .news-card:hover ~ .news-card {
-            transform: translate(calc(-50% + var(--spread-x) + 28px), calc(-50% + var(--arc-y) + 6px)) rotate(calc(var(--angle) + 3deg)) !important;
+            transform: translate(-50%, -50%) rotate(0deg) !important;
         }
-        .news-fan-container:has(.news-card:hover) .news-card:not(:hover):not(.news-card:hover ~ .news-card) {
-            transform: translate(calc(-50% + var(--spread-x) - 28px), calc(-50% + var(--arc-y) + 6px)) rotate(calc(var(--angle) - 3deg)) !important;
+        .news-fan-container:has(.news-card:hover) .news-card:not(:hover) {
+            opacity: 1 !important;
+            filter: none !important;
         }
-        /* Mobile horizontal controls - Simetris & Presisi Sejajar Vertikal */
+
+        /* Mobile Slide Animation per Card */
+        .news-card.anim-exit {
+            animation: mobileCardExitLeft 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+        }
+        .news-card.anim-enter {
+            animation: mobileCardEnterRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+        }
+        .news-card.anim-exit-up {
+            animation: mobileCardExitRight 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+        }
+        .news-card.anim-enter-down {
+            animation: mobileCardEnterLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+        }
+
+        /* Controls Row */
         .news-controls {
             position: relative;
             right: auto;
@@ -1017,20 +1027,24 @@
             justify-content: center !important;
             width: auto;
             gap: 10px;
-            margin-top: 12px;
+            margin-top: 14px;
             margin-bottom: 0;
             padding: 0;
             z-index: 20;
         }
         .news-arrow-btn {
-            width: 40px;
-            height: 40px;
-            font-size: 1rem;
+            width: 42px;
+            height: 42px;
+            font-size: 1.1rem;
             margin: 0;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            border-radius: 50%;
+            border: 2px solid #ea580c;
+            background: #ffffff;
+            color: #ea580c;
         }
         .news-arrow-btn#newsPrevBtn {
             transform: rotate(-90deg);
@@ -1056,7 +1070,7 @@
             justify-content: center !important;
             gap: 6px;
             margin: 0 2px;
-            height: 40px;
+            height: 42px;
         }
         .news-dot {
             width: 8px;
@@ -1069,18 +1083,24 @@
         }
         .news-page-info {
             line-height: 1;
-            margin: 0 2px;
+            margin: 0 4px;
             display: inline-flex;
             align-items: center;
-            height: 40px;
-            font-size: 0.82rem;
+            height: 42px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #ea580c;
+            background: #fff7ed;
+            padding: 0 12px;
+            border-radius: 99px;
+            border: 1px solid rgba(234, 88, 12, 0.25);
         }
         .news-view-all-btn {
             position: relative;
             right: auto;
             bottom: auto;
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
             margin: 0;
             display: inline-flex;
             align-items: center;
@@ -1088,8 +1108,8 @@
             flex-shrink: 0;
         }
         .news-view-all-btn .btn-icon-wrapper {
-            width: 36px;
-            height: 36px;
+            width: 38px;
+            height: 38px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1105,6 +1125,29 @@
             height: 100%;
             background: linear-gradient(90deg, #ea580c, #f97316);
         }
+
+        /* Tombol Down Arrow khusus Mobile untuk Scroll Sesi */
+        .news-mobile-scroll-down {
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1.5px solid #ea580c;
+            background: #ffffff;
+            color: #ea580c;
+            margin-top: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(234, 88, 12, 0.16);
+            transition: all 0.25s ease;
+        }
+        .news-mobile-scroll-down:hover {
+            background: #ea580c;
+            color: #ffffff;
+            transform: translateY(2px);
+        }
+
         .news-modal-header {
             flex-direction: column;
             align-items: stretch;
@@ -1134,8 +1177,8 @@
 
     @media (max-width: 480px) {
         #section-contact {
-            padding-top: 80px !important;
-            padding-bottom: 30px !important;
+            padding-top: 75px !important;
+            padding-bottom: 25px !important;
             justify-content: center !important;
         }
         .news-header h1 {
@@ -1145,21 +1188,19 @@
             font-size: 0.8rem;
         }
         .news-fan-container {
-            height: 335px;
+            height: 360px;
         }
         .news-card {
-            width: 215px;
-            height: 315px;
-            border-radius: 18px;
-            --spread-x: calc(var(--offset) * 32px);
-            --arc-y: calc(var(--offset) * var(--offset) * 3px);
-            --angle-per-card: 5deg;
+            width: 265px;
+            max-width: 84vw;
+            height: 355px;
+            border-radius: 20px;
         }
         .news-content {
             padding: 14px 16px;
         }
         .news-title {
-            font-size: 0.92rem;
+            font-size: 0.95rem;
             margin-bottom: 4px;
             line-height: 1.35;
         }
@@ -1172,53 +1213,28 @@
             line-height: 1.45;
             -webkit-line-clamp: 2;
         }
-        .news-view-all-btn {
-            height: 42px;
-            width: 42px;
-            font-size: 0.78rem;
-        }
-        .news-view-all-btn .btn-icon-wrapper {
-            width: 38px;
-            height: 38px;
-        }
-        .news-view-all-btn:hover,
-        .news-view-all-btn:focus-visible {
-            width: 140px;
-        }
-        .news-modal-grid {
-            grid-template-columns: 1fr;
-        }
-        .news-modal-card {
-            height: 270px;
-        }
-        .news-modal-header h2 {
-            font-size: 1.25rem;
-        }
     }
 
-    @media (max-width: 360px) {
-        .news-header h1 {
-            font-size: 1.25rem;
-        }
-        .news-fan-container {
-            height: 310px;
-        }
-        .news-card {
-            width: 195px;
-            height: 290px;
-            border-radius: 16px;
-            --spread-x: calc(var(--offset) * 22px);
-            --angle-per-card: 4deg;
-        }
-        .news-content {
-            padding: 12px 14px;
-        }
-        .news-title {
-            font-size: 0.86rem;
-        }
-        .news-excerpt {
-            display: none; /* Sembunyikan ringkasan di HP sangat kecil agar judul muat penuh */
-        }
+    /* Keyframes Slide Animation Mobile */
+    @keyframes mobileCardExitLeft {
+        0%   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        100% { opacity: 0; transform: translate(calc(-50% - 150px), -50%) scale(0.85); }
+    }
+    @keyframes mobileCardEnterRight {
+        0%   { opacity: 0; transform: translate(calc(-50% + 150px), -50%) scale(0.85); }
+        100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+    @keyframes mobileCardExitRight {
+        0%   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        100% { opacity: 0; transform: translate(calc(-50% + 150px), -50%) scale(0.85); }
+    }
+    @keyframes mobileCardEnterLeft {
+        0%   { opacity: 0; transform: translate(calc(-50% - 150px), -50%) scale(0.85); }
+        100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .news-mobile-scroll-down {
+        display: none;
     }
 </style>
 
@@ -1256,6 +1272,13 @@
                 <span class="btn-text-label">Semua Berita</span>
             </button>
         </div>
+
+        <!-- Tombol Scroll ke Sesi Berikutnya (Khusus Tampilan Mobile) -->
+        <button class="news-mobile-scroll-down" id="newsMobileScrollDown" onclick="if(window.lenis){window.lenis.scrollTo('#section-tour');}else{document.getElementById('section-tour')?.scrollIntoView({behavior:'smooth'});}" title="Ke Sesi Berikutnya">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;">
+                <path d="M12 5v14M19 12l-7 7-7-7"/>
+            </svg>
+        </button>
 
     </div>
 </div>
@@ -1381,7 +1404,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ===== KONFIGURASI =====
     function getCardsPerPage() {
-        return window.innerWidth <= 768 ? 3 : 5; // 3 kartu per slide di mobile agar tidak terlalu tumpuk/penuh
+        return window.innerWidth <= 768 ? 1 : 5; // 1 kartu per slide di mobile (selector mode)
     }
 
     let CARDS_PER_PAGE = getCardsPerPage();
