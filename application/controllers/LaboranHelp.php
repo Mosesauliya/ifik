@@ -85,13 +85,13 @@ class LaboranHelp extends CI_Controller {
             $formatted[] = [
                 'id'                => (int)$c->id,
                 'user_id'           => $c->user_id,
-                'user_nama'         => htmlspecialchars($c->user_nama ?? 'Pengguna'),
-                'user_email'        => htmlspecialchars($c->user_email ?? ''),
-                'user_role'         => htmlspecialchars($c->user_role ?? 'Mahasiswa'),
-                'user_nim_nip'      => htmlspecialchars($c->user_nim_nip ?? '-'),
-                'topik'             => htmlspecialchars($c->topik ?? 'Bantuan Umum'),
+                'user_nama'         => $c->user_nama ?? 'Pengguna',
+                'user_email'        => $c->user_email ?? '',
+                'user_role'         => $c->user_role ?? 'Mahasiswa',
+                'user_nim_nip'      => $c->user_nim_nip ?? '-',
+                'topik'             => $c->topik ?? 'Bantuan Umum',
                 'status'            => $c->status,
-                'last_message'      => htmlspecialchars($c->last_message ?? ''),
+                'last_message'      => $c->last_message ?? '',
                 'last_message_time' => $this->_format_time_ago($c->last_message_time ?? $c->created_at),
                 'unread_laboran'    => (int)$c->unread_laboran,
                 'unread_user'       => (int)$c->unread_user,
@@ -126,14 +126,19 @@ class LaboranHelp extends CI_Controller {
         $this->Help_chat_model->mark_as_read_by_laboran($conversation_id);
 
         $messages = $this->Help_chat_model->get_messages($conversation_id);
+        $currentUserId = $this->session->userdata('user_id');
         $formattedMessages = [];
 
         foreach ($messages as $m) {
+            $isStaff = in_array(strtolower((string)$m->sender_role), ['laboran', 'kaur', 'admin_layanan', 'admin', 'staff']);
+            $isMe = $isStaff || ($currentUserId && (string)$m->sender_id === (string)$currentUserId);
+
             $formattedMessages[] = [
                 'id'          => (int)$m->id,
                 'sender_id'   => $m->sender_id,
-                'sender_name' => htmlspecialchars($m->sender_name),
+                'sender_name' => $m->sender_name,
                 'sender_role' => $m->sender_role,
+                'is_me'       => $isMe,
                 'message'     => nl2br(htmlspecialchars($m->message)),
                 'attachment'  => $m->attachment ? base_url('uploads/help_attachments/' . $m->attachment) : null,
                 'is_read'     => (int)$m->is_read,
@@ -147,13 +152,13 @@ class LaboranHelp extends CI_Controller {
             'status'       => 'success',
             'conversation' => [
                 'id'                => (int)$conversation->id,
-                'user_nama'         => htmlspecialchars($conversation->user_nama),
-                'user_email'        => htmlspecialchars($conversation->user_email ?? ''),
-                'user_role'         => htmlspecialchars($conversation->user_role ?? 'Mahasiswa'),
-                'user_nim_nip'      => htmlspecialchars($conversation->user_nim_nip ?? '-'),
-                'topik'             => htmlspecialchars($conversation->topik),
+                'user_nama'         => $conversation->user_nama,
+                'user_email'        => $conversation->user_email ?? '',
+                'user_role'         => $conversation->user_role ?? 'Mahasiswa',
+                'user_nim_nip'      => $conversation->user_nim_nip ?? '-',
+                'topik'             => $conversation->topik,
                 'status'            => $conversation->status,
-                'laboran_nama'      => htmlspecialchars($conversation->laboran_nama ?? 'Belum ada'),
+                'laboran_nama'      => $conversation->laboran_nama ?? 'Belum ada',
                 'last_message_time' => $this->_format_time_ago($conversation->last_message_time ?? $conversation->created_at),
                 'created_at'        => date('d M Y, H:i', strtotime($conversation->created_at))
             ],
@@ -163,7 +168,7 @@ class LaboranHelp extends CI_Controller {
     }
 
     /**
-     * Endpoint AJAX: Kirim balasan pesan dari Laboran
+     * Endpoint AJAX: Kirim balasan pesan dari Laboran / Kaur / Admin
      */
     public function send_message_ajax() {
         header('Content-Type: application/json');
@@ -224,6 +229,7 @@ class LaboranHelp extends CI_Controller {
                     'id'          => $msgId,
                     'sender_name' => $laboranName,
                     'sender_role' => $senderRole,
+                    'is_me'       => true,
                     'message'     => nl2br(htmlspecialchars($message)),
                     'time'        => date('H:i'),
                     'date_full'   => date('d M Y, H:i')

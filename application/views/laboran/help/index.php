@@ -661,6 +661,9 @@
 
         .bubble-avatar.user-av { background: #0284c7; }
         .bubble-avatar.laboran-av { background: #ea580c; }
+        .bubble-avatar.kaur-av { background: #4f46e5; }
+        .bubble-avatar.admin_layanan-av { background: #9333ea; }
+        .bubble-avatar.admin-av { background: #0f172a; }
 
         .message-bubble {
             padding: 12px 16px;
@@ -1642,12 +1645,30 @@
                 hasNew = true;
                 renderedMessageIds.add(m.id);
 
-                const isLaboran = (m.sender_role === 'laboran');
-                const rowClass = isLaboran ? 'outgoing' : 'incoming';
-                const avatarClass = isLaboran ? 'laboran-av' : 'user-av';
-                const avatarInit = isLaboran ? 'LB' : getInitials(m.sender_name);
+                const isOutgoing = (typeof m.is_me !== 'undefined') 
+                    ? Boolean(m.is_me) 
+                    : ['laboran', 'kaur', 'admin_layanan', 'admin', 'staff'].includes(String(m.sender_role).toLowerCase());
 
-                const checkMark = isLaboran ? '<i class="fa-solid fa-check-double text-orange-200" style="font-size: 0.65rem;"></i>' : '';
+                const rowClass = isOutgoing ? 'outgoing' : 'incoming';
+                let avatarClass = 'user-av';
+                let avatarInit = getInitials(m.sender_name);
+
+                const roleLower = String(m.sender_role || '').toLowerCase();
+                if (roleLower === 'laboran') {
+                    avatarClass = 'laboran-av';
+                    avatarInit = 'LB';
+                } else if (roleLower === 'kaur') {
+                    avatarClass = 'kaur-av';
+                    avatarInit = 'KU';
+                } else if (roleLower === 'admin_layanan') {
+                    avatarClass = 'admin_layanan-av';
+                    avatarInit = 'AL';
+                } else if (roleLower === 'admin') {
+                    avatarClass = 'admin-av';
+                    avatarInit = 'AD';
+                }
+
+                const checkMark = isOutgoing ? '<i class="fa-solid fa-check-double text-orange-200" style="font-size: 0.65rem;"></i>' : '';
 
                 const html = `
                     <div class="message-row ${rowClass}" data-msg-id="${m.id}">
