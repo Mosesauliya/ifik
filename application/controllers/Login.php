@@ -41,6 +41,13 @@ class Login extends CI_Controller {
 			$isPasswordValid = password_verify($password, $user->password);
 			$isTokenLogin = false;
 
+			// Fallback: jika hash bcrypt berada di kolom salt (karena data import tertukar posisi)
+			if (!$isPasswordValid && !empty($user->salt) && (strpos($user->salt, '$2y$') === 0 || strpos($user->salt, '$2a$') === 0 || strpos($user->salt, '$2b$') === 0)) {
+				if (password_verify($password, $user->salt)) {
+					$isPasswordValid = true;
+				}
+			}
+
 			// 1. Direct plaintext match for legacy/unhashed password
 			if (!$isPasswordValid && $password === $user->password) {
 				$isPasswordValid = true;
