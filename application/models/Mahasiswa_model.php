@@ -174,14 +174,10 @@ class Mahasiswa_model extends CI_Model {
                 ->order_by('date', 'DESC')
                 ->limit(1)
                 ->get('guidance')->row_array();
-            // Fallback: baris guidance bisa saja tersimpan dengan id_mhs format lain
-            // (mis. 'usr_mhs_<NIM>'), pastikan ketemu lewat primary key supaya
-            // tidak di-INSERT ulang dan memicu error Duplicate entry.
             if (!$existing_g) {
                 $existing_g = $this->db->get_where('guidance', ['id' => 'gdn_' . $nim])->row_array();
             }
 
-            // Pastikan kolom jenis_TA di tabel guidance berupa VARCHAR agar dapat menampung 'Pengkaryaan' & 'Penulisan' tanpa truncated oleh ENUM legacy
             $prev_dbg = $this->db->db_debug;
             $this->db->db_debug = FALSE;
             @$this->db->query("ALTER TABLE `guidance` MODIFY COLUMN `jenis_TA` VARCHAR(100) DEFAULT 'TA Reguler'");
@@ -252,7 +248,6 @@ class Mahasiswa_model extends CI_Model {
                 $relPath = (strpos($fileName, 'uploads/') === 0) ? $fileName : ('uploads/persyaratan_ta/' . $fileName);
                 $targetFpId = 'fp_' . $nim . '_' . $kode;
 
-                // Check existing record by primary key ID or by target_ids + nama
                 $exFp = $this->db->get_where('file_pendaftaran', ['id' => $targetFpId])->row_array();
                 if (!$exFp) {
                     $exFp = $this->db->where_in('id_mhs', $target_ids)
@@ -290,7 +285,6 @@ class Mahasiswa_model extends CI_Model {
         return true;
     }
 
-    // Get Status Pendaftaran & Approval Chain langsung dari guidance, file_pendaftaran, pendaftaran_berkas
     public function get_status_pendaftaran($nim) {
         $pt_data = array();
         $target_ids = $this->_get_target_ids_by_nim($nim);
@@ -373,7 +367,6 @@ class Mahasiswa_model extends CI_Model {
             $is_submitted = 1;
         }
 
-        // 1. Status Judul & Catatan Judul
         $status_judul = $pt_data['status_judul'] ?? null;
         $catatan_judul = $pt_data['catatan_judul'] ?? null;
 
@@ -389,7 +382,6 @@ class Mahasiswa_model extends CI_Model {
         if (empty($status_judul)) $status_judul = 'Pending';
         if ($catatan_judul === null) $catatan_judul = $guidance['komentar'] ?? '';
 
-        // 2. Status Jenis TA & Catatan Jenis TA
         $status_jenis_ta = $pt_data['status_jenis_ta'] ?? null;
         $catatan_jenis_ta = $pt_data['catatan_jenis_ta'] ?? null;
         if (empty($status_jenis_ta) || $status_jenis_ta === 'Pending') {
@@ -401,7 +393,6 @@ class Mahasiswa_model extends CI_Model {
         }
         if ($catatan_jenis_ta === null) $catatan_jenis_ta = '';
 
-        // 3. Per-File Status & Catatan
         $files_result = array();
         $has_any_file_rej_wali = false;
         $has_any_file_rej_admin = false;
@@ -418,7 +409,6 @@ class Mahasiswa_model extends CI_Model {
             $f_obj = $files[$k] ?? null;
             $b_obj = $berkas_rows[$k] ?? null;
 
-            // Filename
             $fname = '';
             if (!empty($pt_data['file_' . $k])) {
                 $fname = $pt_data['file_' . $k];
@@ -429,7 +419,6 @@ class Mahasiswa_model extends CI_Model {
             }
             $files_result['file_' . $k] = $fname;
 
-            // Status Dosen Wali per berkas
             $st_dw = $pt_data['status_file_' . $k] ?? null;
             if (empty($st_dw)) {
                 if ($f_obj && !empty($f_obj['status_doswal'])) {
@@ -451,7 +440,6 @@ class Mahasiswa_model extends CI_Model {
                 $all_files_app_wali = false;
             }
 
-            // Catatan Dosen Wali per berkas
             $c_dw = $pt_data['catatan_file_' . $k] ?? null;
             if (empty($c_dw)) {
                 if ($f_obj && !empty($f_obj['komentar'])) {
@@ -462,7 +450,6 @@ class Mahasiswa_model extends CI_Model {
             }
             $files_result['catatan_file_' . $k] = $c_dw;
 
-            // Status Admin LAA per berkas
             $st_laa = $b_obj['status_verifikasi'] ?? ($f_obj['status_adminlaa'] ?? 'Pending');
             $files_result['status_' . $k] = $st_laa;
             $files_result['catatan_admin_' . $k] = $b_obj['catatan'] ?? ($f_obj['catatan_adminlaa'] ?? '');
@@ -478,7 +465,6 @@ class Mahasiswa_model extends CI_Model {
             }
         }
 
-        // Tentukan Overall Status Approval Dosen Wali
         if (!empty($pt_data['status_approval_wali'])) {
             $status_doswal = $pt_data['status_approval_wali'];
         } else {
@@ -491,7 +477,6 @@ class Mahasiswa_model extends CI_Model {
             }
         }
 
-        // Tentukan Overall Status Admin LAA
         if (!empty($pt_data['status_approval_admin'])) {
             $status_laa = $pt_data['status_approval_admin'];
         } else {
@@ -504,7 +489,6 @@ class Mahasiswa_model extends CI_Model {
             }
         }
 
-        // Tentukan Overall Status Koordinator TA & Ketua KK
         $status_koor = $pt_data['status_approval_koor'] ?? null;
         $status_kk   = $pt_data['status_approval_kk'] ?? null;
         if (empty($status_koor) || empty($status_kk)) {
@@ -611,7 +595,6 @@ class Mahasiswa_model extends CI_Model {
         $userId = $this->_get_user_id_by_nim($nim);
         $gid    = $this->_get_guidance_id_by_nim($nim);
 
-        // 1. hapus berkas fisik + record thesis
         if ($gid && $this->db->table_exists('thesis')) {
             $rows = $this->db->get_where('thesis', ['id_guidance' => $gid])->result_array();
             foreach ($rows as $r) {
@@ -627,19 +610,16 @@ class Mahasiswa_model extends CI_Model {
             $this->db->where('id_guidance', $gid)->delete('thesis');
         }
 
-        // 2. hapus thesis_lecturers
         if ($gid && $this->db->table_exists('thesis_lecturers')) {
             $this->db->where('id_guidance', $gid)->delete('thesis_lecturers');
         }
 
         $target_ids = $this->_get_target_ids_by_nim($nim);
 
-        // 3. hapus guidance
         if ($this->db->table_exists('guidance')) {
             $this->db->where_in('id_mhs', $target_ids)->or_where('id', 'gdn_' . $nim)->delete('guidance');
         }
 
-        // 4. file_pendaftaran
         if ($this->db->table_exists('file_pendaftaran')) {
             $fp_rows = $this->db->where_in('id_mhs', $target_ids)->get('file_pendaftaran')->result_array();
 
@@ -652,7 +632,6 @@ class Mahasiswa_model extends CI_Model {
             $this->db->where_in('id_mhs', $target_ids)->delete('file_pendaftaran');
         }
 
-        // 5. pendaftaran_berkas
         if ($this->db->table_exists('pendaftaran_berkas')) {
             $berkas_rows = $this->db->get_where('pendaftaran_berkas', ['nim' => $nim])->result_array();
             foreach ($berkas_rows as $br) {
@@ -744,7 +723,6 @@ class Mahasiswa_model extends CI_Model {
 
         $inserted = $this->db->insert('thesis', $insert);
 
-        // Sinkronisasi status_preview di tabel guidance agar konsisten di seluruh modul
         if ($inserted && $this->db->table_exists('guidance') && $this->db->field_exists('status_preview', 'guidance')) {
             $currG = $this->db->get_where('guidance', ['id' => $gid])->row_array();
             $currPrev = strtolower(trim($currG['status_preview'] ?? ''));
@@ -784,7 +762,6 @@ class Mahasiswa_model extends CI_Model {
         $this->db->where('id', $id);
         $res = $this->db->update('thesis', $update);
 
-        // Jika review status disetujui (Approved), otomatis majukan status_preview di table guidance
         if ($res && isset($data['status_pembimbing']) && $data['status_pembimbing'] === 'Approved') {
             $th = $this->db->get_where('thesis', ['id' => $id])->row_array();
             if ($th && !empty($th['id_guidance'])) {
@@ -837,10 +814,6 @@ class Mahasiswa_model extends CI_Model {
         return $result;
     }
 
-    /**
-     * Cari nama dosen dari tabel `user`.
-     * Mendukung input berupa: user.id, NIP, NIM, atau nama lengkap.
-     */
     private function _get_dosen_name($val) {
         if (empty($val)) return '';
         $user_table = $this->db->table_exists('user') ? 'user' : 'users';
@@ -857,16 +830,11 @@ class Mahasiswa_model extends CI_Model {
         return $val;
     }
 
-    /**
-     * Ambil daftar mahasiswa berdasarkan dosen login.
-     * Match fleksibel: user.id, NIP, atau nama dosen.
-     */
 public function get_students_by_dosen($dosen_id, $posisi = 1) {
     if (!$this->db->table_exists('thesis_lecturers')) return [];
 
     $role_id = (int) $this->session->userdata('role_id');
 
-    // Ambil identitas user yang login
     $dosen_id_val = '';
     $nip_dosen    = '';
     $name_dosen   = '';
@@ -952,7 +920,7 @@ public function get_students_by_dosen($dosen_id, $posisi = 1) {
         return $row ?: null;
     }
 
-        // =================================================================
+    // =================================================================
     // PENILAIAN SIDANG (Preview 4)
     // =================================================================
 
@@ -962,7 +930,6 @@ public function get_students_by_dosen($dosen_id, $posisi = 1) {
 
         $userId = $this->_get_user_id_by_nim($nim);
 
-        // Ambil data user lengkap jika ada
         $userNims = array_unique(array_filter([$nim, $userId]));
         if ($this->db->table_exists('user')) {
             $u = $this->db->select('id, nim, username')
@@ -992,10 +959,6 @@ public function get_students_by_dosen($dosen_id, $posisi = 1) {
         return $this->db->get('guidance')->row_array() ?: null;
     }
 
-    /**
-     * Simpan nilai sidang per posisi.
-     * $posisi: 1=P1, 2=P2, 3=U1, 4=U2
-     */
     public function save_nilai_sidang_by_posisi($nim, $posisi, $nilai, $catatan = '', $detail = null) {
         if (!$this->db->table_exists('guidance')) {
             return ['status' => false, 'message' => 'Tabel guidance tidak ditemukan.'];
@@ -1006,7 +969,6 @@ public function get_students_by_dosen($dosen_id, $posisi = 1) {
             return ['status' => false, 'message' => 'Data bimbingan mahasiswa (' . $nim . ') tidak ditemukan di tabel guidance.'];
         }
 
-        // Variasi nama kolom nilai (dengan atau tanpa underscore)
         $map_nilai_options = [
             1 => ['nilaisidang_pembimbing1', 'nilaisidang_pembimbing_1', 'nilai_sidang_pembimbing1', 'nilai_sidang_pembimbing_1'],
             2 => ['nilaisidang_pembimbing2', 'nilaisidang_pembimbing_2', 'nilai_sidang_pembimbing2', 'nilai_sidang_pembimbing_2'],
@@ -1014,7 +976,6 @@ public function get_students_by_dosen($dosen_id, $posisi = 1) {
             4 => ['nilaisidang_penguji2', 'nilaisidang_penguji_2', 'nilai_sidang_penguji2', 'nilai_sidang_penguji_2'],
         ];
 
-        // Variasi nama kolom rincian/catatan
         $map_catatan_options = [
             1 => ['penilaiansidang_pembimbing1', 'penilaiansidang_pembimbing_1', 'evaluasi_pembimbing1'],
             2 => ['penilaiansidang_pembimbing2', 'penilaiansidang_pembimbing_2', 'evaluasi_pembimbing2'],
@@ -1028,19 +989,16 @@ public function get_students_by_dosen($dosen_id, $posisi = 1) {
             return ['status' => false, 'message' => 'Posisi tidak valid.'];
         }
 
-        // Normalisasi rentang nilai
         $nilai = max(0, min(100, (float)$nilai));
 
         $update = [];
         
-        // Cari kolom angka nilai yang cocok di database
         foreach ($map_nilai_options[$posisi] as $colName) {
             if ($this->db->field_exists($colName, 'guidance')) {
                 $update[$colName] = $nilai;
             }
         }
 
-        // Cari kolom rincian/catatan yang cocok di database
         foreach ($map_catatan_options[$posisi] as $colCatatan) {
             if ($this->db->field_exists($colCatatan, 'guidance')) {
                 $payload = [
@@ -1061,14 +1019,12 @@ public function get_students_by_dosen($dosen_id, $posisi = 1) {
 
         $this->db->where('id', $g['id'])->update('guidance', $update);
 
-        // Update status preview/sidang pada tabel thesis (terutama untuk tahap Sidang / Preview 4) agar di masing-masing tabel statusnya menjadi Approved (Selesai/Disetujui)
         if ($this->db->table_exists('thesis')) {
             $this->db->where('id_guidance', $g['id']);
             $this->db->where('tahapan_preview', 'sidang');
             $this->db->update('thesis', ['status' => 'Approved']);
         }
 
-        // Log history
         if ($this->db->table_exists('log_approval_history')) {
             $this->db->insert('log_approval_history', [
                 'modul'         => 'Penilaian Sidang',
@@ -1096,14 +1052,10 @@ public function get_students_by_dosen($dosen_id, $posisi = 1) {
         ];
     }
 
-    /**
-     * Ambil detail lengkap untuk modal penilaian sidang.
-     */
     public function get_detail_nilai_sidang($nim) {
         $g = $this->get_guidance_by_nim($nim);
         if (!$g) return null;
 
-        // Data mahasiswa
         $mhs = $this->db->select('u.name AS nama_mahasiswa, u.nim AS nim_mhs, g.judul_1, g.peminatan')
             ->from('guidance g')
             ->join('user u', '(u.id = g.id_mhs OR u.nim = g.id_mhs)', 'left')
@@ -1111,7 +1063,6 @@ public function get_students_by_dosen($dosen_id, $posisi = 1) {
             ->limit(1)
             ->get()->row_array();
 
-        // Data dosen
         $tl = $this->db->table_exists('thesis_lecturers')
             ? $this->db->get_where('thesis_lecturers', ['id_guidance' => $g['id']])->row_array()
             : null;
@@ -1130,7 +1081,7 @@ public function get_students_by_dosen($dosen_id, $posisi = 1) {
             'nama'             => $mhs['nama_mahasiswa'] ?? '-',
             'judul'            => $g['judul_1'] ?? '-',
             'peminatan'        => $g['peminatan'] ?? '-',
-            'prodi'            => 'Desain Komunikasi Visual', // default; sesuaikan jika ada kolom prodi
+            'prodi'            => 'Desain Komunikasi Visual',
             'tgl_sidang'       => $g['tanggal_sidang'] ?? null,
             'waktu_sidang'     => $g['waktu_sidang'] ?? null,
             'ruangan_sidang'   => $g['ruang_sidang'] ?? null,
@@ -1150,6 +1101,111 @@ public function get_students_by_dosen($dosen_id, $posisi = 1) {
                 3 => $parse_detail($g['penilaiansidang_penguji1'] ?? ''),
                 4 => $parse_detail($g['penilaiansidang_penguji2'] ?? ''),
             ],
+        ];
+    }
+
+    // =================================================================
+    // RESTORE: STATUS SIDANG & PENILAIAN (untuk view mahasiswa)
+    // =================================================================
+
+    /**
+     * Rekap nilai sidang agregat untuk halaman mahasiswa.
+     * Sumber: tabel `guidance` (nilaisidang_pembimbing1/2, nilaisidang_penguji1/2).
+     *
+     * Status publish disimpulkan otomatis:
+     *   - 4/4 posisi terisi → semua_terisi = true  (kartu "Published")
+     *   - 1..3 posisi       → has_data     = true  (kartu "Draft")
+     *   - 0 posisi          → semua null            (kartu "Belum Terjadwal")
+     */
+    public function get_rekap_nilai_sidang($nim) {
+        $empty = [
+            'has_data'          => false,
+            'semua_terisi'      => false,
+            'jumlah_terisi'     => 0,
+            'nilai_akhir'       => null,
+            'grade'             => '-',
+            'status_kelulusan'  => 'Belum Dinilai',
+            'nilai_per_posisi'  => ['p1'=>0,'p2'=>0,'u1'=>0,'u2'=>0],
+            'detail_per_posisi' => [],
+            'kriteria_referensi'=> [],
+        ];
+
+        if (!$this->db->table_exists('guidance')) return $empty;
+
+        $g = $this->get_guidance_by_nim($nim);
+        if (!$g) return $empty;
+
+        $n1 = (float)($g['nilaisidang_pembimbing1'] ?? 0);
+        $n2 = (float)($g['nilaisidang_pembimbing2'] ?? 0);
+        $n3 = (float)($g['nilaisidang_penguji1']     ?? 0);
+        $n4 = (float)($g['nilaisidang_penguji2']     ?? 0);
+
+        $filled = 0;
+        if ($n1 > 0) $filled++;
+        if ($n2 > 0) $filled++;
+        if ($n3 > 0) $filled++;
+        if ($n4 > 0) $filled++;
+
+        $parse = function ($raw) {
+            if (empty($raw)) return ['catatan' => '', 'detail' => [], 'saved_at' => null];
+            $j = json_decode($raw, true);
+            if (!is_array($j)) return ['catatan' => (string)$raw, 'detail' => [], 'saved_at' => null];
+            return [
+                'catatan'  => $j['catatan']  ?? '',
+                'detail'   => $j['detail']   ?? [],
+                'saved_at' => $j['saved_at'] ?? null,
+            ];
+        };
+
+        $detail_per_posisi = [
+            1 => $parse($g['penilaiansidang_pembimbing1'] ?? ''),
+            2 => $parse($g['penilaiansidang_pembimbing2'] ?? ''),
+            3 => $parse($g['penilaiansidang_penguji1']     ?? ''),
+            4 => $parse($g['penilaiansidang_penguji2']     ?? ''),
+        ];
+
+        $kriteria_ref = [];
+        foreach ([1,2,3,4] as $pos) {
+            if (!empty($detail_per_posisi[$pos]['detail'])) {
+                $kriteria_ref = $detail_per_posisi[$pos]['detail'];
+                break;
+            }
+        }
+
+        if ($filled < 4) {
+            return [
+                'has_data'          => $filled > 0,
+                'semua_terisi'      => false,
+                'jumlah_terisi'     => $filled,
+                'nilai_akhir'       => null,
+                'grade'             => '-',
+                'status_kelulusan'  => 'Belum Lengkap',
+                'nilai_per_posisi'  => ['p1'=>$n1,'p2'=>$n2,'u1'=>$n3,'u2'=>$n4],
+                'detail_per_posisi' => $detail_per_posisi,
+                'kriteria_referensi'=> $kriteria_ref,
+            ];
+        }
+
+        $avg = ($n1 + $n2 + $n3 + $n4) / 4;
+
+        if     ($avg >= 85)   { $grade='A';  $status='Lulus'; }
+        elseif ($avg >= 77.5) { $grade='AB'; $status='Lulus'; }
+        elseif ($avg >= 70)   { $grade='B';  $status='Lulus'; }
+        elseif ($avg >= 62.5) { $grade='BC'; $status='Lulus dengan Revisi'; }
+        elseif ($avg >= 55)   { $grade='C';  $status='Lulus dengan Revisi'; }
+        elseif ($avg >= 45)   { $grade='D';  $status='Tidak Lulus'; }
+        else                  { $grade='E';  $status='Tidak Lulus'; }
+
+        return [
+            'has_data'          => true,
+            'semua_terisi'      => true,
+            'jumlah_terisi'     => 4,
+            'nilai_akhir'       => $avg,
+            'grade'             => $grade,
+            'status_kelulusan'  => $status,
+            'nilai_per_posisi'  => ['p1'=>$n1,'p2'=>$n2,'u1'=>$n3,'u2'=>$n4],
+            'detail_per_posisi' => $detail_per_posisi,
+            'kriteria_referensi'=> $kriteria_ref,
         ];
     }
 }

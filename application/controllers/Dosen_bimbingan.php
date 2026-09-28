@@ -118,6 +118,13 @@ class Dosen_bimbingan extends CI_Controller {
         $this->bimbingan();
     }
 
+    /**
+     * Halaman Bimbingan & Evaluasi Preview TA untuk Mahasiswa.
+     *
+     * RESTORE: Method ini sekarang juga menyiapkan data untuk fitur
+     * "Status Sidang & Penilaian" (kartu Published/Draft/Scheduled di tab Sidang).
+     * Sumber nilai: tabel `guidance` (nilaisidang_pembimbing1/2, nilaisidang_penguji1/2).
+     */
     public function bimbingan() {
         $nim = $this->_get_current_nim();
 
@@ -140,7 +147,7 @@ class Dosen_bimbingan extends CI_Controller {
         $data['latest_p1']     = $data['riwayat_preview1'][0] ?? null;
         $data['latest_p2']     = $data['riwayat_preview2'][0] ?? null;
         $data['latest_p3']     = $data['riwayat_preview3'][0] ?? null;
-        $data['latest_sidang'] = $data['riwayat_sidang'][0] ?? null;
+        $data['latest_sidang'] = $data['riwayat_sidang'][0]   ?? null;
 
         $data['pembimbing_1'] = !empty($pembimbing_penguji['pembimbing_1']) ? $pembimbing_penguji['pembimbing_1'] : '';
         $data['pembimbing_2'] = !empty($pembimbing_penguji['pembimbing_2']) ? $pembimbing_penguji['pembimbing_2'] : '';
@@ -160,6 +167,37 @@ class Dosen_bimbingan extends CI_Controller {
         }
         $data['detail_penilaian']       = $detail_penilaian;
         $data['is_pembimbing_assigned'] = (!empty($data['pembimbing_1']) && !empty($data['pembimbing_2']));
+
+        // ============================================================
+        // RESTORE: STATUS SIDANG & PENILAIAN
+        // ============================================================
+        $rekap = $this->Mahasiswa_model->get_rekap_nilai_sidang($nim);
+        $data['rekap_nilai_sidang'] = $rekap;
+
+        // Status publish disimpulkan otomatis:
+        //   - 4/4 posisi terisi → Published (kartu hasil kelulusan)
+        //   - 1..3 posisi       → Draft (kartu "sedang direkapitulasi")
+        //   - 0 posisi          → Belum dinilai (form upload / kartu jadwal)
+        $data['is_nilai_published'] = !empty($rekap['semua_terisi']);
+        $data['is_nilai_draft']     = (!empty($rekap['has_data']) && empty($rekap['semua_terisi']));
+
+        $data['nilai_akhir'] = !empty($rekap['nilai_akhir'])
+            ? number_format((float)$rekap['nilai_akhir'], 2, '.', '')
+            : '-';
+        $data['grade_sidang']     = $rekap['grade']            ?? '-';
+        $data['status_kelulusan'] = $rekap['status_kelulusan'] ?? 'Belum Dinilai';
+
+        // Kriteria rubrik untuk modal (dari salah satu dosen yang sudah menilai)
+        $data['criteria_items'] = $rekap['kriteria_referensi'] ?? [];
+
+        // Jadwal sidang — nullable, aman dengan null coalescing
+        $data['tgl_sidang']          = $data['pendaftaran']['tgl_sidang']         ?? null;
+        $data['jam_mulai_sidang']    = $data['pendaftaran']['jam_mulai_sidang']   ?? null;
+        $data['jam_selesai_sidang']  = $data['pendaftaran']['jam_selesai_sidang'] ?? null;
+        $data['ruangan_sidang']      = $data['pendaftaran']['ruangan_sidang']     ?? null;
+        $data['tgl_publish_sidang']  = $data['pendaftaran']['tgl_publish_sidang'] ?? null;
+        $data['catatan_sidang']      = $data['pendaftaran']['catatan_koor']       ?? '';
+        $data['is_sidang_scheduled'] = (!empty($data['tgl_sidang']) && !empty($data['jam_mulai_sidang']));
 
         $this->load->view('mahasiswa/bimbingan_preview1', $data);
     }
@@ -360,7 +398,6 @@ class Dosen_bimbingan extends CI_Controller {
         switch ((int) $posisi) {
             case 1:
                 $data = ['catatan_pembimbing' => $catatan];
-                // Status hanya diubah jika dikirim & valid. Tidak menimpa dengan null/kosong.
                 if ($status !== null && $status !== '') {
                     if (!in_array($status, $this->allowed_status, true)) return null;
                     $data['status_pembimbing'] = $status;
@@ -407,7 +444,6 @@ class Dosen_bimbingan extends CI_Controller {
         $this->Mahasiswa_model->update_review_preview($id, $data);
         $this->session->set_flashdata('success', $message);
 
-        // Redirect ke dashboard dosen (sebelumnya salah ke halaman mahasiswa)
         redirect('mahasiswa/dosen_bimbingan?role=' . $role_back);
     }
 
@@ -432,7 +468,6 @@ class Dosen_bimbingan extends CI_Controller {
             return;
         }
 
-        // Validasi: dosen ini memang ditugaskan pada mahasiswa & posisi tersebut
         if (!$this->_get_reviewable_preview($id, $posisi)) {
             echo json_encode(['status' => false, 'message' => 'Anda tidak berhak me-review berkas ini.']);
             return;
@@ -469,7 +504,6 @@ class Dosen_bimbingan extends CI_Controller {
             return;
         }
 
-        // Kolom komentar per posisi (untuk cek "hanya isi jika kosong")
         $comment_col = [
             2 => 'catatan_pembimbing_2',
             3 => 'catatan_penguji_1',
@@ -485,12 +519,10 @@ class Dosen_bimbingan extends CI_Controller {
             if (!$preview) { $skipped++; continue; }
 
             if ($posisi === 1) {
-                // Hanya ubah status. Komentar P1 yang sudah ada TIDAK dihapus.
                 $this->Mahasiswa_model->update_review_preview($id, ['status_pembimbing' => 'Approved']);
                 $processed++;
             } else {
                 $col = $comment_col[$posisi];
-                // Jangan menimpa komentar yang sudah ditulis dosen
                 if (!empty(trim(strip_tags((string) ($preview[$col] ?? ''))))) {
                     $skipped++;
                     continue;
@@ -632,11 +664,6 @@ class Dosen_bimbingan extends CI_Controller {
     // DOMAIN 2: DOSEN (BIMBINGAN & PENGUJI) — UNIFIED 4 ROLE
     // =========================================================
 
-    /**
-     * Render dashboard dosen untuk 4 role (p1, p2, u1, u2).
-     * Nilai ?role= dibaca dari URL dan divalidasi terhadap whitelist,
-     * sehingga tombol "Penguji 1/2" di hero tidak lagi dipaksa jadi P1.
-     */
     private function _render_dosen_dashboard($default_role) {
         if (!$this->_is_authorized_reviewer()) {
             redirect('login');
@@ -645,7 +672,6 @@ class Dosen_bimbingan extends CI_Controller {
 
         $role = $this->input->get('role', TRUE);
 
-        // Kompatibilitas link lama: ?posisi=1|2
         if (!$role && $this->input->get('posisi')) {
             $is_p2_like = ((int) $this->input->get('posisi') === 2);
             $is_penguji = in_array($default_role, ['u1', 'u2'], true);
@@ -658,8 +684,6 @@ class Dosen_bimbingan extends CI_Controller {
         $display_posisi = in_array($role, ['p1', 'u1'], true) ? 1 : 2;
         $is_pembimbing  = in_array($role, ['p1', 'p2'], true);
 
-        // Data mahasiswa diambil via AJAX (ajax_get_dosen_bimbingan),
-        // jadi tidak perlu query get_students_by_dosen + 3x get_riwayat_preview per mahasiswa di sini.
         $data = [
             'title'        => $is_pembimbing ? 'Dashboard Bimbingan Dosen' : 'Dashboard Dosen Penguji',
             'role'         => $role,
@@ -667,7 +691,6 @@ class Dosen_bimbingan extends CI_Controller {
             'model_posisi' => $model_posisi,
         ];
 
-        // View unified untuk 4 role
         $this->load->view('mahasiswa/dosen_bimbingan', $data);
     }
 
@@ -705,7 +728,6 @@ class Dosen_bimbingan extends CI_Controller {
             $rekomen = $this->Rekomendasi_model->get_latest_submission($student['nim']);
 
             if ($latest && !empty($latest['file_draft'])) {
-                // File sidang disimpan di uploads/sidang/, yang lain di uploads/preview_ta/
                 if ($tahap === 'Sidang') {
                     $sidangFile = $latest['file_sidang'] ?? $latest['file_draft'];
                     $filePath = FCPATH . 'uploads/sidang/' . $sidangFile;
@@ -741,7 +763,6 @@ class Dosen_bimbingan extends CI_Controller {
         header('Connection: keep-alive');
         header('X-Accel-Buffering: no');
 
-        // Ambil semua data session SEBELUM session ditutup
         $authorized = $this->_is_authorized_reviewer();
         $dosen_id   = $this->session->userdata('user_id');
         $posisi     = $this->_posisi_from_get();

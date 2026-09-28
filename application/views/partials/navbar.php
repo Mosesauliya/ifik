@@ -465,6 +465,9 @@
         } elseif ($role_id == 6) {
             $panel_label = 'Panel Koordinator TA';
             $panel_url   = base_url('koordinatorta');
+        }elseif ($role_id == 5) {
+            $panel_label = 'Panel LAA';
+            $panel_url   = base_url('adminlayanan');   // route: AdminLayanan/index
         }
     ?>
 
@@ -472,7 +475,7 @@
         <li class="nav-item">
             <a href="<?= site_url('mahasiswa') ?>" class="nav-link" style="color: #ea580c; font-weight: 800;"><span>Portal Mahasiswa</span></a>
         </li>
-    <?php elseif ($this->session->userdata('logged_in') && $role_id != 5): ?>
+    <?php elseif ($this->session->userdata('logged_in')): ?>
         <li class="nav-item">
             <a href="<?= $panel_url ?>" class="nav-link"><span><?= $panel_label ?></span></a>
             <?php if ($role_id == 1): ?>

@@ -170,7 +170,6 @@
                 letter-spacing: 0.05em;
                 line-height: 1.2;
             }
-            /* Baris nomor sebagai badge di pojok kanan atas */
             .responsive-log-table td.cell-no {
                 position: absolute !important;
                 top: 0.65rem !important;
@@ -196,14 +195,12 @@
                 font-size: 0.7rem !important;
                 box-shadow: 0 3px 8px rgba(234,88,12,0.3) !important;
             }
-            /* Baris file di atas, beri ruang untuk badge nomor */
             .responsive-log-table td.cell-file {
                 padding: 0.15rem 2.5rem 0.6rem 0.35rem !important;
                 border-bottom: 1px solid #e2e8f0 !important;
                 margin-bottom: 0.35rem;
             }
             .responsive-log-table td.cell-file::before { display: none !important; }
-            /* Baris aksi/status di bawah */
             .responsive-log-table td.cell-center {
                 text-align: right !important;
                 padding-right: 0.35rem !important;
@@ -212,7 +209,6 @@
                 width: 40%;
                 text-align: left;
             }
-            /* Empty state (colspan) */
             .responsive-log-table td[colspan] {
                 display: block !important;
                 padding: 2rem 1rem !important;
@@ -286,7 +282,6 @@
             white-space: pre-wrap;
             word-break: break-word;
         }
-        /* Styling untuk tag HTML dari komentar dosen (via TinyMCE) */
         .uc-comment-content p { margin: 0 0 0.6rem 0; }
         .uc-comment-content p:last-child { margin-bottom: 0; }
         .uc-comment-content ul { list-style: disc; padding-left: 1.4rem; margin: 0.5rem 0; }
@@ -311,7 +306,6 @@
 
     <?php $this->load->view('components/curved_sidebar'); ?>
 
-    <!-- Main Page Content Wrapper (Shrinks / Expands with Sidebar) -->
     <div id="mainPageContent" class="page-wrapper-for-sidebar min-h-screen flex flex-col flex-grow">
 
     <?php $this->load->view('partials/mahasiswa_navbar'); ?>
@@ -526,7 +520,7 @@
             $is_p1_app = ($latest_p1 && $latest_p1['status_pembimbing'] === 'Approved');
             $is_p2_app = ($latest_p2 && $latest_p2['status_pembimbing'] === 'Approved');
             $is_p3_app = ($latest_p3 && $latest_p3['status_pembimbing'] === 'Approved');
-            
+
             if (!$is_p1_app) {
                 $active_step = 'preview1';
             } elseif (!$is_p2_app) {
@@ -627,26 +621,26 @@
                     </div>
                 </div>
 
-                <div onclick="switchPreviewTab('sidang')" id="tabBtnSidang" class="tab-card p-6 rounded-3xl border-2 transition-all duration-300 relative overflow-hidden hover-card-elevate cursor-pointer <?= $active_step === 'sidang' ? 'tab-card-active border-emerald-400' : ($is_p3_app ? 'border-emerald-400 bg-emerald-50/50' : 'tab-card-locked border-slate-200 bg-slate-50/80') ?>">
+                <div onclick="switchPreviewTab('sidang')" id="tabBtnSidang" class="tab-card p-6 rounded-3xl border-2 transition-all duration-300 relative overflow-hidden hover-card-elevate cursor-pointer <?= $active_step === 'sidang' ? 'tab-card-active border-emerald-400' : (($is_p3_app || !empty($is_nilai_published)) ? 'border-emerald-400 bg-emerald-50/50' : 'tab-card-locked border-slate-200 bg-slate-50/80') ?>">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold tracking-wider uppercase <?= $active_step === 'sidang' ? 'text-emerald-700' : 'text-slate-400' ?>">Tahap 04</span>
                         <div class="flex items-center gap-2">
                             <?php if ($active_step === 'sidang'): ?>
                                 <span class="badge-active-step" style="background:#059669;"><i class="bi bi-arrow-right-circle-fill"></i> Saat Ini</span>
                             <?php endif; ?>
-                            <div class="w-10 h-10 rounded-2xl <?= $is_p3_app ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'; ?> flex items-center justify-center font-bold text-lg box-3d">
-                                <i class="bi <?= $is_p3_app ? 'bi-mortarboard-fill' : 'bi-lock-fill text-sm'; ?>"></i>
+                            <div class="w-10 h-10 rounded-2xl <?= ($is_p3_app || !empty($is_nilai_published)) ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'; ?> flex items-center justify-center font-bold text-lg box-3d">
+                                <i class="bi <?= !empty($is_nilai_published) ? 'bi-award-fill' : ($is_p3_app ? 'bi-mortarboard-fill' : 'bi-lock-fill text-sm'); ?>"></i>
                             </div>
                         </div>
                     </div>
                     <div>
                         <h4 class="font-bold text-base sm:text-lg <?= $active_step === 'sidang' ? 'text-slate-900' : 'text-slate-500' ?>">Sidang Tugas Akhir</h4>
-                        <p class="text-xs text-slate-500 font-medium mt-1 leading-snug">Pendaftaran &amp; Penjadwalan Sidang</p>
+                        <p class="text-xs text-slate-500 font-medium mt-1 leading-snug">Pendaftaran, Jadwal &amp; Hasil Sidang</p>
                     </div>
                     <div>
-                        <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold <?= $is_p3_app ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-100 text-slate-500 border border-slate-200'; ?>">
-                            <i class="bi <?= $is_p3_app ? 'bi-check-circle-fill' : 'bi-lock-fill'; ?>"></i>
-                            <?= $is_p3_app ? 'Siap Daftar Sidang' : 'Terkunci (Syarat P3)'; ?>
+                        <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold <?= !empty($is_nilai_published) ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : ($is_p3_app ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-100 text-slate-500 border border-slate-200'); ?>">
+                            <i class="bi <?= !empty($is_nilai_published) ? 'bi-award-fill' : ($is_p3_app ? 'bi-check-circle-fill' : 'bi-lock-fill'); ?>"></i>
+                            <?= !empty($is_nilai_published) ? 'Hasil Terbit' : ($is_p3_app ? 'Siap Daftar Sidang' : 'Terkunci (Syarat P3)'); ?>
                         </span>
                     </div>
                 </div>
@@ -1105,8 +1099,272 @@
         </div>
 
         <!-- ================= TAB CONTENT PANEL: SIDANG AKHIR ================= -->
-        <div id="panelSidang" class="tab-panel hidden space-y-7">
-            <div class="card-3d-warm rounded-3xl p-7 sm:p-9 space-y-6 w-full shadow-md shadow-emerald-500/10">
+        <div id="panelSidang" class="tab-panel <?= $active_step === 'sidang' ? '' : 'hidden' ?> space-y-7">
+            <?php
+                // Format tanggal sidang
+                $tgl_sidang_raw = $tgl_sidang ?? '';
+                $tgl_sidang_fmt = '-';
+                if (!empty($tgl_sidang_raw)) {
+                    $hari_arr  = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+                    $bulan_arr = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+                    $ts = strtotime($tgl_sidang_raw);
+                    if ($ts) $tgl_sidang_fmt = $hari_arr[date('w',$ts)].', '.date('j',$ts).' '.$bulan_arr[(int)date('n',$ts)].' '.date('Y',$ts);
+                }
+                $jam_sidang_fmt = '-';
+                if (!empty($jam_mulai_sidang)) {
+                    $jam_sidang_fmt = substr($jam_mulai_sidang,0,5) . (!empty($jam_selesai_sidang) ? ' – '.substr($jam_selesai_sidang,0,5) : '') . ' WIB';
+                }
+                $ruangan_sidang_fmt = !empty($ruangan_sidang) ? $ruangan_sidang : 'Belum Ditentukan';
+
+                $tgl_pub_fmt = 'Resmi Diterbitkan';
+                if (!empty($tgl_publish_sidang)) {
+                    $ts_pub = strtotime($tgl_publish_sidang);
+                    if ($ts_pub) {
+                        $bulan_arr2 = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+                        $tgl_pub_fmt = date('j',$ts_pub).' '.$bulan_arr2[(int)date('n',$ts_pub)].' '.date('Y, H:i',$ts_pub).' WIB';
+                    }
+                }
+
+                $dosen_p1 = !empty($pembimbing_1) ? $pembimbing_1 : 'Dosen Pembimbing 1';
+                $dosen_p2 = !empty($pembimbing_2) ? $pembimbing_2 : 'Dosen Pembimbing 2';
+                $dosen_u1 = !empty($penguji_1)    ? $penguji_1    : (!empty($penguji_ta) ? $penguji_ta : 'Dosen Penguji 1');
+                $dosen_u2 = !empty($penguji_2)    ? $penguji_2    : 'Dosen Penguji 2';
+            ?>
+
+            <?php if (!empty($is_nilai_published)): ?>
+            <?php
+                $is_lulus_murni = (stripos($status_kelulusan,'revisi')===false && stripos($status_kelulusan,'tidak')===false && stripos($status_kelulusan,'lulus')!==false);
+                $is_revisi      = (stripos($status_kelulusan,'revisi')!==false || stripos($status_kelulusan,'bersyarat')!==false);
+
+                if ($is_lulus_murni) {
+                    $card_theme_border   = 'border-emerald-300';
+                    $card_header_bg      = 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700';
+                    $card_badge_kelulusan= 'bg-emerald-500 text-white';
+                    $icon_hero           = 'bi-trophy-fill';
+                    $headline_title      = 'SELAMAT! ANDA DINYATAKAN LULUS SIDANG TUGAS AKHIR';
+                    $headline_sub        = 'Hasil evaluasi sidang Tugas Akhir Anda telah disahkan dan dipublikasikan secara resmi oleh Koordinator TA.';
+                } elseif ($is_revisi) {
+                    $card_theme_border   = 'border-amber-300';
+                    $card_header_bg      = 'bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700';
+                    $card_badge_kelulusan= 'bg-amber-500 text-white';
+                    $icon_hero           = 'bi-exclamation-diamond-fill';
+                    $headline_title      = 'LULUS DENGAN REVISI';
+                    $headline_sub        = 'Anda dinyatakan lulus dengan kewajiban menyelesaikan revisi naskah/karya sesuai catatan dari dewan penguji.';
+                } else {
+                    $card_theme_border   = 'border-rose-300';
+                    $card_header_bg      = 'bg-gradient-to-r from-rose-600 via-red-600 to-rose-700';
+                    $card_badge_kelulusan= 'bg-rose-500 text-white';
+                    $icon_hero           = 'bi-x-octagon-fill';
+                    $headline_title      = 'TIDAK LULUS SIDANG TUGAS AKHIR';
+                    $headline_sub        = 'Silakan berkonsultasi dengan Dosen Pembimbing untuk arahan perbaikan dan pengajuan sidang ulang.';
+                }
+            ?>
+            <div class="card-3d-warm rounded-3xl p-7 sm:p-9 space-y-7 w-full shadow-xl border-2 <?= $card_theme_border; ?> bg-white relative overflow-hidden">
+                <div class="<?= $card_header_bg; ?> rounded-2xl p-6 sm:p-7 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 relative overflow-hidden shadow-lg">
+                    <div class="relative z-10 flex items-start gap-4">
+                        <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md text-white flex items-center justify-center text-3xl shrink-0 box-3d border border-white/30">
+                            <i class="bi <?= $icon_hero; ?>"></i>
+                        </div>
+                        <div class="space-y-1">
+                            <div class="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[11px] font-extrabold uppercase tracking-wider text-white border border-white/30">
+                                <span class="w-2 h-2 rounded-full bg-white animate-ping"></span> Pengumuman Resmi Hasil Sidang TA
+                            </div>
+                            <h2 class="text-xl sm:text-2xl font-black tracking-tight text-white leading-snug"><?= $headline_title; ?></h2>
+                            <p class="text-xs sm:text-sm text-white/90 font-medium max-w-2xl leading-relaxed"><?= $headline_sub; ?></p>
+                        </div>
+                    </div>
+                    <div class="relative z-10 sm:text-right shrink-0">
+                        <span class="text-[10px] uppercase font-bold text-white/80 block tracking-wider">Tanggal Publikasi:</span>
+                        <span class="text-xs font-bold text-white mt-0.5 block bg-black/25 px-3 py-1.5 rounded-xl border border-white/20">
+                            <i class="bi bi-calendar2-check mr-1.5"></i> <?= $tgl_pub_fmt; ?>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-orange-50/40 border border-slate-200/80 shadow-2xs flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">Nilai Akhir Sidang</span>
+                            <div class="flex items-baseline gap-1">
+                                <span class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight"><?= $nilai_akhir; ?></span>
+                                <span class="text-xs font-bold text-slate-400">/ 100</span>
+                            </div>
+                            <span class="text-[11px] font-semibold text-emerald-700 mt-1 block">Rata-rata 4 Penilai</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-orange-500 text-white flex items-center justify-center text-xl font-bold box-3d shadow-md shadow-orange-500/30">
+                            <i class="bi bi-speedometer2"></i>
+                        </div>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-indigo-50/40 border border-slate-200/80 shadow-2xs flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">Grade Mutu</span>
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-3xl sm:text-4xl font-black text-indigo-700 tracking-tight"><?= htmlspecialchars($grade_sidang); ?></span>
+                                <span class="text-xs font-bold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-md">Huruf Mutu</span>
+                            </div>
+                            <span class="text-[11px] font-semibold text-slate-500 mt-1 block">Standar Skala Akademik</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-xl font-bold box-3d shadow-md shadow-indigo-600/30">
+                            <i class="bi bi-mortarboard-fill"></i>
+                        </div>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-emerald-50/40 border border-slate-200/80 shadow-2xs flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">Keputusan Dewan Sidang</span>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black uppercase tracking-wide <?= $card_badge_kelulusan; ?> shadow-xs">
+                                <i class="bi bi-patch-check-fill"></i> <?= htmlspecialchars($status_kelulusan); ?>
+                            </span>
+                            <span class="text-[11px] font-semibold text-slate-500 mt-2 block">Keputusan Final Disahkan</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-xl font-bold box-3d shadow-md shadow-emerald-600/30">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-5 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-200/80 pb-3">
+                        <span class="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                            <i class="bi bi-info-circle-fill text-orange-500"></i> Informasi Berita Acara &amp; Pelaksanaan Sidang
+                        </span>
+                        <span class="text-xs font-bold px-3 py-1 rounded-lg bg-white border border-slate-200 text-slate-600">
+                            <i class="bi bi-door-open-fill text-cyan-600 mr-1"></i> Ruangan: <?= htmlspecialchars($ruangan_sidang_fmt); ?>
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+                        <div class="p-3 bg-white rounded-xl border border-slate-200/80 space-y-1">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Waktu Sidang:</span>
+                            <p class="font-bold text-slate-900"><?= $tgl_sidang_fmt; ?></p>
+                            <p class="text-slate-600"><?= $jam_sidang_fmt; ?></p>
+                        </div>
+                        <div class="p-3 bg-white rounded-xl border border-slate-200/80 space-y-1">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tempat / Ruangan:</span>
+                            <p class="font-bold text-slate-900"><?= htmlspecialchars($ruangan_sidang_fmt); ?></p>
+                            <p class="text-slate-500">Gedung Fakultas Industri Kreatif</p>
+                        </div>
+                        <div class="p-3 bg-white rounded-xl border border-slate-200/80 space-y-1">
+                            <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block">Dewan Dosen Penguji:</span>
+                            <p class="font-bold text-slate-900 truncate">1. <?= htmlspecialchars($dosen_u1); ?></p>
+                            <p class="font-bold text-slate-900 truncate">2. <?= htmlspecialchars($dosen_u2); ?></p>
+                        </div>
+                        <div class="p-3 bg-white rounded-xl border border-slate-200/80 space-y-1">
+                            <span class="text-[10px] font-bold text-orange-600 uppercase tracking-wider block">Dosen Pembimbing:</span>
+                            <p class="font-bold text-slate-900 truncate">1. <?= htmlspecialchars($dosen_p1); ?></p>
+                            <p class="font-bold text-slate-900 truncate">2. <?= htmlspecialchars($dosen_p2); ?></p>
+                        </div>
+                    </div>
+
+                    <?php if (!empty($catatan_sidang)): ?>
+                        <div class="p-4 rounded-xl bg-amber-50/80 border border-amber-200 space-y-1">
+                            <span class="text-[11px] font-extrabold uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
+                                <i class="bi bi-chat-quote-fill text-amber-600"></i> Catatan &amp; Arahan Revisi dari Dewan Sidang:
+                            </span>
+                            <p class="text-xs text-amber-950 font-medium leading-relaxed italic pl-4 border-l-2 border-amber-400 my-1 whitespace-pre-wrap"><?= htmlspecialchars($catatan_sidang); ?></p>
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200/80">
+                        <span class="text-xs text-slate-500 font-medium">Transparansi penilaian: Anda dapat melihat rincian bobot dan poin per aspek kriteria evaluasi.</span>
+                        <button type="button" onclick="openModalRubrikNilai()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md transition flex items-center gap-2 box-3d hover:scale-105 active:scale-95 cursor-pointer">
+                            <i class="bi bi-card-checklist text-base"></i> Lihat Rincian Rubrik Penilaian
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <?php elseif (!empty($is_nilai_draft)): ?>
+            <div class="card-3d-warm rounded-3xl p-7 sm:p-9 space-y-5 w-full shadow-lg border-2 border-amber-300 bg-amber-50/40">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-2xl shrink-0 box-3d shadow-md shadow-amber-500/30">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-amber-800 block">EVALUASI DALAM PROSES VERIFIKASI</span>
+                        <h3 class="text-lg sm:text-xl font-extrabold text-slate-900">Sidang Telah Selesai — Penilaian Sedang Direkapitulasi</h3>
+                        <p class="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+                            Sidang Tugas Akhir Anda telah selesai dilaksanakan. Saat ini dewan penguji sedang melengkapi penilaian. Baru <strong><?= (int)($rekap_nilai_sidang['jumlah_terisi'] ?? 0); ?> dari 4</strong> penilai yang telah mengisi nilai. Nilai akhir, grade mutu, dan status kelulusan akan ditampilkan otomatis setelah keempat penilai selesai.
+                        </p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs pt-3 border-t border-amber-200">
+                    <div class="p-3 bg-white rounded-xl border border-amber-200 space-y-1">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Waktu Sidang:</span>
+                        <p class="font-bold text-slate-900"><?= $tgl_sidang_fmt; ?></p>
+                        <p class="text-slate-600"><?= $jam_sidang_fmt; ?></p>
+                    </div>
+                    <div class="p-3 bg-white rounded-xl border border-amber-200 space-y-1">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Ruangan:</span>
+                        <p class="font-bold text-slate-900"><?= htmlspecialchars($ruangan_sidang_fmt); ?></p>
+                        <p class="text-slate-500">Gedung FIK</p>
+                    </div>
+                    <div class="p-3 bg-white rounded-xl border border-amber-200 space-y-1">
+                        <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block">Dewan Penguji:</span>
+                        <p class="font-bold text-slate-900 truncate">1. <?= htmlspecialchars($dosen_u1); ?></p>
+                        <p class="font-bold text-slate-900 truncate">2. <?= htmlspecialchars($dosen_u2); ?></p>
+                    </div>
+                    <div class="p-3 bg-white rounded-xl border border-amber-200 space-y-1">
+                        <span class="text-[10px] font-bold text-orange-600 uppercase tracking-wider block">Dosen Pembimbing:</span>
+                        <p class="font-bold text-slate-900 truncate">1. <?= htmlspecialchars($dosen_p1); ?></p>
+                        <p class="font-bold text-slate-900 truncate">2. <?= htmlspecialchars($dosen_p2); ?></p>
+                    </div>
+                </div>
+            </div>
+
+            <?php elseif (!empty($is_sidang_scheduled)): ?>
+            <div class="card-3d-warm rounded-3xl p-7 sm:p-9 space-y-5 w-full shadow-lg border-2 border-sky-300 bg-sky-50/40">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-sky-600 text-white flex items-center justify-center text-2xl shrink-0 box-3d shadow-md shadow-sky-600/30">
+                        <i class="bi bi-calendar-check-fill"></i>
+                    </div>
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-sky-800 block">JADWAL SIDANG TERBIT</span>
+                        <h3 class="text-lg sm:text-xl font-extrabold text-slate-900">Jadwal Pelaksanaan Sidang Tugas Akhir</h3>
+                        <p class="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+                            Koordinator TA telah menetapkan jadwal dan dewan penguji sidang Tugas Akhir Anda. Harap hadir 15 menit sebelum waktu pelaksanaan dan mempersiapkan naskah cetak, slide presentasi, serta prototype karya.
+                        </p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs pt-3 border-t border-sky-200">
+                    <div class="p-3.5 bg-white rounded-xl border border-sky-200 space-y-1 shadow-2xs">
+                        <span class="text-[10px] font-bold text-sky-700 uppercase tracking-wider block">Hari &amp; Tanggal:</span>
+                        <p class="font-extrabold text-slate-900 text-sm"><?= $tgl_sidang_fmt; ?></p>
+                        <p class="text-slate-600 font-semibold"><?= $jam_sidang_fmt; ?></p>
+                    </div>
+                    <div class="p-3.5 bg-white rounded-xl border border-sky-200 space-y-1 shadow-2xs">
+                        <span class="text-[10px] font-bold text-sky-700 uppercase tracking-wider block">Ruangan Sidang:</span>
+                        <p class="font-extrabold text-slate-900 text-sm"><?= htmlspecialchars($ruangan_sidang_fmt); ?></p>
+                        <p class="text-slate-500">Gedung Fakultas Industri Kreatif</p>
+                    </div>
+                    <div class="p-3.5 bg-white rounded-xl border border-sky-200 space-y-1 shadow-2xs">
+                        <span class="text-[10px] font-bold text-indigo-700 uppercase tracking-wider block">Dewan Dosen Penguji:</span>
+                        <p class="font-bold text-slate-900 truncate">1. <?= htmlspecialchars($dosen_u1); ?></p>
+                        <p class="font-bold text-slate-900 truncate">2. <?= htmlspecialchars($dosen_u2); ?></p>
+                    </div>
+                    <div class="p-3.5 bg-white rounded-xl border border-sky-200 space-y-1 shadow-2xs">
+                        <span class="text-[10px] font-bold text-orange-700 uppercase tracking-wider block">Dosen Pembimbing:</span>
+                        <p class="font-bold text-slate-900 truncate">1. <?= htmlspecialchars($dosen_p1); ?></p>
+                        <p class="font-bold text-slate-900 truncate">2. <?= htmlspecialchars($dosen_p2); ?></p>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <?php if (!empty($is_nilai_published)): ?>
+            <div class="p-5 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-emerald-900 text-xs font-semibold flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-base shrink-0 box-3d">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <span>Pendaftaran dan pelaksanaan sidang telah selesai dilalui. Berkas persyaratan yang telah diunggah dapat ditinjau pada riwayat pengajuan di bawah.</span>
+                </div>
+                <button type="button" onclick="toggleFormUploadSidang()" class="px-3.5 py-2 rounded-xl bg-white border border-emerald-300 text-emerald-800 font-bold hover:bg-emerald-100 transition shrink-0 cursor-pointer flex items-center gap-1.5 shadow-2xs">
+                    <i class="bi bi-file-earmark-text"></i> <span id="toggleUploadFormText">Tampilkan Form Berkas</span>
+                </button>
+            </div>
+            <?php endif; ?>
+
+            <!-- Form Upload Berkas Sidang -->
+            <div id="wrapperFormUploadSidang" class="card-3d-warm rounded-3xl p-7 sm:p-9 space-y-6 w-full shadow-md shadow-emerald-500/10 <?= !empty($is_nilai_published) ? 'hidden' : ''; ?>">
                 <div class="border-b border-emerald-100 pb-5">
                     <span class="text-xs font-bold uppercase tracking-wider text-emerald-700 block mb-1">FORMULIR PENDAFTARAN SIDANG</span>
                     <h3 class="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2.5">
@@ -1119,13 +1377,13 @@
 
                 <?php
                 $sidang_locked = false;
-                $lock_message = '';
+                $lock_message  = '';
                 if (!$is_p3_app) {
                     $sidang_locked = true;
-                    $lock_message = 'Anda harus menyelesaikan Preview 3 dan mendapatkan persetujuan Pembimbing 1 terlebih dahulu sebelum dapat mengunggah berkas sidang.';
+                    $lock_message  = 'Anda harus menyelesaikan Preview 3 dan mendapatkan persetujuan Pembimbing 1 terlebih dahulu sebelum dapat mengunggah berkas sidang.';
                 } elseif (empty($penguji_ta)) {
                     $sidang_locked = true;
-                    $lock_message = 'Dosen Penguji belum di-assign. Silakan hubungi Koordinator TA untuk menetapkan Dosen Penguji sebelum Anda dapat mengunggah berkas sidang.';
+                    $lock_message  = 'Dosen Penguji belum di-assign. Silakan hubungi Koordinator TA untuk menetapkan Dosen Penguji sebelum Anda dapat mengunggah berkas sidang.';
                 }
                 ?>
 
@@ -1223,7 +1481,7 @@
     <footer class="bg-white/90 border-t border-orange-100 py-6 text-center text-xs sm:text-sm text-slate-500 font-medium">
         &copy; <?= date('Y'); ?> IFIK Portal — Fakultas Industri Kreatif, Telkom University
     </footer>
-    </div> <!-- /#mainPageContent -->
+    </div>
 
     <!-- ==========================================================
          UNIFIED COMMENT MODAL (P1, P2, U1, U2)
@@ -1259,7 +1517,7 @@
         </div>
     </div>
 
-    <!-- Modal Popup Catatan Pembimbing (Legacy - tetap dipertahankan) -->
+    <!-- Modal Popup Catatan Pembimbing (Legacy) -->
     <div id="catatanModal" class="modal-overlay hidden" onclick="closeCatatanModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="flex items-center justify-between p-5 border-b border-slate-200 bg-gradient-to-r from-orange-50 to-amber-50">
@@ -1281,13 +1539,166 @@
         </div>
     </div>
 
+    <!-- ==========================================================
+         MODAL RINCIAN RUBRIK PENILAIAN SIDANG
+         ========================================================== -->
+    <div id="modalRubrikNilai" class="modal-overlay hidden" onclick="closeModalRubrikNilai(event)">
+        <div class="modal-content !max-w-3xl" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between p-5 border-b border-slate-200 bg-gradient-to-r from-indigo-50 via-slate-50 to-orange-50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-lg box-3d shadow-md shadow-indigo-600/30">
+                        <i class="bi bi-card-checklist"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-extrabold text-slate-900">Rincian Rubrik Penilaian Sidang</h3>
+                        <p class="text-xs text-slate-500 font-medium">Program Studi: <?= htmlspecialchars($pendaftaran['prodi'] ?? 'FIK'); ?></p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModalRubrikNilai()" class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-500 hover:text-rose-600 hover:border-rose-300 flex items-center justify-center text-lg transition cursor-pointer">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <div class="modal-body-scroll space-y-4">
+                <div class="grid grid-cols-3 gap-3 p-4 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Nilai Akhir</span>
+                        <span class="text-2xl font-black text-slate-900"><?= $nilai_akhir; ?></span>
+                    </div>
+                    <div class="border-x border-slate-200">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Grade</span>
+                        <span class="text-2xl font-black text-indigo-700"><?= htmlspecialchars($grade_sidang); ?></span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Status</span>
+                        <span class="text-sm font-black text-emerald-700 uppercase"><?= htmlspecialchars($status_kelulusan); ?></span>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead class="bg-slate-50 text-slate-700 font-bold uppercase border-b border-slate-200">
+                            <tr>
+                                <th class="py-3 px-3.5 w-10 text-center">No</th>
+                                <th class="py-3 px-3.5">Aspek / Kriteria Penilaian</th>
+                                <th class="py-3 px-3.5 text-center w-24">Bobot</th>
+                                <th class="py-3 px-3.5 text-center w-24">Nilai Rata-rata</th>
+                                <th class="py-3 px-3.5 text-center w-28">Poin Terbobot</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 font-medium text-slate-800">
+                            <?php if (!empty($criteria_items)): ?>
+                                <?php
+                                    $total_bobot     = 0;
+                                    $total_terbobot  = 0;
+                                    $posisi_list     = [1, 2, 3, 4];
+
+                                    foreach ($criteria_items as $k_idx => $crit):
+                                        $crit_title = $crit['title'] ?? ('Kriteria ' . ($k_idx + 1));
+                                        $crit_desc  = $crit['desc']  ?? '';
+                                        $crit_bobot = isset($crit['bobot']) ? (float)$crit['bobot'] : 0;
+                                        $crit_id    = $crit['id'] ?? null;
+
+                                        $scores = [];
+                                        foreach ($posisi_list as $pos) {
+                                            $detail_pos = $rekap_nilai_sidang['detail_per_posisi'][$pos]['detail'] ?? [];
+                                            if (!is_array($detail_pos)) continue;
+                                            foreach ($detail_pos as $dp) {
+                                                if (($dp['id'] ?? null) === $crit_id && isset($dp['nilai'])) {
+                                                    $scores[] = (float)$dp['nilai'];
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        $crit_score = !empty($scores) ? (array_sum($scores) / count($scores)) : 0;
+                                        $terbobot   = ($crit_bobot * $crit_score) / 100;
+                                        $total_bobot    += $crit_bobot;
+                                        $total_terbobot += $terbobot;
+                                ?>
+                                    <tr class="hover:bg-slate-50/70">
+                                        <td class="py-3 px-3.5 text-center font-bold text-slate-400"><?= $k_idx + 1; ?></td>
+                                        <td class="py-3 px-3.5">
+                                            <div class="font-bold text-slate-900"><?= htmlspecialchars($crit_title); ?></div>
+                                            <?php if (!empty($crit_desc)): ?>
+                                                <div class="text-[11px] text-slate-500 font-normal leading-relaxed mt-0.5"><?= htmlspecialchars($crit_desc); ?></div>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="py-3 px-3.5 text-center font-bold text-slate-700 bg-slate-50/50"><?= $crit_bobot; ?>%</td>
+                                        <td class="py-3 px-3.5 text-center font-bold text-slate-900"><?= number_format($crit_score, 1); ?></td>
+                                        <td class="py-3 px-3.5 text-center font-black text-indigo-700 bg-indigo-50/30"><?= number_format($terbobot, 2); ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                                <tr class="bg-slate-100/80 font-bold border-t-2 border-slate-200">
+                                    <td colspan="2" class="py-3 px-3.5 text-right uppercase tracking-wider text-slate-700">Total Akumulasi Terbobot:</td>
+                                    <td class="py-3 px-3.5 text-center text-slate-800"><?= $total_bobot; ?>%</td>
+                                    <td class="py-3 px-3.5 text-center text-slate-400">-</td>
+                                    <td class="py-3 px-3.5 text-center font-black text-emerald-700 text-sm"><?= number_format($total_terbobot, 2); ?></td>
+                                </tr>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="5" class="py-8 text-center text-slate-400">
+                                        <i class="bi bi-info-circle text-2xl mb-1 block"></i>
+                                        Belum ada detail rubrik yang tersimpan. Nilai akhir akan terisi setelah semua penilai selesai mengisi.
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+
+                <?php if (!empty($catatan_sidang)): ?>
+                    <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs">
+                        <span class="font-bold text-amber-800 uppercase tracking-wider text-[10px] block mb-1">Catatan Tambahan:</span>
+                        <p class="text-slate-700 leading-relaxed font-medium italic">"<?= htmlspecialchars($catatan_sidang); ?>"</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <div class="p-4 border-t border-slate-200 flex justify-end bg-slate-50">
+                <button type="button" onclick="closeModalRubrikNilai()" class="px-5 py-2 rounded-xl bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold transition cursor-pointer">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="<?= base_url('assets/js/navbar_animated.js'); ?>?v=<?= time(); ?>"></script>
     <script>
+        // ===================== MODAL RUBRIK PENILAIAN =====================
+        function openModalRubrikNilai() {
+            const modal = document.getElementById('modalRubrikNilai');
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeModalRubrikNilai(event) {
+            const modal = document.getElementById('modalRubrikNilai');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        }
+
+        function toggleFormUploadSidang() {
+            const formWrap = document.getElementById('wrapperFormUploadSidang');
+            const txt = document.getElementById('toggleUploadFormText');
+            if (!formWrap) return;
+
+            if (formWrap.classList.contains('hidden')) {
+                formWrap.classList.remove('hidden');
+                if (txt) txt.textContent = 'Sembunyikan Form Berkas';
+            } else {
+                formWrap.classList.add('hidden');
+                if (txt) txt.textContent = 'Tampilkan Form Berkas';
+            }
+        }
+
         // ============================================================
         // HELPERS: HTML ↔ PLAIN TEXT
         // ============================================================
 
-        // Escape semua karakter HTML → aman untuk ditampilkan sebagai teks
         function escapeHtml(str) {
             if (str === null || str === undefined) return '';
             return String(str)
@@ -1298,20 +1709,16 @@
                 .replace(/'/g, '&#39;');
         }
 
-        // Konversi HTML → plain text (untuk preview singkat di tabel & validasi kosong)
         function stripHtml(html) {
             if (!html) return '';
             const tmp = document.createElement('div');
             tmp.innerHTML = String(html);
-            // Ganti <br> & block-level dengan spasi agar rapi
             tmp.querySelectorAll('br').forEach(el => el.replaceWith(' '));
             tmp.querySelectorAll('p, div, li, h1, h2, h3, h4, h5, h6, blockquote')
                 .forEach(el => { el.appendChild(document.createTextNode(' ')); });
             return (tmp.textContent || tmp.innerText || '').replace(/\s+/g, ' ').trim();
         }
 
-        // Sanitasi HTML: hanya izinkan tag & atribut yang aman, lalu kembalikan HTML bersih
-        // → Dipakai untuk menampilkan komentar dosen yang diformat dengan TinyMCE
         function sanitizeHtml(html) {
             if (!html) return '';
             const allowed = ['P','DIV','BR','B','STRONG','I','EM','U','S','UL','OL','LI','A','SPAN','H1','H2','H3','H4','H5','H6','BLOCKQUOTE','CODE','PRE'];
@@ -1320,13 +1727,11 @@
 
             (function clean(node) {
                 Array.from(node.childNodes).forEach(child => {
-                    if (child.nodeType === 1) { // ELEMENT_NODE
+                    if (child.nodeType === 1) {
                         if (!allowed.includes(child.tagName)) {
-                            // Ganti tag tak diizinkan dengan teks isinya
                             const text = document.createTextNode(child.textContent || '');
                             child.parentNode.replaceChild(text, child);
                         } else {
-                            // Bersihkan atribut
                             Array.from(child.attributes).forEach(attr => {
                                 const ok = child.tagName === 'A' &&
                                     ['href','target','rel'].includes(attr.name);
@@ -1345,9 +1750,6 @@
             return tmp.innerHTML;
         }
 
-        // ============================================================
-        // REGISTRY KOMENTAR (aman dari kutip & karakter khusus)
-        // ============================================================
         window._commentRegistry = window._commentRegistry || {};
         window._commentCounter = window._commentCounter || 0;
 
@@ -1373,7 +1775,6 @@
             const plain = stripHtml(comment);
 
             if (plain && plain.length > 0) {
-                // Render sebagai HTML yang sudah disanitasi → tag <p>, <strong>, <ul> dll tampil rapi
                 content.innerHTML = sanitizeHtml(comment);
             } else {
                 content.innerHTML = `<em class="text-slate-400">Belum ada komentar dari ${labels[_ucActiveTab]}.</em>`;
@@ -1406,7 +1807,6 @@
             document.getElementById('ucStudentName').textContent = studentName || '-';
             document.getElementById('ucStageInfo').textContent = stageInfo || '';
 
-            // Auto-select first tab with content (pakai stripHtml agar tidak false-positive karena tag HTML)
             if (stripHtml(_ucData.p1)) _ucActiveTab = 'p1';
             else if (stripHtml(_ucData.p2)) _ucActiveTab = 'p2';
             else if (stripHtml(_ucData.u1)) _ucActiveTab = 'u1';
@@ -1464,6 +1864,7 @@
             if (e.key === 'Escape') {
                 closeCatatanModal();
                 closeUnifiedCommentModal();
+                closeModalRubrikNilai();
             }
         });
 
@@ -1571,7 +1972,6 @@
         setupGenericFileUploader('fileSitasiP3', 'fileBadgeSitasiP3', 'fileNameSitasiP3', 'fileSizeSitasiP3', 'dropZoneSitasiP3');
         setupGenericFileUploader('filePersyaratanP3', 'fileBadgePersyaratanP3', 'fileNamePersyaratanP3', 'fileSizePersyaratanP3', 'dropZonePersyaratanP3');
 
-        // Sequential upload logic for Preview 3
         const fbBimbingan = document.getElementById('fileBimbinganP3');
         const fbSitasi = document.getElementById('fileSitasiP3');
         const fbPersyaratan = document.getElementById('filePersyaratanP3');
@@ -1618,7 +2018,6 @@
                     const catatan = document.getElementById('catatanP3');
                     catatan.disabled = false;
                     catatan.classList.remove('bg-slate-100', 'cursor-not-allowed');
-                    if (tinymce && tinymce.get('catatanP3')) tinymce.get('catatanP3').mode.set('design');
                     
                     const btnSubmit = document.getElementById('btnSubmitP3');
                     btnSubmit.disabled = false;
@@ -1635,7 +2034,6 @@
             if (formPreview3) {
                 formPreview3.addEventListener('reset', function() {
                     setTimeout(() => {
-                        // Relock Sitasi
                         document.getElementById('containerSitasiP3').classList.add('opacity-50', 'bg-slate-50');
                         document.getElementById('containerSitasiP3').classList.remove('bg-white/60');
                         document.getElementById('iconSitasiP3').classList.replace('bg-indigo-500', 'bg-slate-400');
@@ -1647,7 +2045,6 @@
                         document.getElementById('iconLockSitasiP3').classList.replace('bi-cloud-arrow-up', 'bi-lock-fill');
                         document.getElementById('textLockSitasiP3').textContent = 'Terkunci (Upload File Bimbingan dulu)';
                         
-                        // Relock Persyaratan
                         document.getElementById('containerPersyaratanP3').classList.add('opacity-50', 'bg-slate-50');
                         document.getElementById('containerPersyaratanP3').classList.remove('bg-white/60');
                         document.getElementById('iconPersyaratanP3').classList.replace('bg-indigo-500', 'bg-slate-400');
@@ -1659,11 +2056,9 @@
                         document.getElementById('iconLockPersyaratanP3').classList.replace('bi-cloud-arrow-up', 'bi-lock-fill');
                         document.getElementById('textLockPersyaratanP3').textContent = 'Terkunci (Upload File Sitasi dulu)';
                         
-                        // Relock Submit
                         document.getElementById('containerSubmitP3').classList.add('opacity-50');
                         document.getElementById('catatanP3').disabled = true;
                         document.getElementById('catatanP3').classList.add('bg-slate-100', 'cursor-not-allowed');
-                        if (tinymce && tinymce.get('catatanP3')) tinymce.get('catatanP3').mode.set('readonly');
 
                         const btnSubmit = document.getElementById('btnSubmitP3');
                         btnSubmit.disabled = true;
@@ -1675,12 +2070,6 @@
                     }, 50);
                 });
             }
-
-            setTimeout(() => {
-                if (tinymce && tinymce.get('catatanP3')) {
-                    tinymce.get('catatanP3').mode.set('readonly');
-                }
-            }, 1000);
         }
         setupGenericFileUploader('fileSidangSingle', 'fileBadgeSidangSingle', 'fileNameSidangSingle', 'fileSizeSidangSingle', 'dropZoneSidangSingle');
 
@@ -1872,7 +2261,6 @@
                 const dt = new Date(row.created_at || row.uploaded_at);
                 const timeHtml = isNaN(dt.getTime()) ? '-' : `${dt.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'})} ${dt.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})} WIB`;
 
-                // === Kumpulkan semua komentar dari 4 role ===
                 const p1 = row.catatan_pembimbing || '';
                 const p2 = row.catatan_pembimbing_2 || '';
                 const u1 = row.catatan_penguji_1 || '';
@@ -1888,7 +2276,6 @@
 
                 let commentBtn = `<span class="text-slate-400 text-xs italic">-</span>`;
                 if (hasAnyComment) {
-                    // Registrasi data → dapat ID pendek, tidak ada isu quote/HTML di attribute
                     const commentId = registerComment({
                         name: row.nama_mahasiswa || '',
                         p1: p1,
@@ -1905,7 +2292,6 @@
                         </button>`;
                 }
 
-                // Preview 1 & 2
                 if (type === 'preview1' || type === 'preview2') {
                     const fileName = escapeHtml(row.file_draft || '');
                     const fileUrl = '<?= base_url('uploads/preview_ta/') ?>' + encodeURIComponent(row.file_draft || '');
@@ -1935,7 +2321,6 @@
                         <td data-label="Komentar" class="cell-center py-4 px-6 text-center">${commentBtn}</td>
                     </tr>`;
                 }
-                // Preview 3
                 else if (type === 'preview3') {
                     const fileBimbingan = escapeHtml(row.file_bimbingan || '-');
                     const fileSitasi = escapeHtml(row.file_sitasi || '-');
@@ -1959,7 +2344,6 @@
                         <td data-label="Komentar" class="cell-center py-4 px-4 text-center">${commentBtn}</td>
                     </tr>`;
                 }
-                // Sidang
                 else if (type === 'sidang') {
                     const fileSidangRaw = row.file_sidang || row.file_draft || '';
                     const fileSidang = escapeHtml(fileSidangRaw) || '-';
