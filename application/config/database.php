@@ -109,10 +109,10 @@ if ($is_nas) {
 	// === DATABASE LOCAL / LARAGON / TAILSCALE ===
 	$db['default'] = array(
 		'dsn'	=> '',
-		'hostname' => '100.83.19.18',
-		'username' => 'ci3_user',
-		'password' => 'ci3_password',
-		'database' => 'db_ifik_baru',
+		'hostname' => 'localhost',
+		'username' => 'root',
+		'password' => '',
+		'database' => 'ifik',
 		'dbdriver' => 'mysqli',
 		'dbprefix' => '',
 		'pconnect' => FALSE,
