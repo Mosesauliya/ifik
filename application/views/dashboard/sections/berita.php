@@ -1359,7 +1359,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ===== KONFIGURASI =====
     function getCardsPerPage() {
-        return 5; // Selalu 5 kartu mekar/bertumpuk per halaman (baik di desktop maupun mobile)
+        return window.innerWidth <= 768 ? 1 : 5; // Mobile: 1 fokus aktif per slide (memungkinkan swipe per kartu)
     }
 
     let CARDS_PER_PAGE = getCardsPerPage();
@@ -1407,20 +1407,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ===== RENDER KARTU (tanpa animasi, untuk inisialisasi) =====
+    // ===== RENDER KARTU =====
     function renderPage(pageIndex) {
         container.innerHTML = '';
-        const start  = pageIndex * CARDS_PER_PAGE;
-        const slice  = allNews.slice(start, start + CARDS_PER_PAGE);
-        const total  = slice.length;
+        const isMobile = window.innerWidth <= 768;
 
-        slice.forEach((news, i) => {
-            const card = createCard(news, i, total);
-            if (window.innerWidth <= 768) {
-                card.setAttribute('data-stack-pos', i);
-            }
-            container.appendChild(card);
-        });
+        if (isMobile) {
+            const totalNews = allNews.length;
+            const offsets = [-2, -1, 0, 1, 2];
+            offsets.forEach((offset, i) => {
+                let newsIndex = (pageIndex + offset + totalNews * 10) % totalNews;
+                const news = allNews[newsIndex];
+                if (news) {
+                    const card = createCard(news, i, 5);
+                    card.style.setProperty('--offset', offset);
+                    card.style.setProperty('--index', i);
+                    container.appendChild(card);
+                }
+            });
+        } else {
+            const start  = pageIndex * CARDS_PER_PAGE;
+            const slice  = allNews.slice(start, start + CARDS_PER_PAGE);
+            const total  = slice.length;
+
+            slice.forEach((news, i) => {
+                const card = createCard(news, i, total);
+                container.appendChild(card);
+            });
+        }
     }
 
     // ===== BUAT ELEMEN KARTU =====
@@ -1458,7 +1472,13 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>`;
 
         if (news.url) {
-            card.addEventListener('click', () => window.location.href = news.url);
+            card.addEventListener('click', (e) => {
+                if (Math.abs(touchCurrentX - touchStartX) > 10 || Math.abs(touchCurrentY - touchStartY) > 10) {
+                    e.preventDefault();
+                    return;
+                }
+                window.location.href = news.url;
+            });
         }
         return card;
     }
@@ -1669,11 +1689,13 @@ document.addEventListener('DOMContentLoaded', () => {
             card.style.transform = ''; // Reset transform inline agar kembali mengikuti CSS default
         });
 
-        if (isHorizontalSwipe && Math.abs(diffX) > 40) {
-            if (diffX < 0 && currentPage < totalPages - 1) {
-                goToPage(currentPage + 1, 'next');
-            } else if (diffX > 0 && currentPage > 0) {
-                goToPage(currentPage - 1, 'prev');
+        if (isHorizontalSwipe && Math.abs(diffX) > 35) {
+            if (diffX < 0) {
+                const nextPage = (currentPage + 1) % totalPages;
+                goToPage(nextPage, 'next');
+            } else if (diffX > 0) {
+                const prevPage = (currentPage - 1 + totalPages) % totalPages;
+                goToPage(prevPage, 'prev');
             }
         }
 
