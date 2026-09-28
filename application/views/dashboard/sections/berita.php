@@ -1723,37 +1723,65 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: false });
 
     function finishTouchSwipe() {
-        if (!isTouchDragging || window.innerWidth > 768) return;
+        if (!isTouchDragging || isAnimating || window.innerWidth > 768) return;
         isTouchDragging = false;
 
         const diffX = touchCurrentX - touchStartX;
         const topCard = container.querySelector('.news-card[data-stack-idx="0"]');
         const card2   = container.querySelector('.news-card[data-stack-idx="1"]');
 
-        if (topCard) topCard.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease';
-        if (card2) card2.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease';
-
         if (isHorizontalSwipe && Math.abs(diffX) > 40) {
-            if (diffX < 0) {
-                if (topCard) {
-                    topCard.setAttribute('data-stack-idx', 'shuffle');
-                }
-                setTimeout(() => {
-                    const nextPage = (currentPage + 1) % totalPages;
-                    goToPage(nextPage, 'next');
-                }, 120);
-            } else if (diffX > 0) {
-                if (topCard) {
-                    topCard.setAttribute('data-stack-idx', 'shuffle-right');
-                }
-                setTimeout(() => {
-                    const prevPage = (currentPage - 1 + totalPages) % totalPages;
-                    goToPage(prevPage, 'prev');
-                }, 120);
+            isAnimating = true;
+
+            const cards = Array.from(container.querySelectorAll('.news-card'));
+            const shuffleState = diffX > 0 ? 'shuffle-right' : 'shuffle';
+
+            if (topCard) {
+                topCard.style.transition = 'transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.28s ease';
+                topCard.style.transform = ''; // clear drag inline transform
+                topCard.setAttribute('data-stack-idx', shuffleState);
             }
+
+            // Move lower cards forward smoothly
+            cards.forEach(card => {
+                if (card !== topCard) {
+                    card.style.transition = 'transform 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.32s ease';
+                    card.style.transform = '';
+                    card.style.opacity = '';
+                    const idx = parseInt(card.getAttribute('data-stack-idx'), 10);
+                    if (!isNaN(idx) && idx > 0) {
+                        card.setAttribute('data-stack-idx', idx - 1);
+                    }
+                }
+            });
+
+            setTimeout(() => {
+                if (topCard) {
+                    topCard.style.transition = 'none';
+                    topCard.style.transform = '';
+                    topCard.style.opacity = '';
+                    topCard.setAttribute('data-stack-idx', cards.length - 1);
+                    container.appendChild(topCard);
+
+                    void topCard.offsetWidth; // Force reflow
+                    topCard.style.transition = 'transform 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.32s ease';
+                }
+
+                if (diffX < 0) {
+                    currentPage = (currentPage + 1) % allNews.length;
+                } else {
+                    currentPage = (currentPage - 1 + allNews.length) % allNews.length;
+                }
+                updateControls();
+                isAnimating = false;
+            }, 280);
         } else {
-            if (topCard) topCard.style.transform = '';
-            if (card2) card2.style.transform = '';
+            const allCards = container.querySelectorAll('.news-card');
+            allCards.forEach(card => {
+                card.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease';
+                card.style.transform = '';
+                card.style.opacity = '';
+            });
         }
 
         isHorizontalSwipe = false;
