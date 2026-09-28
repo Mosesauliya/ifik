@@ -453,7 +453,10 @@
             $panel_label = 'Panel Admin';
             $panel_url   = base_url('ImportEmail');
 
-            if ($role_id == 21) {
+            if ($role_id == 22) {
+                $panel_label = 'Panel Super Admin';
+                $panel_url   = base_url('import-email');
+            } elseif ($role_id == 21) {
                 $panel_label = 'Panel Laboran';
                 $panel_url   = base_url('laboran');
             } elseif ($role_id == 2) {
@@ -465,12 +468,12 @@
             } elseif ($role_id == 6) {
                 $panel_label = 'Panel Koordinator TA';
                 $panel_url   = base_url('koordinatorta');
-            }elseif ($role_id == 5) {
+            } elseif ($role_id == 5) {
                 $panel_label = 'Panel LAA';
-                $panel_url   = base_url('adminlayanan');   // route: AdminLayanan/index
-            }elseif ($role_id == 9) {
+                $panel_url   = base_url('adminlayanan');
+            } elseif ($role_id == 9) {
                 $panel_label = 'Panel Ketua KK';
-                $panel_url   = base_url('ketuakk'); 
+                $panel_url   = base_url('ketuakk');
             }
 
         ?>
