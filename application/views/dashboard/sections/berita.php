@@ -975,42 +975,28 @@
             touch-action: pan-y;
         }
         .news-card {
-            width: 245px;
-            max-width: 82vw;
-            height: 350px;
+            width: 205px;
+            max-width: 68vw;
+            height: 335px;
             position: absolute !important;
             left: 50% !important;
             top: 50% !important;
-            border-radius: 22px;
-            box-shadow: -6px 12px 35px rgba(0, 0, 0, 0.16) !important;
+            border-radius: 20px;
+            --angle-per-card: 5.5deg;
+            --spread-x: calc(var(--offset) * 32px);
+            --arc-y: calc(var(--offset) * var(--offset) * 3.2px);
+            --angle: calc(var(--offset) * var(--angle-per-card));
+            transform: translate(calc(-50% + var(--spread-x)), calc(-50% + var(--arc-y))) rotate(var(--angle)) !important;
+            box-shadow: -4px 10px 30px rgba(0, 0, 0, 0.14) !important;
             transition: transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.45s ease, opacity 0.45s ease;
-        }
-
-        /* Position Stack Card Numpuk khusus Mobile */
-        .news-card[data-stack-pos="0"] {
-            transform: translate(-50%, -50%) rotate(0deg) scale(1) !important;
-            z-index: 30 !important;
+            z-index: calc(10 + var(--index)) !important;
             opacity: 1 !important;
-        }
-        .news-card[data-stack-pos="1"] {
-            transform: translate(calc(-50% + 14px), calc(-50% + 10px)) rotate(3.5deg) scale(0.95) !important;
-            z-index: 20 !important;
-            opacity: 0.92 !important;
-        }
-        .news-card[data-stack-pos="2"] {
-            transform: translate(calc(-50% + 28px), calc(-50% + 20px)) rotate(7deg) scale(0.90) !important;
-            z-index: 10 !important;
-            opacity: 0.80 !important;
-        }
-        .news-card[data-stack-pos="past"] {
-            transform: translate(calc(-50% - 150vw), -50%) rotate(-20deg) scale(0.85) !important;
-            z-index: 0 !important;
-            opacity: 0 !important;
+            filter: none !important;
         }
 
-        /* Dimatikan fanning hover di mobile agar murni stack & touch swipe */
+        /* Dimatikan hover effect fanning di mobile agar murni swipe jari */
         .news-card:hover {
-            box-shadow: -6px 12px 35px rgba(0, 0, 0, 0.16) !important;
+            box-shadow: -4px 10px 30px rgba(0, 0, 0, 0.14) !important;
         }
         .news-fan-container:has(.news-card:hover) .news-card:not(:hover) {
             opacity: 1 !important;
@@ -1373,7 +1359,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ===== KONFIGURASI =====
     function getCardsPerPage() {
-        return window.innerWidth <= 768 ? 3 : 5; // 3 kartu per slide di mobile agar tidak terlalu tumpuk/penuh
+        return 5; // Selalu 5 kartu mekar/bertumpuk per halaman (baik di desktop maupun mobile)
     }
 
     let CARDS_PER_PAGE = getCardsPerPage();
@@ -1607,7 +1593,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ===== TOUCH SWIPE INTERAKSI STACK CARD DECK (KHUSUS MOBILE) =====
+    // ===== TOUCH SWIPE INTERAKSI JARI FOR 5-CARD FANNED OVERLAPPING (KHUSUS MOBILE) =====
     let touchStartX = 0;
     let touchStartY = 0;
     let touchCurrentX = 0;
@@ -1626,10 +1612,10 @@ document.addEventListener('DOMContentLoaded', () => {
         isTouchDragging = true;
         isHorizontalSwipe = false;
 
-        const topCard = container.querySelector('.news-card[data-stack-pos="0"]');
-        if (topCard) {
-            topCard.style.transition = 'none';
-        }
+        const allCards = container.querySelectorAll('.news-card');
+        allCards.forEach(card => {
+            card.style.transition = 'none'; // Matikan transisi CSS saat ditarik jari
+        });
     }, { passive: true });
 
     container.addEventListener('touchmove', (e) => {
@@ -1650,27 +1636,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isHorizontalSwipe) {
             if (e.cancelable) e.preventDefault(); // Mencegah scroll vertikal saat swipe horizontal
 
-            const topCard = container.querySelector('.news-card[data-stack-pos="0"]');
-            const card2   = container.querySelector('.news-card[data-stack-pos="1"]');
-
+            const allCards = container.querySelectorAll('.news-card');
             let moveX = diffX;
             if ((currentPage === 0 && diffX > 0) || (currentPage === totalPages - 1 && diffX < 0)) {
                 moveX = diffX * 0.3; // Tahanan halus di ujung
             }
 
-            if (topCard) {
-                const rotation = moveX * 0.08;
-                topCard.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${diffY * 0.15}px)) rotate(${rotation}deg)`;
-            }
-
-            if (card2) {
-                const progress = Math.min(Math.abs(moveX) / 200, 1);
-                const scaleVal = 0.95 + (progress * 0.05);
-                const rotVal   = 3.5 - (progress * 3.5);
-                const posXVal  = 14 - (progress * 14);
-                const posYVal  = 10 - (progress * 10);
-                card2.style.transform = `translate(calc(-50% + ${posXVal}px), calc(-50% + ${posYVal}px)) rotate(${rotVal}deg) scale(${scaleVal})`;
-            }
+            allCards.forEach(card => {
+                const index = parseInt(card.style.getPropertyValue('--index') || '0');
+                const total = parseInt(card.style.getPropertyValue('--total') || '5');
+                const centerIndex = (total - 1) / 2;
+                const offset = index - centerIndex;
+                const spreadStep = window.innerWidth <= 360 ? 20 : (window.innerWidth <= 480 ? 26 : 32);
+                const angleStep = window.innerWidth <= 360 ? 4 : (window.innerWidth <= 480 ? 4.5 : 5.5);
+                const spreadX = (offset * spreadStep) + moveX;
+                const arcY = offset * offset * 3.2;
+                const angle = (offset * angleStep) + (moveX * 0.04);
+                card.style.transform = `translate(calc(-50% + ${spreadX}px), calc(-50% + ${arcY}px)) rotate(${angle}deg)`;
+            });
         }
     }, { passive: false });
 
@@ -1682,19 +1665,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const allCards = container.querySelectorAll('.news-card');
 
         allCards.forEach(card => {
-            card.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease';
-            card.style.transform = '';
+            card.style.transition = 'transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.45s ease, opacity 0.45s ease';
+            card.style.transform = ''; // Reset transform inline agar kembali mengikuti CSS default
         });
 
-        if (isHorizontalSwipe && Math.abs(diffX) > 45) {
+        if (isHorizontalSwipe && Math.abs(diffX) > 40) {
             if (diffX < 0 && currentPage < totalPages - 1) {
-                const topCard = container.querySelector('.news-card[data-stack-pos="0"]');
-                if (topCard) {
-                    topCard.setAttribute('data-stack-pos', 'past');
-                }
-                setTimeout(() => {
-                    goToPage(currentPage + 1, 'next');
-                }, 120);
+                goToPage(currentPage + 1, 'next');
             } else if (diffX > 0 && currentPage > 0) {
                 goToPage(currentPage - 1, 'prev');
             }
