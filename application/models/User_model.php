@@ -291,6 +291,7 @@ class User_model extends CI_Model {
         if (strpos($roleName, 'laboran') !== false) return 21;
         if (strpos($roleName, 'kaur') !== false || strpos($roleName, 'ka. ur') !== false) return $isUserRoleTable ? 2 : 3;
         if (strpos($roleName, 'koordinator') !== false || strpos($roleName, 'koordinatorta') !== false) return 6;
+        if (strpos($roleName, 'super admin') !== false || strpos($roleName, 'superadmin') !== false) return 22;
         if (strpos($roleName, 'admin laa') !== false || strpos($roleName, 'laa') !== false) return $isUserRoleTable ? 5 : 1;
         if (strpos($roleName, 'ketua kk') !== false || strpos($roleName, 'kk') !== false) return $isUserRoleTable ? 9 : 7;
         if (strpos($roleName, 'admin') !== false) return 1;

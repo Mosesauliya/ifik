@@ -17,7 +17,8 @@ class Admin extends CI_Controller {
      * Central Admin Panel Hub
      */
     public function index() {
-        $data['title']       = 'Central Admin Panel - IFIK Portal';
+        $role_id = (int)$this->session->userdata('role_id');
+        $data['title']       = ($role_id === 22) ? 'Central Super Admin Panel - IFIK Portal' : 'Central Admin Panel - IFIK Portal';
         
         // Metrik LAA
         $data['laa_stats']   = $this->AdminLayanan_model->get_stats();

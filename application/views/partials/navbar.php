@@ -450,10 +450,13 @@
         $is_mahasiswa  = ($role_id == 4 || strpos($user_email, '@student.') !== false);
 
         // ====== Tentukan label & URL panel berdasarkan role ======
-        $panel_label = 'Panel Admin';
+        $panel_label = ($role_id == 22) ? 'Panel Super Admin' : 'Panel Admin';
         $panel_url   = base_url('admin');
 
-        if ($role_id == 21) {
+        if ($role_id == 22) {
+            $panel_label = 'Panel Super Admin';
+            $panel_url   = base_url('admin');
+        } elseif ($role_id == 21) {
             $panel_label = 'Panel Laboran';
             $panel_url   = base_url('laboran');
         } elseif ($role_id == 2) {
