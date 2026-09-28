@@ -29,13 +29,31 @@ if (!$matched_room) {
     exit;
 }
 
-$img_url = !empty($matched_room->foto) 
-    ? (strpos($matched_room->foto, 'http') === 0 ? $matched_room->foto : base_url($matched_room->foto)) 
-    : base_url('assets/images/multimedia.jpg');
+$foto_path = !empty($matched_room->foto) ? ltrim($matched_room->foto, '/') : '';
+if (!empty($foto_path)) {
+    if (strpos($foto_path, 'http://') === 0 || strpos($foto_path, 'https://') === 0) {
+        $img_url = $foto_path;
+    } elseif (file_exists(FCPATH . $foto_path)) {
+        $img_url = base_url($foto_path);
+    } else {
+        $img_url = base_url('assets/images/multimedia.jpg');
+    }
+} else {
+    $img_url = base_url('assets/images/multimedia.jpg');
+}
 
-$model_url = !empty($matched_room->model_3d) 
-    ? (strpos($matched_room->model_3d, 'http') === 0 ? $matched_room->model_3d : base_url($matched_room->model_3d)) 
-    : '';
+$model_path = !empty($matched_room->model_3d) ? ltrim($matched_room->model_3d, '/') : '';
+if (!empty($model_path)) {
+    if (strpos($model_path, 'http://') === 0 || strpos($model_path, 'https://') === 0) {
+        $model_url = $model_path;
+    } elseif (file_exists(FCPATH . $model_path)) {
+        $model_url = base_url($model_path);
+    } else {
+        $model_url = '';
+    }
+} else {
+    $model_url = '';
+}
 
 $parsed_room_codes = [];
 if (!empty($all_ruangan) && !empty($matched_room)) {

@@ -208,16 +208,16 @@ class Kelolaruangan extends CI_Controller {
         if (in_array('tata_tertib', $fields)) $base_data['tata_tertib'] = $tata_tertib;
         if (in_array('date', $fields)) $base_data['date'] = date('Y-m-d H:i:s');
 
-        // Handle gambar/images (support kolom foto & model_3d atau kolom images kombinasi)
+        // Handle gambar/images (sinkronkan kolom foto, model_3d, dan images)
+        if ($foto_path && in_array('foto', $fields)) $base_data['foto'] = $foto_path;
+        if ($model_3d_path && in_array('model_3d', $fields)) $base_data['model_3d'] = $model_3d_path;
+
         if (in_array('images', $fields)) {
             $combined = '';
             if ($foto_path && $model_3d_path) $combined = $foto_path . '|' . $model_3d_path;
             elseif ($foto_path) $combined = $foto_path;
             elseif ($model_3d_path) $combined = '|' . $model_3d_path;
             if ($combined) $base_data['images'] = $combined;
-        } else {
-            if ($foto_path && in_array('foto', $fields)) $base_data['foto'] = $foto_path;
-            if ($model_3d_path && in_array('model_3d', $fields)) $base_data['model_3d'] = $model_3d_path;
         }
 
         // Insert masing-masing kode ruangan fisik sebagai 1 baris tersendiri
@@ -313,10 +313,11 @@ class Kelolaruangan extends CI_Controller {
         if (in_array('tata_tertib', $fields)) $base_data['tata_tertib'] = $tata_tertib;
         if (in_array('date', $fields)) $base_data['date'] = date('Y-m-d H:i:s');
 
-        // Handle gambar/images
-        if (in_array('images', $fields)) {
-            $old_images = $old_room ? (string)$old_room->images : '';
-            $old_foto = ''; $old_model = '';
+        // Handle gambar/images (sinkronkan kolom foto, model_3d, dan images)
+        $old_images = $old_room ? (string)($old_room->images ?? '') : '';
+        $old_foto = $old_room ? (string)($old_room->foto ?? '') : '';
+        $old_model = $old_room ? (string)($old_room->model_3d ?? '') : '';
+        if (empty($old_foto) && !empty($old_images)) {
             if (strpos($old_images, '|') !== false) {
                 list($old_foto, $old_model) = explode('|', $old_images, 2);
             } else {
@@ -324,19 +325,24 @@ class Kelolaruangan extends CI_Controller {
                 if (in_array($ext, ['glb', 'gltf', 'fbx', 'obj'])) { $old_model = $old_images; }
                 else { $old_foto = $old_images; }
             }
-            $final_foto = $foto_path ? $foto_path : $old_foto;
-            $final_model = $model_3d_path ? $model_3d_path : $old_model;
+        }
+
+        $final_foto = $foto_path ? $foto_path : $old_foto;
+        $final_model = $model_3d_path ? $model_3d_path : $old_model;
+
+        if (in_array('foto', $fields) && $final_foto) {
+            $base_data['foto'] = $final_foto;
+        }
+        if (in_array('model_3d', $fields) && $final_model) {
+            $base_data['model_3d'] = $final_model;
+        }
+
+        if (in_array('images', $fields)) {
             $combined = '';
             if ($final_foto && $final_model) $combined = $final_foto . '|' . $final_model;
             elseif ($final_foto) $combined = $final_foto;
             elseif ($final_model) $combined = '|' . $final_model;
             if ($combined) $base_data['images'] = $combined;
-        } else {
-            if ($foto_path && in_array('foto', $fields)) $base_data['foto'] = $foto_path;
-            elseif ($old_room && !empty($old_room->foto) && in_array('foto', $fields)) $base_data['foto'] = $old_room->foto;
-            
-            if ($model_3d_path && in_array('model_3d', $fields)) $base_data['model_3d'] = $model_3d_path;
-            elseif ($old_room && !empty($old_room->model_3d) && in_array('model_3d', $fields)) $base_data['model_3d'] = $old_room->model_3d;
         }
 
         // Hapus baris lama fasilitas ini sebelum memasukkan baris baru per kode ruangan fisik
