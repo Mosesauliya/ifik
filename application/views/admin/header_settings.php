@@ -811,6 +811,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
   <div class="max-w-7xl mx-auto">
     <!-- Top Header -->
+      <?php $this->load->view('components/curved_sidebar'); ?>
     <div class="flex items-center justify-between mb-6">
         <div>
             <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Pengaturan Portal FIK</h1>
