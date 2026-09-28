@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * DASHBOARD UNIFIED — 4 Role: P1, P2, U1, U2
  * 
@@ -1020,6 +1020,18 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             ? `posisi=${DISPLAY_POSISI}`
             : `model_posisi=${MODEL_POSISI}`;
 
+        // ============================================================
+        // ✅ FIX #1: HELPER Base URL berkas sesuai tahap aktif
+        // Berkas Sidang (Preview 4) disimpan di uploads/sidang/,
+        // sedangkan Preview 1/2/3 di uploads/preview_ta/.
+        // Tanpa helper ini, URL untuk Sidang akan 404 page not found.
+        // ============================================================
+        function getUploadBaseUrl(tahap) {
+            return (tahap === 'Sidang')
+                ? '<?= base_url('uploads/sidang/') ?>'
+                : '<?= base_url('uploads/preview_ta/') ?>';
+        }
+
         // Field komentar yang ditampilkan sebagai "milik sendiri" (current user)
         function getCurrentComment(preview) {
             if (IS_P1) return preview.catatan_pembimbing   || '';
@@ -1615,7 +1627,9 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 const statusCurrent    = cb.getAttribute('data-status') || 'Pending';
                 const catatanCurrent   = decodeURIComponent(cb.getAttribute('data-catatan')  || '');
                 const catatan2Current  = decodeURIComponent(cb.getAttribute('data-catatan2') || '');
-                const fileUrl          = `<?= base_url('uploads/preview_ta/') ?>${file}`;
+
+                // ✅ FIX #1: Gunakan helper base URL sesuai tahap
+                const fileUrl          = getUploadBaseUrl(currentTahap) + encodeURIComponent(file);
 
                 // Status dropdown hanya untuk P1
                 const statusOptions = IS_P1 ? `
@@ -1839,8 +1853,12 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 document.getElementById('hoverPanelName').textContent = mhs.nama_mahasiswa + ' (' + mhs.nim + ')';
 
                 const pdfWrap = document.getElementById('hoverPdfWrap');
-                if (latest && latest.file_draft) {
-                    const fileUrl = `<?= base_url('uploads/preview_ta/') ?>${latest.file_draft}`;
+                if (latest && (latest.file_draft || latest.file_sidang)) {
+                    // ✅ FIX #1: Gunakan helper base URL sesuai tahap aktif
+                    const fname = (currentTahap === 'Sidang')
+                        ? (latest.file_sidang || latest.file_draft)
+                        : latest.file_draft;
+                    const fileUrl = getUploadBaseUrl(currentTahap) + encodeURIComponent(fname);
                     pdfWrap.innerHTML = `<iframe src="${fileUrl}" class="w-full h-full" frameborder="0"></iframe>`;
                 } else {
                     pdfWrap.innerHTML = `<div class="pdf-no-file"><i class="bi bi-file-earmark-x text-3xl"></i><span>Belum ada berkas diunggah</span></div>`;
@@ -2157,10 +2175,26 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         }
 
         // ============================================================
-        // HELPERS: Multi-file Preview 3
+        // HELPERS: Multi-file Preview 3 & Preview 4 (Sidang)
         // ============================================================
         function getPreviewFiles(preview) {
             if (!preview) return [];
+
+            // ✅ FIX #1: Preview 4 (Sidang) — file disimpan di uploads/sidang/
+            if (currentTahap === 'Sidang') {
+                const fname = preview.file_sidang || preview.file_draft;
+                if (fname) {
+                    return [{
+                        type: 'sidang',
+                        label: 'File Sidang Akhir',
+                        file: fname,
+                        icon: 'bi-file-earmark-text-fill'
+                    }];
+                }
+                return [];
+            }
+            // =====================================================
+
             if (currentTahap === 'Preview 3') {
                 const files = [];
                 if (preview.file_sitasi)     files.push({ type: 'sitasi',     label: 'File Sitasi',     file: preview.file_sitasi,     icon: 'bi-quote' });
@@ -2323,7 +2357,8 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                             itemsHtml += `<div class="p-2 text-center text-slate-400 text-[11px] italic">Tidak ada file pada pengajuan ini.</div>`;
                         } else {
                             files.forEach((f) => {
-                                const fileUrl   = `<?= base_url('uploads/preview_ta/') ?>${f.file}`;
+                                // ✅ FIX #1: Gunakan helper base URL sesuai tahap aktif
+                                const fileUrl   = getUploadBaseUrl(currentTahap) + encodeURIComponent(f.file);
                                 const fileName  = f.file;
                                 const isActive  = isPreviewItemActive(mhs.nim, idx, f.type);
 
@@ -2406,13 +2441,48 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 const fileObj  = files.find(f => f.type === fileType) || files[0];
                 if (!fileObj) return;
 
-                const fileUrl   = `<?= base_url('uploads/preview_ta/') ?>${fileObj.file}`;
+                // ✅ FIX #1: Gunakan helper base URL sesuai tahap aktif
+                const fileUrl   = getUploadBaseUrl(currentTahap) + encodeURIComponent(fileObj.file);
                 const fileName  = fileObj.file;
                 const fileLabel = fileObj.label;
                 const fullName  = mhs.nama_mahasiswa || 'Mahasiswa';
                 const slotNum   = idx + 1;
                 const status    = preview.status_pembimbing || 'Pending';
                 const uniqueKey = previewItemKey(p.nim, p.fileIndex, fileType);
+
+                // ✅ FIX #1: Tampilkan placeholder jika file hilang (404-friendly)
+                if (preview.file_missing) {
+                    html += `
+                        <div class="preview-card-item pointer-events-auto bg-white rounded-3xl shadow-2xl border border-rose-200 overflow-hidden flex flex-col shrink-0 animate-preview-in" id="previewCard_${uniqueKey}">
+                            <div class="preview-header p-2.5 px-3.5 bg-rose-900 text-white flex items-center justify-between gap-2.5 shrink-0 border-b border-rose-800">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <div class="w-7 h-7 rounded-lg bg-rose-600/30 border border-rose-500/50 text-rose-300 flex items-center justify-center shrink-0">
+                                        <i class="bi bi-exclamation-triangle-fill text-xs"></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <h4 class="text-xs font-bold truncate">File Tidak Ditemukan</h4>
+                                        <p class="text-[10px] text-rose-200 truncate">${fileName || '-'}</p>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="closeSinglePreview(${idx})" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-rose-600/80 text-slate-200 hover:text-white flex items-center justify-center text-xs font-bold transition cursor-pointer">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center justify-center p-6 bg-slate-50">
+                                <i class="bi bi-file-earmark-x text-5xl text-rose-400 mb-3"></i>
+                                <h4 class="font-bold text-slate-700 text-sm">Berkas tidak ditemukan di server</h4>
+                                <p class="text-xs text-slate-500 mt-1 text-center max-w-xs">
+                                    File <strong>${fileName || '-'}</strong> hilang atau telah dipindahkan.
+                                    Silakan minta mahasiswa mengunggah ulang.
+                                </p>
+                                <button type="button" onclick="closeSinglePreview(${idx})"
+                                        class="mt-4 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition cursor-pointer shadow-md">
+                                    <i class="bi bi-x-lg mr-1"></i> Tutup
+                                </button>
+                            </div>
+                        </div>`;
+                    return; // skip render iframe untuk item ini
+                }
 
                 let actionButtons = '';
                 if (currentTahap === 'Sidang') {
@@ -2677,6 +2747,8 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         window.renderFilterRowsDW      = renderFilterRowsDW;
         window.doMultiSearchDW         = doMultiSearchDW;
         window.resetFiltersDW          = resetFiltersDW;
+        // ✅ FIX #1: Expose helper ke global (agar bisa dipakai script lain di bawah)
+        window.getUploadBaseUrl        = getUploadBaseUrl;
     </script>
 
     <!-- ============================================================ -->
