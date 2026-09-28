@@ -1029,11 +1029,14 @@
                         <p class="text-sm font-bold text-slate-800">
                             Tarik & Lepas File CSV / XLSX / XLS di sini, atau <span class="text-brand-600 underline">Pilih File</span>
                         </p>
-                        <p class="text-xs text-slate-500 mt-1">Mendukung format .CSV, .XLSX, .XLS hingga 10MB (Kolom: Nama, Email, Role, NIM/NIP)</p>
+                        <p class="text-xs text-slate-500 mt-1">Mendukung format .CSV, .XLSX, .XLS hingga 10MB (Kolom: Nama, Email, Role [Angka ID], NIM/NIP)</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 mt-2 justify-center">
+                        <span class="px-2.5 py-1 text-[11px] font-semibold bg-orange-50 text-orange-700 rounded-md border border-orange-200">
+                            <i class="fa-solid fa-id-badge text-orange-600 mr-1"></i> Role ID: <b>3</b> (Dosen), <b>4</b> (Mahasiswa)<?= $is_laboran ? '' : ', <b>2</b> (Ka. Ur), <b>1</b> (Admin)' ?>
+                        </span>
                         <span class="px-2.5 py-1 text-[11px] font-semibold bg-emerald-50 text-emerald-700 rounded-md border border-emerald-200">
-                            <i class="fa-solid fa-file-excel text-emerald-600 mr-1"></i> Auto Detect Column Headers
+                            <i class="fa-solid fa-file-excel text-emerald-600 mr-1"></i> Auto Detect Headers
                         </span>
                         <span class="px-2.5 py-1 text-[11px] font-semibold bg-blue-50 text-blue-700 rounded-md border border-blue-200">
                             <i class="fa-solid fa-shield-halved text-blue-600 mr-1"></i> Instant Browser Validation
@@ -2262,22 +2265,38 @@
             let nowStr = new Date().toISOString().slice(0, 16).replace('T', ' ');
             const seenInFile = new Set();
 
+            const roleIdToNameMap = {
+                '1': 'Admin',
+                '2': 'Kepala Urusan',
+                '3': 'Dosen',
+                '4': 'Mahasiswa',
+                '5': 'Admin LAA',
+                '6': 'Koordinator TA',
+                '7': 'PIC KK',
+                '9': 'Ketua KK',
+                '21': 'Laboran',
+                '22': 'Super Admin'
+            };
+
             rows.forEach((row, idx) => {
                 let name = row.Nama || row.nama || row.Name || row.name || 'User ' + (idx + 1);
                 let email = row.Email || row.email || row.EmailAddress || '';
-                let role = row.Role || row.role || row.Peran || row.peran || 'Mahasiswa';
+                let rawRole = row.Role !== undefined ? row.Role : (row.role !== undefined ? row.role : (row.Peran !== undefined ? row.Peran : (row.peran !== undefined ? row.peran : (row.Role_ID !== undefined ? row.Role_ID : (row.role_id !== undefined ? row.role_id : '4')))));
                 let nim_nip = row.NIM || row.nim || row.NIP || row.nip || row.ID || row.id || '';
                 let token = row.Token || row.token || '';
 
                 email = email ? email.trim() : '';
                 name = name ? name.trim() : 'User';
-                role = role ? role.trim() : 'Mahasiswa';
+                let roleStr = (rawRole !== null && rawRole !== undefined) ? rawRole.toString().trim() : '4';
+                let roleDisplay = roleIdToNameMap[roleStr] || (['3', '4', '2', '1', '21', '5', '6', '9'].includes(roleStr) ? 'Mahasiswa' : roleStr);
                 nim_nip = nim_nip ? nim_nip.toString().trim() : '';
 
                 let status = 'valid';
                 let statusText = 'Siap Diimpor';
                 let isChecked = true;
                 const emailLower = email.toLowerCase();
+                const roleLower = roleDisplay.toLowerCase();
+                const isLaboranAllowed = ['dosen', 'mahasiswa', '3', '4'].includes(roleStr.toLowerCase()) || ['dosen', 'mahasiswa'].includes(roleLower);
 
                 if (!email || !email.includes('@')) {
                     status = 'invalid_email';
@@ -2287,7 +2306,7 @@
                     status = 'invalid_domain';
                     statusText = 'Non-Telkom Domain';
                     isChecked = false;
-                } else if (window.isLaboran && !['dosen', 'mahasiswa'].includes(role.toLowerCase())) {
+                } else if (window.isLaboran && !isLaboranAllowed) {
                     status = 'invalid_role';
                     statusText = 'Role Ditolak (Khusus Dosen & Mahasiswa)';
                     isChecked = false;
@@ -2307,7 +2326,8 @@
                     origIdx: idx,
                     name,
                     email,
-                    role,
+                    role: roleDisplay,
+                    rawRole: roleStr,
                     nim_nip,
                     token: token.trim(),
                     status,
@@ -4322,16 +4342,29 @@
 
         function downloadSampleTemplate(type) {
             const sampleData = window.isLaboran ? [
-                { 'Nama': 'Dr. Ir. Ahmad Sudrajat, M.T.', 'Email': 'ahmad.sudrajat@telkomuniversity.ac.id', 'Role': 'Dosen', 'NIM': '197804122005011002' },
-                { 'Nama': 'Budi Santoso', 'Email': 'budi.santoso@student.telkomuniversity.ac.id', 'Role': 'Mahasiswa', 'NIM': '1301210045' },
-                { 'Nama': 'Dewi Lestari', 'Email': 'dewi.lestari@student.telkomuniversity.ac.id', 'Role': 'Mahasiswa', 'NIM': '1301210088' },
-                { 'Nama': 'Prof. Dr. Hendra Wijaya', 'Email': 'hendra.wijaya@telkomuniversity.ac.id', 'Role': 'Dosen', 'NIM': '196503151990021001' }
+                { 'Nama': 'Dr. Ir. Ahmad Sudrajat, M.T.', 'Email': 'ahmad.sudrajat@telkomuniversity.ac.id', 'Role': 3, 'NIM': '197804122005011002' },
+                { 'Nama': 'Budi Santoso', 'Email': 'budi.santoso@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210045' },
+                { 'Nama': 'Dewi Lestari', 'Email': 'dewi.lestari@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210088' },
+                { 'Nama': 'Prof. Dr. Hendra Wijaya', 'Email': 'hendra.wijaya@telkomuniversity.ac.id', 'Role': 3, 'NIM': '196503151990021001' }
             ] : [
-                { 'Nama': 'Dr. Ir. Ahmad Sudrajat, M.T.', 'Email': 'ahmad.sudrajat@telkomuniversity.ac.id', 'Role': 'Dosen', 'NIM': '197804122005011002' },
-                { 'Nama': 'Budi Santoso', 'Email': 'budi.santoso@student.telkomuniversity.ac.id', 'Role': 'Mahasiswa', 'NIM': '1301210045' },
-                { 'Nama': 'Siti Rahmawati, S.Kom.', 'Email': 'siti.rahmawati@telkomuniversity.ac.id', 'Role': 'Ka. Ur', 'NIM': '2019080104' },
-                { 'Nama': 'Dewi Lestari', 'Email': 'dewi.lestari@student.telkomuniversity.ac.id', 'Role': 'Mahasiswa', 'NIM': '1301210088' },
-                { 'Nama': 'Prof. Dr. Hendra Wijaya', 'Email': 'hendra.wijaya@telkomuniversity.ac.id', 'Role': 'Dosen', 'NIM': '196503151990021001' }
+                { 'Nama': 'Dr. Ir. Ahmad Sudrajat, M.T.', 'Email': 'ahmad.sudrajat@telkomuniversity.ac.id', 'Role': 3, 'NIM': '197804122005011002' },
+                { 'Nama': 'Budi Santoso', 'Email': 'budi.santoso@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210045' },
+                { 'Nama': 'Siti Rahmawati, S.Kom.', 'Email': 'siti.rahmawati@telkomuniversity.ac.id', 'Role': 2, 'NIM': '2019080104' },
+                { 'Nama': 'Dewi Lestari', 'Email': 'dewi.lestari@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210088' },
+                { 'Nama': 'Prof. Dr. Hendra Wijaya', 'Email': 'hendra.wijaya@telkomuniversity.ac.id', 'Role': 3, 'NIM': '196503151990021001' }
+            ];
+
+            const guideData = [
+                { 'Role ID': 3, 'Nama Role': 'Dosen', 'Keterangan': 'Dosen Wali / Penguji / Pembimbing' },
+                { 'Role ID': 4, 'Nama Role': 'Mahasiswa', 'Keterangan': 'Mahasiswa Aktif' },
+                ...(window.isLaboran ? [] : [
+                    { 'Role ID': 2, 'Nama Role': 'Kepala Urusan', 'Keterangan': 'Ka. Ur Akademik & Kemahasiswaan' },
+                    { 'Role ID': 1, 'Nama Role': 'Admin', 'Keterangan': 'Administrator Utama' },
+                    { 'Role ID': 5, 'Nama Role': 'Admin LAA', 'Keterangan': 'Layanan Administrasi Akademik' },
+                    { 'Role ID': 6, 'Nama Role': 'Koordinator TA', 'Keterangan': 'Koordinator Tugas Akhir' },
+                    { 'Role ID': 9, 'Nama Role': 'Ketua KK', 'Keterangan': 'Ketua Kelompok Keahlian' },
+                    { 'Role ID': 21, 'Nama Role': 'Laboran', 'Keterangan': 'Pengelola Laboratorium' }
+                ])
             ];
 
             if (type === 'csv') {
@@ -4349,11 +4382,21 @@
                 worksheet['!cols'] = [
                     { wch: 32 }, // Nama
                     { wch: 48 }, // Email
-                    { wch: 16 }, // Role
+                    { wch: 14 }, // Role (Angka ID)
                     { wch: 22 }  // NIM/NIP
                 ];
                 const workbook = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(workbook, worksheet, 'Template Import');
+
+                // Add Guide sheet
+                const guideWorksheet = XLSX.utils.json_to_sheet(guideData);
+                guideWorksheet['!cols'] = [
+                    { wch: 12 },
+                    { wch: 20 },
+                    { wch: 38 }
+                ];
+                XLSX.utils.book_append_sheet(workbook, guideWorksheet, 'Petunjuk Role ID');
+
                 XLSX.writeFile(workbook, 'template_import_email_telkom.xlsx');
             }
         }

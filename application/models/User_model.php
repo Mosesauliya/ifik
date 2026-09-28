@@ -285,7 +285,14 @@ class User_model extends CI_Model {
      */
     public function get_role_id_by_name($roleName)
     {
-        $roleName = strtolower(trim($roleName));
+        $rawRole = trim((string)$roleName);
+        if (is_numeric($rawRole)) {
+            $numRole = (int)$rawRole;
+            if ($numRole > 0) {
+                return $numRole;
+            }
+        }
+        $roleName = strtolower($rawRole);
         $isUserRoleTable = ($this->tbl_role === 'user_role');
 
         if (strpos($roleName, 'mahasiswa') !== false) return $isUserRoleTable ? 4 : 5;
@@ -365,8 +372,9 @@ class User_model extends CI_Model {
                 continue;
             }
 
-            $roleName = isset($acc['role']) ? strtolower(trim($acc['role'])) : 'mahasiswa';
-            $roleId = isset($roleMap[$roleName]) ? $roleMap[$roleName] : $this->get_role_id_by_name($roleName);
+            $rawRole = isset($acc['role']) ? trim((string)$acc['role']) : (isset($acc['peran']) ? trim((string)$acc['peran']) : (isset($acc['role_id']) ? trim((string)$acc['role_id']) : '4'));
+            $roleLower = strtolower($rawRole);
+            $roleId = isset($roleMap[$roleLower]) ? $roleMap[$roleLower] : $this->get_role_id_by_name($rawRole);
 
             $token = isset($acc['token']) && !empty($acc['token']) ? trim($acc['token']) : null;
             $name = isset($acc['name']) && !empty($acc['name']) ? trim($acc['name']) : 'User';
