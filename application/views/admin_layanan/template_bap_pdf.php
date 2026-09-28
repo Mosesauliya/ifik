@@ -183,13 +183,7 @@
         <div class="page-1">
             <!-- Header Logo & Identity -->
             <div class="header-logo">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <div class="logo-box">U</div>
-                    <div>
-                        <div class="logo-box" style="font-size:15pt; color:#e11d48; font-weight:800;">Telkom</div>
-                        <div class="logo-sub" style="font-size:10pt;">University</div>
-                    </div>
-                </div>
+                <img src="<?= base_url('assets/images/logo_telkom_university.png'); ?>" alt="Telkom University Logo" style="height: 52px; width: auto; display: block;">
             </div>
 
             <div class="title-header">
@@ -367,10 +361,19 @@
             <div style="margin-top:18px; margin-left:10px;">
                 <div>Bandung, <?= htmlspecialchars($bap['tanggal_text']); ?></div>
                 <div style="margin-top:2px;">Ketua Sidang,</div>
-                <div class="sig-box" style="height:55px; font-size:22pt; margin:6px 0;">
-                    ~ Samsul Alam ~
+                <div class="sig-box" style="height:55px; margin:6px 0; display:flex; align-items:center;">
+                    <?php 
+                    $ttd_ks = !empty($bap['ttd_ketua_sidang']) ? $bap['ttd_ketua_sidang'] : (!empty($bap['ttd_penguji_1']) ? $bap['ttd_penguji_1'] : null);
+                    if (!empty($ttd_ks) && file_exists(FCPATH . 'uploads/signatures/' . $ttd_ks)): 
+                    ?>
+                        <img src="<?= base_url('uploads/signatures/' . $ttd_ks); ?>" style="max-height: 52px; width: auto; display: block;">
+                    <?php else: ?>
+                        <div style="font-family: 'Brush Script MT', cursive, sans-serif; font-size: 20pt; color: #0284c7;">
+                            ~ TTD Digital ~
+                        </div>
+                    <?php endif; ?>
                 </div>
-                <div><strong><?= htmlspecialchars($bap['ketua_sidang']); ?></strong></div>
+                <div><strong><?= htmlspecialchars($bap['ketua_sidang'] ?? $bap['penguji_1']); ?></strong></div>
             </div>
 
             <!-- Standar Range Nilai Table (Matching Photo 6) -->
