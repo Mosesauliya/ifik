@@ -497,13 +497,37 @@ class LaboranHelp extends CI_Controller {
     public function create_sample_ajax() {
         header('Content-Type: application/json');
 
-        $topics = [
-            'Izin Penggunaan PC High-End untuk Render 3D',
-            'Pertanyaan Ketersediaan Sensor ESP32 di Lab IoT',
-            'Koneksi Internet LAN Lab Software Terputus',
-            'Peminjaman Mikrokontroler Arduino untuk Tugas Mata Kuliah',
-            'Permintaan Akses Masuk Ruang Server Studio'
+        $roleId = (int)$this->session->userdata('role_id');
+        $email = strtolower((string)$this->session->userdata('email'));
+        $targetRole = 'laboran';
+
+        if ($roleId === 2 && strpos($email, 'laboran') === false) {
+            $targetRole = 'kaur';
+        } elseif ($roleId === 5) {
+            $targetRole = 'admin_layanan';
+        }
+
+        $topicsMap = [
+            'laboran' => [
+                'Izin Penggunaan PC High-End untuk Render 3D',
+                'Pertanyaan Ketersediaan Sensor ESP32 di Lab IoT',
+                'Koneksi Internet LAN Lab Software Terputus',
+                'Peminjaman Mikrokontroler Arduino untuk Tugas Mata Kuliah'
+            ],
+            'kaur' => [
+                'Validasi & Rekomendasi Jadwal Sidang Gelombang 2',
+                'Persetujuan Penggunaan Ruangan Lab untuk Seminar',
+                'Pengajuan Anggaran Pengadaan Komputer Baru Lab'
+            ],
+            'admin_layanan' => [
+                'Pengecekan Status Verifikasi Berkas Bebas Lab & Syarat Sidang',
+                'Permohonan Surat Keterangan Bebas Pinjam Laboratorium',
+                'Konsultasi Syarat Kelengkapan Gelombang Sidang TA',
+                'Pertanyaan Pengajuan Legalisir Ijazah & Transkrip'
+            ]
         ];
+
+        $topics = $topicsMap[$targetRole] ?? $topicsMap['laboran'];
 
         $names = [
             ['nama' => 'Bintang Alamsyah', 'role' => 'Mahasiswa', 'nim' => '1301210998', 'email' => 'bintang@student.telkomuniversity.ac.id'],
@@ -521,8 +545,9 @@ class LaboranHelp extends CI_Controller {
             'user_email'   => $person['email'],
             'user_role'    => $person['role'],
             'user_nim_nip' => $person['nim'],
+            'target_role'  => $targetRole,
             'topik'        => $topic,
-            'message'      => "Halo admin/laboran, saya ingin bertanya terkait {$topic}. Apakah bisa dibantu informasinya?"
+            'message'      => "Halo admin/petugas, saya ingin bertanya terkait {$topic}. Apakah bisa dibantu informasinya?"
         ]);
 
         echo json_encode([
