@@ -941,28 +941,7 @@
         .news-excerpt { font-size: 0.8rem; -webkit-line-clamp: 2; }
     }
 
-    @media (max-width: 768px) {
-        #section-contact {
-            height: auto !important;
-            min-height: 100vh;
-            padding-top: 85px !important;
-            padding-bottom: 40px !important;
-            justify-content: center !important;
-            overflow-x: hidden !important;
-        }
-        .news-header {
-            margin-top: 0;
-            margin-bottom: 14px;
-            padding: 0 16px;
-        }
-        .news-header h1 {
-            font-size: 1.55rem;
-            line-height: 1.2;
-        }
-        .news-header p {
-            font-size: 0.84rem;
-            padding: 0 12px;
-        }
+    /* ===== RESPONSIVE MOBILE STACKED CARD DECK SWIPER MODE ===== */
     @media (max-width: 768px) {
         #section-contact {
             height: auto !important;
@@ -986,27 +965,59 @@
             padding: 0 12px;
         }
         .news-fan-container {
-            height: 335px;
-            max-width: 100%;
+            height: 355px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: visible !important;
+            touch-action: pan-y;
         }
         .news-card {
-            width: 215px;
-            height: 315px;
-            --spread-x: calc(var(--offset) * 36px);
-            --arc-y: calc(var(--offset) * var(--offset) * 3.5px);
-            --angle-per-card: 6deg;
+            width: 245px;
+            max-width: 82vw;
+            height: 350px;
+            position: absolute !important;
+            left: 50% !important;
+            top: 50% !important;
+            border-radius: 22px;
+            box-shadow: -6px 12px 35px rgba(0, 0, 0, 0.16) !important;
+            transition: transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.45s ease, opacity 0.45s ease;
         }
+
+        /* Position Stack Card Numpuk khusus Mobile */
+        .news-card[data-stack-pos="0"] {
+            transform: translate(-50%, -50%) rotate(0deg) scale(1) !important;
+            z-index: 30 !important;
+            opacity: 1 !important;
+        }
+        .news-card[data-stack-pos="1"] {
+            transform: translate(calc(-50% + 14px), calc(-50% + 10px)) rotate(3.5deg) scale(0.95) !important;
+            z-index: 20 !important;
+            opacity: 0.92 !important;
+        }
+        .news-card[data-stack-pos="2"] {
+            transform: translate(calc(-50% + 28px), calc(-50% + 20px)) rotate(7deg) scale(0.90) !important;
+            z-index: 10 !important;
+            opacity: 0.80 !important;
+        }
+        .news-card[data-stack-pos="past"] {
+            transform: translate(calc(-50% - 150vw), -50%) rotate(-20deg) scale(0.85) !important;
+            z-index: 0 !important;
+            opacity: 0 !important;
+        }
+
+        /* Dimatikan fanning hover di mobile agar murni stack & touch swipe */
         .news-card:hover {
-            --hover-shift-x: calc(var(--offset) * 10px);
-            transform: translate(calc(-50% + var(--spread-x) + var(--hover-shift-x)), calc(-50% - 18px)) rotate(0deg) scale(1.02) !important;
+            box-shadow: -6px 12px 35px rgba(0, 0, 0, 0.16) !important;
         }
-        .news-card:hover ~ .news-card {
-            transform: translate(calc(-50% + var(--spread-x) + 28px), calc(-50% + var(--arc-y) + 6px)) rotate(calc(var(--angle) + 3deg)) !important;
+        .news-fan-container:has(.news-card:hover) .news-card:not(:hover) {
+            opacity: 1 !important;
+            filter: none !important;
         }
-        .news-fan-container:has(.news-card:hover) .news-card:not(:hover):not(.news-card:hover ~ .news-card) {
-            transform: translate(calc(-50% + var(--spread-x) - 28px), calc(-50% + var(--arc-y) + 6px)) rotate(calc(var(--angle) - 3deg)) !important;
-        }
-        /* Mobile horizontal controls - Simetris & Presisi Sejajar Vertikal */
+
+        /* Controls Row */
         .news-controls {
             position: relative;
             right: auto;
@@ -1017,38 +1028,13 @@
             justify-content: center !important;
             width: auto;
             gap: 10px;
-            margin-top: 12px;
+            margin-top: 14px;
             margin-bottom: 0;
             padding: 0;
-            z-index: 20;
+            z-index: 40;
         }
         .news-arrow-btn {
-            width: 40px;
-            height: 40px;
-            font-size: 1rem;
-            margin: 0;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .news-arrow-btn#newsPrevBtn {
-            transform: rotate(-90deg);
-        }
-        .news-arrow-btn#newsPrevBtn:hover:not(:disabled) {
-            transform: rotate(-90deg) scale(1.1) !important;
-        }
-        .news-arrow-btn#newsPrevBtn:active:not(:disabled) {
-            transform: rotate(-90deg) scale(0.95) !important;
-        }
-        .news-arrow-btn#newsNextBtn {
-            transform: rotate(-90deg);
-        }
-        .news-arrow-btn#newsNextBtn:hover:not(:disabled) {
-            transform: rotate(-90deg) scale(1.1) !important;
-        }
-        .news-arrow-btn#newsNextBtn:active:not(:disabled) {
-            transform: rotate(-90deg) scale(0.95) !important;
+            display: none !important;
         }
         .news-dots {
             flex-direction: row !important;
@@ -1074,6 +1060,12 @@
             align-items: center;
             height: 40px;
             font-size: 0.82rem;
+            font-weight: 700;
+            color: #ea580c;
+            background: #fff7ed;
+            padding: 0 12px;
+            border-radius: 99px;
+            border: 1px solid rgba(234, 88, 12, 0.25);
         }
         .news-view-all-btn {
             position: relative;
@@ -1438,6 +1430,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         slice.forEach((news, i) => {
             const card = createCard(news, i, total);
+            if (window.innerWidth <= 768) {
+                card.setAttribute('data-stack-pos', i);
+            }
             container.appendChild(card);
         });
     }
@@ -1612,32 +1607,104 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Touch Swipe Support for Mobile
+    // ===== TOUCH SWIPE INTERAKSI STACK CARD DECK (KHUSUS MOBILE) =====
     let touchStartX = 0;
-    let touchEndX = 0;
+    let touchStartY = 0;
+    let touchCurrentX = 0;
+    let touchCurrentY = 0;
+    let isTouchDragging = false;
+    let isHorizontalSwipe = false;
+
     container.addEventListener('touchstart', (e) => {
-        if (e.changedTouches && e.changedTouches.length > 0) {
-            touchStartX = e.changedTouches[0].screenX;
+        if (window.innerWidth > 768) return;
+        if (!e.touches || e.touches.length === 0) return;
+
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        touchCurrentX = touchStartX;
+        touchCurrentY = touchStartY;
+        isTouchDragging = true;
+        isHorizontalSwipe = false;
+
+        const topCard = container.querySelector('.news-card[data-stack-pos="0"]');
+        if (topCard) {
+            topCard.style.transition = 'none';
         }
     }, { passive: true });
 
-    container.addEventListener('touchend', (e) => {
-        if (e.changedTouches && e.changedTouches.length > 0) {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-        }
-    }, { passive: true });
+    container.addEventListener('touchmove', (e) => {
+        if (!isTouchDragging || window.innerWidth > 768) return;
+        if (!e.touches || e.touches.length === 0) return;
 
-    function handleSwipe() {
-        const diff = touchStartX - touchEndX;
-        if (Math.abs(diff) > 40) {
-            if (diff > 0) {
-                if (!nextBtn.disabled) nextBtn.click();
-            } else {
-                if (!prevBtn.disabled) prevBtn.click();
+        touchCurrentX = e.touches[0].clientX;
+        touchCurrentY = e.touches[0].clientY;
+
+        const diffX = touchCurrentX - touchStartX;
+        const diffY = touchCurrentY - touchStartY;
+
+        // Deteksi gesture horizontal
+        if (!isHorizontalSwipe && Math.abs(diffX) > 8 && Math.abs(diffX) > Math.abs(diffY)) {
+            isHorizontalSwipe = true;
+        }
+
+        if (isHorizontalSwipe) {
+            if (e.cancelable) e.preventDefault(); // Mencegah scroll vertikal saat swipe horizontal
+
+            const topCard = container.querySelector('.news-card[data-stack-pos="0"]');
+            const card2   = container.querySelector('.news-card[data-stack-pos="1"]');
+
+            let moveX = diffX;
+            if ((currentPage === 0 && diffX > 0) || (currentPage === totalPages - 1 && diffX < 0)) {
+                moveX = diffX * 0.3; // Tahanan halus di ujung
+            }
+
+            if (topCard) {
+                const rotation = moveX * 0.08;
+                topCard.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${diffY * 0.15}px)) rotate(${rotation}deg)`;
+            }
+
+            if (card2) {
+                const progress = Math.min(Math.abs(moveX) / 200, 1);
+                const scaleVal = 0.95 + (progress * 0.05);
+                const rotVal   = 3.5 - (progress * 3.5);
+                const posXVal  = 14 - (progress * 14);
+                const posYVal  = 10 - (progress * 10);
+                card2.style.transform = `translate(calc(-50% + ${posXVal}px), calc(-50% + ${posYVal}px)) rotate(${rotVal}deg) scale(${scaleVal})`;
             }
         }
+    }, { passive: false });
+
+    function finishTouchSwipe() {
+        if (!isTouchDragging || window.innerWidth > 768) return;
+        isTouchDragging = false;
+
+        const diffX = touchCurrentX - touchStartX;
+        const allCards = container.querySelectorAll('.news-card');
+
+        allCards.forEach(card => {
+            card.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease';
+            card.style.transform = '';
+        });
+
+        if (isHorizontalSwipe && Math.abs(diffX) > 45) {
+            if (diffX < 0 && currentPage < totalPages - 1) {
+                const topCard = container.querySelector('.news-card[data-stack-pos="0"]');
+                if (topCard) {
+                    topCard.setAttribute('data-stack-pos', 'past');
+                }
+                setTimeout(() => {
+                    goToPage(currentPage + 1, 'next');
+                }, 120);
+            } else if (diffX > 0 && currentPage > 0) {
+                goToPage(currentPage - 1, 'prev');
+            }
+        }
+
+        isHorizontalSwipe = false;
     }
+
+    container.addEventListener('touchend', finishTouchSwipe, { passive: true });
+    container.addEventListener('touchcancel', finishTouchSwipe, { passive: true });
 
     // Pause auto-scroll HANYA saat kursor berada langsung di atas kartu (.news-card)
     container.addEventListener('mouseover', (e) => { 

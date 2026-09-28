@@ -767,8 +767,14 @@
     </style>
 <body class="bg-slate-50 text-slate-800 antialiased pb-16">
 
-    <!-- Auto Role-Aware Curved Animated Sidebar -->
-    <?php $this->load->view('components/curved_sidebar'); ?>
+    <!-- Auto Role-Aware Sidebar Component -->
+    <?php 
+    if ((int)$this->session->userdata('role_id') === 5) {
+        $this->load->view('admin_layanan/sidebar');
+    } else {
+        $this->load->view('components/curved_sidebar');
+    }
+    ?>
 
     <!-- Main Page Content Wrapper (Smoothly shifts when sidebar is open) -->
     <div id="mainPageContent" class="page-wrapper-for-sidebar min-h-screen flex flex-col">
