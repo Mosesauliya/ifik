@@ -645,8 +645,8 @@
                 $n = trim(isset($r->nama_ruangan) ? $r->nama_ruangan : '');
                 $c_code = trim(isset($r->kode_ruangan) ? $r->kode_ruangan : '');
                 if (!empty($n)) {
-                    $lab_code = preg_replace('/[^a-z0-9]/', '', strtolower($c_code));
-                    if (empty($lab_code)) $lab_code = 'room_' . $r->id;
+                    $lab_code = preg_replace('/[^a-z0-9]/', '', strtolower($n));
+                    if (empty($lab_code)) $lab_code = 'room_' . preg_replace('/[^a-z0-9]/', '', strtolower($c_code));
 
                     if (!in_array($lab_code, $seen_keys)) {
                         $seen_keys[] = $lab_code;

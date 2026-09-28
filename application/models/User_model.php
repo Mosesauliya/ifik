@@ -48,7 +48,7 @@ class User_model extends CI_Model {
 
         // Master accounts (Admin, Kaur, LAA, Laboran, Dosen Wali, Koordinator TA, Ketua KK) are ALWAYS password_changed = 1
         $masterIds = ['admin-01', 'admin-laa-01', 'dsn-wali-01', 'kaur-01', 'koor-ta-01', 'laboran-01', 'ketua-kk-01', 'mhs-1301210001'];
-        $masterRoles = [1, 2, 5, 9, 21]; // Admin, Kaur, LAA, Ketua KK, Laboran
+        $masterRoles = [1, 2, 5, 9, 21, 22]; // Admin, Kaur, LAA, Ketua KK, Laboran, Super Admin
         if (in_array($user->id, $masterIds) || in_array((int)$user->role_id, $masterRoles)) {
             $user->password_changed = 1;
         } elseif (isset($user->password_changed)) {
@@ -264,7 +264,7 @@ class User_model extends CI_Model {
             if (empty($row['token']) && !empty($row['token_hash'])) {
                 $row['token'] = $row['token_hash'];
             }
-            $isMaster = in_array($row['id'], ['admin-01', 'admin-laa-01', 'dsn-wali-01', 'kaur-01', 'koor-ta-01', 'laboran-01', 'ketua-kk-01']) || in_array((int)$row['role_id'], [1, 2, 5, 9, 21]);
+            $isMaster = in_array($row['id'], ['admin-01', 'admin-laa-01', 'dsn-wali-01', 'kaur-01', 'koor-ta-01', 'laboran-01', 'ketua-kk-01', 'super-admin-01']) || in_array((int)$row['role_id'], [1, 2, 5, 9, 21, 22]);
             $isActive = isset($row['is_active']) ? (int)$row['is_active'] : 0;
             if ($isMaster) {
                 $row['password_changed'] = 1;
@@ -307,6 +307,7 @@ class User_model extends CI_Model {
         if (strpos($roleName, 'laboran') !== false) return 21;
         if (strpos($roleName, 'kaur') !== false || strpos($roleName, 'ka. ur') !== false) return $isUserRoleTable ? 2 : 3;
         if (strpos($roleName, 'koordinator') !== false || strpos($roleName, 'koordinatorta') !== false) return 6;
+        if (strpos($roleName, 'super admin') !== false || strpos($roleName, 'superadmin') !== false) return 22;
         if (strpos($roleName, 'admin laa') !== false || strpos($roleName, 'laa') !== false) return $isUserRoleTable ? 5 : 1;
         if (strpos($roleName, 'ketua kk') !== false || strpos($roleName, 'kk') !== false) return $isUserRoleTable ? 9 : 7;
         if (strpos($roleName, 'admin') !== false) return 1;

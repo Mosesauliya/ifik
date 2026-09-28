@@ -65,17 +65,30 @@ if (!empty($foto_path)) {
     $img_url = base_url('assets/images/multimedia.jpg');
 }
 
-$model_path = !empty($matched_room->model_3d) ? ltrim($matched_room->model_3d, '/') : '';
-if (!empty($model_path)) {
-    if (strpos($model_path, 'http://') === 0 || strpos($model_path, 'https://') === 0) {
-        $model_url = $model_path;
-    } elseif (file_exists(FCPATH . $model_path)) {
-        $model_url = base_url($model_path);
+$model_raw = '';
+if (!empty($matched_room->model_3d)) {
+    $model_raw = ltrim($matched_room->model_3d, '/');
+} elseif (!empty($matched_room->images)) {
+    if (strpos($matched_room->images, '|') !== false) {
+        list(, $m) = explode('|', $matched_room->images, 2);
+        $model_raw = ltrim($m, '/');
     } else {
-        $model_url = '';
+        $ext = strtolower(pathinfo($matched_room->images, PATHINFO_EXTENSION));
+        if (in_array($ext, ['glb', 'gltf', 'fbx', 'obj'])) {
+            $model_raw = ltrim($matched_room->images, '/');
+        }
     }
-} else {
-    $model_url = '';
+}
+
+$model_url = '';
+if (!empty($model_raw)) {
+    if (strpos($model_raw, 'http://') === 0 || strpos($model_raw, 'https://') === 0) {
+        $model_url = $model_raw;
+    } elseif (file_exists(FCPATH . $model_raw)) {
+        $model_url = base_url($model_raw);
+    } elseif (file_exists(FCPATH . 'uploads/ruangan/models/' . basename($model_raw))) {
+        $model_url = base_url('uploads/ruangan/models/' . basename($model_raw));
+    }
 }
 
 $parsed_room_codes = [];

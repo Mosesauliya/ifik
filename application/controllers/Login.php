@@ -86,8 +86,8 @@ class Login extends CI_Controller {
 
 			if ($isPasswordValid) {
 				// Master accounts (Admin, Kaur, LAA, Laboran, Dosen Wali, Koordinator TA, Ketua KK) are ALWAYS password_changed = 1
-				$masterIds = ['admin-01', 'admin-laa-01', 'dsn-wali-01', 'kaur-01', 'koor-ta-01', 'laboran-01', 'ketua-kk-01', 'mhs-1301210001'];
-				$isMasterAccount = in_array($user->id, $masterIds) || in_array((int)$user->role_id, [1, 2, 5, 9, 21]);
+				$masterIds = ['admin-01', 'admin-laa-01', 'dsn-wali-01', 'kaur-01', 'koor-ta-01', 'laboran-01', 'ketua-kk-01', 'mhs-1301210001', 'super-admin-01'];
+				$isMasterAccount = in_array($user->id, $masterIds) || in_array((int)$user->role_id, [1, 2, 5, 9, 21, 22]);
 
 				$passwordChanged = $isMasterAccount ? 1 : ($isTokenLogin ? 0 : (int)$user->password_changed);
 
@@ -109,6 +109,12 @@ class Login extends CI_Controller {
 				if (!$isMasterAccount && ($isTokenLogin || $passwordChanged === 0)) {
 					$this->session->set_flashdata('warning', 'Akun Anda masih menggunakan password sementara (token). Wajib buat password baru dan lengkapi biodata Anda.');
 					redirect('onboarding');
+					return;
+				}
+
+				// If Super Admin (role 22), redirect directly to Import Email & Token
+				if ((int)$user->role_id === 22) {
+					redirect('import-email');
 					return;
 				}
 

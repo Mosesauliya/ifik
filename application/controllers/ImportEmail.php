@@ -37,8 +37,8 @@ class ImportEmail extends CI_Controller {
         }
 
         $roleId = (int)$this->session->userdata('role_id');
-        // Allowed: 1 = Admin, 2 = Kepala Urusan, 5 = Admin LAA, 16 = Admin Prodi, 21 = Laboran
-        $allowedRoles = [1, 2, 5, 16, 21];
+        // Allowed: 1 = Admin, 2 = Kepala Urusan, 5 = Admin LAA, 16 = Admin Prodi, 21 = Laboran, 22 = Super Admin
+        $allowedRoles = [1, 2, 5, 16, 21, 22];
 
         if (!in_array($roleId, $allowedRoles)) {
             $isAjax = $this->input->is_ajax_request() || 
@@ -561,7 +561,7 @@ class ImportEmail extends CI_Controller {
                 $roleDisplay = $this->_get_role_name_by_id($u['role_id']);
             }
 
-            $isMaster = in_array($u['id'], ['admin-01', 'admin-laa-01', 'dsn-wali-01', 'kaur-01', 'koor-ta-01', 'laboran-01', 'ketua-kk-01']) || in_array((int)$u['role_id'], [1, 2, 5, 9, 21]);
+            $isMaster = in_array($u['id'], ['admin-01', 'admin-laa-01', 'dsn-wali-01', 'kaur-01', 'koor-ta-01', 'laboran-01', 'ketua-kk-01', 'super-admin-01']) || in_array((int)$u['role_id'], [1, 2, 5, 9, 21, 22]);
             $isPasswordChanged = $isMaster ? true : (!empty($u['password_changed']) && (int)$u['password_changed'] === 1);
 
             $tokenStatus = 'empty';
@@ -619,7 +619,8 @@ class ImportEmail extends CI_Controller {
                 6 => 'Koordinator TA',
                 7 => 'PIC KK',
                 9 => 'Ketua KK',
-                21 => 'Laboran'
+                21 => 'Laboran',
+                22 => 'Super Admin'
             ];
             return $roles[$roleId] ?? 'Mahasiswa';
         }

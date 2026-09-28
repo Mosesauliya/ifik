@@ -25,11 +25,15 @@
 <body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col selection:bg-orange-600 selection:text-white">
 
     <!-- Header Navbar Partial -->
-    <?php $this->load->view('partials/app_navbar', [
-        'user_role_label'   => 'Pusat Kendali Admin',
-        'user_display_name' => 'Super Administrator',
-        'user_display_sub'  => 'Fakultas Industri Kreatif'
-    ]); ?>
+    <?php 
+        $current_role_id = (int)$this->session->userdata('role_id');
+        $is_super_admin = ($current_role_id === 22);
+        $this->load->view('partials/app_navbar', [
+            'user_role_label'   => $is_super_admin ? 'Panel Super Admin' : 'Pusat Kendali Admin',
+            'user_display_name' => $is_super_admin ? ($this->session->userdata('name') ?: 'Super Administrator') : ($this->session->userdata('name') ?: 'Administrator'),
+            'user_display_sub'  => 'Fakultas Industri Kreatif'
+        ]); 
+    ?>
 
     <!-- Main Container -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full space-y-8">
@@ -40,8 +44,8 @@
                 <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-orange-50 border border-orange-200 rounded-full text-[10px] font-bold text-orange-700 uppercase tracking-wider mb-1">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Control Center
                 </div>
-                <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Pusat Kendali Admin (Admin Panel)</h1>
-                <p class="text-slate-500 text-xs mt-0.5">Akses terpadu seluruh modul manajemen layanan fakultas, validasi berkas TA, publikasi berita, dan fasilitas.</p>
+                <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight"><?= $is_super_admin ? 'Pusat Kendali Super Admin (Panel Super Admin)' : 'Pusat Kendali Admin (Admin Panel)'; ?></h1>
+                <p class="text-slate-500 text-xs mt-0.5">Akses terpadu seluruh modul manajemen layanan fakultas, import &amp; kelola akun, validasi berkas TA, publikasi berita, dan fasilitas.</p>
             </div>
             <div class="flex items-center gap-2">
                 <a href="<?= base_url('/'); ?>" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 rounded-xl border border-slate-200 text-xs font-semibold shadow-xs flex items-center gap-1.5 transition-all">
