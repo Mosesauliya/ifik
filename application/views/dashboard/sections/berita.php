@@ -945,28 +945,6 @@
         #section-contact {
             height: auto !important;
             min-height: 100vh;
-            padding-top: 85px !important;
-            padding-bottom: 40px !important;
-            justify-content: center !important;
-            overflow-x: hidden !important;
-        }
-        .news-header {
-            margin-top: 0;
-            margin-bottom: 14px;
-            padding: 0 16px;
-        }
-        .news-header h1 {
-            font-size: 1.55rem;
-            line-height: 1.2;
-        }
-        .news-header p {
-            font-size: 0.84rem;
-            padding: 0 12px;
-        }
-    @media (max-width: 768px) {
-        #section-contact {
-            height: auto !important;
-            min-height: 100vh;
             padding-top: 80px !important;
             padding-bottom: 35px !important;
             justify-content: center !important;
@@ -988,6 +966,7 @@
         .news-fan-container {
             height: 335px;
             max-width: 100%;
+            touch-action: pan-y;
         }
         .news-card {
             width: 215px;
@@ -1022,15 +1001,9 @@
             padding: 0;
             z-index: 20;
         }
+        /* Sembunyikan tombol panah di mobile agar navigasi murni swipe jari */
         .news-arrow-btn {
-            width: 40px;
-            height: 40px;
-            font-size: 1rem;
-            margin: 0;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
+            display: none !important;
         }
         .news-arrow-btn#newsPrevBtn {
             transform: rotate(-90deg);
@@ -1612,32 +1585,94 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Touch Swipe Support for Mobile
+    // ===== TOUCH SWIPE SUPPORT FOR MOBILE (3D FAN OVERLAP LAYOUT) =====
     let touchStartX = 0;
-    let touchEndX = 0;
+    let touchStartY = 0;
+    let touchCurrentX = 0;
+    let touchCurrentY = 0;
+    let isTouchDragging = false;
+    let isHorizontalSwipe = false;
+
     container.addEventListener('touchstart', (e) => {
-        if (e.changedTouches && e.changedTouches.length > 0) {
-            touchStartX = e.changedTouches[0].screenX;
-        }
+        if (window.innerWidth > 768) return;
+        if (!e.touches || e.touches.length === 0) return;
+
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        touchCurrentX = touchStartX;
+        touchCurrentY = touchStartY;
+        isTouchDragging = true;
+        isHorizontalSwipe = false;
+
+        const allCards = container.querySelectorAll('.news-card');
+        allCards.forEach(card => {
+            card.style.transition = 'none'; // Matikan transisi saat ditarik jari
+        });
     }, { passive: true });
 
-    container.addEventListener('touchend', (e) => {
-        if (e.changedTouches && e.changedTouches.length > 0) {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-        }
-    }, { passive: true });
+    container.addEventListener('touchmove', (e) => {
+        if (!isTouchDragging || window.innerWidth > 768) return;
+        if (!e.touches || e.touches.length === 0) return;
 
-    function handleSwipe() {
-        const diff = touchStartX - touchEndX;
-        if (Math.abs(diff) > 40) {
-            if (diff > 0) {
-                if (!nextBtn.disabled) nextBtn.click();
-            } else {
-                if (!prevBtn.disabled) prevBtn.click();
+        touchCurrentX = e.touches[0].clientX;
+        touchCurrentY = e.touches[0].clientY;
+
+        const diffX = touchCurrentX - touchStartX;
+        const diffY = touchCurrentY - touchStartY;
+
+        // Tentukan gesture horizontal
+        if (!isHorizontalSwipe && Math.abs(diffX) > 8 && Math.abs(diffX) > Math.abs(diffY)) {
+            isHorizontalSwipe = true;
+        }
+
+        if (isHorizontalSwipe) {
+            if (e.cancelable) e.preventDefault(); // Mencegah scroll vertikal saat swipe horizontal
+
+            const allCards = container.querySelectorAll('.news-card');
+            let moveX = diffX;
+            if ((currentPage === 0 && diffX > 0) || (currentPage === totalPages - 1 && diffX < 0)) {
+                moveX = diffX * 0.3; // Dampen di ujung
+            }
+
+            allCards.forEach(card => {
+                const index = parseInt(card.style.getPropertyValue('--index') || '0');
+                const total = parseInt(card.style.getPropertyValue('--total') || '3');
+                const centerIndex = (total - 1) / 2;
+                const offset = index - centerIndex;
+                const spreadStep = window.innerWidth <= 480 ? 32 : 36;
+                const angleStep = window.innerWidth <= 480 ? 5 : 6;
+                const spreadX = (offset * spreadStep) + moveX;
+                const arcY = offset * offset * 3.5;
+                const angle = (offset * angleStep) + (moveX * 0.04);
+                card.style.transform = `translate(calc(-50% + ${spreadX}px), calc(-50% + ${arcY}px)) rotate(${angle}deg)`;
+            });
+        }
+    }, { passive: false });
+
+    function finishTouchSwipe() {
+        if (!isTouchDragging || window.innerWidth > 768) return;
+        isTouchDragging = false;
+
+        const diffX = touchCurrentX - touchStartX;
+        const allCards = container.querySelectorAll('.news-card');
+        allCards.forEach(card => {
+            card.style.transition = 'transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.45s ease, opacity 0.45s ease';
+            card.style.transform = ''; // Reset transform inline agar mengikuti CSS
+        });
+
+        if (isHorizontalSwipe && Math.abs(diffX) > 40) {
+            if (diffX < 0 && currentPage < totalPages - 1) {
+                goToPage(currentPage + 1, 'next');
+            } else if (diffX > 0 && currentPage > 0) {
+                goToPage(currentPage - 1, 'prev');
             }
         }
+
+        isHorizontalSwipe = false;
     }
+
+    container.addEventListener('touchend', finishTouchSwipe, { passive: true });
+    container.addEventListener('touchcancel', finishTouchSwipe, { passive: true });
 
     // Pause auto-scroll HANYA saat kursor berada langsung di atas kartu (.news-card)
     container.addEventListener('mouseover', (e) => { 
