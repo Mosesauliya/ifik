@@ -2315,8 +2315,10 @@
 
                 email = email ? email.trim() : '';
                 name = name ? name.trim() : 'User';
+                let emailLower = email.toLowerCase();
                 let roleStr = (rawRole !== null && rawRole !== undefined) ? rawRole.toString().trim() : '4';
                 let roleDisplay = roleIdToNameMap[roleStr] || (['3', '4', '2', '1', '21', '5', '6', '9'].includes(roleStr) ? 'Mahasiswa' : roleStr);
+                let roleLower = (roleDisplay || '').toLowerCase();
                 nim_nip = nim_nip ? nim_nip.toString().trim() : '';
 
                 let status = 'valid';
