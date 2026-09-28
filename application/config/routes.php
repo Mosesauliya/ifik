@@ -227,6 +227,14 @@ $route['adminlayanan/detail_berkas/(:any)'] = 'AdminLayanan/detail_berkas/$1';
 $route['adminlayanan/submit_verifikasi/(:any)'] = 'AdminLayanan/submit_verifikasi/$1';
 $route['adminlayanan/submit_verifikasi_batch'] = 'AdminLayanan/submit_verifikasi_batch';
 $route['adminlayanan/get_batch_details'] = 'AdminLayanan/get_batch_details';
+
+// Admin Layanan Live Chat Routes (Must be before wildcard (:any))
+$route['adminlayanan/help'] = 'LaboranHelp/index';
+$route['adminlayanan/help/conversations'] = 'LaboranHelp/get_conversations_ajax';
+$route['adminlayanan/help/messages/(:num)'] = 'LaboranHelp/get_messages_ajax/$1';
+$route['adminlayanan/help/send'] = 'LaboranHelp/send_message_ajax';
+$route['adminlayanan/help/toggle-status'] = 'LaboranHelp/toggle_status_ajax';
+
 $route['adminlayanan/(:any)'] = 'AdminLayanan/$1';
 $route['adminlayanan/(:any)/(:any)'] = 'AdminLayanan/$1/$2';
 
@@ -362,9 +370,8 @@ $route['laboran/help/toggle-status'] = 'LaboranHelp/toggle_status_ajax';
 $route['laboran/help/quick-replies'] = 'LaboranHelp/quick_replies_ajax';
 $route['laboran/help/sample'] = 'LaboranHelp/create_sample_ajax';
 
-// Kaur & Admin Layanan Help Desk Routes Alias
+// Kaur Help Desk Routes Alias
 $route['kaur/help'] = 'LaboranHelp/index';
-$route['adminlayanan/help'] = 'LaboranHelp/index';
 
 // User / Mahasiswa / Dosen Public Help Desk API Routes (Mudah diintegrasikan teman)
 $route['api/help/create'] = 'LaboranHelp/create_chat_user_ajax';
