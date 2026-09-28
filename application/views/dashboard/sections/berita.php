@@ -941,7 +941,7 @@
         .news-excerpt { font-size: 0.8rem; -webkit-line-clamp: 2; }
     }
 
-    /* ===== RESPONSIVE MOBILE SLIDER SELECTOR MODE ===== */
+    /* ===== RESPONSIVE MOBILE 3D FAN OVERLAPPING CARDS MODE ===== */
     @media (max-width: 768px) {
         #section-contact {
             height: auto !important;
@@ -971,54 +971,44 @@
             justify-content: center;
             align-items: center;
             position: relative;
-            overflow: hidden !important;
+            overflow: visible !important;
             touch-action: pan-y;
         }
         .news-card {
-            width: 280px;
-            max-width: 86vw;
-            height: 375px;
-            position: relative !important;
-            left: auto !important;
-            top: auto !important;
-            margin: 0 auto !important;
-            --spread-x: 0px !important;
-            --arc-y: 0px !important;
-            --angle: 0deg !important;
-            transform: none !important;
-            border-radius: 24px;
-            box-shadow: 0 14px 40px rgba(0, 0, 0, 0.12) !important;
-            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease, box-shadow 0.35s ease;
-            z-index: 1 !important;
+            width: 240px;
+            max-width: 78vw;
+            height: 350px;
+            position: absolute !important;
+            left: 50% !important;
+            top: 50% !important;
+            border-radius: 20px;
+            --angle-per-card: 6deg;
+            --spread-x: calc(var(--offset) * 38px);
+            --arc-y: calc(var(--offset) * var(--offset) * 4px);
+            --angle: calc(var(--offset) * var(--angle-per-card));
+            transform: translate(calc(-50% + var(--spread-x)), calc(-50% + var(--arc-y))) rotate(var(--angle)) !important;
+            box-shadow: -4px 10px 30px rgba(0, 0, 0, 0.14) !important;
+            transition: transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.45s ease, opacity 0.45s ease;
+            z-index: calc(10 + var(--index)) !important;
             opacity: 1 !important;
             filter: none !important;
         }
-        .news-card:hover {
-            --hover-shift-x: 0px;
-            transform: none !important;
-            box-shadow: 0 14px 40px rgba(0, 0, 0, 0.12) !important;
-            z-index: 1 !important;
+        .news-content {
+            padding: 14px 16px;
         }
-        .news-card:hover ~ .news-card {
-            transform: none !important;
+        .news-title {
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+            line-height: 1.35;
         }
-        .news-fan-container:has(.news-card:hover) .news-card:not(:hover) {
-            opacity: 1 !important;
-            filter: none !important;
+        .news-date {
+            font-size: 0.7rem;
+            margin-bottom: 4px;
         }
-
-        /* Mobile Slide Animation per Card */
-        .news-card.anim-exit {
-            animation: mobileCardExitLeft 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
-        }
-        .news-card.anim-enter {
-            animation: mobileCardEnterRight 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
-        }
-        .news-card.anim-exit-up {
-            animation: mobileCardExitRight 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
-        }
-        .news-card.anim-enter-down {
-            animation: mobileCardEnterLeft 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+        .news-excerpt {
+            font-size: 0.78rem;
+            line-height: 1.45;
+            -webkit-line-clamp: 2;
         }
 
         /* Controls Row */
@@ -1167,49 +1157,25 @@
             font-size: 0.8rem;
         }
         .news-fan-container {
-            height: 360px;
+            height: 350px;
         }
         .news-card {
-            width: 265px;
-            max-width: 84vw;
-            height: 355px;
-            border-radius: 20px;
-        }
-        .news-content {
-            padding: 14px 16px;
-        }
-        .news-title {
-            font-size: 0.95rem;
-            margin-bottom: 4px;
-            line-height: 1.35;
-        }
-        .news-date {
-            font-size: 0.7rem;
-            margin-bottom: 4px;
-        }
-        .news-excerpt {
-            font-size: 0.78rem;
-            line-height: 1.45;
-            -webkit-line-clamp: 2;
+            width: 215px;
+            max-width: 78vw;
+            height: 325px;
+            border-radius: 18px;
+            --spread-x: calc(var(--offset) * 32px);
+            --angle-per-card: 5deg;
         }
     }
 
-    /* Keyframes Slide Animation Mobile (Relative Translate) */
-    @keyframes mobileCardExitLeft {
-        0%   { opacity: 1; transform: translateX(0) scale(1); }
-        100% { opacity: 0; transform: translateX(-140px) scale(0.86); }
-    }
-    @keyframes mobileCardEnterRight {
-        0%   { opacity: 0; transform: translateX(140px) scale(0.86); }
-        100% { opacity: 1; transform: translateX(0) scale(1); }
-    }
-    @keyframes mobileCardExitRight {
-        0%   { opacity: 1; transform: translateX(0) scale(1); }
-        100% { opacity: 0; transform: translateX(140px) scale(0.86); }
-    }
-    @keyframes mobileCardEnterLeft {
-        0%   { opacity: 0; transform: translateX(-140px) scale(0.86); }
-        100% { opacity: 1; transform: translateX(0) scale(1); }
+    @media (max-width: 360px) {
+        .news-card {
+            width: 195px;
+            height: 295px;
+            --spread-x: calc(var(--offset) * 25px);
+            --angle-per-card: 4deg;
+        }
     }
 
     .news-mobile-scroll-down {
@@ -1383,7 +1349,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ===== KONFIGURASI =====
     function getCardsPerPage() {
-        return window.innerWidth <= 768 ? 1 : 5; // 1 kartu per slide di mobile (selector mode)
+        return window.innerWidth <= 768 ? 3 : 5; // 3 kartu bertumpuk/mekar (overlapping fan) per halaman di mobile
     }
 
     let CARDS_PER_PAGE = getCardsPerPage();
@@ -1614,7 +1580,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ===== TOUCH SWIPE INTERAKSI JARI DENGAN FEEDBACK REAL-TIME (KHUSUS MOBILE) =====
+    // ===== TOUCH SWIPE INTERAKSI JARI DENGAN FEEDBACK REAL-TIME (KHUSUS MOBILE 3D FAN) =====
     let touchStartX = 0;
     let touchStartY = 0;
     let touchCurrentX = 0;
@@ -1633,10 +1599,10 @@ document.addEventListener('DOMContentLoaded', () => {
         isTouchDragging = true;
         isHorizontalSwipe = false;
 
-        const activeCard = container.querySelector('.news-card');
-        if (activeCard) {
-            activeCard.style.transition = 'none'; // Matikan transisi CSS saat ditarik jari
-        }
+        const allCards = container.querySelectorAll('.news-card');
+        allCards.forEach(card => {
+            card.style.transition = 'none'; // Matikan transisi CSS saat ditarik jari
+        });
     }, { passive: true });
 
     container.addEventListener('touchmove', (e) => {
@@ -1657,17 +1623,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isHorizontalSwipe) {
             if (e.cancelable) e.preventDefault(); // Cegah scroll halaman saat swipe berita
 
-            const activeCard = container.querySelector('.news-card');
-            if (activeCard) {
-                let moveX = diffX;
-                // Beri efek tahanan jika ditarik melampaui batas awal/akhir
-                if ((currentPage === 0 && diffX > 0) || (currentPage === totalPages - 1 && diffX < 0)) {
-                    moveX = diffX * 0.3;
-                }
-                const rotation = moveX * 0.03; // Rotasi tipis visual
-                activeCard.style.transform = `translateX(${moveX}px) rotate(${rotation}deg)`;
-                activeCard.style.opacity = `${1 - Math.min(Math.abs(moveX) / 350, 0.45)}`;
+            const allCards = container.querySelectorAll('.news-card');
+            let moveX = diffX;
+            if ((currentPage === 0 && diffX > 0) || (currentPage === totalPages - 1 && diffX < 0)) {
+                moveX = diffX * 0.3; // Beri tahanan halus di ujung
             }
+
+            allCards.forEach(card => {
+                const index = parseInt(card.style.getPropertyValue('--index') || '0');
+                const total = parseInt(card.style.getPropertyValue('--total') || '3');
+                const centerIndex = (total - 1) / 2;
+                const offset = index - centerIndex;
+                const spreadStep = window.innerWidth <= 480 ? 32 : 38;
+                const angleStep = window.innerWidth <= 480 ? 5 : 6;
+                const spreadX = (offset * spreadStep) + moveX;
+                const arcY = offset * offset * 4;
+                const angle = (offset * angleStep) + (moveX * 0.04);
+                card.style.transform = `translate(calc(-50% + ${spreadX}px), calc(-50% + ${arcY}px)) rotate(${angle}deg)`;
+            });
         }
     }, { passive: false });
 
@@ -1676,27 +1649,17 @@ document.addEventListener('DOMContentLoaded', () => {
         isTouchDragging = false;
 
         const diffX = touchCurrentX - touchStartX;
-        const activeCard = container.querySelector('.news-card');
-
-        if (activeCard) {
-            activeCard.style.transition = 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease';
-        }
+        const allCards = container.querySelectorAll('.news-card');
+        allCards.forEach(card => {
+            card.style.transition = 'transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.45s ease';
+            card.style.transform = ''; // Kembalikan ke CSS default
+        });
 
         if (isHorizontalSwipe && Math.abs(diffX) > 40) {
             if (diffX < 0 && currentPage < totalPages - 1) {
                 goToPage(currentPage + 1, 'next');
             } else if (diffX > 0 && currentPage > 0) {
                 goToPage(currentPage - 1, 'prev');
-            } else {
-                if (activeCard) {
-                    activeCard.style.transform = 'translateX(0) rotate(0deg)';
-                    activeCard.style.opacity = '1';
-                }
-            }
-        } else {
-            if (activeCard) {
-                activeCard.style.transform = 'translateX(0) rotate(0deg)';
-                activeCard.style.opacity = '1';
             }
         }
 
