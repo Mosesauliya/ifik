@@ -842,7 +842,7 @@
                     <!-- Input Text Value Container -->
                     <div id="mainValueContainer" class="flex-1 flex items-center min-w-0">
                         <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs mr-2 shrink-0"></i>
-                        <input type="text" id="mainSearchInput" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); handleUnifiedMultiSearchDW(); }" oninput="handleUnifiedMultiSearchDW()" placeholder="Ketik kata kunci lalu tekan Enter atau klik Cari..." class="w-full text-xs font-medium bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400">
+                        <input type="text" id="mainSearchInput" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); handleUnifiedMultiSearchDW(); }" placeholder="Ketik kata kunci lalu tekan Enter atau klik Cari..." class="w-full text-xs font-medium bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400">
                     </div>
 
                     <!-- Main Custom Select Dropdown Container -->
@@ -1684,7 +1684,7 @@
                 <!-- Input Text Value Container -->
                 <div id="extraValueContainer_${rowId}" class="${isTextCategoryDW(defaultCrit) ? 'flex-1 flex items-center' : 'hidden'}">
                     <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs mr-2"></i>
-                    <input type="text" id="extraInput_${rowId}" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); handleUnifiedMultiSearchDW(); }" oninput="handleUnifiedMultiSearchDW()" placeholder="${getPlaceholderForCategoryDW(defaultCrit)}" value="${forcedVal}" class="w-full text-xs font-medium bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400">
+                    <input type="text" id="extraInput_${rowId}" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); handleUnifiedMultiSearchDW(); }" placeholder="${getPlaceholderForCategoryDW(defaultCrit)}" value="${forcedVal}" class="w-full text-xs font-medium bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400">
                 </div>
 
                 <!-- Custom Dropdown Value Container -->
