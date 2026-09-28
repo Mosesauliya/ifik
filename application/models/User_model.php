@@ -32,10 +32,9 @@ class User_model extends CI_Model {
         }
 
 
-        // Master accounts (Admin, Kaur, LAA, Laboran, Dosen Wali, Koordinator TA, Ketua KK) are ALWAYS password_changed = 1
-        $masterIds = ['admin-01', 'admin-laa-01', 'dsn-wali-01', 'kaur-01', 'koor-ta-01', 'laboran-01', 'ketua-kk-01', 'mhs-1301210001'];
-        $masterRoles = [1, 2, 5, 9, 21, 22]; // Admin, Kaur, LAA, Ketua KK, Laboran, Super Admin
-        if (in_array($user->id, $masterIds) || in_array((int)$user->role_id, $masterRoles)) {
+        // Master seed accounts are strictly identified by their designated IDs
+        $masterIds = ['admin-01', 'admin-laa-01', 'dsn-wali-01', 'kaur-01', 'koor-ta-01', 'laboran-01', 'ketua-kk-01', 'mhs-1301210001', 'super-admin-01'];
+        if (in_array($user->id, $masterIds)) {
             $user->password_changed = 1;
         } elseif (isset($user->password_changed)) {
             $user->password_changed = (int)$user->password_changed;

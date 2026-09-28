@@ -661,7 +661,7 @@ class ImportEmail extends CI_Controller {
                 $roleDisplay = $this->_get_role_name_by_id($u['role_id']);
             }
 
-            $isMaster = in_array($u['id'], ['admin-01', 'admin-laa-01', 'dsn-wali-01', 'kaur-01', 'koor-ta-01', 'laboran-01', 'ketua-kk-01', 'super-admin-01']) || in_array((int)$u['role_id'], [1, 2, 5, 9, 21, 22]);
+            $isMaster = in_array($u['id'], ['admin-01', 'admin-laa-01', 'dsn-wali-01', 'kaur-01', 'koor-ta-01', 'laboran-01', 'ketua-kk-01', 'super-admin-01', 'mhs-1301210001']);
             $isPasswordChanged = $isMaster ? true : (!empty($u['password_changed']) && (int)$u['password_changed'] === 1);
 
             $tokenStatus = 'empty';
