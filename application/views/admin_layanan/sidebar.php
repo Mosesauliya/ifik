@@ -48,6 +48,11 @@ $laaNavItems = [
         'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'
     ],
     [
+        'heading' => 'Import Email & Token',
+        'href'    => site_url('import-email'),
+        'icon_3d' => 'assets/images/icons_3d/email_token.png'
+    ],
+    [
         'heading' => 'Kelola Berita',
         'href'    => site_url('adminlayanan/berita'),
         'icon_3d' => 'assets/images/icons_3d/email_token.png'
