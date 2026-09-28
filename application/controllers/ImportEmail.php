@@ -14,7 +14,7 @@ class ImportEmail extends CI_Controller {
 
     /**
      * Strict Authentication & Role Check
-     * Allowed Roles: Admin (1), Kepala Urusan (2), Admin LAA (5), Admin Prodi (16)
+     * Allowed Roles: Admin (1), Kepala Urusan (2), Admin LAA (5), Koordinator TA (6), Admin Prodi (16), Laboran (21), Super Admin (22)
      */
     private function _check_auth() {
         if (!$this->session->userdata('logged_in')) {
@@ -37,8 +37,8 @@ class ImportEmail extends CI_Controller {
         }
 
         $roleId = (int)$this->session->userdata('role_id');
-        // Allowed: 1 = Admin, 2 = Kepala Urusan, 5 = Admin LAA, 16 = Admin Prodi, 21 = Laboran, 22 = Super Admin
-        $allowedRoles = [1, 2, 5, 16, 21, 22];
+        // Allowed: 1 = Admin, 2 = Kepala Urusan, 5 = Admin LAA, 6 = Koordinator TA, 16 = Admin Prodi, 21 = Laboran, 22 = Super Admin
+        $allowedRoles = [1, 2, 5, 6, 16, 21, 22];
 
         if (!in_array($roleId, $allowedRoles)) {
             $isAjax = $this->input->is_ajax_request() || 
@@ -54,7 +54,7 @@ class ImportEmail extends CI_Controller {
                     ->_display();
                 exit;
             }
-            $this->session->set_flashdata('error', 'Akses ditolak! Halaman ini hanya dapat diakses oleh Administrator & Admin LAA.');
+            $this->session->set_flashdata('error', 'Akses ditolak! Halaman ini hanya dapat diakses oleh Administrator, Ka. Ur, Laboran, LAA, dan Koordinator TA.');
             redirect('dashboard');
             exit;
         }
@@ -68,34 +68,40 @@ class ImportEmail extends CI_Controller {
     private function _get_allowed_import_roles($userRoleId) {
         $userRoleId = (int)$userRoleId;
         if ($userRoleId === 21) {
-            // Laboran: Dosen (3) & Mahasiswa (4)
-            return [3, 4];
+            // Laboran: Laboran (21), Dosen (3), Mahasiswa (4)
+            return [3, 4, 21];
+        } elseif ($userRoleId === 6) {
+            // Koordinator TA: Koordinator TA (6) only
+            return [6];
         } elseif ($userRoleId === 5) {
-            // Admin LAA: Mahasiswa (4) only
-            return [4];
+            // Admin LAA: Mahasiswa (4) & Admin LAA (5)
+            return [4, 5];
         }
-        // Super Admin (22), Admin (1), Ka. Ur (2), Admin Prodi (16): All roles
+        // Super Admin (22), Admin (1), Ka. Ur (2), Admin Prodi (16): Full All roles
         return [1, 2, 3, 4, 5, 6, 7, 9, 21, 22];
     }
 
     /**
-     * Display the Admin / Laboran / LAA Email Import & Token Generator Dashboard
+     * Display the Admin / Laboran / LAA / Koordinator TA Email Import & Token Generator Dashboard
      */
     public function index() {
         $roleId = (int)$this->session->userdata('role_id');
         $isLaboran = ($roleId === 21);
         $isLaa = ($roleId === 5);
-        $isSuperAdmin = ($roleId === 22 || $roleId === 1);
+        $isKoorTa = ($roleId === 6);
+        $isSuperAdmin = ($roleId === 22 || $roleId === 1 || $roleId === 2);
 
         $title = 'Admin - Import Email & Token Dispatcher';
         if ($isLaboran) $title = 'Laboran - Import Email & Token Dispatcher';
         elseif ($isLaa) $title = 'Admin LAA - Import Email & Token Dispatcher';
-        elseif ($isSuperAdmin) $title = 'Super Admin - Import Email & Token Dispatcher';
+        elseif ($isKoorTa) $title = 'Koordinator TA - Import Email & Token Dispatcher';
+        elseif ($isSuperAdmin) $title = ($roleId === 2 ? 'Kepala Urusan (Super Admin) - Import Email & Token Dispatcher' : 'Super Admin - Import Email & Token Dispatcher');
 
         $data['title'] = $title;
         $data['user_role_id'] = $roleId;
         $data['is_laboran'] = $isLaboran;
         $data['is_laa'] = $isLaa;
+        $data['is_koor_ta'] = $isKoorTa;
         $data['is_super_admin'] = $isSuperAdmin;
         $data['initial_accounts_json'] = json_encode($this->_get_formatted_users());
         $this->load->view('admin/import_email', $data);
@@ -149,9 +155,11 @@ class ImportEmail extends CI_Controller {
         if (empty($filteredAccounts)) {
             $roleMsg = 'Akses ditolak: Anda tidak memiliki izin untuk mengimpor akun dengan role tersebut.';
             if ($roleId === 21) {
-                $roleMsg = 'Akses ditolak: Laboran hanya memiliki izin untuk mengimpor akun dengan Role Dosen (3) dan Mahasiswa (4).';
+                $roleMsg = 'Akses ditolak: Laboran hanya memiliki izin untuk mengimpor akun Laboran (21), Dosen (3), dan Mahasiswa (4).';
+            } elseif ($roleId === 6) {
+                $roleMsg = 'Akses ditolak: Koordinator TA hanya memiliki izin untuk mengimpor akun Koordinator TA (6).';
             } elseif ($roleId === 5) {
-                $roleMsg = 'Akses ditolak: Admin LAA hanya memiliki izin untuk mengimpor akun dengan Role Mahasiswa (4).';
+                $roleMsg = 'Akses ditolak: Admin LAA hanya memiliki izin untuk mengimpor akun Mahasiswa (4) dan Admin LAA (5).';
             }
             $this->output
                 ->set_content_type('application/json')
@@ -231,7 +239,7 @@ class ImportEmail extends CI_Controller {
         $roleId = (int)$this->session->userdata('role_id');
         $allowedRoles = $this->_get_allowed_import_roles($roleId);
 
-        if (($roleId === 21 || $roleId === 5) && !empty($updates)) {
+        if (in_array($roleId, [5, 6, 21]) && !empty($updates)) {
             $allowedUpdates = [];
             foreach ($updates as $item) {
                 $user = $this->User_model->get_by_id($item['id']);
@@ -303,7 +311,7 @@ class ImportEmail extends CI_Controller {
             }
 
             // Role access check
-            if (($roleId === 21 || $roleId === 5) && !in_array((int)$user->role_id, $allowedRoles)) {
+            if (in_array($roleId, [5, 6, 21]) && !in_array((int)$user->role_id, $allowedRoles)) {
                 $skippedUnauthorizedCount++;
                 continue;
             }
@@ -376,10 +384,15 @@ class ImportEmail extends CI_Controller {
         $roleId = (int)$this->session->userdata('role_id');
         $allowedRoles = $this->_get_allowed_import_roles($roleId);
 
-        if (($roleId === 21 || $roleId === 5) && !in_array((int)$user->role_id, $allowedRoles)) {
-            $deniedMsg = $roleId === 5 
-                ? 'Akses ditolak: Admin LAA hanya dapat mengirimkan token email untuk akun Mahasiswa.' 
-                : 'Akses ditolak: Laboran hanya dapat mengirimkan token email untuk akun Dosen dan Mahasiswa.';
+        if (in_array($roleId, [5, 6, 21]) && !in_array((int)$user->role_id, $allowedRoles)) {
+            $deniedMsg = 'Akses ditolak: Anda tidak memiliki izin untuk mengirimkan token email ke role ini.';
+            if ($roleId === 21) {
+                $deniedMsg = 'Akses ditolak: Laboran hanya dapat mengirimkan token email untuk akun Laboran, Dosen, dan Mahasiswa.';
+            } elseif ($roleId === 6) {
+                $deniedMsg = 'Akses ditolak: Koordinator TA hanya dapat mengirimkan token email untuk akun Koordinator TA.';
+            } elseif ($roleId === 5) {
+                $deniedMsg = 'Akses ditolak: Admin LAA hanya dapat mengirimkan token email untuk akun Mahasiswa dan Admin LAA.';
+            }
             $this->output
                 ->set_content_type('application/json')
                 ->set_output(json_encode([
@@ -465,10 +478,15 @@ class ImportEmail extends CI_Controller {
         $currentRoleId = (int)$this->session->userdata('role_id');
         $allowedRoles = $this->_get_allowed_import_roles($currentRoleId);
 
-        if (($currentRoleId === 21 || $currentRoleId === 5) && !in_array((int)$targetRoleId, $allowedRoles)) {
-            $deniedMsg = $currentRoleId === 5 
-                ? 'Akses ditolak: Admin LAA hanya memiliki izin untuk menambah atau mengubah akun Mahasiswa.' 
-                : 'Akses ditolak: Laboran hanya memiliki izin untuk menambah atau mengubah akun dengan Role Dosen dan Mahasiswa.';
+        if (in_array($currentRoleId, [5, 6, 21]) && !in_array((int)$targetRoleId, $allowedRoles)) {
+            $deniedMsg = 'Akses ditolak: Anda tidak memiliki izin untuk mengelola akun dengan role ini.';
+            if ($currentRoleId === 21) {
+                $deniedMsg = 'Akses ditolak: Laboran hanya memiliki izin untuk menambah atau mengubah akun Laboran, Dosen, dan Mahasiswa.';
+            } elseif ($currentRoleId === 6) {
+                $deniedMsg = 'Akses ditolak: Koordinator TA hanya memiliki izin untuk menambah atau mengubah akun Koordinator TA.';
+            } elseif ($currentRoleId === 5) {
+                $deniedMsg = 'Akses ditolak: Admin LAA hanya memiliki izin untuk menambah atau mengubah akun Mahasiswa dan Admin LAA.';
+            }
             $this->output
                 ->set_content_type('application/json')
                 ->set_output(json_encode([
@@ -519,7 +537,7 @@ class ImportEmail extends CI_Controller {
         $currentRoleId = (int)$this->session->userdata('role_id');
         $allowedRoles = $this->_get_allowed_import_roles($currentRoleId);
 
-        if ($currentRoleId === 21 || $currentRoleId === 5) {
+        if (in_array($currentRoleId, [5, 6, 21])) {
             $allowedIds = [];
             foreach ($userIds as $uid) {
                 $u = $this->User_model->get_by_id($uid);
@@ -530,9 +548,14 @@ class ImportEmail extends CI_Controller {
             $userIds = $allowedIds;
 
             if (empty($userIds)) {
-                $deniedMsg = $currentRoleId === 5 
-                    ? 'Akses ditolak: Admin LAA hanya memiliki izin menghapus akun Mahasiswa.' 
-                    : 'Akses ditolak: Laboran hanya memiliki izin menghapus akun dengan Role Dosen dan Mahasiswa.';
+                $deniedMsg = 'Akses ditolak: Anda tidak memiliki izin untuk menghapus akun tersebut.';
+                if ($currentRoleId === 21) {
+                    $deniedMsg = 'Akses ditolak: Laboran hanya memiliki izin menghapus akun Laboran, Dosen, dan Mahasiswa.';
+                } elseif ($currentRoleId === 6) {
+                    $deniedMsg = 'Akses ditolak: Koordinator TA hanya memiliki izin menghapus akun Koordinator TA.';
+                } elseif ($currentRoleId === 5) {
+                    $deniedMsg = 'Akses ditolak: Admin LAA hanya memiliki izin menghapus akun Mahasiswa dan Admin LAA.';
+                }
                 $this->output
                     ->set_content_type('application/json')
                     ->set_output(json_encode([
@@ -560,7 +583,7 @@ class ImportEmail extends CI_Controller {
     public function reset_data() {
         $currentRoleId = (int)$this->session->userdata('role_id');
 
-        if ($currentRoleId === 21 || $currentRoleId === 5) {
+        if (in_array($currentRoleId, [5, 6, 21])) {
             $this->output
                 ->set_content_type('application/json')
                 ->set_output(json_encode([
@@ -588,7 +611,7 @@ class ImportEmail extends CI_Controller {
         $roleId = (int)$this->session->userdata('role_id');
         $allowedRoles = $this->_get_allowed_import_roles($roleId);
 
-        if ($roleId === 21 || $roleId === 5) {
+        if (in_array($roleId, [5, 6, 21])) {
             $rawUsers = array_filter($rawUsers, function($u) use ($allowedRoles) {
                 return in_array((int)$u['role_id'], $allowedRoles);
             });
