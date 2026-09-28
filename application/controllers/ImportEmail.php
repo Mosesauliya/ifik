@@ -496,7 +496,8 @@ class ImportEmail extends CI_Controller {
                 6 => 'Koordinator TA',
                 7 => 'PIC KK',
                 9 => 'Ketua KK',
-                21 => 'Laboran'
+                21 => 'Laboran',
+                22 => 'Super Admin'
             ];
             return $roles[$roleId] ?? 'Mahasiswa';
         }
