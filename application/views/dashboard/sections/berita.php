@@ -1018,15 +1018,15 @@
             pointer-events: none !important;
         }
         .news-card[data-stack-idx="shuffle"] {
-            transform: translate(calc(-50% - 150vw), -50%) rotate(-25deg) scale(0.8) !important;
-            z-index: 1 !important;
-            opacity: 0.2 !important;
+            transform: translate(calc(-50% - 240px), calc(-50% + 15px)) rotate(-18deg) scale(0.92) !important;
+            z-index: 60 !important;
+            opacity: 0.75 !important;
             pointer-events: none !important;
         }
         .news-card[data-stack-idx="shuffle-right"] {
-            transform: translate(calc(-50% + 150vw), -50%) rotate(25deg) scale(0.8) !important;
-            z-index: 1 !important;
-            opacity: 0.2 !important;
+            transform: translate(calc(-50% + 240px), calc(-50% + 15px)) rotate(18deg) scale(0.92) !important;
+            z-index: 60 !important;
+            opacity: 0.75 !important;
             pointer-events: none !important;
         }
 
@@ -1678,17 +1678,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const card2   = container.querySelector('.news-card[data-stack-idx="1"]');
 
             if (topCard) {
-                const rotation = diffX * 0.08;
-                topCard.style.transform = `translate(calc(-50% + ${diffX}px), calc(-50% + ${diffY * 0.15}px)) rotate(${rotation}deg)`;
+                const rotation = diffX * 0.1;
+                topCard.style.transform = `translate(calc(-50% + ${diffX}px), calc(-50% + ${diffY * 0.2}px)) rotate(${rotation}deg)`;
             }
 
             if (card2) {
-                const progress = Math.min(Math.abs(diffX) / 200, 1);
+                const progress = Math.min(Math.abs(diffX) / 180, 1);
                 const scaleVal = 0.96 + (progress * 0.04);
                 const rotVal   = 3.5 - (progress * 3.5);
                 const posXVal  = 14 - (progress * 14);
                 const posYVal  = 8 - (progress * 8);
                 card2.style.transform = `translate(calc(-50% + ${posXVal}px), calc(-50% + ${posYVal}px)) rotate(${rotVal}deg) scale(${scaleVal})`;
+                card2.style.opacity   = 0.94 + (progress * 0.06);
             }
         }
     }, { passive: false });
@@ -1701,20 +1702,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const topCard = container.querySelector('.news-card[data-stack-idx="0"]');
         const card2   = container.querySelector('.news-card[data-stack-idx="1"]');
 
-        if (topCard) topCard.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease';
-        if (card2) card2.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease';
-
         if (isHorizontalSwipe && Math.abs(diffX) > 40) {
             if (topCard) {
-                topCard.style.transform = '';
+                topCard.style.transition = 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease';
+                topCard.style.transform = ''; // Clear inline drag transform so CSS shuffle applies
                 const shuffleState = diffX > 0 ? 'shuffle-right' : 'shuffle';
                 topCard.setAttribute('data-stack-idx', shuffleState);
             }
+            if (card2) {
+                card2.style.transition = 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease';
+                card2.style.transform = '';
+            }
+
             setTimeout(() => {
                 const cards = Array.from(container.querySelectorAll('.news-card'));
                 const totalInDeck = cards.length;
                 cards.forEach(card => {
                     const currentIdx = card.getAttribute('data-stack-idx');
+                    card.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease';
                     if (currentIdx === 'shuffle' || currentIdx === 'shuffle-right') {
                         card.setAttribute('data-stack-idx', totalInDeck - 1);
                     } else {
@@ -1724,10 +1729,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                 });
-            }, 150);
+            }, 260);
         } else {
-            if (topCard) topCard.style.transform = '';
-            if (card2) card2.style.transform = '';
+            if (topCard) {
+                topCard.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                topCard.style.transform = '';
+            }
+            if (card2) {
+                card2.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                card2.style.transform = '';
+            }
         }
 
         isHorizontalSwipe = false;
