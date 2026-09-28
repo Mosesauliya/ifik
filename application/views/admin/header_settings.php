@@ -1371,6 +1371,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
           </div>
           <form id="formRuangan" onsubmit="handleFormSubmit(event)" enctype="multipart/form-data">
               <input type="hidden" id="ruanganId" name="id">
+              <input type="hidden" id="oldNamaRuangan" name="old_nama_ruangan">
               <div class="modal-body">
                   
                   <!-- Section 1: Data Utama Ruangan -->
@@ -2292,15 +2293,23 @@ defined('BASEPATH') OR exit('No direct script access allowed');
           ];
       }, (isset($ruangan) && is_array($ruangan)) ? $ruangan : [])) ?>;
 
+      let currentEditOriginalName = '';
+
       function canonicalizeRoomCode(str) {
           return (str || '').toString().toUpperCase().replace(/[^A-Z0-9]/g, '');
       }
 
-      function getOccupiedRoomsMap(excludeId = null) {
+      function getOccupiedRoomsMap(excludeId = null, excludeName = null) {
           const map = {};
+          const exIdStr = excludeId ? String(excludeId).trim().toUpperCase() : '';
+          const exNameStr = excludeName ? String(excludeName).trim().toUpperCase() : '';
+
           (ALL_EXISTING_ROOMS || []).forEach(r => {
-              if (excludeId && parseInt(r.id) === parseInt(excludeId)) {
+              if (exIdStr && String(r.id).trim().toUpperCase() === exIdStr) {
                   return; // Lewati ruangan/fasilitas yang sedang diedit
+              }
+              if (exNameStr && String(r.nama_ruangan).trim().toUpperCase() === exNameStr) {
+                  return; // Lewati jika nama fasilitas lamanya sama
               }
               if (!r.kode_ruangan) return;
               const codes = r.kode_ruangan.split(',').map(s => s.trim()).filter(Boolean);
@@ -2404,7 +2413,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
           if (!container) return;
 
           const currentEditId = isEditMode ? document.getElementById('ruanganId').value : null;
-          const occupiedMap = getOccupiedRoomsMap(currentEditId);
+          const occupiedMap = getOccupiedRoomsMap(currentEditId, isEditMode ? currentEditOriginalName : null);
 
           let filtered = PRESET_ROOMS;
           if (currentActiveFloor !== 'all') {
@@ -2498,7 +2507,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
           if (!val) return;
 
           const currentEditId = isEditMode ? document.getElementById('ruanganId').value : null;
-          const occupiedMap = getOccupiedRoomsMap(currentEditId);
+          const occupiedMap = getOccupiedRoomsMap(currentEditId, isEditMode ? currentEditOriginalName : null);
 
           const items = val.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
           const conflicts = [];
@@ -2549,10 +2558,13 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
       function openModalTambah() {
           isEditMode = false;
+          currentEditOriginalName = '';
           document.body.style.overflow = 'hidden';
           document.getElementById('modalTitle').innerText = '🏢 Tambah Ruangan / Lab Baru';
           document.getElementById('formRuangan').reset();
           document.getElementById('ruanganId').value = '';
+          const oldNameEl = document.getElementById('oldNamaRuangan');
+          if (oldNameEl) oldNameEl.value = '';
           document.getElementById('inputJamOperasional').value = 'Senin - Jumat | 08:00 - 17:00 WIB';
           document.getElementById('inputLokasi').value = 'Gedung Sebatik (FIK)';
           document.getElementById('inputKapasitas').value = '35';
@@ -2576,7 +2588,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
           document.body.style.overflow = 'hidden';
           document.getElementById('modalTitle').innerText = '✏️ Edit Data Ruangan & Berkas';
           document.getElementById('ruanganId').value = data.id;
-          document.getElementById('inputNama').value = data.nama_ruangan || data.ruangan || '';
+          currentEditOriginalName = (data.nama_ruangan || data.ruangan || '').trim();
+          const oldNameEl = document.getElementById('oldNamaRuangan');
+          if (oldNameEl) oldNameEl.value = currentEditOriginalName;
+          document.getElementById('inputNama').value = currentEditOriginalName;
           
           const raw = data.kode_ruangan || '';
           currentRoomTags = raw.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
@@ -2637,7 +2652,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
           // Validasi client-side: periksa apakah ada nomor ruangan fisik yang bentrok dengan fasilitas lain
           const currentEditId = isEditMode ? document.getElementById('ruanganId').value : null;
-          const occupiedMap = getOccupiedRoomsMap(currentEditId);
+          const occupiedMap = getOccupiedRoomsMap(currentEditId, isEditMode ? currentEditOriginalName : null);
           const conflicts = [];
           currentRoomTags.forEach(tag => {
               const upper = tag.toUpperCase();
@@ -2660,8 +2675,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
           const form = document.getElementById('formRuangan');
           const formData = new FormData(form);
-          const id = document.getElementById('ruanganId').value;
-          const targetUrl = isEditMode ? `<?= base_url('kelolaruangan/update/') ?>${id}` : '<?= base_url('kelolaruangan/tambah') ?>';
+          const targetUrl = isEditMode ? '<?= base_url('kelolaruangan/update') ?>' : '<?= base_url('kelolaruangan/tambah') ?>';
 
           Swal.fire({
               title: 'Menyimpan Data...',
@@ -2713,7 +2727,14 @@ defined('BASEPATH') OR exit('No direct script access allowed');
               cancelButtonText: 'Batal'
           }).then((result) => {
               if (result.isConfirmed) {
-                  fetch(`<?= base_url('kelolaruangan/delete/') ?>${id}`, { method: 'POST' })
+                  const delData = new FormData();
+                  delData.append('id', id);
+                  delData.append('nama_ruangan', name);
+                  fetch('<?= base_url('kelolaruangan/delete') ?>', {
+                      method: 'POST',
+                      body: delData,
+                      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                  })
                   .then(res => res.json())
                   .then(data => {
                       if (data.status === 'success') {
@@ -2723,6 +2744,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                       } else {
                           Swal.fire('Gagal', data.message, 'error');
                       }
+                  })
+                  .catch(err => {
+                      Swal.fire('Gagal', 'Terjadi kesalahan saat memproses penghapusan.', 'error');
                   });
               }
           });

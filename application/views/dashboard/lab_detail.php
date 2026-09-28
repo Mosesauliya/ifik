@@ -1,20 +1,43 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-$matched_room = null;
+$unique_facilities = [];
 if (!empty($all_ruangan)) {
     foreach ($all_ruangan as $r) {
-        $r_id = strtolower(trim((string)$r->id));
+        $name_key = strtolower(trim((string)$r->nama_ruangan));
+        if (!empty($name_key) && !isset($unique_facilities[$name_key])) {
+            $unique_facilities[$name_key] = $r;
+        }
+    }
+}
+$facilities_list = array_values($unique_facilities);
+
+$matched_room = null;
+$target = strtolower(trim((string)$lab_key));
+$target_canon = preg_replace('/[^a-z0-9]/', '', $target);
+
+if (!empty($all_ruangan)) {
+    foreach ($all_ruangan as $r) {
+        $r_id   = strtolower(trim((string)$r->id));
         $r_code = strtolower(trim((string)(isset($r->kode_ruangan) ? $r->kode_ruangan : '')));
         $r_name = strtolower(trim((string)$r->nama_ruangan));
-        $target = strtolower(trim((string)$lab_key));
 
-        $target_canon = preg_replace('/[^a-z0-9]/', '', $target);
         $r_id_canon   = preg_replace('/[^a-z0-9]/', '', $r_id);
         $r_code_canon = preg_replace('/[^a-z0-9]/', '', $r_code);
+        $r_name_canon = preg_replace('/[^a-z0-9]/', '', $r_name);
 
-        if ($r_id === $target || $r_code === $target || $r_name === $target || 'room_' . $r_id === $target
-            || (!empty($target_canon) && ($r_id_canon === $target_canon || $r_code_canon === $target_canon))) {
+        if (
+            $r_id === $target ||
+            $r_code === $target ||
+            $r_name === $target ||
+            'room_' . $r_id === $target ||
+            (!empty($target_canon) && (
+                $r_name_canon === $target_canon ||
+                $r_id_canon === $target_canon ||
+                $r_code_canon === $target_canon ||
+                'room' . $r_id_canon === $target_canon
+            ))
+        ) {
             $matched_room = $r;
             break;
         }
@@ -719,34 +742,41 @@ $lab = [
 
             <!-- Switch Labs Footer Links -->
             <?php
-                $count_all = count($all_ruangan ?? []);
+                $count_fac = count($facilities_list ?? []);
                 $current_pos = -1;
                 $prev_room = null;
                 $next_room = null;
 
-                if ($count_all > 1) {
-                    foreach ($all_ruangan as $idx => $r) {
-                        if ((string)$r->id === (string)$matched_room->id) {
+                if ($count_fac > 1) {
+                    $matched_name = strtolower(trim((string)$matched_room->nama_ruangan));
+                    foreach ($facilities_list as $idx => $r) {
+                        if (strtolower(trim((string)$r->nama_ruangan)) === $matched_name) {
                             $current_pos = $idx;
                             break;
                         }
                     }
                     if ($current_pos !== -1) {
-                        $prev_room = $all_ruangan[($current_pos - 1 + $count_all) % $count_all];
-                        $next_room = $all_ruangan[($current_pos + 1) % $count_all];
+                        $prev_room = $facilities_list[($current_pos - 1 + $count_fac) % $count_fac];
+                        $next_room = $facilities_list[($current_pos + 1) % $count_fac];
                     }
                 }
             ?>
-            <?php if ($count_all > 1): ?>
+            <?php if ($count_fac > 1): ?>
             <div class="nav-switch-labs">
-                <?php if ($prev_room): ?>
-                    <a href="<?= site_url('dashboard/lab_detail/' . $prev_room->id) ?>" class="switch-link">&larr; <?= htmlspecialchars($prev_room->nama_ruangan) ?></a>
+                <?php if ($prev_room): 
+                    $prev_key = preg_replace('/[^a-z0-9]/', '', strtolower($prev_room->nama_ruangan));
+                    if (empty($prev_key)) $prev_key = $prev_room->id;
+                ?>
+                    <a href="<?= site_url('dashboard/lab_detail/' . $prev_key) ?>" class="switch-link">&larr; <?= htmlspecialchars($prev_room->nama_ruangan) ?></a>
                 <?php else: ?>
                     <span></span>
                 <?php endif; ?>
 
-                <?php if ($next_room): ?>
-                    <a href="<?= site_url('dashboard/lab_detail/' . $next_room->id) ?>" class="switch-link"><?= htmlspecialchars($next_room->nama_ruangan) ?> &rarr;</a>
+                <?php if ($next_room): 
+                    $next_key = preg_replace('/[^a-z0-9]/', '', strtolower($next_room->nama_ruangan));
+                    if (empty($next_key)) $next_key = $next_room->id;
+                ?>
+                    <a href="<?= site_url('dashboard/lab_detail/' . $next_key) ?>" class="switch-link"><?= htmlspecialchars($next_room->nama_ruangan) ?> &rarr;</a>
                 <?php else: ?>
                     <span></span>
                 <?php endif; ?>

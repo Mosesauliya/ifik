@@ -279,8 +279,14 @@ class Kelolaruangan extends CI_Controller {
         }
 
         // Ambil data lama fasilitas yang sedang diedit
-        $old_room = $this->db->get_where('ruangan', ['id' => $id])->row();
-        $old_name = $old_room ? $old_room->ruangan : '';
+        $old_name = trim((string)$this->input->post('old_nama_ruangan', true));
+        $old_room = null;
+        if (!empty($id)) {
+            $old_room = $this->db->get_where('ruangan', ['id' => $id])->row();
+        }
+        if (empty($old_name) && $old_room) {
+            $old_name = !empty($old_room->ruangan) ? $old_room->ruangan : (!empty($old_room->nama_ruangan) ? $old_room->nama_ruangan : '');
+        }
 
         // Cek duplikasi ruangan fisik dengan mengecualikan fasilitas yang sedang diedit
         $conflict = $this->_check_room_conflicts($rooms, $id, $old_name);
@@ -349,9 +355,15 @@ class Kelolaruangan extends CI_Controller {
         if (!empty($old_name)) {
             $this->db->where('ruangan', $old_name);
             $this->db->delete('ruangan');
+            if (in_array('nama_ruangan', $fields)) {
+                $this->db->where('nama_ruangan', $old_name);
+                $this->db->delete('ruangan');
+            }
         }
-        $this->db->where('id', $id);
-        $this->db->delete('ruangan');
+        if (!empty($id)) {
+            $this->db->where('id', $id);
+            $this->db->delete('ruangan');
+        }
 
         // Insert row baru per kode ruangan fisik
         $inserted = 0;
@@ -383,20 +395,46 @@ class Kelolaruangan extends CI_Controller {
         if (empty($id)) {
             $id = $this->input->post('id', true);
         }
+        $nama_ruangan = trim((string)$this->input->post('nama_ruangan', true));
 
-        $room = $this->db->get_where('ruangan', ['id' => $id])->row();
-        if ($room && !empty($room->ruangan)) {
-            $this->db->where('ruangan', $room->ruangan);
-            $delete = $this->db->delete('ruangan');
-        } else {
-            $this->db->where('id', $id);
-            $delete = $this->db->delete('ruangan');
+        $deleted = false;
+
+        // 1. Hapus berdasarkan nama fasilitas jika ada
+        if (!empty($nama_ruangan)) {
+            $this->db->where('ruangan', $nama_ruangan);
+            $this->db->delete('ruangan');
+            $deleted = true;
         }
 
-        if ($delete) {
+        // 2. Hapus berdasarkan id atau daftar kode ruangan fisik
+        if (!empty($id)) {
+            $id_list = array_values(array_filter(array_map('trim', explode(',', (string)$id))));
+            if (!empty($id_list)) {
+                // Cari nama ruangan dari list id ini
+                $this->db->where_in('id', $id_list);
+                $found = $this->db->get('ruangan')->result();
+                $names_to_delete = [];
+                foreach ($found as $f) {
+                    $fn = !empty($f->ruangan) ? $f->ruangan : (!empty($f->nama_ruangan) ? $f->nama_ruangan : '');
+                    if (!empty($fn)) $names_to_delete[] = $fn;
+                }
+                $names_to_delete = array_unique($names_to_delete);
+                if (!empty($names_to_delete)) {
+                    $this->db->where_in('ruangan', $names_to_delete);
+                    $this->db->delete('ruangan');
+                    $deleted = true;
+                } else {
+                    $this->db->where_in('id', $id_list);
+                    $this->db->delete('ruangan');
+                    $deleted = true;
+                }
+            }
+        }
+
+        if ($deleted) {
             echo json_encode(['status' => 'success', 'message' => 'Ruangan berhasil dihapus!']);
         } else {
-            echo json_encode(['status' => 'error', 'message' => 'Gagal menghapus ruangan.']);
+            echo json_encode(['status' => 'error', 'message' => 'Gagal menemukan atau menghapus data ruangan.']);
         }
     }
 }
