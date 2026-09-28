@@ -99,6 +99,12 @@ class Login extends CI_Controller {
 					return;
 				}
 
+				// If Super Admin (role 22), redirect directly to Import Email & Token
+				if ((int)$user->role_id === 22) {
+					redirect('import-email');
+					return;
+				}
+
 				// Redirect to dashboard
 				redirect('dashboard');
 				return;

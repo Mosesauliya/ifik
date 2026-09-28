@@ -18,6 +18,10 @@ class Admin extends CI_Controller {
      */
     public function index() {
         $role_id = (int)$this->session->userdata('role_id');
+        if ($role_id === 22) {
+            redirect('import-email');
+            return;
+        }
         $data['title']       = ($role_id === 22) ? 'Central Super Admin Panel - IFIK Portal' : 'Central Admin Panel - IFIK Portal';
         
         // Metrik LAA

@@ -455,7 +455,7 @@
 
         if ($role_id == 22) {
             $panel_label = 'Panel Super Admin';
-            $panel_url   = base_url('admin');
+            $panel_url   = base_url('import-email');
         } elseif ($role_id == 21) {
             $panel_label = 'Panel Laboran';
             $panel_url   = base_url('laboran');
