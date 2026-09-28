@@ -542,8 +542,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const initialDosenName = selectedDosen ? selectedDosen.nama : '';
       const konsentrasiLabel = isDosen ? 'Program Studi / Homebase *' : 'Konsentrasi / Program Studi *';
 
-      // Build Dosen Wali Autocomplete block ONLY for Mahasiswa
-      const dosenWaliBlock = isDosen ? '' : `
+      // Build Dosen Wali Autocomplete block ONLY for Mahasiswa / Info Box for Dosen
+      const roleSpecificBlock = isDosen ? `
+        <!-- Info Callout Box: Hak Akses & Layanan Dosen -->
+        <div class="p-3.5 bg-gradient-to-br from-orange-50/90 to-amber-50/60 border border-orange-200/90 rounded-xl space-y-2 text-xs text-slate-700 mt-2 shadow-2xs">
+          <div class="flex items-center gap-2 font-bold text-orange-950">
+            <svg class="w-4 h-4 text-orange-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            <span>Akses Layanan Portal Dosen</span>
+          </div>
+          <p class="text-[11.5px] text-slate-600 leading-relaxed">
+            Akun Anda akan memiliki akses penuh ke fitur <b>Bimbingan Akademik Dosen Wali</b>, <b>Review Sidang & Tugas Akhir</b>, serta <b>Peminjaman Fasilitas & Laboratorium</b>.
+          </p>
+        </div>
+      ` : `
         <!-- Search Autocomplete: Dosen Wali -->
         <div class="orb-autocomplete-wrapper mt-1">
           <label class="orb-label">
@@ -605,7 +616,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
             </div>
 
-            ${dosenWaliBlock}
+            ${roleSpecificBlock}
 
             <p id="orbStep4Error" class="text-xs text-red-400 hidden mt-1"></p>
           </div>
