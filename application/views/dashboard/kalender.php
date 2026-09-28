@@ -2347,7 +2347,6 @@
                 ['heading' => 'Verifikasi Berkas', 'href' => site_url('adminlayanan'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
                 ['heading' => 'Pengaturan Syarat Berkas', 'href' => site_url('adminlayanan/pengaturan_berkas'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
                 ['heading' => 'Pengaturan Jalur TA', 'href' => site_url('adminlayanan/pengaturan_jalur'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
-                ['heading' => 'Import Email & Token', 'href' => site_url('import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
 
                 ['category' => 'Layanan Ticketing & Bantuan', 'has_divider' => true],
                 ['heading' => 'Bantuan & Live Chat', 'href' => site_url('adminlayanan/help'), 'icon_3d' => 'assets/images/icons_3d/help_chat.png'],
