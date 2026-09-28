@@ -455,6 +455,11 @@ class Help_chat_model extends CI_Model {
         $this->db->from($this->table_conversations);
         $this->db->where('user_id', $user_id);
         $this->db->where('target_role', $target_role);
+        // Filter juga berdasarkan user_role agar channel Dosen & KoordinatorTA
+        // tidak saling overlap meski user_id-nya sama
+        if (!empty($user_role)) {
+            $this->db->where('user_role', $user_role);
+        }
         $this->db->order_by('id', 'DESC');
         $conv = $this->db->get()->row();
 

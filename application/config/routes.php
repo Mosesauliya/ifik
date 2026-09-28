@@ -350,6 +350,14 @@ $route['mahasiswa/ticketing/simpan'] = 'Mahasiswa/ticketing_simpan';
 $route['mahasiswa/ticketing/riwayat'] = 'Mahasiswa/ticketing_riwayat';
 $route['mahasiswa/ticketing/detail/(:any)'] = 'Mahasiswa/ticketing_detail/$1';
 
+// Dosen Help Chat Routes (Harus sebelum Laboran Help routes)
+$route['dosen/help'] = 'DosenHelp/index';
+$route['dosen/help/channel'] = 'DosenHelp/help_get_channel_ajax';
+$route['dosen/help/create'] = 'DosenHelp/help_create_chat_ajax';
+$route['dosen/help/send'] = 'DosenHelp/help_send_message_ajax';
+$route['dosen/help/toggle-status'] = 'DosenHelp/help_toggle_status_ajax';
+$route['dosen/help/quick-topics'] = 'DosenHelp/help_quick_topics_ajax';
+
 // Laboran Help Desk / Live Chat Routes
 $route['laboran/help'] = 'LaboranHelp/index';
 $route['laboran/help/conversations'] = 'LaboranHelp/get_conversations_ajax';
