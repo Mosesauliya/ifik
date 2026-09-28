@@ -1970,33 +1970,36 @@
     }
 
     function applyAll() {
-        allRows = Array.from(document.querySelectorAll('.mhs-row'));
-        const activeFilters = getActiveFiltersDW();
-        const visible = allRows.filter(r => rowMatchesDW(r, activeFilters));
-        const total = visible.length;
-        const totalPages = Math.max(1, Math.ceil(total / perPage));
-        if (currentPage > totalPages) currentPage = totalPages;
-        if (currentPage < 1) currentPage = 1;
-        const start = (currentPage - 1) * perPage;
+        try {
+            allRows = Array.from(document.querySelectorAll('.mhs-row'));
+            const activeFilters = getActiveFiltersDW();
+            const visible = allRows.filter(r => rowMatchesDW(r, activeFilters));
+            const total = visible.length;
+            const totalPages = Math.max(1, Math.ceil(total / perPage));
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+            const start = (currentPage - 1) * perPage;
 
-        allRows.forEach(r => {
-            r.style.display = 'none';
-        });
+            // Hide all first, then show the visible page slice
+            allRows.forEach(r => { r.style.display = 'none'; });
+            visible.slice(start, start + perPage).forEach(r => { r.style.display = ''; });
 
-        visible.slice(start, start + perPage).forEach(r => {
-            r.style.display = '';
-        });
+            const tc = document.getElementById('toolbarTotalCountDW');
+            if (tc) tc.innerText = total;
 
-        if (toolbarTotal) {
-            toolbarTotal.innerText = total;
+            renderPagination(totalPages);
+            rebindCheckboxes();
+        } catch (e) {
+            // On any error, show all rows so they're never stuck hidden
+            document.querySelectorAll('.mhs-row').forEach(r => { r.style.display = ''; });
+            console.warn('[applyAll] Error:', e);
         }
-
-        renderPagination(totalPages);
-        rebindCheckboxes();
     }
 
         function renderPagination(totalPages) {
-            pagination.innerHTML = '';
+            const paginationEl = document.getElementById('paginationContainer');
+            if (!paginationEl) return;
+            paginationEl.innerHTML = '';
             if (totalPages <= 1) return;
             const mk = (label, page, disabled, active) => {
                 const btn = document.createElement('button');
@@ -2006,15 +2009,15 @@
                 if (!disabled && !active) btn.addEventListener('click', () => { currentPage = page; applyAll(); });
                 return btn;
             };
-            pagination.appendChild(mk('<i class="bi bi-chevron-left"></i>', currentPage - 1, currentPage === 1, false));
+            paginationEl.appendChild(mk('<i class="bi bi-chevron-left"></i>', currentPage - 1, currentPage === 1, false));
             for (let i = 1; i <= totalPages; i++) {
                 if (totalPages > 7 && i > 2 && i < totalPages - 1 && Math.abs(i - currentPage) > 1) {
-                    if (i === 3 || i === totalPages - 2) { const d = document.createElement('span'); d.textContent = '…'; d.className = 'px-1 text-slate-400'; pagination.appendChild(d); }
+                    if (i === 3 || i === totalPages - 2) { const d = document.createElement('span'); d.textContent = '…'; d.className = 'px-1 text-slate-400'; paginationEl.appendChild(d); }
                     continue;
                 }
-                pagination.appendChild(mk(i, i, false, i === currentPage));
+                paginationEl.appendChild(mk(i, i, false, i === currentPage));
             }
-            pagination.appendChild(mk('<i class="bi bi-chevron-right"></i>', currentPage + 1, currentPage === totalPages, false));
+            paginationEl.appendChild(mk('<i class="bi bi-chevron-right"></i>', currentPage + 1, currentPage === totalPages, false));
         }
 
         document.querySelectorAll('.btn-pintas').forEach(btn => {
@@ -2342,8 +2345,17 @@
             }
         }
 
+        // Initial render: show all rows immediately, then apply filters
         applyAll();
         rebindCheckboxes();
+
+        // Safety-net: re-run applyAll after full page load (handles async PHP rows)
+        document.addEventListener('DOMContentLoaded', function () {
+            allRows = Array.from(document.querySelectorAll('.mhs-row'));
+            applyAll();
+            rebindCheckboxes();
+        });
+
         setInterval(pollRealtimeData, 8000);
 
     // Batch Action Functions
