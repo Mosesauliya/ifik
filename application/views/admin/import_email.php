@@ -779,6 +779,11 @@
                     <div class="header-title-block flex flex-col w-full">
                         <div class="flex items-center gap-2">
                             <h1 class="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-tight">Import Email & Dispatcher Token</h1>
+                            <?php if (!empty($is_laboran) || (int)$this->session->userdata('role_id') === 21): ?>
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300 shadow-2xs">
+                                    <i class="fa-solid fa-user-shield text-amber-600"></i> Mode Laboran (Dosen & Mahasiswa)
+                                </span>
+                            <?php endif; ?>
                         </div>
                         <p class="text-[11px] sm:text-xs text-slate-500 mt-1 leading-normal">Kelola impor Excel (XLSX), generate token 8 karakter, dan kirim email pemberitahuan.</p>
                     </div>
@@ -1409,12 +1414,17 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Peran / Role *</label>
                         <select id="acc-role" required class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                            <option value="Mahasiswa">Mahasiswa</option>
-                            <option value="Dosen">Dosen</option>
-                            <option value="Laboran">Laboran</option>
-                            <option value="Ka. Ur">Ka. Ur</option>
-                            <option value="Koordinator TA">Koordinator TA</option>
-                            <option value="Admin">Admin</option>
+                            <?php if (!empty($is_laboran) || (int)$this->session->userdata('role_id') === 21): ?>
+                                <option value="Mahasiswa">Mahasiswa</option>
+                                <option value="Dosen">Dosen</option>
+                            <?php else: ?>
+                                <option value="Mahasiswa">Mahasiswa</option>
+                                <option value="Dosen">Dosen</option>
+                                <option value="Laboran">Laboran</option>
+                                <option value="Ka. Ur">Ka. Ur</option>
+                                <option value="Koordinator TA">Koordinator TA</option>
+                                <option value="Admin">Admin</option>
+                            <?php endif; ?>
                         </select>
                     </div>
                     <div>
@@ -1576,6 +1586,9 @@
 
     <!-- JAVASCRIPT APPLICATION LOGIC -->
     <script>
+        // Role awareness
+        window.isLaboran = <?= (!empty($is_laboran) || (int)$this->session->userdata('role_id') === 21) ? 'true' : 'false' ?>;
+
         // Initial State Data from Database
         let state = {
             accounts: <?= isset($initial_accounts_json) ? $initial_accounts_json : '[]' ?>,
@@ -2268,6 +2281,10 @@
                     status = 'invalid_domain';
                     statusText = 'Non-Telkom Domain';
                     isChecked = false;
+                } else if (window.isLaboran && !['dosen', 'mahasiswa'].includes(role.toLowerCase())) {
+                    status = 'invalid_role';
+                    statusText = 'Role Ditolak (Khusus Dosen & Mahasiswa)';
+                    isChecked = false;
                 } else if (state.accounts.some(a => a.email.toLowerCase() === emailLower)) {
                     status = 'duplicate';
                     statusText = 'Duplikat di Database';
@@ -2307,7 +2324,7 @@
             const totalCount = previewState.rows.length;
             const validCount = previewState.rows.filter(r => r.status === 'valid').length;
             const dupCount = previewState.rows.filter(r => r.status === 'duplicate').length;
-            const invalidCount = previewState.rows.filter(r => r.status === 'invalid_domain' || r.status === 'invalid_email').length;
+            const invalidCount = previewState.rows.filter(r => r.status === 'invalid_domain' || r.status === 'invalid_email' || r.status === 'invalid_role').length;
 
             document.getElementById('preview-stat-total').innerText = totalCount;
             document.getElementById('preview-stat-valid').innerText = validCount;
@@ -2367,6 +2384,11 @@
         }
 
         function confirmResetAndReimport() {
+            if (window.isLaboran) {
+                Swal.fire('Akses Ditolak', 'Fitur reset database hanya dapat diakses oleh Administrator.', 'warning');
+                return;
+            }
+
             const totalRows = previewState.rawRows ? previewState.rawRows.length : 0;
             Swal.fire({
                 title: 'Kosongkan DB & Impor Ulang?',
@@ -2425,7 +2447,7 @@
             if (previewState.filter === 'valid') {
                 filteredRows = previewState.rows.filter(r => r.status === 'valid');
             } else if (previewState.filter === 'invalid_domain') {
-                filteredRows = previewState.rows.filter(r => r.status === 'invalid_domain' || r.status === 'invalid_email');
+                filteredRows = previewState.rows.filter(r => r.status === 'invalid_domain' || r.status === 'invalid_email' || r.status === 'invalid_role');
             } else if (previewState.filter === 'duplicate') {
                 filteredRows = previewState.rows.filter(r => r.status === 'duplicate');
             }
@@ -2447,6 +2469,8 @@
                         badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full"><i class="fa-solid fa-circle-check text-[10px]"></i> Siap Diimpor</span>`;
                     } else if (r.status === 'duplicate') {
                         badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 rounded-full line-through"><i class="fa-solid fa-ban text-[10px]"></i> Duplikat (Auto-Skip)</span>`;
+                    } else if (r.status === 'invalid_role') {
+                        badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 rounded-full"><i class="fa-solid fa-user-xmark text-[10px]"></i> Role Ditolak (Bukan Dosen/Mhs)</span>`;
                     } else if (r.status === 'invalid_domain') {
                         badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 rounded-full"><i class="fa-solid fa-circle-xmark text-[10px]"></i> Non-Telkom Domain</span>`;
                     } else {
@@ -3342,15 +3366,23 @@
             let html = '';
             if (cat === 'role') {
                 label.innerText = 'Semua Role';
-                html = `
-                    <div onclick="selectMainSelectVal('', 'Semua Role', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium active bg-orange-50 text-brand-600"><span>Semua Role</span><i class="fa-solid fa-check text-xs check-icon"></i></div>
-                    <div onclick="selectMainSelectVal('Dosen', 'Dosen', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Dosen</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                    <div onclick="selectMainSelectVal('Mahasiswa', 'Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Mahasiswa</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                    <div onclick="selectMainSelectVal('Laboran', 'Laboran', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-500"></span> Laboran</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                    <div onclick="selectMainSelectVal('Ka. Ur', 'Ka. Ur', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> Ka. Ur</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                    <div onclick="selectMainSelectVal('Koordinator TA', 'Koordinator TA', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-teal-500"></span> Koordinator TA</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                    <div onclick="selectMainSelectVal('Admin', 'Admin', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Admin</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                `;
+                if (window.isLaboran) {
+                    html = `
+                        <div onclick="selectMainSelectVal('', 'Semua Role', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium active bg-orange-50 text-brand-600"><span>Semua Role</span><i class="fa-solid fa-check text-xs check-icon"></i></div>
+                        <div onclick="selectMainSelectVal('Dosen', 'Dosen', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Dosen</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectMainSelectVal('Mahasiswa', 'Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Mahasiswa</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                    `;
+                } else {
+                    html = `
+                        <div onclick="selectMainSelectVal('', 'Semua Role', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium active bg-orange-50 text-brand-600"><span>Semua Role</span><i class="fa-solid fa-check text-xs check-icon"></i></div>
+                        <div onclick="selectMainSelectVal('Dosen', 'Dosen', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Dosen</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectMainSelectVal('Mahasiswa', 'Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Mahasiswa</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectMainSelectVal('Laboran', 'Laboran', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-500"></span> Laboran</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectMainSelectVal('Ka. Ur', 'Ka. Ur', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> Ka. Ur</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectMainSelectVal('Koordinator TA', 'Koordinator TA', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-teal-500"></span> Koordinator TA</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectMainSelectVal('Admin', 'Admin', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Admin</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                    `;
+                }
             } else if (cat === 'token') {
                 label.innerText = 'Semua Status Token';
                 html = `
@@ -3428,15 +3460,23 @@
             let html = '';
             if (cat === 'role') {
                 label.innerText = 'Semua Role';
-                html = `
-                    <div onclick="selectExtraVal(${rowId}, '', 'Semua Role', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium active bg-orange-50 text-brand-600"><span>Semua Role</span><i class="fa-solid fa-check text-xs check-icon"></i></div>
-                    <div onclick="selectExtraVal(${rowId}, 'Dosen', 'Dosen', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Dosen</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                    <div onclick="selectExtraVal(${rowId}, 'Mahasiswa', 'Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Mahasiswa</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                    <div onclick="selectExtraVal(${rowId}, 'Laboran', 'Laboran', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-500"></span> Laboran</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                    <div onclick="selectExtraVal(${rowId}, 'Ka. Ur', 'Ka. Ur', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> Ka. Ur</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                    <div onclick="selectExtraVal(${rowId}, 'Koordinator TA', 'Koordinator TA', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-teal-500"></span> Koordinator TA</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                    <div onclick="selectExtraVal(${rowId}, 'Admin', 'Admin', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Admin</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                `;
+                if (window.isLaboran) {
+                    html = `
+                        <div onclick="selectExtraVal(${rowId}, '', 'Semua Role', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium active bg-orange-50 text-brand-600"><span>Semua Role</span><i class="fa-solid fa-check text-xs check-icon"></i></div>
+                        <div onclick="selectExtraVal(${rowId}, 'Dosen', 'Dosen', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Dosen</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectExtraVal(${rowId}, 'Mahasiswa', 'Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Mahasiswa</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                    `;
+                } else {
+                    html = `
+                        <div onclick="selectExtraVal(${rowId}, '', 'Semua Role', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium active bg-orange-50 text-brand-600"><span>Semua Role</span><i class="fa-solid fa-check text-xs check-icon"></i></div>
+                        <div onclick="selectExtraVal(${rowId}, 'Dosen', 'Dosen', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Dosen</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectExtraVal(${rowId}, 'Mahasiswa', 'Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Mahasiswa</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectExtraVal(${rowId}, 'Laboran', 'Laboran', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-500"></span> Laboran</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectExtraVal(${rowId}, 'Ka. Ur', 'Ka. Ur', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> Ka. Ur</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectExtraVal(${rowId}, 'Koordinator TA', 'Koordinator TA', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-teal-500"></span> Koordinator TA</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectExtraVal(${rowId}, 'Admin', 'Admin', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Admin</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                    `;
+                }
             } else if (cat === 'token') {
                 label.innerText = 'Semua Status Token';
                 html = `
@@ -4275,7 +4315,12 @@
         }
 
         function downloadSampleTemplate(type) {
-            const sampleData = [
+            const sampleData = window.isLaboran ? [
+                { 'Nama': 'Dr. Ir. Ahmad Sudrajat, M.T.', 'Email': 'ahmad.sudrajat@telkomuniversity.ac.id', 'Role': 'Dosen', 'NIM': '197804122005011002' },
+                { 'Nama': 'Budi Santoso', 'Email': 'budi.santoso@student.telkomuniversity.ac.id', 'Role': 'Mahasiswa', 'NIM': '1301210045' },
+                { 'Nama': 'Dewi Lestari', 'Email': 'dewi.lestari@student.telkomuniversity.ac.id', 'Role': 'Mahasiswa', 'NIM': '1301210088' },
+                { 'Nama': 'Prof. Dr. Hendra Wijaya', 'Email': 'hendra.wijaya@telkomuniversity.ac.id', 'Role': 'Dosen', 'NIM': '196503151990021001' }
+            ] : [
                 { 'Nama': 'Dr. Ir. Ahmad Sudrajat, M.T.', 'Email': 'ahmad.sudrajat@telkomuniversity.ac.id', 'Role': 'Dosen', 'NIM': '197804122005011002' },
                 { 'Nama': 'Budi Santoso', 'Email': 'budi.santoso@student.telkomuniversity.ac.id', 'Role': 'Mahasiswa', 'NIM': '1301210045' },
                 { 'Nama': 'Siti Rahmawati, S.Kom.', 'Email': 'siti.rahmawati@telkomuniversity.ac.id', 'Role': 'Ka. Ur', 'NIM': '2019080104' },
