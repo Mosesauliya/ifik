@@ -755,6 +755,67 @@
                 </a>
             </div>
 
+            <!-- Quick-Filter Mini Stat Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+
+                <!-- Total -->
+                <button type="button" onclick="resetMultiSearchDW()" title="Tampilkan Semua Mahasiswa"
+                    class="group relative flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-br from-slate-50 to-white border border-slate-200 hover:border-brand-400 hover:shadow-md hover:shadow-brand-100 transition-all duration-200 active:scale-95 overflow-hidden text-left cursor-pointer">
+                    <div class="absolute inset-0 bg-gradient-to-br from-brand-500/0 to-brand-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl"></div>
+                    <div class="shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-brand-100 to-orange-100 border border-brand-200/60 flex items-center justify-center text-brand-600 shadow-xs group-hover:scale-110 transition-transform duration-200">
+                        <i class="fa-solid fa-users text-sm"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-brand-600 transition-colors truncate">Total Mahasiswa</p>
+                        <p class="text-lg font-black text-slate-900 leading-tight" id="qs-total"><?= !empty($list_mahasiswa) ? count($list_mahasiswa) : 0; ?></p>
+                    </div>
+                    <div class="absolute bottom-0 left-0 h-0.5 w-0 group-hover:w-full bg-gradient-to-r from-brand-500 to-amber-400 transition-all duration-300 rounded-b-xl"></div>
+                </button>
+
+                <!-- Menunggu -->
+                <button type="button" onclick="qsFilterStatus('pending')" title="Filter: Menunggu Approval"
+                    class="group relative flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-br from-cyan-50/50 to-white border border-slate-200 hover:border-cyan-400 hover:shadow-md hover:shadow-cyan-100 transition-all duration-200 active:scale-95 overflow-hidden text-left cursor-pointer">
+                    <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl"></div>
+                    <div class="shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-100 to-sky-100 border border-cyan-200/60 flex items-center justify-center text-cyan-600 shadow-xs group-hover:scale-110 transition-transform duration-200">
+                        <i class="fa-solid fa-hourglass-half text-sm"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-cyan-600 transition-colors truncate">Menunggu</p>
+                        <p class="text-lg font-black text-slate-900 leading-tight" id="qs-pending"><?= isset($pendingCount) ? $pendingCount : 0; ?></p>
+                    </div>
+                    <div class="absolute bottom-0 left-0 h-0.5 w-0 group-hover:w-full bg-gradient-to-r from-cyan-500 to-sky-400 transition-all duration-300 rounded-b-xl"></div>
+                </button>
+
+                <!-- Disetujui -->
+                <button type="button" onclick="qsFilterStatus('approved')" title="Filter: Disetujui"
+                    class="group relative flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-br from-emerald-50/50 to-white border border-slate-200 hover:border-emerald-400 hover:shadow-md hover:shadow-emerald-100 transition-all duration-200 active:scale-95 overflow-hidden text-left cursor-pointer">
+                    <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl"></div>
+                    <div class="shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-100 to-green-100 border border-emerald-200/60 flex items-center justify-center text-emerald-600 shadow-xs group-hover:scale-110 transition-transform duration-200">
+                        <i class="fa-solid fa-circle-check text-sm"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-emerald-600 transition-colors truncate">Disetujui</p>
+                        <p class="text-lg font-black text-slate-900 leading-tight" id="qs-approved"><?= isset($approvedCount) ? $approvedCount : 0; ?></p>
+                    </div>
+                    <div class="absolute bottom-0 left-0 h-0.5 w-0 group-hover:w-full bg-gradient-to-r from-emerald-500 to-green-400 transition-all duration-300 rounded-b-xl"></div>
+                </button>
+
+                <!-- Perlu Revisi -->
+                <button type="button" onclick="qsFilterStatus('rejected')" title="Filter: Perlu Revisi / Ditolak"
+                    class="group relative flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-br from-rose-50/50 to-white border border-slate-200 hover:border-rose-400 hover:shadow-md hover:shadow-rose-100 transition-all duration-200 active:scale-95 overflow-hidden text-left cursor-pointer">
+                    <div class="absolute inset-0 bg-gradient-to-br from-rose-500/0 to-rose-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl"></div>
+                    <div class="shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-rose-100 to-red-100 border border-rose-200/60 flex items-center justify-center text-rose-600 shadow-xs group-hover:scale-110 transition-transform duration-200">
+                        <i class="fa-solid fa-circle-xmark text-sm"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-rose-600 transition-colors truncate">Perlu Revisi</p>
+                        <p class="text-lg font-black text-slate-900 leading-tight" id="qs-rejected"><?= isset($rejectedCount) ? $rejectedCount : 0; ?></p>
+                    </div>
+                    <div class="absolute bottom-0 left-0 h-0.5 w-0 group-hover:w-full bg-gradient-to-r from-rose-500 to-red-400 transition-all duration-300 rounded-b-xl"></div>
+                </button>
+
+            </div>
+
             <!-- Row 1: Unified Multi-Search Bar -->
             <div class="relative search-pill-container" id="multiSearchWrapper">
                 <!-- Main Search Pill -->
@@ -1775,6 +1836,11 @@
 
         updateFilterBadgeDW();
         currentPage = 1;
+        // Clear quick-filter card highlights
+        document.querySelectorAll('[id^="qs-"]').forEach(el => {
+            const btn = el.closest('button');
+            if (btn) btn.classList.remove('ring-2', 'ring-offset-1', 'ring-cyan-400', 'ring-emerald-400', 'ring-rose-400', 'ring-brand-400');
+        });
         applyAll();
     };
 
@@ -1784,7 +1850,46 @@
         applyAll();
     };
 
-    // Filter Evaluation Engine
+    // Quick-filter by status from stat cards
+    window.qsFilterStatus = function (statusVal) {
+        // Reset first
+        const mainCat = document.getElementById('mainCategorySelect');
+        const mainInput = document.getElementById('mainSearchInput');
+        const container = document.getElementById('additionalFilterRowsContainerDW');
+        const card = document.getElementById('extraRowsCardDW');
+        if (mainInput) mainInput.value = '';
+        if (container) container.innerHTML = '';
+        if (card) card.style.display = 'none';
+        updateFilterBadgeDW();
+
+        // Switch main category to status and set value via custom dropdown
+        selectMainCategoryDW('status', '⚡ Status Approval');
+
+        // Populate the custom select value
+        const hiddenVal = document.getElementById('mainCustomSelectVal');
+        const labelEl = document.getElementById('label-filter-main-select');
+        const labelMap = { pending: 'Menunggu Approval', approved: 'Disetujui', rejected: 'Perlu Revisi' };
+        if (hiddenVal) hiddenVal.value = statusVal;
+        if (labelEl) labelEl.innerText = labelMap[statusVal] || statusVal;
+
+        // Highlight active card
+        document.querySelectorAll('[id^="qs-"]').forEach(el => {
+            if (el.closest('button')) el.closest('button').classList.remove('ring-2', 'ring-offset-1', 'ring-brand-400');
+        });
+        const idMap = { pending: 'qs-pending', approved: 'qs-approved', rejected: 'qs-rejected' };
+        const targetEl = document.getElementById(idMap[statusVal]);
+        if (targetEl && targetEl.closest('button')) {
+            targetEl.closest('button').classList.add('ring-2', 'ring-offset-1');
+            if (statusVal === 'pending') targetEl.closest('button').classList.add('ring-cyan-400');
+            else if (statusVal === 'approved') targetEl.closest('button').classList.add('ring-emerald-400');
+            else if (statusVal === 'rejected') targetEl.closest('button').classList.add('ring-rose-400');
+        }
+
+        currentPage = 1;
+        applyAll();
+    };
+
+
     window.handleUnifiedMultiSearchDW = function () {
         currentPage = 1;
         applyAll();
