@@ -97,12 +97,48 @@ class ImportEmail extends CI_Controller {
         elseif ($isKoorTa) $title = 'Koordinator TA - Import Email & Token Dispatcher';
         elseif ($isSuperAdmin) $title = ($roleId === 2 ? 'Kepala Urusan (Super Admin) - Import Email & Token Dispatcher' : 'Super Admin - Import Email & Token Dispatcher');
 
+        // Compile full roles map for consistent frontend mapping
+        $allRolesMap = [
+            1 => 'Admin',
+            2 => 'Kepala Urusan',
+            3 => 'Dosen',
+            4 => 'Mahasiswa',
+            5 => 'Admin LAA',
+            6 => 'Koordinator TA',
+            7 => 'PIC KK',
+            8 => 'Reviewer',
+            9 => 'Ketua KK',
+            10 => 'Pembimbing 1',
+            11 => 'Pembimbing 2',
+            12 => 'Penguji',
+            13 => 'Dosen Wali',
+            14 => 'Kaprodi',
+            15 => 'Dekan',
+            16 => 'Admin Prodi',
+            17 => 'Staff LAA',
+            18 => 'Tim TA',
+            19 => 'Koordinator MK',
+            20 => 'Asisten Lab',
+            21 => 'Laboran',
+            22 => 'Super Admin'
+        ];
+        if ($this->db->table_exists('user_role')) {
+            $dbRoles = $this->db->get('user_role')->result_array();
+            foreach ($dbRoles as $dr) {
+                $rName = !empty($dr['role']) ? $dr['role'] : (!empty($dr['name']) ? $dr['name'] : '');
+                if ($rName) {
+                    $allRolesMap[(int)$dr['id']] = $rName;
+                }
+            }
+        }
+
         $data['title'] = $title;
         $data['user_role_id'] = $roleId;
         $data['is_laboran'] = $isLaboran;
         $data['is_laa'] = $isLaa;
         $data['is_koor_ta'] = $isKoorTa;
         $data['is_super_admin'] = $isSuperAdmin;
+        $data['all_roles_map'] = $allRolesMap;
         $data['initial_accounts_json'] = json_encode($this->_get_formatted_users());
         $this->load->view('admin/import_email', $data);
     }

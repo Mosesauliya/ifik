@@ -1625,6 +1625,7 @@
         window.isLaa = <?= (!empty($is_laa) || (int)$this->session->userdata('role_id') === 5) ? 'true' : 'false' ?>;
         window.isKoorTa = <?= (!empty($is_koor_ta) || (int)$this->session->userdata('role_id') === 6) ? 'true' : 'false' ?>;
         window.isSuperAdmin = <?= (!empty($is_super_admin) || in_array((int)$this->session->userdata('role_id'), [1, 2, 22])) ? 'true' : 'false' ?>;
+        window.allRolesMap = <?= !empty($all_roles_map) ? json_encode($all_roles_map) : '{}' ?>;
 
         // Initial State Data from Database
         let state = {
@@ -2293,7 +2294,7 @@
             let nowStr = new Date().toISOString().slice(0, 16).replace('T', ' ');
             const seenInFile = new Set();
 
-            const roleIdToNameMap = {
+            const defaultRoleMap = {
                 '1': 'Admin',
                 '2': 'Kepala Urusan',
                 '3': 'Dosen',
@@ -2301,10 +2302,61 @@
                 '5': 'Admin LAA',
                 '6': 'Koordinator TA',
                 '7': 'PIC KK',
+                '8': 'Reviewer',
                 '9': 'Ketua KK',
+                '10': 'Pembimbing 1',
+                '11': 'Pembimbing 2',
+                '12': 'Penguji',
+                '13': 'Dosen Wali',
+                '14': 'Kaprodi',
+                '15': 'Dekan',
+                '16': 'Admin Prodi',
+                '17': 'Staff LAA',
+                '18': 'Tim TA',
+                '19': 'Koordinator MK',
+                '20': 'Asisten Lab',
                 '21': 'Laboran',
                 '22': 'Super Admin'
             };
+            const roleIdToNameMap = Object.assign({}, defaultRoleMap, window.allRolesMap || {});
+
+            function formatRoleDisplay(rawRole) {
+                if (rawRole === null || rawRole === undefined || rawRole === '') return 'Mahasiswa';
+                const str = rawRole.toString().trim();
+                
+                // If it is numeric ID
+                if (/^\d+$/.test(str)) {
+                    if (roleIdToNameMap[str]) {
+                        return roleIdToNameMap[str];
+                    }
+                    return `Role ID ${str}`;
+                }
+
+                // If it is already a text name or alias
+                const lower = str.toLowerCase();
+                for (let [id, name] of Object.entries(roleIdToNameMap)) {
+                    if (name.toLowerCase() === lower) {
+                        return name;
+                    }
+                }
+
+                // Common aliases
+                if (lower.includes('laboran')) return 'Laboran';
+                if (lower.includes('koor') && (lower.includes('ta') || lower.includes('tugas'))) return 'Koordinator TA';
+                if (lower.includes('laa') || lower.includes('layanan')) return 'Admin LAA';
+                if (lower.includes('super')) return 'Super Admin';
+                if (lower.includes('kaur') || lower.includes('ka. ur') || lower.includes('kepala urusan') || lower.includes('ka lab')) return 'Kepala Urusan';
+                if (lower.includes('prodi') && lower.includes('admin')) return 'Admin Prodi';
+                if (lower.includes('wali')) return 'Dosen Wali';
+                if (lower.includes('ketua') && lower.includes('kk')) return 'Ketua KK';
+                if (lower.includes('pic') && lower.includes('kk')) return 'PIC KK';
+                if (lower.includes('dosen')) return 'Dosen';
+                if (lower.includes('mhs') || lower.includes('mahasiswa') || lower.includes('student')) return 'Mahasiswa';
+                if (lower.includes('admin')) return 'Admin';
+
+                // Capitalize each word nicely
+                return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+            }
 
             rows.forEach((row, idx) => {
                 let name = row.Nama || row.nama || row.Name || row.name || 'User ' + (idx + 1);
@@ -2317,20 +2369,29 @@
                 name = name ? name.trim() : 'User';
                 let emailLower = email.toLowerCase();
                 let roleStr = (rawRole !== null && rawRole !== undefined) ? rawRole.toString().trim() : '4';
-                let roleDisplay = roleIdToNameMap[roleStr] || (['3', '4', '2', '1', '21', '5', '6', '9'].includes(roleStr) ? 'Mahasiswa' : roleStr);
-                let roleLower = (roleDisplay || '').toLowerCase();
+                let roleDisplay = formatRoleDisplay(roleStr);
+                let roleLower = roleDisplay.toLowerCase();
                 nim_nip = nim_nip ? nim_nip.toString().trim() : '';
+
+                // Find corresponding role ID
+                let resolvedRoleId = roleStr;
+                for (let [id, name] of Object.entries(roleIdToNameMap)) {
+                    if (name.toLowerCase() === roleLower || id === roleStr) {
+                        resolvedRoleId = id;
+                        break;
+                    }
+                }
 
                 let status = 'valid';
                 let statusText = 'Siap Diimpor';
                 let isChecked = true;
                 let isRoleAllowed = true;
                 if (window.isKoorTa) {
-                    isRoleAllowed = ['koordinator ta', 'koordinator', 'koordinatorta', '6'].includes(roleStr.toLowerCase()) || ['koordinator ta', 'koordinator'].includes(roleLower);
+                    isRoleAllowed = (resolvedRoleId === '6' || roleLower === 'koordinator ta');
                 } else if (window.isLaa) {
-                    isRoleAllowed = ['mahasiswa', '4', 'admin laa', 'laa', '5'].includes(roleStr.toLowerCase()) || ['mahasiswa', 'admin laa'].includes(roleLower);
+                    isRoleAllowed = (['4', '5'].includes(resolvedRoleId) || ['mahasiswa', 'admin laa'].includes(roleLower));
                 } else if (window.isLaboran) {
-                    isRoleAllowed = ['dosen', 'mahasiswa', 'laboran', '3', '4', '21'].includes(roleStr.toLowerCase()) || ['dosen', 'mahasiswa', 'laboran'].includes(roleLower);
+                    isRoleAllowed = (['3', '4', '21'].includes(resolvedRoleId) || ['dosen', 'mahasiswa', 'laboran'].includes(roleLower));
                 }
 
                 if (!email || !email.includes('@')) {
@@ -2347,8 +2408,10 @@
                         statusText = 'Role Ditolak (Khusus Koordinator TA [6])';
                     } else if (window.isLaa) {
                         statusText = 'Role Ditolak (Khusus Mahasiswa [4] & LAA [5])';
-                    } else {
+                    } else if (window.isLaboran) {
                         statusText = 'Role Ditolak (Khusus Laboran [21], Dosen [3], Mhs [4])';
+                    } else {
+                        statusText = 'Role Tidak Diizinkan';
                     }
                     isChecked = false;
                 } else if (state.accounts.some(a => a.email.toLowerCase() === emailLower)) {
@@ -2535,13 +2598,13 @@
                     if (r.status === 'valid') {
                         badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full"><i class="fa-solid fa-circle-check text-[10px]"></i> Siap Diimpor</span>`;
                     } else if (r.status === 'duplicate') {
-                        badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 rounded-full line-through"><i class="fa-solid fa-ban text-[10px]"></i> Duplikat (Auto-Skip)</span>`;
+                        badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 rounded-full line-through" title="${r.statusText || 'Duplikat'}"><i class="fa-solid fa-ban text-[10px]"></i> ${r.statusText || 'Duplikat (Auto-Skip)'}</span>`;
                     } else if (r.status === 'invalid_role') {
-                        badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 rounded-full"><i class="fa-solid fa-user-xmark text-[10px]"></i> Role Ditolak (Bukan Dosen/Mhs)</span>`;
+                        badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 rounded-full" title="${r.statusText || 'Role Ditolak'}"><i class="fa-solid fa-user-xmark text-[10px]"></i> ${r.statusText || 'Role Ditolak'}</span>`;
                     } else if (r.status === 'invalid_domain') {
-                        badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 rounded-full"><i class="fa-solid fa-circle-xmark text-[10px]"></i> Non-Telkom Domain</span>`;
+                        badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 rounded-full" title="${r.statusText || 'Non-Telkom Domain'}"><i class="fa-solid fa-circle-xmark text-[10px]"></i> ${r.statusText || 'Non-Telkom Domain'}</span>`;
                     } else {
-                        badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 rounded-full"><i class="fa-solid fa-circle-xmark text-[10px]"></i> Format Email Salah</span>`;
+                        badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 rounded-full" title="${r.statusText || 'Format Email Salah'}"><i class="fa-solid fa-circle-xmark text-[10px]"></i> ${r.statusText || 'Format Email Salah'}</span>`;
                     }
 
                     html += `
