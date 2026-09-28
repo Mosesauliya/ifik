@@ -1032,14 +1032,24 @@
                         <p class="text-xs text-slate-500 mt-1">Mendukung format .CSV, .XLSX, .XLS hingga 10MB (Kolom: Nama, Email, Role [Angka ID], NIM/NIP)</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 mt-2 justify-center">
-                        <span class="px-2.5 py-1 text-[11px] font-semibold bg-orange-50 text-orange-700 rounded-md border border-orange-200">
-                            <i class="fa-solid fa-id-badge text-orange-600 mr-1"></i> Role ID: <b>3</b> (Dosen), <b>4</b> (Mahasiswa)<?= $is_laboran ? '' : ', <b>2</b> (Ka. Ur), <b>1</b> (Admin)' ?>
-                        </span>
+                        <?php if (!empty($is_laa) || (int)$this->session->userdata('role_id') === 5): ?>
+                            <span class="px-2.5 py-1 text-[11px] font-semibold bg-blue-50 text-blue-700 rounded-md border border-blue-200">
+                                <i class="fa-solid fa-id-badge text-blue-600 mr-1"></i> Hak Akses Admin LAA: <b>Role ID 4 (Mahasiswa Saja)</b>
+                            </span>
+                        <?php elseif (!empty($is_laboran) || (int)$this->session->userdata('role_id') === 21): ?>
+                            <span class="px-2.5 py-1 text-[11px] font-semibold bg-orange-50 text-orange-700 rounded-md border border-orange-200">
+                                <i class="fa-solid fa-id-badge text-orange-600 mr-1"></i> Hak Akses Laboran: <b>Role ID 3 (Dosen) & 4 (Mahasiswa)</b>
+                            </span>
+                        <?php else: ?>
+                            <span class="px-2.5 py-1 text-[11px] font-semibold bg-purple-50 text-purple-700 rounded-md border border-purple-200">
+                                <i class="fa-solid fa-id-badge text-purple-600 mr-1"></i> Hak Akses Super Admin: <b>Semua Role (1, 2, 3, 4, 5, 6, 7, 9, 21, 22)</b>
+                            </span>
+                        <?php endif; ?>
                         <span class="px-2.5 py-1 text-[11px] font-semibold bg-emerald-50 text-emerald-700 rounded-md border border-emerald-200">
                             <i class="fa-solid fa-file-excel text-emerald-600 mr-1"></i> Auto Detect Headers
                         </span>
-                        <span class="px-2.5 py-1 text-[11px] font-semibold bg-blue-50 text-blue-700 rounded-md border border-blue-200">
-                            <i class="fa-solid fa-shield-halved text-blue-600 mr-1"></i> Instant Browser Validation
+                        <span class="px-2.5 py-1 text-[11px] font-semibold bg-sky-50 text-sky-700 rounded-md border border-sky-200">
+                            <i class="fa-solid fa-shield-halved text-sky-600 mr-1"></i> Instant Browser Validation
                         </span>
                     </div>
                 </div>
@@ -1423,16 +1433,22 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Peran / Role *</label>
                         <select id="acc-role" required class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                            <?php if (!empty($is_laboran) || (int)$this->session->userdata('role_id') === 21): ?>
-                                <option value="Mahasiswa">Mahasiswa</option>
-                                <option value="Dosen">Dosen</option>
+                            <?php if (!empty($is_laa) || (int)$this->session->userdata('role_id') === 5): ?>
+                                <option value="Mahasiswa">Mahasiswa (4)</option>
+                            <?php elseif (!empty($is_laboran) || (int)$this->session->userdata('role_id') === 21): ?>
+                                <option value="Mahasiswa">Mahasiswa (4)</option>
+                                <option value="Dosen">Dosen (3)</option>
                             <?php else: ?>
-                                <option value="Mahasiswa">Mahasiswa</option>
-                                <option value="Dosen">Dosen</option>
-                                <option value="Laboran">Laboran</option>
-                                <option value="Ka. Ur">Ka. Ur</option>
-                                <option value="Koordinator TA">Koordinator TA</option>
-                                <option value="Admin">Admin</option>
+                                <option value="Mahasiswa">Mahasiswa (4)</option>
+                                <option value="Dosen">Dosen (3)</option>
+                                <option value="Laboran">Laboran (21)</option>
+                                <option value="Ka. Ur">Kepala Urusan (2)</option>
+                                <option value="Admin LAA">Admin LAA (5)</option>
+                                <option value="Koordinator TA">Koordinator TA (6)</option>
+                                <option value="PIC KK">PIC KK (7)</option>
+                                <option value="Ketua KK">Ketua KK (9)</option>
+                                <option value="Admin">Admin (1)</option>
+                                <option value="Super Admin">Super Admin (22)</option>
                             <?php endif; ?>
                         </select>
                     </div>
@@ -1596,7 +1612,10 @@
     <!-- JAVASCRIPT APPLICATION LOGIC -->
     <script>
         // Role awareness
+        window.userRoleId = <?= (int)$this->session->userdata('role_id') ?>;
         window.isLaboran = <?= (!empty($is_laboran) || (int)$this->session->userdata('role_id') === 21) ? 'true' : 'false' ?>;
+        window.isLaa = <?= (!empty($is_laa) || (int)$this->session->userdata('role_id') === 5) ? 'true' : 'false' ?>;
+        window.isSuperAdmin = <?= (!empty($is_super_admin) || in_array((int)$this->session->userdata('role_id'), [1, 22])) ? 'true' : 'false' ?>;
 
         // Initial State Data from Database
         let state = {
@@ -2294,9 +2313,12 @@
                 let status = 'valid';
                 let statusText = 'Siap Diimpor';
                 let isChecked = true;
-                const emailLower = email.toLowerCase();
-                const roleLower = roleDisplay.toLowerCase();
-                const isLaboranAllowed = ['dosen', 'mahasiswa', '3', '4'].includes(roleStr.toLowerCase()) || ['dosen', 'mahasiswa'].includes(roleLower);
+                let isRoleAllowed = true;
+                if (window.isLaa) {
+                    isRoleAllowed = ['mahasiswa', '4'].includes(roleStr.toLowerCase()) || roleLower === 'mahasiswa';
+                } else if (window.isLaboran) {
+                    isRoleAllowed = ['dosen', 'mahasiswa', '3', '4'].includes(roleStr.toLowerCase()) || ['dosen', 'mahasiswa'].includes(roleLower);
+                }
 
                 if (!email || !email.includes('@')) {
                     status = 'invalid_email';
@@ -2306,9 +2328,11 @@
                     status = 'invalid_domain';
                     statusText = 'Non-Telkom Domain';
                     isChecked = false;
-                } else if (window.isLaboran && !isLaboranAllowed) {
+                } else if (!isRoleAllowed) {
                     status = 'invalid_role';
-                    statusText = 'Role Ditolak (Khusus Dosen & Mahasiswa)';
+                    statusText = window.isLaa 
+                        ? 'Role Ditolak (LAA Khusus Mahasiswa [4])' 
+                        : 'Role Ditolak (Laboran Khusus Dosen [3] & Mhs [4])';
                     isChecked = false;
                 } else if (state.accounts.some(a => a.email.toLowerCase() === emailLower)) {
                     status = 'duplicate';
@@ -4341,31 +4365,56 @@
         }
 
         function downloadSampleTemplate(type) {
-            const sampleData = window.isLaboran ? [
-                { 'Nama': 'Dr. Ir. Ahmad Sudrajat, M.T.', 'Email': 'ahmad.sudrajat@telkomuniversity.ac.id', 'Role': 3, 'NIM': '197804122005011002' },
-                { 'Nama': 'Budi Santoso', 'Email': 'budi.santoso@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210045' },
-                { 'Nama': 'Dewi Lestari', 'Email': 'dewi.lestari@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210088' },
-                { 'Nama': 'Prof. Dr. Hendra Wijaya', 'Email': 'hendra.wijaya@telkomuniversity.ac.id', 'Role': 3, 'NIM': '196503151990021001' }
-            ] : [
-                { 'Nama': 'Dr. Ir. Ahmad Sudrajat, M.T.', 'Email': 'ahmad.sudrajat@telkomuniversity.ac.id', 'Role': 3, 'NIM': '197804122005011002' },
-                { 'Nama': 'Budi Santoso', 'Email': 'budi.santoso@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210045' },
-                { 'Nama': 'Siti Rahmawati, S.Kom.', 'Email': 'siti.rahmawati@telkomuniversity.ac.id', 'Role': 2, 'NIM': '2019080104' },
-                { 'Nama': 'Dewi Lestari', 'Email': 'dewi.lestari@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210088' },
-                { 'Nama': 'Prof. Dr. Hendra Wijaya', 'Email': 'hendra.wijaya@telkomuniversity.ac.id', 'Role': 3, 'NIM': '196503151990021001' }
-            ];
+            let sampleData = [];
+            let guideData = [];
 
-            const guideData = [
-                { 'Role ID': 3, 'Nama Role': 'Dosen', 'Keterangan': 'Dosen Wali / Penguji / Pembimbing' },
-                { 'Role ID': 4, 'Nama Role': 'Mahasiswa', 'Keterangan': 'Mahasiswa Aktif' },
-                ...(window.isLaboran ? [] : [
-                    { 'Role ID': 2, 'Nama Role': 'Kepala Urusan', 'Keterangan': 'Ka. Ur Akademik & Kemahasiswaan' },
+            if (window.isLaa) {
+                // Admin LAA: Mahasiswa (4) only
+                sampleData = [
+                    { 'Nama': 'Budi Santoso', 'Email': 'budi.santoso@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210045' },
+                    { 'Nama': 'Dewi Lestari', 'Email': 'dewi.lestari@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210088' },
+                    { 'Nama': 'Rizky Pratama', 'Email': 'rizky.pratama@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210112' },
+                    { 'Nama': 'Siti Aisyah', 'Email': 'siti.aisyah@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210190' }
+                ];
+                guideData = [
+                    { 'Role ID': 4, 'Nama Role': 'Mahasiswa', 'Keterangan': 'Mahasiswa Aktif Telkom University (Hak Akses LAA: Khusus Mahasiswa)' }
+                ];
+            } else if (window.isLaboran) {
+                // Laboran: Dosen (3) & Mahasiswa (4)
+                sampleData = [
+                    { 'Nama': 'Dr. Ir. Ahmad Sudrajat, M.T.', 'Email': 'ahmad.sudrajat@telkomuniversity.ac.id', 'Role': 3, 'NIM': '197804122005011002' },
+                    { 'Nama': 'Budi Santoso', 'Email': 'budi.santoso@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210045' },
+                    { 'Nama': 'Dewi Lestari', 'Email': 'dewi.lestari@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210088' },
+                    { 'Nama': 'Prof. Dr. Hendra Wijaya', 'Email': 'hendra.wijaya@telkomuniversity.ac.id', 'Role': 3, 'NIM': '196503151990021001' }
+                ];
+                guideData = [
+                    { 'Role ID': 3, 'Nama Role': 'Dosen', 'Keterangan': 'Dosen Wali / Penguji / Pembimbing (Hak Akses Laboran)' },
+                    { 'Role ID': 4, 'Nama Role': 'Mahasiswa', 'Keterangan': 'Mahasiswa Aktif Telkom University (Hak Akses Laboran)' }
+                ];
+            } else {
+                // Super Admin / Admin: All Roles
+                sampleData = [
+                    { 'Nama': 'Dr. Ir. Ahmad Sudrajat, M.T.', 'Email': 'ahmad.sudrajat@telkomuniversity.ac.id', 'Role': 3, 'NIM': '197804122005011002' },
+                    { 'Nama': 'Budi Santoso', 'Email': 'budi.santoso@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210045' },
+                    { 'Nama': 'Siti Rahmawati, S.Kom.', 'Email': 'siti.rahmawati@telkomuniversity.ac.id', 'Role': 2, 'NIM': '2019080104' },
+                    { 'Nama': 'Dewi Lestari', 'Email': 'dewi.lestari@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210088' },
+                    { 'Nama': 'Prof. Dr. Hendra Wijaya', 'Email': 'hendra.wijaya@telkomuniversity.ac.id', 'Role': 3, 'NIM': '196503151990021001' },
+                    { 'Nama': 'Admin LAA Petugas', 'Email': 'laa.petugas@telkomuniversity.ac.id', 'Role': 5, 'NIM': '2020080105' },
+                    { 'Nama': 'Laboran Informatika', 'Email': 'laboran.ifik@telkomuniversity.ac.id', 'Role': 21, 'NIM': '2021080121' }
+                ];
+                guideData = [
                     { 'Role ID': 1, 'Nama Role': 'Admin', 'Keterangan': 'Administrator Utama' },
+                    { 'Role ID': 2, 'Nama Role': 'Kepala Urusan', 'Keterangan': 'Ka. Ur Akademik & Kemahasiswaan' },
+                    { 'Role ID': 3, 'Nama Role': 'Dosen', 'Keterangan': 'Dosen Wali / Penguji / Pembimbing' },
+                    { 'Role ID': 4, 'Nama Role': 'Mahasiswa', 'Keterangan': 'Mahasiswa Aktif' },
                     { 'Role ID': 5, 'Nama Role': 'Admin LAA', 'Keterangan': 'Layanan Administrasi Akademik' },
                     { 'Role ID': 6, 'Nama Role': 'Koordinator TA', 'Keterangan': 'Koordinator Tugas Akhir' },
+                    { 'Role ID': 7, 'Nama Role': 'PIC KK', 'Keterangan': 'PIC Kelompok Keahlian' },
                     { 'Role ID': 9, 'Nama Role': 'Ketua KK', 'Keterangan': 'Ketua Kelompok Keahlian' },
-                    { 'Role ID': 21, 'Nama Role': 'Laboran', 'Keterangan': 'Pengelola Laboratorium' }
-                ])
-            ];
+                    { 'Role ID': 21, 'Nama Role': 'Laboran', 'Keterangan': 'Pengelola Laboratorium' },
+                    { 'Role ID': 22, 'Nama Role': 'Super Admin', 'Keterangan': 'Hak Akses Penuh Sistem' }
+                ];
+            }
 
             if (type === 'csv') {
                 const csv = Papa.unparse(sampleData);
@@ -4393,7 +4442,7 @@
                 guideWorksheet['!cols'] = [
                     { wch: 12 },
                     { wch: 20 },
-                    { wch: 38 }
+                    { wch: 45 }
                 ];
                 XLSX.utils.book_append_sheet(workbook, guideWorksheet, 'Petunjuk Role ID');
 

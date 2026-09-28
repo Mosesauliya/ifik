@@ -63,13 +63,40 @@ class ImportEmail extends CI_Controller {
     }
 
     /**
-     * Display the Admin / Laboran Email Import & Token Generator Dashboard
+     * Helper: Allowed import role IDs per user role
+     */
+    private function _get_allowed_import_roles($userRoleId) {
+        $userRoleId = (int)$userRoleId;
+        if ($userRoleId === 21) {
+            // Laboran: Dosen (3) & Mahasiswa (4)
+            return [3, 4];
+        } elseif ($userRoleId === 5) {
+            // Admin LAA: Mahasiswa (4) only
+            return [4];
+        }
+        // Super Admin (22), Admin (1), Ka. Ur (2), Admin Prodi (16): All roles
+        return [1, 2, 3, 4, 5, 6, 7, 9, 21, 22];
+    }
+
+    /**
+     * Display the Admin / Laboran / LAA Email Import & Token Generator Dashboard
      */
     public function index() {
         $roleId = (int)$this->session->userdata('role_id');
         $isLaboran = ($roleId === 21);
-        $data['title'] = $isLaboran ? 'Laboran - Import Email & Token Dispatcher' : 'Admin - Import Email & Token Dispatcher';
+        $isLaa = ($roleId === 5);
+        $isSuperAdmin = ($roleId === 22 || $roleId === 1);
+
+        $title = 'Admin - Import Email & Token Dispatcher';
+        if ($isLaboran) $title = 'Laboran - Import Email & Token Dispatcher';
+        elseif ($isLaa) $title = 'Admin LAA - Import Email & Token Dispatcher';
+        elseif ($isSuperAdmin) $title = 'Super Admin - Import Email & Token Dispatcher';
+
+        $data['title'] = $title;
+        $data['user_role_id'] = $roleId;
         $data['is_laboran'] = $isLaboran;
+        $data['is_laa'] = $isLaa;
+        $data['is_super_admin'] = $isSuperAdmin;
         $data['initial_accounts_json'] = json_encode($this->_get_formatted_users());
         $this->load->view('admin/import_email', $data);
     }
@@ -107,28 +134,34 @@ class ImportEmail extends CI_Controller {
         }
 
         $roleId = (int)$this->session->userdata('role_id');
-        $isLaboran = ($roleId === 21);
+        $allowedRoles = $this->_get_allowed_import_roles($roleId);
 
-        if ($isLaboran) {
-            $filteredAccounts = [];
-            foreach ($json['accounts'] as $acc) {
-                $rawRole = isset($acc['role']) ? strtolower(trim($acc['role'])) : (isset($acc['peran']) ? strtolower(trim($acc['peran'])) : 'mahasiswa');
-                if (in_array($rawRole, ['dosen', 'mahasiswa', '3', '4'])) {
-                    $filteredAccounts[] = $acc;
-                }
+        $filteredAccounts = [];
+        foreach ($json['accounts'] as $acc) {
+            $rawRole = isset($acc['role']) ? trim((string)$acc['role']) : (isset($acc['peran']) ? trim((string)$acc['peran']) : (isset($acc['role_id']) ? trim((string)$acc['role_id']) : '4'));
+            $targetRoleId = $this->User_model->get_role_id_by_name($rawRole);
+            if (in_array((int)$targetRoleId, $allowedRoles)) {
+                $acc['role'] = $targetRoleId;
+                $filteredAccounts[] = $acc;
             }
-
-            if (empty($filteredAccounts)) {
-                $this->output
-                    ->set_content_type('application/json')
-                    ->set_output(json_encode([
-                        'status' => 'error',
-                        'message' => 'Akses ditolak: Laboran hanya memiliki izin untuk mengimpor akun dengan Role Dosen dan Mahasiswa.'
-                    ]));
-                return;
-            }
-            $json['accounts'] = $filteredAccounts;
         }
+
+        if (empty($filteredAccounts)) {
+            $roleMsg = 'Akses ditolak: Anda tidak memiliki izin untuk mengimpor akun dengan role tersebut.';
+            if ($roleId === 21) {
+                $roleMsg = 'Akses ditolak: Laboran hanya memiliki izin untuk mengimpor akun dengan Role Dosen (3) dan Mahasiswa (4).';
+            } elseif ($roleId === 5) {
+                $roleMsg = 'Akses ditolak: Admin LAA hanya memiliki izin untuk mengimpor akun dengan Role Mahasiswa (4).';
+            }
+            $this->output
+                ->set_content_type('application/json')
+                ->set_output(json_encode([
+                    'status' => 'error',
+                    'message' => $roleMsg
+                ]));
+            return;
+        }
+        $json['accounts'] = $filteredAccounts;
 
         try {
             $res = $this->User_model->upsert_users_bulk($json['accounts']);
@@ -196,13 +229,13 @@ class ImportEmail extends CI_Controller {
         }
 
         $roleId = (int)$this->session->userdata('role_id');
-        $isLaboran = ($roleId === 21);
+        $allowedRoles = $this->_get_allowed_import_roles($roleId);
 
-        if ($isLaboran && !empty($updates)) {
+        if (($roleId === 21 || $roleId === 5) && !empty($updates)) {
             $allowedUpdates = [];
             foreach ($updates as $item) {
                 $user = $this->User_model->get_by_id($item['id']);
-                if ($user && in_array((int)$user->role_id, [3, 4])) {
+                if ($user && in_array((int)$user->role_id, $allowedRoles)) {
                     $allowedUpdates[] = $item;
                 }
             }
@@ -254,7 +287,7 @@ class ImportEmail extends CI_Controller {
         }
 
         $roleId = (int)$this->session->userdata('role_id');
-        $isLaboran = ($roleId === 21);
+        $allowedRoles = $this->_get_allowed_import_roles($roleId);
 
         $sentCount = 0;
         $skippedProtectedCount = 0;
@@ -269,8 +302,8 @@ class ImportEmail extends CI_Controller {
                 continue;
             }
 
-            // Laboran is strictly restricted to Dosen (3) and Mahasiswa (4)
-            if ($isLaboran && !in_array((int)$user->role_id, [3, 4])) {
+            // Role access check
+            if (($roleId === 21 || $roleId === 5) && !in_array((int)$user->role_id, $allowedRoles)) {
                 $skippedUnauthorizedCount++;
                 continue;
             }
@@ -308,7 +341,7 @@ class ImportEmail extends CI_Controller {
         $extraInfo = [];
         if ($skippedProtectedCount > 0) $extraInfo[] = "{$skippedProtectedCount} akun protected dilewati";
         if ($noTokenCount > 0) $extraInfo[] = "{$noTokenCount} akun dilewati karena belum di-generate tokennya";
-        if ($skippedUnauthorizedCount > 0) $extraInfo[] = "{$skippedUnauthorizedCount} akun dilewati karena di luar wewenang Laboran";
+        if ($skippedUnauthorizedCount > 0) $extraInfo[] = "{$skippedUnauthorizedCount} akun dilewati karena di luar wewenang role Anda";
         $extraStr = !empty($extraInfo) ? ' (' . implode(', ', $extraInfo) . ')' : '';
 
         $this->output
@@ -341,14 +374,17 @@ class ImportEmail extends CI_Controller {
         }
 
         $roleId = (int)$this->session->userdata('role_id');
-        $isLaboran = ($roleId === 21);
+        $allowedRoles = $this->_get_allowed_import_roles($roleId);
 
-        if ($isLaboran && !in_array((int)$user->role_id, [3, 4])) {
+        if (($roleId === 21 || $roleId === 5) && !in_array((int)$user->role_id, $allowedRoles)) {
+            $deniedMsg = $roleId === 5 
+                ? 'Akses ditolak: Admin LAA hanya dapat mengirimkan token email untuk akun Mahasiswa.' 
+                : 'Akses ditolak: Laboran hanya dapat mengirimkan token email untuk akun Dosen dan Mahasiswa.';
             $this->output
                 ->set_content_type('application/json')
                 ->set_output(json_encode([
                     'status' => 'error',
-                    'message' => 'Akses ditolak: Laboran hanya dapat mengirimkan token email untuk akun Dosen dan Mahasiswa.'
+                    'message' => $deniedMsg
                 ]));
             return;
         }
@@ -427,14 +463,17 @@ class ImportEmail extends CI_Controller {
 
         $targetRoleId = $this->User_model->get_role_id_by_name(isset($json['role']) ? $json['role'] : 'Mahasiswa');
         $currentRoleId = (int)$this->session->userdata('role_id');
-        $isLaboran = ($currentRoleId === 21);
+        $allowedRoles = $this->_get_allowed_import_roles($currentRoleId);
 
-        if ($isLaboran && !in_array((int)$targetRoleId, [3, 4])) {
+        if (($currentRoleId === 21 || $currentRoleId === 5) && !in_array((int)$targetRoleId, $allowedRoles)) {
+            $deniedMsg = $currentRoleId === 5 
+                ? 'Akses ditolak: Admin LAA hanya memiliki izin untuk menambah atau mengubah akun Mahasiswa.' 
+                : 'Akses ditolak: Laboran hanya memiliki izin untuk menambah atau mengubah akun dengan Role Dosen dan Mahasiswa.';
             $this->output
                 ->set_content_type('application/json')
                 ->set_output(json_encode([
                     'status' => 'error',
-                    'message' => 'Akses ditolak: Laboran hanya memiliki izin untuk menambah atau mengubah akun dengan Role Dosen dan Mahasiswa.'
+                    'message' => $deniedMsg
                 ]));
             return;
         }
@@ -478,24 +517,27 @@ class ImportEmail extends CI_Controller {
         }
 
         $currentRoleId = (int)$this->session->userdata('role_id');
-        $isLaboran = ($currentRoleId === 21);
+        $allowedRoles = $this->_get_allowed_import_roles($currentRoleId);
 
-        if ($isLaboran) {
+        if ($currentRoleId === 21 || $currentRoleId === 5) {
             $allowedIds = [];
             foreach ($userIds as $uid) {
                 $u = $this->User_model->get_by_id($uid);
-                if ($u && in_array((int)$u->role_id, [3, 4])) {
+                if ($u && in_array((int)$u->role_id, $allowedRoles)) {
                     $allowedIds[] = $uid;
                 }
             }
             $userIds = $allowedIds;
 
             if (empty($userIds)) {
+                $deniedMsg = $currentRoleId === 5 
+                    ? 'Akses ditolak: Admin LAA hanya memiliki izin menghapus akun Mahasiswa.' 
+                    : 'Akses ditolak: Laboran hanya memiliki izin menghapus akun dengan Role Dosen dan Mahasiswa.';
                 $this->output
                     ->set_content_type('application/json')
                     ->set_output(json_encode([
                         'status' => 'error',
-                        'message' => 'Akses ditolak: Laboran hanya memiliki izin menghapus akun dengan Role Dosen dan Mahasiswa.'
+                        'message' => $deniedMsg
                     ]));
                 return;
             }
@@ -513,18 +555,17 @@ class ImportEmail extends CI_Controller {
     }
 
     /**
-     * AJAX: Reset imported testing accounts (Admin only)
+     * AJAX: Reset imported testing accounts (Super Admin & Admin only)
      */
     public function reset_data() {
         $currentRoleId = (int)$this->session->userdata('role_id');
-        $isLaboran = ($currentRoleId === 21);
 
-        if ($isLaboran) {
+        if ($currentRoleId === 21 || $currentRoleId === 5) {
             $this->output
                 ->set_content_type('application/json')
                 ->set_output(json_encode([
                     'status' => 'error',
-                    'message' => 'Akses ditolak: Fitur reset database hanya dapat diakses oleh Administrator.'
+                    'message' => 'Akses ditolak: Fitur reset database hanya dapat diakses oleh Super Admin / Administrator.'
                 ]));
             return;
         }
@@ -545,11 +586,11 @@ class ImportEmail extends CI_Controller {
     private function _get_formatted_users() {
         $rawUsers = $this->User_model->get_all_users_with_roles();
         $roleId = (int)$this->session->userdata('role_id');
-        $isLaboran = ($roleId === 21);
+        $allowedRoles = $this->_get_allowed_import_roles($roleId);
 
-        if ($isLaboran) {
-            $rawUsers = array_filter($rawUsers, function($u) {
-                return in_array((int)$u['role_id'], [3, 4]);
+        if ($roleId === 21 || $roleId === 5) {
+            $rawUsers = array_filter($rawUsers, function($u) use ($allowedRoles) {
+                return in_array((int)$u['role_id'], $allowedRoles);
             });
         }
 
