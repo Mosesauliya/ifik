@@ -32,6 +32,121 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="<?= base_url('assets/css/style.css'); ?>" rel="stylesheet">
     <style>
+        /* Unified Multi-Search Pill Styles */
+        .search-pill-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
+        .unified-search-pill {
+            display: flex;
+            align-items: center;
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 2px 12px;
+            flex: 1;
+            height: 42px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .unified-search-pill:focus-within, .unified-search-pill.active {
+            border-color: #ea580c !important;
+            background: #ffffff !important;
+            box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12) !important;
+        }
+        .unified-divider {
+            width: 1.5px;
+            height: 20px;
+            background-color: #cbd5e1;
+            margin: 0 10px;
+            flex-shrink: 0;
+        }
+        .btn-standalone-add {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #fff7ed;
+            border: 1.5px solid #ffedd5;
+            border-radius: 14px;
+            padding: 6px 14px;
+            height: 42px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #ea580c;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(234, 88, 12, 0.06);
+        }
+        .btn-standalone-add:hover {
+            background: #ffedd5;
+            border-color: #fdba74;
+            transform: scale(1.02);
+        }
+        .badge-standalone-count {
+            background: #ea580c;
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 1.5px 8px;
+            border-radius: 99px;
+        }
+        .btn-remove-row {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            background: #fff1f2;
+            border: 1.5px solid #fecdd3;
+            border-radius: 14px;
+            color: #e11d48;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        .btn-remove-row:hover {
+            background: #ffe4e6;
+            border-color: #fda4af;
+            color: #be123c;
+            transform: scale(1.05);
+        }
+        .extra-rows-card {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 18px;
+            box-shadow: 0 20px 40px -8px rgba(15, 23, 42, 0.16);
+            z-index: 50;
+            padding: 16px;
+        }
+        .extra-filter-row {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 10;
+            width: 100%;
+        }
+        .extra-filter-row .unified-search-pill {
+            flex: 1;
+            min-width: 0;
+            width: 100%;
+        }
+        .custom-dropdown-container.open .custom-dropdown-menu {
+            display: block !important;
+        }
+        .custom-dropdown-container.open .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
         @keyframes popInCard {
             0% {
                 opacity: 0;
@@ -622,67 +737,121 @@
             </div>
         </div>
 
-        <!-- Table Container Card (3D Warm) -->
-        <div class="card-3d-warm card-no-hover rounded-2xl border border-orange-200/60 shadow-card-clean overflow-hidden">
-
-            <!-- Table Header -->
-            <div class="p-5 border-b border-orange-200/60 flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <!-- Table Toolbar & Filters (Exact Card Container from Import Akun / Koordinator TA) -->
+        <div class="card-custom p-5 mb-8 space-y-4">
+            
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div>
                     <h2 class="text-base font-bold text-slate-900 flex items-center gap-2.5 tracking-tight">
-                        <i class="bi bi-people-fill text-orange-500 text-lg"></i> Daftar Mahasiswa Bimbingan
+                        <i class="fa-solid fa-list-check text-brand-600 text-lg"></i> Daftar Pengajuan Tugas Akhir
                     </h2>
-                    <p class="text-xs text-slate-500 font-normal mt-0.5">Pilih mahasiswa untuk meninjau berkas dan melakukan persetujuan massal.</p>
+                    <p class="text-xs text-slate-500 font-normal mt-0.5">Pilih mahasiswa untuk meninjau berkas dan melakukan persetujuan Dosen Wali.</p>
                 </div>
-                <!-- Controls & Direct Search -->
-                <div class="flex flex-wrap items-center gap-2 shrink-0 w-full md:w-auto">
-                    <!-- Direct Search Input Bar -->
-                    <div class="relative flex-1 min-w-[210px] max-w-full sm:max-w-xs">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                            <i class="bi bi-search text-xs"></i>
+
+                <!-- Tombol Tanda Tangan / Riwayat Approval -->
+                <a href="<?= site_url('dosen/tanda-tangan'); ?>" class="px-4 py-2 bg-gradient-to-r from-slate-800 to-orange-950 hover:from-slate-700 hover:to-orange-900 text-white font-bold rounded-xl text-xs shadow-md border border-orange-900/50 flex items-center gap-2 transition cursor-pointer self-start lg:self-center active:scale-95">
+                    <i class="fa-solid fa-clock-rotate-left text-orange-400"></i>
+                    <span>Tanda Tangan Digital</span>
+                </a>
+            </div>
+
+            <!-- Row 1: Unified Multi-Search Bar -->
+            <div class="relative search-pill-container" id="multiSearchWrapper">
+                <!-- Main Search Pill -->
+                <div class="unified-search-pill">
+                    <!-- Main Category Selector Dropdown -->
+                    <div class="relative custom-dropdown-container">
+                        <input type="hidden" id="mainCategorySelect" value="query">
+                        <button type="button" onclick="toggleCustomDropdownDW('main-cat', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-brand-600 focus:outline-none" title="Kategori Pencarian">
+                            <span id="label-filter-main-cat" class="text-sm sm:text-base leading-none block">🔍</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-main-cat"></i>
+                        </button>
+                        <div id="menu-filter-main-cat" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
+                            <div onclick="selectMainCategoryDW('query', '🔍 Kata Kunci (Semua)', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium active bg-orange-50 text-brand-600"><span>🔍 Kata Kunci (Semua)</span></div>
+                            <div onclick="selectMainCategoryDW('nama', '🏷️ Nama Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span>🏷️ Nama Mahasiswa</span></div>
+                            <div onclick="selectMainCategoryDW('nim', '🆔 NIM Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span>🆔 NIM Mahasiswa</span></div>
+                            <div onclick="selectMainCategoryDW('judul', '📖 Judul Tugas Akhir', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span>📖 Judul Tugas Akhir</span></div>
+                            <div onclick="selectMainCategoryDW('status', '⚡ Status Approval', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span>⚡ Status Approval</span></div>
+                            <div onclick="selectMainCategoryDW('stage', '🔄 Tahap Saat Ini', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span>🔄 Tahap Saat Ini</span></div>
                         </div>
-                        <input type="text" id="directSearchInput" placeholder="Cari Nama, NIM, Judul TA..." class="w-full pl-8 pr-8 py-2 bg-white border border-orange-200 rounded-xl text-xs font-semibold text-slate-800 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition shadow-2xs">
-                        <button type="button" id="btnClearDirectSearch" onclick="clearDirectSearch()" class="hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-rose-600 transition cursor-pointer" title="Hapus Pencarian">
-                            <i class="bi bi-x-circle-fill text-xs"></i>
+                    </div>
+
+                    <div class="unified-divider"></div>
+
+                    <!-- Input Text Value Container -->
+                    <div id="mainValueContainer" class="flex-1 flex items-center min-w-0">
+                        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs mr-2 shrink-0"></i>
+                        <input type="text" id="mainSearchInput" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); handleUnifiedMultiSearchDW(); }" placeholder="Ketik kata kunci lalu tekan Enter atau klik Cari..." class="w-full text-xs font-medium bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400">
+                    </div>
+
+                    <!-- Main Custom Select Dropdown Container -->
+                    <div id="mainCustomSelectWrap" class="hidden flex-1 relative custom-dropdown-container">
+                        <input type="hidden" id="mainCustomSelectVal" value="">
+                        <button type="button" onclick="toggleCustomDropdownDW('main-select', event)" class="w-full py-1 text-xs font-semibold text-slate-800 flex items-center justify-between cursor-pointer focus:outline-none">
+                            <span id="label-filter-main-select" class="flex items-center gap-1.5 truncate">Semua Data</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-main-select"></i>
+                        </button>
+                        <div id="menu-filter-main-select" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
+                        </div>
+                    </div>
+
+                    <!-- Tombol Cari -->
+                    <button type="button" onclick="handleUnifiedMultiSearchDW()" class="px-3.5 py-1.5 bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-500 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer active:scale-95 shrink-0 ml-1.5" title="Klik untuk melakukan pencarian">
+                        <i class="fa-solid fa-magnifying-glass text-[11px]"></i> Cari
+                    </button>
+                </div>
+
+                <!-- Standalone Add Filter Button (Filter Tambahan 1/4) -->
+                <button type="button" id="standaloneAddBtnDW" onclick="toggleOrAddFilterRowDW(event)" class="btn-standalone-add" title="Buka / Tutup / Tambah Filter Baru (Maks 4)">
+                    <span class="btn-standalone-label inline-flex items-center gap-2">
+                        <i class="fa-solid fa-filter text-brand-500 text-xs"></i>
+                        <span class="font-bold text-xs text-brand-700">Filter Tambahan</span>
+                    </span>
+                    <span id="filterCountBadgeDW" class="badge-standalone-count">1/4</span>
+                </button>
+
+                <!-- Extra Filter Rows Card Popover -->
+                <div id="extraRowsCardDW" class="extra-rows-card space-y-2.5">
+                    <div id="additionalFilterRowsContainerDW" class="space-y-2.5">
+                    </div>
+                    
+                    <div class="flex items-center justify-between border-t border-slate-100 pt-2.5 mt-2 text-xs">
+                        <span class="text-slate-400 text-[11px]">Gunakan kombinasi kriteria untuk mempersempit pencarian data bimbingan.</span>
+                        <button type="button" onclick="resetMultiSearchDW()" class="text-rose-600 hover:text-rose-700 font-bold transition-colors cursor-pointer">
+                            Reset All Filters
                         </button>
                     </div>
+                </div>
+            </div>
 
-                    <div class="flex items-center gap-2 bg-white border border-orange-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-600">
-                        <i class="bi bi-list-ul text-slate-400"></i>
-                        <span>Tampilkan</span>
-                        <select id="recordsPerPage" class="bg-transparent font-bold text-slate-800 outline-none cursor-pointer">
-                            <option value="5" selected>5</option>
-                            <option value="10">10</option>
-                            <option value="25">25</option>
+            <!-- Row 2: Page Size & Records Count -->
+            <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                <div class="text-xs text-slate-500 font-medium">
+                    <span>Kelola &amp; telusuri data pengajuan tugas akhir mahasiswa secara langsung.</span>
+                </div>
+
+                <!-- Page Size & Counter Right -->
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <div class="flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 border border-slate-200 px-3 h-9 rounded-xl shadow-2xs">
+                        <span class="font-medium">Tampilkan</span>
+                        <select id="recordsPerPage" onchange="changePageSizeDW(this.value)" class="h-6 px-1.5 text-xs font-bold bg-white border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
                             <option value="50">50</option>
+                            <option value="100">100</option>
                         </select>
-                        <span>data / hal</span>
+                        <span class="font-medium">data/hal</span>
+                        <span class="text-slate-300">|</span>
+                        <span>Total: <strong class="total-rows-count text-slate-900 font-bold" id="toolbarTotalCountDW"><?= !empty($list_mahasiswa) ? count($list_mahasiswa) : 0; ?></strong></span>
                     </div>
-                    <button id="btnAddFilter" class="btn-3d-orange flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-white">
-                        <i class="bi bi-plus-lg"></i> Tambah Filter
-                        <span id="filterCountBadge" class="bg-white/30 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">1/4</span>
-                    </button>
-                    <button id="btnReset" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-orange-300 bg-white text-xs font-semibold text-slate-600 hover:bg-orange-50 transition">
-                        <i class="bi bi-arrow-counterclockwise"></i> Reset
-                    </button>
                 </div>
             </div>
 
-            <!-- Filter Panel -->
-            <div id="filterPanel" class="border-b border-orange-200/60 bg-orange-50/40 px-5 py-4">
-                <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-orange-700 flex items-center gap-1.5">
-                        <i class="bi bi-funnel-fill"></i> Filter Multi-Kriteria (Maksimal 4 Kriteria)
-                    </span>
-                    <div class="flex items-center gap-1.5 text-[11px] font-semibold">
-                        <span class="text-slate-500 mr-1">Pintas Status:</span>
-                        <button class="btn-pintas px-3 py-1 rounded-full bg-slate-800 text-white transition" data-status="all">Semua</button>
-                        <button class="btn-pintas px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-orange-50 transition" data-status="Pending">Menunggu</button>
-                        <button class="btn-pintas px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-orange-50 transition" data-status="Approved">Disetujui</button>
-                        <button class="btn-pintas px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-orange-50 transition" data-status="Rejected">Ditolak</button>
-                    </div>
-                </div>
-                <div id="filterRows" class="space-y-2"></div>
-            </div>
+        </div>
+
+        <!-- Table Container Card (3D Warm) -->
+        <div class="card-3d-warm card-no-hover rounded-2xl border border-orange-200/60 shadow-card-clean overflow-hidden">
             
 
             
@@ -1217,121 +1386,453 @@
     ]); ?>;
     let allRows      = Array.from(document.querySelectorAll('.mhs-row'));
     const tableBody  = document.getElementById('tableBodyMhs');
-    const filterRows = document.getElementById('filterRows');
-    const btnAdd     = document.getElementById('btnAddFilter');
-    const btnReset   = document.getElementById('btnReset');
-    const badge      = document.getElementById('filterCountBadge');
-    const perPageSel = document.getElementById('recordsPerPage');
-    const info       = document.getElementById('recordsInfo');
     const pagination = document.getElementById('paginationContainer');
     const checkAll   = document.getElementById('checkAllStudents');
+    const perPageSel = document.getElementById('recordsPerPage');
+    const toolbarTotal = document.getElementById('toolbarTotalCountDW');
 
-        const COLUMNS = [
-            { label: 'Semua Kolom (Pencarian Umum)', value: 'all' },
-            { label: 'NIM',      value: 'nim'    },
-            { label: 'Nama',     value: 'nama'   },
-            { label: 'Judul TA', value: 'judul'  },
-            { label: 'Status',   value: 'status' },
-            { label: 'Tahap',    value: 'stage'  },
-        ];
+    let currentPage = 1;
+    let perPage     = parseInt(perPageSel ? perPageSel.value : 10) || 10;
+    let extraRowCounterDW = 0;
 
-        let filters      = [];
-        let pintasStatus = 'all';
-        let currentPage  = 1;
-        let perPage      = parseInt(perPageSel.value) || 5;
-        let lastDataHash = '';
+    // Kategori & Metadata Helper
+    const CRITERIA_META_DW = {
+        query:  { emoji: '🔍', label: '🔍 Kata Kunci (Semua)', isText: true,  placeholder: 'Ketik kata kunci lalu tekan Enter atau klik Cari...' },
+        nama:   { emoji: '🏷️', label: '🏷️ Nama Mahasiswa',     isText: true,  placeholder: 'Cari berdasarkan nama mahasiswa...' },
+        nim:    { emoji: '🆔', label: '🆔 NIM Mahasiswa',      isText: true,  placeholder: 'Cari berdasarkan NIM mahasiswa...' },
+        judul:  { emoji: '📖', label: '📖 Judul Tugas Akhir',  isText: true,  placeholder: 'Cari berdasarkan judul TA...' },
+        status: { emoji: '⚡', label: '⚡ Status Approval',    isText: false, placeholder: 'Pilih Status...' },
+        stage:  { emoji: '🔄', label: '🔄 Tahap Saat Ini',     isText: false, placeholder: 'Pilih Tahap...' }
+    };
 
-        function colSelect(selected = 'all') {
-            return `<select class="filter-col border border-orange-200 rounded-lg px-2 py-1.5 text-xs font-medium bg-white outline-none focus:ring-2 focus:ring-orange-400/30 focus:border-orange-400 transition cursor-pointer">${COLUMNS.map(c => `<option value="${c.value}" ${c.value === selected ? 'selected' : ''}>${c.label}</option>`).join('')}</select>`;
+    function getCategoryEmojiDW(cat) {
+        return CRITERIA_META_DW[cat] ? CRITERIA_META_DW[cat].emoji : '🔍';
+    }
+
+    function getCategoryLabelDW(cat) {
+        return CRITERIA_META_DW[cat] ? CRITERIA_META_DW[cat].label : 'Kata Kunci';
+    }
+
+    function isTextCategoryDW(cat) {
+        return CRITERIA_META_DW[cat] ? CRITERIA_META_DW[cat].isText : true;
+    }
+
+    function getPlaceholderForCategoryDW(cat) {
+        return CRITERIA_META_DW[cat] ? CRITERIA_META_DW[cat].placeholder : 'Ketik kata kunci...';
+    }
+
+    // Toggle Dropdown Menu
+    window.toggleCustomDropdownDW = function (id, event) {
+        if (event) {
+            event.stopPropagation();
+            event.preventDefault();
         }
+        const menu = document.getElementById(`menu-filter-${id}`);
+        const container = menu ? menu.closest('.custom-dropdown-container') : null;
+        if (!menu) return;
 
-        function addFilterRow(col = 'all', val = '') {
-            if (filters.length >= 4) return;
-            const filterObj = { col, val };
-            filters.push(filterObj);
-            const rowNumber = filters.length;
+        const isOpen = !menu.classList.contains('hidden');
+        closeAllCustomDropdownsDW();
 
-            const div = document.createElement('div');
-            div.className = 'filter-row flex items-center gap-2';
-            div.innerHTML = `
-                <span class="text-[10px] font-bold text-slate-500 w-14 shrink-0">Filter #${rowNumber}:</span>
-                ${colSelect(col)}
-                <input type="text" placeholder="Ketik kata kunci pencarian..." value="${val}"
-                    class="filter-val flex-1 border border-orange-200 rounded-lg px-3 py-1.5 text-xs font-medium bg-white outline-none focus:ring-2 focus:ring-orange-400/30 focus:border-orange-400 transition placeholder:text-slate-300">
-                ${rowNumber > 1 ? `<button type="button" class="btn-remove-filter w-7 h-7 rounded-lg bg-rose-100 text-rose-600 hover:bg-rose-200 transition flex items-center justify-center text-xs cursor-pointer"><i class="bi bi-x-lg"></i></button>` : ''}`;
-            filterRows.appendChild(div);
+        if (!isOpen) {
+            menu.classList.remove('hidden');
+            if (container) container.classList.add('open');
+        }
+    };
 
-            const colSel = div.querySelector('.filter-col');
-            const valInput = div.querySelector('.filter-val');
-            const rmBtn = div.querySelector('.btn-remove-filter');
+    function closeAllCustomDropdownsDW() {
+        document.querySelectorAll('.custom-dropdown-menu').forEach(m => m.classList.add('hidden'));
+        document.querySelectorAll('.custom-dropdown-container').forEach(c => c.classList.remove('open'));
+    }
 
-            colSel.addEventListener('change', () => {
-                filterObj.col = colSel.value;
-                applyAll();
-            });
-
-            valInput.addEventListener('input', () => {
-                filterObj.val = valInput.value;
-                currentPage = 1;
-                applyAll();
-            });
-
-            if (rmBtn) {
-                rmBtn.addEventListener('click', () => {
-                    const idx = filters.indexOf(filterObj);
-                    if (idx !== -1) filters.splice(idx, 1);
-                    rebuildFilterUI();
-                    applyAll();
-                });
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.custom-dropdown-container') && !e.target.closest('#extraRowsCardDW') && !e.target.closest('#standaloneAddBtnDW')) {
+            closeAllCustomDropdownsDW();
+            const card = document.getElementById('extraRowsCardDW');
+            if (card && !card.contains(e.target) && e.target.id !== 'standaloneAddBtnDW' && !e.target.closest('#standaloneAddBtnDW')) {
+                card.style.display = 'none';
             }
+        }
+    });
 
-            updateBadge();
-            applyAll();
+    // Select Main Category
+    window.selectMainCategoryDW = function (cat, label, el) {
+        const sel = document.getElementById('mainCategorySelect');
+        const iconSpan = document.getElementById('label-filter-main-cat');
+        const valWrap = document.getElementById('mainValueContainer');
+        const selectWrap = document.getElementById('mainCustomSelectWrap');
+        const mainInput = document.getElementById('mainSearchInput');
+
+        if (sel) sel.value = cat;
+        if (iconSpan) iconSpan.innerText = getCategoryEmojiDW(cat);
+
+        if (el && el.parentElement) {
+            el.parentElement.querySelectorAll('.dropdown-item').forEach(i => {
+                i.classList.remove('active', 'bg-orange-50', 'text-brand-600');
+                i.classList.add('text-slate-700');
+            });
+            el.classList.add('active', 'bg-orange-50', 'text-brand-600');
+            el.classList.remove('text-slate-700');
         }
 
-        function rebuildFilterUI() {
-            filterRows.innerHTML = '';
-            const copy = [...filters];
-            filters = [];
-            copy.forEach(f => addFilterRow(f.col, f.val));
+        if (isTextCategoryDW(cat)) {
+            valWrap.classList.remove('hidden');
+            valWrap.classList.add('flex-1', 'flex');
+            selectWrap.classList.add('hidden');
+            if (mainInput) {
+                mainInput.placeholder = getPlaceholderForCategoryDW(cat);
+                mainInput.focus();
+            }
+        } else {
+            valWrap.classList.add('hidden');
+            valWrap.classList.remove('flex-1', 'flex');
+            selectWrap.classList.remove('hidden');
+            updateMainValueOptionsDW(cat);
         }
 
-        function updateBadge() {
-            badge.textContent = `${filters.length}/4`;
-            btnAdd.style.opacity = filters.length >= 4 ? '0.5' : '1';
-            btnAdd.style.pointerEvents = filters.length >= 4 ? 'none' : 'auto';
+        closeAllCustomDropdownsDW();
+        handleUnifiedMultiSearchDW();
+    };
+
+    function updateMainValueOptionsDW(cat) {
+        const menu = document.getElementById('menu-filter-main-select');
+        const label = document.getElementById('label-filter-main-select');
+        const hiddenVal = document.getElementById('mainCustomSelectVal');
+        if (!menu) return;
+
+        let options = [];
+        if (cat === 'status') {
+            options = [
+                { val: '', label: 'Semua Status' },
+                { val: 'Pending', label: '⏳ Menunggu Approval' },
+                { val: 'Approved', label: '✅ Disetujui' },
+                { val: 'Rejected', label: '❌ Ditolak' }
+            ];
+        } else if (cat === 'stage') {
+            options = [
+                { val: '', label: 'Semua Tahap' },
+                { val: 'draft', label: '📝 Draf Pendaftaran' },
+                { val: 'dosen wali', label: '👤 Dosen Wali' },
+                { val: 'admin layanan', label: '📋 Admin Layanan (LAA)' },
+                { val: 'koordinator ta', label: '🎓 Koordinator TA' },
+                { val: 'ketua kk', label: '🏛️ Ketua Kelompok Keahlian' },
+                { val: 'selesai approval', label: '✨ Selesai Approval' }
+            ];
         }
 
-        const directSearchInput = document.getElementById('directSearchInput');
-        const btnClearDirectSearch = document.getElementById('btnClearDirectSearch');
+        hiddenVal.value = '';
+        label.innerText = options[0].label;
 
-        if (directSearchInput) {
-            directSearchInput.addEventListener('input', () => {
-                if (btnClearDirectSearch) {
-                    if (directSearchInput.value.trim()) {
-                        btnClearDirectSearch.classList.remove('hidden');
-                    } else {
-                        btnClearDirectSearch.classList.add('hidden');
-                    }
+        menu.innerHTML = options.map((opt, idx) => `
+            <div onclick="selectMainValueDW('${opt.val}', '${opt.label.replace(/'/g, "\\'")}', this)" 
+                 class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${idx === 0 ? 'active bg-orange-50 text-brand-600 font-bold' : 'text-slate-700 hover:bg-orange-50 hover:text-brand-600'}">
+                <span>${opt.label}</span>
+            </div>
+        `).join('');
+    }
+
+    window.selectMainValueDW = function (val, labelText, el) {
+        const hiddenVal = document.getElementById('mainCustomSelectVal');
+        const label = document.getElementById('label-filter-main-select');
+        if (hiddenVal) hiddenVal.value = val;
+        if (label) label.innerText = labelText;
+
+        if (el && el.parentElement) {
+            el.parentElement.querySelectorAll('.dropdown-item').forEach(i => {
+                i.classList.remove('active', 'bg-orange-50', 'text-brand-600', 'font-bold');
+                i.classList.add('text-slate-700');
+            });
+            el.classList.add('active', 'bg-orange-50', 'text-brand-600', 'font-bold');
+        }
+
+        closeAllCustomDropdownsDW();
+        handleUnifiedMultiSearchDW();
+    };
+
+    // Extra Filter Rows Popover Management
+    window.toggleOrAddFilterRowDW = function (event) {
+        if (event) event.stopPropagation();
+        const card = document.getElementById('extraRowsCardDW');
+        const container = document.getElementById('additionalFilterRowsContainerDW');
+        if (!card || !container) return;
+
+        if (card.style.display === 'block') {
+            card.style.display = 'none';
+        } else {
+            card.style.display = 'block';
+            if (container.children.length === 0) {
+                addExtraFilterRowDW();
+            }
+        }
+    };
+
+    window.addExtraFilterRowDW = function (forcedCat = null, forcedVal = '') {
+        const container = document.getElementById('additionalFilterRowsContainerDW');
+        if (!container) return;
+
+        const currentRows = container.querySelectorAll('.extra-filter-row').length;
+        if (currentRows >= 3) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Maksimal 4 Filter',
+                text: 'Maksimal 4 kriteria filter pencarian yang dapat aktif secara bersamaan.',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            return;
+        }
+
+        const card = document.getElementById('extraRowsCardDW');
+        if (card) card.style.display = 'block';
+
+        extraRowCounterDW++;
+        const rowId = extraRowCounterDW;
+
+        const allCriteria = ['query', 'nama', 'nim', 'judul', 'status', 'stage'];
+        const mainCat = document.getElementById('mainCategorySelect') ? document.getElementById('mainCategorySelect').value : 'query';
+        const usedCriteria = [mainCat];
+        container.querySelectorAll('.extra-cat-select').forEach(el => usedCriteria.push(el.value));
+
+        const defaultCrit = forcedCat || allCriteria.find(c => !usedCriteria.includes(c)) || 'status';
+
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'extra-filter-row';
+        rowDiv.id = `extraRow_${rowId}`;
+
+        rowDiv.innerHTML = `
+            <div class="unified-search-pill">
+                <!-- Extra Category Dropdown -->
+                <div class="relative custom-dropdown-container">
+                    <input type="hidden" id="extraCatSelect_${rowId}" class="extra-cat-select" value="${defaultCrit}">
+                    <button type="button" onclick="toggleCustomDropdownDW('extra-cat-${rowId}', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-brand-600 focus:outline-none" title="Kategori Pencarian">
+                        <span id="label-filter-extra-cat-${rowId}" class="text-sm sm:text-base leading-none block">${getCategoryEmojiDW(defaultCrit)}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-extra-cat-${rowId}"></i>
+                    </button>
+                    <div id="menu-filter-extra-cat-${rowId}" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
+                        <div onclick="selectExtraCategoryDW(${rowId}, 'query', '🔍 Kata Kunci (Semua)', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'query' ? 'active bg-orange-50 text-brand-600' : 'text-slate-700 hover:bg-orange-50 hover:text-brand-600'}"><span>🔍 Kata Kunci (Semua)</span></div>
+                        <div onclick="selectExtraCategoryDW(${rowId}, 'nama', '🏷️ Nama Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'nama' ? 'active bg-orange-50 text-brand-600' : 'text-slate-700 hover:bg-orange-50 hover:text-brand-600'}"><span>🏷️ Nama Mahasiswa</span></div>
+                        <div onclick="selectExtraCategoryDW(${rowId}, 'nim', '🆔 NIM Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'nim' ? 'active bg-orange-50 text-brand-600' : 'text-slate-700 hover:bg-orange-50 hover:text-brand-600'}"><span>🆔 NIM Mahasiswa</span></div>
+                        <div onclick="selectExtraCategoryDW(${rowId}, 'judul', '📖 Judul Tugas Akhir', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'judul' ? 'active bg-orange-50 text-brand-600' : 'text-slate-700 hover:bg-orange-50 hover:text-brand-600'}"><span>📖 Judul Tugas Akhir</span></div>
+                        <div onclick="selectExtraCategoryDW(${rowId}, 'status', '⚡ Status Approval', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'status' ? 'active bg-orange-50 text-brand-600' : 'text-slate-700 hover:bg-orange-50 hover:text-brand-600'}"><span>⚡ Status Approval</span></div>
+                        <div onclick="selectExtraCategoryDW(${rowId}, 'stage', '🔄 Tahap Saat Ini', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'stage' ? 'active bg-orange-50 text-brand-600' : 'text-slate-700 hover:bg-orange-50 hover:text-brand-600'}"><span>🔄 Tahap Saat Ini</span></div>
+                    </div>
+                </div>
+
+                <div class="unified-divider"></div>
+
+                <!-- Input Text Value Container -->
+                <div id="extraValueContainer_${rowId}" class="${isTextCategoryDW(defaultCrit) ? 'flex-1 flex items-center' : 'hidden'}">
+                    <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs mr-2"></i>
+                    <input type="text" id="extraInput_${rowId}" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); handleUnifiedMultiSearchDW(); }" placeholder="${getPlaceholderForCategoryDW(defaultCrit)}" value="${forcedVal}" class="w-full text-xs font-medium bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400">
+                </div>
+
+                <!-- Custom Dropdown Value Container -->
+                <div id="extraCustomSelectWrap_${rowId}" class="${!isTextCategoryDW(defaultCrit) ? 'flex-1 relative custom-dropdown-container' : 'hidden'}">
+                    <input type="hidden" id="extraValueVal_${rowId}" class="extra-val-input" value="${forcedVal}">
+                    <button type="button" onclick="toggleCustomDropdownDW('extra-val-${rowId}', event)" class="w-full py-1 text-xs font-semibold text-slate-800 flex items-center justify-between cursor-pointer focus:outline-none">
+                        <span id="label-filter-extra-val-${rowId}" class="flex items-center gap-1.5 truncate">Semua ${defaultCrit === 'status' ? 'Status' : 'Tahap'}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-extra-val-${rowId}"></i>
+                    </button>
+                    <div id="menu-filter-extra-val-${rowId}" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Remove Row Button -->
+            <button type="button" onclick="removeExtraRowDW(${rowId})" class="btn-remove-row" title="Hapus Kriteria Ini">
+                <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+        `;
+
+        container.appendChild(rowDiv);
+        if (!isTextCategoryDW(defaultCrit)) {
+            updateExtraValueOptionsDW(rowId, defaultCrit, forcedVal);
+        }
+        updateFilterBadgeDW();
+        handleUnifiedMultiSearchDW();
+    };
+
+    window.removeExtraRowDW = function (rowId) {
+        const row = document.getElementById(`extraRow_${rowId}`);
+        if (row) {
+            row.remove();
+            updateFilterBadgeDW();
+            handleUnifiedMultiSearchDW();
+        }
+    };
+
+    window.selectExtraCategoryDW = function (rowId, cat, label, el) {
+        const sel = document.getElementById(`extraCatSelect_${rowId}`);
+        const iconSpan = document.getElementById(`label-filter-extra-cat-${rowId}`);
+        const valWrap = document.getElementById(`extraValueContainer_${rowId}`);
+        const selectWrap = document.getElementById(`extraCustomSelectWrap_${rowId}`);
+        const input = document.getElementById(`extraInput_${rowId}`);
+
+        if (sel) sel.value = cat;
+        if (iconSpan) iconSpan.innerText = getCategoryEmojiDW(cat);
+
+        if (el && el.parentElement) {
+            el.parentElement.querySelectorAll('.dropdown-item').forEach(i => {
+                i.classList.remove('active', 'bg-orange-50', 'text-brand-600');
+                i.classList.add('text-slate-700');
+            });
+            el.classList.add('active', 'bg-orange-50', 'text-brand-600');
+            el.classList.remove('text-slate-700');
+        }
+
+        if (isTextCategoryDW(cat)) {
+            valWrap.className = 'flex-1 flex items-center';
+            selectWrap.className = 'hidden';
+            if (input) {
+                input.placeholder = getPlaceholderForCategoryDW(cat);
+                input.value = '';
+                input.focus();
+            }
+        } else {
+            valWrap.className = 'hidden';
+            selectWrap.className = 'flex-1 relative custom-dropdown-container';
+            updateExtraValueOptionsDW(rowId, cat);
+        }
+
+        closeAllCustomDropdownsDW();
+        handleUnifiedMultiSearchDW();
+    };
+
+    function updateExtraValueOptionsDW(rowId, cat, initialVal = '') {
+        const menu = document.getElementById(`menu-filter-extra-val-${rowId}`);
+        const label = document.getElementById(`label-filter-extra-val-${rowId}`);
+        const hiddenVal = document.getElementById(`extraValueVal_${rowId}`);
+        if (!menu) return;
+
+        let options = [];
+        if (cat === 'status') {
+            options = [
+                { val: '', label: 'Semua Status' },
+                { val: 'Pending', label: '⏳ Menunggu Approval' },
+                { val: 'Approved', label: '✅ Disetujui' },
+                { val: 'Rejected', label: '❌ Ditolak' }
+            ];
+        } else if (cat === 'stage') {
+            options = [
+                { val: '', label: 'Semua Tahap' },
+                { val: 'draft', label: '📝 Draf Pendaftaran' },
+                { val: 'dosen wali', label: '👤 Dosen Wali' },
+                { val: 'admin layanan', label: '📋 Admin Layanan (LAA)' },
+                { val: 'koordinator ta', label: '🎓 Koordinator TA' },
+                { val: 'ketua kk', label: '🏛️ Ketua Kelompok Keahlian' },
+                { val: 'selesai approval', label: '✨ Selesai Approval' }
+            ];
+        }
+
+        const matchOpt = options.find(o => o.val === initialVal) || options[0];
+        hiddenVal.value = matchOpt.val;
+        label.innerText = matchOpt.label;
+
+        menu.innerHTML = options.map((opt, idx) => `
+            <div onclick="selectExtraValueDW(${rowId}, '${opt.val}', '${opt.label.replace(/'/g, "\\'")}', this)" 
+                 class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${opt.val === hiddenVal.value ? 'active bg-orange-50 text-brand-600 font-bold' : 'text-slate-700 hover:bg-orange-50 hover:text-brand-600'}">
+                <span>${opt.label}</span>
+            </div>
+        `).join('');
+    }
+
+    window.selectExtraValueDW = function (rowId, val, labelText, el) {
+        const hiddenVal = document.getElementById(`extraValueVal_${rowId}`);
+        const label = document.getElementById(`label-filter-extra-val-${rowId}`);
+        if (hiddenVal) hiddenVal.value = val;
+        if (label) label.innerText = labelText;
+
+        if (el && el.parentElement) {
+            el.parentElement.querySelectorAll('.dropdown-item').forEach(i => {
+                i.classList.remove('active', 'bg-orange-50', 'text-brand-600', 'font-bold');
+                i.classList.add('text-slate-700');
+            });
+            el.classList.add('active', 'bg-orange-50', 'text-brand-600', 'font-bold');
+        }
+
+        closeAllCustomDropdownsDW();
+        handleUnifiedMultiSearchDW();
+    };
+
+    function updateFilterBadgeDW() {
+        const container = document.getElementById('additionalFilterRowsContainerDW');
+        const badge = document.getElementById('filterCountBadgeDW');
+        const count = container ? container.querySelectorAll('.extra-filter-row').length + 1 : 1;
+        if (badge) badge.innerText = `${count}/4`;
+    }
+
+    // Reset Multi Search
+    window.resetMultiSearchDW = function () {
+        const mainCat = document.getElementById('mainCategorySelect');
+        const mainInput = document.getElementById('mainSearchInput');
+        const container = document.getElementById('additionalFilterRowsContainerDW');
+        const card = document.getElementById('extraRowsCardDW');
+
+        if (mainCat) selectMainCategoryDW('query', '🔍 Kata Kunci (Semua)');
+        if (mainInput) mainInput.value = '';
+        if (container) container.innerHTML = '';
+        if (card) card.style.display = 'none';
+
+        updateFilterBadgeDW();
+        currentPage = 1;
+        applyAll();
+    };
+
+    window.changePageSizeDW = function (val) {
+        perPage = parseInt(val) || 10;
+        currentPage = 1;
+        applyAll();
+    };
+
+    window.handleUnifiedMultiSearchDW = function () {
+        currentPage = 1;
+        applyAll();
+    };
+
+    function getActiveFiltersDW() {
+        const list = [];
+        
+        // 1. Main Pill
+        const mainCat = document.getElementById('mainCategorySelect') ? document.getElementById('mainCategorySelect').value : 'query';
+        let mainVal = '';
+        if (isTextCategoryDW(mainCat)) {
+            mainVal = document.getElementById('mainSearchInput') ? document.getElementById('mainSearchInput').value.trim() : '';
+        } else {
+            mainVal = document.getElementById('mainCustomSelectVal') ? document.getElementById('mainCustomSelectVal').value.trim() : '';
+        }
+        if (mainVal) {
+            list.push({ col: mainCat, val: mainVal });
+        }
+
+        // 2. Extra Rows
+        const extraContainer = document.getElementById('additionalFilterRowsContainerDW');
+        if (extraContainer) {
+            extraContainer.querySelectorAll('.extra-filter-row').forEach(row => {
+                const catEl = row.querySelector('.extra-cat-select');
+                if (!catEl) return;
+                const cat = catEl.value;
+                let val = '';
+                if (isTextCategoryDW(cat)) {
+                    const inp = row.querySelector('input[type="text"]');
+                    val = inp ? inp.value.trim() : '';
+                } else {
+                    const hidden = row.querySelector('.extra-val-input');
+                    val = hidden ? hidden.value.trim() : '';
                 }
-                currentPage = 1;
-                applyAll();
+                if (val) {
+                    list.push({ col: cat, val: val });
+                }
             });
         }
 
-        window.clearDirectSearch = function() {
-            if (directSearchInput) {
-                directSearchInput.value = '';
-                if (btnClearDirectSearch) btnClearDirectSearch.classList.add('hidden');
-                currentPage = 1;
-                applyAll();
-            }
-        };
+        return list;
+    }
 
-        function rowMatches(row) {
-            if (directSearchInput && directSearchInput.value.trim()) {
-                const dq = directSearchInput.value.trim().toLowerCase();
-                const dh = [
+    function rowMatchesDW(row, activeFilters) {
+        for (const f of activeFilters) {
+            const q = f.val.toLowerCase();
+            if (f.col === 'query') {
+                const haystack = [
                     row.dataset.nim || '',
                     row.dataset.nama || '',
                     row.dataset.judul || '',
@@ -1339,67 +1840,60 @@
                     row.dataset.statusLabel || '',
                     row.dataset.stage || '',
                     row.dataset.stageLabel || ''
-                ].join(' ');
-                if (!dh.toLowerCase().includes(dq)) return false;
+                ].join(' ').toLowerCase();
+                if (!haystack.includes(q)) return false;
+            } else if (f.col === 'nama') {
+                const nama = (row.dataset.nama || '').toLowerCase();
+                if (!nama.includes(q)) return false;
+            } else if (f.col === 'nim') {
+                const nim = (row.dataset.nim || '').toLowerCase();
+                if (!nim.includes(q)) return false;
+            } else if (f.col === 'judul') {
+                const judul = (row.dataset.judul || '').toLowerCase();
+                if (!judul.includes(q)) return false;
+            } else if (f.col === 'status') {
+                const status = (row.dataset.status || '').toLowerCase();
+                if (!status.includes(q)) return false;
+            } else if (f.col === 'stage') {
+                const stage = (row.dataset.stage || '').toLowerCase();
+                const stageLabel = (row.dataset.stageLabel || '').toLowerCase();
+                if (!stage.includes(q) && !stageLabel.includes(q)) return false;
             }
-
-            if (pintasStatus !== 'all') {
-                const rowSt = (row.dataset.status || '').trim().toLowerCase();
-                if (rowSt !== pintasStatus.toLowerCase()) return false;
-            }
-            for (const f of filters) {
-                if (!f || !f.val) continue;
-                const q = f.val.trim().toLowerCase();
-                if (!q) continue;
-                let h = '';
-                if (f.col === 'all') {
-                    h = [
-                        row.dataset.nim || '',
-                        row.dataset.nama || '',
-                        row.dataset.judul || '',
-                        row.dataset.status || '',
-                        row.dataset.statusLabel || '',
-                        row.dataset.stage || '',
-                        row.dataset.stageLabel || ''
-                    ].join(' ');
-                } else if (f.col === 'status') {
-                    h = (row.dataset.status || '') + ' ' + (row.dataset.statusLabel || '');
-                } else if (f.col === 'stage') {
-                    h = (row.dataset.stage || '') + ' ' + (row.dataset.stageLabel || '');
-                } else {
-                    h = row.dataset[f.col] || '';
-                }
-                if (!h.toLowerCase().includes(q)) return false;
-            }
-            return true;
         }
+        return true;
+    }
 
-        function applyAll() {
+    function applyAll() {
+        try {
             allRows = Array.from(document.querySelectorAll('.mhs-row'));
-            const visible = allRows.filter(rowMatches);
+            const activeFilters = getActiveFiltersDW();
+            const visible = allRows.filter(r => rowMatchesDW(r, activeFilters));
             const total = visible.length;
             const totalPages = Math.max(1, Math.ceil(total / perPage));
             if (currentPage > totalPages) currentPage = totalPages;
             if (currentPage < 1) currentPage = 1;
             const start = (currentPage - 1) * perPage;
 
-            allRows.forEach(r => {
-                r.style.display = 'none';
-            });
+            // Hide all first, then show the visible page slice
+            allRows.forEach(r => { r.style.display = 'none'; });
+            visible.slice(start, start + perPage).forEach(r => { r.style.display = ''; });
 
-            visible.slice(start, start + perPage).forEach(r => {
-                r.style.display = '';
-            });
+            const tc = document.getElementById('toolbarTotalCountDW');
+            if (tc) tc.innerText = total;
 
-            const from = total === 0 ? 0 : start + 1;
-            const to = Math.min(start + perPage, total);
-            if (info) info.textContent = `Menampilkan ${from}–${to} dari ${total} data`;
             renderPagination(totalPages);
             rebindCheckboxes();
+        } catch (e) {
+            // On any error, show all rows so they're never stuck hidden
+            document.querySelectorAll('.mhs-row').forEach(r => { r.style.display = ''; });
+            console.warn('[applyAll] Error:', e);
         }
+    }
 
         function renderPagination(totalPages) {
-            pagination.innerHTML = '';
+            const paginationEl = document.getElementById('paginationContainer');
+            if (!paginationEl) return;
+            paginationEl.innerHTML = '';
             if (totalPages <= 1) return;
             const mk = (label, page, disabled, active) => {
                 const btn = document.createElement('button');
@@ -1409,15 +1903,15 @@
                 if (!disabled && !active) btn.addEventListener('click', () => { currentPage = page; applyAll(); });
                 return btn;
             };
-            pagination.appendChild(mk('<i class="bi bi-chevron-left"></i>', currentPage - 1, currentPage === 1, false));
+            paginationEl.appendChild(mk('<i class="bi bi-chevron-left"></i>', currentPage - 1, currentPage === 1, false));
             for (let i = 1; i <= totalPages; i++) {
                 if (totalPages > 7 && i > 2 && i < totalPages - 1 && Math.abs(i - currentPage) > 1) {
-                    if (i === 3 || i === totalPages - 2) { const d = document.createElement('span'); d.textContent = '…'; d.className = 'px-1 text-slate-400'; pagination.appendChild(d); }
+                    if (i === 3 || i === totalPages - 2) { const d = document.createElement('span'); d.textContent = '…'; d.className = 'px-1 text-slate-400'; paginationEl.appendChild(d); }
                     continue;
                 }
-                pagination.appendChild(mk(i, i, false, i === currentPage));
+                paginationEl.appendChild(mk(i, i, false, i === currentPage));
             }
-            pagination.appendChild(mk('<i class="bi bi-chevron-right"></i>', currentPage + 1, currentPage === totalPages, false));
+            paginationEl.appendChild(mk('<i class="bi bi-chevron-right"></i>', currentPage + 1, currentPage === totalPages, false));
         }
 
         document.querySelectorAll('.btn-pintas').forEach(btn => {
@@ -1745,8 +2239,17 @@
             }
         }
 
-        addFilterRow();
+        // Initial render: show all rows immediately, then apply filters
+        applyAll();
         rebindCheckboxes();
+
+        // Safety-net: re-run applyAll after full page load (handles async PHP rows)
+        document.addEventListener('DOMContentLoaded', function () {
+            allRows = Array.from(document.querySelectorAll('.mhs-row'));
+            applyAll();
+            rebindCheckboxes();
+        });
+
         setInterval(pollRealtimeData, 8000);
 
     // Batch Action Functions
