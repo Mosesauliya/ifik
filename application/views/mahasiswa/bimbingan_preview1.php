@@ -1348,6 +1348,38 @@
                 </div>
             </div>
             <?php endif; ?>
+<!-- ========================================================== -->
+<!-- CARD: BAP SIDANG (muncul setelah Penguji 1 publish)        -->
+<!-- ========================================================== -->
+<?php if (!empty($pendaftaran['bap_published'])): ?>
+<div class="card-3d-warm rounded-3xl p-7 sm:p-9 space-y-5 w-full shadow-lg border-2 border-purple-300 bg-purple-50/40">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+        <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-purple-600 text-white flex items-center justify-center text-2xl shrink-0 box-3d shadow-md shadow-purple-600/30">
+                <i class="bi bi-file-earmark-check-fill"></i>
+            </div>
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-purple-800 block">BERITA ACARA SIDANG (BAP)</span>
+                <h3 class="text-lg font-extrabold text-slate-900">Dokumen BAP Sidang Telah Terbit</h3>
+                <p class="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+                    Penguji 1 telah mempublikasikan dokumen <strong>Berita Acara Sidang Tugas Akhir</strong> Anda.
+                    Silakan lihat atau cetak dokumen BAP untuk keperluan arsip pribadi.
+                </p>
+                <?php if (!empty($pendaftaran['bap_published_at'])): ?>
+                    <p class="text-[11px] text-slate-500 font-medium mt-2">
+                        <i class="bi bi-clock-history mr-1"></i>
+                        Dipublikasikan: <?= date('d M Y, H:i', strtotime($pendaftaran['bap_published_at'])); ?> WIB
+                    </p>
+                <?php endif; ?>
+            </div>
+        </div>
+        <button type="button" onclick="openStudentBapPopup()"
+                class="px-5 py-3 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs sm:text-sm shadow-md transition flex items-center gap-2 box-3d hover:scale-[1.02] active:scale-95 cursor-pointer shrink-0">
+            <i class="bi bi-eye-fill text-base"></i> Lihat BAP Sidang
+        </button>
+    </div>
+</div>
+<?php endif; ?>
 
             <?php if (!empty($is_nilai_published)): ?>
             <div class="p-5 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-emerald-900 text-xs font-semibold flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
@@ -2451,6 +2483,135 @@
         });
     </script>
     <?php $this->load->view('partials/modal_rekomendasi_sidang'); ?>
+    <!-- ========================================================== -->
+<!-- FLOATING POPUP: BAP SIDANG UNTUK MAHASISWA                  -->
+<!-- Sama seperti Penguji 1, minus tombol Upload                 -->
+<!-- ========================================================== -->
+<?php if (!empty($pendaftaran['bap_published'])): ?>
+<div id="studentBapContainer" class="fixed inset-0 z-[100000] pointer-events-none p-4 sm:p-6 flex items-center justify-center" style="display:none;">
+    <div class="absolute inset-0 bg-slate-900/55 backdrop-blur-sm pointer-events-auto" onclick="closeStudentBapPopup()"></div>
+    <div class="relative pointer-events-auto bg-white rounded-3xl shadow-2xl border border-slate-300 flex flex-col overflow-hidden w-[92vw] sm:w-[600px] xl:w-[720px] h-[85vh] max-h-[92vh] animate-pop-in">
+        <!-- Header -->
+        <div class="p-3 px-4 bg-slate-900 text-white flex items-center justify-between gap-2 shrink-0 border-b border-slate-800">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-8 h-8 rounded-lg bg-purple-500/25 border border-purple-400/40 text-purple-300 flex items-center justify-center font-bold text-sm shrink-0">
+                    <i class="bi bi-file-earmark-check-fill"></i>
+                </div>
+                <div class="min-w-0">
+                    <h4 class="text-sm font-extrabold text-white truncate">Berita Acara Sidang Tugas Akhir</h4>
+                    <p class="text-[10px] text-slate-300 truncate">Dokumen BAP resmi dari dewan sidang</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeStudentBapPopup()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-rose-600 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer">
+                <i class="bi bi-x-lg text-sm"></i>
+            </button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="bg-slate-950 p-2 px-3 flex items-center gap-2 border-b border-slate-800 shrink-0">
+            <button type="button" onclick="studentBapSwitchTab('igracias')" id="stBtnBapIgracias"
+                    class="flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer bg-orange-600 text-white shadow-xs transition">
+                <i class="bi bi-file-earmark-text-fill"></i><span>1. BAP (IGRACIAS)</span>
+            </button>
+            <button type="button" onclick="studentBapSwitchTab('fakultas')" id="stBtnBapFakultas"
+                    class="flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition">
+                <i class="bi bi-award-fill"></i><span>2. BAP FAKULTAS</span>
+            </button>
+        </div>
+
+        <!-- Iframe -->
+        <div class="flex-1 bg-slate-100 p-2 overflow-hidden flex flex-col relative">
+            <iframe id="stBapIframe"
+                    src=""
+                    class="w-full h-full bg-white rounded-2xl shadow-inner border border-slate-200"
+                    frameborder="0"></iframe>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-2.5 px-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs shrink-0 flex-wrap gap-2">
+            <div class="flex items-center gap-2 min-w-0">
+                <span class="font-mono text-[11px] font-bold text-orange-600"><?= htmlspecialchars($pendaftaran['nim'] ?? $nim); ?></span>
+                <span class="text-slate-400 text-[11px]">|</span>
+                <span class="text-[11px] text-slate-600 truncate font-semibold">
+                    <?= htmlspecialchars(trim(($mahasiswa['nama_depan'] ?? 'Mahasiswa') . ' ' . ($mahasiswa['nama_belakang'] ?? ''))); ?>
+                </span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+                <a id="stBtnCetakBap" href="#" target="_blank"
+                   class="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-[11px] transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
+                    <i class="bi bi-printer-fill text-[11px]"></i> Cetak PDF
+                </a>
+                <button type="button" onclick="closeStudentBapPopup()"
+                        class="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 font-bold text-[11px] transition cursor-pointer">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // FLOATING POPUP BAP — untuk mahasiswa
+    // Sama seperti Penguji 1 minus tombol Upload
+    // ============================================================
+    const ST_NIM = <?= json_encode($pendaftaran['nim'] ?? $nim); ?>;
+    const ST_URL_BAP_IGRACIAS_PREVIEW = '<?= site_url('adminlayanan/preview_bap_igracias/'); ?>' + ST_NIM;
+    const ST_URL_BAP_FAKULTAS_PREVIEW = '<?= site_url('adminlayanan/preview_bap_fakultas/'); ?>' + ST_NIM;
+    const ST_URL_BAP_IGRACIAS_PRINT   = '<?= site_url('adminlayanan/cetak_bap_igracias/'); ?>'   + ST_NIM;
+    const ST_URL_BAP_FAKULTAS_PRINT   = '<?= site_url('adminlayanan/cetak_bap_fakultas/'); ?>'   + ST_NIM;
+
+    let stBapActiveTab = 'igracias';
+
+    function studentBapSwitchTab(type) {
+        stBapActiveTab = type;
+        const btnIgracias = document.getElementById('stBtnBapIgracias');
+        const btnFakultas = document.getElementById('stBtnBapFakultas');
+        const iframe      = document.getElementById('stBapIframe');
+        const btnCetak    = document.getElementById('stBtnCetakBap');
+        if (!iframe) return;
+
+        const ACTIVE_ORANGE = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer bg-orange-600 text-white shadow-xs transition';
+        const ACTIVE_INDIGO = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer bg-indigo-600 text-white shadow-xs transition';
+        const INACTIVE      = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition';
+
+        if (type === 'igracias') {
+            iframe.src = ST_URL_BAP_IGRACIAS_PREVIEW;
+            if (btnCetak) btnCetak.href = ST_URL_BAP_IGRACIAS_PRINT;
+            if (btnIgracias) btnIgracias.className = ACTIVE_ORANGE;
+            if (btnFakultas) btnFakultas.className = INACTIVE;
+        } else {
+            iframe.src = ST_URL_BAP_FAKULTAS_PREVIEW;
+            if (btnCetak) btnCetak.href = ST_URL_BAP_FAKULTAS_PRINT;
+            if (btnFakultas) btnFakultas.className = ACTIVE_INDIGO;
+            if (btnIgracias) btnIgracias.className = INACTIVE;
+        }
+    }
+
+    function openStudentBapPopup() {
+        const container = document.getElementById('studentBapContainer');
+        if (!container) return;
+        container.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        studentBapSwitchTab(stBapActiveTab || 'igracias');
+    }
+
+    function closeStudentBapPopup() {
+        const container = document.getElementById('studentBapContainer');
+        if (!container) return;
+        container.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeStudentBapPopup();
+    });
+
+    window.openStudentBapPopup  = openStudentBapPopup;
+    window.closeStudentBapPopup = closeStudentBapPopup;
+    window.studentBapSwitchTab  = studentBapSwitchTab;
+</script>
+<?php endif; ?>
     <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>

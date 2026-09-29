@@ -24,7 +24,6 @@ class Dosen_bimbingan extends CI_Controller {
                 $this->output
                     ->set_status_header(401)
                     ->set_content_type('application/json')
-                    // 'status' ditambahkan agar konsisten dengan yang dibaca JS (res.status)
                     ->set_output(json_encode([
                         'status'  => false,
                         'success' => false,
@@ -120,10 +119,6 @@ class Dosen_bimbingan extends CI_Controller {
 
     /**
      * Halaman Bimbingan & Evaluasi Preview TA untuk Mahasiswa.
-     *
-     * RESTORE: Method ini sekarang juga menyiapkan data untuk fitur
-     * "Status Sidang & Penilaian" (kartu Published/Draft/Scheduled di tab Sidang).
-     * Sumber nilai: tabel `guidance` (nilaisidang_pembimbing1/2, nilaisidang_penguji1/2).
      */
     public function bimbingan() {
         $nim = $this->_get_current_nim();
@@ -174,10 +169,6 @@ class Dosen_bimbingan extends CI_Controller {
         $rekap = $this->Mahasiswa_model->get_rekap_nilai_sidang($nim);
         $data['rekap_nilai_sidang'] = $rekap;
 
-        // Status publish disimpulkan otomatis:
-        //   - 4/4 posisi terisi → Published (kartu hasil kelulusan)
-        //   - 1..3 posisi       → Draft (kartu "sedang direkapitulasi")
-        //   - 0 posisi          → Belum dinilai (form upload / kartu jadwal)
         $data['is_nilai_published'] = !empty($rekap['semua_terisi']);
         $data['is_nilai_draft']     = (!empty($rekap['has_data']) && empty($rekap['semua_terisi']));
 
@@ -187,10 +178,8 @@ class Dosen_bimbingan extends CI_Controller {
         $data['grade_sidang']     = $rekap['grade']            ?? '-';
         $data['status_kelulusan'] = $rekap['status_kelulusan'] ?? 'Belum Dinilai';
 
-        // Kriteria rubrik untuk modal (dari salah satu dosen yang sudah menilai)
         $data['criteria_items'] = $rekap['kriteria_referensi'] ?? [];
 
-        // Jadwal sidang — nullable, aman dengan null coalescing
         $data['tgl_sidang']          = $data['pendaftaran']['tgl_sidang']         ?? null;
         $data['jam_mulai_sidang']    = $data['pendaftaran']['jam_mulai_sidang']   ?? null;
         $data['jam_selesai_sidang']  = $data['pendaftaran']['jam_selesai_sidang'] ?? null;
@@ -382,6 +371,93 @@ class Dosen_bimbingan extends CI_Controller {
             'status'  => true,
             'message' => 'Berkas Sidang Akhir berhasil diunggah.'
         ]);
+    }
+
+    /**
+     * =========================================================
+     * PUBLISH BAP oleh Penguji 1 (U1) — TANPA upload file.
+     *
+     * BAP adalah dokumen server-generated (adminlayanan/preview_bap_*).
+     * Endpoint ini hanya menyimpan "published marker" di file_pendaftaran
+     * via save_pendaftaran_ta() yang sudah ada → tanpa query baru.
+     *
+     * FIX: Menggunakan $this->output + set_status_header() agar
+     * frontend dapat membedakan error permission (403) vs koneksi.
+     * =========================================================
+     */
+    public function upload_bap_ajax() {
+        $this->output->set_content_type('application/json');
+
+        // 1. Cek otorisasi reviewer
+        if (!$this->_is_authorized_reviewer()) {
+            $this->output
+                ->set_status_header(403)
+                ->set_output(json_encode([
+                    'status'  => false,
+                    'message' => 'Unauthorized — Anda tidak memiliki hak akses.'
+                ]));
+            return;
+        }
+
+        $role_id = (int) $this->session->userdata('role_id');
+        $is_admin_or_koor = in_array($role_id, [1, 6, 9], true);
+
+        // 2. Validasi NIM
+        $nim = $this->input->post('nim');
+        if (empty($nim)) {
+            $this->output
+                ->set_status_header(400)
+                ->set_output(json_encode([
+                    'status'  => false,
+                    'message' => 'NIM tidak valid.'
+                ]));
+            return;
+        }
+
+        // 3. Cek apakah dosen login = Penguji 1 (posisi 3) untuk mahasiswa ini
+        if (!$is_admin_or_koor) {
+            $dosen_id = $this->session->userdata('user_id');
+            $students = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, 3);
+            $allowed  = false;
+            foreach ($students as $s) {
+                if ((string) $s['nim'] === (string) $nim) { $allowed = true; break; }
+            }
+            if (!$allowed) {
+                $this->output
+                    ->set_status_header(403)
+                    ->set_output(json_encode([
+                        'status'  => false,
+                        'message' => 'Anda bukan Penguji 1 mahasiswa ini.'
+                    ]));
+                return;
+            }
+        }
+
+        // 4. Simpan marker publish — reuse save_pendaftaran_ta() existing (tanpa query baru)
+        $marker = 'bap_published_' . date('YmdHis');
+
+        $saved = $this->Mahasiswa_model->save_pendaftaran_ta([
+            'nim'      => $nim,
+            'file_bap' => $marker,
+        ]);
+
+        // 5. Response
+        if ($saved) {
+            $this->output
+                ->set_status_header(200)
+                ->set_output(json_encode([
+                    'status'  => true,
+                    'message' => 'BAP berhasil dipublikasikan ke halaman mahasiswa.',
+                    'marker'  => $marker,
+                ]));
+        } else {
+            $this->output
+                ->set_status_header(500)
+                ->set_output(json_encode([
+                    'status'  => false,
+                    'message' => 'Gagal mempublikasikan BAP. Silakan coba lagi.'
+                ]));
+        }
     }
 
     // =========================================================

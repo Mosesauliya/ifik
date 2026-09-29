@@ -365,6 +365,8 @@ $route['dosen/help/create'] = 'DosenHelp/help_create_chat_ajax';
 $route['dosen/help/send'] = 'DosenHelp/help_send_message_ajax';
 $route['dosen/help/toggle-status'] = 'DosenHelp/help_toggle_status_ajax';
 $route['dosen/help/quick-topics'] = 'DosenHelp/help_quick_topics_ajax';
+// Alias kompatibilitas — publikasi BAP
+$route['mahasiswa/upload_bap_ajax'] = 'dosen_bimbingan/upload_bap_ajax';
 
 // Laboran Help Desk / Live Chat Routes
 $route['laboran/help'] = 'LaboranHelp/index';

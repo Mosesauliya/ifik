@@ -725,6 +725,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                                         <th class="py-4 px-4 text-center">Rekomendasi</th>
                                     <?php endif; ?>
                                     <th class="py-4 px-4 text-center">Komentar</th>
+                                    <th id="thBapCol" class="py-4 px-4 text-center" style="display: none;">BAP</th>
                                     <th class="py-4 px-4 pr-6 text-right">Aksi</th>
                                 </tr>
                             </thead>
@@ -1355,6 +1356,11 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         function renderTable() {
             const tbody = document.getElementById('bimbinganTableBody');
 
+            // Kolom BAP hanya untuk Penguji 1 (U1) pada tab Sidang (Preview 4)
+            const showBapCol = (typeof IS_U1 !== 'undefined' && IS_U1) && currentTahap === 'Sidang';
+            const thBapEl = document.getElementById('thBapCol');
+            if (thBapEl) thBapEl.style.display = showBapCol ? '' : 'none';
+
             const filteredData = [];
             bimbinganData.forEach((mhs, originalIndex) => {
                 // ===== MULTI-CRITERIA (manual — hanya diproses saat klik Cari) =====
@@ -1483,8 +1489,10 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                     ? `<button onclick="showUnifiedCommentModal('${mhs.nama_mahasiswa}', '${encodeURIComponent(p1Comment)}', '${encodeURIComponent(p2Comment)}', '${encodeURIComponent(u1Comment)}', '${encodeURIComponent(u2Comment)}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-violet-100 hover:bg-violet-200 text-violet-700 border border-violet-200 rounded-lg text-xs font-bold transition cursor-pointer"><i class="bi bi-chat-quote-fill"></i> ${commentCountParts.join(', ')}</button>`
                     : `<span class="text-slate-400 text-xs italic">-</span>`;
 
+                const namaEscaped = (mhs.nama_mahasiswa || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+
                 html += `
-                    <tr class="hover:bg-slate-50 transition-colors" data-index="${index}">
+                    <tr class="hover:bg-slate-50 transition-colors" data-index="${index}" data-nim="${mhs.nim}">
                         <td class="dosen-cb-cell py-4 px-4 text-center">${checkboxHtml}</td>
                         <td class="mhs-info-cell py-4 px-4">
                             <div class="relative inline-block group">
@@ -1501,12 +1509,30 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                         <td data-label="Status" class="py-4 px-4 text-center">${statusBadge}</td>
                         ${rekomenCell}
                         <td data-label="Komentar" class="py-4 px-4 text-center">${commentBtnHtml}</td>
+                        ${showBapCol ? `
+                            <td data-label="BAP" class="py-4 px-4 text-center">
+                                <div class="flex flex-col gap-1.5 items-stretch max-w-[150px] mx-auto">
+                                    <button type="button"
+                                            id="btn_bap_igracias_${mhs.nim}"
+                                            onclick="toggleBapPopup('${mhs.nim}', '${namaEscaped}', 'igracias')"
+                                            class="btn-bap-action px-2.5 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-bold text-[10.5px] shadow-2xs hover:shadow-xs transition flex items-center justify-center gap-1 cursor-pointer">
+                                        <i class="bi bi-file-earmark-text-fill"></i> <span>BAP (IGRACIAS)</span>
+                                    </button>
+                                    <button type="button"
+                                            id="btn_bap_fakultas_${mhs.nim}"
+                                            onclick="toggleBapPopup('${mhs.nim}', '${namaEscaped}', 'fakultas')"
+                                            class="btn-bap-action px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white font-bold text-[10.5px] shadow-2xs hover:shadow-xs transition flex items-center justify-center gap-1 cursor-pointer">
+                                        <i class="bi bi-award-fill"></i> <span>BAP FAKULTAS</span>
+                                    </button>
+                                </div>
+                            </td>
+                        ` : ''}
                         <td class="aksi-cell py-4 px-4 pr-6 text-right">${btnHtml}</td>
                     </tr>
                 `;
             });
 
-            const emptyColspan = IS_P1 ? 7 : 6;
+            const emptyColspan = IS_P1 ? 7 : (showBapCol ? 7 : 6);
             if (pageData.length === 0) {
                 html = `<tr><td colspan="${emptyColspan}" class="text-center py-10 text-slate-500 font-medium">Tidak ada data mahasiswa ditemukan.</td></tr>`;
             }
@@ -1515,6 +1541,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             renderPagination(totalItems, startIdx, endIdx);
             rebindDosenCheckboxes();
             updateTableButtonHighlights();
+            updateBapTableButtonHighlights();
         }
 
         // ============================================================
@@ -3154,6 +3181,291 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-save-fill"></i> Simpan Penilaian Sidang'; }
             });
         };
+    </script>
+
+    <!-- ============================================================ -->
+    <!-- FLOATING CONTAINER: Preview Dokumen BAP                        -->
+    <!-- Muncul saat Penguji 1 (U1) klik tombol BAP di tab Sidang      -->
+    <!-- ============================================================ -->
+    <div id="floatingBapContainer" class="fixed bottom-0 left-16 sm:left-20 top-16 pointer-events-none z-[100000] p-3 sm:p-5 flex flex-col items-start justify-start gap-4 overflow-y-auto max-h-[calc(100vh-4rem)] scroll-smooth" style="display: none; max-width: 65vw;"></div>
+
+    <!-- ============================================================ -->
+    <!-- HIDDEN INPUT UNTUK UPLOAD BAP (Khusus Penguji 1 / U1)         -->
+    <!-- ============================================================ -->
+    <!-- <input type="file" id="bapUploadInput" accept=".pdf,.doc,.docx" style="display:none"> -->
+
+    <!-- ============================================================ -->
+    <!-- BAP SIDANG FLOATING PREVIEW SYSTEM (Khusus Penguji 1 / U1)    -->
+    <!-- Data dijamin sesuai mahasiswa karena NIM diteruskan langsung  -->
+    <!-- dari mhs.nim di setiap baris tabel                            -->
+    <!-- ============================================================ -->
+    <script>
+        window.activeBapPopups = [];
+
+        function toggleBapPopup(nim, nama, type) {
+            const popupId = 'bap_' + type + '_' + nim;
+            const existingIdx = window.activeBapPopups.findIndex(p => p.id === popupId);
+            if (existingIdx > -1) { closeBapPopup(popupId); return; }
+
+            window.activeBapPopups.push({ id: popupId, nim, nama, type, isMinimized: false });
+            renderBapFloatingPopups();
+            highlightBapCard(popupId);
+            updateBapTableButtonHighlights();
+        }
+
+        function switchBapType(id, newType) {
+            const p = window.activeBapPopups.find(item => item.id === id);
+            if (p) {
+                p.type = newType;
+                p.id = 'bap_' + newType + '_' + p.nim;
+                renderBapFloatingPopups();
+                highlightBapCard(p.id);
+                updateBapTableButtonHighlights();
+            }
+        }
+
+        function toggleMinimizeBap(id) {
+            const p = window.activeBapPopups.find(x => x.id === id);
+            if (p) { p.isMinimized = !p.isMinimized; renderBapFloatingPopups(); }
+        }
+
+        function closeBapPopup(id) {
+            window.activeBapPopups = window.activeBapPopups.filter(p => p.id !== id);
+            renderBapFloatingPopups();
+            updateBapTableButtonHighlights();
+        }
+
+        function closeAllBapPopups() {
+            window.activeBapPopups = [];
+            renderBapFloatingPopups();
+            updateBapTableButtonHighlights();
+        }
+
+        function highlightBapCard(id) {
+            setTimeout(() => {
+                const el = document.getElementById('bapCard_' + id);
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', inline: 'end', block: 'nearest' });
+                    el.classList.add('ring-4', 'ring-orange-400', 'scale-[1.01]');
+                    setTimeout(() => el.classList.remove('ring-4', 'ring-orange-400', 'scale-[1.01]'), 800);
+                }
+            }, 50);
+        }
+
+        function updateBapTableButtonHighlights() {
+            document.querySelectorAll('.btn-bap-action').forEach(btn => {
+                const isIgraciasBtn = btn.id.startsWith('btn_bap_igracias_');
+                const nim = btn.id.replace('btn_bap_igracias_', '').replace('btn_bap_fakultas_', '');
+                const targetType = isIgraciasBtn ? 'igracias' : 'fakultas';
+                const isActive = window.activeBapPopups.some(p => p.nim === nim && p.type === targetType);
+                if (isActive) btn.classList.add('ring-2', 'ring-orange-300', 'ring-offset-1', 'scale-[1.03]');
+                else btn.classList.remove('ring-2', 'ring-orange-300', 'ring-offset-1', 'scale-[1.03]');
+            });
+        }
+
+        function renderBapFloatingPopups() {
+            const container = document.getElementById('floatingBapContainer');
+            if (!container) return;
+            if (window.activeBapPopups.length === 0) { container.style.display = 'none'; container.innerHTML = ''; return; }
+            container.style.display = 'flex';
+            const total = window.activeBapPopups.length;
+            let html = '';
+
+            if (total > 1) {
+                html += `
+                    <div class="pointer-events-auto shrink-0 self-start mb-1 bg-slate-900/95 backdrop-blur text-white px-3.5 py-1.5 rounded-2xl shadow-xl border border-slate-700 flex items-center gap-2 text-xs">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="font-bold">${total} Dokumen BAP Terbuka</span>
+                        <button type="button" onclick="closeAllBapPopups()" class="ml-1 px-2 py-0.5 rounded-lg bg-rose-600/80 hover:bg-rose-600 text-white font-bold text-[10px] transition cursor-pointer">Tutup Semua</button>
+                    </div>
+                `;
+            }
+
+            window.activeBapPopups.forEach(p => {
+                const isIgracias = p.type === 'igracias';
+                const previewUrl = isIgracias ? '<?= site_url('adminlayanan/preview_bap_igracias/'); ?>' + p.nim : '<?= site_url('adminlayanan/preview_bap_fakultas/'); ?>' + p.nim;
+                const printUrl   = isIgracias ? '<?= site_url('adminlayanan/cetak_bap_igracias/'); ?>'   + p.nim : '<?= site_url('adminlayanan/cetak_bap_fakultas/'); ?>'   + p.nim;
+                const title = isIgracias ? 'BAP IGrACIAS — ' + p.nama : 'BAP Fakultas — ' + p.nama;
+                const sub   = isIgracias ? 'Dokumen 1: Berita Acara Sidang (IGrACIAS)' : 'Dokumen 2: Berita Acara & Nilai FIK Tel-U';
+                const badgeColor = isIgracias ? 'bg-orange-500/20 text-orange-400 border border-orange-500/40' : 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/40';
+                const icon  = isIgracias ? 'bi bi-file-earmark-text-fill' : 'bi bi-award-fill';
+
+                if (p.isMinimized) {
+                    html += `
+                        <div id="bapCard_${p.id}" class="pointer-events-auto bg-slate-900 text-white rounded-2xl shadow-2xl border border-slate-700 shrink-0 w-72 p-2.5 flex items-center justify-between gap-2 hover:border-orange-500 cursor-pointer" onclick="toggleMinimizeBap('${p.id}')">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <div class="w-6 h-6 rounded-lg ${badgeColor} flex items-center justify-center text-xs shrink-0"><i class="${icon}"></i></div>
+                                <div class="min-w-0">
+                                    <h4 class="text-xs font-bold truncate max-w-[150px]">${title}</h4>
+                                    <p class="text-[9px] text-slate-400 truncate">${p.nim}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1 shrink-0" onclick="event.stopPropagation()">
+                                <button type="button" onclick="toggleMinimizeBap('${p.id}')" class="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs cursor-pointer"><i class="bi bi-arrows-angle-expand text-[10px]"></i></button>
+                                <button type="button" onclick="closeBapPopup('${p.id}')" class="w-6 h-6 rounded-lg bg-white/10 hover:bg-rose-600 text-slate-300 hover:text-white flex items-center justify-center text-xs ml-0.5 cursor-pointer"><i class="bi bi-x-lg text-[10px]"></i></button>
+                            </div>
+                        </div>`;
+                } else {
+                    html += `
+                        <div id="bapCard_${p.id}" class="pointer-events-auto bg-white rounded-3xl shadow-2xl border border-slate-300 flex flex-col overflow-hidden shrink-0 w-[92vw] sm:w-[480px] xl:w-[520px] h-[560px] max-h-[78vh]">
+                            <div class="p-2.5 px-3.5 bg-slate-900 text-white flex items-center justify-between gap-2 shrink-0 border-b border-slate-800">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <div class="w-6 h-6 rounded-lg ${badgeColor} flex items-center justify-center font-bold text-xs shrink-0"><i class="${icon} text-[11px]"></i></div>
+                                    <div class="min-w-0">
+                                        <h4 class="text-xs font-bold text-white truncate max-w-[170px] sm:max-w-[210px]">${title}</h4>
+                                        <p class="text-[10px] text-slate-300 truncate">${sub}</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1 shrink-0">
+                                    <a href="${printUrl}" target="_blank" class="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs cursor-pointer" title="Buka Cetak / PDF"><i class="bi bi-arrow-up-right-square text-[10px]"></i></a>
+                                    <button type="button" onclick="toggleMinimizeBap('${p.id}')" class="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs cursor-pointer" title="Minimize"><i class="bi bi-dash-lg text-[10px] font-bold"></i></button>
+                                    <button type="button" onclick="closeBapPopup('${p.id}')" class="w-6 h-6 rounded-lg bg-white/10 hover:bg-rose-600 text-slate-300 hover:text-white flex items-center justify-center text-xs font-bold ml-0.5 cursor-pointer"><i class="bi bi-x-lg text-[10px]"></i></button>
+                                </div>
+                            </div>
+                            <div class="bg-slate-950 p-1.5 px-3 flex items-center gap-2 border-b border-slate-800 shrink-0">
+                                <button type="button" onclick="switchBapType('${p.id}', 'igracias')" class="flex-1 py-1 px-2.5 rounded-lg text-[10.5px] font-bold flex items-center justify-center gap-1.5 cursor-pointer ${isIgracias ? 'bg-orange-600 text-white shadow-xs' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'}">
+                                    <i class="bi bi-file-earmark-text-fill"></i><span>1. BAP (IGRACIAS)</span>
+                                </button>
+                                <button type="button" onclick="switchBapType('${p.id}', 'fakultas')" class="flex-1 py-1 px-2.5 rounded-lg text-[10.5px] font-bold flex items-center justify-center gap-1.5 cursor-pointer ${!isIgracias ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'}">
+                                    <i class="bi bi-award-fill"></i><span>2. BAP FAKULTAS</span>
+                                </button>
+                            </div>
+                            <div class="flex-1 bg-slate-100 p-1.5 overflow-hidden flex flex-col relative">
+                                <iframe src="${previewUrl}" class="w-full h-full bg-white rounded-2xl shadow-inner border border-slate-200" frameborder="0"></iframe>
+                            </div>
+                            <div class="p-2 px-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs shrink-0">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <span class="font-mono text-[11px] font-bold text-orange-600">${p.nim}</span>
+                                    <span class="text-slate-400 text-[11px]">|</span>
+                                    <span class="text-[11px] text-slate-600 truncate font-semibold">${p.nama}</span>
+                                </div>
+                                <div class="flex items-center gap-1.5 shrink-0 flex-wrap">
+                                    <a href="${printUrl}" target="_blank" class="px-3 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-[11px] transition flex items-center gap-1 cursor-pointer"><i class="bi bi-printer-fill text-[10px]"></i> Cetak PDF</a>
+                                    ${(typeof IS_U1 !== 'undefined' && IS_U1) ? `
+                                        <button type="button" onclick="triggerBapUpload('${p.nim}')" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] transition flex items-center gap-1 cursor-pointer" title="Upload dokumen BAP untuk mahasiswa ini">
+                                            <i class="bi bi-cloud-arrow-up-fill text-[10px]"></i> Upload BAP
+                                        </button>
+                                    ` : ''}
+                                    <button type="button" onclick="closeBapPopup('${p.id}')" class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 font-bold text-[11px] transition cursor-pointer">Tutup</button>
+                                </div>
+                            </div>
+                        </div>`;
+                }
+            });
+            container.innerHTML = html;
+        }
+
+        window.toggleBapPopup = toggleBapPopup;
+        window.switchBapType = switchBapType;
+        window.toggleMinimizeBap = toggleMinimizeBap;
+        window.closeBapPopup = closeBapPopup;
+        window.closeAllBapPopups = closeAllBapPopups;
+        window.updateBapTableButtonHighlights = updateBapTableButtonHighlights;
+
+           // ============================================================
+    // PUBLISH BAP oleh Penguji 1 (U1) — Tanpa upload file
+    // BAP di-generate server-side oleh adminlayanan/preview_bap_*
+    // ============================================================
+function triggerBapUpload(nim) {
+    if (!nim) return;
+
+    Swal.fire({
+        title: 'Publikasikan BAP?',
+        html: 'Dokumen <strong>Berita Acara Sidang (IGrACIAS + Fakultas)</strong> akan dipublikasikan ke halaman mahasiswa.<br><br><span style="font-size:11px;color:#64748b;">Mahasiswa akan dapat melihat & mengunduh BAP.</span>',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#10b981',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: '<i class="bi bi-cloud-arrow-up-fill"></i> Ya, Publikasikan',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        const fd = new FormData();
+        fd.append('nim', nim);
+
+        showToast('Mempublikasikan BAP...', 'success');
+
+        // ✅ FIX: endpoint diarahkan ke controller Dosen_bimbingan (tempat method berada)
+        fetch('<?= site_url("dosen_bimbingan/upload_bap_ajax") ?>', {
+            method: 'POST',
+            body: fd,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        })
+        .then(data => {
+            if (data && data.status) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: data.message || 'BAP berhasil dipublikasikan ke mahasiswa.',
+                    timer: 1800,
+                    showConfirmButton: false
+                }).then(() => window.location.reload());
+            } else {
+                Swal.fire('Gagal!', (data && data.message) || 'Gagal mempublikasikan BAP.', 'error');
+            }
+        })
+        .catch(err => {
+            console.error('Publish BAP error:', err);
+            Swal.fire('Error!', 'Kesalahan koneksi: ' + err.message, 'error');
+        });
+    });
+}
+
+    window.triggerBapUpload = triggerBapUpload;
+        document.addEventListener('DOMContentLoaded', function () {
+            const input = document.getElementById('bapUploadInput');
+            if (!input) return;
+
+            input.addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                if (!file || !_bapUploadNim) return;
+
+                // Validasi ukuran (maks 10 MB)
+                const maxMB = 10;
+                if (file.size > maxMB * 1024 * 1024) {
+                    if (typeof showToast === 'function') showToast('Ukuran file maksimal ' + maxMB + 'MB.', 'error');
+                    e.target.value = '';
+                    return;
+                }
+
+                const fd = new FormData();
+                fd.append('file_bap', file);
+                fd.append('nim', _bapUploadNim);
+
+                if (typeof showToast === 'function') showToast('Mengunggah BAP...', 'success');
+
+                fetch('<?= site_url("dosen_bimbingan/upload_bap_ajax") ?>', {
+                    method: 'POST',
+                    body: fd,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.status) {
+                        if (typeof showToast === 'function') showToast(data.message || 'BAP berhasil diunggah.', 'success');
+                        // Reload agar halaman dan status BAP terbaru termuat
+                        setTimeout(() => window.location.reload(), 700);
+                    } else {
+                        if (typeof showToast === 'function') showToast((data && data.message) || 'Gagal upload BAP.', 'error');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    if (typeof showToast === 'function') showToast('Kesalahan koneksi.', 'error');
+                })
+                .finally(() => {
+                    e.target.value = '';
+                    _bapUploadNim = null;
+                });
+            });
+        });
+
+        window.triggerBapUpload = triggerBapUpload;
     </script>
 
     <?php $this->load->view('partials/custom_cursor'); ?>
