@@ -203,12 +203,13 @@ class KoordinatorTA_model extends CI_Model {
         ');
         $this->db->from('guidance g');
         $this->db->join('user u', 'u.id = g.id_mhs OR u.nim = g.id_mhs', 'inner');
-        $this->db->join('user u_wali', 'u_wali.nip = u.dosen_wali OR u_wali.id = u.dosen_wali', 'left');
+        $this->db->join('user u_wali', '(u.dosen_wali IS NOT NULL AND u.dosen_wali != "" AND (u_wali.nip = u.dosen_wali OR u_wali.id = u.dosen_wali))', 'left');
         $this->db->join('thesis_lecturers tl', 'tl.id_guidance = g.id', 'left');
-        $this->db->join('user u_p1', 'u_p1.nip = tl.dosen_pembimbing1 OR u_p1.id = tl.dosen_pembimbing1', 'left');
-        $this->db->join('user u_p2', 'u_p2.nip = tl.dosen_pembimbing2 OR u_p2.id = tl.dosen_pembimbing2', 'left');
-        $this->db->join('user u_pj1', 'u_pj1.nip = tl.dosen_penguji1 OR u_pj1.id = tl.dosen_penguji1', 'left');
-        $this->db->join('user u_pj2', 'u_pj2.nip = tl.dosen_penguji2 OR u_pj2.id = tl.dosen_penguji2', 'left');
+        $this->db->join('user u_p1', '(tl.dosen_pembimbing1 IS NOT NULL AND tl.dosen_pembimbing1 != "" AND (u_p1.nip = tl.dosen_pembimbing1 OR u_p1.id = tl.dosen_pembimbing1))', 'left');
+        $this->db->join('user u_p2', '(tl.dosen_pembimbing2 IS NOT NULL AND tl.dosen_pembimbing2 != "" AND (u_p2.nip = tl.dosen_pembimbing2 OR u_p2.id = tl.dosen_pembimbing2))', 'left');
+        $this->db->join('user u_pj1', '(tl.dosen_penguji1 IS NOT NULL AND tl.dosen_penguji1 != "" AND (u_pj1.nip = tl.dosen_penguji1 OR u_pj1.id = tl.dosen_penguji1))', 'left');
+        $this->db->join('user u_pj2', '(tl.dosen_penguji2 IS NOT NULL AND tl.dosen_penguji2 != "" AND (u_pj2.nip = tl.dosen_penguji2 OR u_pj2.id = tl.dosen_penguji2))', 'left');
+        $this->db->group_by('g.id');
         $this->db->order_by('u.nim', 'ASC');
         $query = $this->db->get();
 
