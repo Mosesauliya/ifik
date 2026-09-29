@@ -392,7 +392,7 @@
             <!-- 3D Model Melayang & Menonjol Keluar Card -->
             <div class="vt-card-3d">
                 <model-viewer
-                    src="<?= base_url('assets/3D/CharIFIK.glb') ?>"
+                    src="<?= base_url('assets/3D/CharIFIK.glb?v=2') ?>"
                     alt="Karakter FIK Tour"
                     camera-controls
                     camera-target="auto auto auto"
@@ -428,7 +428,7 @@
             <!-- 3D Model Melayang & Menonjol Keluar Card -->
             <div class="vt-card-3d">
                 <model-viewer
-                    src="<?= base_url('assets/3D/360Preview.glb') ?>"
+                    src="<?= base_url('assets/3D/360Preview.glb?v=2') ?>"
                     alt="Aset 360 IFIK"
                     camera-controls
                     camera-target="auto auto auto"
