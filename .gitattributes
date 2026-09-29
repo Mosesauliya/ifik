@@ -1,1 +1,13 @@
-# Git attributes
+# Keep CharIFIK.glb and 360Preview.glb as standard git binaries for automatic NAS sync
+assets/3D/CharIFIK.glb -filter -diff -merge
+assets/3D/360Preview.glb -filter -diff -merge
+
+# Heavy lab 3D models tracked with Git LFS
+assets/3D/Aula.glb filter=lfs diff=lfs merge=lfs -text
+assets/3D/greenscreen.glb filter=lfs diff=lfs merge=lfs -text
+assets/3D/ifik.glb filter=lfs diff=lfs merge=lfs -text
+assets/3D/ifikouter.glb filter=lfs diff=lfs merge=lfs -text
+"assets/3D/lab Mac (1).glb" filter=lfs diff=lfs merge=lfs -text
+"assets/3D/lab incubator.glb" filter=lfs diff=lfs merge=lfs -text
+"assets/3D/lab tab cintiq (1).glb" filter=lfs diff=lfs merge=lfs -text
+"assets/3D/lab.multi media (1).glb" filter=lfs diff=lfs merge=lfs -text
