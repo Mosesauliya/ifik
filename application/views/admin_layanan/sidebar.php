@@ -43,6 +43,11 @@ $laaNavItems = [
         'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'
     ],
     [
+        'heading' => 'Bantuan & Live Chat',
+        'href'    => site_url('adminlayanan/help'),
+        'icon_3d' => 'assets/images/icons_3d/help_chat.png'
+    ],
+    [
         'heading' => 'Kelola Tiket LAA',
         'href'    => site_url('adminlayanan/ticketing'),
         'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'

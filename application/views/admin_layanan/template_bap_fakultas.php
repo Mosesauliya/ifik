@@ -111,16 +111,19 @@
             border-collapse: collapse;
         }
         .signatures-table td {
-            vertical-align: top;
-            padding: 4px 0;
+            vertical-align: middle;
+            padding: 4px 6px;
+            height: 44px;
         }
         .sig-box {
             font-family: 'Brush Script MT', cursive, sans-serif;
-            font-size: 18pt;
+            font-size: 16pt;
             color: #0284c7;
-            height: 38px;
+            height: 40px;
             display: flex;
             align-items: center;
+            justify-content: center;
+            white-space: nowrap;
         }
         .eval-table {
             width: 100%;
@@ -181,13 +184,7 @@
         <!-- ============================================================= -->
         <div class="page-1">
             <div class="header-logo">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <div class="logo-box">U</div>
-                    <div>
-                        <div class="logo-box" style="font-size:15pt; color:#e11d48; font-weight:800;">Telkom</div>
-                        <div class="logo-sub" style="font-size:10pt;">University</div>
-                    </div>
-                </div>
+                <img src="<?= base_url('assets/images/logo_telkom_university.png'); ?>" alt="Telkom University Logo" style="height: 52px; width: auto; display: block;">
             </div>
 
             <div class="title-header">
@@ -247,9 +244,9 @@
 
             <table class="signatures-table">
                 <tr>
-                    <td style="width:160px;"><strong>Tim Penguji</strong></td>
-                    <td style="width:280px;"><strong>Nama</strong></td>
-                    <td style="width:160px; text-align:center;"><strong>Tanda Tangan</strong></td>
+                    <td style="width:160px; height:auto;"><strong>Tim Penguji</strong></td>
+                    <td style="width:260px; height:auto;"><strong>Nama</strong></td>
+                    <td style="width:200px; text-align:center; height:auto;"><strong>Tanda Tangan</strong></td>
                 </tr>
                 <tr>
                     <td>Pembimbing 1</td>
@@ -362,10 +359,19 @@
             <div style="margin-top:18px; margin-left:10px;">
                 <div>Bandung, <?= htmlspecialchars($bap['tanggal_text']); ?></div>
                 <div style="margin-top:2px;">Ketua Sidang,</div>
-                <div class="sig-box" style="height:55px; font-size:22pt; margin:6px 0;">
-                    ~ Samsul Alam ~
+                <div class="sig-box" style="height:55px; margin:6px 0; display:flex; align-items:center;">
+                    <?php 
+                    $ttd_ks = !empty($bap['ttd_ketua_sidang']) ? $bap['ttd_ketua_sidang'] : (!empty($bap['ttd_penguji_1']) ? $bap['ttd_penguji_1'] : null);
+                    if (!empty($ttd_ks) && file_exists(FCPATH . 'uploads/signatures/' . $ttd_ks)): 
+                    ?>
+                        <img src="<?= base_url('uploads/signatures/' . $ttd_ks); ?>" style="max-height: 52px; width: auto; display: block;">
+                    <?php else: ?>
+                        <div style="font-family: 'Brush Script MT', cursive, sans-serif; font-size: 20pt; color: #0284c7;">
+                            ~ TTD Digital ~
+                        </div>
+                    <?php endif; ?>
                 </div>
-                <div><strong><?= htmlspecialchars($bap['ketua_sidang']); ?></strong></div>
+                <div><strong><?= htmlspecialchars($bap['ketua_sidang'] ?? $bap['penguji_1']); ?></strong></div>
             </div>
 
             <div style="margin-top:20px;">
