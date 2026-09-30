@@ -634,21 +634,21 @@
                                             <!-- Ringkasan Status Warna + Angka -->
                                             <div class="flex items-center gap-1 flex-wrap justify-center">
                                                 <?php if($v_cnt > 0): ?>
-                                                    <button type="button" onclick="openQuickDocReview('<?= $row['nim']; ?>')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="<?= $v_cnt; ?> Berkas Disetujui/Valid — Klik untuk Lihat Multi Card">
+                                                    <button type="button" onclick="openQuickDocReview('<?= $row['nim']; ?>', null, 'Valid')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="<?= $v_cnt; ?> Berkas Disetujui/Valid — Klik untuk Pratinjau Berkas Valid">
                                                         <i class="fa-solid fa-circle-check text-emerald-500 text-[9px]"></i>
                                                         <span><?= $v_cnt; ?> Valid</span>
                                                     </button>
                                                 <?php endif; ?>
 
                                                 <?php if($i_cnt > 0): ?>
-                                                    <button type="button" onclick="openQuickDocReview('<?= $row['nim']; ?>')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="<?= $i_cnt; ?> Berkas Ditolak/Direvisi — Klik untuk Lihat Multi Card">
+                                                    <button type="button" onclick="openQuickDocReview('<?= $row['nim']; ?>', null, 'Invalid')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="<?= $i_cnt; ?> Berkas Ditolak/Direvisi — Klik untuk Pratinjau Berkas Direvisi">
                                                         <i class="fa-solid fa-circle-xmark text-rose-500 text-[9px]"></i>
                                                         <span><?= $i_cnt; ?> Direvisi</span>
                                                     </button>
                                                 <?php endif; ?>
 
                                                 <?php if($p_cnt > 0): ?>
-                                                    <button type="button" onclick="openQuickDocReview('<?= $row['nim']; ?>')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="<?= $p_cnt; ?> Berkas Menunggu Verifikasi — Klik untuk Lihat Multi Card">
+                                                    <button type="button" onclick="openQuickDocReview('<?= $row['nim']; ?>', null, 'Pending')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="<?= $p_cnt; ?> Berkas Menunggu Verifikasi — Klik untuk Pratinjau Berkas Menunggu">
                                                         <i class="fa-solid fa-clock text-amber-500 text-[9px]"></i>
                                                         <span><?= $p_cnt; ?> Menunggu</span>
                                                     </button>
@@ -1000,13 +1000,13 @@
 
                                 let badgesHTML = '';
                                 if (vCnt > 0) {
-                                    badgesHTML += `<button type="button" onclick="openQuickDocReview('${row.nim}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${vCnt} Berkas Disetujui/Valid — Klik untuk Lihat Multi Card"><i class="fa-solid fa-circle-check text-emerald-500 text-[9px]"></i> <span>${vCnt} Valid</span></button>`;
+                                    badgesHTML += `<button type="button" onclick="openQuickDocReview('${row.nim}', null, 'Valid')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${vCnt} Berkas Disetujui/Valid — Klik untuk Pratinjau Berkas Valid"><i class="fa-solid fa-circle-check text-emerald-500 text-[9px]"></i> <span>${vCnt} Valid</span></button>`;
                                 }
                                 if (iCnt > 0) {
-                                    badgesHTML += `<button type="button" onclick="openQuickDocReview('${row.nim}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${iCnt} Berkas Ditolak/Direvisi — Klik untuk Lihat Multi Card"><i class="fa-solid fa-circle-xmark text-rose-500 text-[9px]"></i> <span>${iCnt} Direvisi</span></button>`;
+                                    badgesHTML += `<button type="button" onclick="openQuickDocReview('${row.nim}', null, 'Invalid')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${iCnt} Berkas Ditolak/Direvisi — Klik untuk Pratinjau Berkas Direvisi"><i class="fa-solid fa-circle-xmark text-rose-500 text-[9px]"></i> <span>${iCnt} Direvisi</span></button>`;
                                 }
                                 if (pCnt > 0) {
-                                    badgesHTML += `<button type="button" onclick="openQuickDocReview('${row.nim}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${pCnt} Berkas Menunggu Verifikasi — Klik untuk Lihat Multi Card"><i class="fa-solid fa-clock text-amber-500 text-[9px]"></i> <span>${pCnt} Menunggu</span></button>`;
+                                    badgesHTML += `<button type="button" onclick="openQuickDocReview('${row.nim}', null, 'Pending')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${pCnt} Berkas Menunggu Verifikasi — Klik untuk Pratinjau Berkas Menunggu"><i class="fa-solid fa-clock text-amber-500 text-[9px]"></i> <span>${pCnt} Menunggu</span></button>`;
                                 }
                                 if (vCnt === 0 && iCnt === 0 && pCnt === 0) {
                                     badgesHTML = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">Belum ada berkas</span>`;
@@ -3710,7 +3710,7 @@
             });
         }
 
-        async function openStudentBerkasPreview(nim, docKey) {
+        async function openStudentBerkasPreview(nim, docKey, targetStatus) {
             if (!nim) return;
             nim = String(nim).trim();
 
@@ -3740,7 +3740,9 @@
                 }
             }
 
-            if (window.mhsDataMap[nim] && isStudentAllApproved(window.mhsDataMap[nim], nim)) {
+            const mhs = window.mhsDataMap[nim];
+
+            if (mhs && isStudentAllApproved(mhs, nim)) {
                 showLAAToast('Semua berkas mahasiswa ' + nim + ' sudah disetujui (Approved).');
                 removeStudentFromLihatBerkas(nim);
                 return;
@@ -3754,11 +3756,37 @@
             showLihatBerkasContainer();
             refreshLihatBerkasView();
 
-            if (docKey) {
+            if (docKey && typeof docKey === 'string' && docKey.trim() !== '') {
                 docKey = String(docKey).trim();
                 const isPreviewed = window.activePreviews.some(p => String(p.nim).trim() === nim && String(p.docKey).trim() === docKey);
                 if (!isPreviewed) {
                     previewBerkasItem(nim, docKey);
+                }
+            } else if (targetStatus && typeof targetStatus === 'string' && targetStatus.trim() !== '') {
+                const normTarget = targetStatus.trim().toLowerCase();
+                const docList = (window.SYARAT_BERKAS && window.SYARAT_BERKAS.length > 0)
+                    ? window.SYARAT_BERKAS.map(sb => sb.kode_berkas)
+                    : ['ksm', 'transkrip', 'pernyataan', 'bebas_lab'];
+
+                const matchingDocKeys = docList.filter(k => {
+                    const info = getMhsDocInfo(mhs, k, nim);
+                    const st = String(info.status || 'Pending').toLowerCase();
+                    if (normTarget === 'valid' || normTarget === 'approved') {
+                        return st === 'valid' || st === 'approved';
+                    } else if (normTarget === 'invalid' || normTarget === 'rejected' || normTarget === 'direvisi') {
+                        return st === 'invalid' || st === 'rejected';
+                    } else {
+                        return st === 'pending' || (st !== 'valid' && st !== 'approved' && st !== 'invalid' && st !== 'rejected');
+                    }
+                });
+
+                if (matchingDocKeys.length > 0) {
+                    matchingDocKeys.forEach(mKey => {
+                        const isPreviewed = window.activePreviews.some(p => String(p.nim).trim() === nim && String(p.docKey).trim() === String(mKey).trim());
+                        if (!isPreviewed) {
+                            previewBerkasItem(nim, mKey);
+                        }
+                    });
                 }
             }
         }
