@@ -614,12 +614,19 @@ class AdminLayanan_model extends CI_Model {
             $this->db->group_end();
         }
 
-        $this->db->order_by("CASE 
-            WHEN p.status_approval_admin = 'Pending' AND p.status_approval_wali = 'Approved' THEN 1 
-            WHEN p.status_approval_admin = 'Rejected' THEN 2 
-            WHEN p.status_approval_admin = 'Approved' THEN 3 
-            ELSE 4 END", "ASC", false);
-        $this->db->order_by('p.created_at', 'DESC');
+        if (empty($filter_status) || $filter_status === 'all') {
+            if ($this->db->field_exists('updated_at', 'pendaftaran_ta')) {
+                $this->db->order_by('p.updated_at', 'DESC');
+            }
+            $this->db->order_by('p.created_at', 'DESC');
+        } else {
+            $this->db->order_by("CASE 
+                WHEN p.status_approval_admin = 'Pending' AND p.status_approval_wali = 'Approved' THEN 1 
+                WHEN p.status_approval_admin = 'Rejected' THEN 2 
+                WHEN p.status_approval_admin = 'Approved' THEN 3 
+                ELSE 4 END", "ASC", false);
+            $this->db->order_by('p.created_at', 'DESC');
+        }
 
         if ($limit > 0) {
             $this->db->limit($limit, $offset);
@@ -1072,7 +1079,15 @@ class AdminLayanan_model extends CI_Model {
             $filtered[] = $item;
         }
 
-        usort($filtered, function($a, $b) {
+        usort($filtered, function($a, $b) use ($filter_status) {
+            if (empty($filter_status) || $filter_status === 'all') {
+                $timeA = strtotime($a['updated_at'] ?? $a['created_at']);
+                $timeB = strtotime($b['updated_at'] ?? $b['created_at']);
+                if ($timeA !== $timeB) {
+                    return ($timeB < $timeA) ? -1 : 1;
+                }
+                return strcmp($b['created_at'], $a['created_at']);
+            }
             $priority = array('Pending' => 1, 'Rejected' => 2, 'Approved' => 3);
             $pA = $priority[$a['status_approval_admin']] ?? 4;
             $pB = $priority[$b['status_approval_admin']] ?? 4;
