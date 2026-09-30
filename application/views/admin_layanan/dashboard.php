@@ -1163,7 +1163,36 @@
                         if (mobileContainer) mobileContainer.innerHTML = mobileHtml;
                         rebindStudentCheckboxes();
                         if (window.activeLihatBerkasNims && window.activeLihatBerkasNims.length > 0) {
-                            refreshLihatBerkasView();
+                            const missingNims = window.activeLihatBerkasNims.filter(n => {
+                                const nStr = String(n).trim();
+                                return !window.mhsDataMap || (!window.mhsDataMap[nStr] && !window.mhsDataMap[Number(nStr)]);
+                            });
+
+                            if (missingNims.length > 0) {
+                                const bodyParams = new URLSearchParams();
+                                missingNims.forEach(n => bodyParams.append('nims[]', n));
+                                fetch('<?= site_url("adminlayanan/get_batch_details"); ?>', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                                    body: bodyParams
+                                })
+                                .then(r => r.json())
+                                .then(resData => {
+                                    const listData = resData.data || resData;
+                                    if (listData && listData.length > 0) {
+                                        if (!window.mhsDataMap) window.mhsDataMap = {};
+                                        listData.forEach(st => {
+                                            if (st && st.nim) {
+                                                window.mhsDataMap[String(st.nim).trim()] = st;
+                                            }
+                                        });
+                                    }
+                                    refreshLihatBerkasView();
+                                })
+                                .catch(() => refreshLihatBerkasView());
+                            } else {
+                                refreshLihatBerkasView();
+                            }
                         }
                     }
 
