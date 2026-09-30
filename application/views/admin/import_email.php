@@ -4291,6 +4291,7 @@
 
         function saveAccountForm(e) {
             e.preventDefault();
+            const id = document.getElementById('account-id').value.trim();
             const name = document.getElementById('acc-name').value.trim();
             const emailInput = document.getElementById('acc-email');
             const email = emailInput.value.trim();
@@ -4304,7 +4305,39 @@
                 return;
             }
 
+            // Check duplicate email against other accounts locally
+            const duplicateUser = state.accounts.find(a => a.email.toLowerCase() === email.toLowerCase() && a.id != id);
+            if (duplicateUser) {
+                emailInput.focus();
+                emailInput.classList.add('border-rose-500', 'ring-2', 'ring-rose-300');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Email Sudah Digunakan!',
+                    html: `Email <b>${email}</b> sudah terdaftar dan digunakan oleh akun <b>${duplicateUser.name}</b> (${duplicateUser.role}).<br><br>Silakan gunakan alamat email yang berbeda.`,
+                    confirmButtonColor: '#ea580c'
+                });
+                return;
+            }
+
+            // Check duplicate NIM / NIP against other accounts locally
+            const nimInput = document.getElementById('acc-nim-nip');
+            if (nim_nip && nim_nip !== '-') {
+                const duplicateNimUser = state.accounts.find(a => a.nim_nip && a.nim_nip !== '-' && a.nim_nip.trim() === nim_nip && a.id != id);
+                if (duplicateNimUser) {
+                    nimInput.focus();
+                    nimInput.classList.add('border-rose-500', 'ring-2', 'ring-rose-300');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'NIM/NIP Sudah Digunakan!',
+                        html: `NIM/NIP/ID <b>${nim_nip}</b> sudah terdaftar dan digunakan oleh akun <b>${duplicateNimUser.name}</b> (${duplicateNimUser.role}).<br><br>Silakan gunakan NIM/NIP yang berbeda.`,
+                        confirmButtonColor: '#ea580c'
+                    });
+                    return;
+                }
+            }
+
             emailInput.classList.remove('border-rose-500', 'ring-2', 'ring-rose-300');
+            if (nimInput) nimInput.classList.remove('border-rose-500', 'ring-2', 'ring-rose-300');
 
             Swal.fire({
                 title: 'Menyimpan Akun...',
@@ -4315,7 +4348,7 @@
             fetch('<?= site_url("import-email/save_user") ?>', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, role, nim_nip })
+                body: JSON.stringify({ id, name, email, role, nim_nip })
             })
             .then(res => res.json())
             .then(res => {
@@ -4326,7 +4359,7 @@
                     renderTable();
                     Swal.fire('Berhasil!', res.message, 'success');
                 } else {
-                    Swal.fire('Gagal', res.message, 'error');
+                    Swal.fire('Gagal Menyimpan', res.message, 'error');
                 }
             })
             .catch(err => Swal.fire('Server Error', err.message, 'error'));

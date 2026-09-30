@@ -510,6 +510,48 @@ class ImportEmail extends CI_Controller {
             return;
         }
 
+        $targetUserId = !empty($json['id']) ? trim((string)$json['id']) : null;
+        $userTbl = $this->db->table_exists('user') ? 'user' : 'users';
+
+        // Check if another user is already using this email
+        $existingUserWithEmail = $this->db->get_where($userTbl, ['email' => $email])->row();
+        if ($existingUserWithEmail) {
+            if (!$targetUserId || $existingUserWithEmail->id != $targetUserId) {
+                $this->output
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode([
+                        'status' => 'error',
+                        'message' => "Email '{$email}' sudah digunakan oleh akun lain atas nama '{$existingUserWithEmail->name}'. Silakan gunakan email yang berbeda."
+                    ]));
+                return;
+            }
+        }
+
+        $nimNip = isset($json['nim_nip']) ? trim($json['nim_nip']) : '';
+
+        // Check if another user is already using this NIM / NIP / ID
+        if (!empty($nimNip)) {
+            $this->db->group_start();
+            if ($this->db->field_exists('nim', $userTbl)) $this->db->or_where('nim', $nimNip);
+            if ($this->db->field_exists('nidn_nim', $userTbl)) $this->db->or_where('nidn_nim', $nimNip);
+            if ($this->db->field_exists('nip', $userTbl)) $this->db->or_where('nip', $nimNip);
+            if ($this->db->field_exists('username', $userTbl)) $this->db->or_where('username', $nimNip);
+            $this->db->group_end();
+
+            $existingUserWithNim = $this->db->get($userTbl)->row();
+            if ($existingUserWithNim) {
+                if (!$targetUserId || $existingUserWithNim->id != $targetUserId) {
+                    $this->output
+                        ->set_content_type('application/json')
+                        ->set_output(json_encode([
+                            'status' => 'error',
+                            'message' => "NIM/NIP '{$nimNip}' sudah digunakan oleh akun lain atas nama '{$existingUserWithNim->name}'. Silakan gunakan NIM/NIP yang berbeda."
+                        ]));
+                    return;
+                }
+            }
+        }
+
         $targetRoleId = $this->User_model->get_role_id_by_name(isset($json['role']) ? $json['role'] : 'Mahasiswa');
         $currentRoleId = (int)$this->session->userdata('role_id');
         $allowedRoles = $this->_get_allowed_import_roles($currentRoleId);
@@ -532,15 +574,66 @@ class ImportEmail extends CI_Controller {
             return;
         }
 
-        $data = [
-            'name' => trim($json['name']),
-            'email' => $email,
-            'role_id' => $targetRoleId,
-            'nidn_nim' => isset($json['nim_nip']) ? trim($json['nim_nip']) : '',
-            'token' => isset($json['token']) ? trim($json['token']) : null
-        ];
+        $nimNip = isset($json['nim_nip']) ? trim($json['nim_nip']) : '';
+        $name = trim($json['name']);
+        $rawToken = isset($json['token']) && !empty($json['token']) ? trim($json['token']) : null;
 
-        $userId = $this->User_model->upsert_user($data);
+        if ($targetUserId) {
+            // EDIT EXISTING USER BY ID
+            $currentUser = $this->User_model->get_by_id($targetUserId);
+            if (!$currentUser) {
+                $this->output
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode([
+                        'status' => 'error',
+                        'message' => 'Akun tidak ditemukan atau telah dihapus.'
+                    ]));
+                return;
+            }
+
+            $updateData = [
+                'name' => $name,
+                'email' => $email,
+                'role_id' => $targetRoleId
+            ];
+            if ($this->db->field_exists('nidn_nim', $userTbl)) $updateData['nidn_nim'] = $nimNip;
+            if ($this->db->field_exists('nim', $userTbl)) $updateData['nim'] = $nimNip;
+            if ($this->db->field_exists('updated_at', $userTbl)) $updateData['updated_at'] = date('Y-m-d H:i:s');
+
+            $isUserProtected = (!empty($currentUser->password_changed) && (int)$currentUser->password_changed === 1) || (!empty($currentUser->is_active) && (int)$currentUser->is_active === 1);
+
+            if ($rawToken && !$isUserProtected) {
+                $salt = bin2hex(random_bytes(16));
+                if ($this->db->field_exists('salt', $userTbl)) $updateData['salt'] = $salt;
+                if ($this->db->table_exists('user_token')) {
+                    $this->db->replace('user_token', [
+                        'email' => $email,
+                        'token' => $rawToken,
+                        'date_created' => time()
+                    ]);
+                } elseif ($this->db->field_exists('token', $userTbl)) {
+                    $updateData['token'] = $rawToken;
+                    $updateData['password'] = password_hash($rawToken, PASSWORD_DEFAULT, ['cost' => 10]);
+                }
+            }
+
+            $this->User_model->update($targetUserId, $updateData);
+
+            // If email changed, cleanup old user_token entry
+            if ($currentUser->email && strtolower(trim($currentUser->email)) !== $email && $this->db->table_exists('user_token')) {
+                $this->db->where('email', strtolower(trim($currentUser->email)))->delete('user_token');
+            }
+        } else {
+            // CREATE NEW USER
+            $userData = [
+                'name' => $name,
+                'email' => $email,
+                'role_id' => $targetRoleId,
+                'nidn_nim' => $nimNip,
+                'token' => $rawToken
+            ];
+            $this->User_model->upsert_user($userData);
+        }
 
         $this->output
             ->set_content_type('application/json')
