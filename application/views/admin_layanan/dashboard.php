@@ -3121,9 +3121,40 @@
             return { filename, url, status: status || 'Pending' };
         }
 
+        function isStudentAllApproved(mhs, nim) {
+            if (!mhs) return false;
+            nim = String(nim).trim();
+
+            const overallStatus = String(mhs.status_approval_admin || mhs.status_verifikasi || '').toLowerCase();
+            if (overallStatus === 'approved' || overallStatus === 'disetujui') {
+                return true;
+            }
+
+            const docList = (window.SYARAT_BERKAS && window.SYARAT_BERKAS.length > 0)
+                ? window.SYARAT_BERKAS.map(sb => sb.kode_berkas)
+                : ['ksm', 'transkrip', 'pernyataan', 'bebas_lab'];
+
+            if (docList.length === 0) return false;
+
+            const allValid = docList.every(k => {
+                const info = getMhsDocInfo(mhs, k, nim);
+                const st = String(info.status || '').toLowerCase();
+                return st === 'valid' || st === 'approved' || st === 'disetujui';
+            });
+
+            return allValid;
+        }
+
         function toggleLihatBerkasPanel(nim) {
             if (!nim) return;
             nim = String(nim).trim();
+
+            const mhsCheck = window.mhsDataMap ? (window.mhsDataMap[nim] || window.mhsDataMap[Number(nim)]) : null;
+            if (mhsCheck && isStudentAllApproved(mhsCheck, nim)) {
+                showLAAToast('Semua berkas mahasiswa ' + nim + ' sudah disetujui (Approved).');
+                removeStudentFromLihatBerkas(nim);
+                return;
+            }
 
             const activeNims = (window.activeLihatBerkasNims || []).map(n => String(n).trim());
             const idx = activeNims.indexOf(nim);
@@ -3146,6 +3177,11 @@
                     if (data && data.length > 0) {
                         if (!window.mhsDataMap) window.mhsDataMap = {};
                         window.mhsDataMap[nim] = data[0];
+                        if (isStudentAllApproved(data[0], nim)) {
+                            showLAAToast('Semua berkas mahasiswa ' + nim + ' sudah disetujui (Approved).');
+                            removeStudentFromLihatBerkas(nim);
+                            return;
+                        }
                         showLihatBerkasContainer();
                         refreshLihatBerkasView();
                     } else {
@@ -3211,6 +3247,24 @@
 
             if (!window.activeLihatBerkasNims || window.activeLihatBerkasNims.length === 0) {
                 wrapper.innerHTML = '';
+                return;
+            }
+
+            // Filter out students whose documents are ALL approved
+            const initialCount = window.activeLihatBerkasNims.length;
+            window.activeLihatBerkasNims = window.activeLihatBerkasNims.filter(nim => {
+                const nimStr = String(nim).trim();
+                const mhs = window.mhsDataMap ? (window.mhsDataMap[nimStr] || window.mhsDataMap[Number(nimStr)]) : null;
+                if (!mhs) return true; // Data fetching in progress
+                return !isStudentAllApproved(mhs, nimStr);
+            });
+
+            if (window.activeLihatBerkasNims.length === 0) {
+                wrapper.innerHTML = '';
+                closeLihatBerkasPanel();
+                if (initialCount > 0) {
+                    showLAAToast('Semua berkas mahasiswa telah disetujui (Approved). Panel ditutup otomatis.');
+                }
                 return;
             }
 
@@ -3655,6 +3709,12 @@
                     alert('Gagal memuat berkas mahasiswa.');
                     return;
                 }
+            }
+
+            if (window.mhsDataMap[nim] && isStudentAllApproved(window.mhsDataMap[nim], nim)) {
+                showLAAToast('Semua berkas mahasiswa ' + nim + ' sudah disetujui (Approved).');
+                removeStudentFromLihatBerkas(nim);
+                return;
             }
 
             const activeNims = window.activeLihatBerkasNims.map(n => String(n).trim());
