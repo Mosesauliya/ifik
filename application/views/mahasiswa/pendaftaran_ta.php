@@ -175,12 +175,9 @@
                 <div class="flex-1">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <span class="text-xs font-extrabold uppercase tracking-wider text-amber-800 block">STATUS: FORMULIR TERKUNCI (SEDANG DITINJAU)</span>
-                        <a href="<?= site_url('mahasiswa/reset_pendaftaran'); ?>" onclick="return confirm('Apakah Anda yakin ingin me-reset pengajuan Tugas Akhir ini? Semua berkas dan usulan judul yang diunggah akan dihapus dan Anda dapat mengisi ulang dari awal.');" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition shadow-xs cursor-pointer self-start sm:self-auto">
-                            <i class="bi bi-arrow-counterclockwise"></i> Reset / Batalkan Pengajuan
-                        </a>
                     </div>
                     <p class="text-xs sm:text-sm font-semibold text-slate-800 leading-relaxed mt-1">
-                        Pengajuan Tugas Akhir Anda saat ini sedang dalam proses peninjauan berjenjang. Kolom formulir berstatus <strong>hanya lihat (tidak dapat diedit)</strong>. Jika Anda ingin membatalkan pengajuan dan mengisi ulang dari awal, silakan klik tombol <strong>Reset / Batalkan Pengajuan</strong>.
+                        Pengajuan Tugas Akhir Anda saat ini sedang dalam proses peninjauan berjenjang. Kolom formulir berstatus <strong>hanya lihat (tidak dapat diedit)</strong>.
                     </p>
                 </div>
             </div>
@@ -475,6 +472,17 @@
                                 <div>
                                     <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">JUDUL BAHASA INGGRIS</span>
                                     <p class="text-xs font-semibold italic text-slate-700 mt-0.5 leading-relaxed" id="summaryJudulEn"><?= htmlspecialchars($pendaftaran['judul_en'] ?? '-'); ?></p>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                                    <div class="p-3 rounded-xl bg-white/80 border border-orange-100 shadow-2xs">
+                                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">JUDUL USULAN 2 (ALTERNATIF 1)</span>
+                                        <p class="text-xs font-bold text-slate-900 mt-0.5 leading-relaxed" id="summaryJudul2"><?= htmlspecialchars(!empty($pendaftaran['judul_2']) ? $pendaftaran['judul_2'] : '- (Tidak diisi)'); ?></p>
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-white/80 border border-orange-100 shadow-2xs">
+                                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">JUDUL USULAN 3 (ALTERNATIF 2)</span>
+                                        <p class="text-xs font-bold text-slate-900 mt-0.5 leading-relaxed" id="summaryJudul3"><?= htmlspecialchars(!empty($pendaftaran['judul_3']) ? $pendaftaran['judul_3'] : '- (Tidak diisi)'); ?></p>
+                                    </div>
                                 </div>
 
                                 <div>

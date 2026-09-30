@@ -76,16 +76,28 @@ document.addEventListener('DOMContentLoaded', function () {
         const jenisTA = document.getElementById('inputJenisTA')?.value.trim() || '-';
         const judul1 = document.getElementById('inputJudul1')?.value.trim() || '-';
         const judulEn = document.getElementById('inputJudulEn')?.value.trim() || '-';
+        const judul2 = document.getElementById('inputJudul2')?.value.trim() || '';
+        const judul3 = document.getElementById('inputJudul3')?.value.trim() || '';
         const konsentrasi = document.querySelector('input[name="konsentrasi_dkv"]')?.value.trim() || 'Desain Komunikasi Visual';
 
         const sumJenis = document.getElementById('summaryJenisTA');
         const sumJudul1 = document.getElementById('summaryJudul1');
         const sumJudulEn = document.getElementById('summaryJudulEn');
+        const sumJudul2 = document.getElementById('summaryJudul2');
+        const sumJudul3 = document.getElementById('summaryJudul3');
         const sumKons = document.getElementById('summaryKonsentrasi');
 
         if (sumJenis) sumJenis.textContent = jenisTA || '-';
         if (sumJudul1) sumJudul1.textContent = judul1 || '-';
         if (sumJudulEn) sumJudulEn.textContent = judulEn || '-';
+        if (sumJudul2) {
+            sumJudul2.textContent = judul2 || '- (Tidak diisi)';
+            sumJudul2.className = judul2 ? 'text-xs font-bold text-slate-900 mt-0.5 leading-relaxed' : 'text-xs font-normal italic text-slate-400 mt-0.5 leading-relaxed';
+        }
+        if (sumJudul3) {
+            sumJudul3.textContent = judul3 || '- (Tidak diisi)';
+            sumJudul3.className = judul3 ? 'text-xs font-bold text-slate-900 mt-0.5 leading-relaxed' : 'text-xs font-normal italic text-slate-400 mt-0.5 leading-relaxed';
+        }
         if (sumKons) sumKons.textContent = konsentrasi || 'Desain Komunikasi Visual';
 
         // Populate Document Status List
@@ -94,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function () {
             sumDocList.innerHTML = '';
             const docCards = document.querySelectorAll('.doc-requirement-card');
 
-            docCards.forEach(card => {
+            docCards.forEach((card, index) => {
                 const titleEl = card.querySelector('h4');
                 const rawTitle = titleEl ? titleEl.textContent.trim() : 'Dokumen';
                 const cleanTitle = rawTitle.replace(/^\d+\.\s*/, '').replace(/\s*(Wajib|Opsional)\s*$/gi, '').trim();
@@ -106,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const docItem = document.createElement('div');
                 docItem.className = `p-2.5 rounded-xl border flex items-center justify-between text-xs font-semibold ${hasFile ? 'bg-emerald-50/80 border-emerald-200 text-emerald-900' : 'bg-rose-50/80 border-rose-200 text-rose-900'}`;
                 docItem.innerHTML = `
-                    <span class="truncate pr-2">${cleanTitle}</span>
+                    <span class="truncate pr-2"><span class="font-bold mr-1">${index + 1}.</span>${cleanTitle}</span>
                     <span class="text-[10px] uppercase font-bold shrink-0 ${hasFile ? 'text-emerald-700 bg-emerald-100 border border-emerald-300' : 'text-rose-700 bg-rose-100 border border-rose-300'} px-2 py-0.5 rounded-full">
                         ${hasFile ? '<i class="bi bi-check-lg mr-1"></i> Terunggah' : '<i class="bi bi-x-lg mr-1"></i> Belum ada'}
                     </span>

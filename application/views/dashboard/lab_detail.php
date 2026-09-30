@@ -52,18 +52,27 @@ if (!$matched_room) {
     exit;
 }
 
-$foto_path = !empty($matched_room->foto) ? ltrim($matched_room->foto, '/') : '';
-if (!empty($foto_path)) {
-    if (strpos($foto_path, 'http://') === 0 || strpos($foto_path, 'https://') === 0) {
-        $img_url = $foto_path;
-    } elseif (file_exists(FCPATH . $foto_path)) {
-        $img_url = base_url($foto_path);
-    } else {
-        $img_url = base_url('assets/images/multimedia.jpg');
-    }
-} else {
-    $img_url = base_url('assets/images/multimedia.jpg');
+$raw_photos = [];
+if (!empty($matched_room->all_foto) && is_array($matched_room->all_foto)) {
+    $raw_photos = $matched_room->all_foto;
+} elseif (!empty($matched_room->foto)) {
+    $raw_photos = array_filter(array_map('trim', explode(',', $matched_room->foto)));
 }
+
+$photos_list = [];
+foreach ($raw_photos as $rp) {
+    $rp = ltrim($rp, '/');
+    if (empty($rp)) continue;
+    if (strpos($rp, 'http://') === 0 || strpos($rp, 'https://') === 0) {
+        $photos_list[] = $rp;
+    } elseif (file_exists(FCPATH . $rp)) {
+        $photos_list[] = base_url($rp);
+    }
+}
+if (empty($photos_list)) {
+    $photos_list[] = base_url('assets/images/multimedia.jpg');
+}
+$img_url = $photos_list[0];
 
 $model_raw = '';
 if (!empty($matched_room->model_3d)) {
@@ -136,6 +145,7 @@ $lab = [
     'border_color'   => 'rgba(234, 88, 12, 0.3)',
     'glow_color'     => 'rgba(234, 88, 12, 0.4)',
     'photo'          => $img_url,
+    'photos'         => $photos_list,
     'photo_fallback' => base_url('assets/images/multimedia.jpg'),
     'location'       => !empty($matched_room->lokasi) ? $matched_room->lokasi : 'Gedung Sebatik (FIK)',
     'room_codes'     => $parsed_room_codes,
@@ -676,6 +686,20 @@ $lab = [
                         <span class="detail-line" id="detailLine1" onclick="switchShowcaseMode('3d')" title="Model 3D Interaktif"></span>
                     </div>
                     <?php endif; ?>
+
+                    <!-- Multi-photo Thumbnails Gallery Strip (jika foto lebih dari 1) -->
+                    <?php if (!empty($lab['photos']) && count($lab['photos']) > 1): ?>
+                    <div class="lab-photo-thumbnails" style="display: flex; gap: 8px; justify-content: center; margin-top: 14px; flex-wrap: wrap;">
+                        <?php foreach ($lab['photos'] as $idx => $pUrl): ?>
+                            <div class="photo-thumb-item <?= $idx === 0 ? 'active' : '' ?>" 
+                                 onclick="switchActivePhoto('<?= $pUrl ?>', this)"
+                                 title="Foto <?= $idx + 1 ?>"
+                                 style="width: 52px; height: 52px; border-radius: 10px; overflow: hidden; border: 2px solid <?= $idx === 0 ? '#ea580c' : 'rgba(255,255,255,0.2)' ?>; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.3);">
+                                <img src="<?= $pUrl ?>" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="Foto <?= $idx + 1 ?>">
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Right Column: Lab Info & Actions -->
@@ -831,6 +855,24 @@ $lab = [
                 if (view3D) view3D.style.display = 'block';
                 if (line0) { line0.classList.remove('active'); line0.classList.add('passed'); }
                 if (line1) { line1.classList.add('active'); line1.classList.remove('passed'); }
+            }
+        }
+
+        function switchActivePhoto(url, el) {
+            const photoImg = document.getElementById('labRealPhotoImg');
+            if (photoImg) {
+                photoImg.src = url;
+            }
+            if (typeof switchShowcaseMode === 'function') {
+                switchShowcaseMode('photo');
+            }
+            document.querySelectorAll('.photo-thumb-item').forEach(item => {
+                item.style.borderColor = 'rgba(255,255,255,0.2)';
+                item.classList.remove('active');
+            });
+            if (el) {
+                el.style.borderColor = '#ea580c';
+                el.classList.add('active');
             }
         }
 

@@ -821,7 +821,12 @@ class AdminLayanan extends CI_Controller {
             $detail = $this->AdminLayanan_model->get_detail_pengajuan($nim);
             if (!$detail) continue;
 
-            $target_ids = ['usr_mhs_' . $nim, 'mhs_' . $nim, $nim];
+            $u_id = null;
+            if ($this->db->table_exists('user')) {
+                $u = $this->db->where('nim', $nim)->or_where('username', $nim)->get('user')->row_array();
+                if ($u && !empty($u['id'])) $u_id = $u['id'];
+            }
+            $target_ids = array_values(array_unique(array_filter([$u_id, 'usr_mhs_' . $nim, 'mhs_' . $nim, $nim])));
 
             if (!empty($kode_berkas) && count($nims) === 1) {
                 // Reset satu file

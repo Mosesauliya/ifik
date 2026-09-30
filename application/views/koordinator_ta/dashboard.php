@@ -3266,5 +3266,7 @@
 
     <!-- Modular Dashboard JavaScript Engine -->
     <script src="<?= base_url('assets/js/koordinator_ta_dashboard.js?v=' . time()); ?>"></script>
+    <!-- Global Custom Circle Cursor -->
+    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>

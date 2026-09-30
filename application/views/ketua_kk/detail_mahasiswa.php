@@ -328,6 +328,7 @@
     <footer class="bg-white border-t border-slate-200 py-4 mt-8 text-center text-xs text-slate-500">
         &copy; <?= date('Y'); ?> Fakultas Industri Kreatif - Telkom University. Modul Ketua Kelompok Keahlian (KK).
     </footer>
-
+    <!-- Global Custom Circle Cursor -->
+    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>

@@ -31,8 +31,8 @@
         }
     }
 
-    /* Pastikan iframe file (seperti PDF viewer) mengizinkan kursor sistem bawaan */
-    iframe {
+    /* Pastikan iframe file (seperti PDF viewer) dan canvas tanda tangan digital mengizinkan kursor pen/bawaan */
+    iframe, #signaturePadCanvas, #signatureCanvas, #canvasBox, .cursor-pen {
         cursor: auto !important;
     }
 
@@ -157,8 +157,8 @@
             const target = e.target;
             if (!target) return;
 
-            // Sembunyikan kursor saat di dalam iframe (misal viewer PDF)
-            if (target.tagName === 'IFRAME' || (target.closest && (target.closest('iframe') || target.closest('#quickDocFileViewerWrapper') || target.closest('.pdf-viewer-container')))) {
+            // Sembunyikan kursor saat di dalam iframe (misal viewer PDF) atau canvas tanda tangan
+            if (target.tagName === 'IFRAME' || target.id === 'signaturePadCanvas' || target.id === 'signatureCanvas' || (target.closest && (target.closest('iframe') || target.closest('#quickDocFileViewerWrapper') || target.closest('.pdf-viewer-container') || target.closest('#signaturePadCanvas') || target.closest('#signatureCanvas') || target.closest('#canvasBox')))) {
                 hideCircleCursor();
                 return;
             }

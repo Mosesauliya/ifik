@@ -214,6 +214,64 @@
             background: transparent;
         }
 
+        /* Rotating Conic-Gradient Border Table (Koordinator TA Style) */
+        @keyframes spinRotatingBorder {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .table-rotating-border-wrap {
+            position: relative;
+            border-radius: 16px;
+            padding: 2px;
+            overflow: hidden;
+            box-shadow: 0 12px 36px -8px rgba(234, 88, 12, 0.15), 0 4px 16px rgba(71, 85, 105, 0.06);
+            margin-bottom: 8px;
+            background: #ffffff;
+        }
+
+        .table-rotating-border-spin {
+            position: absolute;
+            inset: -350%;
+            background: conic-gradient(
+                from 90deg at 50% 50%,
+                #ea580c 0%,
+                #f97316 12%,
+                #ffffff 22%,
+                #cbd5e1 35%,
+                #475569 48%,
+                #1e293b 58%,
+                #ea580c 68%,
+                #ffffff 80%,
+                #94a3b8 90%,
+                #ea580c 100%
+            );
+            animation: spinRotatingBorder 7s linear infinite;
+            opacity: 0.95;
+            pointer-events: none;
+        }
+
+        .table-rotating-border-inner {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .table-custom-rounded {
+            border-collapse: separate !important;
+            border-spacing: 0 !important;
+            width: 100%;
+        }
+        .table-custom-rounded thead tr th:first-child {
+            border-top-left-radius: 14px;
+        }
+        .table-custom-rounded thead tr th:last-child {
+            border-top-right-radius: 14px;
+        }
+
         /* ========================================================
            RESPONSIVE CARD VIEW (MOBILE < 1024px) UNTUK TABEL MAHASISWA
            ======================================================== */
@@ -850,40 +908,38 @@
 
         </div>
 
-        <!-- Table Container Card (3D Warm) -->
-        <div class="card-3d-warm card-no-hover rounded-2xl border border-orange-200/60 shadow-card-clean overflow-hidden">
-            
-
-            
-            <!-- Table View -->
-            <!-- Mobile Master Checkbox Bar -->
-            <div class="lg:hidden flex items-center justify-between px-4 py-3 bg-gradient-to-r from-white via-orange-50/70 to-white border-b border-orange-200/70">
-                <label class="flex items-center gap-2.5 cursor-pointer select-none">
-                    <input type="checkbox" id="checkAllStudentsMobile" onchange="toggleAllCheckboxesDW(this)" class="w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer">
-                    <span class="text-xs font-black text-slate-800 tracking-tight">Pilih Semua Mahasiswa</span>
-                </label>
-                <div class="flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-full border border-orange-200 shadow-2xs">
-                    <i class="fa-solid fa-id-card text-orange-600 text-[11px]"></i>
-                    <span class="text-[10px] text-orange-700 font-extrabold uppercase tracking-wider">Mode Kartu</span>
+        <!-- Table with Rotating Conic-Gradient Border (Exact Koordinator TA Style) -->
+        <div class="table-rotating-border-wrap">
+            <span class="table-rotating-border-spin"></span>
+            <div class="table-rotating-border-inner overflow-hidden">
+                <!-- Mobile Master Checkbox Bar -->
+                <div class="lg:hidden flex items-center justify-between px-4 py-3 bg-gradient-to-r from-white via-orange-50/70 to-white border-b border-slate-200/90">
+                    <label class="flex items-center gap-2.5 cursor-pointer select-none">
+                        <input type="checkbox" id="checkAllStudentsMobile" onchange="toggleAllCheckboxesDW(this)" class="w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer">
+                        <span class="text-xs font-bold text-slate-800 tracking-tight">Pilih Semua Mahasiswa</span>
+                    </label>
+                    <div class="flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-full border border-orange-200 shadow-2xs">
+                        <i class="fa-solid fa-id-card text-orange-600 text-[11px]"></i>
+                        <span class="text-[10px] text-orange-700 font-extrabold uppercase tracking-wider">Mode Kartu</span>
+                    </div>
                 </div>
-            </div>
 
-            <div class="overflow-x-auto lg:overflow-x-visible">
-                <table class="w-full text-left border-collapse text-xs responsive-dw-table">
-                    <thead>
-                        <tr class="bg-slate-900 text-white uppercase tracking-wider text-[10px] sm:text-[11px] font-black border-b border-slate-800">
-                            <th class="py-3 px-2 text-center w-8">
-                                <input type="checkbox" id="checkAllStudents" onchange="toggleAllCheckboxesDW(this)" title="Pilih Semua Mahasiswa" class="w-4 h-4 text-orange-600 rounded border-slate-600 focus:ring-orange-500 cursor-pointer">
-                            </th>
-                            <th class="py-3 px-3">MAHASISWA</th>
-                            <th class="py-3 px-3">JUDUL RENCANA TA</th>
-                            <th class="py-3 px-3 text-center">STATUS BERKAS &amp; USULAN</th>
-                            <th class="py-3 px-3 text-center">DOSEN WALI</th>
-                            <th class="py-3 px-3 text-center">TAHAP SAAT INI</th>
-                            <th class="py-3 px-3 text-center">AKSI</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-orange-100/80 font-medium bg-white" id="tableBodyMhs">
+                <div class="overflow-x-auto lg:overflow-x-visible">
+                    <table class="table-custom-rounded text-left text-xs w-full responsive-dw-table">
+                        <thead class="bg-slate-50/80 text-slate-900 font-extrabold text-xs border-b border-slate-200/90 uppercase tracking-wider text-[11px]">
+                            <tr>
+                                <th class="w-8 py-3.5 px-2 text-center">
+                                    <input type="checkbox" id="checkAllStudents" onchange="toggleAllCheckboxesDW(this)" title="Pilih Semua Mahasiswa" class="w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer">
+                                </th>
+                                <th class="py-3.5 px-3 font-extrabold whitespace-nowrap text-slate-900">MAHASISWA</th>
+                                <th class="py-3.5 px-3 font-extrabold text-slate-900">JUDUL RENCANA TA</th>
+                                <th class="py-3.5 px-3 text-center font-extrabold whitespace-nowrap text-slate-900">STATUS BERKAS &amp; USULAN</th>
+                                <th class="py-3.5 px-3 text-center font-extrabold whitespace-nowrap text-slate-900">DOSEN WALI</th>
+                                <th class="py-3.5 px-3 text-center font-extrabold whitespace-nowrap text-slate-900">TAHAP SAAT INI</th>
+                                <th class="py-3.5 px-3 text-center font-extrabold whitespace-nowrap text-slate-900">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 font-medium bg-white" id="tableBodyMhs">
                         <?php if(!empty($list_mahasiswa)): ?>
                             <?php foreach($list_mahasiswa as $mhs): ?>
                                 <?php 
@@ -956,6 +1012,34 @@
                                             $p_cnt = 0;
                                             $item_pills = [];
 
+                                            // Sertakan Status Usulan Judul & Skema TA TERLEBIH DAHULU (Paling Awal)
+                                            $jdl_st = $mhs['status_judul'] ?? 'Pending';
+                                            $jns_st = $mhs['status_jenis_ta'] ?? 'Pending';
+                                            if ($jdl_st === 'Rejected' || $jns_st === 'Rejected') {
+                                                $usulan_st = 'Rejected';
+                                            } elseif ($jdl_st === 'Approved' && $jns_st === 'Approved') {
+                                                $usulan_st = 'Approved';
+                                            } else {
+                                                $usulan_st = 'Pending';
+                                            }
+
+                                            if ($usulan_st === 'Approved') {
+                                                $v_cnt++;
+                                            } elseif ($usulan_st === 'Rejected') {
+                                                $i_cnt++;
+                                            } else {
+                                                $p_cnt++;
+                                            }
+
+                                            $btn_class_usulan = ($usulan_st === 'Approved') ? 'bg-emerald-100/90 text-emerald-700 hover:bg-emerald-200' : (($usulan_st === 'Rejected') ? 'bg-rose-100/90 text-rose-700 hover:bg-rose-200' : 'bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60');
+
+                                            $item_pills[] = [
+                                                'code' => 'judul_jenis',
+                                                'name' => 'Usulan Judul & Skema TA',
+                                                'abbr' => 'JUDUL',
+                                                'class' => $btn_class_usulan
+                                            ];
+
                                             $map_abbr = ['ksm' => 'KSM', 'transkrip' => 'TRS', 'pernyataan' => 'SRT', 'bebas_lab' => 'LAB'];
 
                                             foreach ($active_sb as $sb) {
@@ -990,54 +1074,26 @@
                                                     'class' => $btn_class
                                                 ];
                                             }
-
-                                            // Sertakan Status Usulan Judul & Skema TA
-                                            $jdl_st = $mhs['status_judul'] ?? 'Pending';
-                                            $jns_st = $mhs['status_jenis_ta'] ?? 'Pending';
-                                            if ($jdl_st === 'Rejected' || $jns_st === 'Rejected') {
-                                                $usulan_st = 'Rejected';
-                                            } elseif ($jdl_st === 'Approved' && $jns_st === 'Approved') {
-                                                $usulan_st = 'Approved';
-                                            } else {
-                                                $usulan_st = 'Pending';
-                                            }
-
-                                            if ($usulan_st === 'Approved') {
-                                                $v_cnt++;
-                                            } elseif ($usulan_st === 'Rejected') {
-                                                $i_cnt++;
-                                            } else {
-                                                $p_cnt++;
-                                            }
-
-                                            $btn_class_usulan = ($usulan_st === 'Approved') ? 'bg-emerald-100/90 text-emerald-700 hover:bg-emerald-200' : (($usulan_st === 'Rejected') ? 'bg-rose-100/90 text-rose-700 hover:bg-rose-200' : 'bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60');
-
-                                            $item_pills[] = [
-                                                'code' => 'judul_jenis',
-                                                'name' => 'Usulan Judul & Skema TA',
-                                                'abbr' => 'JUDUL',
-                                                'class' => $btn_class_usulan
-                                            ];
                                         ?>
                                         <div class="flex flex-col items-center gap-1.5">
                                             <!-- Ringkasan Status Berkas (Valid, Direvisi, Menunggu) persis Admin LAA -->
                                             <div id="berkas_summary_badges_<?= $mhs['nim']; ?>" class="flex items-center gap-1 flex-wrap justify-center">
                                                 <?php if($v_cnt > 0): ?>
-                                                    <button type="button" onclick="openStudentBerkasPreview('<?= $mhs['nim']; ?>')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="<?= $v_cnt; ?> Berkas Disetujui/Valid — Klik untuk Lihat Berkas">
+                                                    <button type="button" onclick="openStudentBerkasPreview('<?= $mhs['nim']; ?>', null, 'Approved')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="<?= $v_cnt; ?> Berkas Disetujui/Valid — Klik untuk Hanya Tampilkan Berkas Valid">
                                                         <i class="fa-solid fa-circle-check text-emerald-500 text-[9px]"></i>
                                                         <span><?= $v_cnt; ?> Valid</span>
                                                     </button>
                                                 <?php endif; ?>
 
                                                 <?php if($i_cnt > 0): ?>
-                                                    <button type="button" onclick="openStudentBerkasPreview('<?= $mhs['nim']; ?>')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="<?= $i_cnt; ?> Berkas Ditolak/Direvisi — Klik untuk Lihat Berkas">
+                                                    <button type="button" onclick="openStudentBerkasPreview('<?= $mhs['nim']; ?>', null, 'Rejected')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="<?= $i_cnt; ?> Berkas Ditolak/Direvisi — Klik untuk Hanya Tampilkan Berkas Revisi">
                                                         <i class="fa-solid fa-circle-xmark text-rose-500 text-[9px]"></i>
                                                         <span><?= $i_cnt; ?> Direvisi</span>
                                                     </button>
                                                 <?php endif; ?>
 
                                                 <?php if($p_cnt > 0): ?>
-                                                    <button type="button" onclick="openStudentBerkasPreview('<?= $mhs['nim']; ?>')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="<?= $p_cnt; ?> Berkas Menunggu Verifikasi — Klik untuk Lihat Berkas">
+                                                    <button type="button" onclick="openStudentBerkasPreview('<?= $mhs['nim']; ?>', null, 'Pending')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="<?= $p_cnt; ?> Berkas Menunggu Verifikasi — Klik untuk Hanya Tampilkan Berkas Menunggu">
                                                         <i class="fa-solid fa-clock text-amber-500 text-[9px]"></i>
                                                         <span><?= $p_cnt; ?> Menunggu</span>
                                                     </button>
@@ -1117,10 +1173,16 @@
                     </tbody>
                 </table>
             </div>
-            <!-- Footer: Info + Pagination -->
-            <div class="px-5 py-3.5 border-t border-orange-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-orange-50/30">
-                <span id="recordsInfo" class="text-[11px] text-slate-500 font-medium"></span>
-                <div id="paginationContainer" class="flex items-center gap-1 text-xs font-semibold"></div>
+        </div>
+    </div>
+
+        <!-- Table Bottom Pagination Bar (Exact Koordinator TA Style) -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 text-xs text-slate-500 font-medium w-full overflow-hidden">
+            <div class="text-center sm:text-left">
+                Menampilkan data <strong id="pageStartDW" class="text-slate-800 font-bold">1</strong> - <strong id="pageEndDW" class="text-slate-800 font-bold">10</strong> dari total <strong id="totalRecordsBottomDW" class="text-slate-800 font-bold"><?= !empty($list_mahasiswa) ? count($list_mahasiswa) : 0; ?></strong> mahasiswa
+            </div>
+            <div class="pagination-controls-bottom flex items-center justify-center sm:justify-end gap-1 max-w-full overflow-x-auto scrollbar-none py-1" id="paginationContainer" style="-webkit-overflow-scrolling: touch;">
+                <!-- Pagination buttons rendered via JS -->
             </div>
         </div>
     </main>
@@ -1881,6 +1943,14 @@
             const tc = document.getElementById('toolbarTotalCountDW');
             if (tc) tc.innerText = total;
 
+            const pageStartEl = document.getElementById('pageStartDW');
+            const pageEndEl = document.getElementById('pageEndDW');
+            const totalBottomEl = document.getElementById('totalRecordsBottomDW');
+
+            if (pageStartEl) pageStartEl.textContent = total > 0 ? (start + 1) : 0;
+            if (pageEndEl) pageEndEl.textContent = Math.min(start + perPage, total);
+            if (totalBottomEl) totalBottomEl.textContent = total;
+
             renderPagination(totalPages);
             rebindCheckboxes();
         } catch (e) {
@@ -1895,23 +1965,54 @@
             if (!paginationEl) return;
             paginationEl.innerHTML = '';
             if (totalPages <= 1) return;
-            const mk = (label, page, disabled, active) => {
-                const btn = document.createElement('button');
-                btn.innerHTML = label;
-                btn.className = `px-3 py-1.5 rounded-lg border text-[11px] font-semibold transition cursor-pointer ${ active ? 'bg-orange-500 text-white border-orange-500 shadow-sm' : disabled ? 'bg-white text-slate-300 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-600 border-slate-200 hover:bg-orange-50 hover:border-orange-300'}`;
-                btn.disabled = disabled;
-                if (!disabled && !active) btn.addEventListener('click', () => { currentPage = page; applyAll(); });
-                return btn;
-            };
-            paginationEl.appendChild(mk('<i class="bi bi-chevron-left"></i>', currentPage - 1, currentPage === 1, false));
-            for (let i = 1; i <= totalPages; i++) {
-                if (totalPages > 7 && i > 2 && i < totalPages - 1 && Math.abs(i - currentPage) > 1) {
-                    if (i === 3 || i === totalPages - 2) { const d = document.createElement('span'); d.textContent = '…'; d.className = 'px-1 text-slate-400'; paginationEl.appendChild(d); }
-                    continue;
-                }
-                paginationEl.appendChild(mk(i, i, false, i === currentPage));
+
+            const btnFirst = document.createElement('button');
+            btnFirst.className = `px-2 sm:px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-bold transition shrink-0 ${currentPage === 1 ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
+            btnFirst.innerHTML = '<span class="sm:hidden">&laquo;</span><span class="hidden sm:inline">&laquo; Awal</span>';
+            btnFirst.title = 'Halaman Pertama';
+            btnFirst.disabled = (currentPage === 1);
+            btnFirst.addEventListener('click', () => { currentPage = 1; applyAll(); });
+            paginationEl.appendChild(btnFirst);
+
+            const btnPrev = document.createElement('button');
+            btnPrev.className = `px-2 sm:px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-bold transition shrink-0 ${currentPage === 1 ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
+            btnPrev.innerHTML = '<span class="sm:hidden">&lsaquo;</span><span class="hidden sm:inline">&lsaquo; Prev</span>';
+            btnPrev.title = 'Halaman Sebelumnya';
+            btnPrev.disabled = (currentPage === 1);
+            btnPrev.addEventListener('click', () => { currentPage--; applyAll(); });
+            paginationEl.appendChild(btnPrev);
+
+            const maxVisibleButtons = 5;
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + maxVisibleButtons - 1);
+            if (endPage - startPage + 1 < maxVisibleButtons) {
+                startPage = Math.max(1, endPage - maxVisibleButtons + 1);
             }
-            paginationEl.appendChild(mk('<i class="bi bi-chevron-right"></i>', currentPage + 1, currentPage === totalPages, false));
+
+            for (let p = startPage; p <= endPage; p++) {
+                const btnPage = document.createElement('button');
+                const isActive = (p === currentPage);
+                btnPage.className = `min-w-[28px] sm:min-w-[32px] px-2 sm:px-3 py-1 rounded-lg text-[11px] sm:text-xs font-bold transition shrink-0 cursor-pointer ${isActive ? 'bg-orange-600 text-white shadow-xs' : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'}`;
+                btnPage.textContent = p;
+                btnPage.addEventListener('click', () => { currentPage = p; applyAll(); });
+                paginationEl.appendChild(btnPage);
+            }
+
+            const btnNext = document.createElement('button');
+            btnNext.className = `px-2 sm:px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-bold transition shrink-0 ${currentPage === totalPages ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
+            btnNext.innerHTML = '<span class="sm:hidden">&rsaquo;</span><span class="hidden sm:inline">Next &rsaquo;</span>';
+            btnNext.title = 'Halaman Selanjutnya';
+            btnNext.disabled = (currentPage === totalPages);
+            btnNext.addEventListener('click', () => { currentPage++; applyAll(); });
+            paginationEl.appendChild(btnNext);
+
+            const btnLast = document.createElement('button');
+            btnLast.className = `px-2 sm:px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-bold transition shrink-0 ${currentPage === totalPages ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
+            btnLast.innerHTML = '<span class="sm:hidden">&raquo;</span><span class="hidden sm:inline">Akhir &raquo;</span>';
+            btnLast.title = 'Halaman Terakhir';
+            btnLast.disabled = (currentPage === totalPages);
+            btnLast.addEventListener('click', () => { currentPage = totalPages; applyAll(); });
+            paginationEl.appendChild(btnLast);
         }
 
         document.querySelectorAll('.btn-pintas').forEach(btn => {
@@ -2112,25 +2213,8 @@
                             { kode_berkas: 'bebas_lab', nama_berkas: 'Bebas Lab' }
                         ];
                         let vCnt = 0, iCnt = 0, pCnt = 0;
-                        let berkasPillsHtml = activeSyaratList.map((sb, bIdx) => {
-                            const k = sb.kode_berkas;
-                            const bSt = mhs[`status_file_${k}`] || (mhs.berkas_map && mhs.berkas_map[k] ? (mhs.berkas_map[k].status_verifikasi === 'Valid' ? 'Approved' : (mhs.berkas_map[k].status_verifikasi === 'Invalid' ? 'Rejected' : 'Pending')) : 'Pending');
-                            if (bSt === 'Approved') vCnt++;
-                            else if (bSt === 'Rejected') iCnt++;
-                            else pCnt++;
 
-                            const bClass = (bSt === 'Approved') ? 'bg-emerald-100/90 text-emerald-700 hover:bg-emerald-200' : ((bSt === 'Rejected') ? 'bg-rose-100/90 text-rose-700 hover:bg-rose-200' : 'bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60');
-                            
-                            const mapAbbr = { ksm: 'KSM', transkrip: 'TRS', pernyataan: 'SRT', bebas_lab: 'LAB' };
-                            let abbr = mapAbbr[k];
-                            if (!abbr) {
-                                const w = (sb.nama_berkas || k).trim().split(/[\s_-]+/);
-                                abbr = (w[0] || 'DOC').substring(0, 4).toUpperCase();
-                            }
-                            return `<button type="button" onclick="openStudentBerkasPreview('${mhs.nim}', '${k}')" id="badge_doc_${mhs.nim}_${k}" title="Review ${sb.nama_berkas} - ${mhs.nama}" class="px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer ${bClass}">${abbr}</button><span class="text-slate-300">·</span>`;
-                        }).join('');
-
-                        // Tambahkan pill Usulan Judul & Skema TA
+                        // Tambahkan pill Usulan Judul & Skema TA TERLEBIH DAHULU (Paling Awal)
                         const jdlSt = mhs.status_judul || 'Pending';
                         const jnsSt = mhs.status_jenis_ta || 'Pending';
                         let usulanSt = 'Pending';
@@ -2145,17 +2229,37 @@
                         else pCnt++;
 
                         const usulanClass = (usulanSt === 'Approved') ? 'bg-emerald-100/90 text-emerald-700 hover:bg-emerald-200' : ((usulanSt === 'Rejected') ? 'bg-rose-100/90 text-rose-700 hover:bg-rose-200' : 'bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60');
-                        berkasPillsHtml += `<button type="button" onclick="openStudentBerkasPreview('${mhs.nim}', 'judul_jenis')" id="badge_doc_${mhs.nim}_judul_jenis" title="Review Usulan Judul & Skema TA - ${mhs.nama}" class="px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer ${usulanClass}">JUDUL</button>`;
+                        let berkasPillsHtml = `<button type="button" onclick="openStudentBerkasPreview('${mhs.nim}', 'judul_jenis')" id="badge_doc_${mhs.nim}_judul_jenis" title="Review Usulan Judul & Skema TA - ${mhs.nama}" class="px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer ${usulanClass}">JUDUL</button>`;
+
+                        if (activeSyaratList.length > 0) {
+                            berkasPillsHtml += '<span class="text-slate-300">·</span>' + activeSyaratList.map((sb, bIdx) => {
+                                const k = sb.kode_berkas;
+                                const bSt = mhs[`status_file_${k}`] || (mhs.berkas_map && mhs.berkas_map[k] ? (mhs.berkas_map[k].status_verifikasi === 'Valid' ? 'Approved' : (mhs.berkas_map[k].status_verifikasi === 'Invalid' ? 'Rejected' : 'Pending')) : 'Pending');
+                                if (bSt === 'Approved') vCnt++;
+                                else if (bSt === 'Rejected') iCnt++;
+                                else pCnt++;
+
+                                const bClass = (bSt === 'Approved') ? 'bg-emerald-100/90 text-emerald-700 hover:bg-emerald-200' : ((bSt === 'Rejected') ? 'bg-rose-100/90 text-rose-700 hover:bg-rose-200' : 'bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60');
+                                
+                                const mapAbbr = { ksm: 'KSM', transkrip: 'TRS', pernyataan: 'SRT', bebas_lab: 'LAB' };
+                                let abbr = mapAbbr[k];
+                                if (!abbr) {
+                                    const w = (sb.nama_berkas || k).trim().split(/[\s_-]+/);
+                                    abbr = (w[0] || 'DOC').substring(0, 4).toUpperCase();
+                                }
+                                return `<button type="button" onclick="openStudentBerkasPreview('${mhs.nim}', '${k}')" id="badge_doc_${mhs.nim}_${k}" title="Review ${sb.nama_berkas} - ${mhs.nama}" class="px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer ${bClass}">${abbr}</button>`;
+                            }).join('<span class="text-slate-300">·</span>');
+                        }
 
                         let summaryBadgesHtml = '';
                         if (vCnt > 0) {
-                            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${mhs.nim}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${vCnt} Berkas Disetujui/Valid — Klik untuk Lihat Berkas"><i class="fa-solid fa-circle-check text-emerald-500 text-[9px]"></i> <span>${vCnt} Valid</span></button>`;
+                            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${mhs.nim}', null, 'Approved')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${vCnt} Berkas Disetujui/Valid — Klik untuk Hanya Tampilkan Berkas Valid"><i class="fa-solid fa-circle-check text-emerald-500 text-[9px]"></i> <span>${vCnt} Valid</span></button>`;
                         }
                         if (iCnt > 0) {
-                            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${mhs.nim}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${iCnt} Berkas Ditolak/Direvisi — Klik untuk Lihat Berkas"><i class="fa-solid fa-circle-xmark text-rose-500 text-[9px]"></i> <span>${iCnt} Direvisi</span></button>`;
+                            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${mhs.nim}', null, 'Rejected')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${iCnt} Berkas Ditolak/Direvisi — Klik untuk Hanya Tampilkan Berkas Revisi"><i class="fa-solid fa-circle-xmark text-rose-500 text-[9px]"></i> <span>${iCnt} Direvisi</span></button>`;
                         }
                         if (pCnt > 0) {
-                            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${mhs.nim}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${pCnt} Berkas Menunggu Verifikasi — Klik untuk Lihat Berkas"><i class="fa-solid fa-clock text-amber-500 text-[9px]"></i> <span>${pCnt} Menunggu</span></button>`;
+                            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${mhs.nim}', null, 'Pending')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${pCnt} Berkas Menunggu Verifikasi — Klik untuk Hanya Tampilkan Berkas Menunggu"><i class="fa-solid fa-clock text-amber-500 text-[9px]"></i> <span>${pCnt} Menunggu</span></button>`;
                         }
                         if (vCnt === 0 && iCnt === 0 && pCnt === 0) {
                             summaryBadgesHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">Belum ada berkas</span>`;
@@ -3671,11 +3775,35 @@
         });
     }
 
+    function setCardDocFilter(nim, filterStatus) {
+        if (!nim) return;
+        nim = String(nim).trim();
+        if (!window.cardFilterStatus) window.cardFilterStatus = {};
+        window.cardFilterStatus[nim] = filterStatus || 'all';
+        
+        if (filterStatus && filterStatus !== 'all') {
+            const isDocKey = getDocList().some(d => d.key === filterStatus);
+            if (isDocKey) {
+                window.activePreviews = [{ nim, docKey: filterStatus }];
+            } else {
+                window.activePreviews = (window.activePreviews || []).filter(p => {
+                    if (String(p.nim).trim() !== nim) return true;
+                    return getMhsDocStatus(nim, p.docKey) === filterStatus;
+                });
+            }
+            refreshLihatBerkasView();
+        } else {
+            renderAllLihatBerkasCards();
+        }
+    }
+
     function toggleLihatBerkasPanel(nim) {
         if (!nim) return;
         nim = String(nim).trim();
 
         if (!window.activeLihatBerkasNims) window.activeLihatBerkasNims = [];
+        if (!window.cardFilterStatus) window.cardFilterStatus = {};
+        window.cardFilterStatus[nim] = 'all';
 
         // ON MOBILE (< 1024px): Buka 1 mahasiswa saja per saat agar tidak tumpang tindih / terpotong di layar HP
         if (window.innerWidth < 1024) {
@@ -3789,7 +3917,18 @@
     }
 
     function getDocList() {
-        const baseList = (window.SYARAT_BERKAS && window.SYARAT_BERKAS.length > 0)
+        // Khusus Dosen Wali: letakkan Usulan Judul & Skema TA di URUTAN PERTAMA (#1)
+        const specialJudul = {
+            key: 'judul_jenis',
+            title: '1. Usulan Judul & Skema TA',
+            shortTitle: 'Usulan Judul & Skema TA',
+            isSpecialJudul: true,
+            statusField: 'status_judul',
+            noteField: 'catatan_judul',
+            icon: 'fa-solid fa-heading'
+        };
+
+        const fileDocs = (window.SYARAT_BERKAS && window.SYARAT_BERKAS.length > 0)
             ? window.SYARAT_BERKAS.map((sb, i) => {
                 const k = sb.kode_berkas;
                 const iconMap = {
@@ -3800,7 +3939,7 @@
                 };
                 return {
                     key: k,
-                    title: `${i + 1}. ${sb.nama_berkas}`,
+                    title: `${i + 2}. ${sb.nama_berkas}`,
                     shortTitle: sb.nama_berkas,
                     fileField: `file_${k}`,
                     statusField: `status_file_${k}`,
@@ -3809,24 +3948,13 @@
                 };
             })
             : [
-                { key: 'ksm', title: '1. KSM', shortTitle: 'KSM', fileField: 'file_ksm', statusField: 'status_file_ksm', noteField: 'catatan_file_ksm', icon: 'fa-solid fa-file-lines' },
-                { key: 'transkrip', title: '2. Transkrip Nilai', shortTitle: 'Transkrip Nilai', fileField: 'file_transkrip', statusField: 'status_file_transkrip', noteField: 'catatan_file_transkrip', icon: 'fa-solid fa-file-spreadsheet' },
-                { key: 'pernyataan', title: '3. Surat Pernyataan', shortTitle: 'Surat Pernyataan', fileField: 'file_pernyataan', statusField: 'status_file_pernyataan', noteField: 'catatan_file_pernyataan', icon: 'fa-solid fa-file-contract' },
-                { key: 'bebas_lab', title: '4. Bebas Lab & Perpus', shortTitle: 'Bebas Lab & Perpus', fileField: 'file_bebas_lab', statusField: 'status_file_bebas_lab', noteField: 'catatan_file_bebas_lab', icon: 'fa-solid fa-building-circle-check' }
+                { key: 'ksm', title: '2. KSM', shortTitle: 'KSM', fileField: 'file_ksm', statusField: 'status_file_ksm', noteField: 'catatan_file_ksm', icon: 'fa-solid fa-file-lines' },
+                { key: 'transkrip', title: '3. Transkrip Nilai', shortTitle: 'Transkrip Nilai', fileField: 'file_transkrip', statusField: 'status_file_transkrip', noteField: 'catatan_file_transkrip', icon: 'fa-solid fa-file-spreadsheet' },
+                { key: 'pernyataan', title: '4. Surat Pernyataan', shortTitle: 'Surat Pernyataan', fileField: 'file_pernyataan', statusField: 'status_file_pernyataan', noteField: 'catatan_file_pernyataan', icon: 'fa-solid fa-file-contract' },
+                { key: 'bebas_lab', title: '5. Bebas Lab & Perpus', shortTitle: 'Bebas Lab & Perpus', fileField: 'file_bebas_lab', statusField: 'status_file_bebas_lab', noteField: 'catatan_file_bebas_lab', icon: 'fa-solid fa-building-circle-check' }
             ];
 
-        // Khusus Dosen Wali: tambahkan Usulan Judul & Skema TA
-        baseList.push({
-            key: 'judul_jenis',
-            title: `${baseList.length + 1}. Usulan Judul & Skema TA`,
-            shortTitle: 'Usulan Judul & Skema TA',
-            isSpecialJudul: true,
-            statusField: 'status_judul',
-            noteField: 'catatan_judul',
-            icon: 'fa-solid fa-heading'
-        });
-
-        return baseList;
+        return [specialJudul, ...fileDocs];
     }
 
     function getMhsDocStatus(nim, docKey) {
@@ -3835,20 +3963,22 @@
         if (docKey === 'judul_jenis') {
             const sj = mhs.status_judul || 'Pending';
             const sk = mhs.status_jenis_ta || 'Pending';
-            if (sj === 'Rejected' || sk === 'Rejected') return 'Rejected';
-            if (sj === 'Approved' && sk === 'Approved') return 'Approved';
+            if (sj === 'Rejected' || sk === 'Rejected' || sj === 'Invalid' || sk === 'Invalid') return 'Rejected';
+            if ((sj === 'Approved' || sj === 'Valid') && (sk === 'Approved' || sk === 'Valid')) return 'Approved';
             return 'Pending';
         }
         const directStatus = mhs[`status_file_${docKey}`];
-        if (directStatus === 'Approved' || directStatus === 'Rejected') return directStatus;
+        if (directStatus === 'Approved' || directStatus === 'Valid') return 'Approved';
+        if (directStatus === 'Rejected' || directStatus === 'Invalid') return 'Rejected';
         if (mhs.berkas_map && mhs.berkas_map[docKey]) {
             const bv = mhs.berkas_map[docKey].status_verifikasi;
-            if (bv === 'Valid') return 'Approved';
-            if (bv === 'Invalid') return 'Rejected';
+            if (bv === 'Valid' || bv === 'Approved') return 'Approved';
+            if (bv === 'Invalid' || bv === 'Rejected') return 'Rejected';
         }
         if (mhs.files && mhs.files[docKey] && mhs.files[docKey].status) {
             const fs = mhs.files[docKey].status;
-            if (fs === 'Approved' || fs === 'Rejected') return fs;
+            if (fs === 'Approved' || fs === 'Valid') return 'Approved';
+            if (fs === 'Rejected' || fs === 'Invalid') return 'Rejected';
         }
         return 'Pending';
     }
@@ -3923,7 +4053,40 @@
             const validCount = getMhsValidDocCount(nim, docList);
             const totalDocs = docList.length;
 
-            const itemsHtml = docList.map(doc => {
+            const currentFilter = (window.cardFilterStatus && window.cardFilterStatus[nim]) ? window.cardFilterStatus[nim] : 'all';
+
+            let countApproved = 0, countRejected = 0, countPending = 0;
+            docList.forEach(d => {
+                const st = getMhsDocStatus(nim, d.key);
+                if (st === 'Approved') countApproved++;
+                else if (st === 'Rejected') countRejected++;
+                else countPending++;
+            });
+
+            const isDocKeyFilter = docList.some(d => d.key === currentFilter);
+            const currentDoc = isDocKeyFilter ? docList.find(d => d.key === currentFilter) : null;
+            const filterLabel = isDocKeyFilter 
+                ? (currentDoc ? (currentDoc.shortTitle || currentDoc.title) : currentFilter)
+                : (currentFilter === 'Approved' ? 'Valid' : (currentFilter === 'Rejected' ? 'Revisi' : 'Menunggu'));
+
+            const filteredDocs = (currentFilter === 'all')
+                ? docList
+                : (isDocKeyFilter
+                    ? docList.filter(d => d.key === currentFilter)
+                    : docList.filter(d => getMhsDocStatus(nim, d.key) === currentFilter));
+
+            const emptyFilterHtml = `
+                <div class="py-8 px-4 text-center">
+                    <i class="fa-regular fa-folder-open text-slate-300 text-3xl mb-2 block"></i>
+                    <p class="text-xs text-slate-600 font-bold">Tidak ada berkas untuk filter "${filterLabel}"</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Pilih filter lain atau tampilkan semua berkas.</p>
+                    <button type="button" onclick="setCardDocFilter('${nim}', 'all')" class="mt-2.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer">
+                        Tampilkan Semua (${totalDocs})
+                    </button>
+                </div>
+            `;
+
+            const itemsHtml = (filteredDocs.length > 0) ? filteredDocs.map(doc => {
                 const rawFilename = mhs[doc.fileField] || `${doc.key}_${nim}.pdf`;
                 const pdfUrl = resolveDocPdfUrl(rawFilename);
                 const status = getMhsDocStatus(nim, doc.key);
@@ -3949,32 +4112,27 @@
                     : 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200 shadow-2xs';
 
                 const isJudulDoc = (doc.key === 'judul_jenis');
+                const cleanJudul = (mhs.judul && mhs.judul !== '-') ? mhs.judul : ((mhs.judul_1 && mhs.judul_1 !== '-') ? mhs.judul_1 : '');
+                const hasAlt = isJudulDoc && (Boolean(mhs.judul_2) || Boolean(mhs.judul_3));
                 const docSubtext = isJudulDoc
-                    ? `<span class="text-orange-600 font-bold"><i class="fa-solid fa-tag mr-1 text-[9px]"></i>${mhs.jenis_ta || 'Pengkaryaan / Reguler'}</span> &bull; <span class="text-slate-600 font-medium truncate inline-block max-w-[140px] align-bottom" title="${mhs.judul || ''}">${mhs.judul || 'Belum diisi'}</span>`
+                    ? `<span class="text-orange-600 font-bold"><i class="fa-solid fa-tag mr-1 text-[9px]"></i>${cleanJenis}</span> &bull; <span class="text-slate-600 font-medium truncate inline-block max-w-[125px] align-bottom" title="${cleanJudul}">${cleanJudul || 'Belum diisi'}</span>${hasAlt ? ` <span class="px-1 py-0.2 rounded text-[8px] font-bold bg-amber-50 text-amber-700 border border-amber-200 inline-block align-middle" title="Terdapat judul alternatif">+Alternatif</span>` : ''}`
                     : `<i class="fa-solid fa-file-pdf text-rose-500 mr-1 text-[9px]"></i>${rawFilename}`;
 
-                const downloadBtnHtml = isJudulDoc
-                    ? `<div class="flex flex-col items-center group/btn opacity-50 cursor-default" title="Usulan Judul & Skema (Teks)">
-                            <div class="w-7 h-7 rounded-lg bg-slate-100 text-slate-400 border border-slate-200 text-xs font-bold flex items-center justify-center">
-                                <i class="fa-solid fa-heading text-xs"></i>
-                            </div>
-                            <span class="text-[9px] font-bold text-slate-400 mt-0.5 leading-tight select-none">Teks</span>
-                       </div>`
-                    : `<div class="flex flex-col items-center group/btn">
-                            <a href="${pdfUrl}" 
-                               download="${rawFilename}" 
-                               target="_blank" 
-                               class="w-7 h-7 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold transition flex items-center justify-center cursor-pointer shadow-2xs active:scale-95" 
-                               title="Unduh Berkas">
-                                <i class="fa-solid fa-download text-xs"></i>
-                            </a>
-                            <a href="${pdfUrl}" 
-                               download="${rawFilename}" 
-                               target="_blank" 
-                               class="text-[9px] font-bold text-slate-500 group-hover/btn:text-slate-800 mt-0.5 leading-tight select-none cursor-pointer transition-colors">
-                                Unduh
-                            </a>
-                       </div>`;
+                const canReset = (status !== 'Pending');
+                const resetBtnHtml = `
+                    <div class="flex flex-col items-center group/btn">
+                        <button type="button" 
+                                onclick="${canReset ? `resetDocApproval('${nim}', '${doc.key}')` : ''}" 
+                                class="w-7 h-7 rounded-lg border text-xs font-bold transition flex items-center justify-center ${canReset ? 'bg-amber-50 hover:bg-amber-500 text-amber-700 hover:text-white border-amber-300 hover:border-amber-500 cursor-pointer shadow-2xs active:scale-95' : 'bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed'}" 
+                                title="${canReset ? `Reset status ${doc.title} kembali ke Menunggu` : 'Status berkas masih Menunggu'}">
+                            <i class="fa-solid fa-rotate-left text-xs ${canReset ? 'group-hover/btn:-rotate-45 transition-transform' : ''}"></i>
+                        </button>
+                        <span onclick="${canReset ? `resetDocApproval('${nim}', '${doc.key}')` : ''}" 
+                              class="text-[9px] font-bold ${canReset ? 'text-amber-700 group-hover/btn:text-amber-600 cursor-pointer' : 'text-slate-400 cursor-not-allowed'} mt-0.5 leading-tight select-none transition-colors">
+                            Reset
+                        </span>
+                    </div>
+                `;
 
                 return `
                     <div class="p-2.5 px-3 rounded-xl border shadow-2xs hover:shadow-xs transition-all flex items-center justify-between gap-2 ${activeCardBorder}">
@@ -4002,12 +4160,12 @@
                                 </span>
                             </div>
 
-                            <!-- Tombol Unduh / Teks -->
-                            ${downloadBtnHtml}
+                            <!-- Tombol Reset Status Berkas -->
+                            ${resetBtnHtml}
                         </div>
                     </div>
                 `;
-            }).join('');
+            }).join('') : emptyFilterHtml;
 
             return `
                 <div id="cardMhs_${nim}" class="student-card-item pointer-events-auto ${cardWidthClass} bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden flex flex-col shrink-0">
@@ -4029,6 +4187,47 @@
                         </div>
                     </div>
 
+                    <!-- Filter Tabs -->
+                    <div class="p-2 px-3 bg-slate-100/90 border-b border-slate-200/90 flex items-center justify-between gap-1 flex-wrap text-[10px]">
+                        <div class="flex items-center gap-1 flex-wrap">
+                            <button type="button" 
+                                    onclick="setCardDocFilter('${nim}', 'all')" 
+                                    class="px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer ${currentFilter === 'all' ? 'bg-slate-800 text-white shadow-2xs' : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'}">
+                                Semua (${totalDocs})
+                            </button>
+                            ${isDocKeyFilter ? `
+                            <button type="button" 
+                                    onclick="setCardDocFilter('${nim}', '${currentFilter}')" 
+                                    class="px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer bg-orange-600 text-white shadow-2xs">
+                                <i class="${currentDoc ? currentDoc.icon : 'fa-solid fa-file'} text-[9px] mr-0.5"></i> ${filterLabel} (1)
+                            </button>
+                            ` : ''}
+                            ${countApproved > 0 ? `
+                            <button type="button" 
+                                    onclick="setCardDocFilter('${nim}', 'Approved')" 
+                                    class="px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer ${currentFilter === 'Approved' ? 'bg-emerald-600 text-white shadow-2xs' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}">
+                                <i class="fa-solid fa-circle-check text-[9px] mr-0.5"></i> Valid (${countApproved})
+                            </button>` : ''}
+                            ${countRejected > 0 ? `
+                            <button type="button" 
+                                    onclick="setCardDocFilter('${nim}', 'Rejected')" 
+                                    class="px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer ${currentFilter === 'Rejected' ? 'bg-rose-600 text-white shadow-2xs' : 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200'}">
+                                <i class="fa-solid fa-circle-exclamation text-[9px] mr-0.5"></i> Revisi (${countRejected})
+                            </button>` : ''}
+                            ${countPending > 0 ? `
+                            <button type="button" 
+                                    onclick="setCardDocFilter('${nim}', 'Pending')" 
+                                    class="px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer ${currentFilter === 'Pending' ? 'bg-amber-600 text-white shadow-2xs' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'}">
+                                <i class="fa-solid fa-clock text-[9px] mr-0.5"></i> Menunggu (${countPending})
+                            </button>` : ''}
+                        </div>
+                        ${currentFilter !== 'all' ? `
+                            <button type="button" onclick="setCardDocFilter('${nim}', 'all')" class="text-[9px] text-slate-400 hover:text-slate-700 font-medium underline cursor-pointer">
+                                Reset
+                            </button>
+                        ` : ''}
+                    </div>
+
                     <!-- List of Berkas -->
                     <div class="p-3 space-y-2 bg-slate-50/50 overflow-y-auto ${isMobile && isPreviewActive ? 'max-h-[165px] sm:max-h-[220px]' : 'max-h-[55vh] sm:max-h-[60vh]'}">
                         ${itemsHtml}
@@ -4037,7 +4236,10 @@
                     <!-- Footer Info & Close for Mobile -->
                     <div class="p-2.5 px-4 bg-white border-t border-slate-200 flex items-center justify-between gap-2 shrink-0">
                         <span class="text-[11px] text-slate-500 font-medium">
-                            <strong class="text-slate-800">${validCount}/${totalDocs}</strong> Berkas Disetujui
+                            ${currentFilter === 'all'
+                                ? `<strong class="text-slate-800">${validCount}/${totalDocs}</strong> Berkas Disetujui`
+                                : `Menampilkan <strong class="text-slate-800">${filteredDocs.length}</strong> berkas (<span class="font-bold ${currentFilter === 'Approved' ? 'text-emerald-700' : (currentFilter === 'Rejected' ? 'text-rose-700' : (currentFilter === 'Pending' ? 'text-amber-700' : 'text-orange-700'))}">${filterLabel}</span>)`
+                            }
                         </span>
                         <button type="button" onclick="removeStudentFromLihatBerkas('${nim}')" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer">
                             Tutup
@@ -4064,16 +4266,8 @@
             return;
         }
 
-        // Tambahkan ke slot (maksimal 5 pratinjau berdampingan)
-        if (window.activePreviews.length >= 5) {
-            window.activePreviews.shift();
-            window.activePreviews.push({ nim, docKey });
-            if (typeof showDWToast === 'function') {
-                showDWToast(`Maksimal 5 pratinjau. Menampilkan 5 dokumen terbaru.`, true);
-            }
-        } else {
-            window.activePreviews.push({ nim, docKey });
-        }
+        // HANYA 1 preview yang aktif per klik berkas (tidak membuka bertumpuk banyak)
+        window.activePreviews = [{ nim, docKey }];
 
         refreshLihatBerkasView();
 
@@ -4088,9 +4282,22 @@
         }, 120);
     }
 
-    async function openStudentBerkasPreview(nim, docKey) {
+    async function openStudentBerkasPreview(nim, docKey, filterStatus) {
         if (!nim) return;
         nim = String(nim).trim();
+
+        if (!window.cardFilterStatus) window.cardFilterStatus = {};
+        if (filterStatus) {
+            window.cardFilterStatus[nim] = filterStatus;
+            window.activePreviews = (window.activePreviews || []).filter(p => {
+                if (String(p.nim).trim() !== nim) return true;
+                return getMhsDocStatus(nim, p.docKey) === filterStatus;
+            });
+        } else if (docKey) {
+            // Ketika mengklik badge berkas tertentu (KSM, TRS, SRT, LAB, JUDUL), tampilkan 1 berkas saja
+            window.cardFilterStatus[nim] = docKey;
+            window.activePreviews = [{ nim, docKey }];
+        }
 
         if (!window.activeLihatBerkasNims) window.activeLihatBerkasNims = [];
         if (!window.activePreviews) window.activePreviews = [];
@@ -4104,17 +4311,23 @@
             window.activeLihatBerkasNims.push(nim);
         }
 
+        const resolveTargetDocKey = () => {
+            if (filterStatus && !docKey) {
+                const docList = getDocList();
+                const matching = docList.filter(d => getMhsDocStatus(nim, d.key) === filterStatus);
+                if (matching.length === 1) {
+                    docKey = matching[0].key;
+                }
+            }
+        };
+
         const showAndRender = () => {
+            resolveTargetDocKey();
             showLihatBerkasContainer();
             if (docKey) {
                 docKey = String(docKey).trim();
-                const isPreviewed = window.activePreviews.some(p => String(p.nim).trim() === nim && String(p.docKey).trim() === docKey);
-                if (!isPreviewed) {
-                    if (window.activePreviews.length >= 5) {
-                        window.activePreviews.shift();
-                    }
-                    window.activePreviews.push({ nim, docKey });
-                }
+                // Buka HANYA 1 preview ini (jangan bertumpuk banyak)
+                window.activePreviews = [{ nim, docKey }];
             }
             refreshLihatBerkasView();
             if (docKey) {
@@ -4169,13 +4382,13 @@
 
         let summaryBadgesHtml = '';
         if (vCnt > 0) {
-            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${nim}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${vCnt} Berkas Disetujui/Valid — Klik untuk Lihat Berkas"><i class="fa-solid fa-circle-check text-emerald-500 text-[9px]"></i> <span>${vCnt} Valid</span></button>`;
+            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${nim}', null, 'Approved')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${vCnt} Berkas Disetujui/Valid — Klik untuk Hanya Tampilkan Berkas Valid"><i class="fa-solid fa-circle-check text-emerald-500 text-[9px]"></i> <span>${vCnt} Valid</span></button>`;
         }
         if (iCnt > 0) {
-            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${nim}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${iCnt} Berkas Ditolak/Direvisi — Klik untuk Lihat Berkas"><i class="fa-solid fa-circle-xmark text-rose-500 text-[9px]"></i> <span>${iCnt} Direvisi</span></button>`;
+            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${nim}', null, 'Rejected')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${iCnt} Berkas Ditolak/Direvisi — Klik untuk Hanya Tampilkan Berkas Revisi"><i class="fa-solid fa-circle-xmark text-rose-500 text-[9px]"></i> <span>${iCnt} Direvisi</span></button>`;
         }
         if (pCnt > 0) {
-            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${nim}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${pCnt} Berkas Menunggu Verifikasi — Klik untuk Lihat Berkas"><i class="fa-solid fa-clock text-amber-500 text-[9px]"></i> <span>${pCnt} Menunggu</span></button>`;
+            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${nim}', null, 'Pending')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${pCnt} Berkas Menunggu Verifikasi — Klik untuk Hanya Tampilkan Berkas Menunggu"><i class="fa-solid fa-clock text-amber-500 text-[9px]"></i> <span>${pCnt} Menunggu</span></button>`;
         }
         if (vCnt === 0 && iCnt === 0 && pCnt === 0) {
             summaryBadgesHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">Belum ada berkas</span>`;
@@ -4269,6 +4482,9 @@
                         <button type="button" onclick="togglePreviewIframeInteraction('${p.nim}', '${p.docKey}')" id="btnPreviewInteract_${p.nim}_${p.docKey}" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Kursor Terkunci (Normal). Klik jika ingin mengaktifkan scroll di dalam berkas">
                             <i class="fa-solid fa-arrow-pointer text-[10px]" id="iconPreviewInteract_${p.nim}_${p.docKey}"></i>
                         </button>
+                        <a href="${pdfUrl}" download="${rawFilename}" target="_blank" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-emerald-600/80 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Unduh Berkas PDF (${rawFilename})">
+                            <i class="fa-solid fa-download text-[10px]"></i>
+                        </a>
                         <a href="${pdfUrl}" target="_blank" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Buka Layar Penuh di Tab Baru">
                             <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
                         </a>
@@ -4276,6 +4492,9 @@
                             <i class="fa-solid fa-xmark"></i>
                         </button>
                     `;
+
+                const finalJudul = (mhs.judul && mhs.judul !== '-') ? mhs.judul : ((mhs.judul_1 && mhs.judul_1 !== '-') ? mhs.judul_1 : '');
+                const finalJenis = (mhs.jenis_ta && mhs.jenis_ta !== '-') ? mhs.jenis_ta : 'TA Reguler';
 
                 const bodyContentHtml = isJudulDoc
                     ? `
@@ -4285,7 +4504,7 @@
                                     <i class="fa-solid fa-lightbulb text-orange-500"></i>
                                     <span>Usulan Judul (Bahasa Indonesia)</span>
                                 </div>
-                                <p class="text-xs sm:text-sm font-bold text-slate-800 leading-relaxed">${mhs.judul || mhs.judul_1 || '<span class="italic text-slate-400 font-normal">Belum diisi oleh mahasiswa</span>'}</p>
+                                <p class="text-xs sm:text-sm font-bold text-slate-800 leading-relaxed">${finalJudul || '<span class="italic text-slate-400 font-normal">Belum diisi oleh mahasiswa</span>'}</p>
                             </div>
                             ${mhs.judul_en ? `
                             <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs">
@@ -4296,11 +4515,33 @@
                                 <p class="text-xs sm:text-sm font-semibold italic text-slate-700 leading-relaxed">${mhs.judul_en}</p>
                             </div>
                             ` : ''}
+                            ${(mhs.judul_2 || mhs.judul_3) ? `
+                            <div class="grid grid-cols-1 ${(mhs.judul_2 && mhs.judul_3) ? 'sm:grid-cols-2' : ''} gap-2.5">
+                                ${mhs.judul_2 ? `
+                                <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs">
+                                    <div class="flex items-center gap-1.5 mb-1 text-[11px] font-bold text-slate-600">
+                                        <i class="fa-solid fa-lightbulb text-amber-500 text-[10px]"></i>
+                                        <span>Judul Usulan 2 (Alternatif 1):</span>
+                                    </div>
+                                    <p class="text-xs font-semibold text-slate-800 leading-snug">${mhs.judul_2}</p>
+                                </div>
+                                ` : ''}
+                                ${mhs.judul_3 ? `
+                                <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs">
+                                    <div class="flex items-center gap-1.5 mb-1 text-[11px] font-bold text-slate-600">
+                                        <i class="fa-solid fa-lightbulb text-amber-500 text-[10px]"></i>
+                                        <span>Judul Usulan 3 (Alternatif 2):</span>
+                                    </div>
+                                    <p class="text-xs font-semibold text-slate-800 leading-snug">${mhs.judul_3}</p>
+                                </div>
+                                ` : ''}
+                            </div>
+                            ` : ''}
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                                 <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs">
                                     <span class="text-[10px] font-bold text-slate-400 block mb-1">Skema / Jenis TA:</span>
                                     <span class="px-2 py-0.5 bg-orange-50 text-orange-700 border border-orange-200 rounded-lg text-xs font-bold inline-flex items-center gap-1">
-                                        <i class="fa-solid fa-tag text-orange-500 text-[10px]"></i> ${mhs.jenis_ta || 'Pengkaryaan / Reguler'}
+                                        <i class="fa-solid fa-tag text-orange-500 text-[10px]"></i> ${finalJenis}
                                     </span>
                                 </div>
                                 <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs">
@@ -4496,6 +4737,171 @@
         }
     }
 
+    function resetDocApproval(nim, docKey) {
+        if (!nim || !docKey) return;
+        nim = String(nim).trim();
+        docKey = String(docKey).trim();
+
+        if (isMhsStageLocked(nim)) {
+            showDWToast('Pendaftaran telah disetujui di tahap berikutnya. Perubahan dikunci.', false);
+            return;
+        }
+
+        const docList = getDocList();
+        const doc = docList.find(d => d.key === docKey) || { shortTitle: docKey };
+        const docTitle = doc.shortTitle || docKey;
+
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Reset Status Berkas?',
+                html: `
+                    <div class="text-xs text-slate-600 text-left space-y-2 mt-2">
+                        <p>Status <strong>${docTitle}</strong> akan dikembalikan ke <strong>Menunggu</strong>.</p>
+                        <p class="text-slate-400 text-[11px]">Catatan penolakan/revisi pada berkas ini juga akan dikosongkan agar dapat ditinjau ulang.</p>
+                    </div>
+                `,
+                icon: 'warning',
+                iconColor: '#f59e0b',
+                showCancelButton: true,
+                confirmButtonColor: '#d97706',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: '<i class="fa-solid fa-rotate-left mr-1"></i> Ya, Reset ke Menunggu',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                customClass: {
+                    popup: 'rounded-3xl shadow-2xl border border-amber-100',
+                    confirmButton: 'rounded-xl font-bold px-4 py-2 text-xs cursor-pointer shadow-md shadow-amber-600/20',
+                    cancelButton: 'rounded-xl font-semibold px-4 py-2 text-xs cursor-pointer'
+                }
+            }).then(result => {
+                if (result.isConfirmed) {
+                    executeDocReset(nim, docKey, docTitle);
+                }
+            });
+        } else {
+            if (confirm(`Reset status ${docTitle} kembali ke Menunggu? Catatan revisi akan dikosongkan.`)) {
+                executeDocReset(nim, docKey, docTitle);
+            }
+        }
+    }
+
+    function executeDocReset(nim, docKey, docTitle) {
+        if (docKey === 'judul_jenis') {
+            const formData = new FormData();
+            formData.append('nim', nim);
+            formData.append('status', 'Pending');
+            formData.append('catatan', '');
+
+            fetch('<?= site_url("dosenwali/update_judul_jenis_ajax"); ?>', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    if (window.mhsDataMap && window.mhsDataMap[nim]) {
+                        window.mhsDataMap[nim].status_judul = 'Pending';
+                        window.mhsDataMap[nim].catatan_judul = '';
+                        window.mhsDataMap[nim].status_jenis_ta = 'Pending';
+                        window.mhsDataMap[nim].catatan_jenis_ta = '';
+                    }
+                    finalizeDocResetUI(nim, docKey, 'Usulan Judul & Skema TA');
+                } else {
+                    showDWToast(res.message || 'Gagal mereset status usulan judul.', false);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showDWToast('Terjadi kesalahan jaringan.', false);
+            });
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('nim', nim);
+        formData.append('file_type', docKey);
+        formData.append('status', 'Pending');
+        formData.append('comment', '');
+
+        fetch('<?= site_url("dosenwali/update_file_approval_ajax"); ?>', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(res => {
+            if (res.success) {
+                if (window.mhsDataMap && window.mhsDataMap[nim]) {
+                    window.mhsDataMap[nim][`status_file_${docKey}`] = 'Pending';
+                    window.mhsDataMap[nim][`catatan_file_${docKey}`] = '';
+                    if (window.mhsDataMap[nim].berkas_map && window.mhsDataMap[nim].berkas_map[docKey]) {
+                        window.mhsDataMap[nim].berkas_map[docKey].status_verifikasi = 'Pending';
+                        window.mhsDataMap[nim].berkas_map[docKey].catatan = '';
+                    }
+                    if (window.mhsDataMap[nim].files && window.mhsDataMap[nim].files[docKey]) {
+                        window.mhsDataMap[nim].files[docKey].status = 'Pending';
+                        window.mhsDataMap[nim].files[docKey].note = '';
+                    }
+                }
+                finalizeDocResetUI(nim, docKey, docTitle || docKey.toUpperCase());
+            } else {
+                showDWToast(res.message || 'Gagal mereset status berkas.', false);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showDWToast('Terjadi kesalahan jaringan.', false);
+        });
+    }
+
+    function finalizeDocResetUI(nim, docKey, docTitle) {
+        // 1. Update status badge di tabel utama
+        const tableBadge = document.getElementById(`badge_doc_${nim}_${docKey}`);
+        if (tableBadge) {
+            tableBadge.className = 'px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60';
+        }
+        updateTableBerkasSummaryBadges(nim);
+
+        // 2. Kosongkan input textarea catatan penolakan jika sedang ada preview yang terbuka
+        const inputCatatan = document.getElementById(`inputPreviewCatatan_${nim}_${docKey}`);
+        if (inputCatatan) inputCatatan.value = '';
+        const rejectBox = document.getElementById(`previewRejectBox_${nim}_${docKey}`);
+        if (rejectBox) rejectBox.classList.add('hidden');
+
+        // 3. Render ulang tampilan kartu mahasiswa & preview
+        refreshLihatBerkasView();
+
+        // 4. Trigger polling refresh
+        if (typeof pollRealtimeData === 'function') {
+            lastDataHash = '';
+            pollRealtimeData();
+        }
+
+        showDWToast(`Status ${docTitle} berhasil di-reset kembali ke Menunggu!`, true);
+    }
+
+    function checkAndAutoCloseIfDone(nim) {
+        if (!nim) return false;
+        nim = String(nim).trim();
+        const docList = getDocList();
+        let pendingCount = 0;
+        docList.forEach(d => {
+            if (getMhsDocStatus(nim, d.key) === 'Pending') {
+                pendingCount++;
+            }
+        });
+
+        if (pendingCount === 0) {
+            setTimeout(() => {
+                removeStudentFromLihatBerkas(nim);
+                showDWToast(`Semua berkas mahasiswa (${nim}) telah selesai diverifikasi (tidak ada yang menunggu). Card otomatis ditutup.`, true);
+            }, 300);
+            return true;
+        }
+        return false;
+    }
+
     function submitPreviewDocApproval(nim, docKey, status) {
         console.log('[DW] submitPreviewDocApproval DIPANGGIL:', nim, docKey, status);
         if (isMhsStageLocked(nim)) {
@@ -4582,6 +4988,7 @@
                     }
 
                     showDWToast(status === 'Approved' ? `Usulan Judul & Skema TA disetujui!` : `Catatan revisi Usulan Judul berhasil dikirim!`, true);
+                    checkAndAutoCloseIfDone(nim);
                 } else {
                     showDWToast(res.message || 'Gagal memperbarui status Usulan Judul.', false);
                 }
@@ -4664,6 +5071,7 @@
 
                 const docTitle = docKey.toUpperCase();
                 showDWToast((status === 'Approved') ? `Berkas ${docTitle} disetujui (Valid)!` : `Catatan revisi berkas ${docTitle} berhasil dikirim!`, true);
+                checkAndAutoCloseIfDone(nim);
             } else {
                 showDWToast(res.message || 'Gagal memperbarui status berkas.', false);
             }
@@ -4733,9 +5141,8 @@
                     window.mhsDataMap[nim].current_stage = 'Dosen Wali (Revisi)';
                 }
 
-                // Tutup semua tab preview berkas milik mahasiswa ini jika ada
-                window.activePreviews = (window.activePreviews || []).filter(p => String(p.nim).trim() !== String(nim).trim());
-                refreshLihatBerkasView();
+                // Tutup card dan semua tab preview berkas milik mahasiswa ini
+                removeStudentFromLihatBerkas(nim);
                 updateTableBerkasSummaryBadges(nim);
                 showDWToast(`Catatan revisi pendaftaran mahasiswa ${nim} berhasil dikirim!`, true);
 
@@ -4835,9 +5242,8 @@
                     });
                 }
 
-                // Tutup semua tab preview berkas milik mahasiswa ini jika ada
-                window.activePreviews = (window.activePreviews || []).filter(p => String(p.nim).trim() !== String(nim).trim());
-                refreshLihatBerkasView();
+                // Tutup card dan semua tab preview berkas milik mahasiswa ini
+                removeStudentFromLihatBerkas(nim);
                 updateTableBerkasSummaryBadges(nim);
 
                 showDWToast(`Pendaftaran ${fullName} (${nim}) berhasil disetujui!`, true);
@@ -4969,10 +5375,14 @@
     window.openStudentBerkasPreview = openStudentBerkasPreview;
     window.openQuickDocReview = openStudentBerkasPreview;
     window.updateTableBerkasSummaryBadges = updateTableBerkasSummaryBadges;
+    window.setCardDocFilter = setCardDocFilter;
     window.toggleStudentRejectBox = toggleStudentRejectBox;
     window.setStudentPresetNote = setStudentPresetNote;
     window.submitStudentRejectWali = submitStudentRejectWali;
     window.confirmApproveStudentWali = confirmApproveStudentWali;
+    window.checkAndAutoCloseIfDone = checkAndAutoCloseIfDone;
+    window.resetDocApproval = resetDocApproval;
+    window.executeDocReset = executeDocReset;
 
     // Keyboard ESC Shortcut untuk menutup modal & panel
     document.addEventListener('keydown', (e) => {

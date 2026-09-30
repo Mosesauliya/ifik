@@ -255,11 +255,30 @@ class Mahasiswa_model extends CI_Model {
                         ->get('file_pendaftaran')->row_array();
                 }
 
+                $is_file_changed = ($exFp && !empty($exFp['file']) && $exFp['file'] !== $relPath);
+                $prev_dw_st = $exFp['status_doswal'] ?? '';
+                $prev_la_st = $exFp['status_adminlaa'] ?? '';
+
                 $fpData = [];
                 if (in_array('file',            $fp_fields)) $fpData['file']            = $relPath;
-                if (in_array('status_doswal',   $fp_fields)) $fpData['status_doswal']   = 'Pending';
-                if (in_array('status_adminlaa', $fp_fields)) $fpData['status_adminlaa'] = 'Pending';
                 if (in_array('date_edit',       $fp_fields)) $fpData['date_edit']       = date('Y-m-d H:i:s');
+
+                if (in_array('status_doswal', $fp_fields)) {
+                    if ($is_file_changed || $prev_dw_st === 'Rejected' || empty($prev_dw_st)) {
+                        $fpData['status_doswal'] = 'Pending';
+                        if (in_array('komentar', $fp_fields)) $fpData['komentar'] = '';
+                    } else {
+                        $fpData['status_doswal'] = $prev_dw_st;
+                    }
+                }
+
+                if (in_array('status_adminlaa', $fp_fields)) {
+                    if ($is_file_changed || $prev_la_st === 'Rejected' || $prev_la_st === 'Invalid' || empty($prev_la_st)) {
+                        $fpData['status_adminlaa'] = 'Pending';
+                    } else {
+                        $fpData['status_adminlaa'] = $prev_la_st;
+                    }
+                }
 
                 if ($exFp) {
                     $this->db->where('id', $exFp['id'])->update('file_pendaftaran', $fpData);

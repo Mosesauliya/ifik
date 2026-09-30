@@ -19,7 +19,14 @@ class DosenWali extends CI_Controller {
     }
 
     private function _get_current_nip() {
-        return $this->session->userdata('nidn_nim') ?: ($this->session->userdata('nip') ?: ($this->session->userdata('nim') ?: '19850101'));
+        $userId = $this->session->userdata('user_id');
+        if ($userId && $this->db->table_exists('user')) {
+            $u = $this->db->select('nip, username')->get_where('user', ['id' => $userId])->row_array();
+            if ($u) {
+                return !empty($u['nip']) ? $u['nip'] : (!empty($u['username']) ? $u['username'] : '19850101');
+            }
+        }
+        return $this->session->userdata('nip') ?: ($this->session->userdata('nidn_nim') ?: ($this->session->userdata('nim') ?: '19850101'));
     }
 
     // Dashboard Dosen Wali: Daftar Mahasiswa Bimbingan Akademik
@@ -62,6 +69,8 @@ class DosenWali extends CI_Controller {
                 'email'                  => '-',
                 'no_hp'                  => '-',
                 'judul_1'                => 'Usulan Judul Tugas Akhir',
+                'judul_2'                => '',
+                'judul_3'                => '',
                 'judul_en'               => '',
                 'jenis_ta'               => 'Pengkaryaan',
                 'status_judul'           => 'Pending',
@@ -425,6 +434,8 @@ class DosenWali extends CI_Controller {
                 'konsentrasi'            => $m['mhs_konsentrasi'] ?? '',
                 'judul'                  => $m['judul_1'] ?? '',
                 'judul_1'                => $m['judul_1'] ?? '',
+                'judul_2'                => $m['judul_2'] ?? '',
+                'judul_3'                => $m['judul_3'] ?? '',
                 'judul_en'               => $m['judul_en'] ?? '',
                 'jenis_ta'               => $m['jenis_ta'] ?? '',
                 'status_judul'           => $m['status_judul'] ?? 'Pending',
@@ -507,7 +518,8 @@ class DosenWali extends CI_Controller {
                 'jenis_ta'             => htmlspecialchars($r['jenis_ta'] ?? 'Reguler'),
                 'status_jenis_ta'      => $st_jenis,
                 'catatan_jenis_ta'     => ($st_jenis === 'Rejected') ? htmlspecialchars($r['catatan_jenis_ta'] ?? '') : '',
-                'judul_1'              => htmlspecialchars($r['judul_1'] ?? ''),
+                'judul'                => htmlspecialchars($r['judul'] ?? ($r['judul_1'] ?? '')),
+                'judul_1'              => htmlspecialchars($r['judul_1'] ?? ($r['judul'] ?? '')),
                 'judul_2'              => htmlspecialchars($r['judul_2'] ?? ''),
                 'judul_3'              => htmlspecialchars($r['judul_3'] ?? ''),
                 'judul_en'             => htmlspecialchars($r['judul_en'] ?? ''),
@@ -524,6 +536,7 @@ class DosenWali extends CI_Controller {
                 'status_file_pernyataan'=> $r['status_file_pernyataan'] ?? 'Pending',
                 'file_bebas_lab'       => $r['file_bebas_lab'] ?? '',
                 'status_file_bebas_lab'=> $r['status_file_bebas_lab'] ?? 'Pending',
+                'berkas_map'           => $r['berkas_map'] ?? [],
                 'files' => (function() use ($r, $resolve_pdf_url) {
                     $ci =& get_instance();
                     $ci->load->model('AdminLayanan_model');

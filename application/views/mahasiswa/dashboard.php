@@ -846,9 +846,6 @@
                                         <a href="<?= site_url('mahasiswa/detail_pendaftaran'); ?>" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-xs font-bold transition shadow-2xs hover:scale-105 active:scale-95" title="Lihat Detail Lengkap Pengajuan Tugas Akhir">
                                             <i class="bi bi-eye-fill text-xs"></i> <span>Detail</span>
                                         </a>
-                                        <button type="button" onclick="openResetModal()" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition cursor-pointer shadow-2xs hover:scale-105 active:scale-95" title="Reset / Batalkan Pengajuan">
-                                            <i class="bi bi-arrow-counterclockwise text-xs"></i> <span>Reset</span>
-                                        </button>
                                     </div>
                                 </td>
                             </tr>

@@ -930,11 +930,18 @@
                     <?php foreach ($ruangan as $r): ?>
                         <tr>
                             <td style="text-align: center;">
-                                <?php if (isset($r->foto) && !empty($r->foto)): ?>
-                                    <img src="<?= base_url($r->foto) ?>" alt="Foto" class="room-thumbnail">
-                                <?php else: ?>
-                                    <div class="room-thumbnail" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🖼️</div>
-                                <?php endif; ?>
+                                <div style="position: relative; display: inline-block;">
+                                    <?php if (isset($r->foto) && !empty($r->foto)): ?>
+                                        <img src="<?= base_url($r->foto) ?>" alt="Foto" class="room-thumbnail">
+                                        <?php if (!empty($r->all_foto) && count($r->all_foto) > 1): ?>
+                                            <span style="position: absolute; bottom: -3px; right: -3px; background: rgba(15,23,42,0.9); color: #fff; font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.2);" title="<?= count($r->all_foto) ?> Foto Ruangan Tersimpan">
+                                                +<?= count($r->all_foto) ?> 📷
+                                            </span>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <div class="room-thumbnail" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🖼️</div>
+                                    <?php endif; ?>
+                                </div>
                             </td>
                             <td>
                                 <div style="font-weight: 800; font-size: 0.92rem; color: #0f172a; line-height: 1.3;"><?= htmlspecialchars(isset($r->nama_ruangan) ? $r->nama_ruangan : '') ?></div>
@@ -1110,23 +1117,27 @@
 
                     <!-- Section 2: Upload Files (Foto & 3D Model .glb/.fbx) with Drag & Drop -->
                     <div class="form-grid-2">
-                        <!-- Foto Utama Dropzone -->
+                        <!-- Foto Ruangan (Multi-Foto) Dropzone -->
                         <div>
-                            <label style="font-size:0.78rem; font-weight:800; color:#334155; text-transform:uppercase; display:block; margin-bottom:6px;">📷 Foto Utama Ruangan</label>
+                            <label style="font-size:0.78rem; font-weight:800; color:#334155; text-transform:uppercase; display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <span>📷 Foto Ruangan / Fasilitas</span>
+                                <span style="font-size:0.7rem; color:#ea580c; text-transform:none; font-weight:700;">(Bisa pilih banyak foto)</span>
+                            </label>
                             <div class="upload-dropzone" id="dropzoneFoto">
-                                <input type="file" id="inputFoto" name="foto" accept="image/png, image/jpeg, image/webp">
+                                <input type="file" id="inputFoto" name="foto[]" multiple accept="image/png, image/jpeg, image/webp">
                                 <div class="dropzone-icon">🖼️</div>
-                                <div class="dropzone-title">Tarik &amp; lepas foto ke sini</div>
-                                <div class="dropzone-sub">atau <span>pilih file</span> dari komputer</div>
-                                <span class="hint" style="margin-top:4px;">JPG, PNG, WEBP (Maks 5MB)</span>
+                                <div class="dropzone-title">Tarik &amp; lepas satu / banyak foto ke sini</div>
+                                <div class="dropzone-sub">atau <span>pilih file</span> dari komputer (multi-select)</div>
+                                <span class="hint" style="margin-top:4px;">JPG, PNG, WEBP (Bisa unggah banyak foto, maks 10MB/foto)</span>
                             </div>
-                            <div id="previewFotoBox" class="dropzone-preview" style="display:none;">
-                                <img id="previewFotoImg" src="" alt="Preview Foto">
-                                <div class="preview-info">
-                                    <span id="previewFotoText" class="preview-name">foto.jpg</span>
-                                    <span id="previewFotoSize" class="preview-size">File Siap</span>
+                            
+                            <!-- Multi-photo Gallery Preview Grid -->
+                            <div id="fotoGalleryGrid" style="display:none; margin-top:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:10px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid #e2e8f0;">
+                                    <span id="fotoCountBadge" style="font-size:0.75rem; font-weight:800; color:#1e293b;">0 Foto</span>
+                                    <button type="button" onclick="clearAllPhotos(event)" style="font-size:0.7rem; font-weight:700; color:#ef4444; background:none; border:none; cursor:pointer; padding:2px 6px; border-radius:4px;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Hapus Semua</button>
                                 </div>
-                                <button type="button" class="btn-remove-file" onclick="clearFileFoto(event)" title="Hapus berkas foto">&times;</button>
+                                <div id="fotoThumbnailsList" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(72px, 1fr)); gap:8px;"></div>
                             </div>
                         </div>
 
@@ -1390,14 +1401,121 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
-        function clearFileFoto(e) {
+        let currentNewPhotoFiles = [];
+        let currentExistingPhotos = [];
+
+        function clearAllPhotos(e) {
             if (e) { e.preventDefault(); e.stopPropagation(); }
+            currentExistingPhotos = [];
+            currentNewPhotoFiles = [];
             const input = document.getElementById('inputFoto');
             if (input) input.value = '';
-            const previewBox = document.getElementById('previewFotoBox');
-            if (previewBox) previewBox.style.display = 'none';
-            const previewImg = document.getElementById('previewFotoImg');
-            if (previewImg) previewImg.src = '';
+            renderPhotoGallery();
+        }
+
+        function clearFileFoto(e) {
+            clearAllPhotos(e);
+        }
+
+        function removeExistingPhoto(index, e) {
+            if (e) { e.preventDefault(); e.stopPropagation(); }
+            currentExistingPhotos.splice(index, 1);
+            renderPhotoGallery();
+        }
+
+        function removeNewPhotoFile(index, e) {
+            if (e) { e.preventDefault(); e.stopPropagation(); }
+            currentNewPhotoFiles.splice(index, 1);
+            renderPhotoGallery();
+        }
+
+        function handleFotoFiles(fileList) {
+            if (!fileList || fileList.length === 0) return;
+            const maxMb = 10;
+            const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+            Array.from(fileList).forEach(file => {
+                if (file.size > maxMb * 1024 * 1024) {
+                    Swal.fire('File Terlalu Besar', `Ukuran foto "${file.name}" (${formatFileSize(file.size)}) melebihi batas ${maxMb}MB.`, 'warning');
+                    return;
+                }
+                const ext = file.name.split('.').pop().toLowerCase();
+                if (!validTypes.includes(file.type) && !['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
+                    Swal.fire('Format Tidak Didukung', `File "${file.name}" bukan format gambar yang didukung (JPG, PNG, WEBP).`, 'warning');
+                    return;
+                }
+
+                const exists = currentNewPhotoFiles.some(f => f.name === file.name && f.size === file.size);
+                if (!exists) {
+                    currentNewPhotoFiles.push(file);
+                }
+            });
+
+            renderPhotoGallery();
+        }
+
+        function renderPhotoGallery() {
+            const galleryGrid = document.getElementById('fotoGalleryGrid');
+            const thumbList = document.getElementById('fotoThumbnailsList');
+            const countBadge = document.getElementById('fotoCountBadge');
+            if (!galleryGrid || !thumbList) return;
+
+            thumbList.innerHTML = '';
+            const totalCount = currentExistingPhotos.length + currentNewPhotoFiles.length;
+
+            if (totalCount === 0) {
+                galleryGrid.style.display = 'none';
+                return;
+            }
+
+            galleryGrid.style.display = 'block';
+            if (countBadge) {
+                const existCount = currentExistingPhotos.length;
+                const newCount = currentNewPhotoFiles.length;
+                let text = `${totalCount} Foto Terpilih`;
+                if (existCount > 0 && newCount > 0) {
+                    text += ` (${existCount} tersimpan, ${newCount} baru)`;
+                } else if (newCount > 0) {
+                    text += ` (${newCount} foto baru)`;
+                }
+                countBadge.innerText = text;
+            }
+
+            let displayIndex = 0;
+
+            // Render existing photos
+            currentExistingPhotos.forEach((path, idx) => {
+                const item = document.createElement('div');
+                item.style.cssText = 'position:relative; width:100%; aspect-ratio:1/1; border-radius:10px; overflow:hidden; border:1px solid #e2e8f0; background:#f8fafc; box-shadow: 0 1px 3px rgba(0,0,0,0.06);';
+                
+                const fullUrl = path.startsWith('http') ? path : `<?= base_url() ?>${path}`;
+                const isMain = (displayIndex === 0);
+
+                item.innerHTML = `
+                    <img src="${fullUrl}" style="width:100%; height:100%; object-fit:cover; display:block;" alt="Foto Ruangan">
+                    ${isMain ? '<span style="position:absolute; top:4px; left:4px; background:#ea580c; color:#fff; font-size:8px; font-weight:800; padding:1px 5px; border-radius:4px; box-shadow:0 1px 2px rgba(0,0,0,0.3); z-index:2;">Utama</span>' : ''}
+                    <button type="button" onclick="removeExistingPhoto(${idx}, event)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(239,68,68,0.9); color:#fff; border:none; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:bold; cursor:pointer; line-height:1; box-shadow:0 1px 2px rgba(0,0,0,0.3); z-index:2;" title="Hapus foto ini">&times;</button>
+                `;
+                thumbList.appendChild(item);
+                displayIndex++;
+            });
+
+            // Render new selected files
+            currentNewPhotoFiles.forEach((file, idx) => {
+                const item = document.createElement('div');
+                item.style.cssText = 'position:relative; width:100%; aspect-ratio:1/1; border-radius:10px; overflow:hidden; border:1.5px dashed #ea580c; background:#fff7ed; box-shadow: 0 1px 3px rgba(0,0,0,0.06);';
+
+                const isMain = (displayIndex === 0);
+                const objUrl = URL.createObjectURL(file);
+
+                item.innerHTML = `
+                    <img src="${objUrl}" style="width:100%; height:100%; object-fit:cover; display:block;" alt="${file.name}">
+                    ${isMain ? '<span style="position:absolute; top:4px; left:4px; background:#ea580c; color:#fff; font-size:8px; font-weight:800; padding:1px 5px; border-radius:4px; box-shadow:0 1px 2px rgba(0,0,0,0.3); z-index:2;">Utama</span>' : '<span style="position:absolute; top:4px; left:4px; background:#0284c7; color:#fff; font-size:8px; font-weight:800; padding:1px 5px; border-radius:4px; box-shadow:0 1px 2px rgba(0,0,0,0.3); z-index:2;">Baru</span>'}
+                    <button type="button" onclick="removeNewPhotoFile(${idx}, event)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(239,68,68,0.9); color:#fff; border:none; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:bold; cursor:pointer; line-height:1; box-shadow:0 1px 2px rgba(0,0,0,0.3); z-index:2;" title="Hapus foto ini">&times;</button>
+                `;
+                thumbList.appendChild(item);
+                displayIndex++;
+            });
         }
 
         function clearFileModel(e) {
@@ -1406,33 +1524,6 @@
             if (input) input.value = '';
             const previewBox = document.getElementById('previewModelBox');
             if (previewBox) previewBox.style.display = 'none';
-        }
-
-        function handleFotoFile(file) {
-            if (!file) return;
-            const maxMb = 5;
-            if (file.size > maxMb * 1024 * 1024) {
-                Swal.fire('File Terlalu Besar', `Ukuran foto (${formatFileSize(file.size)}) melebihi batas maksimum ${maxMb}MB.`, 'warning');
-                clearFileFoto();
-                return;
-            }
-
-            const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
-            const ext = file.name.split('.').pop().toLowerCase();
-            if (!validTypes.includes(file.type) && !['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
-                Swal.fire('Format Tidak Didukung', 'Harap unggah file foto dengan format JPG, PNG, atau WEBP.', 'warning');
-                clearFileFoto();
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('previewFotoImg').src = e.target.result;
-                document.getElementById('previewFotoText').innerText = file.name;
-                document.getElementById('previewFotoSize').innerText = formatFileSize(file.size);
-                document.getElementById('previewFotoBox').style.display = 'flex';
-            };
-            reader.readAsDataURL(file);
         }
 
         function handleModelFile(file) {
@@ -1481,15 +1572,18 @@
                 });
 
                 dropFoto.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropFoto.classList.remove('dragover');
                     if (e.dataTransfer && e.dataTransfer.files.length > 0) {
-                        inputFoto.files = e.dataTransfer.files;
-                        handleFotoFile(inputFoto.files[0]);
+                        handleFotoFiles(e.dataTransfer.files);
                     }
                 });
 
                 inputFoto.addEventListener('change', () => {
                     if (inputFoto.files && inputFoto.files.length > 0) {
-                        handleFotoFile(inputFoto.files[0]);
+                        handleFotoFiles(inputFoto.files);
+                        inputFoto.value = '';
                     }
                 });
             }
@@ -1826,7 +1920,7 @@
             renderRoomTags();
             renderRoomPillsGrid();
             switchFloorTab('all');
-            clearFileFoto();
+            clearAllPhotos();
             clearFileModel();
             document.getElementById('modalRuangan').classList.add('active');
         }
@@ -1864,17 +1958,15 @@
             document.getElementById('inputSpesifikasi').value = data.spesifikasi_fasilitas || '';
             document.getElementById('inputTataTertib').value = data.tata_tertib || '';
 
-            // Render existing Foto indicator
-            if (data.foto) {
-                const fotoPath = data.foto.startsWith('http') ? data.foto : `<?= base_url() ?>${data.foto}`;
-                document.getElementById('previewFotoBox').style.display = 'flex';
-                document.getElementById('previewFotoImg').src = fotoPath;
-                document.getElementById('previewFotoText').innerText = data.foto.split('/').pop();
-                const fotoSizeEl = document.getElementById('previewFotoSize');
-                if (fotoSizeEl) fotoSizeEl.innerText = 'Foto Terpasang';
-            } else {
-                clearFileFoto();
+            // Render existing multi-foto ruangan
+            currentNewPhotoFiles = [];
+            currentExistingPhotos = [];
+            if (data.all_foto && Array.isArray(data.all_foto) && data.all_foto.length > 0) {
+                currentExistingPhotos = [...data.all_foto];
+            } else if (data.foto) {
+                currentExistingPhotos = data.foto.split(',').map(s => s.trim()).filter(Boolean);
             }
+            renderPhotoGallery();
 
             // Render existing 3D Model indicator
             if (data.model_3d) {
@@ -1927,6 +2019,19 @@
 
             const form = document.getElementById('formRuangan');
             const formData = new FormData(form);
+
+            // Re-assign multiple photo files and existing photo paths
+            formData.delete('foto[]');
+            formData.delete('foto');
+            currentNewPhotoFiles.forEach(file => {
+                formData.append('foto[]', file);
+            });
+            formData.delete('existing_foto[]');
+            formData.delete('existing_foto');
+            currentExistingPhotos.forEach(path => {
+                formData.append('existing_foto[]', path);
+            });
+
             const targetUrl = isEditMode ? '<?= base_url('kelolaruangan/update') ?>' : '<?= base_url('kelolaruangan/tambah') ?>';
 
             Swal.fire({

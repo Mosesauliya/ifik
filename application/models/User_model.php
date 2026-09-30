@@ -22,7 +22,12 @@ class User_model extends CI_Model {
     {
         if (!$user) return null;
         if (!isset($user->nidn_nim)) {
-            $user->nidn_nim = !empty($user->nim) ? $user->nim : (!empty($user->nip) ? $user->nip : '');
+            $isStudent = (isset($user->role_id) && (int)$user->role_id === 4);
+            if ($isStudent) {
+                $user->nidn_nim = !empty($user->nim) ? $user->nim : (!empty($user->username) ? $user->username : '');
+            } else {
+                $user->nidn_nim = !empty($user->nip) ? $user->nip : (!empty($user->username) ? $user->username : (!empty($user->nim) ? $user->nim : ''));
+            }
         }
         if (!isset($user->nim)) {
             $user->nim = $user->nidn_nim;

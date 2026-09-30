@@ -1651,5 +1651,7 @@
             textarea.style.overflowY = textarea.scrollHeight > 120 ? 'auto' : 'hidden';
         }
     </script>
+    <!-- Global Custom Circle Cursor -->
+    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>
