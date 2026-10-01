@@ -240,6 +240,7 @@ class Mahasiswa_model extends CI_Model {
                 'transkrip'  => $data_ta['file_transkrip']  ?? null,
                 'pernyataan' => $data_ta['file_pernyataan'] ?? null,
                 'bebas_lab'  => $data_ta['file_bebas_lab']  ?? null,
+                'bap'        => $data_ta['file_bap']        ?? null,
             ];
             $fp_fields = $this->db->list_fields('file_pendaftaran');
 
@@ -552,6 +553,19 @@ class Mahasiswa_model extends CI_Model {
             'updated_at'            => $pt_data['updated_at'] ?? ($guidance['date'] ?? null)
         ), $files_result);
 
+        // =========================================================
+        // BAP PUBLISHED MARKER
+        // Cek apakah Penguji 1 sudah mempublikasikan BAP.
+        // Reuse $files (sudah difetch di atas) — tanpa query baru.
+        // =========================================================
+        if (isset($files['bap']) && !empty($files['bap']['file'])) {
+            $res['bap_published']    = true;
+            $res['bap_published_at'] = $files['bap']['date_edit'] ?? ($files['bap']['date'] ?? null);
+        } else {
+            $res['bap_published']    = false;
+            $res['bap_published_at'] = null;
+        }
+
         return $res;
     }
 
@@ -830,54 +844,54 @@ class Mahasiswa_model extends CI_Model {
         return $val;
     }
 
-public function get_students_by_dosen($dosen_id, $posisi = 1) {
-    if (!$this->db->table_exists('thesis_lecturers')) return [];
+    public function get_students_by_dosen($dosen_id, $posisi = 1) {
+        if (!$this->db->table_exists('thesis_lecturers')) return [];
 
-    $role_id = (int) $this->session->userdata('role_id');
+        $role_id = (int) $this->session->userdata('role_id');
 
-    $dosen_id_val = '';
-    $nip_dosen    = '';
-    $name_dosen   = '';
-    if ($this->db->table_exists('user')) {
-        $u = $this->db->get_where('user', ['id' => $dosen_id])->row_array();
-        if ($u) {
-            $dosen_id_val = $u['id']   ?? '';
-            $nip_dosen    = $u['nip']  ?? '';
-            $name_dosen   = $u['name'] ?? '';
+        $dosen_id_val = '';
+        $nip_dosen    = '';
+        $name_dosen   = '';
+        if ($this->db->table_exists('user')) {
+            $u = $this->db->get_where('user', ['id' => $dosen_id])->row_array();
+            if ($u) {
+                $dosen_id_val = $u['id']   ?? '';
+                $nip_dosen    = $u['nip']  ?? '';
+                $name_dosen   = $u['name'] ?? '';
+            }
         }
+
+        $this->db->select("
+            COALESCE(u.nim, g.id_mhs)   AS nim,
+            g.judul_1                    AS judul,
+            g.peminatan                  AS konsentrasi_dkv,
+            COALESCE(u.name, m.nama_depan, g.id_mhs) AS nama_mahasiswa
+        ", FALSE);
+        $this->db->from('thesis_lecturers tl');
+        $this->db->join('guidance g',  'g.id = tl.id_guidance', 'inner');
+        $this->db->join('user u',      '(u.id = g.id_mhs OR u.nim = g.id_mhs)', 'left');
+        $this->db->join('mahasiswa m', 'm.nim = u.nim', 'left');
+
+
+        if ($role_id !== 1) {
+            $col_map = [
+                1 => 'tl.dosen_pembimbing1',
+                2 => 'tl.dosen_pembimbing2',
+                3 => 'tl.dosen_penguji1',
+                4 => 'tl.dosen_penguji2',
+            ];
+            $col = $col_map[$posisi] ?? $col_map[1];
+
+            $this->db->group_start();
+            if ($dosen_id_val) $this->db->or_where($col, $dosen_id_val);
+            if ($nip_dosen)    $this->db->or_where($col, $nip_dosen);
+            if ($name_dosen)   $this->db->or_like($col, $name_dosen);
+            $this->db->group_end();
+        }
+
+        return $this->db->get()->result_array();
     }
 
-    $this->db->select("
-        COALESCE(u.nim, g.id_mhs)   AS nim,
-        g.judul_1                    AS judul,
-        g.peminatan                  AS konsentrasi_dkv,
-        COALESCE(u.name, m.nama_depan, g.id_mhs) AS nama_mahasiswa
-    ", FALSE);
-    $this->db->from('thesis_lecturers tl');
-    $this->db->join('guidance g',  'g.id = tl.id_guidance', 'inner');
-    $this->db->join('user u',      '(u.id = g.id_mhs OR u.nim = g.id_mhs)', 'left');
-    $this->db->join('mahasiswa m', 'm.nim = u.nim', 'left');
-
-
-    if ($role_id !== 1) {
-        $col_map = [
-            1 => 'tl.dosen_pembimbing1',
-            2 => 'tl.dosen_pembimbing2',
-            3 => 'tl.dosen_penguji1',
-            4 => 'tl.dosen_penguji2',
-        ];
-        $col = $col_map[$posisi] ?? $col_map[1];
-
-        $this->db->group_start();
-        if ($dosen_id_val) $this->db->or_where($col, $dosen_id_val);
-        if ($nip_dosen)    $this->db->or_where($col, $nip_dosen);
-        if ($name_dosen)   $this->db->or_like($col, $name_dosen);
-        $this->db->group_end();
-    }
-
-    return $this->db->get()->result_array();
-
-}
     public function get_preview_by_id($id_preview)
     {
         if (empty($id_preview)) return null;
