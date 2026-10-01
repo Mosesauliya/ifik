@@ -4465,24 +4465,59 @@
             document.getElementById('detailBookingModal').classList.remove('show');
         }
 
-        function reloadBookingData() {
+        let isSyncingBookings = false;
+        function reloadBookingData(silent = true) {
+            if (isSyncingBookings || !window.getUpdatedBookingsUrl) return;
+            isSyncingBookings = true;
+
             fetch(window.getUpdatedBookingsUrl)
             .then(r => r.json())
             .then(data => {
-                window.bookingData = data;
-                applyMultiFilters();
+                isSyncingBookings = false;
+                if (!Array.isArray(data)) return;
 
-                // If modal is open, refresh daily list and active booking
-                if (document.getElementById('detailBookingModal').classList.contains('show') && currentModalTargetDate) {
-                    activeDailyBookings = window.bookingData.filter(b => b.tanggal_mulai <= currentModalTargetDate && b.tanggal_selesai >= currentModalTargetDate);
-                    activeDailyBookings.sort((a, b) => (a.jam_mulai || '').localeCompare(b.jam_mulai || ''));
-                    filterDailyModalList();
-                    if (selectedDailyBookingId) {
-                        selectBookingInDailyModal(selectedDailyBookingId);
+                // Smart hash compare to avoid unnecessary DOM re-renders if data is identical
+                const currentHash = JSON.stringify(window.bookingData || []);
+                const newHash = JSON.stringify(data);
+
+                if (currentHash !== newHash) {
+                    window.bookingData = data;
+                    applyMultiFilters();
+
+                    // If modal is open, refresh daily list and active booking smoothly
+                    const modalEl = document.getElementById('detailBookingModal');
+                    if (modalEl && modalEl.classList.contains('show') && currentModalTargetDate) {
+                        activeDailyBookings = window.bookingData.filter(b => b.tanggal_mulai <= currentModalTargetDate && b.tanggal_selesai >= currentModalTargetDate);
+                        activeDailyBookings.sort((a, b) => (a.jam_mulai || '').localeCompare(b.jam_mulai || ''));
+                        filterDailyModalList();
+                        if (selectedDailyBookingId) {
+                            selectBookingInDailyModal(selectedDailyBookingId);
+                        }
                     }
                 }
-            }).catch(e => console.error(e));
+            })
+            .catch(e => {
+                isSyncingBookings = false;
+                if (!silent) console.error('Error syncing bookings:', e);
+            });
         }
+
+        // Live Realtime Auto-Sync: Poll in background every 8 seconds when tab is active
+        setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                reloadBookingData(true);
+            }
+        }, 8000);
+
+        // Instant Auto-Sync whenever user switches back / focuses the tab
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                reloadBookingData(true);
+            }
+        });
+        window.addEventListener('focus', () => {
+            reloadBookingData(true);
+        });
 
         function nextWeek() { currentWeekStart.setDate(currentWeekStart.getDate() + 7); renderCalendar(); applyMultiFilters(); }
         function prevWeek() { currentWeekStart.setDate(currentWeekStart.getDate() - 7); renderCalendar(); applyMultiFilters(); }
