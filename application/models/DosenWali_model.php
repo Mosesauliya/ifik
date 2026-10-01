@@ -15,11 +15,17 @@ class DosenWali_model extends CI_Model {
     public function resolve_target_mhs_ids($nim) {
         if (empty($nim)) return [];
         $u_id = null;
-        if ($this->db->table_exists('user')) {
-            $u = $this->db->where('nim', $nim)->or_where('username', $nim)->get('user')->row_array();
+        $user_tbl = $this->db->table_exists('user') ? 'user' : ($this->db->table_exists('users') ? 'users' : null);
+        if ($user_tbl) {
+            $this->db->group_start();
+            if ($this->db->field_exists('nim', $user_tbl)) $this->db->where('nim', $nim);
+            if ($this->db->field_exists('nidn_nim', $user_tbl)) $this->db->or_where('nidn_nim', $nim);
+            if ($this->db->field_exists('username', $user_tbl)) $this->db->or_where('username', $nim);
+            $this->db->group_end();
+            $u = $this->db->get($user_tbl)->row_array();
             if ($u && !empty($u['id'])) $u_id = $u['id'];
         }
-        return array_values(array_unique(array_filter([$u_id, 'usr_mhs_' . $nim, 'mhs_' . $nim, $nim])));
+        return array_values(array_unique(array_filter([$u_id, $nim])));
     }
 
     // Update Keputusan Usulan Judul TA (Status & Saran/Catatan Revisi)
@@ -729,7 +735,7 @@ class DosenWali_model extends CI_Model {
             if (!isset($grouped[$sNim])) {
                 $grouped[$sNim] = [
                     'nim'    => $sNim,
-                    'id_mhs' => $gIdMhs ?: ('usr_mhs_' . $sNim),
+                    'id_mhs' => $gIdMhs ?: $sNim,
                     'files'  => [],
                     'date'   => $gInfo['date'] ?? date('Y-m-d H:i:s')
                 ];
@@ -743,7 +749,7 @@ class DosenWali_model extends CI_Model {
             if (isset($pb_map[$sNim]) || isset($pt_map[$sNim])) {
                 $grouped[$sNim] = [
                     'nim'    => $sNim,
-                    'id_mhs' => $u['id'] ?? ('usr_mhs_' . $sNim),
+                    'id_mhs' => $u['id'] ?? $sNim,
                     'files'  => [],
                     'date'   => date('Y-m-d H:i:s')
                 ];
@@ -945,14 +951,13 @@ class DosenWali_model extends CI_Model {
         $user_tbl = $this->db->table_exists('user') ? 'user' : ($this->db->table_exists('users') ? 'users' : null);
         $user_row = null;
         if ($user_tbl) {
-            $user_row = $this->db->group_start()
-                ->where('id', 'usr_mhs_' . $nim)
-                ->or_where('id', $nim)
-                ->or_where('username', $nim)
-                ->or_where('nim', $nim)
-                ->group_end()
-                ->get($user_tbl)
-                ->row_array();
+            $this->db->group_start();
+            if ($this->db->field_exists('nim', $user_tbl)) $this->db->where('nim', $nim);
+            if ($this->db->field_exists('nidn_nim', $user_tbl)) $this->db->or_where('nidn_nim', $nim);
+            if ($this->db->field_exists('username', $user_tbl)) $this->db->or_where('username', $nim);
+            if ($this->db->field_exists('id', $user_tbl)) $this->db->or_where('id', $nim);
+            $this->db->group_end();
+            $user_row = $this->db->get($user_tbl)->row_array();
         }
 
         $mhs_tbl = $this->db->table_exists('mahasiswa') ? 'mahasiswa' : null;
@@ -961,7 +966,7 @@ class DosenWali_model extends CI_Model {
             $mhs_row = $this->db->get_where('mahasiswa', ['nim' => $nim])->row_array();
         }
 
-        $target_ids = array_values(array_unique(array_filter([$user_row['id'] ?? null, 'usr_mhs_' . $nim, 'mhs_' . $nim, $nim])));
+        $target_ids = array_values(array_unique(array_filter([$user_row['id'] ?? null, $nim])));
         $files = [];
         if ($this->db->table_exists('file_pendaftaran')) {
             $files = $this->db->where_in('id_mhs', $target_ids)->get('file_pendaftaran')->result_array();
@@ -1084,7 +1089,7 @@ class DosenWali_model extends CI_Model {
         $cur_stage = ($status_wali === 'Approved') ? 'Admin Layanan' : ($status_wali === 'Rejected' ? 'Dosen Wali (Ditolak)' : 'Dosen Wali');
 
         return [
-            'id'                     => 'usr_mhs_' . $nim,
+            'id'                     => $user_row['id'] ?? $nim,
             'nim'                    => $nim,
             'nama_depan'             => $namaMhs,
             'nama_belakang'          => '',
@@ -1132,7 +1137,7 @@ class DosenWali_model extends CI_Model {
         $ver = ($status === 'Approved') ? 'Approved' : (($status === 'Rejected') ? 'Rejected' : 'Pending');
 
         $target_ids = $this->resolve_target_mhs_ids($nim);
-        $u_id = !empty($target_ids) ? $target_ids[0] : ('usr_mhs_' . $nim);
+        $u_id = !empty($target_ids) ? $target_ids[0] : $nim;
 
         // Cari record yang cocok di file_pendaftaran
         $check = $this->db->where_in('id_mhs', $target_ids)
@@ -1150,7 +1155,7 @@ class DosenWali_model extends CI_Model {
                 ]);
         } else {
             $update = $this->db->insert('file_pendaftaran', [
-                'id_mhs'        => $u_id ?: ('usr_mhs_' . $nim),
+                'id_mhs'        => $u_id ?: $nim,
                 'nama'          => 'file_' . $file_type,
                 'file'          => $file_type . '_' . $nim . '.pdf',
                 'status_doswal' => $ver,

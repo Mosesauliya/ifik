@@ -24,10 +24,13 @@ class Mahasiswa extends CI_Controller {
 
     private function _get_current_nim() {
         $nim = $this->session->userdata('nim') ?: ($this->session->userdata('nidn_nim') ?: ($this->session->userdata('username') ?: ''));
-        if (empty($nim) && $this->session->userdata('user_id') && $this->db->table_exists('user')) {
-            $u = $this->db->select('nim, nidn_nim, username')->get_where('user', ['id' => $this->session->userdata('user_id')])->row_array();
-            if ($u) {
-                $nim = !empty($u['nim']) ? $u['nim'] : (!empty($u['nidn_nim']) ? $u['nidn_nim'] : ($u['username'] ?? ''));
+        if (empty($nim) && $this->session->userdata('user_id')) {
+            $user_tbl = $this->db->table_exists('user') ? 'user' : ($this->db->table_exists('users') ? 'users' : null);
+            if ($user_tbl) {
+                $u = $this->db->get_where($user_tbl, ['id' => $this->session->userdata('user_id')])->row_array();
+                if ($u) {
+                    $nim = !empty($u['nim']) ? $u['nim'] : (!empty($u['nidn_nim']) ? $u['nidn_nim'] : ($u['username'] ?? ''));
+                }
             }
         }
         return $nim;
@@ -37,14 +40,20 @@ class Mahasiswa extends CI_Controller {
         $userId = $this->session->userdata('user_id');
         if (!$userId) {
             $nim = $this->_get_current_nim();
-            if ($nim && $this->db->table_exists('user')) {
-                $u = $this->db->select('id')->where('nim', $nim)->or_where('nidn_nim', $nim)->or_where('username', $nim)->get('user')->row_array();
-                if ($u) {
+            $user_tbl = $this->db->table_exists('user') ? 'user' : ($this->db->table_exists('users') ? 'users' : null);
+            if ($nim && $user_tbl) {
+                $this->db->group_start();
+                if ($this->db->field_exists('nim', $user_tbl)) $this->db->where('nim', $nim);
+                if ($this->db->field_exists('nidn_nim', $user_tbl)) $this->db->or_where('nidn_nim', $nim);
+                if ($this->db->field_exists('username', $user_tbl)) $this->db->or_where('username', $nim);
+                $this->db->group_end();
+                $u = $this->db->select('id')->limit(1)->get($user_tbl)->row_array();
+                if ($u && !empty($u['id'])) {
                     $userId = $u['id'];
                 }
             }
         }
-        return $userId;
+        return $userId ? $userId : null;
     }
 
     private function _do_upload($field_name, $config) {
@@ -323,7 +332,7 @@ class Mahasiswa extends CI_Controller {
                     // 2. Simpan ke file_pendaftaran jika ada
                     if ($this->db->table_exists('file_pendaftaran')) {
                         $u_id = $this->_get_current_user_id();
-                        $target_ids = array_values(array_unique(array_filter([$u_id, 'usr_mhs_' . $nim, 'mhs_' . $nim, $nim])));
+                        $target_ids = array_values(array_unique(array_filter([$u_id, $nim])));
                         $update_fp = [
                             'file'            => 'uploads/persyaratan_ta/' . $new_file,
                             'status_adminlaa' => 'Pending',
@@ -336,7 +345,6 @@ class Mahasiswa extends CI_Controller {
 
                         $ex_fp = $this->db->group_start()
                             ->where_in('id_mhs', $target_ids)
-                            ->or_like('id_mhs', $nim)
                             ->group_end()
                             ->like('nama', $k)
                             ->get('file_pendaftaran')->row_array();
@@ -347,7 +355,7 @@ class Mahasiswa extends CI_Controller {
                             $fp_fields = $this->db->list_fields('file_pendaftaran');
                             $new_fp = $update_fp;
                             if (in_array('id', $fp_fields)) $new_fp['id'] = 'fp_' . $nim . '_' . $k;
-                            if (in_array('id_mhs', $fp_fields)) $new_fp['id_mhs'] = $u_id ?: ('usr_mhs_' . $nim);
+                            if (in_array('id_mhs', $fp_fields)) $new_fp['id_mhs'] = $u_id;
                             if (in_array('nama', $fp_fields)) $new_fp['nama'] = $k;
                             if (in_array('date', $fp_fields)) $new_fp['date'] = date('Y-m-d H:i:s');
                             $this->db->insert('file_pendaftaran', $new_fp);
@@ -390,7 +398,7 @@ class Mahasiswa extends CI_Controller {
                 $updated_data['catatan_judul'] = '';
                 if ($this->db->table_exists('guidance')) {
                     $u_id = $this->_get_current_user_id();
-                    $target_ids = array_values(array_unique(array_filter([$u_id, 'usr_mhs_' . $nim, 'mhs_' . $nim, $nim])));
+                    $target_ids = array_values(array_unique(array_filter([$u_id, $nim])));
                     $this->db->where_in('id_mhs', $target_ids)->update('guidance', [
                         'judul_1'    => $new_j,
                         'keterangan' => 'Pending',
@@ -407,7 +415,7 @@ class Mahasiswa extends CI_Controller {
             $updated_data['catatan_jenis_ta'] = '';
             if ($this->db->table_exists('guidance')) {
                 $u_id = $this->_get_current_user_id();
-                $target_ids = array_values(array_unique(array_filter([$u_id, 'usr_mhs_' . $nim, 'mhs_' . $nim, $nim])));
+                $target_ids = array_values(array_unique(array_filter([$u_id, $nim])));
                 $this->db->where_in('id_mhs', $target_ids)->update('guidance', [
                     'jenis_TA' => $new_jen
                 ]);
@@ -478,7 +486,7 @@ class Mahasiswa extends CI_Controller {
                 $updated_data['catatan_wali'] = '';
                 if ($this->db->table_exists('guidance')) {
                     $u_id = $this->_get_current_user_id();
-                    $target_ids = array_values(array_unique(array_filter([$u_id, 'usr_mhs_' . $nim, 'mhs_' . $nim, $nim])));
+                    $target_ids = array_values(array_unique(array_filter([$u_id, $nim])));
                     $this->db->where_in('id_mhs', $target_ids)->update('guidance', [
                         'komentar' => ''
                     ]);
@@ -881,8 +889,7 @@ class Mahasiswa extends CI_Controller {
                     $fp_fields = $this->db->list_fields('file_pendaftaran');
                     $user_id_real = $this->_get_current_user_id();
                     $id_fp = 'fp_' . $nim . '_' . $kode_berkas;
-                    $id_mhs_usr = $user_id_real ?: ('usr_mhs_' . $nim);
-                    $target_user_ids = array_values(array_unique(array_filter([$user_id_real, 'usr_mhs_' . $nim, 'mhs_' . $nim, $nim])));
+                    $target_user_ids = array_values(array_unique(array_filter([$user_id_real, $nim])));
                     $ex_fp = $this->db->group_start()
                         ->where('id', $id_fp)
                         ->or_group_start()
@@ -905,7 +912,7 @@ class Mahasiswa extends CI_Controller {
                         }
                     } else {
                         if (in_array('id', $fp_fields)) $fp_payload['id'] = $id_fp;
-                        if (in_array('id_mhs', $fp_fields)) $fp_payload['id_mhs'] = $id_mhs_usr;
+                        if (in_array('id_mhs', $fp_fields)) $fp_payload['id_mhs'] = $user_id_real;
                         if (in_array('nama', $fp_fields)) $fp_payload['nama'] = $kode_berkas;
                         if (in_array('view_adminlaa', $fp_fields)) $fp_payload['view_adminlaa'] = 0;
                         if (in_array('view_doswal', $fp_fields)) $fp_payload['view_doswal'] = 0;
@@ -1093,8 +1100,8 @@ class Mahasiswa extends CI_Controller {
 
             // Sinkronkan juga ke tabel guidance (legacy / active db)
             if ($this->db->table_exists('guidance')) {
-                $user_id = $this->_get_current_user_id() ?: ('usr_mhs_' . $nim);
-                $target_ids = array_values(array_unique(array_filter([$user_id, $nim, 'usr_mhs_' . $nim, 'mhs_' . $nim])));
+                $user_id = $this->_get_current_user_id();
+                $target_ids = array_values(array_unique(array_filter([$user_id, $nim])));
                 $existing_g = $this->db->where_in('id_mhs', $target_ids)
                     ->order_by('date', 'DESC')
                     ->limit(1)

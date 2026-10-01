@@ -60,7 +60,7 @@ class DosenWali extends CI_Controller {
         $data['detail']         = $this->DosenWali_model->get_detail_pendaftaran_mahasiswa($nim);
         if (empty($data['detail'])) {
             $data['detail'] = [
-                'id'                     => 'usr_mhs_' . $nim,
+                'id'                     => $nim,
                 'nim'                    => $nim,
                 'nama_depan'             => 'Mahasiswa ' . $nim,
                 'nama_belakang'          => '',

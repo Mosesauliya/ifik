@@ -406,7 +406,13 @@ class AdminLayanan extends CI_Controller {
 
         // Mark view_adminlaa = 1 in file_pendaftaran when Admin LAA views student's berkas
         if ($this->db->table_exists('file_pendaftaran')) {
-            $target_ids = array_unique(['usr_mhs_' . $nim, 'mhs_' . $nim, $nim]);
+            $u_id = null;
+            $user_tbl = $this->db->table_exists('user') ? 'user' : ($this->db->table_exists('users') ? 'users' : null);
+            if ($user_tbl) {
+                $u = $this->db->where('nim', $nim)->or_where('nidn_nim', $nim)->or_where('username', $nim)->get($user_tbl)->row_array();
+                if ($u && !empty($u['id'])) $u_id = $u['id'];
+            }
+            $target_ids = array_values(array_unique(array_filter([$u_id, $nim])));
             if ($this->db->field_exists('view_adminlaa', 'file_pendaftaran')) {
                 $this->db->where_in('id_mhs', $target_ids)
                          ->update('file_pendaftaran', ['view_adminlaa' => 1]);
@@ -822,11 +828,12 @@ class AdminLayanan extends CI_Controller {
             if (!$detail) continue;
 
             $u_id = null;
-            if ($this->db->table_exists('user')) {
-                $u = $this->db->where('nim', $nim)->or_where('username', $nim)->get('user')->row_array();
+            $user_tbl = $this->db->table_exists('user') ? 'user' : ($this->db->table_exists('users') ? 'users' : null);
+            if ($user_tbl) {
+                $u = $this->db->where('nim', $nim)->or_where('nidn_nim', $nim)->or_where('username', $nim)->get($user_tbl)->row_array();
                 if ($u && !empty($u['id'])) $u_id = $u['id'];
             }
-            $target_ids = array_values(array_unique(array_filter([$u_id, 'usr_mhs_' . $nim, 'mhs_' . $nim, $nim])));
+            $target_ids = array_values(array_unique(array_filter([$u_id, $nim])));
 
             if (!empty($kode_berkas) && count($nims) === 1) {
                 // Reset satu file
