@@ -336,15 +336,18 @@ class User_model extends CI_Model {
             $roleMap[strtolower(trim($r[$roleField]))] = (int)$r['id'];
         }
 
-        // Collect unique valid emails
-        $emails = [];
+        // Deduplicate input accounts by email to guarantee zero duplicate inserts from single bulk Excel file
+        $uniqueAccounts = [];
         foreach ($accounts as $acc) {
             $email = isset($acc['email']) ? strtolower(trim($acc['email'])) : '';
             if (!empty($email) && preg_match('/@(student\.)?telkomuniversity\.ac\.id$/i', $email)) {
-                $emails[] = $email;
+                $uniqueAccounts[$email] = $acc;
             }
         }
-        $emails = array_unique($emails);
+        $accounts = array_values($uniqueAccounts);
+
+        // Collect unique valid emails
+        $emails = array_keys($uniqueAccounts);
 
         if (empty($emails)) {
             return ['imported' => 0, 'updated' => 0];
@@ -685,6 +688,18 @@ class User_model extends CI_Model {
     public function delete_users_batch($ids)
     {
         if (empty($ids)) return false;
+
+        // Clean up corresponding tokens from user_token table
+        if ($this->db->table_exists('user_token')) {
+            $this->db->select('email');
+            $this->db->where_in('id', $ids);
+            $users = $this->db->get($this->tbl_user)->result_array();
+            $emails = array_filter(array_column($users, 'email'));
+            if (!empty($emails)) {
+                $this->db->where_in('email', $emails)->delete('user_token');
+            }
+        }
+
         $this->db->where_in('id', $ids);
         return $this->db->delete($this->tbl_user);
     }
@@ -697,6 +712,11 @@ class User_model extends CI_Model {
     {
         $this->db->where_not_in('id', ['admin-01', 'mhs-1301210001', 'dsn-wali-01', 'koor-ta-01', 'admin-laa-01']);
         $res = $this->db->delete($this->tbl_user);
+
+        if ($this->db->table_exists('user_token')) {
+            $masterEmails = ['admin@telkomuniversity.ac.id', 'mhs@student.telkomuniversity.ac.id', 'dosen@telkomuniversity.ac.id'];
+            $this->db->where_not_in('email', $masterEmails)->delete('user_token');
+        }
 
         if ($this->db->table_exists('log_approval_history')) {
             $this->db->where('modul', 'Import Email')->delete('log_approval_history');

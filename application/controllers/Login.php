@@ -117,15 +117,19 @@ class Login extends CI_Controller {
 
 				$passwordChanged = $isMasterAccount ? 1 : ($isTokenLogin ? 0 : (int)$user->password_changed);
 
-				// Set session data
+				// Set session data (Fully synchronized with supervisor session standard)
 				$session_data = array(
+					'id'               => $user->id,
 					'user_id'          => $user->id,
+					'username'         => !empty($user->username) ? $user->username : (!empty($user->nidn_nim) ? $user->nidn_nim : $user->email),
 					'role_id'          => $user->role_id,
 					'name'             => $user->name,
 					'email'            => $user->email,
 					'nidn_nim'         => $user->nidn_nim,
 					'nim'              => $user->nidn_nim,
 					'status'           => 'active',
+					'koordinator'      => isset($user->koordinator) ? $user->koordinator : '',
+					'dosen_wali'       => isset($user->dosen_wali) ? $user->dosen_wali : '',
 					'password_changed' => $passwordChanged,
 					'logged_in'        => TRUE
 				);
@@ -227,13 +231,17 @@ class Login extends CI_Controller {
 
 		// Direct 1-Click Login: set active session!
 		$session_data = array(
+			'id'               => $user->id,
 			'user_id'          => $user->id,
+			'username'         => !empty($user->username) ? $user->username : (!empty($user->nidn_nim) ? $user->nidn_nim : $user->email),
 			'role_id'          => $user->role_id,
 			'name'             => $user->name,
 			'email'            => $user->email,
 			'nidn_nim'         => $user->nidn_nim,
 			'nim'              => $user->nidn_nim,
 			'status'           => 'active',
+			'koordinator'      => isset($user->koordinator) ? $user->koordinator : '',
+			'dosen_wali'       => isset($user->dosen_wali) ? $user->dosen_wali : '',
 			'password_changed' => 0, // Directs to onboarding to setup password
 			'logged_in'        => TRUE
 		);
@@ -245,7 +253,7 @@ class Login extends CI_Controller {
 
 	public function logout()
 	{
-		$this->session->unset_userdata(array('user_id', 'role_id', 'name', 'email', 'nidn_nim', 'status', 'logged_in'));
+		$this->session->unset_userdata(array('id', 'user_id', 'username', 'role_id', 'name', 'email', 'nidn_nim', 'nim', 'koordinator', 'dosen_wali', 'status', 'password_changed', 'logged_in'));
 		$this->session->sess_destroy();
 		redirect('login');
 	}
