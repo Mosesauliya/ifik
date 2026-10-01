@@ -2869,34 +2869,44 @@
                     
                     updateMhsDataDocStatus(nim, kode_berkas, normStatus);
 
-                    // Tutup / hilangkan tab preview berkas yang baru saja di-aksi
-                    const pIdx = (window.activePreviews || []).findIndex(p => String(p.nim).trim() === String(nim).trim() && String(p.docKey).trim() === String(kode_berkas).trim());
-                    if (pIdx > -1) {
-                        window.activePreviews.splice(pIdx, 1);
-                    }
+                    const mhsCheck = window.mhsDataMap ? (window.mhsDataMap[nim] || window.mhsDataMap[Number(nim)]) : null;
+                    const allApprovedNow = mhsCheck ? isStudentAllApproved(mhsCheck, nim) : false;
 
-                    if (typeof showLAAToast === 'function') {
-                        let msg = 'Status berkas berhasil di-reset ke Menunggu (Pending)!';
-                        if (normStatus === 'Valid') {
-                            msg = 'Dokumen berhasil disetujui (Valid)! Tab pratinjau ditutup.';
-                        } else if (normStatus === 'Invalid') {
-                            msg = 'Catatan revisi berhasil dikirim! Tab pratinjau ditutup.';
+                    if (allApprovedNow) {
+                        if (typeof showLAAToast === 'function') {
+                            showLAAToast('Semua berkas mahasiswa ' + nim + ' telah disetujui (Approved). Card ditutup otomatis!');
                         }
-                        showLAAToast(msg, normStatus === 'Valid' || normStatus === 'Pending');
-                    }
+                        removeStudentFromLihatBerkas(nim);
+                    } else {
+                        // Tutup / hilangkan tab preview berkas yang baru saja di-aksi
+                        const pIdx = (window.activePreviews || []).findIndex(p => String(p.nim).trim() === String(nim).trim() && String(p.docKey).trim() === String(kode_berkas).trim());
+                        if (pIdx > -1) {
+                            window.activePreviews.splice(pIdx, 1);
+                        }
 
-                    // Close the floating preview card if present in activePreviews
-                    if (window.activePreviews && window.activePreviews.length > 0) {
-                        const pNim = String(nim).trim();
-                        const pDocKey = String(kode_berkas).trim();
-                        const existingIdx = window.activePreviews.findIndex(p => String(p.nim).trim() === pNim && String(p.docKey).trim() === pDocKey);
-                        if (existingIdx > -1) {
-                            closeSinglePreview(existingIdx);
+                        if (typeof showLAAToast === 'function') {
+                            let msg = 'Status berkas berhasil di-reset ke Menunggu (Pending)!';
+                            if (normStatus === 'Valid') {
+                                msg = 'Dokumen berhasil disetujui (Valid)! Tab pratinjau ditutup.';
+                            } else if (normStatus === 'Invalid') {
+                                msg = 'Catatan revisi berhasil dikirim! Tab pratinjau ditutup.';
+                            }
+                            showLAAToast(msg, normStatus === 'Valid' || normStatus === 'Pending');
+                        }
+
+                        // Close the floating preview card if present in activePreviews
+                        if (window.activePreviews && window.activePreviews.length > 0) {
+                            const pNim = String(nim).trim();
+                            const pDocKey = String(kode_berkas).trim();
+                            const existingIdx = window.activePreviews.findIndex(p => String(p.nim).trim() === pNim && String(p.docKey).trim() === pDocKey);
+                            if (existingIdx > -1) {
+                                closeSinglePreview(existingIdx);
+                            } else {
+                                refreshLihatBerkasView();
+                            }
                         } else {
                             refreshLihatBerkasView();
                         }
-                    } else {
-                        refreshLihatBerkasView();
                     }
 
                     if (typeof refreshLAATable === 'function') {
