@@ -25,7 +25,7 @@
             this.pathId = options.pathId || 'curvedSidebarPath';
             this.svgId = options.svgId || 'curvedSidebarSvg';
             
-            this.isDesktop = window.innerWidth >= 1024;
+            this.isDesktop = (window.matchMedia && window.matchMedia('(min-width: 1024px)').matches) || window.innerWidth >= 992;
             let savedState = null;
             try {
                 savedState = localStorage.getItem('ifik_curved_sidebar_state');
@@ -114,7 +114,7 @@
 
             window.addEventListener('resize', () => {
                 const wasDesktop = this.isDesktop;
-                this.isDesktop = window.innerWidth >= 1024;
+                this.isDesktop = (window.matchMedia && window.matchMedia('(min-width: 1024px)').matches) || window.innerWidth >= 992;
                 if (wasDesktop !== this.isDesktop) {
                     if (this.isDesktop) {
                         if (this.backdrop) this.backdrop.classList.remove('is-active');
@@ -140,6 +140,7 @@
                 } else {
                     this.setPath(70);
                 }
+                syncAllModalOverlays();
             });
 
             // Prepare letter spans for staggered kinetic wave
@@ -148,6 +149,7 @@
             // Initial SVG path state
             this.updateSvgDimensions();
             this.setPath(this.isOpen ? 0 : 70);
+            syncAllModalOverlays();
         }
 
         updateSvgDimensions() {
@@ -272,13 +274,13 @@
             try {
                 localStorage.setItem('ifik_curved_sidebar_state', 'open');
             } catch (e) {}
-            this.isDesktop = window.innerWidth >= 1024;
+            this.isDesktop = (window.matchMedia && window.matchMedia('(min-width: 1024px)').matches) || window.innerWidth >= 992;
 
             // Update DOM classes
             this.toggleBtn.classList.add('is-active');
             this.toggleBtn.setAttribute('aria-expanded', 'true');
+            document.body.classList.remove('curved-sidebar-desktop-collapsed');
             if (this.isDesktop) {
-                document.body.classList.remove('curved-sidebar-desktop-collapsed');
                 document.body.classList.add('curved-sidebar-desktop-open');
                 if (this.backdrop) this.backdrop.classList.remove('is-active');
                 document.body.classList.remove('curved-sidebar-open');
@@ -287,6 +289,11 @@
                 document.body.classList.add('curved-sidebar-open');
             }
             this.panel.classList.add('is-active');
+
+            try {
+                window.dispatchEvent(new CustomEvent('curvedSidebarToggled', { detail: { isOpen: true } }));
+            } catch(e) {}
+            syncAllModalOverlays();
 
             // Scroll inner menu to top
             const inner = this.panel ? this.panel.querySelector('.curved-sidebar-inner') : null;
@@ -305,7 +312,7 @@
             try {
                 localStorage.setItem('ifik_curved_sidebar_state', 'closed');
             } catch (e) {}
-            this.isDesktop = window.innerWidth >= 1024;
+            this.isDesktop = (window.matchMedia && window.matchMedia('(min-width: 1024px)').matches) || window.innerWidth >= 992;
 
             // Update DOM classes
             this.toggleBtn.classList.remove('is-active');
@@ -313,10 +320,17 @@
             if (this.isDesktop) {
                 document.body.classList.remove('curved-sidebar-desktop-open');
                 document.body.classList.add('curved-sidebar-desktop-collapsed');
+            } else {
+                document.body.classList.remove('curved-sidebar-open');
+                document.body.classList.add('curved-sidebar-desktop-collapsed');
             }
             if (this.backdrop) this.backdrop.classList.remove('is-active');
-            document.body.classList.remove('curved-sidebar-open');
             this.panel.classList.remove('is-active');
+
+            try {
+                window.dispatchEvent(new CustomEvent('curvedSidebarToggled', { detail: { isOpen: false } }));
+            } catch(e) {}
+            syncAllModalOverlays();
 
             if (this.svg) this.svg.style.opacity = '1';
             // Morph curve from flat (0) back to bulging (70)
@@ -325,6 +339,28 @@
             });
         }
     }
+
+    function syncAllModalOverlays() {
+        const overlays = document.querySelectorAll('.modal-overlay, #modalRuangan, #editSlide1Modal, #editSlideModal');
+        if (!overlays.length) return;
+        const isDesktop = (window.matchMedia && window.matchMedia('(min-width: 1024px)').matches) || window.innerWidth >= 992;
+        const panel = document.getElementById('curvedSidebarPanel');
+        const isPanelActive = panel ? panel.classList.contains('is-active') : false;
+        const isCollapsed = document.body.classList.contains('curved-sidebar-desktop-collapsed');
+        
+        const shouldShift = isDesktop && isPanelActive && !isCollapsed;
+
+        overlays.forEach(modal => {
+            if (shouldShift) {
+                modal.style.setProperty('left', '270px', 'important');
+                modal.style.setProperty('width', 'calc(100% - 270px)', 'important');
+            } else {
+                modal.style.setProperty('left', '0px', 'important');
+                modal.style.setProperty('width', '100%', 'important');
+            }
+        });
+    }
+    window.syncAllModalOverlays = syncAllModalOverlays;
 
     function initCurvedSidebar() {
         if (document.getElementById('curvedSidebarPanel') && !window.curvedSidebarInstance) {

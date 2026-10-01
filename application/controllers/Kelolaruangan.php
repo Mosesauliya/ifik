@@ -383,7 +383,8 @@ class Kelolaruangan extends CI_Controller {
         if (in_array('deskripsi', $fields)) $base_data['deskripsi'] = $deskripsi;
         if (in_array('spesifikasi_fasilitas', $fields)) $base_data['spesifikasi_fasilitas'] = $spesifikasi_fasilitas;
         if (in_array('tata_tertib', $fields)) $base_data['tata_tertib'] = $tata_tertib;
-        if (in_array('date', $fields)) $base_data['date'] = date('Y-m-d H:i:s');
+        $existing_date = ($old_room && !empty($old_room->date)) ? $old_room->date : date('Y-m-d H:i:s');
+        if (in_array('date', $fields)) $base_data['date'] = $existing_date;
 
         // Handle gambar/images (sinkronkan kolom foto, model_3d, dan images)
         $old_images = $old_room ? (string)($old_room->images ?? '') : '';

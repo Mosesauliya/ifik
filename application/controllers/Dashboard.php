@@ -60,6 +60,8 @@ class Dashboard extends CI_Controller {
         $this->load->model('Booking_model');
         $data['kategori'] = $this->Booking_model->get_all_kategori();
         $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan');
+        $this->db->order_by('ruangan.date', 'ASC');
+        $this->db->order_by('ruangan.id', 'ASC');
         $data['ruangan'] = $this->db->get('ruangan')->result();
 
         $this->load->view('dashboard/ajukan_booking', $data);
@@ -283,6 +285,7 @@ class Dashboard extends CI_Controller {
         if (in_array('kapasitas', $fields)) $base_data['kapasitas'] = $kapasitas ? $kapasitas : 30;
         if (in_array('lokasi', $fields)) $base_data['lokasi'] = $lokasi ? $lokasi : 'Gedung Sebatik (FIK)';
         if (in_array('status', $fields)) $base_data['status'] = $status ? $status : 'Tersedia';
+        if (in_array('date', $fields)) $base_data['date'] = date('Y-m-d H:i:s');
 
         $inserted = 0;
         foreach ($rooms as $single_code) {

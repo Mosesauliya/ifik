@@ -421,7 +421,7 @@ body.curved-sidebar-open {
     box-sizing: border-box;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 992px) {
     /* Default desktop behavior: sidebar is OPEN by default and content is shifted right */
     .curved-sidebar-panel {
         transform: translateX(0);
@@ -433,6 +433,17 @@ body.curved-sidebar-open {
         width: calc(100% - 270px);
     }
 
+    /* Modal overlays shift to the right ONLY when sidebar is OPEN on desktop */
+    body.curved-sidebar-desktop-open .modal-overlay,
+    body.curved-sidebar-desktop-open #modalRuangan,
+    body:not(.curved-sidebar-desktop-collapsed) .modal-overlay,
+    body:not(.curved-sidebar-desktop-collapsed) #modalRuangan {
+        left: 270px !important;
+        width: calc(100% - 270px) !important;
+        box-sizing: border-box !important;
+        transition: left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+    }
+
     /* When sidebar is explicitly collapsed by user on desktop */
     body.curved-sidebar-desktop-collapsed .curved-sidebar-panel {
         transform: translateX(calc(-100% - 90px)) !important;
@@ -442,6 +453,12 @@ body.curved-sidebar-open {
     body.curved-sidebar-desktop-collapsed .curved-page-container {
         margin-left: 0;
         width: 100%;
+    }
+
+    body.curved-sidebar-desktop-collapsed .modal-overlay,
+    body.curved-sidebar-desktop-collapsed #modalRuangan {
+        left: 0 !important;
+        width: 100% !important;
     }
 
     /* Header title smooth glide when collapsed vs open */
@@ -457,10 +474,16 @@ body.curved-sidebar-open {
     }
 }
 
-@media (max-width: 1023.98px) {
+@media (max-width: 991.98px) {
     .page-wrapper-for-sidebar,
     .curved-page-container {
         margin-left: 0 !important;
+        width: 100% !important;
+    }
+
+    .modal-overlay,
+    #modalRuangan {
+        left: 0 !important;
         width: 100% !important;
     }
 }

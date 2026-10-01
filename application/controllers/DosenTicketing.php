@@ -156,7 +156,7 @@ class DosenTicketing extends CI_Controller {
         $userId      = $this->session->userdata('user_id');
         $nidn        = $this->session->userdata('nidn_nim') ?: $this->session->userdata('nim');
         $namaLengkap = trim($this->input->post('nama_lengkap', true)) ?: ($this->session->userdata('name') ?: 'Dosen');
-        $tujuanPenerima  = trim($this->input->post('tujuan_penerima', true)) ?: 'Kaur';
+        $tujuanPenerima  = trim($this->input->post('tujuan_penerima', true));
         $unitTerkait     = trim($this->input->post('unit_terkait', true)) ?: (trim($this->input->post('unit_tujuan', true)) ?: 'Layanan Umum');
         $unitTujuan      = $unitTerkait;
         $kategori        = trim($this->input->post('kategori', true));

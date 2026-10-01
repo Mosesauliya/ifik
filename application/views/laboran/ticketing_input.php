@@ -188,14 +188,14 @@
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="penerimaGroup">
                         
                         <!-- 1. Laboran -->
-                        <label id="card_penerima_Laboran" onclick="selectPenerima('Laboran')" class="relative flex items-start gap-3.5 p-3.5 rounded-2xl border border-orange-500 bg-orange-50/80 ring-2 ring-orange-500/20 shadow-xs cursor-pointer transition-all select-none">
-                            <input type="radio" name="tujuan_penerima" id="radio_penerima_Laboran" value="Laboran" checked onchange="updatePenerimaUI(this.value)" class="sr-only">
-                            <div class="penerima-icon-box w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center text-base shrink-0 shadow-xs">
+                        <label id="card_penerima_Laboran" onclick="selectPenerima('Laboran')" class="relative flex items-start gap-3.5 p-3.5 rounded-2xl border border-slate-200 bg-white hover:border-orange-300 hover:bg-orange-50/20 shadow-2xs cursor-pointer transition-all select-none">
+                            <input type="radio" name="tujuan_penerima" id="radio_penerima_Laboran" value="Laboran" onchange="updatePenerimaUI(this.value)" class="sr-only">
+                            <div class="penerima-icon-box w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center text-base shrink-0 transition-all">
                                 <i class="bi bi-pc-display-horizontal"></i>
                             </div>
                             <div class="flex-1 min-w-0">
-                                <span class="penerima-title text-xs font-bold text-orange-700 block">Laboran</span>
-                                <span class="text-[11px] text-slate-500 leading-tight block mt-0.5">Fasilitas Lab, Hardware/Software, Jaringan & Sarpras</span>
+                                <span class="penerima-title text-xs font-semibold text-slate-700 block">Laboran</span>
+                                <span class="text-[11px] text-slate-400 leading-tight block mt-0.5">Fasilitas Lab, Hardware/Software, Jaringan & Sarpras</span>
                             </div>
                         </label>
 
@@ -585,7 +585,19 @@
 
         function updatePenerimaUI(val) {
             const penerimaKeys = ['Laboran', 'Kaur', 'Admin_LAA', 'Dosen_Kaur'];
-            let valKey = (val || 'Laboran').replace(/\s+/g, '_');
+            if (!val) {
+                penerimaKeys.forEach(function(key) {
+                    const card = document.getElementById('card_penerima_' + key);
+                    if (!card) return;
+                    const iconBox = card.querySelector('.penerima-icon-box');
+                    const title = card.querySelector('.penerima-title');
+                    card.className = 'relative flex items-start gap-3.5 p-3.5 rounded-2xl border border-slate-200 bg-white hover:border-orange-300 hover:bg-orange-50/20 shadow-2xs cursor-pointer transition-all select-none';
+                    if (iconBox) iconBox.className = 'penerima-icon-box w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center text-base shrink-0 transition-all';
+                    if (title) title.className = 'penerima-title text-xs font-semibold text-slate-700 block';
+                });
+                return;
+            }
+            let valKey = val.replace(/\s+/g, '_');
             if (valKey === 'Dosen_Kaur') valKey = 'Kaur';
 
             penerimaKeys.forEach(function(key) {
@@ -831,6 +843,14 @@
                         tinymce.get('deskripsi').focus();
                         return false;
                     }
+                }
+
+                // 1b. Validate tujuan_penerima
+                const selectedPenerima = document.querySelector('input[name="tujuan_penerima"]:checked');
+                if (!selectedPenerima || !selectedPenerima.value) {
+                    alert('Harap pilih tujuan penerima tiket terlebih dahulu.');
+                    document.getElementById('penerimaGroup').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return false;
                 }
 
                 // 2. Validate standard fields

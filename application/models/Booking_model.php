@@ -24,6 +24,7 @@ class Booking_model extends CI_Model {
         $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan, kategori_ruangan.nama_kategori');
         $this->db->from('ruangan');
         $this->db->join('kategori_ruangan', 'kategori_ruangan.id = ruangan.id_kategori', 'left');
+        $this->db->order_by('ruangan.date', 'ASC');
         $this->db->order_by('ruangan.id', 'ASC');
         $ruangan_list = $this->db->get()->result();
 
@@ -122,6 +123,8 @@ class Booking_model extends CI_Model {
     {
         $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan');
         $this->db->where('id_kategori', $id_kategori);
+        $this->db->order_by('ruangan.date', 'ASC');
+        $this->db->order_by('ruangan.id', 'ASC');
         $raw = $this->db->get('ruangan')->result();
 
         $flattened = [];

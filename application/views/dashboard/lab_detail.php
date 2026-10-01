@@ -150,6 +150,7 @@ $lab = [
     'location'       => !empty($matched_room->lokasi) ? $matched_room->lokasi : 'Gedung Sebatik (FIK)',
     'room_codes'     => $parsed_room_codes,
     'capacity'       => !empty($matched_room->kapasitas) ? ($matched_room->kapasitas . ' Orang') : (!empty($matched_room->jumlah_unit) ? $matched_room->jumlah_unit : '-'),
+    'units'          => !empty($matched_room->jumlah_unit) ? (is_numeric(trim($matched_room->jumlah_unit)) ? trim($matched_room->jumlah_unit) . ' Unit' : $matched_room->jumlah_unit) : '',
     'hours'          => !empty($matched_room->jam_operasional) ? $matched_room->jam_operasional : '',
     'desc'           => !empty($matched_room->deskripsi) ? $matched_room->deskripsi : ('Fasilitas ' . $matched_room->nama_ruangan . ' di Fakultas Industri Kreatif Telkom University.'),
     'specs'          => $specs,
@@ -726,6 +727,12 @@ $lab = [
                                     <span style="background: #ea580c; color: #ffffff; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.02em;"><?= htmlspecialchars($rc) ?></span>
                                 <?php endforeach; ?>
                             </div>
+                        </div>
+                        <?php endif; ?>
+                        <?php if (!empty($lab['units'])): ?>
+                        <div class="meta-item">
+                            <span class="icon">💻</span>
+                            <span><?= htmlspecialchars($lab['units']) ?></span>
                         </div>
                         <?php endif; ?>
                         <div class="meta-item">
