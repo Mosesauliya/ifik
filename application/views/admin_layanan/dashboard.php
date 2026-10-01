@@ -2876,8 +2876,13 @@
                     }
 
                     if (typeof showLAAToast === 'function') {
-                        const msg = (normStatus === 'Valid') ? 'Dokumen berhasil disetujui (Valid)! Tab pratinjau ditutup.' : 'Catatan revisi berhasil dikirim! Tab pratinjau ditutup.';
-                        showLAAToast(msg, normStatus === 'Valid');
+                        let msg = 'Status berkas berhasil di-reset ke Menunggu (Pending)!';
+                        if (normStatus === 'Valid') {
+                            msg = 'Dokumen berhasil disetujui (Valid)! Tab pratinjau ditutup.';
+                        } else if (normStatus === 'Invalid') {
+                            msg = 'Catatan revisi berhasil dikirim! Tab pratinjau ditutup.';
+                        }
+                        showLAAToast(msg, normStatus === 'Valid' || normStatus === 'Pending');
                     }
 
                     // Close the floating preview card if present in activePreviews
@@ -3390,14 +3395,13 @@
                                     <i class="fa-solid fa-eye text-[10px]"></i>
                                     <span>${isCurrentlyPreviewed ? 'Tutup' : 'Lihat'}</span>
                                 </button>
-                                <a href="${pdfUrl}" 
-                                   download="${rawFilename}" 
-                                   target="_blank" 
-                                   class="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-[11px] font-bold transition inline-flex items-center gap-1 cursor-pointer shadow-2xs active:scale-95" 
-                                   title="Unduh Berkas">
-                                    <i class="fa-solid fa-download text-[10px]"></i>
-                                    <span>Unduh</span>
-                                </a>
+                                <button type="button" 
+                                        onclick="quickVerifyFloatingDoc('${nimStr}', '${doc.key}', 'Pending')" 
+                                        class="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 text-slate-600 border border-slate-200 text-[11px] font-bold transition inline-flex items-center gap-1 cursor-pointer shadow-2xs active:scale-95" 
+                                        title="Kembalikan status berkas ini ke Menunggu / Pending">
+                                    <i class="fa-solid fa-rotate-left text-[10px]"></i>
+                                    <span>Reset</span>
+                                </button>
                             </div>
                         </div>
                     `;
@@ -3581,6 +3585,13 @@
                                             title="Minta revisi dokumen ini">
                                         <i class="fa-solid fa-circle-xmark text-[10px]"></i>
                                         <span>Revisi</span>
+                                    </button>
+                                    <button type="button" 
+                                            onclick="quickVerifyFloatingDoc('${pNim}', '${pDocKey}', 'Pending')" 
+                                            class="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 active:scale-95 font-bold text-[11px] shadow-2xs transition flex items-center gap-1 cursor-pointer"
+                                            title="Kembalikan status dokumen ini ke Menunggu / Pending">
+                                        <i class="fa-solid fa-rotate-left text-[10px]"></i>
+                                        <span>Reset</span>
                                     </button>
                                 </div>
                                 <div class="flex items-center gap-1">
