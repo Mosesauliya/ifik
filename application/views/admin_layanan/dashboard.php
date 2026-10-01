@@ -3183,13 +3183,6 @@
             if (!nim) return;
             nim = String(nim).trim();
 
-            const mhsCheck = window.mhsDataMap ? (window.mhsDataMap[nim] || window.mhsDataMap[Number(nim)]) : null;
-            if (mhsCheck && isStudentAllApproved(mhsCheck, nim)) {
-                showLAAToast('Semua berkas mahasiswa ' + nim + ' sudah disetujui (Approved).');
-                removeStudentFromLihatBerkas(nim);
-                return;
-            }
-
             const activeNims = (window.activeLihatBerkasNims || []).map(n => String(n).trim());
             const idx = activeNims.indexOf(nim);
             if (idx > -1) {
@@ -3211,11 +3204,6 @@
                     if (data && data.length > 0) {
                         if (!window.mhsDataMap) window.mhsDataMap = {};
                         window.mhsDataMap[nim] = data[0];
-                        if (isStudentAllApproved(data[0], nim)) {
-                            showLAAToast('Semua berkas mahasiswa ' + nim + ' sudah disetujui (Approved).');
-                            removeStudentFromLihatBerkas(nim);
-                            return;
-                        }
                         showLihatBerkasContainer();
                         refreshLihatBerkasView();
                     } else {
@@ -3281,24 +3269,7 @@
 
             if (!window.activeLihatBerkasNims || window.activeLihatBerkasNims.length === 0) {
                 wrapper.innerHTML = '';
-                return;
-            }
-
-            // Filter out students whose documents are ALL approved
-            const initialCount = window.activeLihatBerkasNims.length;
-            window.activeLihatBerkasNims = window.activeLihatBerkasNims.filter(nim => {
-                const nimStr = String(nim).trim();
-                const mhs = window.mhsDataMap ? (window.mhsDataMap[nimStr] || window.mhsDataMap[Number(nimStr)]) : null;
-                if (!mhs) return true; // Data fetching in progress
-                return !isStudentAllApproved(mhs, nimStr);
-            });
-
-            if (window.activeLihatBerkasNims.length === 0) {
-                wrapper.innerHTML = '';
                 closeLihatBerkasPanel();
-                if (initialCount > 0) {
-                    showLAAToast('Semua berkas mahasiswa telah disetujui (Approved). Panel ditutup otomatis.');
-                }
                 return;
             }
 
@@ -3752,12 +3723,6 @@
             }
 
             const mhs = window.mhsDataMap[nim];
-
-            if (mhs && isStudentAllApproved(mhs, nim)) {
-                showLAAToast('Semua berkas mahasiswa ' + nim + ' sudah disetujui (Approved).');
-                removeStudentFromLihatBerkas(nim);
-                return;
-            }
 
             const activeNims = window.activeLihatBerkasNims.map(n => String(n).trim());
             if (!activeNims.includes(nim)) {
