@@ -50,6 +50,20 @@ class Booking_model extends CI_Model {
                         }
                     }
                 }
+
+                // Parse multiple photos (disimpan dipisah koma)
+                $all_foto = [];
+                if (!empty($r->foto)) {
+                    $parts = array_filter(array_map('trim', explode(',', $r->foto)));
+                    foreach ($parts as $p) {
+                        if (!empty($p) && !in_array($p, $all_foto)) {
+                            $all_foto[] = $p;
+                        }
+                    }
+                }
+                $r->all_foto = $all_foto;
+                $r->foto_utama = !empty($all_foto[0]) ? $all_foto[0] : '';
+                $r->foto = $r->foto_utama; // Tetap kompatibel 100% dengan kode/view yang memanggil $r->foto
             }
         }
 
@@ -72,6 +86,7 @@ class Booking_model extends CI_Model {
                 $clone = clone $r;
                 $clone->kode_ruangan_list = [$r->kode_ruangan ?: $r->id];
                 $clone->all_ids = [$r->id];
+                $clone->all_foto = is_array($r->all_foto) ? $r->all_foto : [];
                 $grouped[$nameKey] = $clone;
             } else {
                 $code = $r->kode_ruangan ?: $r->id;
@@ -81,7 +96,13 @@ class Booking_model extends CI_Model {
                 if (!in_array($r->id, $grouped[$nameKey]->all_ids)) {
                     $grouped[$nameKey]->all_ids[] = $r->id;
                 }
-                if (empty($grouped[$nameKey]->foto) && !empty($r->foto)) $grouped[$nameKey]->foto = $r->foto;
+                if (is_array($r->all_foto)) {
+                    foreach ($r->all_foto as $af) {
+                        if (!in_array($af, $grouped[$nameKey]->all_foto)) {
+                            $grouped[$nameKey]->all_foto[] = $af;
+                        }
+                    }
+                }
                 if (empty($grouped[$nameKey]->model_3d) && !empty($r->model_3d)) $grouped[$nameKey]->model_3d = $r->model_3d;
                 if (empty($grouped[$nameKey]->tagline) && !empty($r->tagline)) $grouped[$nameKey]->tagline = $r->tagline;
                 if (empty($grouped[$nameKey]->deskripsi) && !empty($r->deskripsi)) $grouped[$nameKey]->deskripsi = $r->deskripsi;
@@ -90,6 +111,8 @@ class Booking_model extends CI_Model {
 
         foreach ($grouped as &$g) {
             $g->kode_ruangan = implode(', ', $g->kode_ruangan_list);
+            $g->foto_utama = !empty($g->all_foto[0]) ? $g->all_foto[0] : '';
+            $g->foto = $g->foto_utama;
         }
 
         return array_values($grouped);

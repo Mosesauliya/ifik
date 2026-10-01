@@ -393,7 +393,7 @@ class KoordinatorTA_model extends CI_Model {
             );
         }
 
-        $target_ids = array_unique([$userId, $mhs['nim'], 'usr_mhs_' . $mhs['nim'], 'mhs_' . $mhs['nim']]);
+        $target_ids = array_values(array_unique(array_filter([$userId, $mhs['nim']])));
         $this->db->where_in('id_mhs', $target_ids);
         $guidance = $this->db->get('guidance')->row_array();
 
@@ -733,7 +733,7 @@ class KoordinatorTA_model extends CI_Model {
 
         $userId = $mhs['id'];
         $mhsNim = $mhs['nim'] ?: $nim;
-        $target_ids = array_values(array_unique(array_filter([$userId, $mhsNim, 'usr_mhs_' . $mhsNim, 'mhs_' . $mhsNim, 'usr_' . $userId])));
+        $target_ids = array_values(array_unique(array_filter([$userId, $mhsNim])));
 
         $this->db->where_in('id_mhs', $target_ids);
         $this->db->or_where('id', 'gdn_' . $mhsNim);

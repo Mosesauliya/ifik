@@ -55,6 +55,14 @@ class Kelolaruangan extends CI_Controller {
             $this->session->set_flashdata('error', 'Hanya Admin System, Ka. Ur, dan Laboran yang dapat mengakses halaman Kelola Ruangan.');
             redirect('dashboard');
         }
+
+        // Pastikan kolom foto & images bertipe TEXT agar muat banyak path foto
+        try {
+            $this->db->query("ALTER TABLE ruangan MODIFY COLUMN foto TEXT NULL");
+            $this->db->query("ALTER TABLE ruangan MODIFY COLUMN images TEXT NULL");
+        } catch (\Throwable $e) {
+            // Lewati jika sudah di-alter atau user db tidak memiliki permission alter
+        }
     }
 
     public function index()
@@ -94,6 +102,62 @@ class Kelolaruangan extends CI_Controller {
             log_message('error', 'Upload Error (' . $field_name . '): ' . $err);
         }
         return null;
+    }
+
+    /**
+     * Upload banyak foto sekaligus dan mengembalikan array berisi path berkas
+     */
+    private function _upload_multiple_files($field_name, $upload_path)
+    {
+        if (empty($_FILES[$field_name]['name'])) {
+            return [];
+        }
+
+        $full_dir = FCPATH . rtrim($upload_path, '/') . '/';
+        if (!is_dir($full_dir)) {
+            @mkdir($full_dir, 0777, true);
+        }
+
+        $uploaded_paths = [];
+        $this->load->library('upload');
+
+        if (is_array($_FILES[$field_name]['name'])) {
+            $files_count = count($_FILES[$field_name]['name']);
+            for ($i = 0; $i < $files_count; $i++) {
+                if (empty($_FILES[$field_name]['name'][$i])) {
+                    continue;
+                }
+
+                $_FILES['_temp_multi_foto']['name']     = $_FILES[$field_name]['name'][$i];
+                $_FILES['_temp_multi_foto']['type']     = $_FILES[$field_name]['type'][$i];
+                $_FILES['_temp_multi_foto']['tmp_name'] = $_FILES[$field_name]['tmp_name'][$i];
+                $_FILES['_temp_multi_foto']['error']    = $_FILES[$field_name]['error'][$i];
+                $_FILES['_temp_multi_foto']['size']     = $_FILES[$field_name]['size'][$i];
+
+                $config = [
+                    'upload_path'   => $full_dir,
+                    'allowed_types' => 'jpg|jpeg|png|webp|gif',
+                    'max_size'      => 10240, // 10MB
+                    'encrypt_name'  => TRUE
+                ];
+
+                $this->upload->initialize($config, TRUE);
+                if ($this->upload->do_upload('_temp_multi_foto')) {
+                    $data = $this->upload->data();
+                    $uploaded_paths[] = rtrim($upload_path, '/') . '/' . $data['file_name'];
+                } else {
+                    $err = $this->upload->display_errors('', '');
+                    log_message('error', 'Multi-Upload Foto Error: ' . $err);
+                }
+            }
+        } else {
+            $path = $this->_upload_file($field_name, $upload_path, 'jpg|jpeg|png|webp|gif');
+            if ($path) {
+                $uploaded_paths[] = $path;
+            }
+        }
+
+        return $uploaded_paths;
     }
 
     /**
@@ -187,9 +251,10 @@ class Kelolaruangan extends CI_Controller {
             return;
         }
 
-        // Upload foto & 3D model jika diupload
-        $foto_path     = $this->_upload_file('foto', 'uploads/ruangan/foto/', 'jpg|jpeg|png|webp|gif');
-        $model_3d_path = $this->_upload_file('model_3d', 'uploads/ruangan/models/', 'glb|fbx|gltf|obj|bin');
+        // Upload foto (bisa banyak) & 3D model jika diupload
+        $uploaded_fotos = $this->_upload_multiple_files('foto', 'uploads/ruangan/foto/');
+        $foto_path      = !empty($uploaded_fotos) ? implode(',', $uploaded_fotos) : null;
+        $model_3d_path  = $this->_upload_file('model_3d', 'uploads/ruangan/models/', 'glb|fbx|gltf|obj|bin');
 
         $fields = $this->db->list_fields('ruangan');
         $base_data = array();
@@ -298,9 +363,10 @@ class Kelolaruangan extends CI_Controller {
             return;
         }
 
-        // Upload foto & 3D model jika diubah
-        $foto_path     = $this->_upload_file('foto', 'uploads/ruangan/foto/', 'jpg|jpeg|png|webp|gif');
-        $model_3d_path = $this->_upload_file('model_3d', 'uploads/ruangan/models/', 'glb|fbx|gltf|obj|bin');
+        // Upload foto baru (bisa banyak) & 3D model jika diubah
+        $uploaded_fotos = $this->_upload_multiple_files('foto', 'uploads/ruangan/foto/');
+        $existing_fotos = $this->input->post('existing_foto');
+        $model_3d_path  = $this->_upload_file('model_3d', 'uploads/ruangan/models/', 'glb|fbx|gltf|obj|bin');
 
         $fields = $this->db->list_fields('ruangan');
         $base_data = array();
@@ -333,10 +399,23 @@ class Kelolaruangan extends CI_Controller {
             }
         }
 
-        $final_foto = $foto_path ? $foto_path : $old_foto;
+        // Gabungkan foto lama yang dipertahankan dengan foto baru yang diunggah
+        if ($existing_fotos !== null) {
+            $cleaned_existing = is_array($existing_fotos) ? $existing_fotos : [$existing_fotos];
+            $cleaned_existing = array_values(array_filter(array_map('trim', $cleaned_existing)));
+            $combined_fotos = array_merge($cleaned_existing, $uploaded_fotos);
+            $final_foto = !empty($combined_fotos) ? implode(',', $combined_fotos) : '';
+        } else {
+            if (!empty($uploaded_fotos)) {
+                $final_foto = implode(',', $uploaded_fotos);
+            } else {
+                $final_foto = $old_foto;
+            }
+        }
+
         $final_model = $model_3d_path ? $model_3d_path : $old_model;
 
-        if (in_array('foto', $fields) && $final_foto) {
+        if (in_array('foto', $fields)) {
             $base_data['foto'] = $final_foto;
         }
         if (in_array('model_3d', $fields) && $final_model) {
@@ -348,7 +427,7 @@ class Kelolaruangan extends CI_Controller {
             if ($final_foto && $final_model) $combined = $final_foto . '|' . $final_model;
             elseif ($final_foto) $combined = $final_foto;
             elseif ($final_model) $combined = '|' . $final_model;
-            if ($combined) $base_data['images'] = $combined;
+            $base_data['images'] = $combined;
         }
 
         // Hapus baris lama fasilitas ini sebelum memasukkan baris baru per kode ruangan fisik

@@ -12,32 +12,32 @@ class Mahasiswa_model extends CI_Model {
     // =================================================================
 
     private function _get_user_id_by_nim($nim) {
-        if (empty($nim)) return $nim;
-        if (!$this->db->table_exists('user')) return $nim;
+        if (empty($nim)) return null;
+        $user_tbl = $this->db->table_exists('user') ? 'user' : ($this->db->table_exists('users') ? 'users' : null);
+        if (!$user_tbl) return null;
 
         $prev_debug = $this->db->db_debug;
         $this->db->db_debug = FALSE;
         $u = null;
         try {
-            $u = $this->db->select('id, nim, username')
-                ->group_start()
-                    ->where('nim', $nim)
-                    ->or_where('username', $nim)
-                ->group_end()
-                ->limit(1)
-                ->get('user')->row_array();
+            $this->db->select('id')->group_start();
+            if ($this->db->field_exists('nim', $user_tbl)) $this->db->where('nim', $nim);
+            if ($this->db->field_exists('nidn_nim', $user_tbl)) $this->db->or_where('nidn_nim', $nim);
+            if ($this->db->field_exists('username', $user_tbl)) $this->db->or_where('username', $nim);
+            $this->db->group_end()->limit(1);
+            $u = $this->db->get($user_tbl)->row_array();
         } catch (Throwable $e) {
             $u = null;
         }
         $this->db->db_debug = $prev_debug;
 
-        return $u ? $u['id'] : $nim;
+        return ($u && !empty($u['id'])) ? $u['id'] : null;
     }
 
     private function _get_target_ids_by_nim($nim) {
         if (empty($nim)) return [];
         $userId = $this->_get_user_id_by_nim($nim);
-        return array_values(array_unique(array_filter([$userId, $nim, 'usr_mhs_' . $nim, 'mhs_' . $nim])));
+        return array_values(array_unique(array_filter([$userId, $nim])));
     }
 
     private function _get_guidance_id_by_nim($nim) {
@@ -166,6 +166,10 @@ class Mahasiswa_model extends CI_Model {
         if (!$nim) return false;
 
         $userId = $this->_get_user_id_by_nim($nim);
+        if (empty($userId)) {
+            log_message('error', 'save_pendaftaran_ta: Akun pengguna tidak ditemukan di database untuk NIM ' . $nim);
+            return false;
+        }
         $target_ids = $this->_get_target_ids_by_nim($nim);
 
         // 1. guidance
@@ -228,7 +232,7 @@ class Mahasiswa_model extends CI_Model {
                 $this->db->where('id', $existing_g['id'])->update('guidance', $g_data);
             } else {
                 if (in_array('id',     $g_fields)) $g_data['id']     = 'gdn_' . $nim;
-                if (in_array('id_mhs', $g_fields)) $g_data['id_mhs'] = $userId ?: ('usr_mhs_' . $nim);
+                if (in_array('id_mhs', $g_fields)) $g_data['id_mhs'] = $userId;
                 $this->db->insert('guidance', $g_data);
             }
         }
@@ -256,17 +260,36 @@ class Mahasiswa_model extends CI_Model {
                         ->get('file_pendaftaran')->row_array();
                 }
 
+                $is_file_changed = ($exFp && !empty($exFp['file']) && $exFp['file'] !== $relPath);
+                $prev_dw_st = $exFp['status_doswal'] ?? '';
+                $prev_la_st = $exFp['status_adminlaa'] ?? '';
+
                 $fpData = [];
                 if (in_array('file',            $fp_fields)) $fpData['file']            = $relPath;
-                if (in_array('status_doswal',   $fp_fields)) $fpData['status_doswal']   = 'Pending';
-                if (in_array('status_adminlaa', $fp_fields)) $fpData['status_adminlaa'] = 'Pending';
                 if (in_array('date_edit',       $fp_fields)) $fpData['date_edit']       = date('Y-m-d H:i:s');
+
+                if (in_array('status_doswal', $fp_fields)) {
+                    if ($is_file_changed || $prev_dw_st === 'Rejected' || empty($prev_dw_st)) {
+                        $fpData['status_doswal'] = 'Pending';
+                        if (in_array('komentar', $fp_fields)) $fpData['komentar'] = '';
+                    } else {
+                        $fpData['status_doswal'] = $prev_dw_st;
+                    }
+                }
+
+                if (in_array('status_adminlaa', $fp_fields)) {
+                    if ($is_file_changed || $prev_la_st === 'Rejected' || $prev_la_st === 'Invalid' || empty($prev_la_st)) {
+                        $fpData['status_adminlaa'] = 'Pending';
+                    } else {
+                        $fpData['status_adminlaa'] = $prev_la_st;
+                    }
+                }
 
                 if ($exFp) {
                     $this->db->where('id', $exFp['id'])->update('file_pendaftaran', $fpData);
                 } else {
                     if (in_array('id',            $fp_fields)) $fpData['id']            = $targetFpId;
-                    if (in_array('id_mhs',        $fp_fields)) $fpData['id_mhs']        = $userId ?: ('usr_mhs_' . $nim);
+                    if (in_array('id_mhs',        $fp_fields)) $fpData['id_mhs']        = $userId;
                     if (in_array('nama',          $fp_fields)) $fpData['nama']          = $kode;
                     if (in_array('view_adminlaa', $fp_fields)) $fpData['view_adminlaa'] = 0;
                     if (in_array('view_doswal',   $fp_fields)) $fpData['view_doswal']   = 0;

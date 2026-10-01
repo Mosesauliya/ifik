@@ -241,10 +241,15 @@
                         <h2 class="text-lg sm:text-xl font-extrabold text-slate-900">Usulan Judul Tugas Akhir</h2>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
                     <span class="text-[11px] font-bold <?= ($st_j === 'Approved') ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : (($st_j === 'Rejected') ? 'bg-rose-100 text-rose-800 border-rose-300' : 'bg-amber-100 text-amber-800 border-amber-300'); ?> px-3 py-1 rounded-full border">
                         <?= ($st_j === 'Approved') ? '✅ Judul Disetujui' : (($st_j === 'Rejected') ? '❌ Judul Ditolak / Perlu Revisi' : '⏳ Menunggu Review Judul'); ?>
                     </span>
+                    <?php if($st_j === 'Rejected'): ?>
+                        <a href="<?= site_url('mahasiswa/edit_pendaftaran#section-judul'); ?>" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-bold text-xs shadow-xs transition box-3d">
+                            <i class="bi bi-pencil-square"></i> Perbaiki Usulan Judul
+                        </a>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -375,16 +380,23 @@
                         <?php endif; ?>
                     </div>
 
-                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
-                        <?php if($has_ksm): ?>
-                            <button type="button" onclick="openPdfPreview('<?= $url_ksm; ?>', 'Kartu Studi Mahasiswa (KSM)', '<?= htmlspecialchars($file_ksm); ?>')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold text-xs transition border border-sky-200 cursor-pointer">
-                                <i class="bi bi-eye-fill"></i> Lihat Dokumen
-                            </button>
-                            <a href="<?= $url_ksm; ?>" download class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition border border-slate-200">
-                                <i class="bi bi-download"></i> Unduh
+                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+                        <div class="flex items-center gap-2">
+                            <?php if($has_ksm): ?>
+                                <button type="button" onclick="openPdfPreview('<?= $url_ksm; ?>', 'Kartu Studi Mahasiswa (KSM)', '<?= htmlspecialchars($file_ksm); ?>')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold text-xs transition border border-sky-200 cursor-pointer">
+                                    <i class="bi bi-eye-fill"></i> Lihat Dokumen
+                                </button>
+                                <a href="<?= $url_ksm; ?>" download class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition border border-slate-200">
+                                    <i class="bi bi-download"></i> Unduh
+                                </a>
+                            <?php else: ?>
+                                <span class="text-xs text-slate-400 italic">File belum tersedia</span>
+                            <?php endif; ?>
+                        </div>
+                        <?php if($st_ksm === 'Rejected'): ?>
+                            <a href="<?= site_url('mahasiswa/edit_pendaftaran#card-ksm'); ?>" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-bold text-xs shadow-xs transition box-3d">
+                                <i class="bi bi-pencil-square"></i> Perbaiki Dokumen Ini
                             </a>
-                        <?php else: ?>
-                            <span class="text-xs text-slate-400 italic">File belum tersedia</span>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -428,16 +440,23 @@
                         <?php endif; ?>
                     </div>
 
-                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
-                        <?php if($has_transkrip): ?>
-                            <button type="button" onclick="openPdfPreview('<?= $url_transkrip; ?>', 'Transkrip Nilai Akademik', '<?= htmlspecialchars($file_transkrip); ?>')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold text-xs transition border border-sky-200 cursor-pointer">
-                                <i class="bi bi-eye-fill"></i> Lihat Dokumen
-                            </button>
-                            <a href="<?= $url_transkrip; ?>" download class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition border border-slate-200">
-                                <i class="bi bi-download"></i> Unduh
+                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+                        <div class="flex items-center gap-2">
+                            <?php if($has_transkrip): ?>
+                                <button type="button" onclick="openPdfPreview('<?= $url_transkrip; ?>', 'Transkrip Nilai Akademik', '<?= htmlspecialchars($file_transkrip); ?>')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold text-xs transition border border-sky-200 cursor-pointer">
+                                    <i class="bi bi-eye-fill"></i> Lihat Dokumen
+                                </button>
+                                <a href="<?= $url_transkrip; ?>" download class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition border border-slate-200">
+                                    <i class="bi bi-download"></i> Unduh
+                                </a>
+                            <?php else: ?>
+                                <span class="text-xs text-slate-400 italic">File belum tersedia</span>
+                            <?php endif; ?>
+                        </div>
+                        <?php if($st_trn === 'Rejected'): ?>
+                            <a href="<?= site_url('mahasiswa/edit_pendaftaran#card-transkrip'); ?>" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-bold text-xs shadow-xs transition box-3d">
+                                <i class="bi bi-pencil-square"></i> Perbaiki Dokumen Ini
                             </a>
-                        <?php else: ?>
-                            <span class="text-xs text-slate-400 italic">File belum tersedia</span>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -481,16 +500,23 @@
                         <?php endif; ?>
                     </div>
 
-                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
-                        <?php if($has_pernyataan): ?>
-                            <button type="button" onclick="openPdfPreview('<?= $url_pernyataan; ?>', 'Surat Pernyataan Keaslian', '<?= htmlspecialchars($file_pernyataan); ?>')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold text-xs transition border border-sky-200 cursor-pointer">
-                                <i class="bi bi-eye-fill"></i> Lihat Dokumen
-                            </button>
-                            <a href="<?= $url_pernyataan; ?>" download class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition border border-slate-200">
-                                <i class="bi bi-download"></i> Unduh
+                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+                        <div class="flex items-center gap-2">
+                            <?php if($has_pernyataan): ?>
+                                <button type="button" onclick="openPdfPreview('<?= $url_pernyataan; ?>', 'Surat Pernyataan Keaslian', '<?= htmlspecialchars($file_pernyataan); ?>')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold text-xs transition border border-sky-200 cursor-pointer">
+                                    <i class="bi bi-eye-fill"></i> Lihat Dokumen
+                                </button>
+                                <a href="<?= $url_pernyataan; ?>" download class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition border border-slate-200">
+                                    <i class="bi bi-download"></i> Unduh
+                                </a>
+                            <?php else: ?>
+                                <span class="text-xs text-slate-400 italic">File belum tersedia</span>
+                            <?php endif; ?>
+                        </div>
+                        <?php if($st_prn === 'Rejected'): ?>
+                            <a href="<?= site_url('mahasiswa/edit_pendaftaran#card-pernyataan'); ?>" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-bold text-xs shadow-xs transition box-3d">
+                                <i class="bi bi-pencil-square"></i> Perbaiki Dokumen Ini
                             </a>
-                        <?php else: ?>
-                            <span class="text-xs text-slate-400 italic">File belum tersedia</span>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -534,16 +560,23 @@
                         <?php endif; ?>
                     </div>
 
-                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
-                        <?php if($has_bebas_lab): ?>
-                            <button type="button" onclick="openPdfPreview('<?= $url_bebas_lab; ?>', 'Surat Bebas Laboratorium', '<?= htmlspecialchars($file_bebas_lab); ?>')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold text-xs transition border border-sky-200 cursor-pointer">
-                                <i class="bi bi-eye-fill"></i> Lihat Dokumen
-                            </button>
-                            <a href="<?= $url_bebas_lab; ?>" download class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition border border-slate-200">
-                                <i class="bi bi-download"></i> Unduh
+                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+                        <div class="flex items-center gap-2">
+                            <?php if($has_bebas_lab): ?>
+                                <button type="button" onclick="openPdfPreview('<?= $url_bebas_lab; ?>', 'Surat Bebas Laboratorium', '<?= htmlspecialchars($file_bebas_lab); ?>')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold text-xs transition border border-sky-200 cursor-pointer">
+                                    <i class="bi bi-eye-fill"></i> Lihat Dokumen
+                                </button>
+                                <a href="<?= $url_bebas_lab; ?>" download class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition border border-slate-200">
+                                    <i class="bi bi-download"></i> Unduh
+                                </a>
+                            <?php else: ?>
+                                <span class="text-xs text-slate-400 italic">File belum tersedia</span>
+                            <?php endif; ?>
+                        </div>
+                        <?php if($st_lab === 'Rejected'): ?>
+                            <a href="<?= site_url('mahasiswa/edit_pendaftaran#card-bebas-lab'); ?>" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-bold text-xs shadow-xs transition box-3d">
+                                <i class="bi bi-pencil-square"></i> Perbaiki Dokumen Ini
                             </a>
-                        <?php else: ?>
-                            <span class="text-xs text-slate-400 italic">File belum tersedia</span>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -573,12 +606,6 @@
             <a href="<?= site_url('mahasiswa'); ?>" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white hover:bg-orange-50 text-slate-700 font-bold text-xs border border-slate-300 shadow-2xs transition box-3d">
                 <i class="bi bi-arrow-left text-base"></i> Kembali ke Dashboard
             </a>
-
-            <div class="flex items-center gap-3">
-                <a href="<?= site_url('mahasiswa/edit_pendaftaran'); ?>" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 text-white font-bold text-xs shadow-md hover:from-orange-700 hover:to-amber-700 transition box-3d">
-                    <i class="bi bi-pencil-square text-base"></i> Edit Formulir Data
-                </a>
-            </div>
         </div>
 
     </main>
