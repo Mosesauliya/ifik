@@ -227,6 +227,7 @@ $route['adminlayanan/detail_berkas/(:any)'] = 'AdminLayanan/detail_berkas/$1';
 $route['adminlayanan/submit_verifikasi/(:any)'] = 'AdminLayanan/submit_verifikasi/$1';
 $route['adminlayanan/submit_verifikasi_batch'] = 'AdminLayanan/submit_verifikasi_batch';
 $route['adminlayanan/get_batch_details'] = 'AdminLayanan/get_batch_details';
+$route['adminlayanan/ajax_update_single_berkas'] = 'AdminLayanan/ajax_update_single_berkas';
 
 // Admin Layanan Live Chat Routes (Must be before wildcard (:any))
 $route['adminlayanan/help'] = 'LaboranHelp/index';
