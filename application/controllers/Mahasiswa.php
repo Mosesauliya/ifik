@@ -1811,4 +1811,90 @@ class Mahasiswa extends CI_Controller {
 
         echo json_encode($res);
     }
+
+    // =========================================================
+// PERSYARATAN SIDANG (DINAMIS)
+// =========================================================
+
+public function get_master_syarat_sidang_ajax() {
+    header('Content-Type: application/json');
+    $nim = $this->_get_current_nim();
+
+    $this->load->model('AdminLayanan_model');
+    $master   = $this->AdminLayanan_model->get_master_syarat_sidang();
+    $uploaded = $this->AdminLayanan_model->get_berkas_pendaftaran_sidang($nim);
+
+    echo json_encode([
+        'status'   => true,
+        'master'   => $master,
+        'uploaded' => $uploaded
+    ]);
+}
+
+public function upload_berkas_sidang_ajax() {
+    header('Content-Type: application/json');
+    $nim = $this->_get_current_nim();
+
+    if (empty($_FILES['berkas']['name'])) {
+        echo json_encode(['status' => false, 'message' => 'Tidak ada berkas yang dipilih.']);
+        return;
+    }
+
+    $upload_dir = './uploads/persyaratan_ta/';
+    if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
+
+    $this->load->model('AdminLayanan_model');
+    $this->load->library('upload');
+
+    $uploaded_count = 0;
+    $errors = [];
+
+    foreach ($_FILES['berkas']['name'] as $kode => $origName) {
+        if (empty($origName) || $_FILES['berkas']['error'][$kode] !== UPLOAD_ERR_OK) continue;
+
+        $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+        $new_name = $kode . '_' . $nim . '_' . time() . '_' . rand(100,999) . '.' . $ext;
+
+        $config = [
+            'upload_path'   => $upload_dir,
+            'allowed_types' => 'pdf|doc|docx|jpg|jpeg|png',
+            'max_size'      => 5120,
+            'file_name'     => $new_name,
+        ];
+
+        $this->upload->initialize($config);
+
+        $_FILES['userfile'] = [
+            'name'     => $_FILES['berkas']['name'][$kode],
+            'type'     => $_FILES['berkas']['type'][$kode],
+            'tmp_name' => $_FILES['berkas']['tmp_name'][$kode],
+            'error'    => $_FILES['berkas']['error'][$kode],
+            'size'     => $_FILES['berkas']['size'][$kode],
+        ];
+
+        if ($this->upload->do_upload('userfile')) {
+            $fd = $this->upload->data();
+            // Simpan ke pendaftaran_berkas + auto-sync ke file_pendaftaran
+            $this->AdminLayanan_model->save_student_berkas(
+                $nim, $kode, $fd['file_name'], 'Pending', null, ''
+            );
+            $uploaded_count++;
+        } else {
+            $errors[] = $kode . ': ' . $this->upload->display_errors('', '');
+        }
+    }
+
+    if ($uploaded_count > 0) {
+        echo json_encode([
+            'status'  => true,
+            'message' => $uploaded_count . ' berkas berhasil diunggah & menunggu verifikasi LAA.',
+            'errors'  => $errors
+        ]);
+    } else {
+        echo json_encode([
+            'status'  => false,
+            'message' => 'Gagal: ' . implode('; ', $errors)
+        ]);
+    }
+}
 }
