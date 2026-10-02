@@ -18,225 +18,125 @@
         body, button, input, textarea, select {
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         }
-        .orb-glow {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(50px);
-            pointer-events: none;
-            z-index: 0;
-        }
+        .orb-glow { position: absolute; border-radius: 50%; filter: blur(50px); pointer-events: none; z-index: 0; }
 
-        /* Modal overlay */
         .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.55);
-            backdrop-filter: blur(6px);
-            z-index: 9998;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-            animation: fadeIn 0.2s ease;
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(6px); z-index: 9998;
+            display: flex; align-items: center; justify-content: center;
+            padding: 1rem; animation: fadeIn 0.2s ease;
         }
-        .modal-overlay.hidden {
-            display: none !important;
-        }
+        .modal-overlay.hidden { display: none !important; }
         .modal-content {
-            background: white;
-            border-radius: 1.5rem;
-            max-width: 600px;
-            width: 100%;
-            max-height: 80vh;
-            display: flex;
-            flex-direction: column;
+            background: white; border-radius: 1.5rem; max-width: 600px; width: 100%;
+            max-height: 80vh; display: flex; flex-direction: column;
             box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
-            animation: slideUp 0.25s ease;
-            overflow: hidden;
+            animation: slideUp 0.25s ease; overflow: hidden;
         }
         .modal-body-scroll {
-            overflow-y: auto;
-            flex: 1;
-            padding: 1.25rem 1.5rem;
-            scrollbar-width: thin;
-            scrollbar-color: #fdba74 #fef3c7;
+            overflow-y: auto; flex: 1; padding: 1.25rem 1.5rem;
+            scrollbar-width: thin; scrollbar-color: #fdba74 #fef3c7;
         }
-        .modal-body-scroll::-webkit-scrollbar {
-            width: 6px;
-        }
-        .modal-body-scroll::-webkit-scrollbar-track {
-            background: #fef3c7;
-            border-radius: 3px;
-        }
-        .modal-body-scroll::-webkit-scrollbar-thumb {
-            background: #fdba74;
-            border-radius: 3px;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
+        .modal-body-scroll::-webkit-scrollbar { width: 6px; }
+        .modal-body-scroll::-webkit-scrollbar-track { background: #fef3c7; border-radius: 3px; }
+        .modal-body-scroll::-webkit-scrollbar-thumb { background: #fdba74; border-radius: 3px; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        /* Active step highlight */
         .tab-card-active {
             border-color: #f97316 !important;
             box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.25), 0 10px 30px -5px rgba(249, 115, 22, 0.2) !important;
             background: linear-gradient(to bottom, #fff7ed, #ffffff) !important;
         }
-        .tab-card-locked {
-            opacity: 0.65;
-            filter: grayscale(0.35);
-            cursor: not-allowed !important;
-        }
+        .tab-card-locked { opacity: 0.65; filter: grayscale(0.35); cursor: not-allowed !important; }
         .badge-active-step {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 2px 10px;
-            border-radius: 9999px;
-            font-size: 10px;
-            font-weight: 800;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            background: #f97316;
-            color: white;
-            box-shadow: 0 2px 8px rgba(249, 115, 22, 0.4);
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 2px 10px; border-radius: 9999px; font-size: 10px; font-weight: 800;
+            letter-spacing: 0.05em; text-transform: uppercase;
+            background: #f97316; color: white; box-shadow: 0 2px 8px rgba(249, 115, 22, 0.4);
         }
 
-        /* Drop zone for sidang files */
         .drop-zone-sidang {
-            border: 2px dashed #d1d5db;
-            background-color: #f9fafb;
-            transition: all 0.2s;
-            cursor: pointer;
+            border: 2px dashed #d1d5db; background-color: #f9fafb;
+            transition: all 0.2s; cursor: pointer;
         }
-        .drop-zone-sidang:hover,
-        .drop-zone-sidang.dragover {
-            border-color: #10b981;
-            background-color: #ecfdf5;
+        .drop-zone-sidang:hover, .drop-zone-sidang.dragover {
+            border-color: #10b981; background-color: #ecfdf5;
         }
 
-        /* ==========================================================
-           RESPONSIVE TABLES (MOBILE CARD LAYOUT — NO HORIZONTAL SCROLL)
-           ========================================================== */
+        /* ===== Dropzone Persyaratan Sidang (baru) ===== */
+        .ps-dropzone {
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .ps-dropzone.dragover {
+            border-color: #ea580c !important;
+            background-color: #fff7ed !important;
+            transform: scale(1.01);
+            box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.15);
+        }
+
         @media (max-width: 768px) {
-            .responsive-log-table {
-                border: none !important;
-                background: transparent !important;
-                box-shadow: none !important;
-            }
+            .responsive-log-table { border: none !important; background: transparent !important; box-shadow: none !important; }
             .responsive-log-table thead { display: none !important; }
-            .responsive-log-table,
-            .responsive-log-table tbody { display: block !important; width: 100% !important; }
+            .responsive-log-table, .responsive-log-table tbody { display: block !important; width: 100% !important; }
             .responsive-log-table tr {
-                display: block !important;
-                margin: 0 0 1rem 0 !important;
-                border: 1.5px solid #e2e8f0 !important;
-                border-radius: 18px !important;
-                padding: 0.9rem 0.85rem 0.7rem !important;
-                background: #ffffff !important;
-                box-shadow: 0 4px 14px -4px rgba(15,23,42,0.09) !important;
-                position: relative !important;
+                display: block !important; margin: 0 0 1rem 0 !important;
+                border: 1.5px solid #e2e8f0 !important; border-radius: 18px !important;
+                padding: 0.9rem 0.85rem 0.7rem !important; background: #ffffff !important;
+                box-shadow: 0 4px 14px -4px rgba(15,23,42,0.09) !important; position: relative !important;
             }
             .responsive-log-table tbody tr:last-child { margin-bottom: 0 !important; }
             .responsive-log-table tbody tr:hover { background: #fff !important; }
             .responsive-log-table td {
-                display: block !important;
-                width: 100% !important;
-                padding: 0.5rem 0.35rem !important;
-                text-align: left !important;
-                border-bottom: 1px dashed #f1f5f9 !important;
-                position: relative !important;
-                padding-left: 42% !important;
-                min-height: 34px !important;
-                font-size: 0.8rem !important;
-                vertical-align: top !important;
+                display: block !important; width: 100% !important;
+                padding: 0.5rem 0.35rem !important; text-align: left !important;
+                border-bottom: 1px dashed #f1f5f9 !important; position: relative !important;
+                padding-left: 42% !important; min-height: 34px !important;
+                font-size: 0.8rem !important; vertical-align: top !important;
             }
             .responsive-log-table td:last-child { border-bottom: none !important; padding-bottom: 0.2rem !important; }
             .responsive-log-table td::before {
-                content: attr(data-label);
-                position: absolute;
-                left: 0.35rem;
-                top: 0.55rem;
-                width: 38%;
-                font-weight: 800;
-                font-size: 0.6rem;
-                text-transform: uppercase;
-                color: #64748b;
-                letter-spacing: 0.05em;
-                line-height: 1.2;
+                content: attr(data-label); position: absolute; left: 0.35rem; top: 0.55rem;
+                width: 38%; font-weight: 800; font-size: 0.6rem; text-transform: uppercase;
+                color: #64748b; letter-spacing: 0.05em; line-height: 1.2;
             }
             .responsive-log-table td.cell-no {
-                position: absolute !important;
-                top: 0.65rem !important;
-                right: 0.65rem !important;
-                width: auto !important;
-                padding: 0 !important;
-                border: none !important;
-                padding-left: 0 !important;
-                min-height: 0 !important;
-                z-index: 2 !important;
+                position: absolute !important; top: 0.65rem !important; right: 0.65rem !important;
+                width: auto !important; padding: 0 !important; border: none !important;
+                padding-left: 0 !important; min-height: 0 !important; z-index: 2 !important;
             }
             .responsive-log-table td.cell-no::before { display: none !important; }
             .responsive-log-table td.cell-no span {
-                display: inline-flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                width: 28px !important;
-                height: 28px !important;
+                display: inline-flex !important; align-items: center !important;
+                justify-content: center !important; width: 28px !important; height: 28px !important;
                 border-radius: 10px !important;
                 background: linear-gradient(135deg, #ea580c, #f97316) !important;
-                color: #fff !important;
-                font-weight: 800 !important;
-                font-size: 0.7rem !important;
+                color: #fff !important; font-weight: 800 !important; font-size: 0.7rem !important;
                 box-shadow: 0 3px 8px rgba(234,88,12,0.3) !important;
             }
             .responsive-log-table td.cell-file {
                 padding: 0.15rem 2.5rem 0.6rem 0.35rem !important;
-                border-bottom: 1px solid #e2e8f0 !important;
-                margin-bottom: 0.35rem;
+                border-bottom: 1px solid #e2e8f0 !important; margin-bottom: 0.35rem;
             }
             .responsive-log-table td.cell-file::before { display: none !important; }
-            .responsive-log-table td.cell-center {
-                text-align: right !important;
-                padding-right: 0.35rem !important;
-            }
-            .responsive-log-table td.cell-center::before {
-                width: 40%;
-                text-align: left;
-            }
+            .responsive-log-table td.cell-center { text-align: right !important; padding-right: 0.35rem !important; }
+            .responsive-log-table td.cell-center::before { width: 40%; text-align: left; }
             .responsive-log-table td[colspan] {
-                display: block !important;
-                padding: 2rem 1rem !important;
-                padding-left: 1rem !important;
-                text-align: center !important;
-                border: none !important;
-                min-height: 0 !important;
+                display: block !important; padding: 2rem 1rem !important;
+                padding-left: 1rem !important; text-align: center !important;
+                border: none !important; min-height: 0 !important;
             }
             .responsive-log-table td[colspan]::before { display: none !important; }
             .responsive-log-table tbody tr:has(td[colspan]) {
-                padding: 0 !important;
-                border: none !important;
-                box-shadow: none !important;
-                background: transparent !important;
+                padding: 0 !important; border: none !important;
+                box-shadow: none !important; background: transparent !important;
             }
             .responsive-log-table .log-file-link {
-                max-width: 100% !important;
-                white-space: normal !important;
-                word-break: break-all;
+                max-width: 100% !important; white-space: normal !important; word-break: break-all;
             }
-            .responsive-log-table .inline-flex {
-                font-size: 0.68rem !important;
-            }
+            .responsive-log-table .inline-flex { font-size: 0.68rem !important; }
         }
 
-        /* ==========================================================
-           UNIFIED COMMENT MODAL (P1, P2, U1, U2)
-           ========================================================== */
         #unifiedCommentModal {
             position: fixed; inset: 0; z-index: 10000; display: none;
             align-items: center; justify-content: center;
@@ -245,19 +145,14 @@
         #unifiedCommentModal.active { display: flex; }
         #unifiedCommentModal .uc-modal-box {
             background: #fff; border-radius: 1.75rem; max-width: 640px; width: 100%;
-            max-height: 88vh; overflow: hidden;
-            box-shadow: 0 40px 80px -20px rgba(0,0,0,0.45);
-            display: flex; flex-direction: column;
-            animation: slideUp 0.25s ease;
+            max-height: 88vh; overflow: hidden; box-shadow: 0 40px 80px -20px rgba(0,0,0,0.45);
+            display: flex; flex-direction: column; animation: slideUp 0.25s ease;
         }
         #unifiedCommentModal .uc-header {
             padding: 1.1rem 1.4rem; background: #1e293b; color: white;
-            display: flex; align-items: center; justify-content: space-between;
-            flex-shrink: 0;
+            display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
         }
-        #unifiedCommentModal .uc-body {
-            padding: 1.25rem 1.4rem; overflow-y: auto; flex: 1;
-        }
+        #unifiedCommentModal .uc-body { padding: 1.25rem 1.4rem; overflow-y: auto; flex: 1; }
         .uc-tab-btn {
             padding: 6px 12px; border-radius: 10px; font-size: 0.7rem; font-weight: 800;
             border: 1.5px solid transparent; cursor: pointer; transition: all 0.15s ease;
@@ -278,9 +173,7 @@
         .uc-comment-content {
             padding: 1rem 1.1rem; background: #f8fafc; border: 1px solid #e2e8f0;
             border-radius: 14px; font-size: 0.85rem; line-height: 1.6;
-            color: #1e293b; font-weight: 500;
-            white-space: pre-wrap;
-            word-break: break-word;
+            color: #1e293b; font-weight: 500; white-space: pre-wrap; word-break: break-word;
         }
         .uc-comment-content p { margin: 0 0 0.6rem 0; }
         .uc-comment-content p:last-child { margin-bottom: 0; }
@@ -371,6 +264,19 @@
                             </div>
                         </div>
                     <?php endif; ?>
+
+                    <!-- TOMBOL PERSYARATAN SIDANG -->
+                    <div class="pt-3 border-t border-white/15">
+                        <button type="button" onclick="openModalPersyaratanSidang()"
+                                class="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-extrabold text-xs sm:text-sm shadow-lg shadow-amber-500/30 transition flex items-center justify-center gap-2.5 box-3d hover:scale-[1.02] active:scale-95 cursor-pointer">
+                            <i class="bi bi-file-earmark-check-fill text-base"></i>
+                            <span>Persyaratan Sidang</span>
+                            <i class="bi bi-arrow-right-short text-lg"></i>
+                        </button>
+                        <p class="text-[10px] text-amber-100/80 text-center mt-2 font-medium">
+                            Upload berkas persyaratan sidang TA sesuai daftar dinamis dari LAA
+                        </p>
+                    </div>
                 </div>
 
                 <div class="w-full xl:w-[460px] bg-black/25 backdrop-blur-xl rounded-3xl p-6 sm:p-7 border border-white/20 shadow-2xl space-y-4 shrink-0 text-white hover-card-elevate transition-all duration-300">
@@ -515,21 +421,16 @@
             </div>
         </div>
 
-        <!-- Milestone Stepper Workflow / Tab Switcher -->
+        <!-- Milestone Stepper Workflow -->
         <?php
             $is_p1_app = ($latest_p1 && $latest_p1['status_pembimbing'] === 'Approved');
             $is_p2_app = ($latest_p2 && $latest_p2['status_pembimbing'] === 'Approved');
             $is_p3_app = ($latest_p3 && $latest_p3['status_pembimbing'] === 'Approved');
 
-            if (!$is_p1_app) {
-                $active_step = 'preview1';
-            } elseif (!$is_p2_app) {
-                $active_step = 'preview2';
-            } elseif (!$is_p3_app) {
-                $active_step = 'preview3';
-            } else {
-                $active_step = 'sidang';
-            }
+            if (!$is_p1_app) { $active_step = 'preview1'; }
+            elseif (!$is_p2_app) { $active_step = 'preview2'; }
+            elseif (!$is_p3_app) { $active_step = 'preview3'; }
+            else { $active_step = 'sidang'; }
         ?>
 
         <div class="card-3d-warm rounded-3xl p-7 sm:p-9 space-y-7 w-full shadow-lg shadow-orange-500/5">
@@ -1101,7 +1002,6 @@
         <!-- ================= TAB CONTENT PANEL: SIDANG AKHIR ================= -->
         <div id="panelSidang" class="tab-panel <?= $active_step === 'sidang' ? '' : 'hidden' ?> space-y-7">
             <?php
-                // Format tanggal sidang
                 $tgl_sidang_raw = $tgl_sidang ?? '';
                 $tgl_sidang_fmt = '-';
                 if (!empty($tgl_sidang_raw)) {
@@ -1348,38 +1248,37 @@
                 </div>
             </div>
             <?php endif; ?>
-<!-- ========================================================== -->
-<!-- CARD: BAP SIDANG (muncul setelah Penguji 1 publish)        -->
-<!-- ========================================================== -->
-<?php if (!empty($pendaftaran['bap_published'])): ?>
-<div class="card-3d-warm rounded-3xl p-7 sm:p-9 space-y-5 w-full shadow-lg border-2 border-purple-300 bg-purple-50/40">
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
-        <div class="flex items-start gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-purple-600 text-white flex items-center justify-center text-2xl shrink-0 box-3d shadow-md shadow-purple-600/30">
-                <i class="bi bi-file-earmark-check-fill"></i>
+
+            <!-- CARD: BAP SIDANG -->
+            <?php if (!empty($pendaftaran['bap_published'])): ?>
+            <div class="card-3d-warm rounded-3xl p-7 sm:p-9 space-y-5 w-full shadow-lg border-2 border-purple-300 bg-purple-50/40">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-purple-600 text-white flex items-center justify-center text-2xl shrink-0 box-3d shadow-md shadow-purple-600/30">
+                            <i class="bi bi-file-earmark-check-fill"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-purple-800 block">BERITA ACARA SIDANG (BAP)</span>
+                            <h3 class="text-lg font-extrabold text-slate-900">Dokumen BAP Sidang Telah Terbit</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+                                Penguji 1 telah mempublikasikan dokumen <strong>Berita Acara Sidang Tugas Akhir</strong> Anda.
+                                Silakan lihat atau cetak dokumen BAP untuk keperluan arsip pribadi.
+                            </p>
+                            <?php if (!empty($pendaftaran['bap_published_at'])): ?>
+                                <p class="text-[11px] text-slate-500 font-medium mt-2">
+                                    <i class="bi bi-clock-history mr-1"></i>
+                                    Dipublikasikan: <?= date('d M Y, H:i', strtotime($pendaftaran['bap_published_at'])); ?> WIB
+                                </p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <button type="button" onclick="openStudentBapPopup()"
+                            class="px-5 py-3 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs sm:text-sm shadow-md transition flex items-center gap-2 box-3d hover:scale-[1.02] active:scale-95 cursor-pointer shrink-0">
+                        <i class="bi bi-eye-fill text-base"></i> Lihat BAP Sidang
+                    </button>
+                </div>
             </div>
-            <div>
-                <span class="text-xs font-bold uppercase tracking-wider text-purple-800 block">BERITA ACARA SIDANG (BAP)</span>
-                <h3 class="text-lg font-extrabold text-slate-900">Dokumen BAP Sidang Telah Terbit</h3>
-                <p class="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
-                    Penguji 1 telah mempublikasikan dokumen <strong>Berita Acara Sidang Tugas Akhir</strong> Anda.
-                    Silakan lihat atau cetak dokumen BAP untuk keperluan arsip pribadi.
-                </p>
-                <?php if (!empty($pendaftaran['bap_published_at'])): ?>
-                    <p class="text-[11px] text-slate-500 font-medium mt-2">
-                        <i class="bi bi-clock-history mr-1"></i>
-                        Dipublikasikan: <?= date('d M Y, H:i', strtotime($pendaftaran['bap_published_at'])); ?> WIB
-                    </p>
-                <?php endif; ?>
-            </div>
-        </div>
-        <button type="button" onclick="openStudentBapPopup()"
-                class="px-5 py-3 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs sm:text-sm shadow-md transition flex items-center gap-2 box-3d hover:scale-[1.02] active:scale-95 cursor-pointer shrink-0">
-            <i class="bi bi-eye-fill text-base"></i> Lihat BAP Sidang
-        </button>
-    </div>
-</div>
-<?php endif; ?>
+            <?php endif; ?>
 
             <?php if (!empty($is_nilai_published)): ?>
             <div class="p-5 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-emerald-900 text-xs font-semibold flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
@@ -1815,9 +1714,7 @@
 
         function ucSwitchTab(tab) {
             _ucActiveTab = tab;
-            const map = {
-                p1: 'ucTabP1', p2: 'ucTabP2', u1: 'ucTabU1', u2: 'ucTabU2'
-            };
+            const map = { p1: 'ucTabP1', p2: 'ucTabP2', u1: 'ucTabU1', u2: 'ucTabU2' };
             const colorPrefix = { p1: 'p1', p2: 'p2', u1: 'u1', u2: 'u2' };
 
             for (const [key, elId] of Object.entries(map)) {
@@ -1897,6 +1794,7 @@
                 closeCatatanModal();
                 closeUnifiedCommentModal();
                 closeModalRubrikNilai();
+                closeModalPersyaratanSidang();
             }
         });
 
@@ -2482,136 +2380,466 @@
             renderLogTable(<?= json_encode($riwayat_sidang ?? []) ?>, 'logTableSidang', 'sidang');
         });
     </script>
+
     <?php $this->load->view('partials/modal_rekomendasi_sidang'); ?>
+
     <!-- ========================================================== -->
-<!-- FLOATING POPUP: BAP SIDANG UNTUK MAHASISWA                  -->
-<!-- Sama seperti Penguji 1, minus tombol Upload                 -->
-<!-- ========================================================== -->
-<?php if (!empty($pendaftaran['bap_published'])): ?>
-<div id="studentBapContainer" class="fixed inset-0 z-[100000] pointer-events-none p-4 sm:p-6 flex items-center justify-center" style="display:none;">
-    <div class="absolute inset-0 bg-slate-900/55 backdrop-blur-sm pointer-events-auto" onclick="closeStudentBapPopup()"></div>
-    <div class="relative pointer-events-auto bg-white rounded-3xl shadow-2xl border border-slate-300 flex flex-col overflow-hidden w-[92vw] sm:w-[600px] xl:w-[720px] h-[85vh] max-h-[92vh] animate-pop-in">
-        <!-- Header -->
-        <div class="p-3 px-4 bg-slate-900 text-white flex items-center justify-between gap-2 shrink-0 border-b border-slate-800">
-            <div class="flex items-center gap-2.5 min-w-0">
-                <div class="w-8 h-8 rounded-lg bg-purple-500/25 border border-purple-400/40 text-purple-300 flex items-center justify-center font-bold text-sm shrink-0">
-                    <i class="bi bi-file-earmark-check-fill"></i>
+    <!-- FLOATING POPUP: BAP SIDANG UNTUK MAHASISWA (kondisional)   -->
+    <!-- ========================================================== -->
+    <?php if (!empty($pendaftaran['bap_published'])): ?>
+    <div id="studentBapContainer" class="fixed inset-0 z-[100000] pointer-events-none p-4 sm:p-6 flex items-center justify-center" style="display:none;">
+        <div class="absolute inset-0 bg-slate-900/55 backdrop-blur-sm pointer-events-auto" onclick="closeStudentBapPopup()"></div>
+        <div class="relative pointer-events-auto bg-white rounded-3xl shadow-2xl border border-slate-300 flex flex-col overflow-hidden w-[92vw] sm:w-[600px] xl:w-[720px] h-[85vh] max-h-[92vh] animate-pop-in">
+            <div class="p-3 px-4 bg-slate-900 text-white flex items-center justify-between gap-2 shrink-0 border-b border-slate-800">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-8 h-8 rounded-lg bg-purple-500/25 border border-purple-400/40 text-purple-300 flex items-center justify-center font-bold text-sm shrink-0">
+                        <i class="bi bi-file-earmark-check-fill"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <h4 class="text-sm font-extrabold text-white truncate">Berita Acara Sidang Tugas Akhir</h4>
+                        <p class="text-[10px] text-slate-300 truncate">Dokumen BAP resmi dari dewan sidang</p>
+                    </div>
                 </div>
-                <div class="min-w-0">
-                    <h4 class="text-sm font-extrabold text-white truncate">Berita Acara Sidang Tugas Akhir</h4>
-                    <p class="text-[10px] text-slate-300 truncate">Dokumen BAP resmi dari dewan sidang</p>
-                </div>
-            </div>
-            <button type="button" onclick="closeStudentBapPopup()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-rose-600 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer">
-                <i class="bi bi-x-lg text-sm"></i>
-            </button>
-        </div>
-
-        <!-- Tabs -->
-        <div class="bg-slate-950 p-2 px-3 flex items-center gap-2 border-b border-slate-800 shrink-0">
-            <button type="button" onclick="studentBapSwitchTab('igracias')" id="stBtnBapIgracias"
-                    class="flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer bg-orange-600 text-white shadow-xs transition">
-                <i class="bi bi-file-earmark-text-fill"></i><span>1. BAP (IGRACIAS)</span>
-            </button>
-            <button type="button" onclick="studentBapSwitchTab('fakultas')" id="stBtnBapFakultas"
-                    class="flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition">
-                <i class="bi bi-award-fill"></i><span>2. BAP FAKULTAS</span>
-            </button>
-        </div>
-
-        <!-- Iframe -->
-        <div class="flex-1 bg-slate-100 p-2 overflow-hidden flex flex-col relative">
-            <iframe id="stBapIframe"
-                    src=""
-                    class="w-full h-full bg-white rounded-2xl shadow-inner border border-slate-200"
-                    frameborder="0"></iframe>
-        </div>
-
-        <!-- Footer -->
-        <div class="p-2.5 px-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs shrink-0 flex-wrap gap-2">
-            <div class="flex items-center gap-2 min-w-0">
-                <span class="font-mono text-[11px] font-bold text-orange-600"><?= htmlspecialchars($pendaftaran['nim'] ?? $nim); ?></span>
-                <span class="text-slate-400 text-[11px]">|</span>
-                <span class="text-[11px] text-slate-600 truncate font-semibold">
-                    <?= htmlspecialchars(trim(($mahasiswa['nama_depan'] ?? 'Mahasiswa') . ' ' . ($mahasiswa['nama_belakang'] ?? ''))); ?>
-                </span>
-            </div>
-            <div class="flex items-center gap-1.5 shrink-0">
-                <a id="stBtnCetakBap" href="#" target="_blank"
-                   class="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-[11px] transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
-                    <i class="bi bi-printer-fill text-[11px]"></i> Cetak PDF
-                </a>
-                <button type="button" onclick="closeStudentBapPopup()"
-                        class="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 font-bold text-[11px] transition cursor-pointer">
-                    Tutup
+                <button type="button" onclick="closeStudentBapPopup()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-rose-600 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer">
+                    <i class="bi bi-x-lg text-sm"></i>
                 </button>
+            </div>
+
+            <div class="bg-slate-950 p-2 px-3 flex items-center gap-2 border-b border-slate-800 shrink-0">
+                <button type="button" onclick="studentBapSwitchTab('igracias')" id="stBtnBapIgracias"
+                        class="flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer bg-orange-600 text-white shadow-xs transition">
+                    <i class="bi bi-file-earmark-text-fill"></i><span>1. BAP (IGRACIAS)</span>
+                </button>
+                <button type="button" onclick="studentBapSwitchTab('fakultas')" id="stBtnBapFakultas"
+                        class="flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition">
+                    <i class="bi bi-award-fill"></i><span>2. BAP FAKULTAS</span>
+                </button>
+            </div>
+
+            <div class="flex-1 bg-slate-100 p-2 overflow-hidden flex flex-col relative">
+                <iframe id="stBapIframe"
+                        src=""
+                        class="w-full h-full bg-white rounded-2xl shadow-inner border border-slate-200"
+                        frameborder="0"></iframe>
+            </div>
+
+            <div class="p-2.5 px-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs shrink-0 flex-wrap gap-2">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="font-mono text-[11px] font-bold text-orange-600"><?= htmlspecialchars($pendaftaran['nim'] ?? $nim); ?></span>
+                    <span class="text-slate-400 text-[11px]">|</span>
+                    <span class="text-[11px] text-slate-600 truncate font-semibold">
+                        <?= htmlspecialchars(trim(($mahasiswa['nama_depan'] ?? 'Mahasiswa') . ' ' . ($mahasiswa['nama_belakang'] ?? ''))); ?>
+                    </span>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <a id="stBtnCetakBap" href="#" target="_blank"
+                       class="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-[11px] transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
+                        <i class="bi bi-printer-fill text-[11px]"></i> Cetak PDF
+                    </a>
+                    <button type="button" onclick="closeStudentBapPopup()"
+                            class="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 font-bold text-[11px] transition cursor-pointer">
+                        Tutup
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    // ============================================================
-    // FLOATING POPUP BAP — untuk mahasiswa
-    // Sama seperti Penguji 1 minus tombol Upload
-    // ============================================================
-    const ST_NIM = <?= json_encode($pendaftaran['nim'] ?? $nim); ?>;
-    const ST_URL_BAP_IGRACIAS_PREVIEW = '<?= site_url('adminlayanan/preview_bap_igracias/'); ?>' + ST_NIM;
-    const ST_URL_BAP_FAKULTAS_PREVIEW = '<?= site_url('adminlayanan/preview_bap_fakultas/'); ?>' + ST_NIM;
-    const ST_URL_BAP_IGRACIAS_PRINT   = '<?= site_url('adminlayanan/cetak_bap_igracias/'); ?>'   + ST_NIM;
-    const ST_URL_BAP_FAKULTAS_PRINT   = '<?= site_url('adminlayanan/cetak_bap_fakultas/'); ?>'   + ST_NIM;
+    <script>
+        const ST_NIM = <?= json_encode($pendaftaran['nim'] ?? $nim); ?>;
+        const ST_URL_BAP_IGRACIAS_PREVIEW = '<?= site_url('adminlayanan/preview_bap_igracias/'); ?>' + ST_NIM;
+        const ST_URL_BAP_FAKULTAS_PREVIEW = '<?= site_url('adminlayanan/preview_bap_fakultas/'); ?>' + ST_NIM;
+        const ST_URL_BAP_IGRACIAS_PRINT   = '<?= site_url('adminlayanan/cetak_bap_igracias/'); ?>'   + ST_NIM;
+        const ST_URL_BAP_FAKULTAS_PRINT   = '<?= site_url('adminlayanan/cetak_bap_fakultas/'); ?>'   + ST_NIM;
 
-    let stBapActiveTab = 'igracias';
+        let stBapActiveTab = 'igracias';
 
-    function studentBapSwitchTab(type) {
-        stBapActiveTab = type;
-        const btnIgracias = document.getElementById('stBtnBapIgracias');
-        const btnFakultas = document.getElementById('stBtnBapFakultas');
-        const iframe      = document.getElementById('stBapIframe');
-        const btnCetak    = document.getElementById('stBtnCetakBap');
-        if (!iframe) return;
+        function studentBapSwitchTab(type) {
+            stBapActiveTab = type;
+            const btnIgracias = document.getElementById('stBtnBapIgracias');
+            const btnFakultas = document.getElementById('stBtnBapFakultas');
+            const iframe      = document.getElementById('stBapIframe');
+            const btnCetak    = document.getElementById('stBtnCetakBap');
+            if (!iframe) return;
 
-        const ACTIVE_ORANGE = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer bg-orange-600 text-white shadow-xs transition';
-        const ACTIVE_INDIGO = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer bg-indigo-600 text-white shadow-xs transition';
-        const INACTIVE      = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition';
+            const ACTIVE_ORANGE = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer bg-orange-600 text-white shadow-xs transition';
+            const ACTIVE_INDIGO = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer bg-indigo-600 text-white shadow-xs transition';
+            const INACTIVE      = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition';
 
-        if (type === 'igracias') {
-            iframe.src = ST_URL_BAP_IGRACIAS_PREVIEW;
-            if (btnCetak) btnCetak.href = ST_URL_BAP_IGRACIAS_PRINT;
-            if (btnIgracias) btnIgracias.className = ACTIVE_ORANGE;
-            if (btnFakultas) btnFakultas.className = INACTIVE;
-        } else {
-            iframe.src = ST_URL_BAP_FAKULTAS_PREVIEW;
-            if (btnCetak) btnCetak.href = ST_URL_BAP_FAKULTAS_PRINT;
-            if (btnFakultas) btnFakultas.className = ACTIVE_INDIGO;
-            if (btnIgracias) btnIgracias.className = INACTIVE;
+            if (type === 'igracias') {
+                iframe.src = ST_URL_BAP_IGRACIAS_PREVIEW;
+                if (btnCetak) btnCetak.href = ST_URL_BAP_IGRACIAS_PRINT;
+                if (btnIgracias) btnIgracias.className = ACTIVE_ORANGE;
+                if (btnFakultas) btnFakultas.className = INACTIVE;
+            } else {
+                iframe.src = ST_URL_BAP_FAKULTAS_PREVIEW;
+                if (btnCetak) btnCetak.href = ST_URL_BAP_FAKULTAS_PRINT;
+                if (btnFakultas) btnFakultas.className = ACTIVE_INDIGO;
+                if (btnIgracias) btnIgracias.className = INACTIVE;
+            }
         }
-    }
 
-    function openStudentBapPopup() {
-        const container = document.getElementById('studentBapContainer');
-        if (!container) return;
-        container.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-        studentBapSwitchTab(stBapActiveTab || 'igracias');
-    }
+        function openStudentBapPopup() {
+            const container = document.getElementById('studentBapContainer');
+            if (!container) return;
+            container.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            studentBapSwitchTab(stBapActiveTab || 'igracias');
+        }
 
-    function closeStudentBapPopup() {
-        const container = document.getElementById('studentBapContainer');
-        if (!container) return;
-        container.style.display = 'none';
-        document.body.style.overflow = '';
-    }
+        function closeStudentBapPopup() {
+            const container = document.getElementById('studentBapContainer');
+            if (!container) return;
+            container.style.display = 'none';
+            document.body.style.overflow = '';
+        }
 
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') closeStudentBapPopup();
-    });
+        window.openStudentBapPopup  = openStudentBapPopup;
+        window.closeStudentBapPopup = closeStudentBapPopup;
+        window.studentBapSwitchTab  = studentBapSwitchTab;
+    </script>
+    <?php endif; ?>
 
-    window.openStudentBapPopup  = openStudentBapPopup;
-    window.closeStudentBapPopup = closeStudentBapPopup;
-    window.studentBapSwitchTab  = studentBapSwitchTab;
-</script>
-<?php endif; ?>
+    <!-- ========================================================== -->
+    <!-- MODAL: PERSYARATAN SIDANG (DINAMIS) — SELALU DI-RENDER     -->
+    <!-- ========================================================== -->
+    <div id="modalPersyaratanSidang" class="fixed inset-0 z-[10000] bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div class="bg-white w-full max-w-3xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-6 flex flex-col max-h-[90vh]">
+
+            <div class="px-5 sm:px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-orange-50/60 to-amber-50/30 shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-md shadow-orange-500/20 shrink-0">
+                        <i class="bi bi-file-earmark-check-fill text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm sm:text-base font-extrabold text-slate-800">Persyaratan Sidang Tugas Akhir</h3>
+                        <p class="text-[11px] text-slate-500 font-medium">Daftar berkas dinamis dari Admin LAA. Status verifikasi akan tampil setelah diunggah.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModalPersyaratanSidang()"
+                        class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition">
+                    <i class="bi bi-x-lg text-sm"></i>
+                </button>
+            </div>
+
+            <div class="p-5 sm:p-6 overflow-y-auto space-y-3" id="psBodyContent">
+                <div class="text-center py-10 text-slate-400">
+                    <i class="bi bi-arrow-repeat animate-spin text-2xl inline-block"></i>
+                    <p class="mt-2 text-xs font-semibold">Memuat daftar persyaratan sidang...</p>
+                </div>
+            </div>
+
+            <div class="px-5 sm:px-6 py-3.5 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-3 shrink-0">
+                <span class="text-[11px] text-slate-400 font-medium hidden sm:block">
+                    Format: PDF / DOC / DOCX / JPG / PNG — Maks. 5MB per berkas
+                </span>
+                <div class="flex items-center gap-2 ml-auto">
+                    <button type="button" onclick="closeModalPersyaratanSidang()"
+                            class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold transition">
+                        Tutup
+                    </button>
+                    <button type="button" id="psBtnSubmit" onclick="submitPersyaratanSidang()"
+                            class="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold shadow-md shadow-orange-500/25 transition">
+                        <i class="bi bi-cloud-arrow-up-fill text-sm"></i>
+                        <span>Upload Semua Berkas</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // MODAL PERSYARATAN SIDANG — DINAMIS DARI MASTER LAA
+        // ============================================================
+        let _psMasterData = [];
+        let _psUploadedData = [];
+
+        function openModalPersyaratanSidang() {
+            const m = document.getElementById('modalPersyaratanSidang');
+            if (!m) {
+                console.error('[PS] Element #modalPersyaratanSidang tidak ditemukan!');
+                return;
+            }
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+            loadMasterSyaratSidang();
+        }
+
+        function closeModalPersyaratanSidang() {
+            const m = document.getElementById('modalPersyaratanSidang');
+            if (!m) return;
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+            document.body.style.overflow = '';
+        }
+
+        function loadMasterSyaratSidang() {
+            const body = document.getElementById('psBodyContent');
+            body.innerHTML = `<div class="text-center py-10 text-slate-400">
+                <i class="bi bi-arrow-repeat animate-spin text-2xl inline-block"></i>
+                <p class="mt-2 text-xs font-semibold">Memuat daftar persyaratan sidang...</p>
+            </div>`;
+
+            fetch('<?= site_url("mahasiswa/get_master_syarat_sidang_ajax") ?>')
+                .then(r => r.json())
+                .then(res => {
+                    if (!res.status) throw new Error(res.message || 'Gagal memuat data.');
+
+                    // ============================================
+                    // FILTER: buang file hantu (placeholder dari sistem)
+                    // ============================================
+                    const uploaded = (res.uploaded || []).filter(b => {
+                        if (!b || !b.file_name) return false;
+                        // Buang placeholder seperti "berkas_xyz_<nim>.pdf"
+                        if (b.file_name.startsWith('berkas_')) return false;
+                        // Buang pattern "<kode>_<nim>.pdf" (tanpa timestamp)
+                        if (/^[a-z_]+_\d+\.pdf$/i.test(b.file_name)) return false;
+                        return true;
+                    });
+
+                    _psMasterData   = res.master || [];
+                    _psUploadedData = uploaded;
+                    renderSyaratSidangForm();
+                })
+                .catch(err => {
+                    console.error('[PS] fetch error:', err);
+                    body.innerHTML = `<div class="text-center py-10 text-rose-500 text-xs font-bold">${err.message}</div>`;
+                });
+        }
+
+        function _psStatusBadge(status) {
+            const s = (status || '').toLowerCase();
+            if (s.includes('setuju') || s.includes('valid') || s.includes('approved')) {
+                return '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200"><i class="bi bi-check-circle-fill"></i> Disetujui LAA</span>';
+            }
+            if (s.includes('revisi') || s.includes('tolak') || s.includes('invalid') || s.includes('rejected')) {
+                return '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200"><i class="bi bi-x-circle-fill"></i> Perlu Revisi</span>';
+            }
+            return '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200"><i class="bi bi-clock-fill"></i> Menunggu</span>';
+        }
+
+        function renderSyaratSidangForm() {
+            const body = document.getElementById('psBodyContent');
+
+            if (!_psMasterData.length) {
+                body.innerHTML = `<div class="text-center py-10 text-slate-400 text-xs font-semibold">
+                    <i class="bi bi-inbox text-3xl block mb-2"></i>
+                    Belum ada berkas persyaratan yang dikonfigurasi oleh Admin LAA.
+                </div>`;
+                return;
+            }
+
+            const totalReq = _psMasterData.filter(m => parseInt(m.is_required) === 1).length;
+            const uploadedReq = _psMasterData.filter(m => {
+                if (parseInt(m.is_required) !== 1) return false;
+                const u = _psUploadedData.find(x => x.kode === m.kode_berkas);
+                return u && u.file_name;
+            }).length;
+
+            let html = `
+                <div class="p-3.5 rounded-2xl bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-orange-500 text-white flex items-center justify-center text-sm"><i class="bi bi-info-circle-fill"></i></div>
+                        <div>
+                            <span class="text-xs font-extrabold text-slate-800 block">Progres Berkas Wajib</span>
+                            <span class="text-[11px] text-slate-500">Unggah semua berkas bertanda <span class="text-rose-500 font-bold">*</span></span>
+                        </div>
+                    </div>
+                    <span class="text-xs font-black text-orange-700 bg-white px-3 py-1.5 rounded-xl border border-orange-200">
+                        ${uploadedReq} / ${totalReq}
+                    </span>
+                </div>
+            `;
+
+            _psMasterData.forEach((item, idx) => {
+                const kode      = item.kode_berkas || '';
+                const uploaded  = _psUploadedData.find(u => u.kode === kode);
+                const isReq     = parseInt(item.is_required) === 1;
+                const hasFile   = uploaded && uploaded.file_name;
+                const statusSt  = uploaded ? uploaded.status : '';
+
+                html += `
+                    <div class="p-4 rounded-2xl border ${hasFile ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-200 bg-white'} space-y-3 transition">
+                        
+                        <!-- HEADER: NAMA + STATUS -->
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0 flex-1">
+                                <label class="font-bold text-slate-800 text-xs sm:text-sm block">
+                                    ${idx + 1}. ${item.nama_berkas}
+                                    ${isReq ? '<span class="text-rose-500">*</span>' : '<span class="text-[10px] text-slate-400 font-medium ml-1">(opsional)</span>'}
+                                </label>
+                                ${item.deskripsi ? `<p class="text-[11px] text-slate-500 mt-0.5 leading-snug">${item.deskripsi}</p>` : ''}
+                            </div>
+                            ${hasFile ? _psStatusBadge(statusSt) : ''}
+                        </div>
+
+                        <!-- DROPZONE (DI ATAS) -->
+                        <div class="ps-dropzone relative border-2 border-dashed ${hasFile ? 'border-emerald-300 bg-emerald-50/40' : 'border-slate-300 hover:border-orange-400 bg-slate-50/50 hover:bg-orange-50/40'} rounded-2xl p-5 text-center transition-all cursor-pointer group"
+                             data-kode="${kode}"
+                             ondragover="psDragOver(event, this)"
+                             ondragleave="psDragLeave(event, this)"
+                             ondrop="psDrop(event, this)">
+                            
+                            <input type="file" name="berkas[${kode}]" data-kode="${kode}"
+                                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                   class="ps-file-input absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                            
+                            <div class="pointer-events-none space-y-2">
+                                <div class="ps-dz-icon w-12 h-12 rounded-2xl ${hasFile ? 'bg-gradient-to-tr from-emerald-500 to-teal-400' : 'bg-gradient-to-tr from-orange-500 to-amber-400'} text-white flex items-center justify-center text-xl mx-auto transition-transform group-hover:scale-110 shadow-md ${hasFile ? 'shadow-emerald-500/25' : 'shadow-orange-500/25'}">
+                                    <i class="bi ${hasFile ? 'bi-arrow-repeat' : 'bi-cloud-arrow-up-fill'}"></i>
+                                </div>
+                                <div>
+                                    <p class="ps-dz-title text-xs sm:text-sm font-bold ${hasFile ? 'text-emerald-700' : 'text-slate-800'}">
+                                        ${hasFile ? 'Ganti Berkas — Klik atau seret file baru' : 'Klik untuk pilih file atau seret & lepas ke sini'}
+                                    </p>
+                                    <p class="ps-dz-sub text-[10px] sm:text-[11px] text-slate-500 font-medium mt-0.5">
+                                        PDF / DOC / DOCX / JPG / PNG — Maks. 5MB
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CURRENT FILE (DI BAWAH DROPZONE) -->
+                        ${hasFile ? `
+                            <div class="ps-current-file flex items-center gap-2.5 p-3 rounded-xl bg-white border border-emerald-200 shadow-2xs">
+                                <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-base shrink-0">
+                                    <i class="bi bi-file-earmark-check-fill"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <span class="text-[9px] font-extrabold text-emerald-700 uppercase tracking-wider block">Current File</span>
+                                    <a href="${uploaded.file_url}" target="_blank"
+                                       class="text-[11px] font-bold text-slate-800 hover:text-emerald-700 underline truncate block">
+                                        ${uploaded.file_name}
+                                    </a>
+                                </div>
+                                <span class="text-[10px] text-slate-400 font-semibold shrink-0 bg-slate-100 px-2 py-1 rounded-md">Terupload</span>
+                            </div>
+                        ` : ''}
+
+                    </div>
+                `;
+            });
+
+            body.innerHTML = html;
+
+            // Attach event listener ke semua input file
+            document.querySelectorAll('.ps-file-input').forEach(inp => {
+                inp.addEventListener('change', function() {
+                    const dz = this.closest('.ps-dropzone');
+                    if (this.files && this.files[0]) {
+                        psShowPickedFile(dz, this.files[0]);
+                    }
+                });
+            });
+        }
+
+        // ============================================================
+        // DRAG & DROP HELPERS
+        // ============================================================
+        function psDragOver(e, el) {
+            e.preventDefault(); e.stopPropagation();
+            el.classList.add('dragover');
+        }
+        function psDragLeave(e, el) {
+            e.preventDefault(); e.stopPropagation();
+            el.classList.remove('dragover');
+        }
+        function psDrop(e, el) {
+            e.preventDefault(); e.stopPropagation();
+            el.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files && files.length > 0) {
+                const input = el.querySelector('.ps-file-input');
+                // Set file via DataTransfer
+                const dt = new DataTransfer();
+                dt.items.add(files[0]);
+                input.files = dt.files;
+                psShowPickedFile(el, files[0]);
+            }
+        }
+        function psShowPickedFile(dropzoneEl, file) {
+            const title = dropzoneEl.querySelector('.ps-dz-title');
+            const sub   = dropzoneEl.querySelector('.ps-dz-sub');
+            const icon  = dropzoneEl.querySelector('.ps-dz-icon');
+            if (!title || !sub || !icon) return;
+
+            // Reset styling → tandai sebagai "siap upload"
+            dropzoneEl.classList.remove('border-slate-300', 'bg-slate-50/50', 'border-emerald-300', 'bg-emerald-50/40');
+            dropzoneEl.classList.add('border-orange-500', 'bg-orange-50');
+            title.classList.remove('text-slate-800', 'text-emerald-700');
+            title.classList.add('text-orange-800');
+            icon.classList.remove('from-orange-500', 'to-amber-400', 'from-emerald-500', 'to-teal-400');
+            icon.classList.add('from-orange-600', 'to-orange-500');
+            icon.innerHTML = '<i class="bi bi-file-earmark-check-fill"></i>';
+
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            title.textContent = '📎 ' + file.name;
+            sub.textContent   = 'Siap diunggah — ' + sizeMB + ' MB';
+            sub.classList.remove('text-slate-500');
+            sub.classList.add('text-orange-700', 'font-bold');
+        }
+
+        function submitPersyaratanSidang() {
+            const inputs = document.querySelectorAll('.ps-file-input');
+            const formData = new FormData();
+            let fileCount = 0;
+
+            inputs.forEach(input => {
+                if (input.files && input.files[0]) {
+                    formData.append('berkas[' + input.dataset.kode + ']', input.files[0]);
+                    fileCount++;
+                }
+            });
+
+            if (fileCount === 0) {
+                if (typeof showToast === 'function') showToast('Pilih minimal satu berkas untuk diunggah.', 'error');
+                else alert('Pilih minimal satu berkas untuk diunggah.');
+                return;
+            }
+
+            const btn = document.getElementById('psBtnSubmit');
+            const orig = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin text-sm"></i> Mengunggah...';
+
+            fetch('<?= site_url("mahasiswa/upload_berkas_sidang_ajax") ?>', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.status) {
+                    if (typeof showToast === 'function') showToast(res.message, 'success');
+                    else alert(res.message);
+                    setTimeout(() => loadMasterSyaratSidang(), 600);
+                } else {
+                    if (typeof showToast === 'function') showToast(res.message || 'Gagal mengunggah berkas.', 'error');
+                    else alert(res.message || 'Gagal mengunggah berkas.');
+                }
+            })
+            .catch(err => {
+                console.error('[PS] upload error:', err);
+                if (typeof showToast === 'function') showToast('Kesalahan koneksi ke server.', 'error');
+                else alert('Kesalahan koneksi ke server.');
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = orig;
+            });
+        }
+
+        // Expose ke window agar aman
+        window.openModalPersyaratanSidang  = openModalPersyaratanSidang;
+        window.closeModalPersyaratanSidang = closeModalPersyaratanSidang;
+        window.submitPersyaratanSidang     = submitPersyaratanSidang;
+        window.psDragOver                  = psDragOver;
+        window.psDragLeave                 = psDragLeave;
+        window.psDrop                      = psDrop;
+    </script>
+
     <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>
