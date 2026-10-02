@@ -212,24 +212,34 @@ defined('BASEPATH') OR exit('No direct script access allowed');
       gap: 16px;
       flex-wrap: wrap;
     }
+    .search-box-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      max-width: 480px;
+    }
     .search-box {
       position: relative;
       flex: 1;
-      max-width: 380px;
+      min-width: 0;
     }
     .search-input {
       width: 100%;
       height: 42px;
-      padding: 0 16px 0 40px;
+      padding: 0 36px 0 40px;
       border-radius: 12px;
       border: 1px solid var(--border-color);
       background: #ffffff;
       font-size: 0.88rem;
       color: #0f172a;
       outline: none;
-      transition: border-color 0.2s;
+      transition: all 0.2s ease;
     }
-    .search-input:focus { border-color: var(--primary); }
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12);
+    }
     .search-icon {
       position: absolute;
       left: 14px;
@@ -238,6 +248,73 @@ defined('BASEPATH') OR exit('No direct script access allowed');
       width: 16px;
       height: 16px;
       fill: #94a3b8;
+      pointer-events: none;
+    }
+    .btn-clear-search {
+      display: none;
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #f1f5f9;
+      color: #64748b;
+      border: none;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+    .btn-clear-search:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+    .btn-search-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      height: 42px;
+      padding: 0 20px;
+      background: var(--primary);
+      color: #ffffff;
+      font-size: 0.86rem;
+      font-weight: 700;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(234, 88, 12, 0.25);
+      flex-shrink: 0;
+    }
+    .btn-search-action:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(234, 88, 12, 0.35);
+    }
+    .btn-reset-action {
+      display: none;
+      align-items: center;
+      height: 42px;
+      padding: 0 16px;
+      background: #ffffff;
+      color: #64748b;
+      font-size: 0.86rem;
+      font-weight: 700;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+    .btn-reset-action:hover {
+      background: #f8fafc;
+      color: #0f172a;
+      border-color: #cbd5e1;
     }
 
     .table-card {
@@ -374,6 +451,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
       justify-content: center;
       padding: 20px 12px;
       overflow-y: auto;
+      box-sizing: border-box;
+      transition: left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
     }
     .modal-overlay.active { display: flex; }
     .modal-card {
@@ -814,23 +893,44 @@ defined('BASEPATH') OR exit('No direct script access allowed');
       box-sizing: border-box;
     }
 
-    @media (min-width: 1024px) {
+    @media (min-width: 992px) {
       .page-wrapper-for-sidebar {
         margin-left: 270px;
         width: calc(100% - 270px);
+      }
+
+      body.curved-sidebar-desktop-open .modal-overlay,
+      body.curved-sidebar-desktop-open #modalRuangan,
+      body:not(.curved-sidebar-desktop-collapsed) .modal-overlay,
+      body:not(.curved-sidebar-desktop-collapsed) #modalRuangan {
+        left: 270px !important;
+        width: calc(100% - 270px) !important;
+        box-sizing: border-box !important;
+        transition: left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
       }
 
       body.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar {
         margin-left: 0;
         width: 100%;
       }
+
+      body.curved-sidebar-desktop-collapsed .modal-overlay,
+      body.curved-sidebar-desktop-collapsed #modalRuangan {
+        left: 0 !important;
+        width: 100% !important;
+      }
     }
 
-    @media (max-width: 1023.98px) {
+    @media (max-width: 991.98px) {
       .page-wrapper-for-sidebar {
         margin-left: 0 !important;
         width: 100% !important;
         padding-top: 56px;
+      }
+      .modal-overlay,
+      #modalRuangan {
+        left: 0 !important;
+        width: 100% !important;
       }
     }
   </style>
@@ -1163,9 +1263,19 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
         <!-- Filter & Search Bar -->
         <div class="filter-bar">
-            <div class="search-box">
-                <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Cari kode atau nama ruangan..." class="search-input">
+            <div class="search-box-wrapper">
+                <div class="search-box">
+                    <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                    <input type="text" id="searchInput" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); filterTable(); }" oninput="handleSearchInputChange(this)" placeholder="Cari kode atau nama ruangan..." class="search-input">
+                    <button type="button" id="btnClearSearch" onclick="resetSearchTable()" class="btn-clear-search" title="Hapus pencarian">✕</button>
+                </div>
+                <button type="button" onclick="filterTable()" class="btn-search-action">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <span>Cari</span>
+                </button>
+                <button type="button" id="btnResetSearch" onclick="resetSearchTable()" class="btn-reset-action">
+                    <span>Reset</span>
+                </button>
             </div>
         </div>
 
@@ -1243,7 +1353,16 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <div style="font-size: 0.8rem; font-weight: 700;">💻 <?= htmlspecialchars(isset($r->jumlah_unit) && !empty($r->jumlah_unit) ? $r->jumlah_unit : (isset($r->kapasitas) ? $r->kapasitas . ' Orang' : '30 Orang')) ?></div>
+                                    <div style="font-size: 0.8rem; font-weight: 700;">
+                                        <?php if (!empty($r->jumlah_unit)): ?>
+                                            💻 <?= htmlspecialchars(is_numeric(trim($r->jumlah_unit)) ? trim($r->jumlah_unit) . ' Unit' : $r->jumlah_unit) ?>
+                                            <?php if (!empty($r->kapasitas)): ?>
+                                                <span style="font-size: 0.72rem; font-weight: 600; color: #64748b;">(<?= htmlspecialchars($r->kapasitas) ?> Orang)</span>
+                                            <?php endif; ?>
+                                        <?php else: ?>
+                                            👥 <?= htmlspecialchars(!empty($r->kapasitas) ? $r->kapasitas . ' Orang' : '30 Orang') ?>
+                                        <?php endif; ?>
+                                    </div>
                                     <div style="font-size: 0.75rem; color: #64748b;">⏰ <?= htmlspecialchars(isset($r->jam_operasional) && !empty($r->jam_operasional) ? $r->jam_operasional : '08:00 - 17:00 WIB') ?></div>
                                 </td>
                                 <td>
@@ -2725,6 +2844,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
           switchFloorTab('all');
           clearAllPhotos();
           clearFileModel();
+          syncModalOverlayPosition();
           document.getElementById('modalRuangan').classList.add('active');
       }
 
@@ -2780,8 +2900,31 @@ defined('BASEPATH') OR exit('No direct script access allowed');
               clearFileModel();
           }
 
+          syncModalOverlayPosition();
           document.getElementById('modalRuangan').classList.add('active');
       }
+
+      function syncModalOverlayPosition() {
+          const modal = document.getElementById('modalRuangan');
+          if (!modal) return;
+          const isDesktop = (window.matchMedia && window.matchMedia('(min-width: 1024px)').matches) || window.innerWidth >= 992;
+          const panel = document.getElementById('curvedSidebarPanel');
+          const isPanelActive = panel ? panel.classList.contains('is-active') : false;
+          const isCollapsed = document.body.classList.contains('curved-sidebar-desktop-collapsed');
+          
+          const isSidebarOpen = isDesktop && isPanelActive && !isCollapsed;
+
+          if (isSidebarOpen) {
+              modal.style.setProperty('left', '270px', 'important');
+              modal.style.setProperty('width', 'calc(100% - 270px)', 'important');
+          } else {
+              modal.style.setProperty('left', '0px', 'important');
+              modal.style.setProperty('width', '100%', 'important');
+          }
+      }
+
+      window.addEventListener('resize', syncModalOverlayPosition);
+      window.addEventListener('curvedSidebarToggled', syncModalOverlayPosition);
 
       function closeModalRuangan() {
           document.body.style.overflow = '';
@@ -2910,24 +3053,72 @@ defined('BASEPATH') OR exit('No direct script access allowed');
           });
       }
 
+      function handleSearchInputChange(input) {
+          const btnClear = document.getElementById('btnClearSearch');
+          if (btnClear) {
+              btnClear.style.display = input.value.trim() ? 'inline-flex' : 'none';
+          }
+      }
+
       function filterTable() {
           const input = document.getElementById('searchInput');
-          const filter = input.value.toLowerCase();
+          if (!input) return;
+          const filter = input.value.toLowerCase().trim();
           const table = document.getElementById('ruanganTable');
-          const tr = table.getElementsByTagName('tr');
+          if (!table) return;
+          const tbody = table.getElementsByTagName('tbody')[0] || table;
+          const tr = tbody.getElementsByTagName('tr');
 
-          for (let i = 1; i < tr.length; i++) {
+          const btnClear = document.getElementById('btnClearSearch');
+          const btnReset = document.getElementById('btnResetSearch');
+          if (btnClear) btnClear.style.display = filter ? 'inline-flex' : 'none';
+          if (btnReset) btnReset.style.display = filter ? 'inline-flex' : 'none';
+
+          let visibleCount = 0;
+          let noResultRow = document.getElementById('noResultsRow');
+
+          for (let i = 0; i < tr.length; i++) {
+              if (tr[i].id === 'noResultsRow') continue;
+
               let show = false;
-              const tdCode = tr[i].getElementsByTagName('td')[1];
-              const tdName = tr[i].getElementsByTagName('td')[2];
-              if (tdCode || tdName) {
-                  const codeTxt = tdCode ? tdCode.textContent || tdCode.innerText : '';
-                  const nameTxt = tdName ? tdName.textContent || tdName.innerText : '';
-                  if (codeTxt.toLowerCase().indexOf(filter) > -1 || nameTxt.toLowerCase().indexOf(filter) > -1) {
+              const tdRoom = tr[i].getElementsByTagName('td')[1];
+              const tdCat  = tr[i].getElementsByTagName('td')[2];
+              if (tdRoom || tdCat) {
+                  const roomTxt = tdRoom ? (tdRoom.textContent || tdRoom.innerText) : '';
+                  const catTxt  = tdCat ? (tdCat.textContent || tdCat.innerText) : '';
+                  if (!filter || roomTxt.toLowerCase().indexOf(filter) > -1 || catTxt.toLowerCase().indexOf(filter) > -1) {
                       show = true;
                   }
               }
               tr[i].style.display = show ? '' : 'none';
+              if (show) visibleCount++;
+          }
+
+          if (visibleCount === 0 && filter) {
+              if (!noResultRow) {
+                  noResultRow = document.createElement('tr');
+                  noResultRow.id = 'noResultsRow';
+                  tbody.appendChild(noResultRow);
+              }
+              noResultRow.style.display = '';
+              noResultRow.innerHTML = `
+                  <td colspan="7" style="text-align: center; padding: 45px 20px; color: #64748b;">
+                      <div style="font-size: 2rem; margin-bottom: 8px;">🔍</div>
+                      <div style="font-weight: 800; font-size: 1rem; color: #1e293b; margin-bottom: 4px;">Tidak ada ruangan yang cocok</div>
+                      <div style="font-size: 0.82rem; color: #64748b;">Tidak ditemukan ruangan dengan kata kunci "<strong>${filter.replace(/</g, '&lt;')}</strong>"</div>
+                  </td>
+              `;
+          } else if (noResultRow) {
+              noResultRow.style.display = 'none';
+          }
+      }
+
+      function resetSearchTable() {
+          const input = document.getElementById('searchInput');
+          if (input) {
+              input.value = '';
+              filterTable();
+              input.focus();
           }
       }
 

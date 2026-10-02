@@ -554,6 +554,7 @@ class KoordinatorTA_model extends CI_Model {
     public function get_available_ruangan() {
         $this->db->select('id, ruangan as nama_ruangan, kapasitas, akses as status, spesifikasi_fasilitas as fasilitas, date as tanggal_dibuat');
         $this->db->from('ruangan');
+        $this->db->order_by('date', 'ASC');
         $this->db->order_by('id', 'ASC');
         $this->db->order_by('ruangan', 'ASC');
         $query = $this->db->get();

@@ -420,7 +420,7 @@ class LaboranTicketing extends CI_Controller {
         $nidn        = $this->session->userdata('nidn_nim') ?: $this->session->userdata('nim');
         $namaLengkap = trim($this->input->post('nama_lengkap', true)) ?: ($this->session->userdata('name') ?: 'Laboran');
 
-        $tujuan_penerima  = trim($this->input->post('tujuan_penerima', true)) ?: 'Laboran';
+        $tujuan_penerima  = trim($this->input->post('tujuan_penerima', true));
         $unit_terkait     = trim($this->input->post('unit_terkait', true)) ?: (trim($this->input->post('unit_tujuan', true)) ?: 'Laboratorium (Fasilitas & Lab)');
         $kategori         = trim($this->input->post('kategori', true));
         $kategori_lainnya = trim($this->input->post('kategori_lainnya', true));

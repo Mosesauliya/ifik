@@ -557,7 +557,8 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
 (function() {
     try {
         var state = localStorage.getItem('ifik_curved_sidebar_state');
-        if (state === 'closed' || (state === null && window.innerWidth < 1024)) {
+        var isDesktop = (window.matchMedia && window.matchMedia('(min-width: 1024px)').matches) || window.innerWidth >= 992;
+        if (state === 'closed' || (state === null && !isDesktop)) {
             document.body.classList.add('curved-sidebar-desktop-collapsed');
             document.body.classList.remove('curved-sidebar-desktop-open');
             var btn = document.getElementById('curvedSidebarToggle');

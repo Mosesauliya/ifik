@@ -2027,25 +2027,6 @@
             });
         });
 
-        btnAdd.addEventListener('click', () => addFilterRow());
-
-        btnReset.addEventListener('click', () => {
-            filters = [];
-            pintasStatus = 'all';
-            currentPage = 1;
-            filterRows.innerHTML = '';
-            if (directSearchInput) {
-                directSearchInput.value = '';
-                if (btnClearDirectSearch) btnClearDirectSearch.classList.add('hidden');
-            }
-            document.querySelectorAll('.btn-pintas').forEach((b, i) => {
-                b.className = `btn-pintas px-3 py-1 rounded-full transition text-[11px] font-semibold cursor-pointer ${i === 0 ? 'bg-slate-800 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-orange-50'}`;
-            });
-            perPageSel.value = '5';
-            perPage = 5;
-            addFilterRow();
-        });
-
         perPageSel.addEventListener('change', () => { 
             perPage = parseInt(perPageSel.value) || 5; 
             currentPage = 1; 
@@ -4113,6 +4094,7 @@
 
                 const isJudulDoc = (doc.key === 'judul_jenis');
                 const cleanJudul = (mhs.judul && mhs.judul !== '-') ? mhs.judul : ((mhs.judul_1 && mhs.judul_1 !== '-') ? mhs.judul_1 : '');
+                const cleanJenis = (mhs.jenis_ta && mhs.jenis_ta !== '-') ? mhs.jenis_ta : 'TA Reguler';
                 const hasAlt = isJudulDoc && (Boolean(mhs.judul_2) || Boolean(mhs.judul_3));
                 const docSubtext = isJudulDoc
                     ? `<span class="text-orange-600 font-bold"><i class="fa-solid fa-tag mr-1 text-[9px]"></i>${cleanJenis}</span> &bull; <span class="text-slate-600 font-medium truncate inline-block max-w-[125px] align-bottom" title="${cleanJudul}">${cleanJudul || 'Belum diisi'}</span>${hasAlt ? ` <span class="px-1 py-0.2 rounded text-[8px] font-bold bg-amber-50 text-amber-700 border border-amber-200 inline-block align-middle" title="Terdapat judul alternatif">+Alternatif</span>` : ''}`
@@ -4220,6 +4202,12 @@
                                     class="px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer ${currentFilter === 'Pending' ? 'bg-amber-600 text-white shadow-2xs' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'}">
                                 <i class="fa-solid fa-clock text-[9px] mr-0.5"></i> Menunggu (${countPending})
                             </button>` : ''}
+                            <button type="button" 
+                                    onclick="openAllDocsForStudent('${nim}')" 
+                                    class="px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 shadow-2xs" 
+                                    title="Buka semua berkas mahasiswa ini sekaligus berjajar">
+                                <i class="fa-solid fa-layer-group text-[9px] mr-0.5"></i> Buka Semua
+                            </button>
                         </div>
                         ${currentFilter !== 'all' ? `
                             <button type="button" onclick="setCardDocFilter('${nim}', 'all')" class="text-[9px] text-slate-400 hover:text-slate-700 font-medium underline cursor-pointer">
@@ -4266,8 +4254,11 @@
             return;
         }
 
-        // HANYA 1 preview yang aktif per klik berkas (tidak membuka bertumpuk banyak)
-        window.activePreviews = [{ nim, docKey }];
+        // Izinkan multi-preview berkas sekaligus berjajar (maksimal 4 berkas sekaligus)
+        if (window.activePreviews.length >= 4) {
+            window.activePreviews.shift();
+        }
+        window.activePreviews.push({ nim, docKey });
 
         refreshLihatBerkasView();
 
@@ -4275,6 +4266,35 @@
             const previewWrapper = document.getElementById('wrapperPreviewBerkas');
             if (previewWrapper) {
                 previewWrapper.scrollLeft = previewWrapper.scrollWidth;
+                if (window.innerWidth < 1024) {
+                    previewWrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+        }, 120);
+    }
+
+    function openAllDocsForStudent(nim) {
+        if (!nim) return;
+        nim = String(nim).trim();
+        const docList = getDocList();
+        if (!docList || docList.length === 0) return;
+
+        if (!window.activePreviews) window.activePreviews = [];
+        
+        // Hapus preview lama khusus mahasiswa ini jika ada
+        window.activePreviews = window.activePreviews.filter(p => String(p.nim).trim() !== nim);
+
+        // Masukkan semua berkas mahasiswa ini ke activePreviews
+        docList.forEach(d => {
+            window.activePreviews.push({ nim, docKey: d.key });
+        });
+
+        refreshLihatBerkasView();
+
+        setTimeout(() => {
+            const previewWrapper = document.getElementById('wrapperPreviewBerkas');
+            if (previewWrapper) {
+                previewWrapper.scrollLeft = 0;
                 if (window.innerWidth < 1024) {
                     previewWrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }
@@ -5383,6 +5403,7 @@
     window.checkAndAutoCloseIfDone = checkAndAutoCloseIfDone;
     window.resetDocApproval = resetDocApproval;
     window.executeDocReset = executeDocReset;
+    window.openAllDocsForStudent = openAllDocsForStudent;
 
     // Keyboard ESC Shortcut untuk menutup modal & panel
     document.addEventListener('keydown', (e) => {

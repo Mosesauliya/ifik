@@ -140,8 +140,13 @@
                 <div class="flex-grow">
                     <span class="text-xs font-extrabold uppercase tracking-wider text-rose-800 block">STATUS: PERLU REVISI / PERBAIKAN BERKAS</span>
                     <p class="text-xs sm:text-sm font-semibold text-slate-800 leading-relaxed mt-1">
-                        Terdapat catatan perbaikan dari peninjau. Formulir telah diaktifkan kembali sehingga Anda dapat memperbarui data atau mengunggah ulang dokumen PDF yang diminta.
+                        Pendaftaran Anda telah diajukan dan terdapat catatan perbaikan dari peninjau. Formulir pendaftaran awal ini berstatus <strong>hanya lihat</strong>. Untuk mengunggah ulang dokumen perbaikan, silakan gunakan tombol <strong>Perbaikan Berkas</strong> di Dashboard.
                     </p>
+                    <div class="mt-3">
+                        <a href="<?= site_url('mahasiswa'); ?>" class="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer">
+                            <i class="bi bi-arrow-left-circle"></i> Menuju Dashboard untuk Perbaikan Berkas
+                        </a>
+                    </div>
                     <?php if(!empty($pendaftaran['catatan_wali'])): ?>
                         <div class="mt-2.5 p-3 bg-white/80 rounded-xl border border-rose-200 text-xs text-rose-900 font-medium">
                             <strong>Catatan Dosen Wali:</strong> <?= htmlspecialchars($pendaftaran['catatan_wali']); ?>
@@ -166,7 +171,7 @@
             </div>
         <?php endif; ?>
 
-        <?php if(!empty($is_locked)): ?>
+        <?php if(!empty($is_locked) && empty($has_revisi)): ?>
             <!-- Locked View-Only Notice Banner -->
             <div class="p-5 mb-6 rounded-2xl bg-amber-500/10 border-2 border-amber-400/80 text-amber-950 shadow-xs flex items-start gap-4">
                 <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-xl font-bold box-3d shrink-0">
@@ -539,7 +544,7 @@
                         </button>
                         <?php if(!empty($is_locked)): ?>
                             <button type="button" class="hidden flex items-center gap-2 bg-slate-200 border border-slate-300 text-slate-500 font-bold px-6 py-2.5 rounded-xl shadow-none transition text-xs select-none cursor-not-allowed" id="btnSubmit" disabled>
-                                <i class="bi bi-lock-fill text-sm"></i> Formulir Terkunci (Sedang Ditinjau)
+                                <i class="bi bi-lock-fill text-sm"></i> <?= !empty($has_revisi) ? 'Terkunci (Perbaikan di Dashboard)' : 'Formulir Terkunci (Sedang Ditinjau)'; ?>
                             </button>
                         <?php else: ?>
                             <button type="submit" class="hidden flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-md transition text-xs box-3d cursor-pointer" id="btnSubmit">
