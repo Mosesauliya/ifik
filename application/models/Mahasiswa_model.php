@@ -1346,7 +1346,7 @@ class Mahasiswa_model extends CI_Model {
     /**
      * Update status 1 file spesifik (ACC/Revisi per file).
      */
-    public function update_file_status($id_preview, $file_type, $status, $catatan = '', $role = null) {
+        public function update_file_status($id_preview, $file_type, $status, $catatan = '', $role = null) {
         if (!$this->db->table_exists('thesis')) {
             return ['status' => false, 'message' => 'Tabel thesis tidak ditemukan.'];
         }
@@ -1369,6 +1369,7 @@ class Mahasiswa_model extends CI_Model {
             return ['status' => false, 'message' => 'Kolom ' . $col_status . ' belum ada. Jalankan migrasi SQL dulu.'];
         }
 
+        // 1. Update status file
         $update = [$col_status => $status];
         if ($this->db->field_exists($col_catatan, 'thesis')) {
             $update[$col_catatan] = $catatan;
@@ -1381,6 +1382,9 @@ class Mahasiswa_model extends CI_Model {
         }
 
         $this->db->where('id', $id_preview)->update('thesis', $update);
+
+        // 2. ✅ FIX: Cek semua file di preview ini, update `status` agregat
+        $this->_sync_thesis_status_from_files($id_preview);
 
         $label_map = ['draft'=>'Draft','sitasi'=>'Sitasi','bimbingan'=>'Bimbingan','persyaratan'=>'Persyaratan','sidang'=>'Sidang'];
         $label = $label_map[$file_type] ?? $file_type;
@@ -1410,6 +1414,53 @@ class Mahasiswa_model extends CI_Model {
         }
 
         return ['status' => true, 'message' => $msg, 'file_type' => $file_type, 'new_status' => $status];
+    }
+
+    /**
+     * Sync `thesis.status` (== status_pembimbing) berdasarkan agregat status_file_*.
+     * - Semua file Approved → `status` = 'Approved'
+     * - Ada file Revision → `status` = 'Revision'
+     * - Selain itu → `status` = 'Pending'
+     */
+    private function _sync_thesis_status_from_files($id_preview) {
+        if (!$this->db->table_exists('thesis')) return;
+
+        $preview = $this->db->select('id, id_guidance, tahapan_preview')
+            ->get_where('thesis', ['id' => $id_preview])->row_array();
+        if (!$preview) return;
+
+        $thesis_fields = $this->db->list_fields('thesis');
+        if (!in_array('status', $thesis_fields)) return;
+
+        $tahap = strtolower($preview['tahapan_preview'] ?? 'preview1');
+
+        // File wajib per tahap
+        if ($tahap === 'preview3')     $required = ['sitasi', 'bimbingan', 'persyaratan'];
+        elseif ($tahap === 'sidang')   $required = ['sidang'];
+        else                           $required = ['draft'];
+
+        // Ambil status per file (guard kolom existence)
+        $row = $this->db->get_where('thesis', ['id' => $id_preview])->row_array();
+        if (!$row) return;
+
+        $has_revision  = false;
+        $all_approved  = true;
+
+        foreach ($required as $ft) {
+            $col = 'status_file_' . $ft;
+            $st  = isset($row[$col]) ? $row[$col] : 'Pending';
+            if ($st === 'Revision') $has_revision = true;
+            if ($st !== 'Approved') $all_approved = false;
+        }
+
+        $new_status = 'Pending';
+        if ($has_revision)         $new_status = 'Revision';
+        elseif ($all_approved)     $new_status = 'Approved';
+
+        // Update hanya kalau perlu
+        if (($row['status'] ?? '') !== $new_status) {
+            $this->db->where('id', $id_preview)->update('thesis', ['status' => $new_status]);
+        }
     }
 
     /**
