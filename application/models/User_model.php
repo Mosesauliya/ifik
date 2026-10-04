@@ -336,11 +336,19 @@ class User_model extends CI_Model {
             $roleMap[strtolower(trim($r[$roleField]))] = (int)$r['id'];
         }
 
-        // Deduplicate input accounts by email to guarantee zero duplicate inserts from single bulk Excel file
+        // Deduplicate input accounts by email and NIM/NIP to guarantee zero duplicate inserts from single bulk Excel file
         $uniqueAccounts = [];
+        $seenNims = [];
         foreach ($accounts as $acc) {
             $email = isset($acc['email']) ? strtolower(trim($acc['email'])) : '';
+            $nimNip = isset($acc['nim_nip']) ? trim($acc['nim_nip']) : '';
             if (!empty($email) && preg_match('/@(student\.)?telkomuniversity\.ac\.id$/i', $email)) {
+                if (!empty($nimNip) && $nimNip !== '-') {
+                    if (isset($seenNims[$nimNip])) {
+                        continue; // Skip duplicate NIM/NIP in same bulk Excel file
+                    }
+                    $seenNims[$nimNip] = true;
+                }
                 $uniqueAccounts[$email] = $acc;
             }
         }
@@ -353,7 +361,7 @@ class User_model extends CI_Model {
             return ['imported' => 0, 'updated' => 0];
         }
 
-        // Single query to find existing users
+        // Single query to find existing users by Email
         $existingMap = [];
         $emailChunks = array_chunk($emails, 200);
         foreach ($emailChunks as $chunk) {
@@ -361,6 +369,26 @@ class User_model extends CI_Model {
             $found = $this->db->get($this->tbl_user)->result_array();
             foreach ($found as $u) {
                 $existingMap[strtolower(trim($u['email']))] = $u;
+            }
+        }
+
+        // Single query to find existing users by NIM/NIP
+        $nims = array_filter(array_column($accounts, 'nim_nip'), function($n) { return !empty($n) && $n !== '-'; });
+        $existingNimMap = [];
+        if (!empty($nims)) {
+            $nimChunks = array_chunk(array_unique($nims), 200);
+            foreach ($nimChunks as $nchunk) {
+                $this->db->group_start();
+                if ($this->db->field_exists('nim', $this->tbl_user)) $this->db->where_in('nim', $nchunk);
+                if ($this->db->field_exists('nidn_nim', $this->tbl_user)) $this->db->or_where_in('nidn_nim', $nchunk);
+                $this->db->group_end();
+                $foundNim = $this->db->get($this->tbl_user)->result_array();
+                foreach ($foundNim as $u) {
+                    $uNim = !empty($u['nim']) ? trim($u['nim']) : (!empty($u['nidn_nim']) ? trim($u['nidn_nim']) : '');
+                    if ($uNim) {
+                        $existingNimMap[$uNim] = strtolower(trim($u['email']));
+                    }
+                }
             }
         }
 
@@ -375,7 +403,13 @@ class User_model extends CI_Model {
 
         foreach ($accounts as $acc) {
             $email = isset($acc['email']) ? strtolower(trim($acc['email'])) : '';
+            $nimNip = isset($acc['nim_nip']) ? trim($acc['nim_nip']) : '';
             if (empty($email) || !preg_match('/@(student\.)?telkomuniversity\.ac\.id$/i', $email)) {
+                continue;
+            }
+
+            // Prevent assigning a NIM/NIP that already belongs to another user in database
+            if (!empty($nimNip) && $nimNip !== '-' && isset($existingNimMap[$nimNip]) && $existingNimMap[$nimNip] !== $email) {
                 continue;
             }
 

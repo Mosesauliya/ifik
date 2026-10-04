@@ -1198,10 +1198,12 @@
                             <i class="fa-solid fa-file-excel text-emerald-600 text-sm"></i>
                             <span>Export Excel</span>
                         </button>
+                        <?php if ((int)$this->session->userdata('role_id') === 22): ?>
                         <button onclick="bulkDeleteSelected()" class="btn-gradient-base btn-gradient-rose-soft h-9 px-3.5 text-xs flex items-center gap-2" title="Hapus Selected">
                             <i class="fa-solid fa-trash-can text-sm text-rose-600"></i>
                             <span>Hapus</span>
                         </button>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -1275,9 +1277,11 @@
                         <i class="fa-solid fa-paper-plane text-[11px]"></i>
                         <span class="text-[11px]">Kirim</span>
                     </button>
+                    <?php if ((int)$this->session->userdata('role_id') === 22): ?>
                     <button type="button" onclick="bulkDeleteSelected()" class="h-8 w-8 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 flex items-center justify-center text-xs cursor-pointer transition-all shrink-0" title="Hapus Akun Selected">
                         <i class="fa-regular fa-trash-can text-xs"></i>
                     </button>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -1624,7 +1628,7 @@
         window.isLaboran = <?= (!empty($is_laboran) || (int)$this->session->userdata('role_id') === 21) ? 'true' : 'false' ?>;
         window.isLaa = <?= (!empty($is_laa) || (int)$this->session->userdata('role_id') === 5) ? 'true' : 'false' ?>;
         window.isKoorTa = <?= (!empty($is_koor_ta) || (int)$this->session->userdata('role_id') === 6) ? 'true' : 'false' ?>;
-        window.isSuperAdmin = <?= (!empty($is_super_admin) || in_array((int)$this->session->userdata('role_id'), [1, 2, 22])) ? 'true' : 'false' ?>;
+        window.isSuperAdmin = <?= ((int)$this->session->userdata('role_id') === 22) ? 'true' : 'false' ?>;
         window.allRolesMap = <?= !empty($all_roles_map) ? json_encode($all_roles_map) : '{}' ?>;
 
         // Initial State Data from Database
@@ -2293,6 +2297,7 @@
 
             let nowStr = new Date().toISOString().slice(0, 16).replace('T', ' ');
             const seenInFile = new Set();
+            const seenNimInFile = new Set();
 
             const defaultRoleMap = {
                 '1': 'Admin',
@@ -2416,14 +2421,23 @@
                     isChecked = false;
                 } else if (state.accounts.some(a => a.email.toLowerCase() === emailLower)) {
                     status = 'duplicate';
-                    statusText = 'Duplikat di Database';
+                    statusText = 'Duplikat Email di Database';
                     isChecked = false;
                 } else if (seenInFile.has(emailLower)) {
                     status = 'duplicate';
-                    statusText = 'Duplikat di File Excel';
+                    statusText = 'Duplikat Email di File Excel';
+                    isChecked = false;
+                } else if (nim_nip && nim_nip !== '-' && state.accounts.some(a => a.nim_nip && a.nim_nip !== '-' && a.nim_nip.trim() === nim_nip && a.email.toLowerCase() !== emailLower)) {
+                    status = 'duplicate';
+                    statusText = 'Duplikat NIM/NIP di Database';
+                    isChecked = false;
+                } else if (nim_nip && nim_nip !== '-' && seenNimInFile.has(nim_nip)) {
+                    status = 'duplicate';
+                    statusText = 'Duplikat NIM/NIP di File Excel';
                     isChecked = false;
                 } else {
                     seenInFile.add(emailLower);
+                    if (nim_nip && nim_nip !== '-') seenNimInFile.add(nim_nip);
                 }
 
                 previewState.rows.push({
@@ -3005,10 +3019,12 @@
                                             <i class="fa-solid fa-paper-plane text-emerald-600 w-4 text-center"></i>
                                             <span>Kirim Email</span>
                                         </button>
+                                        ${window.isSuperAdmin ? `
                                         <button onclick="openEditAccountModal('${acc.id}'); closeAllActionDropdowns();" class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-blue-50 text-slate-700 hover:text-blue-600 font-medium transition-colors text-left cursor-pointer">
                                             <i class="fa-regular fa-pen-to-square text-blue-600 w-4 text-center"></i>
                                             <span>Ubah Data</span>
                                         </button>
+                                        ` : ''}
                                         ` : `
                                         <div class="px-3 py-1.5 text-[11px] text-indigo-600 flex items-center gap-2 bg-indigo-50/60 rounded-lg cursor-pointer" onclick="showProtectedAccountInfo('${acc.id}'); closeAllActionDropdowns();" title="Password telah diubah mandiri oleh pengguna (Terkunci)">
                                             <i class="fa-solid fa-user-shield text-indigo-500 w-4 text-center"></i>
@@ -3016,12 +3032,14 @@
                                         </div>
                                         `}
                                     </div>
+                                    ${window.isSuperAdmin ? `
                                     <div class="p-1">
                                         <button onclick="deleteSingleAccount('${acc.id}'); closeAllActionDropdowns();" class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-rose-50 text-slate-700 hover:text-rose-600 font-medium transition-colors text-left cursor-pointer">
                                             <i class="fa-regular fa-trash-can text-rose-500 w-4 text-center"></i>
                                             <span>Hapus Akun</span>
                                         </button>
                                     </div>
+                                    ` : ''}
                                 </div>
                             </div>
                         </td>
@@ -3061,10 +3079,12 @@
                                                 <i class="fa-solid fa-paper-plane text-emerald-600 w-4 text-center"></i>
                                                 <span>Kirim Email</span>
                                             </button>
+                                            ${window.isSuperAdmin ? `
                                             <button onclick="openEditAccountModal('${acc.id}'); closeAllActionDropdowns();" class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-blue-50 text-slate-700 hover:text-blue-600 font-medium transition-colors text-left cursor-pointer">
                                                 <i class="fa-regular fa-pen-to-square text-blue-600 w-4 text-center"></i>
                                                 <span>Ubah Data</span>
                                             </button>
+                                            ` : ''}
                                             ` : `
                                             <div class="px-3 py-1.5 text-[11px] text-indigo-600 flex items-center gap-2 bg-indigo-50/60 rounded-lg cursor-pointer" onclick="showProtectedAccountInfo('${acc.id}'); closeAllActionDropdowns();" title="Password telah diubah mandiri oleh pengguna (Terkunci)">
                                                 <i class="fa-solid fa-user-shield text-indigo-500 w-4 text-center"></i>
@@ -3072,12 +3092,14 @@
                                             </div>
                                             `}
                                         </div>
+                                        ${window.isSuperAdmin ? `
                                         <div class="p-1">
                                             <button onclick="deleteSingleAccount('${acc.id}'); closeAllActionDropdowns();" class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-rose-50 text-slate-700 hover:text-rose-600 font-medium transition-colors text-left cursor-pointer">
                                                 <i class="fa-regular fa-trash-can text-rose-500 w-4 text-center"></i>
                                                 <span>Hapus Akun</span>
                                             </button>
                                         </div>
+                                        ` : ''}
                                     </div>
                                 </div>
                             </div>
@@ -4272,6 +4294,10 @@
         }
 
         function openEditAccountModal(id) {
+            if (!window.isSuperAdmin) {
+                Swal.fire('Akses Ditolak', 'Hanya Super Administrator yang berhak mengubah data akun.', 'error');
+                return;
+            }
             const acc = state.accounts.find(a => a.id == id);
             if (!acc) return;
 
@@ -4292,6 +4318,10 @@
         function saveAccountForm(e) {
             e.preventDefault();
             const id = document.getElementById('account-id').value.trim();
+            if (id && !window.isSuperAdmin) {
+                Swal.fire('Akses Ditolak', 'Hanya Super Administrator yang berhak mengubah data akun.', 'error');
+                return;
+            }
             const name = document.getElementById('acc-name').value.trim();
             const emailInput = document.getElementById('acc-email');
             const email = emailInput.value.trim();
@@ -4367,6 +4397,10 @@
 
         // 11. DELETE HANDLERS
         function deleteSingleAccount(id) {
+            if (!window.isSuperAdmin) {
+                Swal.fire('Akses Ditolak', 'Hanya Super Administrator yang berhak menghapus akun.', 'error');
+                return;
+            }
             Swal.fire({
                 title: 'Hapus Akun?',
                 text: 'Data akun akan dihapus dari database MySQL.',
@@ -4400,6 +4434,10 @@
         }
 
         function bulkDeleteSelected() {
+            if (!window.isSuperAdmin) {
+                Swal.fire('Akses Ditolak', 'Hanya Super Administrator yang berhak menghapus akun.', 'error');
+                return;
+            }
             if (state.selectedIds.length === 0) {
                 Swal.fire('Pilih Akun', 'Centang akun yang ingin dihapus.', 'warning');
                 return;
