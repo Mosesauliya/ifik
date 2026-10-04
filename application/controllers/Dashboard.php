@@ -355,12 +355,25 @@ class Dashboard extends CI_Controller {
                 $statusCategory = 'ditolak';
             }
 
+            $indoMonths = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
             $dateFormatted = '';
             if (!empty($p->tanggal_mulai)) {
-                if ($p->tanggal_mulai === $p->tanggal_selesai || empty($p->tanggal_selesai)) {
-                    $dateFormatted = date('d M Y', strtotime($p->tanggal_mulai));
-                } else {
-                    $dateFormatted = date('d M Y', strtotime($p->tanggal_mulai)) . ' - ' . date('d M Y', strtotime($p->tanggal_selesai));
+                $tglM = $p->tanggal_mulai;
+                $tglS = $p->tanggal_selesai;
+                $dM = (int)date('j', strtotime($tglM));
+                $mM = $indoMonths[(int)date('n', strtotime($tglM))];
+                $yM = date('Y', strtotime($tglM));
+                $dateFormatted = "{$dM} {$mM} {$yM}";
+
+                if (!empty($tglS) && $tglM !== $tglS) {
+                    $dS = (int)date('j', strtotime($tglS));
+                    $mS = $indoMonths[(int)date('n', strtotime($tglS))];
+                    $yS = date('Y', strtotime($tglS));
+                    if ($yM === $yS && $mM === $mS) {
+                        $dateFormatted = "{$dM} - {$dS} {$mM} {$yM}";
+                    } else {
+                        $dateFormatted = "{$dM} {$mM} {$yM} s/d {$dS} {$mS} {$yS}";
+                    }
                 }
             }
 
@@ -520,12 +533,25 @@ class Dashboard extends CI_Controller {
                 $statusCategory = 'ditolak';
             }
 
+            $indoMonths = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
             $dateFormatted = '';
             if (!empty($p->tanggal_mulai)) {
-                if ($p->tanggal_mulai === $p->tanggal_selesai || empty($p->tanggal_selesai)) {
-                    $dateFormatted = date('d M Y', strtotime($p->tanggal_mulai));
-                } else {
-                    $dateFormatted = date('d M Y', strtotime($p->tanggal_mulai)) . ' - ' . date('d M Y', strtotime($p->tanggal_selesai));
+                $tglM = $p->tanggal_mulai;
+                $tglS = $p->tanggal_selesai;
+                $dM = (int)date('j', strtotime($tglM));
+                $mM = $indoMonths[(int)date('n', strtotime($tglM))];
+                $yM = date('Y', strtotime($tglM));
+                $dateFormatted = "{$dM} {$mM} {$yM}";
+
+                if (!empty($tglS) && $tglM !== $tglS) {
+                    $dS = (int)date('j', strtotime($tglS));
+                    $mS = $indoMonths[(int)date('n', strtotime($tglS))];
+                    $yS = date('Y', strtotime($tglS));
+                    if ($yM === $yS && $mM === $mS) {
+                        $dateFormatted = "{$dM} - {$dS} {$mM} {$yM}";
+                    } else {
+                        $dateFormatted = "{$dM} {$mM} {$yM} s/d {$dS} {$mS} {$yS}";
+                    }
                 }
             }
 
