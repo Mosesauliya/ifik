@@ -881,4 +881,175 @@ class Dosen_bimbingan extends CI_Controller {
         }
         exit;
     }
+        // =================================================================
+    // PER-FILE ACC/REVISI, LULUS TAHAP, DOWNGRADE (2026-10-05)
+    // =================================================================
+
+    /** Helper: role PIC untuk suatu tahap. */
+    private function _get_responsible_role($tahap) {
+        return ($tahap === 'Preview 1') ? 'p1' : 'u1';
+    }
+
+    /** Helper: cek apakah user yang login = PIC untuk mahasiswa ini di tahap tsb. */
+    private function _is_pic_for_student($nim, $pic_role) {
+        $role_id = (int)$this->session->userdata('role_id');
+        if ($role_id === 1) return true; // Admin bebas
+
+        $dosen_id = $this->session->userdata('user_id');
+        $posisi_map = ['p1' => 1, 'p2' => 2, 'u1' => 3, 'u2' => 4];
+        $pic_posisi = $posisi_map[$pic_role] ?? 1;
+
+        $students = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, $pic_posisi);
+        foreach ($students as $s) {
+            if ((string)$s['nim'] === (string)$nim) return true;
+        }
+        return false;
+    }
+
+    /**
+     * POST — ACC / Revisi Berkas PER FILE.
+     * Body: id_preview, file_type, action (Approved|Revision), catatan
+     */
+    public function review_file_ajax() {
+        header('Content-Type: application/json');
+
+        if (!$this->_is_authorized_reviewer()) {
+            echo json_encode(['status' => false, 'message' => 'Unauthorized']);
+            return;
+        }
+
+        $id_preview = $this->input->post('id_preview');
+        $file_type  = $this->input->post('file_type');
+        $action     = $this->input->post('action');
+        $catatan    = $this->input->post('catatan') ?? '';
+
+        if (empty($id_preview) || empty($file_type) || empty($action)) {
+            echo json_encode(['status' => false, 'message' => 'Parameter tidak lengkap.']);
+            return;
+        }
+
+        $preview = $this->Mahasiswa_model->get_preview_by_id($id_preview);
+        if (!$preview) {
+            echo json_encode(['status' => false, 'message' => 'Preview tidak ditemukan.']);
+            return;
+        }
+
+        $tahap_key  = strtolower($preview['tahapan_preview'] ?? 'preview1');
+        $tahap_name = [
+            'preview1' => 'Preview 1', 'preview2' => 'Preview 2',
+            'preview3' => 'Preview 3', 'sidang'   => 'Sidang',
+        ][$tahap_key] ?? 'Preview 1';
+
+        $pic_role = $this->_get_responsible_role($tahap_name);
+
+        if (!$this->_is_pic_for_student($preview['nim'], $pic_role)) {
+            echo json_encode([
+                'status'  => false,
+                'message' => 'Hanya ' . strtoupper($pic_role) . ' (PIC tahap ' . $tahap_name . ') yang dapat ACC/Revisi berkas ini.',
+            ]);
+            return;
+        }
+
+        $res = $this->Mahasiswa_model->update_file_status(
+            $id_preview, $file_type, $action, $catatan, $pic_role
+        );
+
+        echo json_encode($res);
+    }
+
+    /**
+     * POST — Lulus Tahap.
+     * Body: nim, tahap, id_preview (opsional)
+     */
+    public function lulus_stage_ajax() {
+        header('Content-Type: application/json');
+
+        if (!$this->_is_authorized_reviewer()) {
+            echo json_encode(['status' => false, 'message' => 'Unauthorized']);
+            return;
+        }
+
+        $nim        = $this->input->post('nim');
+        $tahap      = $this->input->post('tahap');
+        $id_preview = $this->input->post('id_preview') ?: null;
+
+        if (empty($nim) || empty($tahap)) {
+            echo json_encode(['status' => false, 'message' => 'Parameter tidak lengkap.']);
+            return;
+        }
+
+        $pic_role = $this->_get_responsible_role($tahap);
+
+        if (!$this->_is_pic_for_student($nim, $pic_role)) {
+            echo json_encode([
+                'status'  => false,
+                'message' => 'Hanya ' . strtoupper($pic_role) . ' yang dapat meluluskan tahap ' . $tahap . '.',
+            ]);
+            return;
+        }
+
+        $res = $this->Mahasiswa_model->set_stage_lulus($nim, $tahap, $pic_role, $id_preview);
+        echo json_encode($res);
+    }
+
+    /**
+     * POST — Downgrade Tahap.
+     * Body: nim, dari, ke, alasan
+     * Guard: hanya PIC tahap 'dari' atau admin.
+     */
+    public function downgrade_stage_ajax() {
+        header('Content-Type: application/json');
+
+        if (!$this->_is_authorized_reviewer()) {
+            echo json_encode(['status' => false, 'message' => 'Unauthorized']);
+            return;
+        }
+
+        $nim    = $this->input->post('nim');
+        $dari   = $this->input->post('dari');
+        $ke     = $this->input->post('ke');
+        $alasan = $this->input->post('alasan') ?? '';
+
+        if (empty($nim) || empty($dari) || empty($ke)) {
+            echo json_encode(['status' => false, 'message' => 'Parameter tidak lengkap.']);
+            return;
+        }
+
+        $normalize = function ($t) {
+            $map = [
+                'Preview 1' => 'preview1', 'Preview 2' => 'preview2',
+                'Preview 3' => 'preview3', 'Sidang'   => 'sidang',
+                'preview1' => 'preview1', 'preview2' => 'preview2',
+                'preview3' => 'preview3', 'sidang'   => 'sidang',
+            ];
+            return $map[$t] ?? null;
+        };
+
+        $dari_key = $normalize($dari);
+        $ke_key   = $normalize($ke);
+
+        if (!$dari_key || !$ke_key) {
+            echo json_encode(['status' => false, 'message' => 'Tahap tidak valid.']);
+            return;
+        }
+
+        $hierarchy = ['preview1' => 1, 'preview2' => 2, 'preview3' => 3, 'sidang' => 4];
+        if ($hierarchy[$dari_key] - $hierarchy[$ke_key] !== 1) {
+            echo json_encode(['status' => false, 'message' => 'Downgrade hanya boleh turun 1 tingkat.']);
+            return;
+        }
+
+        $pic_role = ($dari_key === 'preview1') ? 'p1' : 'u1';
+
+        if (!$this->_is_pic_for_student($nim, $pic_role)) {
+            echo json_encode([
+                'status'  => false,
+                'message' => 'Hanya ' . strtoupper($pic_role) . ' yang dapat melakukan downgrade dari tahap ini.',
+            ]);
+            return;
+        }
+
+        $res = $this->Mahasiswa_model->downgrade_stage($nim, $dari, $ke, $pic_role, $alasan);
+        echo json_encode($res);
+    }
 }
