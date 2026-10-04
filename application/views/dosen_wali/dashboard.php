@@ -4254,8 +4254,8 @@
             return;
         }
 
-        // Izinkan multi-preview berkas sekaligus berjajar (maksimal 4 berkas sekaligus)
-        if (window.activePreviews.length >= 4) {
+        // Izinkan multi-preview berkas sekaligus berjajar (maksimal 5 berkas sekaligus)
+        if (window.activePreviews.length >= 5) {
             window.activePreviews.shift();
         }
         window.activePreviews.push({ nim, docKey });

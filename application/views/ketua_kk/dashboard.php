@@ -140,7 +140,7 @@
     <?php $this->load->view('components/curved_sidebar'); ?>
     <!-- Header Navbar Partial -->
 
-
+    <div class="page-wrapper-for-sidebar">
     <!-- Sub Navigation Page Title Bar -->
     <div class="glass-header px-6 py-4 mb-8">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
@@ -1104,6 +1104,7 @@
             }, 5000);
         }
     </script>
+    </div>
     <!-- Global Custom Circle Cursor -->
     <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
