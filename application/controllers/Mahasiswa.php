@@ -522,7 +522,9 @@ class Mahasiswa extends CI_Controller {
             $kk_status = $pendaftaran['status_approval_kk'] ?? 'Pending';
             $st_judul  = $pendaftaran['status_judul'] ?? 'Pending';
             $has_revisi = ($w_status === 'Rejected' || $a_status === 'Rejected' || $k_status === 'Rejected' || $kk_status === 'Rejected' || !empty($pendaftaran['berkas_kurang']) || $st_judul === 'Rejected');
-            $is_locked = !$has_revisi;
+            // Jika sudah pernah diajukan (is_submitted), form pendaftaran utama tetap terkunci.
+            // Mahasiswa yang memiliki catatan revisi harus mengunggah perbaikan melalui menu Perbaikan Berkas di Dashboard.
+            $is_locked = true;
         }
 
         $has_ta = !empty($pendaftaran['jenis_ta']) || !empty($pendaftaran['judul_1']) || !empty($pendaftaran['file_ksm']) || !empty($student_berkas);
@@ -561,6 +563,12 @@ class Mahasiswa extends CI_Controller {
         $data['student_berkas'] = $student_berkas;
 
         if ($this->input->post()) {
+            if ($is_locked) {
+                $this->session->set_flashdata('error', 'Formulir pendaftaran telah dikunci karena sudah diajukan. Untuk melakukan perbaikan berkas yang direvisi, silakan gunakan menu Perbaikan Berkas di Dashboard.');
+                redirect('mahasiswa');
+                return;
+            }
+
             $config['upload_path']   = './uploads/persyaratan_ta/';
             $config['allowed_types'] = 'pdf';
             $config['max_size']      = 5120;
@@ -1530,7 +1538,7 @@ class Mahasiswa extends CI_Controller {
         $namaLengkap = trim($this->input->post('nama_lengkap', true)) ?: $namaDefault;
         $email       = $this->session->userdata('email') ?: ($mhs['email'] ?? '');
 
-        $tujuan_penerima  = trim($this->input->post('tujuan_penerima', true)) ?: 'Laboran';
+        $tujuan_penerima  = trim($this->input->post('tujuan_penerima', true));
         $unit_terkait     = trim($this->input->post('unit_terkait', true)) ?: (trim($this->input->post('unit_tujuan', true)) ?: 'Layanan Umum');
         $kategori         = trim($this->input->post('kategori', true));
         $kategori_lainnya = trim($this->input->post('kategori_lainnya', true));

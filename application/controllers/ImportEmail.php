@@ -89,13 +89,15 @@ class ImportEmail extends CI_Controller {
         $isLaboran = ($roleId === 21);
         $isLaa = ($roleId === 5);
         $isKoorTa = ($roleId === 6);
-        $isSuperAdmin = ($roleId === 22 || $roleId === 1 || $roleId === 2);
+        $isSuperAdmin = ($roleId === 22);
 
         $title = 'Admin - Import Email & Token Dispatcher';
         if ($isLaboran) $title = 'Laboran - Import Email & Token Dispatcher';
         elseif ($isLaa) $title = 'Admin LAA - Import Email & Token Dispatcher';
         elseif ($isKoorTa) $title = 'Koordinator TA - Import Email & Token Dispatcher';
-        elseif ($isSuperAdmin) $title = ($roleId === 2 ? 'Kepala Urusan (Super Admin) - Import Email & Token Dispatcher' : 'Super Admin - Import Email & Token Dispatcher');
+        elseif ($roleId === 2) $title = 'Kepala Urusan - Import Email & Token Dispatcher';
+        elseif ($roleId === 1) $title = 'Admin - Import Email & Token Dispatcher';
+        elseif ($isSuperAdmin) $title = 'Super Admin - Import Email & Token Dispatcher';
 
         // Compile full roles map for consistent frontend mapping
         $allRolesMap = [
@@ -579,7 +581,18 @@ class ImportEmail extends CI_Controller {
         $rawToken = isset($json['token']) && !empty($json['token']) ? trim($json['token']) : null;
 
         if ($targetUserId) {
-            // EDIT EXISTING USER BY ID
+            // EDIT EXISTING USER BY ID (STRICTLY SUPER ADMIN ONLY)
+            if ($currentRoleId !== 22) {
+                $this->output
+                    ->set_content_type('application/json')
+                    ->set_status_header(403)
+                    ->set_output(json_encode([
+                        'status' => 'error',
+                        'message' => 'Akses ditolak: Hanya Super Administrator yang memiliki izin untuk mengubah data akun.'
+                    ]));
+                return;
+            }
+
             $currentUser = $this->User_model->get_by_id($targetUserId);
             if (!$currentUser) {
                 $this->output
@@ -645,9 +658,21 @@ class ImportEmail extends CI_Controller {
     }
 
     /**
-     * AJAX: Delete selected users
+     * AJAX: Delete selected users (STRICTLY SUPER ADMIN ONLY)
      */
     public function delete_users() {
+        $currentRoleId = (int)$this->session->userdata('role_id');
+        if ($currentRoleId !== 22) {
+            $this->output
+                ->set_content_type('application/json')
+                ->set_status_header(403)
+                ->set_output(json_encode([
+                    'status' => 'error',
+                    'message' => 'Akses ditolak: Hanya Super Administrator yang memiliki hak akses untuk menghapus akun.'
+                ]));
+            return;
+        }
+
         $rawInput = file_get_contents('php://input');
         $json = json_decode($rawInput, true);
 
@@ -663,38 +688,6 @@ class ImportEmail extends CI_Controller {
             return;
         }
 
-        $currentRoleId = (int)$this->session->userdata('role_id');
-        $allowedRoles = $this->_get_allowed_import_roles($currentRoleId);
-
-        if (in_array($currentRoleId, [5, 6, 21])) {
-            $allowedIds = [];
-            foreach ($userIds as $uid) {
-                $u = $this->User_model->get_by_id($uid);
-                if ($u && in_array((int)$u->role_id, $allowedRoles)) {
-                    $allowedIds[] = $uid;
-                }
-            }
-            $userIds = $allowedIds;
-
-            if (empty($userIds)) {
-                $deniedMsg = 'Akses ditolak: Anda tidak memiliki izin untuk menghapus akun tersebut.';
-                if ($currentRoleId === 21) {
-                    $deniedMsg = 'Akses ditolak: Laboran hanya memiliki izin menghapus akun Laboran, Dosen, dan Mahasiswa.';
-                } elseif ($currentRoleId === 6) {
-                    $deniedMsg = 'Akses ditolak: Koordinator TA hanya memiliki izin menghapus akun Koordinator TA.';
-                } elseif ($currentRoleId === 5) {
-                    $deniedMsg = 'Akses ditolak: Admin LAA hanya memiliki izin menghapus akun Mahasiswa dan Admin LAA.';
-                }
-                $this->output
-                    ->set_content_type('application/json')
-                    ->set_output(json_encode([
-                        'status' => 'error',
-                        'message' => $deniedMsg
-                    ]));
-                return;
-            }
-        }
-
         $this->User_model->delete_users_batch($userIds);
 
         $this->output
@@ -707,17 +700,18 @@ class ImportEmail extends CI_Controller {
     }
 
     /**
-     * AJAX: Reset imported testing accounts (Super Admin & Admin only)
+     * AJAX: Reset imported testing accounts (Super Admin only)
      */
     public function reset_data() {
         $currentRoleId = (int)$this->session->userdata('role_id');
 
-        if (in_array($currentRoleId, [5, 6, 21])) {
+        if ($currentRoleId !== 22) {
             $this->output
                 ->set_content_type('application/json')
+                ->set_status_header(403)
                 ->set_output(json_encode([
                     'status' => 'error',
-                    'message' => 'Akses ditolak: Fitur reset database hanya dapat diakses oleh Super Admin / Administrator.'
+                    'message' => 'Akses ditolak: Fitur reset database hanya dapat diakses oleh Super Administrator.'
                 ]));
             return;
         }

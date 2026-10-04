@@ -2869,29 +2869,44 @@
                     
                     updateMhsDataDocStatus(nim, kode_berkas, normStatus);
 
-                    // Tutup / hilangkan tab preview berkas yang baru saja di-aksi
-                    const pIdx = (window.activePreviews || []).findIndex(p => String(p.nim).trim() === String(nim).trim() && String(p.docKey).trim() === String(kode_berkas).trim());
-                    if (pIdx > -1) {
-                        window.activePreviews.splice(pIdx, 1);
-                    }
+                    const mhsCheck = window.mhsDataMap ? (window.mhsDataMap[nim] || window.mhsDataMap[Number(nim)]) : null;
+                    const allApprovedNow = mhsCheck ? isStudentAllApproved(mhsCheck, nim) : false;
 
-                    if (typeof showLAAToast === 'function') {
-                        const msg = (normStatus === 'Valid') ? 'Dokumen berhasil disetujui (Valid)! Tab pratinjau ditutup.' : 'Catatan revisi berhasil dikirim! Tab pratinjau ditutup.';
-                        showLAAToast(msg, normStatus === 'Valid');
-                    }
+                    if (allApprovedNow) {
+                        if (typeof showLAAToast === 'function') {
+                            showLAAToast('Semua berkas mahasiswa ' + nim + ' telah disetujui (Approved). Card ditutup otomatis!');
+                        }
+                        removeStudentFromLihatBerkas(nim);
+                    } else {
+                        // Tutup / hilangkan tab preview berkas yang baru saja di-aksi
+                        const pIdx = (window.activePreviews || []).findIndex(p => String(p.nim).trim() === String(nim).trim() && String(p.docKey).trim() === String(kode_berkas).trim());
+                        if (pIdx > -1) {
+                            window.activePreviews.splice(pIdx, 1);
+                        }
 
-                    // Close the floating preview card if present in activePreviews
-                    if (window.activePreviews && window.activePreviews.length > 0) {
-                        const pNim = String(nim).trim();
-                        const pDocKey = String(kode_berkas).trim();
-                        const existingIdx = window.activePreviews.findIndex(p => String(p.nim).trim() === pNim && String(p.docKey).trim() === pDocKey);
-                        if (existingIdx > -1) {
-                            closeSinglePreview(existingIdx);
+                        if (typeof showLAAToast === 'function') {
+                            let msg = 'Status berkas berhasil di-reset ke Menunggu (Pending)!';
+                            if (normStatus === 'Valid') {
+                                msg = 'Dokumen berhasil disetujui (Valid)! Tab pratinjau ditutup.';
+                            } else if (normStatus === 'Invalid') {
+                                msg = 'Catatan revisi berhasil dikirim! Tab pratinjau ditutup.';
+                            }
+                            showLAAToast(msg, normStatus === 'Valid' || normStatus === 'Pending');
+                        }
+
+                        // Close the floating preview card if present in activePreviews
+                        if (window.activePreviews && window.activePreviews.length > 0) {
+                            const pNim = String(nim).trim();
+                            const pDocKey = String(kode_berkas).trim();
+                            const existingIdx = window.activePreviews.findIndex(p => String(p.nim).trim() === pNim && String(p.docKey).trim() === pDocKey);
+                            if (existingIdx > -1) {
+                                closeSinglePreview(existingIdx);
+                            } else {
+                                refreshLihatBerkasView();
+                            }
                         } else {
                             refreshLihatBerkasView();
                         }
-                    } else {
-                        refreshLihatBerkasView();
                     }
 
                     if (typeof refreshLAATable === 'function') {
@@ -3178,13 +3193,6 @@
             if (!nim) return;
             nim = String(nim).trim();
 
-            const mhsCheck = window.mhsDataMap ? (window.mhsDataMap[nim] || window.mhsDataMap[Number(nim)]) : null;
-            if (mhsCheck && isStudentAllApproved(mhsCheck, nim)) {
-                showLAAToast('Semua berkas mahasiswa ' + nim + ' sudah disetujui (Approved).');
-                removeStudentFromLihatBerkas(nim);
-                return;
-            }
-
             const activeNims = (window.activeLihatBerkasNims || []).map(n => String(n).trim());
             const idx = activeNims.indexOf(nim);
             if (idx > -1) {
@@ -3206,11 +3214,6 @@
                     if (data && data.length > 0) {
                         if (!window.mhsDataMap) window.mhsDataMap = {};
                         window.mhsDataMap[nim] = data[0];
-                        if (isStudentAllApproved(data[0], nim)) {
-                            showLAAToast('Semua berkas mahasiswa ' + nim + ' sudah disetujui (Approved).');
-                            removeStudentFromLihatBerkas(nim);
-                            return;
-                        }
                         showLihatBerkasContainer();
                         refreshLihatBerkasView();
                     } else {
@@ -3276,24 +3279,7 @@
 
             if (!window.activeLihatBerkasNims || window.activeLihatBerkasNims.length === 0) {
                 wrapper.innerHTML = '';
-                return;
-            }
-
-            // Filter out students whose documents are ALL approved
-            const initialCount = window.activeLihatBerkasNims.length;
-            window.activeLihatBerkasNims = window.activeLihatBerkasNims.filter(nim => {
-                const nimStr = String(nim).trim();
-                const mhs = window.mhsDataMap ? (window.mhsDataMap[nimStr] || window.mhsDataMap[Number(nimStr)]) : null;
-                if (!mhs) return true; // Data fetching in progress
-                return !isStudentAllApproved(mhs, nimStr);
-            });
-
-            if (window.activeLihatBerkasNims.length === 0) {
-                wrapper.innerHTML = '';
                 closeLihatBerkasPanel();
-                if (initialCount > 0) {
-                    showLAAToast('Semua berkas mahasiswa telah disetujui (Approved). Panel ditutup otomatis.');
-                }
                 return;
             }
 
@@ -3390,14 +3376,13 @@
                                     <i class="fa-solid fa-eye text-[10px]"></i>
                                     <span>${isCurrentlyPreviewed ? 'Tutup' : 'Lihat'}</span>
                                 </button>
-                                <a href="${pdfUrl}" 
-                                   download="${rawFilename}" 
-                                   target="_blank" 
-                                   class="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-[11px] font-bold transition inline-flex items-center gap-1 cursor-pointer shadow-2xs active:scale-95" 
-                                   title="Unduh Berkas">
-                                    <i class="fa-solid fa-download text-[10px]"></i>
-                                    <span>Unduh</span>
-                                </a>
+                                <button type="button" 
+                                        onclick="quickVerifyFloatingDoc('${nimStr}', '${doc.key}', 'Pending')" 
+                                        class="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 text-slate-600 border border-slate-200 text-[11px] font-bold transition inline-flex items-center gap-1 cursor-pointer shadow-2xs active:scale-95" 
+                                        title="Kembalikan status berkas ini ke Menunggu / Pending">
+                                    <i class="fa-solid fa-rotate-left text-[10px]"></i>
+                                    <span>Reset</span>
+                                </button>
                             </div>
                         </div>
                     `;
@@ -3582,6 +3567,13 @@
                                         <i class="fa-solid fa-circle-xmark text-[10px]"></i>
                                         <span>Revisi</span>
                                     </button>
+                                    <button type="button" 
+                                            onclick="quickVerifyFloatingDoc('${pNim}', '${pDocKey}', 'Pending')" 
+                                            class="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 active:scale-95 font-bold text-[11px] shadow-2xs transition flex items-center gap-1 cursor-pointer"
+                                            title="Kembalikan status dokumen ini ke Menunggu / Pending">
+                                        <i class="fa-solid fa-rotate-left text-[10px]"></i>
+                                        <span>Reset</span>
+                                    </button>
                                 </div>
                                 <div class="flex items-center gap-1">
                                     <a href="${pdfUrl}" download="${rawFilename}" target="_blank" class="w-7 h-7 rounded-lg bg-white hover:bg-slate-200 text-slate-600 border border-slate-200 font-bold transition flex items-center justify-center cursor-pointer shadow-2xs" title="Unduh File">
@@ -3741,12 +3733,6 @@
             }
 
             const mhs = window.mhsDataMap[nim];
-
-            if (mhs && isStudentAllApproved(mhs, nim)) {
-                showLAAToast('Semua berkas mahasiswa ' + nim + ' sudah disetujui (Approved).');
-                removeStudentFromLihatBerkas(nim);
-                return;
-            }
 
             const activeNims = window.activeLihatBerkasNims.map(n => String(n).trim());
             if (!activeNims.includes(nim)) {

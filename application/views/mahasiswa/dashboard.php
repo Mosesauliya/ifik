@@ -418,9 +418,9 @@
                             <h3 class="text-base font-bold text-white tracking-tight flex items-center gap-2">
                                 Pengajuan TA Anda Perlu Revisi / Ditolak
                             </h3>
-                            <a href="<?= site_url('mahasiswa/pendaftaran_ta?step=' . $rev_step); ?>" class="px-3.5 py-1.5 bg-white hover:bg-rose-50 text-rose-800 rounded-xl text-xs font-bold shadow-xs transition-all flex items-center gap-1.5">
-                                <i class="bi bi-pencil-square"></i> Edit &amp; Perbarui Berkas
-                            </a>
+                            <button type="button" onclick="openFileBreakdownModal()" class="px-3.5 py-1.5 bg-white hover:bg-rose-50 text-rose-800 rounded-xl text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
+                                <i class="bi bi-pencil-square"></i> Perbaiki &amp; Unggah Ulang Berkas
+                            </button>
                         </div>
                         <p class="text-xs text-rose-100 mb-4 font-normal">
                             Mohon perhatikan catatan revisi dari pihak berwenang di bawah ini untuk memperbarui pendaftaran Anda:

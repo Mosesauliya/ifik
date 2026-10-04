@@ -552,12 +552,13 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
     </svg>
 </aside>
 
-<!-- Instant Pre-init to prevent flash when user preferred closed -->
+<!-- Instant Pre-init to ensure desktop is always open by default -->
 <script>
 (function() {
     try {
-        var state = localStorage.getItem('ifik_curved_sidebar_state');
-        if (state === 'closed' || (state === null && window.innerWidth < 1024)) {
+        localStorage.removeItem('ifik_curved_sidebar_state');
+        var isDesktop = (window.matchMedia && window.matchMedia('(min-width: 1024px)').matches) || window.innerWidth >= 992;
+        if (!isDesktop) {
             document.body.classList.add('curved-sidebar-desktop-collapsed');
             document.body.classList.remove('curved-sidebar-desktop-open');
             var btn = document.getElementById('curvedSidebarToggle');

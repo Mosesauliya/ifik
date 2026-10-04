@@ -9,12 +9,12 @@ class KoordinatorTA_model extends CI_Model {
     }
 
     /**
-     * Ambil list semua dosen dari tabel user (role_id = 3 / Dosen, 6 / Koor, 7 / PIC, 9 / Ketua KK)
+     * Ambil list semua dosen dari tabel user (role_id = 2 / Kaur, 3 / Dosen, 6 / Koor, 7 / PIC, 9 / Ketua KK)
      */
     public function get_dosen_list() {
         $this->db->select('id, name as nama_dosen, nip, email, kode_dosen, no_telp as no_hp');
         $this->db->from('user');
-        $this->db->where_in('role_id', array(3, 6, 7, 9));
+        $this->db->where_in('role_id', array(2, 3, 6, 7, 9));
         $this->db->order_by('name', 'ASC');
         $query = $this->db->get();
 
@@ -554,6 +554,7 @@ class KoordinatorTA_model extends CI_Model {
     public function get_available_ruangan() {
         $this->db->select('id, ruangan as nama_ruangan, kapasitas, akses as status, spesifikasi_fasilitas as fasilitas, date as tanggal_dibuat');
         $this->db->from('ruangan');
+        $this->db->order_by('date', 'ASC');
         $this->db->order_by('id', 'ASC');
         $this->db->order_by('ruangan', 'ASC');
         $query = $this->db->get();

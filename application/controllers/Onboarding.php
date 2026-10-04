@@ -96,7 +96,7 @@ class Onboarding extends CI_Controller {
         if (empty($dosenList)) {
             $this->db->select('u.nip, u.name as nama, u.email, u.prodi as jurusan');
             $this->db->from('user u');
-            $this->db->where_in('u.role_id', [3, 6, 9]);
+            $this->db->where_in('u.role_id', [2, 3, 6, 9]);
             $this->db->where('u.nip IS NOT NULL', null, false);
             $this->db->where('u.nip !=', '');
             $this->db->order_by('u.name', 'ASC');

@@ -52,7 +52,7 @@ class Dosen_bimbingan extends CI_Controller {
      */
     private function _is_authorized_reviewer() {
         $role_id = (int) $this->session->userdata('role_id');
-        return in_array($role_id, [1, 3 , 9 , 5, 6, ], true);
+        return in_array($role_id, [1, 2, 3, 5, 6, 9], true);
     }
 
     private function _is_admin() {
