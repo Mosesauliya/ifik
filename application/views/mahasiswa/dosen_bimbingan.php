@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * DASHBOARD UNIFIED — 4 Role: P1, P2, U1, U2
  * 
@@ -1371,8 +1371,10 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                     const dt = new Date(latest.created_at);
                     timeHtml = `<div class="text-xs font-semibold text-slate-700">${dt.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'})}</div><div class="text-[10px] text-slate-500">${dt.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})} WIB</div>`;
 
+                    const isLulus = isStageLulus(latest);
                     let st = latest.status_pembimbing;
-                    if (st === 'Approved') statusBadge = `<span class="badge badge-success"><i class="bi bi-check-circle-fill"></i> Disetujui</span>`;
+                    if (isLulus) statusBadge = `<span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold inline-flex items-center gap-1"><i class="bi bi-mortarboard-fill"></i> Lulus Tahap</span>`;
+                    else if (st === 'Approved') statusBadge = `<span class="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold inline-flex items-center gap-1"><i class="bi bi-check-circle-fill"></i> Berkas di-ACC</span>`;
                     else if (st === 'Revision') statusBadge = `<span class="badge badge-danger"><i class="bi bi-x-circle-fill"></i> Revisi</span>`;
                     else statusBadge = `<span class="badge badge-warning"><i class="bi bi-clock-fill"></i> Pending</span>`;
 
@@ -2317,15 +2319,12 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
 
                     // Tombol Lulus Tahap (semua tahap kecuali Sidang)
                     if (currentTahap !== 'Sidang') {
-                        const allApproved  = areAllFilesApproved(latestPreview, getPreviewFiles(latestPreview));
                         const alreadyLulus = isStageLulus(latestPreview);
 
                         if (alreadyLulus) {
                             lulusBtnHtml = `<span class="px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-300 text-[11px] font-bold flex items-center gap-1.5"><i class="bi bi-mortarboard-fill"></i> Sudah Lulus Tahap ${currentTahap}</span>`;
-                        } else if (allApproved) {
-                            lulusBtnHtml = `<button type="button" onclick="handleLulusStage('${mhs.nim}')" class="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md flex items-center gap-1.5 cursor-pointer"><i class="bi bi-mortarboard-fill"></i> Lulus Tahap ${currentTahap}</button>`;
                         } else {
-                            lulusBtnHtml = `<span class="text-[10px] text-slate-400 italic px-2">Lulus tersedia setelah semua berkas di-ACC.</span>`;
+                            lulusBtnHtml = `<button type="button" onclick="handleLulusStage('${mhs.nim}')" class="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md flex items-center gap-1.5 cursor-pointer"><i class="bi bi-mortarboard-fill"></i> Lulus Tahap ${currentTahap}</button>`;
                         }
                     }
 
@@ -2503,7 +2502,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                         <div class="preview-footer p-2 px-3 bg-white flex items-center justify-between text-xs shrink-0 gap-2 border-t border-slate-200">
                             <div class="flex items-center gap-1.5 flex-wrap">
                                 ${actionButtons}
-                                ${isCurrentUserPIC() && currentTahap !== 'Sidang' && areAllFilesApproved(preview, getPreviewFiles(preview)) && !isStageLulus(preview)
+                                ${isCurrentUserPIC() && currentTahap !== 'Sidang' && !isStageLulus(preview)
                                     ? `<button onclick="handleLulusStage('${p.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ml-1"><i class="bi bi-mortarboard-fill"></i> Lulus ${currentTahap}</button>`
                                     : ''}
                                 ${isStageLulus(preview)
@@ -2723,7 +2722,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         function handleLulusStage(nim) {
             Swal.fire({
                 title: `Lulus Tahap ${currentTahap}?`,
-                html: `Mahasiswa akan dinyatakan <strong>LULUS</strong> di tahap <strong>${currentTahap}</strong>.<br><br><span style="font-size:12px;color:#64748b;">Pastikan semua berkas sudah di-ACC.</span>`,
+                html: `Mahasiswa akan dinyatakan <strong>LULUS</strong> di tahap <strong>${currentTahap}</strong>.`,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#a855f7',

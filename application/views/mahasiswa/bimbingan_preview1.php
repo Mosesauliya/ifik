@@ -247,9 +247,9 @@
 
         <?php
             // ---------- Status milestone (dipakai hero + panel) ----------
-            $is_p1_app = ($latest_p1 && $latest_p1['status_pembimbing'] === 'Approved');
-            $is_p2_app = ($latest_p2 && $latest_p2['status_pembimbing'] === 'Approved');
-            $is_p3_app = ($latest_p3 && $latest_p3['status_pembimbing'] === 'Approved');
+            $is_p1_app = (!empty($latest_p1['lulus_preview1']) && (string)$latest_p1['lulus_preview1'] === '1') || (!empty($pendaftaran['lulus_preview1']) && (string)$pendaftaran['lulus_preview1'] === '1');
+            $is_p2_app = (!empty($latest_p2['lulus_preview2']) && (string)$latest_p2['lulus_preview2'] === '1') || (!empty($pendaftaran['lulus_preview2']) && (string)$pendaftaran['lulus_preview2'] === '1');
+            $is_p3_app = (!empty($latest_p3['lulus_preview3']) && (string)$latest_p3['lulus_preview3'] === '1') || (!empty($pendaftaran['lulus_preview3']) && (string)$pendaftaran['lulus_preview3'] === '1');
 
             if (!$is_p1_app) { $active_step = 'preview1'; }
             elseif (!$is_p2_app) { $active_step = 'preview2'; }
@@ -272,10 +272,15 @@
             $curr_n2 = '';
 
             if ($stage_row) {
+                $is_curr_lulus = (!empty($stage_row['lulus_preview' . $stage_no]) && (string)$stage_row['lulus_preview' . $stage_no] === '1')
+                              || (!empty($pendaftaran['lulus_preview' . $stage_no]) && (string)$pendaftaran['lulus_preview' . $stage_no] === '1');
                 $st = $stage_row['status_pembimbing'] ?? '';
-                if ($st === 'Approved') {
-                    $curr_status = 'Preview ' . $stage_no . ' Disetujui' . $next_label[$stage_no];
+                if ($is_curr_lulus) {
+                    $curr_status = 'Lulus Tahap Preview ' . $stage_no . $next_label[$stage_no];
                     $curr_tone = 'text-emerald-300'; $curr_icon = 'bi-check-circle-fill';
+                } elseif ($st === 'Approved') {
+                    $curr_status = 'Berkas Preview ' . $stage_no . ' Disetujui (Menunggu Lulus Tahap)';
+                    $curr_tone = 'text-amber-200'; $curr_icon = 'bi-clock-fill';
                 } elseif ($st === 'Revision') {
                     $curr_status = 'Preview ' . $stage_no . ' Revisi';
                     $curr_tone = 'text-rose-300'; $curr_icon = 'bi-x-circle-fill';
@@ -2227,12 +2232,14 @@
             const latest = stageNo ? data['latest_p' + stageNo] : null;
             let text = 'Belum Memulai Bimbingan', icon = 'bi-dash-circle', tone = 'text-white/70';
 
-            if (data.is_p3_app) { text = 'Preview 3 Disetujui (Siap Sidang)'; icon = 'bi-check-circle-fill'; tone = 'text-emerald-300'; }
-            else if (data.is_p2_app) { text = 'Preview 2 Disetujui (Lanjut Preview 3)'; icon = 'bi-check-circle-fill'; tone = 'text-emerald-300'; }
-            else if (data.is_p1_app) { text = 'Preview 1 Disetujui (Lanjut Preview 2)'; icon = 'bi-check-circle-fill'; tone = 'text-emerald-300'; }
+            if (data.is_p3_app) { text = 'Lulus Preview 3 (Siap Sidang)'; icon = 'bi-check-circle-fill'; tone = 'text-emerald-300'; }
+            else if (data.is_p2_app) { text = 'Lulus Preview 2 (Lanjut Preview 3)'; icon = 'bi-check-circle-fill'; tone = 'text-emerald-300'; }
+            else if (data.is_p1_app) { text = 'Lulus Preview 1 (Lanjut Preview 2)'; icon = 'bi-check-circle-fill'; tone = 'text-emerald-300'; }
             else if (stageNo) {
                 if (latest && latest.status_pembimbing === 'Revision') {
-                    text = 'Preview ' + stageNo + ' Revisi'; icon = 'bi-x-circle-fill'; tone = 'text-rose-300';
+                    text = 'Preview ' + stageNo + ' Perlu Revisi'; icon = 'bi-x-circle-fill'; tone = 'text-rose-300';
+                } else if (latest && latest.status_pembimbing === 'Approved') {
+                    text = 'Berkas Preview ' + stageNo + ' Disetujui (Menunggu Lulus Tahap)'; icon = 'bi-clock-fill'; tone = 'text-amber-200';
                 } else {
                     text = 'Preview ' + stageNo + ' Sedang Direview'; icon = 'bi-clock-fill'; tone = 'text-amber-200';
                 }

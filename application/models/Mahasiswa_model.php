@@ -295,7 +295,7 @@ class Mahasiswa_model extends CI_Model {
             $prev_debug = $this->db->db_debug;
             $this->db->db_debug = FALSE;
             try {
-                $q_g = $this->db->select('id, id_mhs, judul_1, judul_2, judul_3, judul_en, jenis_TA, peminatan, komentar, keterangan, date')
+                $q_g = $this->db->select('id, id_mhs, judul_1, judul_2, judul_3, judul_en, jenis_TA, peminatan, komentar, keterangan, date, lulus_preview1, lulus_preview2, lulus_preview3, lulus_sidang, status_preview')
                     ->where_in('id_mhs', $target_ids)
                     ->order_by('date', 'DESC')
                     ->limit(1)
@@ -1502,20 +1502,6 @@ class Mahasiswa_model extends CI_Model {
         $preview = $this->get_preview_by_id($id_preview);
         if (!$preview) {
             return ['status' => false, 'message' => 'Preview tidak ditemukan.'];
-        }
-
-        $required = $this->_required_files_for_tahap($tahap_key);
-        $missing  = [];
-        foreach ($required as $ft) {
-            $col = 'status_file_' . $ft;
-            $st  = $preview[$col] ?? 'Pending';
-            if ($st !== 'Approved') $missing[] = $ft;
-        }
-        if (!empty($missing)) {
-            return [
-                'status'  => false,
-                'message' => 'Tidak bisa Lulus. File berikut belum di-ACC: ' . implode(', ', $missing)
-            ];
         }
 
         $col_lulus = 'lulus_' . $tahap_key;

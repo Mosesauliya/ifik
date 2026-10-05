@@ -718,9 +718,9 @@ class Dosen_bimbingan extends CI_Controller {
                 'upload_count_p2'     => count($riwayat_p2),
                 'upload_count_p3'     => count($riwayat_p3),
                 'upload_count_sidang' => count($riwayat_sidang),
-                'is_p1_app'           => (bool)(($riwayat_p1[0]['status_pembimbing'] ?? null) == 'Approved'),
-                'is_p2_app'           => (bool)(($riwayat_p2[0]['status_pembimbing'] ?? null) == 'Approved'),
-                'is_p3_app'           => (bool)(($riwayat_p3[0]['status_pembimbing'] ?? null) == 'Approved'),
+                'is_p1_app'           => (bool)(!empty($riwayat_p1[0]['lulus_preview1']) && (string)$riwayat_p1[0]['lulus_preview1'] === '1'),
+                'is_p2_app'           => (bool)(!empty($riwayat_p2[0]['lulus_preview2']) && (string)$riwayat_p2[0]['lulus_preview2'] === '1'),
+                'is_p3_app'           => (bool)(!empty($riwayat_p3[0]['lulus_preview3']) && (string)$riwayat_p3[0]['lulus_preview3'] === '1'),
             ];
 
             $json = json_encode($data);
