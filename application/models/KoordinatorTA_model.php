@@ -2124,6 +2124,9 @@ class KoordinatorTA_model extends CI_Model {
         $bimbinganFile   = $row['file_bimbingan'] ?? null;
         $persyaratanFile = $row['file_persyaratan'] ?? null;
 
+        $rawCatatan      = (!empty($row['catatan_file_draft']) ? $row['catatan_file_draft'] : (!empty($row['correction1']) ? $row['correction1'] : (!empty($row['correction2']) ? $row['correction2'] : (!empty($row['correction3']) ? $row['correction3'] : (!empty($row['keterangan']) ? $row['keterangan'] : null)))));
+        $cleanCatatan    = !empty($rawCatatan) ? trim(strip_tags(html_entity_decode($rawCatatan, ENT_QUOTES, 'UTF-8'))) : null;
+
         return array(
             'id'                   => $row['id'],
             'label'                => $label,
@@ -2138,7 +2141,7 @@ class KoordinatorTA_model extends CI_Model {
             'file_persyaratan'     => $persyaratanFile,
             'file_persyaratan_url' => !empty($persyaratanFile) ? $this->_resolve_preview_file_url($persyaratanFile, 'preview_ta') : null,
             'link_project'         => $row['link_project'] ?? null,
-            'catatan'              => (!empty($row['catatan_file_draft']) ? $row['catatan_file_draft'] : (!empty($row['correction1']) ? $row['correction1'] : (!empty($row['correction2']) ? $row['correction2'] : (!empty($row['correction3']) ? $row['correction3'] : (!empty($row['keterangan']) ? $row['keterangan'] : null))))),
+            'catatan'              => $cleanCatatan,
             'date'                 => $row['date'] ?: ($row['created_at'] ?? null)
         );
     }

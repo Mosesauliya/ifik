@@ -2090,6 +2090,16 @@
             return '<?= base_url("uploads/persyaratan_ta/"); ?>' + filename;
         }
 
+        function formatCleanNote(str) {
+            if (!str) return '';
+            if (typeof str === 'string' && /<[a-z][\s\S]*>/i.test(str)) {
+                const temp = document.createElement('div');
+                temp.innerHTML = str;
+                return escapeHtml((temp.textContent || temp.innerText || '').trim());
+            }
+            return escapeHtml(String(str).trim());
+        }
+
         function openStudentBerkasPreview(nim, docKey = null, tabKey = 'pendaftaran') {
             if (!nim) return;
             const item = RAW_PESERTA_DATA.find(p => String(p.nim) === String(nim));
@@ -2348,7 +2358,7 @@
                                 ${b.catatan ? `
                                     <div class="mt-1.5 p-1.5 bg-rose-50 border border-rose-200/80 rounded-lg text-[9.5px] text-rose-700 flex items-start gap-1">
                                         <i class="fa-solid fa-comment-dots text-rose-500 mt-0.5 shrink-0"></i>
-                                        <div><strong class="font-bold">Catatan:</strong> ${escapeHtml(b.catatan)}</div>
+                                        <div><strong class="font-bold">Catatan:</strong> ${formatCleanNote(b.catatan)}</div>
                                     </div>
                                 ` : ''}
                             </div>
@@ -2531,7 +2541,7 @@
                                 ${d.catatan ? `
                                     <div class="p-2 bg-amber-50 border border-amber-200/80 rounded-lg text-[10px] text-amber-900 flex items-start gap-1.5">
                                         <i class="fa-solid fa-comment-dots text-amber-600 mt-0.5 shrink-0"></i>
-                                        <div><strong class="font-bold">Catatan Reviewer:</strong> ${escapeHtml(d.catatan)}</div>
+                                        <div><strong class="font-bold">Catatan Reviewer:</strong> ${formatCleanNote(d.catatan)}</div>
                                     </div>
                                 ` : ''}
                             </div>
@@ -2916,7 +2926,7 @@
                             ${docCatatan ? `
                                 <div class="p-1.5 bg-rose-50 border border-rose-200 rounded-lg text-[9.5px] text-rose-700 flex items-start gap-1">
                                     <i class="fa-solid fa-comment-dots text-rose-500 mt-0.5 shrink-0"></i>
-                                    <div><strong class="font-bold">Catatan:</strong> ${escapeHtml(docCatatan)}</div>
+                                    <div><strong class="font-bold">Catatan:</strong> ${formatCleanNote(docCatatan)}</div>
                                 </div>
                             ` : ''}
                         </div>
