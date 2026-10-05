@@ -16,22 +16,64 @@ class DosenWali extends CI_Controller {
             redirect('dosen/wali' . $subPath, 'location', 301);
             return;
         }
+
+        $isAjax = $this->input->is_ajax_request() ||
+                  (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') ||
+                  (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) ||
+                  strpos($this->uri->uri_string(), '_ajax') !== false;
+
+        // 1. Cek Login: Wajib login terlebih dahulu
+        if (!$this->session->userdata('logged_in')) {
+            if ($isAjax) {
+                $this->output
+                    ->set_status_header(401)
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode(['status' => false, 'message' => 'Sesi login telah berakhir. Silakan login kembali.']));
+                exit;
+            }
+            $this->session->set_flashdata('error', 'Silakan login terlebih dahulu untuk mengakses halaman Dosen Wali.');
+            redirect('login');
+            return;
+        }
+
+        // 2. Cek Role (Hanya Dosen: 3, Koordinator TA: 6, PIC: 7, Ketua KK: 9, atau Admin: 1)
+        $role_id = (int)$this->session->userdata('role_id');
+        if (!in_array($role_id, [1, 3, 6, 7, 9], true)) {
+            if ($isAjax) {
+                $this->output
+                    ->set_status_header(403)
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode(['status' => false, 'message' => 'Akses ditolak. Halaman ini khusus untuk Dosen Wali.']));
+                exit;
+            }
+            $this->session->set_flashdata('error', 'Akses ditolak! Halaman ini khusus untuk Dosen.');
+            redirect('login');
+            return;
+        }
     }
 
     private function _get_current_nip() {
         $userId = $this->session->userdata('user_id');
         if ($userId && $this->db->table_exists('user')) {
-            $u = $this->db->select('nip, username')->get_where('user', ['id' => $userId])->row_array();
+            $u = $this->db->get_where('user', ['id' => $userId])->row_array();
             if ($u) {
-                return !empty($u['nip']) ? $u['nip'] : (!empty($u['username']) ? $u['username'] : '19850101');
+                if (!empty($u['nip'])) return trim($u['nip']);
+                if (!empty($u['username'])) return trim($u['username']);
+                if (!empty($u['nim'])) return trim($u['nim']);
             }
         }
-        return $this->session->userdata('nip') ?: ($this->session->userdata('nidn_nim') ?: ($this->session->userdata('nim') ?: '19850101'));
+        $nip = $this->session->userdata('nip') ?: ($this->session->userdata('nidn_nim') ?: ($this->session->userdata('username') ?: ($this->session->userdata('nim') ?: '')));
+        return trim((string)$nip);
     }
 
     // Dashboard Dosen Wali: Daftar Mahasiswa Bimbingan Akademik
     public function index() {
         $nip_dosen = $this->_get_current_nip();
+        if (empty($nip_dosen)) {
+            $this->session->set_flashdata('error', 'Identitas NIP/NIDN Dosen tidak ditemukan pada profil akun Anda.');
+            redirect('dashboard');
+            return;
+        }
         $this->load->model('AdminLayanan_model');
         $data['title'] = 'Dashboard Dosen Wali';
         $data['dosen_info'] = $this->DosenWali_model->get_dosen_wali_info($nip_dosen);
@@ -407,6 +449,13 @@ class DosenWali extends CI_Controller {
     // AJAX Endpoint: Realtime fetch daftar mahasiswa bimbingan & statistik status
     public function get_mahasiswa_ajax() {
         $nip_dosen = $this->_get_current_nip();
+        if (empty($nip_dosen)) {
+            $this->output
+                ->set_status_header(400)
+                ->set_content_type('application/json')
+                ->set_output(json_encode(['status' => false, 'message' => 'NIP Dosen tidak terdeteksi.']));
+            return;
+        }
         $this->load->model('AdminLayanan_model');
         $active_syarat = $this->AdminLayanan_model->get_active_syarat_berkas();
         $list = $this->DosenWali_model->get_mahasiswa_bimbingan($nip_dosen);

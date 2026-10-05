@@ -203,6 +203,34 @@
         #wrapperPreviewBerkas {
             transition: all 1.1s cubic-bezier(0.2, 0.9, 0.2, 1);
         }
+        #wrapperPreviewBerkas::-webkit-scrollbar {
+            height: 7px;
+        }
+        #wrapperPreviewBerkas::-webkit-scrollbar-thumb {
+            background: rgba(234, 88, 12, 0.45);
+            border-radius: 9999px;
+        }
+        #wrapperPreviewBerkas::-webkit-scrollbar-thumb:hover {
+            background: rgba(234, 88, 12, 0.75);
+        }
+        #wrapperPreviewBerkas::-webkit-scrollbar-track {
+            background: rgba(241, 245, 249, 0.5);
+            border-radius: 9999px;
+        }
+        #lihatBerkasContainer::-webkit-scrollbar {
+            height: 7px;
+        }
+        #lihatBerkasContainer::-webkit-scrollbar-thumb {
+            background: rgba(234, 88, 12, 0.45);
+            border-radius: 9999px;
+        }
+        #lihatBerkasContainer::-webkit-scrollbar-thumb:hover {
+            background: rgba(234, 88, 12, 0.75);
+        }
+        #lihatBerkasContainer::-webkit-scrollbar-track {
+            background: rgba(241, 245, 249, 0.5);
+            border-radius: 9999px;
+        }
         #wrapperDaftarMhs::-webkit-scrollbar {
             width: 5px;
         }
@@ -535,6 +563,28 @@
                 left: 0 !important;
                 width: 100% !important;
             }
+
+            /* Saat sidebar terbuka & mode pratinjau berkas aktif di desktop:
+               Card mahasiswa (David Scott) tetap diam/fixed di posisinya di sebelah sidebar,
+               hanya panel preview berkas yang digeser secara horizontal */
+            body:not(.curved-sidebar-desktop-collapsed) #lihatBerkasContainer.has-active-previews {
+                overflow-x: hidden !important;
+            }
+
+            body:not(.curved-sidebar-desktop-collapsed) #lihatBerkasContainer.has-active-previews #wrapperDaftarMhs {
+                flex-shrink: 0 !important;
+                position: sticky !important;
+                left: 0 !important;
+                z-index: 20 !important;
+            }
+
+            body:not(.curved-sidebar-desktop-collapsed) #lihatBerkasContainer.has-active-previews #wrapperPreviewBerkas {
+                flex: 1 1 0% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                width: auto !important;
+                overflow-x: auto !important;
+            }
         }
 
         @media (max-width: 1023.98px) {
@@ -806,11 +856,41 @@
                     <p class="text-xs text-slate-500 font-normal mt-0.5">Pilih mahasiswa untuk meninjau berkas dan melakukan persetujuan Dosen Wali.</p>
                 </div>
 
-                <!-- Tombol Tanda Tangan / Riwayat Approval -->
-                <a href="<?= site_url('dosen/tanda-tangan'); ?>" class="px-4 py-2 bg-gradient-to-r from-slate-800 to-orange-950 hover:from-slate-700 hover:to-orange-900 text-white font-bold rounded-xl text-xs shadow-md border border-orange-900/50 flex items-center gap-2 transition cursor-pointer self-start lg:self-center active:scale-95">
-                    <i class="fa-solid fa-clock-rotate-left text-orange-400"></i>
-                    <span>Tanda Tangan Digital</span>
-                </a>
+                <!-- Tombol Tanda Tangan / Riwayat Approval & Refresh -->
+                <div class="flex items-center gap-2 flex-wrap self-start lg:self-center">
+                    <button type="button" onclick="window.location.reload()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs border border-slate-200 flex items-center gap-1.5 transition cursor-pointer active:scale-95 shadow-2xs" title="Muat ulang data">
+                        <i class="fa-solid fa-rotate text-xs text-slate-500"></i> <span>Refresh</span>
+                    </button>
+                    <a href="<?= site_url('dosen/tanda-tangan'); ?>" class="px-4 py-2 bg-gradient-to-r from-slate-800 to-orange-950 hover:from-slate-700 hover:to-orange-900 text-white font-bold rounded-xl text-xs shadow-md border border-orange-900/50 flex items-center gap-2 transition cursor-pointer active:scale-95">
+                        <i class="fa-solid fa-clock-rotate-left text-orange-400"></i>
+                        <span>Tanda Tangan Digital</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Status Filter Pills (Tab Filter Cepat: Semua, Menunggu, Disetujui, Perlu Revisi) -->
+            <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
+                <button type="button" onclick="filterQuickStatusDW('all')" id="btnQuickFilter_all" class="quick-status-pill px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-2xs border bg-slate-900 text-white border-slate-900 shadow-sm" title="Tampilkan Semua Mahasiswa">
+                    <i class="fa-solid fa-layer-group text-[11px]"></i>
+                    <span>Semua Status</span>
+                    <span id="quickFilterCount_all" class="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold bg-white/20 text-white pill-count"><?= !empty($list_mahasiswa) ? count($list_mahasiswa) : 0; ?></span>
+                </button>
+                <button type="button" onclick="filterQuickStatusDW('Pending')" id="btnQuickFilter_Pending" class="quick-status-pill px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-2xs border bg-white hover:bg-amber-50/50 text-slate-700 border-slate-200" title="Tampilkan Hanya yang Menunggu Persetujuan">
+                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                    <i class="fa-solid fa-clock text-[11px] text-amber-500"></i>
+                    <span>Menunggu Persetujuan</span>
+                    <span id="quickFilterCount_Pending" class="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 pill-count"><?= $pendingCount ?? 0; ?></span>
+                </button>
+                <button type="button" onclick="filterQuickStatusDW('Approved')" id="btnQuickFilter_Approved" class="quick-status-pill px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-2xs border bg-white hover:bg-emerald-50/50 text-slate-700 border-slate-200" title="Tampilkan Hanya yang Telah Disetujui">
+                    <i class="fa-solid fa-circle-check text-[11px] text-emerald-500"></i>
+                    <span>Disetujui</span>
+                    <span id="quickFilterCount_Approved" class="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 pill-count"><?= $approvedCount ?? 0; ?></span>
+                </button>
+                <button type="button" onclick="filterQuickStatusDW('Rejected')" id="btnQuickFilter_Rejected" class="quick-status-pill px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-2xs border bg-white hover:bg-rose-50/50 text-slate-700 border-slate-200" title="Tampilkan Hanya yang Perlu Revisi / Ditolak">
+                    <i class="fa-solid fa-circle-exclamation text-[11px] text-rose-500"></i>
+                    <span>Perlu Revisi</span>
+                    <span id="quickFilterCount_Rejected" class="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 pill-count"><?= $rejectedCount ?? 0; ?></span>
+                </button>
             </div>
 
             <!-- Row 1: Unified Multi-Search Bar -->
@@ -869,8 +949,24 @@
                 </button>
 
                 <!-- Extra Filter Rows Card Popover -->
-                <div id="extraRowsCardDW" class="extra-rows-card space-y-2.5">
+                <div id="extraRowsCardDW" class="extra-rows-card space-y-3">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                        <span class="text-xs font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-filter text-orange-500"></i> Kriteria Filter Tambahan
+                        </span>
+                        <button type="button" onclick="closeExtraRowsCardDW()" class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-xs transition cursor-pointer" title="Tutup Card Filter">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
                     <div id="additionalFilterRowsContainerDW" class="space-y-2.5">
+                    </div>
+
+                    <div class="flex items-center justify-between pt-1">
+                        <button type="button" onclick="addExtraFilterRowDW()" id="btnInsideAddFilterDW" class="px-3.5 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold text-xs border border-orange-200 flex items-center gap-1.5 transition cursor-pointer shadow-2xs active:scale-95">
+                            <i class="fa-solid fa-plus text-[11px]"></i> <span>Tambah Kriteria Filter</span>
+                        </button>
+                        <span id="extraFilterCountTextDW" class="text-[11px] text-slate-400 font-medium">Maksimal 4 kriteria</span>
                     </div>
                     
                     <div class="flex items-center justify-between border-t border-slate-100 pt-2.5 mt-2 text-xs">
@@ -1508,10 +1604,13 @@
     }
 
     document.addEventListener('click', (e) => {
+        // Abaikan jika target sudah terlepas dari DOM (misal tombol hapus baris yang baru saja menghapus dirinya sendiri)
+        if (!e.target || !e.target.isConnected) return;
+
         if (!e.target.closest('.custom-dropdown-container') && !e.target.closest('#extraRowsCardDW') && !e.target.closest('#standaloneAddBtnDW')) {
             closeAllCustomDropdownsDW();
             const card = document.getElementById('extraRowsCardDW');
-            if (card && !card.contains(e.target) && e.target.id !== 'standaloneAddBtnDW' && !e.target.closest('#standaloneAddBtnDW')) {
+            if (card) {
                 card.style.display = 'none';
             }
         }
@@ -1618,14 +1717,35 @@
         const container = document.getElementById('additionalFilterRowsContainerDW');
         if (!card || !container) return;
 
-        if (card.style.display === 'block') {
-            card.style.display = 'none';
-        } else {
+        const isCardOpen = (card.style.display === 'block');
+
+        if (!isCardOpen) {
             card.style.display = 'block';
             if (container.children.length === 0) {
                 addExtraFilterRowDW();
             }
+        } else {
+            // Jika card sudah terbuka, menekan tombol "Filter Tambahan" berarti ingin MENAMBAHKAN baris filter lagi
+            const currentRows = container.querySelectorAll('.extra-filter-row').length;
+            if (currentRows < 3) {
+                addExtraFilterRowDW();
+            } else {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Maksimal 4 Filter',
+                        text: 'Maksimal 4 kriteria filter pencarian yang dapat aktif secara bersamaan.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
+            }
         }
+    };
+
+    window.closeExtraRowsCardDW = function () {
+        const card = document.getElementById('extraRowsCardDW');
+        if (card) card.style.display = 'none';
     };
 
     window.addExtraFilterRowDW = function (forcedCat = null, forcedVal = '') {
@@ -1701,8 +1821,8 @@
             </div>
 
             <!-- Remove Row Button -->
-            <button type="button" onclick="removeExtraRowDW(${rowId})" class="btn-remove-row" title="Hapus Kriteria Ini">
-                <i class="fa-solid fa-trash-can text-xs"></i>
+            <button type="button" onclick="removeExtraRowDW(event, ${rowId})" class="btn-remove-row" title="Hapus Kriteria Ini">
+                <i class="fa-solid fa-trash-can text-xs pointer-events-none"></i>
             </button>
         `;
 
@@ -1714,7 +1834,11 @@
         handleUnifiedMultiSearchDW();
     };
 
-    window.removeExtraRowDW = function (rowId) {
+    window.removeExtraRowDW = function (event, rowId) {
+        if (event) {
+            event.stopPropagation();
+            event.preventDefault();
+        }
         const row = document.getElementById(`extraRow_${rowId}`);
         if (row) {
             row.remove();
@@ -1821,6 +1945,23 @@
         const badge = document.getElementById('filterCountBadgeDW');
         const count = container ? container.querySelectorAll('.extra-filter-row').length + 1 : 1;
         if (badge) badge.innerText = `${count}/4`;
+
+        const btnInside = document.getElementById('btnInsideAddFilterDW');
+        const countText = document.getElementById('extraFilterCountTextDW');
+        if (btnInside) {
+            if (count >= 4) {
+                btnInside.disabled = true;
+                btnInside.classList.add('opacity-50', 'cursor-not-allowed');
+                btnInside.innerHTML = '<i class="fa-solid fa-check text-[11px]"></i> <span>Maks. 4 Filter Tercapai</span>';
+            } else {
+                btnInside.disabled = false;
+                btnInside.classList.remove('opacity-50', 'cursor-not-allowed');
+                btnInside.innerHTML = '<i class="fa-solid fa-plus text-[11px]"></i> <span>Tambah Kriteria Filter</span>';
+            }
+        }
+        if (countText) {
+            countText.innerText = `${count} dari 4 kriteria aktif`;
+        }
     }
 
     // Reset Multi Search
@@ -1835,10 +1976,69 @@
         if (container) container.innerHTML = '';
         if (card) card.style.display = 'none';
 
+        window.currentQuickStatusFilter = 'all';
+        if (typeof updateQuickFilterButtonsUI === 'function') updateQuickFilterButtonsUI();
+
         updateFilterBadgeDW();
         currentPage = 1;
         applyAll();
     };
+
+    window.currentQuickStatusFilter = 'all';
+
+    window.filterQuickStatusDW = function(status) {
+        window.currentQuickStatusFilter = status;
+        updateQuickFilterButtonsUI();
+        currentPage = 1;
+        applyAll();
+    };
+
+    function updateQuickFilterButtonsUI() {
+        const cur = window.currentQuickStatusFilter || 'all';
+        const pills = {
+            'all': {
+                id: 'btnQuickFilter_all',
+                active: 'bg-slate-900 text-white border-slate-900 shadow-sm',
+                inactive: 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200',
+                badgeActive: 'bg-white/20 text-white',
+                badgeInactive: 'bg-slate-100 text-slate-600'
+            },
+            'Pending': {
+                id: 'btnQuickFilter_Pending',
+                active: 'bg-amber-500 text-white border-amber-600 shadow-sm ring-2 ring-amber-300',
+                inactive: 'bg-white hover:bg-amber-50/50 text-slate-700 border-slate-200',
+                badgeActive: 'bg-white/20 text-white',
+                badgeInactive: 'bg-amber-100 text-amber-800'
+            },
+            'Approved': {
+                id: 'btnQuickFilter_Approved',
+                active: 'bg-emerald-600 text-white border-emerald-700 shadow-sm ring-2 ring-emerald-300',
+                inactive: 'bg-white hover:bg-emerald-50/50 text-slate-700 border-slate-200',
+                badgeActive: 'bg-white/20 text-white',
+                badgeInactive: 'bg-emerald-100 text-emerald-800'
+            },
+            'Rejected': {
+                id: 'btnQuickFilter_Rejected',
+                active: 'bg-rose-600 text-white border-rose-700 shadow-sm ring-2 ring-rose-300',
+                inactive: 'bg-white hover:bg-rose-50/50 text-slate-700 border-slate-200',
+                badgeActive: 'bg-white/20 text-white',
+                badgeInactive: 'bg-rose-100 text-rose-800'
+            }
+        };
+
+        Object.keys(pills).forEach(key => {
+            const item = pills[key];
+            const btn = document.getElementById(item.id);
+            if (!btn) return;
+            const badge = btn.querySelector('.pill-count');
+            const isActive = (cur === key);
+            
+            btn.className = `quick-status-pill px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-2xs border ${isActive ? item.active : item.inactive}`;
+            if (badge) {
+                badge.className = `px-1.5 py-0.2 rounded-full text-[10px] font-extrabold pill-count ${isActive ? item.badgeActive : item.badgeInactive}`;
+            }
+        });
+    }
 
     window.changePageSizeDW = function (val) {
         perPage = parseInt(val) || 10;
@@ -1853,6 +2053,11 @@
 
     function getActiveFiltersDW() {
         const list = [];
+
+        // 0. Quick Status Filter Pill
+        if (window.currentQuickStatusFilter && window.currentQuickStatusFilter !== 'all') {
+            list.push({ col: 'status', val: window.currentQuickStatusFilter });
+        }
         
         // 1. Main Pill
         const mainCat = document.getElementById('mainCategorySelect') ? document.getElementById('mainCategorySelect').value : 'query';
@@ -2159,6 +2364,15 @@
                     if (elPending) elPending.innerHTML = `${json.stats.pending} <span class="text-xs font-semibold text-cyan-600 font-normal">(${json.stats.total > 0 ? Math.round((json.stats.pending / json.stats.total)*100) : 0}%)</span>`;
                     if (elApproved) elApproved.innerHTML = `${json.stats.approved} <span class="text-xs font-semibold text-emerald-600 font-normal">(${json.stats.approved_pct}%)</span>`;
                     if (elRejected) elRejected.textContent = json.stats.rejected;
+
+                    const countAll = document.getElementById('quickFilterCount_all');
+                    const countPending = document.getElementById('quickFilterCount_Pending');
+                    const countApproved = document.getElementById('quickFilterCount_Approved');
+                    const countRejected = document.getElementById('quickFilterCount_Rejected');
+                    if (countAll) countAll.textContent = json.stats.total;
+                    if (countPending) countPending.textContent = json.stats.pending;
+                    if (countApproved) countApproved.textContent = json.stats.approved;
+                    if (countRejected) countRejected.textContent = json.stats.rejected;
                 }
 
                 // Preserve checked NIMs
@@ -3885,15 +4099,19 @@
             }
         } else if (isPreviewActive) {
             // Mode Preview Desktop: Geser ke KIRI UJUNG dan susun ATAS-BAWAH (flex-col)
-            container.className = 'fixed inset-0 pointer-events-none z-[60] flex flex-row items-center justify-start p-3 sm:p-5 gap-4 sm:gap-5 overflow-x-auto';
+            container.scrollLeft = 0;
+            container.className = 'fixed inset-0 pointer-events-none z-[60] flex flex-row items-center justify-start p-3 sm:p-5 gap-4 sm:gap-5 overflow-x-auto has-active-previews';
             wrapper.className = 'flex flex-col gap-3 max-h-[92vh] overflow-y-auto pr-1.5 shrink-0 w-[330px] sm:w-[350px]';
             if (previewWrapper) {
                 previewWrapper.className = 'flex items-center gap-3 shrink-0 max-w-[65vw] sm:max-w-[70vw] overflow-x-auto p-1.5 scroll-smooth';
             }
         } else {
-            // Mode Standar Desktop (tanpa preview): Tampil di TENGAH (flex-row)
-            container.className = 'fixed inset-0 pointer-events-none z-[60] flex flex-row items-center justify-center p-3 sm:p-5 gap-4 sm:gap-5 overflow-x-auto';
-            wrapper.className = 'flex flex-row items-center gap-4 max-h-[92vh] overflow-x-auto p-1 shrink-0';
+            // Mode Standar Desktop (tanpa preview)
+            container.classList.remove('has-active-previews');
+            const totalActive = (window.activeLihatBerkasNims || []).length;
+            const justifyClass = totalActive > 1 ? 'justify-start' : 'justify-center';
+            container.className = `fixed inset-0 pointer-events-none z-[60] flex flex-row items-center ${justifyClass} p-3 sm:p-5 gap-4 sm:gap-5 overflow-x-auto`;
+            wrapper.className = `flex flex-row items-center gap-4 max-h-[92vh] p-1 shrink-0 ${totalActive === 1 ? 'mx-auto' : ''}`;
         }
     }
 
@@ -4254,8 +4472,8 @@
             return;
         }
 
-        // Izinkan multi-preview berkas sekaligus berjajar (maksimal 4 berkas sekaligus)
-        if (window.activePreviews.length >= 4) {
+        // Izinkan multi-preview berkas sekaligus berjajar (maksimal 5 berkas sekaligus)
+        if (window.activePreviews.length >= 5) {
             window.activePreviews.shift();
         }
         window.activePreviews.push({ nim, docKey });
@@ -5345,7 +5563,8 @@
         if (container) {
             container.style.display = 'none';
             container.classList.add('hidden');
-            container.classList.remove('flex');
+            container.classList.remove('flex', 'has-active-previews');
+            container.scrollLeft = 0;
         }
         window.activePreviews = [];
         window.activeLihatBerkasNims = [];
@@ -5404,6 +5623,56 @@
     window.resetDocApproval = resetDocApproval;
     window.executeDocReset = executeDocReset;
     window.openAllDocsForStudent = openAllDocsForStudent;
+
+    // Handle horizontal scroll & wheel di panel preview berkas
+    const previewWrapperEl = document.getElementById('wrapperPreviewBerkas');
+    if (previewWrapperEl) {
+        previewWrapperEl.addEventListener('wheel', (e) => {
+            const scrollableY = e.target.closest('.overflow-y-auto');
+            if (scrollableY) {
+                const canScrollUp = e.deltaY < 0 && scrollableY.scrollTop > 0;
+                const canScrollDown = e.deltaY > 0 && (scrollableY.scrollTop + scrollableY.clientHeight < scrollableY.scrollHeight);
+                if (canScrollUp || canScrollDown) return;
+            }
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                e.preventDefault();
+                previewWrapperEl.scrollLeft += e.deltaY;
+            }
+        }, { passive: false });
+    }
+
+    // Pastikan container luar tidak ter-scroll horizontal saat sidebar terbuka & preview aktif,
+    // serta dukung scrolling roda mouse horizontal saat mode kartu mahasiswa berjajar
+    const lihatContainerEl = document.getElementById('lihatBerkasContainer');
+    if (lihatContainerEl) {
+        lihatContainerEl.addEventListener('scroll', () => {
+            const isSidebarOpen = window.innerWidth >= 1024 && !document.body.classList.contains('curved-sidebar-desktop-collapsed');
+            if (isSidebarOpen && lihatContainerEl.classList.contains('has-active-previews')) {
+                if (lihatContainerEl.scrollLeft !== 0) {
+                    lihatContainerEl.scrollLeft = 0;
+                }
+            }
+        });
+
+        lihatContainerEl.addEventListener('wheel', (e) => {
+            // Jangan scroll kontainer luar jika mode pratinjau berkas sedang aktif
+            if (lihatContainerEl.classList.contains('has-active-previews')) return;
+
+            // Jika mouse di dalam list berkas yang sedang di-scroll vertikal, biarkan normal
+            const scrollableY = e.target.closest('.overflow-y-auto');
+            if (scrollableY && scrollableY !== lihatContainerEl) {
+                const canScrollUp = e.deltaY < 0 && scrollableY.scrollTop > 0;
+                const canScrollDown = e.deltaY > 0 && (scrollableY.scrollTop + scrollableY.clientHeight < scrollableY.scrollHeight);
+                if (canScrollUp || canScrollDown) return;
+            }
+
+            // Alihkan roda mouse vertikal ke horizontal scroll
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                e.preventDefault();
+                lihatContainerEl.scrollLeft += e.deltaY;
+            }
+        }, { passive: false });
+    }
 
     // Keyboard ESC Shortcut untuk menutup modal & panel
     document.addEventListener('keydown', (e) => {

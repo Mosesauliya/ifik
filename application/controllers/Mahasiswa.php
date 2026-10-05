@@ -9,14 +9,35 @@ class Mahasiswa extends CI_Controller {
         $this->load->library('form_validation');
         $this->load->helper(array('form', 'url'));
 
+        $isAjax = $this->input->is_ajax_request() ||
+                  (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') ||
+                  (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
+
+        // 1. Cek Login
         if (!$this->session->userdata('logged_in')) {
-            if ($this->input->is_ajax_request()) {
+            if ($isAjax) {
                 $this->output
                     ->set_status_header(401)
                     ->set_content_type('application/json')
                     ->set_output(json_encode(['success' => false, 'message' => 'Sesi berakhir, silakan login kembali.']));
                 exit;
             }
+            $this->session->set_flashdata('error', 'Silakan login terlebih dahulu untuk mengakses portal Mahasiswa.');
+            redirect('login');
+            return;
+        }
+
+        // 2. Cek Role (Hanya Role 4 = Mahasiswa, atau Role 1 = Admin)
+        $role_id = (int)$this->session->userdata('role_id');
+        if ($role_id !== 4 && $role_id !== 1) {
+            if ($isAjax) {
+                $this->output
+                    ->set_status_header(403)
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode(['success' => false, 'message' => 'Akses ditolak. Halaman ini khusus untuk Mahasiswa.']));
+                exit;
+            }
+            $this->session->set_flashdata('error', 'Akses ditolak! Halaman ini khusus untuk Mahasiswa.');
             redirect('login');
             return;
         }
