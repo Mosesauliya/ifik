@@ -209,7 +209,6 @@ class KoordinatorTA_model extends CI_Model {
         $this->db->join('user u_p2', '(tl.dosen_pembimbing2 IS NOT NULL AND tl.dosen_pembimbing2 != "" AND (u_p2.nip = tl.dosen_pembimbing2 OR u_p2.id = tl.dosen_pembimbing2))', 'left');
         $this->db->join('user u_pj1', '(tl.dosen_penguji1 IS NOT NULL AND tl.dosen_penguji1 != "" AND (u_pj1.nip = tl.dosen_penguji1 OR u_pj1.id = tl.dosen_penguji1))', 'left');
         $this->db->join('user u_pj2', '(tl.dosen_penguji2 IS NOT NULL AND tl.dosen_penguji2 != "" AND (u_pj2.nip = tl.dosen_penguji2 OR u_pj2.id = tl.dosen_penguji2))', 'left');
-        $this->db->group_by('g.id');
         $this->db->order_by('u.nim', 'ASC');
         $query = $this->db->get();
 
@@ -218,6 +217,19 @@ class KoordinatorTA_model extends CI_Model {
         }
 
         $rawList = $query->result_array();
+
+        // Deduplicate rows by guidance_id in PHP (safe for sql_mode=only_full_group_by)
+        $uniqueList = array();
+        $seenGuidance = array();
+        foreach ($rawList as $rowItem) {
+            $gKey = $rowItem['guidance_id'];
+            if (!isset($seenGuidance[$gKey])) {
+                $seenGuidance[$gKey] = true;
+                $uniqueList[] = $rowItem;
+            }
+        }
+        $rawList = $uniqueList;
+
         $id_mhs_list = array();
         foreach ($rawList as $row) {
             if (!empty($row['user_id'])) {
@@ -1794,8 +1806,9 @@ class KoordinatorTA_model extends CI_Model {
 
         // Ambil riwayat aktivitas dari tabel thesis
         $thesisMap = array();
+        $thesisFullMap = array();
         if (!empty($guidanceIds) && $this->db->table_exists('thesis')) {
-            $this->db->select('id_guidance, tahapan_preview, status, date, created_at');
+            $this->db->select('id, id_guidance, tahapan_preview, status, pdf_file, file_sitasi, file_bimbingan, file_persyaratan, file_sidang, link_project, correction1, correction2, correction3, correction4, catatan_file_draft, catatan_mahasiswa, keterangan, date, created_at');
             $this->db->where_in('id_guidance', $guidanceIds);
             $this->db->order_by('created_at', 'DESC');
             $this->db->order_by('date', 'DESC');
@@ -1821,6 +1834,11 @@ class KoordinatorTA_model extends CI_Model {
                     if ($thp === 'preview2') { $thesisMap[$tGid]['has_p2'] = true; if ($isApp) $thesisMap[$tGid]['p2_app'] = true; }
                     if ($thp === 'preview3') { $thesisMap[$tGid]['has_p3'] = true; if ($isApp) $thesisMap[$tGid]['p3_app'] = true; }
                     if ($thp === 'sidang')   { $thesisMap[$tGid]['has_sidang'] = true; if ($isApp) $thesisMap[$tGid]['sidang_app'] = true; }
+
+                    if (!isset($thesisFullMap[$tGid])) {
+                        $thesisFullMap[$tGid] = array();
+                    }
+                    $thesisFullMap[$tGid][] = $tr;
                 }
             }
         }
@@ -2003,6 +2021,55 @@ class KoordinatorTA_model extends CI_Model {
                 $berkasStatusColor = 'slate';
             }
 
+            // Format Dokumen Preview & Sidang
+            $studentTheses = $thesisFullMap[$gId] ?? array();
+            $p1Row = null;
+            $p2Row = null;
+            $p3Row = null;
+            $sidangRow = null;
+
+            foreach ($studentTheses as $stRow) {
+                $thKey = strtolower(trim($stRow['tahapan_preview'] ?? ''));
+                if ($thKey === 'preview1' && !$p1Row) $p1Row = $stRow;
+                elseif ($thKey === 'preview2' && !$p2Row) $p2Row = $stRow;
+                elseif ($thKey === 'preview3' && !$p3Row) $p3Row = $stRow;
+                elseif ($thKey === 'sidang' && !$sidangRow) $sidangRow = $stRow;
+            }
+
+            $previewDocs = array(
+                'p1' => $this->_format_preview_entry($p1Row, 'Preview 1 (Proposal TA)'),
+                'p2' => $this->_format_preview_entry($p2Row, 'Preview 2 (Evaluasi Progres 50%)'),
+                'p3' => $this->_format_preview_entry($p3Row, 'Preview 3 (Pra-Sidang TA)'),
+                'total_submitted' => ($p1Row ? 1 : 0) + ($p2Row ? 1 : 0) + ($p3Row ? 1 : 0)
+            );
+
+            // Sidang & BAP Details
+            $sidangFile = $sidangRow['file_sidang'] ?? ($sidangRow['pdf_file'] ?? null);
+            $bapFile = $gRow['bap'] ?? null;
+
+            $sidangDocs = array(
+                'has_sidang'          => (!empty($gRow['tanggal_sidang']) || $sidangRow !== null),
+                'status_sidang'       => (!empty($gRow['tanggal_sidang']) ? 'Terjadwal' : ($sidangRow ? 'Diajukan' : 'Belum Terjadwal')),
+                'tanggal_sidang'      => $gRow['tanggal_sidang'] ?? null,
+                'waktu_sidang'        => $gRow['waktu_sidang'] ?? null,
+                'ruang_sidang'        => $gRow['ruang_sidang'] ?? null,
+                'link_sidang'         => $gRow['link_sidang'] ?? null,
+                'file_sidang'         => $sidangFile,
+                'file_sidang_url'     => !empty($sidangFile) ? $this->_resolve_preview_file_url($sidangFile, 'sidang') : null,
+                'bap_file'            => $bapFile,
+                'bap_file_url'        => !empty($bapFile) ? $this->_resolve_preview_file_url($bapFile, 'sidang') : null,
+                'status_bap'          => $gRow['status_bap'] ?? 'Pending',
+                'nilai_p1'            => $n1,
+                'nilai_p2'            => $n2,
+                'nilai_pj1'           => $np1,
+                'nilai_pj2'           => $np2,
+                'avg_score'           => $avgScore,
+                'is_nilai_lengkap'    => $isNilaiLengkap,
+                'status_publish'      => $statusPublish,
+                'is_published'        => $isPublished,
+                'is_lulus'            => $isLulus
+            );
+
             $item['progres_stage']       = $progresStage;
             $item['stage_key']           = $stageKey;
             $item['stage_index']         = $stageIndex;
@@ -2023,10 +2090,76 @@ class KoordinatorTA_model extends CI_Model {
             $item['berkas_status_label'] = $berkasStatusLabel;
             $item['berkas_status_code']  = $berkasStatusCode;
             $item['berkas_status_color'] = $berkasStatusColor;
+            $item['preview_docs']        = $previewDocs;
+            $item['sidang_docs']         = $sidangDocs;
 
             $result[] = $item;
         }
 
         return $result;
+    }
+
+    private function _format_preview_entry($row, $label) {
+        if (!$row) {
+            return array(
+                'label'                => $label,
+                'has_submission'       => false,
+                'status'               => 'Belum Mengajukan',
+                'file_draft'           => null,
+                'file_draft_url'       => null,
+                'file_sitasi'          => null,
+                'file_sitasi_url'      => null,
+                'file_bimbingan'       => null,
+                'file_bimbingan_url'   => null,
+                'file_persyaratan'     => null,
+                'file_persyaratan_url' => null,
+                'link_project'         => null,
+                'catatan'              => null,
+                'date'                 => null
+            );
+        }
+
+        $draftFile       = $row['pdf_file'] ?? null;
+        $sitasiFile      = $row['file_sitasi'] ?? null;
+        $bimbinganFile   = $row['file_bimbingan'] ?? null;
+        $persyaratanFile = $row['file_persyaratan'] ?? null;
+
+        return array(
+            'id'                   => $row['id'],
+            'label'                => $label,
+            'has_submission'       => true,
+            'status'               => $row['status'] ?: 'Pending',
+            'file_draft'           => $draftFile,
+            'file_draft_url'       => !empty($draftFile) ? $this->_resolve_preview_file_url($draftFile, 'preview_ta') : null,
+            'file_sitasi'          => $sitasiFile,
+            'file_sitasi_url'      => !empty($sitasiFile) ? $this->_resolve_preview_file_url($sitasiFile, 'preview_ta') : null,
+            'file_bimbingan'       => $bimbinganFile,
+            'file_bimbingan_url'   => !empty($bimbinganFile) ? $this->_resolve_preview_file_url($bimbinganFile, 'preview_ta') : null,
+            'file_persyaratan'     => $persyaratanFile,
+            'file_persyaratan_url' => !empty($persyaratanFile) ? $this->_resolve_preview_file_url($persyaratanFile, 'preview_ta') : null,
+            'link_project'         => $row['link_project'] ?? null,
+            'catatan'              => (!empty($row['catatan_file_draft']) ? $row['catatan_file_draft'] : (!empty($row['correction1']) ? $row['correction1'] : (!empty($row['correction2']) ? $row['correction2'] : (!empty($row['correction3']) ? $row['correction3'] : (!empty($row['keterangan']) ? $row['keterangan'] : null))))),
+            'date'                 => $row['date'] ?: ($row['created_at'] ?? null)
+        );
+    }
+
+    private function _resolve_preview_file_url($filename, $defaultFolder = 'preview_ta') {
+        if (empty($filename)) return null;
+        if (strpos($filename, 'http://') === 0 || strpos($filename, 'https://') === 0) return $filename;
+        if (strpos($filename, 'uploads/') === 0) return base_url($filename);
+
+        if (file_exists(FCPATH . 'uploads/' . $defaultFolder . '/' . $filename)) {
+            return base_url('uploads/' . $defaultFolder . '/' . $filename);
+        }
+        if (file_exists(FCPATH . 'uploads/preview_ta/' . $filename)) {
+            return base_url('uploads/preview_ta/' . $filename);
+        }
+        if (file_exists(FCPATH . 'uploads/persyaratan_ta/' . $filename)) {
+            return base_url('uploads/persyaratan_ta/' . $filename);
+        }
+        if (file_exists(FCPATH . 'uploads/sidang/' . $filename)) {
+            return base_url('uploads/sidang/' . $filename);
+        }
+        return base_url('uploads/' . $defaultFolder . '/' . $filename);
     }
 }

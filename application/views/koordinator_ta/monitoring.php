@@ -2076,10 +2076,11 @@
 
         // ==========================================
         // FLOATING MULTI-SUB-PRATINJAU BERKAS HANDLERS
-        // (IDENTIK DENGAN DOSEN WALI MULTI-VIEW)
+        // (MULTI-TAB: PENDAFTARAN, PREVIEW 1-3, SIDANG & BAP)
         // ==========================================
         window.activeLihatBerkasNim = null;
-        window.activePreviews = []; // [{ nim, docKey }]
+        window.activeLihatBerkasTab = 'pendaftaran'; // 'pendaftaran', 'preview', 'sidang'
+        window.activePreviews = []; // [{ nim, docKey, customUrl, customTitle, customStatus }]
         window.previewIframeInteractions = {}; // { 'nim_docKey': bool }
 
         function resolveDocPdfUrl(filename, defaultUrl = '') {
@@ -2089,12 +2090,13 @@
             return '<?= base_url("uploads/persyaratan_ta/"); ?>' + filename;
         }
 
-        function openStudentBerkasPreview(nim, docKey = null) {
+        function openStudentBerkasPreview(nim, docKey = null, tabKey = 'pendaftaran') {
             if (!nim) return;
             const item = RAW_PESERTA_DATA.find(p => String(p.nim) === String(nim));
             if (!item) return;
 
             window.activeLihatBerkasNim = String(nim);
+            window.activeLihatBerkasTab = tabKey || 'pendaftaran';
             if (!window.activePreviews) window.activePreviews = [];
 
             if (docKey) {
@@ -2112,6 +2114,11 @@
             }
 
             renderLihatBerkasView();
+        }
+
+        function switchLihatBerkasTab(tabKey) {
+            window.activeLihatBerkasTab = tabKey;
+            renderStudentCard();
         }
 
         function closeLihatBerkasPanel() {
@@ -2165,7 +2172,7 @@
             });
         }
 
-        function previewBerkasItem(nim, docKey) {
+        function previewBerkasItem(nim, docKey, customUrl = null, customTitle = null, customStatus = null) {
             if (!window.activePreviews) window.activePreviews = [];
             const idx = window.activePreviews.findIndex(p => String(p.nim) === String(nim) && String(p.docKey) === String(docKey));
             if (idx > -1) {
@@ -2176,7 +2183,13 @@
             if (window.activePreviews.length >= 5) {
                 window.activePreviews.shift();
             }
-            window.activePreviews.push({ nim: String(nim), docKey: String(docKey) });
+            window.activePreviews.push({ 
+                nim: String(nim), 
+                docKey: String(docKey),
+                customUrl: customUrl || null,
+                customTitle: customTitle || null,
+                customStatus: customStatus || null
+            });
             window.activeFocusedPreviewKey = `${nim}_${docKey}`;
             renderLihatBerkasView();
 
@@ -2225,13 +2238,13 @@
                 }
             } else if (isPreviewActive) {
                 container.className = 'fixed inset-0 pointer-events-none z-[100000] flex flex-row items-center justify-start p-4 sm:p-6 gap-4 sm:gap-5 overflow-x-auto scrollbar-none bg-slate-900/60 backdrop-blur-xs pointer-events-auto';
-                wrapper.className = 'flex flex-col gap-3 max-h-[92vh] overflow-y-auto pr-1 shrink-0 w-[380px] sm:w-[410px] scrollbar-none';
+                wrapper.className = 'flex flex-col gap-3 max-h-[92vh] overflow-y-auto pr-1 shrink-0 w-[410px] sm:w-[440px] scrollbar-none';
                 if (previewWrapper) {
-                    previewWrapper.className = 'flex items-center gap-3 shrink-0 max-w-[calc(100vw-460px)] overflow-x-auto p-1.5 scroll-smooth scrollbar-none';
+                    previewWrapper.className = 'flex items-center gap-3 shrink-0 max-w-[calc(100vw-490px)] overflow-x-auto p-1.5 scroll-smooth scrollbar-none';
                 }
             } else {
                 container.className = 'fixed inset-0 pointer-events-none z-[100000] flex flex-row items-center justify-center p-4 sm:p-6 gap-4 sm:gap-5 overflow-x-auto scrollbar-none bg-slate-900/60 backdrop-blur-xs pointer-events-auto';
-                wrapper.className = 'flex flex-row items-center gap-4 max-h-[92vh] overflow-x-auto p-1 shrink-0 scrollbar-none w-[380px] sm:w-[410px]';
+                wrapper.className = 'flex flex-row items-center gap-4 max-h-[92vh] overflow-x-auto p-1 shrink-0 scrollbar-none w-[410px] sm:w-[440px]';
             }
         }
 
@@ -2260,91 +2273,442 @@
             const name = item.nama || item.name || 'Mahasiswa';
             const summary = item.berkas_summary || {};
             const items = summary.items || [];
+            const previewDocs = item.preview_docs || {};
+            const sidangDocs = item.sidang_docs || {};
+            const currentTab = window.activeLihatBerkasTab || 'pendaftaran';
+
             const isMobile = window.innerWidth < 1024;
-            const cardWidthClass = isMobile ? 'w-full max-w-[94vw] sm:max-w-md' : 'w-[380px] sm:w-[410px] shrink-0';
+            const cardWidthClass = isMobile ? 'w-full max-w-[94vw] sm:max-w-md' : 'w-[410px] sm:w-[440px] shrink-0';
 
-            let validCount = 0;
-            let itemsHtml = '';
+            // Counts for badges
+            let validPendaftaranCount = 0;
+            items.forEach(b => { if (b.status === 'Valid') validPendaftaranCount++; });
+            const totalPendaftaran = items.length || 4;
 
-            if (items.length === 0) {
-                itemsHtml = `
-                    <div class="p-6 text-center text-slate-400">
-                        <i class="fa-solid fa-folder-open text-3xl mb-2 text-slate-300 block"></i>
-                        <p class="font-bold text-xs">Belum ada berkas</p>
-                    </div>
-                `;
-            } else {
-                items.forEach((b, idx) => {
-                    const docKey = b.kode || `doc_${idx}`;
-                    const st = b.status || 'Pending';
-                    if (st === 'Valid') validCount++;
+            const totalPrevSubmitted = previewDocs.total_submitted || 0;
+            const hasSidang = sidangDocs.has_sidang || false;
 
-                    const isCurrentlyPreviewed = window.activePreviews && window.activePreviews.some(p => String(p.nim) === String(nim) && String(p.docKey) === String(docKey));
-                    const rawFile = b.file_name || '';
-                    const fileUrl = b.file_url ? b.file_url : resolveDocPdfUrl(rawFile);
+            // Render Content per Tab
+            let tabContentHtml = '';
+
+            // TAB 1: BERKAS PENDAFTARAN TA
+            if (currentTab === 'pendaftaran') {
+                if (items.length === 0) {
+                    tabContentHtml = `
+                        <div class="p-8 text-center text-slate-400">
+                            <i class="fa-solid fa-folder-open text-3xl mb-2 text-slate-300 block"></i>
+                            <p class="font-bold text-xs">Belum ada berkas pendaftaran diunggah</p>
+                        </div>
+                    `;
+                } else {
+                    items.forEach((b, idx) => {
+                        const docKey = b.kode || `doc_${idx}`;
+                        const st = b.status || 'Pending';
+                        const isCurrentlyPreviewed = window.activePreviews && window.activePreviews.some(p => String(p.nim) === String(nim) && String(p.docKey) === String(docKey));
+                        const rawFile = b.file_name || '';
+                        const fileUrl = b.file_url ? b.file_url : resolveDocPdfUrl(rawFile);
+
+                        let stBadge = '';
+                        if (st === 'Valid') {
+                            stBadge = '<span class="px-1.5 py-0.2 text-[8.5px] font-bold bg-emerald-100 text-emerald-700 rounded-full border border-emerald-200 shrink-0">Valid</span>';
+                        } else if (st === 'Invalid') {
+                            stBadge = '<span class="px-1.5 py-0.2 text-[8.5px] font-bold bg-rose-100 text-rose-700 rounded-full border border-rose-200 shrink-0">Revisi</span>';
+                        } else {
+                            stBadge = '<span class="px-1.5 py-0.2 text-[8.5px] font-bold bg-amber-100 text-amber-700 rounded-full border border-amber-200 shrink-0">Pending</span>';
+                        }
+
+                        let displayDocName = (b.kode === 'ksm' ? 'KSM' : (b.nama || b.kode)).replace(/\s*\([^)]*\)/, '');
+
+                        tabContentHtml += `
+                            <div class="p-2.5 rounded-xl border transition-all ${isCurrentlyPreviewed ? 'bg-orange-50/70 border-orange-400 ring-2 ring-orange-400/40 shadow-xs' : 'bg-white border-slate-200 hover:border-slate-300'}">
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-center gap-1.5 min-w-0">
+                                            <i class="fa-solid fa-file-pdf text-xs ${isCurrentlyPreviewed ? 'text-orange-600' : 'text-rose-500'} shrink-0"></i>
+                                            <span class="font-bold text-xs text-slate-900 truncate" title="${escapeHtml(b.nama || b.kode)}">${idx + 1}. ${escapeHtml(displayDocName)}</span>
+                                            ${stBadge}
+                                        </div>
+                                        <div class="text-[9.5px] text-slate-400 font-mono truncate mt-0.5" title="${escapeHtml(rawFile || 'Belum diunggah')}">
+                                            <i class="fa-solid fa-file-lines text-[9px] mr-1 text-rose-400"></i>${escapeHtml(rawFile || 'Belum diunggah')}
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-1.5 shrink-0">
+                                        <button type="button" 
+                                                onclick="previewBerkasItem('${nim}', '${docKey}', '${fileUrl}', '${escapeHtml(displayDocName)}', '${st}')" 
+                                                class="px-2.5 py-1 text-xs font-bold rounded-lg transition-all active:scale-95 flex items-center gap-1 cursor-pointer ${isCurrentlyPreviewed ? 'bg-orange-600 text-white shadow-xs' : 'bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200'}">
+                                            <i class="fa-solid ${isCurrentlyPreviewed ? 'fa-eye-slash' : 'fa-eye'} text-[9px]"></i>
+                                            <span>${isCurrentlyPreviewed ? 'Tutup' : 'Lihat'}</span>
+                                        </button>
+                                        <a href="${fileUrl}" download="${escapeHtml(rawFile || 'berkas.pdf')}" target="_blank" class="px-2.5 py-1 text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition flex items-center gap-1 cursor-pointer" title="Unduh Berkas">
+                                            <i class="fa-solid fa-download text-[9px]"></i>
+                                            <span>Unduh</span>
+                                        </a>
+                                    </div>
+                                </div>
+                                ${b.catatan ? `
+                                    <div class="mt-1.5 p-1.5 bg-rose-50 border border-rose-200/80 rounded-lg text-[9.5px] text-rose-700 flex items-start gap-1">
+                                        <i class="fa-solid fa-comment-dots text-rose-500 mt-0.5 shrink-0"></i>
+                                        <div><strong class="font-bold">Catatan:</strong> ${escapeHtml(b.catatan)}</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    });
+                }
+            }
+
+            // TAB 2: BERKAS PREVIEW 1-3
+            else if (currentTab === 'preview') {
+                const stages = [
+                    { key: 'p1', code: 'preview1', label: 'Preview 1: Proposal TA', data: previewDocs.p1 || {} },
+                    { key: 'p2', code: 'preview2', label: 'Preview 2: Evaluasi Progres', data: previewDocs.p2 || {} },
+                    { key: 'p3', code: 'preview3', label: 'Preview 3: Pra-Sidang TA', data: previewDocs.p3 || {} }
+                ];
+
+                stages.forEach((stg, sIdx) => {
+                    const d = stg.data;
+                    const hasSub = d.has_submission;
+                    const stStatus = d.status || 'Belum Mengajukan';
 
                     let stBadge = '';
-                    if (st === 'Valid') {
-                        stBadge = '<span class="px-1.5 py-0.2 text-[8.5px] font-bold bg-emerald-100 text-emerald-700 rounded-full border border-emerald-200 shrink-0">Valid</span>';
-                    } else if (st === 'Invalid') {
-                        stBadge = '<span class="px-1.5 py-0.2 text-[8.5px] font-bold bg-rose-100 text-rose-700 rounded-full border border-rose-200 shrink-0">Revisi</span>';
+                    if (stStatus === 'Approved' || stStatus === 'Lulus') {
+                        stBadge = '<span class="px-2 py-0.5 text-[8.5px] font-bold bg-emerald-100 text-emerald-800 rounded-md border border-emerald-200"><i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i>Approved</span>';
+                    } else if (stStatus === 'Revisi' || stStatus === 'Rejected') {
+                        stBadge = '<span class="px-2 py-0.5 text-[8.5px] font-bold bg-rose-100 text-rose-800 rounded-md border border-rose-200"><i class="fa-solid fa-triangle-exclamation mr-1 text-rose-600"></i>Revisi</span>';
+                    } else if (hasSub) {
+                        stBadge = '<span class="px-2 py-0.5 text-[8.5px] font-bold bg-amber-100 text-amber-800 rounded-md border border-amber-200"><i class="fa-solid fa-clock mr-1 text-amber-600"></i>' + escapeHtml(stStatus) + '</span>';
                     } else {
-                        stBadge = '<span class="px-1.5 py-0.2 text-[8.5px] font-bold bg-amber-100 text-amber-700 rounded-full border border-amber-200 shrink-0">Pending</span>';
+                        stBadge = '<span class="px-2 py-0.5 text-[8.5px] font-bold bg-slate-100 text-slate-600 rounded-md border border-slate-200">Belum Mengajukan</span>';
                     }
 
-                    // Clean name like "KSM (Kartu Studi Mahasiswa)" -> "KSM"
-                    let displayDocName = (b.kode === 'ksm' ? 'KSM' : (b.nama || b.kode)).replace(/\s*\([^)]*\)/, '');
+                    let fileRows = '';
 
-                    itemsHtml += `
-                        <div class="p-2.5 rounded-xl border transition-all ${isCurrentlyPreviewed ? 'bg-orange-50/70 border-orange-400 ring-2 ring-orange-400/40 shadow-xs' : 'bg-white border-slate-200 hover:border-slate-300'}">
-                            <div class="flex items-center justify-between gap-2">
-                                <div class="min-w-0 flex-1">
-                                    <div class="flex items-center gap-1.5 min-w-0">
-                                        <i class="fa-solid fa-file-pdf text-xs ${isCurrentlyPreviewed ? 'text-orange-600' : 'text-rose-500'} shrink-0"></i>
-                                        <span class="font-bold text-xs text-slate-900 truncate" title="${escapeHtml(b.nama || b.kode)}">${idx + 1}. ${escapeHtml(displayDocName)}</span>
-                                        ${stBadge}
+                    if (hasSub) {
+                        // Draft Naskah
+                        if (d.file_draft) {
+                            const docKey = `${stg.key}_draft`;
+                            const isPrev = window.activePreviews.some(p => String(p.nim) === String(nim) && String(p.docKey) === String(docKey));
+                            fileRows += `
+                                <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200/80">
+                                    <div class="min-w-0 flex-1 pr-2">
+                                        <div class="flex items-center gap-1.5 text-xs font-bold text-slate-800 truncate">
+                                            <i class="fa-solid fa-file-pdf text-rose-500 text-[11px] shrink-0"></i>
+                                            <span>Draft Naskah TA</span>
+                                        </div>
+                                        <p class="text-[9.5px] text-slate-400 font-mono truncate mt-0.5">${escapeHtml(d.file_draft)}</p>
                                     </div>
-                                    <div class="text-[9.5px] text-slate-400 font-mono truncate mt-0.5" title="${escapeHtml(rawFile || 'Belum diunggah')}">
-                                        <i class="fa-solid fa-file-lines text-[9px] mr-1 text-rose-400"></i>${escapeHtml(rawFile || 'Belum diunggah')}
+                                    <div class="flex items-center gap-1 shrink-0">
+                                        <button type="button" onclick="previewBerkasItem('${nim}', '${docKey}', '${d.file_draft_url}', '${stg.label} - Draft Naskah', '${stStatus}')" class="px-2 py-0.8 text-[11px] font-bold rounded-md transition ${isPrev ? 'bg-orange-600 text-white' : 'bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200'}">
+                                            <i class="fa-solid ${isPrev ? 'fa-eye-slash' : 'fa-eye'} text-[8.5px]"></i> ${isPrev ? 'Tutup' : 'Lihat'}
+                                        </button>
+                                        <a href="${d.file_draft_url}" download="${escapeHtml(d.file_draft)}" target="_blank" class="px-2 py-0.8 text-[11px] font-bold text-slate-600 bg-white hover:bg-slate-100 border border-slate-200 rounded-md" title="Unduh">
+                                            <i class="fa-solid fa-download text-[8.5px]"></i>
+                                        </a>
                                     </div>
                                 </div>
-                                <div class="flex items-center gap-1.5 shrink-0">
-                                    <button type="button" 
-                                            onclick="previewBerkasItem('${nim}', '${docKey}')" 
-                                            class="px-2.5 py-1 text-xs font-bold rounded-lg transition-all active:scale-95 flex items-center gap-1 cursor-pointer ${isCurrentlyPreviewed ? 'bg-orange-600 text-white shadow-xs' : 'bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200'}">
-                                        <i class="fa-solid ${isCurrentlyPreviewed ? 'fa-eye-slash' : 'fa-eye'} text-[9px]"></i>
-                                        <span>${isCurrentlyPreviewed ? 'Tutup' : 'Lihat'}</span>
-                                    </button>
-                                    <a href="${fileUrl}" download="${escapeHtml(rawFile || 'berkas.pdf')}" target="_blank" class="px-2.5 py-1 text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition flex items-center gap-1 cursor-pointer" title="Unduh Berkas">
-                                        <i class="fa-solid fa-download text-[9px]"></i>
-                                        <span>Unduh</span>
+                            `;
+                        }
+
+                        // Sitasi / Turnitin
+                        if (d.file_sitasi) {
+                            const docKey = `${stg.key}_sitasi`;
+                            const isPrev = window.activePreviews.some(p => String(p.nim) === String(nim) && String(p.docKey) === String(docKey));
+                            fileRows += `
+                                <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200/80">
+                                    <div class="min-w-0 flex-1 pr-2">
+                                        <div class="flex items-center gap-1.5 text-xs font-bold text-slate-800 truncate">
+                                            <i class="fa-solid fa-file-shield text-teal-600 text-[11px] shrink-0"></i>
+                                            <span>Hasil Cek Turnitin / Sitasi</span>
+                                        </div>
+                                        <p class="text-[9.5px] text-slate-400 font-mono truncate mt-0.5">${escapeHtml(d.file_sitasi)}</p>
+                                    </div>
+                                    <div class="flex items-center gap-1 shrink-0">
+                                        <button type="button" onclick="previewBerkasItem('${nim}', '${docKey}', '${d.file_sitasi_url}', '${stg.label} - Cek Sitasi', '${stStatus}')" class="px-2 py-0.8 text-[11px] font-bold rounded-md transition ${isPrev ? 'bg-orange-600 text-white' : 'bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200'}">
+                                            <i class="fa-solid ${isPrev ? 'fa-eye-slash' : 'fa-eye'} text-[8.5px]"></i> ${isPrev ? 'Tutup' : 'Lihat'}
+                                        </button>
+                                        <a href="${d.file_sitasi_url}" download="${escapeHtml(d.file_sitasi)}" target="_blank" class="px-2 py-0.8 text-[11px] font-bold text-slate-600 bg-white hover:bg-slate-100 border border-slate-200 rounded-md" title="Unduh">
+                                            <i class="fa-solid fa-download text-[8.5px]"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                        }
+
+                        // Logbook Bimbingan
+                        if (d.file_bimbingan) {
+                            const docKey = `${stg.key}_bimbingan`;
+                            const isPrev = window.activePreviews.some(p => String(p.nim) === String(nim) && String(p.docKey) === String(docKey));
+                            fileRows += `
+                                <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200/80">
+                                    <div class="min-w-0 flex-1 pr-2">
+                                        <div class="flex items-center gap-1.5 text-xs font-bold text-slate-800 truncate">
+                                            <i class="fa-solid fa-book-bookmark text-sky-600 text-[11px] shrink-0"></i>
+                                            <span>Logbook &amp; Kartu Bimbingan</span>
+                                        </div>
+                                        <p class="text-[9.5px] text-slate-400 font-mono truncate mt-0.5">${escapeHtml(d.file_bimbingan)}</p>
+                                    </div>
+                                    <div class="flex items-center gap-1 shrink-0">
+                                        <button type="button" onclick="previewBerkasItem('${nim}', '${docKey}', '${d.file_bimbingan_url}', '${stg.label} - Logbook Bimbingan', '${stStatus}')" class="px-2 py-0.8 text-[11px] font-bold rounded-md transition ${isPrev ? 'bg-orange-600 text-white' : 'bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200'}">
+                                            <i class="fa-solid ${isPrev ? 'fa-eye-slash' : 'fa-eye'} text-[8.5px]"></i> ${isPrev ? 'Tutup' : 'Lihat'}
+                                        </button>
+                                        <a href="${d.file_bimbingan_url}" download="${escapeHtml(d.file_bimbingan)}" target="_blank" class="px-2 py-0.8 text-[11px] font-bold text-slate-600 bg-white hover:bg-slate-100 border border-slate-200 rounded-md" title="Unduh">
+                                            <i class="fa-solid fa-download text-[8.5px]"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                        }
+
+                        // Dokumen Persyaratan / Tambahan
+                        if (d.file_persyaratan) {
+                            const docKey = `${stg.key}_persyaratan`;
+                            const isPrev = window.activePreviews.some(p => String(p.nim) === String(nim) && String(p.docKey) === String(docKey));
+                            fileRows += `
+                                <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200/80">
+                                    <div class="min-w-0 flex-1 pr-2">
+                                        <div class="flex items-center gap-1.5 text-xs font-bold text-slate-800 truncate">
+                                            <i class="fa-solid fa-paperclip text-purple-600 text-[11px] shrink-0"></i>
+                                            <span>Dokumen Persyaratan Tambahan</span>
+                                        </div>
+                                        <p class="text-[9.5px] text-slate-400 font-mono truncate mt-0.5">${escapeHtml(d.file_persyaratan)}</p>
+                                    </div>
+                                    <div class="flex items-center gap-1 shrink-0">
+                                        <button type="button" onclick="previewBerkasItem('${nim}', '${docKey}', '${d.file_persyaratan_url}', '${stg.label} - Dokumen Tambahan', '${stStatus}')" class="px-2 py-0.8 text-[11px] font-bold rounded-md transition ${isPrev ? 'bg-orange-600 text-white' : 'bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200'}">
+                                            <i class="fa-solid ${isPrev ? 'fa-eye-slash' : 'fa-eye'} text-[8.5px]"></i> ${isPrev ? 'Tutup' : 'Lihat'}
+                                        </button>
+                                        <a href="${d.file_persyaratan_url}" download="${escapeHtml(d.file_persyaratan)}" target="_blank" class="px-2 py-0.8 text-[11px] font-bold text-slate-600 bg-white hover:bg-slate-100 border border-slate-200 rounded-md" title="Unduh">
+                                            <i class="fa-solid fa-download text-[8.5px]"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                        }
+
+                        // Link Project
+                        if (d.link_project) {
+                            fileRows += `
+                                <div class="flex items-center justify-between p-2 rounded-lg bg-indigo-50/70 border border-indigo-200/70">
+                                    <div class="min-w-0 flex-1 pr-2">
+                                        <div class="flex items-center gap-1.5 text-xs font-bold text-indigo-900 truncate">
+                                            <i class="fa-solid fa-code-branch text-indigo-600 text-[11px] shrink-0"></i>
+                                            <span>Link Repository / Aplikasi</span>
+                                        </div>
+                                        <a href="${escapeHtml(d.link_project)}" target="_blank" class="text-[9.5px] text-indigo-600 hover:underline font-mono truncate block mt-0.5">
+                                            ${escapeHtml(d.link_project)}
+                                        </a>
+                                    </div>
+                                    <a href="${escapeHtml(d.link_project)}" target="_blank" class="px-2.5 py-1 text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-md flex items-center gap-1 shrink-0 shadow-2xs">
+                                        <span>Buka</span>
+                                        <i class="fa-solid fa-arrow-up-right-from-square text-[8.5px]"></i>
                                     </a>
                                 </div>
+                            `;
+                        }
+
+                        if (!fileRows) {
+                            fileRows = `<p class="text-[10px] text-slate-400 italic py-1">Belum ada file dokumen yang diunggah pada tahap ini.</p>`;
+                        }
+                    } else {
+                        fileRows = `
+                            <div class="py-2.5 px-3 bg-slate-50 border border-dashed border-slate-200 rounded-lg text-center">
+                                <p class="text-[11px] text-slate-400 font-medium">Mahasiswa belum mengunggah berkas untuk ${escapeHtml(stg.label)}</p>
                             </div>
-                            ${b.catatan ? `
-                                <div class="mt-1.5 p-1.5 bg-rose-50 border border-rose-200/80 rounded-lg text-[9.5px] text-rose-700 flex items-start gap-1">
-                                    <i class="fa-solid fa-comment-dots text-rose-500 mt-0.5 shrink-0"></i>
-                                    <div><strong class="font-bold">Catatan:</strong> ${escapeHtml(b.catatan)}</div>
+                        `;
+                    }
+
+                    tabContentHtml += `
+                        <div class="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs">
+                            <div class="p-2.5 px-3 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <span class="w-5 h-5 rounded-md bg-orange-100 text-orange-700 font-black text-[10px] flex items-center justify-center shrink-0">${sIdx + 1}</span>
+                                    <h5 class="font-bold text-xs text-slate-800 truncate">${escapeHtml(stg.label)}</h5>
                                 </div>
-                            ` : ''}
+                                <div>${stBadge}</div>
+                            </div>
+                            <div class="p-2.5 space-y-2">
+                                ${d.date ? `<div class="text-[9.5px] text-slate-400 flex items-center gap-1"><i class="fa-regular fa-calendar text-slate-400"></i> Diajukan: <span class="font-bold text-slate-600">${escapeHtml(d.date)}</span></div>` : ''}
+                                ${fileRows}
+                                ${d.catatan ? `
+                                    <div class="p-2 bg-amber-50 border border-amber-200/80 rounded-lg text-[10px] text-amber-900 flex items-start gap-1.5">
+                                        <i class="fa-solid fa-comment-dots text-amber-600 mt-0.5 shrink-0"></i>
+                                        <div><strong class="font-bold">Catatan Reviewer:</strong> ${escapeHtml(d.catatan)}</div>
+                                    </div>
+                                ` : ''}
+                            </div>
                         </div>
                     `;
                 });
             }
 
-            const totalDocs = items.length || 4;
+            // TAB 3: BERKAS SIDANG & BAP
+            else if (currentTab === 'sidang') {
+                const s = sidangDocs;
+                const isPublished = s.is_published || false;
+                const isLulus = s.is_lulus || false;
+
+                tabContentHtml += `
+                    <!-- Jadwal & Lokasi Sidang Card -->
+                    <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-2xs space-y-2.5">
+                        <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-calendar-check text-orange-600 text-xs"></i>
+                                <h5 class="font-bold text-xs text-slate-900">Jadwal &amp; Ruang Sidang</h5>
+                            </div>
+                            <span class="px-2 py-0.5 text-[9px] font-bold rounded-md ${s.tanggal_sidang ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}">
+                                ${s.tanggal_sidang ? 'Terjadwal' : 'Belum Dijadwalkan'}
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div class="p-2 bg-slate-50 rounded-lg border border-slate-100">
+                                <span class="text-[10px] text-slate-400 block font-medium">Tanggal Sidang</span>
+                                <strong class="text-slate-800 text-[11px] font-bold">${s.tanggal_sidang ? escapeHtml(s.tanggal_sidang) : '-'}</strong>
+                            </div>
+                            <div class="p-2 bg-slate-50 rounded-lg border border-slate-100">
+                                <span class="text-[10px] text-slate-400 block font-medium">Waktu Sidang</span>
+                                <strong class="text-slate-800 text-[11px] font-bold">${s.waktu_sidang ? escapeHtml(s.waktu_sidang) : '-'}</strong>
+                            </div>
+                            <div class="p-2 bg-slate-50 rounded-lg border border-slate-100 col-span-2">
+                                <span class="text-[10px] text-slate-400 block font-medium">Ruangan / Tempat</span>
+                                <strong class="text-slate-800 text-[11px] font-bold flex items-center gap-1.5">
+                                    <i class="fa-solid fa-location-dot text-rose-500 text-[10px]"></i>
+                                    ${s.ruang_sidang ? escapeHtml(s.ruang_sidang) : 'Belum ditentukan'}
+                                </strong>
+                            </div>
+                            ${s.link_sidang ? `
+                                <div class="p-2 bg-blue-50 border border-blue-200 rounded-lg col-span-2 flex items-center justify-between">
+                                    <div class="min-w-0 flex-1 pr-2">
+                                        <span class="text-[9.5px] text-blue-600 font-bold block">Link Sidang Online:</span>
+                                        <a href="${escapeHtml(s.link_sidang)}" target="_blank" class="text-[10px] text-blue-800 font-mono truncate block underline">${escapeHtml(s.link_sidang)}</a>
+                                    </div>
+                                    <a href="${escapeHtml(s.link_sidang)}" target="_blank" class="px-2 py-1 bg-blue-600 text-white rounded text-[10px] font-bold">Gabung</a>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <!-- Dokumen Sidang & BAP -->
+                    <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-2xs space-y-2">
+                        <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-file-lines text-orange-600 text-xs"></i>
+                                <h5 class="font-bold text-xs text-slate-900">Dokumen Sidang &amp; Berita Acara</h5>
+                            </div>
+                            <span class="px-2 py-0.5 text-[9px] font-bold rounded-md ${s.file_sidang || s.bap_file ? 'bg-teal-100 text-teal-800' : 'bg-slate-100 text-slate-600'}">
+                                ${s.file_sidang || s.bap_file ? 'Tersedia' : 'Belum Diunggah'}
+                            </span>
+                        </div>
+
+                        <!-- File Naskah Final Sidang -->
+                        ${s.file_sidang ? `
+                            <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200/80">
+                                <div class="min-w-0 flex-1 pr-2">
+                                    <div class="flex items-center gap-1.5 text-xs font-bold text-slate-800 truncate">
+                                        <i class="fa-solid fa-file-pdf text-rose-500 text-[11px] shrink-0"></i>
+                                        <span>Naskah Final Sidang Tugas Akhir</span>
+                                    </div>
+                                    <p class="text-[9.5px] text-slate-400 font-mono truncate mt-0.5">${escapeHtml(s.file_sidang)}</p>
+                                </div>
+                                <div class="flex items-center gap-1 shrink-0">
+                                    <button type="button" onclick="previewBerkasItem('${nim}', 'sidang_naskah', '${s.file_sidang_url}', 'Naskah Final Sidang', 'Valid')" class="px-2 py-0.8 text-[11px] font-bold rounded-md transition ${window.activePreviews.some(p => p.nim === String(nim) && p.docKey === 'sidang_naskah') ? 'bg-orange-600 text-white' : 'bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200'}">
+                                        <i class="fa-solid fa-eye text-[8.5px]"></i> Lihat
+                                    </button>
+                                    <a href="${s.file_sidang_url}" download="${escapeHtml(s.file_sidang)}" target="_blank" class="px-2 py-0.8 text-[11px] font-bold text-slate-600 bg-white hover:bg-slate-100 border border-slate-200 rounded-md" title="Unduh">
+                                        <i class="fa-solid fa-download text-[8.5px]"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="p-2 bg-slate-50 border border-dashed border-slate-200 rounded-lg text-center">
+                                <p class="text-[10.5px] text-slate-400">Naskah final sidang belum diunggah.</p>
+                            </div>
+                        `}
+
+                        <!-- File Berita Acara (BAP) -->
+                        ${s.bap_file ? `
+                            <div class="flex items-center justify-between p-2 rounded-lg bg-emerald-50/70 border border-emerald-200/80">
+                                <div class="min-w-0 flex-1 pr-2">
+                                    <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-950 truncate">
+                                        <i class="fa-solid fa-file-signature text-emerald-600 text-[11px] shrink-0"></i>
+                                        <span>Lembar Berita Acara (BAP) &amp; Nilai</span>
+                                        <span class="px-1.5 py-0.2 text-[8px] font-bold bg-emerald-100 text-emerald-700 rounded border border-emerald-300">BAP ACC</span>
+                                    </div>
+                                    <p class="text-[9.5px] text-emerald-700 font-mono truncate mt-0.5">${escapeHtml(s.bap_file)}</p>
+                                </div>
+                                <div class="flex items-center gap-1 shrink-0">
+                                    <button type="button" onclick="previewBerkasItem('${nim}', 'sidang_bap', '${s.bap_file_url}', 'Berita Acara Sidang (BAP)', '${s.status_bap || 'Valid'}')" class="px-2 py-0.8 text-[11px] font-bold rounded-md transition ${window.activePreviews.some(p => p.nim === String(nim) && p.docKey === 'sidang_bap') ? 'bg-orange-600 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs'}">
+                                        <i class="fa-solid fa-eye text-[8.5px]"></i> Lihat
+                                    </button>
+                                    <a href="${s.bap_file_url}" download="${escapeHtml(s.bap_file)}" target="_blank" class="px-2 py-0.8 text-[11px] font-bold text-emerald-800 bg-white hover:bg-emerald-100 border border-emerald-200 rounded-md" title="Unduh">
+                                        <i class="fa-solid fa-download text-[8.5px]"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="p-2 bg-slate-50 border border-dashed border-slate-200 rounded-lg text-center">
+                                <p class="text-[10.5px] text-slate-400">Lembar BAP sidang belum diterbitkan / ditandatangani.</p>
+                            </div>
+                        `}
+                    </div>
+
+                    <!-- Rekapitulasi Nilai Sidang Card -->
+                    <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-2xs space-y-2">
+                        <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-award text-amber-500 text-xs"></i>
+                                <h5 class="font-bold text-xs text-slate-900">Rekap Nilai Sidang &amp; Hasil</h5>
+                            </div>
+                            <span class="px-2 py-0.5 text-[9px] font-bold rounded-md ${isPublished ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                                ${isPublished ? 'Nilai Diterbitkan' : 'Draft Nilai'}
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-4 gap-1.5 text-center text-xs">
+                            <div class="p-1.5 bg-slate-50 rounded-lg border border-slate-100">
+                                <span class="text-[9px] text-slate-400 block font-medium">Pemb. 1</span>
+                                <strong class="text-slate-800 text-xs font-bold">${s.nilai_p1 ? Number(s.nilai_p1).toFixed(1) : '-'}</strong>
+                            </div>
+                            <div class="p-1.5 bg-slate-50 rounded-lg border border-slate-100">
+                                <span class="text-[9px] text-slate-400 block font-medium">Pemb. 2</span>
+                                <strong class="text-slate-800 text-xs font-bold">${s.nilai_p2 ? Number(s.nilai_p2).toFixed(1) : '-'}</strong>
+                            </div>
+                            <div class="p-1.5 bg-slate-50 rounded-lg border border-slate-100">
+                                <span class="text-[9px] text-slate-400 block font-medium">Penguji 1</span>
+                                <strong class="text-slate-800 text-xs font-bold">${s.nilai_pj1 ? Number(s.nilai_pj1).toFixed(1) : '-'}</strong>
+                            </div>
+                            <div class="p-1.5 bg-slate-50 rounded-lg border border-slate-100">
+                                <span class="text-[9px] text-slate-400 block font-medium">Penguji 2</span>
+                                <strong class="text-slate-800 text-xs font-bold">${s.nilai_pj2 ? Number(s.nilai_pj2).toFixed(1) : '-'}</strong>
+                            </div>
+                        </div>
+
+                        <div class="p-2.5 rounded-lg bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 flex items-center justify-between">
+                            <div>
+                                <span class="text-[10px] font-bold text-orange-900 block">Rata-Rata Nilai Sidang</span>
+                                <p class="text-[10.5px] text-slate-600 font-medium">Status: <strong class="${isLulus ? 'text-emerald-700 font-bold' : 'text-slate-700'}">${isLulus ? 'LULUS TUGAS AKHIR' : (s.avg_score ? 'Sidang Selesai' : 'Sedang Berjalan')}</strong></p>
+                            </div>
+                            <div class="text-xl font-black text-orange-600">
+                                ${s.avg_score ? Number(s.avg_score).toFixed(2) : '-'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
 
             wrapper.innerHTML = `
                 <div class="student-card-item pointer-events-auto ${cardWidthClass} bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col shrink-0">
                     <!-- Dark Header -->
                     <div class="p-3 px-4 bg-slate-900 text-white flex items-center justify-between gap-2 shrink-0 border-b border-slate-800">
                         <div class="flex items-center gap-2.5 min-w-0">
-                            <div class="w-6 h-6 rounded-lg bg-orange-600/30 border border-orange-500/50 text-orange-400 flex items-center justify-center font-bold text-[11px] shrink-0 shadow-2xs">
-                                1
+                            <div class="w-7 h-7 rounded-xl bg-orange-600/30 border border-orange-500/50 text-orange-400 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                                <i class="fa-solid fa-graduation-cap"></i>
                             </div>
-                            <div class="min-w-0 flex items-center gap-2">
-                                <h4 class="text-xs font-bold text-white truncate max-w-[170px] sm:max-w-[210px]">${escapeHtml(name)}</h4>
-                                <span class="px-2 py-0.5 rounded bg-white/10 text-orange-300 font-mono text-[10px] font-bold">${escapeHtml(nim)}</span>
+                            <div class="min-w-0">
+                                <h4 class="text-xs font-bold text-white truncate max-w-[200px] sm:max-w-[240px]">${escapeHtml(name)}</h4>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span class="px-1.5 py-0.2 rounded bg-white/10 text-orange-300 font-mono text-[9.5px] font-bold">${escapeHtml(nim)}</span>
+                                    <span class="text-[10px] text-slate-400 truncate">${escapeHtml(item.prodi || 'Informatika')}</span>
+                                </div>
                             </div>
                         </div>
                         <button type="button" onclick="closeLihatBerkasPanel()" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-rose-600 text-slate-300 hover:text-white flex items-center justify-center text-xs font-bold transition-colors cursor-pointer" title="Tutup">
@@ -2352,19 +2716,52 @@
                         </button>
                     </div>
 
-                    <!-- List of Berkas -->
-                    <div class="p-3 space-y-2.5 bg-slate-50/50 overflow-y-auto max-h-[60vh] scrollbar-none">
-                        ${itemsHtml}
+                    <!-- Multi-Tab Header Bar -->
+                    <div class="p-1.5 bg-slate-100/90 border-b border-slate-200 grid grid-cols-3 gap-1 shrink-0">
+                        <button type="button" 
+                                onclick="switchLihatBerkasTab('pendaftaran')" 
+                                class="py-1.5 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${currentTab === 'pendaftaran' ? 'bg-white text-orange-600 shadow-2xs border border-slate-200/80' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'}">
+                            <i class="fa-solid fa-folder-closed text-[10px]"></i>
+                            <span>Pendaftaran</span>
+                            <span class="px-1 py-0.2 rounded-full text-[8.5px] ${currentTab === 'pendaftaran' ? 'bg-orange-100 text-orange-700' : 'bg-slate-200 text-slate-600'} font-black">${validPendaftaranCount}/${totalPendaftaran}</span>
+                        </button>
+
+                        <button type="button" 
+                                onclick="switchLihatBerkasTab('preview')" 
+                                class="py-1.5 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${currentTab === 'preview' ? 'bg-white text-orange-600 shadow-2xs border border-slate-200/80' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'}">
+                            <i class="fa-solid fa-file-signature text-[10px]"></i>
+                            <span>Preview 1-3</span>
+                            <span class="px-1 py-0.2 rounded-full text-[8.5px] ${currentTab === 'preview' ? 'bg-orange-100 text-orange-700' : 'bg-slate-200 text-slate-600'} font-black">${totalPrevSubmitted}/3</span>
+                        </button>
+
+                        <button type="button" 
+                                onclick="switchLihatBerkasTab('sidang')" 
+                                class="py-1.5 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${currentTab === 'sidang' ? 'bg-white text-orange-600 shadow-2xs border border-slate-200/80' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'}">
+                            <i class="fa-solid fa-award text-[10px]"></i>
+                            <span>Sidang &amp; BAP</span>
+                            <span class="px-1 py-0.2 rounded-full text-[8.5px] ${currentTab === 'sidang' ? 'bg-orange-100 text-orange-700' : 'bg-slate-200 text-slate-600'} font-black">${hasSidang ? 'OK' : '-'}</span>
+                        </button>
+                    </div>
+
+                    <!-- Tab Body Content -->
+                    <div class="p-3 space-y-2.5 bg-slate-50/50 overflow-y-auto max-h-[62vh] scrollbar-none">
+                        ${tabContentHtml}
                     </div>
 
                     <!-- Footer Info & Actions -->
                     <div class="p-3 px-4 bg-white border-t border-slate-200 flex items-center justify-between gap-2 shrink-0">
-                        <span class="text-[11px] text-slate-500 font-medium">
-                            <strong class="text-slate-800 font-bold">${validCount}/${totalDocs}</strong> Berkas Disetujui
+                        <span class="text-[11px] text-slate-500 font-medium truncate">
+                            Tahap: <strong class="text-slate-800 font-bold">${escapeHtml(item.progres_stage || 'Tugas Akhir')}</strong>
                         </span>
-                        <button type="button" onclick="closeLihatBerkasPanel()" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer">
-                            Tutup
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <a href="<?= site_url('koordinatorta/detail_mahasiswa/'); ?>${nim}" class="px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 text-xs font-bold transition inline-flex items-center gap-1">
+                                <span>Detail Mhs</span>
+                                <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                            </a>
+                            <button type="button" onclick="closeLihatBerkasPanel()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer">
+                                Tutup
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -2402,22 +2799,35 @@
                 const slotNum = index + 1;
 
                 const item = RAW_PESERTA_DATA.find(m => String(m.nim) === String(p.nim)) || {};
-                const summary = item.berkas_summary || {};
-                const items = summary.items || [];
-                const doc = items.find(d => d.kode === p.docKey) || items.find((_, i) => `doc_${i}` === p.docKey) || { nama: p.docKey, kode: p.docKey, status: 'Pending' };
-
-                const rawFilename = doc.file_name || `${p.docKey}_${p.nim}.pdf`;
-                const pdfUrl = doc.file_url ? doc.file_url : resolveDocPdfUrl(rawFilename);
                 const fullName = item.nama || item.name || 'Mahasiswa ' + p.nim;
-                const currentStatus = doc.status || 'Pending';
+
+                let docTitle = p.customTitle || p.docKey;
+                let rawFilename = `${p.docKey}_${p.nim}.pdf`;
+                let pdfUrl = p.customUrl || '';
+                let currentStatus = p.customStatus || 'Pending';
+                let docCatatan = '';
+
+                if (!p.customUrl) {
+                    const summary = item.berkas_summary || {};
+                    const items = summary.items || [];
+                    const doc = items.find(d => d.kode === p.docKey) || items.find((_, i) => `doc_${i}` === p.docKey) || { nama: p.docKey, kode: p.docKey, status: 'Pending' };
+                    docTitle = doc.nama || doc.kode;
+                    rawFilename = doc.file_name || `${p.docKey}_${p.nim}.pdf`;
+                    pdfUrl = doc.file_url ? doc.file_url : resolveDocPdfUrl(rawFilename);
+                    currentStatus = doc.status || 'Pending';
+                    docCatatan = doc.catatan || '';
+                } else {
+                    const parts = p.customUrl.split('/');
+                    rawFilename = parts[parts.length - 1] || 'dokumen.pdf';
+                }
 
                 let statusBadgeHtml = '';
-                if (currentStatus === 'Valid') {
-                    statusBadgeHtml = '<span class="px-2 py-0.5 rounded-md text-[9.5px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200"><i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i>Valid</span>';
-                } else if (currentStatus === 'Invalid') {
-                    statusBadgeHtml = '<span class="px-2 py-0.5 rounded-md text-[9.5px] font-bold bg-rose-100 text-rose-800 border border-rose-200"><i class="fa-solid fa-triangle-exclamation mr-1 text-rose-600"></i>Revisi</span>';
+                if (currentStatus === 'Valid' || currentStatus === 'Approved' || currentStatus === 'Lulus') {
+                    statusBadgeHtml = '<span class="px-2 py-0.5 rounded-md text-[9.5px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200"><i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i>' + escapeHtml(currentStatus) + '</span>';
+                } else if (currentStatus === 'Invalid' || currentStatus === 'Revisi' || currentStatus === 'Rejected') {
+                    statusBadgeHtml = '<span class="px-2 py-0.5 rounded-md text-[9.5px] font-bold bg-rose-100 text-rose-800 border border-rose-200"><i class="fa-solid fa-triangle-exclamation mr-1 text-rose-600"></i>' + escapeHtml(currentStatus) + '</span>';
                 } else {
-                    statusBadgeHtml = '<span class="px-2 py-0.5 rounded-md text-[9.5px] font-bold bg-amber-100 text-amber-800 border border-amber-200"><i class="fa-solid fa-clock mr-1 text-amber-600"></i>Pending</span>';
+                    statusBadgeHtml = '<span class="px-2 py-0.5 rounded-md text-[9.5px] font-bold bg-amber-100 text-amber-800 border border-amber-200"><i class="fa-solid fa-clock mr-1 text-amber-600"></i>' + escapeHtml(currentStatus) + '</span>';
                 }
 
                 const isFocused = (window.activeFocusedPreviewKey === `${p.nim}_${p.docKey}`);
@@ -2461,7 +2871,7 @@
                                 <div class="min-w-0">
                                     <div class="flex items-center gap-1.5">
                                         <span class="px-1.5 py-0.2 text-[7.5px] font-bold bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded uppercase tracking-wider">Sub-Pratinjau</span>
-                                        <h4 class="text-xs font-bold text-white truncate max-w-[150px] sm:max-w-[200px]">${escapeHtml(doc.nama || doc.kode)}</h4>
+                                        <h4 class="text-xs font-bold text-white truncate max-w-[150px] sm:max-w-[200px]">${escapeHtml(docTitle)}</h4>
                                     </div>
                                     <p class="text-[9.5px] text-slate-300 font-medium truncate mt-0.5">${escapeHtml(fullName)} · <span class="font-mono text-slate-400">${escapeHtml(rawFilename)}</span></p>
                                 </div>
@@ -2503,10 +2913,10 @@
                                     </button>
                                 </div>
                             </div>
-                            ${doc.catatan ? `
+                            ${docCatatan ? `
                                 <div class="p-1.5 bg-rose-50 border border-rose-200 rounded-lg text-[9.5px] text-rose-700 flex items-start gap-1">
                                     <i class="fa-solid fa-comment-dots text-rose-500 mt-0.5 shrink-0"></i>
-                                    <div><strong class="font-bold">Catatan:</strong> ${escapeHtml(doc.catatan)}</div>
+                                    <div><strong class="font-bold">Catatan:</strong> ${escapeHtml(docCatatan)}</div>
                                 </div>
                             ` : ''}
                         </div>

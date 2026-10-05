@@ -1924,7 +1924,6 @@ class AdminLayanan_model extends CI_Model {
             $this->db->join('user u_p2', '(tl.dosen_pembimbing2 IS NOT NULL AND tl.dosen_pembimbing2 != "" AND (u_p2.nip = tl.dosen_pembimbing2 OR u_p2.id = tl.dosen_pembimbing2))', 'left');
             $this->db->join('user u_pj1', '(tl.dosen_penguji1 IS NOT NULL AND tl.dosen_penguji1 != "" AND (u_pj1.nip = tl.dosen_penguji1 OR u_pj1.id = tl.dosen_penguji1))', 'left');
             $this->db->join('user u_pj2', '(tl.dosen_penguji2 IS NOT NULL AND tl.dosen_penguji2 != "" AND (u_pj2.nip = tl.dosen_penguji2 OR u_pj2.id = tl.dosen_penguji2))', 'left');
-            $this->db->group_by('g.id');
 
             // Filter Jenis TA
             if ($filter_jenis === 'sidang') {
@@ -1991,6 +1990,18 @@ class AdminLayanan_model extends CI_Model {
 
             $this->db->order_by('g.id', 'DESC');
             $rows = $this->db->get()->result_array();
+
+            // Deduplicate rows by guidance_id in PHP (safe for sql_mode=only_full_group_by)
+            $uniqueRows = array();
+            $seenGid = array();
+            foreach ($rows as $rItem) {
+                $gId = $rItem['guidance_id'];
+                if (!isset($seenGid[$gId])) {
+                    $seenGid[$gId] = true;
+                    $uniqueRows[] = $rItem;
+                }
+            }
+            $rows = $uniqueRows;
 
             foreach ($rows as $r) {
                 $nim = $r['nim'] ?: $r['id_mhs'];
