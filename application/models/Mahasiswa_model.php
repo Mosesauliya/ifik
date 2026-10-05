@@ -12,32 +12,32 @@ class Mahasiswa_model extends CI_Model {
     // =================================================================
 
     private function _get_user_id_by_nim($nim) {
-        if (empty($nim)) return null;
-        $user_tbl = $this->db->table_exists('user') ? 'user' : ($this->db->table_exists('users') ? 'users' : null);
-        if (!$user_tbl) return null;
+        if (empty($nim)) return $nim;
+        if (!$this->db->table_exists('user')) return $nim;
 
         $prev_debug = $this->db->db_debug;
         $this->db->db_debug = FALSE;
         $u = null;
         try {
-            $this->db->select('id')->group_start();
-            if ($this->db->field_exists('nim', $user_tbl)) $this->db->where('nim', $nim);
-            if ($this->db->field_exists('nidn_nim', $user_tbl)) $this->db->or_where('nidn_nim', $nim);
-            if ($this->db->field_exists('username', $user_tbl)) $this->db->or_where('username', $nim);
-            $this->db->group_end()->limit(1);
-            $u = $this->db->get($user_tbl)->row_array();
+            $u = $this->db->select('id, nim, username')
+                ->group_start()
+                    ->where('nim', $nim)
+                    ->or_where('username', $nim)
+                ->group_end()
+                ->limit(1)
+                ->get('user')->row_array();
         } catch (Throwable $e) {
             $u = null;
         }
         $this->db->db_debug = $prev_debug;
 
-        return ($u && !empty($u['id'])) ? $u['id'] : null;
+        return $u ? $u['id'] : $nim;
     }
 
     private function _get_target_ids_by_nim($nim) {
         if (empty($nim)) return [];
         $userId = $this->_get_user_id_by_nim($nim);
-        return array_values(array_unique(array_filter([$userId, $nim])));
+        return array_values(array_unique(array_filter([$userId, $nim, 'usr_mhs_' . $nim, 'mhs_' . $nim])));
     }
 
     private function _get_guidance_id_by_nim($nim) {
@@ -166,10 +166,6 @@ class Mahasiswa_model extends CI_Model {
         if (!$nim) return false;
 
         $userId = $this->_get_user_id_by_nim($nim);
-        if (empty($userId)) {
-            log_message('error', 'save_pendaftaran_ta: Akun pengguna tidak ditemukan di database untuk NIM ' . $nim);
-            return false;
-        }
         $target_ids = $this->_get_target_ids_by_nim($nim);
 
         // 1. guidance
@@ -232,7 +228,7 @@ class Mahasiswa_model extends CI_Model {
                 $this->db->where('id', $existing_g['id'])->update('guidance', $g_data);
             } else {
                 if (in_array('id',     $g_fields)) $g_data['id']     = 'gdn_' . $nim;
-                if (in_array('id_mhs', $g_fields)) $g_data['id_mhs'] = $userId;
+                if (in_array('id_mhs', $g_fields)) $g_data['id_mhs'] = $userId ?: ('usr_mhs_' . $nim);
                 $this->db->insert('guidance', $g_data);
             }
         }
@@ -260,36 +256,17 @@ class Mahasiswa_model extends CI_Model {
                         ->get('file_pendaftaran')->row_array();
                 }
 
-                $is_file_changed = ($exFp && !empty($exFp['file']) && $exFp['file'] !== $relPath);
-                $prev_dw_st = $exFp['status_doswal'] ?? '';
-                $prev_la_st = $exFp['status_adminlaa'] ?? '';
-
                 $fpData = [];
                 if (in_array('file',            $fp_fields)) $fpData['file']            = $relPath;
+                if (in_array('status_doswal',   $fp_fields)) $fpData['status_doswal']   = 'Pending';
+                if (in_array('status_adminlaa', $fp_fields)) $fpData['status_adminlaa'] = 'Pending';
                 if (in_array('date_edit',       $fp_fields)) $fpData['date_edit']       = date('Y-m-d H:i:s');
-
-                if (in_array('status_doswal', $fp_fields)) {
-                    if ($is_file_changed || $prev_dw_st === 'Rejected' || empty($prev_dw_st)) {
-                        $fpData['status_doswal'] = 'Pending';
-                        if (in_array('komentar', $fp_fields)) $fpData['komentar'] = '';
-                    } else {
-                        $fpData['status_doswal'] = $prev_dw_st;
-                    }
-                }
-
-                if (in_array('status_adminlaa', $fp_fields)) {
-                    if ($is_file_changed || $prev_la_st === 'Rejected' || $prev_la_st === 'Invalid' || empty($prev_la_st)) {
-                        $fpData['status_adminlaa'] = 'Pending';
-                    } else {
-                        $fpData['status_adminlaa'] = $prev_la_st;
-                    }
-                }
 
                 if ($exFp) {
                     $this->db->where('id', $exFp['id'])->update('file_pendaftaran', $fpData);
                 } else {
                     if (in_array('id',            $fp_fields)) $fpData['id']            = $targetFpId;
-                    if (in_array('id_mhs',        $fp_fields)) $fpData['id_mhs']        = $userId;
+                    if (in_array('id_mhs',        $fp_fields)) $fpData['id_mhs']        = $userId ?: ('usr_mhs_' . $nim);
                     if (in_array('nama',          $fp_fields)) $fpData['nama']          = $kode;
                     if (in_array('view_adminlaa', $fp_fields)) $fpData['view_adminlaa'] = 0;
                     if (in_array('view_doswal',   $fp_fields)) $fpData['view_doswal']   = 0;
@@ -318,7 +295,7 @@ class Mahasiswa_model extends CI_Model {
             $prev_debug = $this->db->db_debug;
             $this->db->db_debug = FALSE;
             try {
-                $q_g = $this->db->select('id, id_mhs, judul_1, judul_2, judul_3, judul_en, jenis_TA, peminatan, komentar, keterangan, date')
+                $q_g = $this->db->select('id, id_mhs, judul_1, judul_2, judul_3, judul_en, jenis_TA, peminatan, komentar, keterangan, date, lulus_preview1, lulus_preview2, lulus_preview3, lulus_sidang, status_preview')
                     ->where_in('id_mhs', $target_ids)
                     ->order_by('date', 'DESC')
                     ->limit(1)
@@ -578,8 +555,6 @@ class Mahasiswa_model extends CI_Model {
 
         // =========================================================
         // BAP PUBLISHED MARKER
-        // Cek apakah Penguji 1 sudah mempublikasikan BAP.
-        // Reuse $files (sudah difetch di atas) — tanpa query baru.
         // =========================================================
         if (isset($files['bap']) && !empty($files['bap']['file'])) {
             $res['bap_published']    = true;
@@ -687,6 +662,13 @@ class Mahasiswa_model extends CI_Model {
     // RIWAYAT PREVIEW (thesis)
     // =================================================================
 
+    /**
+     * Ambil riwayat preview berdasarkan NIM + tahap.
+     *
+     * ✅ FIX #1 (2026-10-05): SELECT dibuat DINAMIS — kolom opsional
+     *     hanya ditambahkan jika benar-benar ada (via field_exists).
+     *     Ini mencegah SQL error jika migrasi ALTER TABLE belum dijalankan.
+     */
     public function get_riwayat_preview($nim, $tahap = 'Preview 1') {
         if (!$this->db->table_exists('thesis')) return [];
 
@@ -695,28 +677,56 @@ class Mahasiswa_model extends CI_Model {
 
         $tahap_enum = $this->_tahap_to_enum($tahap);
 
-        $this->db->select("
-            t.id,
-            t.id_guidance,
-            t.pdf_file          AS file_draft,
-            t.file_sitasi,
-            t.file_bimbingan,
-            t.file_persyaratan,
-            t.file_sidang,
-            t.created_at,
-            t.date,
-            t.status            AS status_pembimbing,
-            t.correction1       AS catatan_pembimbing,
-            t.correction2       AS catatan_pembimbing_2,
-            t.correction3       AS catatan_penguji_1,
-            t.correction4       AS catatan_penguji_2,
-            t.keterangan        AS catatan_mahasiswa,
-            t.tahapan_preview,
-            g.nilaisidang_pembimbing1,
-            g.nilaisidang_pembimbing2,
-            g.nilaisidang_penguji1,
-            g.nilaisidang_penguji2
-        ", FALSE);
+        // Kolom WAJIB (sudah ada di skema dasar)
+        $select_cols = [
+            't.id',
+            't.id_guidance',
+            't.pdf_file          AS file_draft',
+            't.file_sitasi',
+            't.file_bimbingan',
+            't.file_persyaratan',
+            't.file_sidang',
+            't.created_at',
+            't.date',
+            't.status            AS status_pembimbing',
+            't.correction1       AS catatan_pembimbing',
+            't.correction2       AS catatan_pembimbing_2',
+            't.correction3       AS catatan_penguji_1',
+            't.correction4       AS catatan_penguji_2',
+            't.keterangan        AS catatan_mahasiswa',
+            't.tahapan_preview',
+            'g.nilaisidang_pembimbing1',
+            'g.nilaisidang_pembimbing2',
+            'g.nilaisidang_penguji1',
+            'g.nilaisidang_penguji2',
+        ];
+
+        // Kolom OPSIONAL dari tabel `thesis` — cek dulu existence-nya
+        $optional_thesis = [
+            'status_file_draft', 'status_file_sitasi', 'status_file_bimbingan',
+            'status_file_persyaratan', 'status_file_sidang',
+            'catatan_file_draft', 'catatan_file_sitasi', 'catatan_file_bimbingan',
+            'catatan_file_persyaratan', 'catatan_file_sidang',
+            'reviewed_by_role', 'reviewed_at',
+        ];
+        foreach ($optional_thesis as $col) {
+            if ($this->db->field_exists($col, 'thesis')) {
+                $select_cols[] = 't.' . $col;
+            }
+        }
+
+        // Kolom OPSIONAL dari tabel `guidance`
+        $optional_guidance = [
+            'lulus_preview1', 'lulus_preview2', 'lulus_preview3', 'lulus_sidang',
+            'lulus_by_role', 'lulus_at',
+        ];
+        foreach ($optional_guidance as $col) {
+            if ($this->db->field_exists($col, 'guidance')) {
+                $select_cols[] = 'g.' . $col;
+            }
+        }
+
+        $this->db->select(implode(",\n", $select_cols), FALSE);
         $this->db->from('thesis t');
         $this->db->join('guidance g', 'g.id = t.id_guidance', 'left');
         $this->db->where('t.id_guidance', $gid);
@@ -758,6 +768,14 @@ class Mahasiswa_model extends CI_Model {
             'tahapan_preview'   => $tahap_enum,
         ];
 
+        // Kolom status per-file — hanya jika sudah ada (pasca migrasi)
+        $thesis_fields = $this->db->list_fields('thesis');
+        if (in_array('status_file_draft', $thesis_fields))       $insert['status_file_draft']       = 'Pending';
+        if (in_array('status_file_sitasi', $thesis_fields))      $insert['status_file_sitasi']      = 'Pending';
+        if (in_array('status_file_bimbingan', $thesis_fields))   $insert['status_file_bimbingan']   = 'Pending';
+        if (in_array('status_file_persyaratan', $thesis_fields)) $insert['status_file_persyaratan'] = 'Pending';
+        if (in_array('status_file_sidang', $thesis_fields))      $insert['status_file_sidang']      = 'Pending';
+
         $inserted = $this->db->insert('thesis', $insert);
 
         if ($inserted && $this->db->table_exists('guidance') && $this->db->field_exists('status_preview', 'guidance')) {
@@ -788,6 +806,11 @@ class Mahasiswa_model extends CI_Model {
 
         $update = [];
         if (isset($data['status_pembimbing']))    $update['status']      = $data['status_pembimbing'];
+        if (isset($data['status_file_draft']))    $update['status_file_draft'] = $data['status_file_draft'];
+        if (isset($data['status_file_sitasi']))   $update['status_file_sitasi'] = $data['status_file_sitasi'];
+        if (isset($data['status_file_bimbingan'])) $update['status_file_bimbingan'] = $data['status_file_bimbingan'];
+        if (isset($data['status_file_persyaratan'])) $update['status_file_persyaratan'] = $data['status_file_persyaratan'];
+        if (isset($data['status_file_sidang']))   $update['status_file_sidang'] = $data['status_file_sidang'];
         if (isset($data['catatan_pembimbing']))   $update['correction1'] = $data['catatan_pembimbing'];
         if (isset($data['catatan_pembimbing_2'])) $update['correction2'] = $data['catatan_pembimbing_2'];
         if (isset($data['catatan_penguji_1']))    $update['correction3'] = $data['catatan_penguji_1'];
@@ -796,33 +819,59 @@ class Mahasiswa_model extends CI_Model {
 
         if (empty($update)) return false;
 
+        // Filter hanya kolom yang ada
+        $thesis_fields = $this->db->list_fields('thesis');
+        foreach ($update as $k => $v) {
+            if (!in_array($k, $thesis_fields)) unset($update[$k]);
+        }
+        if (empty($update)) return false;
+
         $this->db->where('id', $id);
         $res = $this->db->update('thesis', $update);
 
-        if ($res && isset($data['status_pembimbing']) && $data['status_pembimbing'] === 'Approved') {
-            $th = $this->db->get_where('thesis', ['id' => $id])->row_array();
-            if ($th && !empty($th['id_guidance'])) {
-                $gId = $th['id_guidance'];
-                $thp = strtolower($th['tahapan_preview']);
+        return $res;
+    }
 
-                $nextStage = null;
-                if ($thp === 'preview1') {
-                    $nextStage = 'preview2';
-                } elseif ($thp === 'preview2') {
-                    $nextStage = 'preview3';
-                } elseif ($thp === 'preview3') {
-                    $nextStage = 'sidang';
-                } elseif ($thp === 'sidang') {
-                    $nextStage = 'lulus';
-                }
+    public function lulus_tahap($id_guidance, $tahap_sekarang) {
+        if (!$this->db->table_exists('guidance') || !$this->db->field_exists('status_preview', 'guidance')) return false;
 
-                if ($nextStage && $this->db->table_exists('guidance') && $this->db->field_exists('status_preview', 'guidance')) {
-                    $this->db->where('id', $gId)->update('guidance', ['status_preview' => $nextStage]);
-                }
-            }
+        $thp = strtolower($tahap_sekarang);
+        $nextStage = null;
+        if ($thp === 'preview1' || $thp === 'preview 1') {
+            $nextStage = 'preview2';
+        } elseif ($thp === 'preview2' || $thp === 'preview 2') {
+            $nextStage = 'preview3';
+        } elseif ($thp === 'preview3' || $thp === 'preview 3') {
+            $nextStage = 'sidang';
+        } elseif ($thp === 'sidang') {
+            $nextStage = 'lulus';
         }
 
-        return $res;
+        if ($nextStage) {
+            $this->db->where('id', $id_guidance)->update('guidance', ['status_preview' => $nextStage]);
+            return true;
+        }
+        return false;
+    }
+
+    public function revert_tahap($id_guidance, $tahap_sekarang) {
+        if (!$this->db->table_exists('guidance') || !$this->db->field_exists('status_preview', 'guidance')) return false;
+
+        $thp = strtolower($tahap_sekarang);
+        $prevStage = null;
+        if ($thp === 'preview2' || $thp === 'preview 2') {
+            $prevStage = 'preview1';
+        } elseif ($thp === 'preview3' || $thp === 'preview 3') {
+            $prevStage = 'preview2';
+        } elseif ($thp === 'sidang') {
+            $prevStage = 'preview3';
+        }
+
+        if ($prevStage) {
+            $this->db->where('id', $id_guidance)->update('guidance', ['status_preview' => $prevStage]);
+            return true;
+        }
+        return false;
     }
 
     // =================================================================
@@ -953,8 +1002,41 @@ class Mahasiswa_model extends CI_Model {
         $this->db->limit(1);
 
         $row = $this->db->get()->row_array();
+        if (!$row) return null;
 
-        return $row ?: null;
+        // Enrichment: tambahkan kolom status_file_* & lulus_* secara dinamis
+        // supaya set_stage_lulus() dan update_file_status() bisa validasi.
+        $thesis_opt = [
+            'status_file_draft','status_file_sitasi','status_file_bimbingan',
+            'status_file_persyaratan','status_file_sidang',
+            'catatan_file_draft','catatan_file_sitasi','catatan_file_bimbingan',
+            'catatan_file_persyaratan','catatan_file_sidang',
+            'reviewed_by_role','reviewed_at',
+        ];
+        $want_thesis = [];
+        foreach ($thesis_opt as $c) {
+            if ($this->db->field_exists($c, 'thesis')) $want_thesis[] = $c;
+        }
+        if (!empty($want_thesis) && !empty($row['id'])) {
+            $extra = $this->db->select(implode(',', $want_thesis))
+                ->get_where('thesis', ['id' => $row['id']])
+                ->row_array();
+            if ($extra) $row = array_merge($row, $extra);
+        }
+
+        $guidance_opt = ['lulus_preview1','lulus_preview2','lulus_preview3','lulus_sidang','lulus_by_role','lulus_at'];
+        $want_g = [];
+        foreach ($guidance_opt as $c) {
+            if ($this->db->field_exists($c, 'guidance')) $want_g[] = $c;
+        }
+        if (!empty($want_g) && !empty($row['id_guidance'])) {
+            $extra_g = $this->db->select(implode(',', $want_g))
+                ->get_where('guidance', ['id' => $row['id_guidance']])
+                ->row_array();
+            if ($extra_g) $row = array_merge($row, $extra_g);
+        }
+
+        return $row;
     }
 
     // =================================================================
@@ -1145,15 +1227,6 @@ class Mahasiswa_model extends CI_Model {
     // RESTORE: STATUS SIDANG & PENILAIAN (untuk view mahasiswa)
     // =================================================================
 
-    /**
-     * Rekap nilai sidang agregat untuk halaman mahasiswa.
-     * Sumber: tabel `guidance` (nilaisidang_pembimbing1/2, nilaisidang_penguji1/2).
-     *
-     * Status publish disimpulkan otomatis:
-     *   - 4/4 posisi terisi → semua_terisi = true  (kartu "Published")
-     *   - 1..3 posisi       → has_data     = true  (kartu "Draft")
-     *   - 0 posisi          → semua null            (kartu "Belum Terjadwal")
-     */
     public function get_rekap_nilai_sidang($nim) {
         $empty = [
             'has_data'          => false,
@@ -1243,6 +1316,413 @@ class Mahasiswa_model extends CI_Model {
             'nilai_per_posisi'  => ['p1'=>$n1,'p2'=>$n2,'u1'=>$n3,'u2'=>$n4],
             'detail_per_posisi' => $detail_per_posisi,
             'kriteria_referensi'=> $kriteria_ref,
+        ];
+    }
+
+    // =================================================================
+    // PER-FILE STATUS, LULUS TAHAP, & DOWNGRADE (2026-10-05)
+    // =================================================================
+
+    /**
+     * Role yang bertanggung jawab (PIC) untuk suatu tahap.
+     * Preview 1 → 'p1', Preview 2/3/Sidang → 'u1'
+     */
+    public function get_responsible_role_for_tahap($tahap) {
+        $tahap = trim((string)$tahap);
+        if ($tahap === 'Preview 1') return 'p1';
+        if (in_array($tahap, ['Preview 2', 'Preview 3', 'Sidang'], true)) return 'u1';
+        return null;
+    }
+
+    /**
+     * Daftar file wajib di-ACC untuk suatu tahap.
+     */
+    private function _required_files_for_tahap($tahap_key) {
+        if ($tahap_key === 'preview3') return ['sitasi', 'bimbingan', 'persyaratan'];
+        if ($tahap_key === 'sidang')   return ['sidang'];
+        return ['draft'];
+    }
+
+    /**
+     * Update status 1 file spesifik (ACC/Revisi per file).
+     */
+        public function update_file_status($id_preview, $file_type, $status, $catatan = '', $role = null) {
+        if (!$this->db->table_exists('thesis')) {
+            return ['status' => false, 'message' => 'Tabel thesis tidak ditemukan.'];
+        }
+
+        $allowed_types  = ['draft', 'sitasi', 'bimbingan', 'persyaratan', 'sidang'];
+        $allowed_status = ['Approved', 'Revision', 'Pending'];
+
+        $file_type = strtolower(trim($file_type));
+        if (!in_array($file_type, $allowed_types, true)) {
+            return ['status' => false, 'message' => 'Tipe file tidak valid: ' . $file_type];
+        }
+        if (!in_array($status, $allowed_status, true)) {
+            return ['status' => false, 'message' => 'Status tidak valid: ' . $status];
+        }
+
+        $col_status  = 'status_file_' . $file_type;
+        $col_catatan = 'catatan_file_' . $file_type;
+
+        // 1. Update status file (granular per-kolom jika ada, selalu update status utama)
+        $update = ['status' => $status]; // status utama selalu di-update (dibaca sbg status_pembimbing)
+        if ($this->db->field_exists($col_status, 'thesis')) {
+            $update[$col_status] = $status;
+        }
+        if ($this->db->field_exists($col_catatan, 'thesis')) {
+            $update[$col_catatan] = $catatan;
+        }
+        if ($this->db->field_exists('reviewed_by_role', 'thesis')) {
+            $update['reviewed_by_role'] = $role;
+        }
+        if ($this->db->field_exists('reviewed_at', 'thesis')) {
+            $update['reviewed_at'] = date('Y-m-d H:i:s');
+        }
+
+        $this->db->where('id', $id_preview)->update('thesis', $update);
+
+        // 2. ✅ FIX: Cek semua file di preview ini, update `status` agregat
+        $this->_sync_thesis_status_from_files($id_preview);
+
+        $label_map = ['draft'=>'Draft','sitasi'=>'Sitasi','bimbingan'=>'Bimbingan','persyaratan'=>'Persyaratan','sidang'=>'Sidang'];
+        $label = $label_map[$file_type] ?? $file_type;
+        $action_label = ($status === 'Approved') ? 'di-ACC' : (($status === 'Revision') ? 'diminta revisi' : 'direset ke Pending');
+        $msg = 'File ' . $label . ' berhasil ' . $action_label . '.';
+
+        if ($this->db->table_exists('log_approval_history')) {
+            $preview = $this->db->select('id_guidance')->get_where('thesis', ['id' => $id_preview])->row_array();
+            $g = $preview ? $this->db->select('id_mhs')->get_where('guidance', ['id' => $preview['id_guidance']])->row_array() : null;
+
+            $this->db->insert('log_approval_history', [
+                'modul'         => 'Review File Preview',
+                'ref_id'        => (string)$id_preview,
+                'target_name'   => $g['id_mhs'] ?? null,
+                'action'        => $status,
+                'actor_id'      => $this->session->userdata('user_id'),
+                'actor_name'    => $this->session->userdata('name') ?: '-',
+                'actor_role'    => strtoupper((string)$role),
+                'actor_nip_nim' => $this->session->userdata('nip') ?: $this->session->userdata('username'),
+                'catatan'       => json_encode([
+                    'file_type' => $file_type,
+                    'status'    => $status,
+                    'catatan'   => $catatan,
+                ], JSON_UNESCAPED_UNICODE),
+                'created_at'    => date('Y-m-d H:i:s'),
+            ]);
+        }
+
+        return ['status' => true, 'message' => $msg, 'file_type' => $file_type, 'new_status' => $status];
+    }
+
+    /**
+     * Sync `thesis.status` (== status_pembimbing) berdasarkan agregat status_file_*.
+     * - Semua file Approved → `status` = 'Approved'
+     * - Ada file Revision → `status` = 'Revision'
+     * - Selain itu → `status` = 'Pending'
+     */
+    private function _sync_thesis_status_from_files($id_preview) {
+        if (!$this->db->table_exists('thesis')) return;
+
+        $preview = $this->db->select('id, id_guidance, tahapan_preview')
+            ->get_where('thesis', ['id' => $id_preview])->row_array();
+        if (!$preview) return;
+
+        $thesis_fields = $this->db->list_fields('thesis');
+        if (!in_array('status', $thesis_fields)) return;
+
+        $tahap = strtolower($preview['tahapan_preview'] ?? 'preview1');
+
+        // File wajib per tahap
+        if ($tahap === 'preview3')     $required = ['sitasi', 'bimbingan', 'persyaratan'];
+        elseif ($tahap === 'sidang')   $required = ['sidang'];
+        else                           $required = ['draft'];
+
+        // Jika tidak ada satu pun kolom status_file_* yang relevan, skip sinkronisasi
+        // agar tidak menimpa status yang baru saja diupdate.
+        $has_any_status_col = false;
+        foreach ($required as $ft) {
+            if (in_array('status_file_' . $ft, $thesis_fields)) {
+                $has_any_status_col = true;
+                break;
+            }
+        }
+        if (!$has_any_status_col) return;
+
+        // Ambil seluruh data row
+        $row = $this->db->get_where('thesis', ['id' => $id_preview])->row_array();
+        if (!$row) return;
+
+        $has_revision  = false;
+        $all_approved  = true;
+        $counted       = 0; // jumlah file yang benar-benar ada di row ini
+
+        foreach ($required as $ft) {
+            $col_status = 'status_file_' . $ft;
+            $col_file   = 'file_' . $ft;
+
+            // Jika kolom status tidak ada di DB, lewati
+            if (!in_array($col_status, $thesis_fields)) continue;
+
+            // Jika file tidak ada di row ini (row lain yang punya file itu),
+            // jangan ikutkan dalam kalkulasi — ini mencegah Approved ditimpa Pending.
+            if (empty($row[$col_file])) continue;
+
+            $counted++;
+            $st = $row[$col_status] ?? 'Pending';
+            if ($st === 'Revision') $has_revision = true;
+            if ($st !== 'Approved') $all_approved = false;
+        }
+
+        // Jika tidak ada file sama sekali di row ini yang relevan, skip
+        if ($counted === 0) return;
+
+        $new_status = 'Pending';
+        if ($has_revision)         $new_status = 'Revision';
+        elseif ($all_approved)     $new_status = 'Approved';
+
+        // Update hanya kalau perlu
+        if (($row['status'] ?? '') !== $new_status) {
+            $this->db->where('id', $id_preview)->update('thesis', ['status' => $new_status]);
+        }
+    }
+
+
+    /**
+     * Set "Lulus Tahap" — tandai mahasiswa lulus di tahap tertentu.
+     * Validasi: semua file di tahap tersebut sudah Approved.
+     */
+    public function set_stage_lulus($nim, $tahap, $role = null, $id_preview = null) {
+        if (!$this->db->table_exists('guidance')) {
+            return ['status' => false, 'message' => 'Tabel guidance tidak ditemukan.'];
+        }
+
+        $tahap_map = [
+            'Preview 1' => 'preview1', 'Preview 2' => 'preview2', 'Preview 3' => 'preview3', 'Sidang' => 'sidang',
+            'preview1' => 'preview1', 'preview2' => 'preview2', 'preview3' => 'preview3', 'sidang' => 'sidang',
+        ];
+        $tahap_key = $tahap_map[$tahap] ?? null;
+        if (!$tahap_key) {
+            return ['status' => false, 'message' => 'Tahap tidak valid: ' . $tahap];
+        }
+
+        $g = $this->get_guidance_by_nim($nim);
+        if (!$g) {
+            return ['status' => false, 'message' => 'Data bimbingan mahasiswa tidak ditemukan.'];
+        }
+
+        if (!$id_preview) {
+            $last = $this->db->select('id')
+                ->where('id_guidance', $g['id'])
+                ->where('tahapan_preview', $tahap_key)
+                ->order_by('created_at', 'DESC')
+                ->limit(1)
+                ->get('thesis')->row_array();
+            if (!$last) {
+                return ['status' => false, 'message' => 'Belum ada berkas untuk tahap ini.'];
+            }
+            $id_preview = $last['id'];
+        }
+
+        $preview = $this->get_preview_by_id($id_preview);
+        if (!$preview) {
+            return ['status' => false, 'message' => 'Preview tidak ditemukan.'];
+        }
+
+        $col_lulus = 'lulus_' . $tahap_key;
+        if (!$this->db->field_exists($col_lulus, 'guidance')) {
+            return ['status' => false, 'message' => 'Kolom ' . $col_lulus . ' belum ada. Jalankan migrasi SQL dulu.'];
+        }
+
+        $update = [$col_lulus => 1];
+        if ($this->db->field_exists('lulus_by_role', 'guidance')) $update['lulus_by_role'] = $role;
+        if ($this->db->field_exists('lulus_at', 'guidance'))      $update['lulus_at']      = date('Y-m-d H:i:s');
+
+        $this->db->where('id', $g['id'])->update('guidance', $update);
+
+        // Auto-advance status_preview
+        if ($this->db->field_exists('status_preview', 'guidance')) {
+            $hierarchy = ['preview1' => 1, 'preview2' => 2, 'preview3' => 3, 'sidang' => 4];
+            $curr = strtolower(trim($g['status_preview'] ?? 'pending'));
+            $curr_rank = $hierarchy[$curr] ?? 0;
+
+            $next = null;
+            if     ($tahap_key === 'preview1') $next = 'preview2';
+            elseif ($tahap_key === 'preview2') $next = 'preview3';
+            elseif ($tahap_key === 'preview3') $next = 'sidang';
+
+            if ($next && isset($hierarchy[$next])) {
+                if ($hierarchy[$next] > $curr_rank) {
+                    $this->db->where('id', $g['id'])->update('guidance', ['status_preview' => $next]);
+                }
+            } elseif ($tahap_key === 'sidang' && $curr_rank < 4) {
+                $this->db->where('id', $g['id'])->update('guidance', ['status_preview' => 'sidang']);
+            }
+        }
+
+        if ($this->db->table_exists('log_approval_history')) {
+            $this->db->insert('log_approval_history', [
+                'modul'         => 'Lulus Tahap',
+                'ref_id'        => (string)$nim,
+                'target_name'   => $nim,
+                'action'        => 'Lulus ' . ucfirst($tahap_key),
+                'actor_id'      => $this->session->userdata('user_id'),
+                'actor_name'    => $this->session->userdata('name') ?: '-',
+                'actor_role'    => strtoupper((string)$role),
+                'actor_nip_nim' => $this->session->userdata('nip') ?: $this->session->userdata('username'),
+                'catatan'       => json_encode(['tahap' => $tahap_key, 'id_preview' => $id_preview], JSON_UNESCAPED_UNICODE),
+                'created_at'    => date('Y-m-d H:i:s'),
+            ]);
+        }
+
+        return [
+            'status'  => true,
+            'message' => 'Mahasiswa dinyatakan LULUS di tahap ' . $tahap . '.',
+            'tahap'   => $tahap_key,
+        ];
+    }
+
+    /**
+     * Downgrade tahap — hanya boleh turun 1 tingkat.
+     */
+       /**
+     * Downgrade tahap — reset semua file di tahap target ke Pending,
+     * hapus thesis di tahap yang lebih tinggi, reset lulus flag.
+     */
+    public function downgrade_stage($nim, $dari_tahap, $ke_tahap, $role = null, $alasan = '') {
+        if (!$this->db->table_exists('guidance')) {
+            return ['status' => false, 'message' => 'Tabel guidance tidak ditemukan.'];
+        }
+
+        $normalize = function ($t) {
+            $map = [
+                'Preview 1' => 'preview1', 'Preview 2' => 'preview2',
+                'Preview 3' => 'preview3', 'Sidang' => 'sidang',
+                'preview1' => 'preview1', 'preview2' => 'preview2',
+                'preview3' => 'preview3', 'sidang' => 'sidang',
+            ];
+            return $map[$t] ?? null;
+        };
+
+        $dari = $normalize($dari_tahap);
+        $ke   = $normalize($ke_tahap);
+        if (!$dari || !$ke) {
+            return ['status' => false, 'message' => 'Parameter tahap tidak valid.'];
+        }
+
+        $hierarchy = ['preview1' => 1, 'preview2' => 2, 'preview3' => 3, 'sidang' => 4];
+        if ($hierarchy[$ke] >= $hierarchy[$dari]) {
+            return ['status' => false, 'message' => 'Downgrade hanya boleh ke tahap yang lebih rendah.'];
+        }
+
+        $g = $this->get_guidance_by_nim($nim);
+        if (!$g) {
+            return ['status' => false, 'message' => 'Data bimbingan tidak ditemukan.'];
+        }
+
+        $target_rank = $hierarchy[$ke];
+
+        // =========================================================
+        // 1. Proses tabel `thesis`
+        //    - Tahap > target: DELETE (biar tab atas kosong)
+        //    - Tahap = target: reset status_file_* & catatan_file_* ke default
+        // =========================================================
+        if ($this->db->table_exists('thesis')) {
+            $thesis_fields = $this->db->list_fields('thesis');
+
+            $status_cols = array_values(array_filter($thesis_fields, function ($c) {
+                return strpos($c, 'status_file_') === 0;
+            }));
+            $catatan_cols = array_values(array_filter($thesis_fields, function ($c) {
+                return strpos($c, 'catatan_file_') === 0;
+            }));
+
+            foreach ($hierarchy as $stage => $rank) {
+                if ($rank > $target_rank) {
+                    // Hapus data tahap yang lebih tinggi
+                    $this->db->where('id_guidance', $g['id']);
+                    $this->db->where('tahapan_preview', $stage);
+                    $this->db->delete('thesis');
+                } elseif ($rank === $target_rank) {
+                    // Reset status semua file di tahap target
+                    $update_thesis = [];
+                    foreach ($status_cols as $c) $update_thesis[$c] = 'Pending';
+                    foreach ($catatan_cols as $c) $update_thesis[$c] = '';
+                    if (in_array('status', $thesis_fields)) $update_thesis['status'] = 'Pending';
+
+                    if (!empty($update_thesis)) {
+                        $this->db->where('id_guidance', $g['id']);
+                        $this->db->where('tahapan_preview', $stage);
+                        $this->db->update('thesis', $update_thesis);
+                    }
+                }
+                // rank < target: tidak diapa-apakan
+            }
+        }
+
+        // =========================================================
+        // 2. Reset flag lulus_* & status_preview di guidance
+        // =========================================================
+        $update_g = [];
+        foreach ($hierarchy as $t => $rank) {
+            if ($rank >= $target_rank) {
+                $col = 'lulus_' . $t;
+                if ($this->db->field_exists($col, 'guidance')) $update_g[$col] = 0;
+            }
+        }
+        if ($this->db->field_exists('status_preview', 'guidance')) {
+            $update_g['status_preview'] = $ke;
+        }
+        if ($this->db->field_exists('lulus_by_role', 'guidance')) $update_g['lulus_by_role'] = $role;
+        if ($this->db->field_exists('lulus_at', 'guidance'))      $update_g['lulus_at']      = date('Y-m-d H:i:s');
+
+        if (!empty($update_g)) {
+            $this->db->where('id', $g['id'])->update('guidance', $update_g);
+        }
+
+        // =========================================================
+        // 3. Log downgrade
+        // =========================================================
+        if ($this->db->field_exists('downgrade_log', 'guidance')) {
+            $existing = $g['downgrade_log'] ?? '';
+            $log_arr = [];
+            if (!empty($existing)) {
+                $dec = json_decode($existing, true);
+                if (is_array($dec)) $log_arr = $dec;
+            }
+            $log_arr[] = [
+                'dari'   => $dari,
+                'ke'     => $ke,
+                'alasan' => $alasan,
+                'role'   => $role,
+                'at'     => date('Y-m-d H:i:s'),
+                'by'     => $this->session->userdata('name') ?: '-',
+            ];
+            $this->db->where('id', $g['id'])->update('guidance', [
+                'downgrade_log' => json_encode($log_arr, JSON_UNESCAPED_UNICODE)
+            ]);
+        }
+
+        if ($this->db->table_exists('log_approval_history')) {
+            $this->db->insert('log_approval_history', [
+                'modul'         => 'Downgrade Tahap',
+                'ref_id'        => (string)$nim,
+                'target_name'   => $nim,
+                'action'        => 'Downgrade',
+                'actor_id'      => $this->session->userdata('user_id'),
+                'actor_name'    => $this->session->userdata('name') ?: '-',
+                'actor_role'    => strtoupper((string)$role),
+                'actor_nip_nim' => $this->session->userdata('nip') ?: $this->session->userdata('username'),
+                'catatan'       => json_encode(['dari' => $dari, 'ke' => $ke, 'alasan' => $alasan], JSON_UNESCAPED_UNICODE),
+                'created_at'    => date('Y-m-d H:i:s'),
+            ]);
+        }
+
+        return [
+            'status'  => true,
+            'message' => 'Mahasiswa berhasil di-downgrade ke ' . ucfirst($ke) . '. Semua berkas di-reset ke Pending.',
+            'dari'    => $dari,
+            'ke'      => $ke,
         ];
     }
 }

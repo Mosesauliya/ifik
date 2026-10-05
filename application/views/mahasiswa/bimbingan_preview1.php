@@ -193,6 +193,22 @@
             border-left: 3px solid #fdba74; padding-left: 0.75rem; color: #475569;
             margin: 0.5rem 0; font-style: italic;
         }
+
+        /* ===== Milestone chip (glass, menyatu dengan hero) ===== */
+        .ms-chip {
+            display: flex; align-items: center; gap: .55rem; padding: .5rem .7rem; min-width: 0;
+            border-radius: 1rem; border: 1.5px solid rgba(255,255,255,.22);
+            background: rgba(255,255,255,.10); color: #fff; cursor: pointer;
+            backdrop-filter: blur(6px); transition: all .2s ease;
+        }
+        .ms-chip:hover { background: rgba(255,255,255,.18); }
+        .ms-chip .ms-sub { color: rgba(255,255,255,.75); }
+        .ms-chip.ms-locked { opacity: .6; }
+        .ms-chip.tab-card-active {
+            background: #ffffff !important; border-color: #ffffff !important; color: #0f172a !important; opacity: 1;
+            box-shadow: 0 0 0 3px rgba(251,191,36,.5), 0 8px 18px -6px rgba(0,0,0,.35) !important;
+        }
+        .ms-chip.tab-card-active .ms-sub { color: #64748b; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-amber-50/40 via-orange-50/25 to-slate-100 min-h-screen text-slate-800 antialiased flex flex-col justify-between selection:bg-orange-500 selection:text-white">
@@ -203,7 +219,7 @@
 
     <?php $this->load->view('partials/mahasiswa_navbar'); ?>
 
-    <main class="w-full px-4 sm:px-6 lg:px-10 py-6 sm:py-8 flex-grow space-y-7">
+    <main class="w-full px-4 sm:px-6 lg:px-10 py-6 sm:py-8 flex-grow space-y-6">
 
         <?php if ($this->session->flashdata('success')): ?>
             <div class="p-5 rounded-3xl bg-emerald-50 border-2 border-emerald-300 text-emerald-900 text-sm font-semibold flex items-center justify-between shadow-md shadow-emerald-500/10">
@@ -229,320 +245,230 @@
             </div>
         <?php endif; ?>
 
-        <!-- Hero Card & Supervisor Info -->
-        <div class="card-3d-orange hover-card-elevate rounded-3xl p-7 sm:p-9 relative overflow-hidden transition-all duration-300 w-full shadow-2xl text-white">
-            <div class="absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-3xl">
-                <img src="<?= base_url('assets/images/background.png'); ?>" alt="FIK Building Illustration" class="w-full h-full object-cover object-[85%_center] opacity-75 saturate-110 contrast-105">
-                <div class="absolute inset-0 bg-gradient-to-r from-[#9a3412]/95 via-[#ea580c]/85 to-[#c2410c]/70"></div>
-            </div>
-
-            <div class="sph-3d w-28 h-28 -top-8 -right-8 bg-gradient-to-tr from-amber-300 to-orange-400 opacity-25 z-0"></div>
-            <div class="sph-3d w-20 h-20 -bottom-6 left-1/3 bg-gradient-to-tr from-rose-300 to-amber-300 opacity-20 z-0" style="animation-duration: 8s;"></div>
-
-            <div class="relative z-10 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-8">
-                <div class="space-y-4 max-w-3xl">
-                    <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white text-xs font-bold badge-3d shadow-xs">
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <i class="bi bi-mortarboard-fill text-amber-200 text-sm"></i> Hub Bimbingan &amp; Evaluasi Preview TA
-                    </div>
-                    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight drop-shadow-sm">
-                        Bimbingan Tugas Akhir
-                    </h1>
-                    
-                    <p class="text-sm sm:text-base text-orange-100/95 font-normal leading-relaxed max-w-2xl">
-                        Kelola seluruh proses bimbingan dan pengunggahan berkas checkpoint evaluasi (<strong class="text-white font-bold">Preview 1, Preview 2, dan Preview 3</strong>) hingga persiapan menuju Sidang Akhir Tugas Akhir.
-                    </p>
-                    
-                    <?php if(!empty($pendaftaran['judul_1'])): ?>
-                        <div class="pt-1">
-                            <span class="text-xs font-bold uppercase tracking-wider text-amber-200 block mb-1.5">Judul Tugas Akhir Utama:</span>
-                            <div class="p-4 sm:p-5 bg-black/25 backdrop-blur-md rounded-2xl border border-white/20 font-bold text-white text-sm sm:text-base shadow-inner flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-400 to-orange-500 text-white flex items-center justify-center text-lg shrink-0 box-3d shadow-sm">
-                                    <i class="bi bi-bookmark-star-fill text-slate-900"></i>
-                                </div>
-                                <span class="leading-relaxed font-semibold"><?= htmlspecialchars($pendaftaran['judul_1']); ?></span>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-
-                    <!-- TOMBOL PERSYARATAN SIDANG -->
-                    <div class="pt-3 border-t border-white/15">
-                        <button type="button" onclick="openModalPersyaratanSidang()"
-                                class="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-extrabold text-xs sm:text-sm shadow-lg shadow-amber-500/30 transition flex items-center justify-center gap-2.5 box-3d hover:scale-[1.02] active:scale-95 cursor-pointer">
-                            <i class="bi bi-file-earmark-check-fill text-base"></i>
-                            <span>Persyaratan Sidang</span>
-                            <i class="bi bi-arrow-right-short text-lg"></i>
-                        </button>
-                        <p class="text-[10px] text-amber-100/80 text-center mt-2 font-medium">
-                            Upload berkas persyaratan sidang TA sesuai daftar dinamis dari LAA
-                        </p>
-                    </div>
-                </div>
-
-                <div class="w-full xl:w-[460px] bg-black/25 backdrop-blur-xl rounded-3xl p-6 sm:p-7 border border-white/20 shadow-2xl space-y-4 shrink-0 text-white hover-card-elevate transition-all duration-300">
-                    <div class="flex items-center justify-between border-b border-white/15 pb-4">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-8 h-8 rounded-xl bg-white/20 text-white flex items-center justify-center text-sm font-bold box-3d border border-white/20">
-                                <i class="bi bi-people-fill text-amber-300"></i>
-                            </div>
-                            <span class="text-sm font-bold text-white uppercase tracking-wider">
-                                Tim Pembimbing &amp; Penguji
-                            </span>
-                        </div>
-                        <span class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/25 text-emerald-300 border border-emerald-400/40 shadow-2xs backdrop-blur-md">
-                            <i class="bi bi-patch-check-fill mr-1"></i> Aktif
-                        </span>
-                    </div>
-
-                    <div class="flex items-start gap-3.5 p-3 rounded-2xl bg-white/10 hover:bg-white/15 transition-colors border border-white/10">
-                        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-400 to-orange-500 text-slate-950 flex items-center justify-center font-extrabold text-base shrink-0 box-3d shadow-sm">
-                            P1
-                        </div>
-                        <div class="min-w-0">
-                            <span class="text-xs font-bold text-amber-200 uppercase tracking-wider block">Pembimbing Utama (Penilai P1 &amp; P3)</span>
-                            <h4 class="font-bold text-sm sm:text-base text-white truncate mt-0.5">
-                                <?= !empty($pembimbing_1) ? htmlspecialchars($pembimbing_1) : '<span class="italic text-white/60 text-xs">Belum Di-assign</span>'; ?>
-                            </h4>
-                        </div>
-                    </div>
-
-                    <div class="flex items-start gap-3.5 p-3 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors border border-white/10">
-                        <div class="w-11 h-11 rounded-2xl bg-white/20 text-white flex items-center justify-center font-bold text-base shrink-0 box-3d border border-white/10">
-                            P2
-                        </div>
-                        <div class="min-w-0">
-                            <span class="text-xs font-bold text-orange-200/80 uppercase tracking-wider block">Pembimbing Pendamping (Bimbingan Teknis)</span>
-                            <h4 class="font-bold text-sm sm:text-base text-white/95 truncate mt-0.5">
-                                <?= !empty($pembimbing_2) ? htmlspecialchars($pembimbing_2) : '<span class="italic text-white/50 text-xs">Belum Di-assign</span>'; ?>
-                            </h4>
-                        </div>
-                    </div>
-
-                    <div class="flex items-start gap-3.5 p-3 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors border border-white/10">
-                        <div class="w-11 h-11 rounded-2xl bg-purple-500/40 text-purple-200 border border-purple-400/30 flex items-center justify-center font-bold text-base shrink-0 box-3d">
-                            U1
-                        </div>
-                        <div class="min-w-0">
-                            <span class="text-xs font-bold text-purple-200 uppercase tracking-wider block">Dosen Penguji (Penilai Preview 2)</span>
-                            <h4 class="font-bold text-sm sm:text-base text-white/95 truncate mt-0.5">
-                                <?= !empty($penguji_ta) ? htmlspecialchars($penguji_ta) : '<span class="italic text-white/50 text-xs">Belum Di-assign</span>'; ?>
-                            </h4>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Status Card Tracker -->
-        <div id="statusCardContainer" class="card-3d-warm rounded-3xl p-6 sm:p-8 space-y-4 w-full shadow-lg border border-orange-100 mb-8">
-            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2.5">
-                <i class="bi bi-info-circle-fill text-orange-500"></i> Status Bimbingan Terkini
-            </h3>
-            <?php 
-                $curr_status = 'Belum Memulai Bimbingan';
-                $curr_color = 'bg-slate-50 border-slate-200 text-slate-700';
-                $curr_icon = 'bi-dash-circle text-slate-400';
-                $curr_catatan = 'Silakan mulai dengan mengunggah berkas Preview 1.';
-                $curr_catatan2 = '';
-
-                if ($latest_p3) {
-                    if ($latest_p3['status_pembimbing'] == 'Approved') {
-                        $curr_status = 'Preview 3 Disetujui (Siap Sidang)';
-                        $curr_color = 'bg-emerald-50 border-emerald-200 text-emerald-800';
-                        $curr_icon = 'bi-check-circle-fill text-emerald-500';
-                        $curr_catatan = $latest_p3['catatan_pembimbing'];
-                    } else if ($latest_p3['status_pembimbing'] == 'Revision') {
-                        $curr_status = 'Preview 3 Revisi';
-                        $curr_color = 'bg-rose-50 border-rose-200 text-rose-800';
-                        $curr_icon = 'bi-x-circle-fill text-rose-500';
-                        $curr_catatan = $latest_p3['catatan_pembimbing'];
-                    } else {
-                        $curr_status = 'Preview 3 Sedang Direview';
-                        $curr_color = 'bg-amber-50 border-amber-200 text-amber-800';
-                        $curr_icon = 'bi-clock-fill text-amber-500';
-                        $curr_catatan = 'Menunggu review dari Pembimbing.';
-                    }
-                    $curr_catatan2 = $latest_p3['catatan_pembimbing_2'] ?? '';
-                } else if ($latest_p2) {
-                    if ($latest_p2['status_pembimbing'] == 'Approved') {
-                        $curr_status = 'Preview 2 Disetujui (Lanjut Preview 3)';
-                        $curr_color = 'bg-emerald-50 border-emerald-200 text-emerald-800';
-                        $curr_icon = 'bi-check-circle-fill text-emerald-500';
-                        $curr_catatan = $latest_p2['catatan_pembimbing'];
-                    } else if ($latest_p2['status_pembimbing'] == 'Revision') {
-                        $curr_status = 'Preview 2 Revisi';
-                        $curr_color = 'bg-rose-50 border-rose-200 text-rose-800';
-                        $curr_icon = 'bi-x-circle-fill text-rose-500';
-                        $curr_catatan = $latest_p2['catatan_pembimbing'];
-                    } else {
-                        $curr_status = 'Preview 2 Sedang Direview';
-                        $curr_color = 'bg-amber-50 border-amber-200 text-amber-800';
-                        $curr_icon = 'bi-clock-fill text-amber-500';
-                        $curr_catatan = 'Menunggu review dari Pembimbing.';
-                    }
-                    $curr_catatan2 = $latest_p2['catatan_pembimbing_2'] ?? '';
-                } else if ($latest_p1) {
-                    if ($latest_p1['status_pembimbing'] == 'Approved') {
-                        $curr_status = 'Preview 1 Disetujui (Lanjut Preview 2)';
-                        $curr_color = 'bg-emerald-50 border-emerald-200 text-emerald-800';
-                        $curr_icon = 'bi-check-circle-fill text-emerald-500';
-                        $curr_catatan = $latest_p1['catatan_pembimbing'];
-                    } else if ($latest_p1['status_pembimbing'] == 'Revision') {
-                        $curr_status = 'Preview 1 Revisi';
-                        $curr_color = 'bg-rose-50 border-rose-200 text-rose-800';
-                        $curr_icon = 'bi-x-circle-fill text-rose-500';
-                        $curr_catatan = $latest_p1['catatan_pembimbing'];
-                    } else {
-                        $curr_status = 'Preview 1 Sedang Direview';
-                        $curr_color = 'bg-amber-50 border-amber-200 text-amber-800';
-                        $curr_icon = 'bi-clock-fill text-amber-500';
-                        $curr_catatan = 'Menunggu review dari Pembimbing.';
-                    }
-                    $curr_catatan2 = $latest_p1['catatan_pembimbing_2'] ?? '';
-                }
-            ?>
-            <div class="p-4 rounded-2xl border <?= $curr_color ?> flex items-start gap-4">
-                <i class="bi <?= $curr_icon ?> text-2xl mt-1"></i>
-                <div class="flex-1">
-                    <h4 class="font-bold text-lg mb-1"><?= $curr_status ?></h4>
-                    <?php if(!empty($curr_catatan)): ?>
-                        <div class="text-sm mt-2 p-3 bg-white/50 rounded-lg border border-inherit">
-                            <strong>Catatan Pembimbing 1:</strong><br>
-                            <?= nl2br(htmlspecialchars(strip_tags($curr_catatan))) ?>
-                        </div>
-                    <?php endif; ?>
-                    <?php if(!empty($curr_catatan2)): ?>
-                        <div class="text-sm mt-2 p-3 bg-white/50 rounded-lg border border-inherit">
-                            <strong>Catatan Pembimbing 2:</strong><br>
-                            <?= nl2br(htmlspecialchars(strip_tags($curr_catatan2))) ?>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-
-        <!-- Milestone Stepper Workflow -->
         <?php
-            $is_p1_app = ($latest_p1 && $latest_p1['status_pembimbing'] === 'Approved');
-            $is_p2_app = ($latest_p2 && $latest_p2['status_pembimbing'] === 'Approved');
-            $is_p3_app = ($latest_p3 && $latest_p3['status_pembimbing'] === 'Approved');
+            // ---------- Status milestone (dipakai hero + panel) ----------
+            $is_p1_app = (!empty($latest_p1['lulus_preview1']) && (string)$latest_p1['lulus_preview1'] === '1') || (!empty($pendaftaran['lulus_preview1']) && (string)$pendaftaran['lulus_preview1'] === '1');
+            $is_p2_app = (!empty($latest_p2['lulus_preview2']) && (string)$latest_p2['lulus_preview2'] === '1') || (!empty($pendaftaran['lulus_preview2']) && (string)$pendaftaran['lulus_preview2'] === '1');
+            $is_p3_app = (!empty($latest_p3['lulus_preview3']) && (string)$latest_p3['lulus_preview3'] === '1') || (!empty($pendaftaran['lulus_preview3']) && (string)$pendaftaran['lulus_preview3'] === '1');
+
+            // Per-file approval flags untuk Preview 3 (didefinisikan di sini supaya
+            // selalu tersedia di SSE handler JS, berapapun step yang aktif)
+            $has_app_bimbingan   = false;
+            $has_app_sitasi      = false;
+            $has_app_persyaratan = false;
+            if (!empty($riwayat_preview3)) {
+                foreach ($riwayat_preview3 as $_r3) {
+                    if (($_r3['status_pembimbing'] ?? '') === 'Approved') {
+                        if (!empty($_r3['file_bimbingan']))   $has_app_bimbingan   = true;
+                        if (!empty($_r3['file_sitasi']))       $has_app_sitasi      = true;
+                        if (!empty($_r3['file_persyaratan']))  $has_app_persyaratan = true;
+                    }
+                }
+            }
 
             if (!$is_p1_app) { $active_step = 'preview1'; }
             elseif (!$is_p2_app) { $active_step = 'preview2'; }
             elseif (!$is_p3_app) { $active_step = 'preview3'; }
             else { $active_step = 'sidang'; }
-        ?>
 
-        <div class="card-3d-warm rounded-3xl p-7 sm:p-9 space-y-7 w-full shadow-lg shadow-orange-500/5">
-            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-orange-100 pb-5">
-                <div>
-                    <span class="text-xs font-bold uppercase tracking-wider text-orange-600 block mb-1">PILIH TAHAPAN EVALUASI</span>
-                    <h3 class="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2.5">
-                        <i class="bi bi-diagram-3-fill text-orange-500 text-xl"></i> Milestone Bimbingan &amp; Evaluasi TA
-                    </h3>
-                </div>
-                <div class="flex flex-wrap items-center gap-3">
-                    <span class="text-xs font-bold px-4 py-2 rounded-2xl bg-slate-100 text-slate-600 border border-slate-200 shadow-2xs">
-                        <i class="bi bi-cursor-fill text-orange-500 mr-1.5"></i> Klik kartu tahapan untuk berganti tab
-                    </span>
-                </div>
+            // ---------- Tim penguji (Penguji 1 & Penguji 2) ----------
+            $hero_u1 = !empty($penguji_1) ? $penguji_1 : (!empty($penguji_ta) ? $penguji_ta : '');
+            $hero_u2 = !empty($penguji_2) ? $penguji_2 : '';
+
+            // ---------- Status bimbingan terkini ----------
+            $stage_no  = $latest_p3 ? 3 : ($latest_p2 ? 2 : ($latest_p1 ? 1 : 0));
+            $stage_row = [1 => $latest_p1, 2 => $latest_p2, 3 => $latest_p3][$stage_no] ?? null;
+            $next_label = [1 => ' (Lanjut Preview 2)', 2 => ' (Lanjut Preview 3)', 3 => ' (Siap Sidang)'];
+
+            $curr_status = 'Belum Memulai Bimbingan';
+            $curr_tone   = 'text-white/70';
+            $curr_icon   = 'bi-dash-circle';
+            $curr_n1 = '';
+            $curr_n2 = '';
+
+            if ($stage_row) {
+                $is_curr_lulus = (!empty($stage_row['lulus_preview' . $stage_no]) && (string)$stage_row['lulus_preview' . $stage_no] === '1')
+                              || (!empty($pendaftaran['lulus_preview' . $stage_no]) && (string)$pendaftaran['lulus_preview' . $stage_no] === '1');
+                $st = $stage_row['status_pembimbing'] ?? '';
+                if ($is_curr_lulus) {
+                    $curr_status = 'Lulus Tahap Preview ' . $stage_no . $next_label[$stage_no];
+                    $curr_tone = 'text-emerald-300'; $curr_icon = 'bi-check-circle-fill';
+                } elseif ($st === 'Approved') {
+                    $curr_status = 'Berkas Preview ' . $stage_no . ' Disetujui (Menunggu Lulus Tahap)';
+                    $curr_tone = 'text-amber-200'; $curr_icon = 'bi-clock-fill';
+                } elseif ($st === 'Revision') {
+                    $curr_status = 'Preview ' . $stage_no . ' Revisi';
+                    $curr_tone = 'text-rose-300'; $curr_icon = 'bi-x-circle-fill';
+                } else {
+                    $curr_status = 'Preview ' . $stage_no . ' Sedang Direview';
+                    $curr_tone = 'text-amber-200'; $curr_icon = 'bi-clock-fill';
+                }
+                if ($st === 'Approved' || $st === 'Revision') {
+                    $curr_n1 = trim(strip_tags($stage_row['catatan_pembimbing'] ?? '')) !== '' ? $stage_row['catatan_pembimbing'] : '';
+                }
+                $curr_n2 = trim(strip_tags($stage_row['catatan_pembimbing_2'] ?? '')) !== '' ? $stage_row['catatan_pembimbing_2'] : '';
+            }
+
+            // ---------- Sub-label & state milestone chip ----------
+            $ms1_sub = $is_p1_app ? 'Selesai' : ($upload_count_p1 > 0 ? 'Menunggu review' : 'Aktif');
+            $ms2_sub = $is_p2_app ? 'Selesai' : ($is_p1_app ? 'Terbuka' : 'Terkunci');
+            $ms3_sub = $is_p3_app ? 'Selesai' : ($is_p2_app ? 'Terbuka' : 'Terkunci');
+            $ms4_sub = !empty($is_nilai_published) ? 'Hasil terbit' : ($is_p3_app ? 'Siap daftar' : 'Terkunci');
+            $ms4_open = ($is_p3_app || !empty($is_nilai_published));
+        ?>
+        <script>window._statusNotes = <?= json_encode(['p1' => $curr_n1, 'p2' => $curr_n2]); ?>;</script>
+
+        <!-- ==========================================================
+             HERO CARD (COMPACT): Judul + Tim + Status + Milestone
+             ========================================================== -->
+        <div class="card-3d-orange rounded-3xl p-4 sm:p-5 relative overflow-hidden w-full shadow-xl text-white">
+            <div class="absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-3xl">
+                <img src="<?= base_url('assets/images/background.png'); ?>" alt="FIK Building Illustration" class="w-full h-full object-cover object-[85%_center] opacity-75 saturate-110 contrast-105">
+                <div class="absolute inset-0 bg-gradient-to-r from-[#9a3412]/95 via-[#ea580c]/85 to-[#c2410c]/70"></div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                
-                <div onclick="switchPreviewTab('preview1')" id="tabBtnPreview1" class="tab-card p-6 rounded-3xl border-2 transition-all duration-300 relative overflow-hidden hover-card-elevate cursor-pointer <?= $active_step === 'preview1' ? 'tab-card-active' : ($is_p1_app ? 'tab-card-locked border-slate-200 bg-slate-50/80' : 'tab-card-locked border-slate-200 bg-slate-50/80') ?>">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold tracking-wider uppercase <?= $active_step === 'preview1' ? 'text-orange-700' : 'text-slate-400' ?>">Tahap 01</span>
-                        <div class="flex items-center gap-2">
-                            <?php if ($active_step === 'preview1'): ?>
-                                <span class="badge-active-step"><i class="bi bi-arrow-right-circle-fill"></i> Saat Ini</span>
+            <div class="relative z-10 space-y-3">
+
+                <!-- ROW 1: Judul (kiri) + Tim (kanan) -->
+                <div class="flex flex-col lg:flex-row lg:items-stretch gap-3">
+
+                    <div class="lg:w-[44%] space-y-2.5 min-w-0">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white text-[11px] font-bold">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <i class="bi bi-mortarboard-fill text-amber-200"></i> Hub Bimbingan &amp; Evaluasi Preview TA
+                        </div>
+                        <h1 class="text-xl sm:text-2xl font-extrabold text-white tracking-tight leading-tight">Bimbingan Tugas Akhir</h1>
+
+                        <?php if(!empty($pendaftaran['judul_1'])): ?>
+                            <div class="px-3 py-2 bg-black/25 backdrop-blur-md rounded-xl border border-white/20 flex items-center gap-2.5" title="<?= htmlspecialchars($pendaftaran['judul_1']); ?>">
+                                <i class="bi bi-bookmark-star-fill text-amber-300 text-base shrink-0"></i>
+                                <div class="min-w-0">
+                                    <span class="text-[9px] font-bold uppercase tracking-wider text-amber-200 block">Judul Tugas Akhir Utama</span>
+                                    <span class="text-xs font-semibold text-white leading-snug line-clamp-2 block"><?= htmlspecialchars($pendaftaran['judul_1']); ?></span>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
+                        <button type="button" onclick="openModalPersyaratanSidang()"
+                                class="w-full py-2 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-extrabold text-xs shadow-md shadow-amber-500/30 transition flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-95 cursor-pointer">
+                            <i class="bi bi-file-earmark-check-fill"></i>
+                            <span>Persyaratan Sidang</span>
+                            <i class="bi bi-arrow-right-short text-base"></i>
+                        </button>
+                    </div>
+
+                    <!-- TIM PEMBIMBING & PENGUJI -->
+                    <div class="flex-1 bg-black/25 backdrop-blur-xl rounded-2xl p-3 border border-white/20 space-y-2 min-w-0">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[11px] font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                                <i class="bi bi-people-fill text-amber-300"></i> Tim Pembimbing &amp; Penguji
+                            </span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/25 text-emerald-300 border border-emerald-400/40">
+                                <i class="bi bi-patch-check-fill mr-0.5"></i> Aktif
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div class="flex items-center gap-2 p-2 rounded-xl bg-white/10 border border-white/10 min-w-0">
+                                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-amber-400 to-orange-500 text-slate-950 flex items-center justify-center font-extrabold text-xs shrink-0">P1</div>
+                                <div class="min-w-0">
+                                    <span class="text-[9px] font-bold text-amber-200 uppercase tracking-wider block truncate">Pembimbing Utama</span>
+                                    <h4 class="font-bold text-xs text-white truncate" title="<?= !empty($pembimbing_1) ? htmlspecialchars($pembimbing_1) : ''; ?>"><?= !empty($pembimbing_1) ? htmlspecialchars($pembimbing_1) : '<span class="italic text-white/60 font-medium">Belum Di-assign</span>'; ?></h4>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 p-2 rounded-xl bg-white/10 border border-white/10 min-w-0">
+                                <div class="w-8 h-8 rounded-lg bg-white/20 text-white flex items-center justify-center font-bold text-xs shrink-0">P2</div>
+                                <div class="min-w-0">
+                                    <span class="text-[9px] font-bold text-orange-200 uppercase tracking-wider block truncate">Pembimbing Pendamping</span>
+                                    <h4 class="font-bold text-xs text-white truncate" title="<?= !empty($pembimbing_2) ? htmlspecialchars($pembimbing_2) : ''; ?>"><?= !empty($pembimbing_2) ? htmlspecialchars($pembimbing_2) : '<span class="italic text-white/60 font-medium">Belum Di-assign</span>'; ?></h4>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 p-2 rounded-xl bg-white/10 border border-white/10 min-w-0">
+                                <div class="w-8 h-8 rounded-lg bg-purple-500/40 text-purple-100 border border-purple-300/30 flex items-center justify-center font-bold text-xs shrink-0">U1</div>
+                                <div class="min-w-0">
+                                    <span class="text-[9px] font-bold text-purple-200 uppercase tracking-wider block truncate">Penguji 1 (Penilai P2)</span>
+                                    <h4 class="font-bold text-xs text-white truncate" title="<?= !empty($hero_u1) ? htmlspecialchars($hero_u1) : ''; ?>"><?= !empty($hero_u1) ? htmlspecialchars($hero_u1) : '<span class="italic text-white/60 font-medium">Belum Di-assign</span>'; ?></h4>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 p-2 rounded-xl bg-white/10 border border-white/10 min-w-0">
+                                <div class="w-8 h-8 rounded-lg bg-fuchsia-500/40 text-fuchsia-100 border border-fuchsia-300/30 flex items-center justify-center font-bold text-xs shrink-0">U2</div>
+                                <div class="min-w-0">
+                                    <span class="text-[9px] font-bold text-fuchsia-200 uppercase tracking-wider block truncate">Penguji 2</span>
+                                    <h4 class="font-bold text-xs text-white truncate" title="<?= !empty($hero_u2) ? htmlspecialchars($hero_u2) : ''; ?>"><?= !empty($hero_u2) ? htmlspecialchars($hero_u2) : '<span class="italic text-white/60 font-medium">Belum Di-assign</span>'; ?></h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ROW 2: Status Bimbingan Terkini + Milestone (satu baris, glass) -->
+                <div class="flex flex-col lg:flex-row lg:items-stretch gap-3 pt-3 border-t border-white/15">
+
+                    <!-- STATUS BIMBINGAN TERKINI -->
+                    <div id="statusCardContainer" class="lg:w-[300px] shrink-0 flex items-center gap-2.5 px-3 py-2 rounded-2xl bg-black/25 backdrop-blur-md border border-white/20">
+                        <i class="bi <?= $curr_icon ?> <?= $curr_tone ?> text-xl"></i>
+                        <div class="min-w-0 flex-1">
+                            <span class="text-[9px] font-bold uppercase tracking-wider text-amber-200 block">Status Bimbingan Terkini</span>
+                            <h4 class="text-xs font-bold text-white leading-snug"><?= $curr_status ?></h4>
+                            <?php if ($curr_n1 !== '' || $curr_n2 !== ''): ?>
+                                <div class="flex flex-wrap gap-1 mt-1">
+                                    <?php if ($curr_n1 !== ''): ?>
+                                        <button type="button" onclick="openStatusNote('p1')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/15 hover:bg-white/25 border border-white/20 text-[10px] font-bold text-white cursor-pointer"><i class="bi bi-chat-quote-fill"></i> Catatan P1</button>
+                                    <?php endif; ?>
+                                    <?php if ($curr_n2 !== ''): ?>
+                                        <button type="button" onclick="openStatusNote('p2')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/15 hover:bg-white/25 border border-white/20 text-[10px] font-bold text-white cursor-pointer"><i class="bi bi-chat-quote-fill"></i> Catatan P2</button>
+                                    <?php endif; ?>
+                                </div>
                             <?php endif; ?>
-                            <div class="w-10 h-10 rounded-2xl <?= $is_p1_app ? 'bg-emerald-500 shadow-md shadow-emerald-500/40' : 'bg-orange-500 shadow-md shadow-orange-500/40'; ?> text-white flex items-center justify-center font-bold text-lg box-3d">
+                        </div>
+                    </div>
+
+                    <!-- MILESTONE BIMBINGAN & EVALUASI TA -->
+                    <div class="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-2 min-w-0">
+
+                        <div onclick="switchPreviewTab('preview1')" id="tabBtnPreview1" title="Proposal &amp; Bab 1–3 (Pembimbing 1)"
+                             class="tab-card ms-chip <?= $active_step === 'preview1' ? 'tab-card-active' : '' ?>">
+                            <div class="ms-ico w-8 h-8 rounded-lg <?= $is_p1_app ? 'bg-emerald-500' : 'bg-orange-500'; ?> text-white flex items-center justify-center text-sm shrink-0">
                                 <i class="bi <?= $is_p1_app ? 'bi-check-lg' : 'bi-file-earmark-text'; ?>"></i>
                             </div>
-                        </div>
-                    </div>
-                    <div>
-                        <h4 class="font-bold text-base sm:text-lg <?= $active_step === 'preview1' ? 'text-slate-900' : 'text-slate-500' ?>">Preview 1</h4>
-                        <p class="text-xs text-slate-500 font-medium mt-1 leading-snug">Proposal &amp; Bab 1–3 (Pembimbing 1)</p>
-                    </div>
-                    <div>
-                        <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold <?= $is_p1_app ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : ($upload_count_p1 > 0 ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-orange-100 text-orange-800 border border-orange-300'); ?>">
-                            <span class="w-2 h-2 rounded-full <?= $is_p1_app ? 'bg-emerald-500' : 'bg-orange-500'; ?>"></span>
-                            <?= $is_p1_app ? 'Selesai (Terkunci)' : ($upload_count_p1 > 0 ? 'Menunggu Review' : 'Aktif / Sedang Berlangsung'); ?>
-                        </span>
-                    </div>
-                </div>
-
-                <div onclick="switchPreviewTab('preview2')" id="tabBtnPreview2" class="tab-card p-6 rounded-3xl border-2 transition-all duration-300 relative overflow-hidden hover-card-elevate cursor-pointer <?= $active_step === 'preview2' ? 'tab-card-active border-amber-300' : ($is_p2_app ? 'tab-card-locked border-slate-200 bg-slate-50/80' : (!$is_p1_app ? 'tab-card-locked border-slate-200 bg-slate-50/80' : 'border-amber-300 bg-amber-50/50')) ?>">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold tracking-wider uppercase <?= $active_step === 'preview2' ? 'text-amber-700' : 'text-slate-400' ?>">Tahap 02</span>
-                        <div class="flex items-center gap-2">
-                            <?php if ($active_step === 'preview2'): ?>
-                                <span class="badge-active-step" style="background:#d97706;"><i class="bi bi-arrow-right-circle-fill"></i> Saat Ini</span>
-                            <?php endif; ?>
-                            <div class="w-10 h-10 rounded-2xl <?= $is_p2_app ? 'bg-emerald-500 text-white' : ($is_p1_app ? 'bg-amber-500 text-white' : 'bg-slate-200 text-slate-500'); ?> flex items-center justify-center font-bold text-lg box-3d">
-                                <i class="bi <?= $is_p2_app ? 'bi-check-lg' : ($is_p1_app ? 'bi-hammer' : 'bi-lock-fill text-sm'); ?>"></i>
+                            <div class="min-w-0">
+                                <h4 class="text-xs font-bold leading-tight truncate">Preview 1</h4>
+                                <span class="ms-sub text-[10px] font-semibold block truncate"><?= $ms1_sub ?></span>
                             </div>
                         </div>
-                    </div>
-                    <div>
-                        <h4 class="font-bold text-base sm:text-lg <?= $active_step === 'preview2' ? 'text-slate-900' : 'text-slate-500' ?>">Preview 2</h4>
-                        <p class="text-xs text-slate-500 font-medium mt-1 leading-snug">Progress Karya 50% (Dosen Penguji)</p>
-                    </div>
-                    <div>
-                        <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold <?= $is_p2_app ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : ($is_p1_app ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-slate-100 text-slate-500 border border-slate-200'); ?>">
-                            <i class="bi <?= $is_p2_app ? 'bi-check-circle-fill' : ($is_p1_app ? 'bi-unlock' : 'bi-lock-fill'); ?>"></i>
-                            <?= $is_p2_app ? 'Selesai (Terkunci)' : ($is_p1_app ? 'Terbuka / Siap Upload' : 'Terkunci (Syarat P1)'); ?>
-                        </span>
-                    </div>
-                </div>
 
-                <div onclick="switchPreviewTab('preview3')" id="tabBtnPreview3" class="tab-card p-6 rounded-3xl border-2 transition-all duration-300 relative overflow-hidden hover-card-elevate cursor-pointer <?= $active_step === 'preview3' ? 'tab-card-active border-indigo-300' : ($is_p3_app ? 'tab-card-locked border-slate-200 bg-slate-50/80' : (!$is_p2_app ? 'tab-card-locked border-slate-200 bg-slate-50/80' : 'border-indigo-300 bg-indigo-50/50')) ?>">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold tracking-wider uppercase <?= $active_step === 'preview3' ? 'text-indigo-700' : 'text-slate-400' ?>">Tahap 03</span>
-                        <div class="flex items-center gap-2">
-                            <?php if ($active_step === 'preview3'): ?>
-                                <span class="badge-active-step" style="background:#6366f1;"><i class="bi bi-arrow-right-circle-fill"></i> Saat Ini</span>
-                            <?php endif; ?>
-                            <div class="w-10 h-10 rounded-2xl <?= $is_p3_app ? 'bg-emerald-500 text-white' : ($is_p2_app ? 'bg-indigo-500 text-white' : 'bg-slate-200 text-slate-500'); ?> flex items-center justify-center font-bold text-lg box-3d">
-                                <i class="bi <?= $is_p3_app ? 'bi-check-lg' : ($is_p2_app ? 'bi-journal-check' : 'bi-lock-fill text-sm'); ?>"></i>
+                        <div onclick="switchPreviewTab('preview2')" id="tabBtnPreview2" title="Progress Karya 50% (Dosen Penguji)"
+                             class="tab-card ms-chip <?= !$is_p1_app ? 'ms-locked' : '' ?> <?= $active_step === 'preview2' ? 'tab-card-active' : '' ?>">
+                            <div class="ms-ico w-8 h-8 rounded-lg <?= $is_p2_app ? 'bg-emerald-500' : ($is_p1_app ? 'bg-amber-500' : 'bg-white/20'); ?> text-white flex items-center justify-center text-sm shrink-0">
+                                <i class="bi <?= $is_p2_app ? 'bi-check-lg' : ($is_p1_app ? 'bi-hammer' : 'bi-lock-fill'); ?>"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <h4 class="text-xs font-bold leading-tight truncate">Preview 2</h4>
+                                <span class="ms-sub text-[10px] font-semibold block truncate"><?= $ms2_sub ?></span>
                             </div>
                         </div>
-                    </div>
-                    <div>
-                        <h4 class="font-bold text-base sm:text-lg <?= $active_step === 'preview3' ? 'text-slate-900' : 'text-slate-500' ?>">Preview 3</h4>
-                        <p class="text-xs text-slate-500 font-medium mt-1 leading-snug">Pra-Sidang Naskah 100% (Pembimbing 1)</p>
-                    </div>
-                    <div>
-                        <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold <?= $is_p3_app ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : ($is_p2_app ? 'bg-indigo-100 text-indigo-800 border border-indigo-200' : 'bg-slate-100 text-slate-500 border border-slate-200'); ?>">
-                            <i class="bi <?= $is_p3_app ? 'bi-check-circle-fill' : ($is_p2_app ? 'bi-unlock' : 'bi-lock-fill'); ?>"></i>
-                            <?= $is_p3_app ? 'Selesai (Terkunci)' : ($is_p2_app ? 'Terbuka' : 'Terkunci (Syarat P2)'); ?>
-                        </span>
-                    </div>
-                </div>
 
-                <div onclick="switchPreviewTab('sidang')" id="tabBtnSidang" class="tab-card p-6 rounded-3xl border-2 transition-all duration-300 relative overflow-hidden hover-card-elevate cursor-pointer <?= $active_step === 'sidang' ? 'tab-card-active border-emerald-400' : (($is_p3_app || !empty($is_nilai_published)) ? 'border-emerald-400 bg-emerald-50/50' : 'tab-card-locked border-slate-200 bg-slate-50/80') ?>">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold tracking-wider uppercase <?= $active_step === 'sidang' ? 'text-emerald-700' : 'text-slate-400' ?>">Tahap 04</span>
-                        <div class="flex items-center gap-2">
-                            <?php if ($active_step === 'sidang'): ?>
-                                <span class="badge-active-step" style="background:#059669;"><i class="bi bi-arrow-right-circle-fill"></i> Saat Ini</span>
-                            <?php endif; ?>
-                            <div class="w-10 h-10 rounded-2xl <?= ($is_p3_app || !empty($is_nilai_published)) ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'; ?> flex items-center justify-center font-bold text-lg box-3d">
-                                <i class="bi <?= !empty($is_nilai_published) ? 'bi-award-fill' : ($is_p3_app ? 'bi-mortarboard-fill' : 'bi-lock-fill text-sm'); ?>"></i>
+                        <div onclick="switchPreviewTab('preview3')" id="tabBtnPreview3" title="Pra-Sidang Naskah 100% (Pembimbing 1)"
+                             class="tab-card ms-chip <?= !$is_p2_app ? 'ms-locked' : '' ?> <?= $active_step === 'preview3' ? 'tab-card-active' : '' ?>">
+                            <div class="ms-ico w-8 h-8 rounded-lg <?= $is_p3_app ? 'bg-emerald-500' : ($is_p2_app ? 'bg-indigo-500' : 'bg-white/20'); ?> text-white flex items-center justify-center text-sm shrink-0">
+                                <i class="bi <?= $is_p3_app ? 'bi-check-lg' : ($is_p2_app ? 'bi-journal-check' : 'bi-lock-fill'); ?>"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <h4 class="text-xs font-bold leading-tight truncate">Preview 3</h4>
+                                <span class="ms-sub text-[10px] font-semibold block truncate"><?= $ms3_sub ?></span>
                             </div>
                         </div>
-                    </div>
-                    <div>
-                        <h4 class="font-bold text-base sm:text-lg <?= $active_step === 'sidang' ? 'text-slate-900' : 'text-slate-500' ?>">Sidang Tugas Akhir</h4>
-                        <p class="text-xs text-slate-500 font-medium mt-1 leading-snug">Pendaftaran, Jadwal &amp; Hasil Sidang</p>
-                    </div>
-                    <div>
-                        <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold <?= !empty($is_nilai_published) ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : ($is_p3_app ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-100 text-slate-500 border border-slate-200'); ?>">
-                            <i class="bi <?= !empty($is_nilai_published) ? 'bi-award-fill' : ($is_p3_app ? 'bi-check-circle-fill' : 'bi-lock-fill'); ?>"></i>
-                            <?= !empty($is_nilai_published) ? 'Hasil Terbit' : ($is_p3_app ? 'Siap Daftar Sidang' : 'Terkunci (Syarat P3)'); ?>
-                        </span>
+
+                        <div onclick="switchPreviewTab('sidang')" id="tabBtnSidang" title="Pendaftaran, Jadwal &amp; Hasil Sidang"
+                             class="tab-card ms-chip <?= !$ms4_open ? 'ms-locked' : '' ?> <?= $active_step === 'sidang' ? 'tab-card-active' : '' ?>">
+                            <div class="ms-ico w-8 h-8 rounded-lg <?= $ms4_open ? 'bg-emerald-500' : 'bg-white/20'; ?> text-white flex items-center justify-center text-sm shrink-0">
+                                <i class="bi <?= !empty($is_nilai_published) ? 'bi-award-fill' : ($is_p3_app ? 'bi-mortarboard-fill' : 'bi-lock-fill'); ?>"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <h4 class="text-xs font-bold leading-tight truncate">Sidang TA</h4>
+                                <span class="ms-sub text-[10px] font-semibold block truncate"><?= $ms4_sub ?></span>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
@@ -885,86 +811,127 @@
                     <p class="text-emerald-700 text-sm mt-2">Tahap ini telah disetujui. Anda tidak dapat mengunggah ulang berkas. Anda sudah siap untuk mendaftar Sidang Akhir.</p>
                 </div>
                 <?php else: ?>
-                <?= form_open_multipart('mahasiswa/upload_preview3', ['id' => 'formUploadPreview3', 'class' => 'space-y-6 max-w-3xl']); ?>
+                    <div class="space-y-6 max-w-3xl">
+                        <!-- FORM FILE BIMBINGAN -->
+                        <?= form_open_multipart('mahasiswa/upload_preview3_ajax', ['id' => 'formUploadP3Bimbingan', 'class' => 'space-y-3']); ?>
+                        <input type="hidden" name="jenis_file" value="bimbingan">
+                        <div class="p-5 rounded-2xl border border-slate-200 <?= $has_app_bimbingan ? 'bg-emerald-50' : 'bg-white/60' ?> space-y-3" id="containerBimbinganP3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl <?= $has_app_bimbingan ? 'bg-emerald-500' : 'bg-indigo-500' ?> text-white flex items-center justify-center text-lg shrink-0 box-3d">
+                                        <i class="bi <?= $has_app_bimbingan ? 'bi-check-lg' : 'bi-file-earmark-check-fill' ?>"></i>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-900">File Bimbingan <span class="text-rose-500">*</span></label>
+                                        <span class="text-xs text-slate-500 font-medium">Dokumen catatan bimbingan lengkap dari Pembimbing 1 &amp; 2</span>
+                                    </div>
+                                </div>
+                                <?php if($has_app_bimbingan): ?>
+                                    <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold border border-emerald-300">Telah Disetujui</span>
+                                <?php endif; ?>
+                            </div>
+                            <?php if(!$has_app_bimbingan): ?>
+                            <div class="drop-zone-sidang relative border-2 border-dashed rounded-2xl p-4 text-center transition-all cursor-pointer" id="dropZoneBimbinganP3">
+                                <input type="file" name="file_upload" id="fileBimbinganP3" accept=".pdf,.doc,.docx" required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                                <div class="pointer-events-none">
+                                    <i class="bi bi-cloud-arrow-up text-2xl text-slate-400"></i>
+                                    <p class="text-sm text-slate-500 mt-1">Klik untuk pilih file atau seret ke sini</p>
+                                </div>
+                            </div>
+                            <div id="fileBadgeBimbinganP3" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center justify-between">
+                                <span id="fileNameBimbinganP3" class="truncate font-mono">file.pdf</span>
+                                <span id="fileSizeBimbinganP3" class="text-emerald-700">0 MB</span>
+                            </div>
+                            <div class="pt-2 hidden" id="submitWrapBimbinganP3">
+                                <input type="text" name="catatan_mahasiswa" placeholder="Catatan kelayakan (opsional)..." class="w-full p-3 mb-3 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none focus:border-indigo-400">
+                                <button type="submit" class="w-full py-3 px-4 rounded-xl bg-indigo-600 text-white font-bold text-xs shadow-md transition hover:bg-indigo-700">
+                                    Submit File Bimbingan
+                                </button>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                        <?= form_close(); ?>
 
-                    <div class="p-5 rounded-2xl border border-slate-200 bg-white/60 space-y-3" id="containerBimbinganP3">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-indigo-500 text-white flex items-center justify-center text-lg shrink-0 box-3d">
-                                <i class="bi bi-file-earmark-check-fill"></i>
+                        <!-- FORM FILE SITASI -->
+                        <?= form_open_multipart('mahasiswa/upload_preview3_ajax', ['id' => 'formUploadP3Sitasi', 'class' => 'space-y-3']); ?>
+                        <input type="hidden" name="jenis_file" value="sitasi">
+                        <div class="p-5 rounded-2xl border border-slate-200 <?= $has_app_sitasi ? 'bg-emerald-50' : (!$has_app_bimbingan ? 'bg-slate-50 opacity-50' : 'bg-white/60') ?> space-y-3 transition-all duration-300" id="containerSitasiP3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl <?= $has_app_sitasi ? 'bg-emerald-500' : (!$has_app_bimbingan ? 'bg-slate-400' : 'bg-indigo-500') ?> text-white flex items-center justify-center text-lg shrink-0 box-3d transition-colors" id="iconSitasiP3">
+                                        <i class="bi <?= $has_app_sitasi ? 'bi-check-lg' : 'bi-quote' ?>"></i>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-900">File Sitasi <span class="text-rose-500">*</span></label>
+                                        <span class="text-xs text-slate-500 font-medium">Dokumen daftar sitasi / referensi (format APA / IEEE)</span>
+                                    </div>
+                                </div>
+                                <?php if($has_app_sitasi): ?>
+                                    <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold border border-emerald-300">Telah Disetujui</span>
+                                <?php endif; ?>
                             </div>
-                            <div>
-                                <label class="block text-sm font-bold text-slate-900">File Bimbingan <span class="text-rose-500">*</span></label>
-                                <span class="text-xs text-slate-500 font-medium">Dokumen catatan bimbingan lengkap dari Pembimbing 1 &amp; 2</span>
+                            <?php if(!$has_app_sitasi): ?>
+                            <div class="drop-zone-sidang relative border-2 border-dashed rounded-2xl p-4 text-center transition-all <?= !$has_app_bimbingan ? 'cursor-not-allowed bg-slate-100' : 'cursor-pointer' ?>" id="dropZoneSitasiP3">
+                                <input type="file" name="file_upload" id="fileSitasiP3" accept=".pdf,.doc,.docx" required <?= !$has_app_bimbingan ? 'disabled' : '' ?> class="absolute inset-0 w-full h-full opacity-0 <?= !$has_app_bimbingan ? 'cursor-not-allowed' : 'cursor-pointer' ?> z-10">
+                                <div class="pointer-events-none">
+                                    <i class="bi <?= !$has_app_bimbingan ? 'bi-lock-fill' : 'bi-cloud-arrow-up' ?> text-2xl text-slate-400" id="iconLockSitasiP3"></i>
+                                    <p class="text-sm text-slate-500 mt-1" id="textLockSitasiP3"><?= !$has_app_bimbingan ? 'Terkunci (Tunggu File Bimbingan di-ACC)' : 'Klik untuk pilih file atau seret ke sini' ?></p>
+                                </div>
                             </div>
-                        </div>
-                        <div class="drop-zone-sidang relative border-2 border-dashed rounded-2xl p-4 text-center transition-all cursor-pointer" id="dropZoneBimbinganP3">
-                            <input type="file" name="file_bimbingan" id="fileBimbinganP3" accept=".pdf,.doc,.docx" required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
-                            <div class="pointer-events-none">
-                                <i class="bi bi-cloud-arrow-up text-2xl text-slate-400"></i>
-                                <p class="text-sm text-slate-500 mt-1">Klik untuk pilih file atau seret ke sini</p>
+                            <div id="fileBadgeSitasiP3" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center justify-between">
+                                <span id="fileNameSitasiP3" class="truncate font-mono">file.pdf</span>
+                                <span id="fileSizeSitasiP3" class="text-emerald-700">0 MB</span>
                             </div>
+                            <div class="pt-2 hidden" id="submitWrapSitasiP3">
+                                <input type="text" name="catatan_mahasiswa" placeholder="Catatan kelayakan (opsional)..." class="w-full p-3 mb-3 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none focus:border-indigo-400">
+                                <button type="submit" class="w-full py-3 px-4 rounded-xl bg-indigo-600 text-white font-bold text-xs shadow-md transition hover:bg-indigo-700">
+                                    Submit File Sitasi
+                                </button>
+                            </div>
+                            <?php endif; ?>
                         </div>
-                        <div id="fileBadgeBimbinganP3" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center justify-between">
-                            <span id="fileNameBimbinganP3" class="truncate font-mono">file.pdf</span>
-                            <span id="fileSizeBimbinganP3" class="text-emerald-700">0 MB</span>
+                        <?= form_close(); ?>
+
+                        <!-- FORM FILE PERSYARATAN -->
+                        <?= form_open_multipart('mahasiswa/upload_preview3_ajax', ['id' => 'formUploadP3Persyaratan', 'class' => 'space-y-3']); ?>
+                        <input type="hidden" name="jenis_file" value="persyaratan">
+                        <div class="p-5 rounded-2xl border border-slate-200 <?= $has_app_persyaratan ? 'bg-emerald-50' : (!$has_app_sitasi ? 'bg-slate-50 opacity-50' : 'bg-white/60') ?> space-y-3 transition-all duration-300" id="containerPersyaratanP3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl <?= $has_app_persyaratan ? 'bg-emerald-500' : (!$has_app_sitasi ? 'bg-slate-400' : 'bg-indigo-500') ?> text-white flex items-center justify-center text-lg shrink-0 box-3d transition-colors" id="iconPersyaratanP3">
+                                        <i class="bi <?= $has_app_persyaratan ? 'bi-check-lg' : 'bi-signpost-split-fill' ?>"></i>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-900">Persyaratan Jalur Tugas Akhir <span class="text-rose-500">*</span></label>
+                                        <span class="text-xs text-slate-500 font-medium">Dokumen persyaratan sesuai jalur TA yang ditempuh</span>
+                                    </div>
+                                </div>
+                                <?php if($has_app_persyaratan): ?>
+                                    <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold border border-emerald-300">Telah Disetujui</span>
+                                <?php endif; ?>
+                            </div>
+                            <?php if(!$has_app_persyaratan): ?>
+                            <div class="drop-zone-sidang relative border-2 border-dashed rounded-2xl p-4 text-center transition-all <?= !$has_app_sitasi ? 'cursor-not-allowed bg-slate-100' : 'cursor-pointer' ?>" id="dropZonePersyaratanP3">
+                                <input type="file" name="file_upload" id="filePersyaratanP3" accept=".pdf,.doc,.docx" required <?= !$has_app_sitasi ? 'disabled' : '' ?> class="absolute inset-0 w-full h-full opacity-0 <?= !$has_app_sitasi ? 'cursor-not-allowed' : 'cursor-pointer' ?> z-10">
+                                <div class="pointer-events-none">
+                                    <i class="bi <?= !$has_app_sitasi ? 'bi-lock-fill' : 'bi-cloud-arrow-up' ?> text-2xl text-slate-400" id="iconLockPersyaratanP3"></i>
+                                    <p class="text-sm text-slate-500 mt-1" id="textLockPersyaratanP3"><?= !$has_app_sitasi ? 'Terkunci (Tunggu File Sitasi di-ACC)' : 'Klik untuk pilih file atau seret ke sini' ?></p>
+                                </div>
+                            </div>
+                            <div id="fileBadgePersyaratanP3" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center justify-between">
+                                <span id="fileNamePersyaratanP3" class="truncate font-mono">file.pdf</span>
+                                <span id="fileSizePersyaratanP3" class="text-emerald-700">0 MB</span>
+                            </div>
+                            <div class="pt-2 hidden" id="submitWrapPersyaratanP3">
+                                <input type="text" name="catatan_mahasiswa" placeholder="Catatan kelayakan (opsional)..." class="w-full p-3 mb-3 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none focus:border-indigo-400">
+                                <button type="submit" class="w-full py-3 px-4 rounded-xl bg-indigo-600 text-white font-bold text-xs shadow-md transition hover:bg-indigo-700">
+                                    Submit File Persyaratan
+                                </button>
+                            </div>
+                            <?php endif; ?>
                         </div>
+                        <?= form_close(); ?>
                     </div>
-
-                    <div class="p-5 rounded-2xl border border-slate-200 bg-slate-50 opacity-50 space-y-3 transition-all duration-300" id="containerSitasiP3">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-slate-400 text-white flex items-center justify-center text-lg shrink-0 box-3d transition-colors" id="iconSitasiP3">
-                                <i class="bi bi-quote"></i>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-bold text-slate-900">File Sitasi <span class="text-rose-500">*</span></label>
-                                <span class="text-xs text-slate-500 font-medium">Dokumen daftar sitasi / referensi (format APA / IEEE)</span>
-                            </div>
-                        </div>
-                        <div class="drop-zone-sidang relative border-2 border-dashed rounded-2xl p-4 text-center transition-all cursor-not-allowed bg-slate-100" id="dropZoneSitasiP3">
-                            <input type="file" name="file_sitasi" id="fileSitasiP3" accept=".pdf,.doc,.docx" required disabled class="absolute inset-0 w-full h-full opacity-0 cursor-not-allowed z-10">
-                            <div class="pointer-events-none">
-                                <i class="bi bi-lock-fill text-2xl text-slate-400" id="iconLockSitasiP3"></i>
-                                <p class="text-sm text-slate-500 mt-1" id="textLockSitasiP3">Terkunci (Upload File Bimbingan dulu)</p>
-                            </div>
-                        </div>
-                        <div id="fileBadgeSitasiP3" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center justify-between">
-                            <span id="fileNameSitasiP3" class="truncate font-mono">file.pdf</span>
-                            <span id="fileSizeSitasiP3" class="text-emerald-700">0 MB</span>
-                        </div>
-                    </div>
-
-                    <div class="p-5 rounded-2xl border border-slate-200 bg-slate-50 opacity-50 space-y-3 transition-all duration-300" id="containerPersyaratanP3">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-slate-400 text-white flex items-center justify-center text-lg shrink-0 box-3d transition-colors" id="iconPersyaratanP3">
-                                <i class="bi bi-signpost-split-fill"></i>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-bold text-slate-900">Persyaratan Jalur Tugas Akhir <span class="text-rose-500">*</span></label>
-                                <span class="text-xs text-slate-500 font-medium">Dokumen persyaratan sesuai jalur TA yang ditempuh (Skripsi / Proyek / Jurnal)</span>
-                            </div>
-                        </div>
-                        <div class="drop-zone-sidang relative border-2 border-dashed rounded-2xl p-4 text-center transition-all cursor-not-allowed bg-slate-100" id="dropZonePersyaratanP3">
-                            <input type="file" name="file_persyaratan" id="filePersyaratanP3" accept=".pdf,.doc,.docx" required disabled class="absolute inset-0 w-full h-full opacity-0 cursor-not-allowed z-10">
-                            <div class="pointer-events-none">
-                                <i class="bi bi-lock-fill text-2xl text-slate-400" id="iconLockPersyaratanP3"></i>
-                                <p class="text-sm text-slate-500 mt-1" id="textLockPersyaratanP3">Terkunci (Upload File Sitasi dulu)</p>
-                            </div>
-                        </div>
-                        <div id="fileBadgePersyaratanP3" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center justify-between">
-                            <span id="fileNamePersyaratanP3" class="truncate font-mono">file.pdf</span>
-                            <span id="fileSizePersyaratanP3" class="text-emerald-700">0 MB</span>
-                        </div>
-                    </div>
-
-                    <div class="opacity-50 transition-opacity duration-300" id="containerSubmitP3">
-                        <label class="block text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wider mb-2.5">Catatan Kelayakan Pra-Sidang</label>
-                        <textarea name="catatan_mahasiswa" id="catatanP3" rows="3" disabled class="w-full p-4 border border-slate-200 rounded-2xl text-xs sm:text-sm font-medium bg-slate-100 cursor-not-allowed" placeholder="Uraikan kelengkapan naskah dan karya yang siap disidangkan..."></textarea>
-                    </div>
-
-                    <button type="submit" id="btnSubmitP3" disabled class="mt-4 py-4 px-8 rounded-2xl bg-slate-400 text-white font-bold text-xs sm:text-sm shadow-md transition cursor-not-allowed w-full">
-                        <i class="bi bi-lock-fill mr-2" id="iconSubmitP3"></i> Submit Berkas Pra-Sidang (Preview 3)
-                    </button>
-                <?= form_close(); ?>
                 <?php endif; ?>
             </div>
 
@@ -1906,100 +1873,32 @@
         const fbSitasi = document.getElementById('fileSitasiP3');
         const fbPersyaratan = document.getElementById('filePersyaratanP3');
         
-        if (fbBimbingan && fbSitasi && fbPersyaratan) {
+        if (fbBimbingan) {
             fbBimbingan.addEventListener('change', function() {
                 if (this.files && this.files.length > 0) {
-                    document.getElementById('containerSitasiP3').classList.remove('opacity-50', 'bg-slate-50');
-                    document.getElementById('containerSitasiP3').classList.add('bg-white/60');
-                    document.getElementById('iconSitasiP3').classList.replace('bg-slate-400', 'bg-indigo-500');
-                    document.getElementById('dropZoneSitasiP3').classList.remove('cursor-not-allowed', 'bg-slate-100');
-                    document.getElementById('dropZoneSitasiP3').classList.add('cursor-pointer');
-                    
-                    fbSitasi.disabled = false;
-                    fbSitasi.classList.remove('cursor-not-allowed');
-                    fbSitasi.classList.add('cursor-pointer');
-                    
-                    document.getElementById('iconLockSitasiP3').classList.replace('bi-lock-fill', 'bi-cloud-arrow-up');
-                    document.getElementById('textLockSitasiP3').textContent = 'Klik untuk pilih file atau seret ke sini';
+                    document.getElementById('submitWrapBimbinganP3').classList.remove('hidden');
+                } else {
+                    document.getElementById('submitWrapBimbinganP3').classList.add('hidden');
                 }
             });
-
+        }
+        if (fbSitasi) {
             fbSitasi.addEventListener('change', function() {
                 if (this.files && this.files.length > 0) {
-                    document.getElementById('containerPersyaratanP3').classList.remove('opacity-50', 'bg-slate-50');
-                    document.getElementById('containerPersyaratanP3').classList.add('bg-white/60');
-                    document.getElementById('iconPersyaratanP3').classList.replace('bg-slate-400', 'bg-indigo-500');
-                    document.getElementById('dropZonePersyaratanP3').classList.remove('cursor-not-allowed', 'bg-slate-100');
-                    document.getElementById('dropZonePersyaratanP3').classList.add('cursor-pointer');
-                    
-                    fbPersyaratan.disabled = false;
-                    fbPersyaratan.classList.remove('cursor-not-allowed');
-                    fbPersyaratan.classList.add('cursor-pointer');
-                    
-                    document.getElementById('iconLockPersyaratanP3').classList.replace('bi-lock-fill', 'bi-cloud-arrow-up');
-                    document.getElementById('textLockPersyaratanP3').textContent = 'Klik untuk pilih file atau seret ke sini';
+                    document.getElementById('submitWrapSitasiP3').classList.remove('hidden');
+                } else {
+                    document.getElementById('submitWrapSitasiP3').classList.add('hidden');
                 }
             });
-
+        }
+        if (fbPersyaratan) {
             fbPersyaratan.addEventListener('change', function() {
                 if (this.files && this.files.length > 0) {
-                    document.getElementById('containerSubmitP3').classList.remove('opacity-50');
-                    
-                    const catatan = document.getElementById('catatanP3');
-                    catatan.disabled = false;
-                    catatan.classList.remove('bg-slate-100', 'cursor-not-allowed');
-                    
-                    const btnSubmit = document.getElementById('btnSubmitP3');
-                    btnSubmit.disabled = false;
-                    btnSubmit.classList.replace('bg-slate-400', 'bg-indigo-600');
-                    btnSubmit.classList.add('hover:bg-indigo-700');
-                    btnSubmit.classList.remove('cursor-not-allowed');
-                    btnSubmit.classList.add('cursor-pointer');
-                    
-                    document.getElementById('iconSubmitP3').classList.replace('bi-lock-fill', 'bi-send-check-fill');
+                    document.getElementById('submitWrapPersyaratanP3').classList.remove('hidden');
+                } else {
+                    document.getElementById('submitWrapPersyaratanP3').classList.add('hidden');
                 }
             });
-            
-            const formPreview3 = document.getElementById('formUploadPreview3');
-            if (formPreview3) {
-                formPreview3.addEventListener('reset', function() {
-                    setTimeout(() => {
-                        document.getElementById('containerSitasiP3').classList.add('opacity-50', 'bg-slate-50');
-                        document.getElementById('containerSitasiP3').classList.remove('bg-white/60');
-                        document.getElementById('iconSitasiP3').classList.replace('bg-indigo-500', 'bg-slate-400');
-                        document.getElementById('dropZoneSitasiP3').classList.add('cursor-not-allowed', 'bg-slate-100');
-                        document.getElementById('dropZoneSitasiP3').classList.remove('cursor-pointer');
-                        fbSitasi.disabled = true;
-                        fbSitasi.classList.add('cursor-not-allowed');
-                        fbSitasi.classList.remove('cursor-pointer');
-                        document.getElementById('iconLockSitasiP3').classList.replace('bi-cloud-arrow-up', 'bi-lock-fill');
-                        document.getElementById('textLockSitasiP3').textContent = 'Terkunci (Upload File Bimbingan dulu)';
-                        
-                        document.getElementById('containerPersyaratanP3').classList.add('opacity-50', 'bg-slate-50');
-                        document.getElementById('containerPersyaratanP3').classList.remove('bg-white/60');
-                        document.getElementById('iconPersyaratanP3').classList.replace('bg-indigo-500', 'bg-slate-400');
-                        document.getElementById('dropZonePersyaratanP3').classList.add('cursor-not-allowed', 'bg-slate-100');
-                        document.getElementById('dropZonePersyaratanP3').classList.remove('cursor-pointer');
-                        fbPersyaratan.disabled = true;
-                        fbPersyaratan.classList.add('cursor-not-allowed');
-                        fbPersyaratan.classList.remove('cursor-pointer');
-                        document.getElementById('iconLockPersyaratanP3').classList.replace('bi-cloud-arrow-up', 'bi-lock-fill');
-                        document.getElementById('textLockPersyaratanP3').textContent = 'Terkunci (Upload File Sitasi dulu)';
-                        
-                        document.getElementById('containerSubmitP3').classList.add('opacity-50');
-                        document.getElementById('catatanP3').disabled = true;
-                        document.getElementById('catatanP3').classList.add('bg-slate-100', 'cursor-not-allowed');
-
-                        const btnSubmit = document.getElementById('btnSubmitP3');
-                        btnSubmit.disabled = true;
-                        btnSubmit.classList.replace('bg-indigo-600', 'bg-slate-400');
-                        btnSubmit.classList.remove('hover:bg-indigo-700');
-                        btnSubmit.classList.add('cursor-not-allowed');
-                        btnSubmit.classList.remove('cursor-pointer');
-                        document.getElementById('iconSubmitP3').classList.replace('bi-send-check-fill', 'bi-lock-fill');
-                    }, 50);
-                });
-            }
         }
         setupGenericFileUploader('fileSidangSingle', 'fileBadgeSidangSingle', 'fileNameSidangSingle', 'fileSizeSidangSingle', 'dropZoneSidangSingle');
 
@@ -2060,45 +1959,49 @@
             }
         });
 
-        const formPreview3 = document.getElementById('formUploadPreview3');
-        if (formPreview3) {
-            formPreview3.addEventListener('submit', function(e) {
-                e.preventDefault();
-                tinymce.triggerSave();
-                const formData = new FormData(this);
-                const btn = this.querySelector('button[type="submit"]');
-                const originalBtnContent = btn.innerHTML;
-                btn.disabled = true;
-                btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin mr-2"></i> Mengunggah...';
+        ['formUploadP3Bimbingan', 'formUploadP3Sitasi', 'formUploadP3Persyaratan'].forEach((formId) => {
+            const form = document.getElementById(formId);
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    // tinymce is not on this form anymore, we just have a normal text input
+                    const formData = new FormData(this);
+                    const btn = this.querySelector('button[type="submit"]');
+                    const originalBtnContent = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin mr-2"></i> Mengunggah...';
 
-                fetch('<?= site_url('mahasiswa/upload_preview3_ajax') ?>', {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if(data.status) {
-                        showToast(data.message, 'success');
-                        this.reset();
-                        ['SitasiP3', 'BimbinganP3', 'PersyaratanP3'].forEach(suffix => {
-                            const badge = document.getElementById('fileBadge' + suffix);
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if(data.status) {
+                            showToast(data.message, 'success');
+                            this.reset();
+                            let suffix = formId.replace('formUploadP3', '');
+                            const badge = document.getElementById('fileBadge' + suffix + 'P3');
                             if(badge) badge.classList.add('hidden');
-                        });
-                    } else {
-                        showToast(data.message || 'Terjadi kesalahan saat mengunggah', 'error');
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    showToast('Kesalahan koneksi', 'error');
-                })
-                .finally(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = originalBtnContent;
+                            document.getElementById('submitWrap' + suffix + 'P3').classList.add('hidden');
+                            // Reload page to reflect approved status if possible, or wait for refresh
+                            setTimeout(() => window.location.reload(), 1500);
+                        } else {
+                            showToast(data.message || 'Terjadi kesalahan saat mengunggah', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        showToast('Kesalahan koneksi', 'error');
+                    })
+                    .finally(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = originalBtnContent;
+                    });
                 });
-            });
-        }
+            }
+        });
 
         const formSidang = document.getElementById('formUploadSidang');
         if (formSidang) {
@@ -2308,36 +2211,46 @@
             tbody.innerHTML = html;
         }
 
+        function openStatusNote(key) {
+            const notes = window._statusNotes || {};
+            openCatatanModal(notes[key] || '', key === 'p1' ? 'Catatan Pembimbing 1' : 'Catatan Pembimbing 2');
+        }
+
         function renderStatusCard(data) {
-            let statusHtml = '';
-            if (data.is_p3_app) {
-                statusHtml = `<div class="p-4 rounded-2xl border bg-emerald-50 border-emerald-200 text-emerald-800 flex items-start gap-4">
-                    <i class="bi bi-check-circle-fill text-2xl mt-1 text-emerald-500"></i>
-                    <div><h4 class="font-bold text-lg">Preview 3 Disetujui (Siap Sidang)</h4></div>
-                </div>`;
-            } else if (data.is_p2_app) {
-                statusHtml = `<div class="p-4 rounded-2xl border bg-emerald-50 border-emerald-200 text-emerald-800 flex items-start gap-4">
-                    <i class="bi bi-check-circle-fill text-2xl mt-1 text-emerald-500"></i>
-                    <div><h4 class="font-bold text-lg">Preview 2 Disetujui (Lanjut Preview 3)</h4></div>
-                </div>`;
-            } else if (data.is_p1_app) {
-                statusHtml = `<div class="p-4 rounded-2xl border bg-emerald-50 border-emerald-200 text-emerald-800 flex items-start gap-4">
-                    <i class="bi bi-check-circle-fill text-2xl mt-1 text-emerald-500"></i>
-                    <div><h4 class="font-bold text-lg">Preview 1 Disetujui (Lanjut Preview 2)</h4></div>
-                </div>`;
-            } else {
-                let statusText = 'Preview 1 Sedang Direview';
-                if (data.latest_p3) statusText = 'Preview 3 Sedang Direview';
-                else if (data.latest_p2) statusText = 'Preview 2 Sedang Direview';
-                statusHtml = `<div class="p-4 rounded-2xl border bg-amber-50 border-amber-200 text-amber-800 flex items-start gap-4">
-                    <i class="bi bi-clock-fill text-2xl mt-1 text-amber-500"></i>
-                    <div><h4 class="font-bold text-lg">${statusText}</h4></div>
-                </div>`;
+            const box = document.getElementById('statusCardContainer');
+            if (!box) return;
+
+            const stageNo = data.latest_p3 ? 3 : (data.latest_p2 ? 2 : (data.latest_p1 ? 1 : 0));
+            const latest = stageNo ? data['latest_p' + stageNo] : null;
+            let text = 'Belum Memulai Bimbingan', icon = 'bi-dash-circle', tone = 'text-white/70';
+
+            if (data.is_p3_app) { text = 'Lulus Preview 3 (Siap Sidang)'; icon = 'bi-check-circle-fill'; tone = 'text-emerald-300'; }
+            else if (data.is_p2_app) { text = 'Lulus Preview 2 (Lanjut Preview 3)'; icon = 'bi-check-circle-fill'; tone = 'text-emerald-300'; }
+            else if (data.is_p1_app) { text = 'Lulus Preview 1 (Lanjut Preview 2)'; icon = 'bi-check-circle-fill'; tone = 'text-emerald-300'; }
+            else if (stageNo) {
+                if (latest && latest.status_pembimbing === 'Revision') {
+                    text = 'Preview ' + stageNo + ' Perlu Revisi'; icon = 'bi-x-circle-fill'; tone = 'text-rose-300';
+                } else if (latest && latest.status_pembimbing === 'Approved') {
+                    text = 'Berkas Preview ' + stageNo + ' Disetujui (Menunggu Lulus Tahap)'; icon = 'bi-clock-fill'; tone = 'text-amber-200';
+                } else {
+                    text = 'Preview ' + stageNo + ' Sedang Direview'; icon = 'bi-clock-fill'; tone = 'text-amber-200';
+                }
             }
-            document.getElementById('statusCardContainer').innerHTML = `
-                <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2.5">
-                    <i class="bi bi-info-circle-fill text-orange-500"></i> Status Bimbingan Terkini
-                </h3>` + statusHtml;
+
+            const n1 = latest && stripHtml(latest.catatan_pembimbing) ? latest.catatan_pembimbing : '';
+            const n2 = latest && stripHtml(latest.catatan_pembimbing_2) ? latest.catatan_pembimbing_2 : '';
+            window._statusNotes = { p1: n1, p2: n2 };
+
+            const btn = (key, label) => `<button type="button" onclick="openStatusNote('${key}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/15 hover:bg-white/25 border border-white/20 text-[10px] font-bold text-white cursor-pointer"><i class="bi bi-chat-quote-fill"></i> ${label}</button>`;
+            const notesHtml = (n1 || n2) ? `<div class="flex flex-wrap gap-1 mt-1">${n1 ? btn('p1', 'Catatan P1') : ''}${n2 ? btn('p2', 'Catatan P2') : ''}</div>` : '';
+
+            box.innerHTML = `
+                <i class="bi ${icon} ${tone} text-xl"></i>
+                <div class="min-w-0 flex-1">
+                    <span class="text-[9px] font-bold uppercase tracking-wider text-amber-200 block">Status Bimbingan Terkini</span>
+                    <h4 class="text-xs font-bold text-white leading-snug">${text}</h4>
+                    ${notesHtml}
+                </div>`;
         }
 
         // ===================== SSE REALTIME =====================
@@ -2360,8 +2273,18 @@
                         const orig_is_p1_app = <?php echo $is_p1_app ? 'true' : 'false'; ?>;
                         const orig_is_p2_app = <?php echo $is_p2_app ? 'true' : 'false'; ?>;
                         const orig_is_p3_app = <?php echo $is_p3_app ? 'true' : 'false'; ?>;
+
+                        // Deteksi perubahan status per-file Preview 3
+                        const orig_has_app_bimbingan   = <?php echo (!empty($has_app_bimbingan)   ? 'true' : 'false'); ?>;
+                        const orig_has_app_sitasi      = <?php echo (!empty($has_app_sitasi)      ? 'true' : 'false'); ?>;
+                        const orig_has_app_persyaratan = <?php echo (!empty($has_app_persyaratan) ? 'true' : 'false'); ?>;
                         
-                        if ((data.is_p1_app && !orig_is_p1_app) || (data.is_p2_app && !orig_is_p2_app) || (data.is_p3_app && !orig_is_p3_app)) {
+                        const fileStatusChanged =
+                            (data.has_app_bimbingan   && !orig_has_app_bimbingan)   ||
+                            (data.has_app_sitasi       && !orig_has_app_sitasi)      ||
+                            (data.has_app_persyaratan  && !orig_has_app_persyaratan);
+
+                        if ((data.is_p1_app && !orig_is_p1_app) || (data.is_p2_app && !orig_is_p2_app) || (data.is_p3_app && !orig_is_p3_app) || fileStatusChanged) {
                             window.location.reload();
                         }
                     }
