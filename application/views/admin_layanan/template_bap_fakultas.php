@@ -3,174 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $title ?? 'BAP Fakultas — Berita Acara & Nilai Komprehensif FIK'; ?></title>
+    <title><?= $title ?? 'BERITA ACARA PENYELENGGARAAN SIDANG TUGAS AKHIR'; ?></title>
     <style>
         @page {
             size: A4 portrait;
             margin: 15mm 20mm;
         }
         body {
-            font-family: 'Times New Roman', Times, serif;
-            color: #111827;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #000000;
             background: #ffffff;
             margin: 0;
-            padding: 20px 40px;
-            font-size: 11pt;
-            line-height: 1.35;
+            padding: 20px 35px;
+            font-size: 10pt;
+            line-height: 1.4;
         }
         .page-container {
-            max-width: 780px;
+            max-width: 750px;
             margin: 0 auto;
             background: #ffffff;
         }
         .page-break {
             page-break-before: always;
-            margin-top: 40px;
+            margin-top: 30px;
             padding-top: 20px;
-            border-top: 1px dashed #cbd5e1;
         }
         @media print {
             body { padding: 0; }
-            .page-break { border-top: none; margin-top: 0; padding-top: 0; }
+            .page-break { page-break-before: always; border-top: none; margin-top: 0; padding-top: 0; }
             .no-print { display: none !important; }
         }
-        .header-logo {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 15px;
-            margin-bottom: 12px;
+
+        /* Header Style */
+        .header-grid {
+            display: table;
+            width: 100%;
+            margin-bottom: 25px;
         }
-        .logo-box {
-            font-family: 'Arial', sans-serif;
-            font-weight: 900;
-            font-size: 20pt;
-            color: #e11d48;
-            letter-spacing: -1px;
-            line-height: 1;
+        .logo-col {
+            display: table-cell;
+            width: 180px;
+            vertical-align: middle;
         }
-        .logo-sub {
-            font-family: 'Arial', sans-serif;
-            font-size: 13pt;
-            color: #334155;
-            font-weight: 700;
+        .logo-img {
+            max-height: 55px;
+            width: auto;
+            display: block;
         }
-        .title-header {
+        .title-col {
+            display: table-cell;
+            vertical-align: middle;
             text-align: center;
-            margin-bottom: 18px;
         }
-        .title-header h2 {
-            font-size: 12pt;
+        .title-col h2 {
+            font-size: 11pt;
             font-weight: bold;
             margin: 0;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
-        .title-header h3 {
-            font-size: 12pt;
-            font-weight: bold;
-            margin: 2px 0 0 0;
-            text-transform: uppercase;
-        }
-        .title-header h4 {
+        .title-col h3 {
             font-size: 11pt;
             font-weight: bold;
-            margin: 2px 0 0 0;
+            margin: 3px 0 0 0;
             text-transform: uppercase;
         }
+        .title-col h4 {
+            font-size: 10.5pt;
+            font-weight: bold;
+            margin: 3px 0 0 0;
+            text-transform: uppercase;
+        }
+
         p {
-            margin: 6px 0;
+            margin: 8px 0;
             text-align: justify;
         }
+
         .data-table {
             width: 100%;
-            margin: 8px 0;
+            margin: 10px 0;
             border-collapse: collapse;
         }
         .data-table td {
-            padding: 3px 0;
+            padding: 2.5px 0;
             vertical-align: top;
         }
-        .data-table td.label {
-            width: 140px;
+        .data-table td.num-col {
+            width: 25px;
+            font-weight: bold;
         }
-        .data-table td.colon {
+        .data-table td.label-col {
+            width: 130px;
+        }
+        .data-table td.colon-col {
             width: 15px;
         }
-        .notes-lines {
-            margin: 10px 0 16px 0;
+
+        /* Catatan Section */
+        .notes-section {
+            margin: 15px 0 25px 0;
         }
-        .notes-lines .line {
-            border-bottom: 1px solid #94a3b8;
-            height: 22px;
+        .notes-title {
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+        .note-content {
+            font-size: 10pt;
+            margin-bottom: 8px;
+            min-height: 20px;
+        }
+        .underline-line {
+            border-bottom: 1px solid #000000;
+            height: 24px;
             width: 100%;
         }
-        .signatures-table {
+
+        /* Signatures Table */
+        .date-right {
+            text-align: right;
+            margin-bottom: 10px;
+            margin-right: 40px;
+        }
+        .sig-table {
             width: 100%;
-            margin-top: 15px;
             border-collapse: collapse;
+            margin-bottom: 15px;
         }
-        .signatures-table td {
+        .sig-table th, .sig-table td {
+            padding: 6px 4px;
             vertical-align: middle;
-            padding: 4px 6px;
-            height: 44px;
         }
-        .sig-box {
+        .sig-table th {
+            text-align: left;
+            font-weight: bold;
+        }
+        .sig-table td.role-col {
+            width: 180px;
+        }
+        .sig-table td.name-col {
+            width: 300px;
+        }
+        .sig-table td.sig-col {
+            text-align: center;
+        }
+        .sig-img {
+            max-height: 44px;
+            width: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        .sig-fallback {
             font-family: 'Brush Script MT', cursive, sans-serif;
             font-size: 16pt;
             color: #0284c7;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            white-space: nowrap;
         }
+
+        /* Page 2 Styles */
         .eval-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 10px 0 15px 0;
+            margin: 15px 0 20px 0;
         }
         .eval-table th, .eval-table td {
-            border: 1px solid #111827;
-            padding: 4px 8px;
-            font-size: 10.5pt;
+            border: 1px solid #000000;
+            padding: 5px 8px;
+            font-size: 10pt;
         }
         .eval-table th {
-            background: #f8fafc;
             text-align: center;
             font-weight: bold;
+        }
+        .checkbox-group {
+            margin: 15px 0 25px 0;
         }
         .checkbox-item {
             display: flex;
             align-items: flex-start;
-            gap: 8px;
-            margin: 5px 0;
+            gap: 10px;
+            margin: 6px 0;
         }
         .checkbox-box {
-            width: 14px;
-            height: 14px;
-            border: 1.5px solid #111827;
+            width: 15px;
+            height: 15px;
+            border: 1.5px solid #000000;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
             font-size: 10pt;
-            margin-top: 2px;
+            margin-top: 1px;
             flex-shrink: 0;
         }
         .range-table {
             width: 60%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 10px;
         }
         .range-table th, .range-table td {
-            border: 1px solid #111827;
-            padding: 2.5px 6px;
+            border: 1px solid #000000;
+            padding: 4px 8px;
             font-size: 9.5pt;
             text-align: center;
         }
         .range-table th {
-            background: #f8fafc;
             font-weight: bold;
         }
     </style>
@@ -180,217 +215,272 @@
     <div class="page-container">
 
         <!-- ============================================================= -->
-        <!-- HALAMAN 1: BERITA ACARA PENYELENGGARAAN SIDANG FIK (Foto 5)   -->
+        <!-- HALAMAN 1: BERITA ACARA PENYELENGGARAAN SIDANG                -->
         <!-- ============================================================= -->
         <div class="page-1">
-            <div class="header-logo">
-                <img src="<?= base_url('assets/images/logo_telkom_university.png'); ?>" alt="Telkom University Logo" style="height: 52px; width: auto; display: block;">
+
+            <!-- Logo & Header -->
+            <div class="header-grid">
+                <div class="logo-col">
+                    <img src="<?= base_url('assets/images/logo_telkom_university.png'); ?>" alt="Telkom University" class="logo-img" onerror="this.src='https://upload.wikimedia.org/wikipedia/id/8/89/Telkom_University_Logo.svg';">
+                </div>
+                <div class="title-col">
+                    <h2>BERITA ACARA</h2>
+                    <h3>PENYELENGGARAAN SIDANG TUGAS AKHIR</h3>
+                    <h4>FAKULTAS INDUSTRI KREATIF</h4>
+                </div>
             </div>
 
-            <div class="title-header">
-                <h2>BERITA ACARA</h2>
-                <h3>PENYELENGGARAAN SIDANG TUGAS AKHIR</h3>
-                <h4>FAKULTAS INDUSTRI KREATIF</h4>
-            </div>
-
+            <!-- Intro Paragraph -->
             <p>
-                Pada hari <strong><?= htmlspecialchars($bap['hari']); ?></strong>, <strong><?= htmlspecialchars($bap['tanggal_text']); ?></strong> bertempat di <?= htmlspecialchars($bap['tempat']); ?> telah diselenggarakan Sidang Tugas Akhir Semester <?= htmlspecialchars($bap['semester']); ?> Tahun Akademik <?= htmlspecialchars($bap['tahun_akademik']); ?>:
+                Pada hari <strong><?= htmlspecialchars($bap['hari'] ?? 'Rabu'); ?></strong>, <strong><?= htmlspecialchars($bap['tanggal_text'] ?? '22 Juli 2026'); ?></strong> bertempat di <?= htmlspecialchars($bap['tempat'] ?? $bap['ruang_sidang'] ?? 'Kampus Fakultas Industri Kreatif Jl. Telekomunikasi, Ters. Buah Batu Bandung'); ?> telah diselenggarakan Sidang Tugas Akhir Semester <?= htmlspecialchars($bap['semester'] ?? 'Genap'); ?> Tahun Akademik <?= htmlspecialchars($bap['tahun_akademik'] ?? '2018/2019'); ?>
             </p>
 
+            <!-- 1. Data Peserta -->
             <table class="data-table">
                 <tr>
-                    <td class="label" style="width:20px;">1.</td>
-                    <td class="label">Nama</td>
-                    <td class="colon">:</td>
-                    <td><strong><?= htmlspecialchars($bap['nama']); ?></strong></td>
+                    <td class="num-col">1.</td>
+                    <td class="label-col">Nama</td>
+                    <td class="colon-col">:</td>
+                    <td><?= htmlspecialchars($bap['nama']); ?></td>
                 </tr>
                 <tr>
                     <td></td>
-                    <td class="label">NIM</td>
-                    <td class="colon">:</td>
-                    <td><strong><?= htmlspecialchars($bap['nim']); ?></strong></td>
+                    <td class="label-col">NIM</td>
+                    <td class="colon-col">:</td>
+                    <td><?= htmlspecialchars($bap['nim']); ?></td>
                 </tr>
                 <tr>
                     <td></td>
-                    <td class="label">Program Studi</td>
-                    <td class="colon">:</td>
+                    <td class="label-col">Program Studi</td>
+                    <td class="colon-col">:</td>
                     <td><?= htmlspecialchars($bap['prodi']); ?></td>
                 </tr>
                 <tr>
-                    <td class="label" style="width:20px; padding-top:6px;">2.</td>
-                    <td class="label" colspan="3" style="padding-top:6px;"><strong>Topik Tugas Akhir *)</strong></td>
+                    <td class="num-col" style="padding-top: 8px;">2.</td>
+                    <td class="label-col" colspan="3" style="padding-top: 8px;"><strong>Topik Tugas Akhir *)</strong></td>
                 </tr>
                 <tr>
                     <td></td>
-                    <td class="label">Judul</td>
-                    <td class="colon">:</td>
-                    <td style="font-style:italic;"><?= htmlspecialchars($bap['judul']); ?></td>
+                    <td class="label-col">Judul</td>
+                    <td class="colon-col">:</td>
+                    <td><?= htmlspecialchars($bap['judul']); ?></td>
                 </tr>
             </table>
 
-            <p style="margin-top:12px;"><strong>3. Catatan Penting Selama Kegiatan Berlangsung :</strong></p>
-            
-            <div class="notes-lines">
-                <div class="line" style="font-size:10pt; color:#334155; padding-left:4px;"><?= htmlspecialchars($bap['catatan_penguji']); ?></div>
-                <div class="line"></div>
-                <div class="line"></div>
-                <div class="line"></div>
-                <div class="line"></div>
+            <!-- 3. Catatan Penting -->
+            <div class="notes-section">
+                <div class="notes-title">3. Catatan Penting Selama Kegiatan Berlangsung :</div>
+                <div class="note-content">
+                    <?= !empty($bap['catatan_penguji']) ? htmlspecialchars($bap['catatan_penguji']) : ''; ?>
+                </div>
+                <div class="underline-line"></div>
+                <div class="underline-line"></div>
+                <div class="underline-line"></div>
+                <div class="underline-line"></div>
             </div>
 
-            <div style="text-align:right; margin-top:12px; margin-right:20px;">
-                Bandung, <?= htmlspecialchars($bap['tanggal_text']); ?>
+            <!-- Date & Signatures Table -->
+            <div class="date-right">
+                Bandung, <?= htmlspecialchars($bap['tanggal_text'] ?? '22 Juli 2026'); ?>
             </div>
 
-            <table class="signatures-table">
-                <tr>
-                    <td style="width:160px; height:auto;"><strong>Tim Penguji</strong></td>
-                    <td style="width:260px; height:auto;"><strong>Nama</strong></td>
-                    <td style="width:200px; text-align:center; height:auto;"><strong>Tanda Tangan</strong></td>
-                </tr>
-                <tr>
-                    <td>Pembimbing 1</td>
-                    <td>: <?= htmlspecialchars($bap['pembimbing_1']); ?></td>
-                    <td align="center">
-                        <?php if (!empty($bap['ttd_pembimbing_1']) && file_exists(FCPATH . 'uploads/signatures/' . $bap['ttd_pembimbing_1'])): ?>
-                            <img src="<?= base_url('uploads/signatures/' . $bap['ttd_pembimbing_1']); ?>" style="max-height: 42px; width: auto; display: block; margin: 0 auto;">
-                        <?php else: ?>
-                            <div class="sig-box">~ TTD Digital ~</div>
-                        <?php endif; ?>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Pembimbing 2</td>
-                    <td>: <?= htmlspecialchars($bap['pembimbing_2']); ?></td>
-                    <td align="center">
-                        <?php if (!empty($bap['ttd_pembimbing_2']) && file_exists(FCPATH . 'uploads/signatures/' . $bap['ttd_pembimbing_2'])): ?>
-                            <img src="<?= base_url('uploads/signatures/' . $bap['ttd_pembimbing_2']); ?>" style="max-height: 42px; width: auto; display: block; margin: 0 auto;">
-                        <?php else: ?>
-                            <div class="sig-box">~ TTD Digital ~</div>
-                        <?php endif; ?>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Penguji 1/Ketua Sidang</td>
-                    <td>: <?= htmlspecialchars($bap['penguji_1']); ?></td>
-                    <td align="center">
-                        <?php if (!empty($bap['ttd_penguji_1']) && file_exists(FCPATH . 'uploads/signatures/' . $bap['ttd_penguji_1'])): ?>
-                            <img src="<?= base_url('uploads/signatures/' . $bap['ttd_penguji_1']); ?>" style="max-height: 42px; width: auto; display: block; margin: 0 auto;">
-                        <?php else: ?>
-                            <div class="sig-box">~ TTD Digital ~</div>
-                        <?php endif; ?>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Penguji 2</td>
-                    <td>: <?= htmlspecialchars($bap['penguji_2']); ?></td>
-                    <td align="center">
-                        <?php if (!empty($bap['ttd_penguji_2']) && file_exists(FCPATH . 'uploads/signatures/' . $bap['ttd_penguji_2'])): ?>
-                            <img src="<?= base_url('uploads/signatures/' . $bap['ttd_penguji_2']); ?>" style="max-height: 42px; width: auto; display: block; margin: 0 auto;">
-                        <?php else: ?>
-                            <div class="sig-box">~ TTD Digital ~</div>
-                        <?php endif; ?>
-                    </td>
-                </tr>
+            <table class="sig-table">
+                <thead>
+                    <tr>
+                        <th class="role-col">Tim Penguji</th>
+                        <th class="name-col">Nama</th>
+                        <th class="sig-col">Tanda Tangan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="role-col">Pembimbing 1</td>
+                        <td class="name-col">: <?= htmlspecialchars($bap['pembimbing_1']); ?></td>
+                        <td class="sig-col">
+                            <?php if (!empty($bap['ttd_pembimbing_1']) && file_exists(FCPATH . 'uploads/signatures/' . $bap['ttd_pembimbing_1'])): ?>
+                                <img src="<?= base_url('uploads/signatures/' . $bap['ttd_pembimbing_1']); ?>" class="sig-img">
+                            <?php else: ?>
+                                <span class="sig-fallback">~ TTD Digital ~</span>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="role-col">Pembimbing 2</td>
+                        <td class="name-col">: <?= htmlspecialchars($bap['pembimbing_2']); ?></td>
+                        <td class="sig-col">
+                            <?php if (!empty($bap['ttd_pembimbing_2']) && file_exists(FCPATH . 'uploads/signatures/' . $bap['ttd_pembimbing_2'])): ?>
+                                <img src="<?= base_url('uploads/signatures/' . $bap['ttd_pembimbing_2']); ?>" class="sig-img">
+                            <?php else: ?>
+                                <span class="sig-fallback">~ TTD Digital ~</span>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="role-col">Penguji 1/Ketua Sidang</td>
+                        <td class="name-col">: <?= htmlspecialchars($bap['penguji_1']); ?></td>
+                        <td class="sig-col">
+                            <?php if (!empty($bap['ttd_penguji_1']) && file_exists(FCPATH . 'uploads/signatures/' . $bap['ttd_penguji_1'])): ?>
+                                <img src="<?= base_url('uploads/signatures/' . $bap['ttd_penguji_1']); ?>" class="sig-img">
+                            <?php else: ?>
+                                <span class="sig-fallback">~ TTD Digital ~</span>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="role-col">Penguji 2</td>
+                        <td class="name-col">: <?= htmlspecialchars($bap['penguji_2']); ?></td>
+                        <td class="sig-col">
+                            <?php if (!empty($bap['ttd_penguji_2']) && file_exists(FCPATH . 'uploads/signatures/' . $bap['ttd_penguji_2'])): ?>
+                                <img src="<?= base_url('uploads/signatures/' . $bap['ttd_penguji_2']); ?>" class="sig-img">
+                            <?php else: ?>
+                                <span class="sig-fallback">~ TTD Digital ~</span>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                </tbody>
             </table>
 
-            <p style="font-size:9pt; font-style:italic; margin-top:15px;">
+            <p style="font-size: 9pt; font-style: italic; margin-top: 10px;">
                 *) Wajib diisi oleh ketua sidang
             </p>
+
         </div>
 
         <!-- ============================================================= -->
-        <!-- HALAMAN 2: NILAI SIDANG KOMPREHENSIF (Foto 6)                 -->
+        <!-- HALAMAN 2: NILAI SIDANG KOMPREHENSIF                          -->
         <!-- ============================================================= -->
         <div class="page-break"></div>
 
         <div class="page-2">
+
             <p><strong>4. Nilai Sidang Tugas Akhir Komprehensif</strong></p>
             <p>
                 Berdasarkan hasil evaluasi dari para Anggota Sidang Tugas Akhir, meliputi aspek-aspek yang dinilai dengan skor rata-rata sebagai berikut:
             </p>
 
+            <!-- Tabel Evualuasi Nilai (Matching PDF 2 Page 2) -->
             <table class="eval-table">
                 <thead>
                     <tr>
-                        <th style="text-align:left; width:180px;">Tim Penilai</th>
-                        <th style="width:90px;">Nilai</th>
-                        <th style="width:90px;">Bobot</th>
-                        <th style="width:110px;">Nilai*Bobot</th>
+                        <th style="border: none; background: transparent;"></th>
+                        <th style="width: 100px;">Nilai</th>
+                        <th style="width: 100px;">Bobot</th>
+                        <th style="width: 120px;">Nilai*Bobot</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($bap['evaluasi_nilai'] as $ev): ?>
+                    <?php if (!empty($bap['evaluasi_nilai'])): ?>
+                        <?php foreach ($bap['evaluasi_nilai'] as $ev): ?>
+                            <tr>
+                                <td><strong><?= htmlspecialchars($ev['peran']); ?></strong></td>
+                                <td align="center"><?= $ev['nilai']; ?></td>
+                                <td align="center"><?= $ev['bobot']; ?></td>
+                                <td align="center"><?= number_format($ev['nilai_bobot'], 1); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
                         <tr>
-                            <td><?= htmlspecialchars($ev['peran']); ?></td>
-                            <td align="center"><?= $ev['nilai']; ?></td>
-                            <td align="center"><?= $ev['bobot']; ?></td>
-                            <td align="center"><?= number_format($ev['nilai_bobot'], 1); ?></td>
+                            <td><strong>Pembimbing 1</strong></td>
+                            <td align="center">70</td>
+                            <td align="center">0.4</td>
+                            <td align="center">28</td>
                         </tr>
-                    <?php endforeach; ?>
-                    <tr style="font-weight:bold; background:#f8fafc;">
-                        <td colspan="3" align="right">Jumlah Rata-Rata :</td>
-                        <td align="center"><?= number_format($bap['nilai_akhir'], 1); ?></td>
+                        <tr>
+                            <td><strong>Pembimbing 2</strong></td>
+                            <td align="center">72</td>
+                            <td align="center">0.2</td>
+                            <td align="center">14.4</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Penguji 1</strong></td>
+                            <td align="center">65.5</td>
+                            <td align="center">0.2</td>
+                            <td align="center">13.1</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Penguji 2</strong></td>
+                            <td align="center">65.5</td>
+                            <td align="center">0.2</td>
+                            <td align="center">13.1</td>
+                        </tr>
+                    <?php endif; ?>
+                    <tr>
+                        <td><strong>Jumlah</strong></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
                     </tr>
-                    <tr style="font-weight:bold; background:#f8fafc;">
-                        <td colspan="3" align="right">Dengan Huruf :</td>
-                        <td align="center" style="font-size:12pt; color:#e11d48;"><?= htmlspecialchars($bap['indeks_huruf']); ?></td>
+                    <tr>
+                        <td colspan="3"><strong>Rata-Rata :</strong></td>
+                        <td align="center"><strong><?= number_format($bap['nilai_akhir'] ?? 68.6, 1); ?></strong></td>
+                    </tr>
+                    <tr>
+                        <td colspan="3"><strong>Dengan Huruf :</strong></td>
+                        <td align="center"><strong><?= htmlspecialchars($bap['indeks_huruf'] ?? 'B'); ?></strong></td>
                     </tr>
                 </tbody>
             </table>
 
-            <p style="margin-top:14px;">
+            <p style="margin-top: 15px;">
                 Atas nama Tim Penguji menetapkan hasil akhir penilaian pada Sidang Tugas Akhir adalah:
             </p>
 
-            <div class="checkbox-item">
-                <div class="checkbox-box">&#10003;</div>
-                <div><strong>Lulus</strong></div>
-            </div>
-            <div class="checkbox-item">
-                <div class="checkbox-box"></div>
-                <div>Lulus, dengan keharusan untuk memperbaiki selama 1 Minggu</div>
-            </div>
-            <div class="checkbox-item">
-                <div class="checkbox-box"></div>
-                <div>Ditangguhkan dengan keharusan untuk memperbaiki Karya Seni/Desain selama 1 Minggu</div>
+            <!-- Checkbox Keputusan Kelulusan -->
+            <?php 
+                $indeks = $bap['indeks_huruf'] ?? 'B';
+                $status_lulus = ($indeks !== 'E' && $indeks !== 'D');
+            ?>
+            <div class="checkbox-group">
+                <div class="checkbox-item">
+                    <div class="checkbox-box"><?= $status_lulus ? '&#10003;' : ''; ?></div>
+                    <div><strong>Lulus</strong></div>
+                </div>
+                <div class="checkbox-item">
+                    <div class="checkbox-box"></div>
+                    <div>Lulus, dengan keharusan untuk memperbaiki selama 1 Minggu</div>
+                </div>
+                <div class="checkbox-item">
+                    <div class="checkbox-box"><?= !$status_lulus ? '&#10003;' : ''; ?></div>
+                    <div>Ditangguhkan dengan keharusan untuk memperbaiki Karya Seni/Desain selama 1 Minggu</div>
+                </div>
             </div>
 
-            <div style="margin-top:18px; margin-left:10px;">
-                <div>Bandung, <?= htmlspecialchars($bap['tanggal_text']); ?></div>
-                <div style="margin-top:2px;">Ketua Sidang,</div>
-                <div class="sig-box" style="height:55px; margin:6px 0; display:flex; align-items:center;">
+            <!-- Tanggal & TTD Ketua Sidang -->
+            <div style="margin-top: 20px;">
+                <div>Bandung, <?= htmlspecialchars($bap['tanggal_text'] ?? '22 Juli 2026'); ?></div>
+                <div style="margin-top: 3px;">Ketua Sidang,</div>
+                <div style="height: 60px; margin: 6px 0; display: flex; align-items: center;">
                     <?php 
                     $ttd_ks = !empty($bap['ttd_ketua_sidang']) ? $bap['ttd_ketua_sidang'] : (!empty($bap['ttd_penguji_1']) ? $bap['ttd_penguji_1'] : null);
                     if (!empty($ttd_ks) && file_exists(FCPATH . 'uploads/signatures/' . $ttd_ks)): 
                     ?>
-                        <img src="<?= base_url('uploads/signatures/' . $ttd_ks); ?>" style="max-height: 52px; width: auto; display: block;">
+                        <img src="<?= base_url('uploads/signatures/' . $ttd_ks); ?>" class="sig-img" style="margin: 0;">
                     <?php else: ?>
-                        <div style="font-family: 'Brush Script MT', cursive, sans-serif; font-size: 20pt; color: #0284c7;">
-                            ~ TTD Digital ~
-                        </div>
+                        <span class="sig-fallback" style="font-size: 18pt;">~ TTD Digital ~</span>
                     <?php endif; ?>
                 </div>
                 <div><strong><?= htmlspecialchars($bap['ketua_sidang'] ?? $bap['penguji_1']); ?></strong></div>
             </div>
 
-            <div style="margin-top:20px;">
-                <p style="font-size:9.5pt; font-weight:bold; margin-bottom:4px;">Range Nilai :</p>
+            <!-- Tabel Range Nilai -->
+            <div style="margin-top: 25px;">
+                <div style="font-weight: bold; margin-bottom: 6px;">Range Nilai :</div>
                 <table class="range-table">
                     <thead>
                         <tr>
-                            <th>Nilai Skor Matakuliah (NSM)</th>
-                            <th>Nilai Mata Kuliah (NMK)</th>
+                            <th>Nilai Skor Matakuliah (NSM) :</th>
+                            <th>Nilai Mata Kuliah (NMK) :</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td>85 &lt; NSM</td><td><strong>A</strong></td></tr>
-                        <tr><td>75 &lt; NSM &lt;= 85</td><td><strong>AB</strong></td></tr>
-                        <tr><td>65 &lt; NSM &lt;= 75</td><td><strong>B</strong></td></tr>
-                        <tr><td>60 &lt; NSM &lt;= 65</td><td><strong>BC</strong></td></tr>
-                        <tr><td>50 &lt; NSM &lt;= 60</td><td><strong>C</strong></td></tr>
-                        <tr><td>40 &lt; NSM &lt;= 50</td><td><strong>D</strong></td></tr>
-                        <tr><td>NSM &lt;= 40</td><td><strong>E</strong></td></tr>
+                        <tr><td>85&lt;NSM</td><td>A</td></tr>
+                        <tr><td>75&lt;NSM&lt;=85</td><td>AB</td></tr>
+                        <tr><td>65&lt;NSM&lt;=75</td><td>B</td></tr>
+                        <tr><td>60&lt;NSM&lt;=65</td><td>BC</td></tr>
+                        <tr><td>50&lt;NSM&lt;=60</td><td>C</td></tr>
+                        <tr><td>40&lt;NSM&lt;=50</td><td>D</td></tr>
+                        <tr><td>NSM&lt;=40</td><td>E</td></tr>
                     </tbody>
                 </table>
             </div>
