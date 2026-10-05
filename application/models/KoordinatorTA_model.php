@@ -952,29 +952,35 @@ class KoordinatorTA_model extends CI_Model {
             }
         }
 
-        // Ambil riwayat log publikasi nilai terbaru per NIM dari log_approval_history
+        // Ambil riwayat log jadwal sidang & publikasi nilai terbaru per NIM dari log_approval_history
         $publishMap = array();
+        $sidangScheduleMap = array();
         if ($this->db->table_exists('log_approval_history')) {
             $allNims = array_unique(array_filter(array_column($all, 'nim')));
             if (!empty($allNims)) {
                 $this->db->from('log_approval_history');
-                $this->db->where('modul', 'Publish Nilai Sidang');
+                $this->db->where_in('modul', array('Publish Nilai Sidang', 'Sidang TA'));
                 $this->db->where_in('ref_id', $allNims);
                 $this->db->order_by('id', 'DESC');
                 $pubLogs = $this->db->get()->result_array();
 
                 foreach ($pubLogs as $pl) {
                     $nimKey = (string)$pl['ref_id'];
-                    if (!isset($publishMap[$nimKey])) {
-                        $parsed = array();
-                        if (!empty($pl['catatan']) && $pl['catatan'][0] === '{') {
-                            $parsed = json_decode($pl['catatan'], true) ?: array();
-                        }
+                    $parsed = array();
+                    if (!empty($pl['catatan']) && $pl['catatan'][0] === '{') {
+                        $parsed = json_decode($pl['catatan'], true) ?: array();
+                    }
+
+                    if ($pl['modul'] === 'Publish Nilai Sidang' && !isset($publishMap[$nimKey])) {
                         $publishMap[$nimKey] = array(
                             'action'      => $pl['action'],
                             'status'      => $parsed['status_publish'] ?? $pl['action'],
                             'tgl_publish' => $parsed['tgl_publish'] ?? null,
                             'created_at'  => $pl['created_at']
+                        );
+                    } elseif ($pl['modul'] === 'Sidang TA' && !isset($sidangScheduleMap[$nimKey])) {
+                        $sidangScheduleMap[$nimKey] = array(
+                            'jam_selesai' => $parsed['jam_selesai'] ?? null
                         );
                     }
                 }
@@ -1071,9 +1077,17 @@ class KoordinatorTA_model extends CI_Model {
                 $statusPublish = 'Belum Lengkap';
             }
 
+            $jamSelesai = $sidangScheduleMap[$nimKey]['jam_selesai'] ?? null;
+            if (empty($jamSelesai) && !empty($waktuSidang)) {
+                $h = (int)substr($waktuSidang, 0, 2);
+                $m = substr($waktuSidang, 3, 2);
+                $jamSelesai = sprintf('%02d:%s:00', min(23, $h + 2), $m);
+            }
+
             $item['tgl_sidang']               = $tglSidang;
             $item['tanggal_sidang']           = $tglSidang;
             $item['jam_mulai_sidang']         = $waktuSidang;
+            $item['jam_selesai_sidang']       = $jamSelesai;
             $item['waktu_sidang']             = $waktuSidang;
             $item['ruangan_sidang']           = $ruangSidang;
             $item['ruang_sidang']             = $ruangSidang;
@@ -1149,6 +1163,7 @@ class KoordinatorTA_model extends CI_Model {
                 'kategori'       => 'Sidang TA',
                 'tanggal_sidang' => $tanggal_sidang,
                 'waktu_sidang'   => $waktu_sidang,
+                'jam_selesai'    => $jam_selesai,
                 'ruang_sidang'   => $ruang_sidang
             ))
         ));
@@ -1157,9 +1172,6 @@ class KoordinatorTA_model extends CI_Model {
     }
 
     /**
-     * Batch update jadwal sidang TA
-     */
-        /**
      * Batch update jadwal sidang TA
      */
     public function batch_jadwal_sidang_per_mhs_ajax($schedules) {
@@ -1174,9 +1186,10 @@ class KoordinatorTA_model extends CI_Model {
             $waktu   = $row['jam_mulai_sidang'] ?? ($row['waktu_sidang'] ?? null);
             $ruang   = $row['ruangan_sidang'] ?? ($row['ruang_sidang'] ?? null);
             $link    = $row['link_sidang'] ?? '';
+            $selesai = $row['jam_selesai_sidang'] ?? ($row['jam_selesai'] ?? null);
 
             if (!empty($nim)) {
-                $r = $this->update_jadwal_sidang_ajax($nim, $tgl, $waktu, $ruang, $link);
+                $r = $this->update_jadwal_sidang_ajax($nim, $tgl, $waktu, $ruang, $link, $selesai);
                 if ($r['status']) $success++;
             }
         }
@@ -1843,29 +1856,35 @@ class KoordinatorTA_model extends CI_Model {
             }
         }
 
-        // Ambil riwayat log publikasi nilai terbaru per NIM dari log_approval_history
+        // Ambil riwayat log jadwal sidang & publikasi nilai terbaru per NIM dari log_approval_history
         $publishMap = array();
+        $sidangScheduleMap = array();
         if ($this->db->table_exists('log_approval_history')) {
             $allNims = array_unique(array_filter(array_column($all, 'nim')));
             if (!empty($allNims)) {
                 $this->db->from('log_approval_history');
-                $this->db->where('modul', 'Publish Nilai Sidang');
+                $this->db->where_in('modul', array('Publish Nilai Sidang', 'Sidang TA'));
                 $this->db->where_in('ref_id', $allNims);
                 $this->db->order_by('id', 'DESC');
                 $pubLogs = $this->db->get()->result_array();
 
                 foreach ($pubLogs as $pl) {
                     $nimKey = (string)$pl['ref_id'];
-                    if (!isset($publishMap[$nimKey])) {
-                        $parsed = array();
-                        if (!empty($pl['catatan']) && $pl['catatan'][0] === '{') {
-                            $parsed = json_decode($pl['catatan'], true) ?: array();
-                        }
+                    $parsed = array();
+                    if (!empty($pl['catatan']) && $pl['catatan'][0] === '{') {
+                        $parsed = json_decode($pl['catatan'], true) ?: array();
+                    }
+
+                    if ($pl['modul'] === 'Publish Nilai Sidang' && !isset($publishMap[$nimKey])) {
                         $publishMap[$nimKey] = array(
                             'action'      => $pl['action'],
                             'status'      => $parsed['status_publish'] ?? $pl['action'],
                             'tgl_publish' => $parsed['tgl_publish'] ?? null,
                             'created_at'  => $pl['created_at']
+                        );
+                    } elseif ($pl['modul'] === 'Sidang TA' && !isset($sidangScheduleMap[$nimKey])) {
+                        $sidangScheduleMap[$nimKey] = array(
+                            'jam_selesai' => $parsed['jam_selesai'] ?? null
                         );
                     }
                 }
@@ -2047,11 +2066,28 @@ class KoordinatorTA_model extends CI_Model {
             $sidangFile = $sidangRow['file_sidang'] ?? ($sidangRow['pdf_file'] ?? null);
             $bapFile = $gRow['bap'] ?? null;
 
+            $rawWaktu = $gRow['waktu_sidang'] ?? null;
+            $jamSelesai = $sidangScheduleMap[$nimKey]['jam_selesai'] ?? null;
+            if (empty($jamSelesai) && !empty($rawWaktu)) {
+                $h = (int)substr($rawWaktu, 0, 2);
+                $m = substr($rawWaktu, 3, 2);
+                $jamSelesai = sprintf('%02d:%s', min(23, $h + 2), $m);
+            }
+
+            $waktuFormatted = null;
+            if (!empty($rawWaktu)) {
+                $startStr = substr($rawWaktu, 0, 5);
+                $endStr = !empty($jamSelesai) ? substr($jamSelesai, 0, 5) : null;
+                $waktuFormatted = $endStr ? ($startStr . ' - ' . $endStr . ' WIB') : ($startStr . ' WIB');
+            }
+
             $sidangDocs = array(
                 'has_sidang'          => (!empty($gRow['tanggal_sidang']) || $sidangRow !== null),
                 'status_sidang'       => (!empty($gRow['tanggal_sidang']) ? 'Terjadwal' : ($sidangRow ? 'Diajukan' : 'Belum Terjadwal')),
                 'tanggal_sidang'      => $gRow['tanggal_sidang'] ?? null,
-                'waktu_sidang'        => $gRow['waktu_sidang'] ?? null,
+                'waktu_sidang'        => $waktuFormatted ?: ($gRow['waktu_sidang'] ?? null),
+                'jam_mulai_sidang'    => $rawWaktu,
+                'jam_selesai_sidang'  => $jamSelesai,
                 'ruang_sidang'        => $gRow['ruang_sidang'] ?? null,
                 'link_sidang'         => $gRow['link_sidang'] ?? null,
                 'file_sidang'         => $sidangFile,

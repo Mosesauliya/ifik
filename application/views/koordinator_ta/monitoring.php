@@ -2298,6 +2298,20 @@
             const totalPrevSubmitted = previewDocs.total_submitted || 0;
             const hasSidang = sidangDocs.has_sidang || false;
 
+            // Status Badge untuk Tab Sidang & BAP
+            let sidangBadgeLabel = 'Belum';
+            let sidangBadgeClass = currentTab === 'sidang' ? 'bg-slate-200 text-slate-700' : 'bg-slate-200 text-slate-600';
+            if (sidangDocs.is_lulus || sidangDocs.bap_file) {
+                sidangBadgeLabel = 'Lulus';
+                sidangBadgeClass = currentTab === 'sidang' ? 'bg-emerald-100 text-emerald-800' : 'bg-emerald-100/80 text-emerald-700';
+            } else if (sidangDocs.tanggal_sidang || sidangDocs.status_sidang === 'Terjadwal') {
+                sidangBadgeLabel = 'Terjadwal';
+                sidangBadgeClass = currentTab === 'sidang' ? 'bg-cyan-100 text-cyan-800' : 'bg-cyan-100/80 text-cyan-700';
+            } else if (sidangDocs.file_sidang || sidangDocs.status_sidang === 'Diajukan' || hasSidang) {
+                sidangBadgeLabel = 'Diajukan';
+                sidangBadgeClass = currentTab === 'sidang' ? 'bg-amber-100 text-amber-800' : 'bg-amber-100/80 text-amber-700';
+            }
+
             // Render Content per Tab
             let tabContentHtml = '';
 
@@ -2730,26 +2744,26 @@
                     <div class="p-1.5 bg-slate-100/90 border-b border-slate-200 grid grid-cols-3 gap-1 shrink-0">
                         <button type="button" 
                                 onclick="switchLihatBerkasTab('pendaftaran')" 
-                                class="py-1.5 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${currentTab === 'pendaftaran' ? 'bg-white text-orange-600 shadow-2xs border border-slate-200/80' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'}">
+                                class="py-1.5 px-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition whitespace-nowrap cursor-pointer ${currentTab === 'pendaftaran' ? 'bg-white text-orange-600 shadow-2xs border border-slate-200/80' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'}">
                             <i class="fa-solid fa-folder-closed text-[10px]"></i>
                             <span>Pendaftaran</span>
-                            <span class="px-1 py-0.2 rounded-full text-[8.5px] ${currentTab === 'pendaftaran' ? 'bg-orange-100 text-orange-700' : 'bg-slate-200 text-slate-600'} font-black">${validPendaftaranCount}/${totalPendaftaran}</span>
+                            <span class="px-1.5 py-0.2 rounded-full text-[8.5px] ${currentTab === 'pendaftaran' ? 'bg-orange-100 text-orange-700' : 'bg-slate-200 text-slate-600'} font-black">${validPendaftaranCount}/${totalPendaftaran}</span>
                         </button>
 
                         <button type="button" 
                                 onclick="switchLihatBerkasTab('preview')" 
-                                class="py-1.5 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${currentTab === 'preview' ? 'bg-white text-orange-600 shadow-2xs border border-slate-200/80' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'}">
+                                class="py-1.5 px-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition whitespace-nowrap cursor-pointer ${currentTab === 'preview' ? 'bg-white text-orange-600 shadow-2xs border border-slate-200/80' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'}">
                             <i class="fa-solid fa-file-signature text-[10px]"></i>
-                            <span>Preview 1-3</span>
-                            <span class="px-1 py-0.2 rounded-full text-[8.5px] ${currentTab === 'preview' ? 'bg-orange-100 text-orange-700' : 'bg-slate-200 text-slate-600'} font-black">${totalPrevSubmitted}/3</span>
+                            <span>Preview</span>
+                            <span class="px-1.5 py-0.2 rounded-full text-[8.5px] ${currentTab === 'preview' ? 'bg-orange-100 text-orange-700' : 'bg-slate-200 text-slate-600'} font-black">${totalPrevSubmitted}/3</span>
                         </button>
 
                         <button type="button" 
                                 onclick="switchLihatBerkasTab('sidang')" 
-                                class="py-1.5 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${currentTab === 'sidang' ? 'bg-white text-orange-600 shadow-2xs border border-slate-200/80' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'}">
+                                class="py-1.5 px-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition whitespace-nowrap cursor-pointer ${currentTab === 'sidang' ? 'bg-white text-orange-600 shadow-2xs border border-slate-200/80' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'}">
                             <i class="fa-solid fa-award text-[10px]"></i>
-                            <span>Sidang &amp; BAP</span>
-                            <span class="px-1 py-0.2 rounded-full text-[8.5px] ${currentTab === 'sidang' ? 'bg-orange-100 text-orange-700' : 'bg-slate-200 text-slate-600'} font-black">${hasSidang ? 'OK' : '-'}</span>
+                            <span>Sidang</span>
+                            <span class="px-1.5 py-0.2 rounded-full text-[8.5px] ${sidangBadgeClass} font-black">${sidangBadgeLabel}</span>
                         </button>
                     </div>
 
