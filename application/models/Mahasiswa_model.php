@@ -1365,12 +1365,11 @@ class Mahasiswa_model extends CI_Model {
         $col_status  = 'status_file_' . $file_type;
         $col_catatan = 'catatan_file_' . $file_type;
 
-        if (!$this->db->field_exists($col_status, 'thesis')) {
-            return ['status' => false, 'message' => 'Kolom ' . $col_status . ' belum ada. Jalankan migrasi SQL dulu.'];
+        // 1. Update status file (granular per-kolom jika ada, selalu update status utama)
+        $update = ['status' => $status]; // status utama selalu di-update (dibaca sbg status_pembimbing)
+        if ($this->db->field_exists($col_status, 'thesis')) {
+            $update[$col_status] = $status;
         }
-
-        // 1. Update status file
-        $update = [$col_status => $status];
         if ($this->db->field_exists($col_catatan, 'thesis')) {
             $update[$col_catatan] = $catatan;
         }
@@ -1439,19 +1438,44 @@ class Mahasiswa_model extends CI_Model {
         elseif ($tahap === 'sidang')   $required = ['sidang'];
         else                           $required = ['draft'];
 
-        // Ambil status per file (guard kolom existence)
+        // Jika tidak ada satu pun kolom status_file_* yang relevan, skip sinkronisasi
+        // agar tidak menimpa status yang baru saja diupdate.
+        $has_any_status_col = false;
+        foreach ($required as $ft) {
+            if (in_array('status_file_' . $ft, $thesis_fields)) {
+                $has_any_status_col = true;
+                break;
+            }
+        }
+        if (!$has_any_status_col) return;
+
+        // Ambil seluruh data row
         $row = $this->db->get_where('thesis', ['id' => $id_preview])->row_array();
         if (!$row) return;
 
         $has_revision  = false;
         $all_approved  = true;
+        $counted       = 0; // jumlah file yang benar-benar ada di row ini
 
         foreach ($required as $ft) {
-            $col = 'status_file_' . $ft;
-            $st  = isset($row[$col]) ? $row[$col] : 'Pending';
+            $col_status = 'status_file_' . $ft;
+            $col_file   = 'file_' . $ft;
+
+            // Jika kolom status tidak ada di DB, lewati
+            if (!in_array($col_status, $thesis_fields)) continue;
+
+            // Jika file tidak ada di row ini (row lain yang punya file itu),
+            // jangan ikutkan dalam kalkulasi — ini mencegah Approved ditimpa Pending.
+            if (empty($row[$col_file])) continue;
+
+            $counted++;
+            $st = $row[$col_status] ?? 'Pending';
             if ($st === 'Revision') $has_revision = true;
             if ($st !== 'Approved') $all_approved = false;
         }
+
+        // Jika tidak ada file sama sekali di row ini yang relevan, skip
+        if ($counted === 0) return;
 
         $new_status = 'Pending';
         if ($has_revision)         $new_status = 'Revision';
@@ -1462,6 +1486,7 @@ class Mahasiswa_model extends CI_Model {
             $this->db->where('id', $id_preview)->update('thesis', ['status' => $new_status]);
         }
     }
+
 
     /**
      * Set "Lulus Tahap" — tandai mahasiswa lulus di tahap tertentu.

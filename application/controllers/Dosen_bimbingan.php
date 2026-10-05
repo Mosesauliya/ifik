@@ -275,6 +275,12 @@ class Dosen_bimbingan extends CI_Controller {
         $upload_dir = './uploads/preview_ta/';
         if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
 
+        $jenis = $this->input->post('jenis_file'); // bimbingan, sitasi, persyaratan
+        if (!in_array($jenis, ['bimbingan', 'sitasi', 'persyaratan'])) {
+            echo json_encode(['status' => false, 'message' => 'Jenis file tidak valid.']);
+            return;
+        }
+
         $config = [
             'upload_path'   => $upload_dir,
             'allowed_types' => 'pdf|doc|docx',
@@ -283,19 +289,13 @@ class Dosen_bimbingan extends CI_Controller {
 
         $this->load->library('upload');
 
-        $config['file_name'] = 'PREVIEW3_SITASI_' . $nim . '_' . time();
-        $file_sitasi = $this->_do_upload('file_sitasi', $config);
+        $config['file_name'] = 'PREVIEW3_' . strtoupper($jenis) . '_' . $nim . '_' . time();
+        $file_name = $this->_do_upload('file_upload', $config);
 
-        $config['file_name'] = 'PREVIEW3_BIMBINGAN_' . $nim . '_' . time();
-        $file_bimbingan = $this->_do_upload('file_bimbingan', $config);
-
-        $config['file_name'] = 'PREVIEW3_PERSYARATAN_' . $nim . '_' . time();
-        $file_persyaratan = $this->_do_upload('file_persyaratan', $config);
-
-        if (!$file_sitasi || !$file_bimbingan || !$file_persyaratan) {
+        if (!$file_name) {
             echo json_encode([
                 'status'  => false,
-                'message' => 'Gagal upload. Pastikan ketiga file terisi dan format PDF/DOC/DOCX maksimal 10MB. ' . $this->upload->display_errors('', '')
+                'message' => 'Gagal upload file ' . $jenis . '. Pastikan format PDF/DOC/DOCX maksimal 10MB. ' . $this->upload->display_errors('', '')
             ]);
             return;
         }
@@ -305,10 +305,10 @@ class Dosen_bimbingan extends CI_Controller {
         $data_insert = [
             'nim'                => $nim,
             'tahap_preview'      => $tahap,
-            'file_draft'         => $file_sitasi,
-            'file_sitasi'        => $file_sitasi,
-            'file_bimbingan'     => $file_bimbingan,
-            'file_persyaratan'   => $file_persyaratan,
+            'file_draft'         => $file_name,
+            'file_sitasi'        => ($jenis === 'sitasi') ? $file_name : null,
+            'file_bimbingan'     => ($jenis === 'bimbingan') ? $file_name : null,
+            'file_persyaratan'   => ($jenis === 'persyaratan') ? $file_name : null,
             'catatan_mahasiswa'  => $catatan,
             'status_pembimbing'  => 'Pending',
             'created_at'         => date('Y-m-d H:i:s')
@@ -318,7 +318,7 @@ class Dosen_bimbingan extends CI_Controller {
 
         echo json_encode([
             'status'  => true,
-            'message' => 'Berkas Preview 3 berhasil diunggah. Menunggu review Pembimbing 1.'
+            'message' => 'Berkas ' . ucfirst($jenis) . ' Preview 3 berhasil diunggah. Menunggu review dosen.'
         ]);
     }
 
@@ -705,6 +705,18 @@ class Dosen_bimbingan extends CI_Controller {
             $riwayat_p3     = $this->Mahasiswa_model->get_riwayat_preview($nim, 'Preview 3');
             $riwayat_sidang = $this->Mahasiswa_model->get_riwayat_preview($nim, 'Sidang');
 
+            // Hitung status per-file Preview 3 untuk trigger reload di sisi mahasiswa
+            $has_app_bimbingan   = false;
+            $has_app_sitasi      = false;
+            $has_app_persyaratan = false;
+            foreach ($riwayat_p3 as $r) {
+                if (($r['status_pembimbing'] ?? '') === 'Approved') {
+                    if (!empty($r['file_bimbingan']))   $has_app_bimbingan   = true;
+                    if (!empty($r['file_sitasi']))       $has_app_sitasi      = true;
+                    if (!empty($r['file_persyaratan']))  $has_app_persyaratan = true;
+                }
+            }
+
             $data = [
                 'riwayat_p1'          => $riwayat_p1,
                 'riwayat_p2'          => $riwayat_p2,
@@ -721,6 +733,10 @@ class Dosen_bimbingan extends CI_Controller {
                 'is_p1_app'           => (bool)(!empty($riwayat_p1[0]['lulus_preview1']) && (string)$riwayat_p1[0]['lulus_preview1'] === '1'),
                 'is_p2_app'           => (bool)(!empty($riwayat_p2[0]['lulus_preview2']) && (string)$riwayat_p2[0]['lulus_preview2'] === '1'),
                 'is_p3_app'           => (bool)(!empty($riwayat_p3[0]['lulus_preview3']) && (string)$riwayat_p3[0]['lulus_preview3'] === '1'),
+                // Per-file approval flags untuk Preview 3
+                'has_app_bimbingan'   => $has_app_bimbingan,
+                'has_app_sitasi'      => $has_app_sitasi,
+                'has_app_persyaratan' => $has_app_persyaratan,
             ];
 
             $json = json_encode($data);
@@ -887,7 +903,10 @@ class Dosen_bimbingan extends CI_Controller {
 
     /** Helper: role PIC untuk suatu tahap. */
     private function _get_responsible_role($tahap) {
-        return ($tahap === 'Preview 1') ? 'p1' : 'u1';
+        // Preview 1, 2, 3 → Pembimbing 1 (p1) yang bertanggung jawab ACC
+        // Sidang → Penguji 1 (u1) sebagai PIC
+        if ($tahap === 'Sidang') return 'u1';
+        return 'p1';
     }
 
     /** Helper: cek apakah user yang login = PIC untuk mahasiswa ini di tahap tsb. */
