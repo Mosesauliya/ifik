@@ -282,33 +282,52 @@ class Login extends CI_Controller {
 
 		$user = $this->User_model->get_by_email($email);
 
-		if ($user && $user->status === 'active') {
-			// Generate secure 32-character random token
-			$token = bin2hex(random_bytes(16));
-			$this->User_model->set_reset_token($email, $token);
+		if (!$user) {
+			$this->session->set_flashdata('error', 'Alamat email "' . htmlspecialchars($email) . '" tidak ditemukan atau belum terdaftar di sistem.');
+			redirect('login/forgot_password');
+			return;
+		}
 
-			// Build secure reset URL
-			$resetLink = base_url('login/reset_password?token=' . $token . '&email=' . urlencode($email));
+		if ($user->status !== 'active') {
+			$this->session->set_flashdata('error', 'Akun dengan email "' . htmlspecialchars($email) . '" berstatus non-aktif. Silakan hubungi Administrator.');
+			redirect('login/forgot_password');
+			return;
+		}
 
-			// Load CodeIgniter Email library
-			$this->load->library('email');
-			$this->email->clear(TRUE);
-			$this->email->from('apgchannel11@gmail.com', 'IFIK Labs Portal — Telkom University');
-			$this->email->to($email);
-			$this->email->subject('Permintaan Reset Password Akun — IFIK Labs Portal');
-
-			$htmlBody = $this->_build_reset_email_template($user->name, $resetLink);
-			$this->email->message($htmlBody);
-
-			if ($this->email->send()) {
-				$this->session->set_flashdata('success', 'Tautan pemulihan kata sandi telah berhasil dikirimkan ke ' . htmlspecialchars($email) . '. Silakan periksa Inbox atau folder Spam Anda.');
+		// Anti-Spam / Rate Limit Protection (Cooldown 60 detik, Max 3x per 15 menit)
+		$rateLimit = $this->User_model->check_reset_rate_limit($email, 60, 3, 900);
+		if ($rateLimit['limited']) {
+			if ($rateLimit['reason'] === 'cooldown') {
+				$this->session->set_flashdata('error', 'Mohon tunggu ' . $rateLimit['remaining'] . ' detik sebelum meminta tautan pemulihan kata sandi kembali.');
 			} else {
-				log_message('error', 'Gagal mengirim email reset password: ' . $this->email->print_debugger(['headers']));
-				$this->session->set_flashdata('error', 'Gagal mengirim email pemulihan. Silakan periksa koneksi internet Anda atau coba beberapa saat lagi.');
+				$this->session->set_flashdata('error', 'Terlalu banyak permintaan reset password untuk email ini. Harap tunggu beberapa saat sebelum mencoba kembali.');
 			}
+			redirect('login/forgot_password');
+			return;
+		}
+
+		// Generate secure 32-character random token
+		$token = bin2hex(random_bytes(16));
+		$this->User_model->set_reset_token($email, $token);
+
+		// Build secure reset URL
+		$resetLink = base_url('login/reset_password?token=' . $token . '&email=' . urlencode($email));
+
+		// Load CodeIgniter Email library
+		$this->load->library('email');
+		$this->email->clear(TRUE);
+		$this->email->from('apgchannel11@gmail.com', 'IFIK Labs Portal — Telkom University');
+		$this->email->to($email);
+		$this->email->subject('Permintaan Reset Password Akun — IFIK Labs Portal');
+
+		$htmlBody = $this->_build_reset_email_template($user->name, $resetLink);
+		$this->email->message($htmlBody);
+
+		if ($this->email->send()) {
+			$this->session->set_flashdata('success', 'Tautan pemulihan kata sandi telah berhasil dikirimkan ke ' . htmlspecialchars($email) . ' (berlaku selama 15 menit). Silakan periksa Inbox atau folder Spam Anda.');
 		} else {
-			// Friendly feedback for unregistered/inactive accounts
-			$this->session->set_flashdata('success', 'Jika email ' . htmlspecialchars($email) . ' terdaftar di sistem, tautan pemulihan kata sandi telah dikirimkan ke kotak masuk Anda.');
+			log_message('error', 'Gagal mengirim email reset password: ' . $this->email->print_debugger(['headers']));
+			$this->session->set_flashdata('error', 'Gagal mengirim email pemulihan. Silakan periksa koneksi internet Anda atau coba beberapa saat lagi.');
 		}
 
 		redirect('login/forgot_password');
@@ -435,7 +454,7 @@ class Login extends CI_Controller {
 									</p>
 									<hr style="border:none; border-top:1px solid #fed7aa; margin:24px 0;">
 									<p style="font-size:12px; color:#9a3412; line-height:1.5; margin:0;">
-										<strong>⚠️ Catatan Keamanan:</strong> Tautan ini hanya berlaku untuk Anda. Jika Anda tidak pernah meminta perubahan kata sandi, abaikan email ini dan akun Anda akan tetap aman.
+										<strong>⚠️ Catatan Keamanan:</strong> Tautan ini bersifat rahasia dan hanya berlaku selama <strong>15 menit</strong>. Jika Anda tidak pernah meminta perubahan kata sandi, abaikan email ini dan akun Anda akan tetap aman.
 									</p>
 								</td>
 							</tr>

@@ -1642,8 +1642,8 @@
             currentPage: 1,
             pageSize: 10,
             emailTemplate: {
-                subject: '[IFIK Telkom University] Token Akses Portal Akun Anda: {TOKEN}',
-                body: 'Halo {NAMA},\n\nAkun portal IFIK Telkom University Anda telah didaftarkan sebagai {ROLE}.\n\nBerikut adalah Kode Token Akses 8-Karakter unik Anda:\n===============================\nKODE TOKEN : {TOKEN}\nNIM / NIP  : {NIM_NIP}\nEMAIL      : {EMAIL}\n===============================\n\nGunakan token ini untuk melakukan verifikasi awal dan aktivasi kata sandi akun Anda.\n\nSalam hangat,\nTim Layanan Informatika (IFIK) Telkom University'
+                subject: '[IFIK Telkom University] Tautan Aktivasi Akun Portal Anda',
+                body: 'Halo {NAMA},\n\nAkun portal IFIK Telkom University Anda telah didaftarkan sebagai {ROLE}.\n\nSilakan klik tautan/tombol aktivasi pada email ini untuk mengaktifkan akun dan membuat kata sandi baru Anda secara langsung tanpa perlu memasukkan token manual.\n\nDetail Akun:\n- NIM / NIP : {NIM_NIP}\n- Email Resmi : {EMAIL}\n- Role / Peran : {ROLE}\n\nTerima kasih,\nTim Layanan Fakultas Industri Kreatif (IFIK) Telkom University'
             }
         };
 

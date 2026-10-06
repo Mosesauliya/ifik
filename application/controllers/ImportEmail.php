@@ -339,7 +339,8 @@ class ImportEmail extends CI_Controller {
         $skippedProtectedCount = 0;
         $noTokenCount = 0;
         $skippedUnauthorizedCount = 0;
-        $templateSubject = isset($json['subject']) ? $json['subject'] : '[IFIK Telkom University] Token Akses Portal Akun Anda: {TOKEN}';
+        $templateSubject = isset($json['subject']) && !empty($json['subject']) ? $json['subject'] : '[IFIK Telkom University] Tautan Aktivasi Akun Portal Anda';
+        $templateSubject = trim(str_replace([': {TOKEN}', '{TOKEN}'], '', $templateSubject));
         $templateBody = isset($json['body']) ? $json['body'] : '';
 
         foreach ($userIds as $id) {
@@ -372,9 +373,10 @@ class ImportEmail extends CI_Controller {
             $htmlMessage = $this->_build_html_email($user, $token, $templateSubject, $templateBody);
             $subject = str_replace(
                 ['{NAMA}', '{ROLE}', '{NIM_NIP}', '{EMAIL}', '{TOKEN}'],
-                [$user->name, $this->_get_role_name_by_id($user->role_id), $user->nidn_nim, $user->email, $token],
+                [$user->name, $this->_get_role_name_by_id($user->role_id), $user->nidn_nim, $user->email, ''],
                 $templateSubject
             );
+            $subject = trim(preg_replace('/\s+/', ' ', $subject));
 
             // Send via SMTP
             $this->_send_smtp_email($user->email, $subject, $htmlMessage);
@@ -462,15 +464,17 @@ class ImportEmail extends CI_Controller {
         }
 
         $token = $user->token;
-        $templateSubject = isset($json['subject']) ? $json['subject'] : '[IFIK Telkom University] Token Akses Portal Akun Anda: {TOKEN}';
+        $templateSubject = isset($json['subject']) && !empty($json['subject']) ? $json['subject'] : '[IFIK Telkom University] Tautan Aktivasi Akun Portal Anda';
+        $templateSubject = trim(str_replace([': {TOKEN}', '{TOKEN}'], '', $templateSubject));
         $templateBody = isset($json['body']) ? $json['body'] : '';
 
         $htmlMessage = $this->_build_html_email($user, $token, $templateSubject, $templateBody);
         $subject = str_replace(
             ['{NAMA}', '{ROLE}', '{NIM_NIP}', '{EMAIL}', '{TOKEN}'],
-            [$user->name, $this->_get_role_name_by_id($user->role_id), $user->nidn_nim, $user->email, $token],
+            [$user->name, $this->_get_role_name_by_id($user->role_id), $user->nidn_nim, $user->email, ''],
             $templateSubject
         );
+        $subject = trim(preg_replace('/\s+/', ' ', $subject));
 
         $this->_send_smtp_email($user->email, $subject, $htmlMessage);
         $this->User_model->update_email_status($userId, 'terkirim');
@@ -479,7 +483,7 @@ class ImportEmail extends CI_Controller {
             ->set_content_type('application/json')
             ->set_output(json_encode([
                 'status' => 'success',
-                'message' => "Email berisi token akses berhasil dikirimkan ke {$user->email}.",
+                'message' => "Email aktivasi akun berhasil dikirimkan ke {$user->email}.",
                 'accounts' => $this->_get_formatted_users()
             ]));
     }

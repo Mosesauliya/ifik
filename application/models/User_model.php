@@ -117,44 +117,139 @@ class User_model extends CI_Model {
      * @param string $token
      * @return bool
      */
-    public function set_reset_token($email, $token)
+    /**
+     * Check if email is currently rate-limited for password reset requests
+     * @param string $email
+     * @param int $cooldownSeconds Jeda minimal antar pengajuan (default 60 detik)
+     * @param int $maxAttempts Maksimal pengajuan dalam 1 window (default 3 kali)
+     * @param int $windowSeconds Jendela waktu (default 900 detik / 15 menit)
+     * @return array [ 'limited' => bool, 'reason' => string, 'remaining' => int ]
+     */
+    public function check_reset_rate_limit($email, $cooldownSeconds = 60, $maxAttempts = 3, $windowSeconds = 900)
     {
         $email = strtolower(trim($email));
-        $this->db->where('email', $email);
-        $res = $this->db->update($this->tbl_user, [
-            'token'      => $token,
-            'updated_at' => date('Y-m-d H:i:s')
-        ]);
+        $now = time();
 
-        // Also record in user_token table if exists
         if ($this->db->table_exists('user_token')) {
-            $this->db->insert('user_token', [
-                'email' => $email,
-                'token' => $token,
-                'date_created' => time()
-            ]);
+            // Cek cooldown (permintaan terakhir)
+            $this->db->where('email', $email);
+            $this->db->order_by('id', 'DESC');
+            $this->db->limit(1);
+            $lastToken = $this->db->get('user_token')->row();
+
+            if ($lastToken) {
+                $created = is_numeric($lastToken->date_created) ? (int)$lastToken->date_created : strtotime($lastToken->date_created);
+                $elapsed = $now - $created;
+                if ($elapsed < $cooldownSeconds) {
+                    return [
+                        'limited'   => true,
+                        'reason'    => 'cooldown',
+                        'remaining' => $cooldownSeconds - $elapsed
+                    ];
+                }
+            }
+
+            // Cek jumlah permohonan dalam window waktu (15 menit)
+            $windowStart = $now - $windowSeconds;
+            $this->db->where('email', $email);
+            $this->db->where('date_created >=', $windowStart);
+            $count = $this->db->count_all_results('user_token');
+
+            if ($count >= $maxAttempts) {
+                return [
+                    'limited'   => true,
+                    'reason'    => 'max_attempts',
+                    'remaining' => $windowSeconds
+                ];
+            }
         }
-        return $res;
+
+        return ['limited' => false, 'reason' => '', 'remaining' => 0];
     }
 
     /**
-     * Verify if password reset token matches for an email
+     * Store password reset token for a user
      * @param string $email
      * @param string $token
+     * @return bool
+     */
+    public function set_reset_token($email, $token)
+    {
+        $email = strtolower(trim($email));
+
+        // Invalidate / bersihkan token lama terlebih dahulu dari user_token
+        if ($this->db->table_exists('user_token')) {
+            $this->db->where('email', $email)->delete('user_token');
+        }
+
+        $updatePayload = [];
+        if ($this->db->field_exists('token', $this->tbl_user)) {
+            $updatePayload['token'] = $token;
+        }
+        if ($this->db->field_exists('updated_at', $this->tbl_user)) {
+            $updatePayload['updated_at'] = date('Y-m-d H:i:s');
+        }
+        if (!empty($updatePayload)) {
+            $this->db->where('email', $email)->update($this->tbl_user, $updatePayload);
+        }
+
+        // Catat token baru dengan timestamp date_created di user_token
+        if ($this->db->table_exists('user_token')) {
+            $this->db->insert('user_token', [
+                'email'        => $email,
+                'token'        => $token,
+                'date_created' => time()
+            ]);
+        }
+        return true;
+    }
+
+    /**
+     * Verify if password reset token matches for an email and is NOT expired (Max 15 minutes)
+     * @param string $email
+     * @param string $token
+     * @param int $maxAgeSeconds Default 900 detik (15 menit)
      * @return object|null
      */
-    public function verify_reset_token($email, $token)
+    public function verify_reset_token($email, $token, $maxAgeSeconds = 900)
     {
+        $email = strtolower(trim($email));
         $user = $this->get_by_email($email);
-        if ($user && !empty($user->token) && $user->token === $token) {
-            return $user;
-        }
+        if (!$user) return null;
+
+        $now = time();
+
+        // 1. Verifikasi melalui tabel user_token dengan validasi masa kedaluwarsa 15 menit
         if ($this->db->table_exists('user_token')) {
-            $foundToken = $this->db->get_where('user_token', ['email' => $email, 'token' => $token])->row();
+            $this->db->where('email', $email);
+            $this->db->where('token', $token);
+            $this->db->order_by('id', 'DESC');
+            $foundToken = $this->db->get('user_token')->row();
+
             if ($foundToken) {
+                $createdTime = is_numeric($foundToken->date_created) ? (int)$foundToken->date_created : strtotime($foundToken->date_created);
+                if (($now - $createdTime) <= $maxAgeSeconds) {
+                    return $user;
+                } else {
+                    // Token sudah kedaluwarsa (> 15 menit), hapus token expired
+                    $this->db->where('id', $foundToken->id)->delete('user_token');
+                    return null;
+                }
+            }
+        }
+
+        // 2. Fallback periksa user.token + user.updated_at (maksimal 15 menit)
+        if ($this->db->field_exists('token', $this->tbl_user) && !empty($user->token) && $user->token === $token) {
+            if ($this->db->field_exists('updated_at', $this->tbl_user) && !empty($user->updated_at)) {
+                $updatedTime = strtotime($user->updated_at);
+                if (($now - $updatedTime) <= $maxAgeSeconds) {
+                    return $user;
+                }
+            } else {
                 return $user;
             }
         }
+
         return null;
     }
 
@@ -172,16 +267,20 @@ class User_model extends CI_Model {
 
         $this->db->where('id', $user->id);
         $updatePayload = [
-            'password'         => $newHashedPassword,
-            'password_changed' => 1,
-            'token'            => null
+            'password' => $newHashedPassword
         ];
+        if ($this->db->field_exists('password_changed', $this->tbl_user)) {
+            $updatePayload['password_changed'] = 1;
+        }
+        if ($this->db->field_exists('token', $this->tbl_user)) {
+            $updatePayload['token'] = null;
+        }
         if ($this->db->field_exists('updated_at', $this->tbl_user)) {
             $updatePayload['updated_at'] = date('Y-m-d H:i:s');
         }
         $res = $this->db->update($this->tbl_user, $updatePayload);
 
-        // Clear from user_token
+        // Clear all tokens for this email from user_token
         if ($this->db->table_exists('user_token')) {
             $this->db->where('email', $email);
             $this->db->delete('user_token');
