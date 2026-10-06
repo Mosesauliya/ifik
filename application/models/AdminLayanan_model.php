@@ -2292,6 +2292,42 @@ class AdminLayanan_model extends CI_Model {
                          'date_edit'       => date('Y-m-d H:i:s')
                      ]);
         }
+
+        // Auto-evaluate overall guidance status for defense registration
+        if ($this->db->table_exists('guidance')) {
+            $all_berkas = $this->get_berkas_pendaftaran_sidang($nim_clean);
+            $total_count = count($all_berkas);
+            $valid_count = 0;
+            $invalid_count = 0;
+
+            foreach ($all_berkas as $b) {
+                if ($b['status'] === 'Disetujui Admin LAA') {
+                    $valid_count++;
+                } elseif ($b['status'] === 'Revisi Admin LAA') {
+                    $invalid_count++;
+                }
+            }
+
+            if ($invalid_count > 0) {
+                $overall_status = 'Revisi Admin LAA';
+            } elseif ($total_count > 0 && $valid_count === $total_count) {
+                $overall_status = 'Disetujui Admin LAA';
+            } else {
+                $overall_status = 'Pending Verifikasi';
+            }
+
+            $this->db->group_start()
+                     ->where('id_mhs', $nim)
+                     ->or_where('id_mhs', $nim_clean)
+                     ->or_where('id_mhs', $nim_prefixed)
+                     ->or_where('id', $nim)
+                     ->or_where('id', $nim_clean)
+                     ->group_end()
+                     ->update('guidance', [
+                         'status_filesidang' => $overall_status
+                     ]);
+        }
+
         return true;
     }
 
