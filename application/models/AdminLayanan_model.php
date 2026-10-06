@@ -1519,6 +1519,9 @@ class AdminLayanan_model extends CI_Model {
             // Filter recipient Admin LAA
             $this->db->group_start();
             $this->db->where('tujuan_penerima', 'Admin LAA');
+            $this->db->or_like('tujuan_penerima', 'Admin LAA');
+            $this->db->or_like('tujuan_penerima', 'LAA');
+            $this->db->or_like('tujuan_penerima', 'Semua');
             $this->db->or_like('unit', 'Admin LAA');
             $this->db->or_like('unit', 'LAA');
             $this->db->or_like('unit', 'Layanan');

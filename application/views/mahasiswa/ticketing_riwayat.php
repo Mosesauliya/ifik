@@ -269,7 +269,7 @@
                                     <td class="py-4 px-6">
                                         <div class="flex flex-wrap items-center gap-1.5 mb-1">
                                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-orange-100 text-orange-800 border border-orange-200">
-                                                <i class="bi bi-person-check-fill"></i> <?= htmlspecialchars($t->tujuan_penerima ?? 'Laboran'); ?>
+                                                <i class="bi bi-people-fill"></i> <?= htmlspecialchars($t->tujuan_penerima ?? 'Laboran, Kaur, Admin LAA'); ?>
                                             </span>
                                             <?php if (!empty($t->unit_terkait)): ?>
                                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200" title="Unit Terkait">
@@ -441,7 +441,7 @@
                             <!-- Meta Info: Penerima, Unit Terkait & Kategori -->
                             <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
                                 <span class="inline-flex items-center gap-1 text-[11px] font-bold text-orange-800 bg-orange-100 px-2 py-0.5 rounded-md border border-orange-200">
-                                    <i class="bi bi-person-check-fill"></i> <?= htmlspecialchars($t->tujuan_penerima ?? 'Laboran'); ?>
+                                    <i class="bi bi-people-fill"></i> <?= htmlspecialchars($t->tujuan_penerima ?? 'Laboran, Kaur, Admin LAA'); ?>
                                 </span>
                                 <?php if (!empty($t->unit_terkait)): ?>
                                     <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200" title="Unit Terkait">
@@ -856,7 +856,7 @@
                         document.getElementById('modalSubjek').textContent = d.subjek;
                         document.getElementById('modalPelapor').textContent = d.nama_dosen + (d.nidn ? ' (NIM: ' + d.nidn + ')' : '');
                         const elPenerima = document.getElementById('modalPenerima');
-                        if (elPenerima) elPenerima.textContent = d.tujuan_penerima || 'Laboran';
+                        if (elPenerima) elPenerima.textContent = d.tujuan_penerima || 'Laboran, Kaur, Admin LAA';
                         document.getElementById('modalUnit').textContent = d.unit_terkait || d.unit_tujuan || 'Unit Terkait';
                         document.getElementById('modalKategori').textContent = d.kategori;
                         document.getElementById('modalPrioritas').textContent = d.prioritas;

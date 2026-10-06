@@ -1559,7 +1559,7 @@ class Mahasiswa extends CI_Controller {
         $namaLengkap = trim($this->input->post('nama_lengkap', true)) ?: $namaDefault;
         $email       = $this->session->userdata('email') ?: ($mhs['email'] ?? '');
 
-        $tujuan_penerima  = trim($this->input->post('tujuan_penerima', true));
+        $tujuan_penerima  = trim($this->input->post('tujuan_penerima', true)) ?: 'Laboran, Kaur, Admin LAA';
         $unit_terkait     = trim($this->input->post('unit_terkait', true)) ?: (trim($this->input->post('unit_tujuan', true)) ?: 'Layanan Umum');
         $kategori         = trim($this->input->post('kategori', true));
         $kategori_lainnya = trim($this->input->post('kategori_lainnya', true));

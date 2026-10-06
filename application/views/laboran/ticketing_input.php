@@ -180,57 +180,35 @@
                     <p class="text-xs text-slate-400 mt-1.5">Nama petugas laboran yang mengajukan tiket kendala ini.</p>
                 </div>
 
-                <!-- 2. Ditujukan Kepada (Tujuan Penerima Tiket) -->
-                <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2">
-                        2. Ditujukan Kepada (Tujuan Penerima Tiket) <span class="text-rose-500">*</span>
-                    </label>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="penerimaGroup">
-                        
-                        <!-- 1. Laboran -->
-                        <label id="card_penerima_Laboran" onclick="selectPenerima('Laboran')" class="relative flex items-start gap-3.5 p-3.5 rounded-2xl border border-slate-200 bg-white hover:border-orange-300 hover:bg-orange-50/20 shadow-2xs cursor-pointer transition-all select-none">
-                            <input type="radio" name="tujuan_penerima" id="radio_penerima_Laboran" value="Laboran" onchange="updatePenerimaUI(this.value)" class="sr-only">
-                            <div class="penerima-icon-box w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center text-base shrink-0 transition-all">
-                                <i class="bi bi-pc-display-horizontal"></i>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <span class="penerima-title text-xs font-semibold text-slate-700 block">Laboran</span>
-                                <span class="text-[11px] text-slate-400 leading-tight block mt-0.5">Fasilitas Lab, Hardware/Software, Jaringan & Sarpras</span>
-                            </div>
-                        </label>
-
-                        <!-- 2. Kaur (Kepala Urusan) -->
-                        <label id="card_penerima_Kaur" onclick="selectPenerima('Kaur')" class="relative flex items-start gap-3.5 p-3.5 rounded-2xl border border-slate-200 bg-white hover:border-orange-300 hover:bg-orange-50/20 shadow-2xs cursor-pointer transition-all select-none">
-                            <input type="radio" name="tujuan_penerima" id="radio_penerima_Kaur" value="Kaur" onchange="updatePenerimaUI(this.value)" class="sr-only">
-                            <div class="penerima-icon-box w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center text-base shrink-0 transition-all">
-                                <i class="bi bi-person-badge"></i>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <span class="penerima-title text-xs font-semibold text-slate-700 block">Kaur (Kepala Urusan)</span>
-                                <span class="text-[11px] text-slate-400 leading-tight block mt-0.5">Kepala Urusan, Kebijakan Akademik, Perkuliahan & Pengesahan</span>
-                            </div>
-                        </label>
-
-                        <!-- 3. Admin LAA -->
-                        <label id="card_penerima_Admin_LAA" onclick="selectPenerima('Admin LAA')" class="relative flex items-start gap-3.5 p-3.5 rounded-2xl border border-slate-200 bg-white hover:border-orange-300 hover:bg-orange-50/20 shadow-2xs cursor-pointer transition-all select-none">
-                            <input type="radio" name="tujuan_penerima" id="radio_penerima_Admin_LAA" value="Admin LAA" onchange="updatePenerimaUI(this.value)" class="sr-only">
-                            <div class="penerima-icon-box w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center text-base shrink-0 transition-all">
-                                <i class="bi bi-building-check"></i>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <span class="penerima-title text-xs font-semibold text-slate-700 block">Admin LAA</span>
-                                <span class="text-[11px] text-slate-400 leading-tight block mt-0.5">Layanan Akademik, Surat Pengantar, Ijazah, Transkrip & KTM</span>
-                            </div>
-                        </label>
-
+                <!-- Tujuan Penerima Tiket Otomatis ke 3 Pihak -->
+                <input type="hidden" name="tujuan_penerima" value="Laboran, Kaur, Admin LAA">
+                <div class="p-4 rounded-2xl bg-gradient-to-r from-orange-50/80 via-amber-50/50 to-orange-50/30 border border-orange-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center text-base shrink-0 shadow-xs shadow-orange-500/20">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-slate-800">Tiket Otomatis Diteruskan ke 3 Pihak Penerima</div>
+                            <div class="text-[11px] text-slate-500 mt-0.5">Tiket Anda langsung dipantau & ditindaklanjuti bersama oleh <span class="font-semibold text-orange-700">Laboran</span>, <span class="font-semibold text-orange-700">Kaur</span>, dan <span class="font-semibold text-orange-700">Admin LAA</span>.</div>
+                        </div>
                     </div>
-                    <p class="text-xs text-slate-400 mt-1.5">Pilih pihak penerima yang berwenang menindaklanjuti dan merespon kendala ini.</p>
+                    <div class="flex items-center gap-1.5 shrink-0 pl-12 sm:pl-0">
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-white text-orange-700 border border-orange-200 shadow-2xs">
+                            <i class="bi bi-pc-display-horizontal text-xs"></i> Laboran
+                        </span>
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-white text-orange-700 border border-orange-200 shadow-2xs">
+                            <i class="bi bi-person-badge text-xs"></i> Kaur
+                        </span>
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-white text-orange-700 border border-orange-200 shadow-2xs">
+                            <i class="bi bi-building-check text-xs"></i> Admin LAA
+                        </span>
+                    </div>
                 </div>
 
-                <!-- 3. Unit / Lingkup Terkait (Dropdown Topik Pembahasan) -->
+                <!-- 2. Unit / Lingkup Terkait (Dropdown Topik Pembahasan) -->
                 <div>
                     <label for="unit_terkait" class="block text-sm font-bold text-slate-700 mb-2">
-                        3. Unit / Lingkup Terkait <span class="text-rose-500">*</span>
+                        2. Unit / Lingkup Terkait <span class="text-rose-500">*</span>
                     </label>
                     <div class="relative">
                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
@@ -249,10 +227,10 @@
                     <p class="text-xs text-slate-400 mt-1.5">Pilih unit kerja atau departemen yang menjadi topik pembahasan persoalan.</p>
                 </div>
 
-                <!-- 4. Kategori Kendala (Dropdown Dinamis) -->
+                <!-- 3. Kategori Kendala (Dropdown Dinamis) -->
                 <div>
                     <label for="kategori" class="block text-sm font-bold text-slate-700 mb-2">
-                        4. Kategori Kendala <span class="text-rose-500">*</span>
+                        3. Kategori Kendala <span class="text-rose-500">*</span>
                     </label>
                     <div class="relative">
                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
@@ -284,13 +262,13 @@
                                class="w-full pl-11 pr-4 py-3 rounded-xl bg-orange-50/40 border border-orange-200 focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 text-sm font-semibold text-slate-800 placeholder-slate-400 transition-all outline-hidden">
                     </div>
                 </div>
-                <!-- 5 & 6. Grid: Prioritas & Subjek (Berurutan No 5 & 6) -->
+                <!-- 4 & 5. Grid: Prioritas & Subjek -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                     
-                    <!-- 5. Tingkat Prioritas -->
+                    <!-- 4. Tingkat Prioritas -->
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2">
-                            5. Tingkat Prioritas <span class="text-rose-500">*</span>
+                            4. Tingkat Prioritas <span class="text-rose-500">*</span>
                         </label>
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5" id="prioritasGroup">
                             
@@ -329,10 +307,10 @@
                         </div>
                     </div>
 
-                    <!-- 6. Subjek Kendala -->
+                    <!-- 5. Subjek Kendala -->
                     <div>
                         <label for="subjek" class="block text-sm font-bold text-slate-700 mb-2">
-                            6. Subjek / Ringkasan Kendala <span class="text-rose-500">*</span>
+                            5. Subjek / Ringkasan Kendala <span class="text-rose-500">*</span>
                         </label>
                         <div class="relative">
                             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
@@ -347,10 +325,10 @@
 
                 </div>
 
-                <!-- 7. Deskripsi Rinci (TinyMCE) -->
+                <!-- 6. Deskripsi Rinci (TinyMCE) -->
                 <div class="pt-2">
                     <label for="deskripsi" class="block text-sm font-bold text-slate-700 mb-2">
-                        7. Deskripsi Kendala Rinci <span class="text-rose-500">*</span>
+                        6. Deskripsi Kendala Rinci <span class="text-rose-500">*</span>
                     </label>
                     <textarea id="deskripsi" name="deskripsi" rows="6"
                               placeholder="Tuliskan rincian kendala Anda di sini..."></textarea>
@@ -845,13 +823,6 @@
                     }
                 }
 
-                // 1b. Validate tujuan_penerima
-                const selectedPenerima = document.querySelector('input[name="tujuan_penerima"]:checked');
-                if (!selectedPenerima || !selectedPenerima.value) {
-                    alert('Harap pilih tujuan penerima tiket terlebih dahulu.');
-                    document.getElementById('penerimaGroup').scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    return false;
-                }
 
                 // 2. Validate standard fields
                 if (!this.checkValidity()) {

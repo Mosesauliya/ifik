@@ -26,6 +26,8 @@ class LaboranTicketing extends CI_Controller {
         if ($this->table === 'tb_ticketing') {
             $this->db->group_start();
             $this->db->where('tujuan_penerima', 'Laboran');
+            $this->db->or_like('tujuan_penerima', 'Laboran');
+            $this->db->or_like('tujuan_penerima', 'Semua');
             $this->db->or_like('unit', 'Laboran');
             $this->db->or_like('unit', 'Laboratorium');
             $this->db->or_like('unit', 'Lab');
@@ -37,6 +39,9 @@ class LaboranTicketing extends CI_Controller {
             $this->db->or_like('unit_tujuan', 'Laboratorium');
             $this->db->or_like('unit_tujuan', 'Lab');
             $this->db->or_like('unit_tujuan', 'Sarpras');
+            $this->db->or_like('unit_tujuan', 'Semua');
+            $this->db->or_like('tujuan_penerima', 'Laboran');
+            $this->db->or_like('tujuan_penerima', 'Semua');
             $this->db->group_end();
         }
     }
@@ -420,7 +425,7 @@ class LaboranTicketing extends CI_Controller {
         $nidn        = $this->session->userdata('nidn_nim') ?: $this->session->userdata('nim');
         $namaLengkap = trim($this->input->post('nama_lengkap', true)) ?: ($this->session->userdata('name') ?: 'Laboran');
 
-        $tujuan_penerima  = trim($this->input->post('tujuan_penerima', true));
+        $tujuan_penerima  = trim($this->input->post('tujuan_penerima', true)) ?: 'Laboran, Kaur, Admin LAA';
         $unit_terkait     = trim($this->input->post('unit_terkait', true)) ?: (trim($this->input->post('unit_tujuan', true)) ?: 'Laboratorium (Fasilitas & Lab)');
         $kategori         = trim($this->input->post('kategori', true));
         $kategori_lainnya = trim($this->input->post('kategori_lainnya', true));

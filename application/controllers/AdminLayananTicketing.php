@@ -40,6 +40,13 @@ class AdminLayananTicketing extends CI_Controller {
                 $this->db->group_start();
                 $this->db->like('unit_tujuan', 'LAA');
                 $this->db->or_like('unit_tujuan', 'Layanan Akademik');
+                $this->db->or_like('unit_tujuan', 'Semua');
+                $this->db->or_like('unit_tujuan', 'Laboran, Kaur, Admin LAA');
+                if ($this->db->field_exists('tujuan_penerima', $this->table)) {
+                    $this->db->or_like('tujuan_penerima', 'Admin LAA');
+                    $this->db->or_like('tujuan_penerima', 'LAA');
+                    $this->db->or_like('tujuan_penerima', 'Semua');
+                }
                 $this->db->group_end();
             }
 

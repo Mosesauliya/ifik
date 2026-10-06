@@ -89,6 +89,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
             $defaultNavItems = [
                 ['category' => 'Operasional Laboratorium'],
                 ['heading' => 'Approval Peminjaman', 'href' => site_url('laboran/booking'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Kelola Master Barang', 'href' => site_url('admin/barang'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
                 ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
                 ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
                 ['heading' => 'Tanda Tangan Digital', 'href' => site_url('laboran/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
@@ -111,6 +112,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
             $defaultNavItems = [
                 ['category' => 'Persetujuan Resmi & Lab'],
                 ['heading' => 'Approval Peminjaman', 'href' => site_url('kaur/approval'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Kelola Master Barang', 'href' => site_url('admin/barang'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
                 ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
                 ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
                 ['heading' => 'Tanda Tangan Digital', 'href' => site_url('kaur/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
@@ -183,6 +185,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['category' => 'Pusat Kendali'],
                 ['heading' => 'Dashboard Control', 'href' => site_url('adminheader'), 'icon_3d' => 'assets/images/icons_3d/home.png'],
                 ['heading' => 'Approval Peminjaman', 'href' => site_url('kelolabooking'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Kelola Master Barang', 'href' => site_url('admin/barang'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
                 ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
                 ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
 
@@ -191,8 +194,8 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
 
                 ['category' => 'Manajemen Sistem & Fasilitas', 'has_divider' => true],
                 ['heading' => 'Kelola Fasilitas & Ruangan', 'href' => site_url('kelolaruangan'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
-                ['heading' => 'Pengaturan Header', 'href' => site_url('adminheader'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
-                ['heading' => 'Pengaturan Footer', 'href' => site_url('adminfooter'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
+                ['heading' => 'Pengaturan Header', 'href' => site_url('adminheader'), 'icon_3d' => 'assets/images/icons_3d/header_setting.png'],
+                ['heading' => 'Pengaturan Footer', 'href' => site_url('adminfooter'), 'icon_3d' => 'assets/images/icons_3d/footer_setting.png'],
                 ['heading' => 'Pengaturan Unit Ticketing', 'href' => site_url('admin#unit-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
                 ['heading' => 'Respon Ticketing Lab', 'href' => site_url('laboran/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
                 ['heading' => 'Riwayat Log History', 'href' => site_url('admin/log_history'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
@@ -235,7 +238,6 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['heading' => 'Tanda Tangan Digital', 'href' => site_url('dosen/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
 
                 ['category' => 'Layanan & Bantuan', 'has_divider' => true],
-                ['heading' => 'Respon Ticketing', 'href' => site_url('dosen/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
                 ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
                 ['heading' => 'Riwayat Ticketing', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
 
