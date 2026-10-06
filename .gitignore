@@ -55,5 +55,8 @@ cookie*.txt
 /components/
 /lib/
 /.agents/
+backend-pembimbing/
+scratch/
+
 
 
