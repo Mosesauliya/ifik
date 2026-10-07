@@ -278,13 +278,3 @@
     .loan-progress__step { grid-template-columns: 24px minmax(0, 1fr); padding: .55rem; }
     .loan-progress__step-number { width: 24px; height: 24px; }
 }
-
-/* loan-progress.css */
-.loan-progress-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: .35rem .75rem;
-    font-size: .8rem;
-    font-weight: 600;
-    border-radius: 9999px;
-}
