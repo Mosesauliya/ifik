@@ -442,6 +442,28 @@ $route['api/help/send'] = 'LaboranHelp/send_user_message_ajax';
 $route['api/help/messages/(:num)'] = 'LaboranHelp/get_messages_ajax/$1';
 $route['api/help/my-chats'] = 'LaboranHelp/my_conversations_ajax';
 
+// Peminjaman Barang / Laboran Scanner & Serah Terima Routes (Linux & NAS Case-Sensitive Compatibility)
+$route['peminjamanbarang']                              = 'PeminjamanBarang/index';
+$route['peminjamanbarang/scanner']                      = 'PeminjamanBarang/scanner';
+$route['peminjamanbarang/serah_terima/(:any)']          = 'PeminjamanBarang/serah_terima/$1';
+$route['peminjamanbarang/proses_serah/(:any)']          = 'PeminjamanBarang/proses_serah/$1';
+$route['peminjamanbarang/validasi_pengembalian/(:any)'] = 'PeminjamanBarang/validasi_pengembalian/$1';
+$route['peminjamanbarang/kembalikan/(:any)']            = 'PeminjamanBarang/kembalikan/$1';
+$route['peminjamanbarang/(:any)']                       = 'PeminjamanBarang/$1';
+$route['peminjamanbarang/(:any)/(:any)']                = 'PeminjamanBarang/$1/$2';
+
+// Aliases for compatibility
+$route['peminjaman_barang/scanner']                     = 'PeminjamanBarang/scanner';
+$route['peminjaman_barang/serah_terima/(:any)']         = 'PeminjamanBarang/serah_terima/$1';
+$route['peminjaman_barang/proses_serah/(:any)']         = 'PeminjamanBarang/proses_serah/$1';
+$route['peminjaman_barang/validasi_pengembalian/(:any)']= 'PeminjamanBarang/validasi_pengembalian/$1';
+$route['peminjaman_barang/kembalikan/(:any)']           = 'PeminjamanBarang/kembalikan/$1';
+$route['peminjaman-barang/scanner']                     = 'PeminjamanBarang/scanner';
+$route['peminjaman-barang/serah_terima/(:any)']         = 'PeminjamanBarang/serah_terima/$1';
+$route['peminjaman-barang/proses_serah/(:any)']         = 'PeminjamanBarang/proses_serah/$1';
+$route['peminjaman-barang/validasi_pengembalian/(:any)']= 'PeminjamanBarang/validasi_pengembalian/$1';
+$route['peminjaman-barang/kembalikan/(:any)']           = 'PeminjamanBarang/kembalikan/$1';
+
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
 
