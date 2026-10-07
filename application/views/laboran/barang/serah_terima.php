@@ -1,6 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
-$boleh_serah = !empty($qr_valid) && ($peminjaman->status ?? '') === 'Disetujui (Menunggu Pengambilan)';
+$boleh_serah = !empty($qr_valid);
 ?>
 <!DOCTYPE html>
 <html lang="id">

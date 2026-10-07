@@ -47,8 +47,12 @@ class PeminjamanBarang extends CI_Controller {
 
         $data['title'] = 'Serah Terima Barang';
         $data['peminjaman'] = $peminjaman;
-        $data['qr_payload'] = $this->Peminjaman_model->get_qr_payload($group_id);
-        $data['qr_valid'] = in_array(($peminjaman->status ?? ''), ['Disetujui (Menunggu Pengambilan)', 'Menunggu Verifikasi Laboran'], true) || (int) ($peminjaman->qr_locked ?? 0) === 1;
+        $data['qr_valid'] = in_array(($peminjaman->status ?? ''), [
+            'Disetujui (Menunggu Pengambilan)',
+            'Menunggu Verifikasi Laboran',
+            'Menunggu Pengecekan Laboran',
+            'Menunggu Persetujuan'
+        ], true) || (int) ($peminjaman->qr_locked ?? 0) === 1;
         $data['qr_message'] = $this->qr_message_for($peminjaman);
         $this->load->view('laboran/barang/serah_terima', $data);
     }
