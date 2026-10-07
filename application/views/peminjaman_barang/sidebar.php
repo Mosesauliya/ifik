@@ -11,7 +11,7 @@ $is_laboran_or_admin = in_array($session_role_id, [1, 21]);
 
 $barangNavItems = [
     [
-        'heading' => 'Katalog Alat Studio',
+        'heading' => 'Katalog Alat',
         'href'    => site_url('peminjaman_barang'),
         'icon_3d' => 'assets/images/icons_3d/ruangan.png'
     ],
@@ -36,12 +36,6 @@ $barangNavItems[] = [
     'heading' => 'Dashboard Utama',
     'href'    => site_url('dashboard'),
     'icon_3d' => 'assets/images/icons_3d/home.png'
-];
-
-$barangNavItems[] = [
-    'heading' => 'Kalender Jadwal',
-    'href'    => site_url('kalender'),
-    'icon_3d' => 'assets/images/icons_3d/kalender.png'
 ];
 
 $barangNavItems[] = [
