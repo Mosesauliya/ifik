@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * @var array $barang
  */
@@ -33,7 +33,7 @@ foreach ($catalog_page_size_query as $query_name => $query_value) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Katalog Alat Studio - SCM FIK</title>
+    <title>Katalog Alat &amp; Barang Studio - IFIK</title>
     
     <!-- Bootstrap 5 & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -44,10 +44,10 @@ foreach ($catalog_page_size_query as $query_name => $query_value) {
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
         body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f8f9fa;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #fbf7f1;
         }
 
         /* CUSTOM COLOR PALETTE FIK (Konsisten dengan Dashboard) */
@@ -532,74 +532,47 @@ foreach ($catalog_page_size_query as $query_name => $query_value) {
 </head>
 <body>
 
-    <!-- NAVBAR (Sama dengan Dashboard) -->
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top shadow-sm">
-        <div class="container-fluid px-4 px-lg-5">
-            <a class="navbar-brand fw-bold d-flex align-items-center" href="<?= base_url('index.php/dashboard') ?>">
-                <img src="<?= base_url('assets/logo/logo.webp'); ?>" alt="Logo FIK" height="40" class="me-2">
-            </a>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?= base_url('index.php/dashboard') ?>">Beranda</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="<?= base_url('index.php/peminjaman_barang') ?>">Total Barang</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="alert('Silakan pilih alat studio yang ingin dipinjam terlebih dahulu di menu Total Barang.'); return false;">Ajukan Peminjaman</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?= base_url('index.php/peminjaman_barang/riwayat') ?>">Riwayat</a>
-                    </li>
-                </ul>
-            </div>
-            
-            <div class="d-none d-lg-flex align-items-center gap-2">
-                <div class="dropdown">
-                    <button class="btn btn-outline-secondary rounded-circle notif-bell position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifikasi">
-                        <i class="bi bi-bell"></i>
-                        <?php if ($notif_count > 0): ?><span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"><?= $notif_count ?></span><?php endif; ?>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-end shadow border-0 p-2 notif-menu">
-                        <div class="fw-bold px-2 py-1">Notifikasi</div>
-                        <?php if (empty($notif_items)): ?>
-                            <div class="small text-muted px-2 py-3">Belum ada notifikasi.</div>
-                            <?php else: foreach ($notif_items as $n): ?>
-                            <a class="dropdown-item rounded-3 py-2" href="<?= html_escape($n->link ?: '#') ?>">
-                                <div class="fw-semibold small"><?= html_escape($n->judul) ?></div>
-                                <div class="small text-muted text-wrap"><?= html_escape($n->pesan) ?></div>
-                            </a>
-                        <?php endforeach; endif; ?>
-                    </div>
+    <!-- Dedicated Sidebar Component (Pola Admin LAA) -->
+    <?php $this->load->view('peminjaman_barang/sidebar'); ?>
+
+    <!-- Sub Navigation Page Title Bar (Admin LAA style) -->
+    <div class="glass-header px-4 px-md-5 py-3 mb-4 bg-white border-bottom shadow-xs sticky-top" style="z-index: 100;">
+        <div class="container-fluid d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-3 d-flex align-items-center justify-content-center shadow-xs" style="width: 44px; height: 44px; background: rgba(234, 91, 26, 0.12); color: #ea5b1a; font-size: 1.4rem;">
+                    <i class="bi bi-box-seam"></i>
                 </div>
+                <div>
+                    <div class="d-flex align-items-center gap-2">
+                        <h1 class="h5 fw-bold text-dark mb-0 tracking-tight">Katalog Peminjaman Alat &amp; Barang</h1>
+                        <span class="badge rounded-pill" style="background: rgba(234, 91, 26, 0.12); color: #ea5b1a; font-weight: 700; font-size: 11px;">Studio &amp; Lab FIK</span>
+                    </div>
+                    <p class="text-muted small mb-0" style="font-size: 12px;">Pilih dan ajukan peminjaman peralatan laboratorium &amp; studio Fakultas Industri Kreatif.</p>
+                </div>
+            </div>
+
+            <!-- Profile & Quick Action -->
+            <div class="d-flex align-items-center gap-2 ms-auto">
+                <a href="<?= site_url('peminjaman_barang/riwayat'); ?>" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-xs">
+                    <i class="bi bi-clock-history text-orange-600"></i>
+                    <span>Riwayat Peminjaman</span>
+                </a>
                 <div class="dropdown">
-                    <button class="btn btn-user dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        <i class="bi bi-person-circle me-1"></i> <?= $display_nama; ?>
+                    <button class="btn btn-light btn-sm rounded-pill px-3 py-1.5 border dropdown-toggle fw-semibold d-inline-flex align-items-center gap-1.5" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle text-orange-600"></i>
+                        <span><?= html_escape($display_nama); ?></span>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg" style="border-radius: 12px; mt-2">
-                        <li>
-                            <div class="px-3 py-2">
-                                <span class="d-block text-muted small">ID/NIM:</span>
-                                <span class="fw-bold"><?= $this->session->userdata('username'); ?></span>
-                            </div>
+                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-3 mt-1">
+                        <li class="px-3 py-2 border-bottom">
+                            <span class="d-block text-muted small" style="font-size: 11px;">Login Sebagai:</span>
+                            <span class="fw-bold text-dark small"><?= html_escape($this->session->userdata('username') ?: $display_nama); ?></span>
                         </li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger fw-bold" href="<?= base_url('index.php/auth/logout') ?>"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                        <li><a class="dropdown-item small py-2" href="<?= site_url('peminjaman_barang/riwayat') ?>"><i class="bi bi-clock-history me-2 text-primary"></i>Riwayat Pinjam</a></li>
+                        <li><hr class="dropdown-divider my-1"></li>
+                        <li><a class="dropdown-item small py-2 text-danger fw-bold" href="<?= site_url('login/logout') ?>"><i class="bi bi-box-arrow-right me-2"></i>Keluar</a></li>
                     </ul>
                 </div>
             </div>
-        </div>
-    </nav>
-
-    <!-- HEADER KATALOG -->
-    <div class="catalog-header">
-        <div class="container text-center" data-aos="fade-down" data-aos-duration="800">
-            <h2 class="fw-bolder mb-0" style="letter-spacing: 1px;">KATALOG <span class="text-fik-orange">ALAT STUDIO</span></h2>
         </div>
     </div>
 
