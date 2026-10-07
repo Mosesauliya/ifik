@@ -532,4 +532,66 @@ class Kelolabarang extends CI_Controller {
         $this->session->set_flashdata('success', 'Data barang berhasil dihapus!');
         redirect('admin/barang');
     }
+
+    /**
+     * Hapus banyak barang sekaligus (Multiple Select / Bulk Delete)
+     * Hanya aksi delete yang diperbolehkan
+     */
+    public function bulk_delete() {
+        $is_ajax = $this->input->is_ajax_request();
+        $raw_ids = $this->input->post('ids');
+        if (empty($raw_ids)) {
+            $raw_ids = $this->input->post('selected_ids');
+        }
+
+        if (is_string($raw_ids)) {
+            $decoded = json_decode($raw_ids, true);
+            if (is_array($decoded)) {
+                $raw_ids = $decoded;
+            } else {
+                $raw_ids = explode(',', $raw_ids);
+            }
+        }
+
+        $ids = array_values(array_filter(array_map('intval', (array) $raw_ids)));
+
+        if (empty($ids)) {
+            if ($is_ajax) {
+                return $this->output->set_content_type('application/json')->set_output(json_encode([
+                    'status' => 'error',
+                    'message' => 'Tidak ada barang yang dipilih untuk dihapus.'
+                ]));
+            }
+            $this->session->set_flashdata('error', 'Tidak ada barang yang dipilih untuk dihapus.');
+            redirect('admin/barang');
+            return;
+        }
+
+        // Ambil info aset untuk membersihkan media gambar/3D di folder upload
+        $assets = $this->db->where_in('id_aset', $ids)->get('aset')->result();
+        foreach ($assets as $a) {
+            if (!empty($a->gambar)) {
+                $this->remove_asset_image_file($a->gambar);
+            }
+            foreach ($this->read_gallery_filenames($a->foto ?? '') as $filename) {
+                $this->remove_asset_image_file($filename);
+            }
+        }
+
+        // Hapus data secara permanen dari database
+        $this->Barang_model->delete_multiple($ids);
+
+        $count = count($ids);
+        $message = "Sebanyak {$count} barang berhasil dihapus secara permanen dari Master Data!";
+
+        if ($is_ajax) {
+            return $this->output->set_content_type('application/json')->set_output(json_encode([
+                'status' => 'success',
+                'message' => $message
+            ]));
+        }
+
+        $this->session->set_flashdata('success', $message);
+        redirect('admin/barang');
+    }
 }
