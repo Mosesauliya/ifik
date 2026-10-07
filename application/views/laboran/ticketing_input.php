@@ -53,6 +53,34 @@
             border-color: #ea580c !important;
             box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.1) !important;
         }
+
+        .page-wrapper-for-sidebar {
+            width: 100%;
+            min-width: 0;
+            min-height: 100vh;
+            transition: margin-left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+            box-sizing: border-box;
+        }
+
+        @media (min-width: 1024px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 270px;
+                width: calc(100% - 270px);
+            }
+
+            body.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 1023.98px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding-top: 48px;
+            }
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 via-orange-50/20 to-slate-100 min-h-screen text-slate-800 antialiased">
@@ -60,8 +88,9 @@
     <!-- Include Curved Sidebar (Panel Laboran) -->
     <?php $this->load->view('components/curved_sidebar'); ?>
 
+    <div class="page-wrapper-for-sidebar">
     <!-- Main Content -->
-    <main class="min-h-screen p-6 sm:p-8 lg:p-10 max-w-5xl mx-auto pl-16">
+    <main class="min-h-screen p-6 sm:p-8 lg:p-10 max-w-5xl mx-auto">
         
         <!-- Header & Breadcrumb -->
         <div class="mb-8">
@@ -159,14 +188,14 @@
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="penerimaGroup">
                         
                         <!-- 1. Laboran -->
-                        <label id="card_penerima_Laboran" onclick="selectPenerima('Laboran')" class="relative flex items-start gap-3.5 p-3.5 rounded-2xl border border-orange-500 bg-orange-50/80 ring-2 ring-orange-500/20 shadow-xs cursor-pointer transition-all select-none">
-                            <input type="radio" name="tujuan_penerima" id="radio_penerima_Laboran" value="Laboran" checked onchange="updatePenerimaUI(this.value)" class="sr-only">
-                            <div class="penerima-icon-box w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center text-base shrink-0 shadow-xs">
+                        <label id="card_penerima_Laboran" onclick="selectPenerima('Laboran')" class="relative flex items-start gap-3.5 p-3.5 rounded-2xl border border-slate-200 bg-white hover:border-orange-300 hover:bg-orange-50/20 shadow-2xs cursor-pointer transition-all select-none">
+                            <input type="radio" name="tujuan_penerima" id="radio_penerima_Laboran" value="Laboran" onchange="updatePenerimaUI(this.value)" class="sr-only">
+                            <div class="penerima-icon-box w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center text-base shrink-0 transition-all">
                                 <i class="bi bi-pc-display-horizontal"></i>
                             </div>
                             <div class="flex-1 min-w-0">
-                                <span class="penerima-title text-xs font-bold text-orange-700 block">Laboran</span>
-                                <span class="text-[11px] text-slate-500 leading-tight block mt-0.5">Fasilitas Lab, Hardware/Software, Jaringan & Sarpras</span>
+                                <span class="penerima-title text-xs font-semibold text-slate-700 block">Laboran</span>
+                                <span class="text-[11px] text-slate-400 leading-tight block mt-0.5">Fasilitas Lab, Hardware/Software, Jaringan & Sarpras</span>
                             </div>
                         </label>
 
@@ -467,6 +496,7 @@
         </div>
 
     </main>
+    </div>
 
     <!-- MODAL: Progress Bar Pengiriman Tiket Kendala -->
     <div id="modalTicketingProgress" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300">
@@ -555,7 +585,19 @@
 
         function updatePenerimaUI(val) {
             const penerimaKeys = ['Laboran', 'Kaur', 'Admin_LAA', 'Dosen_Kaur'];
-            let valKey = (val || 'Laboran').replace(/\s+/g, '_');
+            if (!val) {
+                penerimaKeys.forEach(function(key) {
+                    const card = document.getElementById('card_penerima_' + key);
+                    if (!card) return;
+                    const iconBox = card.querySelector('.penerima-icon-box');
+                    const title = card.querySelector('.penerima-title');
+                    card.className = 'relative flex items-start gap-3.5 p-3.5 rounded-2xl border border-slate-200 bg-white hover:border-orange-300 hover:bg-orange-50/20 shadow-2xs cursor-pointer transition-all select-none';
+                    if (iconBox) iconBox.className = 'penerima-icon-box w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center text-base shrink-0 transition-all';
+                    if (title) title.className = 'penerima-title text-xs font-semibold text-slate-700 block';
+                });
+                return;
+            }
+            let valKey = val.replace(/\s+/g, '_');
             if (valKey === 'Dosen_Kaur') valKey = 'Kaur';
 
             penerimaKeys.forEach(function(key) {
@@ -803,6 +845,14 @@
                     }
                 }
 
+                // 1b. Validate tujuan_penerima
+                const selectedPenerima = document.querySelector('input[name="tujuan_penerima"]:checked');
+                if (!selectedPenerima || !selectedPenerima.value) {
+                    alert('Harap pilih tujuan penerima tiket terlebih dahulu.');
+                    document.getElementById('penerimaGroup').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return false;
+                }
+
                 // 2. Validate standard fields
                 if (!this.checkValidity()) {
                     this.reportValidity();
@@ -919,5 +969,8 @@
             });
         });
     </script>
+
+    <!-- Global Custom Circle Cursor -->
+    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>

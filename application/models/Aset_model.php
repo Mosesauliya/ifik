@@ -1,11 +1,9 @@
-﻿<?php
+<?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
- * Model: Aset_model
- * Mengelola data aset/barang
- * 
- * FIXED VERSION - Memperbaiki method signature yang tidak konsisten
+ * Model: Aset_model (Project IFIK)
+ * Mengelola data aset/barang laboratorium dan sinkronisasi stok peminjaman
  */
 class Aset_model extends CI_Model {
 
@@ -22,8 +20,8 @@ class Aset_model extends CI_Model {
     public function get_all_aset() {
         $this->db->select('aset.*, COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan, "#ea5b1a" AS warna, "bi-box" AS icon');
         $this->db->from($this->table);
-        $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan');
-        $this->db->order_by('aset.id_aset', 'DESC'); // Diubah agar terbaru di atas
+        $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan', 'left');
+        $this->db->order_by('aset.id_aset', 'DESC');
         return $this->db->get()->result();
     }
 
@@ -33,15 +31,13 @@ class Aset_model extends CI_Model {
     public function get_all_aset_ordered($order_by = 'id_aset', $order = 'DESC') {
         $this->db->select('aset.*, COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan, "#ea5b1a" AS warna, "bi-box" AS icon');
         $this->db->from($this->table);
-        $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan');
+        $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan', 'left');
         $this->db->order_by($order_by, $order);
         return $this->db->get()->result();
     }
 
     /**
-     * Pencarian ringan untuk combobox distribusi. Hanya aset dengan stok yang
-     * dapat didistribusikan dikirim ke browser agar halaman tetap cepat saat
-     * master data berisi ribuan record.
+     * Pencarian ringan untuk combobox distribusi.
      */
     public function search_for_distribution($keyword = '', $limit = 20) {
         $keyword = trim((string) $keyword);
@@ -62,8 +58,7 @@ class Aset_model extends CI_Model {
     }
 
     /**
-     * Pencarian ringan untuk combobox maintenance. Semua aset dapat dirawat,
-     * termasuk aset yang belum ditempatkan atau stok tersedianya sedang nol.
+     * Pencarian ringan untuk combobox maintenance.
      */
     public function search_for_maintenance($keyword = '', $limit = 20) {
         $keyword = trim((string) $keyword);
@@ -84,9 +79,6 @@ class Aset_model extends CI_Model {
 
     /**
      * Indeks ringan untuk pencarian barang pada beranda.
-     *
-     * Data lokasi tetap berupa satu baris per master aset supaya nama barang
-     * yang sama di beberapa ruangan dapat digabungkan di antarmuka beranda.
      */
     public function get_dashboard_search_index() {
         $this->db->select('
@@ -110,8 +102,6 @@ class Aset_model extends CI_Model {
 
     /**
      * Ambil barang yang sering dipinjam
-     * @param int $limit - jumlah item yang ditampilkan
-     * @param int $offset - offset untuk pagination
      */
     public function get_popular_items($limit = 10, $offset = 0) {
         $this->db->select('
@@ -119,10 +109,10 @@ class Aset_model extends CI_Model {
             COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan, 
             "#ea5b1a" AS warna, 
             "bi-box" AS icon,
-            (SELECT COUNT(*) FROM peminjaman WHERE id_aset = aset.id_aset) as total_peminjaman
+            (SELECT COUNT(*) FROM peminjaman_barang WHERE id_aset = aset.id_aset) as total_peminjaman
         ');
         $this->db->from($this->table);
-        $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan');
+        $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan', 'left');
         $this->db->where('aset.jumlah_total >', 0);
         $this->db->order_by('total_peminjaman', 'DESC');
         $this->db->order_by('aset.id_aset', 'DESC'); 
@@ -146,8 +136,8 @@ class Aset_model extends CI_Model {
     public function get_aset_by_id($id) {
         $this->db->select('aset.*, COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan, "#ea5b1a" AS warna, "bi-box" AS icon');
         $this->db->from($this->table);
-        $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan');
-        $this->db->where('aset.id_aset', $id);
+        $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan', 'left');
+        $this->db->where('aset.id_aset', (int) $id);
         return $this->db->get()->row();
     }
 
@@ -162,13 +152,6 @@ class Aset_model extends CI_Model {
 
     /**
      * Ambil aset berdasarkan ruangan
-     * 
-     * FIXED: Menambahkan parameter $limit dan $exclude_id yang tadinya tidak ada
-     * 
-     * @param int $id_ruangan - ID ruangan
-     * @param int $limit - jumlah maksimal data (default null = semua)
-     * @param int $exclude_id - ID aset yang ingin di-exclude (default null)
-     * @return array
      */
     public function get_aset_by_ruangan($id_ruangan, $limit = null, $exclude_id = null) {
         $this->db->select('
@@ -176,20 +159,18 @@ class Aset_model extends CI_Model {
             COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan, 
             "#ea5b1a" AS warna,
             "bi-box" AS icon,
-            (SELECT COUNT(*) FROM peminjaman WHERE id_aset = aset.id_aset) as total_peminjaman
+            (SELECT COUNT(*) FROM peminjaman_barang WHERE id_aset = aset.id_aset) as total_peminjaman
         ');
         $this->db->from($this->table);
-        $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan');
+        $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan', 'left');
         $this->db->where('aset.id_ruangan', $id_ruangan);
         
-        // Exclude aset tertentu jika ada (untuk related items)
         if ($exclude_id !== null) {
             $this->db->where('aset.id_aset !=', $exclude_id);
         }
         
         $this->db->order_by('aset.nama_aset', 'ASC');
         
-        // Limit jika ada
         if ($limit !== null) {
             $this->db->limit($limit);
         }
@@ -199,16 +180,11 @@ class Aset_model extends CI_Model {
 
     /**
      * Ambil aset terkait (berdasarkan kategori yang sama)
-     * 
-     * @param int $id_ruangan - ID ruangan
-     * @param int $id_aset - ID aset yang sedang dilihat (untuk di-exclude)
-     * @param int $limit - jumlah maksimal aset terkait
-     * @return array
      */
     public function get_related_aset($id_ruangan, $id_aset, $limit = 4) {
         $this->db->select('aset.*, COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan, "#ea5b1a" AS warna, "bi-box" AS icon');
         $this->db->from($this->table);
-        $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan');
+        $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan', 'left');
         $this->db->where('aset.id_ruangan', $id_ruangan);
         $this->db->where('aset.id_aset !=', $id_aset);
         $this->db->where('aset.jumlah_total >', 0);
@@ -226,12 +202,11 @@ class Aset_model extends CI_Model {
             COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan, 
             "#ea5b1a" AS warna,
             "bi-box" AS icon,
-            (SELECT COUNT(*) FROM peminjaman WHERE id_aset = aset.id_aset) as total_peminjaman
+            (SELECT COUNT(*) FROM peminjaman_barang WHERE id_aset = aset.id_aset) as total_peminjaman
         ');
         $this->db->from($this->table);
-        $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan');
+        $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan', 'left');
         
-        // Group pencarian dengan OR
         $this->db->group_start();
         $this->db->like('aset.nama_aset', $keyword);
         $this->db->or_like('aset.kode_aset', $keyword);
@@ -240,7 +215,7 @@ class Aset_model extends CI_Model {
         $this->db->group_end();
         
         $this->db->order_by('aset.nama_aset', 'ASC');
-        $this->db->limit(50); // Tingkatkan limit dari 10 ke 50
+        $this->db->limit(50);
         return $this->db->get()->result();
     }
 
@@ -249,14 +224,14 @@ class Aset_model extends CI_Model {
      */
     public function get_riwayat_peminjaman($id_aset, $limit = 10) {
         $this->db->select('
-            peminjaman.*, 
+            peminjaman_barang.*, 
             peminjam.nama_peminjam, 
             peminjam.nim_nip
         ');
-        $this->db->from('peminjaman');
-        $this->db->join('peminjam', 'peminjam.id_peminjam = peminjaman.id_peminjam');
-        $this->db->where('peminjaman.id_aset', $id_aset);
-        $this->db->order_by('peminjaman.tanggal_pinjam', 'DESC');
+        $this->db->from('peminjaman_barang');
+        $this->db->join('peminjam', 'peminjam.id_peminjam = peminjaman_barang.id_peminjam', 'left');
+        $this->db->where('peminjaman_barang.id_aset', $id_aset);
+        $this->db->order_by('peminjaman_barang.tanggal_pinjam', 'DESC');
         $this->db->limit($limit);
         return $this->db->get()->result();
     }
@@ -268,16 +243,10 @@ class Aset_model extends CI_Model {
         return $this->reserve_stock($id_aset, $jumlah);
     }
 
-    /**
-     * Reservasi stok dilakukan dengan satu conditional UPDATE sehingga aman
-     * terhadap dua pengajuan bersamaan dan tidak pernah membuat stok negatif.
-     */
     public function reserve_stock($id_aset, $jumlah) {
         $jumlah = (int) $jumlah;
         if ($jumlah < 1) return false;
 
-        // Urutan assignment penting di MySQL: kurangi available berdasarkan nilai
-        // lama terlebih dahulu, baru tambahkan ledger reserved.
         $this->db->set('jumlah_tersedia', 'jumlah_tersedia - ' . $jumlah, false);
         $this->db->set('jumlah_reserved', 'jumlah_reserved + ' . $jumlah, false);
         $this->db->where('id_aset', (int) $id_aset);
@@ -299,10 +268,6 @@ class Aset_model extends CI_Model {
         return $updated && $this->db->affected_rows() === 1;
     }
 
-    /**
-     * Serah terima tidak lagi mengurangi availability. Unit hanya berpindah
-     * dari reserved ke borrowed; selisih edit jumlah dikembalikan ke available.
-     */
     public function reserved_to_borrowed($id_aset, $reserved_amount, $borrowed_amount) {
         $reserved_amount = (int) $reserved_amount;
         $borrowed_amount = (int) $borrowed_amount;
@@ -345,7 +310,7 @@ class Aset_model extends CI_Model {
      */
     public function increment_total_peminjaman($id_aset) {
         $this->db->set('total_peminjaman', 'total_peminjaman + 1', FALSE);
-        $this->db->where('id_aset', $id_aset);
+        $this->db->where('id_aset', (int) $id_aset);
         return $this->db->update($this->table);
     }
 
@@ -353,8 +318,8 @@ class Aset_model extends CI_Model {
      * Update kondisi aset
      */
     public function update_kondisi($id_aset, $kondisi) {
-        $this->db->where('id_aset', $id_aset);
-        return $this->db->update('aset', ['kondisi' => $kondisi]);
+        $this->db->where('id_aset', (int) $id_aset);
+        return $this->db->update($this->table, ['kondisi' => $kondisi]);
     }
 
     /**
@@ -363,18 +328,13 @@ class Aset_model extends CI_Model {
 
     /**
      * Upload gambar aset
-     * 
-     * @param array $file - $_FILES['gambar']
-     * @return string|false - Nama file jika sukses, false jika gagal
      */
     public function upload_gambar($file) {
-        // Konfigurasi upload
         $config['upload_path'] = './uploads/aset/';
         $config['allowed_types'] = 'jpg|jpeg|png|gif|webp';
         $config['max_size'] = 2048; // 2MB
-        $config['encrypt_name'] = TRUE; // Enkripsi nama file untuk keamanan
+        $config['encrypt_name'] = TRUE;
         
-        // Buat folder jika belum ada
         if (!is_dir($config['upload_path'])) {
             mkdir($config['upload_path'], 0777, TRUE);
         }
@@ -391,9 +351,6 @@ class Aset_model extends CI_Model {
 
     /**
      * Hapus gambar aset
-     * 
-     * @param string $gambar_path - Path gambar yang akan dihapus
-     * @return bool
      */
     public function hapus_gambar($gambar_path) {
         if (!empty($gambar_path) && file_exists('./' . $gambar_path)) {
@@ -404,30 +361,20 @@ class Aset_model extends CI_Model {
 
     /**
      * Update gambar aset
-     * 
-     * @param int $id_aset - ID aset
-     * @param string $gambar_baru - Path gambar baru
-     * @return bool
      */
     public function update_gambar($id_aset, $gambar_baru) {
-        // Ambil gambar lama
         $aset = $this->get_aset_by_id($id_aset);
         
-        // Hapus gambar lama jika ada
         if ($aset && !empty($aset->gambar)) {
             $this->hapus_gambar($aset->gambar);
         }
         
-        // Update dengan gambar baru
-        $this->db->where('id_aset', $id_aset);
+        $this->db->where('id_aset', (int) $id_aset);
         return $this->db->update($this->table, ['gambar' => $gambar_baru]);
     }
 
     /**
      * Hapus gambar aset tanpa menghapus data aset
-     * 
-     * @param int $id_aset - ID aset
-     * @return bool
      */
     public function hapus_gambar_aset($id_aset) {
         $aset = $this->get_aset_by_id($id_aset);
@@ -435,8 +382,7 @@ class Aset_model extends CI_Model {
         if ($aset && !empty($aset->gambar)) {
             $this->hapus_gambar($aset->gambar);
             
-            // Set gambar menjadi NULL di database
-            $this->db->where('id_aset', $id_aset);
+            $this->db->where('id_aset', (int) $id_aset);
             return $this->db->update($this->table, ['gambar' => null]);
         }
         
@@ -449,7 +395,7 @@ class Aset_model extends CI_Model {
     public function get_aset_with_gambar() {
         $this->db->select('aset.*, COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan');
         $this->db->from($this->table);
-        $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan');
+        $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan', 'left');
         $this->db->where('aset.gambar IS NOT NULL');
         $this->db->where('aset.gambar !=', '');
         $this->db->order_by('aset.id_aset', 'DESC');
@@ -462,7 +408,7 @@ class Aset_model extends CI_Model {
     public function get_aset_galeri($limit = 12, $offset = 0) {
         $this->db->select('aset.*, COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan');
         $this->db->from($this->table);
-        $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan');
+        $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan', 'left');
         $this->db->where('aset.gambar IS NOT NULL');
         $this->db->where('aset.gambar !=', '');
         $this->db->order_by('aset.id_aset', 'DESC');
@@ -511,7 +457,7 @@ class Aset_model extends CI_Model {
      * Hitung total aset yang dipinjam
      */
     public function count_dipinjam() {
-        $sql = "SELECT COUNT(DISTINCT id_aset) as total FROM peminjaman WHERE status = 'Dipinjam'";
+        $sql = "SELECT COUNT(DISTINCT id_aset) as total FROM peminjaman_barang WHERE status = 'Dipinjam'";
         $result = $this->db->query($sql)->row();
         return $result ? $result->total : 0;
     }
@@ -522,7 +468,7 @@ class Aset_model extends CI_Model {
     public function get_stok_menipis($limit = 10) {
         $this->db->select('aset.*, COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan');
         $this->db->from($this->table);
-        $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan');
+        $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan', 'left');
         $this->db->where('aset.jumlah_tersedia <', 3);
         $this->db->where('aset.jumlah_tersedia >', 0);
         $this->db->order_by('aset.jumlah_tersedia', 'ASC');
@@ -536,7 +482,7 @@ class Aset_model extends CI_Model {
     public function get_stok_habis($limit = 10) {
         $this->db->select('aset.*, COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan');
         $this->db->from($this->table);
-        $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan');
+        $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan', 'left');
         $this->db->where('aset.jumlah_tersedia', 0);
         $this->db->order_by('aset.nama_aset', 'ASC');
         $this->db->limit($limit);
@@ -547,22 +493,10 @@ class Aset_model extends CI_Model {
      * ============== BULK OPERATIONS ==============
      */
 
-    /**
-     * Insert multiple aset sekaligus
-     * 
-     * @param array $data_array - Array of aset data
-     * @return int|false - Jumlah data yang berhasil diinsert atau false
-     */
     public function insert_batch($data_array) {
         return $this->db->insert_batch($this->table, $data_array);
     }
 
-    /**
-     * Update multiple aset sekaligus
-     * 
-     * @param array $data_array - Array of aset data dengan id
-     * @return int|false - Jumlah data yang berhasil diupdate atau false
-     */
     public function update_batch($data_array, $key = 'id_aset') {
         return $this->db->update_batch($this->table, $data_array, $key);
     }
@@ -571,39 +505,22 @@ class Aset_model extends CI_Model {
      * ============== VALIDASI ==============
      */
 
-    /**
-     * Cek apakah kode aset sudah ada
-     * 
-     * @param string $kode_aset - Kode aset yang akan dicek
-     * @param int $exclude_id - ID aset yang di-exclude (untuk update)
-     * @return bool
-     */
     public function is_kode_aset_exists($kode_aset, $exclude_id = null) {
         $this->db->where('kode_aset', $kode_aset);
         
         if ($exclude_id !== null) {
-            $this->db->where('id_aset !=', $exclude_id);
+            $this->db->where('id_aset !=', (int) $exclude_id);
         }
         
         $count = $this->db->count_all_results($this->table);
         return $count > 0;
     }
 
-    /**
-     * Cek apakah aset bisa dihapus
-     * 
-     * @param int $id_aset - ID aset yang akan dicek
-     * @return bool
-     */
     public function can_delete($id_aset) {
-        // Cek apakah ada peminjaman aktif
-        $this->db->where('id_aset', $id_aset);
+        $this->db->where('id_aset', (int) $id_aset);
         $this->db->where('status', 'Dipinjam');
-        $active_peminjaman = $this->db->count_all_results('peminjaman');
+        $active_peminjaman = $this->db->count_all_results('peminjaman_barang');
         
         return $active_peminjaman === 0;
     }
-
 }
-
-

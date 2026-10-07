@@ -80,6 +80,9 @@ class DosenTicketing_model extends CI_Model {
             $tujuanPenerima = !empty($data['tujuan_penerima']) ? $data['tujuan_penerima'] : (!empty($data['penerima']) ? $data['penerima'] : 'Laboran');
             $unitTerkait    = !empty($data['unit_terkait']) ? $data['unit_terkait'] : (!empty($data['unit_tujuan']) ? $data['unit_tujuan'] : ($data['unit'] ?? 'Layanan IFIK'));
 
+            $prioritas = !empty($data['prioritas']) ? $data['prioritas'] : 'Sedang';
+            $metaTags = '[CREATED:' . date('Y-m-d H:i:s') . '][PRIORITAS:' . $prioritas . ']';
+
             $insertData = [
                 'id'              => $kode,
                 'id_user'         => (string)($data['id_user'] ?? $data['nidn'] ?? '0'),
@@ -90,14 +93,21 @@ class DosenTicketing_model extends CI_Model {
                 'tujuan_penerima' => $tujuanPenerima,
                 'unit_terkait'    => $unitTerkait,
                 'kategori'        => $data['kategori'] ?? 'Umum',
+                'prioritas'       => $prioritas,
                 'isi_ticketing'   => $isi,
-                'tgl_ticketing'   => date('Y-m-d'),
+                'tgl_ticketing'   => date('Y-m-d H:i:s'),
                 'tgl_diproses'    => '1970-01-01 00:00:00',
                 'tgl_closed'      => '1970-01-01 00:00:00',
                 'status'          => $statusMapped,
                 'file_pendukung'  => $data['lampiran'] ?? ($data['file_pendukung'] ?? ''),
-                'keterangan'      => ''
+                'keterangan'      => $metaTags
             ];
+
+            // Defensive filtering: hanya masukkan field yang benar-benar ada di tabel (mencegah error jika schema di NAS berbeda)
+            $existingFields = $this->db->list_fields('tb_ticketing');
+            if (!empty($existingFields)) {
+                $insertData = array_intersect_key($insertData, array_flip($existingFields));
+            }
 
             $this->db->insert('tb_ticketing', $insertData);
             return $kode;
@@ -451,10 +461,18 @@ class DosenTicketing_model extends CI_Model {
             $curr = $this->db->get()->row();
             $currKet = $curr ? ($curr->keterangan ?? '') : '';
 
+            $prevCreated = '';
+            $prevPrioritas = '';
             $prevProses = '';
             $prevSelesai = '';
             $prevTutup = '';
 
+            if (preg_match('/\[CREATED:\s*([^\]]+)\]/is', $currKet, $mC)) {
+                $prevCreated = trim($mC[1]);
+            }
+            if (preg_match('/\[PRIORITAS:\s*([^\]]+)\]/is', $currKet, $mPr)) {
+                $prevPrioritas = trim($mPr[1]);
+            }
             if (preg_match('/\[PROSES\]\s*(.*?)(?=\[(SELESAI|DITUTUP)\]|$)/is', $currKet, $mP)) {
                 $prevProses = trim($mP[1]);
             }
@@ -467,7 +485,7 @@ class DosenTicketing_model extends CI_Model {
 
             // Fallback untuk legacy record yang belum menggunakan tag [PROSES] / [SELESAI]
             if (empty($prevProses) && empty($prevSelesai) && !empty($currKet)) {
-                $cleanOld = trim(str_replace('[DITUTUP]', '', $currKet));
+                $cleanOld = trim(str_replace(['[DITUTUP]', '[CREATED:' . $prevCreated . ']', '[PRIORITAS:' . $prevPrioritas . ']'], '', $currKet));
                 if ($curr && $curr->status === 'Sedang Diproses') {
                     $prevProses = $cleanOld;
                 } elseif ($curr && $curr->status === 'Closed') {
@@ -498,22 +516,29 @@ class DosenTicketing_model extends CI_Model {
 
             $cleanInput = trim(str_replace(['[PROSES]', '[SELESAI]', '[DITUTUP]'], '', $tanggapan));
 
+            $parts = [];
+            if (!empty($prevCreated)) {
+                $parts[] = '[CREATED:' . $prevCreated . ']';
+            }
+            if (!empty($prevPrioritas)) {
+                $parts[] = '[PRIORITAS:' . $prevPrioritas . ']';
+            }
+
             if ($status === 'Diproses') {
                 $activeProses = ($cleanInput !== '') ? $cleanInput : $prevProses;
-                $updateData['keterangan'] = ($activeProses !== '') ? ('[PROSES] ' . $activeProses) : '';
+                if (!empty($activeProses)) {
+                    $parts[] = '[PROSES] ' . $activeProses;
+                }
             } elseif ($status === 'Selesai') {
                 $activeSelesai = ($cleanInput !== '') ? $cleanInput : $prevSelesai;
-                $parts = [];
                 if (!empty($prevProses)) {
                     $parts[] = '[PROSES] ' . $prevProses;
                 }
                 if (!empty($activeSelesai)) {
                     $parts[] = '[SELESAI] ' . $activeSelesai;
                 }
-                $updateData['keterangan'] = implode("\n", $parts);
             } elseif ($status === 'Ditutup') {
                 $activeTutup = ($cleanInput !== '') ? $cleanInput : $prevTutup;
-                $parts = [];
                 if (!empty($prevProses)) {
                     $parts[] = '[PROSES] ' . $prevProses;
                 }
@@ -525,10 +550,9 @@ class DosenTicketing_model extends CI_Model {
                 } else {
                     $parts[] = '[DITUTUP]';
                 }
-                $updateData['keterangan'] = implode("\n", $parts);
-            } elseif ($status === 'Menunggu') {
-                $updateData['keterangan'] = '';
             }
+
+            $updateData['keterangan'] = implode("\n", $parts);
 
             $this->db->where('id', (string)$id);
             return $this->db->update('tb_ticketing', $updateData);
@@ -572,7 +596,13 @@ class DosenTicketing_model extends CI_Model {
         $r->unit_terkait    = !empty($row->unit_terkait) ? $row->unit_terkait : (!empty($row->unit) ? $row->unit : 'Layanan IFIK');
         $r->unit_tujuan     = $r->unit_terkait;
         $r->kategori        = $row->kategori ?? 'Umum';
-        $r->prioritas       = !empty($row->prioritas) ? $row->prioritas : 'Sedang';
+
+        $rawKeterangan      = $row->keterangan ?? '';
+        $prioritasParsed    = null;
+        if (preg_match('/\[PRIORITAS:\s*([^\]]+)\]/is', $rawKeterangan, $mPrio)) {
+            $prioritasParsed = trim($mPrio[1]);
+        }
+        $r->prioritas       = $prioritasParsed ?: (!empty($row->prioritas) ? $row->prioritas : 'Sedang');
 
         // Resolve NIDN / NIM / NIP dan Identitas Pengirim (agar tidak undefined property $t->nidn)
         $resolvedNidn   = !empty($row->nidn) ? $row->nidn : '';
@@ -586,11 +616,11 @@ class DosenTicketing_model extends CI_Model {
             if (!array_key_exists($uid, $userMapCache)) {
                 $userRec = null;
                 if ($this->db->table_exists('user')) {
-                    $userRec = $this->db->select('id, nidn_nim, nim, nip, role_id, name')
+                    $userRec = $this->db->select('id, nim, nip, kode_dosen, role_id, name')
                         ->get_where('user', ['id' => $row->id_user])
                         ->row();
                     if (!$userRec && is_numeric($row->id_user)) {
-                        $userRec = $this->db->select('id, nidn_nim, nim, nip, role_id, name')
+                        $userRec = $this->db->select('id, nim, nip, kode_dosen, role_id, name')
                             ->get_where('user', ['role_id' => $row->id_user])
                             ->row();
                     }
@@ -601,7 +631,7 @@ class DosenTicketing_model extends CI_Model {
             }
 
             if ($userRec) {
-                $resolvedNidn = !empty($userRec->nidn_nim) ? $userRec->nidn_nim : (!empty($userRec->nim) ? $userRec->nim : (!empty($userRec->nip) ? $userRec->nip : ''));
+                $resolvedNidn = !empty($userRec->nim) ? $userRec->nim : (!empty($userRec->nip) ? $userRec->nip : (!empty($userRec->kode_dosen) ? $userRec->kode_dosen : ''));
                 if ((int)$userRec->role_id === 3) {
                     $roleSender     = 'Mahasiswa';
                     $labelIdentitas = 'NIM';
@@ -710,7 +740,14 @@ class DosenTicketing_model extends CI_Model {
         }
         $r->tgl_tanggapan = $tglTanggapan;
 
-        $r->created_at    = !empty($row->tgl_ticketing) ? ($row->tgl_ticketing . ' 08:00:00') : date('Y-m-d H:i:s');
+        $createdAtReal = null;
+        if (preg_match('/\[CREATED:\s*([^\]]+)\]/is', $rawKeterangan, $mC)) {
+            $createdAtReal = trim($mC[1]);
+        } elseif (!empty($row->tgl_ticketing) && strlen(trim($row->tgl_ticketing)) > 10 && $row->tgl_ticketing !== '0000-00-00 00:00:00') {
+            $createdAtReal = $row->tgl_ticketing;
+        }
+
+        $r->created_at    = $createdAtReal ?: (!empty($row->tgl_ticketing) ? ($row->tgl_ticketing . ' 08:00:00') : date('Y-m-d H:i:s'));
         $r->updated_at    = $tglTanggapan ?: $r->created_at;
 
         return $r;

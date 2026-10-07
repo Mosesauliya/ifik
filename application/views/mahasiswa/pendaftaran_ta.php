@@ -140,8 +140,13 @@
                 <div class="flex-grow">
                     <span class="text-xs font-extrabold uppercase tracking-wider text-rose-800 block">STATUS: PERLU REVISI / PERBAIKAN BERKAS</span>
                     <p class="text-xs sm:text-sm font-semibold text-slate-800 leading-relaxed mt-1">
-                        Terdapat catatan perbaikan dari peninjau. Formulir telah diaktifkan kembali sehingga Anda dapat memperbarui data atau mengunggah ulang dokumen PDF yang diminta.
+                        Pendaftaran Anda telah diajukan dan terdapat catatan perbaikan dari peninjau. Formulir pendaftaran awal ini berstatus <strong>hanya lihat</strong>. Untuk mengunggah ulang dokumen perbaikan, silakan gunakan tombol <strong>Perbaikan Berkas</strong> di Dashboard.
                     </p>
+                    <div class="mt-3">
+                        <a href="<?= site_url('mahasiswa'); ?>" class="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer">
+                            <i class="bi bi-arrow-left-circle"></i> Menuju Dashboard untuk Perbaikan Berkas
+                        </a>
+                    </div>
                     <?php if(!empty($pendaftaran['catatan_wali'])): ?>
                         <div class="mt-2.5 p-3 bg-white/80 rounded-xl border border-rose-200 text-xs text-rose-900 font-medium">
                             <strong>Catatan Dosen Wali:</strong> <?= htmlspecialchars($pendaftaran['catatan_wali']); ?>
@@ -166,7 +171,7 @@
             </div>
         <?php endif; ?>
 
-        <?php if(!empty($is_locked)): ?>
+        <?php if(!empty($is_locked) && empty($has_revisi)): ?>
             <!-- Locked View-Only Notice Banner -->
             <div class="p-5 mb-6 rounded-2xl bg-amber-500/10 border-2 border-amber-400/80 text-amber-950 shadow-xs flex items-start gap-4">
                 <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-xl font-bold box-3d shrink-0">
@@ -175,12 +180,9 @@
                 <div class="flex-1">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <span class="text-xs font-extrabold uppercase tracking-wider text-amber-800 block">STATUS: FORMULIR TERKUNCI (SEDANG DITINJAU)</span>
-                        <a href="<?= site_url('mahasiswa/reset_pendaftaran'); ?>" onclick="return confirm('Apakah Anda yakin ingin me-reset pengajuan Tugas Akhir ini? Semua berkas dan usulan judul yang diunggah akan dihapus dan Anda dapat mengisi ulang dari awal.');" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition shadow-xs cursor-pointer self-start sm:self-auto">
-                            <i class="bi bi-arrow-counterclockwise"></i> Reset / Batalkan Pengajuan
-                        </a>
                     </div>
                     <p class="text-xs sm:text-sm font-semibold text-slate-800 leading-relaxed mt-1">
-                        Pengajuan Tugas Akhir Anda saat ini sedang dalam proses peninjauan berjenjang. Kolom formulir berstatus <strong>hanya lihat (tidak dapat diedit)</strong>. Jika Anda ingin membatalkan pengajuan dan mengisi ulang dari awal, silakan klik tombol <strong>Reset / Batalkan Pengajuan</strong>.
+                        Pengajuan Tugas Akhir Anda saat ini sedang dalam proses peninjauan berjenjang. Kolom formulir berstatus <strong>hanya lihat (tidak dapat diedit)</strong>.
                     </p>
                 </div>
             </div>
@@ -222,38 +224,44 @@
                                     Jenis tugas akhir <span class="text-orange-500">*</span>
                                 </label>
 
+                                <?php
+                                    $current_jenis_val = !empty(trim($pendaftaran['jenis_ta'] ?? '')) ? trim($pendaftaran['jenis_ta']) : '';
+                                    $standard_jenis_opts = ['TA Reguler', 'TA Jurnal', 'TA HKI', 'TA PROYEK', 'Pengkaryaan', 'Penulisan'];
+                                    if (!empty($current_jenis_val) && !in_array($current_jenis_val, $standard_jenis_opts)) {
+                                        $standard_jenis_opts[] = $current_jenis_val;
+                                    }
+                                ?>
                                 <!-- Custom 3D Glass Dropdown for Jenis TA -->
                                 <div class="custom-dropdown relative w-full z-30" id="dropdownJenisTA">
-                                    <input type="hidden" name="jenis_ta" id="inputJenisTA" value="<?= htmlspecialchars($pendaftaran['jenis_ta'] ?? ''); ?>" required>
+                                    <input type="hidden" name="jenis_ta" id="inputJenisTA" value="<?= htmlspecialchars($current_jenis_val); ?>" required>
 
                                     <button type="button" class="dropdown-trigger w-full px-4 py-3 rounded-xl border border-orange-200 bg-white/90 hover:border-orange-400 focus:ring-4 focus:ring-orange-500/10 outline-none text-slate-800 font-semibold text-xs flex items-center justify-between transition shadow-xs">
-                                        <span class="trigger-label <?= !empty($pendaftaran['jenis_ta']) ? 'text-slate-900 font-semibold' : 'text-slate-400 font-normal'; ?>">
-                                            <?= htmlspecialchars(!empty($pendaftaran['jenis_ta']) ? $pendaftaran['jenis_ta'] : '-- Pilih Jenis TA --'); ?>
+                                        <span class="trigger-label <?= !empty($current_jenis_val) ? 'text-slate-900 font-semibold' : 'text-slate-400 font-normal'; ?>">
+                                            <?= htmlspecialchars(!empty($current_jenis_val) ? $current_jenis_val : '-- Pilih Jenis TA --'); ?>
                                         </span>
                                         <i class="bi bi-chevron-down text-orange-500 font-bold text-xs transition-transform duration-200 chevron-icon"></i>
                                     </button>
 
-                                    <div class="dropdown-menu hidden absolute left-0 right-0 top-full mt-2 bg-white backdrop-blur-xl border border-orange-200/90 rounded-2xl p-2 shadow-2xl z-[100] space-y-1">
-                                        <div class="dropdown-option <?= (($pendaftaran['jenis_ta'] ?? '') === 'Pengkaryaan') ? 'bg-orange-100/80 text-orange-700 font-bold' : ''; ?> px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 hover:bg-orange-50 hover:text-orange-600 transition flex items-center justify-between cursor-pointer" data-value="Pengkaryaan">
-                                            <span>Pengkaryaan</span>
-                                            <i class="bi bi-check-lg text-orange-600 font-bold text-sm <?= (($pendaftaran['jenis_ta'] ?? '') === 'Pengkaryaan') ? '' : 'hidden'; ?> check-icon"></i>
-                                        </div>
-                                        <div class="dropdown-option <?= (($pendaftaran['jenis_ta'] ?? '') === 'Penulisan') ? 'bg-orange-100/80 text-orange-700 font-bold' : ''; ?> px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 hover:bg-orange-50 hover:text-orange-600 transition flex items-center justify-between cursor-pointer" data-value="Penulisan">
-                                            <span>Penulisan</span>
-                                            <i class="bi bi-check-lg text-orange-600 font-bold text-sm <?= (($pendaftaran['jenis_ta'] ?? '') === 'Penulisan') ? '' : 'hidden'; ?> check-icon"></i>
-                                        </div>
+                                    <div class="dropdown-menu hidden absolute left-0 right-0 top-full mt-2 bg-white backdrop-blur-xl border border-orange-200/90 rounded-2xl p-2 shadow-2xl z-[100] space-y-1 max-h-60 overflow-y-auto">
+                                        <?php foreach ($standard_jenis_opts as $s_opt): ?>
+                                            <?php $is_sel = ($current_jenis_val === $s_opt); ?>
+                                            <div class="dropdown-option <?= $is_sel ? 'bg-orange-100/80 text-orange-700 font-bold' : ''; ?> px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 hover:bg-orange-50 hover:text-orange-600 transition flex items-center justify-between cursor-pointer" data-value="<?= htmlspecialchars($s_opt); ?>">
+                                                <span><?= htmlspecialchars($s_opt); ?></span>
+                                                <i class="bi bi-check-lg text-orange-600 font-bold text-sm <?= $is_sel ? '' : 'hidden'; ?> check-icon"></i>
+                                            </div>
+                                        <?php endforeach; ?>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Preview Choice Badge Card -->
-                            <div class="<?= empty($pendaftaran['jenis_ta']) ? 'hidden' : ''; ?> p-4 rounded-xl bg-orange-100/60 border border-orange-200 flex items-center gap-3 transition-all duration-200" id="previewJenisTA">
+                            <div class="<?= empty($current_jenis_val) ? 'hidden' : ''; ?> p-4 rounded-xl bg-orange-100/60 border border-orange-200 flex items-center gap-3 transition-all duration-200" id="previewJenisTA">
                                 <div class="w-8 h-8 rounded-lg bg-orange-500 text-white flex items-center justify-center text-xs font-bold shrink-0 box-3d">
                                     <i class="bi bi-check-lg"></i>
                                 </div>
                                 <div>
                                     <span class="text-[9px] font-bold uppercase tracking-wider text-orange-700 block">JENIS TUGAS AKHIR DIPILIH</span>
-                                    <span class="text-xs font-bold text-slate-900" id="previewTextJenisTA"><?= htmlspecialchars($pendaftaran['jenis_ta'] ?? ''); ?></span>
+                                    <span class="text-xs font-bold text-slate-900" id="previewTextJenisTA"><?= htmlspecialchars($current_jenis_val); ?></span>
                                 </div>
                             </div>
 
@@ -471,6 +479,17 @@
                                     <p class="text-xs font-semibold italic text-slate-700 mt-0.5 leading-relaxed" id="summaryJudulEn"><?= htmlspecialchars($pendaftaran['judul_en'] ?? '-'); ?></p>
                                 </div>
 
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                                    <div class="p-3 rounded-xl bg-white/80 border border-orange-100 shadow-2xs">
+                                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">JUDUL USULAN 2 (ALTERNATIF 1)</span>
+                                        <p class="text-xs font-bold text-slate-900 mt-0.5 leading-relaxed" id="summaryJudul2"><?= htmlspecialchars(!empty($pendaftaran['judul_2']) ? $pendaftaran['judul_2'] : '- (Tidak diisi)'); ?></p>
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-white/80 border border-orange-100 shadow-2xs">
+                                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">JUDUL USULAN 3 (ALTERNATIF 2)</span>
+                                        <p class="text-xs font-bold text-slate-900 mt-0.5 leading-relaxed" id="summaryJudul3"><?= htmlspecialchars(!empty($pendaftaran['judul_3']) ? $pendaftaran['judul_3'] : '- (Tidak diisi)'); ?></p>
+                                    </div>
+                                </div>
+
                                 <div>
                                     <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">KONSENTRASI PROGRAM STUDI</span>
                                     <p class="text-xs font-bold text-slate-800 mt-0.5" id="summaryKonsentrasi"><?= htmlspecialchars(!empty($mahasiswa['konsentrasi_dkv']) ? $mahasiswa['konsentrasi_dkv'] : ($pendaftaran['konsentrasi_dkv'] ?? 'Desain Komunikasi Visual')); ?></p>
@@ -525,7 +544,7 @@
                         </button>
                         <?php if(!empty($is_locked)): ?>
                             <button type="button" class="hidden flex items-center gap-2 bg-slate-200 border border-slate-300 text-slate-500 font-bold px-6 py-2.5 rounded-xl shadow-none transition text-xs select-none cursor-not-allowed" id="btnSubmit" disabled>
-                                <i class="bi bi-lock-fill text-sm"></i> Formulir Terkunci (Sedang Ditinjau)
+                                <i class="bi bi-lock-fill text-sm"></i> <?= !empty($has_revisi) ? 'Terkunci (Perbaikan di Dashboard)' : 'Formulir Terkunci (Sedang Ditinjau)'; ?>
                             </button>
                         <?php else: ?>
                             <button type="submit" class="hidden flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-md transition text-xs box-3d cursor-pointer" id="btnSubmit">

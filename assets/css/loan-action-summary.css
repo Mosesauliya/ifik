@@ -60,7 +60,4 @@
     .loan-action-summary__status { max-width: 100%; }
     .loan-action-summary__metrics { grid-template-columns: 1fr; }
     .loan-action-summary__facts { grid-template-columns: 1fr; }
-    .loan-action-summary__fact-wide { grid-column: auto; }
-    .modal-footer.loan-action-footer { display: grid; grid-template-columns: 1fr; }
-    .modal-footer.loan-action-footer .btn { width: 100%; margin: 0; }
 }

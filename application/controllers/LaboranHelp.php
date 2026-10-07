@@ -85,13 +85,13 @@ class LaboranHelp extends CI_Controller {
             $formatted[] = [
                 'id'                => (int)$c->id,
                 'user_id'           => $c->user_id,
-                'user_nama'         => htmlspecialchars($c->user_nama ?? 'Pengguna'),
-                'user_email'        => htmlspecialchars($c->user_email ?? ''),
-                'user_role'         => htmlspecialchars($c->user_role ?? 'Mahasiswa'),
-                'user_nim_nip'      => htmlspecialchars($c->user_nim_nip ?? '-'),
-                'topik'             => htmlspecialchars($c->topik ?? 'Bantuan Umum'),
+                'user_nama'         => $c->user_nama ?? 'Pengguna',
+                'user_email'        => $c->user_email ?? '',
+                'user_role'         => $c->user_role ?? 'Mahasiswa',
+                'user_nim_nip'      => $c->user_nim_nip ?? '-',
+                'topik'             => $c->topik ?? 'Bantuan Umum',
                 'status'            => $c->status,
-                'last_message'      => htmlspecialchars($c->last_message ?? ''),
+                'last_message'      => $c->last_message ?? '',
                 'last_message_time' => $this->_format_time_ago($c->last_message_time ?? $c->created_at),
                 'unread_laboran'    => (int)$c->unread_laboran,
                 'unread_user'       => (int)$c->unread_user,
@@ -126,14 +126,19 @@ class LaboranHelp extends CI_Controller {
         $this->Help_chat_model->mark_as_read_by_laboran($conversation_id);
 
         $messages = $this->Help_chat_model->get_messages($conversation_id);
+        $currentUserId = $this->session->userdata('user_id');
         $formattedMessages = [];
 
         foreach ($messages as $m) {
+            $isStaff = in_array(strtolower((string)$m->sender_role), ['laboran', 'kaur', 'admin_layanan', 'admin', 'staff']);
+            $isMe = $isStaff || ($currentUserId && (string)$m->sender_id === (string)$currentUserId);
+
             $formattedMessages[] = [
                 'id'          => (int)$m->id,
                 'sender_id'   => $m->sender_id,
-                'sender_name' => htmlspecialchars($m->sender_name),
+                'sender_name' => $m->sender_name,
                 'sender_role' => $m->sender_role,
+                'is_me'       => $isMe,
                 'message'     => nl2br(htmlspecialchars($m->message)),
                 'attachment'  => $m->attachment ? base_url('uploads/help_attachments/' . $m->attachment) : null,
                 'is_read'     => (int)$m->is_read,
@@ -147,13 +152,13 @@ class LaboranHelp extends CI_Controller {
             'status'       => 'success',
             'conversation' => [
                 'id'                => (int)$conversation->id,
-                'user_nama'         => htmlspecialchars($conversation->user_nama),
-                'user_email'        => htmlspecialchars($conversation->user_email ?? ''),
-                'user_role'         => htmlspecialchars($conversation->user_role ?? 'Mahasiswa'),
-                'user_nim_nip'      => htmlspecialchars($conversation->user_nim_nip ?? '-'),
-                'topik'             => htmlspecialchars($conversation->topik),
+                'user_nama'         => $conversation->user_nama,
+                'user_email'        => $conversation->user_email ?? '',
+                'user_role'         => $conversation->user_role ?? 'Mahasiswa',
+                'user_nim_nip'      => $conversation->user_nim_nip ?? '-',
+                'topik'             => $conversation->topik,
                 'status'            => $conversation->status,
-                'laboran_nama'      => htmlspecialchars($conversation->laboran_nama ?? 'Belum ada'),
+                'laboran_nama'      => $conversation->laboran_nama ?? 'Belum ada',
                 'last_message_time' => $this->_format_time_ago($conversation->last_message_time ?? $conversation->created_at),
                 'created_at'        => date('d M Y, H:i', strtotime($conversation->created_at))
             ],
@@ -163,13 +168,13 @@ class LaboranHelp extends CI_Controller {
     }
 
     /**
-     * Endpoint AJAX: Kirim balasan pesan dari Laboran
+     * Endpoint AJAX: Kirim balasan pesan dari Laboran / Kaur / Admin
      */
     public function send_message_ajax() {
         header('Content-Type: application/json');
 
-        $conversation_id = $this->input->post('conversation_id', true);
-        $message = trim($this->input->post('message', true) ?? '');
+        $conversation_id = $this->input->post('conversation_id');
+        $message = trim($this->input->post('message') ?? '');
 
         if (empty($conversation_id) || empty($message)) {
             echo json_encode([
@@ -224,6 +229,7 @@ class LaboranHelp extends CI_Controller {
                     'id'          => $msgId,
                     'sender_name' => $laboranName,
                     'sender_role' => $senderRole,
+                    'is_me'       => true,
                     'message'     => nl2br(htmlspecialchars($message)),
                     'time'        => date('H:i'),
                     'date_full'   => date('d M Y, H:i')
@@ -336,8 +342,8 @@ class LaboranHelp extends CI_Controller {
     public function create_chat_user_ajax() {
         header('Content-Type: application/json');
 
-        $topik = trim($this->input->post('topik', true) ?? '');
-        $message = trim($this->input->post('message', true) ?? '');
+        $topik = trim($this->input->post('topik') ?? '');
+        $message = trim($this->input->post('message') ?? '');
 
         if (empty($topik) || empty($message)) {
             echo json_encode([
@@ -348,10 +354,10 @@ class LaboranHelp extends CI_Controller {
         }
 
         // Ambil data user dari session atau POST data
-        $userId = $this->session->userdata('user_id') ?: ($this->input->post('user_id', true) ?: null);
-        $userNama = $this->session->userdata('name') ?: ($this->input->post('user_nama', true) ?: 'Pengguna IFIK');
-        $userEmail = $this->session->userdata('email') ?: ($this->input->post('user_email', true) ?: null);
-        $userNimNip = $this->session->userdata('nidn_nim') ?: ($this->session->userdata('nim') ?: ($this->input->post('user_nim_nip', true) ?: '-'));
+        $userId = $this->session->userdata('user_id') ?: ($this->input->post('user_id') ?: null);
+        $userNama = $this->session->userdata('name') ?: ($this->input->post('user_nama') ?: 'Pengguna IFIK');
+        $userEmail = $this->session->userdata('email') ?: ($this->input->post('user_email') ?: null);
+        $userNimNip = $this->session->userdata('nidn_nim') ?: ($this->session->userdata('nim') ?: ($this->input->post('user_nim_nip') ?: '-'));
         
         $roleId = (int)($this->session->userdata('role_id') ?? 4);
         $roleMap = [
@@ -364,7 +370,7 @@ class LaboranHelp extends CI_Controller {
             9 => 'Ketua KK',
             21 => 'Laboran'
         ];
-        $userRole = $this->input->post('user_role', true) ?: ($roleMap[$roleId] ?? 'Mahasiswa');
+        $userRole = $this->input->post('user_role') ?: ($roleMap[$roleId] ?? 'Mahasiswa');
 
         $conv_id = $this->Help_chat_model->create_conversation([
             'user_id'      => $userId,
@@ -397,8 +403,8 @@ class LaboranHelp extends CI_Controller {
     public function send_user_message_ajax() {
         header('Content-Type: application/json');
 
-        $conversation_id = $this->input->post('conversation_id', true);
-        $message = trim($this->input->post('message', true) ?? '');
+        $conversation_id = $this->input->post('conversation_id');
+        $message = trim($this->input->post('message') ?? '');
 
         if (empty($conversation_id) || empty($message)) {
             echo json_encode([

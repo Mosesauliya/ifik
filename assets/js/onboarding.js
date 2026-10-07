@@ -356,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
             </div>
 
-            <p id="orbPassError" class="text-xs text-red-400 hidden"></p>
+            <p id="orbPassError" class="text-xs text-red-500 font-semibold mt-1 hidden"></p>
           </div>
 
           <div class="orb-btn-group">
@@ -425,7 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (node.id === 3) {
       formHtml = `
         <div class="orbital-form-pane">
-          <div class="orb-form-body">
+          <div class="orb-form-body orb-form-scrollable">
             <!-- Tempat & Tanggal Lahir -->
             <div class="grid grid-cols-2 gap-2">
               <div class="orb-input-group">
@@ -520,7 +520,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <input type="hidden" id="orb_alamat" value="${formDataState.alamat || ''}">
             </div>
 
-            <p id="orbStep3Error" class="text-xs text-red-400 hidden"></p>
+            <p id="orbStep3Error" class="text-xs text-red-500 font-semibold mt-1 hidden"></p>
           </div>
 
           <div class="orb-btn-group">
@@ -542,8 +542,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const initialDosenName = selectedDosen ? selectedDosen.nama : '';
       const konsentrasiLabel = isDosen ? 'Program Studi / Homebase *' : 'Konsentrasi / Program Studi *';
 
-      // Build Dosen Wali Autocomplete block ONLY for Mahasiswa
-      const dosenWaliBlock = isDosen ? '' : `
+      // Build Dosen Wali Autocomplete block ONLY for Mahasiswa / Info Box for Dosen
+      const roleSpecificBlock = isDosen ? `
+        <!-- Info Callout Box: Hak Akses & Layanan Dosen -->
+        <div class="p-3.5 bg-gradient-to-br from-orange-50/90 to-amber-50/60 border border-orange-200/90 rounded-xl space-y-2 text-xs text-slate-700 mt-2 shadow-2xs">
+          <div class="flex items-center gap-2 font-bold text-orange-950">
+            <svg class="w-4 h-4 text-orange-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            <span>Akses Layanan Portal Dosen</span>
+          </div>
+          <p class="text-[11.5px] text-slate-600 leading-relaxed">
+            Akun Anda akan memiliki akses penuh ke fitur <b>Bimbingan Akademik Dosen Wali</b>, <b>Review Sidang & Tugas Akhir</b>, serta <b>Peminjaman Fasilitas & Laboratorium</b>.
+          </p>
+        </div>
+      ` : `
         <!-- Search Autocomplete: Dosen Wali -->
         <div class="orb-autocomplete-wrapper mt-1">
           <label class="orb-label">
@@ -605,9 +616,9 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
             </div>
 
-            ${dosenWaliBlock}
+            ${roleSpecificBlock}
 
-            <p id="orbStep4Error" class="text-xs text-red-400 hidden mt-1"></p>
+            <p id="orbStep4Error" class="text-xs text-red-500 font-semibold mt-1 hidden"></p>
           </div>
 
           <div class="orb-btn-group">
@@ -760,18 +771,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+      function markFieldInvalid(el, msg) {
+        if (!el) return;
+        card.querySelectorAll('.is-invalid').forEach(e => e.classList.remove('is-invalid'));
+        el.classList.add('is-invalid');
+        const wrap = el.closest('.orb-input-wrap');
+        if (wrap) wrap.classList.add('is-invalid');
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (typeof el.focus === 'function') setTimeout(() => el.focus(), 150);
+        if (passErr) {
+          passErr.textContent = msg;
+          passErr.classList.remove('hidden');
+        }
+        const onClear = () => {
+          el.classList.remove('is-invalid');
+          if (wrap) wrap.classList.remove('is-invalid');
+          if (passErr) passErr.classList.add('hidden');
+          el.removeEventListener('input', onClear);
+        };
+        el.addEventListener('input', onClear);
+      }
+
       nextBtn?.addEventListener('click', (e) => {
         e.stopPropagation();
         if (!passNew.value || passNew.value.length < 6) {
-          passErr.textContent = 'Password baru minimal 6 karakter!';
-          passErr.classList.remove('hidden');
+          markFieldInvalid(passNew, 'Password baru minimal 6 karakter!');
           return;
         }
         if (passNew.value !== passConfirm.value) {
-          passErr.textContent = 'Konfirmasi password tidak cocok!';
-          passErr.classList.remove('hidden');
+          markFieldInvalid(passConfirm, 'Konfirmasi password tidak cocok!');
           return;
         }
+        card.querySelectorAll('.is-invalid').forEach(e => e.classList.remove('is-invalid'));
         passErr.classList.add('hidden');
         formDataState.password_baru = passNew.value;
         formDataState.konfirmasi_password = passConfirm.value;
@@ -822,13 +853,39 @@ document.addEventListener('DOMContentLoaded', () => {
         selectNode(1);
       });
 
+      function markFieldInvalid(el, msg) {
+        if (!el) return;
+        card.querySelectorAll('.is-invalid').forEach(e => e.classList.remove('is-invalid'));
+        el.classList.add('is-invalid');
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (typeof el.focus === 'function') setTimeout(() => el.focus(), 150);
+        if (errElem) {
+          errElem.textContent = msg;
+          errElem.classList.remove('hidden');
+        }
+        const onClear = () => {
+          el.classList.remove('is-invalid');
+          if (errElem) errElem.classList.add('hidden');
+          el.removeEventListener('input', onClear);
+        };
+        el.addEventListener('input', onClear);
+      }
+
       nextBtn?.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (!nimInput.value.trim() || !namaDepanInput.value.trim() || !namaBelakangInput.value.trim()) {
-          errElem.textContent = 'Mohon lengkapi NIM, Nama Depan, dan Nama Belakang tanpa simbol!';
-          errElem.classList.remove('hidden');
+        if (!nimInput.value.trim()) {
+          markFieldInvalid(nimInput, 'NIM wajib diisi!');
           return;
         }
+        if (!namaDepanInput.value.trim()) {
+          markFieldInvalid(namaDepanInput, 'Nama Depan wajib diisi!');
+          return;
+        }
+        if (!namaBelakangInput.value.trim()) {
+          markFieldInvalid(namaBelakangInput, 'Nama Belakang wajib diisi!');
+          return;
+        }
+        card.querySelectorAll('.is-invalid').forEach(e => e.classList.remove('is-invalid'));
         errElem.classList.add('hidden');
 
         formDataState.nim = nimInput.value;
@@ -1335,13 +1392,91 @@ document.addEventListener('DOMContentLoaded', () => {
         selectNode(2);
       });
 
+      // Helper to highlight invalid field with red indicator and auto-scroll
+      function markFieldInvalid(inputElement, errorMessage) {
+        if (!inputElement) return;
+        
+        // Clear prior error indicators
+        card.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        
+        // Apply red error styling
+        inputElement.classList.add('is-invalid');
+        const box = inputElement.closest('.orb-autocomplete-box');
+        if (box) box.classList.add('is-invalid');
+
+        // Smoothly autoscroll to the invalid field inside the scroll container
+        inputElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (typeof inputElement.focus === 'function') {
+          setTimeout(() => inputElement.focus(), 150);
+        }
+
+        if (errElem) {
+          errElem.textContent = errorMessage;
+          errElem.classList.remove('hidden');
+        }
+
+        const clearHandler = () => {
+          inputElement.classList.remove('is-invalid');
+          if (box) box.classList.remove('is-invalid');
+          if (errElem) errElem.classList.add('hidden');
+          inputElement.removeEventListener('input', clearHandler);
+          inputElement.removeEventListener('change', clearHandler);
+        };
+        inputElement.addEventListener('input', clearHandler);
+        inputElement.addEventListener('change', clearHandler);
+      }
+
       nextBtn?.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (!tempatInput.value.trim() || !tglInput.value || !alamatInput.value.trim()) {
-          errElem.textContent = 'Mohon lengkapi Tempat Lahir, Tanggal Lahir, dan Alamat Domisili!';
-          errElem.classList.remove('hidden');
+
+        if (!tempatInput || !tempatInput.value.trim()) {
+          markFieldInvalid(tempatInput, 'Tempat Lahir wajib diisi!');
           return;
         }
+
+        if (!tglInput || !tglInput.value) {
+          markFieldInvalid(tglInput, 'Tanggal Lahir wajib diisi!');
+          return;
+        }
+
+        // Manual vs Map Validation
+        const isManualMode = !paneManual?.classList.contains('hidden');
+        if (isManualMode) {
+          if (!provInput?.value.trim()) {
+            markFieldInvalid(provInput, 'Pilih Provinsi domisili!');
+            return;
+          }
+          if (!kotaInput?.value.trim()) {
+            markFieldInvalid(kotaInput, 'Pilih Kota / Kabupaten domisili!');
+            return;
+          }
+          if (!kecInput?.value.trim()) {
+            markFieldInvalid(kecInput, 'Pilih Kecamatan domisili!');
+            return;
+          }
+          if (!kelInput?.value.trim()) {
+            markFieldInvalid(kelInput, 'Pilih Kelurahan / Desa domisili!');
+            return;
+          }
+          if (!jalanInput?.value.trim()) {
+            markFieldInvalid(jalanInput, 'Mohon isi Nama Jalan / Detail Rumah!');
+            return;
+          }
+          updateAddressFromParts();
+        } else {
+          if (!alamatInput.value.trim()) {
+            const mapWrap = card.querySelector('.orb-map-wrap');
+            markFieldInvalid(mapWrap, 'Silakan tentukan titik lokasi domisili pada peta!');
+            return;
+          }
+        }
+
+        if (!alamatInput.value.trim()) {
+          markFieldInvalid(jalanInput || tempatInput, 'Alamat domisili belum lengkap!');
+          return;
+        }
+
+        card.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
         errElem.classList.add('hidden');
 
         formDataState.tempat_lahir = tempatInput.value.trim();
@@ -1515,6 +1650,38 @@ document.addEventListener('DOMContentLoaded', () => {
         if (dropdownList) dropdownList.style.display = 'none';
       });
 
+      // Helper to highlight invalid field with red indicator and auto-scroll
+      function markFieldInvalid(el, msg) {
+        if (!el) return;
+        card.querySelectorAll('.is-invalid').forEach(e => e.classList.remove('is-invalid'));
+        
+        el.classList.add('is-invalid');
+        const box = el.closest('.orb-autocomplete-box') || el.closest('.orb-custom-select') || el.closest('.orb-input-wrap');
+        if (box) box.classList.add('is-invalid');
+
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (typeof el.focus === 'function') {
+          setTimeout(() => el.focus(), 150);
+        }
+
+        if (step4Err) {
+          step4Err.textContent = msg;
+          step4Err.classList.remove('hidden');
+        }
+
+        const onClear = () => {
+          el.classList.remove('is-invalid');
+          if (box) box.classList.remove('is-invalid');
+          if (step4Err) step4Err.classList.add('hidden');
+          el.removeEventListener('input', onClear);
+          el.removeEventListener('change', onClear);
+          el.removeEventListener('click', onClear);
+        };
+        el.addEventListener('input', onClear);
+        el.addEventListener('change', onClear);
+        el.addEventListener('click', onClear);
+      }
+
       finishBtn?.addEventListener('click', async (e) => {
         e.stopPropagation();
         
@@ -1545,14 +1712,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 4. Check Step 4 (Akademik / Dosen Wali)
-        if (!isDosen && !formDataState.dosen_wali) {
-          if (step4Err) {
-            step4Err.textContent = 'Mohon cari dan pilih Dosen Wali Akademik dari daftar!';
-            step4Err.classList.remove('hidden');
-          }
-          searchInput?.focus();
+        if (!formDataState.konsentrasi) {
+          markFieldInvalid(selectKonsentrasi, 'Pilih Konsentrasi / Program Studi!');
           return;
         }
+
+        if (!isDosen && !formDataState.dosen_wali) {
+          markFieldInvalid(searchInput || card.querySelector('#dosenAutocompleteBox'), 'Mohon cari dan pilih Dosen Wali Akademik dari daftar!');
+          return;
+        }
+
+        card.querySelectorAll('.is-invalid').forEach(e => e.classList.remove('is-invalid'));
         if (step4Err) step4Err.classList.add('hidden');
 
         // Show loading state on button

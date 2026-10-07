@@ -24,6 +24,7 @@ class Booking_model extends CI_Model {
         $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan, kategori_ruangan.nama_kategori');
         $this->db->from('ruangan');
         $this->db->join('kategori_ruangan', 'kategori_ruangan.id = ruangan.id_kategori', 'left');
+        $this->db->order_by('ruangan.date', 'ASC');
         $this->db->order_by('ruangan.id', 'ASC');
         $ruangan_list = $this->db->get()->result();
 
@@ -50,17 +51,105 @@ class Booking_model extends CI_Model {
                         }
                     }
                 }
+
+                // Parse multiple photos (disimpan dipisah koma)
+                $all_foto = [];
+                if (!empty($r->foto)) {
+                    $parts = array_filter(array_map('trim', explode(',', $r->foto)));
+                    foreach ($parts as $p) {
+                        if (!empty($p) && !in_array($p, $all_foto)) {
+                            $all_foto[] = $p;
+                        }
+                    }
+                }
+                $r->all_foto = $all_foto;
+                $r->foto_utama = !empty($all_foto[0]) ? $all_foto[0] : '';
+                $r->foto = $r->foto_utama; // Tetap kompatibel 100% dengan kode/view yang memanggil $r->foto
             }
         }
 
         return $ruangan_list;
     }
 
+    /**
+     * Mengambil seluruh data ruangan yang digrupkan per fasilitas/nama ruangan
+     * untuk tampilan halaman web Admin & Landing Page (1 baris per fasilitas dengan daftar badge kode ruangan)
+     */
+    public function get_all_ruangan_grouped()
+    {
+        $raw_list = $this->get_all_ruangan();
+        if (empty($raw_list)) return [];
+
+        $grouped = [];
+        foreach ($raw_list as $r) {
+            $nameKey = strtolower(trim((string)$r->nama_ruangan));
+            if (!isset($grouped[$nameKey])) {
+                $clone = clone $r;
+                $clone->kode_ruangan_list = [$r->kode_ruangan ?: $r->id];
+                $clone->all_ids = [$r->id];
+                $clone->all_foto = is_array($r->all_foto) ? $r->all_foto : [];
+                $grouped[$nameKey] = $clone;
+            } else {
+                $code = $r->kode_ruangan ?: $r->id;
+                if (!in_array($code, $grouped[$nameKey]->kode_ruangan_list)) {
+                    $grouped[$nameKey]->kode_ruangan_list[] = $code;
+                }
+                if (!in_array($r->id, $grouped[$nameKey]->all_ids)) {
+                    $grouped[$nameKey]->all_ids[] = $r->id;
+                }
+                if (is_array($r->all_foto)) {
+                    foreach ($r->all_foto as $af) {
+                        if (!in_array($af, $grouped[$nameKey]->all_foto)) {
+                            $grouped[$nameKey]->all_foto[] = $af;
+                        }
+                    }
+                }
+                if (empty($grouped[$nameKey]->model_3d) && !empty($r->model_3d)) $grouped[$nameKey]->model_3d = $r->model_3d;
+                if (empty($grouped[$nameKey]->tagline) && !empty($r->tagline)) $grouped[$nameKey]->tagline = $r->tagline;
+                if (empty($grouped[$nameKey]->deskripsi) && !empty($r->deskripsi)) $grouped[$nameKey]->deskripsi = $r->deskripsi;
+            }
+        }
+
+        foreach ($grouped as &$g) {
+            $g->kode_ruangan = implode(', ', $g->kode_ruangan_list);
+            $g->foto_utama = !empty($g->all_foto[0]) ? $g->all_foto[0] : '';
+            $g->foto = $g->foto_utama;
+        }
+
+        return array_values($grouped);
+    }
+
     public function get_ruangan_by_kategori($id_kategori)
     {
         $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan');
         $this->db->where('id_kategori', $id_kategori);
-        return $this->db->get('ruangan')->result();
+        $this->db->order_by('ruangan.date', 'ASC');
+        $this->db->order_by('ruangan.id', 'ASC');
+        $raw = $this->db->get('ruangan')->result();
+
+        $flattened = [];
+        foreach ($raw as $r) {
+            $nama = !empty($r->nama_ruangan) ? $r->nama_ruangan : (!empty($r->ruangan) ? $r->ruangan : 'Ruangan');
+            $rawCodes = !empty($r->kode_ruangan) ? $r->kode_ruangan : (!empty($r->id) ? $r->id : '');
+
+            if (strpos((string)$rawCodes, ',') !== false) {
+                $codes = array_filter(array_map('trim', explode(',', (string)$rawCodes)));
+                foreach ($codes as $c) {
+                    $item = clone $r;
+                    $item->id = $c;
+                    $item->kode_ruangan = $c;
+                    $item->nama_ruangan = $nama;
+                    $flattened[] = $item;
+                }
+            } else {
+                $item = clone $r;
+                $item->id = !empty($r->id) ? $r->id : $rawCodes;
+                $item->kode_ruangan = !empty($r->kode_ruangan) ? $r->kode_ruangan : (!empty($r->id) ? $r->id : '');
+                $item->nama_ruangan = $nama;
+                $flattened[] = $item;
+            }
+        }
+        return $flattened;
     }
 
     public function get_all_slot_waktu()
@@ -89,8 +178,8 @@ class Booking_model extends CI_Model {
                 NULLIF(TRIM(CONCAT(m.nama_depan, ' ', COALESCE(m.nama_belakang, ''))), ''),
                 'Mahasiswa / Civitas IFIK'
             ) AS nama_lengkap,
-            COALESCE(ruangan.ruangan, booking.id_ruangan) AS nama_ruangan,
-            ruangan.id AS kode_ruangan,
+            COALESCE(ruangan.ruangan, 'Ruangan Lab') AS nama_ruangan,
+            COALESCE(booking.id_ruangan, ruangan.id, '-') AS kode_ruangan,
             'Gedung Sebatik (FIK)' AS lokasi,
             COALESCE(ruangan.kapasitas, 30) AS kapasitas,
             ruangan.foto,
@@ -116,7 +205,9 @@ class Booking_model extends CI_Model {
         $this->db->join('user u2', 'u2.nim = booking.id_peminjam', 'left');
         $this->db->join('user u3', 'u3.nip = booking.id_peminjam', 'left');
         $this->db->join('mahasiswa m', 'm.nim = booking.id_peminjam', 'left');
-        $this->db->join('ruangan', 'ruangan.id = booking.id_ruangan', 'left');
+        $this->db->join('ruangan', 'ruangan.id = booking.id_ruangan 
+            OR (FIND_IN_SET(booking.id_ruangan, REPLACE(COALESCE(ruangan.id, ""), " ", "")) > 0)
+            OR ruangan.ruangan = booking.id_ruangan', 'left');
         $this->db->join('kategori_ruangan', 'kategori_ruangan.id = ruangan.id_kategori', 'left');
     }
 
@@ -138,8 +229,8 @@ class Booking_model extends CI_Model {
                 peminjaman.id_user,
                 peminjaman.id_ruangan,
                 peminjaman.nama_lengkap,
-                COALESCE(ruangan.ruangan, peminjaman.id_ruangan) AS nama_ruangan,
-                ruangan.id AS kode_ruangan,
+                COALESCE(ruangan.ruangan, 'Ruangan Lab') AS nama_ruangan,
+                COALESCE(peminjaman.id_ruangan, ruangan.id, '-') AS kode_ruangan,
                 ruangan.id_kategori,
                 'Gedung Sebatik (FIK)' AS lokasi,
                 COALESCE(ruangan.kapasitas, 30) AS kapasitas,
@@ -158,7 +249,9 @@ class Booking_model extends CI_Model {
                 peminjaman.created_at AS date_created
             ", FALSE);
             $this->db->from('peminjaman');
-            $this->db->join('ruangan', 'ruangan.id = peminjaman.id_ruangan', 'left');
+            $this->db->join('ruangan', 'ruangan.id = peminjaman.id_ruangan 
+                OR (FIND_IN_SET(peminjaman.id_ruangan, REPLACE(COALESCE(ruangan.id, ""), " ", "")) > 0)
+                OR ruangan.ruangan = peminjaman.id_ruangan', 'left');
             $this->db->join('kategori_ruangan', 'kategori_ruangan.id = ruangan.id_kategori', 'left');
             $this->db->where('peminjaman.id', $id);
             $res = $this->db->get()->row();
@@ -470,6 +563,41 @@ class Booking_model extends CI_Model {
         }
 
         return $penandatangan;
+    }
+
+    /**
+     * Memeriksa apakah user tertentu (atau role terkait) memiliki file tanda tangan digital yang valid
+     */
+    public function has_signature($user_id = null, $role_id = null)
+    {
+        if (empty($user_id)) {
+            $user_id = $this->session->userdata('user_id');
+        }
+        if ($role_id === null) {
+            $role_id = (int)$this->session->userdata('role_id');
+        }
+
+        $user = null;
+        $user_tbl = $this->db->table_exists('user') ? 'user' : ($this->db->table_exists('users') ? 'users' : null);
+
+        if ($user_tbl && !empty($user_id)) {
+            $user = $this->db->get_where($user_tbl, ['id' => $user_id])->row();
+            if (!$user && $this->db->field_exists('nim', $user_tbl)) {
+                $user = $this->db->get_where($user_tbl, ['nim' => $user_id])->row();
+            }
+        }
+
+        if (!$user && $user_tbl && !empty($role_id)) {
+            $user = $this->db->get_where($user_tbl, ['role_id' => $role_id])->row();
+        }
+
+        $ttd = $user ? ($user->ttd ?? ($user->tanda_tangan ?? null)) : null;
+        if (empty($ttd)) {
+            return false;
+        }
+
+        $filePath = FCPATH . 'uploads/signatures/' . $ttd;
+        return file_exists($filePath);
     }
 }
 

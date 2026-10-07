@@ -2229,7 +2229,7 @@
                 ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
                 ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
                 ['heading' => 'Tanda Tangan Digital', 'href' => site_url('laboran/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
-                ['heading' => 'Import Email & Token', 'href' => site_url('laboran/import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
+                ['heading' => 'Pendaftaran Akun Baru', 'href' => site_url('laboran/import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
 
                 ['category' => 'Layanan Ticketing & Bantuan', 'has_divider' => true],
                 ['heading' => 'Bantuan & Live Chat Lab', 'href' => site_url('laboran/help'), 'icon_3d' => 'assets/images/icons_3d/help_chat.png'],
@@ -2328,7 +2328,7 @@
                 ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
 
                 ['category' => 'Manajemen Sistem', 'has_divider' => true],
-                ['heading' => 'Import Email & Token', 'href' => site_url('admin/import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
+                ['heading' => 'Pendaftaran Akun Baru', 'href' => site_url('admin/import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
                 ['heading' => 'Pengaturan Unit Ticketing', 'href' => site_url('admin#unit-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
                 ['heading' => 'Respon Ticketing Lab', 'href' => site_url('laboran/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
                 ['heading' => 'Riwayat Log History', 'href' => site_url('admin/log_history'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
@@ -2937,7 +2937,7 @@
                         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 16px;">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 10px; flex-wrap: wrap;">
                                 <div>
-                                    <span id="detailKodeRuangan" style="display: inline-block; background: #ede9fe; color: #7c3aed; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-bottom: 4px;"></span>
+                                    <div id="detailKodeRuangan" style="display: none; margin-bottom: 4px;"></div>
                                     <h3 id="detailNamaRuangan" style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #0f172a;"></h3>
                                 </div>
                                 <div id="detailStatusBadge"></div>
@@ -4312,6 +4312,15 @@
             document.getElementById('detailBookingModal').classList.add('show');
         }
 
+        function formatRoomCodeCompact(rawCodes) {
+            if (!rawCodes) return '-';
+            const codes = String(rawCodes).split(',').map(c => c.trim()).filter(Boolean);
+            if (codes.length === 0) return '-';
+            if (codes.length === 1) return codes[0];
+            if (codes.length === 2) return `${codes[0]}, ${codes[1]}`;
+            return `${codes[0]} (+${codes.length - 1} Ruang)`;
+        }
+
         function renderDailyModalList(list, activeId) {
             const listEl = document.getElementById('modalDailyList');
             const countEl = document.getElementById('modalDailyCountBadge');
@@ -4341,10 +4350,10 @@
                 html += `
                     <div class="modal-daily-item ${isActive ? 'active' : ''}" onclick="selectBookingInDailyModal('${b.id}')">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; gap: 6px;">
-                            <span style="font-size: 0.72rem; font-weight: 700; color: #7c3aed; background: #ede9fe; padding: 2px 7px; border-radius: 6px;">
-                                ${b.kode_ruangan || '-'}
+                            <span style="font-size: 0.72rem; font-weight: 700; color: #7c3aed; background: #ede9fe; padding: 2px 7px; border-radius: 6px; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block;" title="${b.kode_ruangan || '-'}">
+                                ${formatRoomCodeCompact(b.kode_ruangan)}
                             </span>
-                            <span style="display:inline-flex; align-items:center; gap:4px; font-size:0.7rem; font-weight:700; color:${st.badgeColor};">
+                            <span style="display:inline-flex; align-items:center; gap:4px; font-size:0.7rem; font-weight:700; color:${st.badgeColor}; flex-shrink:0;">
                                 <span style="width:6px; height:6px; border-radius:50%; background:${st.dot};"></span>
                                 ${st.label}
                             </span>
@@ -4404,8 +4413,26 @@
 
             // Populate detail pane
             document.getElementById('detailBookingId').value = booking.id;
-            document.getElementById('detailKodeRuangan').innerText = booking.kode_ruangan ? 'Ruang: ' + booking.kode_ruangan : '';
-            document.getElementById('detailKodeRuangan').style.display = booking.kode_ruangan ? 'inline-block' : 'none';
+            
+            const detailKodeEl = document.getElementById('detailKodeRuangan');
+            const rawCodes = String(booking.kode_ruangan || '').split(',').map(c => c.trim()).filter(Boolean);
+            if (rawCodes.length > 0) {
+                if (rawCodes.length === 1) {
+                    detailKodeEl.innerHTML = `<span style="display:inline-block; background:#ede9fe; color:#7c3aed; font-size:0.75rem; font-weight:700; padding:3px 10px; border-radius:20px; border:1px solid #ddd6fe; margin-bottom:4px;">Ruang: ${rawCodes[0]}</span>`;
+                } else {
+                    const badges = rawCodes.map(c => `<span style="display:inline-block; background:#ede9fe; color:#7c3aed; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:6px; border:1px solid #ddd6fe;">${c}</span>`).join('');
+                    detailKodeEl.innerHTML = `
+                        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:5px; margin-bottom:6px;">
+                            <span style="font-size:0.74rem; font-weight:700; color:#64748b;">Sub Ruangan (${rawCodes.length}):</span>
+                            ${badges}
+                        </div>
+                    `;
+                }
+                detailKodeEl.style.display = 'block';
+            } else {
+                detailKodeEl.style.display = 'none';
+            }
+
             document.getElementById('detailNamaRuangan').innerText = booking.nama_ruangan || '';
             document.getElementById('detailNamaLengkap').innerText = booking.nama_lengkap || '-';
 
@@ -4438,24 +4465,59 @@
             document.getElementById('detailBookingModal').classList.remove('show');
         }
 
-        function reloadBookingData() {
+        let isSyncingBookings = false;
+        function reloadBookingData(silent = true) {
+            if (isSyncingBookings || !window.getUpdatedBookingsUrl) return;
+            isSyncingBookings = true;
+
             fetch(window.getUpdatedBookingsUrl)
             .then(r => r.json())
             .then(data => {
-                window.bookingData = data;
-                applyMultiFilters();
+                isSyncingBookings = false;
+                if (!Array.isArray(data)) return;
 
-                // If modal is open, refresh daily list and active booking
-                if (document.getElementById('detailBookingModal').classList.contains('show') && currentModalTargetDate) {
-                    activeDailyBookings = window.bookingData.filter(b => b.tanggal_mulai <= currentModalTargetDate && b.tanggal_selesai >= currentModalTargetDate);
-                    activeDailyBookings.sort((a, b) => (a.jam_mulai || '').localeCompare(b.jam_mulai || ''));
-                    filterDailyModalList();
-                    if (selectedDailyBookingId) {
-                        selectBookingInDailyModal(selectedDailyBookingId);
+                // Smart hash compare to avoid unnecessary DOM re-renders if data is identical
+                const currentHash = JSON.stringify(window.bookingData || []);
+                const newHash = JSON.stringify(data);
+
+                if (currentHash !== newHash) {
+                    window.bookingData = data;
+                    applyMultiFilters();
+
+                    // If modal is open, refresh daily list and active booking smoothly
+                    const modalEl = document.getElementById('detailBookingModal');
+                    if (modalEl && modalEl.classList.contains('show') && currentModalTargetDate) {
+                        activeDailyBookings = window.bookingData.filter(b => b.tanggal_mulai <= currentModalTargetDate && b.tanggal_selesai >= currentModalTargetDate);
+                        activeDailyBookings.sort((a, b) => (a.jam_mulai || '').localeCompare(b.jam_mulai || ''));
+                        filterDailyModalList();
+                        if (selectedDailyBookingId) {
+                            selectBookingInDailyModal(selectedDailyBookingId);
+                        }
                     }
                 }
-            }).catch(e => console.error(e));
+            })
+            .catch(e => {
+                isSyncingBookings = false;
+                if (!silent) console.error('Error syncing bookings:', e);
+            });
         }
+
+        // Live Realtime Auto-Sync: Poll in background every 8 seconds when tab is active
+        setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                reloadBookingData(true);
+            }
+        }, 8000);
+
+        // Instant Auto-Sync whenever user switches back / focuses the tab
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                reloadBookingData(true);
+            }
+        });
+        window.addEventListener('focus', () => {
+            reloadBookingData(true);
+        });
 
         function nextWeek() { currentWeekStart.setDate(currentWeekStart.getDate() + 7); renderCalendar(); applyMultiFilters(); }
         function prevWeek() { currentWeekStart.setDate(currentWeekStart.getDate() - 7); renderCalendar(); applyMultiFilters(); }
@@ -4504,5 +4566,7 @@
             }
         });
     </script>
+    <!-- Global Custom Circle Cursor -->
+    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>

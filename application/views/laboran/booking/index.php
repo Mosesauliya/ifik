@@ -1265,6 +1265,10 @@
             flex-shrink: 0;
         }
 
+        .swal2-container {
+            z-index: 9999999 !important;
+        }
+
         /* Modals */
         .modal-overlay {
             position: fixed;
@@ -3945,6 +3949,21 @@
                                     openSuratModal(id);
                                 }
                             });
+                        } else if (resp.needs_signature) {
+                            Swal.fire({
+                                title: 'Tanda Tangan Belum Tersedia',
+                                text: resp.message,
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#ea580c',
+                                cancelButtonColor: '#94a3b8',
+                                confirmButtonText: '<i class="fa-solid fa-signature"></i> Buat TTD Sekarang',
+                                cancelButtonText: 'Nanti Saja'
+                            }).then((action) => {
+                                if (action.isConfirmed) {
+                                    window.location.href = resp.signature_url || (BASE_URL + 'laboran/tanda-tangan');
+                                }
+                            });
                         } else {
                             Swal.fire('Gagal', resp.message, 'error');
                         }
@@ -4046,6 +4065,21 @@
                             triggerLiveLaboranSync();
                             deselectAll();
                             Swal.fire({ title: 'Berhasil!', text: resp.message, icon: 'success', confirmButtonColor: '#16a34a' });
+                        } else if (resp.needs_signature) {
+                            Swal.fire({
+                                title: 'Tanda Tangan Belum Tersedia',
+                                text: resp.message,
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#ea580c',
+                                cancelButtonColor: '#94a3b8',
+                                confirmButtonText: '<i class="fa-solid fa-signature"></i> Buat TTD Sekarang',
+                                cancelButtonText: 'Nanti Saja'
+                            }).then((action) => {
+                                if (action.isConfirmed) {
+                                    window.location.href = resp.signature_url || (BASE_URL + 'laboran/tanda-tangan');
+                                }
+                            });
                         } else {
                             Swal.fire('Gagal', resp.message, 'error');
                         }
@@ -4134,46 +4168,39 @@
                 return;
             }
 
-            const count = ids.length;
+            closeRejectModal();
+
             Swal.fire({
-                title: isBatch ? `Tolak ${count} Permohonan Sekaligus?` : 'Tolak Permohonan Peminjaman?',
-                text: isBatch 
-                    ? `Sebanyak ${count} permohonan peminjaman akan ditolak dengan alasan yang Anda masukkan.`
-                    : `Permohonan peminjaman ini akan ditolak dengan alasan: "${alasan}".`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc2626',
-                cancelButtonColor: '#94a3b8',
-                confirmButtonText: isBatch ? `Ya, Tolak ${count} Permohonan` : 'Ya, Tolak',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    if (isBatch) {
-                        $.post(BASE_URL + 'laboran/batch_reject', { ids: ids, alasan_penolakan: alasan }, function(resp) {
-                            if (resp.status === 'success') {
-                                closeRejectModal();
-                                triggerLiveLaboranSync();
-                                deselectAll();
-                                Swal.fire({ title: 'Ditolak!', text: resp.message, icon: 'success', confirmButtonColor: '#dc2626' });
-                            } else {
-                                Swal.fire('Gagal', resp.message, 'error');
-                            }
-                        }, 'json').fail(() => Swal.fire('Error', 'Terjadi kesalahan pada server', 'error'));
-                    } else {
-                        const singleId = ids[0];
-                        $.post(BASE_URL + 'laboran/reject/' + singleId, { alasan_penolakan: alasan }, function(resp) {
-                            if (resp.status === 'success') {
-                                closeRejectModal();
-                                triggerLiveLaboranSync();
-                                deselectAll();
-                                Swal.fire({ title: 'Ditolak!', text: resp.message, icon: 'success', confirmButtonColor: '#dc2626' });
-                            } else {
-                                Swal.fire('Gagal', resp.message, 'error');
-                            }
-                        }, 'json').fail(() => Swal.fire('Error', 'Terjadi kesalahan pada server', 'error'));
-                    }
+                title: 'Memproses Penolakan...',
+                text: 'Mohon tunggu sebentar',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
                 }
             });
+
+            if (isBatch) {
+                $.post(BASE_URL + 'laboran/batch_reject', { ids: ids, alasan_penolakan: alasan }, function(resp) {
+                    if (resp.status === 'success') {
+                        triggerLiveLaboranSync();
+                        deselectAll();
+                        Swal.fire({ title: 'Ditolak!', text: resp.message, icon: 'success', confirmButtonColor: '#dc2626' });
+                    } else {
+                        Swal.fire('Gagal', resp.message, 'error');
+                    }
+                }, 'json').fail(() => Swal.fire('Error', 'Terjadi kesalahan pada server', 'error'));
+            } else {
+                const singleId = ids[0];
+                $.post(BASE_URL + 'laboran/reject/' + singleId, { alasan_penolakan: alasan }, function(resp) {
+                    if (resp.status === 'success') {
+                        triggerLiveLaboranSync();
+                        deselectAll();
+                        Swal.fire({ title: 'Ditolak!', text: resp.message, icon: 'success', confirmButtonColor: '#dc2626' });
+                    } else {
+                        Swal.fire('Gagal', resp.message, 'error');
+                    }
+                }, 'json').fail(() => Swal.fire('Error', 'Terjadi kesalahan pada server', 'error'));
+            }
         }
 
         // ==========================================
@@ -4275,16 +4302,18 @@
                     success: function(data){
                         var html = '<option value="">Pilih Ruangan</option>';
                         for(var i=0; i<data.length; i++){
-                            if (data[i].kode_ruangan && data[i].kode_ruangan.indexOf(',') > -1) {
-                                var codes = data[i].kode_ruangan.split(',');
+                            var rawCodes = data[i].kode_ruangan || data[i].id || '';
+                            if (rawCodes && rawCodes.indexOf(',') > -1) {
+                                var codes = rawCodes.split(',');
                                 for(var c=0; c<codes.length; c++){
                                     var codeTrim = codes[c].trim();
                                     if(codeTrim) {
-                                        html += '<option value="'+data[i].id+'">'+codeTrim+' - '+data[i].nama_ruangan+'</option>';
+                                        html += '<option value="'+codeTrim+'">'+codeTrim+' - '+data[i].nama_ruangan+'</option>';
                                     }
                                 }
                             } else {
-                                html += '<option value="'+data[i].id+'">'+(data[i].kode_ruangan ? data[i].kode_ruangan + ' - ' : '')+data[i].nama_ruangan+'</option>';
+                                var codeVal = data[i].kode_ruangan || data[i].id;
+                                html += '<option value="'+(data[i].id || codeVal)+'">'+(codeVal ? codeVal + ' - ' : '')+data[i].nama_ruangan+'</option>';
                             }
                         }
                         $('#ruanganSelect').html(html);
@@ -4481,5 +4510,8 @@
             updateDots();
         }
     </script>
+
+    <!-- Global Custom Circle Cursor -->
+    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>

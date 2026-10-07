@@ -31,9 +31,14 @@
         }
     }
 
-    /* Pastikan iframe file (seperti PDF viewer) mengizinkan kursor sistem bawaan */
+    /* Pastikan iframe file (seperti PDF viewer) mengizinkan kursor bawaan */
     iframe {
         cursor: auto !important;
+    }
+
+    /* Kursor Pulpen Khusus untuk Kanvas Tanda Tangan Digital */
+    #signaturePadCanvas, #signatureCanvas, #canvasBox, .cursor-pen, .canvas-container canvas {
+        cursor: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj48cGF0aCBkPSJNMTcgM2EyLjg1IDIuODMgMCAxIDEgNCA0TDcuNSAyMC41IDIgMjJsMS41LTUuNVoiIGZpbGw9IiMxZTI5M2IiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTcgM2EyLjg1IDIuODMgMCAxIDEgNCA0TDcuNSAyMC41IDIgMjJsMS41LTUuNVoiIGZpbGw9IiMxZTI5M2IiLz48cG9seWdvbiBwb2ludHM9IjIsMjIgMy4yLDE3LjYgNi40LDIwLjgiIGZpbGw9IiNlYTU4MGMiLz48cGF0aCBkPSJtMTUgNSA0IDQiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIxLjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxjaXJjbGUgY3g9IjIiIGN5PSIyMiIgcj0iMC43NSIgZmlsbD0iIzBmMTcyYSIvPjwvc3ZnPg==") 2 22, crosshair !important;
     }
 
     #customCursorCircle {
@@ -134,10 +139,28 @@
         window.hideCircleCursor = hideCircleCursor;
         window.showCircleCursor = showCircleCursor;
 
+        function isExcludedElement(el) {
+            if (!el) return false;
+            if (el.tagName === 'IFRAME') return true;
+            if (el.id === 'signaturePadCanvas' || el.id === 'signatureCanvas' || el.id === 'canvasBox') return true;
+            if (el.classList && (el.classList.contains('cursor-pen') || el.classList.contains('canvas-container'))) return true;
+            if (el.closest && (el.closest('iframe') || el.closest('#quickDocFileViewerWrapper') || el.closest('.pdf-viewer-container') || el.closest('#signaturePadCanvas') || el.closest('#signatureCanvas') || el.closest('#canvasBox') || el.closest('.cursor-pen') || el.closest('.canvas-container'))) {
+                return true;
+            }
+            return false;
+        }
+
         // Update posisi 1:1 instan tanpa delay menggunakan GPU Compositor translate3d
         function updateCursorPos(e) {
             mouseX = e.clientX;
             mouseY = e.clientY;
+
+            // Jika mouse berada di area canvas tanda tangan atau iframe PDF, sembunyikan bulatan oranye
+            if (isExcludedElement(e.target)) {
+                hideCircleCursor();
+                return;
+            }
+
             if (!isVisible) showCircleCursor();
             circle.style.transform = 'translate3d(' + mouseX + 'px, ' + mouseY + 'px, 0)';
         }
@@ -157,8 +180,8 @@
             const target = e.target;
             if (!target) return;
 
-            // Sembunyikan kursor saat di dalam iframe (misal viewer PDF)
-            if (target.tagName === 'IFRAME' || (target.closest && (target.closest('iframe') || target.closest('#quickDocFileViewerWrapper') || target.closest('.pdf-viewer-container')))) {
+            // Sembunyikan kursor saat di dalam iframe (misal viewer PDF) atau canvas tanda tangan
+            if (isExcludedElement(target)) {
                 hideCircleCursor();
                 return;
             }
@@ -172,7 +195,8 @@
         }, { passive: true });
 
         // Efek klik ditekan
-        window.addEventListener('pointerdown', function() {
+        window.addEventListener('pointerdown', function(e) {
+            if (isExcludedElement(e.target)) return;
             circle.classList.add('active');
         }, { passive: true });
 

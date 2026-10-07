@@ -828,11 +828,7 @@
                 display: none !important;
             }
 
-            body.mobile-chat-open #curvedSidebarToggle,
-            body.mobile-chat-open .curved-sidebar-btn,
-            body.mobile-chat-open .floating-sidebar-toggle,
-            body.mobile-chat-open .curved-sidebar-nav,
-            body.mobile-chat-open .curved-sidebar-backdrop {
+            body.mobile-chat-open .floating-sidebar-toggle {
                 display: none !important;
             }
 
@@ -1655,5 +1651,7 @@
             textarea.style.overflowY = textarea.scrollHeight > 120 ? 'auto' : 'hidden';
         }
     </script>
+    <!-- Global Custom Circle Cursor -->
+    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>

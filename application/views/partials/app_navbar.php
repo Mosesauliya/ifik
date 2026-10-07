@@ -4,7 +4,7 @@
     $logged_in = (bool)$this->session->userdata('logged_in');
 
     $role_names = [
-        1  => 'Super Admin System',
+        1  => 'Admin System',
         2  => 'Kepala Urusan (Ka Lab)',
         3  => 'Dosen',
         4  => 'Mahasiswa',
@@ -12,10 +12,11 @@
         6  => 'Koordinator Tugas Akhir',
         7  => 'PIC Kelompok Keahlian',
         9  => 'Ketua Kelompok Keahlian',
-        21 => 'Laboran'
+        21 => 'Laboran',
+        22 => 'Super Administrator'
     ];
 
-    $user_role_label = $role_names[$role_id] ?? ($current_uri === 'adminlayanan' ? 'Admin Layanan (LAA)' : ($current_uri === 'ketuakk' ? 'Ketua Kelompok Keahlian' : ($current_uri === 'koordinatorta' ? 'Koordinator Tugas Akhir' : ($current_uri === 'laboran' ? 'Laboran' : ($current_uri === 'kaur' ? 'Kepala Urusan (Ka Lab)' : 'Pusat Kendali Admin')))));
+    $user_role_label = $role_names[$role_id] ?? ($current_uri === 'adminlayanan' ? 'Admin Layanan (LAA)' : ($current_uri === 'ketuakk' ? 'Ketua Kelompok Keahlian' : ($current_uri === 'koordinatorta' ? 'Koordinator Tugas Akhir' : ($current_uri === 'laboran' ? 'Laboran' : ($current_uri === 'kaur' ? 'Kepala Urusan (Ka Lab)' : ($role_id == 22 ? 'Panel Super Admin' : 'Pusat Kendali Admin'))))));
     $user_display_name = $this->session->userdata('name') ?: 'Unit Layanan FIK';
     $user_email = $this->session->userdata('email') ?: 'admin@telkomuniversity.ac.id';
 ?>
@@ -150,7 +151,6 @@
                 </a>
                 <?php endif; ?>
 
-
                 <!-- Riwayat Log Approval - Global Access for Admin & Staff -->
                 <?php if (in_array($role_id, [1, 2, 3, 5, 6, 7, 9, 21])): ?>
                 <a href="<?= site_url('admin/log_history'); ?>" 
@@ -160,12 +160,21 @@
                 </a>
                 <?php endif; ?>
 
-                <!-- Pusat Admin Hub (Hanya Super Admin - Role 1) -->
+                <!-- Pusat Admin Hub (Hanya Admin System - Role 1) -->
                 <?php if ($role_id == 1): ?>
                 <a href="<?= site_url('admin'); ?>" 
                    class="whitespace-nowrap text-xs font-semibold flex items-center gap-1.5 transition-colors py-1 <?= $current_uri === 'admin' ? 'text-orange-600 font-bold border-b-2 border-orange-600' : 'text-slate-600 hover:text-orange-600'; ?>">
                     <i class="bi bi-grid-fill <?= $current_uri === 'admin' ? 'text-orange-600' : 'text-slate-400'; ?>"></i>
                     <span>Pusat Admin</span>
+                </a>
+                <?php endif; ?>
+
+                <!-- Super Admin Hub (Hanya Super Admin - Role 22) -->
+                <?php if ($role_id == 22): ?>
+                <a href="<?= site_url('import-email'); ?>" 
+                   class="whitespace-nowrap text-xs font-semibold flex items-center gap-1.5 transition-colors py-1 <?= $current_uri === 'importemail' || $current_uri === 'import-email' ? 'text-orange-600 font-bold border-b-2 border-orange-600' : 'text-slate-600 hover:text-orange-600'; ?>">
+                    <i class="bi bi-people-fill <?= $current_uri === 'importemail' || $current_uri === 'import-email' ? 'text-orange-600' : 'text-slate-400'; ?>"></i>
+                    <span>Panel Super Admin</span>
                 </a>
                 <?php endif; ?>
             </nav>

@@ -9,21 +9,72 @@ class Mahasiswa extends CI_Controller {
         $this->load->library('form_validation');
         $this->load->helper(array('form', 'url'));
 
+        $isAjax = $this->input->is_ajax_request() ||
+                  (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') ||
+                  (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
+
+        // 1. Cek Login
         if (!$this->session->userdata('logged_in')) {
-            if ($this->input->is_ajax_request()) {
+            if ($isAjax) {
                 $this->output
                     ->set_status_header(401)
                     ->set_content_type('application/json')
                     ->set_output(json_encode(['success' => false, 'message' => 'Sesi berakhir, silakan login kembali.']));
                 exit;
             }
+            $this->session->set_flashdata('error', 'Silakan login terlebih dahulu untuk mengakses portal Mahasiswa.');
+            redirect('login');
+            return;
+        }
+
+        // 2. Cek Role (Hanya Role 4 = Mahasiswa, atau Role 1 = Admin)
+        $role_id = (int)$this->session->userdata('role_id');
+        if ($role_id !== 4 && $role_id !== 1) {
+            if ($isAjax) {
+                $this->output
+                    ->set_status_header(403)
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode(['success' => false, 'message' => 'Akses ditolak. Halaman ini khusus untuk Mahasiswa.']));
+                exit;
+            }
+            $this->session->set_flashdata('error', 'Akses ditolak! Halaman ini khusus untuk Mahasiswa.');
             redirect('login');
             return;
         }
     }
 
     private function _get_current_nim() {
-        return $this->session->userdata('nim') ?: ($this->session->userdata('nidn_nim') ?: '1301210001');
+        $nim = $this->session->userdata('nim') ?: ($this->session->userdata('nidn_nim') ?: ($this->session->userdata('username') ?: ''));
+        if (empty($nim) && $this->session->userdata('user_id')) {
+            $user_tbl = $this->db->table_exists('user') ? 'user' : ($this->db->table_exists('users') ? 'users' : null);
+            if ($user_tbl) {
+                $u = $this->db->get_where($user_tbl, ['id' => $this->session->userdata('user_id')])->row_array();
+                if ($u) {
+                    $nim = !empty($u['nim']) ? $u['nim'] : (!empty($u['nidn_nim']) ? $u['nidn_nim'] : ($u['username'] ?? ''));
+                }
+            }
+        }
+        return $nim;
+    }
+
+    private function _get_current_user_id() {
+        $userId = $this->session->userdata('user_id');
+        if (!$userId) {
+            $nim = $this->_get_current_nim();
+            $user_tbl = $this->db->table_exists('user') ? 'user' : ($this->db->table_exists('users') ? 'users' : null);
+            if ($nim && $user_tbl) {
+                $this->db->group_start();
+                if ($this->db->field_exists('nim', $user_tbl)) $this->db->where('nim', $nim);
+                if ($this->db->field_exists('nidn_nim', $user_tbl)) $this->db->or_where('nidn_nim', $nim);
+                if ($this->db->field_exists('username', $user_tbl)) $this->db->or_where('username', $nim);
+                $this->db->group_end();
+                $u = $this->db->select('id')->limit(1)->get($user_tbl)->row_array();
+                if ($u && !empty($u['id'])) {
+                    $userId = $u['id'];
+                }
+            }
+        }
+        return $userId ? $userId : null;
     }
 
     private function _do_upload($field_name, $config) {
@@ -214,14 +265,28 @@ class Mahasiswa extends CI_Controller {
             $new_k_status  = ($k_status === 'Rejected') ? 'Pending' : $k_status;
             $new_kk_status = ($kk_status === 'Rejected') ? 'Pending' : $kk_status;
 
+            $posted_jenis_ta = $this->input->post('jenis_ta');
+            if (empty($posted_jenis_ta) && !empty($pendaftaran['jenis_ta'])) {
+                $posted_jenis_ta = $pendaftaran['jenis_ta'];
+            }
+            $posted_judul_1 = $this->input->post('judul_1');
+            if (empty($posted_judul_1) && !empty($pendaftaran['judul_1'])) {
+                $posted_judul_1 = $pendaftaran['judul_1'];
+            }
+            $posted_judul_2 = $this->input->post('judul_2') ?: ($pendaftaran['judul_2'] ?? '');
+            $posted_judul_3 = $this->input->post('judul_3') ?: ($pendaftaran['judul_3'] ?? '');
+            $posted_judul_en = $this->input->post('judul_en') ?: ($pendaftaran['judul_en'] ?? '');
+            $posted_konsentrasi = $this->input->post('konsentrasi_dkv') ?: ($pendaftaran['konsentrasi_dkv'] ?? '');
+
             $data_ta = array(
                 'nim'                  => $nim,
-                'jenis_ta'             => $this->input->post('jenis_ta'),
-                'judul_1'              => $this->input->post('judul_1'),
-                'judul_2'              => $this->input->post('judul_2'),
-                'judul_3'              => $this->input->post('judul_3'),
-                'judul_en'             => $this->input->post('judul_en'),
-                'konsentrasi_dkv'      => $this->input->post('konsentrasi_dkv'),
+                'is_submitted'         => 1,
+                'jenis_ta'             => $posted_jenis_ta,
+                'judul_1'              => $posted_judul_1,
+                'judul_2'              => $posted_judul_2,
+                'judul_3'              => $posted_judul_3,
+                'judul_en'             => $posted_judul_en,
+                'konsentrasi_dkv'      => $posted_konsentrasi,
                 'file_ksm'             => $file_step3 ? $file_step3 : $this->input->post('file_ksm_old'),
                 'file_transkrip'       => $file_step4 ? $file_step4 : $this->input->post('file_transkrip_old'),
                 'file_pernyataan'      => $file_step5 ? $file_step5 : $this->input->post('file_pernyataan_old'),
@@ -287,19 +352,35 @@ class Mahasiswa extends CI_Controller {
 
                     // 2. Simpan ke file_pendaftaran jika ada
                     if ($this->db->table_exists('file_pendaftaran')) {
-                        $target_ids = ['usr_mhs_' . $nim, 'mhs_' . $nim, $nim];
-                        $this->db->group_start()
+                        $u_id = $this->_get_current_user_id();
+                        $target_ids = array_values(array_unique(array_filter([$u_id, $nim])));
+                        $update_fp = [
+                            'file'            => 'uploads/persyaratan_ta/' . $new_file,
+                            'status_adminlaa' => 'Pending',
+                            'date_edit'       => date('Y-m-d H:i:s')
+                        ];
+                        if (($pendaftaran['status_approval_wali'] ?? '') !== 'Approved') {
+                            $update_fp['status_doswal'] = 'Pending';
+                            $update_fp['komentar']      = '';
+                        }
+
+                        $ex_fp = $this->db->group_start()
                             ->where_in('id_mhs', $target_ids)
-                            ->or_like('id_mhs', $nim)
                             ->group_end()
                             ->like('nama', $k)
-                            ->update('file_pendaftaran', [
-                                'file'            => 'uploads/persyaratan_ta/' . $new_file,
-                                'status_doswal'   => 'Pending',
-                                'status_adminlaa' => 'Pending',
-                                'komentar'        => '',
-                                'date_edit'       => date('Y-m-d H:i:s')
-                            ]);
+                            ->get('file_pendaftaran')->row_array();
+
+                        if ($ex_fp) {
+                            $this->db->where('id', $ex_fp['id'])->update('file_pendaftaran', $update_fp);
+                        } else {
+                            $fp_fields = $this->db->list_fields('file_pendaftaran');
+                            $new_fp = $update_fp;
+                            if (in_array('id', $fp_fields)) $new_fp['id'] = 'fp_' . $nim . '_' . $k;
+                            if (in_array('id_mhs', $fp_fields)) $new_fp['id_mhs'] = $u_id;
+                            if (in_array('nama', $fp_fields)) $new_fp['nama'] = $k;
+                            if (in_array('date', $fp_fields)) $new_fp['date'] = date('Y-m-d H:i:s');
+                            $this->db->insert('file_pendaftaran', $new_fp);
+                        }
                     }
 
                     // 3. Simpan ke pendaftaran_ta jika tabel dan kolomnya ada
@@ -310,18 +391,20 @@ class Mahasiswa extends CI_Controller {
                         $col_status  = 'status_file_' . $k;
                         $col_review  = 'review_file_' . $k;
                         $col_catatan = 'catatan_file_' . $k;
-                        if ($this->db->field_exists($col_status, 'pendaftaran_ta')) {
-                            $updated_data[$col_status] = 'Pending';
+                        if (($pendaftaran['status_approval_wali'] ?? '') !== 'Approved') {
+                            if ($this->db->field_exists($col_status, 'pendaftaran_ta')) {
+                                $updated_data[$col_status] = 'Pending';
+                            }
+                            if ($this->db->field_exists($col_review, 'pendaftaran_ta')) {
+                                $updated_data[$col_review] = 0;
+                            }
+                            if ($this->db->field_exists($col_catatan, 'pendaftaran_ta')) {
+                                $updated_data[$col_catatan] = '';
+                            }
                         }
                         $col_legacy_status = 'status_' . $k;
                         if ($this->db->field_exists($col_legacy_status, 'pendaftaran_ta')) {
                             $updated_data[$col_legacy_status] = 'Pending';
-                        }
-                        if ($this->db->field_exists($col_review, 'pendaftaran_ta')) {
-                            $updated_data[$col_review] = 0;
-                        }
-                        if ($this->db->field_exists($col_catatan, 'pendaftaran_ta')) {
-                            $updated_data[$col_catatan] = '';
                         }
                     }
                 }
@@ -335,7 +418,8 @@ class Mahasiswa extends CI_Controller {
                 $updated_data['status_judul'] = 'Pending';
                 $updated_data['catatan_judul'] = '';
                 if ($this->db->table_exists('guidance')) {
-                    $target_ids = ['usr_mhs_' . $nim, 'mhs_' . $nim, $nim];
+                    $u_id = $this->_get_current_user_id();
+                    $target_ids = array_values(array_unique(array_filter([$u_id, $nim])));
                     $this->db->where_in('id_mhs', $target_ids)->update('guidance', [
                         'judul_1'    => $new_j,
                         'keterangan' => 'Pending',
@@ -351,7 +435,8 @@ class Mahasiswa extends CI_Controller {
             $updated_data['status_jenis_ta'] = 'Pending';
             $updated_data['catatan_jenis_ta'] = '';
             if ($this->db->table_exists('guidance')) {
-                $target_ids = ['usr_mhs_' . $nim, 'mhs_' . $nim, $nim];
+                $u_id = $this->_get_current_user_id();
+                $target_ids = array_values(array_unique(array_filter([$u_id, $nim])));
                 $this->db->where_in('id_mhs', $target_ids)->update('guidance', [
                     'jenis_TA' => $new_jen
                 ]);
@@ -421,7 +506,8 @@ class Mahasiswa extends CI_Controller {
             if (!$has_any_rejected_left) {
                 $updated_data['catatan_wali'] = '';
                 if ($this->db->table_exists('guidance')) {
-                    $target_ids = ['usr_mhs_' . $nim, 'mhs_' . $nim, $nim];
+                    $u_id = $this->_get_current_user_id();
+                    $target_ids = array_values(array_unique(array_filter([$u_id, $nim])));
                     $this->db->where_in('id_mhs', $target_ids)->update('guidance', [
                         'komentar' => ''
                     ]);
@@ -457,7 +543,9 @@ class Mahasiswa extends CI_Controller {
             $kk_status = $pendaftaran['status_approval_kk'] ?? 'Pending';
             $st_judul  = $pendaftaran['status_judul'] ?? 'Pending';
             $has_revisi = ($w_status === 'Rejected' || $a_status === 'Rejected' || $k_status === 'Rejected' || $kk_status === 'Rejected' || !empty($pendaftaran['berkas_kurang']) || $st_judul === 'Rejected');
-            $is_locked = !$has_revisi;
+            // Jika sudah pernah diajukan (is_submitted), form pendaftaran utama tetap terkunci.
+            // Mahasiswa yang memiliki catatan revisi harus mengunggah perbaikan melalui menu Perbaikan Berkas di Dashboard.
+            $is_locked = true;
         }
 
         $has_ta = !empty($pendaftaran['jenis_ta']) || !empty($pendaftaran['judul_1']) || !empty($pendaftaran['file_ksm']) || !empty($student_berkas);
@@ -496,6 +584,12 @@ class Mahasiswa extends CI_Controller {
         $data['student_berkas'] = $student_berkas;
 
         if ($this->input->post()) {
+            if ($is_locked) {
+                $this->session->set_flashdata('error', 'Formulir pendaftaran telah dikunci karena sudah diajukan. Untuk melakukan perbaikan berkas yang direvisi, silakan gunakan menu Perbaikan Berkas di Dashboard.');
+                redirect('mahasiswa');
+                return;
+            }
+
             $config['upload_path']   = './uploads/persyaratan_ta/';
             $config['allowed_types'] = 'pdf';
             $config['max_size']      = 5120;
@@ -576,16 +670,29 @@ class Mahasiswa extends CI_Controller {
             $dw_row        = $nip_dw ? $this->db->get_where('dosen_wali', ['nip' => $nip_dw])->row_array() : null;
             $id_dosen_wali = $dw_row ? $dw_row['id'] : null;
 
+            $posted_jenis_ta = $this->input->post('jenis_ta');
+            if (empty($posted_jenis_ta) && !empty($existing_ta['jenis_ta'])) {
+                $posted_jenis_ta = $existing_ta['jenis_ta'];
+            }
+            $posted_judul_1 = $this->input->post('judul_1');
+            if (empty($posted_judul_1) && !empty($existing_ta['judul_1'])) {
+                $posted_judul_1 = $existing_ta['judul_1'];
+            }
+            $posted_judul_2 = $this->input->post('judul_2') ?: ($existing_ta['judul_2'] ?? '');
+            $posted_judul_3 = $this->input->post('judul_3') ?: ($existing_ta['judul_3'] ?? '');
+            $posted_judul_en = $this->input->post('judul_en') ?: ($existing_ta['judul_en'] ?? '');
+            $posted_konsentrasi = $this->input->post('konsentrasi_dkv') ?: ($existing_ta['konsentrasi_dkv'] ?? '');
+
             $data_ta = array(
                 'nim'                  => $nim,
                 'id_dosen_wali'        => $id_dosen_wali,
                 'is_submitted'         => $is_final_submit ? 1 : 0,
-                'jenis_ta'             => $this->input->post('jenis_ta'),
-                'judul_1'              => $this->input->post('judul_1'),
-                'judul_2'              => $this->input->post('judul_2'),
-                'judul_3'              => $this->input->post('judul_3'),
-                'judul_en'             => $this->input->post('judul_en'),
-                'konsentrasi_dkv'      => $this->input->post('konsentrasi_dkv'),
+                'jenis_ta'             => $posted_jenis_ta,
+                'judul_1'              => $posted_judul_1,
+                'judul_2'              => $posted_judul_2,
+                'judul_3'              => $posted_judul_3,
+                'judul_en'             => $posted_judul_en,
+                'konsentrasi_dkv'      => $posted_konsentrasi,
                 'file_ksm'             => $file_step3 ? $file_step3 : $this->input->post('file_ksm_old'),
                 'file_transkrip'       => $file_step4 ? $file_step4 : $this->input->post('file_transkrip_old'),
                 'file_pernyataan'      => $file_step5 ? $file_step5 : $this->input->post('file_pernyataan_old'),
@@ -654,8 +761,9 @@ class Mahasiswa extends CI_Controller {
     public function get_status_pendaftaran_ajax() {
         $nim = $this->_get_current_nim();
         $pendaftaran = $this->Mahasiswa_model->get_status_pendaftaran($nim);
+        $has_ta = !empty($pendaftaran['judul_1']) || !empty($pendaftaran['jenis_ta']) || !empty($pendaftaran['is_submitted']) || !empty($pendaftaran['file_ksm']);
 
-        if (!$pendaftaran || empty($pendaftaran['judul_1'])) {
+        if (!$pendaftaran || !$has_ta) {
             $this->output
                 ->set_content_type('application/json')
                 ->set_output(json_encode([
@@ -808,12 +916,13 @@ class Mahasiswa extends CI_Controller {
             if ($this->db->table_exists('file_pendaftaran')) {
                 try {
                     $fp_fields = $this->db->list_fields('file_pendaftaran');
+                    $user_id_real = $this->_get_current_user_id();
                     $id_fp = 'fp_' . $nim . '_' . $kode_berkas;
-                    $id_mhs_usr = 'usr_mhs_' . $nim;
+                    $target_user_ids = array_values(array_unique(array_filter([$user_id_real, $nim])));
                     $ex_fp = $this->db->group_start()
                         ->where('id', $id_fp)
                         ->or_group_start()
-                            ->where('id_mhs', $id_mhs_usr)
+                            ->where_in('id_mhs', $target_user_ids)
                             ->where('nama', $kode_berkas)
                         ->group_end()
                     ->group_end()
@@ -832,7 +941,7 @@ class Mahasiswa extends CI_Controller {
                         }
                     } else {
                         if (in_array('id', $fp_fields)) $fp_payload['id'] = $id_fp;
-                        if (in_array('id_mhs', $fp_fields)) $fp_payload['id_mhs'] = $id_mhs_usr;
+                        if (in_array('id_mhs', $fp_fields)) $fp_payload['id_mhs'] = $user_id_real;
                         if (in_array('nama', $fp_fields)) $fp_payload['nama'] = $kode_berkas;
                         if (in_array('view_adminlaa', $fp_fields)) $fp_payload['view_adminlaa'] = 0;
                         if (in_array('view_doswal', $fp_fields)) $fp_payload['view_doswal'] = 0;
@@ -920,126 +1029,159 @@ class Mahasiswa extends CI_Controller {
     }
 
     public function ajax_save_draft_ta() {
-        $nim = $this->input->post('nim') ?: $this->_get_current_nim();
-        $mhs = $this->Mahasiswa_model->get_mahasiswa($nim);
-        $mhs_konsentrasi = !empty($mhs['konsentrasi_dkv']) ? $mhs['konsentrasi_dkv'] : 'Desain Komunikasi Visual';
-        $mhs_id_kk = !empty($mhs['id_kk']) ? $mhs['id_kk'] : 1;
+        try {
+            $nim = $this->input->post('nim') ?: $this->_get_current_nim();
+            $mhs = $this->Mahasiswa_model->get_mahasiswa($nim);
+            $mhs_konsentrasi = !empty($mhs['konsentrasi_dkv']) ? $mhs['konsentrasi_dkv'] : 'Desain Komunikasi Visual';
+            $mhs_id_kk = !empty($mhs['id_kk']) ? $mhs['id_kk'] : 1;
+            $existing_status = $this->Mahasiswa_model->get_status_pendaftaran($nim);
 
-        $jenis_ta = $this->input->post('jenis_ta', true);
-        $judul_1  = $this->input->post('judul_1', true);
-        $judul_2  = $this->input->post('judul_2', true);
-        $judul_3  = $this->input->post('judul_3', true);
-        $judul_en = $this->input->post('judul_en', true);
-        $konsentrasi_dkv = $this->input->post('konsentrasi_dkv', true) ?: $mhs_konsentrasi;
+            $jenis_ta = $this->input->post('jenis_ta', true);
+            if (empty($jenis_ta) && !empty($existing_status['jenis_ta'])) {
+                $jenis_ta = $existing_status['jenis_ta'];
+            }
+            $judul_1  = $this->input->post('judul_1', true);
+            if (empty($judul_1) && !empty($existing_status['judul_1'])) {
+                $judul_1 = $existing_status['judul_1'];
+            }
+            $judul_2  = $this->input->post('judul_2', true);
+            if (empty($judul_2) && !empty($existing_status['judul_2'])) {
+                $judul_2 = $existing_status['judul_2'];
+            }
+            $judul_3  = $this->input->post('judul_3', true);
+            if (empty($judul_3) && !empty($existing_status['judul_3'])) {
+                $judul_3 = $existing_status['judul_3'];
+            }
+            $judul_en = $this->input->post('judul_en', true);
+            if (empty($judul_en) && !empty($existing_status['judul_en'])) {
+                $judul_en = $existing_status['judul_en'];
+            }
+            $konsentrasi_dkv = $this->input->post('konsentrasi_dkv', true) ?: ($existing_status['konsentrasi_dkv'] ?? $mhs_konsentrasi);
 
-        $draft_step = (int)$this->input->post('draft_step', true);
+            $draft_step = (int)$this->input->post('draft_step', true);
 
-        $data_update = array();
-        if ($jenis_ta !== null && $jenis_ta !== '') $data_update['jenis_ta'] = $jenis_ta;
-        if ($judul_1 !== null)  $data_update['judul_1'] = $judul_1;
-        if ($judul_2 !== null)  $data_update['judul_2'] = $judul_2;
-        if ($judul_3 !== null)  $data_update['judul_3'] = $judul_3;
-        if ($judul_en !== null) $data_update['judul_en'] = $judul_en;
-        if ($draft_step >= 1 && $draft_step <= 3) $data_update['draft_step'] = $draft_step;
-        $data_update['konsentrasi_dkv'] = $konsentrasi_dkv;
-        $data_update['id_kk'] = $mhs_id_kk;
+            $data_update = array();
+            if ($jenis_ta !== null && $jenis_ta !== '') $data_update['jenis_ta'] = $jenis_ta;
+            if ($judul_1 !== null)  $data_update['judul_1'] = $judul_1;
+            if ($judul_2 !== null)  $data_update['judul_2'] = $judul_2;
+            if ($judul_3 !== null)  $data_update['judul_3'] = $judul_3;
+            if ($judul_en !== null) $data_update['judul_en'] = $judul_en;
+            if ($draft_step >= 1 && $draft_step <= 3) $data_update['draft_step'] = $draft_step;
+            $data_update['konsentrasi_dkv'] = $konsentrasi_dkv;
+            $data_update['id_kk'] = $mhs_id_kk;
 
-        $this->load->model('AdminLayanan_model');
-        $post_data = $this->input->post(null, true);
-        $has_any_file = false;
+            $this->load->model('AdminLayanan_model');
+            $post_data = $this->input->post(null, true);
+            $has_any_file = false;
 
-        foreach ($post_data as $key => $val) {
-            if (empty($val) || !is_string($val)) continue;
-            if (preg_match('/^file_([a-z0-9_]+)$/i', $key)) {
-                $clean_key = preg_replace('/_old$/i', '', $key);
-                $raw_kode  = str_replace('file_', '', $clean_key);
-                $col_name  = 'file_' . $raw_kode;
-                $val = trim($val);
+            if (is_array($post_data)) {
+                foreach ($post_data as $key => $val) {
+                    if (empty($val) || !is_string($val)) continue;
+                    if (preg_match('/^file_([a-z0-9_]+)$/i', $key)) {
+                        $clean_key = preg_replace('/_old$/i', '', $key);
+                        $raw_kode  = str_replace('file_', '', $clean_key);
+                        $col_name  = 'file_' . $raw_kode;
+                        $val = trim($val);
 
-                if (!empty($val) && strtolower(substr($val, -4)) === '.pdf') {
-                    $has_any_file = true;
-                    if ($this->db->table_exists('pendaftaran_ta') && $this->db->field_exists($col_name, 'pendaftaran_ta')) {
-                        $data_update[$col_name] = $val;
+                        if (!empty($val) && strtolower(substr($val, -4)) === '.pdf') {
+                            $has_any_file = true;
+                            if ($this->db->table_exists('pendaftaran_ta') && $this->db->field_exists($col_name, 'pendaftaran_ta')) {
+                                $data_update[$col_name] = $val;
+                            }
+                            if ($this->db->table_exists('pendaftaran_berkas') && method_exists($this->AdminLayanan_model, 'save_student_berkas')) {
+                                $this->AdminLayanan_model->save_student_berkas($nim, $raw_kode, $val, 'Pending');
+                            }
+                        }
                     }
-                    if ($this->db->table_exists('pendaftaran_berkas') && method_exists($this->AdminLayanan_model, 'save_student_berkas')) {
-                        $this->AdminLayanan_model->save_student_berkas($nim, $raw_kode, $val, 'Pending');
+                }
+            }
+
+            $data_update['updated_at'] = date('Y-m-d H:i:s');
+            $db_saved = false;
+
+            if ($this->db->table_exists('pendaftaran_ta')) {
+                $p_fields = $this->db->list_fields('pendaftaran_ta');
+                foreach ($data_update as $fk => $fv) {
+                    if (!in_array($fk, $p_fields)) {
+                        unset($data_update[$fk]);
+                    }
+                }
+
+                $existing = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
+                if ($existing) {
+                    $this->db->where('nim', $nim)->update('pendaftaran_ta', $data_update);
+                    $db_saved = true;
+                } else {
+                    if (!empty($jenis_ta) || !empty($judul_1) || $has_any_file) {
+                        if (in_array('nim', $p_fields)) $data_update['nim'] = $nim;
+                        if (in_array('created_at', $p_fields)) $data_update['created_at'] = date('Y-m-d H:i:s');
+                        if (in_array('is_submitted', $p_fields)) $data_update['is_submitted'] = 0;
+                        if (in_array('status_approval_wali', $p_fields)) $data_update['status_approval_wali'] = 'Draft';
+                        if (in_array('status_approval_admin', $p_fields)) $data_update['status_approval_admin'] = 'Pending';
+                        if (in_array('status_approval_koor', $p_fields)) $data_update['status_approval_koor'] = 'Pending';
+                        if (in_array('status_approval_kk', $p_fields)) $data_update['status_approval_kk'] = 'Pending';
+                        if (in_array('current_stage', $p_fields)) $data_update['current_stage'] = 'Draft';
+                        $this->db->insert('pendaftaran_ta', $data_update);
+                        $db_saved = true;
                     }
                 }
             }
-        }
 
-        $data_update['updated_at'] = date('Y-m-d H:i:s');
-        $db_saved = false;
+            // Sinkronkan juga ke tabel guidance (legacy / active db)
+            if ($this->db->table_exists('guidance')) {
+                $user_id = $this->_get_current_user_id();
+                $target_ids = array_values(array_unique(array_filter([$user_id, $nim])));
+                $existing_g = $this->db->where_in('id_mhs', $target_ids)
+                    ->order_by('date', 'DESC')
+                    ->limit(1)
+                    ->get('guidance')->row_array();
+                if (!$existing_g) {
+                    $existing_g = $this->db->get_where('guidance', ['id' => 'gdn_' . $nim])->row_array();
+                }
 
-        if ($this->db->table_exists('pendaftaran_ta')) {
-            $p_fields = $this->db->list_fields('pendaftaran_ta');
-            foreach ($data_update as $fk => $fv) {
-                if (!in_array($fk, $p_fields)) {
-                    unset($data_update[$fk]);
+                $g_fields = $this->db->list_fields('guidance');
+                $g_data = array();
+
+                if (!empty($judul_1) && in_array('judul_1', $g_fields)) $g_data['judul_1'] = $judul_1;
+                if (!empty($judul_2) && in_array('judul_2', $g_fields)) $g_data['judul_2'] = $judul_2;
+                if (!empty($judul_3) && in_array('judul_3', $g_fields)) $g_data['judul_3'] = $judul_3;
+                if (!empty($judul_en) && in_array('judul_en', $g_fields)) $g_data['judul_en'] = $judul_en;
+                if (!empty($jenis_ta) && in_array('jenis_TA', $g_fields)) $g_data['jenis_TA'] = $jenis_ta;
+                if (!empty($konsentrasi_dkv) && in_array('peminatan', $g_fields)) $g_data['peminatan'] = $konsentrasi_dkv;
+                if (in_array('date_edit', $g_fields)) $g_data['date_edit'] = date('Y-m-d H:i:s');
+
+                if (!empty($g_data)) {
+                    if ($existing_g) {
+                        $this->db->where('id', $existing_g['id'])->update('guidance', $g_data);
+                        $db_saved = true;
+                    } else if (!empty($jenis_ta) || !empty($judul_1)) {
+                        if (in_array('id', $g_fields)) $g_data['id'] = 'gdn_' . $nim;
+                        if (in_array('id_mhs', $g_fields)) $g_data['id_mhs'] = $user_id;
+                        if (in_array('date', $g_fields)) $g_data['date'] = date('Y-m-d H:i:s');
+                        if (in_array('tahun', $g_fields)) $g_data['tahun'] = date('Y');
+                        if (in_array('keterangan', $g_fields)) $g_data['keterangan'] = 'Draft';
+                        $this->db->insert('guidance', $g_data);
+                        $db_saved = true;
+                    }
                 }
             }
 
-            $existing = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
-            if ($existing) {
-                $this->db->where('nim', $nim)->update('pendaftaran_ta', $data_update);
-                $db_saved = true;
-            } else {
-                if (!empty($jenis_ta) || !empty($judul_1) || $has_any_file) {
-                    if (in_array('nim', $p_fields)) $data_update['nim'] = $nim;
-                    if (in_array('created_at', $p_fields)) $data_update['created_at'] = date('Y-m-d H:i:s');
-                    if (in_array('is_submitted', $p_fields)) $data_update['is_submitted'] = 0;
-                    if (in_array('status_approval_wali', $p_fields)) $data_update['status_approval_wali'] = 'Draft';
-                    if (in_array('status_approval_admin', $p_fields)) $data_update['status_approval_admin'] = 'Pending';
-                    if (in_array('status_approval_koor', $p_fields)) $data_update['status_approval_koor'] = 'Pending';
-                    if (in_array('status_approval_kk', $p_fields)) $data_update['status_approval_kk'] = 'Pending';
-                    if (in_array('current_stage', $p_fields)) $data_update['current_stage'] = 'Draft';
-                    $this->db->insert('pendaftaran_ta', $data_update);
-                    $db_saved = true;
-                }
-            }
+            $this->output
+                ->set_content_type('application/json')
+                ->set_output(json_encode([
+                    'success' => true,
+                    'db_saved' => $db_saved,
+                    'message' => 'Draft formulir & berkas berhasil tersimpan di database server.'
+                ]));
+        } catch (\Throwable $e) {
+            log_message('error', 'ajax_save_draft_ta exception: ' . $e->getMessage());
+            $this->output
+                ->set_content_type('application/json')
+                ->set_output(json_encode([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]));
         }
-
-        // Sinkronkan juga ke tabel guidance (legacy / active db)
-        if ($this->db->table_exists('guidance')) {
-            $existing_g = $this->db->group_start()
-                ->where('id_mhs', 'usr_mhs_' . $nim)
-                ->or_where('id_mhs', $nim)
-            ->group_end()->get('guidance')->row_array();
-
-            $g_fields = $this->db->list_fields('guidance');
-            $g_data = array();
-
-            if (!empty($judul_1) && in_array('judul_1', $g_fields)) $g_data['judul_1'] = $judul_1;
-            if (!empty($judul_2) && in_array('judul_2', $g_fields)) $g_data['judul_2'] = $judul_2;
-            if (!empty($judul_3) && in_array('judul_3', $g_fields)) $g_data['judul_3'] = $judul_3;
-            if (!empty($judul_en) && in_array('judul_en', $g_fields)) $g_data['judul_en'] = $judul_en;
-            if (!empty($jenis_ta) && in_array('jenis_TA', $g_fields)) $g_data['jenis_TA'] = $jenis_ta;
-            if (!empty($konsentrasi_dkv) && in_array('peminatan', $g_fields)) $g_data['peminatan'] = $konsentrasi_dkv;
-            if (in_array('date_edit', $g_fields)) $g_data['date_edit'] = date('Y-m-d H:i:s');
-
-            if (!empty($g_data)) {
-                if ($existing_g) {
-                    $this->db->where('id', $existing_g['id'])->update('guidance', $g_data);
-                    $db_saved = true;
-                } else if (!empty($jenis_ta) || !empty($judul_1)) {
-                    if (in_array('id', $g_fields)) $g_data['id'] = 'gdn_' . $nim;
-                    if (in_array('id_mhs', $g_fields)) $g_data['id_mhs'] = 'usr_mhs_' . $nim;
-                    if (in_array('date', $g_fields)) $g_data['date'] = date('Y-m-d H:i:s');
-                    if (in_array('tahun', $g_fields)) $g_data['tahun'] = date('Y');
-                    if (in_array('keterangan', $g_fields)) $g_data['keterangan'] = 'Draft';
-                    $this->db->insert('guidance', $g_data);
-                    $db_saved = true;
-                }
-            }
-        }
-
-        $this->output
-            ->set_content_type('application/json')
-            ->set_output(json_encode([
-                'success' => true,
-                'db_saved' => $db_saved,
-                'message' => 'Draft formulir & berkas berhasil tersimpan di database server.'
-            ]));
     }
 
     // =========================================================
@@ -1417,7 +1559,7 @@ class Mahasiswa extends CI_Controller {
         $namaLengkap = trim($this->input->post('nama_lengkap', true)) ?: $namaDefault;
         $email       = $this->session->userdata('email') ?: ($mhs['email'] ?? '');
 
-        $tujuan_penerima  = trim($this->input->post('tujuan_penerima', true)) ?: 'Laboran';
+        $tujuan_penerima  = trim($this->input->post('tujuan_penerima', true));
         $unit_terkait     = trim($this->input->post('unit_terkait', true)) ?: (trim($this->input->post('unit_tujuan', true)) ?: 'Layanan Umum');
         $kategori         = trim($this->input->post('kategori', true));
         $kategori_lainnya = trim($this->input->post('kategori_lainnya', true));
@@ -1698,4 +1840,90 @@ class Mahasiswa extends CI_Controller {
 
         echo json_encode($res);
     }
+
+    // =========================================================
+// PERSYARATAN SIDANG (DINAMIS)
+// =========================================================
+
+public function get_master_syarat_sidang_ajax() {
+    header('Content-Type: application/json');
+    $nim = $this->_get_current_nim();
+
+    $this->load->model('AdminLayanan_model');
+    $master   = $this->AdminLayanan_model->get_master_syarat_sidang();
+    $uploaded = $this->AdminLayanan_model->get_berkas_pendaftaran_sidang($nim);
+
+    echo json_encode([
+        'status'   => true,
+        'master'   => $master,
+        'uploaded' => $uploaded
+    ]);
+}
+
+public function upload_berkas_sidang_ajax() {
+    header('Content-Type: application/json');
+    $nim = $this->_get_current_nim();
+
+    if (empty($_FILES['berkas']['name'])) {
+        echo json_encode(['status' => false, 'message' => 'Tidak ada berkas yang dipilih.']);
+        return;
+    }
+
+    $upload_dir = './uploads/persyaratan_ta/';
+    if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
+
+    $this->load->model('AdminLayanan_model');
+    $this->load->library('upload');
+
+    $uploaded_count = 0;
+    $errors = [];
+
+    foreach ($_FILES['berkas']['name'] as $kode => $origName) {
+        if (empty($origName) || $_FILES['berkas']['error'][$kode] !== UPLOAD_ERR_OK) continue;
+
+        $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+        $new_name = $kode . '_' . $nim . '_' . time() . '_' . rand(100,999) . '.' . $ext;
+
+        $config = [
+            'upload_path'   => $upload_dir,
+            'allowed_types' => 'pdf|doc|docx|jpg|jpeg|png',
+            'max_size'      => 5120,
+            'file_name'     => $new_name,
+        ];
+
+        $this->upload->initialize($config);
+
+        $_FILES['userfile'] = [
+            'name'     => $_FILES['berkas']['name'][$kode],
+            'type'     => $_FILES['berkas']['type'][$kode],
+            'tmp_name' => $_FILES['berkas']['tmp_name'][$kode],
+            'error'    => $_FILES['berkas']['error'][$kode],
+            'size'     => $_FILES['berkas']['size'][$kode],
+        ];
+
+        if ($this->upload->do_upload('userfile')) {
+            $fd = $this->upload->data();
+            // Simpan ke pendaftaran_berkas + auto-sync ke file_pendaftaran
+            $this->AdminLayanan_model->save_student_berkas(
+                $nim, $kode, $fd['file_name'], 'Pending', null, ''
+            );
+            $uploaded_count++;
+        } else {
+            $errors[] = $kode . ': ' . $this->upload->display_errors('', '');
+        }
+    }
+
+    if ($uploaded_count > 0) {
+        echo json_encode([
+            'status'  => true,
+            'message' => $uploaded_count . ' berkas berhasil diunggah & menunggu verifikasi LAA.',
+            'errors'  => $errors
+        ]);
+    } else {
+        echo json_encode([
+            'status'  => false,
+            'message' => 'Gagal: ' . implode('; ', $errors)
+        ]);
+    }
+}
 }

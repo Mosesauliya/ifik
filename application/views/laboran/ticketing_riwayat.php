@@ -39,6 +39,34 @@
         body, button, input, textarea, select {
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         }
+
+        .page-wrapper-for-sidebar {
+            width: 100%;
+            min-width: 0;
+            min-height: 100vh;
+            transition: margin-left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+            box-sizing: border-box;
+        }
+
+        @media (min-width: 1024px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 270px;
+                width: calc(100% - 270px);
+            }
+
+            body.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 1023.98px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding-top: 48px;
+            }
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 via-orange-50/20 to-slate-100 min-h-screen text-slate-800 antialiased">
@@ -46,8 +74,9 @@
     <!-- Include Curved Sidebar (Panel Laboran) -->
     <?php $this->load->view('components/curved_sidebar'); ?>
 
-    <!-- Main Content Container with Left Padding for Sidebar Burger -->
-    <main class="min-h-screen p-6 sm:p-8 lg:p-10 max-w-7xl mx-auto pl-16">
+    <div class="page-wrapper-for-sidebar">
+    <!-- Main Content Container -->
+    <main class="min-h-screen p-6 sm:p-8 lg:p-10 max-w-7xl mx-auto">
         
         <!-- Header & Breadcrumb -->
         <div class="mb-8">
@@ -475,6 +504,7 @@
         </div>
 
     </main>
+    </div>
 
     <!-- Floating Popover Status Stepper Tracking ala WhatsApp & Mahasiswa Workflow -->
     <div id="statusTrackingPopover"
@@ -1150,5 +1180,8 @@
             }
         });
     </script>
+
+    <!-- Global Custom Circle Cursor -->
+    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>

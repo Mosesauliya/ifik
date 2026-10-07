@@ -1,20 +1,43 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-$matched_room = null;
+$unique_facilities = [];
 if (!empty($all_ruangan)) {
     foreach ($all_ruangan as $r) {
-        $r_id = strtolower(trim((string)$r->id));
+        $name_key = strtolower(trim((string)$r->nama_ruangan));
+        if (!empty($name_key) && !isset($unique_facilities[$name_key])) {
+            $unique_facilities[$name_key] = $r;
+        }
+    }
+}
+$facilities_list = array_values($unique_facilities);
+
+$matched_room = null;
+$target = strtolower(trim((string)$lab_key));
+$target_canon = preg_replace('/[^a-z0-9]/', '', $target);
+
+if (!empty($all_ruangan)) {
+    foreach ($all_ruangan as $r) {
+        $r_id   = strtolower(trim((string)$r->id));
         $r_code = strtolower(trim((string)(isset($r->kode_ruangan) ? $r->kode_ruangan : '')));
         $r_name = strtolower(trim((string)$r->nama_ruangan));
-        $target = strtolower(trim((string)$lab_key));
 
-        $target_canon = preg_replace('/[^a-z0-9]/', '', $target);
         $r_id_canon   = preg_replace('/[^a-z0-9]/', '', $r_id);
         $r_code_canon = preg_replace('/[^a-z0-9]/', '', $r_code);
+        $r_name_canon = preg_replace('/[^a-z0-9]/', '', $r_name);
 
-        if ($r_id === $target || $r_code === $target || $r_name === $target || 'room_' . $r_id === $target
-            || (!empty($target_canon) && ($r_id_canon === $target_canon || $r_code_canon === $target_canon))) {
+        if (
+            $r_id === $target ||
+            $r_code === $target ||
+            $r_name === $target ||
+            'room_' . $r_id === $target ||
+            (!empty($target_canon) && (
+                $r_name_canon === $target_canon ||
+                $r_id_canon === $target_canon ||
+                $r_code_canon === $target_canon ||
+                'room' . $r_id_canon === $target_canon
+            ))
+        ) {
             $matched_room = $r;
             break;
         }
@@ -29,19 +52,71 @@ if (!$matched_room) {
     exit;
 }
 
-$img_url = !empty($matched_room->foto) 
-    ? (strpos($matched_room->foto, 'http') === 0 ? $matched_room->foto : base_url($matched_room->foto)) 
-    : base_url('assets/images/multimedia.jpg');
+$raw_photos = [];
+if (!empty($matched_room->all_foto) && is_array($matched_room->all_foto)) {
+    $raw_photos = $matched_room->all_foto;
+} elseif (!empty($matched_room->foto)) {
+    $raw_photos = array_filter(array_map('trim', explode(',', $matched_room->foto)));
+}
 
-$model_url = !empty($matched_room->model_3d) 
-    ? (strpos($matched_room->model_3d, 'http') === 0 ? $matched_room->model_3d : base_url($matched_room->model_3d)) 
-    : '';
+$photos_list = [];
+foreach ($raw_photos as $rp) {
+    $rp = ltrim($rp, '/');
+    if (empty($rp)) continue;
+    if (strpos($rp, 'http://') === 0 || strpos($rp, 'https://') === 0) {
+        $photos_list[] = $rp;
+    } elseif (file_exists(FCPATH . $rp)) {
+        $photos_list[] = base_url($rp);
+    }
+}
+if (empty($photos_list)) {
+    $photos_list[] = base_url('assets/images/multimedia.jpg');
+}
+$img_url = $photos_list[0];
+
+$model_raw = '';
+if (!empty($matched_room->model_3d)) {
+    $model_raw = ltrim($matched_room->model_3d, '/');
+} elseif (!empty($matched_room->images)) {
+    if (strpos($matched_room->images, '|') !== false) {
+        list(, $m) = explode('|', $matched_room->images, 2);
+        $model_raw = ltrim($m, '/');
+    } else {
+        $ext = strtolower(pathinfo($matched_room->images, PATHINFO_EXTENSION));
+        if (in_array($ext, ['glb', 'gltf', 'fbx', 'obj'])) {
+            $model_raw = ltrim($matched_room->images, '/');
+        }
+    }
+}
+
+$model_url = '';
+if (!empty($model_raw)) {
+    if (strpos($model_raw, 'http://') === 0 || strpos($model_raw, 'https://') === 0) {
+        $model_url = $model_raw;
+    } elseif (file_exists(FCPATH . $model_raw)) {
+        $model_url = base_url($model_raw);
+    } elseif (file_exists(FCPATH . 'uploads/ruangan/models/' . basename($model_raw))) {
+        $model_url = base_url('uploads/ruangan/models/' . basename($model_raw));
+    }
+}
 
 $parsed_room_codes = [];
-if (!empty($matched_room->kode_ruangan)) {
-    $parsed_room_codes = array_filter(array_map('trim', explode(',', $matched_room->kode_ruangan)));
-} elseif (!empty($matched_room->id)) {
-    $parsed_room_codes = [$matched_room->id];
+if (!empty($all_ruangan) && !empty($matched_room)) {
+    foreach ($all_ruangan as $ar) {
+        if (strcasecmp(trim((string)$ar->nama_ruangan), trim((string)$matched_room->nama_ruangan)) === 0) {
+            $codeVal = !empty($ar->kode_ruangan) ? $ar->kode_ruangan : $ar->id;
+            if (!empty($codeVal) && !in_array($codeVal, $parsed_room_codes)) {
+                $parsed_room_codes[] = $codeVal;
+            }
+        }
+    }
+}
+if (empty($parsed_room_codes)) {
+    if (!empty($matched_room->kode_ruangan)) {
+        $parsed_room_codes = array_filter(array_map('trim', explode(',', $matched_room->kode_ruangan)));
+    } elseif (!empty($matched_room->id)) {
+        $parsed_room_codes = [$matched_room->id];
+    }
 }
 
 $specs = !empty($matched_room->spesifikasi_fasilitas)
@@ -70,10 +145,12 @@ $lab = [
     'border_color'   => 'rgba(234, 88, 12, 0.3)',
     'glow_color'     => 'rgba(234, 88, 12, 0.4)',
     'photo'          => $img_url,
+    'photos'         => $photos_list,
     'photo_fallback' => base_url('assets/images/multimedia.jpg'),
     'location'       => !empty($matched_room->lokasi) ? $matched_room->lokasi : 'Gedung Sebatik (FIK)',
     'room_codes'     => $parsed_room_codes,
     'capacity'       => !empty($matched_room->kapasitas) ? ($matched_room->kapasitas . ' Orang') : (!empty($matched_room->jumlah_unit) ? $matched_room->jumlah_unit : '-'),
+    'units'          => !empty($matched_room->jumlah_unit) ? (is_numeric(trim($matched_room->jumlah_unit)) ? trim($matched_room->jumlah_unit) . ' Unit' : $matched_room->jumlah_unit) : '',
     'hours'          => !empty($matched_room->jam_operasional) ? $matched_room->jam_operasional : '',
     'desc'           => !empty($matched_room->deskripsi) ? $matched_room->deskripsi : ('Fasilitas ' . $matched_room->nama_ruangan . ' di Fakultas Industri Kreatif Telkom University.'),
     'specs'          => $specs,
@@ -610,6 +687,20 @@ $lab = [
                         <span class="detail-line" id="detailLine1" onclick="switchShowcaseMode('3d')" title="Model 3D Interaktif"></span>
                     </div>
                     <?php endif; ?>
+
+                    <!-- Multi-photo Thumbnails Gallery Strip (jika foto lebih dari 1) -->
+                    <?php if (!empty($lab['photos']) && count($lab['photos']) > 1): ?>
+                    <div class="lab-photo-thumbnails" style="display: flex; gap: 8px; justify-content: center; margin-top: 14px; flex-wrap: wrap;">
+                        <?php foreach ($lab['photos'] as $idx => $pUrl): ?>
+                            <div class="photo-thumb-item <?= $idx === 0 ? 'active' : '' ?>" 
+                                 onclick="switchActivePhoto('<?= $pUrl ?>', this)"
+                                 title="Foto <?= $idx + 1 ?>"
+                                 style="width: 52px; height: 52px; border-radius: 10px; overflow: hidden; border: 2px solid <?= $idx === 0 ? '#ea580c' : 'rgba(255,255,255,0.2)' ?>; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.3);">
+                                <img src="<?= $pUrl ?>" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="Foto <?= $idx + 1 ?>">
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Right Column: Lab Info & Actions -->
@@ -636,6 +727,12 @@ $lab = [
                                     <span style="background: #ea580c; color: #ffffff; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.02em;"><?= htmlspecialchars($rc) ?></span>
                                 <?php endforeach; ?>
                             </div>
+                        </div>
+                        <?php endif; ?>
+                        <?php if (!empty($lab['units'])): ?>
+                        <div class="meta-item">
+                            <span class="icon">💻</span>
+                            <span><?= htmlspecialchars($lab['units']) ?></span>
                         </div>
                         <?php endif; ?>
                         <div class="meta-item">
@@ -689,34 +786,41 @@ $lab = [
 
             <!-- Switch Labs Footer Links -->
             <?php
-                $count_all = count($all_ruangan ?? []);
+                $count_fac = count($facilities_list ?? []);
                 $current_pos = -1;
                 $prev_room = null;
                 $next_room = null;
 
-                if ($count_all > 1) {
-                    foreach ($all_ruangan as $idx => $r) {
-                        if ((string)$r->id === (string)$matched_room->id) {
+                if ($count_fac > 1) {
+                    $matched_name = strtolower(trim((string)$matched_room->nama_ruangan));
+                    foreach ($facilities_list as $idx => $r) {
+                        if (strtolower(trim((string)$r->nama_ruangan)) === $matched_name) {
                             $current_pos = $idx;
                             break;
                         }
                     }
                     if ($current_pos !== -1) {
-                        $prev_room = $all_ruangan[($current_pos - 1 + $count_all) % $count_all];
-                        $next_room = $all_ruangan[($current_pos + 1) % $count_all];
+                        $prev_room = $facilities_list[($current_pos - 1 + $count_fac) % $count_fac];
+                        $next_room = $facilities_list[($current_pos + 1) % $count_fac];
                     }
                 }
             ?>
-            <?php if ($count_all > 1): ?>
+            <?php if ($count_fac > 1): ?>
             <div class="nav-switch-labs">
-                <?php if ($prev_room): ?>
-                    <a href="<?= site_url('dashboard/lab_detail/' . $prev_room->id) ?>" class="switch-link">&larr; <?= htmlspecialchars($prev_room->nama_ruangan) ?></a>
+                <?php if ($prev_room): 
+                    $prev_key = preg_replace('/[^a-z0-9]/', '', strtolower($prev_room->nama_ruangan));
+                    if (empty($prev_key)) $prev_key = $prev_room->id;
+                ?>
+                    <a href="<?= site_url('dashboard/lab_detail/' . $prev_key) ?>" class="switch-link">&larr; <?= htmlspecialchars($prev_room->nama_ruangan) ?></a>
                 <?php else: ?>
                     <span></span>
                 <?php endif; ?>
 
-                <?php if ($next_room): ?>
-                    <a href="<?= site_url('dashboard/lab_detail/' . $next_room->id) ?>" class="switch-link"><?= htmlspecialchars($next_room->nama_ruangan) ?> &rarr;</a>
+                <?php if ($next_room): 
+                    $next_key = preg_replace('/[^a-z0-9]/', '', strtolower($next_room->nama_ruangan));
+                    if (empty($next_key)) $next_key = $next_room->id;
+                ?>
+                    <a href="<?= site_url('dashboard/lab_detail/' . $next_key) ?>" class="switch-link"><?= htmlspecialchars($next_room->nama_ruangan) ?> &rarr;</a>
                 <?php else: ?>
                     <span></span>
                 <?php endif; ?>
@@ -758,6 +862,24 @@ $lab = [
                 if (view3D) view3D.style.display = 'block';
                 if (line0) { line0.classList.remove('active'); line0.classList.add('passed'); }
                 if (line1) { line1.classList.add('active'); line1.classList.remove('passed'); }
+            }
+        }
+
+        function switchActivePhoto(url, el) {
+            const photoImg = document.getElementById('labRealPhotoImg');
+            if (photoImg) {
+                photoImg.src = url;
+            }
+            if (typeof switchShowcaseMode === 'function') {
+                switchShowcaseMode('photo');
+            }
+            document.querySelectorAll('.photo-thumb-item').forEach(item => {
+                item.style.borderColor = 'rgba(255,255,255,0.2)';
+                item.classList.remove('active');
+            });
+            if (el) {
+                el.style.borderColor = '#ea580c';
+                el.classList.add('active');
             }
         }
 

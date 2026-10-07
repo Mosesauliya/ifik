@@ -53,7 +53,7 @@ $laaNavItems = [
         'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'
     ],
     [
-        'heading' => 'Import Email & Token',
+        'heading' => 'Pendaftaran Akun Baru',
         'href'    => site_url('import-email'),
         'icon_3d' => 'assets/images/icons_3d/email_token.png'
     ],

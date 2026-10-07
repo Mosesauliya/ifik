@@ -29,12 +29,44 @@
             background-image: radial-gradient(circle at 50% 0%, rgba(234, 88, 12, 0.15) 0%, transparent 70%);
             border-top: 3px solid #ea580c;
         }
+        /* Responsive Page Wrapper with Sidebar Interaction */
+        .page-wrapper-for-sidebar {
+            width: 100%;
+            min-width: 0;
+            transition: margin-left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+            box-sizing: border-box;
+        }
+
+        @media (min-width: 1024px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 270px;
+                width: calc(100% - 270px);
+            }
+
+            body.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 1023.98px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding-top: 56px;
+            }
+        }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between antialiased selection:bg-orange-500 selection:text-white">
+<body class="bg-slate-50 text-slate-800 min-h-screen antialiased selection:bg-orange-500 selection:text-white">
 
-    <!-- Main Container -->
-    <main class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 flex-grow space-y-8">
+    <!-- Auto Role-Aware Curved Animated Sidebar -->
+    <?php $this->load->view('components/curved_sidebar'); ?>
+
+    <!-- Main Page Content Wrapper (Smoothly shifts when sidebar is open) -->
+    <div id="mainPageContent" class="page-wrapper-for-sidebar min-h-screen flex flex-col justify-between">
+        <!-- Main Container -->
+        <main class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 flex-grow space-y-8">
 
         <!-- Flashdata Alerts -->
         <?php if ($this->session->flashdata('success')): ?>
@@ -378,6 +410,7 @@
         </div>
 
     </main>
+    </div>
 
     <script>
         // Live Preview Synchronization

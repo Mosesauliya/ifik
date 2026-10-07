@@ -32,6 +32,121 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="<?= base_url('assets/css/style.css'); ?>" rel="stylesheet">
     <style>
+        /* Unified Multi-Search Pill Styles */
+        .search-pill-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
+        .unified-search-pill {
+            display: flex;
+            align-items: center;
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 2px 12px;
+            flex: 1;
+            height: 42px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .unified-search-pill:focus-within, .unified-search-pill.active {
+            border-color: #ea580c !important;
+            background: #ffffff !important;
+            box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12) !important;
+        }
+        .unified-divider {
+            width: 1.5px;
+            height: 20px;
+            background-color: #cbd5e1;
+            margin: 0 10px;
+            flex-shrink: 0;
+        }
+        .btn-standalone-add {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #fff7ed;
+            border: 1.5px solid #ffedd5;
+            border-radius: 14px;
+            padding: 6px 14px;
+            height: 42px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #ea580c;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(234, 88, 12, 0.06);
+        }
+        .btn-standalone-add:hover {
+            background: #ffedd5;
+            border-color: #fdba74;
+            transform: scale(1.02);
+        }
+        .badge-standalone-count {
+            background: #ea580c;
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 1.5px 8px;
+            border-radius: 99px;
+        }
+        .btn-remove-row {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            background: #fff1f2;
+            border: 1.5px solid #fecdd3;
+            border-radius: 14px;
+            color: #e11d48;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        .btn-remove-row:hover {
+            background: #ffe4e6;
+            border-color: #fda4af;
+            color: #be123c;
+            transform: scale(1.05);
+        }
+        .extra-rows-card {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 18px;
+            box-shadow: 0 20px 40px -8px rgba(15, 23, 42, 0.16);
+            z-index: 50;
+            padding: 16px;
+        }
+        .extra-filter-row {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 10;
+            width: 100%;
+        }
+        .extra-filter-row .unified-search-pill {
+            flex: 1;
+            min-width: 0;
+            width: 100%;
+        }
+        .custom-dropdown-container.open .custom-dropdown-menu {
+            display: block !important;
+        }
+        .custom-dropdown-container.open .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
         @keyframes popInCard {
             0% {
                 opacity: 0;
@@ -88,6 +203,34 @@
         #wrapperPreviewBerkas {
             transition: all 1.1s cubic-bezier(0.2, 0.9, 0.2, 1);
         }
+        #wrapperPreviewBerkas::-webkit-scrollbar {
+            height: 7px;
+        }
+        #wrapperPreviewBerkas::-webkit-scrollbar-thumb {
+            background: rgba(234, 88, 12, 0.45);
+            border-radius: 9999px;
+        }
+        #wrapperPreviewBerkas::-webkit-scrollbar-thumb:hover {
+            background: rgba(234, 88, 12, 0.75);
+        }
+        #wrapperPreviewBerkas::-webkit-scrollbar-track {
+            background: rgba(241, 245, 249, 0.5);
+            border-radius: 9999px;
+        }
+        #lihatBerkasContainer::-webkit-scrollbar {
+            height: 7px;
+        }
+        #lihatBerkasContainer::-webkit-scrollbar-thumb {
+            background: rgba(234, 88, 12, 0.45);
+            border-radius: 9999px;
+        }
+        #lihatBerkasContainer::-webkit-scrollbar-thumb:hover {
+            background: rgba(234, 88, 12, 0.75);
+        }
+        #lihatBerkasContainer::-webkit-scrollbar-track {
+            background: rgba(241, 245, 249, 0.5);
+            border-radius: 9999px;
+        }
         #wrapperDaftarMhs::-webkit-scrollbar {
             width: 5px;
         }
@@ -97,6 +240,64 @@
         }
         #wrapperDaftarMhs::-webkit-scrollbar-track {
             background: transparent;
+        }
+
+        /* Rotating Conic-Gradient Border Table (Koordinator TA Style) */
+        @keyframes spinRotatingBorder {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .table-rotating-border-wrap {
+            position: relative;
+            border-radius: 16px;
+            padding: 2px;
+            overflow: hidden;
+            box-shadow: 0 12px 36px -8px rgba(234, 88, 12, 0.15), 0 4px 16px rgba(71, 85, 105, 0.06);
+            margin-bottom: 8px;
+            background: #ffffff;
+        }
+
+        .table-rotating-border-spin {
+            position: absolute;
+            inset: -350%;
+            background: conic-gradient(
+                from 90deg at 50% 50%,
+                #ea580c 0%,
+                #f97316 12%,
+                #ffffff 22%,
+                #cbd5e1 35%,
+                #475569 48%,
+                #1e293b 58%,
+                #ea580c 68%,
+                #ffffff 80%,
+                #94a3b8 90%,
+                #ea580c 100%
+            );
+            animation: spinRotatingBorder 7s linear infinite;
+            opacity: 0.95;
+            pointer-events: none;
+        }
+
+        .table-rotating-border-inner {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .table-custom-rounded {
+            border-collapse: separate !important;
+            border-spacing: 0 !important;
+            width: 100%;
+        }
+        .table-custom-rounded thead tr th:first-child {
+            border-top-left-radius: 14px;
+        }
+        .table-custom-rounded thead tr th:last-child {
+            border-top-right-radius: 14px;
         }
 
         /* ========================================================
@@ -362,6 +563,28 @@
                 left: 0 !important;
                 width: 100% !important;
             }
+
+            /* Saat sidebar terbuka & mode pratinjau berkas aktif di desktop:
+               Card mahasiswa (David Scott) tetap diam/fixed di posisinya di sebelah sidebar,
+               hanya panel preview berkas yang digeser secara horizontal */
+            body:not(.curved-sidebar-desktop-collapsed) #lihatBerkasContainer.has-active-previews {
+                overflow-x: hidden !important;
+            }
+
+            body:not(.curved-sidebar-desktop-collapsed) #lihatBerkasContainer.has-active-previews #wrapperDaftarMhs {
+                flex-shrink: 0 !important;
+                position: sticky !important;
+                left: 0 !important;
+                z-index: 20 !important;
+            }
+
+            body:not(.curved-sidebar-desktop-collapsed) #lihatBerkasContainer.has-active-previews #wrapperPreviewBerkas {
+                flex: 1 1 0% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                width: auto !important;
+                overflow-x: auto !important;
+            }
         }
 
         @media (max-width: 1023.98px) {
@@ -622,99 +845,197 @@
             </div>
         </div>
 
-        <!-- Table Container Card (3D Warm) -->
-        <div class="card-3d-warm card-no-hover rounded-2xl border border-orange-200/60 shadow-card-clean overflow-hidden">
-
-            <!-- Table Header -->
-            <div class="p-5 border-b border-orange-200/60 flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <!-- Table Toolbar & Filters (Exact Card Container from Import Akun / Koordinator TA) -->
+        <div class="card-custom p-5 mb-8 space-y-4">
+            
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div>
                     <h2 class="text-base font-bold text-slate-900 flex items-center gap-2.5 tracking-tight">
-                        <i class="bi bi-people-fill text-orange-500 text-lg"></i> Daftar Mahasiswa Bimbingan
+                        <i class="fa-solid fa-list-check text-brand-600 text-lg"></i> Daftar Pengajuan Tugas Akhir
                     </h2>
-                    <p class="text-xs text-slate-500 font-normal mt-0.5">Pilih mahasiswa untuk meninjau berkas dan melakukan persetujuan massal.</p>
+                    <p class="text-xs text-slate-500 font-normal mt-0.5">Pilih mahasiswa untuk meninjau berkas dan melakukan persetujuan Dosen Wali.</p>
                 </div>
-                <!-- Controls & Direct Search -->
-                <div class="flex flex-wrap items-center gap-2 shrink-0 w-full md:w-auto">
-                    <!-- Direct Search Input Bar -->
-                    <div class="relative flex-1 min-w-[210px] max-w-full sm:max-w-xs">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                            <i class="bi bi-search text-xs"></i>
+
+                <!-- Tombol Tanda Tangan / Riwayat Approval & Refresh -->
+                <div class="flex items-center gap-2 flex-wrap self-start lg:self-center">
+                    <button type="button" onclick="window.location.reload()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs border border-slate-200 flex items-center gap-1.5 transition cursor-pointer active:scale-95 shadow-2xs" title="Muat ulang data">
+                        <i class="fa-solid fa-rotate text-xs text-slate-500"></i> <span>Refresh</span>
+                    </button>
+                    <a href="<?= site_url('dosen/tanda-tangan'); ?>" class="px-4 py-2 bg-gradient-to-r from-slate-800 to-orange-950 hover:from-slate-700 hover:to-orange-900 text-white font-bold rounded-xl text-xs shadow-md border border-orange-900/50 flex items-center gap-2 transition cursor-pointer active:scale-95">
+                        <i class="fa-solid fa-clock-rotate-left text-orange-400"></i>
+                        <span>Tanda Tangan Digital</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Status Filter Pills (Tab Filter Cepat: Semua, Menunggu, Disetujui, Perlu Revisi) -->
+            <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
+                <button type="button" onclick="filterQuickStatusDW('all')" id="btnQuickFilter_all" class="quick-status-pill px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-2xs border bg-slate-900 text-white border-slate-900 shadow-sm" title="Tampilkan Semua Mahasiswa">
+                    <i class="fa-solid fa-layer-group text-[11px]"></i>
+                    <span>Semua Status</span>
+                    <span id="quickFilterCount_all" class="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold bg-white/20 text-white pill-count"><?= !empty($list_mahasiswa) ? count($list_mahasiswa) : 0; ?></span>
+                </button>
+                <button type="button" onclick="filterQuickStatusDW('Pending')" id="btnQuickFilter_Pending" class="quick-status-pill px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-2xs border bg-white hover:bg-amber-50/50 text-slate-700 border-slate-200" title="Tampilkan Hanya yang Menunggu Persetujuan">
+                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                    <i class="fa-solid fa-clock text-[11px] text-amber-500"></i>
+                    <span>Menunggu Persetujuan</span>
+                    <span id="quickFilterCount_Pending" class="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 pill-count"><?= $pendingCount ?? 0; ?></span>
+                </button>
+                <button type="button" onclick="filterQuickStatusDW('Approved')" id="btnQuickFilter_Approved" class="quick-status-pill px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-2xs border bg-white hover:bg-emerald-50/50 text-slate-700 border-slate-200" title="Tampilkan Hanya yang Telah Disetujui">
+                    <i class="fa-solid fa-circle-check text-[11px] text-emerald-500"></i>
+                    <span>Disetujui</span>
+                    <span id="quickFilterCount_Approved" class="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 pill-count"><?= $approvedCount ?? 0; ?></span>
+                </button>
+                <button type="button" onclick="filterQuickStatusDW('Rejected')" id="btnQuickFilter_Rejected" class="quick-status-pill px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-2xs border bg-white hover:bg-rose-50/50 text-slate-700 border-slate-200" title="Tampilkan Hanya yang Perlu Revisi / Ditolak">
+                    <i class="fa-solid fa-circle-exclamation text-[11px] text-rose-500"></i>
+                    <span>Perlu Revisi</span>
+                    <span id="quickFilterCount_Rejected" class="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 pill-count"><?= $rejectedCount ?? 0; ?></span>
+                </button>
+            </div>
+
+            <!-- Row 1: Unified Multi-Search Bar -->
+            <div class="relative search-pill-container" id="multiSearchWrapper">
+                <!-- Main Search Pill -->
+                <div class="unified-search-pill">
+                    <!-- Main Category Selector Dropdown -->
+                    <div class="relative custom-dropdown-container">
+                        <input type="hidden" id="mainCategorySelect" value="query">
+                        <button type="button" onclick="toggleCustomDropdownDW('main-cat', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-brand-600 focus:outline-none" title="Kategori Pencarian">
+                            <span id="label-filter-main-cat" class="text-sm sm:text-base leading-none block">🔍</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-main-cat"></i>
+                        </button>
+                        <div id="menu-filter-main-cat" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
+                            <div onclick="selectMainCategoryDW('query', '🔍 Kata Kunci (Semua)', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium active bg-orange-50 text-brand-600"><span>🔍 Kata Kunci (Semua)</span></div>
+                            <div onclick="selectMainCategoryDW('nama', '🏷️ Nama Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span>🏷️ Nama Mahasiswa</span></div>
+                            <div onclick="selectMainCategoryDW('nim', '🆔 NIM Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span>🆔 NIM Mahasiswa</span></div>
+                            <div onclick="selectMainCategoryDW('judul', '📖 Judul Tugas Akhir', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span>📖 Judul Tugas Akhir</span></div>
+                            <div onclick="selectMainCategoryDW('status', '⚡ Status Approval', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span>⚡ Status Approval</span></div>
+                            <div onclick="selectMainCategoryDW('stage', '🔄 Tahap Saat Ini', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span>🔄 Tahap Saat Ini</span></div>
                         </div>
-                        <input type="text" id="directSearchInput" placeholder="Cari Nama, NIM, Judul TA..." class="w-full pl-8 pr-8 py-2 bg-white border border-orange-200 rounded-xl text-xs font-semibold text-slate-800 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition shadow-2xs">
-                        <button type="button" id="btnClearDirectSearch" onclick="clearDirectSearch()" class="hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-rose-600 transition cursor-pointer" title="Hapus Pencarian">
-                            <i class="bi bi-x-circle-fill text-xs"></i>
+                    </div>
+
+                    <div class="unified-divider"></div>
+
+                    <!-- Input Text Value Container -->
+                    <div id="mainValueContainer" class="flex-1 flex items-center min-w-0">
+                        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs mr-2 shrink-0"></i>
+                        <input type="text" id="mainSearchInput" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); handleUnifiedMultiSearchDW(); }" placeholder="Ketik kata kunci lalu tekan Enter atau klik Cari..." class="w-full text-xs font-medium bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400">
+                    </div>
+
+                    <!-- Main Custom Select Dropdown Container -->
+                    <div id="mainCustomSelectWrap" class="hidden flex-1 relative custom-dropdown-container">
+                        <input type="hidden" id="mainCustomSelectVal" value="">
+                        <button type="button" onclick="toggleCustomDropdownDW('main-select', event)" class="w-full py-1 text-xs font-semibold text-slate-800 flex items-center justify-between cursor-pointer focus:outline-none">
+                            <span id="label-filter-main-select" class="flex items-center gap-1.5 truncate">Semua Data</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-main-select"></i>
+                        </button>
+                        <div id="menu-filter-main-select" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
+                        </div>
+                    </div>
+
+                    <!-- Tombol Cari -->
+                    <button type="button" onclick="handleUnifiedMultiSearchDW()" class="px-3.5 py-1.5 bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-500 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer active:scale-95 shrink-0 ml-1.5" title="Klik untuk melakukan pencarian">
+                        <i class="fa-solid fa-magnifying-glass text-[11px]"></i> Cari
+                    </button>
+                </div>
+
+                <!-- Standalone Add Filter Button (Filter Tambahan 1/4) -->
+                <button type="button" id="standaloneAddBtnDW" onclick="toggleOrAddFilterRowDW(event)" class="btn-standalone-add" title="Buka / Tutup / Tambah Filter Baru (Maks 4)">
+                    <span class="btn-standalone-label inline-flex items-center gap-2">
+                        <i class="fa-solid fa-filter text-brand-500 text-xs"></i>
+                        <span class="font-bold text-xs text-brand-700">Filter Tambahan</span>
+                    </span>
+                    <span id="filterCountBadgeDW" class="badge-standalone-count">1/4</span>
+                </button>
+
+                <!-- Extra Filter Rows Card Popover -->
+                <div id="extraRowsCardDW" class="extra-rows-card space-y-3">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                        <span class="text-xs font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-filter text-orange-500"></i> Kriteria Filter Tambahan
+                        </span>
+                        <button type="button" onclick="closeExtraRowsCardDW()" class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-xs transition cursor-pointer" title="Tutup Card Filter">
+                            <i class="fa-solid fa-xmark"></i>
                         </button>
                     </div>
 
-                    <div class="flex items-center gap-2 bg-white border border-orange-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-600">
-                        <i class="bi bi-list-ul text-slate-400"></i>
-                        <span>Tampilkan</span>
-                        <select id="recordsPerPage" class="bg-transparent font-bold text-slate-800 outline-none cursor-pointer">
-                            <option value="5" selected>5</option>
-                            <option value="10">10</option>
-                            <option value="25">25</option>
+                    <div id="additionalFilterRowsContainerDW" class="space-y-2.5">
+                    </div>
+
+                    <div class="flex items-center justify-between pt-1">
+                        <button type="button" onclick="addExtraFilterRowDW()" id="btnInsideAddFilterDW" class="px-3.5 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold text-xs border border-orange-200 flex items-center gap-1.5 transition cursor-pointer shadow-2xs active:scale-95">
+                            <i class="fa-solid fa-plus text-[11px]"></i> <span>Tambah Kriteria Filter</span>
+                        </button>
+                        <span id="extraFilterCountTextDW" class="text-[11px] text-slate-400 font-medium">Maksimal 4 kriteria</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between border-t border-slate-100 pt-2.5 mt-2 text-xs">
+                        <span class="text-slate-400 text-[11px]">Gunakan kombinasi kriteria untuk mempersempit pencarian data bimbingan.</span>
+                        <button type="button" onclick="resetMultiSearchDW()" class="text-rose-600 hover:text-rose-700 font-bold transition-colors cursor-pointer">
+                            Reset All Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 2: Page Size & Records Count -->
+            <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                <div class="text-xs text-slate-500 font-medium">
+                    <span>Kelola &amp; telusuri data pengajuan tugas akhir mahasiswa secara langsung.</span>
+                </div>
+
+                <!-- Page Size & Counter Right -->
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <div class="flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 border border-slate-200 px-3 h-9 rounded-xl shadow-2xs">
+                        <span class="font-medium">Tampilkan</span>
+                        <select id="recordsPerPage" onchange="changePageSizeDW(this.value)" class="h-6 px-1.5 text-xs font-bold bg-white border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
                             <option value="50">50</option>
+                            <option value="100">100</option>
                         </select>
-                        <span>data / hal</span>
-                    </div>
-                    <button id="btnAddFilter" class="btn-3d-orange flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-white">
-                        <i class="bi bi-plus-lg"></i> Tambah Filter
-                        <span id="filterCountBadge" class="bg-white/30 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">1/4</span>
-                    </button>
-                    <button id="btnReset" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-orange-300 bg-white text-xs font-semibold text-slate-600 hover:bg-orange-50 transition">
-                        <i class="bi bi-arrow-counterclockwise"></i> Reset
-                    </button>
-                </div>
-            </div>
-
-            <!-- Filter Panel -->
-            <div id="filterPanel" class="border-b border-orange-200/60 bg-orange-50/40 px-5 py-4">
-                <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-orange-700 flex items-center gap-1.5">
-                        <i class="bi bi-funnel-fill"></i> Filter Multi-Kriteria (Maksimal 4 Kriteria)
-                    </span>
-                    <div class="flex items-center gap-1.5 text-[11px] font-semibold">
-                        <span class="text-slate-500 mr-1">Pintas Status:</span>
-                        <button class="btn-pintas px-3 py-1 rounded-full bg-slate-800 text-white transition" data-status="all">Semua</button>
-                        <button class="btn-pintas px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-orange-50 transition" data-status="Pending">Menunggu</button>
-                        <button class="btn-pintas px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-orange-50 transition" data-status="Approved">Disetujui</button>
-                        <button class="btn-pintas px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-orange-50 transition" data-status="Rejected">Ditolak</button>
+                        <span class="font-medium">data/hal</span>
+                        <span class="text-slate-300">|</span>
+                        <span>Total: <strong class="total-rows-count text-slate-900 font-bold" id="toolbarTotalCountDW"><?= !empty($list_mahasiswa) ? count($list_mahasiswa) : 0; ?></strong></span>
                     </div>
                 </div>
-                <div id="filterRows" class="space-y-2"></div>
             </div>
-            
 
-            
-            <!-- Table View -->
-            <!-- Mobile Master Checkbox Bar -->
-            <div class="lg:hidden flex items-center justify-between px-4 py-3 bg-gradient-to-r from-white via-orange-50/70 to-white border-b border-orange-200/70">
-                <label class="flex items-center gap-2.5 cursor-pointer select-none">
-                    <input type="checkbox" id="checkAllStudentsMobile" onchange="toggleAllCheckboxesDW(this)" class="w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer">
-                    <span class="text-xs font-black text-slate-800 tracking-tight">Pilih Semua Mahasiswa</span>
-                </label>
-                <div class="flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-full border border-orange-200 shadow-2xs">
-                    <i class="fa-solid fa-id-card text-orange-600 text-[11px]"></i>
-                    <span class="text-[10px] text-orange-700 font-extrabold uppercase tracking-wider">Mode Kartu</span>
+        </div>
+
+        <!-- Table with Rotating Conic-Gradient Border (Exact Koordinator TA Style) -->
+        <div class="table-rotating-border-wrap">
+            <span class="table-rotating-border-spin"></span>
+            <div class="table-rotating-border-inner overflow-hidden">
+                <!-- Mobile Master Checkbox Bar -->
+                <div class="lg:hidden flex items-center justify-between px-4 py-3 bg-gradient-to-r from-white via-orange-50/70 to-white border-b border-slate-200/90">
+                    <label class="flex items-center gap-2.5 cursor-pointer select-none">
+                        <input type="checkbox" id="checkAllStudentsMobile" onchange="toggleAllCheckboxesDW(this)" class="w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer">
+                        <span class="text-xs font-bold text-slate-800 tracking-tight">Pilih Semua Mahasiswa</span>
+                    </label>
+                    <div class="flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-full border border-orange-200 shadow-2xs">
+                        <i class="fa-solid fa-id-card text-orange-600 text-[11px]"></i>
+                        <span class="text-[10px] text-orange-700 font-extrabold uppercase tracking-wider">Mode Kartu</span>
+                    </div>
                 </div>
-            </div>
 
-            <div class="overflow-x-auto lg:overflow-x-visible">
-                <table class="w-full text-left border-collapse text-xs responsive-dw-table">
-                    <thead>
-                        <tr class="bg-slate-900 text-white uppercase tracking-wider text-[10px] sm:text-[11px] font-black border-b border-slate-800">
-                            <th class="py-3 px-2 text-center w-8">
-                                <input type="checkbox" id="checkAllStudents" onchange="toggleAllCheckboxesDW(this)" title="Pilih Semua Mahasiswa" class="w-4 h-4 text-orange-600 rounded border-slate-600 focus:ring-orange-500 cursor-pointer">
-                            </th>
-                            <th class="py-3 px-3">MAHASISWA</th>
-                            <th class="py-3 px-3">JUDUL RENCANA TA</th>
-                            <th class="py-3 px-3 text-center">STATUS <?= !empty($syarat_berkas) ? count($syarat_berkas) : 4; ?> BERKAS</th>
-                            <th class="py-3 px-3 text-center">DOSEN WALI</th>
-                            <th class="py-3 px-3 text-center">TAHAP SAAT INI</th>
-                            <th class="py-3 px-3 text-center">AKSI</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-orange-100/80 font-medium bg-white" id="tableBodyMhs">
+                <div class="overflow-x-auto lg:overflow-x-visible">
+                    <table class="table-custom-rounded text-left text-xs w-full responsive-dw-table">
+                        <thead class="bg-slate-50/80 text-slate-900 font-extrabold text-xs border-b border-slate-200/90 uppercase tracking-wider text-[11px]">
+                            <tr>
+                                <th class="w-8 py-3.5 px-2 text-center">
+                                    <input type="checkbox" id="checkAllStudents" onchange="toggleAllCheckboxesDW(this)" title="Pilih Semua Mahasiswa" class="w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer">
+                                </th>
+                                <th class="py-3.5 px-3 font-extrabold whitespace-nowrap text-slate-900">MAHASISWA</th>
+                                <th class="py-3.5 px-3 font-extrabold text-slate-900">JUDUL RENCANA TA</th>
+                                <th class="py-3.5 px-3 text-center font-extrabold whitespace-nowrap text-slate-900">STATUS BERKAS &amp; USULAN</th>
+                                <th class="py-3.5 px-3 text-center font-extrabold whitespace-nowrap text-slate-900">DOSEN WALI</th>
+                                <th class="py-3.5 px-3 text-center font-extrabold whitespace-nowrap text-slate-900">TAHAP SAAT INI</th>
+                                <th class="py-3.5 px-3 text-center font-extrabold whitespace-nowrap text-slate-900">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 font-medium bg-white" id="tableBodyMhs">
                         <?php if(!empty($list_mahasiswa)): ?>
                             <?php foreach($list_mahasiswa as $mhs): ?>
                                 <?php 
@@ -730,14 +1051,21 @@
                                      $trs_st = $mhs['status_file_transkrip'] ?? 'Pending';
                                      $prn_st = $mhs['status_file_pernyataan'] ?? 'Pending';
                                      $lab_st = $mhs['status_file_bebas_lab'] ?? 'Pending';
+                                     $isRowLocked = ($st === 'Approved' || in_array($rawStage, ['Admin Layanan', 'Koordinator TA', 'Ketua KK', 'Selesai Approval', 'Selesai']));
                                  ?>
                                 <tr class="hover:bg-orange-50/50 transition-all duration-150 mhs-row" data-status="<?= $st; ?>" data-status-label="<?= strtolower($stLabel); ?>" data-nim="<?= strtolower($mhs['nim']); ?>" data-nama="<?= strtolower($full_name); ?>" data-judul="<?= strtolower($mhs['judul_1'] ?? ''); ?>" data-stage="<?= strtolower($rawStage); ?>" data-stage-label="<?= strtolower($stageLabel); ?>">
                                     <!-- Checkbox Column -->
                                     <td class="py-3 px-2 text-center whitespace-nowrap">
-                                        <input type="checkbox" name="batch_select[]" value="<?= $mhs['nim']; ?>" 
-                                               data-name="<?= htmlspecialchars($full_name); ?>" 
-                                               onchange="updateBatchBarDW()"
-                                               class="student-cb w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer">
+                                        <?php if($isRowLocked): ?>
+                                            <span title="Pendaftaran sudah disetujui / terkunci" class="inline-flex items-center justify-center text-emerald-600">
+                                                <i class="bi bi-shield-check text-sm"></i>
+                                            </span>
+                                        <?php else: ?>
+                                            <input type="checkbox" name="batch_select[]" value="<?= $mhs['nim']; ?>" 
+                                                   data-name="<?= htmlspecialchars($full_name); ?>" 
+                                                   onchange="updateBatchBarDW()"
+                                                   class="student-cb w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer">
+                                        <?php endif; ?>
                                     </td>
                                     
                                     <!-- Mahasiswa Info -->
@@ -780,6 +1108,34 @@
                                             $p_cnt = 0;
                                             $item_pills = [];
 
+                                            // Sertakan Status Usulan Judul & Skema TA TERLEBIH DAHULU (Paling Awal)
+                                            $jdl_st = $mhs['status_judul'] ?? 'Pending';
+                                            $jns_st = $mhs['status_jenis_ta'] ?? 'Pending';
+                                            if ($jdl_st === 'Rejected' || $jns_st === 'Rejected') {
+                                                $usulan_st = 'Rejected';
+                                            } elseif ($jdl_st === 'Approved' && $jns_st === 'Approved') {
+                                                $usulan_st = 'Approved';
+                                            } else {
+                                                $usulan_st = 'Pending';
+                                            }
+
+                                            if ($usulan_st === 'Approved') {
+                                                $v_cnt++;
+                                            } elseif ($usulan_st === 'Rejected') {
+                                                $i_cnt++;
+                                            } else {
+                                                $p_cnt++;
+                                            }
+
+                                            $btn_class_usulan = ($usulan_st === 'Approved') ? 'bg-emerald-100/90 text-emerald-700 hover:bg-emerald-200' : (($usulan_st === 'Rejected') ? 'bg-rose-100/90 text-rose-700 hover:bg-rose-200' : 'bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60');
+
+                                            $item_pills[] = [
+                                                'code' => 'judul_jenis',
+                                                'name' => 'Usulan Judul & Skema TA',
+                                                'abbr' => 'JUDUL',
+                                                'class' => $btn_class_usulan
+                                            ];
+
                                             $map_abbr = ['ksm' => 'KSM', 'transkrip' => 'TRS', 'pernyataan' => 'SRT', 'bebas_lab' => 'LAB'];
 
                                             foreach ($active_sb as $sb) {
@@ -819,21 +1175,21 @@
                                             <!-- Ringkasan Status Berkas (Valid, Direvisi, Menunggu) persis Admin LAA -->
                                             <div id="berkas_summary_badges_<?= $mhs['nim']; ?>" class="flex items-center gap-1 flex-wrap justify-center">
                                                 <?php if($v_cnt > 0): ?>
-                                                    <button type="button" onclick="openStudentBerkasPreview('<?= $mhs['nim']; ?>')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="<?= $v_cnt; ?> Berkas Disetujui/Valid — Klik untuk Lihat Berkas">
+                                                    <button type="button" onclick="openStudentBerkasPreview('<?= $mhs['nim']; ?>', null, 'Approved')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="<?= $v_cnt; ?> Berkas Disetujui/Valid — Klik untuk Hanya Tampilkan Berkas Valid">
                                                         <i class="fa-solid fa-circle-check text-emerald-500 text-[9px]"></i>
                                                         <span><?= $v_cnt; ?> Valid</span>
                                                     </button>
                                                 <?php endif; ?>
 
                                                 <?php if($i_cnt > 0): ?>
-                                                    <button type="button" onclick="openStudentBerkasPreview('<?= $mhs['nim']; ?>')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="<?= $i_cnt; ?> Berkas Ditolak/Direvisi — Klik untuk Lihat Berkas">
+                                                    <button type="button" onclick="openStudentBerkasPreview('<?= $mhs['nim']; ?>', null, 'Rejected')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="<?= $i_cnt; ?> Berkas Ditolak/Direvisi — Klik untuk Hanya Tampilkan Berkas Revisi">
                                                         <i class="fa-solid fa-circle-xmark text-rose-500 text-[9px]"></i>
                                                         <span><?= $i_cnt; ?> Direvisi</span>
                                                     </button>
                                                 <?php endif; ?>
 
                                                 <?php if($p_cnt > 0): ?>
-                                                    <button type="button" onclick="openStudentBerkasPreview('<?= $mhs['nim']; ?>')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="<?= $p_cnt; ?> Berkas Menunggu Verifikasi — Klik untuk Lihat Berkas">
+                                                    <button type="button" onclick="openStudentBerkasPreview('<?= $mhs['nim']; ?>', null, 'Pending')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="<?= $p_cnt; ?> Berkas Menunggu Verifikasi — Klik untuk Hanya Tampilkan Berkas Menunggu">
                                                         <i class="fa-solid fa-clock text-amber-500 text-[9px]"></i>
                                                         <span><?= $p_cnt; ?> Menunggu</span>
                                                     </button>
@@ -913,10 +1269,16 @@
                     </tbody>
                 </table>
             </div>
-            <!-- Footer: Info + Pagination -->
-            <div class="px-5 py-3.5 border-t border-orange-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-orange-50/30">
-                <span id="recordsInfo" class="text-[11px] text-slate-500 font-medium"></span>
-                <div id="paginationContainer" class="flex items-center gap-1 text-xs font-semibold"></div>
+        </div>
+    </div>
+
+        <!-- Table Bottom Pagination Bar (Exact Koordinator TA Style) -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 text-xs text-slate-500 font-medium w-full overflow-hidden">
+            <div class="text-center sm:text-left">
+                Menampilkan data <strong id="pageStartDW" class="text-slate-800 font-bold">1</strong> - <strong id="pageEndDW" class="text-slate-800 font-bold">10</strong> dari total <strong id="totalRecordsBottomDW" class="text-slate-800 font-bold"><?= !empty($list_mahasiswa) ? count($list_mahasiswa) : 0; ?></strong> mahasiswa
+            </div>
+            <div class="pagination-controls-bottom flex items-center justify-center sm:justify-end gap-1 max-w-full overflow-x-auto scrollbar-none py-1" id="paginationContainer" style="-webkit-overflow-scrolling: touch;">
+                <!-- Pagination buttons rendered via JS -->
             </div>
         </div>
     </main>
@@ -1182,121 +1544,562 @@
     ]); ?>;
     let allRows      = Array.from(document.querySelectorAll('.mhs-row'));
     const tableBody  = document.getElementById('tableBodyMhs');
-    const filterRows = document.getElementById('filterRows');
-    const btnAdd     = document.getElementById('btnAddFilter');
-    const btnReset   = document.getElementById('btnReset');
-    const badge      = document.getElementById('filterCountBadge');
-    const perPageSel = document.getElementById('recordsPerPage');
-    const info       = document.getElementById('recordsInfo');
     const pagination = document.getElementById('paginationContainer');
     const checkAll   = document.getElementById('checkAllStudents');
+    const perPageSel = document.getElementById('recordsPerPage');
+    const toolbarTotal = document.getElementById('toolbarTotalCountDW');
 
-        const COLUMNS = [
-            { label: 'Semua Kolom (Pencarian Umum)', value: 'all' },
-            { label: 'NIM',      value: 'nim'    },
-            { label: 'Nama',     value: 'nama'   },
-            { label: 'Judul TA', value: 'judul'  },
-            { label: 'Status',   value: 'status' },
-            { label: 'Tahap',    value: 'stage'  },
-        ];
+    let currentPage = 1;
+    let perPage     = parseInt(perPageSel ? perPageSel.value : 10) || 10;
+    let extraRowCounterDW = 0;
 
-        let filters      = [];
-        let pintasStatus = 'all';
-        let currentPage  = 1;
-        let perPage      = parseInt(perPageSel.value) || 5;
-        let lastDataHash = '';
+    // Kategori & Metadata Helper
+    const CRITERIA_META_DW = {
+        query:  { emoji: '🔍', label: '🔍 Kata Kunci (Semua)', isText: true,  placeholder: 'Ketik kata kunci lalu tekan Enter atau klik Cari...' },
+        nama:   { emoji: '🏷️', label: '🏷️ Nama Mahasiswa',     isText: true,  placeholder: 'Cari berdasarkan nama mahasiswa...' },
+        nim:    { emoji: '🆔', label: '🆔 NIM Mahasiswa',      isText: true,  placeholder: 'Cari berdasarkan NIM mahasiswa...' },
+        judul:  { emoji: '📖', label: '📖 Judul Tugas Akhir',  isText: true,  placeholder: 'Cari berdasarkan judul TA...' },
+        status: { emoji: '⚡', label: '⚡ Status Approval',    isText: false, placeholder: 'Pilih Status...' },
+        stage:  { emoji: '🔄', label: '🔄 Tahap Saat Ini',     isText: false, placeholder: 'Pilih Tahap...' }
+    };
 
-        function colSelect(selected = 'all') {
-            return `<select class="filter-col border border-orange-200 rounded-lg px-2 py-1.5 text-xs font-medium bg-white outline-none focus:ring-2 focus:ring-orange-400/30 focus:border-orange-400 transition cursor-pointer">${COLUMNS.map(c => `<option value="${c.value}" ${c.value === selected ? 'selected' : ''}>${c.label}</option>`).join('')}</select>`;
+    function getCategoryEmojiDW(cat) {
+        return CRITERIA_META_DW[cat] ? CRITERIA_META_DW[cat].emoji : '🔍';
+    }
+
+    function getCategoryLabelDW(cat) {
+        return CRITERIA_META_DW[cat] ? CRITERIA_META_DW[cat].label : 'Kata Kunci';
+    }
+
+    function isTextCategoryDW(cat) {
+        return CRITERIA_META_DW[cat] ? CRITERIA_META_DW[cat].isText : true;
+    }
+
+    function getPlaceholderForCategoryDW(cat) {
+        return CRITERIA_META_DW[cat] ? CRITERIA_META_DW[cat].placeholder : 'Ketik kata kunci...';
+    }
+
+    // Toggle Dropdown Menu
+    window.toggleCustomDropdownDW = function (id, event) {
+        if (event) {
+            event.stopPropagation();
+            event.preventDefault();
         }
+        const menu = document.getElementById(`menu-filter-${id}`);
+        const container = menu ? menu.closest('.custom-dropdown-container') : null;
+        if (!menu) return;
 
-        function addFilterRow(col = 'all', val = '') {
-            if (filters.length >= 4) return;
-            const filterObj = { col, val };
-            filters.push(filterObj);
-            const rowNumber = filters.length;
+        const isOpen = !menu.classList.contains('hidden');
+        closeAllCustomDropdownsDW();
 
-            const div = document.createElement('div');
-            div.className = 'filter-row flex items-center gap-2';
-            div.innerHTML = `
-                <span class="text-[10px] font-bold text-slate-500 w-14 shrink-0">Filter #${rowNumber}:</span>
-                ${colSelect(col)}
-                <input type="text" placeholder="Ketik kata kunci pencarian..." value="${val}"
-                    class="filter-val flex-1 border border-orange-200 rounded-lg px-3 py-1.5 text-xs font-medium bg-white outline-none focus:ring-2 focus:ring-orange-400/30 focus:border-orange-400 transition placeholder:text-slate-300">
-                ${rowNumber > 1 ? `<button type="button" class="btn-remove-filter w-7 h-7 rounded-lg bg-rose-100 text-rose-600 hover:bg-rose-200 transition flex items-center justify-center text-xs cursor-pointer"><i class="bi bi-x-lg"></i></button>` : ''}`;
-            filterRows.appendChild(div);
+        if (!isOpen) {
+            menu.classList.remove('hidden');
+            if (container) container.classList.add('open');
+        }
+    };
 
-            const colSel = div.querySelector('.filter-col');
-            const valInput = div.querySelector('.filter-val');
-            const rmBtn = div.querySelector('.btn-remove-filter');
+    function closeAllCustomDropdownsDW() {
+        document.querySelectorAll('.custom-dropdown-menu').forEach(m => m.classList.add('hidden'));
+        document.querySelectorAll('.custom-dropdown-container').forEach(c => c.classList.remove('open'));
+    }
 
-            colSel.addEventListener('change', () => {
-                filterObj.col = colSel.value;
-                applyAll();
-            });
+    document.addEventListener('click', (e) => {
+        // Abaikan jika target sudah terlepas dari DOM (misal tombol hapus baris yang baru saja menghapus dirinya sendiri)
+        if (!e.target || !e.target.isConnected) return;
 
-            valInput.addEventListener('input', () => {
-                filterObj.val = valInput.value;
-                currentPage = 1;
-                applyAll();
-            });
-
-            if (rmBtn) {
-                rmBtn.addEventListener('click', () => {
-                    const idx = filters.indexOf(filterObj);
-                    if (idx !== -1) filters.splice(idx, 1);
-                    rebuildFilterUI();
-                    applyAll();
-                });
+        if (!e.target.closest('.custom-dropdown-container') && !e.target.closest('#extraRowsCardDW') && !e.target.closest('#standaloneAddBtnDW')) {
+            closeAllCustomDropdownsDW();
+            const card = document.getElementById('extraRowsCardDW');
+            if (card) {
+                card.style.display = 'none';
             }
-
-            updateBadge();
-            applyAll();
         }
+    });
 
-        function rebuildFilterUI() {
-            filterRows.innerHTML = '';
-            const copy = [...filters];
-            filters = [];
-            copy.forEach(f => addFilterRow(f.col, f.val));
-        }
+    // Select Main Category
+    window.selectMainCategoryDW = function (cat, label, el) {
+        const sel = document.getElementById('mainCategorySelect');
+        const iconSpan = document.getElementById('label-filter-main-cat');
+        const valWrap = document.getElementById('mainValueContainer');
+        const selectWrap = document.getElementById('mainCustomSelectWrap');
+        const mainInput = document.getElementById('mainSearchInput');
 
-        function updateBadge() {
-            badge.textContent = `${filters.length}/4`;
-            btnAdd.style.opacity = filters.length >= 4 ? '0.5' : '1';
-            btnAdd.style.pointerEvents = filters.length >= 4 ? 'none' : 'auto';
-        }
+        if (sel) sel.value = cat;
+        if (iconSpan) iconSpan.innerText = getCategoryEmojiDW(cat);
 
-        const directSearchInput = document.getElementById('directSearchInput');
-        const btnClearDirectSearch = document.getElementById('btnClearDirectSearch');
-
-        if (directSearchInput) {
-            directSearchInput.addEventListener('input', () => {
-                if (btnClearDirectSearch) {
-                    if (directSearchInput.value.trim()) {
-                        btnClearDirectSearch.classList.remove('hidden');
-                    } else {
-                        btnClearDirectSearch.classList.add('hidden');
-                    }
-                }
-                currentPage = 1;
-                applyAll();
+        if (el && el.parentElement) {
+            el.parentElement.querySelectorAll('.dropdown-item').forEach(i => {
+                i.classList.remove('active', 'bg-orange-50', 'text-brand-600');
+                i.classList.add('text-slate-700');
             });
+            el.classList.add('active', 'bg-orange-50', 'text-brand-600');
+            el.classList.remove('text-slate-700');
         }
 
-        window.clearDirectSearch = function() {
-            if (directSearchInput) {
-                directSearchInput.value = '';
-                if (btnClearDirectSearch) btnClearDirectSearch.classList.add('hidden');
-                currentPage = 1;
-                applyAll();
+        if (isTextCategoryDW(cat)) {
+            valWrap.classList.remove('hidden');
+            valWrap.classList.add('flex-1', 'flex');
+            selectWrap.classList.add('hidden');
+            if (mainInput) {
+                mainInput.placeholder = getPlaceholderForCategoryDW(cat);
+                mainInput.focus();
+            }
+        } else {
+            valWrap.classList.add('hidden');
+            valWrap.classList.remove('flex-1', 'flex');
+            selectWrap.classList.remove('hidden');
+            updateMainValueOptionsDW(cat);
+        }
+
+        closeAllCustomDropdownsDW();
+        handleUnifiedMultiSearchDW();
+    };
+
+    function updateMainValueOptionsDW(cat) {
+        const menu = document.getElementById('menu-filter-main-select');
+        const label = document.getElementById('label-filter-main-select');
+        const hiddenVal = document.getElementById('mainCustomSelectVal');
+        if (!menu) return;
+
+        let options = [];
+        if (cat === 'status') {
+            options = [
+                { val: '', label: 'Semua Status' },
+                { val: 'Pending', label: '⏳ Menunggu Approval' },
+                { val: 'Approved', label: '✅ Disetujui' },
+                { val: 'Rejected', label: '❌ Ditolak' }
+            ];
+        } else if (cat === 'stage') {
+            options = [
+                { val: '', label: 'Semua Tahap' },
+                { val: 'draft', label: '📝 Draf Pendaftaran' },
+                { val: 'dosen wali', label: '👤 Dosen Wali' },
+                { val: 'admin layanan', label: '📋 Admin Layanan (LAA)' },
+                { val: 'koordinator ta', label: '🎓 Koordinator TA' },
+                { val: 'ketua kk', label: '🏛️ Ketua Kelompok Keahlian' },
+                { val: 'selesai approval', label: '✨ Selesai Approval' }
+            ];
+        }
+
+        hiddenVal.value = '';
+        label.innerText = options[0].label;
+
+        menu.innerHTML = options.map((opt, idx) => `
+            <div onclick="selectMainValueDW('${opt.val}', '${opt.label.replace(/'/g, "\\'")}', this)" 
+                 class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${idx === 0 ? 'active bg-orange-50 text-brand-600 font-bold' : 'text-slate-700 hover:bg-orange-50 hover:text-brand-600'}">
+                <span>${opt.label}</span>
+            </div>
+        `).join('');
+    }
+
+    window.selectMainValueDW = function (val, labelText, el) {
+        const hiddenVal = document.getElementById('mainCustomSelectVal');
+        const label = document.getElementById('label-filter-main-select');
+        if (hiddenVal) hiddenVal.value = val;
+        if (label) label.innerText = labelText;
+
+        if (el && el.parentElement) {
+            el.parentElement.querySelectorAll('.dropdown-item').forEach(i => {
+                i.classList.remove('active', 'bg-orange-50', 'text-brand-600', 'font-bold');
+                i.classList.add('text-slate-700');
+            });
+            el.classList.add('active', 'bg-orange-50', 'text-brand-600', 'font-bold');
+        }
+
+        closeAllCustomDropdownsDW();
+        handleUnifiedMultiSearchDW();
+    };
+
+    // Extra Filter Rows Popover Management
+    window.toggleOrAddFilterRowDW = function (event) {
+        if (event) event.stopPropagation();
+        const card = document.getElementById('extraRowsCardDW');
+        const container = document.getElementById('additionalFilterRowsContainerDW');
+        if (!card || !container) return;
+
+        const isCardOpen = (card.style.display === 'block');
+
+        if (!isCardOpen) {
+            card.style.display = 'block';
+            if (container.children.length === 0) {
+                addExtraFilterRowDW();
+            }
+        } else {
+            // Jika card sudah terbuka, menekan tombol "Filter Tambahan" berarti ingin MENAMBAHKAN baris filter lagi
+            const currentRows = container.querySelectorAll('.extra-filter-row').length;
+            if (currentRows < 3) {
+                addExtraFilterRowDW();
+            } else {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Maksimal 4 Filter',
+                        text: 'Maksimal 4 kriteria filter pencarian yang dapat aktif secara bersamaan.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
+            }
+        }
+    };
+
+    window.closeExtraRowsCardDW = function () {
+        const card = document.getElementById('extraRowsCardDW');
+        if (card) card.style.display = 'none';
+    };
+
+    window.addExtraFilterRowDW = function (forcedCat = null, forcedVal = '') {
+        const container = document.getElementById('additionalFilterRowsContainerDW');
+        if (!container) return;
+
+        const currentRows = container.querySelectorAll('.extra-filter-row').length;
+        if (currentRows >= 3) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Maksimal 4 Filter',
+                text: 'Maksimal 4 kriteria filter pencarian yang dapat aktif secara bersamaan.',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            return;
+        }
+
+        const card = document.getElementById('extraRowsCardDW');
+        if (card) card.style.display = 'block';
+
+        extraRowCounterDW++;
+        const rowId = extraRowCounterDW;
+
+        const allCriteria = ['query', 'nama', 'nim', 'judul', 'status', 'stage'];
+        const mainCat = document.getElementById('mainCategorySelect') ? document.getElementById('mainCategorySelect').value : 'query';
+        const usedCriteria = [mainCat];
+        container.querySelectorAll('.extra-cat-select').forEach(el => usedCriteria.push(el.value));
+
+        const defaultCrit = forcedCat || allCriteria.find(c => !usedCriteria.includes(c)) || 'status';
+
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'extra-filter-row';
+        rowDiv.id = `extraRow_${rowId}`;
+
+        rowDiv.innerHTML = `
+            <div class="unified-search-pill">
+                <!-- Extra Category Dropdown -->
+                <div class="relative custom-dropdown-container">
+                    <input type="hidden" id="extraCatSelect_${rowId}" class="extra-cat-select" value="${defaultCrit}">
+                    <button type="button" onclick="toggleCustomDropdownDW('extra-cat-${rowId}', event)" class="flex items-center gap-1.5 bg-transparent border-none text-xs font-bold text-slate-800 cursor-pointer py-1 px-0.5 hover:text-brand-600 focus:outline-none" title="Kategori Pencarian">
+                        <span id="label-filter-extra-cat-${rowId}" class="text-sm sm:text-base leading-none block">${getCategoryEmojiDW(defaultCrit)}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-extra-cat-${rowId}"></i>
+                    </button>
+                    <div id="menu-filter-extra-cat-${rowId}" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
+                        <div onclick="selectExtraCategoryDW(${rowId}, 'query', '🔍 Kata Kunci (Semua)', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'query' ? 'active bg-orange-50 text-brand-600' : 'text-slate-700 hover:bg-orange-50 hover:text-brand-600'}"><span>🔍 Kata Kunci (Semua)</span></div>
+                        <div onclick="selectExtraCategoryDW(${rowId}, 'nama', '🏷️ Nama Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'nama' ? 'active bg-orange-50 text-brand-600' : 'text-slate-700 hover:bg-orange-50 hover:text-brand-600'}"><span>🏷️ Nama Mahasiswa</span></div>
+                        <div onclick="selectExtraCategoryDW(${rowId}, 'nim', '🆔 NIM Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'nim' ? 'active bg-orange-50 text-brand-600' : 'text-slate-700 hover:bg-orange-50 hover:text-brand-600'}"><span>🆔 NIM Mahasiswa</span></div>
+                        <div onclick="selectExtraCategoryDW(${rowId}, 'judul', '📖 Judul Tugas Akhir', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'judul' ? 'active bg-orange-50 text-brand-600' : 'text-slate-700 hover:bg-orange-50 hover:text-brand-600'}"><span>📖 Judul Tugas Akhir</span></div>
+                        <div onclick="selectExtraCategoryDW(${rowId}, 'status', '⚡ Status Approval', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'status' ? 'active bg-orange-50 text-brand-600' : 'text-slate-700 hover:bg-orange-50 hover:text-brand-600'}"><span>⚡ Status Approval</span></div>
+                        <div onclick="selectExtraCategoryDW(${rowId}, 'stage', '🔄 Tahap Saat Ini', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${defaultCrit === 'stage' ? 'active bg-orange-50 text-brand-600' : 'text-slate-700 hover:bg-orange-50 hover:text-brand-600'}"><span>🔄 Tahap Saat Ini</span></div>
+                    </div>
+                </div>
+
+                <div class="unified-divider"></div>
+
+                <!-- Input Text Value Container -->
+                <div id="extraValueContainer_${rowId}" class="${isTextCategoryDW(defaultCrit) ? 'flex-1 flex items-center' : 'hidden'}">
+                    <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs mr-2"></i>
+                    <input type="text" id="extraInput_${rowId}" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); handleUnifiedMultiSearchDW(); }" placeholder="${getPlaceholderForCategoryDW(defaultCrit)}" value="${forcedVal}" class="w-full text-xs font-medium bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400">
+                </div>
+
+                <!-- Custom Dropdown Value Container -->
+                <div id="extraCustomSelectWrap_${rowId}" class="${!isTextCategoryDW(defaultCrit) ? 'flex-1 relative custom-dropdown-container' : 'hidden'}">
+                    <input type="hidden" id="extraValueVal_${rowId}" class="extra-val-input" value="${forcedVal}">
+                    <button type="button" onclick="toggleCustomDropdownDW('extra-val-${rowId}', event)" class="w-full py-1 text-xs font-semibold text-slate-800 flex items-center justify-between cursor-pointer focus:outline-none">
+                        <span id="label-filter-extra-val-${rowId}" class="flex items-center gap-1.5 truncate">Semua ${defaultCrit === 'status' ? 'Status' : 'Tahap'}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200" id="arrow-filter-extra-val-${rowId}"></i>
+                    </button>
+                    <div id="menu-filter-extra-val-${rowId}" class="custom-dropdown-menu hidden absolute top-full left-0 mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1 space-y-0.5 text-xs">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Remove Row Button -->
+            <button type="button" onclick="removeExtraRowDW(event, ${rowId})" class="btn-remove-row" title="Hapus Kriteria Ini">
+                <i class="fa-solid fa-trash-can text-xs pointer-events-none"></i>
+            </button>
+        `;
+
+        container.appendChild(rowDiv);
+        if (!isTextCategoryDW(defaultCrit)) {
+            updateExtraValueOptionsDW(rowId, defaultCrit, forcedVal);
+        }
+        updateFilterBadgeDW();
+        handleUnifiedMultiSearchDW();
+    };
+
+    window.removeExtraRowDW = function (event, rowId) {
+        if (event) {
+            event.stopPropagation();
+            event.preventDefault();
+        }
+        const row = document.getElementById(`extraRow_${rowId}`);
+        if (row) {
+            row.remove();
+            updateFilterBadgeDW();
+            handleUnifiedMultiSearchDW();
+        }
+    };
+
+    window.selectExtraCategoryDW = function (rowId, cat, label, el) {
+        const sel = document.getElementById(`extraCatSelect_${rowId}`);
+        const iconSpan = document.getElementById(`label-filter-extra-cat-${rowId}`);
+        const valWrap = document.getElementById(`extraValueContainer_${rowId}`);
+        const selectWrap = document.getElementById(`extraCustomSelectWrap_${rowId}`);
+        const input = document.getElementById(`extraInput_${rowId}`);
+
+        if (sel) sel.value = cat;
+        if (iconSpan) iconSpan.innerText = getCategoryEmojiDW(cat);
+
+        if (el && el.parentElement) {
+            el.parentElement.querySelectorAll('.dropdown-item').forEach(i => {
+                i.classList.remove('active', 'bg-orange-50', 'text-brand-600');
+                i.classList.add('text-slate-700');
+            });
+            el.classList.add('active', 'bg-orange-50', 'text-brand-600');
+            el.classList.remove('text-slate-700');
+        }
+
+        if (isTextCategoryDW(cat)) {
+            valWrap.className = 'flex-1 flex items-center';
+            selectWrap.className = 'hidden';
+            if (input) {
+                input.placeholder = getPlaceholderForCategoryDW(cat);
+                input.value = '';
+                input.focus();
+            }
+        } else {
+            valWrap.className = 'hidden';
+            selectWrap.className = 'flex-1 relative custom-dropdown-container';
+            updateExtraValueOptionsDW(rowId, cat);
+        }
+
+        closeAllCustomDropdownsDW();
+        handleUnifiedMultiSearchDW();
+    };
+
+    function updateExtraValueOptionsDW(rowId, cat, initialVal = '') {
+        const menu = document.getElementById(`menu-filter-extra-val-${rowId}`);
+        const label = document.getElementById(`label-filter-extra-val-${rowId}`);
+        const hiddenVal = document.getElementById(`extraValueVal_${rowId}`);
+        if (!menu) return;
+
+        let options = [];
+        if (cat === 'status') {
+            options = [
+                { val: '', label: 'Semua Status' },
+                { val: 'Pending', label: '⏳ Menunggu Approval' },
+                { val: 'Approved', label: '✅ Disetujui' },
+                { val: 'Rejected', label: '❌ Ditolak' }
+            ];
+        } else if (cat === 'stage') {
+            options = [
+                { val: '', label: 'Semua Tahap' },
+                { val: 'draft', label: '📝 Draf Pendaftaran' },
+                { val: 'dosen wali', label: '👤 Dosen Wali' },
+                { val: 'admin layanan', label: '📋 Admin Layanan (LAA)' },
+                { val: 'koordinator ta', label: '🎓 Koordinator TA' },
+                { val: 'ketua kk', label: '🏛️ Ketua Kelompok Keahlian' },
+                { val: 'selesai approval', label: '✨ Selesai Approval' }
+            ];
+        }
+
+        const matchOpt = options.find(o => o.val === initialVal) || options[0];
+        hiddenVal.value = matchOpt.val;
+        label.innerText = matchOpt.label;
+
+        menu.innerHTML = options.map((opt, idx) => `
+            <div onclick="selectExtraValueDW(${rowId}, '${opt.val}', '${opt.label.replace(/'/g, "\\'")}', this)" 
+                 class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium ${opt.val === hiddenVal.value ? 'active bg-orange-50 text-brand-600 font-bold' : 'text-slate-700 hover:bg-orange-50 hover:text-brand-600'}">
+                <span>${opt.label}</span>
+            </div>
+        `).join('');
+    }
+
+    window.selectExtraValueDW = function (rowId, val, labelText, el) {
+        const hiddenVal = document.getElementById(`extraValueVal_${rowId}`);
+        const label = document.getElementById(`label-filter-extra-val-${rowId}`);
+        if (hiddenVal) hiddenVal.value = val;
+        if (label) label.innerText = labelText;
+
+        if (el && el.parentElement) {
+            el.parentElement.querySelectorAll('.dropdown-item').forEach(i => {
+                i.classList.remove('active', 'bg-orange-50', 'text-brand-600', 'font-bold');
+                i.classList.add('text-slate-700');
+            });
+            el.classList.add('active', 'bg-orange-50', 'text-brand-600', 'font-bold');
+        }
+
+        closeAllCustomDropdownsDW();
+        handleUnifiedMultiSearchDW();
+    };
+
+    function updateFilterBadgeDW() {
+        const container = document.getElementById('additionalFilterRowsContainerDW');
+        const badge = document.getElementById('filterCountBadgeDW');
+        const count = container ? container.querySelectorAll('.extra-filter-row').length + 1 : 1;
+        if (badge) badge.innerText = `${count}/4`;
+
+        const btnInside = document.getElementById('btnInsideAddFilterDW');
+        const countText = document.getElementById('extraFilterCountTextDW');
+        if (btnInside) {
+            if (count >= 4) {
+                btnInside.disabled = true;
+                btnInside.classList.add('opacity-50', 'cursor-not-allowed');
+                btnInside.innerHTML = '<i class="fa-solid fa-check text-[11px]"></i> <span>Maks. 4 Filter Tercapai</span>';
+            } else {
+                btnInside.disabled = false;
+                btnInside.classList.remove('opacity-50', 'cursor-not-allowed');
+                btnInside.innerHTML = '<i class="fa-solid fa-plus text-[11px]"></i> <span>Tambah Kriteria Filter</span>';
+            }
+        }
+        if (countText) {
+            countText.innerText = `${count} dari 4 kriteria aktif`;
+        }
+    }
+
+    // Reset Multi Search
+    window.resetMultiSearchDW = function () {
+        const mainCat = document.getElementById('mainCategorySelect');
+        const mainInput = document.getElementById('mainSearchInput');
+        const container = document.getElementById('additionalFilterRowsContainerDW');
+        const card = document.getElementById('extraRowsCardDW');
+
+        if (mainCat) selectMainCategoryDW('query', '🔍 Kata Kunci (Semua)');
+        if (mainInput) mainInput.value = '';
+        if (container) container.innerHTML = '';
+        if (card) card.style.display = 'none';
+
+        window.currentQuickStatusFilter = 'all';
+        if (typeof updateQuickFilterButtonsUI === 'function') updateQuickFilterButtonsUI();
+
+        updateFilterBadgeDW();
+        currentPage = 1;
+        applyAll();
+    };
+
+    window.currentQuickStatusFilter = 'all';
+
+    window.filterQuickStatusDW = function(status) {
+        window.currentQuickStatusFilter = status;
+        updateQuickFilterButtonsUI();
+        currentPage = 1;
+        applyAll();
+    };
+
+    function updateQuickFilterButtonsUI() {
+        const cur = window.currentQuickStatusFilter || 'all';
+        const pills = {
+            'all': {
+                id: 'btnQuickFilter_all',
+                active: 'bg-slate-900 text-white border-slate-900 shadow-sm',
+                inactive: 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200',
+                badgeActive: 'bg-white/20 text-white',
+                badgeInactive: 'bg-slate-100 text-slate-600'
+            },
+            'Pending': {
+                id: 'btnQuickFilter_Pending',
+                active: 'bg-amber-500 text-white border-amber-600 shadow-sm ring-2 ring-amber-300',
+                inactive: 'bg-white hover:bg-amber-50/50 text-slate-700 border-slate-200',
+                badgeActive: 'bg-white/20 text-white',
+                badgeInactive: 'bg-amber-100 text-amber-800'
+            },
+            'Approved': {
+                id: 'btnQuickFilter_Approved',
+                active: 'bg-emerald-600 text-white border-emerald-700 shadow-sm ring-2 ring-emerald-300',
+                inactive: 'bg-white hover:bg-emerald-50/50 text-slate-700 border-slate-200',
+                badgeActive: 'bg-white/20 text-white',
+                badgeInactive: 'bg-emerald-100 text-emerald-800'
+            },
+            'Rejected': {
+                id: 'btnQuickFilter_Rejected',
+                active: 'bg-rose-600 text-white border-rose-700 shadow-sm ring-2 ring-rose-300',
+                inactive: 'bg-white hover:bg-rose-50/50 text-slate-700 border-slate-200',
+                badgeActive: 'bg-white/20 text-white',
+                badgeInactive: 'bg-rose-100 text-rose-800'
             }
         };
 
-        function rowMatches(row) {
-            if (directSearchInput && directSearchInput.value.trim()) {
-                const dq = directSearchInput.value.trim().toLowerCase();
-                const dh = [
+        Object.keys(pills).forEach(key => {
+            const item = pills[key];
+            const btn = document.getElementById(item.id);
+            if (!btn) return;
+            const badge = btn.querySelector('.pill-count');
+            const isActive = (cur === key);
+            
+            btn.className = `quick-status-pill px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-2xs border ${isActive ? item.active : item.inactive}`;
+            if (badge) {
+                badge.className = `px-1.5 py-0.2 rounded-full text-[10px] font-extrabold pill-count ${isActive ? item.badgeActive : item.badgeInactive}`;
+            }
+        });
+    }
+
+    window.changePageSizeDW = function (val) {
+        perPage = parseInt(val) || 10;
+        currentPage = 1;
+        applyAll();
+    };
+
+    window.handleUnifiedMultiSearchDW = function () {
+        currentPage = 1;
+        applyAll();
+    };
+
+    function getActiveFiltersDW() {
+        const list = [];
+
+        // 0. Quick Status Filter Pill
+        if (window.currentQuickStatusFilter && window.currentQuickStatusFilter !== 'all') {
+            list.push({ col: 'status', val: window.currentQuickStatusFilter });
+        }
+        
+        // 1. Main Pill
+        const mainCat = document.getElementById('mainCategorySelect') ? document.getElementById('mainCategorySelect').value : 'query';
+        let mainVal = '';
+        if (isTextCategoryDW(mainCat)) {
+            mainVal = document.getElementById('mainSearchInput') ? document.getElementById('mainSearchInput').value.trim() : '';
+        } else {
+            mainVal = document.getElementById('mainCustomSelectVal') ? document.getElementById('mainCustomSelectVal').value.trim() : '';
+        }
+        if (mainVal) {
+            list.push({ col: mainCat, val: mainVal });
+        }
+
+        // 2. Extra Rows
+        const extraContainer = document.getElementById('additionalFilterRowsContainerDW');
+        if (extraContainer) {
+            extraContainer.querySelectorAll('.extra-filter-row').forEach(row => {
+                const catEl = row.querySelector('.extra-cat-select');
+                if (!catEl) return;
+                const cat = catEl.value;
+                let val = '';
+                if (isTextCategoryDW(cat)) {
+                    const inp = row.querySelector('input[type="text"]');
+                    val = inp ? inp.value.trim() : '';
+                } else {
+                    const hidden = row.querySelector('.extra-val-input');
+                    val = hidden ? hidden.value.trim() : '';
+                }
+                if (val) {
+                    list.push({ col: cat, val: val });
+                }
+            });
+        }
+
+        return list;
+    }
+
+    function rowMatchesDW(row, activeFilters) {
+        for (const f of activeFilters) {
+            const q = f.val.toLowerCase();
+            if (f.col === 'query') {
+                const haystack = [
                     row.dataset.nim || '',
                     row.dataset.nama || '',
                     row.dataset.judul || '',
@@ -1304,85 +2107,117 @@
                     row.dataset.statusLabel || '',
                     row.dataset.stage || '',
                     row.dataset.stageLabel || ''
-                ].join(' ');
-                if (!dh.toLowerCase().includes(dq)) return false;
+                ].join(' ').toLowerCase();
+                if (!haystack.includes(q)) return false;
+            } else if (f.col === 'nama') {
+                const nama = (row.dataset.nama || '').toLowerCase();
+                if (!nama.includes(q)) return false;
+            } else if (f.col === 'nim') {
+                const nim = (row.dataset.nim || '').toLowerCase();
+                if (!nim.includes(q)) return false;
+            } else if (f.col === 'judul') {
+                const judul = (row.dataset.judul || '').toLowerCase();
+                if (!judul.includes(q)) return false;
+            } else if (f.col === 'status') {
+                const status = (row.dataset.status || '').toLowerCase();
+                if (!status.includes(q)) return false;
+            } else if (f.col === 'stage') {
+                const stage = (row.dataset.stage || '').toLowerCase();
+                const stageLabel = (row.dataset.stageLabel || '').toLowerCase();
+                if (!stage.includes(q) && !stageLabel.includes(q)) return false;
             }
-
-            if (pintasStatus !== 'all') {
-                const rowSt = (row.dataset.status || '').trim().toLowerCase();
-                if (rowSt !== pintasStatus.toLowerCase()) return false;
-            }
-            for (const f of filters) {
-                if (!f || !f.val) continue;
-                const q = f.val.trim().toLowerCase();
-                if (!q) continue;
-                let h = '';
-                if (f.col === 'all') {
-                    h = [
-                        row.dataset.nim || '',
-                        row.dataset.nama || '',
-                        row.dataset.judul || '',
-                        row.dataset.status || '',
-                        row.dataset.statusLabel || '',
-                        row.dataset.stage || '',
-                        row.dataset.stageLabel || ''
-                    ].join(' ');
-                } else if (f.col === 'status') {
-                    h = (row.dataset.status || '') + ' ' + (row.dataset.statusLabel || '');
-                } else if (f.col === 'stage') {
-                    h = (row.dataset.stage || '') + ' ' + (row.dataset.stageLabel || '');
-                } else {
-                    h = row.dataset[f.col] || '';
-                }
-                if (!h.toLowerCase().includes(q)) return false;
-            }
-            return true;
         }
+        return true;
+    }
 
-        function applyAll() {
+    function applyAll() {
+        try {
             allRows = Array.from(document.querySelectorAll('.mhs-row'));
-            const visible = allRows.filter(rowMatches);
+            const activeFilters = getActiveFiltersDW();
+            const visible = allRows.filter(r => rowMatchesDW(r, activeFilters));
             const total = visible.length;
             const totalPages = Math.max(1, Math.ceil(total / perPage));
             if (currentPage > totalPages) currentPage = totalPages;
             if (currentPage < 1) currentPage = 1;
             const start = (currentPage - 1) * perPage;
 
-            allRows.forEach(r => {
-                r.style.display = 'none';
-            });
+            // Hide all first, then show the visible page slice
+            allRows.forEach(r => { r.style.display = 'none'; });
+            visible.slice(start, start + perPage).forEach(r => { r.style.display = ''; });
 
-            visible.slice(start, start + perPage).forEach(r => {
-                r.style.display = '';
-            });
+            const tc = document.getElementById('toolbarTotalCountDW');
+            if (tc) tc.innerText = total;
 
-            const from = total === 0 ? 0 : start + 1;
-            const to = Math.min(start + perPage, total);
-            if (info) info.textContent = `Menampilkan ${from}–${to} dari ${total} data`;
+            const pageStartEl = document.getElementById('pageStartDW');
+            const pageEndEl = document.getElementById('pageEndDW');
+            const totalBottomEl = document.getElementById('totalRecordsBottomDW');
+
+            if (pageStartEl) pageStartEl.textContent = total > 0 ? (start + 1) : 0;
+            if (pageEndEl) pageEndEl.textContent = Math.min(start + perPage, total);
+            if (totalBottomEl) totalBottomEl.textContent = total;
+
             renderPagination(totalPages);
             rebindCheckboxes();
+        } catch (e) {
+            // On any error, show all rows so they're never stuck hidden
+            document.querySelectorAll('.mhs-row').forEach(r => { r.style.display = ''; });
+            console.warn('[applyAll] Error:', e);
         }
+    }
 
         function renderPagination(totalPages) {
-            pagination.innerHTML = '';
+            const paginationEl = document.getElementById('paginationContainer');
+            if (!paginationEl) return;
+            paginationEl.innerHTML = '';
             if (totalPages <= 1) return;
-            const mk = (label, page, disabled, active) => {
-                const btn = document.createElement('button');
-                btn.innerHTML = label;
-                btn.className = `px-3 py-1.5 rounded-lg border text-[11px] font-semibold transition cursor-pointer ${ active ? 'bg-orange-500 text-white border-orange-500 shadow-sm' : disabled ? 'bg-white text-slate-300 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-600 border-slate-200 hover:bg-orange-50 hover:border-orange-300'}`;
-                btn.disabled = disabled;
-                if (!disabled && !active) btn.addEventListener('click', () => { currentPage = page; applyAll(); });
-                return btn;
-            };
-            pagination.appendChild(mk('<i class="bi bi-chevron-left"></i>', currentPage - 1, currentPage === 1, false));
-            for (let i = 1; i <= totalPages; i++) {
-                if (totalPages > 7 && i > 2 && i < totalPages - 1 && Math.abs(i - currentPage) > 1) {
-                    if (i === 3 || i === totalPages - 2) { const d = document.createElement('span'); d.textContent = '…'; d.className = 'px-1 text-slate-400'; pagination.appendChild(d); }
-                    continue;
-                }
-                pagination.appendChild(mk(i, i, false, i === currentPage));
+
+            const btnFirst = document.createElement('button');
+            btnFirst.className = `px-2 sm:px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-bold transition shrink-0 ${currentPage === 1 ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
+            btnFirst.innerHTML = '<span class="sm:hidden">&laquo;</span><span class="hidden sm:inline">&laquo; Awal</span>';
+            btnFirst.title = 'Halaman Pertama';
+            btnFirst.disabled = (currentPage === 1);
+            btnFirst.addEventListener('click', () => { currentPage = 1; applyAll(); });
+            paginationEl.appendChild(btnFirst);
+
+            const btnPrev = document.createElement('button');
+            btnPrev.className = `px-2 sm:px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-bold transition shrink-0 ${currentPage === 1 ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
+            btnPrev.innerHTML = '<span class="sm:hidden">&lsaquo;</span><span class="hidden sm:inline">&lsaquo; Prev</span>';
+            btnPrev.title = 'Halaman Sebelumnya';
+            btnPrev.disabled = (currentPage === 1);
+            btnPrev.addEventListener('click', () => { currentPage--; applyAll(); });
+            paginationEl.appendChild(btnPrev);
+
+            const maxVisibleButtons = 5;
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + maxVisibleButtons - 1);
+            if (endPage - startPage + 1 < maxVisibleButtons) {
+                startPage = Math.max(1, endPage - maxVisibleButtons + 1);
             }
-            pagination.appendChild(mk('<i class="bi bi-chevron-right"></i>', currentPage + 1, currentPage === totalPages, false));
+
+            for (let p = startPage; p <= endPage; p++) {
+                const btnPage = document.createElement('button');
+                const isActive = (p === currentPage);
+                btnPage.className = `min-w-[28px] sm:min-w-[32px] px-2 sm:px-3 py-1 rounded-lg text-[11px] sm:text-xs font-bold transition shrink-0 cursor-pointer ${isActive ? 'bg-orange-600 text-white shadow-xs' : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'}`;
+                btnPage.textContent = p;
+                btnPage.addEventListener('click', () => { currentPage = p; applyAll(); });
+                paginationEl.appendChild(btnPage);
+            }
+
+            const btnNext = document.createElement('button');
+            btnNext.className = `px-2 sm:px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-bold transition shrink-0 ${currentPage === totalPages ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
+            btnNext.innerHTML = '<span class="sm:hidden">&rsaquo;</span><span class="hidden sm:inline">Next &rsaquo;</span>';
+            btnNext.title = 'Halaman Selanjutnya';
+            btnNext.disabled = (currentPage === totalPages);
+            btnNext.addEventListener('click', () => { currentPage++; applyAll(); });
+            paginationEl.appendChild(btnNext);
+
+            const btnLast = document.createElement('button');
+            btnLast.className = `px-2 sm:px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-bold transition shrink-0 ${currentPage === totalPages ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}`;
+            btnLast.innerHTML = '<span class="sm:hidden">&raquo;</span><span class="hidden sm:inline">Akhir &raquo;</span>';
+            btnLast.title = 'Halaman Terakhir';
+            btnLast.disabled = (currentPage === totalPages);
+            btnLast.addEventListener('click', () => { currentPage = totalPages; applyAll(); });
+            paginationEl.appendChild(btnLast);
         }
 
         document.querySelectorAll('.btn-pintas').forEach(btn => {
@@ -1395,25 +2230,6 @@
                 currentPage = 1;
                 applyAll();
             });
-        });
-
-        btnAdd.addEventListener('click', () => addFilterRow());
-
-        btnReset.addEventListener('click', () => {
-            filters = [];
-            pintasStatus = 'all';
-            currentPage = 1;
-            filterRows.innerHTML = '';
-            if (directSearchInput) {
-                directSearchInput.value = '';
-                if (btnClearDirectSearch) btnClearDirectSearch.classList.add('hidden');
-            }
-            document.querySelectorAll('.btn-pintas').forEach((b, i) => {
-                b.className = `btn-pintas px-3 py-1 rounded-full transition text-[11px] font-semibold cursor-pointer ${i === 0 ? 'bg-slate-800 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-orange-50'}`;
-            });
-            perPageSel.value = '5';
-            perPage = 5;
-            addFilterRow();
         });
 
         perPageSel.addEventListener('change', () => { 
@@ -1548,6 +2364,15 @@
                     if (elPending) elPending.innerHTML = `${json.stats.pending} <span class="text-xs font-semibold text-cyan-600 font-normal">(${json.stats.total > 0 ? Math.round((json.stats.pending / json.stats.total)*100) : 0}%)</span>`;
                     if (elApproved) elApproved.innerHTML = `${json.stats.approved} <span class="text-xs font-semibold text-emerald-600 font-normal">(${json.stats.approved_pct}%)</span>`;
                     if (elRejected) elRejected.textContent = json.stats.rejected;
+
+                    const countAll = document.getElementById('quickFilterCount_all');
+                    const countPending = document.getElementById('quickFilterCount_Pending');
+                    const countApproved = document.getElementById('quickFilterCount_Approved');
+                    const countRejected = document.getElementById('quickFilterCount_Rejected');
+                    if (countAll) countAll.textContent = json.stats.total;
+                    if (countPending) countPending.textContent = json.stats.pending;
+                    if (countApproved) countApproved.textContent = json.stats.approved;
+                    if (countRejected) countRejected.textContent = json.stats.rejected;
                 }
 
                 // Preserve checked NIMs
@@ -1583,45 +2408,68 @@
                             { kode_berkas: 'bebas_lab', nama_berkas: 'Bebas Lab' }
                         ];
                         let vCnt = 0, iCnt = 0, pCnt = 0;
-                        const berkasPillsHtml = activeSyaratList.map((sb, bIdx) => {
-                            const k = sb.kode_berkas;
-                            const bSt = mhs[`status_file_${k}`] || (mhs.berkas_map && mhs.berkas_map[k] ? (mhs.berkas_map[k].status_verifikasi === 'Valid' ? 'Approved' : (mhs.berkas_map[k].status_verifikasi === 'Invalid' ? 'Rejected' : 'Pending')) : 'Pending');
-                            if (bSt === 'Approved') vCnt++;
-                            else if (bSt === 'Rejected') iCnt++;
-                            else pCnt++;
 
-                            const bClass = (bSt === 'Approved') ? 'bg-emerald-100/90 text-emerald-700 hover:bg-emerald-200' : ((bSt === 'Rejected') ? 'bg-rose-100/90 text-rose-700 hover:bg-rose-200' : 'bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60');
-                            
-                            const mapAbbr = { ksm: 'KSM', transkrip: 'TRS', pernyataan: 'SRT', bebas_lab: 'LAB' };
-                            let abbr = mapAbbr[k];
-                            if (!abbr) {
-                                const w = (sb.nama_berkas || k).trim().split(/[\s_-]+/);
-                                abbr = (w[0] || 'DOC').substring(0, 4).toUpperCase();
-                            }
-                            const dot = (bIdx < activeSyaratList.length - 1) ? '<span class="text-slate-300">·</span>' : '';
-                            return `<button type="button" onclick="openStudentBerkasPreview('${mhs.nim}', '${k}')" id="badge_doc_${mhs.nim}_${k}" title="Review ${sb.nama_berkas} - ${mhs.nama}" class="px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer ${bClass}">${abbr}</button>${dot}`;
-                        }).join('');
+                        // Tambahkan pill Usulan Judul & Skema TA TERLEBIH DAHULU (Paling Awal)
+                        const jdlSt = mhs.status_judul || 'Pending';
+                        const jnsSt = mhs.status_jenis_ta || 'Pending';
+                        let usulanSt = 'Pending';
+                        if (jdlSt === 'Rejected' || jnsSt === 'Rejected') {
+                            usulanSt = 'Rejected';
+                        } else if (jdlSt === 'Approved' && jnsSt === 'Approved') {
+                            usulanSt = 'Approved';
+                        }
+
+                        if (usulanSt === 'Approved') vCnt++;
+                        else if (usulanSt === 'Rejected') iCnt++;
+                        else pCnt++;
+
+                        const usulanClass = (usulanSt === 'Approved') ? 'bg-emerald-100/90 text-emerald-700 hover:bg-emerald-200' : ((usulanSt === 'Rejected') ? 'bg-rose-100/90 text-rose-700 hover:bg-rose-200' : 'bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60');
+                        let berkasPillsHtml = `<button type="button" onclick="openStudentBerkasPreview('${mhs.nim}', 'judul_jenis')" id="badge_doc_${mhs.nim}_judul_jenis" title="Review Usulan Judul & Skema TA - ${mhs.nama}" class="px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer ${usulanClass}">JUDUL</button>`;
+
+                        if (activeSyaratList.length > 0) {
+                            berkasPillsHtml += '<span class="text-slate-300">·</span>' + activeSyaratList.map((sb, bIdx) => {
+                                const k = sb.kode_berkas;
+                                const bSt = mhs[`status_file_${k}`] || (mhs.berkas_map && mhs.berkas_map[k] ? (mhs.berkas_map[k].status_verifikasi === 'Valid' ? 'Approved' : (mhs.berkas_map[k].status_verifikasi === 'Invalid' ? 'Rejected' : 'Pending')) : 'Pending');
+                                if (bSt === 'Approved') vCnt++;
+                                else if (bSt === 'Rejected') iCnt++;
+                                else pCnt++;
+
+                                const bClass = (bSt === 'Approved') ? 'bg-emerald-100/90 text-emerald-700 hover:bg-emerald-200' : ((bSt === 'Rejected') ? 'bg-rose-100/90 text-rose-700 hover:bg-rose-200' : 'bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60');
+                                
+                                const mapAbbr = { ksm: 'KSM', transkrip: 'TRS', pernyataan: 'SRT', bebas_lab: 'LAB' };
+                                let abbr = mapAbbr[k];
+                                if (!abbr) {
+                                    const w = (sb.nama_berkas || k).trim().split(/[\s_-]+/);
+                                    abbr = (w[0] || 'DOC').substring(0, 4).toUpperCase();
+                                }
+                                return `<button type="button" onclick="openStudentBerkasPreview('${mhs.nim}', '${k}')" id="badge_doc_${mhs.nim}_${k}" title="Review ${sb.nama_berkas} - ${mhs.nama}" class="px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer ${bClass}">${abbr}</button>`;
+                            }).join('<span class="text-slate-300">·</span>');
+                        }
 
                         let summaryBadgesHtml = '';
                         if (vCnt > 0) {
-                            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${mhs.nim}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${vCnt} Berkas Disetujui/Valid — Klik untuk Lihat Berkas"><i class="fa-solid fa-circle-check text-emerald-500 text-[9px]"></i> <span>${vCnt} Valid</span></button>`;
+                            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${mhs.nim}', null, 'Approved')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${vCnt} Berkas Disetujui/Valid — Klik untuk Hanya Tampilkan Berkas Valid"><i class="fa-solid fa-circle-check text-emerald-500 text-[9px]"></i> <span>${vCnt} Valid</span></button>`;
                         }
                         if (iCnt > 0) {
-                            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${mhs.nim}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${iCnt} Berkas Ditolak/Direvisi — Klik untuk Lihat Berkas"><i class="fa-solid fa-circle-xmark text-rose-500 text-[9px]"></i> <span>${iCnt} Direvisi</span></button>`;
+                            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${mhs.nim}', null, 'Rejected')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${iCnt} Berkas Ditolak/Direvisi — Klik untuk Hanya Tampilkan Berkas Revisi"><i class="fa-solid fa-circle-xmark text-rose-500 text-[9px]"></i> <span>${iCnt} Direvisi</span></button>`;
                         }
                         if (pCnt > 0) {
-                            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${mhs.nim}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${pCnt} Berkas Menunggu Verifikasi — Klik untuk Lihat Berkas"><i class="fa-solid fa-clock text-amber-500 text-[9px]"></i> <span>${pCnt} Menunggu</span></button>`;
+                            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${mhs.nim}', null, 'Pending')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${pCnt} Berkas Menunggu Verifikasi — Klik untuk Hanya Tampilkan Berkas Menunggu"><i class="fa-solid fa-clock text-amber-500 text-[9px]"></i> <span>${pCnt} Menunggu</span></button>`;
                         }
                         if (vCnt === 0 && iCnt === 0 && pCnt === 0) {
                             summaryBadgesHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">Belum ada berkas</span>`;
                         }
 
                         const prodiHtml = mhs.konsentrasi ? `<span>•</span><span class="text-orange-600 font-medium">${mhs.konsentrasi}</span>` : '';
+                        const isLockedRow = (st === 'Approved' || ['admin layanan', 'koordinator ta', 'ketua kk', 'selesai approval', 'selesai'].includes(rawStage.toLowerCase()));
+                        const cbHtml = isLockedRow 
+                            ? `<span title="Pendaftaran sudah disetujui / terkunci" class="inline-flex items-center justify-center text-emerald-600"><i class="bi bi-shield-check text-sm"></i></span>`
+                            : `<input type="checkbox" name="batch_select[]" value="${mhs.nim}" data-name="${mhs.nama}" ${isChecked} onchange="updateBatchBarDW()" class="student-cb w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer">`;
 
                         return `
                             <tr class="hover:bg-orange-50/50 transition-all duration-150 mhs-row" data-status="${st}" data-status-label="${stLabel.toLowerCase()}" data-nim="${(mhs.nim || '').toLowerCase()}" data-nama="${(mhs.nama || '').toLowerCase()}" data-judul="${(mhs.judul || '').toLowerCase()}" data-stage="${rawStage.toLowerCase()}" data-stage-label="${stageLabel.toLowerCase()}">
                                 <td class="py-3 px-2 text-center whitespace-nowrap">
-                                    <input type="checkbox" name="batch_select[]" value="${mhs.nim}" data-name="${mhs.nama}" ${isChecked} onchange="updateBatchBarDW()" class="student-cb w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer">
+                                    ${cbHtml}
                                 </td>
                                 <td class="py-3 px-3 whitespace-nowrap">
                                     <div class="flex items-center gap-2">
@@ -1690,8 +2538,17 @@
             }
         }
 
-        addFilterRow();
+        // Initial render: show all rows immediately, then apply filters
+        applyAll();
         rebindCheckboxes();
+
+        // Safety-net: re-run applyAll after full page load (handles async PHP rows)
+        document.addEventListener('DOMContentLoaded', function () {
+            allRows = Array.from(document.querySelectorAll('.mhs-row'));
+            applyAll();
+            rebindCheckboxes();
+        });
+
         setInterval(pollRealtimeData, 8000);
 
     // Batch Action Functions
@@ -3113,11 +3970,35 @@
         });
     }
 
+    function setCardDocFilter(nim, filterStatus) {
+        if (!nim) return;
+        nim = String(nim).trim();
+        if (!window.cardFilterStatus) window.cardFilterStatus = {};
+        window.cardFilterStatus[nim] = filterStatus || 'all';
+        
+        if (filterStatus && filterStatus !== 'all') {
+            const isDocKey = getDocList().some(d => d.key === filterStatus);
+            if (isDocKey) {
+                window.activePreviews = [{ nim, docKey: filterStatus }];
+            } else {
+                window.activePreviews = (window.activePreviews || []).filter(p => {
+                    if (String(p.nim).trim() !== nim) return true;
+                    return getMhsDocStatus(nim, p.docKey) === filterStatus;
+                });
+            }
+            refreshLihatBerkasView();
+        } else {
+            renderAllLihatBerkasCards();
+        }
+    }
+
     function toggleLihatBerkasPanel(nim) {
         if (!nim) return;
         nim = String(nim).trim();
 
         if (!window.activeLihatBerkasNims) window.activeLihatBerkasNims = [];
+        if (!window.cardFilterStatus) window.cardFilterStatus = {};
+        window.cardFilterStatus[nim] = 'all';
 
         // ON MOBILE (< 1024px): Buka 1 mahasiswa saja per saat agar tidak tumpang tindih / terpotong di layar HP
         if (window.innerWidth < 1024) {
@@ -3218,20 +4099,35 @@
             }
         } else if (isPreviewActive) {
             // Mode Preview Desktop: Geser ke KIRI UJUNG dan susun ATAS-BAWAH (flex-col)
-            container.className = 'fixed inset-0 pointer-events-none z-[60] flex flex-row items-center justify-start p-3 sm:p-5 gap-4 sm:gap-5 overflow-x-auto';
+            container.scrollLeft = 0;
+            container.className = 'fixed inset-0 pointer-events-none z-[60] flex flex-row items-center justify-start p-3 sm:p-5 gap-4 sm:gap-5 overflow-x-auto has-active-previews';
             wrapper.className = 'flex flex-col gap-3 max-h-[92vh] overflow-y-auto pr-1.5 shrink-0 w-[330px] sm:w-[350px]';
             if (previewWrapper) {
                 previewWrapper.className = 'flex items-center gap-3 shrink-0 max-w-[65vw] sm:max-w-[70vw] overflow-x-auto p-1.5 scroll-smooth';
             }
         } else {
-            // Mode Standar Desktop (tanpa preview): Tampil di TENGAH (flex-row)
-            container.className = 'fixed inset-0 pointer-events-none z-[60] flex flex-row items-center justify-center p-3 sm:p-5 gap-4 sm:gap-5 overflow-x-auto';
-            wrapper.className = 'flex flex-row items-center gap-4 max-h-[92vh] overflow-x-auto p-1 shrink-0';
+            // Mode Standar Desktop (tanpa preview)
+            container.classList.remove('has-active-previews');
+            const totalActive = (window.activeLihatBerkasNims || []).length;
+            const justifyClass = totalActive > 1 ? 'justify-start' : 'justify-center';
+            container.className = `fixed inset-0 pointer-events-none z-[60] flex flex-row items-center ${justifyClass} p-3 sm:p-5 gap-4 sm:gap-5 overflow-x-auto`;
+            wrapper.className = `flex flex-row items-center gap-4 max-h-[92vh] p-1 shrink-0 ${totalActive === 1 ? 'mx-auto' : ''}`;
         }
     }
 
     function getDocList() {
-        return (window.SYARAT_BERKAS && window.SYARAT_BERKAS.length > 0)
+        // Khusus Dosen Wali: letakkan Usulan Judul & Skema TA di URUTAN PERTAMA (#1)
+        const specialJudul = {
+            key: 'judul_jenis',
+            title: '1. Usulan Judul & Skema TA',
+            shortTitle: 'Usulan Judul & Skema TA',
+            isSpecialJudul: true,
+            statusField: 'status_judul',
+            noteField: 'catatan_judul',
+            icon: 'fa-solid fa-heading'
+        };
+
+        const fileDocs = (window.SYARAT_BERKAS && window.SYARAT_BERKAS.length > 0)
             ? window.SYARAT_BERKAS.map((sb, i) => {
                 const k = sb.kode_berkas;
                 const iconMap = {
@@ -3242,7 +4138,7 @@
                 };
                 return {
                     key: k,
-                    title: `${i + 1}. ${sb.nama_berkas}`,
+                    title: `${i + 2}. ${sb.nama_berkas}`,
                     shortTitle: sb.nama_berkas,
                     fileField: `file_${k}`,
                     statusField: `status_file_${k}`,
@@ -3251,26 +4147,37 @@
                 };
             })
             : [
-                { key: 'ksm', title: '1. KSM', shortTitle: 'KSM', fileField: 'file_ksm', statusField: 'status_file_ksm', noteField: 'catatan_file_ksm', icon: 'fa-solid fa-file-lines' },
-                { key: 'transkrip', title: '2. Transkrip Nilai', shortTitle: 'Transkrip Nilai', fileField: 'file_transkrip', statusField: 'status_file_transkrip', noteField: 'catatan_file_transkrip', icon: 'fa-solid fa-file-spreadsheet' },
-                { key: 'pernyataan', title: '3. Surat Pernyataan', shortTitle: 'Surat Pernyataan', fileField: 'file_pernyataan', statusField: 'status_file_pernyataan', noteField: 'catatan_file_pernyataan', icon: 'fa-solid fa-file-contract' },
-                { key: 'bebas_lab', title: '4. Bebas Lab & Perpus', shortTitle: 'Bebas Lab & Perpus', fileField: 'file_bebas_lab', statusField: 'status_file_bebas_lab', noteField: 'catatan_file_bebas_lab', icon: 'fa-solid fa-building-circle-check' }
+                { key: 'ksm', title: '2. KSM', shortTitle: 'KSM', fileField: 'file_ksm', statusField: 'status_file_ksm', noteField: 'catatan_file_ksm', icon: 'fa-solid fa-file-lines' },
+                { key: 'transkrip', title: '3. Transkrip Nilai', shortTitle: 'Transkrip Nilai', fileField: 'file_transkrip', statusField: 'status_file_transkrip', noteField: 'catatan_file_transkrip', icon: 'fa-solid fa-file-spreadsheet' },
+                { key: 'pernyataan', title: '4. Surat Pernyataan', shortTitle: 'Surat Pernyataan', fileField: 'file_pernyataan', statusField: 'status_file_pernyataan', noteField: 'catatan_file_pernyataan', icon: 'fa-solid fa-file-contract' },
+                { key: 'bebas_lab', title: '5. Bebas Lab & Perpus', shortTitle: 'Bebas Lab & Perpus', fileField: 'file_bebas_lab', statusField: 'status_file_bebas_lab', noteField: 'catatan_file_bebas_lab', icon: 'fa-solid fa-building-circle-check' }
             ];
+
+        return [specialJudul, ...fileDocs];
     }
 
     function getMhsDocStatus(nim, docKey) {
         const mhs = window.mhsDataMap ? window.mhsDataMap[nim] : null;
         if (!mhs) return 'Pending';
+        if (docKey === 'judul_jenis') {
+            const sj = mhs.status_judul || 'Pending';
+            const sk = mhs.status_jenis_ta || 'Pending';
+            if (sj === 'Rejected' || sk === 'Rejected' || sj === 'Invalid' || sk === 'Invalid') return 'Rejected';
+            if ((sj === 'Approved' || sj === 'Valid') && (sk === 'Approved' || sk === 'Valid')) return 'Approved';
+            return 'Pending';
+        }
         const directStatus = mhs[`status_file_${docKey}`];
-        if (directStatus === 'Approved' || directStatus === 'Rejected') return directStatus;
+        if (directStatus === 'Approved' || directStatus === 'Valid') return 'Approved';
+        if (directStatus === 'Rejected' || directStatus === 'Invalid') return 'Rejected';
         if (mhs.berkas_map && mhs.berkas_map[docKey]) {
             const bv = mhs.berkas_map[docKey].status_verifikasi;
-            if (bv === 'Valid') return 'Approved';
-            if (bv === 'Invalid') return 'Rejected';
+            if (bv === 'Valid' || bv === 'Approved') return 'Approved';
+            if (bv === 'Invalid' || bv === 'Rejected') return 'Rejected';
         }
         if (mhs.files && mhs.files[docKey] && mhs.files[docKey].status) {
             const fs = mhs.files[docKey].status;
-            if (fs === 'Approved' || fs === 'Rejected') return fs;
+            if (fs === 'Approved' || fs === 'Valid') return 'Approved';
+            if (fs === 'Rejected' || fs === 'Invalid') return 'Rejected';
         }
         return 'Pending';
     }
@@ -3278,9 +4185,9 @@
     function isMhsStageLocked(nim) {
         const mhs = window.mhsDataMap ? window.mhsDataMap[nim] : null;
         if (!mhs) return false;
-        const stage = mhs.current_stage || '';
-        // Hanya kunci jika berkas sudah diproses lebih lanjut oleh Koordinator TA ke atas
-        return ['Koordinator TA', 'Ketua KK', 'Selesai Approval'].includes(stage);
+        const stage = (mhs.current_stage || '').toLowerCase();
+        const st = mhs.status_approval_wali || '';
+        return st === 'Approved' || ['admin layanan', 'koordinator ta', 'ketua kk', 'selesai approval', 'selesai'].includes(stage);
     }
 
     function getMhsValidDocCount(nim, docList) {
@@ -3345,7 +4252,40 @@
             const validCount = getMhsValidDocCount(nim, docList);
             const totalDocs = docList.length;
 
-            const itemsHtml = docList.map(doc => {
+            const currentFilter = (window.cardFilterStatus && window.cardFilterStatus[nim]) ? window.cardFilterStatus[nim] : 'all';
+
+            let countApproved = 0, countRejected = 0, countPending = 0;
+            docList.forEach(d => {
+                const st = getMhsDocStatus(nim, d.key);
+                if (st === 'Approved') countApproved++;
+                else if (st === 'Rejected') countRejected++;
+                else countPending++;
+            });
+
+            const isDocKeyFilter = docList.some(d => d.key === currentFilter);
+            const currentDoc = isDocKeyFilter ? docList.find(d => d.key === currentFilter) : null;
+            const filterLabel = isDocKeyFilter 
+                ? (currentDoc ? (currentDoc.shortTitle || currentDoc.title) : currentFilter)
+                : (currentFilter === 'Approved' ? 'Valid' : (currentFilter === 'Rejected' ? 'Revisi' : 'Menunggu'));
+
+            const filteredDocs = (currentFilter === 'all')
+                ? docList
+                : (isDocKeyFilter
+                    ? docList.filter(d => d.key === currentFilter)
+                    : docList.filter(d => getMhsDocStatus(nim, d.key) === currentFilter));
+
+            const emptyFilterHtml = `
+                <div class="py-8 px-4 text-center">
+                    <i class="fa-regular fa-folder-open text-slate-300 text-3xl mb-2 block"></i>
+                    <p class="text-xs text-slate-600 font-bold">Tidak ada berkas untuk filter "${filterLabel}"</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Pilih filter lain atau tampilkan semua berkas.</p>
+                    <button type="button" onclick="setCardDocFilter('${nim}', 'all')" class="mt-2.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer">
+                        Tampilkan Semua (${totalDocs})
+                    </button>
+                </div>
+            `;
+
+            const itemsHtml = (filteredDocs.length > 0) ? filteredDocs.map(doc => {
                 const rawFilename = mhs[doc.fileField] || `${doc.key}_${nim}.pdf`;
                 const pdfUrl = resolveDocPdfUrl(rawFilename);
                 const status = getMhsDocStatus(nim, doc.key);
@@ -3370,6 +4310,30 @@
                     ? 'bg-orange-600 text-white border-orange-600 shadow-xs ring-2 ring-orange-400' 
                     : 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200 shadow-2xs';
 
+                const isJudulDoc = (doc.key === 'judul_jenis');
+                const cleanJudul = (mhs.judul && mhs.judul !== '-') ? mhs.judul : ((mhs.judul_1 && mhs.judul_1 !== '-') ? mhs.judul_1 : '');
+                const cleanJenis = (mhs.jenis_ta && mhs.jenis_ta !== '-') ? mhs.jenis_ta : 'TA Reguler';
+                const hasAlt = isJudulDoc && (Boolean(mhs.judul_2) || Boolean(mhs.judul_3));
+                const docSubtext = isJudulDoc
+                    ? `<span class="text-orange-600 font-bold"><i class="fa-solid fa-tag mr-1 text-[9px]"></i>${cleanJenis}</span> &bull; <span class="text-slate-600 font-medium truncate inline-block max-w-[125px] align-bottom" title="${cleanJudul}">${cleanJudul || 'Belum diisi'}</span>${hasAlt ? ` <span class="px-1 py-0.2 rounded text-[8px] font-bold bg-amber-50 text-amber-700 border border-amber-200 inline-block align-middle" title="Terdapat judul alternatif">+Alternatif</span>` : ''}`
+                    : `<i class="fa-solid fa-file-pdf text-rose-500 mr-1 text-[9px]"></i>${rawFilename}`;
+
+                const canReset = (status !== 'Pending');
+                const resetBtnHtml = `
+                    <div class="flex flex-col items-center group/btn">
+                        <button type="button" 
+                                onclick="${canReset ? `resetDocApproval('${nim}', '${doc.key}')` : ''}" 
+                                class="w-7 h-7 rounded-lg border text-xs font-bold transition flex items-center justify-center ${canReset ? 'bg-amber-50 hover:bg-amber-500 text-amber-700 hover:text-white border-amber-300 hover:border-amber-500 cursor-pointer shadow-2xs active:scale-95' : 'bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed'}" 
+                                title="${canReset ? `Reset status ${doc.title} kembali ke Menunggu` : 'Status berkas masih Menunggu'}">
+                            <i class="fa-solid fa-rotate-left text-xs ${canReset ? 'group-hover/btn:-rotate-45 transition-transform' : ''}"></i>
+                        </button>
+                        <span onclick="${canReset ? `resetDocApproval('${nim}', '${doc.key}')` : ''}" 
+                              class="text-[9px] font-bold ${canReset ? 'text-amber-700 group-hover/btn:text-amber-600 cursor-pointer' : 'text-slate-400 cursor-not-allowed'} mt-0.5 leading-tight select-none transition-colors">
+                            Reset
+                        </span>
+                    </div>
+                `;
+
                 return `
                     <div class="p-2.5 px-3 rounded-xl border shadow-2xs hover:shadow-xs transition-all flex items-center justify-between gap-2 ${activeCardBorder}">
                         <div class="min-w-0 flex-1">
@@ -3378,8 +4342,8 @@
                                 <span class="font-bold text-slate-800 text-[11px] truncate">${doc.title}</span>
                                 <span id="cardDocBadge_${nim}_${doc.key}">${statusBadge}</span>
                             </div>
-                            <p class="text-[10px] font-mono text-slate-400 truncate mt-0.5" title="${rawFilename}">
-                                <i class="fa-solid fa-file-pdf text-rose-500 mr-1 text-[9px]"></i>${rawFilename}
+                            <p class="text-[10px] font-mono text-slate-400 truncate mt-0.5" title="${isJudulDoc ? (mhs.judul || '') : rawFilename}">
+                                ${docSubtext}
                             </p>
                         </div>
                         <div class="flex items-center gap-1.5 shrink-0">
@@ -3388,7 +4352,7 @@
                                 <button type="button" 
                                         onclick="previewBerkasItem('${nim}', '${doc.key}')" 
                                         class="w-7 h-7 rounded-lg border text-xs font-bold transition flex items-center justify-center cursor-pointer active:scale-95 ${previewBtnStyle}" 
-                                        title="${isCurrentlyPreviewed ? 'Tutup Pratinjau Ini' : 'Pratinjau Berkas'}">
+                                        title="${isCurrentlyPreviewed ? 'Tutup Pratinjau Ini' : (isJudulDoc ? 'Tinjau Usulan Judul & Skema' : 'Pratinjau Berkas')}">
                                     <i class="fa-solid fa-eye text-xs"></i>
                                 </button>
                                 <span onclick="previewBerkasItem('${nim}', '${doc.key}')" class="text-[9px] font-bold ${isCurrentlyPreviewed ? 'text-orange-600' : 'text-slate-500 group-hover/btn:text-orange-600'} mt-0.5 leading-tight select-none cursor-pointer transition-colors">
@@ -3396,26 +4360,12 @@
                                 </span>
                             </div>
 
-                            <!-- Tombol Unduh -->
-                            <div class="flex flex-col items-center group/btn">
-                                <a href="${pdfUrl}" 
-                                   download="${rawFilename}" 
-                                   target="_blank" 
-                                   class="w-7 h-7 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold transition flex items-center justify-center cursor-pointer shadow-2xs active:scale-95" 
-                                   title="Unduh Berkas">
-                                    <i class="fa-solid fa-download text-xs"></i>
-                                </a>
-                                <a href="${pdfUrl}" 
-                                   download="${rawFilename}" 
-                                   target="_blank" 
-                                   class="text-[9px] font-bold text-slate-500 group-hover/btn:text-slate-800 mt-0.5 leading-tight select-none cursor-pointer transition-colors">
-                                    Unduh
-                                </a>
-                            </div>
+                            <!-- Tombol Reset Status Berkas -->
+                            ${resetBtnHtml}
                         </div>
                     </div>
                 `;
-            }).join('');
+            }).join('') : emptyFilterHtml;
 
             return `
                 <div id="cardMhs_${nim}" class="student-card-item pointer-events-auto ${cardWidthClass} bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden flex flex-col shrink-0">
@@ -3437,6 +4387,53 @@
                         </div>
                     </div>
 
+                    <!-- Filter Tabs -->
+                    <div class="p-2 px-3 bg-slate-100/90 border-b border-slate-200/90 flex items-center justify-between gap-1 flex-wrap text-[10px]">
+                        <div class="flex items-center gap-1 flex-wrap">
+                            <button type="button" 
+                                    onclick="setCardDocFilter('${nim}', 'all')" 
+                                    class="px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer ${currentFilter === 'all' ? 'bg-slate-800 text-white shadow-2xs' : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'}">
+                                Semua (${totalDocs})
+                            </button>
+                            ${isDocKeyFilter ? `
+                            <button type="button" 
+                                    onclick="setCardDocFilter('${nim}', '${currentFilter}')" 
+                                    class="px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer bg-orange-600 text-white shadow-2xs">
+                                <i class="${currentDoc ? currentDoc.icon : 'fa-solid fa-file'} text-[9px] mr-0.5"></i> ${filterLabel} (1)
+                            </button>
+                            ` : ''}
+                            ${countApproved > 0 ? `
+                            <button type="button" 
+                                    onclick="setCardDocFilter('${nim}', 'Approved')" 
+                                    class="px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer ${currentFilter === 'Approved' ? 'bg-emerald-600 text-white shadow-2xs' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}">
+                                <i class="fa-solid fa-circle-check text-[9px] mr-0.5"></i> Valid (${countApproved})
+                            </button>` : ''}
+                            ${countRejected > 0 ? `
+                            <button type="button" 
+                                    onclick="setCardDocFilter('${nim}', 'Rejected')" 
+                                    class="px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer ${currentFilter === 'Rejected' ? 'bg-rose-600 text-white shadow-2xs' : 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200'}">
+                                <i class="fa-solid fa-circle-exclamation text-[9px] mr-0.5"></i> Revisi (${countRejected})
+                            </button>` : ''}
+                            ${countPending > 0 ? `
+                            <button type="button" 
+                                    onclick="setCardDocFilter('${nim}', 'Pending')" 
+                                    class="px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer ${currentFilter === 'Pending' ? 'bg-amber-600 text-white shadow-2xs' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'}">
+                                <i class="fa-solid fa-clock text-[9px] mr-0.5"></i> Menunggu (${countPending})
+                            </button>` : ''}
+                            <button type="button" 
+                                    onclick="openAllDocsForStudent('${nim}')" 
+                                    class="px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 shadow-2xs" 
+                                    title="Buka semua berkas mahasiswa ini sekaligus berjajar">
+                                <i class="fa-solid fa-layer-group text-[9px] mr-0.5"></i> Buka Semua
+                            </button>
+                        </div>
+                        ${currentFilter !== 'all' ? `
+                            <button type="button" onclick="setCardDocFilter('${nim}', 'all')" class="text-[9px] text-slate-400 hover:text-slate-700 font-medium underline cursor-pointer">
+                                Reset
+                            </button>
+                        ` : ''}
+                    </div>
+
                     <!-- List of Berkas -->
                     <div class="p-3 space-y-2 bg-slate-50/50 overflow-y-auto ${isMobile && isPreviewActive ? 'max-h-[165px] sm:max-h-[220px]' : 'max-h-[55vh] sm:max-h-[60vh]'}">
                         ${itemsHtml}
@@ -3445,7 +4442,10 @@
                     <!-- Footer Info & Close for Mobile -->
                     <div class="p-2.5 px-4 bg-white border-t border-slate-200 flex items-center justify-between gap-2 shrink-0">
                         <span class="text-[11px] text-slate-500 font-medium">
-                            <strong class="text-slate-800">${validCount}/${totalDocs}</strong> Berkas Disetujui
+                            ${currentFilter === 'all'
+                                ? `<strong class="text-slate-800">${validCount}/${totalDocs}</strong> Berkas Disetujui`
+                                : `Menampilkan <strong class="text-slate-800">${filteredDocs.length}</strong> berkas (<span class="font-bold ${currentFilter === 'Approved' ? 'text-emerald-700' : (currentFilter === 'Rejected' ? 'text-rose-700' : (currentFilter === 'Pending' ? 'text-amber-700' : 'text-orange-700'))}">${filterLabel}</span>)`
+                            }
                         </span>
                         <button type="button" onclick="removeStudentFromLihatBerkas('${nim}')" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer">
                             Tutup
@@ -3472,16 +4472,11 @@
             return;
         }
 
-        // Tambahkan ke slot (maksimal 5 pratinjau berdampingan)
+        // Izinkan multi-preview berkas sekaligus berjajar (maksimal 5 berkas sekaligus)
         if (window.activePreviews.length >= 5) {
             window.activePreviews.shift();
-            window.activePreviews.push({ nim, docKey });
-            if (typeof showDWToast === 'function') {
-                showDWToast(`Maksimal 5 pratinjau. Menampilkan 5 dokumen terbaru.`, true);
-            }
-        } else {
-            window.activePreviews.push({ nim, docKey });
         }
+        window.activePreviews.push({ nim, docKey });
 
         refreshLihatBerkasView();
 
@@ -3496,9 +4491,51 @@
         }, 120);
     }
 
-    async function openStudentBerkasPreview(nim, docKey) {
+    function openAllDocsForStudent(nim) {
         if (!nim) return;
         nim = String(nim).trim();
+        const docList = getDocList();
+        if (!docList || docList.length === 0) return;
+
+        if (!window.activePreviews) window.activePreviews = [];
+        
+        // Hapus preview lama khusus mahasiswa ini jika ada
+        window.activePreviews = window.activePreviews.filter(p => String(p.nim).trim() !== nim);
+
+        // Masukkan semua berkas mahasiswa ini ke activePreviews
+        docList.forEach(d => {
+            window.activePreviews.push({ nim, docKey: d.key });
+        });
+
+        refreshLihatBerkasView();
+
+        setTimeout(() => {
+            const previewWrapper = document.getElementById('wrapperPreviewBerkas');
+            if (previewWrapper) {
+                previewWrapper.scrollLeft = 0;
+                if (window.innerWidth < 1024) {
+                    previewWrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+        }, 120);
+    }
+
+    async function openStudentBerkasPreview(nim, docKey, filterStatus) {
+        if (!nim) return;
+        nim = String(nim).trim();
+
+        if (!window.cardFilterStatus) window.cardFilterStatus = {};
+        if (filterStatus) {
+            window.cardFilterStatus[nim] = filterStatus;
+            window.activePreviews = (window.activePreviews || []).filter(p => {
+                if (String(p.nim).trim() !== nim) return true;
+                return getMhsDocStatus(nim, p.docKey) === filterStatus;
+            });
+        } else if (docKey) {
+            // Ketika mengklik badge berkas tertentu (KSM, TRS, SRT, LAB, JUDUL), tampilkan 1 berkas saja
+            window.cardFilterStatus[nim] = docKey;
+            window.activePreviews = [{ nim, docKey }];
+        }
 
         if (!window.activeLihatBerkasNims) window.activeLihatBerkasNims = [];
         if (!window.activePreviews) window.activePreviews = [];
@@ -3512,17 +4549,23 @@
             window.activeLihatBerkasNims.push(nim);
         }
 
+        const resolveTargetDocKey = () => {
+            if (filterStatus && !docKey) {
+                const docList = getDocList();
+                const matching = docList.filter(d => getMhsDocStatus(nim, d.key) === filterStatus);
+                if (matching.length === 1) {
+                    docKey = matching[0].key;
+                }
+            }
+        };
+
         const showAndRender = () => {
+            resolveTargetDocKey();
             showLihatBerkasContainer();
             if (docKey) {
                 docKey = String(docKey).trim();
-                const isPreviewed = window.activePreviews.some(p => String(p.nim).trim() === nim && String(p.docKey).trim() === docKey);
-                if (!isPreviewed) {
-                    if (window.activePreviews.length >= 5) {
-                        window.activePreviews.shift();
-                    }
-                    window.activePreviews.push({ nim, docKey });
-                }
+                // Buka HANYA 1 preview ini (jangan bertumpuk banyak)
+                window.activePreviews = [{ nim, docKey }];
             }
             refreshLihatBerkasView();
             if (docKey) {
@@ -3577,13 +4620,13 @@
 
         let summaryBadgesHtml = '';
         if (vCnt > 0) {
-            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${nim}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${vCnt} Berkas Disetujui/Valid — Klik untuk Lihat Berkas"><i class="fa-solid fa-circle-check text-emerald-500 text-[9px]"></i> <span>${vCnt} Valid</span></button>`;
+            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${nim}', null, 'Approved')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${vCnt} Berkas Disetujui/Valid — Klik untuk Hanya Tampilkan Berkas Valid"><i class="fa-solid fa-circle-check text-emerald-500 text-[9px]"></i> <span>${vCnt} Valid</span></button>`;
         }
         if (iCnt > 0) {
-            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${nim}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${iCnt} Berkas Ditolak/Direvisi — Klik untuk Lihat Berkas"><i class="fa-solid fa-circle-xmark text-rose-500 text-[9px]"></i> <span>${iCnt} Direvisi</span></button>`;
+            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${nim}', null, 'Rejected')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${iCnt} Berkas Ditolak/Direvisi — Klik untuk Hanya Tampilkan Berkas Revisi"><i class="fa-solid fa-circle-xmark text-rose-500 text-[9px]"></i> <span>${iCnt} Direvisi</span></button>`;
         }
         if (pCnt > 0) {
-            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${nim}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${pCnt} Berkas Menunggu Verifikasi — Klik untuk Lihat Berkas"><i class="fa-solid fa-clock text-amber-500 text-[9px]"></i> <span>${pCnt} Menunggu</span></button>`;
+            summaryBadgesHtml += `<button type="button" onclick="openStudentBerkasPreview('${nim}', null, 'Pending')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${pCnt} Berkas Menunggu Verifikasi — Klik untuk Hanya Tampilkan Berkas Menunggu"><i class="fa-solid fa-clock text-amber-500 text-[9px]"></i> <span>${pCnt} Menunggu</span></button>`;
         }
         if (vCnt === 0 && iCnt === 0 && pCnt === 0) {
             summaryBadgesHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">Belum ada berkas</span>`;
@@ -3659,54 +4702,169 @@
                 const pdfUrl = resolveDocPdfUrl(rawFilename);
                 const fullName = (mhs.nama_depan ? (mhs.nama_depan + ' ' + (mhs.nama_belakang || '')) : (mhs.nama || 'Mahasiswa ' + p.nim)).trim();
 
+                const isJudulDoc = (p.docKey === 'judul_jenis');
                 const div = document.createElement('div');
                 div.id = cardId;
                 div.className = `preview-card-item pointer-events-auto bg-white rounded-3xl shadow-2xl border border-slate-200/90 overflow-hidden flex flex-col shrink-0 transition-all duration-300 ${panelWidthClass}`;
+                
+                const headerToolsHtml = isJudulDoc
+                    ? `
+                        <a href="${mhs.detail_url || '<?= site_url("dosen/wali/detail_mahasiswa/"); ?>' + p.nim}" target="_blank" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Buka Detail Mahasiswa Lengkap">
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                        </a>
+                        <button type="button" onclick="closeSinglePreview(${index})" class="preview-close-btn w-7 h-7 rounded-lg bg-white/10 hover:bg-rose-600/80 text-slate-300 hover:text-white flex items-center justify-center text-xs font-bold transition-colors cursor-pointer ml-0.5" title="Tutup Pratinjau Ini">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    `
+                    : `
+                        <button type="button" onclick="togglePreviewIframeInteraction('${p.nim}', '${p.docKey}')" id="btnPreviewInteract_${p.nim}_${p.docKey}" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Kursor Terkunci (Normal). Klik jika ingin mengaktifkan scroll di dalam berkas">
+                            <i class="fa-solid fa-arrow-pointer text-[10px]" id="iconPreviewInteract_${p.nim}_${p.docKey}"></i>
+                        </button>
+                        <a href="${pdfUrl}" download="${rawFilename}" target="_blank" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-emerald-600/80 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Unduh Berkas PDF (${rawFilename})">
+                            <i class="fa-solid fa-download text-[10px]"></i>
+                        </a>
+                        <a href="${pdfUrl}" target="_blank" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Buka Layar Penuh di Tab Baru">
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                        </a>
+                        <button type="button" onclick="closeSinglePreview(${index})" class="preview-close-btn w-7 h-7 rounded-lg bg-white/10 hover:bg-rose-600/80 text-slate-300 hover:text-white flex items-center justify-center text-xs font-bold transition-colors cursor-pointer ml-0.5" title="Tutup Pratinjau Ini">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    `;
+
+                const finalJudul = (mhs.judul && mhs.judul !== '-') ? mhs.judul : ((mhs.judul_1 && mhs.judul_1 !== '-') ? mhs.judul_1 : '');
+                const finalJenis = (mhs.jenis_ta && mhs.jenis_ta !== '-') ? mhs.jenis_ta : 'TA Reguler';
+
+                const bodyContentHtml = isJudulDoc
+                    ? `
+                        <div class="${isMobile ? 'h-[310px] sm:h-[360px]' : 'h-[390px] sm:h-[430px] md:h-[450px]'} bg-slate-50 p-4 sm:p-5 overflow-y-auto space-y-3.5 border-b border-slate-200 select-text">
+                            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs">
+                                <div class="flex items-center gap-1.5 mb-1.5 text-xs font-bold text-orange-600">
+                                    <i class="fa-solid fa-lightbulb text-orange-500"></i>
+                                    <span>Usulan Judul (Bahasa Indonesia)</span>
+                                </div>
+                                <p class="text-xs sm:text-sm font-bold text-slate-800 leading-relaxed">${finalJudul || '<span class="italic text-slate-400 font-normal">Belum diisi oleh mahasiswa</span>'}</p>
+                            </div>
+                            ${mhs.judul_en ? `
+                            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs">
+                                <div class="flex items-center gap-1.5 mb-1.5 text-xs font-bold text-blue-600">
+                                    <i class="fa-solid fa-globe text-blue-500"></i>
+                                    <span>Judul Usulan (Bahasa Inggris)</span>
+                                </div>
+                                <p class="text-xs sm:text-sm font-semibold italic text-slate-700 leading-relaxed">${mhs.judul_en}</p>
+                            </div>
+                            ` : ''}
+                            ${(mhs.judul_2 || mhs.judul_3) ? `
+                            <div class="grid grid-cols-1 ${(mhs.judul_2 && mhs.judul_3) ? 'sm:grid-cols-2' : ''} gap-2.5">
+                                ${mhs.judul_2 ? `
+                                <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs">
+                                    <div class="flex items-center gap-1.5 mb-1 text-[11px] font-bold text-slate-600">
+                                        <i class="fa-solid fa-lightbulb text-amber-500 text-[10px]"></i>
+                                        <span>Judul Usulan 2 (Alternatif 1):</span>
+                                    </div>
+                                    <p class="text-xs font-semibold text-slate-800 leading-snug">${mhs.judul_2}</p>
+                                </div>
+                                ` : ''}
+                                ${mhs.judul_3 ? `
+                                <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs">
+                                    <div class="flex items-center gap-1.5 mb-1 text-[11px] font-bold text-slate-600">
+                                        <i class="fa-solid fa-lightbulb text-amber-500 text-[10px]"></i>
+                                        <span>Judul Usulan 3 (Alternatif 2):</span>
+                                    </div>
+                                    <p class="text-xs font-semibold text-slate-800 leading-snug">${mhs.judul_3}</p>
+                                </div>
+                                ` : ''}
+                            </div>
+                            ` : ''}
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs">
+                                    <span class="text-[10px] font-bold text-slate-400 block mb-1">Skema / Jenis TA:</span>
+                                    <span class="px-2 py-0.5 bg-orange-50 text-orange-700 border border-orange-200 rounded-lg text-xs font-bold inline-flex items-center gap-1">
+                                        <i class="fa-solid fa-tag text-orange-500 text-[10px]"></i> ${finalJenis}
+                                    </span>
+                                </div>
+                                <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs">
+                                    <span class="text-[10px] font-bold text-slate-400 block mb-1">Konsentrasi:</span>
+                                    <span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold inline-flex items-center gap-1">
+                                        <i class="fa-solid fa-graduation-cap text-slate-500 text-[10px]"></i> ${mhs.konsentrasi || mhs.mhs_konsentrasi || '-'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="bg-amber-50/80 border border-amber-200 rounded-2xl p-3 flex items-start gap-2.5 text-xs text-amber-900">
+                                <i class="fa-solid fa-circle-info text-amber-600 text-sm mt-0.5 shrink-0"></i>
+                                <div class="text-[11px] text-amber-800 leading-relaxed">
+                                    <strong class="font-bold">Verifikasi Dosen Wali:</strong>
+                                    Periksa kesesuaian topik usulan judul dan skema TA sebelum memberikan persetujuan.
+                                </div>
+                            </div>
+                        </div>
+                    `
+                    : `
+                        <div class="${isMobile ? 'h-[310px] sm:h-[360px]' : 'h-[390px] sm:h-[430px] md:h-[450px]'} bg-slate-200 relative border-b border-slate-200 overflow-hidden cursor-default select-none">
+                            <iframe id="iframePreviewBerkas_${p.nim}_${p.docKey}" src="${pdfUrl}#toolbar=0&navpanes=0" class="w-full h-full border-0 pointer-events-auto" title="Pratinjau Dokumen PDF"></iframe>
+                        </div>
+                    `;
+
+                const footerLeftHtml = isJudulDoc
+                    ? `
+                        <span id="previewStatusBadge_${p.nim}_${p.docKey}">
+                            ${getDocStatusBadgeHtml(currentStatus)}
+                        </span>
+                        <a href="${mhs.detail_url || '<?= site_url("dosen/wali/detail_mahasiswa/"); ?>' + p.nim}" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs text-[11px]" title="Detail Mahasiswa">
+                            <i class="fa-solid fa-user text-[10px]"></i>
+                            <span>Detail</span>
+                        </a>
+                    `
+                    : `
+                        <span id="previewStatusBadge_${p.nim}_${p.docKey}">
+                            ${getDocStatusBadgeHtml(currentStatus)}
+                        </span>
+                        <a href="${pdfUrl}" download="${rawFilename}" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs text-[11px]" title="Unduh Berkas Ini">
+                            <i class="fa-solid fa-download text-[10px]"></i>
+                            <span>Unduh</span>
+                        </a>
+                    `;
+
+                const presetsHtml = isJudulDoc
+                    ? `
+                        <button type="button" onclick="setPreviewPresetNote('${p.nim}', '${p.docKey}', 'Usulan judul kurang sesuai dengan topik keilmuan')" class="px-1.5 py-0.5 rounded bg-rose-100/70 hover:bg-rose-200 text-rose-800 text-[9px] font-medium border border-rose-200 cursor-pointer">+ Kurang Sesuai</button>
+                        <button type="button" onclick="setPreviewPresetNote('${p.nim}', '${p.docKey}', 'Perbaiki tata bahasa / EYD pada judul TA')" class="px-1.5 py-0.5 rounded bg-rose-100/70 hover:bg-rose-200 text-rose-800 text-[9px] font-medium border border-rose-200 cursor-pointer">+ EYD / Bahasa</button>
+                        <button type="button" onclick="setPreviewPresetNote('${p.nim}', '${p.docKey}', 'Skema TA perlu disesuaikan kembali')" class="px-1.5 py-0.5 rounded bg-rose-100/70 hover:bg-rose-200 text-rose-800 text-[9px] font-medium border border-rose-200 cursor-pointer">+ Skema TA</button>
+                    `
+                    : `
+                        <button type="button" onclick="setPreviewPresetNote('${p.nim}', '${p.docKey}', 'Dokumen buram / tidak terbaca')" class="px-1.5 py-0.5 rounded bg-rose-100/70 hover:bg-rose-200 text-rose-800 text-[9px] font-medium border border-rose-200 cursor-pointer">+ Buram</button>
+                        <button type="button" onclick="setPreviewPresetNote('${p.nim}', '${p.docKey}', 'Format / tipe berkas tidak sesuai')" class="px-1.5 py-0.5 rounded bg-rose-100/70 hover:bg-rose-200 text-rose-800 text-[9px] font-medium border border-rose-200 cursor-pointer">+ Format Salah</button>
+                        <button type="button" onclick="setPreviewPresetNote('${p.nim}', '${p.docKey}', 'Tanda tangan / cap belum lengkap')" class="px-1.5 py-0.5 rounded bg-rose-100/70 hover:bg-rose-200 text-rose-800 text-[9px] font-medium border border-rose-200 cursor-pointer">+ Belum TTD</button>
+                    `;
+
                 div.innerHTML = `
                     <!-- Header Pratinjau Kompak dengan Label Sub-Pratinjau Jelas -->
                     <div class="p-2.5 px-3.5 bg-slate-900 text-white flex items-center justify-between gap-2.5 shrink-0 border-b border-slate-800">
                         <div class="flex items-center gap-2 min-w-0">
-                            <div class="preview-slot-badge w-7 h-7 rounded-lg bg-rose-600/30 border border-rose-500/50 text-rose-400 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
-                                ${totalPreviews > 1 ? slotNum : '<i class="fa-solid fa-file-pdf"></i>'}
+                            <div class="preview-slot-badge w-7 h-7 rounded-lg ${isJudulDoc ? 'bg-orange-600/30 border border-orange-500/50 text-orange-400' : 'bg-rose-600/30 border border-rose-500/50 text-rose-400'} flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                                ${totalPreviews > 1 ? slotNum : (isJudulDoc ? '<i class="fa-solid fa-heading"></i>' : '<i class="fa-solid fa-file-pdf"></i>')}
                             </div>
                             <div class="min-w-0">
                                 <div class="flex items-center gap-1.5">
                                     <span class="px-1.5 py-0.2 text-[8px] font-bold bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded uppercase tracking-wider">Sub-Pratinjau</span>
                                     <h4 class="text-xs font-bold text-white truncate max-w-[160px] sm:max-w-[210px]">${doc.title}</h4>
                                 </div>
-                                <p class="text-[10px] text-slate-300 font-medium truncate mt-0.5">${fullName} · <span class="font-mono text-slate-400">${rawFilename}</span></p>
+                                <p class="text-[10px] text-slate-300 font-medium truncate mt-0.5">${fullName} · ${isJudulDoc ? '<span class="text-orange-400 font-bold">Usulan Judul &amp; Skema</span>' : '<span class="font-mono text-slate-400">' + rawFilename + '</span>'}</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-1 shrink-0">
-                            <button type="button" onclick="togglePreviewIframeInteraction('${p.nim}', '${p.docKey}')" id="btnPreviewInteract_${p.nim}_${p.docKey}" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Kursor Terkunci (Normal). Klik jika ingin mengaktifkan scroll di dalam berkas">
-                                <i class="fa-solid fa-arrow-pointer text-[10px]" id="iconPreviewInteract_${p.nim}_${p.docKey}"></i>
-                            </button>
-                            <a href="${pdfUrl}" target="_blank" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Buka Layar Penuh di Tab Baru">
-                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                            </a>
-                            <button type="button" onclick="closeSinglePreview(${index})" class="preview-close-btn w-7 h-7 rounded-lg bg-white/10 hover:bg-rose-600/80 text-slate-300 hover:text-white flex items-center justify-center text-xs font-bold transition-colors cursor-pointer ml-0.5" title="Tutup Pratinjau Ini">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
+                            ${headerToolsHtml}
                         </div>
                     </div>
 
-                    <!-- Body Frame Pratinjau PDF -->
-                    <div class="${isMobile ? 'h-[310px] sm:h-[360px]' : 'h-[390px] sm:h-[430px] md:h-[450px]'} bg-slate-200 relative border-b border-slate-200 overflow-hidden cursor-default select-none">
-                        <iframe id="iframePreviewBerkas_${p.nim}_${p.docKey}" src="${pdfUrl}#toolbar=0&navpanes=0" class="w-full h-full border-0 pointer-events-auto" title="Pratinjau Dokumen PDF"></iframe>
-                    </div>
+                    <!-- Body Frame Pratinjau -->
+                    ${bodyContentHtml}
 
                     <!-- Footer Pratinjau dengan Aksi Approve & Reject Berkas -->
                     <div class="p-2.5 px-3.5 bg-white flex flex-col gap-2 shrink-0 border-t border-slate-200/90">
                         <div class="flex items-center justify-between gap-2 flex-wrap">
-                            <!-- Status Berkas & Unduh -->
+                            <!-- Status Berkas & Aksi Kiri -->
                             <div class="flex items-center gap-2">
-                                <span id="previewStatusBadge_${p.nim}_${p.docKey}">
-                                    ${getDocStatusBadgeHtml(currentStatus)}
-                                </span>
-                                <a href="${pdfUrl}" download="${rawFilename}" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs text-[11px]" title="Unduh Berkas Ini">
-                                    <i class="fa-solid fa-download text-[10px]"></i>
-                                    <span>Unduh</span>
-                                </a>
+                                ${footerLeftHtml}
                             </div>
 
                             <!-- Tombol Aksi Verifikasi Berkas -->
@@ -3726,7 +4884,7 @@
                                             onclick="submitPreviewDocApproval('${p.nim}', '${p.docKey}', 'Approved')" 
                                             id="btnPreviewApprove_${p.nim}_${p.docKey}" 
                                             class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs shadow-emerald-600/20" 
-                                            title="Setujui dokumen ini sebagai Valid">
+                                            title="Setujui sebagai Valid">
                                         <i class="fa-solid fa-check text-[10px]"></i>
                                         <span>Setujui</span>
                                     </button>
@@ -3743,23 +4901,21 @@
                         <!-- Box Catatan Revisi Berkas (Expandable) -->
                         <div id="previewRejectBox_${p.nim}_${p.docKey}" class="hidden pt-2 border-t border-rose-100 flex flex-col gap-1.5 animate-fade-in">
                             <div class="flex items-center justify-between text-[10px] font-bold text-rose-700 flex-wrap gap-1">
-                                <span><i class="fa-solid fa-comment-dots mr-1"></i>Catatan Revisi Dokumen:</span>
+                                <span><i class="fa-solid fa-comment-dots mr-1"></i>Catatan Revisi:</span>
                                 <div class="flex items-center gap-1 flex-wrap">
-                                    <button type="button" onclick="setPreviewPresetNote('${p.nim}', '${p.docKey}', 'Dokumen buram / tidak terbaca')" class="px-1.5 py-0.5 rounded bg-rose-100/70 hover:bg-rose-200 text-rose-800 text-[9px] font-medium border border-rose-200 cursor-pointer">+ Buram</button>
-                                    <button type="button" onclick="setPreviewPresetNote('${p.nim}', '${p.docKey}', 'Format / tipe berkas tidak sesuai')" class="px-1.5 py-0.5 rounded bg-rose-100/70 hover:bg-rose-200 text-rose-800 text-[9px] font-medium border border-rose-200 cursor-pointer">+ Format Salah</button>
-                                    <button type="button" onclick="setPreviewPresetNote('${p.nim}', '${p.docKey}', 'Tanda tangan / cap belum lengkap')" class="px-1.5 py-0.5 rounded bg-rose-100/70 hover:bg-rose-200 text-rose-800 text-[9px] font-medium border border-rose-200 cursor-pointer">+ Belum TTD</button>
+                                    ${presetsHtml}
                                 </div>
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <input type="text" 
                                        id="inputPreviewCatatan_${p.nim}_${p.docKey}" 
-                                       placeholder="Alasan penolakan / revisi dokumen..." 
+                                       placeholder="Alasan penolakan / revisi..." 
                                        oninput="clearPreviewDocNoteError('${p.nim}', '${p.docKey}')"
                                        class="flex-1 text-xs px-2.5 py-1.5 rounded-lg border border-rose-300 focus:ring-2 focus:ring-rose-500/30 focus:border-rose-500 focus:outline-none bg-rose-50/20 text-slate-800">
                                 <button type="button" 
-                                        onclick="submitPreviewDocApproval('${p.nim}', '${p.docKey}', 'Rejected')" 
-                                        id="btnSubmitPreviewReject_${p.nim}_${p.docKey}" 
-                                        class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg shadow-2xs transition active:scale-95 cursor-pointer shrink-0 flex items-center gap-1">
+                                       onclick="submitPreviewDocApproval('${p.nim}', '${p.docKey}', 'Rejected')" 
+                                       id="btnSubmitPreviewReject_${p.nim}_${p.docKey}" 
+                                       class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg shadow-2xs transition active:scale-95 cursor-pointer shrink-0 flex items-center gap-1">
                                     <i class="fa-solid fa-paper-plane text-[10px]"></i>
                                     <span>Kirim Revisi</span>
                                 </button>
@@ -3770,7 +4926,7 @@
                                 </button>
                             </div>
                             <p id="errPreviewCatatan_${p.nim}_${p.docKey}" class="text-[10px] font-bold text-rose-600 flex items-center gap-1 hidden">
-                                <i class="fa-solid fa-circle-exclamation"></i> <span>Alasan / catatan revisi dokumen wajib diisi!</span>
+                                <i class="fa-solid fa-circle-exclamation"></i> <span>Alasan / catatan revisi wajib diisi!</span>
                             </p>
                         </div>
                     </div>
@@ -3819,6 +4975,171 @@
         }
     }
 
+    function resetDocApproval(nim, docKey) {
+        if (!nim || !docKey) return;
+        nim = String(nim).trim();
+        docKey = String(docKey).trim();
+
+        if (isMhsStageLocked(nim)) {
+            showDWToast('Pendaftaran telah disetujui di tahap berikutnya. Perubahan dikunci.', false);
+            return;
+        }
+
+        const docList = getDocList();
+        const doc = docList.find(d => d.key === docKey) || { shortTitle: docKey };
+        const docTitle = doc.shortTitle || docKey;
+
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Reset Status Berkas?',
+                html: `
+                    <div class="text-xs text-slate-600 text-left space-y-2 mt-2">
+                        <p>Status <strong>${docTitle}</strong> akan dikembalikan ke <strong>Menunggu</strong>.</p>
+                        <p class="text-slate-400 text-[11px]">Catatan penolakan/revisi pada berkas ini juga akan dikosongkan agar dapat ditinjau ulang.</p>
+                    </div>
+                `,
+                icon: 'warning',
+                iconColor: '#f59e0b',
+                showCancelButton: true,
+                confirmButtonColor: '#d97706',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: '<i class="fa-solid fa-rotate-left mr-1"></i> Ya, Reset ke Menunggu',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                customClass: {
+                    popup: 'rounded-3xl shadow-2xl border border-amber-100',
+                    confirmButton: 'rounded-xl font-bold px-4 py-2 text-xs cursor-pointer shadow-md shadow-amber-600/20',
+                    cancelButton: 'rounded-xl font-semibold px-4 py-2 text-xs cursor-pointer'
+                }
+            }).then(result => {
+                if (result.isConfirmed) {
+                    executeDocReset(nim, docKey, docTitle);
+                }
+            });
+        } else {
+            if (confirm(`Reset status ${docTitle} kembali ke Menunggu? Catatan revisi akan dikosongkan.`)) {
+                executeDocReset(nim, docKey, docTitle);
+            }
+        }
+    }
+
+    function executeDocReset(nim, docKey, docTitle) {
+        if (docKey === 'judul_jenis') {
+            const formData = new FormData();
+            formData.append('nim', nim);
+            formData.append('status', 'Pending');
+            formData.append('catatan', '');
+
+            fetch('<?= site_url("dosenwali/update_judul_jenis_ajax"); ?>', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    if (window.mhsDataMap && window.mhsDataMap[nim]) {
+                        window.mhsDataMap[nim].status_judul = 'Pending';
+                        window.mhsDataMap[nim].catatan_judul = '';
+                        window.mhsDataMap[nim].status_jenis_ta = 'Pending';
+                        window.mhsDataMap[nim].catatan_jenis_ta = '';
+                    }
+                    finalizeDocResetUI(nim, docKey, 'Usulan Judul & Skema TA');
+                } else {
+                    showDWToast(res.message || 'Gagal mereset status usulan judul.', false);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showDWToast('Terjadi kesalahan jaringan.', false);
+            });
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('nim', nim);
+        formData.append('file_type', docKey);
+        formData.append('status', 'Pending');
+        formData.append('comment', '');
+
+        fetch('<?= site_url("dosenwali/update_file_approval_ajax"); ?>', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(res => {
+            if (res.success) {
+                if (window.mhsDataMap && window.mhsDataMap[nim]) {
+                    window.mhsDataMap[nim][`status_file_${docKey}`] = 'Pending';
+                    window.mhsDataMap[nim][`catatan_file_${docKey}`] = '';
+                    if (window.mhsDataMap[nim].berkas_map && window.mhsDataMap[nim].berkas_map[docKey]) {
+                        window.mhsDataMap[nim].berkas_map[docKey].status_verifikasi = 'Pending';
+                        window.mhsDataMap[nim].berkas_map[docKey].catatan = '';
+                    }
+                    if (window.mhsDataMap[nim].files && window.mhsDataMap[nim].files[docKey]) {
+                        window.mhsDataMap[nim].files[docKey].status = 'Pending';
+                        window.mhsDataMap[nim].files[docKey].note = '';
+                    }
+                }
+                finalizeDocResetUI(nim, docKey, docTitle || docKey.toUpperCase());
+            } else {
+                showDWToast(res.message || 'Gagal mereset status berkas.', false);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showDWToast('Terjadi kesalahan jaringan.', false);
+        });
+    }
+
+    function finalizeDocResetUI(nim, docKey, docTitle) {
+        // 1. Update status badge di tabel utama
+        const tableBadge = document.getElementById(`badge_doc_${nim}_${docKey}`);
+        if (tableBadge) {
+            tableBadge.className = 'px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60';
+        }
+        updateTableBerkasSummaryBadges(nim);
+
+        // 2. Kosongkan input textarea catatan penolakan jika sedang ada preview yang terbuka
+        const inputCatatan = document.getElementById(`inputPreviewCatatan_${nim}_${docKey}`);
+        if (inputCatatan) inputCatatan.value = '';
+        const rejectBox = document.getElementById(`previewRejectBox_${nim}_${docKey}`);
+        if (rejectBox) rejectBox.classList.add('hidden');
+
+        // 3. Render ulang tampilan kartu mahasiswa & preview
+        refreshLihatBerkasView();
+
+        // 4. Trigger polling refresh
+        if (typeof pollRealtimeData === 'function') {
+            lastDataHash = '';
+            pollRealtimeData();
+        }
+
+        showDWToast(`Status ${docTitle} berhasil di-reset kembali ke Menunggu!`, true);
+    }
+
+    function checkAndAutoCloseIfDone(nim) {
+        if (!nim) return false;
+        nim = String(nim).trim();
+        const docList = getDocList();
+        let pendingCount = 0;
+        docList.forEach(d => {
+            if (getMhsDocStatus(nim, d.key) === 'Pending') {
+                pendingCount++;
+            }
+        });
+
+        if (pendingCount === 0) {
+            setTimeout(() => {
+                removeStudentFromLihatBerkas(nim);
+                showDWToast(`Semua berkas mahasiswa (${nim}) telah selesai diverifikasi (tidak ada yang menunggu). Card otomatis ditutup.`, true);
+            }, 300);
+            return true;
+        }
+        return false;
+    }
+
     function submitPreviewDocApproval(nim, docKey, status) {
         console.log('[DW] submitPreviewDocApproval DIPANGGIL:', nim, docKey, status);
         if (isMhsStageLocked(nim)) {
@@ -3853,6 +5174,72 @@
         if (btnApprove) btnApprove.disabled = true;
         if (btnReject) btnReject.disabled = true;
         if (btnSubmitReject) btnSubmitReject.disabled = true;
+
+        if (docKey === 'judul_jenis') {
+            const formData = new FormData();
+            formData.append('nim', nim);
+            formData.append('status', status);
+            formData.append('catatan', comment);
+
+            fetch('<?= site_url("dosenwali/update_judul_jenis_ajax"); ?>', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (btnApprove) btnApprove.disabled = false;
+                if (btnReject) btnReject.disabled = false;
+                if (btnSubmitReject) btnSubmitReject.disabled = false;
+
+                if (res.success) {
+                    if (window.mhsDataMap && window.mhsDataMap[nim]) {
+                        window.mhsDataMap[nim].status_judul = status;
+                        window.mhsDataMap[nim].catatan_judul = comment;
+                        window.mhsDataMap[nim].status_jenis_ta = status;
+                        window.mhsDataMap[nim].catatan_jenis_ta = comment;
+                    }
+
+                    const pIdx = (window.activePreviews || []).findIndex(p => String(p.nim).trim() === String(nim).trim() && String(p.docKey).trim() === 'judul_jenis');
+                    if (pIdx > -1) {
+                        closeSinglePreview(pIdx);
+                    } else {
+                        window.activePreviews = (window.activePreviews || []).filter(p => !(String(p.nim).trim() === String(nim).trim() && String(p.docKey).trim() === 'judul_jenis'));
+                        refreshLihatBerkasView();
+                    }
+
+                    const tableBadge = document.getElementById(`badge_doc_${nim}_judul_jenis`);
+                    if (tableBadge) {
+                        if (status === 'Approved') {
+                            tableBadge.className = 'px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer bg-emerald-100/90 text-emerald-700 hover:bg-emerald-200';
+                        } else if (status === 'Rejected') {
+                            tableBadge.className = 'px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer bg-rose-100/90 text-rose-700 hover:bg-rose-200';
+                        } else {
+                            tableBadge.className = 'px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60';
+                        }
+                    }
+                    updateTableBerkasSummaryBadges(nim);
+
+                    if (typeof pollRealtimeData === 'function') {
+                        lastDataHash = '';
+                        pollRealtimeData();
+                    }
+
+                    showDWToast(status === 'Approved' ? `Usulan Judul & Skema TA disetujui!` : `Catatan revisi Usulan Judul berhasil dikirim!`, true);
+                    checkAndAutoCloseIfDone(nim);
+                } else {
+                    showDWToast(res.message || 'Gagal memperbarui status Usulan Judul.', false);
+                }
+            })
+            .catch(err => {
+                if (btnApprove) btnApprove.disabled = false;
+                if (btnReject) btnReject.disabled = false;
+                if (btnSubmitReject) btnSubmitReject.disabled = false;
+                console.error(err);
+                showDWToast('Terjadi kesalahan jaringan.', false);
+            });
+            return;
+        }
 
         const formData = new FormData();
         formData.append('nim', nim);
@@ -3906,13 +5293,10 @@
                 if (tableBadge) {
                     if (status === 'Approved') {
                         tableBadge.className = 'px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer bg-emerald-100/90 text-emerald-700 hover:bg-emerald-200';
-                        tableBadge.innerText = 'Valid';
                     } else if (status === 'Rejected') {
                         tableBadge.className = 'px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer bg-rose-100/90 text-rose-700 hover:bg-rose-200';
-                        tableBadge.innerText = 'Revisi';
                     } else {
                         tableBadge.className = 'px-1.5 py-0.5 rounded-md font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer bg-white text-slate-500 hover:bg-orange-100 hover:text-orange-700 border border-slate-200/60';
-                        tableBadge.innerText = 'Pending';
                     }
                 }
                 updateTableBerkasSummaryBadges(nim);
@@ -3925,6 +5309,7 @@
 
                 const docTitle = docKey.toUpperCase();
                 showDWToast((status === 'Approved') ? `Berkas ${docTitle} disetujui (Valid)!` : `Catatan revisi berkas ${docTitle} berhasil dikirim!`, true);
+                checkAndAutoCloseIfDone(nim);
             } else {
                 showDWToast(res.message || 'Gagal memperbarui status berkas.', false);
             }
@@ -3994,9 +5379,8 @@
                     window.mhsDataMap[nim].current_stage = 'Dosen Wali (Revisi)';
                 }
 
-                // Tutup semua tab preview berkas milik mahasiswa ini jika ada
-                window.activePreviews = (window.activePreviews || []).filter(p => String(p.nim).trim() !== String(nim).trim());
-                refreshLihatBerkasView();
+                // Tutup card dan semua tab preview berkas milik mahasiswa ini
+                removeStudentFromLihatBerkas(nim);
                 updateTableBerkasSummaryBadges(nim);
                 showDWToast(`Catatan revisi pendaftaran mahasiswa ${nim} berhasil dikirim!`, true);
 
@@ -4096,9 +5480,8 @@
                     });
                 }
 
-                // Tutup semua tab preview berkas milik mahasiswa ini jika ada
-                window.activePreviews = (window.activePreviews || []).filter(p => String(p.nim).trim() !== String(nim).trim());
-                refreshLihatBerkasView();
+                // Tutup card dan semua tab preview berkas milik mahasiswa ini
+                removeStudentFromLihatBerkas(nim);
                 updateTableBerkasSummaryBadges(nim);
 
                 showDWToast(`Pendaftaran ${fullName} (${nim}) berhasil disetujui!`, true);
@@ -4180,7 +5563,8 @@
         if (container) {
             container.style.display = 'none';
             container.classList.add('hidden');
-            container.classList.remove('flex');
+            container.classList.remove('flex', 'has-active-previews');
+            container.scrollLeft = 0;
         }
         window.activePreviews = [];
         window.activeLihatBerkasNims = [];
@@ -4230,10 +5614,65 @@
     window.openStudentBerkasPreview = openStudentBerkasPreview;
     window.openQuickDocReview = openStudentBerkasPreview;
     window.updateTableBerkasSummaryBadges = updateTableBerkasSummaryBadges;
+    window.setCardDocFilter = setCardDocFilter;
     window.toggleStudentRejectBox = toggleStudentRejectBox;
     window.setStudentPresetNote = setStudentPresetNote;
     window.submitStudentRejectWali = submitStudentRejectWali;
     window.confirmApproveStudentWali = confirmApproveStudentWali;
+    window.checkAndAutoCloseIfDone = checkAndAutoCloseIfDone;
+    window.resetDocApproval = resetDocApproval;
+    window.executeDocReset = executeDocReset;
+    window.openAllDocsForStudent = openAllDocsForStudent;
+
+    // Handle horizontal scroll & wheel di panel preview berkas
+    const previewWrapperEl = document.getElementById('wrapperPreviewBerkas');
+    if (previewWrapperEl) {
+        previewWrapperEl.addEventListener('wheel', (e) => {
+            const scrollableY = e.target.closest('.overflow-y-auto');
+            if (scrollableY) {
+                const canScrollUp = e.deltaY < 0 && scrollableY.scrollTop > 0;
+                const canScrollDown = e.deltaY > 0 && (scrollableY.scrollTop + scrollableY.clientHeight < scrollableY.scrollHeight);
+                if (canScrollUp || canScrollDown) return;
+            }
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                e.preventDefault();
+                previewWrapperEl.scrollLeft += e.deltaY;
+            }
+        }, { passive: false });
+    }
+
+    // Pastikan container luar tidak ter-scroll horizontal saat sidebar terbuka & preview aktif,
+    // serta dukung scrolling roda mouse horizontal saat mode kartu mahasiswa berjajar
+    const lihatContainerEl = document.getElementById('lihatBerkasContainer');
+    if (lihatContainerEl) {
+        lihatContainerEl.addEventListener('scroll', () => {
+            const isSidebarOpen = window.innerWidth >= 1024 && !document.body.classList.contains('curved-sidebar-desktop-collapsed');
+            if (isSidebarOpen && lihatContainerEl.classList.contains('has-active-previews')) {
+                if (lihatContainerEl.scrollLeft !== 0) {
+                    lihatContainerEl.scrollLeft = 0;
+                }
+            }
+        });
+
+        lihatContainerEl.addEventListener('wheel', (e) => {
+            // Jangan scroll kontainer luar jika mode pratinjau berkas sedang aktif
+            if (lihatContainerEl.classList.contains('has-active-previews')) return;
+
+            // Jika mouse di dalam list berkas yang sedang di-scroll vertikal, biarkan normal
+            const scrollableY = e.target.closest('.overflow-y-auto');
+            if (scrollableY && scrollableY !== lihatContainerEl) {
+                const canScrollUp = e.deltaY < 0 && scrollableY.scrollTop > 0;
+                const canScrollDown = e.deltaY > 0 && (scrollableY.scrollTop + scrollableY.clientHeight < scrollableY.scrollHeight);
+                if (canScrollUp || canScrollDown) return;
+            }
+
+            // Alihkan roda mouse vertikal ke horizontal scroll
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                e.preventDefault();
+                lihatContainerEl.scrollLeft += e.deltaY;
+            }
+        }, { passive: false });
+    }
 
     // Keyboard ESC Shortcut untuk menutup modal & panel
     document.addEventListener('keydown', (e) => {

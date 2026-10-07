@@ -604,8 +604,8 @@
 
                 if (empty($name)) continue;
 
-                $key = preg_replace('/[^a-z0-9]/', '', strtolower($code));
-                if (empty($key)) $key = 'room_' . $r->id;
+                $key = preg_replace('/[^a-z0-9]/', '', strtolower($name));
+                if (empty($key)) $key = 'room_' . preg_replace('/[^a-z0-9]/', '', strtolower($code));
 
                 if (!isset($dyn_lab_data[$key])) {
                     $default_img = base_url('assets/images/multimedia.jpg');
@@ -613,13 +613,30 @@
 
                     $foto_src = '';
                     if (!empty($r->foto)) {
-                        $foto_src = $r->foto;
+                        $foto_src = ltrim($r->foto, '/');
                     } elseif (!empty($r->images)) {
                         if (strpos($r->images, '|') !== false) {
                             list($f,) = explode('|', $r->images, 2);
-                            $foto_src = $f;
+                            $foto_src = ltrim($f, '/');
                         } else {
-                            $foto_src = $r->images;
+                            $foto_src = ltrim($r->images, '/');
+                        }
+                    }
+
+                    $final_img = $default_img;
+                    if (!empty($foto_src)) {
+                        if (strpos($foto_src, 'http://') === 0 || strpos($foto_src, 'https://') === 0) {
+                            $final_img = $foto_src;
+                        } elseif (file_exists(FCPATH . $foto_src)) {
+                            $final_img = base_url($foto_src);
+                        }
+                    }
+
+                    $has_3d = false;
+                    if (!empty($r->model_3d)) {
+                        $m_clean = ltrim($r->model_3d, '/');
+                        if (strpos($m_clean, 'http://') === 0 || strpos($m_clean, 'https://') === 0 || file_exists(FCPATH . $m_clean)) {
+                            $has_3d = true;
                         }
                     }
 
@@ -630,8 +647,8 @@
                         'desc'    => !empty($r->tagline) ? $r->tagline : (!empty($r->deskripsi) ? substr($r->deskripsi, 0, 95) . '...' : 'Fasilitas Laboratorium Fakultas Industri Kreatif'),
                         'btnText' => 'Lihat Detail &rarr;',
                         'url'     => $detail_url,
-                        'img'     => !empty($foto_src) ? (strpos($foto_src, 'http') === 0 ? $foto_src : base_url($foto_src)) : $default_img,
-                        'has_3d'  => !empty($r->model_3d)
+                        'img'     => $final_img,
+                        'has_3d'  => $has_3d
                     ];
                 }
             }

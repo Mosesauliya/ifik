@@ -24,7 +24,6 @@ class Dosen_bimbingan extends CI_Controller {
                 $this->output
                     ->set_status_header(401)
                     ->set_content_type('application/json')
-                    // 'status' ditambahkan agar konsisten dengan yang dibaca JS (res.status)
                     ->set_output(json_encode([
                         'status'  => false,
                         'success' => false,
@@ -53,7 +52,7 @@ class Dosen_bimbingan extends CI_Controller {
      */
     private function _is_authorized_reviewer() {
         $role_id = (int) $this->session->userdata('role_id');
-        return in_array($role_id, [1, 3], true);
+        return in_array($role_id, [1, 2, 3, 5, 6, 9], true);
     }
 
     private function _is_admin() {
@@ -118,6 +117,9 @@ class Dosen_bimbingan extends CI_Controller {
         $this->bimbingan();
     }
 
+    /**
+     * Halaman Bimbingan & Evaluasi Preview TA untuk Mahasiswa.
+     */
     public function bimbingan() {
         $nim = $this->_get_current_nim();
 
@@ -140,7 +142,7 @@ class Dosen_bimbingan extends CI_Controller {
         $data['latest_p1']     = $data['riwayat_preview1'][0] ?? null;
         $data['latest_p2']     = $data['riwayat_preview2'][0] ?? null;
         $data['latest_p3']     = $data['riwayat_preview3'][0] ?? null;
-        $data['latest_sidang'] = $data['riwayat_sidang'][0] ?? null;
+        $data['latest_sidang'] = $data['riwayat_sidang'][0]   ?? null;
 
         $data['pembimbing_1'] = !empty($pembimbing_penguji['pembimbing_1']) ? $pembimbing_penguji['pembimbing_1'] : '';
         $data['pembimbing_2'] = !empty($pembimbing_penguji['pembimbing_2']) ? $pembimbing_penguji['pembimbing_2'] : '';
@@ -160,6 +162,31 @@ class Dosen_bimbingan extends CI_Controller {
         }
         $data['detail_penilaian']       = $detail_penilaian;
         $data['is_pembimbing_assigned'] = (!empty($data['pembimbing_1']) && !empty($data['pembimbing_2']));
+
+        // ============================================================
+        // RESTORE: STATUS SIDANG & PENILAIAN
+        // ============================================================
+        $rekap = $this->Mahasiswa_model->get_rekap_nilai_sidang($nim);
+        $data['rekap_nilai_sidang'] = $rekap;
+
+        $data['is_nilai_published'] = !empty($rekap['semua_terisi']);
+        $data['is_nilai_draft']     = (!empty($rekap['has_data']) && empty($rekap['semua_terisi']));
+
+        $data['nilai_akhir'] = !empty($rekap['nilai_akhir'])
+            ? number_format((float)$rekap['nilai_akhir'], 2, '.', '')
+            : '-';
+        $data['grade_sidang']     = $rekap['grade']            ?? '-';
+        $data['status_kelulusan'] = $rekap['status_kelulusan'] ?? 'Belum Dinilai';
+
+        $data['criteria_items'] = $rekap['kriteria_referensi'] ?? [];
+
+        $data['tgl_sidang']          = $data['pendaftaran']['tgl_sidang']         ?? null;
+        $data['jam_mulai_sidang']    = $data['pendaftaran']['jam_mulai_sidang']   ?? null;
+        $data['jam_selesai_sidang']  = $data['pendaftaran']['jam_selesai_sidang'] ?? null;
+        $data['ruangan_sidang']      = $data['pendaftaran']['ruangan_sidang']     ?? null;
+        $data['tgl_publish_sidang']  = $data['pendaftaran']['tgl_publish_sidang'] ?? null;
+        $data['catatan_sidang']      = $data['pendaftaran']['catatan_koor']       ?? '';
+        $data['is_sidang_scheduled'] = (!empty($data['tgl_sidang']) && !empty($data['jam_mulai_sidang']));
 
         $this->load->view('mahasiswa/bimbingan_preview1', $data);
     }
@@ -248,6 +275,12 @@ class Dosen_bimbingan extends CI_Controller {
         $upload_dir = './uploads/preview_ta/';
         if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
 
+        $jenis = $this->input->post('jenis_file'); // bimbingan, sitasi, persyaratan
+        if (!in_array($jenis, ['bimbingan', 'sitasi', 'persyaratan'])) {
+            echo json_encode(['status' => false, 'message' => 'Jenis file tidak valid.']);
+            return;
+        }
+
         $config = [
             'upload_path'   => $upload_dir,
             'allowed_types' => 'pdf|doc|docx',
@@ -256,19 +289,13 @@ class Dosen_bimbingan extends CI_Controller {
 
         $this->load->library('upload');
 
-        $config['file_name'] = 'PREVIEW3_SITASI_' . $nim . '_' . time();
-        $file_sitasi = $this->_do_upload('file_sitasi', $config);
+        $config['file_name'] = 'PREVIEW3_' . strtoupper($jenis) . '_' . $nim . '_' . time();
+        $file_name = $this->_do_upload('file_upload', $config);
 
-        $config['file_name'] = 'PREVIEW3_BIMBINGAN_' . $nim . '_' . time();
-        $file_bimbingan = $this->_do_upload('file_bimbingan', $config);
-
-        $config['file_name'] = 'PREVIEW3_PERSYARATAN_' . $nim . '_' . time();
-        $file_persyaratan = $this->_do_upload('file_persyaratan', $config);
-
-        if (!$file_sitasi || !$file_bimbingan || !$file_persyaratan) {
+        if (!$file_name) {
             echo json_encode([
                 'status'  => false,
-                'message' => 'Gagal upload. Pastikan ketiga file terisi dan format PDF/DOC/DOCX maksimal 10MB. ' . $this->upload->display_errors('', '')
+                'message' => 'Gagal upload file ' . $jenis . '. Pastikan format PDF/DOC/DOCX maksimal 10MB. ' . $this->upload->display_errors('', '')
             ]);
             return;
         }
@@ -278,10 +305,10 @@ class Dosen_bimbingan extends CI_Controller {
         $data_insert = [
             'nim'                => $nim,
             'tahap_preview'      => $tahap,
-            'file_draft'         => $file_sitasi,
-            'file_sitasi'        => $file_sitasi,
-            'file_bimbingan'     => $file_bimbingan,
-            'file_persyaratan'   => $file_persyaratan,
+            'file_draft'         => $file_name,
+            'file_sitasi'        => ($jenis === 'sitasi') ? $file_name : null,
+            'file_bimbingan'     => ($jenis === 'bimbingan') ? $file_name : null,
+            'file_persyaratan'   => ($jenis === 'persyaratan') ? $file_name : null,
             'catatan_mahasiswa'  => $catatan,
             'status_pembimbing'  => 'Pending',
             'created_at'         => date('Y-m-d H:i:s')
@@ -291,7 +318,7 @@ class Dosen_bimbingan extends CI_Controller {
 
         echo json_encode([
             'status'  => true,
-            'message' => 'Berkas Preview 3 berhasil diunggah. Menunggu review Pembimbing 1.'
+            'message' => 'Berkas ' . ucfirst($jenis) . ' Preview 3 berhasil diunggah. Menunggu review dosen.'
         ]);
     }
 
@@ -346,6 +373,93 @@ class Dosen_bimbingan extends CI_Controller {
         ]);
     }
 
+    /**
+     * =========================================================
+     * PUBLISH BAP oleh Penguji 1 (U1) — TANPA upload file.
+     *
+     * BAP adalah dokumen server-generated (adminlayanan/preview_bap_*).
+     * Endpoint ini hanya menyimpan "published marker" di file_pendaftaran
+     * via save_pendaftaran_ta() yang sudah ada → tanpa query baru.
+     *
+     * FIX: Menggunakan $this->output + set_status_header() agar
+     * frontend dapat membedakan error permission (403) vs koneksi.
+     * =========================================================
+     */
+    public function upload_bap_ajax() {
+        $this->output->set_content_type('application/json');
+
+        // 1. Cek otorisasi reviewer
+        if (!$this->_is_authorized_reviewer()) {
+            $this->output
+                ->set_status_header(403)
+                ->set_output(json_encode([
+                    'status'  => false,
+                    'message' => 'Unauthorized — Anda tidak memiliki hak akses.'
+                ]));
+            return;
+        }
+
+        $role_id = (int) $this->session->userdata('role_id');
+        $is_admin_or_koor = in_array($role_id, [1, 6, 9], true);
+
+        // 2. Validasi NIM
+        $nim = $this->input->post('nim');
+        if (empty($nim)) {
+            $this->output
+                ->set_status_header(400)
+                ->set_output(json_encode([
+                    'status'  => false,
+                    'message' => 'NIM tidak valid.'
+                ]));
+            return;
+        }
+
+        // 3. Cek apakah dosen login = Penguji 1 (posisi 3) untuk mahasiswa ini
+        if (!$is_admin_or_koor) {
+            $dosen_id = $this->session->userdata('user_id');
+            $students = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, 3);
+            $allowed  = false;
+            foreach ($students as $s) {
+                if ((string) $s['nim'] === (string) $nim) { $allowed = true; break; }
+            }
+            if (!$allowed) {
+                $this->output
+                    ->set_status_header(403)
+                    ->set_output(json_encode([
+                        'status'  => false,
+                        'message' => 'Anda bukan Penguji 1 mahasiswa ini.'
+                    ]));
+                return;
+            }
+        }
+
+        // 4. Simpan marker publish — reuse save_pendaftaran_ta() existing (tanpa query baru)
+        $marker = 'bap_published_' . date('YmdHis');
+
+        $saved = $this->Mahasiswa_model->save_pendaftaran_ta([
+            'nim'      => $nim,
+            'file_bap' => $marker,
+        ]);
+
+        // 5. Response
+        if ($saved) {
+            $this->output
+                ->set_status_header(200)
+                ->set_output(json_encode([
+                    'status'  => true,
+                    'message' => 'BAP berhasil dipublikasikan ke halaman mahasiswa.',
+                    'marker'  => $marker,
+                ]));
+        } else {
+            $this->output
+                ->set_status_header(500)
+                ->set_output(json_encode([
+                    'status'  => false,
+                    'message' => 'Gagal mempublikasikan BAP. Silakan coba lagi.'
+                ]));
+        }
+    }
+
     // =========================================================
     // REVIEW PREVIEW (DOSEN)
     // =========================================================
@@ -360,7 +474,6 @@ class Dosen_bimbingan extends CI_Controller {
         switch ((int) $posisi) {
             case 1:
                 $data = ['catatan_pembimbing' => $catatan];
-                // Status hanya diubah jika dikirim & valid. Tidak menimpa dengan null/kosong.
                 if ($status !== null && $status !== '') {
                     if (!in_array($status, $this->allowed_status, true)) return null;
                     $data['status_pembimbing'] = $status;
@@ -407,7 +520,6 @@ class Dosen_bimbingan extends CI_Controller {
         $this->Mahasiswa_model->update_review_preview($id, $data);
         $this->session->set_flashdata('success', $message);
 
-        // Redirect ke dashboard dosen (sebelumnya salah ke halaman mahasiswa)
         redirect('mahasiswa/dosen_bimbingan?role=' . $role_back);
     }
 
@@ -432,7 +544,6 @@ class Dosen_bimbingan extends CI_Controller {
             return;
         }
 
-        // Validasi: dosen ini memang ditugaskan pada mahasiswa & posisi tersebut
         if (!$this->_get_reviewable_preview($id, $posisi)) {
             echo json_encode(['status' => false, 'message' => 'Anda tidak berhak me-review berkas ini.']);
             return;
@@ -469,7 +580,6 @@ class Dosen_bimbingan extends CI_Controller {
             return;
         }
 
-        // Kolom komentar per posisi (untuk cek "hanya isi jika kosong")
         $comment_col = [
             2 => 'catatan_pembimbing_2',
             3 => 'catatan_penguji_1',
@@ -485,12 +595,10 @@ class Dosen_bimbingan extends CI_Controller {
             if (!$preview) { $skipped++; continue; }
 
             if ($posisi === 1) {
-                // Hanya ubah status. Komentar P1 yang sudah ada TIDAK dihapus.
                 $this->Mahasiswa_model->update_review_preview($id, ['status_pembimbing' => 'Approved']);
                 $processed++;
             } else {
                 $col = $comment_col[$posisi];
-                // Jangan menimpa komentar yang sudah ditulis dosen
                 if (!empty(trim(strip_tags((string) ($preview[$col] ?? ''))))) {
                     $skipped++;
                     continue;
@@ -597,6 +705,18 @@ class Dosen_bimbingan extends CI_Controller {
             $riwayat_p3     = $this->Mahasiswa_model->get_riwayat_preview($nim, 'Preview 3');
             $riwayat_sidang = $this->Mahasiswa_model->get_riwayat_preview($nim, 'Sidang');
 
+            // Hitung status per-file Preview 3 untuk trigger reload di sisi mahasiswa
+            $has_app_bimbingan   = false;
+            $has_app_sitasi      = false;
+            $has_app_persyaratan = false;
+            foreach ($riwayat_p3 as $r) {
+                if (($r['status_pembimbing'] ?? '') === 'Approved') {
+                    if (!empty($r['file_bimbingan']))   $has_app_bimbingan   = true;
+                    if (!empty($r['file_sitasi']))       $has_app_sitasi      = true;
+                    if (!empty($r['file_persyaratan']))  $has_app_persyaratan = true;
+                }
+            }
+
             $data = [
                 'riwayat_p1'          => $riwayat_p1,
                 'riwayat_p2'          => $riwayat_p2,
@@ -610,9 +730,13 @@ class Dosen_bimbingan extends CI_Controller {
                 'upload_count_p2'     => count($riwayat_p2),
                 'upload_count_p3'     => count($riwayat_p3),
                 'upload_count_sidang' => count($riwayat_sidang),
-                'is_p1_app'           => (bool)(($riwayat_p1[0]['status_pembimbing'] ?? null) == 'Approved'),
-                'is_p2_app'           => (bool)(($riwayat_p2[0]['status_pembimbing'] ?? null) == 'Approved'),
-                'is_p3_app'           => (bool)(($riwayat_p3[0]['status_pembimbing'] ?? null) == 'Approved'),
+                'is_p1_app'           => (bool)(!empty($riwayat_p1[0]['lulus_preview1']) && (string)$riwayat_p1[0]['lulus_preview1'] === '1'),
+                'is_p2_app'           => (bool)(!empty($riwayat_p2[0]['lulus_preview2']) && (string)$riwayat_p2[0]['lulus_preview2'] === '1'),
+                'is_p3_app'           => (bool)(!empty($riwayat_p3[0]['lulus_preview3']) && (string)$riwayat_p3[0]['lulus_preview3'] === '1'),
+                // Per-file approval flags untuk Preview 3
+                'has_app_bimbingan'   => $has_app_bimbingan,
+                'has_app_sitasi'      => $has_app_sitasi,
+                'has_app_persyaratan' => $has_app_persyaratan,
             ];
 
             $json = json_encode($data);
@@ -632,11 +756,6 @@ class Dosen_bimbingan extends CI_Controller {
     // DOMAIN 2: DOSEN (BIMBINGAN & PENGUJI) — UNIFIED 4 ROLE
     // =========================================================
 
-    /**
-     * Render dashboard dosen untuk 4 role (p1, p2, u1, u2).
-     * Nilai ?role= dibaca dari URL dan divalidasi terhadap whitelist,
-     * sehingga tombol "Penguji 1/2" di hero tidak lagi dipaksa jadi P1.
-     */
     private function _render_dosen_dashboard($default_role) {
         if (!$this->_is_authorized_reviewer()) {
             redirect('login');
@@ -645,7 +764,6 @@ class Dosen_bimbingan extends CI_Controller {
 
         $role = $this->input->get('role', TRUE);
 
-        // Kompatibilitas link lama: ?posisi=1|2
         if (!$role && $this->input->get('posisi')) {
             $is_p2_like = ((int) $this->input->get('posisi') === 2);
             $is_penguji = in_array($default_role, ['u1', 'u2'], true);
@@ -658,8 +776,6 @@ class Dosen_bimbingan extends CI_Controller {
         $display_posisi = in_array($role, ['p1', 'u1'], true) ? 1 : 2;
         $is_pembimbing  = in_array($role, ['p1', 'p2'], true);
 
-        // Data mahasiswa diambil via AJAX (ajax_get_dosen_bimbingan),
-        // jadi tidak perlu query get_students_by_dosen + 3x get_riwayat_preview per mahasiswa di sini.
         $data = [
             'title'        => $is_pembimbing ? 'Dashboard Bimbingan Dosen' : 'Dashboard Dosen Penguji',
             'role'         => $role,
@@ -667,7 +783,6 @@ class Dosen_bimbingan extends CI_Controller {
             'model_posisi' => $model_posisi,
         ];
 
-        // View unified untuk 4 role
         $this->load->view('mahasiswa/dosen_bimbingan', $data);
     }
 
@@ -705,7 +820,6 @@ class Dosen_bimbingan extends CI_Controller {
             $rekomen = $this->Rekomendasi_model->get_latest_submission($student['nim']);
 
             if ($latest && !empty($latest['file_draft'])) {
-                // File sidang disimpan di uploads/sidang/, yang lain di uploads/preview_ta/
                 if ($tahap === 'Sidang') {
                     $sidangFile = $latest['file_sidang'] ?? $latest['file_draft'];
                     $filePath = FCPATH . 'uploads/sidang/' . $sidangFile;
@@ -741,7 +855,6 @@ class Dosen_bimbingan extends CI_Controller {
         header('Connection: keep-alive');
         header('X-Accel-Buffering: no');
 
-        // Ambil semua data session SEBELUM session ditutup
         $authorized = $this->_is_authorized_reviewer();
         $dosen_id   = $this->session->userdata('user_id');
         $posisi     = $this->_posisi_from_get();
@@ -783,5 +896,179 @@ class Dosen_bimbingan extends CI_Controller {
             sleep(3);
         }
         exit;
+    }
+        // =================================================================
+    // PER-FILE ACC/REVISI, LULUS TAHAP, DOWNGRADE (2026-10-05)
+    // =================================================================
+
+    /** Helper: role PIC untuk suatu tahap. */
+    private function _get_responsible_role($tahap) {
+        // Preview 1, 2, 3 → Pembimbing 1 (p1) yang bertanggung jawab ACC
+        // Sidang → Penguji 1 (u1) sebagai PIC
+        if ($tahap === 'Sidang') return 'u1';
+        return 'p1';
+    }
+
+    /** Helper: cek apakah user yang login = PIC untuk mahasiswa ini di tahap tsb. */
+    private function _is_pic_for_student($nim, $pic_role) {
+        $role_id = (int)$this->session->userdata('role_id');
+        if ($role_id === 1) return true; // Admin bebas
+
+        $dosen_id = $this->session->userdata('user_id');
+        $posisi_map = ['p1' => 1, 'p2' => 2, 'u1' => 3, 'u2' => 4];
+        $pic_posisi = $posisi_map[$pic_role] ?? 1;
+
+        $students = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, $pic_posisi);
+        foreach ($students as $s) {
+            if ((string)$s['nim'] === (string)$nim) return true;
+        }
+        return false;
+    }
+
+    /**
+     * POST — ACC / Revisi Berkas PER FILE.
+     * Body: id_preview, file_type, action (Approved|Revision), catatan
+     */
+    public function review_file_ajax() {
+        header('Content-Type: application/json');
+
+        if (!$this->_is_authorized_reviewer()) {
+            echo json_encode(['status' => false, 'message' => 'Unauthorized']);
+            return;
+        }
+
+        $id_preview = $this->input->post('id_preview');
+        $file_type  = $this->input->post('file_type');
+        $action     = $this->input->post('action');
+        $catatan    = $this->input->post('catatan') ?? '';
+
+        if (empty($id_preview) || empty($file_type) || empty($action)) {
+            echo json_encode(['status' => false, 'message' => 'Parameter tidak lengkap.']);
+            return;
+        }
+
+        $preview = $this->Mahasiswa_model->get_preview_by_id($id_preview);
+        if (!$preview) {
+            echo json_encode(['status' => false, 'message' => 'Preview tidak ditemukan.']);
+            return;
+        }
+
+        $tahap_key  = strtolower($preview['tahapan_preview'] ?? 'preview1');
+        $tahap_name = [
+            'preview1' => 'Preview 1', 'preview2' => 'Preview 2',
+            'preview3' => 'Preview 3', 'sidang'   => 'Sidang',
+        ][$tahap_key] ?? 'Preview 1';
+
+        $pic_role = $this->_get_responsible_role($tahap_name);
+
+        if (!$this->_is_pic_for_student($preview['nim'], $pic_role)) {
+            echo json_encode([
+                'status'  => false,
+                'message' => 'Hanya ' . strtoupper($pic_role) . ' (PIC tahap ' . $tahap_name . ') yang dapat ACC/Revisi berkas ini.',
+            ]);
+            return;
+        }
+
+        $res = $this->Mahasiswa_model->update_file_status(
+            $id_preview, $file_type, $action, $catatan, $pic_role
+        );
+
+        echo json_encode($res);
+    }
+
+    /**
+     * POST — Lulus Tahap.
+     * Body: nim, tahap, id_preview (opsional)
+     */
+    public function lulus_stage_ajax() {
+        header('Content-Type: application/json');
+
+        if (!$this->_is_authorized_reviewer()) {
+            echo json_encode(['status' => false, 'message' => 'Unauthorized']);
+            return;
+        }
+
+        $nim        = $this->input->post('nim');
+        $tahap      = $this->input->post('tahap');
+        $id_preview = $this->input->post('id_preview') ?: null;
+
+        if (empty($nim) || empty($tahap)) {
+            echo json_encode(['status' => false, 'message' => 'Parameter tidak lengkap.']);
+            return;
+        }
+
+        $pic_role = $this->_get_responsible_role($tahap);
+
+        if (!$this->_is_pic_for_student($nim, $pic_role)) {
+            echo json_encode([
+                'status'  => false,
+                'message' => 'Hanya ' . strtoupper($pic_role) . ' yang dapat meluluskan tahap ' . $tahap . '.',
+            ]);
+            return;
+        }
+
+        $res = $this->Mahasiswa_model->set_stage_lulus($nim, $tahap, $pic_role, $id_preview);
+        echo json_encode($res);
+    }
+
+    /**
+     * POST — Downgrade Tahap.
+     * Body: nim, dari, ke, alasan
+     * Guard: hanya PIC tahap 'dari' atau admin.
+     */
+    public function downgrade_stage_ajax() {
+        header('Content-Type: application/json');
+
+        if (!$this->_is_authorized_reviewer()) {
+            echo json_encode(['status' => false, 'message' => 'Unauthorized']);
+            return;
+        }
+
+        $nim    = $this->input->post('nim');
+        $dari   = $this->input->post('dari');
+        $ke     = $this->input->post('ke');
+        $alasan = $this->input->post('alasan') ?? '';
+
+        if (empty($nim) || empty($dari) || empty($ke)) {
+            echo json_encode(['status' => false, 'message' => 'Parameter tidak lengkap.']);
+            return;
+        }
+
+        $normalize = function ($t) {
+            $map = [
+                'Preview 1' => 'preview1', 'Preview 2' => 'preview2',
+                'Preview 3' => 'preview3', 'Sidang'   => 'sidang',
+                'preview1' => 'preview1', 'preview2' => 'preview2',
+                'preview3' => 'preview3', 'sidang'   => 'sidang',
+            ];
+            return $map[$t] ?? null;
+        };
+
+        $dari_key = $normalize($dari);
+        $ke_key   = $normalize($ke);
+
+        if (!$dari_key || !$ke_key) {
+            echo json_encode(['status' => false, 'message' => 'Tahap tidak valid.']);
+            return;
+        }
+
+        $hierarchy = ['preview1' => 1, 'preview2' => 2, 'preview3' => 3, 'sidang' => 4];
+        if ($hierarchy[$dari_key] - $hierarchy[$ke_key] !== 1) {
+            echo json_encode(['status' => false, 'message' => 'Downgrade hanya boleh turun 1 tingkat.']);
+            return;
+        }
+
+        $pic_role = ($dari_key === 'preview1') ? 'p1' : 'u1';
+
+        if (!$this->_is_pic_for_student($nim, $pic_role)) {
+            echo json_encode([
+                'status'  => false,
+                'message' => 'Hanya ' . strtoupper($pic_role) . ' yang dapat melakukan downgrade dari tahap ini.',
+            ]);
+            return;
+        }
+
+        $res = $this->Mahasiswa_model->downgrade_stage($nim, $dari, $ke, $pic_role, $alasan);
+        echo json_encode($res);
     }
 }

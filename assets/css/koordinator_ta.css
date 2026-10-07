@@ -117,6 +117,56 @@ body {
     transform: translateY(-50%) translateX(0);
 }
 
+/* MOBILE FLOATING BOTTOM DOCK OVERRIDE (< 768px) */
+@media (max-width: 767.98px) {
+    .vertical-floating-dock {
+        position: fixed;
+        bottom: 1.25rem;
+        top: auto;
+        left: 50%;
+        transform: translateX(-50%);
+        flex-direction: row;
+        width: auto;
+        max-width: calc(100vw - 2rem);
+        padding: 8px 12px;
+        gap: 12px;
+        border-radius: 9999px;
+        z-index: 60;
+        background: rgba(255, 255, 255, 0.94);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1.5px solid rgba(234, 88, 12, 0.25);
+        box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+    }
+
+    .dock-item {
+        width: 44px;
+        height: 44px;
+    }
+
+    .dock-tooltip {
+        left: 50%;
+        top: auto;
+        bottom: calc(100% + 12px);
+        transform: translateY(8px) translateX(-50%);
+    }
+
+    .dock-item:hover .dock-tooltip {
+        opacity: 1;
+        transform: translateY(0) translateX(-50%);
+    }
+
+    .dock-tooltip::before {
+        left: 50%;
+        top: 100%;
+        right: auto;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-top-color: #0f172a;
+        border-right-color: transparent;
+    }
+}
+
 /* Tab Transition Animation */
 .tab-panel {
     display: none;

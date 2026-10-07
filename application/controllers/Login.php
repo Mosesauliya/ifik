@@ -38,15 +38,44 @@ class Login extends CI_Controller {
 		$user = $this->User_model->get_by_email($identity);
 
 		if ($user) {
-			$isPasswordValid = password_verify($password, $user->password);
+			$isPasswordValid = false;
 			$isTokenLogin = false;
+			$shouldUpgradeHash = false;
 
-			// 1. Direct plaintext match for legacy/unhashed password
-			if (!$isPasswordValid && $password === $user->password) {
+			// 1. Modern Bcrypt Hash in password column
+			if (password_verify($password, $user->password)) {
 				$isPasswordValid = true;
 			}
 
-			// 2. Check user_token / user_tokens table for activation token
+			// 2. Legacy SHA-256 with Salt (database import format: sha256(password + salt))
+			if (!$isPasswordValid && !empty($user->salt)) {
+				if (hash('sha256', $password . $user->salt) === $user->password || hash('sha256', $user->salt . $password) === $user->password) {
+					$isPasswordValid = true;
+					$shouldUpgradeHash = true;
+				}
+			}
+
+			// 3. Legacy SHA-256 Unsalted
+			if (!$isPasswordValid && hash('sha256', $password) === $user->password) {
+				$isPasswordValid = true;
+				$shouldUpgradeHash = true;
+			}
+
+			// 4. Fallback if bcrypt hash was stored in salt column (swapped data)
+			if (!$isPasswordValid && !empty($user->salt) && (strpos($user->salt, '$2y$') === 0 || strpos($user->salt, '$2a$') === 0 || strpos($user->salt, '$2b$') === 0)) {
+				if (password_verify($password, $user->salt)) {
+					$isPasswordValid = true;
+					$shouldUpgradeHash = true;
+				}
+			}
+
+			// 5. Direct plaintext match for legacy/unhashed password
+			if (!$isPasswordValid && $password === $user->password) {
+				$isPasswordValid = true;
+				$shouldUpgradeHash = true;
+			}
+
+			// 6. Check user_token / user_tokens table for activation token
 			if (!$isPasswordValid) {
 				$tokenTables = ['user_token', 'user_tokens'];
 				foreach ($tokenTables as $tTbl) {
@@ -63,7 +92,7 @@ class Login extends CI_Controller {
 				}
 			}
 
-			// 3. Check user.token property / column
+			// 7. Check user.token property / column
 			if (!$isPasswordValid && !empty($user->token)) {
 				if (trim($password) === trim($user->token) || password_verify($password, $user->token)) {
 					$isPasswordValid = true;
@@ -72,21 +101,35 @@ class Login extends CI_Controller {
 			}
 
 			if ($isPasswordValid) {
-				// Master accounts (Admin, Kaur, LAA, Laboran, Dosen Wali, Koordinator TA, Ketua KK) are ALWAYS password_changed = 1
-				$masterIds = ['admin-01', 'admin-laa-01', 'dsn-wali-01', 'kaur-01', 'koor-ta-01', 'laboran-01', 'ketua-kk-01', 'mhs-1301210001'];
-				$isMasterAccount = in_array($user->id, $masterIds) || in_array((int)$user->role_id, [1, 2, 5, 9, 21]);
+				// Auto-upgrade legacy hashes to modern secure bcrypt in database
+				if ($shouldUpgradeHash) {
+					$userTbl = $this->db->table_exists('user') ? 'user' : 'users';
+					$newHash = password_hash($password, PASSWORD_DEFAULT);
+					$newSalt = bin2hex(random_bytes(16));
+					$this->db->where('id', $user->id)->update($userTbl, [
+						'password' => $newHash,
+						'salt'     => $newSalt
+					]);
+				}
+				// Master accounts are strictly identified by their designated seeder IDs
+				$masterIds = ['admin-01', 'admin-laa-01', 'dsn-wali-01', 'kaur-01', 'koor-ta-01', 'laboran-01', 'ketua-kk-01', 'mhs-1301210001', 'super-admin-01'];
+				$isMasterAccount = in_array($user->id, $masterIds);
 
 				$passwordChanged = $isMasterAccount ? 1 : ($isTokenLogin ? 0 : (int)$user->password_changed);
 
-				// Set session data
+				// Set session data (Fully synchronized with supervisor session standard)
 				$session_data = array(
+					'id'               => $user->id,
 					'user_id'          => $user->id,
+					'username'         => !empty($user->username) ? $user->username : (!empty($user->nidn_nim) ? $user->nidn_nim : $user->email),
 					'role_id'          => $user->role_id,
 					'name'             => $user->name,
 					'email'            => $user->email,
 					'nidn_nim'         => $user->nidn_nim,
 					'nim'              => $user->nidn_nim,
 					'status'           => 'active',
+					'koordinator'      => isset($user->koordinator) ? $user->koordinator : '',
+					'dosen_wali'       => isset($user->dosen_wali) ? $user->dosen_wali : '',
 					'password_changed' => $passwordChanged,
 					'logged_in'        => TRUE
 				);
@@ -96,6 +139,12 @@ class Login extends CI_Controller {
 				if (!$isMasterAccount && ($isTokenLogin || $passwordChanged === 0)) {
 					$this->session->set_flashdata('warning', 'Akun Anda masih menggunakan password sementara (token). Wajib buat password baru dan lengkapi biodata Anda.');
 					redirect('onboarding');
+					return;
+				}
+
+				// If Super Admin (role 22), redirect directly to Import Email & Token
+				if ((int)$user->role_id === 22) {
+					redirect('import-email');
 					return;
 				}
 
@@ -182,13 +231,17 @@ class Login extends CI_Controller {
 
 		// Direct 1-Click Login: set active session!
 		$session_data = array(
+			'id'               => $user->id,
 			'user_id'          => $user->id,
+			'username'         => !empty($user->username) ? $user->username : (!empty($user->nidn_nim) ? $user->nidn_nim : $user->email),
 			'role_id'          => $user->role_id,
 			'name'             => $user->name,
 			'email'            => $user->email,
 			'nidn_nim'         => $user->nidn_nim,
 			'nim'              => $user->nidn_nim,
 			'status'           => 'active',
+			'koordinator'      => isset($user->koordinator) ? $user->koordinator : '',
+			'dosen_wali'       => isset($user->dosen_wali) ? $user->dosen_wali : '',
 			'password_changed' => 0, // Directs to onboarding to setup password
 			'logged_in'        => TRUE
 		);
@@ -200,7 +253,7 @@ class Login extends CI_Controller {
 
 	public function logout()
 	{
-		$this->session->unset_userdata(array('user_id', 'role_id', 'name', 'email', 'nidn_nim', 'status', 'logged_in'));
+		$this->session->unset_userdata(array('id', 'user_id', 'username', 'role_id', 'name', 'email', 'nidn_nim', 'nim', 'koordinator', 'dosen_wali', 'status', 'password_changed', 'logged_in'));
 		$this->session->sess_destroy();
 		redirect('login');
 	}
@@ -229,33 +282,52 @@ class Login extends CI_Controller {
 
 		$user = $this->User_model->get_by_email($email);
 
-		if ($user && $user->status === 'active') {
-			// Generate secure 32-character random token
-			$token = bin2hex(random_bytes(16));
-			$this->User_model->set_reset_token($email, $token);
+		if (!$user) {
+			$this->session->set_flashdata('error', 'Alamat email "' . htmlspecialchars($email) . '" tidak ditemukan atau belum terdaftar di sistem.');
+			redirect('login/forgot_password');
+			return;
+		}
 
-			// Build secure reset URL
-			$resetLink = base_url('login/reset_password?token=' . $token . '&email=' . urlencode($email));
+		if ($user->status !== 'active') {
+			$this->session->set_flashdata('error', 'Akun dengan email "' . htmlspecialchars($email) . '" berstatus non-aktif. Silakan hubungi Administrator.');
+			redirect('login/forgot_password');
+			return;
+		}
 
-			// Load CodeIgniter Email library
-			$this->load->library('email');
-			$this->email->clear(TRUE);
-			$this->email->from('apgchannel11@gmail.com', 'IFIK Labs Portal — Telkom University');
-			$this->email->to($email);
-			$this->email->subject('Permintaan Reset Password Akun — IFIK Labs Portal');
-
-			$htmlBody = $this->_build_reset_email_template($user->name, $resetLink);
-			$this->email->message($htmlBody);
-
-			if ($this->email->send()) {
-				$this->session->set_flashdata('success', 'Tautan pemulihan kata sandi telah berhasil dikirimkan ke ' . htmlspecialchars($email) . '. Silakan periksa Inbox atau folder Spam Anda.');
+		// Anti-Spam / Rate Limit Protection (Cooldown 60 detik, Max 3x per 15 menit)
+		$rateLimit = $this->User_model->check_reset_rate_limit($email, 60, 3, 900);
+		if ($rateLimit['limited']) {
+			if ($rateLimit['reason'] === 'cooldown') {
+				$this->session->set_flashdata('error', 'Mohon tunggu ' . $rateLimit['remaining'] . ' detik sebelum meminta tautan pemulihan kata sandi kembali.');
 			} else {
-				log_message('error', 'Gagal mengirim email reset password: ' . $this->email->print_debugger(['headers']));
-				$this->session->set_flashdata('error', 'Gagal mengirim email pemulihan. Silakan periksa koneksi internet Anda atau coba beberapa saat lagi.');
+				$this->session->set_flashdata('error', 'Terlalu banyak permintaan reset password untuk email ini. Harap tunggu beberapa saat sebelum mencoba kembali.');
 			}
+			redirect('login/forgot_password');
+			return;
+		}
+
+		// Generate secure 32-character random token
+		$token = bin2hex(random_bytes(16));
+		$this->User_model->set_reset_token($email, $token);
+
+		// Build secure reset URL
+		$resetLink = base_url('login/reset_password?token=' . $token . '&email=' . urlencode($email));
+
+		// Load CodeIgniter Email library
+		$this->load->library('email');
+		$this->email->clear(TRUE);
+		$this->email->from('apgchannel11@gmail.com', 'IFIK Labs Portal — Telkom University');
+		$this->email->to($email);
+		$this->email->subject('Permintaan Reset Password Akun — IFIK Labs Portal');
+
+		$htmlBody = $this->_build_reset_email_template($user->name, $resetLink);
+		$this->email->message($htmlBody);
+
+		if ($this->email->send()) {
+			$this->session->set_flashdata('success', 'Tautan pemulihan kata sandi telah berhasil dikirimkan ke ' . htmlspecialchars($email) . ' (berlaku selama 15 menit). Silakan periksa Inbox atau folder Spam Anda.');
 		} else {
-			// Friendly feedback for unregistered/inactive accounts
-			$this->session->set_flashdata('success', 'Jika email ' . htmlspecialchars($email) . ' terdaftar di sistem, tautan pemulihan kata sandi telah dikirimkan ke kotak masuk Anda.');
+			log_message('error', 'Gagal mengirim email reset password: ' . $this->email->print_debugger(['headers']));
+			$this->session->set_flashdata('error', 'Gagal mengirim email pemulihan. Silakan periksa koneksi internet Anda atau coba beberapa saat lagi.');
 		}
 
 		redirect('login/forgot_password');
@@ -382,7 +454,7 @@ class Login extends CI_Controller {
 									</p>
 									<hr style="border:none; border-top:1px solid #fed7aa; margin:24px 0;">
 									<p style="font-size:12px; color:#9a3412; line-height:1.5; margin:0;">
-										<strong>⚠️ Catatan Keamanan:</strong> Tautan ini hanya berlaku untuk Anda. Jika Anda tidak pernah meminta perubahan kata sandi, abaikan email ini dan akun Anda akan tetap aman.
+										<strong>⚠️ Catatan Keamanan:</strong> Tautan ini bersifat rahasia dan hanya berlaku selama <strong>15 menit</strong>. Jika Anda tidak pernah meminta perubahan kata sandi, abaikan email ini dan akun Anda akan tetap aman.
 									</p>
 								</td>
 							</tr>

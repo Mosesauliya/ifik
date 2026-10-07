@@ -29,7 +29,61 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Responsive Page Wrapper with Sidebar Interaction */
+        .page-wrapper-for-sidebar {
+            width: 100%;
+            min-width: 0;
             padding: 40px 60px;
+            min-height: 100vh;
+            transition: margin-left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+            box-sizing: border-box;
+        }
+
+        @media (min-width: 992px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 270px;
+                width: calc(100% - 270px);
+            }
+
+            body.curved-sidebar-desktop-open .modal-overlay,
+            body.curved-sidebar-desktop-open #modalRuangan,
+            body:not(.curved-sidebar-desktop-collapsed) .modal-overlay,
+            body:not(.curved-sidebar-desktop-collapsed) #modalRuangan {
+                left: 270px !important;
+                width: calc(100% - 270px) !important;
+                box-sizing: border-box !important;
+                transition: left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+            }
+
+            body.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            body.curved-sidebar-desktop-collapsed .modal-overlay,
+            body.curved-sidebar-desktop-collapsed #modalRuangan {
+                left: 0 !important;
+                width: 100% !important;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding: 30px 20px;
+                padding-top: 56px;
+            }
+
+            .modal-overlay,
+            #modalRuangan {
+                left: 0 !important;
+                width: 100% !important;
+            }
         }
 
         /* Top Header Navigation & Title */
@@ -146,27 +200,36 @@
             gap: 16px;
         }
 
+        .search-box-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            max-width: 480px;
+        }
+
         .search-box {
             position: relative;
             flex: 1;
-            max-width: 380px;
+            min-width: 0;
         }
 
         .search-input {
             width: 100%;
             height: 42px;
-            padding: 0 16px 0 40px;
+            padding: 0 36px 0 40px;
             border-radius: 12px;
             border: 1px solid var(--border-color);
             background: #ffffff;
             font-size: 0.88rem;
             color: #0f172a;
             outline: none;
-            transition: border-color 0.2s;
+            transition: all 0.2s ease;
         }
 
         .search-input:focus {
             border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12);
         }
 
         .search-icon {
@@ -177,6 +240,79 @@
             width: 16px;
             height: 16px;
             fill: #94a3b8;
+            pointer-events: none;
+        }
+
+        .btn-clear-search {
+            display: none;
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #f1f5f9;
+            color: #64748b;
+            border: none;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 11px;
+            font-weight: 800;
+            line-height: 1;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+
+        .btn-clear-search:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        .btn-search-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            height: 42px;
+            padding: 0 20px;
+            background: var(--primary);
+            color: #ffffff;
+            font-size: 0.86rem;
+            font-weight: 700;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(234, 88, 12, 0.25);
+            flex-shrink: 0;
+        }
+
+        .btn-search-action:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(234, 88, 12, 0.35);
+        }
+
+        .btn-reset-action {
+            display: none;
+            align-items: center;
+            height: 42px;
+            padding: 0 16px;
+            background: #ffffff;
+            color: #64748b;
+            font-size: 0.86rem;
+            font-weight: 700;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .btn-reset-action:hover {
+            background: #f8fafc;
+            color: #0f172a;
+            border-color: #cbd5e1;
         }
 
         /* Main Data Table Card */
@@ -341,7 +477,10 @@
         /* Modal Overlay */
         .modal-overlay {
             position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
             background: rgba(15, 23, 42, 0.65);
             backdrop-filter: blur(6px);
             z-index: 9999;
@@ -350,6 +489,8 @@
             justify-content: center;
             padding: 20px 12px;
             overflow-y: auto;
+            box-sizing: border-box;
+            transition: left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
         }
 
         .modal-overlay.active {
@@ -859,6 +1000,12 @@
 </head>
 <body>
 
+    <!-- Auto Role-Aware Curved Animated Sidebar -->
+    <?php $this->load->view('components/curved_sidebar'); ?>
+
+    <!-- Main Page Content Wrapper (Smoothly shifts when sidebar is open) -->
+    <div id="mainPageContent" class="page-wrapper-for-sidebar">
+
     <!-- Header Page -->
     <div class="page-header">
         <div class="header-left">
@@ -905,9 +1052,19 @@
 
     <!-- Filter Bar -->
     <div class="filter-bar">
-        <div class="search-box">
-            <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-            <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Cari kode atau nama ruangan..." class="search-input">
+        <div class="search-box-wrapper">
+            <div class="search-box">
+                <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                <input type="text" id="searchInput" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); filterTable(); }" oninput="handleSearchInputChange(this)" placeholder="Cari kode atau nama ruangan..." class="search-input">
+                <button type="button" id="btnClearSearch" onclick="resetSearchTable()" class="btn-clear-search" title="Hapus pencarian">✕</button>
+            </div>
+            <button type="button" onclick="filterTable()" class="btn-search-action">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <span>Cari</span>
+            </button>
+            <button type="button" id="btnResetSearch" onclick="resetSearchTable()" class="btn-reset-action">
+                <span>Reset</span>
+            </button>
         </div>
     </div>
 
@@ -930,11 +1087,18 @@
                     <?php foreach ($ruangan as $r): ?>
                         <tr>
                             <td style="text-align: center;">
-                                <?php if (isset($r->foto) && !empty($r->foto)): ?>
-                                    <img src="<?= base_url($r->foto) ?>" alt="Foto" class="room-thumbnail">
-                                <?php else: ?>
-                                    <div class="room-thumbnail" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🖼️</div>
-                                <?php endif; ?>
+                                <div style="position: relative; display: inline-block;">
+                                    <?php if (isset($r->foto) && !empty($r->foto)): ?>
+                                        <img src="<?= base_url($r->foto) ?>" alt="Foto" class="room-thumbnail">
+                                        <?php if (!empty($r->all_foto) && count($r->all_foto) > 1): ?>
+                                            <span style="position: absolute; bottom: -3px; right: -3px; background: rgba(15,23,42,0.9); color: #fff; font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.2);" title="<?= count($r->all_foto) ?> Foto Ruangan Tersimpan">
+                                                +<?= count($r->all_foto) ?> 📷
+                                            </span>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <div class="room-thumbnail" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🖼️</div>
+                                    <?php endif; ?>
+                                </div>
                             </td>
                             <td>
                                 <div style="font-weight: 800; font-size: 0.92rem; color: #0f172a; line-height: 1.3;"><?= htmlspecialchars(isset($r->nama_ruangan) ? $r->nama_ruangan : '') ?></div>
@@ -978,7 +1142,16 @@
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <div style="font-size: 0.8rem; font-weight: 700;">💻 <?= htmlspecialchars(isset($r->jumlah_unit) && !empty($r->jumlah_unit) ? $r->jumlah_unit : (isset($r->kapasitas) ? $r->kapasitas . ' Orang' : '30 Orang')) ?></div>
+                                <div style="font-size: 0.8rem; font-weight: 700;">
+                                    <?php if (!empty($r->jumlah_unit)): ?>
+                                        💻 <?= htmlspecialchars(is_numeric(trim($r->jumlah_unit)) ? trim($r->jumlah_unit) . ' Unit' : $r->jumlah_unit) ?>
+                                        <?php if (!empty($r->kapasitas)): ?>
+                                            <span style="font-size: 0.72rem; font-weight: 600; color: #64748b;">(<?= htmlspecialchars($r->kapasitas) ?> Orang)</span>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        👥 <?= htmlspecialchars(!empty($r->kapasitas) ? $r->kapasitas . ' Orang' : '30 Orang') ?>
+                                    <?php endif; ?>
+                                </div>
                                 <div style="font-size: 0.75rem; color: #64748b;">⏰ <?= htmlspecialchars(isset($r->jam_operasional) && !empty($r->jam_operasional) ? $r->jam_operasional : '08:00 - 17:00 WIB') ?></div>
                             </td>
                             <td>
@@ -1019,6 +1192,7 @@
             </tbody>
         </table>
     </div>
+    </div> <!-- /#mainPageContent -->
 
     <!-- Modal Form Tambah / Edit Ruangan (Multi-field lengkap sesuai detail page) -->
     <div id="modalRuangan" class="modal-overlay" onclick="if(event.target===this)closeModalRuangan()">
@@ -1029,6 +1203,7 @@
             </div>
             <form id="formRuangan" onsubmit="handleFormSubmit(event)" enctype="multipart/form-data">
                 <input type="hidden" id="ruanganId" name="id">
+                <input type="hidden" id="oldNamaRuangan" name="old_nama_ruangan">
                 <div class="modal-body">
                     
                     <!-- Section 1: Data Utama Ruangan -->
@@ -1109,23 +1284,27 @@
 
                     <!-- Section 2: Upload Files (Foto & 3D Model .glb/.fbx) with Drag & Drop -->
                     <div class="form-grid-2">
-                        <!-- Foto Utama Dropzone -->
+                        <!-- Foto Ruangan (Multi-Foto) Dropzone -->
                         <div>
-                            <label style="font-size:0.78rem; font-weight:800; color:#334155; text-transform:uppercase; display:block; margin-bottom:6px;">📷 Foto Utama Ruangan</label>
+                            <label style="font-size:0.78rem; font-weight:800; color:#334155; text-transform:uppercase; display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <span>📷 Foto Ruangan / Fasilitas</span>
+                                <span style="font-size:0.7rem; color:#ea580c; text-transform:none; font-weight:700;">(Bisa pilih banyak foto)</span>
+                            </label>
                             <div class="upload-dropzone" id="dropzoneFoto">
-                                <input type="file" id="inputFoto" name="foto" accept="image/png, image/jpeg, image/webp">
+                                <input type="file" id="inputFoto" name="foto[]" multiple accept="image/png, image/jpeg, image/webp">
                                 <div class="dropzone-icon">🖼️</div>
-                                <div class="dropzone-title">Tarik &amp; lepas foto ke sini</div>
-                                <div class="dropzone-sub">atau <span>pilih file</span> dari komputer</div>
-                                <span class="hint" style="margin-top:4px;">JPG, PNG, WEBP (Maks 5MB)</span>
+                                <div class="dropzone-title">Tarik &amp; lepas satu / banyak foto ke sini</div>
+                                <div class="dropzone-sub">atau <span>pilih file</span> dari komputer (multi-select)</div>
+                                <span class="hint" style="margin-top:4px;">JPG, PNG, WEBP (Bisa unggah banyak foto, maks 10MB/foto)</span>
                             </div>
-                            <div id="previewFotoBox" class="dropzone-preview" style="display:none;">
-                                <img id="previewFotoImg" src="" alt="Preview Foto">
-                                <div class="preview-info">
-                                    <span id="previewFotoText" class="preview-name">foto.jpg</span>
-                                    <span id="previewFotoSize" class="preview-size">File Siap</span>
+                            
+                            <!-- Multi-photo Gallery Preview Grid -->
+                            <div id="fotoGalleryGrid" style="display:none; margin-top:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:10px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid #e2e8f0;">
+                                    <span id="fotoCountBadge" style="font-size:0.75rem; font-weight:800; color:#1e293b;">0 Foto</span>
+                                    <button type="button" onclick="clearAllPhotos(event)" style="font-size:0.7rem; font-weight:700; color:#ef4444; background:none; border:none; cursor:pointer; padding:2px 6px; border-radius:4px;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Hapus Semua</button>
                                 </div>
-                                <button type="button" class="btn-remove-file" onclick="clearFileFoto(event)" title="Hapus berkas foto">&times;</button>
+                                <div id="fotoThumbnailsList" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(72px, 1fr)); gap:8px;"></div>
                             </div>
                         </div>
 
@@ -1389,14 +1568,121 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
-        function clearFileFoto(e) {
+        let currentNewPhotoFiles = [];
+        let currentExistingPhotos = [];
+
+        function clearAllPhotos(e) {
             if (e) { e.preventDefault(); e.stopPropagation(); }
+            currentExistingPhotos = [];
+            currentNewPhotoFiles = [];
             const input = document.getElementById('inputFoto');
             if (input) input.value = '';
-            const previewBox = document.getElementById('previewFotoBox');
-            if (previewBox) previewBox.style.display = 'none';
-            const previewImg = document.getElementById('previewFotoImg');
-            if (previewImg) previewImg.src = '';
+            renderPhotoGallery();
+        }
+
+        function clearFileFoto(e) {
+            clearAllPhotos(e);
+        }
+
+        function removeExistingPhoto(index, e) {
+            if (e) { e.preventDefault(); e.stopPropagation(); }
+            currentExistingPhotos.splice(index, 1);
+            renderPhotoGallery();
+        }
+
+        function removeNewPhotoFile(index, e) {
+            if (e) { e.preventDefault(); e.stopPropagation(); }
+            currentNewPhotoFiles.splice(index, 1);
+            renderPhotoGallery();
+        }
+
+        function handleFotoFiles(fileList) {
+            if (!fileList || fileList.length === 0) return;
+            const maxMb = 10;
+            const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+            Array.from(fileList).forEach(file => {
+                if (file.size > maxMb * 1024 * 1024) {
+                    Swal.fire('File Terlalu Besar', `Ukuran foto "${file.name}" (${formatFileSize(file.size)}) melebihi batas ${maxMb}MB.`, 'warning');
+                    return;
+                }
+                const ext = file.name.split('.').pop().toLowerCase();
+                if (!validTypes.includes(file.type) && !['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
+                    Swal.fire('Format Tidak Didukung', `File "${file.name}" bukan format gambar yang didukung (JPG, PNG, WEBP).`, 'warning');
+                    return;
+                }
+
+                const exists = currentNewPhotoFiles.some(f => f.name === file.name && f.size === file.size);
+                if (!exists) {
+                    currentNewPhotoFiles.push(file);
+                }
+            });
+
+            renderPhotoGallery();
+        }
+
+        function renderPhotoGallery() {
+            const galleryGrid = document.getElementById('fotoGalleryGrid');
+            const thumbList = document.getElementById('fotoThumbnailsList');
+            const countBadge = document.getElementById('fotoCountBadge');
+            if (!galleryGrid || !thumbList) return;
+
+            thumbList.innerHTML = '';
+            const totalCount = currentExistingPhotos.length + currentNewPhotoFiles.length;
+
+            if (totalCount === 0) {
+                galleryGrid.style.display = 'none';
+                return;
+            }
+
+            galleryGrid.style.display = 'block';
+            if (countBadge) {
+                const existCount = currentExistingPhotos.length;
+                const newCount = currentNewPhotoFiles.length;
+                let text = `${totalCount} Foto Terpilih`;
+                if (existCount > 0 && newCount > 0) {
+                    text += ` (${existCount} tersimpan, ${newCount} baru)`;
+                } else if (newCount > 0) {
+                    text += ` (${newCount} foto baru)`;
+                }
+                countBadge.innerText = text;
+            }
+
+            let displayIndex = 0;
+
+            // Render existing photos
+            currentExistingPhotos.forEach((path, idx) => {
+                const item = document.createElement('div');
+                item.style.cssText = 'position:relative; width:100%; aspect-ratio:1/1; border-radius:10px; overflow:hidden; border:1px solid #e2e8f0; background:#f8fafc; box-shadow: 0 1px 3px rgba(0,0,0,0.06);';
+                
+                const fullUrl = path.startsWith('http') ? path : `<?= base_url() ?>${path}`;
+                const isMain = (displayIndex === 0);
+
+                item.innerHTML = `
+                    <img src="${fullUrl}" style="width:100%; height:100%; object-fit:cover; display:block;" alt="Foto Ruangan">
+                    ${isMain ? '<span style="position:absolute; top:4px; left:4px; background:#ea580c; color:#fff; font-size:8px; font-weight:800; padding:1px 5px; border-radius:4px; box-shadow:0 1px 2px rgba(0,0,0,0.3); z-index:2;">Utama</span>' : ''}
+                    <button type="button" onclick="removeExistingPhoto(${idx}, event)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(239,68,68,0.9); color:#fff; border:none; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:bold; cursor:pointer; line-height:1; box-shadow:0 1px 2px rgba(0,0,0,0.3); z-index:2;" title="Hapus foto ini">&times;</button>
+                `;
+                thumbList.appendChild(item);
+                displayIndex++;
+            });
+
+            // Render new selected files
+            currentNewPhotoFiles.forEach((file, idx) => {
+                const item = document.createElement('div');
+                item.style.cssText = 'position:relative; width:100%; aspect-ratio:1/1; border-radius:10px; overflow:hidden; border:1.5px dashed #ea580c; background:#fff7ed; box-shadow: 0 1px 3px rgba(0,0,0,0.06);';
+
+                const isMain = (displayIndex === 0);
+                const objUrl = URL.createObjectURL(file);
+
+                item.innerHTML = `
+                    <img src="${objUrl}" style="width:100%; height:100%; object-fit:cover; display:block;" alt="${file.name}">
+                    ${isMain ? '<span style="position:absolute; top:4px; left:4px; background:#ea580c; color:#fff; font-size:8px; font-weight:800; padding:1px 5px; border-radius:4px; box-shadow:0 1px 2px rgba(0,0,0,0.3); z-index:2;">Utama</span>' : '<span style="position:absolute; top:4px; left:4px; background:#0284c7; color:#fff; font-size:8px; font-weight:800; padding:1px 5px; border-radius:4px; box-shadow:0 1px 2px rgba(0,0,0,0.3); z-index:2;">Baru</span>'}
+                    <button type="button" onclick="removeNewPhotoFile(${idx}, event)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(239,68,68,0.9); color:#fff; border:none; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:bold; cursor:pointer; line-height:1; box-shadow:0 1px 2px rgba(0,0,0,0.3); z-index:2;" title="Hapus foto ini">&times;</button>
+                `;
+                thumbList.appendChild(item);
+                displayIndex++;
+            });
         }
 
         function clearFileModel(e) {
@@ -1405,33 +1691,6 @@
             if (input) input.value = '';
             const previewBox = document.getElementById('previewModelBox');
             if (previewBox) previewBox.style.display = 'none';
-        }
-
-        function handleFotoFile(file) {
-            if (!file) return;
-            const maxMb = 5;
-            if (file.size > maxMb * 1024 * 1024) {
-                Swal.fire('File Terlalu Besar', `Ukuran foto (${formatFileSize(file.size)}) melebihi batas maksimum ${maxMb}MB.`, 'warning');
-                clearFileFoto();
-                return;
-            }
-
-            const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
-            const ext = file.name.split('.').pop().toLowerCase();
-            if (!validTypes.includes(file.type) && !['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
-                Swal.fire('Format Tidak Didukung', 'Harap unggah file foto dengan format JPG, PNG, atau WEBP.', 'warning');
-                clearFileFoto();
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('previewFotoImg').src = e.target.result;
-                document.getElementById('previewFotoText').innerText = file.name;
-                document.getElementById('previewFotoSize').innerText = formatFileSize(file.size);
-                document.getElementById('previewFotoBox').style.display = 'flex';
-            };
-            reader.readAsDataURL(file);
         }
 
         function handleModelFile(file) {
@@ -1480,15 +1739,18 @@
                 });
 
                 dropFoto.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropFoto.classList.remove('dragover');
                     if (e.dataTransfer && e.dataTransfer.files.length > 0) {
-                        inputFoto.files = e.dataTransfer.files;
-                        handleFotoFile(inputFoto.files[0]);
+                        handleFotoFiles(e.dataTransfer.files);
                     }
                 });
 
                 inputFoto.addEventListener('change', () => {
                     if (inputFoto.files && inputFoto.files.length > 0) {
-                        handleFotoFile(inputFoto.files[0]);
+                        handleFotoFiles(inputFoto.files);
+                        inputFoto.value = '';
                     }
                 });
             }
@@ -1533,21 +1795,29 @@
         // Data seluruh ruangan yang sudah tersimpan untuk mendeteksi ketersediaan ruangan fisik
         const ALL_EXISTING_ROOMS = <?= json_encode(array_map(function($item) {
             return [
-                'id'           => (int)$item->id,
+                'id'           => (string)$item->id,
                 'nama_ruangan' => $item->nama_ruangan,
                 'kode_ruangan' => $item->kode_ruangan
             ];
         }, (isset($ruangan) && is_array($ruangan)) ? $ruangan : [])) ?>;
 
+        let currentEditOriginalName = '';
+
         function canonicalizeRoomCode(str) {
             return (str || '').toString().toUpperCase().replace(/[^A-Z0-9]/g, '');
         }
 
-        function getOccupiedRoomsMap(excludeId = null) {
+        function getOccupiedRoomsMap(excludeId = null, excludeName = null) {
             const map = {};
+            const exIdStr = excludeId ? String(excludeId).trim().toUpperCase() : '';
+            const exNameStr = excludeName ? String(excludeName).trim().toUpperCase() : '';
+
             (ALL_EXISTING_ROOMS || []).forEach(r => {
-                if (excludeId && parseInt(r.id) === parseInt(excludeId)) {
+                if (exIdStr && String(r.id).trim().toUpperCase() === exIdStr) {
                     return; // Lewati ruangan/fasilitas yang sedang diedit
+                }
+                if (exNameStr && String(r.nama_ruangan).trim().toUpperCase() === exNameStr) {
+                    return; // Lewati jika nama fasilitas lamanya sama
                 }
                 if (!r.kode_ruangan) return;
                 const codes = r.kode_ruangan.split(',').map(s => s.trim()).filter(Boolean);
@@ -1651,7 +1921,7 @@
             if (!container) return;
 
             const currentEditId = isEditMode ? document.getElementById('ruanganId').value : null;
-            const occupiedMap = getOccupiedRoomsMap(currentEditId);
+            const occupiedMap = getOccupiedRoomsMap(currentEditId, isEditMode ? currentEditOriginalName : null);
 
             let filtered = PRESET_ROOMS;
             if (currentActiveFloor !== 'all') {
@@ -1745,7 +2015,7 @@
             if (!val) return;
 
             const currentEditId = isEditMode ? document.getElementById('ruanganId').value : null;
-            const occupiedMap = getOccupiedRoomsMap(currentEditId);
+            const occupiedMap = getOccupiedRoomsMap(currentEditId, isEditMode ? currentEditOriginalName : null);
 
             // Support multi-input via comma or single input
             const items = val.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
@@ -1797,10 +2067,13 @@
 
         function openModalTambah() {
             isEditMode = false;
+            currentEditOriginalName = '';
             document.body.style.overflow = 'hidden';
             document.getElementById('modalTitle').innerText = '🏢 Tambah Ruangan / Lab Baru';
             document.getElementById('formRuangan').reset();
             document.getElementById('ruanganId').value = '';
+            const oldNameEl = document.getElementById('oldNamaRuangan');
+            if (oldNameEl) oldNameEl.value = '';
             document.getElementById('inputJamOperasional').value = 'Senin – Jumat | 08:00 – 17:00 WIB';
             document.getElementById('inputLokasi').value = 'Gedung Industri Kreatif (FIK)';
             document.getElementById('inputKapasitas').value = '35';
@@ -1814,8 +2087,9 @@
             renderRoomTags();
             renderRoomPillsGrid();
             switchFloorTab('all');
-            clearFileFoto();
+            clearAllPhotos();
             clearFileModel();
+            syncModalOverlayPosition();
             document.getElementById('modalRuangan').classList.add('active');
         }
 
@@ -1824,7 +2098,10 @@
             document.body.style.overflow = 'hidden';
             document.getElementById('modalTitle').innerText = '✏️ Edit Data Ruangan & Berkas';
             document.getElementById('ruanganId').value = data.id;
-            document.getElementById('inputNama').value = data.nama_ruangan || '';
+            currentEditOriginalName = (data.nama_ruangan || '').trim();
+            const oldNameEl = document.getElementById('oldNamaRuangan');
+            if (oldNameEl) oldNameEl.value = currentEditOriginalName;
+            document.getElementById('inputNama').value = currentEditOriginalName;
             
             const raw = data.kode_ruangan || '';
             currentRoomTags = raw.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
@@ -1849,17 +2126,15 @@
             document.getElementById('inputSpesifikasi').value = data.spesifikasi_fasilitas || '';
             document.getElementById('inputTataTertib').value = data.tata_tertib || '';
 
-            // Render existing Foto indicator
-            if (data.foto) {
-                const fotoPath = data.foto.startsWith('http') ? data.foto : `<?= base_url() ?>${data.foto}`;
-                document.getElementById('previewFotoBox').style.display = 'flex';
-                document.getElementById('previewFotoImg').src = fotoPath;
-                document.getElementById('previewFotoText').innerText = data.foto.split('/').pop();
-                const fotoSizeEl = document.getElementById('previewFotoSize');
-                if (fotoSizeEl) fotoSizeEl.innerText = 'Foto Terpasang';
-            } else {
-                clearFileFoto();
+            // Render existing multi-foto ruangan
+            currentNewPhotoFiles = [];
+            currentExistingPhotos = [];
+            if (data.all_foto && Array.isArray(data.all_foto) && data.all_foto.length > 0) {
+                currentExistingPhotos = [...data.all_foto];
+            } else if (data.foto) {
+                currentExistingPhotos = data.foto.split(',').map(s => s.trim()).filter(Boolean);
             }
+            renderPhotoGallery();
 
             // Render existing 3D Model indicator
             if (data.model_3d) {
@@ -1872,8 +2147,31 @@
                 clearFileModel();
             }
 
+            syncModalOverlayPosition();
             document.getElementById('modalRuangan').classList.add('active');
         }
+
+        function syncModalOverlayPosition() {
+            const modal = document.getElementById('modalRuangan');
+            if (!modal) return;
+            const isDesktop = (window.matchMedia && window.matchMedia('(min-width: 1024px)').matches) || window.innerWidth >= 992;
+            const panel = document.getElementById('curvedSidebarPanel');
+            const isPanelActive = panel ? panel.classList.contains('is-active') : false;
+            const isCollapsed = document.body.classList.contains('curved-sidebar-desktop-collapsed');
+            
+            const isSidebarOpen = isDesktop && isPanelActive && !isCollapsed;
+
+            if (isSidebarOpen) {
+                modal.style.setProperty('left', '270px', 'important');
+                modal.style.setProperty('width', 'calc(100% - 270px)', 'important');
+            } else {
+                modal.style.setProperty('left', '0px', 'important');
+                modal.style.setProperty('width', '100%', 'important');
+            }
+        }
+
+        window.addEventListener('resize', syncModalOverlayPosition);
+        window.addEventListener('curvedSidebarToggled', syncModalOverlayPosition);
 
         function closeModalRuangan() {
             document.body.style.overflow = '';
@@ -1889,7 +2187,7 @@
 
             // Validasi client-side: periksa apakah ada nomor ruangan fisik yang bentrok dengan fasilitas lain
             const currentEditId = isEditMode ? document.getElementById('ruanganId').value : null;
-            const occupiedMap = getOccupiedRoomsMap(currentEditId);
+            const occupiedMap = getOccupiedRoomsMap(currentEditId, isEditMode ? currentEditOriginalName : null);
             const conflicts = [];
             currentRoomTags.forEach(tag => {
                 const upper = tag.toUpperCase();
@@ -1912,6 +2210,19 @@
 
             const form = document.getElementById('formRuangan');
             const formData = new FormData(form);
+
+            // Re-assign multiple photo files and existing photo paths
+            formData.delete('foto[]');
+            formData.delete('foto');
+            currentNewPhotoFiles.forEach(file => {
+                formData.append('foto[]', file);
+            });
+            formData.delete('existing_foto[]');
+            formData.delete('existing_foto');
+            currentExistingPhotos.forEach(path => {
+                formData.append('existing_foto[]', path);
+            });
+
             const targetUrl = isEditMode ? '<?= base_url('kelolaruangan/update') ?>' : '<?= base_url('kelolaruangan/tambah') ?>';
 
             Swal.fire({
@@ -1968,6 +2279,7 @@
                 if (result.isConfirmed) {
                     const delData = new FormData();
                     delData.append('id', id);
+                    delData.append('nama_ruangan', name);
                     fetch('<?= base_url('kelolaruangan/delete') ?>', {
                         method: 'POST',
                         body: delData,
@@ -1987,24 +2299,72 @@
             });
         }
 
+        function handleSearchInputChange(input) {
+            const btnClear = document.getElementById('btnClearSearch');
+            if (btnClear) {
+                btnClear.style.display = input.value.trim() ? 'inline-flex' : 'none';
+            }
+        }
+
         function filterTable() {
             const input = document.getElementById('searchInput');
-            const filter = input.value.toLowerCase();
+            if (!input) return;
+            const filter = input.value.toLowerCase().trim();
             const table = document.getElementById('ruanganTable');
-            const tr = table.getElementsByTagName('tr');
+            if (!table) return;
+            const tbody = table.getElementsByTagName('tbody')[0] || table;
+            const tr = tbody.getElementsByTagName('tr');
 
-            for (let i = 1; i < tr.length; i++) {
+            const btnClear = document.getElementById('btnClearSearch');
+            const btnReset = document.getElementById('btnResetSearch');
+            if (btnClear) btnClear.style.display = filter ? 'inline-flex' : 'none';
+            if (btnReset) btnReset.style.display = filter ? 'inline-flex' : 'none';
+
+            let visibleCount = 0;
+            let noResultRow = document.getElementById('noResultsRow');
+
+            for (let i = 0; i < tr.length; i++) {
+                if (tr[i].id === 'noResultsRow') continue;
+
                 let show = false;
-                const tdCode = tr[i].getElementsByTagName('td')[1];
-                const tdName = tr[i].getElementsByTagName('td')[2];
-                if (tdCode || tdName) {
-                    const codeTxt = tdCode ? tdCode.textContent || tdCode.innerText : '';
-                    const nameTxt = tdName ? tdName.textContent || tdName.innerText : '';
-                    if (codeTxt.toLowerCase().indexOf(filter) > -1 || nameTxt.toLowerCase().indexOf(filter) > -1) {
+                const tdRoom = tr[i].getElementsByTagName('td')[1];
+                const tdCat  = tr[i].getElementsByTagName('td')[2];
+                if (tdRoom || tdCat) {
+                    const roomTxt = tdRoom ? (tdRoom.textContent || tdRoom.innerText) : '';
+                    const catTxt  = tdCat ? (tdCat.textContent || tdCat.innerText) : '';
+                    if (!filter || roomTxt.toLowerCase().indexOf(filter) > -1 || catTxt.toLowerCase().indexOf(filter) > -1) {
                         show = true;
                     }
                 }
                 tr[i].style.display = show ? '' : 'none';
+                if (show) visibleCount++;
+            }
+
+            if (visibleCount === 0 && filter) {
+                if (!noResultRow) {
+                    noResultRow = document.createElement('tr');
+                    noResultRow.id = 'noResultsRow';
+                    tbody.appendChild(noResultRow);
+                }
+                noResultRow.style.display = '';
+                noResultRow.innerHTML = `
+                    <td colspan="7" style="text-align: center; padding: 45px 20px; color: #64748b;">
+                        <div style="font-size: 2rem; margin-bottom: 8px;">🔍</div>
+                        <div style="font-weight: 800; font-size: 1rem; color: #1e293b; margin-bottom: 4px;">Tidak ada ruangan yang cocok</div>
+                        <div style="font-size: 0.82rem; color: #64748b;">Tidak ditemukan ruangan dengan kata kunci "<strong>${filter.replace(/</g, '&lt;')}</strong>"</div>
+                    </td>
+                `;
+            } else if (noResultRow) {
+                noResultRow.style.display = 'none';
+            }
+        }
+
+        function resetSearchTable() {
+            const input = document.getElementById('searchInput');
+            if (input) {
+                input.value = '';
+                filterTable();
+                input.focus();
             }
         }
     </script>

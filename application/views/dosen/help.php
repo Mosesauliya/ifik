@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title><?= htmlspecialchars($title ?? 'Bantuan & Live Chat Lab - Panel Laboran') ?></title>
+    <title><?= htmlspecialchars($title ?? 'Bantuan & Live Chat - Portal Dosen') ?></title>
     
     <!-- Google Fonts & FontAwesome & SweetAlert2 -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -21,10 +21,15 @@
             --primary: #ea580c;
             --primary-hover: #c2410c;
             --primary-light: #fff7ed;
-            --accent-blue: #2563eb;
-            --accent-green: #16a34a;
-            --accent-purple: #7c3aed;
-            --accent-red: #dc2626;
+            --laboran-color: #ea580c;
+            --laboran-bg: #fff7ed;
+            --laboran-border: #fed7aa;
+            --kaur-color: #4f46e5;
+            --kaur-bg: #eef2ff;
+            --kaur-border: #c7d2fe;
+            --admin-color: #9333ea;
+            --admin-bg: #faf5ff;
+            --admin-border: #e9d5ff;
             --radius-md: 12px;
             --radius-lg: 16px;
             --radius-xl: 20px;
@@ -40,7 +45,6 @@
             height: 100%;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
 
         body {
@@ -49,8 +53,6 @@
             color: var(--text-color);
             height: 100vh;
             height: 100dvh;
-            margin: 0;
-            padding: 0;
             overflow: hidden;
         }
 
@@ -98,382 +100,217 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            min-height: 0;
+            flex: 1;
         }
 
-        /* Top Header */
+        /* Top Page Header */
         .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 10px;
             margin-bottom: 12px;
             flex-shrink: 0;
         }
 
         .header-title-wrap h1 {
-            font-size: 1.4rem;
+            font-size: 1.35rem;
             font-weight: 800;
             color: #0f172a;
             letter-spacing: -0.02em;
             display: flex;
             align-items: center;
             flex-wrap: wrap;
-            gap: 8px 12px;
+            gap: 8px 10px;
         }
 
-        .header-title-wrap h1 .role-badge {
-            font-size: 0.72rem;
-            font-weight: 700;
-            background: #eff6ff;
-            color: #1d4ed8;
-            border: 1px solid #bfdbfe;
-            padding: 3px 10px;
-            border-radius: 999px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .header-title-wrap p {
-            color: var(--text-muted);
-            font-size: 0.84rem;
-            margin-top: 2px;
-        }
-
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn-action {
+        .badge-service-hub {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 8px 14px;
-            border-radius: 10px;
-            font-size: 0.82rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            border: 1px solid var(--border-color);
-            background: #ffffff;
-            color: #334155;
+            gap: 6px;
+            padding: 3px 12px;
+            background: #fff7ed;
+            color: #ea580c;
+            border: 1px solid #fed7aa;
+            border-radius: 99px;
+            font-size: 0.72rem;
+            font-weight: 700;
         }
 
-        .btn-action:hover {
-            background: #f1f5f9;
-            color: #0f172a;
+        /* Chat Workspace */
+        .chat-workspace {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 14px;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        /* Left Contacts Panel */
+        .chat-sidebar {
+            background: #ffffff;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
+        }
+
+        .chat-sidebar-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: #ffffff;
+            flex-shrink: 0;
+        }
+
+        .chat-sidebar-header h3 {
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chat-sidebar-header p {
+            font-size: 0.73rem;
+            color: #64748b;
+        }
+
+        .contacts-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .contact-channel-card {
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1.5px solid var(--border-color);
+            background: #ffffff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+        }
+
+        .contact-channel-card:hover {
+            border-color: #fdba74;
+            background: #f8fafc;
             transform: translateY(-1px);
         }
 
-        .btn-primary-action {
-            background: linear-gradient(135deg, #ea580c, #f97316);
-            color: #ffffff;
-            border: none;
-            box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);
+        .contact-channel-card.active {
+            background: #fff7ed !important;
+            border-color: #ea580c !important;
+            box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.15) !important;
         }
 
-        .btn-primary-action:hover {
-            background: linear-gradient(135deg, #c2410c, #ea580c);
-            color: #ffffff;
-            box-shadow: 0 6px 16px rgba(234, 88, 12, 0.35);
-        }
-
-        /* Main Chat Workspace Layout */
-        .chat-workspace {
-            display: grid;
-            grid-template-columns: 360px 1fr;
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: var(--radius-xl);
-            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
-            flex: 1;
-            min-height: 0;
-            height: 100%;
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* Left Pane: Conversation List */
-        .chat-sidebar {
-            background: #fafafa;
-            border-right: 1px solid #e2e8f0;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            min-height: 0;
-            overflow: hidden;
-        }
-
-        .sidebar-search-box {
-            padding: 12px 14px 8px 14px;
-            background: #ffffff;
-            border-bottom: 1px solid #f1f5f9;
-            flex-shrink: 0;
-        }
-
-        .search-input-wrapper {
-            position: relative;
-        }
-
-        .search-input-wrapper i {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #94a3b8;
-            font-size: 0.88rem;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 9px 12px 9px 36px;
-            font-size: 0.84rem;
-            border: 1px solid #cbd5e1;
-            border-radius: 10px;
-            outline: none;
-            background: #f8fafc;
-            font-family: inherit;
-            transition: all 0.2s;
-        }
-
-        .search-input:focus {
-            border-color: #ea580c;
-            background: #ffffff;
-            box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12);
-        }
-
-        /* Filter Tabs */
-        .sidebar-tabs {
-            display: flex;
-            padding: 8px 12px;
-            background: #ffffff;
-            border-bottom: 1px solid #e2e8f0;
-            gap: 6px;
-            flex-shrink: 0;
-        }
-
-        .filter-tab {
-            flex: 1;
-            padding: 6px 8px;
-            border-radius: 8px;
-            font-size: 0.78rem;
-            font-weight: 700;
-            border: none;
-            background: #f1f5f9;
-            color: #64748b;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-        }
-
-        .filter-tab.active {
-            background: #ea580c;
-            color: #ffffff;
-            box-shadow: 0 2px 6px rgba(234, 88, 12, 0.25);
-        }
-
-        /* Conversation Thread List */
-        .conversation-list {
-            flex: 1;
-            min-height: 0;
-            overflow-y: auto;
-            padding: 8px;
-        }
-
-        .conversation-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 14px;
-            border-radius: 14px;
-            cursor: pointer;
-            margin-bottom: 6px;
-            background: #ffffff;
-            border: 1px solid transparent;
-            transition: all 0.2s ease;
-            position: relative;
-        }
-
-        .conversation-item:hover {
-            background: #f8fafc;
-            border-color: #e2e8f0;
-            transform: translateX(2px);
-        }
-
-        .conversation-item.active {
-            background: #fff7ed;
-            border-color: #fed7aa;
-            box-shadow: 0 4px 12px rgba(234, 88, 12, 0.08);
-        }
-
-        .conv-avatar {
+        .contact-avatar {
             width: 44px;
             height: 44px;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 800;
-            font-size: 0.95rem;
+            font-size: 1.35rem;
             flex-shrink: 0;
-            color: #ffffff;
-            background: linear-gradient(135deg, #64748b, #475569);
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            position: relative;
         }
 
-        .conv-avatar.role-mahasiswa { background: linear-gradient(135deg, #0284c7, #0369a1); }
-        .conv-avatar.role-dosen { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
-        .conv-avatar.role-laboran { background: linear-gradient(135deg, #ea580c, #c2410c); }
+        .contact-channel-card.laboran .contact-avatar {
+            background: var(--laboran-bg);
+            border: 1px solid var(--laboran-border);
+        }
 
-        .conv-info {
+        .contact-channel-card.kaur .contact-avatar {
+            background: var(--kaur-bg);
+            border: 1px solid var(--kaur-border);
+        }
+
+        .contact-channel-card.admin_layanan .contact-avatar {
+            background: var(--admin-bg);
+            border: 1px solid var(--admin-border);
+        }
+
+        .online-dot {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #22c55e;
+            border: 2px solid #fff;
+        }
+
+        .contact-info {
             flex: 1;
             min-width: 0;
         }
 
-        .conv-header-line {
+        .contact-name {
+            font-size: 0.86rem;
+            font-weight: 800;
+            color: #0f172a;
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 3px;
-        }
-
-        .conv-name {
-            font-size: 0.88rem;
-            font-weight: 700;
-            color: #0f172a;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .conv-time {
-            font-size: 0.72rem;
-            font-weight: 600;
-            color: #94a3b8;
-            flex-shrink: 0;
-        }
-
-        .conv-subline {
-            display: flex;
-            align-items: center;
             gap: 6px;
-            margin-bottom: 4px;
         }
 
-        .role-pill {
-            font-size: 0.65rem;
-            font-weight: 700;
-            padding: 1px 7px;
-            border-radius: 999px;
-            text-transform: uppercase;
-        }
-
-        .role-pill.mahasiswa { background: #e0f2fe; color: #0369a1; }
-        .role-pill.dosen { background: #f3e8ff; color: #7e22ce; }
-
-        .status-pill {
-            font-size: 0.65rem;
-            font-weight: 700;
-            padding: 1px 7px;
-            border-radius: 999px;
-        }
-
-        .status-pill.open { background: #fef3c7; color: #b45309; }
-        .status-pill.resolved { background: #dcfce7; color: #15803d; }
-
-        .conv-preview {
-            font-size: 0.8rem;
+        .contact-desc {
+            font-size: 0.72rem;
             color: #64748b;
+            margin-top: 2px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            line-height: 1.3;
         }
 
-        .unread-badge {
-            background: #ef4444;
-            color: #ffffff;
-            font-size: 0.7rem;
+        .contact-unread-badge {
+            background: #ea580c;
+            color: #fff;
+            font-size: 0.68rem;
             font-weight: 800;
-            min-width: 18px;
-            height: 18px;
-            padding: 0 5px;
-            border-radius: 999px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-left: 6px;
+            padding: 1px 7px;
+            border-radius: 99px;
             flex-shrink: 0;
-            animation: bounce-badge 1s infinite alternate;
         }
 
-        @keyframes bounce-badge {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.1); }
-        }
-
-        /* Right Pane: Active Chat Area */
-        .chat-main {
+        /* Right Area: Main Active Direct Chat Room */
+        .chat-main-area {
+            background: #ffffff;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-lg);
             display: flex;
             flex-direction: column;
-            height: 100%;
-            min-height: 0;
-            background: #ffffff;
-            position: relative;
             overflow: hidden;
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
+            position: relative;
         }
 
-        /* Empty State */
-        .chat-empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            padding: 32px;
-            text-align: center;
-            color: #64748b;
-        }
-
-        .empty-illustration {
-            width: 120px;
-            height: 120px;
-            background: #fff7ed;
-            border-radius: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            color: #ea580c;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 25px rgba(234, 88, 12, 0.15);
-        }
-
-        .chat-empty-state h2 {
-            font-size: 1.3rem;
-            font-weight: 800;
-            color: #0f172a;
-            margin-bottom: 8px;
-        }
-
-        .chat-empty-state p {
-            max-width: 420px;
-            font-size: 0.9rem;
-            line-height: 1.5;
-        }
-
-        /* Active Chat Header */
+        /* Header Chat Area */
         .chat-header {
-            padding: 12px 20px;
-            background: #ffffff;
-            border-bottom: 1px solid #e2e8f0;
+            padding: 12px 18px;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
+            background: #ffffff;
             flex-shrink: 0;
             z-index: 10;
         }
@@ -481,7 +318,7 @@
         .chat-header-user {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
             min-width: 0;
             flex: 1;
         }
@@ -489,15 +326,21 @@
         .btn-mobile-back {
             display: none;
             background: #f1f5f9;
-            border: none;
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
+            border: 1px solid #e2e8f0;
             color: #0f172a;
-            font-size: 1rem;
+            font-size: 0.95rem;
             cursor: pointer;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.15s;
+        }
+
+        .btn-mobile-back:active {
+            background: #e2e8f0;
         }
 
         .header-avatar {
@@ -536,8 +379,32 @@
             min-width: 0;
         }
 
+        .role-pill {
+            font-size: 0.64rem;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 6px;
+            letter-spacing: 0.02em;
+            flex-shrink: 0;
+        }
+
+        .role-pill.laboran {
+            background: #ffedd5;
+            color: #ea580c;
+        }
+
+        .role-pill.kaur {
+            background: #e0e7ff;
+            color: #4f46e5;
+        }
+
+        .role-pill.admin_layanan {
+            background: #fae8ff;
+            color: #9333ea;
+        }
+
         .header-info p {
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             color: #64748b;
             margin-top: 2px;
             white-space: nowrap;
@@ -549,54 +416,29 @@
         .header-actions-wrap {
             display: flex;
             align-items: center;
-            gap: 10px;
-            flex-shrink: 0;
-        }
-
-        .btn-status-toggle {
-            display: inline-flex;
-            align-items: center;
             gap: 8px;
-            padding: 8px 16px;
-            border-radius: 10px;
-            font-size: 0.82rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: none;
-            white-space: nowrap;
             flex-shrink: 0;
         }
 
-        .btn-status-toggle .btn-text-short {
-            display: none;
+        .btn-header-refresh {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: #f8fafc;
+            color: #64748b;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            flex-shrink: 0;
         }
 
-        .btn-status-toggle .btn-text-full {
-            display: inline;
-            white-space: nowrap;
-        }
-
-        .btn-status-toggle.resolve-btn {
-            background: #f0fdf4;
-            color: #16a34a;
-            border: 1px solid #bbf7d0;
-        }
-
-        .btn-status-toggle.resolve-btn:hover {
-            background: #16a34a;
-            color: #ffffff;
-        }
-
-        .btn-status-toggle.reopen-btn {
+        .btn-header-refresh:hover {
             background: #fff7ed;
             color: #ea580c;
-            border: 1px solid #fed7aa;
-        }
-
-        .btn-status-toggle.reopen-btn:hover {
-            background: #ea580c;
-            color: #ffffff;
+            border-color: #fdba74;
         }
 
         /* Message Feed Area */
@@ -611,29 +453,42 @@
             gap: 12px;
         }
 
-        .date-divider {
-            text-align: center;
-            position: relative;
-            margin: 12px 0;
+        /* System Notice Pill */
+        .system-message-divider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 6px 0;
+            width: 100%;
+            animation: bubbleFadeIn 0.15s ease;
         }
 
-        .date-divider span {
-            background: #e2e8f0;
+        .system-message-divider span {
+            background: #f1f5f9;
             color: #64748b;
             font-size: 0.72rem;
-            font-weight: 700;
+            font-weight: 600;
             padding: 4px 14px;
             border-radius: 999px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+            max-width: 90%;
+            line-height: 1.4;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
         }
 
-        /* Message Bubbles */
+        /* Message Bubbles - Identical to Laboran Panel */
         .message-row {
             display: flex;
             align-items: flex-end;
             gap: 10px;
             max-width: 80%;
+            animation: bubbleFadeIn 0.15s ease;
+        }
+
+        @keyframes bubbleFadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .message-row.incoming {
@@ -660,10 +515,10 @@
         }
 
         .bubble-avatar.user-av { background: #0284c7; }
+        .bubble-avatar.dosen-av { background: #0284c7; }
         .bubble-avatar.laboran-av { background: #ea580c; }
         .bubble-avatar.kaur-av { background: #4f46e5; }
         .bubble-avatar.admin_layanan-av { background: #9333ea; }
-        .bubble-avatar.admin-av { background: #0f172a; }
 
         .message-bubble {
             padding: 12px 16px;
@@ -696,7 +551,7 @@
             display: block;
         }
 
-        .message-row.incoming .sender-tag { color: #0284c7; }
+        .message-row.incoming .sender-tag { color: #ea580c; }
         .message-row.outgoing .sender-tag { color: #fed7aa; }
 
         .message-meta {
@@ -712,7 +567,7 @@
         .message-row.incoming .message-meta { color: #94a3b8; }
         .message-row.outgoing .message-meta { color: #fed7aa; }
 
-        /* Input Bar */
+        /* Input Area - Identical to Laboran Panel */
         .chat-input-area {
             padding: 12px 18px;
             background: #ffffff;
@@ -920,128 +775,25 @@
             color: #94a3b8;
         }
 
-        /* Responsive Styles */
-        @media (max-width: 1024px) {
-            .chat-workspace {
-                grid-template-columns: 320px 1fr;
-            }
-        }
-
+        /* Fullscreen Mobile View & Responsive Layout */
         @media (max-width: 900px) {
             body {
                 padding: 0;
                 overflow: hidden;
             }
 
-            .page-wrapper-for-sidebar {
-                margin-left: 0 !important;
-                width: 100% !important;
-                padding: 56px 12px 12px 12px;
-                height: 100vh;
-                height: 100dvh;
-            }
-
-            .page-header {
-                flex-direction: row;
-                align-items: center;
-                justify-content: space-between;
-                gap: 8px;
-                margin-bottom: 8px;
-            }
-
-            .header-title-wrap h1 {
-                font-size: 1.05rem;
-                gap: 6px;
-            }
-
-            .header-title-wrap h1 .role-badge {
-                font-size: 0.62rem;
-                padding: 2px 7px;
-            }
-
-            .header-title-wrap p {
-                display: none; /* Hide verbose tagline on mobile */
-            }
-
-            .header-actions {
-                gap: 5px;
-            }
-
-            .live-status-pill {
-                padding: 4px 8px !important;
-                font-size: 0.65rem !important;
-            }
-
-            .btn-action {
-                padding: 5px 8px;
-                font-size: 0.72rem;
-                border-radius: 8px;
-            }
-
             .chat-workspace {
-                display: block;
-                height: calc(100% - 4px);
+                grid-template-columns: 1fr;
                 position: relative;
-                border-radius: 16px;
-                overflow: hidden;
+                gap: 0;
             }
 
-            .chat-sidebar {
-                width: 100%;
-                height: 100%;
-            }
-
-            .chat-workspace.mobile-active .chat-sidebar,
-            body.mobile-chat-open .chat-sidebar {
+            .chat-workspace.mobile-active .chat-sidebar {
                 display: none !important;
             }
 
-            .chat-workspace:not(.mobile-active) .chat-main {
+            .chat-workspace:not(.mobile-active) .chat-main-area {
                 display: none !important;
-            }
-
-            .chat-workspace.mobile-active .chat-main,
-            body.mobile-chat-open .chat-main {
-                display: flex !important;
-                position: relative !important;
-                transform: none !important;
-                width: 100% !important;
-                height: 100% !important;
-                max-height: 100% !important;
-                min-height: 0 !important;
-                flex: 1 1 0% !important;
-                border-radius: 0 !important;
-                border: none !important;
-                overflow: hidden !important;
-                box-shadow: none !important;
-                flex-direction: column !important;
-                background: #ffffff;
-            }
-
-            .conversation-item {
-                padding: 10px 12px;
-                margin-bottom: 5px;
-                gap: 10px;
-                border-radius: 12px;
-            }
-
-            .conv-avatar {
-                width: 38px;
-                height: 38px;
-                font-size: 0.85rem;
-                border-radius: 10px;
-            }
-
-            .conv-name {
-                font-size: 0.82rem;
-            }
-
-            .conv-time {
-                font-size: 0.68rem;
-            }
-
-            .conv-preview {
-                font-size: 0.75rem;
             }
 
             /* Fullscreen mobile active chat state */
@@ -1076,11 +828,7 @@
                 display: none !important;
             }
 
-            body.mobile-chat-open #curvedSidebarToggle,
-            body.mobile-chat-open .curved-sidebar-btn,
-            body.mobile-chat-open .floating-sidebar-toggle,
-            body.mobile-chat-open .curved-sidebar-nav,
-            body.mobile-chat-open .curved-sidebar-backdrop {
+            body.mobile-chat-open .floating-sidebar-toggle {
                 display: none !important;
             }
 
@@ -1111,7 +859,9 @@
                 gap: 0 !important;
             }
 
-            #activeChatWrap {
+            body.mobile-chat-open .chat-main-area {
+                border-radius: 0 !important;
+                border: none !important;
                 height: 100% !important;
                 max-height: 100% !important;
                 min-height: 0 !important;
@@ -1120,6 +870,7 @@
                 flex: 1 1 0% !important;
                 width: 100% !important;
                 overflow: hidden !important;
+                box-shadow: none !important;
             }
 
             body.mobile-chat-open .chat-messages {
@@ -1160,10 +911,6 @@
                 align-items: center;
                 justify-content: center;
                 border: 1px solid #e2e8f0;
-            }
-
-            .btn-mobile-back:active {
-                background: #e2e8f0;
             }
 
             .header-avatar {
@@ -1218,23 +965,6 @@
                 text-overflow: ellipsis;
                 min-width: 0;
                 line-height: 1.2;
-            }
-
-            .btn-status-toggle {
-                padding: 6px 10px;
-                font-size: 0.74rem;
-                gap: 5px;
-                white-space: nowrap;
-                border-radius: 8px;
-                flex-shrink: 0;
-            }
-
-            .btn-status-toggle .btn-text-full {
-                display: none;
-            }
-
-            .btn-status-toggle .btn-text-short {
-                display: inline;
             }
 
             /* Message Feed Area on Mobile */
@@ -1297,111 +1027,117 @@
 </head>
 <body>
 
-    <!-- Sidebar Integration -->
-    <?php 
-    if (isset($targetRole) && $targetRole === 'admin_layanan') {
-        $this->load->view('admin_layanan/sidebar');
-    } else {
-        $this->load->view('components/curved_sidebar');
-    }
-    ?>
+    <!-- Load Curved Animated Sidebar Component -->
+    <?php $this->load->view('components/curved_sidebar'); ?>
 
     <div class="page-wrapper-for-sidebar">
         <div class="main-container">
-        <!-- Top Header -->
-        <div class="page-header">
-            <div class="header-title-wrap">
-                <h1>
-                    <span><?= htmlspecialchars($channelTitle ?? 'Bantuan & Live Chat Lab') ?></span>
-                    <span class="role-badge"><?= htmlspecialchars($panelRole ?? 'Panel Laboran') ?></span>
-                </h1>
-                <p><?= htmlspecialchars($channelDesc ?? 'Pusat help desk interaktif untuk menjawab pertanyaan, kendala praktikum, dan izin lab secara langsung.') ?></p>
-            </div>
-            <div class="header-actions">
-                <span class="live-status-pill" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 9999px; background: #ecfdf5; color: #047857; font-size: 0.75rem; font-weight: 700; border: 1px solid #a7f3d0;">
-                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
-                    <span>Live Help Desk</span>
-                </span>
-                <button type="button" class="btn-action" onclick="fetchConversations()" title="Segarkan data chat">
-                    <i class="fa-solid fa-arrows-rotate"></i>
-                    <span>Segarkan</span>
-                </button>
-            </div>
-        </div>
 
-        <!-- Chat Workspace Area -->
-        <div class="chat-workspace" id="chatWorkspace">
-            <!-- Left Sidebar Pane -->
-            <div class="chat-sidebar">
-                <div class="sidebar-search-box">
-                    <div class="search-input-wrapper">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="searchInput" class="search-input" placeholder="Cari nama, topik, atau pesan..." oninput="handleSearch(this.value)">
-                    </div>
-                </div>
-
-                <!--
-                <div class="sidebar-tabs">
-                    <button type="button" class="filter-tab active" data-status="all" onclick="setFilterStatus('all', this)">Semua</button>
-                    <button type="button" class="filter-tab" data-status="open" onclick="setFilterStatus('open', this)">Menunggu</button>
-                    <button type="button" class="filter-tab" data-status="resolved" onclick="setFilterStatus('resolved', this)">Selesai</button>
-                </div>
-                -->
-
-                <div class="conversation-list" id="conversationList">
-                    <!-- Dynamic conversation cards loaded via AJAX -->
-                    <div style="padding: 24px; text-align: center; color: #94a3b8;">
-                        <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
-                        <p style="margin-top: 8px; font-size: 0.84rem;">Memuat daftar percakapan...</p>
-                    </div>
+            <!-- Top Page Header -->
+            <div class="page-header">
+                <div class="header-title-wrap">
+                    <h1>
+                        💬 Bantuan & Live Chat
+                        <span class="badge-service-hub">
+                            <i class="fa-solid fa-bolt"></i> Obrolan Langsung Petugas Layanan
+                        </span>
+                    </h1>
                 </div>
             </div>
 
-            <!-- Right Main Chat Pane -->
-            <div class="chat-main" id="chatMain">
-                <!-- Empty Placeholder State -->
-                <div class="chat-empty-state" id="emptyChatState">
-                    <div class="empty-illustration">
-                        <i class="fa-solid fa-headset"></i>
+            <!-- Direct Chat Workspace -->
+            <div class="chat-workspace" id="chatWorkspace">
+                
+                <!-- Left Sidebar: 3 Direct Service Channels -->
+                <div class="chat-sidebar">
+                    <div class="chat-sidebar-header">
+                        <h3><i class="fa-solid fa-comments text-orange-600"></i> Saluran Bantuan Langsung</h3>
+                        <p>Pilih petugas tujuan dan langsung kirimkan pesan Anda.</p>
                     </div>
-                    <h2>Pilih Percakapan Help Desk</h2>
-                    <p>Klik salah satu percakapan di sebelah kiri untuk membaca pesan dan memberikan tanggapan cepat kepada mahasiswa atau dosen.</p>
+
+                    <!-- Channels List -->
+                    <div class="contacts-list">
+                        <!-- 1. Laboran -->
+                        <div class="contact-channel-card laboran active" id="channel_laboran" onclick="switchChannel('laboran')">
+                            <div class="contact-avatar">
+                                🧪
+                                <div class="online-dot"></div>
+                            </div>
+                            <div class="contact-info">
+                                <div class="contact-name">
+                                    <span>Petugas Laboran</span>
+                                    <span class="contact-unread-badge" id="unread_laboran" style="display: none;">0</span>
+                                </div>
+                                <div class="contact-desc">Fasilitas Lab, Alat, Jaringan & Ruang Uji</div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Ka. Ur -->
+                        <div class="contact-channel-card kaur" id="channel_kaur" onclick="switchChannel('kaur')">
+                            <div class="contact-avatar">
+                                🏛️
+                                <div class="online-dot"></div>
+                            </div>
+                            <div class="contact-info">
+                                <div class="contact-name">
+                                    <span>Ka. Ur Laboratorium</span>
+                                    <span class="contact-unread-badge" id="unread_kaur" style="display: none;">0</span>
+                                </div>
+                                <div class="contact-desc">Kebijakan Lab, Validasi & Izin Khusus</div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Admin Layanan -->
+                        <div class="contact-channel-card admin_layanan" id="channel_admin_layanan" onclick="switchChannel('admin_layanan')">
+                            <div class="contact-avatar">
+                                📋
+                                <div class="online-dot"></div>
+                            </div>
+                            <div class="contact-info">
+                                <div class="contact-name">
+                                    <span>Admin Layanan (LAA)</span>
+                                    <span class="contact-unread-badge" id="unread_admin_layanan" style="display: none;">0</span>
+                                </div>
+                                <div class="contact-desc">Berkas TA, SK Pembimbing & Yudisium</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Active Chat Content (Hidden initially) -->
-                <div id="activeChatWrap" style="display: none; height: 100%; flex-direction: column; min-height: 0; overflow: hidden;">
-                    <!-- Active Chat Header -->
+                <!-- Right Main Area: Active Direct Chat Room -->
+                <div class="chat-main-area">
+                    
+                    <!-- Top Chat Header -->
                     <div class="chat-header">
                         <div class="chat-header-user">
                             <button type="button" class="btn-mobile-back" onclick="closeMobileChat()">
                                 <i class="fa-solid fa-arrow-left"></i>
                             </button>
-                            <div class="header-avatar" id="headerAvatar">RF</div>
+                            <div class="header-avatar" id="headerAvatar">LB</div>
                             <div class="header-info">
-                                <h2 id="headerUserName">
-                                    <span>Rian Firmansyah</span>
-                                    <span class="role-pill mahasiswa" id="headerUserRole">Mahasiswa</span>
+                                <h2>
+                                    <span id="activeTargetName">Petugas Laboran</span>
+                                    <span class="role-pill laboran" id="activeTargetRolePill">LABORAN</span>
                                 </h2>
-                                <p id="headerUserSub">1301213001 &bull; Topik: Peminjaman Ruangan Lab</p>
+                                <p id="activeTargetSub">Fasilitas Lab, Ruang & Alat Pengujian</p>
                             </div>
                         </div>
-                        <!-- 
+
                         <div class="header-actions-wrap">
-                            <button type="button" id="btnToggleStatus" class="btn-status-toggle resolve-btn" onclick="toggleActiveStatus()">
-                                <i class="fa-solid fa-check"></i>
-                                <span class="btn-text-full">Tandai Selesai</span>
-                                <span class="btn-text-short">Selesai</span>
+                            <button type="button" class="btn-header-refresh" onclick="refreshActiveChannel(true)" title="Segarkan Pesan">
+                                <i class="fa-solid fa-rotate"></i>
                             </button>
                         </div>
-                        -->
                     </div>
 
                     <!-- Message Feed -->
-                    <div class="chat-messages" id="chatMessages">
-                        <!-- Messages dynamically injected here -->
+                    <div class="chat-messages" id="messagesContainer">
+                        <div style="padding: 40px 10px; text-align: center; color: #94a3b8; font-size: 0.8rem;">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i> Memuat percakapan...
+                        </div>
                     </div>
 
-                    <!-- Input Area -->
+                    <!-- Bottom Direct Input Area -->
                     <div class="chat-input-area">
                         <div class="emoji-picker-container">
                             <button type="button" class="btn-emoji-trigger" id="btnEmojiToggle" onclick="toggleEmojiPicker(event)" title="Pilih Emoji">
@@ -1422,222 +1158,246 @@
                                 </div>
                             </div>
                         </div>
-                        <textarea id="chatInput" class="chat-textarea" placeholder="Tulis balasan pesan..." rows="1" onkeydown="handleInputKeydown(event)"></textarea>
-                        <button type="button" class="btn-send" onclick="sendMessage()" title="Kirim Balasan">
+                        <textarea id="composerInput" class="chat-textarea" placeholder="Tulis balasan pesan..." rows="1" onkeydown="handleComposerKey(event)"></textarea>
+                        <button type="button" class="btn-send" id="btnSendChat" onclick="sendDirectMessage()" title="Kirim Balasan">
                             <i class="fa-solid fa-paper-plane"></i>
                         </button>
                     </div>
+
                 </div>
+
             </div>
+
         </div>
     </div>
-</div>
 
-<!-- JavaScript Chat Engine -->
+    <!-- Scripts -->
     <script>
-        let currentStatusFilter = 'all';
-        let searchQuery = '';
+        let currentTargetRole = 'laboran';
         let activeConversationId = null;
-        let activeConversationStatus = 'open';
         let pollingTimer = null;
-        let isSending = false;
-
-        let lastConversationsJson = '';
         let renderedConversationId = null;
         let renderedMessageIds = new Set();
 
-        $(document).ready(function() {
-            fetchConversations();
+        const TARGET_CONFIG = {
+            'laboran': {
+                name: 'Petugas Laboran',
+                roleBadge: 'LABORAN',
+                roleBadgeClass: 'laboran',
+                sub: 'Fasilitas Lab, Ruang & Alat Pengujian',
+                emoji: '🧪',
+                avatarInit: 'LB',
+                avatarBg: 'linear-gradient(135deg, #ea580c, #f97316)',
+                avatarClass: 'laboran-av',
+                tagColor: '#ea580c',
+                placeholder: 'Tulis balasan pesan...'
+            },
+            'kaur': {
+                name: 'Ka. Ur Laboratorium',
+                roleBadge: 'KA. UR',
+                roleBadgeClass: 'kaur',
+                sub: 'Kebijakan Lab, Validasi & Izin Khusus',
+                emoji: '🏛️',
+                avatarInit: 'KU',
+                avatarBg: 'linear-gradient(135deg, #4f46e5, #6366f1)',
+                avatarClass: 'kaur-av',
+                tagColor: '#4f46e5',
+                placeholder: 'Tulis balasan pesan...'
+            },
+            'admin_layanan': {
+                name: 'Admin Layanan (LAA)',
+                roleBadge: 'ADMIN LAYANAN',
+                roleBadgeClass: 'admin_layanan',
+                sub: 'Berkas TA, SK Pembimbing & Yudisium',
+                emoji: '📋',
+                avatarInit: 'AL',
+                avatarBg: 'linear-gradient(135deg, #9333ea, #a855f7)',
+                avatarClass: 'admin_layanan-av',
+                tagColor: '#9333ea',
+                placeholder: 'Tulis balasan pesan...'
+            }
+        };
 
-            // Auto polling setiap 3.5 detik
+        $(document).ready(function() {
+            // Load initial channel
+            switchChannel('laboran', false);
+
+            // Real-time polling every 3.5 seconds
             pollingTimer = setInterval(function() {
-                pollUpdates();
+                refreshActiveChannel(false);
             }, 3500);
 
             // Auto resize textarea
-            const textarea = document.getElementById('chatInput');
-            textarea.addEventListener('input', function() {
-                this.style.height = '42px';
-                const newHeight = Math.min(Math.max(this.scrollHeight, 42), 120);
-                this.style.height = newHeight + 'px';
-                this.style.overflowY = this.scrollHeight > 120 ? 'auto' : 'hidden';
-            });
+            const textarea = document.getElementById('composerInput');
+            if (textarea) {
+                textarea.addEventListener('input', function() {
+                    this.style.height = '42px';
+                    const newHeight = Math.min(Math.max(this.scrollHeight, 42), 120);
+                    this.style.height = newHeight + 'px';
+                    this.style.overflowY = this.scrollHeight > 120 ? 'auto' : 'hidden';
+                });
+            }
 
             // Initialize emoji picker
             initEmojiPicker();
         });
 
-        function setFilterStatus(status, btn) {
-            $('.filter-tab').removeClass('active');
-            $(btn).addClass('active');
-            currentStatusFilter = status;
-            lastConversationsJson = '';
-            fetchConversations();
+        function isFeedAtBottom() {
+            const feed = document.getElementById('messagesContainer');
+            if (!feed) return true;
+            return (feed.scrollHeight - feed.scrollTop - feed.clientHeight) < 80;
         }
 
-        let searchDebounce = null;
-        function handleSearch(val) {
-            clearTimeout(searchDebounce);
-            searchDebounce = setTimeout(() => {
-                searchQuery = val.trim();
-                lastConversationsJson = '';
-                fetchConversations();
-            }, 300);
-        }
-
-        function fetchConversations() {
-            $.ajax({
-                url: '<?= site_url("laboran/help/conversations") ?>',
-                type: 'GET',
-                data: {
-                    status: currentStatusFilter,
-                    q: searchQuery,
-                    target_role: '<?= $targetRole ?? "laboran" ?>'
-                },
-                dataType: 'json',
-                success: function(res) {
-                    if (res.status === 'success') {
-                        renderConversationList(res.data);
-                    }
-                }
-            });
-        }
-
-        function renderConversationList(conversations) {
-            const newJson = JSON.stringify(conversations);
-            if (newJson === lastConversationsJson) {
-                // Periksa apakah item aktif masih memiliki class active
-                if (activeConversationId) {
-                    $(`.conversation-item`).removeClass('active');
-                    $(`.conversation-item[onclick="selectConversation(${activeConversationId})"]`).addClass('active');
-                }
-                return;
-            }
-            lastConversationsJson = newJson;
-
-            const list = $('#conversationList');
-            list.empty();
-
-            if (!conversations || conversations.length === 0) {
-                list.html(`
-                    <div style="padding: 36px 16px; text-align: center; color: #94a3b8;">
-                        <i class="fa-regular fa-comment-dots fa-3x" style="color: #cbd5e1; margin-bottom: 10px;"></i>
-                        <p style="font-size: 0.88rem; font-weight: 600;">Tidak ada percakapan ditemukan</p>
-                    </div>
-                `);
-                return;
-            }
-
-            conversations.forEach(c => {
-                const isActive = (c.id === activeConversationId) ? 'active' : '';
-                const initials = getInitials(c.user_nama);
-                const roleClass = c.user_role.toLowerCase() === 'dosen' ? 'role-dosen' : 'role-mahasiswa';
-                const rolePillClass = c.user_role.toLowerCase() === 'dosen' ? 'dosen' : 'mahasiswa';
-                /*
-                const statusPill = (c.status === 'resolved') 
-                    ? `<span class="status-pill resolved"><i class="fa-solid fa-check"></i> Selesai</span>` 
-                    : `<span class="status-pill open"><i class="fa-solid fa-clock"></i> Menunggu</span>`;
-                */
-                const statusPill = '';
-                
-                const unread = (c.unread_laboran > 0) ? `<span class="unread-badge">${c.unread_laboran}</span>` : '';
-
-                const html = `
-                    <div class="conversation-item ${isActive}" onclick="selectConversation(${c.id})">
-                        <div class="conv-avatar ${roleClass}">${initials}</div>
-                        <div class="conv-info">
-                            <div class="conv-header-line">
-                                <div class="conv-name">${escapeHtml(c.user_nama)}</div>
-                                <div class="conv-time">${c.last_message_time}</div>
-                            </div>
-                            <div class="conv-subline">
-                                <span class="role-pill ${rolePillClass}">${escapeHtml(c.user_role)}</span>
-                                ${statusPill}
-                                ${unread}
-                            </div>
-                            <div class="conv-preview">${escapeHtml(c.last_message || c.topik)}</div>
-                        </div>
-                    </div>
-                `;
-                list.append(html);
-            });
-        }
-
-        function selectConversation(id) {
-            if (activeConversationId !== id) {
-                activeConversationId = id;
+        // Switch active channel
+        function switchChannel(targetRole, showLoader = true) {
+            if (currentTargetRole !== targetRole) {
                 renderedConversationId = null;
                 renderedMessageIds.clear();
             }
-            $('#chatWorkspace').addClass('mobile-active');
+
+            currentTargetRole = targetRole;
+
+            $('.contact-channel-card').removeClass('active');
+            $('#channel_' + targetRole).addClass('active');
+
+            const conf = TARGET_CONFIG[targetRole] || TARGET_CONFIG['laboran'];
+            $('#headerAvatar').text(conf.avatarInit).css('background', conf.avatarBg);
+            $('#activeTargetName').text(conf.name);
+            
+            const badgeEl = $('#activeTargetRolePill');
+            badgeEl.text(conf.roleBadge).attr('class', 'role-pill ' + conf.roleBadgeClass);
+
+            $('#activeTargetSub').text(conf.sub);
+            $('#composerInput').attr('placeholder', conf.placeholder);
+
+            // On mobile, show fullscreen chat area
             if (window.innerWidth <= 900) {
                 $('body').addClass('mobile-chat-open');
+                $('#chatWorkspace').addClass('mobile-active');
             }
-            $('#emptyChatState').hide();
-            $('#activeChatWrap').css('display', 'flex');
 
-            // Update active style in list
-            $('.conversation-item').removeClass('active');
-            $(`.conversation-item[onclick="selectConversation(${id})"]`).addClass('active');
-
-            loadMessages(id, true);
+            loadChannelMessages(targetRole, showLoader);
         }
 
-        function loadMessages(id, scrollToBottom = true) {
+        // Fetch messages for active channel
+        function loadChannelMessages(targetRole, showLoader = true) {
+            if (showLoader && renderedConversationId === null) {
+                $('#messagesContainer').html(`
+                    <div style="padding: 40px 10px; text-align: center; color: #94a3b8; font-size: 0.8rem;">
+                        <i class="fa-solid fa-circle-notch fa-spin"></i> Memuat percakapan...
+                    </div>
+                `);
+            }
+
             $.ajax({
-                url: '<?= site_url("laboran/help/messages") ?>/' + id,
+                url: '<?= site_url("dosen/help/channel") ?>',
                 type: 'GET',
+                data: { target: targetRole },
                 dataType: 'json',
                 success: function(res) {
-                    if (res.status === 'success') {
-                        renderActiveHeader(res.conversation);
-                        renderMessages(res.messages, scrollToBottom);
+                    if (res && res.status === 'success') {
+                        activeConversationId = res.conversation.id;
+                        renderMessages(res.messages, showLoader);
+                        updateUnreadBadges(res.unreads);
+                    } else {
+                        renderMessages([], showLoader);
                     }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error fetching channel messages:', error, xhr.responseText);
+                    $('#messagesContainer').html(`
+                        <div style="padding: 40px 10px; text-align: center; color: #ef4444; font-size: 0.82rem;">
+                            <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.5rem; margin-bottom: 8px;"></i>
+                            <div style="font-weight: 700;">Gagal memuat percakapan</div>
+                            <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">Koneksi terputus atau server sedang sibuk.</div>
+                            <button type="button" onclick="loadChannelMessages('${targetRole}', true)" style="margin-top: 10px; padding: 4px 14px; background: #ea580c; color: #fff; border: none; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Coba Lagi</button>
+                        </div>
+                    `);
                 }
             });
         }
 
-        function renderActiveHeader(conv) {
-            activeConversationStatus = conv.status;
-            $('#headerAvatar').text(getInitials(conv.user_nama));
-            $('#headerUserName span:first').text(conv.user_nama);
-            
-            const roleEl = $('#headerUserRole');
-            roleEl.text(conv.user_role);
-            roleEl.attr('class', 'role-pill ' + (conv.user_role.toLowerCase() === 'dosen' ? 'dosen' : 'mahasiswa'));
+        function refreshActiveChannel(scrollToBottom = false) {
+            if (!currentTargetRole) return;
+            $.ajax({
+                url: '<?= site_url("dosen/help/channel") ?>',
+                type: 'GET',
+                data: { target: currentTargetRole },
+                dataType: 'json',
+                success: function(res) {
+                    if (res && res.status === 'success') {
+                        activeConversationId = res.conversation.id;
+                        renderMessages(res.messages, scrollToBottom);
+                        updateUnreadBadges(res.unreads);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.warn('Silent refresh error:', error);
+                }
+            });
+        }
 
-            $('#headerUserSub').html(`${conv.user_nim_nip} &bull; <strong>Topik:</strong> ${escapeHtml(conv.topik)}`);
+        function updateUnreadBadges(unreads) {
+            if (!unreads) return;
+            ['laboran', 'kaur', 'admin_layanan'].forEach(k => {
+                const count = unreads[k] || 0;
+                const el = $('#unread_' + k);
+                if (count > 0 && k !== currentTargetRole) {
+                    el.text(count).show();
+                } else {
+                    el.hide();
+                }
+            });
+        }
 
-            const btn = $('#btnToggleStatus');
-            if (conv.status === 'resolved') {
-                btn.attr('class', 'btn-status-toggle reopen-btn')
-                   .html('<i class="fa-solid fa-rotate-left"></i><span class="btn-text-full">Buka Kembali Tiket</span><span class="btn-text-short">Buka</span>');
-            } else {
-                btn.attr('class', 'btn-status-toggle resolve-btn')
-                   .html('<i class="fa-solid fa-check"></i><span class="btn-text-full">Tandai Selesai</span><span class="btn-text-short">Selesai</span>');
-            }
+        function escapeHtml(text) {
+            if (!text) return '';
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        function getInitials(name) {
+            if (!name) return 'DS';
+            const parts = name.trim().split(/\s+/);
+            if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+            return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        }
+
+        function isFeedAtBottom() {
+            const feed = document.getElementById('messagesContainer');
+            if (!feed) return true;
+            return (feed.scrollHeight - feed.scrollTop - feed.clientHeight) < 80;
         }
 
         function renderMessages(messages, scrollToBottom = false) {
-            const feed = $('#chatMessages');
+            const msgBox = $('#messagesContainer');
+            const conf = TARGET_CONFIG[currentTargetRole] || TARGET_CONFIG['laboran'];
             const isDifferentConv = (renderedConversationId !== activeConversationId);
 
             if (isDifferentConv) {
                 renderedConversationId = activeConversationId;
                 renderedMessageIds.clear();
-                feed.empty();
+                msgBox.empty();
             }
 
             if (!messages || messages.length === 0) {
                 if (isDifferentConv) {
-                    feed.html(`
-                        <div style="text-align: center; color: #94a3b8; padding: 40px;">
-                            <i class="fa-solid fa-comments fa-2x" style="color: #cbd5e1; margin-bottom: 8px;"></i>
-                            <p style="font-size: 0.84rem;">Belum ada pesan dalam sesi bantuan ini.</p>
+                    msgBox.html(`
+                        <div style="padding: 50px 14px; text-align: center; color: #94a3b8;">
+                            <div style="font-size: 2.5rem; margin-bottom: 8px;">${conf.emoji}</div>
+                            <div style="font-size: 0.9rem; font-weight: 800; color: #334155;">Mulai Chat Langsung dengan ${conf.name}</div>
+                            <div style="font-size: 0.76rem; color: #64748b; margin-top: 4px; max-width: 320px; margin-left: auto; margin-right: auto;">
+                                Ketik pertanyaan atau kebutuhan bantuan Anda pada kotak pesan di bawah. Petugas akan langsung merespons.
+                            </div>
                         </div>
                     `);
                 }
                 return;
+            }
+
+            // Remove empty placeholder if any
+            if (msgBox.find('> div:not(.message-row)').length > 0) {
+                msgBox.empty();
             }
 
             const wasAtBottom = isFeedAtBottom();
@@ -1645,42 +1405,24 @@
 
             messages.forEach(m => {
                 if (renderedMessageIds.has(m.id)) {
-                    return; // Already rendered in DOM, do not touch or re-render
+                    return; // Already rendered in DOM, skip to prevent flickering
                 }
 
                 hasNew = true;
                 renderedMessageIds.add(m.id);
 
-                const isOutgoing = (typeof m.is_me !== 'undefined') 
-                    ? Boolean(m.is_me) 
-                    : ['laboran', 'kaur', 'admin_layanan', 'admin', 'staff'].includes(String(m.sender_role).toLowerCase());
-
-                const rowClass = isOutgoing ? 'outgoing' : 'incoming';
-                let avatarClass = 'user-av';
-                let avatarInit = getInitials(m.sender_name);
-
-                const roleLower = String(m.sender_role || '').toLowerCase();
-                if (roleLower === 'laboran') {
-                    avatarClass = 'laboran-av';
-                    avatarInit = 'LB';
-                } else if (roleLower === 'kaur') {
-                    avatarClass = 'kaur-av';
-                    avatarInit = 'KU';
-                } else if (roleLower === 'admin_layanan') {
-                    avatarClass = 'admin_layanan-av';
-                    avatarInit = 'AL';
-                } else if (roleLower === 'admin') {
-                    avatarClass = 'admin-av';
-                    avatarInit = 'AD';
-                }
-
-                const checkMark = isOutgoing ? '<i class="fa-solid fa-check-double text-orange-200" style="font-size: 0.65rem;"></i>' : '';
+                const isMe = m.is_me;
+                const rowClass = isMe ? 'outgoing' : 'incoming';
+                const avatarClass = isMe ? 'dosen-av' : conf.avatarClass;
+                const avatarInit = isMe ? 'DS' : conf.avatarInit;
+                const checkMark = isMe ? '<i class="fa-solid fa-check-double text-orange-200" style="font-size: 0.65rem;"></i>' : '';
+                const senderTag = isMe ? 'Anda (Dosen)' : (m.sender_name || conf.name);
 
                 const html = `
                     <div class="message-row ${rowClass}" data-msg-id="${m.id}">
                         <div class="bubble-avatar ${avatarClass}">${avatarInit}</div>
                         <div class="message-bubble">
-                            <span class="sender-tag">${escapeHtml(m.sender_name)}</span>
+                            <span class="sender-tag">${escapeHtml(senderTag)}</span>
                             <div>${m.message}</div>
                             <div class="message-meta">
                                 <span>${m.time}</span>
@@ -1689,39 +1431,48 @@
                         </div>
                     </div>
                 `;
-                feed.append(html);
+                msgBox.append(html);
             });
 
             if (hasNew && (scrollToBottom || wasAtBottom || isDifferentConv)) {
-                feed.scrollTop(feed[0].scrollHeight);
+                msgBox.scrollTop(msgBox[0].scrollHeight);
             }
         }
 
-        function isFeedAtBottom() {
-            const feed = document.getElementById('chatMessages');
-            if (!feed) return true;
-            return (feed.scrollHeight - feed.scrollTop - feed.clientHeight) < 80;
-        }
-
-        function handleInputKeydown(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-        }
-
-        function sendMessage() {
-            if (!activeConversationId || isSending) return;
-
-            const input = $('#chatInput');
+        // Send Direct Message
+        function sendDirectMessage() {
+            const input = $('#composerInput');
             const message = input.val().trim();
+
             if (!message) return;
 
-            isSending = true;
-            input.prop('disabled', true);
+            if (!activeConversationId) {
+                // If no active conv id yet, create conversation directly
+                $.ajax({
+                    url: '<?= site_url("dosen/help/create") ?>',
+                    type: 'POST',
+                    data: {
+                        target_role: currentTargetRole,
+                        topik: TARGET_CONFIG[currentTargetRole].name,
+                        message: message
+                    },
+                    dataType: 'json',
+                    success: function(res) {
+                        input.val('');
+                        if (res.status === 'success') {
+                            refreshActiveChannel(true);
+                        }
+                    }
+                });
+                return;
+            }
+
+            input.val('');
+            const textarea = document.getElementById('composerInput');
+            if (textarea) textarea.style.height = '42px';
 
             $.ajax({
-                url: '<?= site_url("laboran/help/send") ?>',
+                url: '<?= site_url("dosen/help/send") ?>',
                 type: 'POST',
                 data: {
                     conversation_id: activeConversationId,
@@ -1729,124 +1480,30 @@
                 },
                 dataType: 'json',
                 success: function(res) {
-                    isSending = false;
-                    input.prop('disabled', false).val('');
-                    input.css({ 'height': '42px', 'overflow-y': 'hidden' });
-                    input.focus();
-
                     if (res.status === 'success') {
-                        loadMessages(activeConversationId, true);
-                        fetchConversations();
+                        refreshActiveChannel(true);
                     } else {
                         Swal.fire({
                             icon: 'error',
-                            title: 'Gagal Mengirim',
-                            text: res.message || 'Terjadi kesalahan saat mengirim pesan.'
+                            title: 'Gagal',
+                            text: res.message || 'Terjadi kesalahan.',
+                            confirmButtonColor: '#ea580c'
                         });
                     }
-                },
-                error: function() {
-                    isSending = false;
-                    input.prop('disabled', false);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Koneksi Terputus',
-                        text: 'Gagal terhubung ke server.'
-                    });
                 }
             });
         }
 
-        function toggleActiveStatus() {
-            if (!activeConversationId) return;
-
-            const targetStatus = (activeConversationStatus === 'resolved') ? 'open' : 'resolved';
-            const actionText = (targetStatus === 'resolved') ? 'Tandai Selesai' : 'Buka Kembali';
-
-            Swal.fire({
-                title: `${actionText}?`,
-                text: (targetStatus === 'resolved') 
-                    ? 'Percakapan akan ditandai terselesaikan dan notifikasi penyelesaian akan dikirimkan.'
-                    : 'Percakapan akan dibuka kembali untuk tindak lanjut bantuan.',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#ea580c',
-                cancelButtonColor: '#94a3b8',
-                confirmButtonText: `Ya, ${actionText}`,
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: '<?= site_url("laboran/help/toggle-status") ?>',
-                        type: 'POST',
-                        data: {
-                            conversation_id: activeConversationId,
-                            status: targetStatus
-                        },
-                        dataType: 'json',
-                        success: function(res) {
-                            if (res.status === 'success') {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Status Diperbarui',
-                                    text: res.message,
-                                    timer: 1500,
-                                    showConfirmButton: false
-                                });
-                                loadMessages(activeConversationId, true);
-                                fetchConversations();
-                            }
-                        }
-                    });
-                }
-            });
-        }
-
-        function createSampleChat() {
-            $.ajax({
-                url: '<?= site_url("laboran/help/sample") ?>',
-                type: 'GET',
-                dataType: 'json',
-                success: function(res) {
-                    if (res.status === 'success') {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Simulasi Berhasil',
-                            text: 'Pesan chat simulasi baru dari pengguna telah masuk.',
-                            timer: 1800,
-                            showConfirmButton: false
-                        });
-                        fetchConversations();
-                        if (res.conversation_id) {
-                            selectConversation(res.conversation_id);
-                        }
-                    }
-                }
-            });
-        }
-
-        function closeMobileChat() {
-            $('#chatWorkspace').removeClass('mobile-active');
-            $('body').removeClass('mobile-chat-open');
-        }
-
-        function pollUpdates() {
-            fetchConversations();
-            if (activeConversationId) {
-                loadMessages(activeConversationId, false);
+        function handleComposerKey(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendDirectMessage();
             }
         }
 
-        function getInitials(name) {
-            if (!name) return '??';
-            const parts = name.trim().split(' ');
-            if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
-            return (parts[0][0] + parts[1][0]).toUpperCase();
-        }
-
-        function escapeHtml(text) {
-            if (!text) return '';
-            return $('<div>').text(text).html();
+        function closeMobileChat() {
+            $('body').removeClass('mobile-chat-open');
+            $('#chatWorkspace').removeClass('mobile-active');
         }
 
         // --- EMOJI PICKER ENGINE ---
@@ -1976,7 +1633,7 @@
         }
 
         function insertEmoji(emoji) {
-            const textarea = document.getElementById('chatInput');
+            const textarea = document.getElementById('composerInput') || document.getElementById('chatInput');
             if (!textarea) return;
             
             const start = textarea.selectionStart || 0;
@@ -1994,7 +1651,6 @@
             textarea.style.overflowY = textarea.scrollHeight > 120 ? 'auto' : 'hidden';
         }
     </script>
-
     <!-- Global Custom Circle Cursor -->
     <?php $this->load->view('partials/custom_cursor'); ?>
 </body>

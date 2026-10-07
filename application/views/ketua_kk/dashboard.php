@@ -137,14 +137,10 @@
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased pb-16">
-
+    <?php $this->load->view('components/curved_sidebar'); ?>
     <!-- Header Navbar Partial -->
-    <?php $this->load->view('partials/app_navbar', [
-        'user_role_label'   => 'Ketua Kelompok Keahlian (KK)',
-        'user_display_name' => 'Ketua KK Fakultas',
-        'user_display_sub'  => 'Approval Bidang Keilmuan & Bimbingan'
-    ]); ?>
 
+    <div class="page-wrapper-for-sidebar">
     <!-- Sub Navigation Page Title Bar -->
     <div class="glass-header px-6 py-4 mb-8">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
@@ -1108,6 +1104,8 @@
             }, 5000);
         }
     </script>
-
+    </div>
+    <!-- Global Custom Circle Cursor -->
+    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>

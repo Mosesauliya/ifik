@@ -177,7 +177,7 @@
         <?php
             $current_stage = $detail['current_stage'] ?? 'Dosen Wali';
             $status_wali = $detail['status_approval_wali'] ?? 'Pending';
-            $isLocked = in_array($current_stage, array('Koordinator TA', 'Ketua KK', 'Selesai Approval'));
+            $isLocked = ($status_wali === 'Approved' || in_array($current_stage, array('Admin Layanan', 'Koordinator TA', 'Ketua KK', 'Selesai Approval', 'Selesai')));
         ?>
 
         <?php if($isLocked): ?>
@@ -213,8 +213,8 @@
                             <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
                                 <?= htmlspecialchars(($detail['nama_depan'] ?? 'Mahasiswa') . ' ' . ($detail['nama_belakang'] ?? '')); ?>
                             </h1>
-                            <button type="button" onclick="copyNIM('<?= $detail['nim']; ?>')" class="px-2.5 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-[11px] font-mono font-bold border border-slate-200 flex items-center gap-1.5 transition-colors" title="Klik untuk salin NIM">
-                                <span><?= htmlspecialchars($detail['nim']); ?></span>
+                            <button type="button" onclick="copyNIM('<?= $detail['nim'] ?? ($nim ?? ''); ?>')" class="px-2.5 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-[11px] font-mono font-bold border border-slate-200 flex items-center gap-1.5 transition-colors" title="Klik untuk salin NIM">
+                                <span><?= htmlspecialchars($detail['nim'] ?? ($nim ?? '')); ?></span>
                                 <i class="bi bi-clipboard text-slate-400 text-[10px]"></i>
                             </button>
                         </div>
@@ -289,11 +289,11 @@
                             <?= htmlspecialchars($detail['nama_kk'] ?? $detail['kode_kk'] ?? 'Visual Communication & Multimedia'); ?>
                         </span>
                         <div class="mt-1.5 text-[11px] text-slate-500 font-medium">
-                            Skema TA: <span class="font-bold text-orange-600"><?= htmlspecialchars($detail['jenis_ta'] ?? 'Reguler'); ?></span>
+                            Skema TA: <span class="font-bold text-orange-600"><?= htmlspecialchars(!empty(trim($detail['jenis_ta'] ?? '')) ? trim($detail['jenis_ta']) : 'TA Reguler'); ?></span>
                         </div>
                     </div>
                     <div class="md:col-span-2 bg-white/90 p-3.5 rounded-xl border border-slate-200 shadow-2xs">
-                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1">Judul Rencana Tugas Akhir</span>
+                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1">Judul Usulan Utama (Bahasa Indonesia)</span>
                         <p class="text-xs font-semibold text-slate-800 leading-relaxed"><?= htmlspecialchars($detail['judul_1'] ?? '-'); ?></p>
                         <?php if(!empty($detail['judul_en'])): ?>
                             <p class="text-[11px] text-slate-500 italic mt-1 leading-relaxed">"<?= htmlspecialchars($detail['judul_en']); ?>"</p>
@@ -301,13 +301,36 @@
                     </div>
                 </div>
 
+                <?php if (!empty($detail['judul_2']) || !empty($detail['judul_3'])): ?>
+                <!-- Judul Alternatif -->
+                <div class="grid grid-cols-1 <?= (!empty($detail['judul_2']) && !empty($detail['judul_3'])) ? 'md:grid-cols-2' : '' ?> gap-3.5 mb-3.5">
+                    <?php if (!empty($detail['judul_2'])): ?>
+                    <div class="bg-white/90 p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+                        <span class="text-[10px] uppercase font-bold text-amber-600 tracking-wider flex items-center gap-1 mb-1">
+                            <i class="bi bi-lightbulb"></i> Judul Usulan 2 (Alternatif 1)
+                        </span>
+                        <p class="text-xs font-semibold text-slate-800 leading-relaxed"><?= htmlspecialchars($detail['judul_2']); ?></p>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($detail['judul_3'])): ?>
+                    <div class="bg-white/90 p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+                        <span class="text-[10px] uppercase font-bold text-amber-600 tracking-wider flex items-center gap-1 mb-1">
+                            <i class="bi bi-lightbulb"></i> Judul Usulan 3 (Alternatif 2)
+                        </span>
+                        <p class="text-xs font-semibold text-slate-800 leading-relaxed"><?= htmlspecialchars($detail['judul_3']); ?></p>
+                    </div>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
+
                 <!-- Action Toggles (Approve / Reject untuk Judul & Jenis Disatukan) -->
                 <div class="pt-3 border-t border-slate-200/60 flex flex-wrap items-center justify-between gap-3">
                     <span class="text-[11px] font-bold text-slate-600 flex items-center gap-1.5">
                         <i class="bi bi-check2-circle text-orange-600"></i> Keputusan Judul &amp; Skema TA:
                     </span>
 
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-3 sm:gap-4">
                         <!-- Pilihan Valid / Setujui -->
                         <label class="inline-flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700 select-none hover:text-emerald-700 transition-colors">
                             <input type="checkbox" id="cbJudulJenisValid"
@@ -327,6 +350,16 @@
                                     class="w-3.5 h-3.5 text-rose-600 rounded border-slate-300 focus:ring-rose-500 cursor-pointer">
                             <span class="text-[11px] text-rose-600 font-medium">Kurang / Revisi</span>
                         </label>
+
+                        <?php if(!$isLocked): ?>
+                        <!-- Tombol Reset Judul & Skema TA -->
+                        <button type="button" onclick="resetJudulJenis()" id="btnResetJudulJenis" 
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-300 text-[11px] font-bold transition-all cursor-pointer <?= (!$is_jj_valid && !$is_jj_invalid) ? 'hidden' : ''; ?>" 
+                                title="Reset keputusan Judul & Skema TA kembali ke Belum Dicek / Pending">
+                            <i class="bi bi-arrow-counterclockwise text-xs"></i>
+                            <span>Reset</span>
+                        </button>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -371,7 +404,7 @@
         </div>
 
         <!-- Document Verification Form -->
-        <form method="POST" action="<?= site_url('dosen/wali/detail_mahasiswa/' . $detail['nim']); ?>" id="formVerifikasi">
+        <form method="POST" action="<?= site_url('dosen/wali/detail_mahasiswa/' . ($detail['nim'] ?? ($nim ?? ''))); ?>" id="formVerifikasi">
             <input type="hidden" name="status" id="formStatus" value="<?= $status_wali === 'Approved' ? 'Approved' : ($status_wali === 'Rejected' ? 'Rejected' : 'Pending'); ?>">
             <input type="hidden" name="status_judul_jenis" id="inputStatusJudulJenis" value="<?= $jj_status; ?>">
             <input type="hidden" name="catatan_judul_jenis" id="inputCatatanJudulJenis" value="<?= htmlspecialchars($jj_note); ?>">
@@ -418,7 +451,7 @@
                         $sb_idx = 1;
                         foreach ($active_sb as $sb) {
                             $k = $sb['kode_berkas'];
-                            $file_val = $student_berkas[$k]['file_name'] ?? ($detail['file_' . $k] ?? ($k . '_' . $detail['nim'] . '.pdf'));
+                            $file_val = $student_berkas[$k]['file_name'] ?? ($detail['file_' . $k] ?? ($k . '_' . ($detail['nim'] ?? ($nim ?? '')) . '.pdf'));
                             $st_val = $detail['status_file_' . $k] ?? 'Pending';
                             if ($st_val === 'Pending' && !empty($student_berkas[$k]['status_verifikasi'])) {
                                 $ver = $student_berkas[$k]['status_verifikasi'];
@@ -470,6 +503,10 @@
                             <button type="button" onclick="markAllValid()" class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold shadow-2xs flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer">
                                 <i class="bi bi-check2-all text-sm"></i>
                                 <span>Tandai Semua Valid</span>
+                            </button>
+                            <button type="button" onclick="resetAllStatuses()" class="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-300 rounded-xl text-xs font-bold shadow-2xs flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer" title="Reset seluruh status berkas & judul kembali ke Belum Dicek / Pending">
+                                <i class="bi bi-arrow-counterclockwise text-xs"></i>
+                                <span>Reset Semua</span>
                             </button>
                             <?php endif; ?>
                         </div>
@@ -580,6 +617,16 @@
                                                     class="w-3.5 h-3.5 text-rose-600 rounded border-slate-300 focus:ring-rose-500 cursor-pointer">
                                             <span class="text-[11px] text-rose-600 font-medium">Kurang / Revisi</span>
                                         </label>
+
+                                        <?php if(!$isLocked): ?>
+                                        <!-- Tombol Reset Dokumen -->
+                                        <button type="button" onclick="resetDetailDoc('<?= $b['key']; ?>')" id="btnResetDoc_<?= $b['key']; ?>" 
+                                                class="btn-reset-doc inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-300 text-[11px] font-bold transition-all cursor-pointer <?= (!$is_valid && !$is_invalid) ? 'hidden' : ''; ?>" 
+                                                title="Reset verifikasi berkas <?= htmlspecialchars($b['label']); ?> kembali ke Belum Dicek / Pending">
+                                            <i class="bi bi-arrow-counterclockwise text-xs"></i>
+                                            <span>Reset</span>
+                                        </button>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
 
@@ -710,12 +757,17 @@
                     </button>
                 </div>
                 <div class="flex items-center gap-2.5">
+                    <?php if(!$isLocked): ?>
+                    <button type="button" id="modalBtnReset" class="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-300 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer hidden" title="Reset verifikasi dokumen ini">
+                        <i class="bi bi-arrow-counterclockwise text-xs"></i> Reset Status
+                    </button>
                     <button type="button" id="modalBtnKurang" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer">
                         <i class="bi bi-exclamation-circle"></i> Tandai Kurang / Revisi
                     </button>
                     <button type="button" id="modalBtnValid" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer">
                         <i class="bi bi-check2-circle"></i> Tandai Valid &amp; Lolos
                     </button>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -740,7 +792,7 @@
                             <?php 
                                 $mhs_full_name = trim(($detail['nama_depan'] ?? ($detail['nama'] ?? 'Mahasiswa')) . ' ' . ($detail['nama_belakang'] ?? ''));
                             ?>
-                            <span class="text-[11px] text-slate-400"><?= htmlspecialchars($mhs_full_name); ?> &bull; <span class="font-mono text-slate-300"><?= $detail['nim']; ?></span></span>
+                            <span class="text-[11px] text-slate-400"><?= htmlspecialchars($mhs_full_name); ?> &bull; <span class="font-mono text-slate-300"><?= htmlspecialchars($detail['nim'] ?? ($nim ?? '')); ?></span></span>
                         </div>
                     </div>
                     <button type="button" onclick="closeMultiDocModal()" class="md:hidden w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-lg flex items-center justify-center transition-colors cursor-pointer">&times;</button>
@@ -820,8 +872,12 @@
                         </div>
 
                         <?php if(!$isLocked): ?>
-                        <!-- Quick Toggle Valid / Revisi for this doc in modal -->
+                        <!-- Quick Toggle Valid / Revisi / Reset for this doc in modal -->
                         <div class="flex items-center gap-1">
+                            <button type="button" id="btnModalResetNow" onclick="setMultiDocStatus('reset')" 
+                                    class="px-2 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 border border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 cursor-pointer hidden" title="Reset verifikasi dokumen ini">
+                                <i class="bi bi-arrow-counterclockwise text-amber-600 text-xs"></i> Reset
+                            </button>
                             <button type="button" id="btnModalValidNow" onclick="setMultiDocStatus('valid')" 
                                     class="px-2 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 cursor-pointer">
                                 <i class="bi bi-check2-circle text-emerald-600"></i> Valid
@@ -937,7 +993,7 @@
         window.reviewedDocs = <?= json_encode($reviewed_map ?? []); ?>;
         // Merge dari localStorage agar status 'Sudah Dilihat' langsung persisten seketika saat refresh
         try {
-            const storageKey = 'ifik_reviewed_' + '<?= $detail['nim']; ?>';
+            const storageKey = 'ifik_reviewed_' + '<?= $detail['nim'] ?? ($nim ?? ''); ?>';
             let stored = JSON.parse(localStorage.getItem(storageKey) || '{}');
             for (let k in stored) {
                 if (stored[k]) {
@@ -1168,7 +1224,7 @@
 
             // Simpan ke localStorage agar seketika persisten saat refresh
             try {
-                const storageKey = 'ifik_reviewed_' + '<?= $detail['nim']; ?>';
+                const storageKey = 'ifik_reviewed_' + '<?= $detail['nim'] ?? ($nim ?? ''); ?>';
                 let stored = JSON.parse(localStorage.getItem(storageKey) || '{}');
                 allKeys.forEach(k => stored[k] = true);
                 localStorage.setItem(storageKey, JSON.stringify(stored));
@@ -1177,7 +1233,7 @@
             // Kirim batch AJAX request ke server
             try {
                 const fd = new FormData();
-                fd.append('nim', '<?= $detail['nim']; ?>');
+                fd.append('nim', '<?= $detail['nim'] ?? ($nim ?? ''); ?>');
                 fd.append('file_type', allKeys.join(','));
                 fetch('<?= site_url("dosen/wali/log_review_ajax"); ?>', {
                     method: 'POST',
@@ -1404,6 +1460,18 @@
 
             updateMultiDocDrawerForActive();
             refreshMultiModalUI();
+
+            const btnResetNow = document.getElementById('btnModalResetNow');
+            if (btnResetNow) {
+                const card = document.querySelector('.doc-card[data-key="' + doc.key + '"]');
+                const cbValid = card ? card.querySelector('input[name="berkas_valid[]"]') : null;
+                const cbKurang = card ? card.querySelector('input[name="berkas_kurang[]"]') : null;
+                if ((cbValid && cbValid.checked) || (cbKurang && cbKurang.checked)) {
+                    btnResetNow.classList.remove('hidden');
+                } else {
+                    btnResetNow.classList.add('hidden');
+                }
+            }
         }
 
         function updateMultiDocDrawerForActive() {
@@ -1462,10 +1530,23 @@
             if (!window.docList) return;
             const doc = window.docList[currentMultiDocIndex];
             if (!doc) return;
+
+            if (status === 'reset') {
+                resetDetailDoc(doc.key);
+                updateMultiDocDrawerForActive();
+                refreshMultiModalUI();
+                const btnResetNow = document.getElementById('btnModalResetNow');
+                if (btnResetNow) btnResetNow.classList.add('hidden');
+                return;
+            }
+
             setDocStatusDirect(doc.key, status === 'kurang');
 
             updateMultiDocDrawerForActive();
             refreshMultiModalUI();
+
+            const btnResetNow = document.getElementById('btnModalResetNow');
+            if (btnResetNow) btnResetNow.classList.remove('hidden');
 
             if (status === 'valid' && currentMultiDocIndex < window.docList.length - 1) {
                 setTimeout(() => {
@@ -1549,7 +1630,7 @@
 
             // Simpan ke localStorage agar seketika persisten saat refresh
             try {
-                const storageKey = 'ifik_reviewed_' + '<?= $detail['nim']; ?>';
+                const storageKey = 'ifik_reviewed_' + '<?= $detail['nim'] ?? ($nim ?? ''); ?>';
                 let stored = JSON.parse(localStorage.getItem(storageKey) || '{}');
                 stored[key] = true;
                 localStorage.setItem(storageKey, JSON.stringify(stored));
@@ -1558,7 +1639,7 @@
             // Send AJAX to server to log review timestamp
             try {
                 const fd = new FormData();
-                fd.append('nim', '<?= $detail['nim']; ?>');
+                fd.append('nim', '<?= $detail['nim'] ?? ($nim ?? ''); ?>');
                 fd.append('file_type', key);
                 fetch('<?= site_url("dosen/wali/log_review_ajax"); ?>', {
                     method: 'POST',
@@ -1608,17 +1689,41 @@
             loadDocumentToViewer(canvasWrapper, iframe, targetUrl, filename || title);
 
             // Wire up modal buttons
-            document.getElementById('modalBtnKurang').onclick = function() {
-                toggleDocStatus(key, true);
-                closePdfModal();
-                showToast(title + ' ditandai Kurang/Revisi');
-            };
+            const card = document.querySelector('.doc-card[data-key="' + key + '"]');
+            const cbValid = card ? card.querySelector('input[name="berkas_valid[]"]') : null;
+            const cbKurang = card ? card.querySelector('input[name="berkas_kurang[]"]') : null;
+            const isDocDecided = (cbValid && cbValid.checked) || (cbKurang && cbKurang.checked);
 
-            document.getElementById('modalBtnValid').onclick = function() {
-                toggleDocStatus(key, false);
-                closePdfModal();
-                showToast(title + ' ditandai Valid');
-            };
+            const modalResetBtn = document.getElementById('modalBtnReset');
+            if (modalResetBtn) {
+                if (isDocDecided) {
+                    modalResetBtn.classList.remove('hidden');
+                    modalResetBtn.onclick = function() {
+                        resetDetailDoc(key);
+                        closePdfModal();
+                    };
+                } else {
+                    modalResetBtn.classList.add('hidden');
+                }
+            }
+
+            const btnKurang = document.getElementById('modalBtnKurang');
+            if (btnKurang) {
+                btnKurang.onclick = function() {
+                    toggleDocStatus(key, true);
+                    closePdfModal();
+                    showToast(title + ' ditandai Kurang/Revisi');
+                };
+            }
+
+            const btnValid = document.getElementById('modalBtnValid');
+            if (btnValid) {
+                btnValid.onclick = function() {
+                    toggleDocStatus(key, false);
+                    closePdfModal();
+                    showToast(title + ' ditandai Valid');
+                };
+            }
 
             // Lock body scroll
             document.body.style.overflow = 'hidden';
@@ -1743,8 +1848,42 @@
                 sendJudulJenisAjax('Pending', '');
             }
 
+            const btnResetJJ = document.getElementById('btnResetJudulJenis');
+            if (btnResetJJ) {
+                if ((cbValid && cbValid.checked) || (cbKurang && cbKurang.checked)) {
+                    btnResetJJ.classList.remove('hidden');
+                } else {
+                    btnResetJJ.classList.add('hidden');
+                }
+            }
+
             syncAllCatatanAdmin();
             updateActionButtonsUI();
+        }
+
+        function resetJudulJenis(silent = false) {
+            const cbValid = document.getElementById('cbJudulJenisValid');
+            const cbKurang = document.getElementById('cbJudulJenisKurang');
+            const noteInput = document.getElementById('catatan_judul_jenis');
+            const hiddenStatus = document.getElementById('inputStatusJudulJenis');
+            const hiddenCatatan = document.getElementById('inputCatatanJudulJenis');
+            const btnResetJJ = document.getElementById('btnResetJudulJenis');
+
+            if (cbValid) cbValid.checked = false;
+            if (cbKurang) cbKurang.checked = false;
+            if (noteInput) {
+                noteInput.value = '';
+                clearJudulJenisError();
+            }
+            if (hiddenStatus) hiddenStatus.value = 'Pending';
+            if (hiddenCatatan) hiddenCatatan.value = '';
+            if (btnResetJJ) btnResetJJ.classList.add('hidden');
+
+            handleJudulJenisCheck(null, 'reset');
+
+            if (!silent) {
+                showToast('Status Usulan Judul & Skema TA berhasil di-reset ke Belum Dicek!');
+            }
         }
 
         function handleJudulJenisNoteInput() {
@@ -1824,7 +1963,7 @@
         function sendJudulJenisAjax(status, catatan) {
             try {
                 const fd = new FormData();
-                fd.append('nim', '<?= $detail['nim']; ?>');
+                fd.append('nim', '<?= $detail['nim'] ?? ($nim ?? ''); ?>');
                 fd.append('status', status);
                 fd.append('catatan', catatan);
                 fetch('<?= site_url("dosen/wali/update_judul_jenis_ajax"); ?>', {
@@ -1912,8 +2051,100 @@
                     clearDocNoteError(noteInput, errEl);
                 }
             }
+
+            const btnReset = card ? card.querySelector('.btn-reset-doc') : null;
+            if (btnReset) {
+                if ((cbValid && cbValid.checked) || (cbKurang && cbKurang.checked)) {
+                    btnReset.classList.remove('hidden');
+                } else {
+                    btnReset.classList.add('hidden');
+                }
+            }
+
             syncAllCatatanAdmin();
             updateActionButtonsUI();
+        }
+
+        function resetDetailDoc(key, silent = false) {
+            const card = document.querySelector('.doc-card[data-key="' + key + '"]');
+            if (!card) return;
+
+            const cbValid = card.querySelector('input[name="berkas_valid[]"]');
+            const cbKurang = card.querySelector('input[name="berkas_kurang[]"]');
+            const noteInput = card.querySelector('.catatan-doc-box input');
+            const errEl = document.getElementById('err_doc_' + key);
+
+            if (cbValid) cbValid.checked = false;
+            if (cbKurang) cbKurang.checked = false;
+            if (noteInput) {
+                noteInput.value = '';
+                clearDocNoteError(noteInput, errEl);
+            }
+
+            updateCardState(card);
+
+            // AJAX reset ke backend agar sinkron di database
+            try {
+                const fd = new FormData();
+                fd.append('nim', '<?= $detail['nim'] ?? ($nim ?? ''); ?>');
+                fd.append('file_type', key);
+                fd.append('status', 'Pending');
+                fd.append('comment', '');
+
+                fetch('<?= site_url("dosen/wali/update_file_approval_ajax"); ?>', {
+                    method: 'POST',
+                    body: fd
+                }).then(r => r.json()).then(d => {
+                    if (d && d.success && !silent) {
+                        const docTitle = card.querySelector('h3') ? card.querySelector('h3').textContent.trim() : key.toUpperCase();
+                        showToast('Status berkas ' + docTitle + ' berhasil di-reset ke Belum Dicek!');
+                    }
+                }).catch(e => {});
+            } catch(e) {}
+
+            refreshMultiModalUI();
+        }
+
+        function resetAllStatuses() {
+            if (!confirm('Yakin ingin mereset seluruh status berkas serta Usulan Judul & Skema TA kembali ke status awal (Belum Dicek / Pending)?')) {
+                return;
+            }
+
+            resetJudulJenis(true);
+
+            document.querySelectorAll('.doc-card').forEach(card => {
+                const key = card.getAttribute('data-key');
+                if (key) {
+                    const cbValid = card.querySelector('input[name="berkas_valid[]"]');
+                    const cbKurang = card.querySelector('input[name="berkas_kurang[]"]');
+                    const noteInput = card.querySelector('.catatan-doc-box input');
+                    const errEl = document.getElementById('err_doc_' + key);
+                    if (cbValid) cbValid.checked = false;
+                    if (cbKurang) cbKurang.checked = false;
+                    if (noteInput) {
+                        noteInput.value = '';
+                        clearDocNoteError(noteInput, errEl);
+                    }
+                    updateCardState(card);
+                }
+            });
+
+            // Kirim AJAX reset all
+            try {
+                const fd = new FormData();
+                fd.append('nim', '<?= $detail['nim'] ?? ($nim ?? ''); ?>');
+                fd.append('status', 'Pending');
+                fetch('<?= site_url("dosen/wali/approve_all_files_ajax"); ?>', {
+                    method: 'POST',
+                    body: fd
+                }).then(r => r.json()).then(d => {
+                    refreshMultiModalUI();
+                    showToast('Seluruh status berkas & Usulan Judul berhasil di-reset ke Belum Dicek!');
+                }).catch(e => {
+                    refreshMultiModalUI();
+                    showToast('Seluruh status berkas & Usulan Judul berhasil di-reset ke Belum Dicek!');
+                });
+            } catch(e) {}
         }
 
         function clearDocNoteError(inputEl, errEl) {
@@ -2321,6 +2552,7 @@
             }
         });
     </script>
-
+    <!-- Global Custom Circle Cursor -->
+    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>

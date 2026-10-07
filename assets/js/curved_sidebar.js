@@ -25,18 +25,13 @@
             this.pathId = options.pathId || 'curvedSidebarPath';
             this.svgId = options.svgId || 'curvedSidebarSvg';
             
-            this.isDesktop = window.innerWidth >= 1024;
-            let savedState = null;
+            this.isDesktop = (window.matchMedia && window.matchMedia('(min-width: 1024px)').matches) || window.innerWidth >= 992;
             try {
-                savedState = localStorage.getItem('ifik_curved_sidebar_state');
+                localStorage.removeItem('ifik_curved_sidebar_state');
             } catch (e) {}
 
             if (typeof options.defaultOpen !== 'undefined') {
                 this.isOpen = options.defaultOpen;
-            } else if (savedState === 'closed') {
-                this.isOpen = false;
-            } else if (savedState === 'open') {
-                this.isOpen = true;
             } else {
                 this.isOpen = this.isDesktop ? true : false;
             }
@@ -114,7 +109,7 @@
 
             window.addEventListener('resize', () => {
                 const wasDesktop = this.isDesktop;
-                this.isDesktop = window.innerWidth >= 1024;
+                this.isDesktop = (window.matchMedia && window.matchMedia('(min-width: 1024px)').matches) || window.innerWidth >= 992;
                 if (wasDesktop !== this.isDesktop) {
                     if (this.isDesktop) {
                         if (this.backdrop) this.backdrop.classList.remove('is-active');
@@ -140,6 +135,7 @@
                 } else {
                     this.setPath(70);
                 }
+                syncAllModalOverlays();
             });
 
             // Prepare letter spans for staggered kinetic wave
@@ -148,6 +144,7 @@
             // Initial SVG path state
             this.updateSvgDimensions();
             this.setPath(this.isOpen ? 0 : 70);
+            syncAllModalOverlays();
         }
 
         updateSvgDimensions() {
@@ -209,6 +206,11 @@
                                 }
                                 if (history.pushState) {
                                     history.pushState(null, '', targetUrl.hash);
+                                } else {
+                                    window.location.hash = targetUrl.hash;
+                                }
+                                if (typeof window.updateSidebarActiveTab === 'function') {
+                                    window.updateSidebarActiveTab(targetUrl.hash);
                                 }
                             }
                         } catch (err) {
@@ -264,16 +266,13 @@
         open() {
             if (this.isOpen) return;
             this.isOpen = true;
-            try {
-                localStorage.setItem('ifik_curved_sidebar_state', 'open');
-            } catch (e) {}
-            this.isDesktop = window.innerWidth >= 1024;
+            this.isDesktop = (window.matchMedia && window.matchMedia('(min-width: 1024px)').matches) || window.innerWidth >= 992;
 
             // Update DOM classes
             this.toggleBtn.classList.add('is-active');
             this.toggleBtn.setAttribute('aria-expanded', 'true');
+            document.body.classList.remove('curved-sidebar-desktop-collapsed');
             if (this.isDesktop) {
-                document.body.classList.remove('curved-sidebar-desktop-collapsed');
                 document.body.classList.add('curved-sidebar-desktop-open');
                 if (this.backdrop) this.backdrop.classList.remove('is-active');
                 document.body.classList.remove('curved-sidebar-open');
@@ -282,6 +281,11 @@
                 document.body.classList.add('curved-sidebar-open');
             }
             this.panel.classList.add('is-active');
+
+            try {
+                window.dispatchEvent(new CustomEvent('curvedSidebarToggled', { detail: { isOpen: true } }));
+            } catch(e) {}
+            syncAllModalOverlays();
 
             // Scroll inner menu to top
             const inner = this.panel ? this.panel.querySelector('.curved-sidebar-inner') : null;
@@ -297,10 +301,7 @@
         close() {
             if (!this.isOpen) return;
             this.isOpen = false;
-            try {
-                localStorage.setItem('ifik_curved_sidebar_state', 'closed');
-            } catch (e) {}
-            this.isDesktop = window.innerWidth >= 1024;
+            this.isDesktop = (window.matchMedia && window.matchMedia('(min-width: 1024px)').matches) || window.innerWidth >= 992;
 
             // Update DOM classes
             this.toggleBtn.classList.remove('is-active');
@@ -308,10 +309,17 @@
             if (this.isDesktop) {
                 document.body.classList.remove('curved-sidebar-desktop-open');
                 document.body.classList.add('curved-sidebar-desktop-collapsed');
+            } else {
+                document.body.classList.remove('curved-sidebar-open');
+                document.body.classList.add('curved-sidebar-desktop-collapsed');
             }
             if (this.backdrop) this.backdrop.classList.remove('is-active');
-            document.body.classList.remove('curved-sidebar-open');
             this.panel.classList.remove('is-active');
+
+            try {
+                window.dispatchEvent(new CustomEvent('curvedSidebarToggled', { detail: { isOpen: false } }));
+            } catch(e) {}
+            syncAllModalOverlays();
 
             if (this.svg) this.svg.style.opacity = '1';
             // Morph curve from flat (0) back to bulging (70)
@@ -321,33 +329,84 @@
         }
     }
 
+    function syncAllModalOverlays() {
+        const overlays = document.querySelectorAll('.modal-overlay, #modalRuangan, #editSlide1Modal, #editSlideModal');
+        if (!overlays.length) return;
+        const isDesktop = (window.matchMedia && window.matchMedia('(min-width: 1024px)').matches) || window.innerWidth >= 992;
+        const panel = document.getElementById('curvedSidebarPanel');
+        const isPanelActive = panel ? panel.classList.contains('is-active') : false;
+        const isCollapsed = document.body.classList.contains('curved-sidebar-desktop-collapsed');
+        
+        const shouldShift = isDesktop && isPanelActive && !isCollapsed;
+
+        overlays.forEach(modal => {
+            if (shouldShift) {
+                modal.style.setProperty('left', '270px', 'important');
+                modal.style.setProperty('width', 'calc(100% - 270px)', 'important');
+            } else {
+                modal.style.setProperty('left', '0px', 'important');
+                modal.style.setProperty('width', '100%', 'important');
+            }
+        });
+    }
+    window.syncAllModalOverlays = syncAllModalOverlays;
+
     function initCurvedSidebar() {
         if (document.getElementById('curvedSidebarPanel') && !window.curvedSidebarInstance) {
             window.curvedSidebarInstance = new CurvedSidebar();
         }
 
         // Handle initial hash or hashchange for tabs/sections and update active state
-        const updateSidebarActiveTab = () => {
-            const currentHash = window.location.hash || '';
+        const updateSidebarActiveTab = (forcedHash) => {
             const panel = document.getElementById('curvedSidebarPanel');
             if (!panel) return;
             const navItems = panel.querySelectorAll('.curved-nav-item');
-            const isKoordinatorPage = window.location.pathname.includes('koordinatorta');
-            const targetHash = currentHash || (isKoordinatorPage ? '#pendaftaran' : '');
-
-            if (targetHash) {
+            
+            // Check if current page is the Koordinator TA dashboard with client-side tabs
+            const hasDashboardTabs = !!(document.getElementById('tabBtnPendaftaran') || document.getElementById('tabContentPendaftaran'));
+            
+            if (!hasDashboardTabs) {
+                // On subpages (e.g. /koordinatorta/monitoring, /koordinatorta/help, /kalender),
+                // do not force client-side hash tabs. Match against full page URL.
+                const currentPath = window.location.pathname.replace(/\/index\.php\/?/i, '/').replace(/\/+$/, '');
                 navItems.forEach(item => {
                     const href = item.getAttribute('href') || '';
-                    if (href.includes('#')) {
-                        if (href.endsWith(targetHash)) {
-                            item.classList.add('is-current');
-                        } else {
-                            item.classList.remove('is-current');
-                        }
+                    if (!href.startsWith('javascript:')) {
+                        try {
+                            const itemUrl = new URL(href, window.location.href);
+                            const itemPath = itemUrl.pathname.replace(/\/index\.php\/?/i, '/').replace(/\/+$/, '');
+                            if (itemPath === currentPath && !itemUrl.hash) {
+                                item.classList.add('is-current');
+                            } else {
+                                item.classList.remove('is-current');
+                            }
+                        } catch (e) {}
                     }
                 });
+                return;
             }
+
+            // On the Dashboard page with client-side tabs (#pendaftaran, #preview2, #sidang)
+            const currentHash = (forcedHash !== undefined && forcedHash !== null) ? forcedHash : (window.location.hash || '');
+            const targetHash = currentHash || '#pendaftaran';
+            const cleanTarget = targetHash.startsWith('#') ? targetHash : '#' + targetHash;
+
+            navItems.forEach(item => {
+                const href = item.getAttribute('href') || '';
+                if (href.includes('#')) {
+                    if (href.endsWith(cleanTarget) || href.includes(cleanTarget)) {
+                        item.classList.add('is-current');
+                    } else {
+                        item.classList.remove('is-current');
+                    }
+                } else {
+                    item.classList.remove('is-current');
+                }
+            });
         };
+
+        window.updateSidebarActiveTab = updateSidebarActiveTab;
+        window.updateCurvedSidebarActive = updateSidebarActiveTab;
 
         const checkHash = () => {
             if (window.location.hash) {

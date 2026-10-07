@@ -44,12 +44,31 @@
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         }
 
-        body {
-            padding-left: 0;
+        .page-wrapper-for-sidebar {
+            width: 100%;
+            min-width: 0;
+            min-height: 100vh;
+            transition: margin-left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+            box-sizing: border-box;
         }
+
         @media (min-width: 1024px) {
-            body {
-                padding-left: 76px; /* space for left floating trigger */
+            .page-wrapper-for-sidebar {
+                margin-left: 270px;
+                width: calc(100% - 270px);
+            }
+
+            body.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 1023.98px) {
+            .page-wrapper-for-sidebar {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding-top: 48px;
             }
         }
 
@@ -95,6 +114,7 @@
     <!-- Universal Curved Sidebar Component -->
     <?php $this->load->view('components/curved_sidebar'); ?>
 
+    <div class="page-wrapper-for-sidebar">
     <!-- Main Content Container -->
     <main class="min-h-screen p-6 sm:p-8 lg:p-10 max-w-7xl mx-auto">
 
@@ -380,6 +400,7 @@
         </div>
 
     </main>
+    </div>
 
     <!-- Hidden form for deleting signature -->
     <form id="deleteTtdForm" action="<?= site_url('laboran/tanda-tangan/hapus'); ?>" method="POST" class="hidden"></form>
@@ -618,5 +639,8 @@
             });
         }
     </script>
+
+    <!-- Global Custom Circle Cursor -->
+    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>

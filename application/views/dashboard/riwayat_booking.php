@@ -2188,7 +2188,7 @@
                                     $filterType = 'ditolak';
                                 }
 
-                                $tglFormat = !empty($row['tanggal_booking']) ? date('d M Y', strtotime($row['tanggal_booking'])) : (!empty($row['tanggal']) ? date('d M Y', strtotime($row['tanggal'])) : '-');
+                                $tglFormat = !empty($row['tanggal_formatted']) ? $row['tanggal_formatted'] : (!empty($row['tanggal_booking']) ? $row['tanggal_booking'] : (!empty($row['tanggal']) ? $row['tanggal'] : '-'));
                                 $jamFormat = (!empty($row['waktu_mulai']) ? substr($row['waktu_mulai'], 0, 5) : '-') . ' - ' . (!empty($row['waktu_selesai']) ? substr($row['waktu_selesai'], 0, 5) : '-');
                                 $encodedData = htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8');
                             ?>
@@ -2351,6 +2351,44 @@
     </div>
 
     <script>
+        function formatIndoDate(tglM, tglS) {
+            if (!tglM) return '-';
+            const indoMonths = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+            if (typeof tglM === 'string' && (tglM.includes('Januari') || tglM.includes('Februari') || tglM.includes('Maret') || tglM.includes('April') || tglM.includes('Mei') || tglM.includes('Juni') || tglM.includes('Juli') || tglM.includes('Agustus') || tglM.includes('September') || tglM.includes('Oktober') || tglM.includes('November') || tglM.includes('Desember'))) {
+                return tglM;
+            }
+
+            const parseDate = (dStr) => {
+                if (!dStr) return null;
+                const clean = String(dStr).split(' ')[0];
+                const parts = clean.split('-');
+                if (parts.length === 3) {
+                    return { y: parseInt(parts[0], 10), m: parseInt(parts[1], 10), d: parseInt(parts[2], 10) };
+                }
+                const d = new Date(dStr);
+                if (isNaN(d.getTime())) return null;
+                return { y: d.getFullYear(), m: d.getMonth() + 1, d: d.getDate() };
+            };
+
+            const start = parseDate(tglM);
+            if (!start || isNaN(start.d) || isNaN(start.m) || isNaN(start.y)) return tglM;
+
+            const startFormatted = `${start.d} ${indoMonths[start.m] || ''} ${start.y}`;
+            if (!tglS || tglM === tglS) {
+                return startFormatted;
+            }
+
+            const end = parseDate(tglS);
+            if (!end || isNaN(end.d) || isNaN(end.m) || isNaN(end.y)) return startFormatted;
+
+            if (start.y === end.y && start.m === end.m) {
+                return `${start.d} - ${end.d} ${indoMonths[start.m] || ''} ${start.y}`;
+            } else {
+                return `${startFormatted} s/d ${end.d} ${indoMonths[end.m] || ''} ${end.y}`;
+            }
+        }
+
         let currentFilter = 'all';
         let extraRowCounter = 0;
         let fpRange = null;
@@ -3366,7 +3404,7 @@
                 filterType = 'ditolak';
             }
 
-            let tglFormat = row.tanggal_formatted || (row.tanggal_booking ? row.tanggal_booking : (row.tanggal ? row.tanggal : '-'));
+            let tglFormat = row.tanggal_formatted || formatIndoDate(row.tanggal_mulai || row.tanggal_booking || row.tanggal, row.tanggal_selesai);
             let jamFormat = row.time_formatted || ((row.waktu_mulai ? row.waktu_mulai.substring(0,5) : '-') + ' - ' + (row.waktu_selesai ? row.waktu_selesai.substring(0,5) : '-') + ' WIB');
             let encodedData = JSON.stringify(row).replace(/"/g, '&quot;');
             let roomName = row.ruangan || row.nama_ruangan || (row.kode_ruangan ? 'Ruang ' + row.kode_ruangan : 'Ruangan Lab');
@@ -3679,7 +3717,7 @@
         function openDetailModal(data) {
             if (!data) return;
 
-            let tgl = data.tanggal_booking || data.tanggal || data.tanggal_formatted || '-';
+            let tgl = data.tanggal_formatted || formatIndoDate(data.tanggal_mulai || data.tanggal_booking || data.tanggal, data.tanggal_selesai);
             let jam = data.time_formatted || ((data.waktu_mulai ? data.waktu_mulai.substring(0,5) : '-') + ' - ' + (data.waktu_selesai ? data.waktu_selesai.substring(0,5) : '-') + ' WIB');
             
             let statusBadge = '<span class="badge-status menunggu">Menunggu Persetujuan</span>';
@@ -3690,14 +3728,6 @@
                 statusBadge = '<span class="badge-status ditolak">Ditolak</span>';
             } else if (st === 'dibatalkan' || st.indexOf('batal') !== -1) {
                 statusBadge = '<span class="badge-status dibatalkan">Dibatalkan</span>';
-            }
-
-            let docHtml = '<span style="color:#94a3b8;">Tidak ada dokumen</span>';
-            if (data.dokumen_pendukung) {
-                let docUrl = "<?= base_url('uploads/dokumen_booking/') ?>" + data.dokumen_pendukung;
-                docHtml = `<a href="${docUrl}" target="_blank" style="color:var(--primary); font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
-                    <i class="fa-solid fa-file-arrow-down"></i> Unduh / Lihat Dokumen
-                </a>`;
             }
 
             let html = `
@@ -3728,10 +3758,6 @@
                 <div class="detail-item full-span">
                     <div class="detail-item-label">Agenda / Keterangan Acara</div>
                     <div class="detail-item-value" style="font-weight: 500; line-height: 1.5;">${data.agenda || data.keterangan || '-'}</div>
-                </div>
-                <div class="detail-item full-span">
-                    <div class="detail-item-label">Dokumen Surat Pengantar / Proposal</div>
-                    <div class="detail-item-value" style="margin-top:6px;">${docHtml}</div>
                 </div>
             `;
 
@@ -3815,5 +3841,7 @@
             }
         });
     </script>
+    <!-- Global Custom Circle Cursor -->
+    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>

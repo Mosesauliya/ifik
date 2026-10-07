@@ -118,6 +118,18 @@ class Kaur extends CI_Controller {
     public function approve($id)
     {
         header('Content-Type: application/json');
+
+        // Validasi: Cek apakah akun Ka. Ur sudah memiliki Tanda Tangan Digital yang tersimpan
+        if (!$this->Booking_model->has_signature($this->session->userdata('user_id'), 2)) {
+            echo json_encode([
+                'status'          => 'error',
+                'needs_signature' => true,
+                'signature_url'   => site_url('kaur/tanda-tangan'),
+                'message'         => 'Anda belum memiliki Tanda Tangan Digital! Silakan buat atau unggah tanda tangan terlebih dahulu sebelum menyetujui permohonan agar surat izin resmi dapat disahkan dan diterbitkan.'
+            ]);
+            return;
+        }
+
         $status = 'Disetujui Ka. Ur';
 
         $update = $this->Booking_model->update_status($id, $status);
@@ -156,6 +168,17 @@ class Kaur extends CI_Controller {
         $ids = $this->input->post('ids');
         if (empty($ids) || !is_array($ids)) {
             echo json_encode(['status' => 'error', 'message' => 'Pilih setidaknya satu data peminjaman!']);
+            return;
+        }
+
+        // Validasi: Cek apakah akun Ka. Ur sudah memiliki Tanda Tangan Digital yang tersimpan
+        if (!$this->Booking_model->has_signature($this->session->userdata('user_id'), 2)) {
+            echo json_encode([
+                'status'          => 'error',
+                'needs_signature' => true,
+                'signature_url'   => site_url('kaur/tanda-tangan'),
+                'message'         => 'Anda belum memiliki Tanda Tangan Digital! Silakan buat atau unggah tanda tangan terlebih dahulu sebelum menyetujui permohonan agar surat izin resmi dapat disahkan dan diterbitkan.'
+            ]);
             return;
         }
 

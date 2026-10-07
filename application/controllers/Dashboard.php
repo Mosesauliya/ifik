@@ -17,20 +17,7 @@ class Dashboard extends CI_Controller {
         $data['jadwal_peminjaman'] = $this->Booking_model->get_approved_bookings();
         $data['kategori'] = $this->Booking_model->get_all_kategori();
         
-        $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan');
-        $ruangan_list = $this->db->get('ruangan')->result();
-        foreach ($ruangan_list as &$r) {
-            if (empty($r->foto) && !empty($r->images)) {
-                if (strpos($r->images, '|') !== false) {
-                    list($f, $m) = explode('|', $r->images, 2);
-                    $r->foto = $f;
-                    if (empty($r->model_3d)) $r->model_3d = $m;
-                } else {
-                    $r->foto = $r->images;
-                }
-            }
-        }
-        $data['ruangan'] = $ruangan_list;
+        $data['ruangan'] = $this->Booking_model->get_all_ruangan();
 
         $data['header_settings'] = $this->Header_model->get_settings();
         $data['header_slides'] = $this->Header_model->get_slides();
@@ -41,23 +28,11 @@ class Dashboard extends CI_Controller {
     public function lab_detail($id = 'multimedia')
     {
         $this->load->helper('url');
+        $this->load->model('Booking_model');
         $data['lab_key'] = strtolower($id);
 
-        // Load all ruangan data from DB to sync details
-        $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan');
-        $all_ruangan = $this->db->get('ruangan')->result();
-        foreach ($all_ruangan as &$r) {
-            if (empty($r->foto) && !empty($r->images)) {
-                if (strpos($r->images, '|') !== false) {
-                    list($f, $m) = explode('|', $r->images, 2);
-                    $r->foto = $f;
-                    if (empty($r->model_3d)) $r->model_3d = $m;
-                } else {
-                    $r->foto = $r->images;
-                }
-            }
-        }
-        $data['all_ruangan'] = $all_ruangan;
+        // Load all ruangan data via Booking_model to sync foto and model_3d details
+        $data['all_ruangan'] = $this->Booking_model->get_all_ruangan();
 
         $this->load->view('dashboard/lab_detail', $data);
     }
@@ -68,20 +43,7 @@ class Dashboard extends CI_Controller {
         $this->load->model('Booking_model');
         $data['jadwal_peminjaman'] = $this->Booking_model->get_approved_bookings();
         $data['kategori'] = $this->Booking_model->get_all_kategori();
-        $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan');
-        $cal_ruangan = $this->db->get('ruangan')->result();
-        foreach ($cal_ruangan as &$r) {
-            if (empty($r->foto) && !empty($r->images)) {
-                if (strpos($r->images, '|') !== false) {
-                    list($f, $m) = explode('|', $r->images, 2);
-                    $r->foto = $f;
-                    if (empty($r->model_3d)) $r->model_3d = $m;
-                } else {
-                    $r->foto = $r->images;
-                }
-            }
-        }
-        $data['ruangan'] = $cal_ruangan;
+        $data['ruangan'] = $this->Booking_model->get_all_ruangan();
         $this->load->view('dashboard/kalender', $data);
     }
 
@@ -98,6 +60,8 @@ class Dashboard extends CI_Controller {
         $this->load->model('Booking_model');
         $data['kategori'] = $this->Booking_model->get_all_kategori();
         $this->db->select('ruangan.*, ruangan.ruangan AS nama_ruangan, ruangan.id AS kode_ruangan');
+        $this->db->order_by('ruangan.date', 'ASC');
+        $this->db->order_by('ruangan.id', 'ASC');
         $data['ruangan'] = $this->db->get('ruangan')->result();
 
         $this->load->view('dashboard/ajukan_booking', $data);
@@ -173,11 +137,25 @@ class Dashboard extends CI_Controller {
     {
         header('Content-Type: application/json');
         $this->load->model('Booking_model');
-        $role_id = $this->session->userdata('role_id');
+        $role_id = (int)$this->session->userdata('role_id');
 
-        if (!in_array($role_id, [1, 2, 21])) {
+        if (!in_array($role_id, [1, 2, 21, 22])) {
             echo json_encode(['status' => 'error', 'message' => 'Anda tidak memiliki hak akses untuk menyetujui peminjaman ini.']);
             return;
+        }
+
+        // Validasi: Cek tanda tangan jika Laboran atau Ka. Ur
+        if (in_array($role_id, [2, 21])) {
+            if (!$this->Booking_model->has_signature($this->session->userdata('user_id'), $role_id)) {
+                $targetUrl = ($role_id == 2) ? site_url('kaur/tanda-tangan') : site_url('laboran/tanda-tangan');
+                echo json_encode([
+                    'status'          => 'error',
+                    'needs_signature' => true,
+                    'signature_url'   => $targetUrl,
+                    'message'         => 'Anda belum memiliki Tanda Tangan Digital! Silakan buat atau unggah tanda tangan terlebih dahulu sebelum menyetujui peminjaman.'
+                ]);
+                return;
+            }
         }
 
         if ($role_id == 2) {
@@ -202,7 +180,7 @@ class Dashboard extends CI_Controller {
         $this->load->model('Booking_model');
         $role_id = (int)$this->session->userdata('role_id');
 
-        if (!in_array($role_id, [1, 2, 21])) {
+        if (!in_array($role_id, [1, 2, 21, 22])) {
             echo json_encode(['status' => 'error', 'message' => 'Anda tidak memiliki hak akses untuk menolak peminjaman ini.']);
             return;
         }
@@ -222,7 +200,7 @@ class Dashboard extends CI_Controller {
         $this->load->model('Booking_model');
         $role_id = (int)$this->session->userdata('role_id');
 
-        if (!in_array($role_id, [1, 2, 21])) {
+        if (!in_array($role_id, [1, 2, 21, 22])) {
             echo json_encode(['status' => 'error', 'message' => 'Anda tidak memiliki hak akses untuk menghapus jadwal ini.']);
             return;
         }
@@ -248,7 +226,7 @@ class Dashboard extends CI_Controller {
         header('Content-Type: application/json');
         $role_id = $this->session->userdata('role_id');
 
-        if ($role_id != 1) {
+        if ($role_id != 1 && $role_id != 22) {
             echo json_encode(['status' => 'error', 'message' => 'Hanya Admin System yang dapat menambahkan ruangan baru!']);
             return;
         }
@@ -260,22 +238,23 @@ class Dashboard extends CI_Controller {
         $lokasi       = $this->input->post('lokasi', true);
         $status       = $this->input->post('status', true);
 
-        $rooms = array_filter(array_map('trim', explode(',', (string)$kode_ruangan)));
-        $clean_kode_ruangan = !empty($rooms) ? implode(', ', array_map('strtoupper', $rooms)) : strtoupper(trim((string)$kode_ruangan));
+        $rooms = array_values(array_filter(array_map('trim', explode(',', (string)$kode_ruangan))));
+        if (empty($rooms) && !empty($kode_ruangan)) {
+            $rooms = [strtoupper(trim((string)$kode_ruangan))];
+        }
 
-        if (empty($nama_ruangan) || empty($clean_kode_ruangan) || empty($id_kategori)) {
+        if (empty($nama_ruangan) || empty($rooms) || empty($id_kategori)) {
             echo json_encode(['status' => 'error', 'message' => 'Harap isi Nama Ruangan/Lab, Ruangan Fisik (Nomor LK), dan Kategori!']);
             return;
         }
 
-        // Cek duplikasi ruangan fisik (1 ruangan fisik = 1 fasilitas)
+        // Cek duplikasi ruangan fisik (1 ruangan fisik = 1 baris)
         $this->db->select('id, ruangan, ruangan AS nama_ruangan, id AS kode_ruangan');
         $existing_ruangan = $this->db->get('ruangan')->result();
         $canonicalize = function($str) {
             return strtoupper(preg_replace('/[^a-zA-Z0-9]/', '', (string)$str));
         };
-        $check_rooms = !empty($rooms) ? $rooms : [$clean_kode_ruangan];
-        foreach ($check_rooms as $target) {
+        foreach ($rooms as $target) {
             $target_clean = strtoupper(trim($target));
             $target_canon = $canonicalize($target);
             if (empty($target_clean)) continue;
@@ -283,7 +262,7 @@ class Dashboard extends CI_Controller {
             foreach ($existing_ruangan as $row) {
                 $rowCode = $row->kode_ruangan ?: $row->id;
                 if (empty($rowCode)) continue;
-                $row_rooms = array_filter(array_map('trim', explode(',', $rowCode)));
+                $row_rooms = array_filter(array_map('trim', explode(',', (string)$rowCode)));
                 foreach ($row_rooms as $r) {
                     $r_clean = strtoupper(trim($r));
                     $r_canon = $canonicalize($r);
@@ -299,20 +278,34 @@ class Dashboard extends CI_Controller {
         }
 
         $fields = $this->db->list_fields('ruangan');
-        $data_ruangan = array();
-        if (in_array('id', $fields)) $data_ruangan['id'] = $clean_kode_ruangan;
-        if (in_array('ruangan', $fields)) $data_ruangan['ruangan'] = $nama_ruangan;
-        if (in_array('nama_ruangan', $fields)) $data_ruangan['nama_ruangan'] = $nama_ruangan;
-        if (in_array('kode_ruangan', $fields)) $data_ruangan['kode_ruangan'] = $clean_kode_ruangan;
-        if (in_array('id_kategori', $fields)) $data_ruangan['id_kategori'] = $id_kategori;
-        if (in_array('kapasitas', $fields)) $data_ruangan['kapasitas'] = $kapasitas ? $kapasitas : 30;
-        if (in_array('lokasi', $fields)) $data_ruangan['lokasi'] = $lokasi ? $lokasi : 'Gedung Sebatik (FIK)';
-        if (in_array('status', $fields)) $data_ruangan['status'] = $status ? $status : 'Tersedia';
+        $base_data = array();
+        if (in_array('ruangan', $fields)) $base_data['ruangan'] = $nama_ruangan;
+        if (in_array('nama_ruangan', $fields)) $base_data['nama_ruangan'] = $nama_ruangan;
+        if (in_array('id_kategori', $fields)) $base_data['id_kategori'] = $id_kategori;
+        if (in_array('kapasitas', $fields)) $base_data['kapasitas'] = $kapasitas ? $kapasitas : 30;
+        if (in_array('lokasi', $fields)) $base_data['lokasi'] = $lokasi ? $lokasi : 'Gedung Sebatik (FIK)';
+        if (in_array('status', $fields)) $base_data['status'] = $status ? $status : 'Tersedia';
+        if (in_array('date', $fields)) $base_data['date'] = date('Y-m-d H:i:s');
 
-        $insert = $this->db->insert('ruangan', $data_ruangan);
+        $inserted = 0;
+        foreach ($rooms as $single_code) {
+            $clean_code = strtoupper(trim($single_code));
+            if (empty($clean_code)) continue;
 
-        if ($insert) {
-            echo json_encode(['status' => 'success', 'message' => 'Ruangan baru berhasil ditambahkan!']);
+            $row_data = $base_data;
+            if (in_array('id', $fields)) $row_data['id'] = $clean_code;
+            if (in_array('kode_ruangan', $fields)) $row_data['kode_ruangan'] = $clean_code;
+
+            if ($this->db->insert('ruangan', $row_data)) {
+                $inserted++;
+            }
+        }
+
+        if ($inserted > 0) {
+            $msg = ($inserted > 1) 
+                ? "{$inserted} ruangan fisik baru berhasil ditambahkan!" 
+                : "Ruangan baru berhasil ditambahkan!";
+            echo json_encode(['status' => 'success', 'message' => $msg]);
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Gagal menambahkan ruangan baru.']);
         }
@@ -362,12 +355,25 @@ class Dashboard extends CI_Controller {
                 $statusCategory = 'ditolak';
             }
 
+            $indoMonths = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
             $dateFormatted = '';
             if (!empty($p->tanggal_mulai)) {
-                if ($p->tanggal_mulai === $p->tanggal_selesai || empty($p->tanggal_selesai)) {
-                    $dateFormatted = date('d M Y', strtotime($p->tanggal_mulai));
-                } else {
-                    $dateFormatted = date('d M Y', strtotime($p->tanggal_mulai)) . ' - ' . date('d M Y', strtotime($p->tanggal_selesai));
+                $tglM = $p->tanggal_mulai;
+                $tglS = $p->tanggal_selesai;
+                $dM = (int)date('j', strtotime($tglM));
+                $mM = $indoMonths[(int)date('n', strtotime($tglM))];
+                $yM = date('Y', strtotime($tglM));
+                $dateFormatted = "{$dM} {$mM} {$yM}";
+
+                if (!empty($tglS) && $tglM !== $tglS) {
+                    $dS = (int)date('j', strtotime($tglS));
+                    $mS = $indoMonths[(int)date('n', strtotime($tglS))];
+                    $yS = date('Y', strtotime($tglS));
+                    if ($yM === $yS && $mM === $mS) {
+                        $dateFormatted = "{$dM} - {$dS} {$mM} {$yM}";
+                    } else {
+                        $dateFormatted = "{$dM} {$mM} {$yM} s/d {$dS} {$mS} {$yS}";
+                    }
                 }
             }
 
@@ -527,12 +533,25 @@ class Dashboard extends CI_Controller {
                 $statusCategory = 'ditolak';
             }
 
+            $indoMonths = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
             $dateFormatted = '';
             if (!empty($p->tanggal_mulai)) {
-                if ($p->tanggal_mulai === $p->tanggal_selesai || empty($p->tanggal_selesai)) {
-                    $dateFormatted = date('d M Y', strtotime($p->tanggal_mulai));
-                } else {
-                    $dateFormatted = date('d M Y', strtotime($p->tanggal_mulai)) . ' - ' . date('d M Y', strtotime($p->tanggal_selesai));
+                $tglM = $p->tanggal_mulai;
+                $tglS = $p->tanggal_selesai;
+                $dM = (int)date('j', strtotime($tglM));
+                $mM = $indoMonths[(int)date('n', strtotime($tglM))];
+                $yM = date('Y', strtotime($tglM));
+                $dateFormatted = "{$dM} {$mM} {$yM}";
+
+                if (!empty($tglS) && $tglM !== $tglS) {
+                    $dS = (int)date('j', strtotime($tglS));
+                    $mS = $indoMonths[(int)date('n', strtotime($tglS))];
+                    $yS = date('Y', strtotime($tglS));
+                    if ($yM === $yS && $mM === $mS) {
+                        $dateFormatted = "{$dM} - {$dS} {$mM} {$yM}";
+                    } else {
+                        $dateFormatted = "{$dM} {$mM} {$yM} s/d {$dS} {$mS} {$yS}";
+                    }
                 }
             }
 

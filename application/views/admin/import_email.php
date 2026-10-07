@@ -785,6 +785,11 @@
                     <div class="header-title-block flex flex-col w-full">
                         <div class="flex items-center gap-2">
                             <h1 class="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-tight">Import Email & Dispatcher Token</h1>
+                            <?php if (!empty($is_laboran) || (int)$this->session->userdata('role_id') === 21): ?>
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300 shadow-2xs">
+                                    <i class="fa-solid fa-user-shield text-amber-600"></i> Mode Laboran (Dosen & Mahasiswa)
+                                </span>
+                            <?php endif; ?>
                         </div>
                         <p class="text-[11px] sm:text-xs text-slate-500 mt-1 leading-normal">Kelola impor Excel (XLSX), generate token 8 karakter, dan kirim email pemberitahuan.</p>
                     </div>
@@ -1024,14 +1029,31 @@
                         <p class="text-sm font-bold text-slate-800">
                             Tarik & Lepas File CSV / XLSX / XLS di sini, atau <span class="text-brand-600 underline">Pilih File</span>
                         </p>
-                        <p class="text-xs text-slate-500 mt-1">Mendukung format .CSV, .XLSX, .XLS hingga 10MB (Kolom: Nama, Email, Role, NIM/NIP)</p>
+                        <p class="text-xs text-slate-500 mt-1">Mendukung format .CSV, .XLSX, .XLS hingga 10MB (Kolom: Nama, Email, Role [Angka ID], NIM/NIP)</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 mt-2 justify-center">
+                        <?php if (!empty($is_koor_ta) || (int)$this->session->userdata('role_id') === 6): ?>
+                            <span class="px-2.5 py-1 text-[11px] font-semibold bg-emerald-50 text-emerald-700 rounded-md border border-emerald-200">
+                                <i class="fa-solid fa-id-badge text-emerald-600 mr-1"></i> Hak Akses Koordinator TA: <b>Role ID 6 (Koordinator TA Saja)</b>
+                            </span>
+                        <?php elseif (!empty($is_laa) || (int)$this->session->userdata('role_id') === 5): ?>
+                            <span class="px-2.5 py-1 text-[11px] font-semibold bg-blue-50 text-blue-700 rounded-md border border-blue-200">
+                                <i class="fa-solid fa-id-badge text-blue-600 mr-1"></i> Hak Akses Admin LAA: <b>Role ID 4 (Mahasiswa) & 5 (Admin LAA)</b>
+                            </span>
+                        <?php elseif (!empty($is_laboran) || (int)$this->session->userdata('role_id') === 21): ?>
+                            <span class="px-2.5 py-1 text-[11px] font-semibold bg-orange-50 text-orange-700 rounded-md border border-orange-200">
+                                <i class="fa-solid fa-id-badge text-orange-600 mr-1"></i> Hak Akses Laboran: <b>Role ID 21 (Laboran), 3 (Dosen), 4 (Mahasiswa)</b>
+                            </span>
+                        <?php else: ?>
+                            <span class="px-2.5 py-1 text-[11px] font-semibold bg-purple-50 text-purple-700 rounded-md border border-purple-200">
+                                <i class="fa-solid fa-id-badge text-purple-600 mr-1"></i> Hak Akses Super Admin (Ka. Ur / Admin): <b>Semua Role (1, 2, 3, 4, 5, 6, 7, 9, 21, 22)</b>
+                            </span>
+                        <?php endif; ?>
                         <span class="px-2.5 py-1 text-[11px] font-semibold bg-emerald-50 text-emerald-700 rounded-md border border-emerald-200">
-                            <i class="fa-solid fa-file-excel text-emerald-600 mr-1"></i> Auto Detect Column Headers
+                            <i class="fa-solid fa-file-excel text-emerald-600 mr-1"></i> Auto Detect Headers
                         </span>
-                        <span class="px-2.5 py-1 text-[11px] font-semibold bg-blue-50 text-blue-700 rounded-md border border-blue-200">
-                            <i class="fa-solid fa-shield-halved text-blue-600 mr-1"></i> Instant Browser Validation
+                        <span class="px-2.5 py-1 text-[11px] font-semibold bg-sky-50 text-sky-700 rounded-md border border-sky-200">
+                            <i class="fa-solid fa-shield-halved text-sky-600 mr-1"></i> Instant Browser Validation
                         </span>
                     </div>
                 </div>
@@ -1176,10 +1198,12 @@
                             <i class="fa-solid fa-file-excel text-emerald-600 text-sm"></i>
                             <span>Export Excel</span>
                         </button>
+                        <?php if ((int)$this->session->userdata('role_id') === 22): ?>
                         <button onclick="bulkDeleteSelected()" class="btn-gradient-base btn-gradient-rose-soft h-9 px-3.5 text-xs flex items-center gap-2" title="Hapus Selected">
                             <i class="fa-solid fa-trash-can text-sm text-rose-600"></i>
                             <span>Hapus</span>
                         </button>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -1253,9 +1277,11 @@
                         <i class="fa-solid fa-paper-plane text-[11px]"></i>
                         <span class="text-[11px]">Kirim</span>
                     </button>
+                    <?php if ((int)$this->session->userdata('role_id') === 22): ?>
                     <button type="button" onclick="bulkDeleteSelected()" class="h-8 w-8 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 flex items-center justify-center text-xs cursor-pointer transition-all shrink-0" title="Hapus Akun Selected">
                         <i class="fa-regular fa-trash-can text-xs"></i>
                     </button>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -1415,12 +1441,27 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Peran / Role *</label>
                         <select id="acc-role" required class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                            <option value="Mahasiswa">Mahasiswa</option>
-                            <option value="Dosen">Dosen</option>
-                            <option value="Laboran">Laboran</option>
-                            <option value="Ka. Ur">Ka. Ur</option>
-                            <option value="Koordinator TA">Koordinator TA</option>
-                            <option value="Admin">Admin</option>
+                            <?php if (!empty($is_koor_ta) || (int)$this->session->userdata('role_id') === 6): ?>
+                                <option value="Koordinator TA">Koordinator TA (6)</option>
+                            <?php elseif (!empty($is_laa) || (int)$this->session->userdata('role_id') === 5): ?>
+                                <option value="Mahasiswa">Mahasiswa (4)</option>
+                                <option value="Admin LAA">Admin LAA (5)</option>
+                            <?php elseif (!empty($is_laboran) || (int)$this->session->userdata('role_id') === 21): ?>
+                                <option value="Mahasiswa">Mahasiswa (4)</option>
+                                <option value="Dosen">Dosen (3)</option>
+                                <option value="Laboran">Laboran (21)</option>
+                            <?php else: ?>
+                                <option value="Mahasiswa">Mahasiswa (4)</option>
+                                <option value="Dosen">Dosen (3)</option>
+                                <option value="Laboran">Laboran (21)</option>
+                                <option value="Ka. Ur">Kepala Urusan (2)</option>
+                                <option value="Admin LAA">Admin LAA (5)</option>
+                                <option value="Koordinator TA">Koordinator TA (6)</option>
+                                <option value="PIC KK">PIC KK (7)</option>
+                                <option value="Ketua KK">Ketua KK (9)</option>
+                                <option value="Admin">Admin (1)</option>
+                                <option value="Super Admin">Super Admin (22)</option>
+                            <?php endif; ?>
                         </select>
                     </div>
                     <div>
@@ -1582,6 +1623,14 @@
 
     <!-- JAVASCRIPT APPLICATION LOGIC -->
     <script>
+        // Role awareness
+        window.userRoleId = <?= (int)$this->session->userdata('role_id') ?>;
+        window.isLaboran = <?= (!empty($is_laboran) || (int)$this->session->userdata('role_id') === 21) ? 'true' : 'false' ?>;
+        window.isLaa = <?= (!empty($is_laa) || (int)$this->session->userdata('role_id') === 5) ? 'true' : 'false' ?>;
+        window.isKoorTa = <?= (!empty($is_koor_ta) || (int)$this->session->userdata('role_id') === 6) ? 'true' : 'false' ?>;
+        window.isSuperAdmin = <?= ((int)$this->session->userdata('role_id') === 22) ? 'true' : 'false' ?>;
+        window.allRolesMap = <?= !empty($all_roles_map) ? json_encode($all_roles_map) : '{}' ?>;
+
         // Initial State Data from Database
         let state = {
             accounts: <?= isset($initial_accounts_json) ? $initial_accounts_json : '[]' ?>,
@@ -1593,8 +1642,8 @@
             currentPage: 1,
             pageSize: 10,
             emailTemplate: {
-                subject: '[IFIK Telkom University] Token Akses Portal Akun Anda: {TOKEN}',
-                body: 'Halo {NAMA},\n\nAkun portal IFIK Telkom University Anda telah didaftarkan sebagai {ROLE}.\n\nBerikut adalah Kode Token Akses 8-Karakter unik Anda:\n===============================\nKODE TOKEN : {TOKEN}\nNIM / NIP  : {NIM_NIP}\nEMAIL      : {EMAIL}\n===============================\n\nGunakan token ini untuk melakukan verifikasi awal dan aktivasi kata sandi akun Anda.\n\nSalam hangat,\nTim Layanan Informatika (IFIK) Telkom University'
+                subject: '[IFIK Telkom University] Tautan Aktivasi Akun Portal Anda',
+                body: 'Halo {NAMA},\n\nAkun portal IFIK Telkom University Anda telah didaftarkan sebagai {ROLE}.\n\nSilakan klik tautan/tombol aktivasi pada email ini untuk mengaktifkan akun dan membuat kata sandi baru Anda secara langsung tanpa perlu memasukkan token manual.\n\nDetail Akun:\n- NIM / NIP : {NIM_NIP}\n- Email Resmi : {EMAIL}\n- Role / Peran : {ROLE}\n\nTerima kasih,\nTim Layanan Fakultas Industri Kreatif (IFIK) Telkom University'
             }
         };
 
@@ -2248,23 +2297,107 @@
 
             let nowStr = new Date().toISOString().slice(0, 16).replace('T', ' ');
             const seenInFile = new Set();
+            const seenNimInFile = new Set();
+
+            const defaultRoleMap = {
+                '1': 'Admin',
+                '2': 'Kepala Urusan',
+                '3': 'Dosen',
+                '4': 'Mahasiswa',
+                '5': 'Admin LAA',
+                '6': 'Koordinator TA',
+                '7': 'PIC KK',
+                '8': 'Reviewer',
+                '9': 'Ketua KK',
+                '10': 'Pembimbing 1',
+                '11': 'Pembimbing 2',
+                '12': 'Penguji',
+                '13': 'Dosen Wali',
+                '14': 'Kaprodi',
+                '15': 'Dekan',
+                '16': 'Admin Prodi',
+                '17': 'Staff LAA',
+                '18': 'Tim TA',
+                '19': 'Koordinator MK',
+                '20': 'Asisten Lab',
+                '21': 'Laboran',
+                '22': 'Super Admin'
+            };
+            const roleIdToNameMap = Object.assign({}, defaultRoleMap, window.allRolesMap || {});
+
+            function formatRoleDisplay(rawRole) {
+                if (rawRole === null || rawRole === undefined || rawRole === '') return 'Mahasiswa';
+                const str = rawRole.toString().trim();
+                
+                // If it is numeric ID
+                if (/^\d+$/.test(str)) {
+                    if (roleIdToNameMap[str]) {
+                        return roleIdToNameMap[str];
+                    }
+                    return `Role ID ${str}`;
+                }
+
+                // If it is already a text name or alias
+                const lower = str.toLowerCase();
+                for (let [id, name] of Object.entries(roleIdToNameMap)) {
+                    if (name.toLowerCase() === lower) {
+                        return name;
+                    }
+                }
+
+                // Common aliases
+                if (lower.includes('laboran')) return 'Laboran';
+                if (lower.includes('koor') && (lower.includes('ta') || lower.includes('tugas'))) return 'Koordinator TA';
+                if (lower.includes('laa') || lower.includes('layanan')) return 'Admin LAA';
+                if (lower.includes('super')) return 'Super Admin';
+                if (lower.includes('kaur') || lower.includes('ka. ur') || lower.includes('kepala urusan') || lower.includes('ka lab')) return 'Kepala Urusan';
+                if (lower.includes('prodi') && lower.includes('admin')) return 'Admin Prodi';
+                if (lower.includes('wali')) return 'Dosen Wali';
+                if (lower.includes('ketua') && lower.includes('kk')) return 'Ketua KK';
+                if (lower.includes('pic') && lower.includes('kk')) return 'PIC KK';
+                if (lower.includes('dosen')) return 'Dosen';
+                if (lower.includes('mhs') || lower.includes('mahasiswa') || lower.includes('student')) return 'Mahasiswa';
+                if (lower.includes('admin')) return 'Admin';
+
+                // Capitalize each word nicely
+                return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+            }
 
             rows.forEach((row, idx) => {
                 let name = row.Nama || row.nama || row.Name || row.name || 'User ' + (idx + 1);
                 let email = row.Email || row.email || row.EmailAddress || '';
-                let role = row.Role || row.role || row.Peran || row.peran || 'Mahasiswa';
+                let rawRole = row.Role !== undefined ? row.Role : (row.role !== undefined ? row.role : (row.Peran !== undefined ? row.Peran : (row.peran !== undefined ? row.peran : (row.Role_ID !== undefined ? row.Role_ID : (row.role_id !== undefined ? row.role_id : '4')))));
                 let nim_nip = row.NIM || row.nim || row.NIP || row.nip || row.ID || row.id || '';
                 let token = row.Token || row.token || '';
 
                 email = email ? email.trim() : '';
                 name = name ? name.trim() : 'User';
-                role = role ? role.trim() : 'Mahasiswa';
+                let emailLower = email.toLowerCase();
+                let roleStr = (rawRole !== null && rawRole !== undefined) ? rawRole.toString().trim() : '4';
+                let roleDisplay = formatRoleDisplay(roleStr);
+                let roleLower = roleDisplay.toLowerCase();
                 nim_nip = nim_nip ? nim_nip.toString().trim() : '';
+
+                // Find corresponding role ID
+                let resolvedRoleId = roleStr;
+                for (let [id, name] of Object.entries(roleIdToNameMap)) {
+                    if (name.toLowerCase() === roleLower || id === roleStr) {
+                        resolvedRoleId = id;
+                        break;
+                    }
+                }
 
                 let status = 'valid';
                 let statusText = 'Siap Diimpor';
                 let isChecked = true;
-                const emailLower = email.toLowerCase();
+                let isRoleAllowed = true;
+                if (window.isKoorTa) {
+                    isRoleAllowed = (resolvedRoleId === '6' || roleLower === 'koordinator ta');
+                } else if (window.isLaa) {
+                    isRoleAllowed = (['4', '5'].includes(resolvedRoleId) || ['mahasiswa', 'admin laa'].includes(roleLower));
+                } else if (window.isLaboran) {
+                    isRoleAllowed = (['3', '4', '21'].includes(resolvedRoleId) || ['dosen', 'mahasiswa', 'laboran'].includes(roleLower));
+                }
 
                 if (!email || !email.includes('@')) {
                     status = 'invalid_email';
@@ -2274,23 +2407,45 @@
                     status = 'invalid_domain';
                     statusText = 'Non-Telkom Domain';
                     isChecked = false;
+                } else if (!isRoleAllowed) {
+                    status = 'invalid_role';
+                    if (window.isKoorTa) {
+                        statusText = 'Role Ditolak (Khusus Koordinator TA [6])';
+                    } else if (window.isLaa) {
+                        statusText = 'Role Ditolak (Khusus Mahasiswa [4] & LAA [5])';
+                    } else if (window.isLaboran) {
+                        statusText = 'Role Ditolak (Khusus Laboran [21], Dosen [3], Mhs [4])';
+                    } else {
+                        statusText = 'Role Tidak Diizinkan';
+                    }
+                    isChecked = false;
                 } else if (state.accounts.some(a => a.email.toLowerCase() === emailLower)) {
                     status = 'duplicate';
-                    statusText = 'Duplikat di Database';
+                    statusText = 'Duplikat Email di Database';
                     isChecked = false;
                 } else if (seenInFile.has(emailLower)) {
                     status = 'duplicate';
-                    statusText = 'Duplikat di File Excel';
+                    statusText = 'Duplikat Email di File Excel';
+                    isChecked = false;
+                } else if (nim_nip && nim_nip !== '-' && state.accounts.some(a => a.nim_nip && a.nim_nip !== '-' && a.nim_nip.trim() === nim_nip && a.email.toLowerCase() !== emailLower)) {
+                    status = 'duplicate';
+                    statusText = 'Duplikat NIM/NIP di Database';
+                    isChecked = false;
+                } else if (nim_nip && nim_nip !== '-' && seenNimInFile.has(nim_nip)) {
+                    status = 'duplicate';
+                    statusText = 'Duplikat NIM/NIP di File Excel';
                     isChecked = false;
                 } else {
                     seenInFile.add(emailLower);
+                    if (nim_nip && nim_nip !== '-') seenNimInFile.add(nim_nip);
                 }
 
                 previewState.rows.push({
                     origIdx: idx,
                     name,
                     email,
-                    role,
+                    role: roleDisplay,
+                    rawRole: roleStr,
                     nim_nip,
                     token: token.trim(),
                     status,
@@ -2313,7 +2468,7 @@
             const totalCount = previewState.rows.length;
             const validCount = previewState.rows.filter(r => r.status === 'valid').length;
             const dupCount = previewState.rows.filter(r => r.status === 'duplicate').length;
-            const invalidCount = previewState.rows.filter(r => r.status === 'invalid_domain' || r.status === 'invalid_email').length;
+            const invalidCount = previewState.rows.filter(r => r.status === 'invalid_domain' || r.status === 'invalid_email' || r.status === 'invalid_role').length;
 
             document.getElementById('preview-stat-total').innerText = totalCount;
             document.getElementById('preview-stat-valid').innerText = validCount;
@@ -2373,6 +2528,11 @@
         }
 
         function confirmResetAndReimport() {
+            if (window.isLaboran) {
+                Swal.fire('Akses Ditolak', 'Fitur reset database hanya dapat diakses oleh Administrator.', 'warning');
+                return;
+            }
+
             const totalRows = previewState.rawRows ? previewState.rawRows.length : 0;
             Swal.fire({
                 title: 'Kosongkan DB & Impor Ulang?',
@@ -2431,7 +2591,7 @@
             if (previewState.filter === 'valid') {
                 filteredRows = previewState.rows.filter(r => r.status === 'valid');
             } else if (previewState.filter === 'invalid_domain') {
-                filteredRows = previewState.rows.filter(r => r.status === 'invalid_domain' || r.status === 'invalid_email');
+                filteredRows = previewState.rows.filter(r => r.status === 'invalid_domain' || r.status === 'invalid_email' || r.status === 'invalid_role');
             } else if (previewState.filter === 'duplicate') {
                 filteredRows = previewState.rows.filter(r => r.status === 'duplicate');
             }
@@ -2452,11 +2612,13 @@
                     if (r.status === 'valid') {
                         badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full"><i class="fa-solid fa-circle-check text-[10px]"></i> Siap Diimpor</span>`;
                     } else if (r.status === 'duplicate') {
-                        badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 rounded-full line-through"><i class="fa-solid fa-ban text-[10px]"></i> Duplikat (Auto-Skip)</span>`;
+                        badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 rounded-full line-through" title="${r.statusText || 'Duplikat'}"><i class="fa-solid fa-ban text-[10px]"></i> ${r.statusText || 'Duplikat (Auto-Skip)'}</span>`;
+                    } else if (r.status === 'invalid_role') {
+                        badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 rounded-full" title="${r.statusText || 'Role Ditolak'}"><i class="fa-solid fa-user-xmark text-[10px]"></i> ${r.statusText || 'Role Ditolak'}</span>`;
                     } else if (r.status === 'invalid_domain') {
-                        badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 rounded-full"><i class="fa-solid fa-circle-xmark text-[10px]"></i> Non-Telkom Domain</span>`;
+                        badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 rounded-full" title="${r.statusText || 'Non-Telkom Domain'}"><i class="fa-solid fa-circle-xmark text-[10px]"></i> ${r.statusText || 'Non-Telkom Domain'}</span>`;
                     } else {
-                        badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 rounded-full"><i class="fa-solid fa-circle-xmark text-[10px]"></i> Format Email Salah</span>`;
+                        badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 rounded-full" title="${r.statusText || 'Format Email Salah'}"><i class="fa-solid fa-circle-xmark text-[10px]"></i> ${r.statusText || 'Format Email Salah'}</span>`;
                     }
 
                     html += `
@@ -2857,10 +3019,12 @@
                                             <i class="fa-solid fa-paper-plane text-emerald-600 w-4 text-center"></i>
                                             <span>Kirim Email</span>
                                         </button>
+                                        ${window.isSuperAdmin ? `
                                         <button onclick="openEditAccountModal('${acc.id}'); closeAllActionDropdowns();" class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-blue-50 text-slate-700 hover:text-blue-600 font-medium transition-colors text-left cursor-pointer">
                                             <i class="fa-regular fa-pen-to-square text-blue-600 w-4 text-center"></i>
                                             <span>Ubah Data</span>
                                         </button>
+                                        ` : ''}
                                         ` : `
                                         <div class="px-3 py-1.5 text-[11px] text-indigo-600 flex items-center gap-2 bg-indigo-50/60 rounded-lg cursor-pointer" onclick="showProtectedAccountInfo('${acc.id}'); closeAllActionDropdowns();" title="Password telah diubah mandiri oleh pengguna (Terkunci)">
                                             <i class="fa-solid fa-user-shield text-indigo-500 w-4 text-center"></i>
@@ -2868,12 +3032,14 @@
                                         </div>
                                         `}
                                     </div>
+                                    ${window.isSuperAdmin ? `
                                     <div class="p-1">
                                         <button onclick="deleteSingleAccount('${acc.id}'); closeAllActionDropdowns();" class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-rose-50 text-slate-700 hover:text-rose-600 font-medium transition-colors text-left cursor-pointer">
                                             <i class="fa-regular fa-trash-can text-rose-500 w-4 text-center"></i>
                                             <span>Hapus Akun</span>
                                         </button>
                                     </div>
+                                    ` : ''}
                                 </div>
                             </div>
                         </td>
@@ -2913,10 +3079,12 @@
                                                 <i class="fa-solid fa-paper-plane text-emerald-600 w-4 text-center"></i>
                                                 <span>Kirim Email</span>
                                             </button>
+                                            ${window.isSuperAdmin ? `
                                             <button onclick="openEditAccountModal('${acc.id}'); closeAllActionDropdowns();" class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-blue-50 text-slate-700 hover:text-blue-600 font-medium transition-colors text-left cursor-pointer">
                                                 <i class="fa-regular fa-pen-to-square text-blue-600 w-4 text-center"></i>
                                                 <span>Ubah Data</span>
                                             </button>
+                                            ` : ''}
                                             ` : `
                                             <div class="px-3 py-1.5 text-[11px] text-indigo-600 flex items-center gap-2 bg-indigo-50/60 rounded-lg cursor-pointer" onclick="showProtectedAccountInfo('${acc.id}'); closeAllActionDropdowns();" title="Password telah diubah mandiri oleh pengguna (Terkunci)">
                                                 <i class="fa-solid fa-user-shield text-indigo-500 w-4 text-center"></i>
@@ -2924,12 +3092,14 @@
                                             </div>
                                             `}
                                         </div>
+                                        ${window.isSuperAdmin ? `
                                         <div class="p-1">
                                             <button onclick="deleteSingleAccount('${acc.id}'); closeAllActionDropdowns();" class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-rose-50 text-slate-700 hover:text-rose-600 font-medium transition-colors text-left cursor-pointer">
                                                 <i class="fa-regular fa-trash-can text-rose-500 w-4 text-center"></i>
                                                 <span>Hapus Akun</span>
                                             </button>
                                         </div>
+                                        ` : ''}
                                     </div>
                                 </div>
                             </div>
@@ -3348,15 +3518,23 @@
             let html = '';
             if (cat === 'role') {
                 label.innerText = 'Semua Role';
-                html = `
-                    <div onclick="selectMainSelectVal('', 'Semua Role', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium active bg-orange-50 text-brand-600"><span>Semua Role</span><i class="fa-solid fa-check text-xs check-icon"></i></div>
-                    <div onclick="selectMainSelectVal('Dosen', 'Dosen', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Dosen</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                    <div onclick="selectMainSelectVal('Mahasiswa', 'Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Mahasiswa</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                    <div onclick="selectMainSelectVal('Laboran', 'Laboran', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-500"></span> Laboran</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                    <div onclick="selectMainSelectVal('Ka. Ur', 'Ka. Ur', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> Ka. Ur</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                    <div onclick="selectMainSelectVal('Koordinator TA', 'Koordinator TA', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-teal-500"></span> Koordinator TA</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                    <div onclick="selectMainSelectVal('Admin', 'Admin', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Admin</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                `;
+                if (window.isLaboran) {
+                    html = `
+                        <div onclick="selectMainSelectVal('', 'Semua Role', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium active bg-orange-50 text-brand-600"><span>Semua Role</span><i class="fa-solid fa-check text-xs check-icon"></i></div>
+                        <div onclick="selectMainSelectVal('Dosen', 'Dosen', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Dosen</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectMainSelectVal('Mahasiswa', 'Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Mahasiswa</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                    `;
+                } else {
+                    html = `
+                        <div onclick="selectMainSelectVal('', 'Semua Role', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium active bg-orange-50 text-brand-600"><span>Semua Role</span><i class="fa-solid fa-check text-xs check-icon"></i></div>
+                        <div onclick="selectMainSelectVal('Dosen', 'Dosen', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Dosen</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectMainSelectVal('Mahasiswa', 'Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Mahasiswa</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectMainSelectVal('Laboran', 'Laboran', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-500"></span> Laboran</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectMainSelectVal('Ka. Ur', 'Ka. Ur', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> Ka. Ur</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectMainSelectVal('Koordinator TA', 'Koordinator TA', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-teal-500"></span> Koordinator TA</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectMainSelectVal('Admin', 'Admin', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Admin</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                    `;
+                }
             } else if (cat === 'token') {
                 label.innerText = 'Semua Status Token';
                 html = `
@@ -3434,15 +3612,23 @@
             let html = '';
             if (cat === 'role') {
                 label.innerText = 'Semua Role';
-                html = `
-                    <div onclick="selectExtraVal(${rowId}, '', 'Semua Role', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium active bg-orange-50 text-brand-600"><span>Semua Role</span><i class="fa-solid fa-check text-xs check-icon"></i></div>
-                    <div onclick="selectExtraVal(${rowId}, 'Dosen', 'Dosen', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Dosen</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                    <div onclick="selectExtraVal(${rowId}, 'Mahasiswa', 'Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Mahasiswa</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                    <div onclick="selectExtraVal(${rowId}, 'Laboran', 'Laboran', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-500"></span> Laboran</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                    <div onclick="selectExtraVal(${rowId}, 'Ka. Ur', 'Ka. Ur', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> Ka. Ur</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                    <div onclick="selectExtraVal(${rowId}, 'Koordinator TA', 'Koordinator TA', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-teal-500"></span> Koordinator TA</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                    <div onclick="selectExtraVal(${rowId}, 'Admin', 'Admin', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Admin</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
-                `;
+                if (window.isLaboran) {
+                    html = `
+                        <div onclick="selectExtraVal(${rowId}, '', 'Semua Role', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium active bg-orange-50 text-brand-600"><span>Semua Role</span><i class="fa-solid fa-check text-xs check-icon"></i></div>
+                        <div onclick="selectExtraVal(${rowId}, 'Dosen', 'Dosen', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Dosen</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectExtraVal(${rowId}, 'Mahasiswa', 'Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Mahasiswa</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                    `;
+                } else {
+                    html = `
+                        <div onclick="selectExtraVal(${rowId}, '', 'Semua Role', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium active bg-orange-50 text-brand-600"><span>Semua Role</span><i class="fa-solid fa-check text-xs check-icon"></i></div>
+                        <div onclick="selectExtraVal(${rowId}, 'Dosen', 'Dosen', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Dosen</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectExtraVal(${rowId}, 'Mahasiswa', 'Mahasiswa', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Mahasiswa</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectExtraVal(${rowId}, 'Laboran', 'Laboran', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-500"></span> Laboran</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectExtraVal(${rowId}, 'Ka. Ur', 'Ka. Ur', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> Ka. Ur</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectExtraVal(${rowId}, 'Koordinator TA', 'Koordinator TA', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-teal-500"></span> Koordinator TA</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                        <div onclick="selectExtraVal(${rowId}, 'Admin', 'Admin', this)" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between font-medium text-slate-700 hover:bg-orange-50 hover:text-brand-600"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Admin</span><i class="fa-solid fa-check text-xs check-icon hidden"></i></div>
+                    `;
+                }
             } else if (cat === 'token') {
                 label.innerText = 'Semua Status Token';
                 html = `
@@ -4108,6 +4294,10 @@
         }
 
         function openEditAccountModal(id) {
+            if (!window.isSuperAdmin) {
+                Swal.fire('Akses Ditolak', 'Hanya Super Administrator yang berhak mengubah data akun.', 'error');
+                return;
+            }
             const acc = state.accounts.find(a => a.id == id);
             if (!acc) return;
 
@@ -4127,6 +4317,11 @@
 
         function saveAccountForm(e) {
             e.preventDefault();
+            const id = document.getElementById('account-id').value.trim();
+            if (id && !window.isSuperAdmin) {
+                Swal.fire('Akses Ditolak', 'Hanya Super Administrator yang berhak mengubah data akun.', 'error');
+                return;
+            }
             const name = document.getElementById('acc-name').value.trim();
             const emailInput = document.getElementById('acc-email');
             const email = emailInput.value.trim();
@@ -4140,7 +4335,39 @@
                 return;
             }
 
+            // Check duplicate email against other accounts locally
+            const duplicateUser = state.accounts.find(a => a.email.toLowerCase() === email.toLowerCase() && a.id != id);
+            if (duplicateUser) {
+                emailInput.focus();
+                emailInput.classList.add('border-rose-500', 'ring-2', 'ring-rose-300');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Email Sudah Digunakan!',
+                    html: `Email <b>${email}</b> sudah terdaftar dan digunakan oleh akun <b>${duplicateUser.name}</b> (${duplicateUser.role}).<br><br>Silakan gunakan alamat email yang berbeda.`,
+                    confirmButtonColor: '#ea580c'
+                });
+                return;
+            }
+
+            // Check duplicate NIM / NIP against other accounts locally
+            const nimInput = document.getElementById('acc-nim-nip');
+            if (nim_nip && nim_nip !== '-') {
+                const duplicateNimUser = state.accounts.find(a => a.nim_nip && a.nim_nip !== '-' && a.nim_nip.trim() === nim_nip && a.id != id);
+                if (duplicateNimUser) {
+                    nimInput.focus();
+                    nimInput.classList.add('border-rose-500', 'ring-2', 'ring-rose-300');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'NIM/NIP Sudah Digunakan!',
+                        html: `NIM/NIP/ID <b>${nim_nip}</b> sudah terdaftar dan digunakan oleh akun <b>${duplicateNimUser.name}</b> (${duplicateNimUser.role}).<br><br>Silakan gunakan NIM/NIP yang berbeda.`,
+                        confirmButtonColor: '#ea580c'
+                    });
+                    return;
+                }
+            }
+
             emailInput.classList.remove('border-rose-500', 'ring-2', 'ring-rose-300');
+            if (nimInput) nimInput.classList.remove('border-rose-500', 'ring-2', 'ring-rose-300');
 
             Swal.fire({
                 title: 'Menyimpan Akun...',
@@ -4151,7 +4378,7 @@
             fetch('<?= site_url("import-email/save_user") ?>', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, role, nim_nip })
+                body: JSON.stringify({ id, name, email, role, nim_nip })
             })
             .then(res => res.json())
             .then(res => {
@@ -4162,7 +4389,7 @@
                     renderTable();
                     Swal.fire('Berhasil!', res.message, 'success');
                 } else {
-                    Swal.fire('Gagal', res.message, 'error');
+                    Swal.fire('Gagal Menyimpan', res.message, 'error');
                 }
             })
             .catch(err => Swal.fire('Server Error', err.message, 'error'));
@@ -4170,6 +4397,10 @@
 
         // 11. DELETE HANDLERS
         function deleteSingleAccount(id) {
+            if (!window.isSuperAdmin) {
+                Swal.fire('Akses Ditolak', 'Hanya Super Administrator yang berhak menghapus akun.', 'error');
+                return;
+            }
             Swal.fire({
                 title: 'Hapus Akun?',
                 text: 'Data akun akan dihapus dari database MySQL.',
@@ -4203,6 +4434,10 @@
         }
 
         function bulkDeleteSelected() {
+            if (!window.isSuperAdmin) {
+                Swal.fire('Akses Ditolak', 'Hanya Super Administrator yang berhak menghapus akun.', 'error');
+                return;
+            }
             if (state.selectedIds.length === 0) {
                 Swal.fire('Pilih Akun', 'Centang akun yang ingin dihapus.', 'warning');
                 return;
@@ -4281,13 +4516,67 @@
         }
 
         function downloadSampleTemplate(type) {
-            const sampleData = [
-                { 'Nama': 'Dr. Ir. Ahmad Sudrajat, M.T.', 'Email': 'ahmad.sudrajat@telkomuniversity.ac.id', 'Role': 'Dosen', 'NIM': '197804122005011002' },
-                { 'Nama': 'Budi Santoso', 'Email': 'budi.santoso@student.telkomuniversity.ac.id', 'Role': 'Mahasiswa', 'NIM': '1301210045' },
-                { 'Nama': 'Siti Rahmawati, S.Kom.', 'Email': 'siti.rahmawati@telkomuniversity.ac.id', 'Role': 'Ka. Ur', 'NIM': '2019080104' },
-                { 'Nama': 'Dewi Lestari', 'Email': 'dewi.lestari@student.telkomuniversity.ac.id', 'Role': 'Mahasiswa', 'NIM': '1301210088' },
-                { 'Nama': 'Prof. Dr. Hendra Wijaya', 'Email': 'hendra.wijaya@telkomuniversity.ac.id', 'Role': 'Dosen', 'NIM': '196503151990021001' }
-            ];
+            let sampleData = [];
+            let guideData = [];
+
+            if (window.isKoorTa) {
+                // Koordinator TA: Koordinator TA (6) only
+                sampleData = [
+                    { 'Nama': 'Dr. Bayu Pratama, S.T., M.T.', 'Email': 'bayu.pratama@telkomuniversity.ac.id', 'Role': 6, 'NIM': '198506152010021003' },
+                    { 'Nama': 'Ir. Anita Rahayu, M.Kom.', 'Email': 'anita.rahayu@telkomuniversity.ac.id', 'Role': 6, 'NIM': '198902142015042001' }
+                ];
+                guideData = [
+                    { 'Role ID': 6, 'Nama Role': 'Koordinator TA', 'Keterangan': 'Koordinator Tugas Akhir (Hak Akses: Khusus Koordinator TA)' }
+                ];
+            } else if (window.isLaa) {
+                // Admin LAA: Mahasiswa (4) & Admin LAA (5)
+                sampleData = [
+                    { 'Nama': 'Budi Santoso', 'Email': 'budi.santoso@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210045' },
+                    { 'Nama': 'Dewi Lestari', 'Email': 'dewi.lestari@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210088' },
+                    { 'Nama': 'Petugas Admin LAA', 'Email': 'admin.laa@telkomuniversity.ac.id', 'Role': 5, 'NIM': '2020080105' }
+                ];
+                guideData = [
+                    { 'Role ID': 4, 'Nama Role': 'Mahasiswa', 'Keterangan': 'Mahasiswa Aktif Telkom University' },
+                    { 'Role ID': 5, 'Nama Role': 'Admin LAA', 'Keterangan': 'Layanan Administrasi Akademik' }
+                ];
+            } else if (window.isLaboran) {
+                // Laboran: Laboran (21), Dosen (3), Mahasiswa (4)
+                sampleData = [
+                    { 'Nama': 'Laboran Informatika', 'Email': 'laboran.ifik@telkomuniversity.ac.id', 'Role': 21, 'NIM': '2021080121' },
+                    { 'Nama': 'Dr. Ir. Ahmad Sudrajat, M.T.', 'Email': 'ahmad.sudrajat@telkomuniversity.ac.id', 'Role': 3, 'NIM': '197804122005011002' },
+                    { 'Nama': 'Budi Santoso', 'Email': 'budi.santoso@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210045' },
+                    { 'Nama': 'Dewi Lestari', 'Email': 'dewi.lestari@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210088' }
+                ];
+                guideData = [
+                    { 'Role ID': 21, 'Nama Role': 'Laboran', 'Keterangan': 'Pengelola Laboratorium Informatika (Hak Akses Laboran)' },
+                    { 'Role ID': 3, 'Nama Role': 'Dosen', 'Keterangan': 'Dosen Wali / Penguji / Pembimbing (Hak Akses Laboran)' },
+                    { 'Role ID': 4, 'Nama Role': 'Mahasiswa', 'Keterangan': 'Mahasiswa Aktif Telkom University (Hak Akses Laboran)' }
+                ];
+            } else {
+                // Super Admin / Ka. Ur / Admin: All Roles
+                sampleData = [
+                    { 'Nama': 'Dr. Ir. Ahmad Sudrajat, M.T.', 'Email': 'ahmad.sudrajat@telkomuniversity.ac.id', 'Role': 3, 'NIM': '197804122005011002' },
+                    { 'Nama': 'Budi Santoso', 'Email': 'budi.santoso@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210045' },
+                    { 'Nama': 'Siti Rahmawati, S.Kom.', 'Email': 'siti.rahmawati@telkomuniversity.ac.id', 'Role': 2, 'NIM': '2019080104' },
+                    { 'Nama': 'Dewi Lestari', 'Email': 'dewi.lestari@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210088' },
+                    { 'Nama': 'Prof. Dr. Hendra Wijaya', 'Email': 'hendra.wijaya@telkomuniversity.ac.id', 'Role': 3, 'NIM': '196503151990021001' },
+                    { 'Nama': 'Admin LAA Petugas', 'Email': 'laa.petugas@telkomuniversity.ac.id', 'Role': 5, 'NIM': '2020080105' },
+                    { 'Nama': 'Koordinator Tugas Akhir', 'Email': 'koorta@telkomuniversity.ac.id', 'Role': 6, 'NIM': '198506152010021003' },
+                    { 'Nama': 'Laboran Informatika', 'Email': 'laboran.ifik@telkomuniversity.ac.id', 'Role': 21, 'NIM': '2021080121' }
+                ];
+                guideData = [
+                    { 'Role ID': 1, 'Nama Role': 'Admin', 'Keterangan': 'Administrator Utama' },
+                    { 'Role ID': 2, 'Nama Role': 'Kepala Urusan', 'Keterangan': 'Ka. Ur Akademik & Kemahasiswaan (Super Admin)' },
+                    { 'Role ID': 3, 'Nama Role': 'Dosen', 'Keterangan': 'Dosen Wali / Penguji / Pembimbing' },
+                    { 'Role ID': 4, 'Nama Role': 'Mahasiswa', 'Keterangan': 'Mahasiswa Aktif' },
+                    { 'Role ID': 5, 'Nama Role': 'Admin LAA', 'Keterangan': 'Layanan Administrasi Akademik' },
+                    { 'Role ID': 6, 'Nama Role': 'Koordinator TA', 'Keterangan': 'Koordinator Tugas Akhir' },
+                    { 'Role ID': 7, 'Nama Role': 'PIC KK', 'Keterangan': 'PIC Kelompok Keahlian' },
+                    { 'Role ID': 9, 'Nama Role': 'Ketua KK', 'Keterangan': 'Ketua Kelompok Keahlian' },
+                    { 'Role ID': 21, 'Nama Role': 'Laboran', 'Keterangan': 'Pengelola Laboratorium' },
+                    { 'Role ID': 22, 'Nama Role': 'Super Admin', 'Keterangan': 'Hak Akses Penuh Sistem' }
+                ];
+            }
 
             if (type === 'csv') {
                 const csv = Papa.unparse(sampleData);
@@ -4304,11 +4593,21 @@
                 worksheet['!cols'] = [
                     { wch: 32 }, // Nama
                     { wch: 48 }, // Email
-                    { wch: 16 }, // Role
+                    { wch: 14 }, // Role (Angka ID)
                     { wch: 22 }  // NIM/NIP
                 ];
                 const workbook = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(workbook, worksheet, 'Template Import');
+
+                // Add Guide sheet
+                const guideWorksheet = XLSX.utils.json_to_sheet(guideData);
+                guideWorksheet['!cols'] = [
+                    { wch: 12 },
+                    { wch: 20 },
+                    { wch: 45 }
+                ];
+                XLSX.utils.book_append_sheet(workbook, guideWorksheet, 'Petunjuk Role ID');
+
                 XLSX.writeFile(workbook, 'template_import_email_telkom.xlsx');
             }
         }
@@ -4343,5 +4642,8 @@
             });
         }
     </script>
+
+    <!-- Global Custom Circle Cursor -->
+    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>

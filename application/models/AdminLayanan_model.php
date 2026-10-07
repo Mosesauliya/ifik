@@ -1561,6 +1561,18 @@ class AdminLayanan_model extends CI_Model {
                 elseif ($r['status'] === 'Dikirim') $st = 'Pending';
                 else $st = $r['status'];
 
+                $createdAtReal = null;
+                if (preg_match('/\[CREATED:\s*([^\]]+)\]/is', $r['keterangan'] ?? '', $mC)) {
+                    $createdAtReal = trim($mC[1]);
+                } elseif (!empty($r['tgl_ticketing']) && strlen(trim($r['tgl_ticketing'])) > 10 && $r['tgl_ticketing'] !== '0000-00-00 00:00:00') {
+                    $createdAtReal = $r['tgl_ticketing'];
+                }
+
+                $prioritasParsed = null;
+                if (preg_match('/\[PRIORITAS:\s*([^\]]+)\]/is', $r['keterangan'] ?? '', $mPrio)) {
+                    $prioritasParsed = trim($mPrio[1]);
+                }
+
                 $formatted[] = [
                     'id'            => $r['id'],
                     'ticket_number' => $r['id'],
@@ -1572,10 +1584,10 @@ class AdminLayanan_model extends CI_Model {
                     'kategori'      => $r['kategori'] ?? 'Layanan Umum',
                     'perihal'       => $subjek,
                     'deskripsi'     => $deskripsi,
-                    'prioritas'     => 'Normal',
+                    'prioritas'     => $prioritasParsed ?: (!empty($r['prioritas']) ? $r['prioritas'] : 'Normal'),
                     'status'        => $st,
                     'catatan'       => $r['keterangan'] ?? '',
-                    'created_at'    => !empty($r['tgl_ticketing']) ? ($r['tgl_ticketing'] . ' 08:00:00') : date('Y-m-d H:i:s'),
+                    'created_at'    => $createdAtReal ?: (!empty($r['tgl_ticketing']) ? ($r['tgl_ticketing'] . ' 08:00:00') : date('Y-m-d H:i:s')),
                     'updated_at'    => $r['tgl_closed'] ?? ($r['tgl_diproses'] ?? date('Y-m-d H:i:s'))
                 ];
             }
@@ -1906,12 +1918,12 @@ class AdminLayanan_model extends CI_Model {
             $this->db->from('guidance g');
             $this->db->join('user u', 'u.id = g.id_mhs OR u.nim = g.id_mhs', 'left');
             $this->db->join('mahasiswa m', 'm.nim = u.nim OR m.nim = g.id_mhs', 'left');
-            $this->db->join('user u_wali', 'u_wali.nip = u.dosen_wali OR u_wali.id = u.dosen_wali', 'left');
+            $this->db->join('user u_wali', '(u.dosen_wali IS NOT NULL AND u.dosen_wali != "" AND (u_wali.nip = u.dosen_wali OR u_wali.id = u.dosen_wali))', 'left');
             $this->db->join('thesis_lecturers tl', 'tl.id_guidance = g.id', 'left');
-            $this->db->join('user u_p1', 'u_p1.nip = tl.dosen_pembimbing1 OR u_p1.id = tl.dosen_pembimbing1', 'left');
-            $this->db->join('user u_p2', 'u_p2.nip = tl.dosen_pembimbing2 OR u_p2.id = tl.dosen_pembimbing2', 'left');
-            $this->db->join('user u_pj1', 'u_pj1.nip = tl.dosen_penguji1 OR u_pj1.id = tl.dosen_penguji1', 'left');
-            $this->db->join('user u_pj2', 'u_pj2.nip = tl.dosen_penguji2 OR u_pj2.id = tl.dosen_penguji2', 'left');
+            $this->db->join('user u_p1', '(tl.dosen_pembimbing1 IS NOT NULL AND tl.dosen_pembimbing1 != "" AND (u_p1.nip = tl.dosen_pembimbing1 OR u_p1.id = tl.dosen_pembimbing1))', 'left');
+            $this->db->join('user u_p2', '(tl.dosen_pembimbing2 IS NOT NULL AND tl.dosen_pembimbing2 != "" AND (u_p2.nip = tl.dosen_pembimbing2 OR u_p2.id = tl.dosen_pembimbing2))', 'left');
+            $this->db->join('user u_pj1', '(tl.dosen_penguji1 IS NOT NULL AND tl.dosen_penguji1 != "" AND (u_pj1.nip = tl.dosen_penguji1 OR u_pj1.id = tl.dosen_penguji1))', 'left');
+            $this->db->join('user u_pj2', '(tl.dosen_penguji2 IS NOT NULL AND tl.dosen_penguji2 != "" AND (u_pj2.nip = tl.dosen_penguji2 OR u_pj2.id = tl.dosen_penguji2))', 'left');
 
             // Filter Jenis TA
             if ($filter_jenis === 'sidang') {
@@ -1951,6 +1963,11 @@ class AdminLayanan_model extends CI_Model {
                     $this->db->or_like('g.id_mhs', $search);
                 } elseif ($cat === 'judul') {
                     $this->db->like('g.judul_1', $search);
+                } elseif ($cat === 'ruangan') {
+                    $this->db->like('g.ruang_sidang', $search);
+                } elseif ($cat === 'waktu') {
+                    $this->db->like('g.tanggal_sidang', $search);
+                    $this->db->or_like('g.waktu_sidang', $search);
                 } elseif ($cat === 'prodi') {
                     $this->db->like('m.prodi', $search);
                     $this->db->or_like('g.peminatan', $search);
@@ -1958,18 +1975,33 @@ class AdminLayanan_model extends CI_Model {
                 } elseif ($cat === 'dosen') {
                     $this->db->like('u_wali.name', $search);
                     $this->db->or_like('u_p1.name', $search);
+                    $this->db->or_like('u_pj1.name', $search);
+                    $this->db->or_like('u_pj2.name', $search);
                 } else {
                     $this->db->like('u.name', $search);
                     $this->db->or_like('u.nim', $search);
                     $this->db->or_like('g.id_mhs', $search);
                     $this->db->or_like('g.judul_1', $search);
                     $this->db->or_like('m.prodi', $search);
+                    $this->db->or_like('g.ruang_sidang', $search);
                 }
                 $this->db->group_end();
             }
 
             $this->db->order_by('g.id', 'DESC');
             $rows = $this->db->get()->result_array();
+
+            // Deduplicate rows by guidance_id in PHP (safe for sql_mode=only_full_group_by)
+            $uniqueRows = array();
+            $seenGid = array();
+            foreach ($rows as $rItem) {
+                $gId = $rItem['guidance_id'];
+                if (!isset($seenGid[$gId])) {
+                    $seenGid[$gId] = true;
+                    $uniqueRows[] = $rItem;
+                }
+            }
+            $rows = $uniqueRows;
 
             foreach ($rows as $r) {
                 $nim = $r['nim'] ?: $r['id_mhs'];

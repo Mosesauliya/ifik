@@ -15,7 +15,7 @@ class News extends CI_Controller {
     private function _is_admin()
     {
         $role_id = (int)$this->session->userdata('role_id');
-        return in_array($role_id, [1, 5]);
+        return in_array($role_id, [1, 5, 22]);
     }
 
     private function _require_admin()

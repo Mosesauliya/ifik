@@ -9,8 +9,9 @@ class AdminFooter extends CI_Controller {
         $this->load->model('Footer_model');
         $this->load->helper(array('form', 'url'));
 
-        // Proteksi Ketat: Hanya Admin System (role_id 1) yang berhak mengakses
-        if (!$this->session->userdata('logged_in') || $this->session->userdata('role_id') != 1) {
+        // Proteksi Ketat: Hanya Admin System (role_id 1) atau Super Admin (role_id 22) yang berhak mengakses
+        $role_id = (int)$this->session->userdata('role_id');
+        if (!$this->session->userdata('logged_in') || ($role_id !== 1 && $role_id !== 22)) {
             $this->session->set_flashdata('error', 'Akses ditolak. Halaman ini hanya diperuntukkan bagi Administrator.');
             redirect('login');
         }

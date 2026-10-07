@@ -43,11 +43,20 @@ uploads/preview_ta/*
 uploads/ruangan/*
 uploads/signatures/*
 !uploads/signatures/index.html
+uploads/ticketing/*
+!uploads/ticketing/index.html
+
+# Temp files
+cookie*.txt
+
 
 
 # React UI & Agents
 /components/
 /lib/
 /.agents/
+backend-pembimbing/
+scratch/
+
 
 
