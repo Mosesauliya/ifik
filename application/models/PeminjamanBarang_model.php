@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
@@ -797,7 +797,7 @@ class PeminjamanBarang_model extends CI_Model {
             $this->db->order_by('MIN(sort_aset.nama_aset)', $sort_dir, false);
             $this->db->order_by('id_peminjaman', 'DESC');
         } elseif ($sort_key === 'lab') {
-            $this->db->order_by('MIN(sort_COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan)', $sort_dir, false);
+            $this->db->order_by('MIN(COALESCE(sort_ruangan.ruangan, "Umum"))', $sort_dir, false);
             $this->db->order_by('id_peminjaman', 'DESC');
         } elseif (isset($sort_map[$sort_key])) {
             $this->db->order_by($sort_map[$sort_key], $sort_dir);
@@ -827,10 +827,10 @@ class PeminjamanBarang_model extends CI_Model {
         }
 
         $detail_map = [];
-        $this->db->select('COALESCE(p.group_id, CONCAT("single-", p.id_peminjaman)) AS group_key, p.id_peminjaman, p.id_aset, p.jumlah_pinjam, p.stock_allocation_status, a.nama_aset, a.kode_aset, a.jumlah_total, a.jumlah_tersedia, a.jumlah_reserved, a.jumlah_dipinjam, r.nama_ruangan', false);
+        $this->db->select('COALESCE(p.group_id, CONCAT("single-", p.id_peminjaman)) AS group_key, p.id_peminjaman, p.id_aset, p.jumlah_pinjam, p.stock_allocation_status, a.nama_aset, a.kode_aset, a.jumlah_total, a.jumlah_tersedia, a.jumlah_reserved, a.jumlah_dipinjam, COALESCE(r.ruangan, "Umum") AS nama_ruangan', false);
         $this->db->from($this->table_peminjaman . ' as p');
         $this->db->join('aset a', 'a.id_aset = p.id_aset', 'left');
-        $this->db->join('ruangan r', 'r.id_ruangan = a.id_ruangan', 'left');
+        $this->db->join('ruangan r', 'r.id = a.id_ruangan', 'left');
         $this->db->group_start();
         if (!empty($group_ids)) $this->db->where_in('p.group_id', $group_ids);
         if (!empty($single_ids)) {
@@ -943,7 +943,7 @@ class PeminjamanBarang_model extends CI_Model {
                 $this->db->where("p.id_aset IN (SELECT a.id_aset FROM `aset` a WHERE a.nama_aset LIKE " . $this->db->escape($search) . " OR a.kode_aset LIKE " . $this->db->escape($search) . ")", null, false);
             } elseif ($field === 'lab') {
                 $search = '%' . $value . '%';
-                $this->db->where("p.id_aset IN (SELECT a.id_aset FROM `aset` a LEFT JOIN `ruangan` r ON r.id_ruangan = a.id_ruangan WHERE r.nama_ruangan LIKE " . $this->db->escape($search) . ")", null, false);
+                $this->db->where("p.id_aset IN (SELECT a.id_aset FROM `aset` a LEFT JOIN `ruangan` r ON r.id = a.id_ruangan WHERE r.ruangan LIKE " . $this->db->escape($search) . ")", null, false);
             } elseif (in_array($field, ['status', 'status_approval'], true)) {
                 if ($value === 'Terlambat') {
                     $this->db->where_in('p.status', ['Sedang Dipinjam', 'Dipinjam'])->where('p.tanggal_kembali_rencana <', date('Y-m-d'));
@@ -1175,7 +1175,7 @@ class PeminjamanBarang_model extends CI_Model {
             aset.kode_aset,
             COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan
         ');
-        $this->db->from('peminjaman_detail pd');
+        $this->db->from($this->table_peminjaman_detail . ' pd');
         $this->db->join('aset', 'aset.id_aset = pd.id_aset', 'left');
         $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan', 'left');
         $this->db->where('pd.id_peminjaman', $id_peminjaman);
@@ -1334,8 +1334,14 @@ class PeminjamanBarang_model extends CI_Model {
     }
 
     public function get_peminjaman_by_group_id($group_id) {
+        $group_id = trim((string) $group_id);
+        if (preg_match('/[?&]data=([^&]+)/i', $group_id, $m)) {
+            $group_id = rawurldecode($m[1]);
+        } elseif (preg_match('/(?:serah_terima|validasi_pengembalian|peminjaman)\/([^\/?#]+)/i', $group_id, $m)) {
+            $group_id = rawurldecode($m[1]);
+        }
         $this->db->select('MIN(id_peminjaman) as id_peminjaman');
-        if (strpos((string) $group_id, 'single-') === 0) {
+        if (strpos($group_id, 'single-') === 0) {
             $row = $this->db->where('id_peminjaman', (int) str_replace('single-', '', $group_id))->get($this->table_peminjaman)->row();
         } else {
             $row = $this->db->where('group_id', $group_id)->get($this->table_peminjaman)->row();
@@ -1348,7 +1354,13 @@ class PeminjamanBarang_model extends CI_Model {
      * two concurrent QR scans from both passing the same status check.
      */
     public function get_peminjaman_by_group_id_for_update($group_id) {
-        if (strpos((string) $group_id, 'single-') === 0) {
+        $group_id = trim((string) $group_id);
+        if (preg_match('/[?&]data=([^&]+)/i', $group_id, $m)) {
+            $group_id = rawurldecode($m[1]);
+        } elseif (preg_match('/(?:serah_terima|validasi_pengembalian|peminjaman)\/([^\/?#]+)/i', $group_id, $m)) {
+            $group_id = rawurldecode($m[1]);
+        }
+        if (strpos($group_id, 'single-') === 0) {
             $sql = 'SELECT id_peminjaman FROM `' . $this->table_peminjaman . '` WHERE id_peminjaman = ? LIMIT 1 FOR UPDATE';
             $row = $this->db->query($sql, [(int) str_replace('single-', '', $group_id)])->row();
         } else {
@@ -1427,7 +1439,7 @@ class PeminjamanBarang_model extends CI_Model {
     }
 
     public function get_qr_payload($group_id) {
-        return site_url('admin/peminjaman/serah_terima/' . rawurlencode($group_id));
+        return site_url('peminjamanbarang/serah_terima/' . rawurlencode($group_id));
     }
 
     public function qr_is_visible($status, $qr_locked = 0) {
@@ -2232,7 +2244,7 @@ class PeminjamanBarang_model extends CI_Model {
             aset.kode_aset,
             COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan
         ');
-        $this->db->from('peminjaman_detail pd');
+        $this->db->from($this->table_peminjaman_detail . ' pd');
         $this->db->join($this->table_peminjaman . ' p', 'p.id_peminjaman = pd.id_peminjaman');
         $this->db->join('aset', 'aset.id_aset = pd.id_aset', 'left');
         $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan', 'left');
@@ -2251,7 +2263,7 @@ class PeminjamanBarang_model extends CI_Model {
             aset.kode_aset,
             COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan
         ');
-        $this->db->from('peminjaman_detail pd');
+        $this->db->from($this->table_peminjaman_detail . ' pd');
         $this->db->join('aset', 'aset.id_aset = pd.id_aset', 'left');
         $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan', 'left');
         $this->db->where('pd.id_peminjaman', $id_peminjaman);
@@ -2300,13 +2312,13 @@ class PeminjamanBarang_model extends CI_Model {
             $value = trim((string) ($filter['value'] ?? ''));
             if ($value === '') continue;
             if ($field === 'all') {
-                $this->db->group_start()->like('aset.nama_aset', $value)->or_like('aset.kode_aset', $value)->or_like('COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan', $value)->or_like('aset.kondisi', $value);
+                $this->db->group_start()->like('aset.nama_aset', $value)->or_like('aset.kode_aset', $value)->or_like('ruangan.ruangan', $value)->or_like('aset.kondisi', $value);
                 if (is_numeric($value)) $this->db->or_where('aset.jumlah_tersedia', (int) $value);
                 $this->db->group_end();
             }
             elseif ($field === 'nama') $this->db->like('aset.nama_aset', $value);
             elseif ($field === 'kode') $this->db->like('aset.kode_aset', $value);
-            elseif ($field === 'ruangan') $this->db->like('COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan', $value);
+            elseif ($field === 'ruangan') $this->db->like('ruangan.ruangan', $value);
             elseif ($field === 'kondisi') $this->db->like('aset.kondisi', $value);
             elseif ($field === 'stok' && is_numeric($value)) $this->db->where('aset.jumlah_tersedia', (int) $value);
         }

@@ -1,6 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
-$boleh_serah = !empty($qr_valid);
+$boleh_serah = !empty($qr_valid) && ($peminjaman->status ?? '') === 'Disetujui (Menunggu Pengambilan)';
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -105,15 +105,15 @@ $boleh_serah = !empty($qr_valid);
                             <span>Kembali ke Scanner</span>
                         </a>
                         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold uppercase tracking-wider">
-                            <i class="bi bi-box-seam-fill"></i>
+                            <i class="bi bi-box-seam"></i>
                             <span>Serah Terima Barang</span>
                         </span>
                     </div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                        Verifikasi &amp; Serah Terima Barang
+                        Serah Terima Barang
                     </h1>
                     <p class="text-sm text-slate-500 mt-1">
-                        Periksa ketersediaan unit fisik di lab, sesuaikan jumlah jika diperlukan, lalu serahkan barang.
+                        Verifikasi fisik peralatan laboratorium, sesuaikan kuantitas serah, dan ambil bukti dokumentasi serah terima.
                     </p>
                 </div>
 
@@ -138,12 +138,12 @@ $boleh_serah = !empty($qr_valid);
                 </div>
             <?php endif; ?>
 
-            <!-- Detail Transaksi Header Card -->
+            <!-- Detail Peminjaman Header Card -->
             <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-5 sm:p-6 mb-6">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-100">
                     <div class="flex items-start gap-4">
                         <div class="w-12 h-12 rounded-2xl bg-orange-500/10 text-orange-600 flex items-center justify-center font-bold text-xl flex-shrink-0">
-                            <i class="bi bi-receipt"></i>
+                            <i class="bi bi-box-seam-fill"></i>
                         </div>
                         <div>
                             <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Kode / Nomor Peminjaman</div>
@@ -174,7 +174,7 @@ $boleh_serah = !empty($qr_valid);
                 <!-- Info Grid -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-5">
                     <div class="bg-slate-50/80 rounded-2xl p-4 border border-slate-100">
-                        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Mulai Pinjam</div>
+                        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Pinjam</div>
                         <div class="text-sm font-bold text-slate-800 mt-1 flex items-center gap-1.5">
                             <i class="bi bi-calendar-event text-orange-500"></i>
                             <span><?= html_escape(function_exists('tanggal_indonesia') ? tanggal_indonesia($peminjaman->tanggal_pinjam ?? null) : ($peminjaman->tanggal_pinjam ?? '-')) ?></span>
@@ -182,7 +182,7 @@ $boleh_serah = !empty($qr_valid);
                     </div>
 
                     <div class="bg-slate-50/80 rounded-2xl p-4 border border-slate-100">
-                        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Rencana Pengembalian</div>
+                        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Rencana Kembali</div>
                         <div class="text-sm font-bold text-slate-800 mt-1 flex items-center gap-1.5">
                             <i class="bi bi-calendar-check text-orange-500"></i>
                             <span><?= html_escape(function_exists('tanggal_indonesia') ? tanggal_indonesia($peminjaman->tanggal_kembali_rencana ?? null) : ($peminjaman->tanggal_kembali_rencana ?? '-')) ?></span>
@@ -190,7 +190,7 @@ $boleh_serah = !empty($qr_valid);
                     </div>
 
                     <div class="bg-slate-50/80 rounded-2xl p-4 border border-slate-100">
-                        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Keperluan / Alasan</div>
+                        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Keperluan Pinjam</div>
                         <div class="text-sm font-medium text-slate-700 mt-1 line-clamp-2" title="<?= html_escape($peminjaman->keperluan ?? '-') ?>">
                             <?= html_escape($peminjaman->keperluan ?? '-') ?>
                         </div>
@@ -200,13 +200,13 @@ $boleh_serah = !empty($qr_valid);
 
             <?php if ($boleh_serah): ?>
                 <form id="handoverForm" method="post" enctype="multipart/form-data" action="<?= site_url('peminjamanbarang/proses_serah/' . rawurlencode($peminjaman->group_id)) ?>">
-                    
+
                     <!-- Table Rincian Barang Card -->
                     <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-5 sm:p-6 mb-6">
                         <div class="flex items-center justify-between mb-4">
                             <div>
-                                <h3 class="text-base font-bold text-slate-800">Daftar Barang yang Diajukan</h3>
-                                <p class="text-xs text-slate-500 mt-0.5">Sesuaikan jumlah unit yang diserahkan jika stok fisik di lab kurang dari pengajuan.</p>
+                                <h3 class="text-base font-bold text-slate-800">Daftar Barang yang Diserahkan</h3>
+                                <p class="text-xs text-slate-500 mt-0.5">Jumlah unit dapat dikurangi jika ketersediaan fisik saat serah terima kurang dari pengajuan.</p>
                             </div>
                         </div>
 
@@ -247,7 +247,7 @@ $boleh_serah = !empty($qr_valid);
                                                            value="<?= $jumlah_pinjam ?>"
                                                            min="0"
                                                            max="<?= $jumlah_pinjam ?>"
-                                                           class="jumlah-input w-16 px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-center font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white text-sm"
+                                                           class="jumlah-input w-16 px-2 py-1.5 text-center border border-slate-200 rounded-lg font-bold text-slate-900 text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none"
                                                            data-max="<?= $jumlah_pinjam ?>"
                                                            required>
                                                     <button type="button" class="btn-increment w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center transition-colors">
@@ -262,243 +262,140 @@ $boleh_serah = !empty($qr_valid);
                         </div>
                     </div>
 
-                    <!-- Catatan & Foto Dokumentasi Card -->
+                    <!-- Bukti Foto Dokumentasi Card -->
                     <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-5 sm:p-6 mb-6">
-                        <div class="space-y-5">
-                            <!-- Catatan Serah Terima -->
+                        <div class="flex items-center justify-between mb-4">
                             <div>
-                                <label for="catatan_serah" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                                    Catatan Serah Terima <span class="text-slate-400 font-normal">(Opsional)</span>
-                                </label>
-                                <textarea id="catatan_serah"
-                                          name="catatan_serah"
-                                          rows="2"
-                                          placeholder="Contoh: Barang diserahkan lengkap dalam kondisi baik bersama kelengkapannya."
-                                          class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all"></textarea>
-                            </div>
-
-                            <!-- Foto Dokumentasi -->
-                            <div>
-                                <div class="flex items-center justify-between mb-2">
-                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                                        Dokumentasi Foto Serah Terima
-                                    </label>
-                                    <span class="text-xs text-slate-400">Maks. 5MB per file (JPG / PNG)</span>
-                                </div>
-
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                                    <button type="button"
-                                            id="btnGaleriSerah"
-                                            class="flex items-center justify-center gap-2 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-bold text-sm transition-colors border border-slate-200">
-                                        <i class="bi bi-images text-orange-500 text-base"></i>
-                                        <span>Pilih dari Galeri</span>
-                                    </button>
-                                    <button type="button"
-                                            id="btnKameraSerah"
-                                            class="flex items-center justify-center gap-2 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-bold text-sm transition-colors border border-slate-200">
-                                        <i class="bi bi-camera-fill text-orange-500 text-base"></i>
-                                        <span>Buka Kamera Langsung</span>
-                                    </button>
-                                </div>
-
-                                <input type="file" id="fotoSerahInput" class="hidden" accept="image/*" multiple>
-
-                                <!-- Thumbnail Preview Grid -->
-                                <div id="serahPreview" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+                                <h3 class="text-base font-bold text-slate-800">Dokumentasi Foto Serah Terima</h3>
+                                <p class="text-xs text-slate-500 mt-0.5">Ambil foto bukti penyerahan barang secara langsung atau unggah dari perangkat.</p>
                             </div>
                         </div>
+
+                        <input type="file" id="fileInputSerah" class="hidden" accept="image/*" multiple>
+
+                        <div class="flex flex-wrap gap-3 mb-4">
+                            <button type="button" id="btnKameraSerah"
+                                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm shadow-sm shadow-orange-600/20 transition-all active:scale-[0.98]">
+                                <i class="bi bi-camera-fill"></i>
+                                <span>Buka Kamera</span>
+                            </button>
+                            <button type="button" id="btnGaleriSerah"
+                                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-slate-700 hover:border-orange-300 hover:text-orange-600 font-semibold text-sm shadow-sm transition-all active:scale-[0.98]">
+                                <i class="bi bi-images text-orange-500"></i>
+                                <span>Pilih dari Galeri / File</span>
+                            </button>
+                        </div>
+
+                        <div id="previewSerah" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
                     </div>
 
-                    <!-- Action Submit Button -->
-                    <div class="flex items-center justify-end gap-3">
+                    <!-- Catatan Serah Terima Card -->
+                    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-5 sm:p-6 mb-8">
+                        <h3 class="text-base font-bold text-slate-800 mb-1">Catatan Tambahan (Opsional)</h3>
+                        <p class="text-xs text-slate-500 mb-3">Tuliskan keterangan nomor seri khusus, kelengkapan aksesoris, atau instruksi khusus kepada peminjam.</p>
+                        <textarea name="catatan_serah" rows="3"
+                                  placeholder="Contoh: Kabel power dan adaptor VGA lengkap diserahkan dalam tas..."
+                                  class="w-full px-4 py-3 text-sm rounded-2xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all resize-none"></textarea>
+                    </div>
+
+                    <!-- Action Submit Buttons -->
+                    <div class="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
                         <a href="<?= site_url('peminjamanbarang/scanner') ?>"
-                           class="px-6 py-3 rounded-2xl border border-slate-200 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors">
+                           class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold text-sm text-center transition-all">
                             Batal
                         </a>
-                        <button type="button"
-                                id="openHandoverConfirmation"
-                                class="px-7 py-3 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm shadow-lg shadow-orange-600/30 transition-all flex items-center gap-2">
-                            <i class="bi bi-check2-circle text-base"></i>
-                            <span>Periksa &amp; Konfirmasi Serah Terima</span>
+                        <button type="button" id="btnSubmitSerah"
+                                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm shadow-lg shadow-orange-600/25 transition-all active:scale-[0.98]">
+                            <i class="bi bi-check2-circle text-lg"></i>
+                            <span>Konfirmasi & Serahkan Barang</span>
                         </button>
                     </div>
-
-                    <!-- Camera Overlay Modal -->
-                    <div class="camera-overlay hidden" id="cameraOverlaySerah">
-                        <div class="bg-slate-900 rounded-3xl overflow-hidden w-full max-w-lg shadow-2xl border border-slate-700">
-                            <div class="p-4 bg-slate-800 text-white flex items-center justify-between border-b border-slate-700">
-                                <h4 class="font-bold text-sm flex items-center gap-2">
-                                    <i class="bi bi-camera text-orange-500"></i> Ambil Foto Bukti Serah Terima
-                                </h4>
-                                <button type="button" id="btnTutupKameraSerah" class="text-slate-400 hover:text-white text-lg">
-                                    <i class="bi bi-x-lg"></i>
-                                </button>
-                            </div>
-                            <div class="relative bg-black">
-                                <video id="cameraVideoSerah" autoplay playsinline class="w-full max-h-[55vh] object-cover"></video>
-                            </div>
-                            <div class="p-4 bg-slate-800 flex items-center justify-center gap-3">
-                                <button type="button"
-                                        id="btnJepretSerah"
-                                        class="px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-2xl font-bold text-sm flex items-center gap-2 shadow-md">
-                                    <i class="bi bi-camera-fill"></i>
-                                    <span>Jepret Foto</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
                 </form>
+
             <?php else: ?>
-                <div class="bg-amber-50 border border-amber-200 rounded-3xl p-6 text-center">
-                    <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-bold text-xl mx-auto mb-3 shadow-md shadow-amber-500/20">
-                        <i class="bi bi-exclamation-triangle-fill"></i>
+                <!-- State Alert Ketika Status Tidak Memenuhi Syarat Serah -->
+                <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-8 text-center max-w-lg mx-auto my-8">
+                    <div class="w-16 h-16 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-3xl mx-auto mb-4">
+                        <i class="bi bi-exclamation-octagon"></i>
                     </div>
-                    <h3 class="text-base font-bold text-amber-900 mb-1">Peminjaman Belum Siap Serah</h3>
-                    <p class="text-sm text-amber-800 max-w-md mx-auto leading-relaxed">
-                        <?= html_escape($qr_message ?? 'QR peminjaman ini belum berada pada status siap serah terima atau sudah pernah diproses sebelumnya.') ?>
+                    <h3 class="text-lg font-extrabold text-slate-900 mb-2">Tidak Dapat Memproses Serah Terima</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed mb-6">
+                        <?= html_escape($qr_message ?? 'Status peminjaman ini bukan "Disetujui (Menunggu Pengambilan)" atau belum melewati persetujuan Kaprodi.') ?>
                     </p>
-                    <div class="mt-5">
-                        <a href="<?= site_url('peminjamanbarang/scanner') ?>"
-                           class="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-slate-900 text-white text-sm font-bold hover:bg-orange-600 transition-colors">
-                            <i class="bi bi-arrow-left"></i>
-                            <span>Kembali ke Scanner</span>
-                        </a>
-                    </div>
+                    <a href="<?= site_url('peminjamanbarang/scanner') ?>"
+                       class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm transition-all">
+                        <i class="bi bi-qr-code-scan"></i>
+                        <span>Kembali ke Scanner</span>
+                    </a>
                 </div>
             <?php endif; ?>
 
         </main>
     </div>
 
-    <?php if ($boleh_serah): ?>
-    <!-- Confirmation Modal Component -->
-    <div id="handoverConfirmationModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between pb-4 border-b border-slate-100">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-9 h-9 rounded-xl bg-orange-500/10 text-orange-600 flex items-center justify-center font-bold text-base">
-                        <i class="bi bi-shield-check"></i>
-                    </div>
-                    <h3 class="text-base font-extrabold text-slate-900">Konfirmasi Serah Terima</h3>
+    <!-- Camera Live Modal Overlay -->
+    <div id="cameraOverlaySerah" class="camera-overlay hidden">
+        <div class="bg-slate-900 rounded-3xl overflow-hidden w-full max-w-lg border border-slate-800 shadow-2xl">
+            <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2 text-white font-bold text-sm">
+                    <i class="bi bi-camera text-orange-500"></i>
+                    <span>Ambil Foto Dokumentasi</span>
                 </div>
-                <button type="button" id="btnCloseConfirmModal" class="text-slate-400 hover:text-slate-600 text-lg">
+                <button type="button" id="btnTutupKameraSerah" class="text-slate-400 hover:text-white text-lg w-8 h-8 rounded-full flex items-center justify-center">
                     <i class="bi bi-x-lg"></i>
                 </button>
             </div>
-
-            <div class="py-4 space-y-4">
-                <?php $loan_action_item = $peminjaman; include APPPATH . 'views/shared/loan_action_summary.php'; unset($loan_action_item); ?>
-
-                <div class="bg-orange-50/80 border border-orange-200/80 rounded-2xl p-4 flex items-center justify-between">
-                    <div>
-                        <div class="text-xs font-bold text-orange-950 uppercase tracking-wide">Total Unit Diserahkan</div>
-                        <div class="text-xs text-orange-800/80 mt-0.5">Sesuai penyesuaian fisik laboran</div>
-                    </div>
-                    <div id="modalConfirmUnits" class="text-xl font-extrabold text-orange-600">0 unit</div>
-                </div>
-
-                <p class="text-xs text-slate-500 leading-relaxed">
-                    <i class="bi bi-info-circle text-orange-500 me-1"></i>
-                    Dengan menekan tombol setujui, status peminjaman akan diperbarui menjadi <strong>Sedang Dipinjam</strong> dan diteruskan ke Kaur untuk pencatatan resmi.
-                </p>
+            <div class="relative bg-black aspect-video flex items-center justify-center overflow-hidden">
+                <video id="cameraVideoSerah" autoplay playsinline muted class="w-full h-full object-cover"></video>
             </div>
-
-            <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
-                <button type="button" id="btnCancelConfirmModal" class="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50">
-                    Batal Periksa
-                </button>
-                <button type="button" id="btnSubmitHandover" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm flex items-center gap-1.5 shadow-md shadow-emerald-600/30">
-                    <i class="bi bi-check2-circle"></i>
-                    <span>Setujui Serah Terima</span>
+            <div class="p-4 bg-slate-950 flex items-center justify-center gap-4">
+                <button type="button" id="btnJepretSerah"
+                        class="w-16 h-16 rounded-full bg-orange-600 hover:bg-orange-500 text-white flex items-center justify-center text-2xl shadow-lg shadow-orange-600/40 transition-transform active:scale-90 border-4 border-slate-800">
+                    <i class="bi bi-camera-fill"></i>
                 </button>
             </div>
         </div>
     </div>
-    <?php endif; ?>
 
+    <!-- Script Logic -->
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Quantity inputs & steppers
-        document.querySelectorAll('.jumlah-input').forEach((input) => {
-            const container = input.closest('tr');
-            const btnDec = container ? container.querySelector('.btn-decrement') : null;
-            const btnInc = container ? container.querySelector('.btn-increment') : null;
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('handoverForm');
+        const fileInput = document.getElementById('fileInputSerah');
+        const preview = document.getElementById('previewSerah');
+        const btnKamera = document.getElementById('btnKameraSerah');
+        const btnGaleri = document.getElementById('btnGaleriSerah');
+        const btnSubmit = document.getElementById('btnSubmitSerah');
+        
+        let selectedFiles = [];
+        let cameraStream = null;
 
-            function validateVal() {
-                const max = parseInt(input.dataset.max || '0', 10);
+        // Counter Increment / Decrement
+        document.querySelectorAll('.btn-decrement').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const input = btn.parentElement.querySelector('.jumlah-input');
+                const min = parseInt(input.getAttribute('min') || '0', 10);
                 let val = parseInt(input.value || '0', 10);
-                if (isNaN(val) || val < 0) val = 0;
-                if (val > max) val = max;
-                input.value = val;
-            }
-
-            input.addEventListener('input', validateVal);
-
-            if (btnDec) {
-                btnDec.addEventListener('click', () => {
-                    let val = parseInt(input.value || '0', 10);
-                    if (val > 0) {
-                        input.value = val - 1;
-                        validateVal();
-                    }
-                });
-            }
-
-            if (btnInc) {
-                btnInc.addEventListener('click', () => {
-                    const max = parseInt(input.dataset.max || '0', 10);
-                    let val = parseInt(input.value || '0', 10);
-                    if (val < max) {
-                        input.value = val + 1;
-                        validateVal();
-                    }
-                });
-            }
+                if (val > min) {
+                    input.value = val - 1;
+                }
+            });
         });
 
-        const fileInput = document.getElementById('fotoSerahInput');
-        const btnGaleri = document.getElementById('btnGaleriSerah');
-        const btnKamera = document.getElementById('btnKameraSerah');
-        const preview = document.getElementById('serahPreview');
-        const form = document.getElementById('handoverForm');
-        let selectedFiles = [];
-
-        if (!fileInput || !form) return;
-
-        // Modal Confirmation
-        const openConfirmBtn = document.getElementById('openHandoverConfirmation');
-        const confirmModal = document.getElementById('handoverConfirmationModal');
-        const closeConfirmBtn = document.getElementById('btnCloseConfirmModal');
-        const cancelConfirmBtn = document.getElementById('btnCancelConfirmModal');
-        const submitHandoverBtn = document.getElementById('btnSubmitHandover');
-        const modalUnitsEl = document.getElementById('modalConfirmUnits');
-
-        if (openConfirmBtn && confirmModal) {
-            openConfirmBtn.addEventListener('click', () => {
-                if (!form.reportValidity()) return;
-                
-                const units = Array.from(form.querySelectorAll('.jumlah-input')).reduce((total, input) => total + (parseInt(input.value || '0', 10) || 0), 0);
-                if (modalUnitsEl) modalUnitsEl.textContent = units + ' unit';
-                confirmModal.classList.remove('hidden');
+        document.querySelectorAll('.btn-increment').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const input = btn.parentElement.querySelector('.jumlah-input');
+                const max = parseInt(input.getAttribute('data-max') || input.getAttribute('max') || '999', 10);
+                let val = parseInt(input.value || '0', 10);
+                if (val < max) {
+                    input.value = val + 1;
+                }
             });
-
-            const hideModal = () => confirmModal.classList.add('hidden');
-            if (closeConfirmBtn) closeConfirmBtn.addEventListener('click', hideModal);
-            if (cancelConfirmBtn) cancelConfirmBtn.addEventListener('click', hideModal);
-
-            if (submitHandoverBtn) {
-                submitHandoverBtn.addEventListener('click', () => {
-                    hideModal();
-                    fileInput.name = 'foto_serah[]';
-                    form.submit();
-                });
-            }
-        }
+        });
 
         function syncFileInput() {
             const dt = new DataTransfer();
-            selectedFiles.forEach((f) => dt.items.add(f));
+            selectedFiles.forEach(file => dt.items.add(file));
             fileInput.files = dt.files;
         }
 
@@ -506,11 +403,11 @@ $boleh_serah = !empty($qr_valid);
             preview.innerHTML = '';
             selectedFiles.forEach((file, idx) => {
                 const reader = new FileReader();
-                reader.onload = (event) => {
+                reader.onload = (e) => {
                     const card = document.createElement('div');
                     card.className = 'relative group rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 shadow-sm aspect-video';
                     card.innerHTML = `
-                        <img src="${event.target.result}" alt="Preview" class="w-full h-full object-cover">
+                        <img src="${e.target.result}" alt="Preview" class="w-full h-full object-cover">
                         <button type="button" class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-slate-900/80 hover:bg-rose-600 text-white flex items-center justify-center text-xs shadow-md transition-colors" data-idx="${idx}">
                             <i class="bi bi-x"></i>
                         </button>`;
@@ -533,29 +430,30 @@ $boleh_serah = !empty($qr_valid);
             });
         }
 
-        fileInput.addEventListener('change', () => {
-            Array.from(fileInput.files || []).forEach((file) => {
-                if (file.type.startsWith('image/') && file.size <= 5 * 1024 * 1024) {
-                    selectedFiles.push(file);
-                } else if (file.size > 5 * 1024 * 1024) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Ukuran File Terlalu Besar',
-                        text: 'File ' + file.name + ' melebihi batas 5MB.',
-                        confirmButtonColor: '#ea580c'
-                    });
-                }
+        if (fileInput) {
+            fileInput.addEventListener('change', () => {
+                Array.from(fileInput.files || []).forEach(file => {
+                    if (file.type.startsWith('image/') && file.size <= 5 * 1024 * 1024) {
+                        selectedFiles.push(file);
+                    } else if (file.size > 5 * 1024 * 1024) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Ukuran File Terlalu Besar',
+                            text: 'File ' + file.name + ' melebihi batas 5MB.',
+                            confirmButtonColor: '#ea580c'
+                        });
+                    }
+                });
+                syncFileInput();
+                renderPreview();
             });
-            syncFileInput();
-            renderPreview();
-        });
+        }
 
-        // Camera capture logic
+        // Camera Live
         const overlay = document.getElementById('cameraOverlaySerah');
         const video = document.getElementById('cameraVideoSerah');
         const btnJepret = document.getElementById('btnJepretSerah');
         const btnTutupKamera = document.getElementById('btnTutupKameraSerah');
-        let cameraStream = null;
 
         async function openCamera() {
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -568,14 +466,16 @@ $boleh_serah = !empty($qr_valid);
                 return;
             }
             try {
-                cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: 'environment' } }
+                });
                 video.srcObject = cameraStream;
                 overlay.classList.remove('hidden');
             } catch (err) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Gagal Membuka Kamera',
-                    text: err.message,
+                    text: 'Pastikan izin kamera diaktifkan. Detail: ' + err.message,
                     confirmButtonColor: '#ea580c'
                 });
             }
@@ -583,21 +483,20 @@ $boleh_serah = !empty($qr_valid);
 
         function closeCamera() {
             if (cameraStream) {
-                cameraStream.getTracks().forEach((track) => track.stop());
+                cameraStream.getTracks().forEach(t => t.stop());
                 cameraStream = null;
             }
             overlay.classList.add('hidden');
         }
 
         function ambilFoto() {
-            if (!cameraStream) return;
+            if (!video.videoWidth) return;
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-            canvas.toBlob((blob) => {
-                if (!blob) return;
-                const file = new File([blob], `bukti-serah-${Date.now()}.jpg`, { type: 'image/jpeg' });
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            canvas.toBlob(blob => {
+                const file = new File([blob], 'serah_terima_' + Date.now() + '.jpg', { type: 'image/jpeg' });
                 selectedFiles.push(file);
                 syncFileInput();
                 renderPreview();
@@ -609,9 +508,42 @@ $boleh_serah = !empty($qr_valid);
         if (btnJepret) btnJepret.addEventListener('click', ambilFoto);
         if (btnTutupKamera) btnTutupKamera.addEventListener('click', closeCamera);
 
-        form.addEventListener('submit', () => {
-            fileInput.name = 'foto_serah[]';
-        });
+        // Submit Confirmation
+        if (btnSubmit && form) {
+            btnSubmit.addEventListener('click', () => {
+                if (!form.reportValidity()) return;
+
+                const inputs = form.querySelectorAll('.jumlah-input');
+                let totalUnits = 0;
+                inputs.forEach(i => totalUnits += parseInt(i.value || '0', 10));
+
+                if (totalUnits === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Jumlah Barang Kosong',
+                        text: 'Minimal harus ada 1 unit barang yang diserahkan.',
+                        confirmButtonColor: '#ea580c'
+                    });
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Konfirmasi Serah Terima',
+                    html: `Apakah Anda yakin ingin menyerahkan total <b>${totalUnits} unit</b> barang ini kepada peminjam?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ea580c',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Ya, Serahkan Barang',
+                    cancelButtonText: 'Batal'
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        fileInput.name = 'foto_serah[]';
+                        form.submit();
+                    }
+                });
+            });
+        }
     });
     </script>
 </body>
