@@ -29,7 +29,7 @@ if ($isLoggedIn && $sessionRoleId === 2 && strpos(strtolower($sessionEmail), 'la
 
 // Fallback deteksi URI hanya jika user sudah login tapi sessionRoleId belum match
 if ($isLoggedIn && $activeRoleId === 0) {
-    if (strpos($currentUri, 'laboran') === 0) {
+    if (strpos($currentUri, 'laboran') === 0 || strpos($currentUri, 'peminjamanbarang') === 0) {
         $activeRoleId = 21; // Laboran
     } elseif (strpos($currentUri, 'kaur') === 0) {
         $activeRoleId = 2; // Kaur / Ka Lab
@@ -87,13 +87,16 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
             break;
         case 21: // Laboran (Staff Operasional Laboratorium)
             $defaultNavItems = [
-                ['category' => 'Operasional Laboratorium'],
-                ['heading' => 'Approval Peminjaman', 'href' => site_url('laboran/booking'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
-                ['heading' => 'Kelola Master Barang', 'href' => site_url('admin/barang'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
+                ['category' => 'Peminjaman Ruangan & Lab'],
+                ['heading' => 'Approval Peminjaman Ruangan', 'href' => site_url('laboran/booking'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
                 ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
                 ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
                 ['heading' => 'Tanda Tangan Digital', 'href' => site_url('laboran/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
                 ['heading' => 'Pendaftaran Akun Baru', 'href' => site_url('laboran/import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
+
+                ['category' => 'Peminjaman Barang & Aset', 'has_divider' => true],
+                ['heading' => 'Kelola Master Barang', 'href' => site_url('admin/barang'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
+                ['heading' => 'Scanner QR Serah Terima', 'href' => site_url('peminjamanbarang/scanner'), 'icon_3d' => 'assets/images/icons_3d/preview2.png'],
 
                 ['category' => 'Layanan Ticketing & Bantuan', 'has_divider' => true],
                 ['heading' => 'Bantuan & Live Chat Lab', 'href' => site_url('laboran/help'), 'icon_3d' => 'assets/images/icons_3d/help_chat.png'],
