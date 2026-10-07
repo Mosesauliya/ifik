@@ -5,7 +5,7 @@ class Approval extends CI_Controller {
     public function __construct() {
         parent::__construct();
         $this->load->library('session');
-        $this->load->helper(['url', 'scm_ajax', 'scm_pagination']);
+        $this->load->helper(['url', 'scm_ajax', 'scm_pagination', 'scm_date']);
         $this->load->helper('loan_progress');
         $this->load->model('PeminjamanBarang_model');
         $this->load->model('Aset_model');

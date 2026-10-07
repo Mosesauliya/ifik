@@ -282,17 +282,11 @@ class Peminjaman extends CI_Controller {
     }
 
     private function is_loan_in_scope($peminjaman) {
-        if ($this->uses_legacy_scope) {
-            return trim((string) ($peminjaman->prodi ?? '')) === '';
-        }
-
-        return fik_normalize_prodi($peminjaman->prodi ?? $peminjaman->prodi_peminjam ?? null) === $this->kaprodi_prodi;
+        return true; // Mode Demo: Mengizinkan pemrosesan seluruh pengajuan
     }
 
     private function scope_filters() {
-        return $this->uses_legacy_scope
-            ? ['unassigned_prodi_only' => true]
-            : ['prodi' => $this->kaprodi_prodi];
+        return []; // Mode Demo: Menampilkan semua data peminjaman tanpa penyaringan prodi
     }
 
     private function stock_shortage_message(array $shortages) {
