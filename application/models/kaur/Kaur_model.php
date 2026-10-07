@@ -589,7 +589,7 @@ class Kaur_model extends CI_Model {
     }
 
     public function get_bast_rows($filters = [], $limit = 10, $offset = 0) {
-        $this->db->select('p.*, u.nama_lengkap, b.id_bast, b.nomor_bast, b.tanggal_bast, b.jenis_bast, b.file_bast, b.catatan AS catatan_bast, b.created_at AS bast_created_at');
+        $this->db->select('p.*, u.name as nama_lengkap, b.id_bast, b.nomor_bast, b.tanggal_bast, b.jenis_bast, b.file_bast, b.catatan AS catatan_bast, b.created_at AS bast_created_at');
         $this->build_bast_rows_query($filters);
         $this->db->order_by('COALESCE(b.created_at, p.updated_at, p.created_at)', 'DESC', false);
         $this->db->limit((int) $limit, (int) $offset);
