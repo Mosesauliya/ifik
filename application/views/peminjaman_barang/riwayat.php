@@ -273,11 +273,12 @@ $history_query['per_page'] = $history_per_page;
                             </td>
                             <td class="text-center">
                                 <?php
-                                    $qr_locked = (int)($r->qr_locked ?? 0) === 1;
-                                    $show_pickup_qr = $qr_locked && $r->status === 'Disetujui (Menunggu Pengambilan)';
-                                    $show_return_qr = $qr_locked && in_array($r->status, ['Sedang Dipinjam', 'Dipinjam'], true);
+                                    $is_kaprodi_valid = (($r->status_kaprodi ?? '') === 'Disetujui') 
+                                        || !in_array($r->status, ['Menunggu ACC Kaprodi', 'Ditolak', 'Kedaluwarsa / Ditolak Otomatis'], true);
+                                    $is_not_rejected = !in_array($r->status, ['Ditolak', 'Kedaluwarsa / Ditolak Otomatis'], true);
+                                    $show_qr = $is_kaprodi_valid && $is_not_rejected;
                                 ?>
-                                <?php if($show_pickup_qr || $show_return_qr): ?>
+                                <?php if($show_qr): ?>
                                     <button class="btn btn-sm btn-outline-dark fw-semibold px-3" data-bs-toggle="modal" data-bs-target="#qrModal<?= $r->id_peminjaman ?>">
                                         <i class="bi bi-qr-code-scan me-1"></i> QR Transaksi
                                     </button>
@@ -313,11 +314,13 @@ $history_query['per_page'] = $history_per_page;
     <?php if(!empty($riwayat)): ?>
         <?php foreach($riwayat as $r): ?>
         <?php
-            $qr_locked = (int)($r->qr_locked ?? 0) === 1;
-            $show_pickup_qr = $qr_locked && $r->status === 'Disetujui (Menunggu Pengambilan)';
-            $show_return_qr = $qr_locked && in_array($r->status, ['Sedang Dipinjam', 'Dipinjam'], true);
-            if(!$show_pickup_qr && !$show_return_qr) { continue; }
-            $qr_url = site_url('admin/peminjaman/serah_terima/'.rawurlencode($r->group_id));
+            $is_kaprodi_valid = (($r->status_kaprodi ?? '') === 'Disetujui') 
+                || !in_array($r->status, ['Menunggu ACC Kaprodi', 'Ditolak', 'Kedaluwarsa / Ditolak Otomatis'], true);
+            $is_not_rejected = !in_array($r->status, ['Ditolak', 'Kedaluwarsa / Ditolak Otomatis'], true);
+            $show_qr = $is_kaprodi_valid && $is_not_rejected;
+            if(!$show_qr) { continue; }
+            $show_return_qr = in_array($r->status, ['Sedang Dipinjam', 'Dipinjam'], true);
+            $qr_url = site_url('peminjamanbarang/serah_terima/'.rawurlencode($r->group_id));
         ?>
         <div class="modal fade" id="qrModal<?= $r->id_peminjaman ?>" tabindex="-1" aria-labelledby="qrModalLabel<?= $r->id_peminjaman ?>" aria-hidden="true">
             <div class="modal-dialog modal-sm modal-dialog-centered">
