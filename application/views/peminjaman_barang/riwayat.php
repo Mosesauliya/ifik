@@ -1,7 +1,21 @@
 <?php
 /** @var array $riwayat */
 $session_role = strtolower((string) $this->session->userdata('role'));
-$display_nama = ($session_role === 'admin') ? 'Laboran' : $this->session->userdata('nama');
+$display_nama = ($session_role === 'admin') ? 'Laboran' : ($this->session->userdata('nama') ?: $this->session->userdata('username') ?: 'Pengguna FIK');
+$user_role_id = (int)($this->session->userdata('role_id') ?? 0);
+$role_names = [
+    1  => 'Admin System',
+    2  => 'Kepala Urusan',
+    3  => 'Dosen',
+    4  => 'Mahasiswa',
+    5  => 'Admin LAA',
+    6  => 'Koordinator TA',
+    7  => 'PIC KK',
+    9  => 'Ketua KK',
+    21 => 'Laboran',
+    22 => 'Super Admin'
+];
+$user_role_label = $role_names[$user_role_id] ?? ($this->session->userdata('role') ?: 'PORTAL IFIK');
 $notif_items = isset($notifikasi) && is_array($notifikasi) ? $notifikasi : [];
 $notif_count = (int) ($unread_notifikasi ?? 0);
 $history_pagination = isset($pagination) && is_array($pagination) ? $pagination : ['page' => 1, 'per_page' => 10, 'total' => count($riwayat ?? []), 'total_pages' => 1];
@@ -105,46 +119,71 @@ $history_query['per_page'] = $history_per_page;
     <!-- Dedicated Sidebar Component (Pola Admin LAA) -->
     <?php $this->load->view('peminjaman_barang/sidebar'); ?>
 
+<div id="laaMainContentWrapper">
     <!-- Sub Navigation Page Title Bar (Admin LAA style) -->
-    <div class="glass-header px-4 px-md-5 py-3 mb-4 bg-white border-bottom shadow-xs sticky-top" style="z-index: 100;">
-        <div class="container-fluid d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <header class="glass-header-ifik px-3 px-md-4 py-2.5 mb-4">
+        <div class="container-fluid d-flex flex-wrap align-items-center justify-content-between gap-3 header-inner-pad">
             <div class="d-flex align-items-center gap-3">
-                <div class="rounded-3 d-flex align-items-center justify-content-center shadow-xs" style="width: 44px; height: 44px; background: rgba(234, 91, 26, 0.12); color: #ea5b1a; font-size: 1.4rem;">
+                <div class="rounded-3 d-flex align-items-center justify-content-center shadow-xs flex-shrink-0" style="width: 44px; height: 44px; background: rgba(234, 91, 26, 0.12); color: #ea5b1a; font-size: 1.35rem;">
                     <i class="bi bi-clock-history"></i>
                 </div>
                 <div>
-                    <div class="d-flex align-items-center gap-2">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
                         <h1 class="h5 fw-bold text-dark mb-0 tracking-tight">Riwayat Peminjaman Barang</h1>
-                        <span class="badge rounded-pill" style="background: rgba(234, 91, 26, 0.12); color: #ea5b1a; font-weight: 700; font-size: 11px;">Status &amp; Tracking</span>
+                        <span class="badge rounded-pill px-2.5 py-1" style="background: rgba(234, 91, 26, 0.12); color: #ea5b1a; font-weight: 700; font-size: 11px;">Status &amp; Tracking</span>
                     </div>
-                    <p class="text-muted small mb-0" style="font-size: 12px;">Pantau progress pengajuan, status verifikasi, dan QR serah terima barang.</p>
+                    <p class="text-muted small mb-0 d-none d-sm-block" style="font-size: 12px;">Pantau progress pengajuan, status verifikasi, dan QR serah terima barang.</p>
                 </div>
             </div>
 
             <!-- Profile & Quick Action -->
             <div class="d-flex align-items-center gap-2 ms-auto">
-                <a href="<?= site_url('peminjaman_barang'); ?>" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-xs">
-                    <i class="bi bi-box-seam text-orange-600"></i>
+                <a href="<?= site_url('peminjaman_barang'); ?>" class="btn-ifik-action" title="Kembali ke Katalog Barang">
+                    <i class="bi bi-box-seam"></i>
                     <span>Katalog Alat</span>
                 </a>
+                
                 <div class="dropdown">
-                    <button class="btn btn-light btn-sm rounded-pill px-3 py-1.5 border dropdown-toggle fw-semibold d-inline-flex align-items-center gap-1.5" type="button" data-bs-toggle="dropdown">
-                        <i class="bi bi-person-circle text-orange-600"></i>
-                        <span><?= html_escape($display_nama); ?></span>
+                    <button class="btn-ifik-profile" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div class="profile-avatar-box">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                        <div class="profile-text-group d-none d-sm-flex">
+                            <span class="profile-name"><?= html_escape($display_nama); ?></span>
+                            <span class="profile-role"><?= html_escape($user_role_label); ?></span>
+                        </div>
+                        <i class="bi bi-chevron-down profile-chevron"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-3 mt-1">
-                        <li class="px-3 py-2 border-bottom">
-                            <span class="d-block text-muted small" style="font-size: 11px;">Login Sebagai:</span>
-                            <span class="fw-bold text-dark small"><?= html_escape($this->session->userdata('username') ?: $display_nama); ?></span>
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-ifik mt-2">
+                        <li class="px-3 py-2 border-bottom mb-1">
+                            <span class="d-block text-muted" style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Login Sebagai</span>
+                            <span class="fw-bold text-dark d-block text-truncate" style="font-size: 13px;"><?= html_escape($this->session->userdata('username') ?: $display_nama); ?></span>
+                            <span class="badge rounded-pill mt-1" style="background: #fff7ed; color: #ea580c; font-size: 10px; font-weight: 700;"><?= html_escape($user_role_label); ?></span>
                         </li>
-                        <li><a class="dropdown-item small py-2" href="<?= site_url('peminjaman_barang/riwayat') ?>"><i class="bi bi-clock-history me-2 text-primary"></i>Riwayat Pinjam</a></li>
+                        <li>
+                            <a class="dropdown-item" href="<?= site_url('peminjaman_barang/riwayat') ?>">
+                                <i class="bi bi-clock-history text-primary"></i>
+                                <span>Riwayat Pinjam</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="<?= site_url('peminjaman_barang') ?>">
+                                <i class="bi bi-grid text-warning"></i>
+                                <span>Katalog Alat</span>
+                            </a>
+                        </li>
                         <li><hr class="dropdown-divider my-1"></li>
-                        <li><a class="dropdown-item small py-2 text-danger fw-bold" href="<?= site_url('login/logout') ?>"><i class="bi bi-box-arrow-right me-2"></i>Keluar</a></li>
+                        <li>
+                            <a class="dropdown-item text-danger fw-bold" href="<?= site_url('login/logout') ?>">
+                                <i class="bi bi-box-arrow-right"></i>
+                                <span>Keluar</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
         </div>
-    </div>
+    </header>
 
     <!-- CONTENT -->
     <div class="container py-3">
@@ -447,6 +486,7 @@ $history_query['per_page'] = $history_per_page;
             renderHistory();
         }
     </script>
+</div><!-- /#laaMainContentWrapper -->
 </body>
 </html>
 
