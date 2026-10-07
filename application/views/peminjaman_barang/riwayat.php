@@ -1,7 +1,21 @@
 <?php
 /** @var array $riwayat */
 $session_role = strtolower((string) $this->session->userdata('role'));
-$display_nama = ($session_role === 'admin') ? 'Laboran' : $this->session->userdata('nama');
+$display_nama = ($session_role === 'admin') ? 'Laboran' : ($this->session->userdata('nama') ?: $this->session->userdata('username') ?: 'Pengguna FIK');
+$user_role_id = (int)($this->session->userdata('role_id') ?? 0);
+$role_names = [
+    1  => 'Admin System',
+    2  => 'Kepala Urusan',
+    3  => 'Dosen',
+    4  => 'Mahasiswa',
+    5  => 'Admin LAA',
+    6  => 'Koordinator TA',
+    7  => 'PIC KK',
+    9  => 'Ketua KK',
+    21 => 'Laboran',
+    22 => 'Super Admin'
+];
+$user_role_label = $role_names[$user_role_id] ?? ($this->session->userdata('role') ?: 'PORTAL IFIK');
 $notif_items = isset($notifikasi) && is_array($notifikasi) ? $notifikasi : [];
 $notif_count = (int) ($unread_notifikasi ?? 0);
 $history_pagination = isset($pagination) && is_array($pagination) ? $pagination : ['page' => 1, 'per_page' => 10, 'total' => count($riwayat ?? []), 'total_pages' => 1];
@@ -17,7 +31,7 @@ $history_query['per_page'] = $history_per_page;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Riwayat Peminjaman - SCM FIK</title>
+    <title>Riwayat Peminjaman Barang - IFIK</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -25,8 +39,8 @@ $history_query['per_page'] = $history_per_page;
     <link rel="stylesheet" href="<?= base_url('assets/css/loan-progress.css'); ?>?v=<?= @filemtime(FCPATH . 'assets/css/loan-progress.css'); ?>">
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Poppins', sans-serif; background-color: #f8f9fa; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
 
         /* Palette FIK */
         .text-fik-orange { color: #ea5b1a !important; }
@@ -51,7 +65,7 @@ $history_query['per_page'] = $history_per_page;
         
         .table-custom { width: 100%; table-layout: fixed; }
         .badge-status { display:inline-flex; align-items:center; justify-content:center; gap:.4rem; width:300px; min-width:300px; max-width:300px; height:42px; min-height:42px; padding:7px 14px; border-radius:999px; font-weight:600; font-size:.76rem; line-height:1.2; white-space:normal; text-align:center; }
-        .history-search { max-width:980px; margin:0 auto 1.25rem; }
+        .history-search { width: 100%; max-width: 100%; margin: 0 0 1.5rem; }
         .history-date { display:grid; width:100%; grid-template-columns:24px minmax(0, 1fr); align-items:center; gap:.55rem; padding:.5rem .6rem; border:1px solid transparent; border-radius:10px; cursor:help; transition:background-color .18s ease, border-color .18s ease; }
         .history-date:hover { background:#fff3eb; }
         .history-date > i { width:24px; font-size:1rem; text-align:center; }
@@ -102,52 +116,77 @@ $history_query['per_page'] = $history_per_page;
 </head>
 <body>
 
-    <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top shadow-sm">
-        <div class="container-fluid px-4 px-lg-5">
-            <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
-                <img src="<?= base_url('assets/logo/logo.webp'); ?>" alt="Logo" height="40" class="me-2">
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item"><a class="nav-link" href="<?= base_url('index.php/dashboard') ?>">Beranda</a></li>
-                    <li class="nav-item"><a class="nav-link" href="<?= base_url('index.php/peminjaman_barang') ?>">Total Barang</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#" onclick="alert('Pilih barang dari Katalog terlebih dahulu.'); return false;">Ajukan Peminjaman</a></li>
-                    <!-- INI YANG AKTIF -->
-                    <li class="nav-item"><a class="nav-link active" href="<?= base_url('index.php/peminjaman_barang/riwayat') ?>">Riwayat</a></li>
-                </ul>
-            </div>
-            <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
-                <div class="dropdown">
-                    <button class="btn btn-outline-secondary rounded-circle notif-bell position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifikasi">
-                        <i class="bi bi-bell"></i>
-                        <?php if ($notif_count > 0): ?><span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"><?= $notif_count ?></span><?php endif; ?>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-end shadow border-0 p-2 notif-menu">
-                        <div class="fw-bold px-2 py-1">Notifikasi</div>
-                        <?php if (empty($notif_items)): ?>
-                            <div class="small text-muted px-2 py-3">Belum ada notifikasi.</div>
-                            <?php else: foreach ($notif_items as $n): ?>
-                            <a class="dropdown-item rounded-3 py-2" href="<?= html_escape($n->link ?: '#') ?>">
-                                <div class="fw-semibold small"><?= html_escape($n->judul) ?></div>
-                                <div class="small text-muted text-wrap"><?= html_escape($n->pesan) ?></div>
-                            </a>
-                        <?php endforeach; endif; ?>
-                    </div>
+    <!-- Dedicated Sidebar Component (Pola Admin LAA) -->
+    <?php $this->load->view('peminjaman_barang/sidebar'); ?>
+
+<div id="laaMainContentWrapper">
+    <!-- Sub Navigation Page Title Bar (Admin LAA style) -->
+    <header class="glass-header-ifik mb-4">
+        <div class="container d-flex flex-wrap align-items-center justify-content-between gap-3 header-inner-pad">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-3 d-flex align-items-center justify-content-center shadow-xs flex-shrink-0" style="width: 44px; height: 44px; background: rgba(234, 91, 26, 0.12); color: #ea5b1a; font-size: 1.35rem;">
+                    <i class="bi bi-clock-history"></i>
                 </div>
-                <button class="btn btn-user"><i class="bi bi-person-circle me-1"></i> <?= $display_nama; ?></button>
+                <div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <h1 class="h5 fw-bold text-dark mb-0 tracking-tight">Riwayat Peminjaman Barang</h1>
+                        <span class="badge rounded-pill px-2.5 py-1" style="background: rgba(234, 91, 26, 0.12); color: #ea5b1a; font-weight: 700; font-size: 11px;">Status &amp; Tracking</span>
+                    </div>
+                    <p class="text-muted small mb-0 d-none d-sm-block" style="font-size: 12px;">Pantau progress pengajuan, status verifikasi, dan QR serah terima barang.</p>
+                </div>
+            </div>
+
+            <!-- Profile & Quick Action -->
+            <div class="d-flex align-items-center gap-2 ms-auto">
+                <a href="<?= site_url('peminjaman_barang'); ?>" class="btn-ifik-action" title="Kembali ke Katalog Barang">
+                    <i class="bi bi-box-seam"></i>
+                    <span>Katalog Alat</span>
+                </a>
+                
+                <div class="dropdown">
+                    <button class="btn-ifik-profile" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div class="profile-avatar-box">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                        <div class="profile-text-group d-none d-sm-flex">
+                            <span class="profile-name"><?= html_escape($display_nama); ?></span>
+                            <span class="profile-role"><?= html_escape($user_role_label); ?></span>
+                        </div>
+                        <i class="bi bi-chevron-down profile-chevron"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-ifik mt-2">
+                        <li class="px-3 py-2 border-bottom mb-1">
+                            <span class="d-block text-muted" style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Login Sebagai</span>
+                            <span class="fw-bold text-dark d-block text-truncate" style="font-size: 13px;"><?= html_escape($this->session->userdata('username') ?: $display_nama); ?></span>
+                            <span class="badge rounded-pill mt-1" style="background: #fff7ed; color: #ea580c; font-size: 10px; font-weight: 700;"><?= html_escape($user_role_label); ?></span>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="<?= site_url('peminjaman_barang/riwayat') ?>">
+                                <i class="bi bi-clock-history text-primary"></i>
+                                <span>Riwayat Pinjam</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="<?= site_url('peminjaman_barang') ?>">
+                                <i class="bi bi-grid text-warning"></i>
+                                <span>Katalog Alat</span>
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider my-1"></li>
+                        <li>
+                            <a class="dropdown-item text-danger fw-bold" href="<?= site_url('login/logout') ?>">
+                                <i class="bi bi-box-arrow-right"></i>
+                                <span>Keluar</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
-    </nav>
+    </header>
 
     <!-- CONTENT -->
-    <div class="container py-5">
-        <div class="mb-4 text-center" data-aos="fade-down">
-            <h2 class="fw-bold text-dark mb-0">RIWAYAT <span class="text-fik-orange">PEMINJAMAN</span></h2>
-        </div>
+    <div class="container py-3">
 
         <!-- Notifikasi Sukses -->
         <?php if($this->session->flashdata('success')): ?>
@@ -447,6 +486,7 @@ $history_query['per_page'] = $history_per_page;
             renderHistory();
         }
     </script>
+</div><!-- /#laaMainContentWrapper -->
 </body>
 </html>
 
