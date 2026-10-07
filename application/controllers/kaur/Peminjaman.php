@@ -5,7 +5,7 @@ class Peminjaman extends CI_Controller {
     public function __construct() {
         parent::__construct();
         $this->load->library('session');
-        $this->load->helper(['url', 'loan_progress', 'scm_ajax']);
+        $this->load->helper(['url', 'loan_progress', 'scm_ajax', 'scm_date']);
         $this->load->model('PeminjamanBarang_model');
         $this->guard_kaur();
     }
