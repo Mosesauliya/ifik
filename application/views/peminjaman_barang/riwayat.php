@@ -40,7 +40,7 @@ $history_query['per_page'] = $history_per_page;
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #fbf7f1; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
 
         /* Palette FIK */
         .text-fik-orange { color: #ea5b1a !important; }
@@ -65,7 +65,7 @@ $history_query['per_page'] = $history_per_page;
         
         .table-custom { width: 100%; table-layout: fixed; }
         .badge-status { display:inline-flex; align-items:center; justify-content:center; gap:.4rem; width:300px; min-width:300px; max-width:300px; height:42px; min-height:42px; padding:7px 14px; border-radius:999px; font-weight:600; font-size:.76rem; line-height:1.2; white-space:normal; text-align:center; }
-        .history-search { max-width:980px; margin:0 auto 1.25rem; }
+        .history-search { width: 100%; max-width: 100%; margin: 0 0 1.5rem; }
         .history-date { display:grid; width:100%; grid-template-columns:24px minmax(0, 1fr); align-items:center; gap:.55rem; padding:.5rem .6rem; border:1px solid transparent; border-radius:10px; cursor:help; transition:background-color .18s ease, border-color .18s ease; }
         .history-date:hover { background:#fff3eb; }
         .history-date > i { width:24px; font-size:1rem; text-align:center; }
@@ -121,8 +121,8 @@ $history_query['per_page'] = $history_per_page;
 
 <div id="laaMainContentWrapper">
     <!-- Sub Navigation Page Title Bar (Admin LAA style) -->
-    <header class="glass-header-ifik px-3 px-md-4 py-2.5 mb-4">
-        <div class="container-fluid d-flex flex-wrap align-items-center justify-content-between gap-3 header-inner-pad">
+    <header class="glass-header-ifik mb-4">
+        <div class="container d-flex flex-wrap align-items-center justify-content-between gap-3 header-inner-pad">
             <div class="d-flex align-items-center gap-3">
                 <div class="rounded-3 d-flex align-items-center justify-content-center shadow-xs flex-shrink-0" style="width: 44px; height: 44px; background: rgba(234, 91, 26, 0.12); color: #ea5b1a; font-size: 1.35rem;">
                     <i class="bi bi-clock-history"></i>

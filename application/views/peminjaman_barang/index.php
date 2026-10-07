@@ -61,7 +61,7 @@ foreach ($catalog_page_size_query as $query_name => $query_value) {
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #fbf7f1;
+            background-color: #f8fafc;
         }
 
         /* CUSTOM COLOR PALETTE FIK (Konsisten dengan Dashboard) */
@@ -551,8 +551,8 @@ foreach ($catalog_page_size_query as $query_name => $query_value) {
 
 <div id="laaMainContentWrapper">
     <!-- Sub Navigation Page Title Bar (Admin LAA style) -->
-    <header class="glass-header-ifik px-3 px-md-4 py-2.5 mb-4">
-        <div class="container-fluid d-flex flex-wrap align-items-center justify-content-between gap-3 header-inner-pad">
+    <header class="glass-header-ifik mb-4">
+        <div class="container d-flex flex-wrap align-items-center justify-content-between gap-3 header-inner-pad">
             <div class="d-flex align-items-center gap-3">
                 <div class="rounded-3 d-flex align-items-center justify-content-center shadow-xs flex-shrink-0" style="width: 44px; height: 44px; background: rgba(234, 91, 26, 0.12); color: #ea5b1a; font-size: 1.35rem;">
                     <i class="bi bi-box-seam"></i>

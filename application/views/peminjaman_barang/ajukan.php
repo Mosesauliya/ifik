@@ -53,7 +53,7 @@ $has_uploaded_visual = !empty($asset_media);
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #fbf7f1; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
 
         /* Palette FIK */
         .text-fik-orange { color: #ea5b1a !important; }
@@ -332,8 +332,8 @@ $has_uploaded_visual = !empty($asset_media);
 
 <div id="laaMainContentWrapper">
     <!-- Sub Navigation Page Title Bar (Admin LAA style) -->
-    <header class="glass-header-ifik px-3 px-md-4 py-2.5 mb-4">
-        <div class="container-fluid d-flex flex-wrap align-items-center justify-content-between gap-3 header-inner-pad">
+    <header class="glass-header-ifik mb-4">
+        <div class="container d-flex flex-wrap align-items-center justify-content-between gap-3 header-inner-pad">
             <div class="d-flex align-items-center gap-3">
                 <a href="<?= site_url('peminjaman_barang'); ?>" class="btn btn-light btn-sm rounded-circle d-flex align-items-center justify-content-center border shadow-xs flex-shrink-0" style="width: 38px; height: 38px;" title="Kembali ke Katalog">
                     <i class="bi bi-arrow-left text-dark"></i>

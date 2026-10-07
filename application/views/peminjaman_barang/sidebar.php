@@ -91,22 +91,27 @@ $barangNavItems[] = [
    POLISHED HEADER & ACTION BUTTONS (ADMIN LAA STYLE)
    ========================================================= */
 .glass-header-ifik {
-    background: rgba(255, 255, 255, 0.95) !important;
-    backdrop-filter: blur(14px) !important;
-    -webkit-backdrop-filter: blur(14px) !important;
+    background: rgba(255, 255, 255, 0.98) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
     border-bottom: 1.5px solid rgba(226, 232, 240, 0.9) !important;
-    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05) !important;
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04) !important;
     position: sticky;
     top: 0;
     z-index: 999;
+    padding-top: 14px !important;
+    padding-bottom: 14px !important;
+    min-height: 72px;
 }
 
 .header-inner-pad {
-    padding-left: 64px;
+    padding-left: 78px;
+    padding-right: 12px;
 }
 @media (min-width: 1024px) {
     body.laa-sidebar-pushed .header-inner-pad {
-        padding-left: 0.5rem;
+        padding-left: 12px;
+        padding-right: 12px;
     }
 }
 
@@ -193,10 +198,10 @@ $barangNavItems[] = [
     line-height: 1.2;
 }
 .profile-name {
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     font-weight: 700;
     color: #1e293b;
-    max-width: 150px;
+    max-width: 260px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
