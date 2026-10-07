@@ -19,13 +19,19 @@ class Peminjaman extends CI_Controller {
             redirect('auth');
         }
 
-        if (strtolower((string) $this->session->userdata('role')) !== 'kaur') {
+       if ((int) $this->session->userdata('role_id') !== 1) {
             if (scm_is_ajax()) {
                 scm_json_abort(['success' => false, 'message' => 'Anda tidak memiliki izin untuk memproses approval Kaur.'], 403);
             }
             $this->session->set_flashdata('error', 'Akses ditolak. Approval ini khusus Kaur Laboratorium.');
             redirect('dashboard');
         }
+    }
+
+    public function index() {
+        $data['title'] = 'Approval Peminjaman - Kaur';
+        $data['pengajuan'] = $this->PeminjamanBarang_model->get_visible_peminjaman(['action_role' => 'kaur']);
+        $this->load->view('kaur/dashboard', $data);
     }
 
     public function setujui($id_peminjaman) {
