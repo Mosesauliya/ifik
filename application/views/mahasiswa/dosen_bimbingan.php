@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * DASHBOARD UNIFIED — 4 Role: P1, P2, U1, U2
  * 
@@ -599,7 +599,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 </button>
                 <button onclick="switchDosenTab('sidang')" id="dosenTab4"
                     class="px-5 py-2.5 rounded-xl font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200">
-                    Sidang (Preview 4)
+                    Sidang
                 </button>
             </div>
 
@@ -2186,7 +2186,10 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             window.activeLihatBerkasIndices.forEach((index, cardIdx) => {
                 const mhs = bimbinganData[index];
                 if (!mhs) return;
-                const fileList = (mhs.riwayat_previews || []).slice(0, 2);
+                const allPreviews = mhs.riwayat_previews || [];
+                const fileList = currentTahap === 'Preview 3'
+                    ? allPreviews.slice(0, 3).reverse()
+                    : allPreviews.slice(0, 2);
                 const cardNum  = cardIdx + 1;
 
                 let itemsHtml = '';
@@ -2194,6 +2197,8 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                     itemsHtml = `<div class="p-3 text-center text-slate-400 text-xs">Tidak ada riwayat berkas.</div>`;
                 } else {
                     fileList.forEach((preview, idx) => {
+                        // Dapatkan index asli di riwayat_previews (sebelum reverse)
+                        const realIdx = allPreviews.findIndex(p => p.id === preview.id);
                         const files = getPreviewFiles(preview);
                         const status = preview.status_pembimbing || 'Pending';
 
@@ -2228,7 +2233,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                                        : IS_U1 ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border-emerald-300'
                                        :         'bg-purple-100 hover:bg-purple-200 text-purple-700 border-purple-300';
                             actionButtons = `
-                                <button onclick="handleFileAction('${mhs.nim}', ${idx}, 'Comment')"
+                                <button onclick="handleFileAction('${mhs.nim}', ${realIdx}, 'Comment')"
                                         class="px-2.5 py-1 rounded-lg ${cls} border text-[10px] font-bold transition cursor-pointer flex items-center gap-1"
                                         title="Beri komentar">
                                     <i class="bi ${icon} text-[10px]"></i><span>${label}</span>
@@ -2240,7 +2245,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                             <div class="mb-1.5 flex items-center justify-between gap-2 px-1">
                                 <div class="flex items-center gap-1.5">
                                     <i class="bi bi-folder2-open text-orange-500 text-xs"></i>
-                                    <span class="text-[11px] font-bold text-slate-700">Pengajuan #${idx+1}</span>
+                                    <span class="text-[11px] font-bold text-slate-700">Pengajuan #${realIdx + 1}</span>
                                     ${statusBadge}
                                 </div>
                                 <div class="flex items-center gap-1">${actionButtons}</div>
@@ -2253,7 +2258,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                             files.forEach((f) => {
                                 const fileUrl   = getUploadBaseUrl(currentTahap) + encodeURIComponent(f.file);
                                 const fileName  = f.file;
-                                const isActive  = isPreviewItemActive(mhs.nim, idx, f.type);
+                                const isActive  = isPreviewItemActive(mhs.nim, realIdx, f.type);
                                 const activeCardBorder = isActive ? 'ring-2 ring-orange-500 border-orange-300 bg-orange-50/45' : 'border-slate-200 bg-white hover:border-slate-300';
                                 const previewBtnStyle  = isActive ? 'bg-orange-600 text-white border-orange-600 shadow-xs ring-2 ring-orange-400' : 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200 shadow-2xs';
                                 const previewBtnLabel  = isActive ? 'Tutup' : 'Lihat';
@@ -2265,10 +2270,10 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                                 let picButtons = '';
                                 if (isCurrentUserPIC() && currentTahap !== 'Sidang') {
                                     if (fileStatus !== 'Approved') {
-                                        picButtons += `<button type="button" onclick="event.stopPropagation(); handleFileStatus('${mhs.nim}', ${idx}, '${f.type}', 'Approved')" class="px-2 h-7 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-300 text-[10px] font-bold transition cursor-pointer flex items-center gap-1" title="ACC Berkas"><i class="bi bi-check-lg"></i>ACC</button>`;
+                                        picButtons += `<button type="button" onclick="event.stopPropagation(); handleFileStatus('${mhs.nim}', ${realIdx}, '${f.type}', 'Approved')" class="px-2 h-7 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-300 text-[10px] font-bold transition cursor-pointer flex items-center gap-1" title="ACC Berkas"><i class="bi bi-check-lg"></i>ACC</button>`;
                                     }
                                     if (fileStatus !== 'Revision') {
-                                        picButtons += `<button type="button" onclick="event.stopPropagation(); handleFileStatus('${mhs.nim}', ${idx}, '${f.type}', 'Revision')" class="px-2 h-7 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300 text-[10px] font-bold transition cursor-pointer flex items-center gap-1" title="Revisi Berkas"><i class="bi bi-x-lg"></i>Revisi</button>`;
+                                        picButtons += `<button type="button" onclick="event.stopPropagation(); handleFileStatus('${mhs.nim}', ${realIdx}, '${f.type}', 'Revision')" class="px-2 h-7 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300 text-[10px] font-bold transition cursor-pointer flex items-center gap-1" title="Revisi Berkas"><i class="bi bi-x-lg"></i>Revisi</button>`;
                                     }
                                 }
 
@@ -2287,7 +2292,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                                             </div>
                                             <div class="flex items-center gap-1.5 shrink-0">
                                                 <button type="button"
-                                                        onclick="event.stopPropagation(); previewBerkasItem('${mhs.nim}', ${idx}, '${f.type}')"
+                                                        onclick="event.stopPropagation(); previewBerkasItem('${mhs.nim}', ${realIdx}, '${f.type}')"
                                                         class="px-2.5 h-7 rounded-lg border text-[10px] font-bold transition flex items-center justify-center gap-1 cursor-pointer active:scale-95 whitespace-nowrap ${previewBtnStyle}">
                                                     <i class="bi ${previewBtnIcon} text-[11px]"></i><span>${previewBtnLabel}</span>
                                                 </button>
