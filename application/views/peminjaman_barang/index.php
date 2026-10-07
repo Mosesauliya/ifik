@@ -1,0 +1,1298 @@
+﻿<?php
+/**
+ * @var array $barang
+ */
+$session_role = strtolower((string) $this->session->userdata('role'));
+$display_nama = ($session_role === 'admin') ? 'Laboran' : $this->session->userdata('nama');
+$notif_items = isset($notifikasi) && is_array($notifikasi) ? $notifikasi : [];
+$notif_count = (int) ($unread_notifikasi ?? 0);
+$catalog_pagination = $pagination ?? ['page' => 1, 'per_page' => 10, 'total' => count($barang ?? []), 'total_pages' => 1];
+$catalog_page = (int) $catalog_pagination['page'];
+$catalog_per_page = (int) $catalog_pagination['per_page'];
+$catalog_total = (int) $catalog_pagination['total'];
+$catalog_total_pages = (int) $catalog_pagination['total_pages'];
+$catalog_first_item = $catalog_total > 0 ? (($catalog_page - 1) * $catalog_per_page) + 1 : 0;
+$catalog_last_item = $catalog_total > 0 ? min($catalog_total, $catalog_page * $catalog_per_page) : 0;
+$catalog_query = $_GET;
+$catalog_query['per_page'] = $catalog_per_page;
+$catalog_page_size_query = $catalog_query;
+unset($catalog_page_size_query['per_page'], $catalog_page_size_query['page']);
+$catalog_page_size_hidden = [];
+foreach ($catalog_page_size_query as $query_name => $query_value) {
+    if (is_array($query_value)) {
+        foreach ($query_value as $array_value) {
+            $catalog_page_size_hidden[] = ['name' => $query_name . '[]', 'value' => $array_value];
+        }
+    } elseif ($query_value !== null) {
+        $catalog_page_size_hidden[] = ['name' => $query_name, 'value' => $query_value];
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Katalog Alat Studio - SCM FIK</title>
+    
+    <!-- Bootstrap 5 & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    
+    <!-- AOS Animation -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        /* CUSTOM COLOR PALETTE FIK (Konsisten dengan Dashboard) */
+        .text-fik-orange { color: #ea5b1a !important; }
+        .bg-fik-orange { background-color: #ea5b1a !important; }
+        .bg-fik-orange-light { background-color: rgba(234, 91, 26, 0.1) !important; }
+        .text-fik-brown { color: #5d3315 !important; }
+        
+        /* Navbar Dinamis (Sama persis dengan Dashboard) */
+        .navbar-custom { background-color: #ffffff; padding: 12px 0; border-bottom: 2px solid #ea5b1a; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+        .navbar-dark .navbar-nav .nav-link { color: #333333; font-weight: 500; font-size: 0.95rem; margin: 0 12px; transition: 0.3s; position: relative; }
+        .navbar-dark .navbar-nav .nav-link:hover, .navbar-dark .navbar-nav .nav-link.active { color: #ea5b1a; }
+        .navbar-dark .navbar-nav .nav-link::after { content: ''; position: absolute; width: 0; height: 2px; display: block; margin-top: 5px; right: 0; background: #ea5b1a; transition: width 0.3s ease; }
+        .navbar-dark .navbar-nav .nav-link:hover::after { width: 100%; left: 0; background: #ea5b1a; }
+        .btn-user { background: linear-gradient(45deg, #c24a13, #ea5b1a); color: white; font-weight: 600; border: none; border-radius: 8px; padding: 8px 20px; }
+        .notif-bell { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; }
+        .notif-menu { width: min(380px, calc(100vw - 32px)); max-height: min(420px, calc(100vh - 110px)); overflow-y: auto; }
+        .internal-doc-frame { width: 100%; height: min(78vh, 760px); border: 0; border-radius: 0 0 8px 8px; background: #f7f8fa; }
+        .btn-doc-mini {
+            border-radius: 999px;
+            font-weight: 700;
+            padding: 7px 12px;
+            background-color: #ea5b1a;
+            border: 1px solid #ea5b1a;
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+        .btn-doc-mini:hover,
+        .btn-doc-mini:focus,
+        .btn-doc-mini:active,
+        .btn-doc-mini.active,
+        .btn-doc-mini.show {
+            background-color: #c24a13;
+            border-color: #c24a13;
+            color: #ffffff;
+            box-shadow: 0 0 0 0.2rem rgba(234, 91, 26, 0.25);
+        }
+
+        /* Header Katalog (Slim & Elegan, bukan hero besar) */
+        .catalog-header {
+            background: linear-gradient(rgba(26, 26, 26, 0.9), rgba(26, 26, 26, 0.95)), url('https://images.unsplash.com/photo-1601506521937-0121a7fc2a6b?auto=format&fit=crop&q=80') center/cover;
+            padding: 50px 0;
+            color: white;
+            border-bottom: 5px solid #ea5b1a;
+        }
+
+        /* Styling Kartu Barang (Etalase) */
+        .item-card {
+            border: none;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            transition: all 0.3s ease;
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .item-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(234, 91, 26, 0.15);
+            border-bottom: 3px solid #ea5b1a;
+        }
+        
+        /* Area visual aset: render atau foto dari CRUD aset. */
+        .item-img-placeholder {
+            --asset-entry-delay: 0ms;
+            --asset-rotate-x: 0deg;
+            --asset-rotate-y: 0deg;
+            --asset-mouse-raise: 0px;
+            height: 180px;
+            background:
+                radial-gradient(circle at 50% 26%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 45%),
+                linear-gradient(145deg, #f4f6f9 0%, #e0e6ed 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #a4b0be;
+            position: relative;
+            overflow: hidden;
+            isolation: isolate;
+        }
+
+        .item-img-placeholder.asset-visual--product {
+            background:
+                radial-gradient(circle at 50% 24%, rgba(255, 255, 255, 0.95) 0, rgba(255, 255, 255, 0) 44%),
+                linear-gradient(145deg, #f7f9fc 0%, #e4eaf1 100%);
+        }
+
+        .item-img-placeholder::before {
+            content: '';
+            position: absolute;
+            top: -15%;
+            bottom: -15%;
+            left: -65%;
+            width: 42%;
+            background: linear-gradient(105deg, transparent 0%, rgba(255, 255, 255, 0.04) 24%, rgba(255, 255, 255, 0.72) 51%, rgba(255, 255, 255, 0.06) 75%, transparent 100%);
+            transform: skewX(-18deg);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .item-img-placeholder::after {
+            content: '';
+            position: absolute;
+            left: 18%;
+            right: 18%;
+            bottom: 13px;
+            height: 14px;
+            border-radius: 50%;
+            background: rgba(42, 52, 64, 0.19);
+            filter: blur(10px);
+            z-index: 0;
+            transform: scale(1) translateY(0);
+            opacity: 0.55;
+            transition: transform 360ms ease, opacity 360ms ease;
+        }
+
+        .asset-visual__motion {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transform: translateY(14px) scale(0.94);
+            animation: asset-visual-enter 720ms cubic-bezier(0.22, 1, 0.36, 1) var(--asset-entry-delay) forwards;
+        }
+
+        .asset-visual__float {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            transform-origin: center bottom;
+            animation: asset-visual-breathe 6s ease-in-out calc(var(--asset-entry-delay) + 720ms) infinite;
+        }
+
+        /* Render WEBP produk tetap diam; kedalaman muncul saat pengguna berinteraksi. */
+        .item-img-placeholder.asset-visual--interactive .asset-visual__float {
+            animation: none;
+        }
+
+        .asset-visual__content {
+            position: relative;
+            z-index: 2;
+            display: block;
+            max-width: 88%;
+            max-height: 92%;
+            transform: perspective(850px) translate3d(0, var(--asset-mouse-raise), 0) rotateX(var(--asset-rotate-x)) rotateY(var(--asset-rotate-y)) scale(1);
+            transform-style: preserve-3d;
+            transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), filter 300ms ease;
+            will-change: transform;
+        }
+
+        .asset-visual__media {
+            width: min(88%, 305px) !important;
+            height: 92% !important;
+            object-fit: contain !important;
+            filter: drop-shadow(0 16px 14px rgba(37, 45, 54, 0.20));
+        }
+
+        /* Model 3D dikendalikan oleh model-viewer: diam saat idle, drag untuk rotasi. */
+        .asset-visual__model {
+            width: 96%;
+            height: 96%;
+            display: block;
+            background: transparent;
+            --poster-color: transparent;
+            --progress-bar-color: #ea5b1a;
+            filter: drop-shadow(0 16px 14px rgba(37, 45, 54, 0.20));
+            cursor: grab;
+        }
+
+        .asset-visual__model:active {
+            cursor: grabbing;
+        }
+
+        .asset-gallery {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            touch-action: pan-y;
+        }
+
+        .asset-gallery__track {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            transition: transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
+            will-change: transform;
+        }
+
+        .asset-gallery__slide {
+            flex: 0 0 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            height: 100%;
+        }
+
+        .asset-gallery__control {
+            position: absolute;
+            top: 50%;
+            z-index: 5;
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border: 0;
+            border-radius: 50%;
+            background: rgba(31, 38, 48, 0.7);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transform: translateY(-50%);
+            transition: background-color 180ms ease, transform 180ms ease;
+        }
+
+        .asset-gallery__control:hover,
+        .asset-gallery__control:focus-visible {
+            background: #ea5b1a;
+            transform: translateY(-50%) scale(1.06);
+        }
+
+        .asset-gallery__control--previous { left: 10px; }
+        .asset-gallery__control--next { right: 10px; }
+
+        .asset-gallery__dots {
+            position: absolute;
+            z-index: 5;
+            left: 50%;
+            bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transform: translateX(-50%);
+        }
+
+        .asset-gallery__dot {
+            width: 6px;
+            height: 6px;
+            padding: 0;
+            border: 0;
+            border-radius: 99px;
+            background: rgba(48, 56, 66, 0.34);
+            transition: width 200ms ease, background-color 200ms ease;
+        }
+
+        .asset-gallery__dot.is-active {
+            width: 18px;
+            background: #ea5b1a;
+        }
+
+        .asset-gallery__slide[data-asset-product-viewer],
+        .asset-gallery__slide--model { cursor: grab; }
+        .asset-gallery__slide[data-asset-product-viewer].is-dragging { cursor: grabbing; }
+
+        @media (max-width: 575.98px) {
+            .asset-gallery__control { width: 28px; height: 28px; }
+        }
+
+        .asset-visual__icon {
+            font-size: 4.5rem;
+            line-height: 1;
+            filter: drop-shadow(0 13px 10px rgba(37, 45, 54, 0.16));
+        }
+
+        @keyframes asset-visual-enter {
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes asset-visual-breathe {
+            0%, 100% { transform: translateY(0) rotateZ(-1.5deg); }
+            50% { transform: translateY(-6px) rotateZ(1.5deg); }
+        }
+
+        .item-card:hover .asset-visual__content {
+            --asset-mouse-raise: -3px;
+            transform: perspective(850px) translate3d(0, var(--asset-mouse-raise), 0) rotateX(var(--asset-rotate-x)) rotateY(var(--asset-rotate-y)) scale(1.055);
+            filter: brightness(1.025) saturate(1.03);
+        }
+
+        /* WEBP produk menahan pose terakhir seperti product viewer, tanpa hover float. */
+        .item-card:hover .item-img-placeholder.asset-visual--interactive .asset-visual__content {
+            --asset-mouse-raise: 0px;
+            transform: perspective(850px) translate3d(0, 0, 0) rotateX(var(--asset-rotate-x)) rotateY(var(--asset-rotate-y)) scale(1);
+            filter: none;
+        }
+
+        .item-img-placeholder.asset-visual--interactive .asset-gallery__slide.is-dragging .asset-visual__content {
+            filter: brightness(1.02) saturate(1.03);
+        }
+
+        .item-card:hover .asset-visual__icon {
+            color: #ea5b1a;
+        }
+
+        .item-card:hover .item-img-placeholder::before {
+            animation: asset-visual-sweep 850ms cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .item-card:hover .item-img-placeholder::after {
+            opacity: 0.4;
+            transform: scale(0.85) translateY(5px);
+        }
+
+        @keyframes asset-visual-sweep {
+            0% { left: -65%; opacity: 0; }
+            20% { opacity: 0.72; }
+            100% { left: 128%; opacity: 0; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .asset-visual__motion,
+            .asset-visual__float,
+            .item-img-placeholder::before {
+                animation: none;
+            }
+            .asset-visual__motion {
+                opacity: 1;
+                transform: none;
+            }
+            .asset-visual__content,
+            .item-card:hover .asset-visual__content {
+                transform: none;
+                transition: none;
+            }
+        }
+
+        /* Tombol Pinjam */
+        .btn-pinjam {
+            background-color: transparent;
+            color: #ea5b1a;
+            border: 1px solid #ea5b1a;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: 0.3s;
+            display: block;
+            text-align: center;
+            text-decoration: none;
+        }
+        .btn-pinjam:hover {
+            background-color: #ea5b1a;
+            color: white;
+        }
+        .btn-pinjam.disabled {
+            background-color: #e9ecef;
+            border-color: #ced4da;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .catalog-toolbar {
+            margin-bottom: 24px;
+        }
+        .catalog-toolbar .admin-multi-filter { margin-bottom:.75rem !important; }
+        .catalog-search-group .input-group-text { width:44px; justify-content:center; border-color:#cfd6dd; background:#fff; color:#5e6873; }
+        .catalog-search-group .form-control { border-left:0; }
+        .catalog-reset { min-height:42px; padding-inline:17px; border-color:#c5cdd5; border-radius:999px; color:#626d78; background:#fff; font-size:.74rem; font-weight:600; white-space:nowrap; }
+        .catalog-reset:hover { border-color:#ea5b1a; color:#ea5b1a; background:#fff7f2; }
+        .catalog-filter-hint { grid-column:1 / -1; margin-top:-3px; color:#7c8791; font-size:.66rem; }
+        .catalog-empty-result { padding:48px 18px; text-align:center; }
+        .catalog-empty-result i { display:block; margin-bottom:10px; color:#a8b1bb; font-size:2.4rem; }
+        .catalog-pagination-footer { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-top:30px; padding:12px 14px; border:1px solid #e1e5e9; border-radius:10px; background:#fff; color:#6f7a85; font-size:.7rem; }
+        .catalog-pagination-summary { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+        .catalog-pagination-summary .form-select { width:72px; min-height:34px; border-color:#cfd6dd; background:#fff; color:#27313b; font-size:.7rem; }
+        .catalog-pagination-status { flex:1 1 auto; text-align:center; white-space:nowrap; }
+        .catalog-page-nav { display:flex; flex:0 0 auto; justify-content:flex-end; margin-left:auto; }
+        .catalog-pagination { margin:0; }
+        .catalog-pagination .page-link { display:inline-flex; min-width:34px; min-height:34px; align-items:center; justify-content:center; border-color:#e1e5e9; background:#fff; color:#27313b; font-size:.7rem; }
+        .catalog-pagination .page-link:hover { background:#fff7f2; color:#ea5b1a; }
+        .catalog-pagination .page-item.active .page-link { border-color:#ea5b1a; background:#ea5b1a; color:#fff; }
+        .catalog-pagination .page-item.disabled .page-link { background:#f7f8f9; color:#9ba4ad; opacity:.7; }
+        .catalog-item[hidden], .catalog-empty-result[hidden] { display:none !important; }
+
+        html.scm-theme-dark .catalog-toolbar,
+        html.scm-theme-dark .catalog-pagination-footer { border-color:var(--scm-theme-border); background:var(--scm-theme-surface); }
+        html.scm-theme-dark .catalog-search-group .input-group-text,
+        html.scm-theme-dark .catalog-reset,
+        html.scm-theme-dark .catalog-pagination-summary .form-select,
+        html.scm-theme-dark .catalog-pagination .page-link { border-color:var(--scm-theme-border); background:var(--scm-theme-surface-soft); color:var(--scm-theme-text); }
+        html.scm-theme-dark .catalog-filter-hint,
+        html.scm-theme-dark .catalog-pagination-footer { color:var(--scm-theme-muted); }
+
+        .sop-modal-content {
+            border: none;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .sop-modal-header {
+            background: linear-gradient(135deg, #5d3315, #2c1607);
+            color: #ffffff;
+            border-bottom: 4px solid #ea5b1a;
+        }
+        .sop-asset-summary {
+            background: #fff7f2;
+            border: 1px solid rgba(234, 91, 26, 0.2);
+            border-radius: 10px;
+            padding: 14px 16px;
+        }
+        .sop-scroll-box {
+            height: min(42vh, 330px);
+            min-height: 220px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 18px;
+            background: #ffffff;
+            scroll-behavior: smooth;
+        }
+        .sop-scroll-box:focus {
+            outline: 3px solid rgba(234, 91, 26, 0.18);
+            border-color: #ea5b1a;
+        }
+        .sop-scroll-box li {
+            margin-bottom: 12px;
+            line-height: 1.55;
+        }
+        .sop-check-card {
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 14px 16px;
+            background: #f8f9fa;
+        }
+        .sop-check-card.is-ready {
+            border-color: rgba(25, 135, 84, 0.45);
+            background: rgba(25, 135, 84, 0.06);
+        }
+        .btn-sop-continue {
+            background-color: #ea5b1a;
+            border-color: #ea5b1a;
+            color: #ffffff;
+            font-weight: 700;
+            border-radius: 8px;
+            padding: 10px 18px;
+        }
+        .btn-sop-continue:hover,
+        .btn-sop-continue:focus {
+            background-color: #c24a13;
+            border-color: #c24a13;
+            color: #ffffff;
+        }
+        .btn-sop-continue.disabled {
+            background-color: #e9ecef;
+            border-color: #ced4da;
+            color: #6c757d;
+            pointer-events: none;
+        }
+        @media (max-width: 575.98px) {
+            .catalog-filter-hint { grid-column:auto; }
+            .catalog-reset { width:100%; }
+            .catalog-pagination-footer { display:grid; grid-template-columns:minmax(0, 1fr) auto; align-items:center; gap:8px 12px; }
+            .catalog-pagination-summary { grid-column:1; grid-row:1; justify-content:flex-start; }
+            .catalog-pagination-status { grid-column:1; grid-row:2; min-width:0; text-align:left; white-space:normal; }
+            .catalog-page-nav { grid-column:2; grid-row:1 / span 2; max-width:100%; margin-left:0; justify-content:flex-end; overflow-x:auto; }
+            .sop-modal-content {
+                border-radius: 0;
+            }
+            .sop-scroll-box {
+                height: 45vh;
+                min-height: 240px;
+                padding: 14px;
+            }
+        }
+        @media (min-width:576px) and (max-width:991.98px) {
+            .catalog-reset, .catalog-filter-hint { grid-column:1 / -1; }
+            .catalog-reset { justify-self:end; }
+            .catalog-pagination-footer { display:grid; grid-template-columns:minmax(0, 1fr) auto; align-items:center; gap:8px 16px; }
+            .catalog-pagination-summary { grid-column:1; grid-row:1; justify-content:flex-start; }
+            .catalog-pagination-status { grid-column:1; grid-row:2; text-align:left; }
+            .catalog-page-nav { grid-column:2; grid-row:1 / span 2; margin-left:0; justify-content:flex-end; }
+        }
+    </style>
+    <?php include APPPATH . 'views/shared/theme_assets.php'; ?>
+</head>
+<body>
+
+    <!-- NAVBAR (Sama dengan Dashboard) -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top shadow-sm">
+        <div class="container-fluid px-4 px-lg-5">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="<?= base_url('index.php/dashboard') ?>">
+                <img src="<?= base_url('assets/logo/logo.webp'); ?>" alt="Logo FIK" height="40" class="me-2">
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= base_url('index.php/dashboard') ?>">Beranda</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="<?= base_url('index.php/peminjaman_barang') ?>">Total Barang</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="alert('Silakan pilih alat studio yang ingin dipinjam terlebih dahulu di menu Total Barang.'); return false;">Ajukan Peminjaman</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= base_url('index.php/peminjaman_barang/riwayat') ?>">Riwayat</a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="d-none d-lg-flex align-items-center gap-2">
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary rounded-circle notif-bell position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifikasi">
+                        <i class="bi bi-bell"></i>
+                        <?php if ($notif_count > 0): ?><span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"><?= $notif_count ?></span><?php endif; ?>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end shadow border-0 p-2 notif-menu">
+                        <div class="fw-bold px-2 py-1">Notifikasi</div>
+                        <?php if (empty($notif_items)): ?>
+                            <div class="small text-muted px-2 py-3">Belum ada notifikasi.</div>
+                            <?php else: foreach ($notif_items as $n): ?>
+                            <a class="dropdown-item rounded-3 py-2" href="<?= html_escape($n->link ?: '#') ?>">
+                                <div class="fw-semibold small"><?= html_escape($n->judul) ?></div>
+                                <div class="small text-muted text-wrap"><?= html_escape($n->pesan) ?></div>
+                            </a>
+                        <?php endforeach; endif; ?>
+                    </div>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-user dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle me-1"></i> <?= $display_nama; ?>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg" style="border-radius: 12px; mt-2">
+                        <li>
+                            <div class="px-3 py-2">
+                                <span class="d-block text-muted small">ID/NIM:</span>
+                                <span class="fw-bold"><?= $this->session->userdata('username'); ?></span>
+                            </div>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger fw-bold" href="<?= base_url('index.php/auth/logout') ?>"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HEADER KATALOG -->
+    <div class="catalog-header">
+        <div class="container text-center" data-aos="fade-down" data-aos-duration="800">
+            <h2 class="fw-bolder mb-0" style="letter-spacing: 1px;">KATALOG <span class="text-fik-orange">ALAT STUDIO</span></h2>
+        </div>
+    </div>
+
+    <!-- KONTEN UTAMA (ETALASE BARANG) -->
+    <div class="container py-5">
+        <?php if($this->session->flashdata('success')): ?>
+            <div class="alert alert-success border-0 shadow-sm rounded-3 mb-4">
+                <i class="bi bi-check-circle-fill me-2"></i><?= $this->session->flashdata('success'); ?>
+            </div>
+        <?php endif; ?>
+        <?php if($this->session->flashdata('error')): ?>
+            <div class="alert alert-danger border-0 shadow-sm rounded-3 mb-4">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i><?= $this->session->flashdata('error'); ?>
+            </div>
+        <?php endif; ?>
+        
+        <!-- Info & Filter Sederhana -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4 pb-3 border-bottom">
+            <h5 class="fw-bold text-dark m-0"><i class="bi bi-grid-fill me-2 text-fik-orange"></i>Daftar Barang Tersedia</h5>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <button type="button" class="btn btn-sm btn-doc-mini" data-bs-toggle="modal" data-bs-target="#internalDocsModal">
+                    <i class="bi bi-file-earmark-pdf me-1"></i> SOP & Instruksi Kerja
+                </button>
+                <span class="badge bg-light text-dark border px-3 py-2"><i class="bi bi-box-seam me-1"></i> Total: <span id="catalogHeaderTotal"><?= number_format($catalog_total, 0, ',', '.') ?></span> Aset</span>
+            </div>
+        </div>
+
+        <?php if (isset($catalog_total)): ?>
+        <div class="catalog-toolbar">
+            <?php
+                $multi_filter_id = 'catalogMultiFilter';
+                $multi_filter_mode = 'server';
+                $multi_filter_fields = [
+                    'all' => ['label' => 'Semua data alat', 'placeholder' => 'Cari nama alat, kode aset, ruangan, kondisi, atau stok...'],
+                    'nama' => ['label' => 'Nama alat', 'placeholder' => 'Cari nama alat...'],
+                    'kode' => ['label' => 'Kode aset', 'placeholder' => 'Cari kode aset...'],
+                    'ruangan' => ['label' => 'Ruangan / laboratorium', 'placeholder' => 'Cari ruangan atau laboratorium...'],
+                    'kondisi' => ['label' => 'Kondisi', 'placeholder' => 'Cari kondisi alat...'],
+                    'stok' => ['label' => 'Stok tersedia', 'placeholder' => 'Cari jumlah stok...'],
+                ];
+                $multi_filter_rows = $filter_rows ?? [['field' => 'all', 'value' => '']];
+                $multi_filter_action = current_url();
+                $multi_filter_hidden = ['id_ruangan' => $this->input->get('id_ruangan', true), 'per_page' => $catalog_per_page, 'page' => 1];
+                $multi_filter_meta_id = 'catalogFilterMeta';
+                $multi_filter_meta = number_format($catalog_total, 0, ',', '.') . ' aset tersedia';
+                include APPPATH . 'views/admin/_multi_filter.php';
+                unset($multi_filter_id, $multi_filter_mode, $multi_filter_fields, $multi_filter_rows, $multi_filter_meta_id, $multi_filter_meta);
+            ?>
+        </div>
+        <?php endif; ?>
+        
+        <div class="row g-4" id="catalogGrid">
+            <!-- Jika tidak ada barang di database -->
+            <?php if(empty($barang)): ?>
+                <div class="col-12 text-center py-5" data-aos="fade-up">
+                    <div class="bg-light rounded-4 p-5">
+                        <i class="bi bi-inboxes text-muted mb-3" style="font-size: 5rem;"></i>
+                        <h4 class="fw-bold text-dark">Oops, Etalase Kosong!</h4>
+                        <p class="text-muted">Saat ini belum ada alat studio yang tersedia atau stok sedang habis dipinjam.</p>
+                        <a href="<?= base_url('index.php/dashboard') ?>" class="btn btn-outline-secondary mt-3 px-4 rounded-pill">Kembali ke Beranda</a>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <!-- Looping Kartu Barang dari Database -->
+            <?php foreach($barang as $index => $b): ?>
+            <?php
+                $catalog_room = isset($b->nama_ruangan) ? $b->nama_ruangan : 'Laboratorium Pusat';
+                $asset_images = [];
+                foreach ([$b->gambar ?? ''] as $filename) {
+                    $filename = basename((string) $filename);
+                    if ($filename !== '') $asset_images[] = $filename;
+                }
+                $gallery_source = json_decode((string) ($b->foto ?? ''), true);
+                $gallery_images = is_array($gallery_source) ? $gallery_source : [($b->foto ?? '')];
+                foreach ($gallery_images as $filename) {
+                    $filename = basename((string) $filename);
+                    if ($filename !== '') $asset_images[] = $filename;
+                }
+                $asset_images = array_values(array_unique($asset_images));
+                $has_uploaded_visual = !empty($asset_images);
+                $has_interactive_image = (bool) array_filter($asset_images, static function ($filename) {
+                    return in_array(strtolower(pathinfo($filename, PATHINFO_EXTENSION)), ['webp', 'glb', 'gltf'], true);
+                });
+            ?>
+            <div
+                class="col-sm-6 col-md-4 col-lg-3 catalog-item"
+                data-aos="fade-up"
+                data-aos-delay="<?= ($index % 4) * 100 ?>"
+                data-search="<?= html_escape(implode(' ', [$b->nama_aset ?? '', $b->kode_aset ?? '', $catalog_room, $b->kondisi ?? '', $b->jumlah_tersedia ?? 0])) ?>"
+                data-filter-all="<?= html_escape(implode(' ', [$b->nama_aset ?? '', $b->kode_aset ?? '', $catalog_room, $b->kondisi ?? '', $b->jumlah_tersedia ?? 0])) ?>"
+                data-filter-nama="<?= html_escape($b->nama_aset ?? '') ?>"
+                data-filter-kode="<?= html_escape($b->kode_aset ?? '') ?>"
+                data-filter-ruangan="<?= html_escape($catalog_room) ?>"
+                data-filter-kondisi="<?= html_escape($b->kondisi ?? '') ?>"
+                data-filter-stok="<?= (int) ($b->jumlah_tersedia ?? 0) ?>"
+            >
+                <div class="card item-card">
+                    <!-- Semua media dari CRUD menerima treatment visual produk yang sama. -->
+                    <div class="item-img-placeholder<?= $has_uploaded_visual ? ' asset-visual--product' : '' ?><?= $has_interactive_image ? ' asset-visual--interactive' : '' ?>" style="--asset-entry-delay: <?= ($index % 4) * 70 ?>ms;">
+                        <div class="asset-visual__motion">
+                            <div class="asset-visual__float">
+                                <?php if($has_uploaded_visual): ?>
+                                    <div class="asset-gallery" data-asset-gallery aria-label="Galeri aset <?= html_escape($b->nama_aset) ?>">
+                                        <div class="asset-gallery__track" data-asset-gallery-track>
+                                            <?php foreach ($asset_images as $image_index => $image_filename): ?>
+                                                <?php $asset_extension = strtolower(pathinfo($image_filename, PATHINFO_EXTENSION)); ?>
+                                                <?php $is_webp = $asset_extension === 'webp'; ?>
+                                                <?php $is_3d_model = in_array($asset_extension, ['glb', 'gltf'], true); ?>
+                                                <div class="asset-gallery__slide<?= $is_3d_model ? ' asset-gallery__slide--model' : '' ?>"<?= $is_webp ? ' data-asset-product-viewer' : '' ?> data-asset-gallery-slide aria-hidden="<?= $image_index === 0 ? 'false' : 'true' ?>">
+                                                    <?php if ($is_3d_model): ?>
+                                                        <model-viewer class="asset-visual__model" src="<?= base_url('assets/uploads/barang/'.rawurlencode($image_filename)) ?>" alt="Model 3D <?= html_escape($b->nama_aset) ?><?= count($asset_images) > 1 ? ' - media ' . ($image_index + 1) : '' ?>" camera-controls disable-pan disable-zoom interaction-prompt="none" touch-action="pan-y" shadow-intensity="0.55" loading="lazy" reveal="auto"></model-viewer>
+                                                    <?php else: ?>
+                                                        <img class="asset-visual__content asset-visual__media"
+                                                             src="<?= base_url('assets/uploads/barang/'.rawurlencode($image_filename)) ?>"
+                                                             alt="<?= html_escape($b->nama_aset) ?><?= count($asset_images) > 1 ? ' - gambar ' . ($image_index + 1) : '' ?>"
+                                                             loading="lazy"
+                                                             decoding="async"
+                                                             draggable="false"
+                                                             onerror="this.onerror=null; this.src='https://placehold.co/400x300?text=No+Image';">
+                                                    <?php endif; ?>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                        <?php if (count($asset_images) > 1): ?>
+                                            <button type="button" class="asset-gallery__control asset-gallery__control--previous" data-asset-gallery-previous aria-label="Gambar sebelumnya"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+                                            <button type="button" class="asset-gallery__control asset-gallery__control--next" data-asset-gallery-next aria-label="Gambar berikutnya"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+                                            <div class="asset-gallery__dots" aria-label="Pilih gambar aset">
+                                                <?php foreach ($asset_images as $image_index => $unused): ?>
+                                                    <button type="button" class="asset-gallery__dot<?= $image_index === 0 ? ' is-active' : '' ?>" data-asset-gallery-dot="<?= $image_index ?>" aria-label="Tampilkan gambar <?= $image_index + 1 ?>" aria-current="<?= $image_index === 0 ? 'true' : 'false' ?>"></button>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <!-- Ikon fallback tetap memakai animasi visual yang sama. -->
+                                    <?php
+                                        $nama_lower = strtolower($b->nama_aset);
+                                        if(strpos($nama_lower, 'kamera') !== false || strpos($nama_lower, 'dslr') !== false) {
+                                            echo '<i class="bi bi-camera asset-visual__content asset-visual__icon" aria-hidden="true"></i>';
+                                        } elseif(strpos($nama_lower, 'komputer') !== false || strpos($nama_lower, 'pc') !== false || strpos($nama_lower, 'mac') !== false) {
+                                            echo '<i class="bi bi-pc-display asset-visual__content asset-visual__icon" aria-hidden="true"></i>';
+                                        } elseif(strpos($nama_lower, 'tablet') !== false || strpos($nama_lower, 'wacom') !== false) {
+                                            echo '<i class="bi bi-tablet-landscape asset-visual__content asset-visual__icon" aria-hidden="true"></i>';
+                                        } else {
+                                            echo '<i class="bi bi-box-seam asset-visual__content asset-visual__icon" aria-hidden="true"></i>';
+                                        }
+                                    ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body d-flex flex-column p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <span class="badge bg-light text-secondary border" style="font-family: monospace; font-size:0.75rem;"><?= $b->kode_aset ?></span>
+                            <!-- Label Kondisi Sinkron Database -->
+                            <span class="badge <?= ($b->kondisi == 'Baik') ? 'bg-success bg-opacity-10 text-success border border-success' : 'bg-warning bg-opacity-10 text-dark border border-warning' ?>">
+                                <?= $b->kondisi ?>
+                            </span>
+                        </div>
+                        
+                        <h6 class="card-title fw-bold mb-2 text-dark" style="line-height: 1.4;"><?= $b->nama_aset ?></h6>
+                        
+                        <!-- Info Lokasi Ruangan & Stok -->
+                        <div class="mt-auto pt-3">
+                            <div class="d-flex align-items-center text-muted small mb-2">
+                                <i class="bi bi-geo-alt-fill text-fik-orange me-2"></i> 
+                                <span class="text-truncate"><?= isset($b->nama_ruangan) ? $b->nama_ruangan : 'Laboratorium Pusat' ?></span>
+                            </div>
+                            <div class="d-flex align-items-center text-muted small">
+                                <i class="bi bi-boxes text-fik-orange me-2"></i> 
+                                Stok Tersedia: <strong class="ms-1 text-dark fs-6"><?= $b->jumlah_tersedia ?></strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tombol Aksi di bagian bawah kartu -->
+                    <div class="card-footer bg-white border-top-0 p-3 pt-0 mt-auto">
+                        <?php if($b->jumlah_tersedia > 0): ?>
+                            <button type="button"
+                                class="btn btn-pinjam js-open-sop w-100 py-2"
+                                data-sop-url="<?= base_url('index.php/peminjaman_barang/ajukan/'.$b->id_aset) ?>"
+                                data-sop-name="<?= html_escape($b->nama_aset) ?>"
+                                data-sop-code="<?= html_escape($b->kode_aset) ?>"
+                                data-sop-room="<?= html_escape(isset($b->nama_ruangan) ? $b->nama_ruangan : 'Laboratorium Pusat') ?>"
+                                data-sop-stock="<?= (int) $b->jumlah_tersedia ?>">
+                                <i class="bi bi-cart-plus me-1"></i> Ajukan Pinjam
+                            </button>
+                        <?php else: ?>
+                            <!-- Tombol mati jika stok 0 -->
+                            <button class="btn btn-pinjam disabled w-100 py-2" disabled>
+                                <i class="bi bi-x-circle me-1"></i> Stok Habis
+                            </button>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+            <?php endforeach; ?>
+
+            <?php if (!empty($barang)): ?>
+                <div id="catalogEmptyResult" class="col-12 catalog-empty-result" hidden>
+                    <i class="bi bi-search"></i>
+                    <h5 class="fw-bold text-dark mb-1">Alat tidak ditemukan</h5>
+                    <p class="text-muted mb-0">Coba gunakan nama, kode aset, ruangan, kondisi, atau jumlah stok yang berbeda.</p>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <?php if (isset($catalog_total)): ?>
+        <div class="catalog-pagination-footer" data-scm-pagination-layout="inline">
+            <form method="get" action="<?= html_escape(current_url()) ?>" class="catalog-pagination-summary">
+                <?php foreach ($catalog_page_size_hidden as $hidden_query): ?>
+                    <input type="hidden" name="<?= html_escape($hidden_query['name']) ?>" value="<?= html_escape($hidden_query['value']) ?>">
+                <?php endforeach; ?>
+                <input type="hidden" name="page" value="1">
+                <label for="catalogPageSize">Tampilkan:</label>
+                <select id="catalogPageSize" name="per_page" class="form-select form-select-sm" aria-label="Jumlah aset per halaman" onchange="this.form.submit();">
+                    <?php foreach ([10,25,50,100] as $size): ?><option value="<?= $size ?>" <?= $catalog_per_page === $size ? 'selected' : '' ?>><?= $size ?></option><?php endforeach; ?>
+                </select>
+                <span>Total item: <span id="catalogTotalItems"><?= number_format($catalog_total, 0, ',', '.') ?></span></span>
+            </form>
+            <div id="catalogPageStatus" class="catalog-pagination-status">Menampilkan <?= number_format($catalog_first_item, 0, ',', '.') ?>&ndash;<?= number_format($catalog_last_item, 0, ',', '.') ?> dari <?= number_format($catalog_total, 0, ',', '.') ?> data</div>
+            <nav class="catalog-page-nav" aria-label="Paging katalog alat studio">
+                <ul id="catalogPageNav" class="pagination pagination-sm catalog-pagination">
+                    <?php $catalog_query['page'] = max(1, $catalog_page - 1); ?><li class="page-item <?= $catalog_page <= 1 ? 'disabled' : '' ?>"><a class="page-link" href="<?= current_url() . '?' . http_build_query($catalog_query) ?>">Previous</a></li>
+                    <?php foreach (scm_pagination_tokens($catalog_page, $catalog_total_pages) as $token): ?><?php if (is_string($token)): ?><li class="page-item disabled"><span class="page-link">...</span></li><?php else: $catalog_query['page'] = $token; ?><li class="page-item <?= $token === $catalog_page ? 'active' : '' ?>"><a class="page-link" href="<?= current_url() . '?' . http_build_query($catalog_query) ?>"><?= $token ?></a></li><?php endif; ?><?php endforeach; ?>
+                    <?php $catalog_query['page'] = min($catalog_total_pages, $catalog_page + 1); ?><li class="page-item <?= $catalog_page >= $catalog_total_pages ? 'disabled' : '' ?>"><a class="page-link" href="<?= current_url() . '?' . http_build_query($catalog_query) ?>">Next</a></li>
+                </ul>
+            </nav>
+        </div>
+        <?php endif; ?>
+    </div>
+
+
+    <div class="modal fade" id="internalDocsModal" tabindex="-1" aria-labelledby="internalDocsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-fullscreen-lg-down">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-dark text-white border-0">
+                    <div>
+                        <p class="small text-uppercase text-warning fw-bold mb-1">Dokumen Internal</p>
+                        <h5 class="modal-title fw-bold mb-0" id="internalDocsModalLabel">SOP & Instruksi Kerja</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <iframe class="internal-doc-frame js-internal-doc-frame" data-src="<?= base_url('index.php/dokumen_internal/popup') ?>" title="Dokumen Internal SOP dan Instruksi Kerja"></iframe>
+            </div>
+        </div>
+    </div>
+    <!-- MODAL SOP PEMINJAMAN -->
+    <div class="modal fade" id="sopModal" tabindex="-1" aria-labelledby="sopModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-sm-down">
+            <div class="modal-content sop-modal-content shadow-lg">
+                <div class="modal-header sop-modal-header">
+                    <div>
+                        <p class="text-fik-orange fw-bold small mb-1 text-uppercase">SOP Peminjaman Barang</p>
+                        <h5 class="modal-title fw-bold mb-0" id="sopModalLabel">Baca Ketentuan Sebelum Melanjutkan</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body p-3 p-md-4">
+                    <div class="sop-asset-summary mb-3">
+                        <div class="d-flex flex-column flex-md-row justify-content-between gap-2">
+                            <div>
+                                <span class="small text-muted d-block">Barang yang akan dipinjam</span>
+                                <strong class="text-dark" id="sopAssetName">-</strong>
+                                <span class="small text-muted d-block font-monospace" id="sopAssetCode">-</span>
+                            </div>
+                            <div class="text-md-end">
+                                <span class="small text-muted d-block">Lokasi dan stok</span>
+                                <strong class="text-dark" id="sopAssetRoom">-</strong>
+                                <span class="small text-muted d-block" id="sopAssetStock">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sop-scroll-box" id="sopScrollBox" tabindex="0" role="region" aria-label="Isi SOP peminjaman barang">
+                        <ol class="mb-0 ps-3 ps-md-4">
+                            <li>Peminjam wajib menggunakan akun pribadi dan mengisi data pengajuan sesuai identitas asli.</li>
+                            <li>Barang hanya dapat dipinjam untuk kegiatan akademik, praktikum, produksi, kepanitiaan, atau aktivitas resmi yang relevan dengan Fakultas Industri Kreatif.</li>
+                            <li>Peminjam wajib memastikan jumlah barang, kode aset, kondisi fisik, dan kelengkapan aksesori sebelum pengajuan dikirim.</li>
+                            <li>Peminjam wajib mengunggah foto kondisi awal barang yang jelas, tidak buram, dan memperlihatkan kelengkapan utama barang.</li>
+                            <li>Setelah pengajuan dikirim, peminjaman masih berstatus menunggu persetujuan. Barang belum boleh diambil sebelum pengajuan disetujui oleh petugas terkait.</li>
+                            <li>Barang wajib diambil dan dikembalikan sesuai tanggal yang diajukan. Perubahan jadwal harus dikonfirmasi kepada laboran atau petugas aset.</li>
+                            <li>Peminjam bertanggung jawab menjaga barang dari kehilangan, kerusakan, kelalaian penggunaan, dan penggunaan di luar keperluan yang diajukan.</li>
+                            <li>Barang tidak boleh dipindahtangankan kepada pihak lain tanpa izin petugas aset.</li>
+                            <li>Jika terjadi kerusakan, kehilangan, atau kendala saat penggunaan, peminjam wajib segera melapor kepada laboran atau petugas aset.</li>
+                            <li>Saat pengembalian, barang harus dalam kondisi lengkap dan sesuai kondisi awal. Petugas berhak melakukan pemeriksaan sebelum transaksi dinyatakan selesai.</li>
+                            <li>Pelanggaran SOP dapat menyebabkan pengajuan ditolak, pembatasan peminjaman berikutnya, atau tindak lanjut sesuai ketentuan fakultas.</li>
+                            <li>Dengan melanjutkan, peminjam menyatakan telah membaca, memahami, dan menyetujui seluruh ketentuan peminjaman barang.</li>
+                        </ol>
+                    </div>
+
+                    <div class="d-flex align-items-start gap-2 mt-2" id="sopScrollHint">
+                        <i class="bi bi-arrow-down-circle text-fik-orange mt-1"></i>
+                        <small class="text-muted">Scroll SOP sampai bagian akhir untuk membuka checkbox persetujuan.</small>
+                    </div>
+
+                    <div class="sop-check-card mt-3" id="sopCheckCard">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="1" id="sopAgreeCheck" disabled>
+                            <label class="form-check-label fw-semibold" for="sopAgreeCheck">
+                                Saya sudah membaca SOP sampai selesai dan menyetujui ketentuan peminjaman barang ini.
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer flex-column flex-sm-row gap-2 p-3 p-md-4">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                    <a href="#" class="btn btn-sop-continue disabled w-100 w-sm-auto" id="sopContinueBtn" aria-disabled="true">
+                        Lanjut ke Form Peminjaman <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- FOOTER SEDERHANA KHUSUS HALAMAN DALAM -->
+    <footer class="bg-dark text-center py-4 mt-5">
+        <div class="container">
+            <p class="small text-white opacity-50 m-0">
+                &copy; <?= date('Y') ?> SCM Fakultas Industri Kreatif - Telkom University. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ once: true, offset: 20 });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const catalogGrid = document.getElementById('catalogGrid');
+            const catalogItems = Array.from(document.querySelectorAll('.catalog-item'));
+            const catalogFilterRoot = document.getElementById('catalogMultiFilter');
+            const catalogFilterMeta = document.getElementById('catalogFilterMeta');
+            const catalogPageSize = document.getElementById('catalogPageSize');
+            const catalogTotalItems = document.getElementById('catalogTotalItems');
+            const catalogHeaderTotal = document.getElementById('catalogHeaderTotal');
+            const catalogPageStatus = document.getElementById('catalogPageStatus');
+            const catalogPageNav = document.getElementById('catalogPageNav');
+            const catalogEmptyResult = document.getElementById('catalogEmptyResult');
+            const reducedAssetMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+            const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+
+            function enableAssetVisualTilt() {
+                if (reducedAssetMotion.matches || !finePointer.matches) return;
+
+                document.querySelectorAll('.item-card .item-img-placeholder').forEach(function (visual) {
+                    if (visual.classList.contains('asset-visual--interactive')) return;
+                    visual.addEventListener('pointermove', function (event) {
+                        if (event.target.closest('.asset-gallery__control, .asset-gallery__dot')) return;
+                        const bounds = visual.getBoundingClientRect();
+                        const pointerX = (event.clientX - bounds.left) / bounds.width - 0.5;
+                        const pointerY = (event.clientY - bounds.top) / bounds.height - 0.5;
+
+                        visual.style.setProperty('--asset-rotate-y', (pointerX * 7).toFixed(2) + 'deg');
+                        visual.style.setProperty('--asset-rotate-x', (pointerY * -6).toFixed(2) + 'deg');
+                        visual.style.setProperty('--asset-mouse-raise', '-3px');
+                    });
+
+                    visual.addEventListener('pointerleave', function () {
+                        visual.style.setProperty('--asset-rotate-y', '0deg');
+                        visual.style.setProperty('--asset-rotate-x', '0deg');
+                        visual.style.setProperty('--asset-mouse-raise', '0px');
+                    });
+                });
+            }
+
+            function enableInteractiveAssetViewers() {
+                if (reducedAssetMotion.matches || !finePointer.matches) return;
+
+                document.querySelectorAll('[data-asset-product-viewer]').forEach(function (viewer) {
+                    const visual = viewer.closest('.item-img-placeholder');
+                    if (!visual) return;
+
+                    let activePointerId = null;
+                    let lastPoint = null;
+                    let rotationX = 0;
+                    let rotationY = 0;
+                    const limit = function (value, minimum, maximum) {
+                        return Math.max(minimum, Math.min(maximum, value));
+                    };
+
+                    viewer.addEventListener('pointerdown', function (event) {
+                        if (event.button !== undefined && event.button !== 0) return;
+                        activePointerId = event.pointerId;
+                        lastPoint = { x: event.clientX, y: event.clientY };
+                        viewer.classList.add('is-dragging');
+                        if (viewer.setPointerCapture) viewer.setPointerCapture(event.pointerId);
+                        event.preventDefault();
+                    });
+
+                    viewer.addEventListener('pointermove', function (event) {
+                        if (event.pointerId !== activePointerId || !lastPoint) return;
+                        const deltaX = event.clientX - lastPoint.x;
+                        const deltaY = event.clientY - lastPoint.y;
+                        rotationY = limit(rotationY + (deltaX * 0.16), -18, 18);
+                        rotationX = limit(rotationX - (deltaY * 0.14), -14, 14);
+                        visual.style.setProperty('--asset-rotate-y', rotationY.toFixed(2) + 'deg');
+                        visual.style.setProperty('--asset-rotate-x', rotationX.toFixed(2) + 'deg');
+                        lastPoint = { x: event.clientX, y: event.clientY };
+                    });
+
+                    const stopRotation = function (event) {
+                        if (event.pointerId !== activePointerId) return;
+                        if (viewer.hasPointerCapture && viewer.hasPointerCapture(event.pointerId)) {
+                            viewer.releasePointerCapture(event.pointerId);
+                        }
+                        activePointerId = null;
+                        lastPoint = null;
+                        viewer.classList.remove('is-dragging');
+                    };
+
+                    viewer.addEventListener('pointerup', stopRotation);
+                    viewer.addEventListener('pointercancel', stopRotation);
+                });
+            }
+
+            function enableAssetGalleries() {
+                document.querySelectorAll('[data-asset-gallery]').forEach(function (gallery) {
+                    const track = gallery.querySelector('[data-asset-gallery-track]');
+                    const slides = Array.from(gallery.querySelectorAll('[data-asset-gallery-slide]'));
+                    const dots = Array.from(gallery.querySelectorAll('[data-asset-gallery-dot]'));
+                    const previous = gallery.querySelector('[data-asset-gallery-previous]');
+                    const next = gallery.querySelector('[data-asset-gallery-next]');
+                    if (!track || slides.length < 2) return;
+
+                    let activeIndex = 0;
+                    let pointerStart = null;
+
+                    function showSlide(index) {
+                        activeIndex = (index + slides.length) % slides.length;
+                        track.style.transform = 'translate3d(' + (-activeIndex * 100) + '%, 0, 0)';
+                        slides.forEach(function (slide, slideIndex) {
+                            slide.setAttribute('aria-hidden', slideIndex === activeIndex ? 'false' : 'true');
+                        });
+                        dots.forEach(function (dot, dotIndex) {
+                            const active = dotIndex === activeIndex;
+                            dot.classList.toggle('is-active', active);
+                            dot.setAttribute('aria-current', active ? 'true' : 'false');
+                        });
+                    }
+
+                    if (previous) previous.addEventListener('click', function () { showSlide(activeIndex - 1); });
+                    if (next) next.addEventListener('click', function () { showSlide(activeIndex + 1); });
+                    dots.forEach(function (dot) {
+                        dot.addEventListener('click', function () { showSlide(Number(dot.dataset.assetGalleryDot)); });
+                    });
+
+                    gallery.addEventListener('pointerdown', function (event) {
+                        if (event.button !== undefined && event.button !== 0) return;
+                        if (event.target.closest('.asset-gallery__control, .asset-gallery__dot')) return;
+
+                        // Drag pada media interaktif dipakai sebagai product viewer, bukan pindah slide.
+                        if (event.target.closest('model-viewer')) {
+                            return;
+                        }
+                        if (finePointer.matches && event.target.closest('[data-asset-product-viewer]')) {
+                            return;
+                        }
+                        pointerStart = { x: event.clientX, y: event.clientY, id: event.pointerId };
+                    });
+
+                    gallery.addEventListener('pointerup', function (event) {
+                        if (!pointerStart || pointerStart.id !== event.pointerId) return;
+                        const deltaX = event.clientX - pointerStart.x;
+                        const deltaY = event.clientY - pointerStart.y;
+                        pointerStart = null;
+                        if (Math.abs(deltaX) > 42 && Math.abs(deltaX) > Math.abs(deltaY)) {
+                            showSlide(activeIndex + (deltaX < 0 ? 1 : -1));
+                        }
+                    });
+
+                    gallery.addEventListener('pointercancel', function (event) {
+                        pointerStart = null;
+                    });
+                });
+            }
+
+            enableAssetGalleries();
+            enableAssetVisualTilt();
+            enableInteractiveAssetViewers();
+
+            if (catalogGrid && catalogItems.length && catalogFilterRoot?.dataset.mode === 'client' && catalogPageSize && catalogPageNav) {
+                let catalogPage = 1;
+
+                function filteredCatalogItems() {
+                    const criteria = window.AdminMultiFilter?.getCriteria(catalogFilterRoot) || [];
+                    return catalogItems.filter(function (item) {
+                        return window.AdminMultiFilter?.matches(item, criteria) ?? true;
+                    });
+                }
+
+                function catalogSizeFor(total) {
+                    return catalogPageSize.value === 'all'
+                        ? Math.max(total, 1)
+                        : Math.max(Number(catalogPageSize.value) || 10, 1);
+                }
+
+                function addCatalogPageButton(label, target, disabled, active, ariaLabel, ellipsis) {
+                    const item = document.createElement('li');
+                    if (ellipsis) {
+                        item.className = 'page-item disabled';
+                        item.setAttribute('aria-hidden', 'true');
+                        const separator = document.createElement('span');
+                        separator.className = 'page-link';
+                        separator.textContent = '...';
+                        item.appendChild(separator);
+                        catalogPageNav.appendChild(item);
+                        return;
+                    }
+                    const link = document.createElement('button');
+                    item.className = 'page-item' + (disabled ? ' disabled' : '') + (active ? ' active' : '');
+                    link.type = 'button';
+                    link.className = 'page-link';
+                    link.textContent = label;
+                    link.disabled = disabled;
+                    if (ariaLabel) link.setAttribute('aria-label', ariaLabel);
+                    if (active) link.setAttribute('aria-current', 'page');
+                    link.addEventListener('click', function () {
+                        catalogPage = target;
+                        renderCatalog();
+                        catalogGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    });
+                    item.appendChild(link);
+                    catalogPageNav.appendChild(item);
+                }
+
+                function renderCatalogPagination(totalPages) {
+                    catalogPageNav.innerHTML = '';
+                    addCatalogPageButton('Previous', Math.max(1, catalogPage - 1), catalogPage <= 1, false, 'Halaman sebelumnya');
+
+                    const pageTokens = totalPages <= 7
+                        ? Array.from({ length: totalPages }, (_, index) => index + 1)
+                        : catalogPage <= 3
+                            ? [1, 2, 3, 4, 5, 'ellipsis', totalPages]
+                            : catalogPage >= totalPages - 2
+                                ? [totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages]
+                                : [1, 'ellipsis', catalogPage - 2, catalogPage - 1, catalogPage, catalogPage + 1, catalogPage + 2, 'ellipsis', totalPages];
+                    pageTokens.forEach((token) => {
+                        if (typeof token === 'string') {
+                            addCatalogPageButton('...', catalogPage, true, false, 'Pemisah halaman', true);
+                        } else {
+                            addCatalogPageButton(String(token), token, false, token === catalogPage, 'Halaman ' + token);
+                        }
+                    });
+
+                    addCatalogPageButton('Next', Math.min(totalPages, catalogPage + 1), catalogPage >= totalPages, false, 'Halaman berikutnya');
+                }
+
+                function renderCatalog() {
+                    const visibleItems = filteredCatalogItems();
+                    const pageSize = catalogSizeFor(visibleItems.length);
+                    const totalPages = Math.max(1, Math.ceil(visibleItems.length / pageSize));
+                    catalogPage = Math.max(1, Math.min(catalogPage, totalPages));
+                    const start = (catalogPage - 1) * pageSize;
+                    const end = start + pageSize;
+
+                    catalogItems.forEach(function (item) {
+                        item.hidden = true;
+                        item.removeAttribute('data-aos');
+                    });
+
+                    visibleItems.forEach(function (item, index) {
+                        catalogGrid.insertBefore(item, catalogEmptyResult || null);
+                        item.hidden = index < start || index >= end;
+                    });
+
+                    if (catalogEmptyResult) catalogEmptyResult.hidden = visibleItems.length !== 0;
+                    if (catalogTotalItems) catalogTotalItems.textContent = String(visibleItems.length);
+                    if (catalogHeaderTotal) catalogHeaderTotal.textContent = String(visibleItems.length);
+                    if (catalogFilterMeta) catalogFilterMeta.textContent = new Intl.NumberFormat('id-ID').format(visibleItems.length) + (window.AdminMultiFilter.getCriteria(catalogFilterRoot).length ? ' hasil ditemukan' : ' aset tersedia');
+                    if (catalogPageStatus) catalogPageStatus.textContent = 'Halaman: ' + catalogPage + ' dari ' + totalPages;
+                    renderCatalogPagination(totalPages);
+                }
+
+                catalogFilterRoot.addEventListener('admin-multi-filter-change', function () {
+                    catalogPage = 1;
+                    renderCatalog();
+                });
+
+                catalogPageSize.addEventListener('change', function () {
+                    catalogPage = 1;
+                    renderCatalog();
+                });
+
+                const catalogReset = catalogFilterRoot.querySelector('[data-filter-reset]');
+                if (catalogReset) {
+                    catalogReset.addEventListener('click', function () {
+                        catalogPageSize.value = '10';
+                        catalogPage = 1;
+                        renderCatalog();
+                    });
+                }
+
+                renderCatalog();
+            }
+
+            const internalDocsModal = document.getElementById('internalDocsModal');
+            const internalDocsFrame = document.querySelector('.js-internal-doc-frame');
+
+            if (internalDocsModal && internalDocsFrame) {
+                internalDocsModal.addEventListener('show.bs.modal', function () {
+                    if (!internalDocsFrame.getAttribute('src')) {
+                        internalDocsFrame.setAttribute('src', internalDocsFrame.dataset.src);
+                    }
+                });
+
+                internalDocsModal.addEventListener('hidden.bs.modal', function () {
+                    internalDocsFrame.removeAttribute('src');
+                });
+            }
+            const sopModalElement = document.getElementById('sopModal');
+            const sopModal = new bootstrap.Modal(sopModalElement);
+            const sopScrollBox = document.getElementById('sopScrollBox');
+            const sopAgreeCheck = document.getElementById('sopAgreeCheck');
+            const sopContinueBtn = document.getElementById('sopContinueBtn');
+            const sopCheckCard = document.getElementById('sopCheckCard');
+            const sopScrollHint = document.getElementById('sopScrollHint');
+            const sopAssetName = document.getElementById('sopAssetName');
+            const sopAssetCode = document.getElementById('sopAssetCode');
+            const sopAssetRoom = document.getElementById('sopAssetRoom');
+            const sopAssetStock = document.getElementById('sopAssetStock');
+
+            let targetUrl = '#';
+            let hasReadSop = false;
+
+            function setContinueState() {
+                const canContinue = hasReadSop && sopAgreeCheck.checked;
+
+                if (canContinue) {
+                    sopContinueBtn.classList.remove('disabled');
+                    sopContinueBtn.setAttribute('href', targetUrl);
+                    sopContinueBtn.setAttribute('aria-disabled', 'false');
+                } else {
+                    sopContinueBtn.classList.add('disabled');
+                    sopContinueBtn.setAttribute('href', '#');
+                    sopContinueBtn.setAttribute('aria-disabled', 'true');
+                }
+            }
+
+            function resetSopState(button) {
+                targetUrl = button.dataset.sopUrl || '#';
+                hasReadSop = false;
+                sopAgreeCheck.checked = false;
+                sopAgreeCheck.disabled = true;
+                sopCheckCard.classList.remove('is-ready');
+                sopScrollBox.scrollTop = 0;
+                sopAssetName.textContent = button.dataset.sopName || '-';
+                sopAssetCode.textContent = button.dataset.sopCode || '-';
+                sopAssetRoom.textContent = button.dataset.sopRoom || '-';
+                sopAssetStock.textContent = 'Stok tersedia: ' + (button.dataset.sopStock || '0') + ' unit';
+                sopScrollHint.innerHTML = '<i class="bi bi-arrow-down-circle text-fik-orange mt-1"></i><small class="text-muted">Scroll SOP sampai bagian akhir untuk membuka checkbox persetujuan.</small>';
+                setContinueState();
+            }
+
+            function markSopAsReadIfNeeded() {
+                const reachedBottom = sopScrollBox.scrollTop + sopScrollBox.clientHeight >= sopScrollBox.scrollHeight - 8;
+
+                if (reachedBottom && !hasReadSop) {
+                    hasReadSop = true;
+                    sopAgreeCheck.disabled = false;
+                    sopCheckCard.classList.add('is-ready');
+                    sopScrollHint.innerHTML = '<i class="bi bi-check-circle-fill text-success mt-1"></i><small class="text-success fw-semibold">SOP sudah dibaca sampai akhir. Silakan centang persetujuan untuk lanjut.</small>';
+                }
+
+                setContinueState();
+            }
+
+            document.querySelectorAll('.js-open-sop').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    resetSopState(button);
+                    sopModal.show();
+
+                    setTimeout(function () {
+                        sopScrollBox.focus({ preventScroll: true });
+                        markSopAsReadIfNeeded();
+                    }, 250);
+                });
+            });
+
+            sopScrollBox.addEventListener('scroll', markSopAsReadIfNeeded);
+            sopAgreeCheck.addEventListener('change', setContinueState);
+
+            sopContinueBtn.addEventListener('click', function (event) {
+                if (!hasReadSop || !sopAgreeCheck.checked) {
+                    event.preventDefault();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
+

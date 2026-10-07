@@ -132,4 +132,3 @@ if (!function_exists('scm_upload_exists')) {
     }
 }
 
-?>
