@@ -312,20 +312,18 @@ class Barang extends CI_Controller {
 
     private function resolve_ruangan_id($value) {
         $value = trim((string) $value);
-        if ($value !== '' && ctype_digit($value)) {
-            $exists = $this->db->get_where('ruangan_aset', ['id_ruangan' => (int) $value])->row();
-            if ($exists) {
-                return (int) $value;
-            }
-        }
         if ($value !== '') {
-            $row = $this->db->like('nama_ruangan', $value)->limit(1)->get('ruangan_aset')->row();
+            $exists = $this->db->get_where('ruangan', ['id' => $value])->row();
+            if ($exists) {
+                return $exists->id;
+            }
+            $row = $this->db->like('ruangan', $value)->limit(1)->get('ruangan')->row();
             if ($row) {
-                return (int) $row->id_ruangan;
+                return $row->id;
             }
         }
-        $fallback = $this->db->order_by('id_ruangan', 'ASC')->limit(1)->get('ruangan_aset')->row();
-        return $fallback ? (int) $fallback->id_ruangan : null;
+        $fallback = $this->db->order_by('id', 'ASC')->limit(1)->get('ruangan')->row();
+        return $fallback ? $fallback->id : null;
     }
 
     private function make_unique_kode($kode) {

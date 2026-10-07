@@ -269,13 +269,8 @@
                                     <td class="py-4 px-6">
                                         <div class="flex flex-wrap items-center gap-1.5 mb-1">
                                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-orange-100 text-orange-800 border border-orange-200">
-                                                <i class="bi bi-people-fill"></i> <?= htmlspecialchars($t->tujuan_penerima ?? 'Laboran, Kaur, Admin LAA'); ?>
+                                                <i class="bi bi-building-check"></i> <?= htmlspecialchars($t->tujuan_penerima ?? $t->unit_terkait ?? 'Unit Penanganan'); ?>
                                             </span>
-                                            <?php if (!empty($t->unit_terkait)): ?>
-                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200" title="Unit Terkait">
-                                                    <i class="bi bi-building"></i> <?= htmlspecialchars($t->unit_terkait); ?>
-                                                </span>
-                                            <?php endif; ?>
                                         </div>
                                         <div class="text-[11px] text-slate-600 font-medium truncate max-w-xs">
                                             <i class="bi bi-tag-fill text-orange-400 text-[10px] mr-1"></i><?= htmlspecialchars($t->kategori); ?>
@@ -438,16 +433,11 @@
                                 <?php endif; ?>
                             </div>
 
-                            <!-- Meta Info: Penerima, Unit Terkait & Kategori -->
+                            <!-- Meta Info: Unit Dituju & Kategori -->
                             <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
                                 <span class="inline-flex items-center gap-1 text-[11px] font-bold text-orange-800 bg-orange-100 px-2 py-0.5 rounded-md border border-orange-200">
-                                    <i class="bi bi-people-fill"></i> <?= htmlspecialchars($t->tujuan_penerima ?? 'Laboran, Kaur, Admin LAA'); ?>
+                                    <i class="bi bi-building-check"></i> <?= htmlspecialchars($t->tujuan_penerima ?? $t->unit_terkait ?? 'Unit Penanganan'); ?>
                                 </span>
-                                <?php if (!empty($t->unit_terkait)): ?>
-                                    <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200" title="Unit Terkait">
-                                        <i class="bi bi-building"></i> <?= htmlspecialchars($t->unit_terkait); ?>
-                                    </span>
-                                <?php endif; ?>
                                 <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
                                     <i class="bi bi-tag"></i> <?= htmlspecialchars($t->kategori); ?>
                                 </span>
@@ -575,12 +565,9 @@
                         <strong id="modalPelapor" class="text-slate-700 font-semibold block">-</strong>
                     </div>
                     <div>
-                        <span class="text-slate-400 block mb-0.5">Ditujukan Kepada:</span>
+                        <span class="text-slate-400 block mb-0.5">Unit yang Dituju:</span>
                         <strong id="modalPenerima" class="text-orange-600 font-bold block">-</strong>
-                    </div>
-                    <div>
-                        <span class="text-slate-400 block mb-0.5">Unit / Lingkup Terkait:</span>
-                        <strong id="modalUnit" class="text-slate-700 font-semibold block">-</strong>
+                        <span id="modalUnit" class="hidden"></span>
                     </div>
                     <div>
                         <span class="text-slate-400 block mb-0.5">Kategori:</span>
@@ -855,9 +842,11 @@
                         document.getElementById('modalKode').textContent = d.kode_tiket;
                         document.getElementById('modalSubjek').textContent = d.subjek;
                         document.getElementById('modalPelapor').textContent = d.nama_dosen + (d.nidn ? ' (NIM: ' + d.nidn + ')' : '');
+                        const targetUnit = d.unit_tujuan || d.unit || d.unit_terkait || d.tujuan_penerima || 'Laboratorium Bengkel dan Studio';
                         const elPenerima = document.getElementById('modalPenerima');
-                        if (elPenerima) elPenerima.textContent = d.tujuan_penerima || 'Laboran, Kaur, Admin LAA';
-                        document.getElementById('modalUnit').textContent = d.unit_terkait || d.unit_tujuan || 'Unit Terkait';
+                        if (elPenerima) elPenerima.textContent = targetUnit;
+                        const elUnit = document.getElementById('modalUnit');
+                        if (elUnit) elUnit.textContent = targetUnit;
                         document.getElementById('modalKategori').textContent = d.kategori;
                         document.getElementById('modalPrioritas').textContent = d.prioritas;
                         document.getElementById('modalStatus').textContent = d.status;

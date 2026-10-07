@@ -67,31 +67,59 @@ class DosenTicketing extends CI_Controller {
         // Fallback default unit & kategori jika tabel konfigurasi tidak ada
         if (empty($unit_kategori_map)) {
             $unit_kategori_map = [
-                'Laboran (Fasilitas & Lab)' => [
-                    'Fasilitas Ruangan / AC / Proyektor',
-                    'Perangkat Komputer / Hardware',
-                    'Koneksi Jaringan / Internet Lab',
-                    'Software / Lisensi Praktikum',
-                    'Lain-lain (Laboran)'
+                'Laboratorium Bengkel dan Studio' => [
+                    'Fasilitas Ruangan / AC / Proyektor Lab',
+                    'Perangkat Komputer / Hardware / Monitor',
+                    'Drawing Tablet / Display Cintiq / Alat Digital',
+                    'Software / Lisensi Aplikasi Praktikum & Studio',
+                    'Jaringan & Koneksi Internet Lab',
+                    'Peralatan & Bahan Praktikum Bengkel / Studio',
+                    'Peminjaman & Pemeliharaan Alat Lab',
+                    'Lain-lain (Laboratorium Bengkel dan Studio)'
                 ],
-                'Layanan Akademik (LAA)' => [
-                    'Surat Keterangan / Pengantar',
-                    'Administrasi Nilai & Transkrip',
-                    'Jadwal Kuliah / Ujian',
-                    'Lain-lain (LAA)'
+                'Layanan Akademik - LAA' => [
+                    'Surat Keterangan Mahasiswa / Pengantar Kuliah',
+                    'Administrasi Nilai, KSM & Transkrip Akademik',
+                    'Registrasi Mata Kuliah / Perubahan KRS',
+                    'Pengajuan Cuti Akademik / Aktif Kembali',
+                    'Jadwal Kuliah & Ruang Ujian (UTS/UAS)',
+                    'Legalisir Ijazah, Transkrip & KTM',
+                    'Lain-lain (Layanan Akademik - LAA)'
                 ],
-                'Koordinator TA' => [
-                    'Bimbingan & Penguji Tugas Akhir',
-                    'Jadwal Preview / Sidang TA',
-                    'Rubrik Penilaian TA',
-                    'Lain-lain (Koordinator TA)'
+                'Kemahasiswaan' => [
+                    'Beasiswa & Bantuan Finansial Mahasiswa',
+                    'Kegiatan Ormawa, UKM & Himpunan Mahasiswa',
+                    'Lomba, Kompetisi & Pencatatan Prestasi Mahasiswa',
+                    'Surat Rekomendasi & Izin Kegiatan Mahasiswa',
+                    'Pembinaan Karakter, Konseling & Tata Tertib',
+                    'Asuransi & Kesejahteraan Mahasiswa',
+                    'Lain-lain (Kemahasiswaan)'
                 ],
-                'Dosen Wali' => [
-                    'Konsultasi Akademik / Perwalian',
-                    'Persetujuan / Tanda Tangan Dokumen',
-                    'Kendala Perkuliahan & Nilai',
-                    'Bimbingan Akademik',
-                    'Lain-lain (Dosen Wali)'
+                'Sekretariat' => [
+                    'Penerbitan Surat Keputusan (SK) Dekanat',
+                    'Pengesahan & Tanda Tangan Dokumen Pimpinan',
+                    'Administrasi Persuratan Masuk & Keluar Fakultas',
+                    'Disposisi & Permohonan Informasi Resmi',
+                    'Peminjaman Fasilitas Rapat / Ruang Dekanat',
+                    'Lain-lain (Sekretariat)'
+                ],
+                'SDM dan Keuangan' => [
+                    'Pembayaran BPP / Registrasi Keuangan Kuliah',
+                    'Dispensasi & Penyesuaian Tagihan Biaya Kuliah',
+                    'Konfirmasi & Verifikasi Bukti Pembayaran',
+                    'Administrasi Penggajian, Honor & Klaim (SDM)',
+                    'Berkas Kepegawaian & Verifikasi Dosen / Tendik',
+                    'Anggaran Operasional & Pengadaan Sarana Unit',
+                    'Lain-lain (SDM dan Keuangan)'
+                ],
+                'Program Studi (DKV, DI, DP, KTF, SR, Film dan Animasi)' => [
+                    'Kurikulum, Silabus & Mata Kuliah Program Studi',
+                    'Bimbingan Akademik / Dosen Pembimbing Prodi',
+                    'Pendaftaran, Seminar Proposal & Sidang TA / Skripsi',
+                    'Pengajuan / Perubahan Judul & Pembimbing TA',
+                    'Konversi SKS Magang / MBKM / Kerja Praktik (KP)',
+                    'Surat Rekomendasi / Keterangan Program Studi',
+                    'Lain-lain (Program Studi)'
                 ]
             ];
         }
@@ -156,9 +184,16 @@ class DosenTicketing extends CI_Controller {
         $userId      = $this->session->userdata('user_id');
         $nidn        = $this->session->userdata('nidn_nim') ?: $this->session->userdata('nim');
         $namaLengkap = trim($this->input->post('nama_lengkap', true)) ?: ($this->session->userdata('name') ?: 'Dosen');
-        $tujuanPenerima  = trim($this->input->post('tujuan_penerima', true)) ?: 'Laboran, Kaur, Admin LAA';
-        $unitTerkait     = trim($this->input->post('unit_terkait', true)) ?: (trim($this->input->post('unit_tujuan', true)) ?: 'Layanan Umum');
-        $unitTujuan      = $unitTerkait;
+        $unitTujuan  = trim($this->input->post('unit_tujuan', true)) ?: (trim($this->input->post('tujuan_penerima', true)) ?: trim($this->input->post('unit_terkait', true)));
+        if (empty($unitTujuan)) {
+            $unitTujuan = 'Laboratorium Bengkel dan Studio';
+        }
+        $subProdi = trim($this->input->post('sub_prodi', true) ?? '');
+        if (!empty($subProdi) && (strpos($unitTujuan, 'Program Studi') !== false || strpos($unitTujuan, 'Prodi') !== false)) {
+            $unitTujuan = "Program Studi - {$subProdi}";
+        }
+        $tujuanPenerima  = $unitTujuan;
+        $unitTerkait     = $unitTujuan;
         $kategori        = trim($this->input->post('kategori', true));
         $kategoriLainnya = trim($this->input->post('kategori_lainnya', true));
         $prioritas       = trim($this->input->post('prioritas', true));
@@ -167,12 +202,12 @@ class DosenTicketing extends CI_Controller {
 
         // Validasi input
         $textOnly = trim(strip_tags($deskripsi));
-        if (empty($namaLengkap) || empty($tujuanPenerima) || empty($unitTerkait) || empty($kategori) || empty($subjek) || empty($textOnly)) {
+        if (empty($namaLengkap) || empty($unitTujuan) || empty($kategori) || empty($subjek) || empty($textOnly)) {
             if ($this->input->is_ajax_request()) {
-                echo json_encode(['status' => 'error', 'message' => 'Harap lengkapi semua kolom wajib (Nama Lengkap, Tujuan Penerima, Unit Terkait, Kategori, Subjek, dan Deskripsi).']);
+                echo json_encode(['status' => 'error', 'message' => 'Harap lengkapi semua kolom wajib (Nama Lengkap, Unit yang Dituju, Kategori Kendala, Subjek, dan Deskripsi).']);
                 return;
             }
-            $this->session->set_flashdata('error', 'Harap lengkapi semua kolom wajib (Nama Lengkap, Tujuan Penerima, Unit Terkait, Kategori, Subjek, dan Deskripsi).');
+            $this->session->set_flashdata('error', 'Harap lengkapi semua kolom wajib (Nama Lengkap, Unit yang Dituju, Kategori Kendala, Subjek, dan Deskripsi).');
             redirect('dosen/ticketing/input');
             return;
         }
@@ -312,7 +347,7 @@ class DosenTicketing extends CI_Controller {
         $insertId = $this->DosenTicketing_model->insert($ticketData);
 
         if ($insertId) {
-            $msg = "Tiket kendala berhasil dikirim dengan kode: <strong>{$kodeTiket}</strong> ditujukan kepada <strong>" . htmlspecialchars($tujuanPenerima) . "</strong> (Lingkup Terkait: <strong>" . htmlspecialchars($unitTerkait) . "</strong>). Tim terkait akan segera meninjau laporan Anda.";
+            $msg = "Tiket kendala berhasil dikirim dengan kode: <strong>{$kodeTiket}</strong> ditujukan kepada <strong>" . htmlspecialchars($unitTujuan) . "</strong>. Tim terkait akan segera meninjau laporan Anda.";
             $this->session->set_flashdata('success', $msg);
             if ($this->input->is_ajax_request()) {
                 echo json_encode([

@@ -632,12 +632,9 @@ $baseResponUrl = $baseResponUrl ?? 'kaur/respon-ticketing';
                             <span class="text-[11px] text-slate-400 font-mono block" id="modalNidn">-</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Ditujukan Kepada</span>
-                            <span class="font-bold text-orange-700 inline-flex items-center gap-1 mt-0.5 bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200 text-[11px]" id="modalTujuanPenerima">Kaur</span>
-                        </div>
-                        <div>
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Unit / Lingkup Terkait</span>
-                            <span class="font-bold text-slate-700 inline-flex items-center gap-1 mt-0.5 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 text-[11px]" id="modalUnitTerkait">-</span>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Unit yang Dituju</span>
+                            <span class="font-bold text-orange-700 inline-flex items-center gap-1 mt-0.5 bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200 text-[11px]" id="modalTujuanPenerima">-</span>
+                            <span class="hidden" id="modalUnitTerkait"></span>
                         </div>
                         <div>
                             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Kategori & Prioritas</span>
@@ -1071,8 +1068,9 @@ $baseResponUrl = $baseResponUrl ?? 'kaur/respon-ticketing';
                         document.getElementById('modalCreatedAt').innerText = 'Dibuat pada: ' + (d.created_at_fmt || d.created_at);
                         document.getElementById('modalNamaDosen').innerText = d.nama_dosen;
                         document.getElementById('modalNidn').innerText = 'NIDN/ID: ' + d.nidn;
-                        if (document.getElementById('modalTujuanPenerima')) document.getElementById('modalTujuanPenerima').innerText = (d.tujuan_penerima === 'Dosen Kaur' ? 'Kaur' : (d.tujuan_penerima || 'Kaur'));
-                        if (document.getElementById('modalUnitTerkait')) document.getElementById('modalUnitTerkait').innerText = d.unit_terkait || d.unit_tujuan || '-';
+                        const targetUnit = d.unit_tujuan || d.unit || d.unit_terkait || d.tujuan_penerima || 'Layanan IFIK';
+                        if (document.getElementById('modalTujuanPenerima')) document.getElementById('modalTujuanPenerima').innerText = targetUnit;
+                        if (document.getElementById('modalUnitTerkait')) document.getElementById('modalUnitTerkait').innerText = targetUnit;
                         document.getElementById('modalKategori').innerText = d.kategori;
                         document.getElementById('modalPrioritas').innerText = d.prioritas;
                         document.getElementById('modalSubjek').innerText = d.subjek;

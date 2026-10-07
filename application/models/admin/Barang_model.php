@@ -5,11 +5,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * Model: Barang_model
  * Path: application/models/admin/Barang_model.php
  * Mengelola interaksi database untuk fitur Master Data Aset (Admin/Laboran) di db_ifik_baru
- * Menggunakan tabel `aset` dan `ruangan_aset`
+ * Menggunakan tabel `aset` dan `ruangan`
  */
 class Barang_model extends CI_Model {
 
-    private $room_table = 'ruangan_aset';
+    private $room_table = 'ruangan';
 
     public function __construct() {
         parent::__construct();
@@ -20,9 +20,9 @@ class Barang_model extends CI_Model {
      * Tampilkan semua barang beserta nama laboratorium/ruangannya
      */
     public function get_all($filters = []) {
-        $this->db->select('aset.*, ruangan.nama_ruangan');
+        $this->db->select('aset.*, COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan');
         $this->db->from('aset');
-        $this->db->join($this->room_table . ' ruangan', 'ruangan.id_ruangan = aset.id_ruangan', 'left');
+        $this->db->join($this->room_table . ' ruangan', 'ruangan.id = aset.id_ruangan', 'left');
         $this->apply_criteria($filters['criteria'] ?? []);
         $this->db->order_by('aset.nama_aset', 'ASC');
         if (!empty($filters['limit'])) {
@@ -34,7 +34,7 @@ class Barang_model extends CI_Model {
 
     public function count_all($filters = []) {
         $this->db->from('aset');
-        $this->db->join($this->room_table . ' ruangan', 'ruangan.id_ruangan = aset.id_ruangan', 'left');
+        $this->db->join($this->room_table . ' ruangan', 'ruangan.id = aset.id_ruangan', 'left');
         $this->apply_criteria($filters['criteria'] ?? []);
         return (int) $this->db->count_all_results();
     }
@@ -43,7 +43,7 @@ class Barang_model extends CI_Model {
         $columns = [
             'kode' => 'aset.kode_aset',
             'nama' => 'aset.nama_aset',
-            'ruangan' => 'ruangan.nama_ruangan',
+            'ruangan' => 'ruangan.ruangan',
             'kondisi' => 'aset.kondisi',
         ];
         foreach ((array) $criteria as $criterion) {
@@ -61,7 +61,7 @@ class Barang_model extends CI_Model {
     public function find_duplicate($data, $exclude_id = null) {
         $kode = trim((string) ($data['kode_aset'] ?? ''));
         $nama = trim((string) ($data['nama_aset'] ?? ''));
-        $id_ruangan = (int) ($data['id_ruangan'] ?? 0);
+        $id_ruangan = trim((string) ($data['id_ruangan'] ?? ''));
         if ($kode === '' && $nama === '') {
             return null;
         }
@@ -75,7 +75,7 @@ class Barang_model extends CI_Model {
                 $this->db->or_group_start();
             }
             $this->db->where('nama_aset', $nama);
-            if ($id_ruangan > 0) {
+            if ($id_ruangan !== '') {
                 $this->db->where('id_ruangan', $id_ruangan);
             }
             if ($kode !== '') {
@@ -91,10 +91,44 @@ class Barang_model extends CI_Model {
 
     /**
      * Ambil daftar semua ruangan untuk pilihan di Dropdown form Tambah/Edit
+     * Menggabungkan/menghilangkan duplikasi nama ruangan agar rapi dan unik
      */
     public function get_all_ruangan() {
-        $this->db->order_by('nama_ruangan', 'ASC');
-        return $this->db->get($this->room_table)->result();
+        $raw = $this->db
+            ->order_by('ruangan', 'ASC')
+            ->order_by('id', 'ASC')
+            ->get($this->room_table)
+            ->result();
+
+        $grouped = [];
+        foreach ($raw as $r) {
+            $name = trim(preg_replace('/\s+/', ' ', (string) ($r->ruangan ?: $r->nama_ruangan ?? '')));
+            if ($name === '') continue;
+
+            $key = strtolower($name);
+            if ($key === 'green screen') {
+                $key = 'lab green screen';
+                $name = 'Lab Green Screen';
+            }
+
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = (object) [
+                    'id'           => $r->id,
+                    'id_ruangan'   => $r->id,
+                    'ruangan'      => $name,
+                    'nama_ruangan' => $name,
+                    'all_ids'      => [(string) $r->id],
+                ];
+            } else {
+                $grouped[$key]->all_ids[] = (string) $r->id;
+            }
+        }
+
+        usort($grouped, function($a, $b) {
+            return strcasecmp($a->nama_ruangan, $b->nama_ruangan);
+        });
+
+        return array_values($grouped);
     }
 
     /**

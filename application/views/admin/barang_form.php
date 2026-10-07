@@ -236,7 +236,14 @@
                                 <select name="id_ruangan" class="form-select rounded-3" required>
                                     <option value="">-- Pilih Penempatan Laboratorium --</option>
                                     <?php foreach ($ruangan as $r): ?>
-                                        <?php $selected = (isset($aset) && $aset->id_ruangan == $r->id_ruangan) ? 'selected' : ''; ?>
+                                        <?php 
+                                            $isSelected = false;
+                                            if (isset($aset) && !empty($aset->id_ruangan)) {
+                                                $isSelected = ($aset->id_ruangan == $r->id_ruangan) || 
+                                                              (!empty($r->all_ids) && in_array((string)$aset->id_ruangan, $r->all_ids, true));
+                                            }
+                                            $selected = $isSelected ? 'selected' : ''; 
+                                        ?>
                                         <option value="<?= $r->id_ruangan ?>" <?= $selected ?>><?= $r->nama_ruangan ?></option>
                                     <?php endforeach; ?>
                                 </select>
