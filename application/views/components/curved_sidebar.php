@@ -43,6 +43,14 @@ if ($isLoggedIn && $activeRoleId === 0) {
         $activeRoleId = 9; // Ketua KK
     } elseif (strpos($currentUri, 'mahasiswa') === 0) {
         $activeRoleId = 4; // Mahasiswa
+    } elseif (strpos($currentUri, 'kemahasiswaan') === 0) {
+        $activeRoleId = 17; // Kemahasiswaan
+    } elseif (strpos($currentUri, 'sekretariat') === 0) {
+        $activeRoleId = 11; // Sekretariat
+    } elseif (strpos($currentUri, 'sdmkeuangan') === 0 || strpos($currentUri, 'sdm') === 0) {
+        $activeRoleId = 15; // SDM dan Keuangan
+    } elseif (strpos($currentUri, 'prodi') === 0) {
+        $activeRoleId = 16; // Program Studi
     } elseif (strpos($currentUri, 'admin') === 0 || strpos($currentUri, 'kelolabooking') === 0) {
         $activeRoleId = 1; // Admin
     } elseif (strpos($currentUri, 'importemail') === 0 || strpos($currentUri, 'import-email') === 0) {
@@ -67,6 +75,10 @@ $roleBadgeMap = [
     6 => 'Koordinator TA',
     7 => 'PIC KK',
     9 => 'Ketua KK',
+    11 => 'Sekretariat',
+    15 => 'SDM dan Keuangan',
+    16 => 'Program Studi',
+    17 => 'Kemahasiswaan',
     21 => 'Laboran',
     22 => 'Panel Super Admin'
 ];
@@ -267,6 +279,55 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['category' => 'Layanan Ticketing', 'has_divider' => true],
                 ['heading' => 'Buat Tiket Kendala', 'href' => site_url('mahasiswa/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
                 ['heading' => 'Riwayat Tiket Saya', 'href' => site_url('mahasiswa/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+
+                ['category' => 'Akun', 'has_divider' => true],
+                ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
+            ];
+            break;
+
+        case 17: // Kemahasiswaan
+            $defaultNavItems = [
+                ['category' => 'Layanan Kemahasiswaan'],
+                ['heading' => 'Membuat Ticketing', 'href' => site_url('kemahasiswaan/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
+                ['heading' => 'Respon Ticketing', 'href' => site_url('kemahasiswaan/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
+                ['heading' => 'Riwayat', 'href' => site_url('kemahasiswaan/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+
+                ['category' => 'Akun', 'has_divider' => true],
+                ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
+            ];
+            break;
+
+        case 11: // Sekretariat
+            $defaultNavItems = [
+                ['category' => 'Layanan Sekretariat'],
+                ['heading' => 'Membuat Ticketing', 'href' => site_url('sekretariat/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
+                ['heading' => 'Respon Ticketing', 'href' => site_url('sekretariat/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
+                ['heading' => 'Riwayat', 'href' => site_url('sekretariat/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+
+                ['category' => 'Akun', 'has_divider' => true],
+                ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
+            ];
+            break;
+
+        case 15: // SDM dan Keuangan
+            $defaultNavItems = [
+                ['category' => 'Layanan SDM dan Keuangan'],
+                ['heading' => 'Membuat Ticketing', 'href' => site_url('sdmkeuangan/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
+                ['heading' => 'Respon Ticketing', 'href' => site_url('sdmkeuangan/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
+                ['heading' => 'Riwayat', 'href' => site_url('sdmkeuangan/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+
+                ['category' => 'Akun', 'has_divider' => true],
+                ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
+            ];
+            break;
+
+        case 16: // Program Studi
+            $userProdiSession = $this->session->userdata('prodi') ? ' (' . $this->session->userdata('prodi') . ')' : '';
+            $defaultNavItems = [
+                ['category' => 'Layanan Program Studi' . $userProdiSession],
+                ['heading' => 'Membuat Ticketing', 'href' => site_url('prodi/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
+                ['heading' => 'Respon Ticketing', 'href' => site_url('prodi/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
+                ['heading' => 'Riwayat', 'href' => site_url('prodi/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
 
                 ['category' => 'Akun', 'has_divider' => true],
                 ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],

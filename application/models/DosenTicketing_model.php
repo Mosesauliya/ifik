@@ -316,12 +316,21 @@ class DosenTicketing_model extends CI_Model {
     /**
      * Get tickets routed to specific recipient role (Laboran, Kaur, Admin LAA)
      */
-    public function get_respon_tickets($filterStatus = 'all', $search = '', $recipientRole = 'Kaur') {
+    public function get_respon_tickets($filterStatus = 'all', $search = '', $recipientRole = 'Kaur', $specificFilter = '') {
         if ($this->table === 'tb_ticketing') {
             $this->db->from('tb_ticketing');
             
             // Recipient Role Filter
             $this->_apply_recipient_filter($recipientRole);
+
+            // Specific Sub Filter (e.g. Prodi DKV/DI/DP/etc)
+            if (!empty($specificFilter)) {
+                $this->db->group_start();
+                $this->db->like('unit', $specificFilter);
+                $this->db->or_like('tujuan_penerima', $specificFilter);
+                $this->db->or_like('unit_terkait', $specificFilter);
+                $this->db->group_end();
+            }
 
             // Status Filter
             if (!empty($filterStatus) && $filterStatus !== 'all') {
@@ -467,10 +476,18 @@ class DosenTicketing_model extends CI_Model {
     /**
      * Count tickets routed to specific recipient role by status
      */
-    public function count_respon_tickets($status = 'all', $recipientRole = 'Kaur') {
+    public function count_respon_tickets($status = 'all', $recipientRole = 'Kaur', $specificFilter = '') {
         if ($this->table === 'tb_ticketing') {
             $this->db->from('tb_ticketing');
             $this->_apply_recipient_filter($recipientRole);
+
+            if (!empty($specificFilter)) {
+                $this->db->group_start();
+                $this->db->like('unit', $specificFilter);
+                $this->db->or_like('tujuan_penerima', $specificFilter);
+                $this->db->or_like('unit_terkait', $specificFilter);
+                $this->db->group_end();
+            }
 
             if ($status !== 'all') {
                 if ($status === 'Menunggu') {
