@@ -319,6 +319,8 @@ $route['verifikasi/(:num)'] = 'Verifikasi/surat/$1';
 // Laboran & Kaur Dedicated Routes
 $route['laboran'] = 'Laboran/booking';
 $route['laboran/booking'] = 'Laboran/booking';
+$route['kaur/peminjaman'] = 'kaur/Peminjaman';
+$route['kaur/peminjaman/(:any)'] = 'kaur/Peminjaman/$1';
 $route['kaur'] = 'Kaur/approval';
 $route['kaur/approval'] = 'Kaur/approval';
 $route['kaur/surat/(:num)'] = 'Kaur/surat/$1';
