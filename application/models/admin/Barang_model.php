@@ -160,4 +160,15 @@ class Barang_model extends CI_Model {
         $this->db->where('id_aset', $id_aset);
         return $this->db->delete('aset');
     }
+
+    /**
+     * Hapus banyak barang sekaligus secara permanen dari database
+     */
+    public function delete_multiple($id_list) {
+        if (empty($id_list) || !is_array($id_list)) {
+            return false;
+        }
+        $this->db->where_in('id_aset', $id_list);
+        return $this->db->delete('aset');
+    }
 }

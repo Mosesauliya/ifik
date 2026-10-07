@@ -23,6 +23,8 @@ $master_base_query = ['filter_field' => array_column($master_filters['criteria']
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <!-- SweetAlert2 CDN for Confirmation Alerts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --primary: #ea580c;
@@ -32,6 +34,29 @@ $master_base_query = ['filter_field' => array_column($master_filters['criteria']
             --text-main: #0f172a;
             --text-muted: #64748b;
             --border-color: #e2e8f0;
+        }
+
+        .item-check, #checkAll {
+            cursor: pointer;
+            width: 1.25rem;
+            height: 1.25rem;
+            border-color: #cbd5e1;
+        }
+        .item-check:checked, #checkAll:checked {
+            background-color: #ea580c;
+            border-color: #ea580c;
+        }
+        tr.selected-row {
+            background-color: rgba(234, 88, 12, 0.08) !important;
+        }
+        .bulk-action-bar {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translate(-50%, 0);
+        }
+        .bulk-action-bar.hidden-bar {
+            transform: translate(-50%, 120px) !important;
+            opacity: 0;
+            pointer-events: none;
         }
 
         * {
@@ -207,12 +232,31 @@ $master_base_query = ['filter_field' => array_column($master_filters['criteria']
             </div>
         <?php endif; ?>
 
+        <!-- Bulk Action Top Toolbar -->
+        <div id="topBulkToolbar" class="alert alert-dark border-0 shadow-sm rounded-4 d-none align-items-center justify-content-between mb-3 py-2 px-3 text-white" style="background: #1e293b;">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-check-square-fill text-warning fs-5"></i>
+                <span class="fw-bold small"><span id="topSelectedCount">0</span> barang dipilih</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-sm btn-outline-light rounded-pill px-3" id="topBtnCancel">
+                    Batal Pilih
+                </button>
+                <button type="button" class="btn btn-sm btn-danger fw-bold rounded-pill px-3 d-inline-flex align-items-center gap-1.5" id="topBtnBulkDelete">
+                    <i class="bi bi-trash3-fill"></i> Hapus Terpilih
+                </button>
+            </div>
+        </div>
+
         <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white mb-4">
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light border-bottom">
                             <tr>
+                                <th class="p-3 text-center" style="width: 46px;">
+                                    <input type="checkbox" id="checkAll" class="form-check-input" title="Pilih Semua di Halaman Ini">
+                                </th>
                                 <th class="p-3 text-center text-muted small fw-bold">NO</th>
                                 <th class="p-3 text-center text-muted small fw-bold">GAMBAR</th>
                                 <th class="text-muted small fw-bold">KODE ASET</th>
@@ -229,14 +273,17 @@ $master_base_query = ['filter_field' => array_column($master_filters['criteria']
                         <tbody>
                             <?php if(empty($barang)): ?>
                             <tr>
-                                <td colspan="11" class="text-center py-5 text-muted">
+                                <td colspan="12" class="text-center py-5 text-muted">
                                     <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary opacity-50"></i>
                                     Belum ada data barang di Master Data.
                                 </td>
                             </tr>
                             <?php else: ?>
                                 <?php foreach($barang as $loop_index => $b): ?>
-                                <tr>
+                                <tr id="row-aset-<?= $b->id_aset ?>">
+                                    <td class="p-3 text-center">
+                                        <input type="checkbox" class="form-check-input item-check" value="<?= $b->id_aset ?>" data-nama="<?= html_escape($b->nama_aset) ?>" title="Pilih <?= html_escape($b->nama_aset) ?>">
+                                    </td>
                                     <td class="p-3 text-center fw-semibold text-muted"><?= (($master_page - 1) * max(1, (int) ($master_pagination['per_page'] ?? 10))) + $loop_index + 1 ?></td>
                                     <td class="p-3 text-center">
                                         <?php if(!empty($b->gambar) && file_exists('./assets/uploads/barang/'.$b->gambar)): ?>
@@ -305,6 +352,29 @@ $master_base_query = ['filter_field' => array_column($master_filters['criteria']
                 </nav>
             </div>
         </div>
+
+        <!-- Floating Bulk Action Bar (Fixed at Bottom) -->
+        <div id="bulkActionBar" class="bulk-action-bar hidden-bar shadow-lg border rounded-4 px-4 py-3 bg-dark text-white d-flex align-items-center justify-content-between position-fixed bottom-0 start-50 mb-4 z-3" style="min-width: 380px; max-width: 90vw; background: rgba(15, 23, 42, 0.95) !important; backdrop-filter: blur(12px); border-color: rgba(255,255,255,0.15) !important; box-shadow: 0 20px 40px rgba(0,0,0,0.35) !important;">
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge bg-danger fs-6 px-3 py-2 rounded-pill font-monospace" id="bulkCountBadge">
+                    0 Terpilih
+                </span>
+                <span class="small text-white-50 d-none d-sm-inline">Barang dipilih</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-outline-light btn-sm rounded-pill px-3" id="btnCancelBulk">
+                    Batal
+                </button>
+                <button type="button" class="btn btn-danger fw-bold btn-sm rounded-pill px-4 shadow-sm d-inline-flex align-items-center gap-2" id="btnTriggerBulkDelete">
+                    <i class="bi bi-trash3-fill"></i> Hapus Terpilih
+                </button>
+            </div>
+        </div>
+
+        <!-- Hidden Form for Bulk Delete -->
+        <form id="bulkDeleteForm" action="<?= site_url('admin/barang/bulk_delete') ?>" method="POST" style="display:none;">
+            <input type="hidden" name="ids" id="bulkDeleteIdsInput">
+        </form>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -316,6 +386,154 @@ $master_base_query = ['filter_field' => array_column($master_filters['criteria']
             url.searchParams.set('page', '1');
             window.location.href = url.toString();
         });
+
+        // Multiple Select & Bulk Delete Functionality
+        const checkAll = document.getElementById('checkAll');
+        const itemChecks = document.querySelectorAll('.item-check');
+        const topBulkToolbar = document.getElementById('topBulkToolbar');
+        const topSelectedCount = document.getElementById('topSelectedCount');
+        const bulkActionBar = document.getElementById('bulkActionBar');
+        const bulkCountBadge = document.getElementById('bulkCountBadge');
+        const btnCancelBulk = document.getElementById('btnCancelBulk');
+        const topBtnCancel = document.getElementById('topBtnCancel');
+        const btnTriggerBulkDelete = document.getElementById('btnTriggerBulkDelete');
+        const topBtnBulkDelete = document.getElementById('topBtnBulkDelete');
+        const bulkDeleteForm = document.getElementById('bulkDeleteForm');
+        const bulkDeleteIdsInput = document.getElementById('bulkDeleteIdsInput');
+
+        function updateSelectionState() {
+            const checkedBoxes = Array.from(itemChecks).filter(cb => cb.checked);
+            const count = checkedBoxes.length;
+            const total = itemChecks.length;
+
+            if (topSelectedCount) topSelectedCount.textContent = count;
+            if (bulkCountBadge) bulkCountBadge.textContent = count + ' Terpilih';
+
+            // Update checkAll state
+            if (checkAll) {
+                if (count === 0) {
+                    checkAll.checked = false;
+                    checkAll.indeterminate = false;
+                } else if (count === total) {
+                    checkAll.checked = true;
+                    checkAll.indeterminate = false;
+                } else {
+                    checkAll.checked = false;
+                    checkAll.indeterminate = true;
+                }
+            }
+
+            // Highlight selected rows
+            itemChecks.forEach(cb => {
+                const tr = cb.closest('tr');
+                if (tr) {
+                    if (cb.checked) {
+                        tr.classList.add('selected-row');
+                    } else {
+                        tr.classList.remove('selected-row');
+                    }
+                }
+            });
+
+            // Show or hide toolbars
+            if (count > 0) {
+                topBulkToolbar?.classList.remove('d-none');
+                topBulkToolbar?.classList.add('d-flex');
+                bulkActionBar?.classList.remove('hidden-bar');
+            } else {
+                topBulkToolbar?.classList.remove('d-flex');
+                topBulkToolbar?.classList.add('d-none');
+                bulkActionBar?.classList.add('hidden-bar');
+            }
+        }
+
+        // Check All handler
+        checkAll?.addEventListener('change', function() {
+            itemChecks.forEach(cb => {
+                cb.checked = checkAll.checked;
+            });
+            updateSelectionState();
+        });
+
+        // Single checkbox handler
+        itemChecks.forEach(cb => {
+            cb.addEventListener('change', updateSelectionState);
+        });
+
+        // Cancel selection handlers
+        function clearSelection() {
+            itemChecks.forEach(cb => { cb.checked = false; });
+            if (checkAll) {
+                checkAll.checked = false;
+                checkAll.indeterminate = false;
+            }
+            updateSelectionState();
+        }
+        btnCancelBulk?.addEventListener('click', clearSelection);
+        topBtnCancel?.addEventListener('click', clearSelection);
+
+        // Bulk Delete Action Handler
+        function handleBulkDelete() {
+            const checkedBoxes = Array.from(itemChecks).filter(cb => cb.checked);
+            const ids = checkedBoxes.map(cb => cb.value);
+
+            if (ids.length === 0) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Pilih Barang',
+                        text: 'Silakan centang minimal 1 barang yang ingin dihapus terlebih dahulu.',
+                        confirmButtonColor: '#ea580c'
+                    });
+                } else {
+                    alert('Silakan centang minimal 1 barang yang ingin dihapus.');
+                }
+                return;
+            }
+
+            const itemNames = checkedBoxes.slice(0, 3).map(cb => cb.getAttribute('data-nama') || 'Barang #' + cb.value);
+            let previewText = itemNames.join(', ');
+            if (checkedBoxes.length > 3) {
+                previewText += ` dan ${checkedBoxes.length - 3} lainnya`;
+            }
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: `Hapus ${ids.length} Barang Terpilih?`,
+                    html: `
+                        <div class="text-start">
+                            <p class="mb-2">Anda akan menghapus <b>${ids.length} item</b> Master Data:</p>
+                            <div class="p-2 mb-3 bg-light rounded text-muted small border font-monospace text-truncate">${previewText}</div>
+                            <div class="alert alert-danger py-2 px-3 small mb-0 d-flex align-items-center gap-2">
+                                <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+                                <div><strong>PERINGATAN:</strong> Data dan berkas foto/media akan dihapus secara <strong>permanen</strong> dari sistem!</div>
+                            </div>
+                        </div>
+                    `,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: `<i class="bi bi-trash3-fill me-1"></i> Ya, Hapus (${ids.length} Barang)`,
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true,
+                    focusCancel: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        bulkDeleteIdsInput.value = JSON.stringify(ids);
+                        bulkDeleteForm.submit();
+                    }
+                });
+            } else {
+                if (confirm(`PERINGATAN!\n\nAnda yakin ingin menghapus ${ids.length} barang terpilih secara permanen?\nData dan berkas foto akan dihapus. Lanjutkan?`)) {
+                    bulkDeleteIdsInput.value = JSON.stringify(ids);
+                    bulkDeleteForm.submit();
+                }
+            }
+        }
+
+        btnTriggerBulkDelete?.addEventListener('click', handleBulkDelete);
+        topBtnBulkDelete?.addEventListener('click', handleBulkDelete);
     </script>
 </body>
 </html>
