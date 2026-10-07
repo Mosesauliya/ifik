@@ -62,7 +62,15 @@ $route['riwayat-booking'] = 'dashboard/riwayat';
 $route['riwayat-booking/live-data'] = 'dashboard/get_my_bookings_json';
 $route['riwayat-booking/cancel/(:num)'] = 'dashboard/cancel_booking/$1';
 $route['riwayat-booking/bulk-cancel'] = 'dashboard/bulk_cancel_booking';
-$route['peminjaman/riwayat'] = 'dashboard/riwayat';
+$route['admin/barang'] = 'Kelolabarang/index';
+$route['admin/barang/(:any)'] = 'Kelolabarang/$1';
+$route['admin/barang/(:any)/(:any)'] = 'Kelolabarang/$1/$2';
+$route['laboran/barang'] = 'Kelolabarang/index';
+$route['laboran/barang/(:any)'] = 'Kelolabarang/$1';
+$route['laboran/barang/(:any)/(:any)'] = 'Kelolabarang/$1/$2';
+$route['kelolabarang'] = 'Kelolabarang/index';
+$route['kelolabarang/(:any)'] = 'Kelolabarang/$1';
+$route['kelolabarang/(:any)/(:any)'] = 'Kelolabarang/$1/$2';
 $route['laboran/live-data'] = 'laboran/live_data';
 $route['kaur/live-data'] = 'kaur/live_data';
 $route['kelolabooking/live-data'] = 'kelolabooking/live_data';
@@ -358,6 +366,50 @@ $route['mahasiswa/ticketing/input'] = 'Mahasiswa/ticketing_input';
 $route['mahasiswa/ticketing/simpan'] = 'Mahasiswa/ticketing_simpan';
 $route['mahasiswa/ticketing/riwayat'] = 'Mahasiswa/ticketing_riwayat';
 $route['mahasiswa/ticketing/detail/(:any)'] = 'Mahasiswa/ticketing_detail/$1';
+
+// Kemahasiswaan Ticketing Routes (Role 17)
+$route['kemahasiswaan']                               = 'KemahasiswaanTicketing/index';
+$route['kemahasiswaan/respon-ticketing']              = 'KemahasiswaanTicketing/index';
+$route['kemahasiswaan/respon-ticketing/detail/(:any)']= 'KemahasiswaanTicketing/detail/$1';
+$route['kemahasiswaan/respon-ticketing/simpan_tanggapan'] = 'KemahasiswaanTicketing/simpan_tanggapan';
+$route['kemahasiswaan/ticketing']                     = 'KemahasiswaanTicketing/input';
+$route['kemahasiswaan/ticketing/input']               = 'KemahasiswaanTicketing/input';
+$route['kemahasiswaan/ticketing/simpan']              = 'KemahasiswaanTicketing/simpan';
+$route['kemahasiswaan/ticketing/riwayat']             = 'KemahasiswaanTicketing/riwayat';
+$route['kemahasiswaan/ticketing/detail/(:any)']       = 'KemahasiswaanTicketing/riwayat_detail/$1';
+
+// Sekretariat Ticketing Routes (Role 11)
+$route['sekretariat']                                 = 'SekretariatTicketing/index';
+$route['sekretariat/respon-ticketing']                = 'SekretariatTicketing/index';
+$route['sekretariat/respon-ticketing/detail/(:any)']  = 'SekretariatTicketing/detail/$1';
+$route['sekretariat/respon-ticketing/simpan_tanggapan'] = 'SekretariatTicketing/simpan_tanggapan';
+$route['sekretariat/ticketing']                       = 'SekretariatTicketing/input';
+$route['sekretariat/ticketing/input']                 = 'SekretariatTicketing/input';
+$route['sekretariat/ticketing/simpan']                = 'SekretariatTicketing/simpan';
+$route['sekretariat/ticketing/riwayat']               = 'SekretariatTicketing/riwayat';
+$route['sekretariat/ticketing/detail/(:any)']         = 'SekretariatTicketing/riwayat_detail/$1';
+
+// SDM dan Keuangan Ticketing Routes (Role 15)
+$route['sdmkeuangan']                                 = 'SdmKeuanganTicketing/index';
+$route['sdmkeuangan/respon-ticketing']                = 'SdmKeuanganTicketing/index';
+$route['sdmkeuangan/respon-ticketing/detail/(:any)']  = 'SdmKeuanganTicketing/detail/$1';
+$route['sdmkeuangan/respon-ticketing/simpan_tanggapan'] = 'SdmKeuanganTicketing/simpan_tanggapan';
+$route['sdmkeuangan/ticketing']                       = 'SdmKeuanganTicketing/input';
+$route['sdmkeuangan/ticketing/input']                 = 'SdmKeuanganTicketing/input';
+$route['sdmkeuangan/ticketing/simpan']                = 'SdmKeuanganTicketing/simpan';
+$route['sdmkeuangan/ticketing/riwayat']               = 'SdmKeuanganTicketing/riwayat';
+$route['sdmkeuangan/ticketing/detail/(:any)']         = 'SdmKeuanganTicketing/riwayat_detail/$1';
+
+// Program Studi Ticketing Routes (Role 16)
+$route['prodi']                                       = 'ProdiTicketing/index';
+$route['prodi/respon-ticketing']                      = 'ProdiTicketing/index';
+$route['prodi/respon-ticketing/detail/(:any)']        = 'ProdiTicketing/detail/$1';
+$route['prodi/respon-ticketing/simpan_tanggapan']     = 'ProdiTicketing/simpan_tanggapan';
+$route['prodi/ticketing']                             = 'ProdiTicketing/input';
+$route['prodi/ticketing/input']                       = 'ProdiTicketing/input';
+$route['prodi/ticketing/simpan']                      = 'ProdiTicketing/simpan';
+$route['prodi/ticketing/riwayat']                     = 'ProdiTicketing/riwayat';
+$route['prodi/ticketing/detail/(:any)']               = 'ProdiTicketing/riwayat_detail/$1';
 
 // Dosen Help Chat Routes (Harus sebelum Laboran Help routes)
 $route['dosen/help'] = 'DosenHelp/index';

@@ -130,6 +130,7 @@ class Login extends CI_Controller {
 					'status'           => 'active',
 					'koordinator'      => isset($user->koordinator) ? $user->koordinator : '',
 					'dosen_wali'       => isset($user->dosen_wali) ? $user->dosen_wali : '',
+					'prodi'            => isset($user->prodi) ? $user->prodi : '',
 					'password_changed' => $passwordChanged,
 					'logged_in'        => TRUE
 				);
@@ -145,6 +146,24 @@ class Login extends CI_Controller {
 				// If Super Admin (role 22), redirect directly to Import Email & Token
 				if ((int)$user->role_id === 22) {
 					redirect('import-email');
+					return;
+				}
+
+				// Redirect to dedicated unit ticketing panel
+				if ((int)$user->role_id === 17) {
+					redirect('kemahasiswaan/respon-ticketing');
+					return;
+				}
+				if ((int)$user->role_id === 11) {
+					redirect('sekretariat/respon-ticketing');
+					return;
+				}
+				if ((int)$user->role_id === 15) {
+					redirect('sdmkeuangan/respon-ticketing');
+					return;
+				}
+				if ((int)$user->role_id === 16) {
+					redirect('prodi/respon-ticketing');
 					return;
 				}
 
@@ -242,6 +261,7 @@ class Login extends CI_Controller {
 			'status'           => 'active',
 			'koordinator'      => isset($user->koordinator) ? $user->koordinator : '',
 			'dosen_wali'       => isset($user->dosen_wali) ? $user->dosen_wali : '',
+			'prodi'            => isset($user->prodi) ? $user->prodi : '',
 			'password_changed' => 0, // Directs to onboarding to setup password
 			'logged_in'        => TRUE
 		);
@@ -253,7 +273,7 @@ class Login extends CI_Controller {
 
 	public function logout()
 	{
-		$this->session->unset_userdata(array('id', 'user_id', 'username', 'role_id', 'name', 'email', 'nidn_nim', 'nim', 'koordinator', 'dosen_wali', 'status', 'password_changed', 'logged_in'));
+		$this->session->unset_userdata(array('id', 'user_id', 'username', 'role_id', 'name', 'email', 'nidn_nim', 'nim', 'koordinator', 'dosen_wali', 'prodi', 'status', 'password_changed', 'logged_in'));
 		$this->session->sess_destroy();
 		redirect('login');
 	}
