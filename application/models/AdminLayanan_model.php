@@ -304,7 +304,11 @@ class AdminLayanan_model extends CI_Model {
             }
 
             if (!empty($fp_update) && !empty($target_ids)) {
-                $this->db->where_in('id_mhs', $target_ids)->update('file_pendaftaran', $fp_update);
+                $this->db->group_start()
+                         ->where_in('id_mhs', $target_ids)
+                         ->or_like('id_mhs', $nim)
+                         ->group_end()
+                         ->update('file_pendaftaran', $fp_update);
             }
         }
 
@@ -537,7 +541,10 @@ class AdminLayanan_model extends CI_Model {
             }
 
             if (!empty($fp_update) && !empty($target_ids)) {
-                $this->db->where_in('id_mhs', $target_ids)
+                $this->db->group_start()
+                         ->where_in('id_mhs', $target_ids)
+                         ->or_like('id_mhs', $nim)
+                         ->group_end()
                          ->update('file_pendaftaran', $fp_update);
             }
         }
