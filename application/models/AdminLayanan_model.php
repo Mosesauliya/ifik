@@ -165,6 +165,7 @@ class AdminLayanan_model extends CI_Model {
                             'nim'               => $nim,
                             'kode_berkas'       => $kode,
                             'file_name'         => $fp['file'] ?? '',
+                            'status'            => $cleanSt,
                             'status_verifikasi' => $cleanSt,
                             'catatan'           => $fp['komentar'] ?? ''
                         );
@@ -182,6 +183,10 @@ class AdminLayanan_model extends CI_Model {
                 $this->db->db_debug = $prev_debug;
                 if (!empty($rows)) {
                     foreach ($rows as $r) {
+                        $st_v = $r['status_verifikasi'] ?? 'Pending';
+                        $cleanSt = ($st_v === 'Approved' || $st_v === 'Valid') ? 'Valid' : (($st_v === 'Rejected' || $st_v === 'Invalid') ? 'Invalid' : 'Pending');
+                        $r['status'] = $cleanSt;
+                        $r['status_verifikasi'] = $cleanSt;
                         $map[$r['kode_berkas']] = $r;
                     }
                 }
