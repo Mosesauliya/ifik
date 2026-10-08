@@ -891,6 +891,8 @@ class AdminLayanan_model extends CI_Model {
                 'nim'                   => $nim,
                 'nama_depan'            => $nama_depan,
                 'nama_belakang'         => $nama_belakang,
+                'nama_lengkap'          => trim($nama_depan . ' ' . $nama_belakang),
+                'nama_dosen_wali'       => 'Dosen Wali LAA',
                 'prodi'                 => $mhs_map[$nim]['prodi'] ?? 'Desain Komunikasi Visual',
                 'konsentrasi_dkv'       => $g_data['peminatan'] ?? ($mhs_map[$nim]['konsentrasi_dkv'] ?? 'Desain Komunikasi Visual'),
                 'email'                 => $mhs_map[$nim]['email'] ?? '',
@@ -1544,11 +1546,27 @@ class AdminLayanan_model extends CI_Model {
                         strpos($prodi, $search) !== false);
             }));
         }
-        return array_values(array_filter($fallback, function($item) {
+
+        $res = array_values(array_filter($fallback, function($item) {
             return (strpos($item['current_stage'] ?? '', 'Lulus') !== false 
                  || strpos($item['current_stage'] ?? '', 'Selesai') !== false 
                  || ($item['status_approval_admin'] ?? '') === 'Approved');
         }));
+
+        foreach ($res as &$r) {
+            if (empty($r['nama_lengkap'])) {
+                $r['nama_lengkap'] = trim(($r['nama_depan'] ?? '') . ' ' . ($r['nama_belakang'] ?? ''));
+            }
+            if (empty($r['nama_lengkap'])) {
+                $r['nama_lengkap'] = 'Mahasiswa';
+            }
+            if (empty($r['nama_dosen_wali'])) {
+                $r['nama_dosen_wali'] = $r['dosen_wali'] ?? 'Dosen Wali LAA';
+            }
+        }
+        unset($r);
+
+        return $res;
     }
 
     public function get_status_peserta_ta($search = '', $filter_stage = 'all', $cat = 'query') {
@@ -1576,6 +1594,13 @@ class AdminLayanan_model extends CI_Model {
         foreach ($rows as &$r) {
             $nim = $r['nim'];
             
+            if (empty($r['nama_lengkap'])) {
+                $r['nama_lengkap'] = trim(($r['nama_depan'] ?? '') . ' ' . ($r['nama_belakang'] ?? ''));
+            }
+            if (empty($r['nama_lengkap'])) {
+                $r['nama_lengkap'] = 'Mahasiswa';
+            }
+
             // Map stage name to Bimbingan TA evaluation display tag (Preview 1, Preview 2, Preview 3, Pendaftaran Sidang)
             $stg = strtolower($r['current_stage'] ?? '');
             if (strpos($stg, 'preview 3') !== false || strpos($stg, 'preview3') !== false || strpos($stg, 'pra-sidang') !== false) {
