@@ -1108,20 +1108,35 @@ class AdminLayanan_model extends CI_Model {
     }
 
     /**
-     * Resolve URL file PDF untuk preview modal
+     * Resolve URL file PDF untuk preview modal (aman dari simbol %, #, spasi, dsb)
      */
     public function resolve_pdf_url($filename) {
+        $encode_path = function($path) {
+            if (empty($path)) return '';
+            $parts = explode('/', str_replace('\\', '/', $path));
+            $encoded = array_map(function($part) {
+                return rawurlencode(rawurldecode($part));
+            }, $parts);
+            return implode('/', $encoded);
+        };
+
         if (empty($filename)) {
-            return base_url('uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf');
+            return base_url($encode_path('uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf'));
         }
-        if (strpos($filename, 'uploads/') === 0 && file_exists(FCPATH . $filename)) {
-            return base_url($filename);
+
+        $clean = ltrim(str_replace('\\', '/', $filename), '/');
+        $target = (strpos($clean, 'uploads/') === 0) ? $clean : ('uploads/persyaratan_ta/' . $clean);
+
+        if (!file_exists(FCPATH . $target)) {
+            $decoded = rawurldecode($target);
+            if (file_exists(FCPATH . $decoded)) {
+                $target = $decoded;
+            } else {
+                $target = 'uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf';
+            }
         }
-        $sub_path = 'uploads/persyaratan_ta/' . $filename;
-        if (file_exists(FCPATH . $sub_path)) {
-            return base_url($sub_path);
-        }
-        return base_url('uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf');
+
+        return base_url($encode_path($target));
     }
 
     /**

@@ -491,17 +491,7 @@ class AdminLayanan extends CI_Controller {
         $data = array();
 
         $resolve_pdf_url = function($filename) {
-            if (empty($filename)) {
-                return base_url('uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf');
-            }
-            if (strpos($filename, 'uploads/') === 0 && file_exists(FCPATH . $filename)) {
-                return base_url($filename);
-            }
-            $sub_path = 'uploads/persyaratan_ta/' . $filename;
-            if (file_exists(FCPATH . $sub_path)) {
-                return base_url($sub_path);
-            }
-            return base_url('uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf');
+            return $this->AdminLayanan_model->resolve_pdf_url($filename);
         };
 
         foreach ($list as $r) {
