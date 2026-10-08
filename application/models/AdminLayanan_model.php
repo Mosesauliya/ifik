@@ -672,6 +672,10 @@ class AdminLayanan_model extends CI_Model {
                 $raw_id = $fp['id_mhs'] ?? '';
                 if (empty($raw_id)) continue;
                 $nim = preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', $raw_id);
+                $doc_name_raw = strtolower(trim($fp['nama'] ?? ''));
+                $is_doc_name = in_array($doc_name_raw, array('mahasiswa', 'ksm', 'transkrip', 'pernyataan', 'bebas_lab', 'bap', 'surat_pernyataan', 'lab', 'bukti', 'surat'));
+                $valid_name_fp = (!empty($fp['nama']) && !$is_doc_name) ? $fp['nama'] : null;
+
                 if (!isset($student_map[$nim])) {
                     $student_map[$nim] = array(
                         'nim'           => $nim,
@@ -681,14 +685,14 @@ class AdminLayanan_model extends CI_Model {
                         'komentar'      => array(),
                         'files'         => array(),
                         'latest_date'   => $fp['date_edit'] ?? null,
-                        'name_from_fp'  => (!empty($fp['nama']) && $fp['nama'] !== 'Mahasiswa') ? $fp['nama'] : null,
+                        'name_from_fp'  => $valid_name_fp,
                     );
                 } else {
                     if (!in_array($raw_id, $student_map[$nim]['raw_ids'])) {
                         $student_map[$nim]['raw_ids'][] = $raw_id;
                     }
-                    if (!empty($fp['nama']) && $fp['nama'] !== 'Mahasiswa' && empty($student_map[$nim]['name_from_fp'])) {
-                        $student_map[$nim]['name_from_fp'] = $fp['nama'];
+                    if ($valid_name_fp && empty($student_map[$nim]['name_from_fp'])) {
+                        $student_map[$nim]['name_from_fp'] = $valid_name_fp;
                     }
                     if (!empty($fp['date_edit']) && ($student_map[$nim]['latest_date'] === null || $fp['date_edit'] > $student_map[$nim]['latest_date'])) {
                         $student_map[$nim]['latest_date'] = $fp['date_edit'];
@@ -789,6 +793,16 @@ class AdminLayanan_model extends CI_Model {
 
         $results = array();
         foreach ($student_map as $nim => $info) {
+            $has_user_rec = !empty($user_map[$nim]);
+            $has_mhs_rec  = !empty($mhs_map[$nim]);
+            $has_g_rec    = !empty($info['guidance']);
+
+            // Ignore orphan dummy test rows in file_pendaftaran (e.g. 6ac718f3c6e49, 6abb2313edc3b)
+            // that don't belong to any real user, student in mahasiswa table, or guidance entry.
+            if (!$has_user_rec && !$has_mhs_rec && !$has_g_rec) {
+                continue;
+            }
+
             $full_name = 'Mahasiswa';
             if (!empty($user_map[$nim])) {
                 $full_name = $user_map[$nim];
@@ -877,6 +891,8 @@ class AdminLayanan_model extends CI_Model {
                 'nim'                   => $nim,
                 'nama_depan'            => $nama_depan,
                 'nama_belakang'         => $nama_belakang,
+                'nama_lengkap'          => trim($nama_depan . ' ' . $nama_belakang),
+                'nama_dosen_wali'       => 'Dosen Wali LAA',
                 'prodi'                 => $mhs_map[$nim]['prodi'] ?? 'Desain Komunikasi Visual',
                 'konsentrasi_dkv'       => $g_data['peminatan'] ?? ($mhs_map[$nim]['konsentrasi_dkv'] ?? 'Desain Komunikasi Visual'),
                 'email'                 => $mhs_map[$nim]['email'] ?? '',
@@ -1530,11 +1546,27 @@ class AdminLayanan_model extends CI_Model {
                         strpos($prodi, $search) !== false);
             }));
         }
-        return array_values(array_filter($fallback, function($item) {
+
+        $res = array_values(array_filter($fallback, function($item) {
             return (strpos($item['current_stage'] ?? '', 'Lulus') !== false 
                  || strpos($item['current_stage'] ?? '', 'Selesai') !== false 
                  || ($item['status_approval_admin'] ?? '') === 'Approved');
         }));
+
+        foreach ($res as &$r) {
+            if (empty($r['nama_lengkap'])) {
+                $r['nama_lengkap'] = trim(($r['nama_depan'] ?? '') . ' ' . ($r['nama_belakang'] ?? ''));
+            }
+            if (empty($r['nama_lengkap'])) {
+                $r['nama_lengkap'] = 'Mahasiswa';
+            }
+            if (empty($r['nama_dosen_wali'])) {
+                $r['nama_dosen_wali'] = $r['dosen_wali'] ?? 'Dosen Wali LAA';
+            }
+        }
+        unset($r);
+
+        return $res;
     }
 
     public function get_status_peserta_ta($search = '', $filter_stage = 'all', $cat = 'query') {
@@ -1562,6 +1594,13 @@ class AdminLayanan_model extends CI_Model {
         foreach ($rows as &$r) {
             $nim = $r['nim'];
             
+            if (empty($r['nama_lengkap'])) {
+                $r['nama_lengkap'] = trim(($r['nama_depan'] ?? '') . ' ' . ($r['nama_belakang'] ?? ''));
+            }
+            if (empty($r['nama_lengkap'])) {
+                $r['nama_lengkap'] = 'Mahasiswa';
+            }
+
             // Map stage name to Bimbingan TA evaluation display tag (Preview 1, Preview 2, Preview 3, Pendaftaran Sidang)
             $stg = strtolower($r['current_stage'] ?? '');
             if (strpos($stg, 'preview 3') !== false || strpos($stg, 'preview3') !== false || strpos($stg, 'pra-sidang') !== false) {
