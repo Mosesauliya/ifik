@@ -15,7 +15,7 @@ class PeminjamanBarang_model extends CI_Model {
     private $table_blokir = 'blokir_pengguna';
     private $table_settings = 'peminjaman_settings';
     private $last_expired_count = 0;
-    private $workflow_schema_version = 3;
+    private $workflow_schema_version = 4;
 
     public function __construct() {
         parent::__construct();
@@ -67,6 +67,34 @@ class PeminjamanBarang_model extends CI_Model {
             }
             if (!$this->db->field_exists('id_approver_kaprodi', $this->table_peminjaman)) {
                 $this->db->query("ALTER TABLE `{$this->table_peminjaman}` ADD `id_approver_kaprodi` int(11) DEFAULT NULL AFTER `tgl_approve_kaprodi`");
+            }
+
+            if (!$this->db->field_exists('status_laboran', $this->table_peminjaman)) {
+                $this->db->query("ALTER TABLE `{$this->table_peminjaman}` ADD `status_laboran` varchar(20) NOT NULL DEFAULT 'Pending' AFTER `id_approver_kaprodi`");
+                $this->db->query("UPDATE `{$this->table_peminjaman}` SET `status_laboran` = 'Disetujui' WHERE `status` IN ('Menunggu ACC Kaur', 'Disetujui (Menunggu Pengambilan)', 'Sedang Dipinjam', 'Selesai', 'Dikembalikan')");
+            }
+            if (!$this->db->field_exists('catatan_laboran', $this->table_peminjaman)) {
+                $this->db->query("ALTER TABLE `{$this->table_peminjaman}` ADD `catatan_laboran` text DEFAULT NULL AFTER `status_laboran`");
+            }
+            if (!$this->db->field_exists('tgl_approve_laboran', $this->table_peminjaman)) {
+                $this->db->query("ALTER TABLE `{$this->table_peminjaman}` ADD `tgl_approve_laboran` datetime DEFAULT NULL AFTER `catatan_laboran`");
+            }
+            if (!$this->db->field_exists('id_approver_laboran', $this->table_peminjaman)) {
+                $this->db->query("ALTER TABLE `{$this->table_peminjaman}` ADD `id_approver_laboran` int(11) DEFAULT NULL AFTER `tgl_approve_laboran`");
+            }
+
+            if (!$this->db->field_exists('status_kaur', $this->table_peminjaman)) {
+                $this->db->query("ALTER TABLE `{$this->table_peminjaman}` ADD `status_kaur` varchar(20) NOT NULL DEFAULT 'Pending' AFTER `id_approver_laboran`");
+                $this->db->query("UPDATE `{$this->table_peminjaman}` SET `status_kaur` = 'Disetujui' WHERE `status` IN ('Disetujui (Menunggu Pengambilan)', 'Sedang Dipinjam', 'Selesai', 'Dikembalikan')");
+            }
+            if (!$this->db->field_exists('catatan_kaur', $this->table_peminjaman)) {
+                $this->db->query("ALTER TABLE `{$this->table_peminjaman}` ADD `catatan_kaur` text DEFAULT NULL AFTER `status_kaur`");
+            }
+            if (!$this->db->field_exists('tgl_approve_kaur', $this->table_peminjaman)) {
+                $this->db->query("ALTER TABLE `{$this->table_peminjaman}` ADD `tgl_approve_kaur` datetime DEFAULT NULL AFTER `catatan_kaur`");
+            }
+            if (!$this->db->field_exists('id_approver_kaur', $this->table_peminjaman)) {
+                $this->db->query("ALTER TABLE `{$this->table_peminjaman}` ADD `id_approver_kaur` int(11) DEFAULT NULL AFTER `tgl_approve_kaur`");
             }
 
             if (!$this->db->field_exists('foto_pengembalian', $this->table_peminjaman)) {
