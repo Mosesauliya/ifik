@@ -223,43 +223,9 @@ class AdminLayanan extends CI_Controller {
             }
         }
 
-        // Recompute all berkas summary for this student
-        $active_syarat = $this->AdminLayanan_model->get_active_syarat_berkas();
-        $summary = $this->AdminLayanan_model->get_student_berkas_summary($nim, $active_syarat);
-
-        // If any required berkas is Invalid, update berkas_kurang or status_approval_admin
-        $invalid_kodes = array();
-        foreach ($summary['items'] as $it) {
-            if ($it['status'] === 'Invalid') {
-                $invalid_kodes[] = $it['kode'];
-            }
-        }
-
-        if ($this->db->table_exists('pendaftaran_ta')) {
-            if (!empty($invalid_kodes)) {
-                $this->db->where('nim', $nim);
-                $this->db->update('pendaftaran_ta', array(
-                    'status_approval_admin' => 'Rejected',
-                    'berkas_kurang'         => json_encode($invalid_kodes),
-                    'catatan_admin'         => !empty($catatan) ? $catatan : ($detail['catatan_admin'] ?? 'Beberapa berkas perlu direvisi')
-                ));
-            } elseif ($summary['valid_count'] === $summary['total_count']) {
-                $this->db->where('nim', $nim);
-                $this->db->update('pendaftaran_ta', array(
-                    'status_approval_admin' => 'Approved',
-                    'catatan_admin'         => !empty($catatan) ? $catatan : 'Seluruh berkas persyaratan telah lengkap & valid.',
-                    'berkas_kurang'         => NULL,
-                    'current_stage'         => 'Koordinator TA'
-                ));
-            } else {
-                $this->db->where('nim', $nim);
-                $this->db->update('pendaftaran_ta', array(
-                    'status_approval_admin' => 'Pending',
-                    'berkas_kurang'         => NULL,
-                    'current_stage'         => 'Admin Layanan'
-                ));
-            }
-        }
+        // Recompute all berkas summary and sync overall status across tables (pendaftaran_ta & file_pendaftaran)
+        $sync_res = $this->AdminLayanan_model->sync_overall_status($nim, $catatan);
+        $summary = $sync_res['summary'];
 
         // Log action
         $this->load->model('Approval_log_model');
