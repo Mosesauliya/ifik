@@ -76,7 +76,7 @@ $route['kelolabarang'] = 'Kelolabarang/index';
 $route['kelolabarang/(:any)'] = 'Kelolabarang/$1';
 $route['kelolabarang/(:any)/(:any)'] = 'Kelolabarang/$1/$2';
 $route['laboran/live-data'] = 'laboran/live_data';
-$route['kaur/live-data'] = 'kaur/live_data';
+$route['kaur/live-data'] = 'KaurDashboard/live_data';
 $route['kelolabooking/live-data'] = 'kelolabooking/live_data';
 $route['admin/live-data'] = 'kelolabooking/live_data';
 // Mahasiswa Routes
@@ -321,9 +321,11 @@ $route['laboran'] = 'Laboran/booking';
 $route['laboran/booking'] = 'Laboran/booking';
 $route['kaur/peminjaman'] = 'kaur/Peminjaman';
 $route['kaur/peminjaman/(:any)'] = 'kaur/Peminjaman/$1';
-$route['kaur'] = 'Kaur/approval';
-$route['kaur/approval'] = 'Kaur/approval';
-$route['kaur/surat/(:num)'] = 'Kaur/surat/$1';
+// $route['kaur/dashboard/peminjaman'] = 'kaur/Peminjaman';
+// $route['kaur/dashboard/peminjaman/(:any)'] = 'kaur/Peminjaman/$1';
+$route['kaur'] = 'KaurDashboard/approval';
+$route['kaur/approval'] = 'KaurDashboard/approval';
+$route['kaur/surat/(:num)'] = 'KaurDashboard/surat/$1';
 $route['laboran/surat/(:num)'] = 'Laboran/surat/$1';
 $route['kelolabooking/surat/(:num)'] = 'Kelolabooking/surat/$1';
 
@@ -335,11 +337,11 @@ $route['laboran/tanda-tangan/download'] = 'Laboran/download_tanda_tangan';
 $route['laboran/signature'] = 'Laboran/tanda_tangan';
 
 // Kaur Digital Signature Routes
-$route['kaur/tanda-tangan'] = 'Kaur/tanda_tangan';
-$route['kaur/tanda-tangan/simpan'] = 'Kaur/simpan_tanda_tangan';
-$route['kaur/tanda-tangan/hapus'] = 'Kaur/hapus_tanda_tangan';
-$route['kaur/tanda-tangan/download'] = 'Kaur/download_tanda_tangan';
-$route['kaur/signature'] = 'Kaur/tanda_tangan';
+$route['kaur/tanda-tangan'] = 'KaurDashboard/tanda_tangan';
+$route['kaur/tanda-tangan/simpan'] = 'KaurDashboard/simpan_tanda_tangan';
+$route['kaur/tanda-tangan/hapus'] = 'KaurDashboard/hapus_tanda_tangan';
+$route['kaur/tanda-tangan/download'] = 'KaurDashboard/download_tanda_tangan';
+$route['kaur/signature'] = 'KaurDashboard/tanda_tangan';
 
 // Laboran Ticketing & Respon Routes
 $route['laboran/respon-ticketing'] = 'LaboranTicketing/index';

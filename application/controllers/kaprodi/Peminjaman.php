@@ -282,7 +282,11 @@ class Peminjaman extends CI_Controller {
     }
 
     private function is_loan_in_scope($peminjaman) {
-        return true; // Mode Demo: Mengizinkan pemrosesan seluruh pengajuan
+        if ($this->uses_legacy_scope) {
+            return trim((string) ($peminjaman->prodi ?? '')) === '';
+        }
+
+        return fik_normalize_prodi($peminjaman->prodi ?? $peminjaman->prodi_peminjam ?? null) === $this->kaprodi_prodi;
     }
 
     private function scope_filters() {
