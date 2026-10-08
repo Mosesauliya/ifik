@@ -3640,9 +3640,18 @@
 
     function resolveDocPdfUrl(filename) {
         if (!filename) return '<?= base_url("uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf"); ?>';
+        filename = String(filename).trim();
         if (filename.startsWith('http://') || filename.startsWith('https://')) return filename;
-        if (filename.startsWith('uploads/')) return '<?= base_url(); ?>' + filename;
-        return '<?= base_url("uploads/persyaratan_ta/"); ?>' + filename;
+
+        let folder = 'uploads/persyaratan_ta/';
+        let name = filename;
+        if (filename.startsWith('uploads/')) {
+            const lastSlash = filename.lastIndexOf('/');
+            folder = filename.substring(0, lastSlash + 1);
+            name = filename.substring(lastSlash + 1);
+        }
+
+        return '<?= base_url(); ?>' + folder + encodeURIComponent(name);
     }
 
     let quickDocToastTimer = null;
