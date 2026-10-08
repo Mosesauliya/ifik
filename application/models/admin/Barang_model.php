@@ -1,0 +1,174 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+/**
+ * Model: Barang_model
+ * Path: application/models/admin/Barang_model.php
+ * Mengelola interaksi database untuk fitur Master Data Aset (Admin/Laboran) di db_ifik_baru
+ * Menggunakan tabel `aset` dan `ruangan`
+ */
+class Barang_model extends CI_Model {
+
+    private $room_table = 'ruangan';
+
+    public function __construct() {
+        parent::__construct();
+        $this->load->database();
+    }
+
+    /**
+     * Tampilkan semua barang beserta nama laboratorium/ruangannya
+     */
+    public function get_all($filters = []) {
+        $this->db->select('aset.*, COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan');
+        $this->db->from('aset');
+        $this->db->join($this->room_table . ' ruangan', 'ruangan.id = aset.id_ruangan', 'left');
+        $this->apply_criteria($filters['criteria'] ?? []);
+        $this->db->order_by('aset.nama_aset', 'ASC');
+        if (!empty($filters['limit'])) {
+            $this->db->limit((int) $filters['limit'], max(0, (int) ($filters['offset'] ?? 0)));
+        }
+
+        return $this->db->get()->result();
+    }
+
+    public function count_all($filters = []) {
+        $this->db->from('aset');
+        $this->db->join($this->room_table . ' ruangan', 'ruangan.id = aset.id_ruangan', 'left');
+        $this->apply_criteria($filters['criteria'] ?? []);
+        return (int) $this->db->count_all_results();
+    }
+
+    private function apply_criteria($criteria) {
+        $columns = [
+            'kode' => 'aset.kode_aset',
+            'nama' => 'aset.nama_aset',
+            'ruangan' => 'ruangan.ruangan',
+            'kondisi' => 'aset.kondisi',
+        ];
+        foreach ((array) $criteria as $criterion) {
+            $field = $criterion['field'] ?? '';
+            $value = trim((string) ($criterion['value'] ?? ''));
+            if ($value === '') continue;
+            if ($field === 'total') {
+                $this->db->where("CAST(aset.jumlah_total AS CHAR) LIKE " . $this->db->escape('%' . $value . '%'), null, false);
+            } elseif (isset($columns[$field])) {
+                $this->db->like($columns[$field], $value);
+            }
+        }
+    }
+
+    public function find_duplicate($data, $exclude_id = null) {
+        $kode = trim((string) ($data['kode_aset'] ?? ''));
+        $nama = trim((string) ($data['nama_aset'] ?? ''));
+        $id_ruangan = trim((string) ($data['id_ruangan'] ?? ''));
+        if ($kode === '' && $nama === '') {
+            return null;
+        }
+        $this->db->from('aset');
+        $this->db->group_start();
+        if ($kode !== '') {
+            $this->db->where('kode_aset', $kode);
+        }
+        if ($nama !== '') {
+            if ($kode !== '') {
+                $this->db->or_group_start();
+            }
+            $this->db->where('nama_aset', $nama);
+            if ($id_ruangan !== '') {
+                $this->db->where('id_ruangan', $id_ruangan);
+            }
+            if ($kode !== '') {
+                $this->db->group_end();
+            }
+        }
+        $this->db->group_end();
+        if ($exclude_id) {
+            $this->db->where('id_aset !=', (int) $exclude_id);
+        }
+        return $this->db->get()->row();
+    }
+
+    /**
+     * Ambil daftar semua ruangan untuk pilihan di Dropdown form Tambah/Edit
+     * Menggabungkan/menghilangkan duplikasi nama ruangan agar rapi dan unik
+     */
+    public function get_all_ruangan() {
+        $raw = $this->db
+            ->order_by('ruangan', 'ASC')
+            ->order_by('id', 'ASC')
+            ->get($this->room_table)
+            ->result();
+
+        $grouped = [];
+        foreach ($raw as $r) {
+            $name = trim(preg_replace('/\s+/', ' ', (string) ($r->ruangan ?: $r->nama_ruangan ?? '')));
+            if ($name === '') continue;
+
+            $key = strtolower($name);
+            if ($key === 'green screen') {
+                $key = 'lab green screen';
+                $name = 'Lab Green Screen';
+            }
+
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = (object) [
+                    'id'           => $r->id,
+                    'id_ruangan'   => $r->id,
+                    'ruangan'      => $name,
+                    'nama_ruangan' => $name,
+                    'all_ids'      => [(string) $r->id],
+                ];
+            } else {
+                $grouped[$key]->all_ids[] = (string) $r->id;
+            }
+        }
+
+        usort($grouped, function($a, $b) {
+            return strcasecmp($a->nama_ruangan, $b->nama_ruangan);
+        });
+
+        return array_values($grouped);
+    }
+
+    /**
+     * Ambil detail 1 barang spesifik berdasarkan ID (digunakan untuk fitur Edit)
+     */
+    public function get_by_id($id_aset) {
+        return $this->db->get_where('aset', ['id_aset' => $id_aset])->row();
+    }
+
+    /**
+     * Simpan data barang baru ke tabel aset
+     */
+    public function insert($data) {
+        return $this->db->insert('aset', $data);
+    }
+
+    /**
+     * Simpan pembaruan data barang berdasarkan ID
+     */
+    public function update($id_aset, $data) {
+        $this->db->where('id_aset', $id_aset);
+        return $this->db->update('aset', $data);
+    }
+
+    /**
+     * Hapus barang secara permanen dari database
+     */
+    public function delete($id_aset) {
+        $this->db->where('id_aset', $id_aset);
+        return $this->db->delete('aset');
+    }
+
+    /**
+     * Hapus banyak barang sekaligus secara permanen dari database
+     */
+    public function delete_multiple($id_list) {
+        if (empty($id_list) || !is_array($id_list)) {
+            return false;
+        }
+        $this->db->where_in('id_aset', $id_list);
+        return $this->db->delete('aset');
+    }
+}

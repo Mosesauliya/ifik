@@ -825,7 +825,7 @@ class PeminjamanBarang_model extends CI_Model {
             $this->db->order_by('MIN(sort_aset.nama_aset)', $sort_dir, false);
             $this->db->order_by('id_peminjaman', 'DESC');
         } elseif ($sort_key === 'lab') {
-            $this->db->order_by('MIN(sort_COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan)', $sort_dir, false);
+            $this->db->order_by('MIN(COALESCE(sort_ruangan.ruangan, "Umum"))', $sort_dir, false);
             $this->db->order_by('id_peminjaman', 'DESC');
         } elseif (isset($sort_map[$sort_key])) {
             $this->db->order_by($sort_map[$sort_key], $sort_dir);
@@ -855,10 +855,10 @@ class PeminjamanBarang_model extends CI_Model {
         }
 
         $detail_map = [];
-        $this->db->select('COALESCE(p.group_id, CONCAT("single-", p.id_peminjaman)) AS group_key, p.id_peminjaman, p.id_aset, p.jumlah_pinjam, p.stock_allocation_status, a.nama_aset, a.kode_aset, a.jumlah_total, a.jumlah_tersedia, a.jumlah_reserved, a.jumlah_dipinjam, r.nama_ruangan', false);
+        $this->db->select('COALESCE(p.group_id, CONCAT("single-", p.id_peminjaman)) AS group_key, p.id_peminjaman, p.id_aset, p.jumlah_pinjam, p.stock_allocation_status, a.nama_aset, a.kode_aset, a.jumlah_total, a.jumlah_tersedia, a.jumlah_reserved, a.jumlah_dipinjam, COALESCE(r.ruangan, "Umum") AS nama_ruangan', false);
         $this->db->from($this->table_peminjaman . ' as p');
         $this->db->join('aset a', 'a.id_aset = p.id_aset', 'left');
-        $this->db->join('ruangan r', 'r.id_ruangan = a.id_ruangan', 'left');
+        $this->db->join('ruangan r', 'r.id = a.id_ruangan', 'left');
         $this->db->group_start();
         if (!empty($group_ids)) $this->db->where_in('p.group_id', $group_ids);
         if (!empty($single_ids)) {
@@ -971,7 +971,7 @@ class PeminjamanBarang_model extends CI_Model {
                 $this->db->where("p.id_aset IN (SELECT a.id_aset FROM `aset` a WHERE a.nama_aset LIKE " . $this->db->escape($search) . " OR a.kode_aset LIKE " . $this->db->escape($search) . ")", null, false);
             } elseif ($field === 'lab') {
                 $search = '%' . $value . '%';
-                $this->db->where("p.id_aset IN (SELECT a.id_aset FROM `aset` a LEFT JOIN `ruangan` r ON r.id_ruangan = a.id_ruangan WHERE r.nama_ruangan LIKE " . $this->db->escape($search) . ")", null, false);
+                $this->db->where("p.id_aset IN (SELECT a.id_aset FROM `aset` a LEFT JOIN `ruangan` r ON r.id = a.id_ruangan WHERE r.ruangan LIKE " . $this->db->escape($search) . ")", null, false);
             } elseif (in_array($field, ['status', 'status_approval'], true)) {
                 if ($value === 'Terlambat') {
                     $this->db->where_in('p.status', ['Sedang Dipinjam', 'Dipinjam'])->where('p.tanggal_kembali_rencana <', date('Y-m-d'));
@@ -1203,7 +1203,7 @@ class PeminjamanBarang_model extends CI_Model {
             aset.kode_aset,
             COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan
         ');
-        $this->db->from('peminjaman_detail pd');
+        $this->db->from($this->table_peminjaman_detail . ' pd');
         $this->db->join('aset', 'aset.id_aset = pd.id_aset', 'left');
         $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan', 'left');
         $this->db->where('pd.id_peminjaman', $id_peminjaman);
@@ -1362,8 +1362,14 @@ class PeminjamanBarang_model extends CI_Model {
     }
 
     public function get_peminjaman_by_group_id($group_id) {
+        $group_id = trim((string) $group_id);
+        if (preg_match('/[?&]data=([^&]+)/i', $group_id, $m)) {
+            $group_id = rawurldecode($m[1]);
+        } elseif (preg_match('/(?:serah_terima|validasi_pengembalian|peminjaman)\/([^\/?#]+)/i', $group_id, $m)) {
+            $group_id = rawurldecode($m[1]);
+        }
         $this->db->select('MIN(id_peminjaman) as id_peminjaman');
-        if (strpos((string) $group_id, 'single-') === 0) {
+        if (strpos($group_id, 'single-') === 0) {
             $row = $this->db->where('id_peminjaman', (int) str_replace('single-', '', $group_id))->get($this->table_peminjaman)->row();
         } else {
             $row = $this->db->where('group_id', $group_id)->get($this->table_peminjaman)->row();
@@ -1376,7 +1382,13 @@ class PeminjamanBarang_model extends CI_Model {
      * two concurrent QR scans from both passing the same status check.
      */
     public function get_peminjaman_by_group_id_for_update($group_id) {
-        if (strpos((string) $group_id, 'single-') === 0) {
+        $group_id = trim((string) $group_id);
+        if (preg_match('/[?&]data=([^&]+)/i', $group_id, $m)) {
+            $group_id = rawurldecode($m[1]);
+        } elseif (preg_match('/(?:serah_terima|validasi_pengembalian|peminjaman)\/([^\/?#]+)/i', $group_id, $m)) {
+            $group_id = rawurldecode($m[1]);
+        }
+        if (strpos($group_id, 'single-') === 0) {
             $sql = 'SELECT id_peminjaman FROM `' . $this->table_peminjaman . '` WHERE id_peminjaman = ? LIMIT 1 FOR UPDATE';
             $row = $this->db->query($sql, [(int) str_replace('single-', '', $group_id)])->row();
         } else {
@@ -1455,7 +1467,7 @@ class PeminjamanBarang_model extends CI_Model {
     }
 
     public function get_qr_payload($group_id) {
-        return site_url('admin/peminjaman/serah_terima/' . rawurlencode($group_id));
+        return site_url('peminjamanbarang/serah_terima/' . rawurlencode($group_id));
     }
 
     public function qr_is_visible($status, $qr_locked = 0) {
@@ -2260,7 +2272,7 @@ class PeminjamanBarang_model extends CI_Model {
             aset.kode_aset,
             COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan
         ');
-        $this->db->from('peminjaman_detail pd');
+        $this->db->from($this->table_peminjaman_detail . ' pd');
         $this->db->join($this->table_peminjaman . ' p', 'p.id_peminjaman = pd.id_peminjaman');
         $this->db->join('aset', 'aset.id_aset = pd.id_aset', 'left');
         $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan', 'left');
@@ -2279,7 +2291,7 @@ class PeminjamanBarang_model extends CI_Model {
             aset.kode_aset,
             COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan
         ');
-        $this->db->from('peminjaman_detail pd');
+        $this->db->from($this->table_peminjaman_detail . ' pd');
         $this->db->join('aset', 'aset.id_aset = pd.id_aset', 'left');
         $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan', 'left');
         $this->db->where('pd.id_peminjaman', $id_peminjaman);
@@ -2328,13 +2340,13 @@ class PeminjamanBarang_model extends CI_Model {
             $value = trim((string) ($filter['value'] ?? ''));
             if ($value === '') continue;
             if ($field === 'all') {
-                $this->db->group_start()->like('aset.nama_aset', $value)->or_like('aset.kode_aset', $value)->or_like('COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan', $value)->or_like('aset.kondisi', $value);
+                $this->db->group_start()->like('aset.nama_aset', $value)->or_like('aset.kode_aset', $value)->or_like('ruangan.ruangan', $value)->or_like('aset.kondisi', $value);
                 if (is_numeric($value)) $this->db->or_where('aset.jumlah_tersedia', (int) $value);
                 $this->db->group_end();
             }
             elseif ($field === 'nama') $this->db->like('aset.nama_aset', $value);
             elseif ($field === 'kode') $this->db->like('aset.kode_aset', $value);
-            elseif ($field === 'ruangan') $this->db->like('COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan', $value);
+            elseif ($field === 'ruangan') $this->db->like('ruangan.ruangan', $value);
             elseif ($field === 'kondisi') $this->db->like('aset.kondisi', $value);
             elseif ($field === 'stok' && is_numeric($value)) $this->db->where('aset.jumlah_tersedia', (int) $value);
         }
@@ -2392,6 +2404,103 @@ class PeminjamanBarang_model extends CI_Model {
         }
 
         return $peminjam->id_peminjam;
+    }
+
+    /**
+     * Mengambil data peminjaman barang terformat untuk Kalender & Tabel
+     * Kompatibel dengan calendar & table rendering JS
+     */
+    public function get_calendar_peminjaman_barang() {
+        $this->db->select("
+            p.id_peminjaman,
+            p.id_peminjaman AS id,
+            COALESCE(p.group_id, CONCAT('single-', p.id_peminjaman)) AS group_id,
+            p.id_aset,
+            COALESCE(a.nama_aset, 'Aset Laboratorium') AS nama_aset,
+            COALESCE(a.nama_aset, 'Aset Laboratorium') AS title,
+            COALESCE(a.kode_aset, '-') AS kode_aset,
+            COALESCE(a.foto, a.gambar, '') AS foto,
+            COALESCE(a.deskripsi, '') AS deskripsi_aset,
+            p.jumlah_pinjam,
+            p.jumlah_kembali,
+            COALESCE(p.nama_peminjam, peminjam.nama_peminjam, 'Peminjam') AS nama_peminjam,
+            COALESCE(p.nama_peminjam, peminjam.nama_peminjam, 'Peminjam') AS nama_lengkap,
+            COALESCE(p.nim_nip, peminjam.nim_nip, '-') AS nim_nip,
+            COALESCE(p.prodi, peminjam.prodi, '-') AS prodi,
+            COALESCE(peminjam.jenis, 'Mahasiswa') AS jenis_peminjam,
+            p.tanggal_pinjam,
+            p.tanggal_pinjam AS tanggal_mulai,
+            p.tanggal_pinjam AS date,
+            COALESCE(
+                IF(p.tanggal_kembali_actual IS NOT NULL AND CAST(p.tanggal_kembali_actual AS CHAR) > '1970-01-01', p.tanggal_kembali_actual, NULL),
+                IF(p.tanggal_kembali_rencana IS NOT NULL AND CAST(p.tanggal_kembali_rencana AS CHAR) > '1970-01-01', p.tanggal_kembali_rencana, NULL),
+                p.tanggal_pinjam
+            ) AS tanggal_selesai,
+            p.tanggal_kembali_rencana,
+            p.tanggal_kembali_actual,
+            '08:00:00' AS jam_mulai,
+            '17:00:00' AS jam_selesai,
+            '08:00 - 17:00' AS time,
+            p.keperluan,
+            p.keperluan AS keterangan,
+            p.status,
+            p.status_kaprodi,
+            p.catatan_kaprodi,
+            p.tgl_approve_kaprodi,
+            p.status_laboran,
+            p.catatan_laboran,
+            p.tgl_approve_laboran,
+            p.status_kaur,
+            p.catatan_kaur,
+            p.tgl_approve_kaur,
+            p.kondisi_saat_pinjam,
+            p.kondisi_saat_kembali,
+            p.foto_bukti,
+            p.foto_pengembalian,
+            p.qr_locked,
+            p.created_at,
+            p.created_at AS date_created,
+            COALESCE(r.ruangan, 'Lab Terpadu FIK') AS nama_ruangan,
+            COALESCE(r.id, '-') AS kode_ruangan,
+            'Aset / Alat Laboratorium' AS nama_kategori,
+            'Gedung Sebatik (FIK)' AS lokasi
+        ", FALSE);
+        $this->db->from($this->table_peminjaman . ' p');
+        $this->db->join('aset a', 'a.id_aset = p.id_aset', 'left');
+        $this->db->join('ruangan r', 'r.id = a.id_ruangan', 'left');
+        $this->db->join($this->table_peminjam . ' peminjam', 'peminjam.id_peminjam = p.id_peminjam', 'left');
+        $this->db->order_by('p.tanggal_pinjam DESC, p.id_peminjaman DESC');
+        return $this->db->get()->result();
+    }
+
+    /**
+     * Daftar prefix atau kategori aset untuk opsi dropdown filter
+     */
+    public function get_kategori_aset_list() {
+        $this->db->select("DISTINCT SUBSTRING_INDEX(kode_aset, '-', 1) as prefix", FALSE);
+        $this->db->from('aset');
+        $this->db->where('kode_aset IS NOT NULL', NULL, FALSE);
+        $this->db->where("kode_aset != ''", NULL, FALSE);
+        $this->db->order_by('prefix ASC');
+        $rows = $this->db->get()->result();
+        $list = [];
+        foreach ($rows as $r) {
+            if (!empty($r->prefix)) {
+                $list[] = (object) [
+                    'id' => $r->prefix,
+                    'nama_kategori' => 'Kategori ' . strtoupper($r->prefix),
+                    'kode' => $r->prefix
+                ];
+            }
+        }
+        if (empty($list)) {
+            $list = [
+                (object) ['id' => 'PC', 'nama_kategori' => 'Perangkat Komputer (PC)', 'kode' => 'PC'],
+                (object) ['id' => 'WOD', 'nama_kategori' => 'Alat Woodworking', 'kode' => 'WOD'],
+                (object) ['id' => 'CAM', 'nama_kategori' => 'Kamera & Multimedia', 'kode' => 'CAM'],
+            ];
+        }
+        return $list;
     }
 
 }

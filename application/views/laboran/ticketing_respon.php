@@ -284,8 +284,8 @@
                                             <?= htmlspecialchars($t->subjek); ?>
                                         </div>
                                         <div class="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1.5 flex-wrap">
-                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100 text-[10px] font-semibold truncate" title="Unit: <?= htmlspecialchars($t->unit_terkait ?? $t->unit_tujuan); ?>">
-                                                <i class="bi bi-diagram-3"></i> <?= htmlspecialchars($t->unit_terkait ?? $t->unit_tujuan); ?>
+                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100 text-[10px] font-semibold truncate" title="Unit: <?= htmlspecialchars($t->unit_tujuan ?? $t->unit ?? $t->unit_terkait ?? 'Laboratorium Bengkel dan Studio'); ?>">
+                                                <i class="bi bi-building"></i> <?= htmlspecialchars($t->unit_tujuan ?? $t->unit ?? $t->unit_terkait ?? 'Laboratorium Bengkel dan Studio'); ?>
                                             </span>
                                             <span class="text-slate-400 text-[11px] truncate" title="<?= htmlspecialchars($t->kategori); ?>">
                                                 <i class="bi bi-tag mr-0.5"></i> <?= htmlspecialchars($t->kategori); ?>
@@ -437,9 +437,14 @@
                             <!-- Kendala & Kategori -->
                             <div>
                                 <h4 class="font-bold text-slate-900 text-sm leading-snug"><?= htmlspecialchars($t->subjek); ?></h4>
-                                <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md mt-1.5">
-                                    <i class="bi bi-tag text-orange-500"></i> <?= htmlspecialchars($t->kategori); ?>
-                                </span>
+                                <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
+                                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-800 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                                        <i class="bi bi-building"></i> <?= htmlspecialchars($t->unit_tujuan ?? $t->unit ?? $t->unit_terkait ?? 'Laboratorium Bengkel dan Studio'); ?>
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                                        <i class="bi bi-tag text-orange-500"></i> <?= htmlspecialchars($t->kategori); ?>
+                                    </span>
+                                </div>
                             </div>
 
                             <!-- Footer: Waktu Masuk & Tombol Tanggapi -->
@@ -632,12 +637,9 @@
                             <span class="text-[11px] text-slate-400 font-mono block" id="modalNidn">-</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Ditujukan Kepada</span>
-                            <span class="font-bold text-blue-700 inline-flex items-center gap-1 mt-0.5 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200 text-[11px]" id="modalTujuanPenerima">Laboran</span>
-                        </div>
-                        <div>
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Unit / Lingkup Terkait</span>
-                            <span class="font-bold text-slate-700 inline-flex items-center gap-1 mt-0.5 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 text-[11px]" id="modalUnitTerkait">-</span>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Unit yang Dituju</span>
+                            <span class="font-bold text-blue-700 inline-flex items-center gap-1 mt-0.5 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200 text-[11px]" id="modalTujuanPenerima">Laboratorium Bengkel dan Studio</span>
+                            <span class="hidden" id="modalUnitTerkait"></span>
                         </div>
                         <div>
                             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Kategori & Prioritas</span>
@@ -1081,8 +1083,9 @@
                         document.getElementById('modalCreatedAt').innerText = 'Dibuat pada: ' + d.created_at_fmt;
                         document.getElementById('modalNamaDosen').innerText = d.nama_dosen;
                         document.getElementById('modalNidn').innerText = (d.label_identitas || 'NIDN/NIM') + ': ' + (d.nidn || '-');
-                        if (document.getElementById('modalTujuanPenerima')) document.getElementById('modalTujuanPenerima').innerText = d.tujuan_penerima || 'Laboran';
-                        if (document.getElementById('modalUnitTerkait')) document.getElementById('modalUnitTerkait').innerText = d.unit_terkait || d.unit_tujuan || '-';
+                        const targetUnit = d.unit_tujuan || d.unit || d.unit_terkait || d.tujuan_penerima || 'Laboratorium Bengkel dan Studio';
+                        if (document.getElementById('modalTujuanPenerima')) document.getElementById('modalTujuanPenerima').innerText = targetUnit;
+                        if (document.getElementById('modalUnitTerkait')) document.getElementById('modalUnitTerkait').innerText = targetUnit;
                         document.getElementById('modalKategori').innerText = d.kategori;
                         document.getElementById('modalPrioritas').innerText = d.prioritas;
                         document.getElementById('modalSubjek').innerText = d.subjek;

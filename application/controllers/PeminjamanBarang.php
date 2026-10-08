@@ -250,10 +250,14 @@ class PeminjamanBarang extends CI_Controller {
                 $this->Aset_model->increment_total_peminjaman($item->id_aset);
             }
         }
+        $laboran_id = $this->session->userdata('id_user') ?: $this->session->userdata('user_id');
         $this->Peminjaman_model->update_group_status($group_id, [
             'status' => 'Sedang Dipinjam',
             'status_laboran' => 'Disetujui',
-            'catatan_laboran' => trim($this->input->post('catatan_serah', true)),
+            'qr_locked' => 1,
+            'tgl_approve_laboran' => date('Y-m-d H:i:s'),
+            'id_approver_laboran' => $laboran_id,
+            'catatan_laboran' => trim((string) $this->input->post('catatan_serah', true)),
         ]);
         foreach ($evidence as $file) {
             $this->Peminjaman_model->insert_evidence([
@@ -262,11 +266,11 @@ class PeminjamanBarang extends CI_Controller {
                 'jenis' => 'serah_terima',
                 'nama_file' => $file['path'],
                 'original_name' => $file['original_name'],
-                'uploaded_by' => $this->session->userdata('id_user'),
+                'uploaded_by' => $laboran_id,
             ]);
         }
         if (!empty($evidence)) {
-            $this->db->where('id_peminjaman', $peminjaman->id_peminjaman)->update('peminjaman', ['foto_bukti' => $evidence[0]['path']]);
+            $this->Peminjaman_model->update_group_status($group_id, ['foto_bukti' => $evidence[0]['path']]);
         }
         $this->db->trans_complete();
 
@@ -294,7 +298,7 @@ class PeminjamanBarang extends CI_Controller {
 
         $data['title'] = 'Validasi Pengembalian Barang';
         $data['peminjaman'] = $peminjaman;
-        $data['qr_valid'] = in_array(($peminjaman->status ?? ''), ['Sedang Dipinjam', 'Dipinjam'], true) && (int) ($peminjaman->qr_locked ?? 0) === 1;
+        $data['qr_valid'] = in_array(($peminjaman->status ?? ''), ['Sedang Dipinjam', 'Dipinjam'], true);
         $data['qr_message'] = $this->qr_message_for($peminjaman);
         $this->load->view('laboran/barang/validasi_pengembalian', $data);
     }
@@ -348,12 +352,14 @@ class PeminjamanBarang extends CI_Controller {
             }
         }
 
+        $laboran_id = $this->session->userdata('id_user') ?: $this->session->userdata('user_id');
         $update_data = [
             'status' => 'Selesai',
             'kondisi_saat_kembali' => $kondisi_kembali,
-            'catatan_pengembalian' => $catatan_pengembalian !== '' ? $catatan_pengembalian : null,
-            'tanggal_kembali_aktual' => date('Y-m-d H:i:s'),
-            'diterima_oleh' => $this->session->userdata('id_user'),
+            'catatan_laboran' => $catatan_pengembalian !== '' ? $catatan_pengembalian : null,
+            'tanggal_kembali_actual' => date('Y-m-d'),
+            'tgl_approve_laboran' => date('Y-m-d H:i:s'),
+            'id_approver_laboran' => $laboran_id,
         ];
         if (!empty($foto_pengembalian)) {
             $update_data['foto_pengembalian'] = $foto_pengembalian;
@@ -466,5 +472,13 @@ class PeminjamanBarang extends CI_Controller {
             return 'Barang sedang aktif dipinjam. Silakan periksa fisik dan proses pengembalian.';
         }
         return 'QR terbaca dan siap diproses.';
+    }
+
+    public function kalender() {
+        redirect('peminjaman_barang/kalender');
+    }
+
+    public function get_updated_peminjaman() {
+        redirect('peminjaman_barang/get_updated_peminjaman');
     }
 }

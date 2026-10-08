@@ -157,7 +157,7 @@
                     <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-5 sm:p-6">
                         
                         <!-- Header Scanner Controls -->
-                        <div class="flex items-center justify-between pb-3.5 mb-3.5 border-b border-slate-100">
+                        <div class="flex flex-wrap items-center justify-between gap-2 pb-3.5 mb-3.5 border-b border-slate-100">
                             <div class="flex items-center gap-2">
                                 <span class="flex h-3 w-3 relative">
                                     <span id="pingDot" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -167,9 +167,14 @@
                             </div>
 
                             <div class="flex items-center gap-2">
-                                <button type="button" id="btnToggleMirror" title="Balik arah kamera (Mirror)" class="text-xs font-semibold px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-orange-100 text-slate-700 hover:text-orange-700 transition-colors flex items-center gap-1.5">
+                                <button type="button" id="btnSwitchCamera" title="Ganti Kamera Depan / Belakang" class="text-xs font-semibold px-3 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white transition-all flex items-center gap-1.5 shadow-sm shadow-orange-600/25 active:scale-95">
+                                    <i class="bi bi-arrow-repeat text-sm"></i>
+                                    <span>Ganti Kamera</span>
+                                </button>
+                                
+                                <button type="button" id="btnToggleMirror" title="Balik arah kamera (Mirror)" class="text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-orange-100 text-slate-700 hover:text-orange-700 transition-colors flex items-center gap-1.5">
                                     <i class="bi bi-symmetry-vertical"></i>
-                                    <span>Mirror Tampilan</span>
+                                    <span class="hidden sm:inline">Mirror</span>
                                 </button>
                             </div>
                         </div>
@@ -365,6 +370,31 @@
             } catch (e) {}
         }
 
+        function extractGroupId(raw) {
+            if (!raw) return '';
+            let clean = raw.trim();
+            try {
+                if (/^https?:\/\//i.test(clean)) {
+                    const url = new URL(clean);
+                    if (url.searchParams.has('data')) {
+                        return url.searchParams.get('data').trim();
+                    }
+                    if (url.searchParams.has('group_id')) {
+                        return url.searchParams.get('group_id').trim();
+                    }
+                    if (url.searchParams.has('id')) {
+                        return url.searchParams.get('id').trim();
+                    }
+                    const segments = url.pathname.split('/').filter(Boolean);
+                    if (segments.length > 0) {
+                        const lastSegment = segments[segments.length - 1].trim();
+                        if (lastSegment) return lastSegment;
+                    }
+                }
+            } catch (e) {}
+            return clean;
+        }
+
         function handleOpenPeminjaman(code) {
             if (!code || !code.trim()) {
                 Swal.fire({
@@ -385,12 +415,8 @@
                 statusPill.innerHTML = '<i class="bi bi-check2-circle"></i><span>QR Ditemukan! Mengalihkan...</span>';
             }
 
-            const cleanCode = code.trim();
+            const cleanCode = extractGroupId(code);
             setTimeout(() => {
-                if (/^https?:\/\//i.test(cleanCode)) {
-                    window.location.href = cleanCode;
-                    return;
-                }
                 window.location.href = '<?= site_url('peminjamanbarang/serah_terima/') ?>' + encodeURIComponent(cleanCode);
             }, 300);
         }
@@ -530,14 +556,19 @@
             }
         }
 
-        // Camera Management
-        async function startCamera(deviceId) {
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 768);
+        const btnSwitchCamera = document.getElementById('btnSwitchCamera');
+        let availableCameras = [];
+        let currentCameraIndex = 0;
+
+        // Camera Management & Initialization
+        async function switchCameraTo(deviceId, index) {
             if (currentStream) {
                 currentStream.getTracks().forEach(track => track.stop());
             }
 
             const constraints = {
-                video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: "environment" },
+                video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: { ideal: "environment" } },
                 audio: false
             };
 
@@ -549,39 +580,98 @@
                 video.play();
                 isScanning = true;
                 requestAnimationFrame(scanFrame);
+                if (cameraSelect && deviceId) cameraSelect.value = deviceId;
+                if (typeof index === 'number') currentCameraIndex = index;
                 if (statusPill) statusPill.innerHTML = '<i class="bi bi-camera-video-fill text-emerald-400"></i><span>Mendeteksi QR...</span>';
             } catch (err) {
-                console.error("Gagal start kamera:", err);
+                console.error("Gagal ganti kamera:", err);
                 if (statusPill) statusPill.innerHTML = '<i class="bi bi-camera-video-off text-rose-400"></i><span>Kamera Gagal</span>';
             }
         }
 
-        // Enumerate Cameras
-        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-            navigator.mediaDevices.enumerateDevices().then(devices => {
-                const videoDevices = devices.filter(device => device.kind === 'videoinput');
-                if (videoDevices.length > 0) {
-                    cameraSelect.innerHTML = '';
-                    videoDevices.forEach((device, index) => {
-                        const opt = document.createElement('option');
-                        opt.value = device.deviceId;
-                        opt.text = device.label || `Kamera ${index + 1}`;
-                        cameraSelect.appendChild(opt);
-                    });
+        async function initCameras() {
+            try {
+                // Request initial stream with ideal environment (back camera) so permissions are granted
+                const initialConstraints = {
+                    video: { facingMode: { ideal: "environment" } },
+                    audio: false
+                };
+                const stream = await navigator.mediaDevices.getUserMedia(initialConstraints);
+                currentStream = stream;
+                video.srcObject = stream;
+                video.setAttribute("playsinline", true);
+                video.play();
+                isScanning = true;
+                requestAnimationFrame(scanFrame);
 
-                    // Start default camera
-                    startCamera(videoDevices[0].deviceId);
-                } else {
-                    startCamera(null);
+                // Enumerate devices with granted permissions to get full labels
+                if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    availableCameras = devices.filter(d => d.kind === 'videoinput');
+
+                    if (availableCameras.length > 0) {
+                        cameraSelect.innerHTML = '';
+                        
+                        const currentTrack = stream.getVideoTracks()[0];
+                        const currentTrackSettings = currentTrack ? currentTrack.getSettings() : {};
+                        const activeDeviceId = currentTrackSettings.deviceId;
+
+                        let defaultIndex = 0;
+                        availableCameras.forEach((cam, idx) => {
+                            let label = cam.label || `Kamera ${idx + 1}`;
+                            const lower = label.toLowerCase();
+                            if (lower.includes('back') || lower.includes('rear') || lower.includes('environment') || lower.includes('belakang') || lower.includes('0')) {
+                                label = `📷 ${label} (Kamera Belakang)`;
+                                if (isMobile) defaultIndex = idx;
+                            } else if (lower.includes('front') || lower.includes('user') || lower.includes('depan') || lower.includes('selfie') || lower.includes('1')) {
+                                label = `🤳 ${label} (Kamera Depan)`;
+                            }
+
+                            const opt = document.createElement('option');
+                            opt.value = cam.deviceId;
+                            opt.text = label;
+                            cameraSelect.appendChild(opt);
+
+                            if (activeDeviceId && cam.deviceId === activeDeviceId) {
+                                defaultIndex = idx;
+                            }
+                        });
+
+                        currentCameraIndex = defaultIndex;
+                        cameraSelect.value = availableCameras[defaultIndex].deviceId;
+                    }
                 }
-            }).catch(() => startCamera(null));
-
-            cameraSelect.addEventListener('change', () => {
-                startCamera(cameraSelect.value);
-            });
-        } else {
-            startCamera(null);
+            } catch (err) {
+                console.warn("Init camera error:", err);
+                if (statusPill) statusPill.innerHTML = '<i class="bi bi-camera-video-off text-rose-400"></i><span>Kamera Gagal</span>';
+            }
         }
+
+        // Switch camera button (1-click cycle front/back)
+        if (btnSwitchCamera) {
+            btnSwitchCamera.addEventListener('click', () => {
+                if (availableCameras.length > 1) {
+                    currentCameraIndex = (currentCameraIndex + 1) % availableCameras.length;
+                    const targetCam = availableCameras[currentCameraIndex];
+                    switchCameraTo(targetCam.deviceId, currentCameraIndex);
+                } else {
+                    // Fallback toggle facingMode between environment and user
+                    const currentFacing = video.getAttribute('data-facing') === 'user' ? 'environment' : 'user';
+                    video.setAttribute('data-facing', currentFacing);
+                    switchCameraTo(null, 0);
+                }
+            });
+        }
+
+        if (cameraSelect) {
+            cameraSelect.addEventListener('change', () => {
+                const idx = availableCameras.findIndex(c => c.deviceId === cameraSelect.value);
+                switchCameraTo(cameraSelect.value, idx !== -1 ? idx : 0);
+            });
+        }
+
+        // Start initial camera setup
+        initCameras();
     });
     </script>
 </body>

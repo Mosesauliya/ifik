@@ -62,9 +62,27 @@ $route['riwayat-booking'] = 'dashboard/riwayat';
 $route['riwayat-booking/live-data'] = 'dashboard/get_my_bookings_json';
 $route['riwayat-booking/cancel/(:num)'] = 'dashboard/cancel_booking/$1';
 $route['riwayat-booking/bulk-cancel'] = 'dashboard/bulk_cancel_booking';
-$route['peminjaman/riwayat'] = 'dashboard/riwayat';
+$route['peminjaman_barang/kalender'] = 'Peminjaman_barang/kalender';
+$route['peminjaman-barang/kalender'] = 'Peminjaman_barang/kalender';
+$route['peminjamanbarang/kalender']  = 'Peminjaman_barang/kalender';
+$route['peminjaman_barang/get_updated_peminjaman'] = 'Peminjaman_barang/get_updated_peminjaman';
+$route['peminjaman-barang/get_updated_peminjaman'] = 'Peminjaman_barang/get_updated_peminjaman';
+$route['peminjamanbarang/get_updated_peminjaman']  = 'Peminjaman_barang/get_updated_peminjaman';
+$route['admin/barang/bulk-delete'] = 'Kelolabarang/bulk_delete';
+$route['admin/barang/bulk_delete'] = 'Kelolabarang/bulk_delete';
+$route['admin/barang'] = 'Kelolabarang/index';
+$route['admin/barang/(:any)'] = 'Kelolabarang/$1';
+$route['admin/barang/(:any)/(:any)'] = 'Kelolabarang/$1/$2';
+$route['laboran/barang/bulk-delete'] = 'Kelolabarang/bulk_delete';
+$route['laboran/barang/bulk_delete'] = 'Kelolabarang/bulk_delete';
+$route['laboran/barang'] = 'Kelolabarang/index';
+$route['laboran/barang/(:any)'] = 'Kelolabarang/$1';
+$route['laboran/barang/(:any)/(:any)'] = 'Kelolabarang/$1/$2';
+$route['kelolabarang'] = 'Kelolabarang/index';
+$route['kelolabarang/(:any)'] = 'Kelolabarang/$1';
+$route['kelolabarang/(:any)/(:any)'] = 'Kelolabarang/$1/$2';
 $route['laboran/live-data'] = 'laboran/live_data';
-$route['kaur/live-data'] = 'kaur/live_data';
+$route['kaur/live-data'] = 'KaurDashboard/live_data';
 $route['kelolabooking/live-data'] = 'kelolabooking/live_data';
 $route['admin/live-data'] = 'kelolabooking/live_data';
 // Mahasiswa Routes
@@ -307,9 +325,16 @@ $route['verifikasi/(:num)'] = 'Verifikasi/surat/$1';
 // Laboran & Kaur Dedicated Routes
 $route['laboran'] = 'Laboran/booking';
 $route['laboran/booking'] = 'Laboran/booking';
-$route['kaur'] = 'Kaur/approval';
-$route['kaur/approval'] = 'Kaur/approval';
-$route['kaur/surat/(:num)'] = 'Kaur/surat/$1';
+$route['kaur/peminjaman'] = 'kaur/Peminjaman';
+$route['kaur/peminjaman/(:any)'] = 'kaur/Peminjaman/$1';
+// $route['kaur/dashboard/peminjaman'] = 'kaur/Peminjaman';
+// $route['kaur/dashboard/peminjaman/(:any)'] = 'kaur/Peminjaman/$1';
+$route['kaur'] = 'KaurDashboard/approval';
+$route['kaur/approval'] = 'KaurDashboard/approval';
+$route['kaur/barang'] = 'KaurDashboard/barang';
+$route['kaur/approve_barang/(:any)'] = 'KaurDashboard/approve_barang/$1';
+$route['kaur/reject_barang/(:any)'] = 'KaurDashboard/reject_barang/$1';
+$route['kaur/surat/(:num)'] = 'KaurDashboard/surat/$1';
 $route['laboran/surat/(:num)'] = 'Laboran/surat/$1';
 $route['kelolabooking/surat/(:num)'] = 'Kelolabooking/surat/$1';
 
@@ -321,11 +346,11 @@ $route['laboran/tanda-tangan/download'] = 'Laboran/download_tanda_tangan';
 $route['laboran/signature'] = 'Laboran/tanda_tangan';
 
 // Kaur Digital Signature Routes
-$route['kaur/tanda-tangan'] = 'Kaur/tanda_tangan';
-$route['kaur/tanda-tangan/simpan'] = 'Kaur/simpan_tanda_tangan';
-$route['kaur/tanda-tangan/hapus'] = 'Kaur/hapus_tanda_tangan';
-$route['kaur/tanda-tangan/download'] = 'Kaur/download_tanda_tangan';
-$route['kaur/signature'] = 'Kaur/tanda_tangan';
+$route['kaur/tanda-tangan'] = 'KaurDashboard/tanda_tangan';
+$route['kaur/tanda-tangan/simpan'] = 'KaurDashboard/simpan_tanda_tangan';
+$route['kaur/tanda-tangan/hapus'] = 'KaurDashboard/hapus_tanda_tangan';
+$route['kaur/tanda-tangan/download'] = 'KaurDashboard/download_tanda_tangan';
+$route['kaur/signature'] = 'KaurDashboard/tanda_tangan';
 
 // Laboran Ticketing & Respon Routes
 $route['laboran/respon-ticketing'] = 'LaboranTicketing/index';
@@ -359,6 +384,50 @@ $route['mahasiswa/ticketing/simpan'] = 'Mahasiswa/ticketing_simpan';
 $route['mahasiswa/ticketing/riwayat'] = 'Mahasiswa/ticketing_riwayat';
 $route['mahasiswa/ticketing/detail/(:any)'] = 'Mahasiswa/ticketing_detail/$1';
 
+// Kemahasiswaan Ticketing Routes (Role 17)
+$route['kemahasiswaan']                               = 'KemahasiswaanTicketing/index';
+$route['kemahasiswaan/respon-ticketing']              = 'KemahasiswaanTicketing/index';
+$route['kemahasiswaan/respon-ticketing/detail/(:any)']= 'KemahasiswaanTicketing/detail/$1';
+$route['kemahasiswaan/respon-ticketing/simpan_tanggapan'] = 'KemahasiswaanTicketing/simpan_tanggapan';
+$route['kemahasiswaan/ticketing']                     = 'KemahasiswaanTicketing/input';
+$route['kemahasiswaan/ticketing/input']               = 'KemahasiswaanTicketing/input';
+$route['kemahasiswaan/ticketing/simpan']              = 'KemahasiswaanTicketing/simpan';
+$route['kemahasiswaan/ticketing/riwayat']             = 'KemahasiswaanTicketing/riwayat';
+$route['kemahasiswaan/ticketing/detail/(:any)']       = 'KemahasiswaanTicketing/riwayat_detail/$1';
+
+// Sekretariat Ticketing Routes (Role 11)
+$route['sekretariat']                                 = 'SekretariatTicketing/index';
+$route['sekretariat/respon-ticketing']                = 'SekretariatTicketing/index';
+$route['sekretariat/respon-ticketing/detail/(:any)']  = 'SekretariatTicketing/detail/$1';
+$route['sekretariat/respon-ticketing/simpan_tanggapan'] = 'SekretariatTicketing/simpan_tanggapan';
+$route['sekretariat/ticketing']                       = 'SekretariatTicketing/input';
+$route['sekretariat/ticketing/input']                 = 'SekretariatTicketing/input';
+$route['sekretariat/ticketing/simpan']                = 'SekretariatTicketing/simpan';
+$route['sekretariat/ticketing/riwayat']               = 'SekretariatTicketing/riwayat';
+$route['sekretariat/ticketing/detail/(:any)']         = 'SekretariatTicketing/riwayat_detail/$1';
+
+// SDM dan Keuangan Ticketing Routes (Role 15)
+$route['sdmkeuangan']                                 = 'SdmKeuanganTicketing/index';
+$route['sdmkeuangan/respon-ticketing']                = 'SdmKeuanganTicketing/index';
+$route['sdmkeuangan/respon-ticketing/detail/(:any)']  = 'SdmKeuanganTicketing/detail/$1';
+$route['sdmkeuangan/respon-ticketing/simpan_tanggapan'] = 'SdmKeuanganTicketing/simpan_tanggapan';
+$route['sdmkeuangan/ticketing']                       = 'SdmKeuanganTicketing/input';
+$route['sdmkeuangan/ticketing/input']                 = 'SdmKeuanganTicketing/input';
+$route['sdmkeuangan/ticketing/simpan']                = 'SdmKeuanganTicketing/simpan';
+$route['sdmkeuangan/ticketing/riwayat']               = 'SdmKeuanganTicketing/riwayat';
+$route['sdmkeuangan/ticketing/detail/(:any)']         = 'SdmKeuanganTicketing/riwayat_detail/$1';
+
+// Program Studi Ticketing Routes (Role 16)
+$route['prodi']                                       = 'ProdiTicketing/index';
+$route['prodi/respon-ticketing']                      = 'ProdiTicketing/index';
+$route['prodi/respon-ticketing/detail/(:any)']        = 'ProdiTicketing/detail/$1';
+$route['prodi/respon-ticketing/simpan_tanggapan']     = 'ProdiTicketing/simpan_tanggapan';
+$route['prodi/ticketing']                             = 'ProdiTicketing/input';
+$route['prodi/ticketing/input']                       = 'ProdiTicketing/input';
+$route['prodi/ticketing/simpan']                      = 'ProdiTicketing/simpan';
+$route['prodi/ticketing/riwayat']                     = 'ProdiTicketing/riwayat';
+$route['prodi/ticketing/detail/(:any)']               = 'ProdiTicketing/riwayat_detail/$1';
+
 // Dosen Help Chat Routes (Harus sebelum Laboran Help routes)
 $route['dosen/help'] = 'DosenHelp/index';
 $route['dosen/help/channel'] = 'DosenHelp/help_get_channel_ajax';
@@ -389,6 +458,28 @@ $route['api/help/create'] = 'LaboranHelp/create_chat_user_ajax';
 $route['api/help/send'] = 'LaboranHelp/send_user_message_ajax';
 $route['api/help/messages/(:num)'] = 'LaboranHelp/get_messages_ajax/$1';
 $route['api/help/my-chats'] = 'LaboranHelp/my_conversations_ajax';
+
+// Peminjaman Barang / Laboran Scanner & Serah Terima Routes (Linux & NAS Case-Sensitive Compatibility)
+$route['peminjamanbarang']                              = 'PeminjamanBarang/index';
+$route['peminjamanbarang/scanner']                      = 'PeminjamanBarang/scanner';
+$route['peminjamanbarang/serah_terima/(:any)']          = 'PeminjamanBarang/serah_terima/$1';
+$route['peminjamanbarang/proses_serah/(:any)']          = 'PeminjamanBarang/proses_serah/$1';
+$route['peminjamanbarang/validasi_pengembalian/(:any)'] = 'PeminjamanBarang/validasi_pengembalian/$1';
+$route['peminjamanbarang/kembalikan/(:any)']            = 'PeminjamanBarang/kembalikan/$1';
+$route['peminjamanbarang/(:any)']                       = 'PeminjamanBarang/$1';
+$route['peminjamanbarang/(:any)/(:any)']                = 'PeminjamanBarang/$1/$2';
+
+// Aliases for compatibility
+$route['peminjaman_barang/scanner']                     = 'PeminjamanBarang/scanner';
+$route['peminjaman_barang/serah_terima/(:any)']         = 'PeminjamanBarang/serah_terima/$1';
+$route['peminjaman_barang/proses_serah/(:any)']         = 'PeminjamanBarang/proses_serah/$1';
+$route['peminjaman_barang/validasi_pengembalian/(:any)']= 'PeminjamanBarang/validasi_pengembalian/$1';
+$route['peminjaman_barang/kembalikan/(:any)']           = 'PeminjamanBarang/kembalikan/$1';
+$route['peminjaman-barang/scanner']                     = 'PeminjamanBarang/scanner';
+$route['peminjaman-barang/serah_terima/(:any)']         = 'PeminjamanBarang/serah_terima/$1';
+$route['peminjaman-barang/proses_serah/(:any)']         = 'PeminjamanBarang/proses_serah/$1';
+$route['peminjaman-barang/validasi_pengembalian/(:any)']= 'PeminjamanBarang/validasi_pengembalian/$1';
+$route['peminjaman-barang/kembalikan/(:any)']           = 'PeminjamanBarang/kembalikan/$1';
 
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;

@@ -2179,7 +2179,7 @@
     }
 
     if ($isLoggedIn && $activeRoleId === 0) {
-        if (strpos($currentUri, 'laboran') === 0) {
+        if (strpos($currentUri, 'laboran') === 0 || strpos($currentUri, 'peminjamanbarang') === 0 || strpos($currentUri, 'peminjaman_barang') === 0) {
             $activeRoleId = 21; // Laboran
         } elseif (strpos($currentUri, 'kaur') === 0) {
             $activeRoleId = 2; // Kaur / Ka Lab
@@ -2193,6 +2193,14 @@
             $activeRoleId = 9; // Ketua KK
         } elseif (strpos($currentUri, 'mahasiswa') === 0) {
             $activeRoleId = 4; // Mahasiswa
+        } elseif (strpos($currentUri, 'kemahasiswaan') === 0) {
+            $activeRoleId = 17; // Kemahasiswaan
+        } elseif (strpos($currentUri, 'sekretariat') === 0) {
+            $activeRoleId = 11; // Sekretariat
+        } elseif (strpos($currentUri, 'sdmkeuangan') === 0 || strpos($currentUri, 'sdm') === 0) {
+            $activeRoleId = 15; // SDM dan Keuangan
+        } elseif (strpos($currentUri, 'prodi') === 0) {
+            $activeRoleId = 16; // Program Studi
         } elseif (strpos($currentUri, 'admin') === 0 || strpos($currentUri, 'kelolabooking') === 0) {
             $activeRoleId = 1; // Admin
         } elseif (strpos($currentUri, 'importemail') === 0 || strpos($currentUri, 'import-email') === 0) {
@@ -2202,12 +2210,14 @@
             } else {
                 $activeRoleId = 21; // Laboran
             }
+        } else {
+            $activeRoleId = 0; // Publik
         }
     }
 
     $roleBadgeMap = [
         0 => 'Publik / Tamu',
-        1 => 'Admin Panel',
+        1 => 'Panel Admin',
         2 => 'Ka. Ur / Ka Lab',
         3 => 'Portal Dosen',
         4 => 'Mahasiswa',
@@ -2215,21 +2225,44 @@
         6 => 'Koordinator TA',
         7 => 'PIC KK',
         9 => 'Ketua KK',
-        21 => 'Laboran'
+        11 => 'Sekretariat',
+        15 => 'SDM dan Keuangan',
+        16 => 'Program Studi',
+        17 => 'Kemahasiswaan',
+        21 => 'Laboran',
+        22 => 'Panel Super Admin'
     ];
     $activeRoleBadge = $roleBadgeMap[$activeRoleId] ?? 'Portal IFIK';
 
     switch ($activeRoleId) {
+        case 22: // Super Admin (Khusus Import Akun)
+            $backUrl = site_url('import-email');
+            $backLabel = 'Panel Super Admin';
+            $defaultNavItems = [
+                ['category' => 'Super Admin'],
+                ['heading' => 'Pendaftaran Akun Baru', 'href' => site_url('import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
+
+                ['category' => 'Akun', 'has_divider' => true],
+                ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
+            ];
+            break;
+
         case 21: // Laboran (Staff Operasional Laboratorium)
             $backUrl = site_url('laboran/booking');
             $backLabel = 'Portal Laboran';
             $defaultNavItems = [
-                ['category' => 'Operasional Laboratorium'],
-                ['heading' => 'Approval Peminjaman', 'href' => site_url('laboran/booking'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['category' => 'Peminjaman Ruangan & Lab'],
+                ['heading' => 'Approval Peminjaman Ruangan', 'href' => site_url('laboran/booking'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
                 ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
                 ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
                 ['heading' => 'Tanda Tangan Digital', 'href' => site_url('laboran/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
                 ['heading' => 'Pendaftaran Akun Baru', 'href' => site_url('laboran/import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
+
+                ['category' => 'Peminjaman Barang & Aset', 'has_divider' => true],
+                ['heading' => 'Kalender & Jadwal Barang', 'href' => site_url('peminjaman_barang/kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+                ['heading' => 'Katalog & Pengajuan Alat', 'href' => site_url('peminjaman_barang'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
+                ['heading' => 'Kelola Master Barang', 'href' => site_url('admin/barang'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
+                ['heading' => 'Scanner QR Serah Terima', 'href' => site_url('peminjamanbarang/scanner'), 'icon_3d' => 'assets/images/icons_3d/preview2.png'],
 
                 ['category' => 'Layanan Ticketing & Bantuan', 'has_divider' => true],
                 ['heading' => 'Bantuan & Live Chat Lab', 'href' => site_url('laboran/help'), 'icon_3d' => 'assets/images/icons_3d/help_chat.png'],
@@ -2244,29 +2277,33 @@
             ];
             break;
 
-        case 2: // Kaur / Ka Lab (Kepala Urusan / Kepala Lab & Dosen)
+        case 2: // Kaur / Ka Lab (Kepala Urusan / Kepala Lab & Dosen) - Full Super Admin Access
             $backUrl = site_url('kaur/approval');
             $backLabel = 'Portal Ka. Ur / Ka Lab';
             $defaultNavItems = [
                 ['category' => 'Persetujuan Resmi & Lab'],
                 ['heading' => 'Approval Peminjaman', 'href' => site_url('kaur/approval'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Kelola Master Barang', 'href' => site_url('admin/barang'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
                 ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
                 ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
                 ['heading' => 'Tanda Tangan Digital', 'href' => site_url('kaur/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
 
+                ['category' => 'Manajemen Akun & User', 'has_divider' => true],
+                ['heading' => 'Pendaftaran Akun Baru', 'href' => site_url('import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
+
                 ['category' => 'Portal Akademik & Dosen', 'has_divider' => true],
                 ['heading' => 'Dosen Pembimbing', 'href' => site_url('dosen/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
-                ['heading' => 'Dosen Penguji', 'href' => site_url('dosen/penguji'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
                 ['heading' => 'Dosen Wali', 'href' => site_url('dosen/wali'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
 
                 ['category' => 'Layanan & Bantuan', 'has_divider' => true],
                 ['heading' => 'Bantuan & Live Chat', 'href' => site_url('kaur/help'), 'icon_3d' => 'assets/images/icons_3d/help_chat.png'],
-                ['heading' => 'Respon Ticketing', 'href' => site_url('dosen/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
+                ['heading' => 'Respon Ticketing Kaur', 'href' => site_url('kaur/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
                 ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
                 ['heading' => 'Riwayat Ticketing', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
 
                 ['category' => 'Informasi & Jadwal', 'has_divider' => true],
-                ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+                ['heading' => 'Kalender Jadwal Ruangan', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+                ['heading' => 'Kalender Jadwal Barang', 'href' => site_url('peminjaman_barang/kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
                 ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
             ];
             break;
@@ -2280,6 +2317,9 @@
                 ['heading' => 'Tahap Preview 2', 'href' => site_url('koordinatorta#preview2'), 'icon_3d' => 'assets/images/icons_3d/preview2.png'],
                 ['heading' => 'Jadwal Sidang TA', 'href' => site_url('koordinatorta#sidang'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
                 ['heading' => 'Monitoring Status Peserta', 'href' => site_url('koordinatorta/monitoring'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+
+                ['category' => 'Manajemen Akun Koordinator', 'has_divider' => true],
+                ['heading' => 'Pendaftaran Akun Baru', 'href' => site_url('import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
 
                 ['category' => 'Layanan Ticketing & Bantuan', 'has_divider' => true],
                 ['heading' => 'Bantuan & Live Chat', 'href' => site_url('koordinatorta/help'), 'icon_3d' => 'assets/images/icons_3d/help_chat.png'],
@@ -2300,12 +2340,11 @@
             $defaultNavItems = [
                 ['category' => 'Bimbingan & Pengujian'],
                 ['heading' => 'Dosen Pembimbing', 'href' => site_url('dosen/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
-                ['heading' => 'Dosen Penguji', 'href' => site_url('dosen/penguji'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
                 ['heading' => 'Dosen Wali', 'href' => site_url('dosen/wali'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
                 ['heading' => 'Tanda Tangan Digital', 'href' => site_url('dosen/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
 
                 ['category' => 'Layanan & Bantuan', 'has_divider' => true],
-                ['heading' => 'Respon Ticketing', 'href' => site_url('dosen/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
+                ['heading' => 'Bantuan & Live Chat', 'href' => site_url('dosen/help'), 'icon_3d' => 'assets/images/icons_3d/help_chat.png'],
                 ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
                 ['heading' => 'Riwayat Ticketing', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
 
@@ -2318,23 +2357,30 @@
             break;
 
         case 1: // Admin System
-            $backUrl = site_url('admin');
+            $backUrl = site_url('adminheader');
             $backLabel = 'Dashboard Admin';
             $defaultNavItems = [
                 ['category' => 'Pusat Kendali'],
-                ['heading' => 'Dashboard Control', 'href' => site_url('admin'), 'icon_3d' => 'assets/images/icons_3d/home.png'],
+                ['heading' => 'Dashboard Control', 'href' => site_url('adminheader'), 'icon_3d' => 'assets/images/icons_3d/home.png'],
                 ['heading' => 'Approval Peminjaman', 'href' => site_url('kelolabooking'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Kelola Master Barang', 'href' => site_url('admin/barang'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
                 ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
                 ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
 
-                ['category' => 'Manajemen Sistem', 'has_divider' => true],
-                ['heading' => 'Pendaftaran Akun Baru', 'href' => site_url('admin/import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
+                ['category' => 'Manajemen Akun & User', 'has_divider' => true],
+                ['heading' => 'Pendaftaran Akun Baru', 'href' => site_url('import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
+
+                ['category' => 'Manajemen Sistem & Fasilitas', 'has_divider' => true],
+                ['heading' => 'Kelola Fasilitas & Ruangan', 'href' => site_url('kelolaruangan'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
+                ['heading' => 'Pengaturan Header', 'href' => site_url('adminheader'), 'icon_3d' => 'assets/images/icons_3d/header_setting.png'],
+                ['heading' => 'Pengaturan Footer', 'href' => site_url('adminfooter'), 'icon_3d' => 'assets/images/icons_3d/footer_setting.png'],
                 ['heading' => 'Pengaturan Unit Ticketing', 'href' => site_url('admin#unit-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
                 ['heading' => 'Respon Ticketing Lab', 'href' => site_url('laboran/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
                 ['heading' => 'Riwayat Log History', 'href' => site_url('admin/log_history'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
 
                 ['category' => 'Informasi & Jadwal', 'has_divider' => true],
-                ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+                ['heading' => 'Kalender Jadwal Ruangan', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+                ['heading' => 'Kalender Jadwal Barang', 'href' => site_url('peminjaman_barang/kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
                 ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
             ];
             break;
@@ -2372,12 +2418,10 @@
 
                 ['category' => 'Portal Dosen & Pembimbing', 'has_divider' => true],
                 ['heading' => 'Dosen Pembimbing', 'href' => site_url('dosen/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
-                ['heading' => 'Dosen Penguji', 'href' => site_url('dosen/penguji'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
                 ['heading' => 'Dosen Wali', 'href' => site_url('dosen/wali'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
                 ['heading' => 'Tanda Tangan Digital', 'href' => site_url('dosen/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
 
                 ['category' => 'Layanan & Bantuan', 'has_divider' => true],
-                ['heading' => 'Respon Ticketing', 'href' => site_url('dosen/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
                 ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
                 ['heading' => 'Riwayat Ticketing', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
 
@@ -2393,15 +2437,18 @@
             $backUrl = site_url('mahasiswa');
             $backLabel = 'Portal Mahasiswa';
             $defaultNavItems = [
-                ['category' => 'Menu Utama', 'mobile_only' => true],
-                ['heading' => 'Dashboard', 'href' => site_url('mahasiswa'), 'icon_3d' => 'assets/images/icons_3d/home.png', 'mobile_only' => true],
-                ['heading' => 'Pendaftaran TA', 'href' => site_url('mahasiswa/pendaftaran_ta'), 'icon_3d' => 'assets/images/icons_3d/daftar.png', 'mobile_only' => true],
-                ['heading' => 'Bimbingan TA', 'href' => site_url('mahasiswa/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/sidang.png', 'mobile_only' => true],
+                ['category' => 'Akademik Mahasiswa'],
+                ['heading' => 'Dashboard', 'href' => site_url('mahasiswa'), 'icon_3d' => 'assets/images/icons_3d/home.png'],
+                ['heading' => 'Pendaftaran TA', 'href' => site_url('mahasiswa/pendaftaran_ta'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
+                ['heading' => 'Bimbingan TA', 'href' => site_url('mahasiswa/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
 
-                ['category' => 'Menu Mahasiswa', 'has_divider_mobile' => true],
+                ['category' => 'Fasilitas & Jadwal', 'has_divider' => true],
                 ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
-                ['heading' => 'Riwayat Peminjaman Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
-                ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+                ['heading' => 'Riwayat Booking Ruangan', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
+                ['heading' => 'Kalender Jadwal Ruangan', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+                ['heading' => 'Katalog Peminjaman Alat', 'href' => site_url('peminjaman_barang'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
+                ['heading' => 'Kalender Jadwal Barang', 'href' => site_url('peminjaman_barang/kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+                ['heading' => 'Riwayat Peminjaman Alat', 'href' => site_url('peminjaman_barang/riwayat'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
 
                 ['category' => 'Layanan Ticketing', 'has_divider' => true],
                 ['heading' => 'Buat Tiket Kendala', 'href' => site_url('mahasiswa/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
@@ -2412,16 +2459,71 @@
             ];
             break;
 
-        default: // Tamu / Publik
+        case 17: // Kemahasiswaan
+            $backUrl = site_url('kemahasiswaan/respon-ticketing');
+            $backLabel = 'Portal Kemahasiswaan';
+            $defaultNavItems = [
+                ['category' => 'Layanan Kemahasiswaan'],
+                ['heading' => 'Membuat Ticketing', 'href' => site_url('kemahasiswaan/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
+                ['heading' => 'Respon Ticketing', 'href' => site_url('kemahasiswaan/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
+                ['heading' => 'Riwayat', 'href' => site_url('kemahasiswaan/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+
+                ['category' => 'Akun', 'has_divider' => true],
+                ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
+            ];
+            break;
+
+        case 11: // Sekretariat
+            $backUrl = site_url('sekretariat/respon-ticketing');
+            $backLabel = 'Portal Sekretariat';
+            $defaultNavItems = [
+                ['category' => 'Layanan Sekretariat'],
+                ['heading' => 'Membuat Ticketing', 'href' => site_url('sekretariat/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
+                ['heading' => 'Respon Ticketing', 'href' => site_url('sekretariat/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
+                ['heading' => 'Riwayat', 'href' => site_url('sekretariat/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+
+                ['category' => 'Akun', 'has_divider' => true],
+                ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
+            ];
+            break;
+
+        case 15: // SDM dan Keuangan
+            $backUrl = site_url('sdmkeuangan/respon-ticketing');
+            $backLabel = 'Portal SDM & Keuangan';
+            $defaultNavItems = [
+                ['category' => 'Layanan SDM dan Keuangan'],
+                ['heading' => 'Membuat Ticketing', 'href' => site_url('sdmkeuangan/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
+                ['heading' => 'Respon Ticketing', 'href' => site_url('sdmkeuangan/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
+                ['heading' => 'Riwayat', 'href' => site_url('sdmkeuangan/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+
+                ['category' => 'Akun', 'has_divider' => true],
+                ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
+            ];
+            break;
+
+        case 16: // Program Studi
+            $userProdiSession = $this->session->userdata('prodi') ? ' (' . $this->session->userdata('prodi') . ')' : '';
+            $backUrl = site_url('prodi/respon-ticketing');
+            $backLabel = 'Portal Program Studi';
+            $defaultNavItems = [
+                ['category' => 'Layanan Program Studi' . $userProdiSession],
+                ['heading' => 'Membuat Ticketing', 'href' => site_url('prodi/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
+                ['heading' => 'Respon Ticketing', 'href' => site_url('prodi/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
+                ['heading' => 'Riwayat', 'href' => site_url('prodi/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+
+                ['category' => 'Akun', 'has_divider' => true],
+                ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
+            ];
+            break;
+
+        default: // Publik / Tamu
             $backUrl = site_url('dashboard');
             $backLabel = 'Dashboard Utama';
             $defaultNavItems = [
                 ['category' => 'Menu Utama'],
                 ['heading' => 'Dashboard Utama', 'href' => site_url('dashboard'), 'icon_3d' => 'assets/images/icons_3d/home.png'],
-                ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
-                ['heading' => 'Riwayat Peminjaman Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
                 ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
-                ['heading' => $isLoggedIn ? 'Keluar' : 'Masuk', 'href' => site_url($isLoggedIn ? 'login/logout' : 'login'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
+                ['heading' => $isLoggedIn ? 'Keluar' : 'Masuk ke Portal', 'href' => site_url($isLoggedIn ? 'login/logout' : 'login'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
             ];
             break;
     }

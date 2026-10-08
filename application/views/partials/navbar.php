@@ -440,6 +440,10 @@
         </li> -->
 
         <li class="nav-item">
+            <a href="<?= site_url('peminjaman') ?>" class="nav-link"><span>Peminjaman Barang</span></a>
+        </li>
+
+        <li class="nav-item">
             <a href="<?= site_url('welcome') ?>" class="nav-link"><span>Galeri Karya FIK</span></a>
         </li>
 

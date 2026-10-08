@@ -77,8 +77,9 @@ class DosenTicketing_model extends CI_Model {
                 }
             }
 
-            $tujuanPenerima = !empty($data['tujuan_penerima']) ? $data['tujuan_penerima'] : (!empty($data['penerima']) ? $data['penerima'] : 'Laboran');
-            $unitTerkait    = !empty($data['unit_terkait']) ? $data['unit_terkait'] : (!empty($data['unit_tujuan']) ? $data['unit_tujuan'] : ($data['unit'] ?? 'Layanan IFIK'));
+            $targetUnit = !empty($data['unit_tujuan']) ? $data['unit_tujuan'] : (!empty($data['tujuan_penerima']) ? $data['tujuan_penerima'] : (!empty($data['unit_terkait']) ? $data['unit_terkait'] : (!empty($data['unit']) ? $data['unit'] : 'Laboratorium Bengkel dan Studio')));
+            $tujuanPenerima = $targetUnit;
+            $unitTerkait    = $targetUnit;
 
             $prioritas = !empty($data['prioritas']) ? $data['prioritas'] : 'Sedang';
             $metaTags = '[CREATED:' . date('Y-m-d H:i:s') . '][PRIORITAS:' . $prioritas . ']';
@@ -315,12 +316,21 @@ class DosenTicketing_model extends CI_Model {
     /**
      * Get tickets routed to specific recipient role (Laboran, Kaur, Admin LAA)
      */
-    public function get_respon_tickets($filterStatus = 'all', $search = '', $recipientRole = 'Kaur') {
+    public function get_respon_tickets($filterStatus = 'all', $search = '', $recipientRole = 'Kaur', $specificFilter = '') {
         if ($this->table === 'tb_ticketing') {
             $this->db->from('tb_ticketing');
             
             // Recipient Role Filter
             $this->_apply_recipient_filter($recipientRole);
+
+            // Specific Sub Filter (e.g. Prodi DKV/DI/DP/etc)
+            if (!empty($specificFilter)) {
+                $this->db->group_start();
+                $this->db->like('unit', $specificFilter);
+                $this->db->or_like('tujuan_penerima', $specificFilter);
+                $this->db->or_like('unit_terkait', $specificFilter);
+                $this->db->group_end();
+            }
 
             // Status Filter
             if (!empty($filterStatus) && $filterStatus !== 'all') {
@@ -361,6 +371,8 @@ class DosenTicketing_model extends CI_Model {
         $this->db->like('unit_tujuan', 'Kaur');
         $this->db->or_like('unit_tujuan', 'Kepala Urusan');
         $this->db->or_like('unit_tujuan', 'Ka. Ur');
+        $this->db->or_like('unit_tujuan', 'Semua');
+        $this->db->or_like('unit_tujuan', 'Laboran, Kaur, Admin LAA');
         $this->db->group_end();
 
         if (!empty($filterStatus) && $filterStatus !== 'all') {
@@ -384,30 +396,79 @@ class DosenTicketing_model extends CI_Model {
      * Apply recipient role filter based on Laboran, Kaur, or Admin LAA
      */
     private function _apply_recipient_filter($recipientRole = 'Kaur') {
-        if ($recipientRole === 'Laboran') {
+        $rRole = strtolower(trim((string)$recipientRole));
+        if (strpos($rRole, 'lab') !== false || strpos($rRole, 'bengkel') !== false || strpos($rRole, 'studio') !== false) {
             $this->db->group_start();
             $this->db->where('tujuan_penerima', 'Laboran');
+            $this->db->or_like('tujuan_penerima', 'Laboran');
+            $this->db->or_like('tujuan_penerima', 'Laboratorium');
+            $this->db->or_like('tujuan_penerima', 'Bengkel');
+            $this->db->or_like('tujuan_penerima', 'Studio');
+            $this->db->or_like('tujuan_penerima', 'Semua');
             $this->db->or_like('unit', 'Laboran');
             $this->db->or_like('unit', 'Laboratorium');
+            $this->db->or_like('unit', 'Bengkel');
+            $this->db->or_like('unit', 'Studio');
             $this->db->or_like('unit', 'Lab');
             $this->db->or_like('unit', 'Sarpras');
             $this->db->group_end();
-        } elseif ($recipientRole === 'Admin LAA' || $recipientRole === 'LAA') {
+        } elseif (strpos($rRole, 'laa') !== false || strpos($rRole, 'akademik') !== false) {
             $this->db->group_start();
             $this->db->where('tujuan_penerima', 'Admin LAA');
+            $this->db->or_like('tujuan_penerima', 'Admin LAA');
             $this->db->or_like('tujuan_penerima', 'LAA');
+            $this->db->or_like('tujuan_penerima', 'Layanan Akademik');
+            $this->db->or_like('tujuan_penerima', 'Semua');
+            $this->db->or_like('unit', 'Admin LAA');
             $this->db->or_like('unit', 'LAA');
             $this->db->or_like('unit', 'Layanan Akademik');
+            $this->db->or_like('unit', 'Layanan');
             $this->db->group_end();
-        } else { // Kaur (Kepala Urusan) - Khusus Role Kaur, TIDAK dikirim ke Dosen biasa
+        } elseif (strpos($rRole, 'kemahasiswaan') !== false || strpos($rRole, 'mhs') !== false) {
             $this->db->group_start();
-            $this->db->where('tujuan_penerima', 'Kaur');
+            $this->db->where('tujuan_penerima', 'Kemahasiswaan');
+            $this->db->or_like('tujuan_penerima', 'Kemahasiswaan');
+            $this->db->or_like('tujuan_penerima', 'Semua');
+            $this->db->or_like('unit', 'Kemahasiswaan');
+            $this->db->group_end();
+        } elseif (strpos($rRole, 'sekr') !== false || strpos($rRole, 'fak') !== false) {
+            $this->db->group_start();
+            $this->db->where('tujuan_penerima', 'Sekretariat');
+            $this->db->or_like('tujuan_penerima', 'Sekretariat');
+            $this->db->or_like('tujuan_penerima', 'Sekre Fak');
+            $this->db->or_like('tujuan_penerima', 'Semua');
+            $this->db->or_like('unit', 'Sekretariat');
+            $this->db->or_like('unit', 'Sekre Fak');
+            $this->db->group_end();
+        } elseif (strpos($rRole, 'sdm') !== false || strpos($rRole, 'keuangan') !== false) {
+            $this->db->group_start();
+            $this->db->where('tujuan_penerima', 'SDM dan Keuangan');
+            $this->db->or_like('tujuan_penerima', 'SDM');
+            $this->db->or_like('tujuan_penerima', 'Keuangan');
+            $this->db->or_like('tujuan_penerima', 'Semua');
+            $this->db->or_like('unit', 'SDM dan Keuangan');
+            $this->db->or_like('unit', 'SDM');
+            $this->db->or_like('unit', 'Keuangan');
+            $this->db->group_end();
+        } elseif (strpos($rRole, 'prodi') !== false) {
+            $this->db->group_start();
+            $this->db->where('tujuan_penerima', 'Program Studi');
+            $this->db->or_like('tujuan_penerima', 'Program Studi');
+            $this->db->or_like('tujuan_penerima', 'Prodi');
+            $this->db->or_like('tujuan_penerima', 'DKV');
+            $this->db->or_like('tujuan_penerima', 'Semua');
+            $this->db->or_like('unit', 'Program Studi');
+            $this->db->or_like('unit', 'Prodi');
+            $this->db->or_like('unit', 'Admin Prodi');
+            $this->db->group_end();
+        } else { // Fallback / Kaur
+            $this->db->group_start();
+            $this->db->where('tujuan_penerima', $recipientRole);
             $this->db->or_where('tujuan_penerima', 'Kepala Urusan');
-            $this->db->or_where('tujuan_penerima', 'Dosen Kaur'); // Kompatibilitas data tiket yang sudah ada
-            $this->db->or_like('tujuan_penerima', 'Ka. Ur');
-            $this->db->or_like('unit', 'Kaur');
-            $this->db->or_like('unit', 'Kepala Urusan');
-            $this->db->or_like('unit', 'Ka. Ur');
+            $this->db->or_where('tujuan_penerima', 'Dosen Kaur');
+            $this->db->or_like('tujuan_penerima', $recipientRole);
+            $this->db->or_like('tujuan_penerima', 'Semua');
+            $this->db->or_like('unit', $recipientRole);
             $this->db->group_end();
         }
     }
@@ -415,10 +476,18 @@ class DosenTicketing_model extends CI_Model {
     /**
      * Count tickets routed to specific recipient role by status
      */
-    public function count_respon_tickets($status = 'all', $recipientRole = 'Kaur') {
+    public function count_respon_tickets($status = 'all', $recipientRole = 'Kaur', $specificFilter = '') {
         if ($this->table === 'tb_ticketing') {
             $this->db->from('tb_ticketing');
             $this->_apply_recipient_filter($recipientRole);
+
+            if (!empty($specificFilter)) {
+                $this->db->group_start();
+                $this->db->like('unit', $specificFilter);
+                $this->db->or_like('tujuan_penerima', $specificFilter);
+                $this->db->or_like('unit_terkait', $specificFilter);
+                $this->db->group_end();
+            }
 
             if ($status !== 'all') {
                 if ($status === 'Menunggu') {
@@ -588,13 +657,13 @@ class DosenTicketing_model extends CI_Model {
         $r->id              = $row->id;
         $r->kode_tiket      = $row->id;
         $r->nama_dosen      = $row->nama ?? 'Dosen';
-        $rawPenerima        = !empty($row->tujuan_penerima) ? $row->tujuan_penerima : (!empty($row->unit) ? $row->unit : 'Laboran');
+        $rawPenerima        = !empty($row->tujuan_penerima) ? $row->tujuan_penerima : (!empty($row->unit) ? $row->unit : 'Laboratorium Bengkel dan Studio');
         if ($rawPenerima === 'Dosen Kaur') {
             $rawPenerima = 'Kaur';
         }
         $r->tujuan_penerima = $rawPenerima;
-        $r->unit_terkait    = !empty($row->unit_terkait) ? $row->unit_terkait : (!empty($row->unit) ? $row->unit : 'Layanan IFIK');
-        $r->unit_tujuan     = $r->unit_terkait;
+        $r->unit_terkait    = !empty($row->unit_terkait) ? $row->unit_terkait : (!empty($row->unit) ? $row->unit : $rawPenerima);
+        $r->unit_tujuan     = !empty($row->unit_tujuan) ? $row->unit_tujuan : $r->tujuan_penerima;
         $r->kategori        = $row->kategori ?? 'Umum';
 
         $rawKeterangan      = $row->keterangan ?? '';

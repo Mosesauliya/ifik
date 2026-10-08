@@ -131,4 +131,3 @@ if (!function_exists('scm_upload_exists')) {
         return is_file(FCPATH . str_replace('/', DIRECTORY_SEPARATOR, $relative));
     }
 }
-

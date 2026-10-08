@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Kaur extends CI_Controller {
+class KaurDashboard extends CI_Controller {
 
     public function __construct()
     {

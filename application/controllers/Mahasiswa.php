@@ -1454,31 +1454,59 @@ class Mahasiswa extends CI_Controller {
 
         if (empty($map)) {
             $map = [
-                'Laboran (Fasilitas & Lab)' => [
-                    'Fasilitas Ruangan / AC / Proyektor',
-                    'Perangkat Komputer / Hardware',
-                    'Koneksi Jaringan / Internet Lab',
-                    'Software / Lisensi Praktikum',
-                    'Lain-lain (Laboran)'
+                'Laboratorium Bengkel dan Studio' => [
+                    'Fasilitas Ruangan / AC / Proyektor Lab',
+                    'Perangkat Komputer / Hardware / Monitor',
+                    'Drawing Tablet / Display Cintiq / Alat Digital',
+                    'Software / Lisensi Aplikasi Praktikum & Studio',
+                    'Jaringan & Koneksi Internet Lab',
+                    'Peralatan & Bahan Praktikum Bengkel / Studio',
+                    'Peminjaman & Pemeliharaan Alat Lab',
+                    'Lain-lain (Laboratorium Bengkel dan Studio)'
                 ],
-                'Layanan Akademik (LAA)' => [
-                    'Surat Keterangan / Pengantar',
-                    'Administrasi Nilai & Transkrip',
-                    'Jadwal Kuliah / Ujian',
-                    'Lain-lain (LAA)'
+                'Layanan Akademik - LAA' => [
+                    'Surat Keterangan Mahasiswa / Pengantar Kuliah',
+                    'Administrasi Nilai, KSM & Transkrip Akademik',
+                    'Registrasi Mata Kuliah / Perubahan KRS',
+                    'Pengajuan Cuti Akademik / Aktif Kembali',
+                    'Jadwal Kuliah & Ruang Ujian (UTS/UAS)',
+                    'Legalisir Ijazah, Transkrip & KTM',
+                    'Lain-lain (Layanan Akademik - LAA)'
                 ],
-                'Koordinator TA' => [
-                    'Bimbingan & Penguji Tugas Akhir',
-                    'Jadwal Preview / Sidang TA',
-                    'Rubrik Penilaian TA',
-                    'Lain-lain (Koordinator TA)'
+                'Kemahasiswaan' => [
+                    'Beasiswa & Bantuan Finansial Mahasiswa',
+                    'Kegiatan Ormawa, UKM & Himpunan Mahasiswa',
+                    'Lomba, Kompetisi & Pencatatan Prestasi Mahasiswa',
+                    'Surat Rekomendasi & Izin Kegiatan Mahasiswa',
+                    'Pembinaan Karakter, Konseling & Tata Tertib',
+                    'Asuransi & Kesejahteraan Mahasiswa',
+                    'Lain-lain (Kemahasiswaan)'
                 ],
-                'Dosen Wali' => [
-                    'Konsultasi Akademik / Perwalian',
-                    'Persetujuan / Tanda Tangan Dokumen',
-                    'Kendala Perkuliahan & Nilai',
-                    'Bimbingan Akademik',
-                    'Lain-lain (Dosen Wali)'
+                'Sekretariat' => [
+                    'Penerbitan Surat Keputusan (SK) Dekanat',
+                    'Pengesahan & Tanda Tangan Dokumen Pimpinan',
+                    'Administrasi Persuratan Masuk & Keluar Fakultas',
+                    'Disposisi & Permohonan Informasi Resmi',
+                    'Peminjaman Fasilitas Rapat / Ruang Dekanat',
+                    'Lain-lain (Sekretariat)'
+                ],
+                'SDM dan Keuangan' => [
+                    'Pembayaran BPP / Registrasi Keuangan Kuliah',
+                    'Dispensasi & Penyesuaian Tagihan Biaya Kuliah',
+                    'Konfirmasi & Verifikasi Bukti Pembayaran',
+                    'Administrasi Penggajian, Honor & Klaim (SDM)',
+                    'Berkas Kepegawaian & Verifikasi Dosen / Tendik',
+                    'Anggaran Operasional & Pengadaan Sarana Unit',
+                    'Lain-lain (SDM dan Keuangan)'
+                ],
+                'Program Studi (DKV, DI, DP, KTF, SR, Film dan Animasi)' => [
+                    'Kurikulum, Silabus & Mata Kuliah Program Studi',
+                    'Bimbingan Akademik / Dosen Pembimbing Prodi',
+                    'Pendaftaran, Seminar Proposal & Sidang TA / Skripsi',
+                    'Pengajuan / Perubahan Judul & Pembimbing TA',
+                    'Konversi SKS Magang / MBKM / Kerja Praktik (KP)',
+                    'Surat Rekomendasi / Keterangan Program Studi',
+                    'Lain-lain (Program Studi)'
                 ]
             ];
         }
@@ -1559,8 +1587,16 @@ class Mahasiswa extends CI_Controller {
         $namaLengkap = trim($this->input->post('nama_lengkap', true)) ?: $namaDefault;
         $email       = $this->session->userdata('email') ?: ($mhs['email'] ?? '');
 
-        $tujuan_penerima  = trim($this->input->post('tujuan_penerima', true));
-        $unit_terkait     = trim($this->input->post('unit_terkait', true)) ?: (trim($this->input->post('unit_tujuan', true)) ?: 'Layanan Umum');
+        $unit_tujuan      = trim($this->input->post('unit_tujuan', true)) ?: (trim($this->input->post('tujuan_penerima', true)) ?: trim($this->input->post('unit_terkait', true)));
+        if (empty($unit_tujuan)) {
+            $unit_tujuan = 'Laboratorium Bengkel dan Studio';
+        }
+        $sub_prodi = trim($this->input->post('sub_prodi', true) ?? '');
+        if (!empty($sub_prodi) && (strpos($unit_tujuan, 'Program Studi') !== false || strpos($unit_tujuan, 'Prodi') !== false)) {
+            $unit_tujuan = "Program Studi - {$sub_prodi}";
+        }
+        $tujuan_penerima  = $unit_tujuan;
+        $unit_terkait     = $unit_tujuan;
         $kategori         = trim($this->input->post('kategori', true));
         $kategori_lainnya = trim($this->input->post('kategori_lainnya', true));
         $prioritas        = trim($this->input->post('prioritas', true));
@@ -1568,7 +1604,7 @@ class Mahasiswa extends CI_Controller {
         $deskripsi        = $this->input->post('deskripsi');
 
         $textOnly = trim(strip_tags($deskripsi));
-        if (empty($namaLengkap) || empty($tujuan_penerima) || empty($unit_terkait) || empty($kategori) || empty($subjek) || empty($textOnly)) {
+        if (empty($namaLengkap) || empty($unit_tujuan) || empty($kategori) || empty($subjek) || empty($textOnly)) {
             if ($this->input->is_ajax_request()) {
                 echo json_encode(['status' => 'error', 'message' => 'Semua field bertanda bintang (*) wajib diisi.']);
                 return;
@@ -1672,7 +1708,7 @@ class Mahasiswa extends CI_Controller {
         $insertedId = $this->DosenTicketing_model->insert($ticketData);
 
         if ($insertedId) {
-            $msg = "Tiket kendala berhasil diajukan dengan Kode: <b>{$kodeTiket}</b> ditujukan kepada <b>" . htmlspecialchars($tujuan_penerima) . "</b> (Lingkup Terkait: <b>" . htmlspecialchars($unit_terkait) . "</b>). Mohon pantau status respon secara berkala.";
+            $msg = "Tiket kendala berhasil diajukan dengan Kode: <b>{$kodeTiket}</b> ditujukan kepada <b>" . htmlspecialchars($unit_tujuan) . "</b>. Mohon pantau status respon secara berkala.";
             $this->session->set_flashdata('success', $msg);
             if ($this->input->is_ajax_request()) {
                 echo json_encode([
