@@ -54,15 +54,21 @@ class Peminjaman_barang extends CI_Controller {
 
     private function attach_notifikasi(&$data) {
         $role = strtolower((string) $this->session->userdata('role'));
-        if (in_array($role, ['admin', 'laboran'], true)) {
+        $roleId = (int) ($this->session->userdata('role_id') ?? 0);
+        $userId = $this->session->userdata('id_user') ?: $this->session->userdata('user_id');
+
+        if (in_array($role, ['admin', 'laboran'], true) || in_array($roleId, [1, 21], true)) {
             $data['notifikasi'] = $this->Peminjaman_barang_model->get_notifikasi('laboran', null);
             $data['unread_notifikasi'] = $this->Peminjaman_barang_model->count_notifikasi_unread('laboran', null);
-        } elseif ($role === 'kaur') {
+        } elseif ($role === 'kaur' || $roleId === 2) {
             $data['notifikasi'] = $this->Peminjaman_barang_model->get_notifikasi('kaur', null);
             $data['unread_notifikasi'] = $this->Peminjaman_barang_model->count_notifikasi_unread('kaur', null);
+        } elseif ($role === 'kaprodi') {
+            $data['notifikasi'] = $this->Peminjaman_barang_model->get_notifikasi('kaprodi', null);
+            $data['unread_notifikasi'] = $this->Peminjaman_barang_model->count_notifikasi_unread('kaprodi', null);
         } else {
-            $data['notifikasi'] = $this->Peminjaman_barang_model->get_notifikasi(null, $this->session->userdata('id_user'));
-            $data['unread_notifikasi'] = $this->Peminjaman_barang_model->count_notifikasi_unread(null, $this->session->userdata('id_user'));
+            $data['notifikasi'] = $this->Peminjaman_barang_model->get_notifikasi(null, $userId);
+            $data['unread_notifikasi'] = $this->Peminjaman_barang_model->count_notifikasi_unread(null, $userId);
         }
     }
 

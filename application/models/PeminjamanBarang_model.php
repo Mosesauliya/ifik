@@ -1535,18 +1535,20 @@ class PeminjamanBarang_model extends CI_Model {
 
         $this->db->from($this->table_notifikasi);
         $this->db->where('id_notifikasi', (int) $id_notifikasi);
-        $this->db->group_start();
-        if ($recipient_role) {
-            $this->db->where('recipient_role', $recipient_role);
-        }
-        if ($recipient_user_id) {
-            if ($recipient_role) {
-                $this->db->or_where('recipient_user_id', $recipient_user_id);
-            } else {
-                $this->db->where('recipient_user_id', $recipient_user_id);
+        if (!empty($recipient_role) || !empty($recipient_user_id)) {
+            $this->db->group_start();
+            if (!empty($recipient_role)) {
+                $this->db->where('recipient_role', $recipient_role);
             }
+            if (!empty($recipient_user_id)) {
+                if (!empty($recipient_role)) {
+                    $this->db->or_where('recipient_user_id', $recipient_user_id);
+                } else {
+                    $this->db->where('recipient_user_id', $recipient_user_id);
+                }
+            }
+            $this->db->group_end();
         }
-        $this->db->group_end();
         return $this->db->get()->row();
     }
 
@@ -1568,18 +1570,20 @@ class PeminjamanBarang_model extends CI_Model {
         }
 
         $this->db->from($this->table_notifikasi);
-        $this->db->group_start();
-        if ($recipient_role) {
-            $this->db->where('recipient_role', $recipient_role);
-        }
-        if ($recipient_user_id) {
-            if ($recipient_role) {
-                $this->db->or_where('recipient_user_id', $recipient_user_id);
-            } else {
-                $this->db->where('recipient_user_id', $recipient_user_id);
+        if (!empty($recipient_role) || !empty($recipient_user_id)) {
+            $this->db->group_start();
+            if (!empty($recipient_role)) {
+                $this->db->where('recipient_role', $recipient_role);
             }
+            if (!empty($recipient_user_id)) {
+                if (!empty($recipient_role)) {
+                    $this->db->or_where('recipient_user_id', $recipient_user_id);
+                } else {
+                    $this->db->where('recipient_user_id', $recipient_user_id);
+                }
+            }
+            $this->db->group_end();
         }
-        $this->db->group_end();
         $this->db->order_by('created_at', 'DESC');
         if ($limit !== null && (int) $limit > 0) {
             $this->db->limit((int) $limit);
@@ -1594,18 +1598,20 @@ class PeminjamanBarang_model extends CI_Model {
 
         $this->db->from($this->table_notifikasi);
         $this->db->where('is_read', 0);
-        $this->db->group_start();
-        if ($recipient_role) {
-            $this->db->where('recipient_role', $recipient_role);
-        }
-        if ($recipient_user_id) {
-            if ($recipient_role) {
-                $this->db->or_where('recipient_user_id', $recipient_user_id);
-            } else {
-                $this->db->where('recipient_user_id', $recipient_user_id);
+        if (!empty($recipient_role) || !empty($recipient_user_id)) {
+            $this->db->group_start();
+            if (!empty($recipient_role)) {
+                $this->db->where('recipient_role', $recipient_role);
             }
+            if (!empty($recipient_user_id)) {
+                if (!empty($recipient_role)) {
+                    $this->db->or_where('recipient_user_id', $recipient_user_id);
+                } else {
+                    $this->db->where('recipient_user_id', $recipient_user_id);
+                }
+            }
+            $this->db->group_end();
         }
-        $this->db->group_end();
         return $this->db->count_all_results();
     }
 
