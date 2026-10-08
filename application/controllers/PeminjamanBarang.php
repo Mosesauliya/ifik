@@ -36,7 +36,7 @@ class PeminjamanBarang extends CI_Controller {
             redirect('peminjamanbarang/scanner');
         }
 
-        if (in_array(($peminjaman->status ?? ''), ['Sedang Dipinjam', 'Dipinjam'], true) && (int) ($peminjaman->qr_locked ?? 0) === 1) {
+        if (in_array(($peminjaman->status ?? ''), ['Sedang Dipinjam', 'Dipinjam'], true)) {
             $data['title'] = 'Validasi Pengembalian Barang';
             $data['peminjaman'] = $peminjaman;
             $data['qr_valid'] = true;
@@ -98,6 +98,7 @@ class PeminjamanBarang extends CI_Controller {
         $this->Peminjaman_model->update_group_status($group_id, [
             'status' => 'Sedang Dipinjam',
             'status_laboran' => 'Disetujui',
+            'qr_locked' => 1,
             'tgl_approve_laboran' => date('Y-m-d H:i:s'),
             'id_approver_laboran' => $laboran_id,
             'catatan_laboran' => trim((string) $this->input->post('catatan_serah', true)),
@@ -141,7 +142,7 @@ class PeminjamanBarang extends CI_Controller {
 
         $data['title'] = 'Validasi Pengembalian Barang';
         $data['peminjaman'] = $peminjaman;
-        $data['qr_valid'] = in_array(($peminjaman->status ?? ''), ['Sedang Dipinjam', 'Dipinjam'], true) && (int) ($peminjaman->qr_locked ?? 0) === 1;
+        $data['qr_valid'] = in_array(($peminjaman->status ?? ''), ['Sedang Dipinjam', 'Dipinjam'], true);
         $data['qr_message'] = $this->qr_message_for($peminjaman);
         $this->load->view('laboran/barang/validasi_pengembalian', $data);
     }
@@ -315,5 +316,13 @@ class PeminjamanBarang extends CI_Controller {
             return 'Barang sedang aktif dipinjam. Silakan periksa fisik dan proses pengembalian.';
         }
         return 'QR terbaca dan siap diproses.';
+    }
+
+    public function kalender() {
+        redirect('peminjaman_barang/kalender');
+    }
+
+    public function get_updated_peminjaman() {
+        redirect('peminjaman_barang/get_updated_peminjaman');
     }
 }

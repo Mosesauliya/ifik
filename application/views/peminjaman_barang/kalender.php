@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kalender Peminjaman Ruangan - IFIK</title>
+    <title>Kalender & Tabel Jadwal Peminjaman Barang - IFIK</title>
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -896,15 +896,20 @@
         .table-view-container {
             height: calc(100vh - 68px);
             overflow-y: auto;
+            overflow-x: hidden;
             background: #fbf7f1;
-            padding: 24px 36px 40px;
+            padding: 20px 24px 36px;
+            box-sizing: border-box;
+            width: 100%;
         }
         .table-view-inner {
-            max-width: 1200px;
-            margin: 0 auto;
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
             display: flex;
             flex-direction: column;
-            gap: 18px;
+            gap: 16px;
+            box-sizing: border-box;
         }
 
         .table-stats-bar {
@@ -1079,10 +1084,10 @@
         /* MODERN CLEAN TABLE COLUMN HEADER */
         .table-column-header {
             display: grid;
-            grid-template-columns: 230px 170px 150px 1fr 170px;
+            grid-template-columns: minmax(180px, 1.2fr) minmax(160px, 1.1fr) 140px minmax(130px, 1fr) minmax(150px, auto);
             align-items: center;
-            gap: 16px;
-            padding: 10px 12px;
+            gap: 12px;
+            padding: 10px 14px;
             background: rgba(255, 255, 255, 0.4);
             border-bottom: 1.8px solid #cbd5e1;
             font-size: 0.74rem;
@@ -1091,14 +1096,17 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
             margin-top: 10px;
+            width: 100%;
+            box-sizing: border-box;
         }
         .th-col {
             display: flex;
             align-items: center;
+            min-width: 0;
         }
         .th-col.th-user-time {
-            justify-content: center;
-            text-align: center;
+            justify-content: flex-start;
+            text-align: left;
         }
         .th-col.th-date {
             justify-content: center;
@@ -1106,30 +1114,34 @@
         }
         .th-col.th-desc {
             justify-content: flex-start;
-            padding-left: 20px;
+            padding-left: 8px;
         }
         .th-col.th-status {
-            justify-content: flex-start;
-            padding-left: 14px;
+            justify-content: flex-end;
+            padding-right: 4px;
         }
 
         /* CLEAN FLAT LIST WITH SUBTLE DIVIDERS (NO HEAVY CARD BOXES) */
         .table-cards-list {
             display: flex;
             flex-direction: column;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .table-row-card {
             display: grid;
-            grid-template-columns: 230px 170px 150px 1fr 170px;
+            grid-template-columns: minmax(180px, 1.2fr) minmax(160px, 1.1fr) 140px minmax(130px, 1fr) minmax(150px, auto);
             align-items: center;
             background: transparent;
             border-bottom: 1px solid #e8e2d5;
-            padding: 16px 12px;
-            gap: 16px;
+            padding: 12px 14px;
+            gap: 12px;
             cursor: pointer;
             transition: background 0.15s ease, border-radius 0.15s ease;
             position: relative;
+            width: 100%;
+            box-sizing: border-box;
         }
         .table-row-card:hover {
             background: rgba(255, 255, 255, 0.7);
@@ -1262,31 +1274,31 @@
             margin-top: 4px;
         }
 
-        /* VERTICALLY STACKED PILLS WITH UNIFORM FIXED WIDTH: USER (TOP) + TIME (BOTTOM) */
+        /* VERTICALLY STACKED PILLS / LABELS FOR BORROWER & UNIT */
         .tr-user-time-col {
             display: flex;
             flex-direction: column;
             align-items: flex-start;
-            gap: 6px;
-            width: 170px;
-            flex-shrink: 0;
+            gap: 5px;
+            min-width: 0;
+            width: 100%;
+            overflow: hidden;
         }
         .tr-pill-user {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             gap: 6px;
             background: #ffffff;
-            border: 1.5px solid #334155;
+            border: 1.2px solid #cbd5e1;
             border-radius: 999px;
-            padding: 4px 12px;
+            padding: 3px 10px;
             font-size: 0.78rem;
             font-weight: 700;
             color: #1e293b;
-            white-space: nowrap;
-            width: 160px;
+            max-width: 100%;
             box-sizing: border-box;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
         }
         .tr-pill-user span {
             overflow: hidden;
@@ -1296,27 +1308,33 @@
         .tr-pill-time {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            background: #ffffff;
-            border: 1.5px solid #fb923c;
+            justify-content: flex-start;
+            gap: 5px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
             border-radius: 999px;
-            padding: 4px 12px;
-            font-size: 0.78rem;
-            font-weight: 700;
-            color: #ea580c;
-            white-space: nowrap;
-            width: 160px;
+            padding: 2.5px 10px;
+            font-size: 0.73rem;
+            font-weight: 600;
+            color: #64748b;
+            max-width: 100%;
             box-sizing: border-box;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+            overflow: hidden;
+        }
+        .tr-pill-time span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .tr-date-col {
-            font-size: 0.92rem;
-            font-weight: 800;
+            font-size: 0.88rem;
+            font-weight: 700;
             color: #1e293b;
             text-align: center;
             letter-spacing: -0.2px;
-            white-space: nowrap;
+            white-space: normal;
+            line-height: 1.35;
             flex-shrink: 0;
         }
 
@@ -1397,26 +1415,28 @@
             line-height: 1.4;
         }
 
-        /* STATUS BADGE WITH UNIFORM FIXED WIDTH */
+        /* STATUS BADGE WITH FLEXIBLE AUTO WIDTH */
         .tr-status-col {
             display: flex;
             justify-content: flex-end;
-            width: 175px;
+            min-width: 0;
+            width: auto;
             flex-shrink: 0;
         }
         .tr-status-badge {
             display: inline-flex;
             align-items: center;
-            justify-content: flex-start;
-            gap: 8px;
-            font-size: 0.8rem;
+            justify-content: center;
+            gap: 7px;
+            font-size: 0.78rem;
             font-weight: 700;
-            padding: 5px 14px;
+            padding: 5px 12px;
             border-radius: 999px;
             white-space: nowrap;
-            width: 165px;
+            width: auto;
+            max-width: 100%;
             box-sizing: border-box;
-            text-align: left;
+            text-align: center;
         }
 
         .table-pagination-wrap {
@@ -2629,56 +2649,27 @@
                             <span class="stat-val" id="tableStatPending">0</span>
                         </div>
 
-                        <!-- Disetujui with interactive dropdown options -->
-                        <div class="stat-pill-approved-wrap" style="position: relative; width: 100%;">
-                            <div class="stat-pill stat-pill-approved" id="statPillApproved" onclick="toggleApprovedSubMenu(event)" title="Klik untuk memilih filter status Disetujui" style="width: 100%; justify-content: space-between; padding: 5px 8px; font-size: 0.72rem; box-sizing: border-box;">
-                                <div style="display: flex; align-items: center; gap: 5px;">
-                                    <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
-                                    <span class="stat-label" id="approvedStatLabel">Disetujui:</span>
-                                    <span class="stat-val" id="tableStatApproved">0</span>
-                                </div>
-                                <svg id="approvedStatChevron" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left: 2px; transition: transform 0.2s ease;"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                            </div>
-
-                            <!-- Dropdown Sub-Menu Disetujui -->
-                            <div class="approved-sub-menu" id="approvedSubMenu" style="width: 100%; top: calc(100% + 4px); z-index: 100050; box-sizing: border-box;">
-                                <div class="approved-sub-item active" id="subOptAllApproved" onclick="selectApprovedSub('all_approved', event)">
-                                    <div style="display: flex; align-items: center; gap: 5px;">
-                                        <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
-                                        <span>Semua Disetujui</span>
-                                    </div>
-                                    <span class="sub-count" id="subCountAllApproved">0</span>
-                                </div>
-                                <div class="approved-sub-item" id="subOptLaboran" onclick="selectApprovedSub('laboran', event)">
-                                    <div style="display: flex; align-items: center; gap: 5px;">
-                                        <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #3b82f6;"></span>
-                                        <span>Disetujui Laboran</span>
-                                    </div>
-                                    <span class="sub-count" id="subCountLaboran">0</span>
-                                </div>
-                                <div class="approved-sub-item" id="subOptKaur" onclick="selectApprovedSub('kaur', event)">
-                                    <div style="display: flex; align-items: center; gap: 5px;">
-                                        <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #22c55e;"></span>
-                                        <span>Disetujui Ka. Ur</span>
-                                    </div>
-                                    <span class="sub-count" id="subCountKaur">0</span>
-                                </div>
-                                <div class="approved-sub-item" id="subOptAdmin" onclick="selectApprovedSub('admin', event)">
-                                    <div style="display: flex; align-items: center; gap: 5px;">
-                                        <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #8b5cf6;"></span>
-                                        <span>Disetujui Admin</span>
-                                    </div>
-                                    <span class="sub-count" id="subCountAdmin">0</span>
-                                </div>
-                            </div>
+                        <div class="stat-pill stat-pill-approved" id="statPillApproved" onclick="filterByStatPill('approved')" title="Klik untuk memfilter status Disetujui" style="flex: 1 1 calc(50% - 3px); justify-content: center; padding: 4px 6px; font-size: 0.72rem;">
+                            <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+                            <span class="stat-label">Disetujui:</span>
+                            <span class="stat-val" id="tableStatApproved">0</span>
                         </div>
 
-                        <!-- Ditolak Stat Pill -->
-                        <div class="stat-pill stat-pill-rejected" id="statPillRejected" onclick="filterByStatPill('rejected')" title="Klik untuk memfilter status Ditolak" style="width: 100%; justify-content: space-between; padding: 5px 8px; font-size: 0.72rem; box-sizing: border-box;">
-                            <div style="display: flex; align-items: center; gap: 5px;">
-                                <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #ef4444; display: inline-block;"></span>
-                                <span class="stat-label">Ditolak:</span>
-                            </div>
+                        <div class="stat-pill stat-pill-dipinjam" id="statPillDipinjam" onclick="filterByStatPill('dipinjam')" title="Klik untuk memfilter status Sedang Dipinjam" style="flex: 1 1 calc(50% - 3px); justify-content: center; padding: 4px 6px; font-size: 0.72rem;">
+                            <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #3b82f6; display: inline-block;"></span>
+                            <span class="stat-label">Dipinjam:</span>
+                            <span class="stat-val" id="tableStatDipinjam">0</span>
+                        </div>
+
+                        <div class="stat-pill stat-pill-selesai" id="statPillSelesai" onclick="filterByStatPill('selesai')" title="Klik untuk memfilter status Selesai" style="flex: 1 1 calc(50% - 3px); justify-content: center; padding: 4px 6px; font-size: 0.72rem;">
+                            <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #059669; display: inline-block;"></span>
+                            <span class="stat-label">Selesai:</span>
+                            <span class="stat-val" id="tableStatSelesai">0</span>
+                        </div>
+
+                        <div class="stat-pill stat-pill-rejected" id="statPillRejected" onclick="filterByStatPill('rejected')" title="Klik untuk memfilter status Ditolak" style="flex: 1 1 calc(50% - 3px); justify-content: center; padding: 4px 6px; font-size: 0.72rem;">
+                            <span class="stat-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #ef4444; display: inline-block;"></span>
+                            <span class="stat-label">Ditolak:</span>
                             <span class="stat-val" id="tableStatRejected">0</span>
                         </div>
                     </div>
@@ -2827,9 +2818,7 @@
         <div class="gcal-page-header">
             <div class="gcal-header-left">
                 <!-- Pane 2: Table Title (Active on Table Mode) -->
-                <div id="headerLeftTableTitle" class="header-left-pane" style="display: none;">
-                    <span style="font-size: 1.05rem; font-weight: 800; color: #0f172a; white-space: nowrap; padding: 4px 6px;">Daftar Peminjaman</span>
-                </div>
+                <div id="headerLeftTableTitle" class="header-left-pane" style="display: none;"></div>
             </div>
 
             <!-- UNIFIED SEARCH PILL & SEPARATE STANDALONE + BUTTON IN HEADER (CENTERED) -->
@@ -2852,11 +2841,11 @@
                             <div class="cat-option active" data-val="keyword" onclick="selectCatOption('main', 'keyword', 'Key / Kata Kunci', '🔑')">
                                 <span>🔑</span> Key / Kata Kunci
                             </div>
-                            <div class="cat-option" data-val="kategori" onclick="selectCatOption('main', 'kategori', 'Kategori Ruangan', '📁')">
-                                <span>📁</span> Kategori Ruangan
+                            <div class="cat-option" data-val="barang" onclick="selectCatOption('main', 'barang', 'Barang / Aset', '📦')">
+                                <span>📦</span> Barang / Aset
                             </div>
-                            <div class="cat-option" data-val="ruangan" onclick="selectCatOption('main', 'ruangan', 'Pilih Ruangan', '🏢')">
-                                <span>🏢</span> Pilih Ruangan
+                            <div class="cat-option" data-val="peminjam" onclick="selectCatOption('main', 'peminjam', 'Peminjam / NIM', '👤')">
+                                <span>👤</span> Peminjam / NIM
                             </div>
                             <div class="cat-option" data-val="status" onclick="selectCatOption('main', 'status', 'Status Peminjaman', '⚡')">
                                 <span>⚡</span> Status Peminjaman
@@ -2871,7 +2860,7 @@
 
                     <!-- Text Search Container -->
                     <div style="position: relative; flex: 1; display: flex; align-items: center;" id="mainValueContainer">
-                        <input type="text" id="mainSearchInput" placeholder="Cari agenda, lab, peminjam..." 
+                        <input type="text" id="mainSearchInput" placeholder="Cari nama barang, kode aset, peminjam, keperluan..." 
                                oninput="handleUnifiedMultiSearch(this)" 
                                onkeydown="if(event.key === 'Enter') { triggerSearchSubmit(); }"
                                onfocus="onMainInputFocused()"
@@ -2903,17 +2892,20 @@
                             <div class="status-option active" data-val="" onclick="selectStatusOption('main', '', 'Semua Status', '#94a3b8')">
                                 <span class="status-dot" style="background: #94a3b8;"></span> Semua Status
                             </div>
-                            <div class="status-option" data-val="pending" onclick="selectStatusOption('main', 'pending', 'Menunggu Persetujuan', '#f59e0b')">
+                            <div class="status-option" data-val="menunggu" onclick="selectStatusOption('main', 'menunggu', 'Menunggu Persetujuan', '#f59e0b')">
                                 <span class="status-dot" style="background: #f59e0b;"></span> Menunggu Persetujuan
                             </div>
-                            <div class="status-option" data-val="disetujui" onclick="selectStatusOption('main', 'disetujui', 'Disetujui', '#10b981')">
-                                <span class="status-dot" style="background: #10b981;"></span> Disetujui
+                            <div class="status-option" data-val="disetujui" onclick="selectStatusOption('main', 'disetujui', 'Disetujui (Menunggu Ambil)', '#10b981')">
+                                <span class="status-dot" style="background: #10b981;"></span> Disetujui (Menunggu Ambil)
                             </div>
-                            <div class="status-option" data-val="ditolak" onclick="selectStatusOption('main', 'ditolak', 'Ditolak', '#ef4444')">
-                                <span class="status-dot" style="background: #ef4444;"></span> Ditolak
+                            <div class="status-option" data-val="dipinjam" onclick="selectStatusOption('main', 'dipinjam', 'Sedang Dipinjam', '#3b82f6')">
+                                <span class="status-dot" style="background: #3b82f6;"></span> Sedang Dipinjam
                             </div>
-                            <div class="status-option" data-val="selesai" onclick="selectStatusOption('main', 'selesai', 'Selesai', '#94a3b8')">
-                                <span class="status-dot" style="background: #94a3b8;"></span> Selesai
+                            <div class="status-option" data-val="selesai" onclick="selectStatusOption('main', 'selesai', 'Selesai Dikembalikan', '#059669')">
+                                <span class="status-dot" style="background: #059669;"></span> Selesai Dikembalikan
+                            </div>
+                            <div class="status-option" data-val="ditolak" onclick="selectStatusOption('main', 'ditolak', 'Ditolak / Batal', '#ef4444')">
+                                <span class="status-dot" style="background: #ef4444;"></span> Ditolak / Batal
                             </div>
                         </div>
                     </div>
@@ -2978,10 +2970,10 @@
             <div class="table-view-inner">
                 <!-- Table Column Header -->
                 <div class="table-column-header">
-                    <div class="th-col th-room">Ruangan</div>
-                    <div class="th-col th-user-time">Peminjam & Waktu</div>
-                    <div class="th-col th-date">Tanggal</div>
-                    <div class="th-col th-desc">Keterangan</div>
+                    <div class="th-col th-room">Barang & Alat</div>
+                    <div class="th-col th-user-time">Peminjam & Unit</div>
+                    <div class="th-col th-date">Jadwal Pinjam</div>
+                    <div class="th-col th-desc">Keperluan</div>
                     <div class="th-col th-status">Status</div>
                 </div>
 
@@ -3024,7 +3016,7 @@
                 <div class="modal-daily-list-pane">
                     <div class="modal-daily-search-wrap">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" style="position: absolute; left: 28px; top: 25px; pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        <input type="text" id="modalDailySearchInput" class="modal-daily-search-input" placeholder="Cari ruangan, kode, peminjam..." oninput="filterDailyModalList()" autocomplete="off">
+                        <input type="text" id="modalDailySearchInput" class="modal-daily-search-input" placeholder="Cari barang, kode aset, peminjam..." oninput="filterDailyModalList()" autocomplete="off">
                     </div>
                     <div class="modal-daily-list-scroll" id="modalDailyList">
                         <!-- Items rendered dynamically via JS -->
@@ -3039,7 +3031,7 @@
                         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 16px;">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 10px; flex-wrap: wrap;">
                                 <div>
-                                    <div id="detailKodeRuangan" style="display: none; margin-bottom: 4px;"></div>
+                                    <div id="detailKodeRuangan" style="margin-bottom: 4px;"></div>
                                     <h3 id="detailNamaRuangan" style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #0f172a;"></h3>
                                 </div>
                                 <div id="detailStatusBadge"></div>
@@ -3051,21 +3043,33 @@
                                     <strong>Peminjam:</strong> <span id="detailNamaLengkap"></span>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 8px;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                                    <strong>Tanggal:</strong> <span id="detailTanggal"></span>
+                                    <i class="fa-solid fa-id-card" style="font-size: 14px; color: #64748b;"></i>
+                                    <strong>NIM / NIP / Prodi:</strong> <span id="detailNimProdi"></span>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 8px;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                    <strong>Waktu:</strong> <span id="detailWaktu"></span>
+                                    <i class="fa-solid fa-boxes-stacked" style="font-size: 14px; color: #64748b;"></i>
+                                    <strong>Jumlah Pinjam:</strong> <span id="detailJumlahPinjam"></span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                    <strong>Jadwal Pinjam:</strong> <span id="detailTanggal"></span>
                                 </div>
                                 <div style="display: flex; align-items: flex-start; gap: 8px;">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" style="margin-top: 2px; flex-shrink:0;"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-                                    <strong>Keterangan:</strong> <span id="detailKeterangan" style="color: #475569;"></span>
+                                    <strong>Keperluan:</strong> <span id="detailKeterangan" style="color: #475569;"></span>
                                 </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <i class="fa-solid fa-wrench" style="font-size: 14px; color: #64748b;"></i>
+                                    <strong>Kondisi Pinjam:</strong> <span id="detailKondisiPinjam"></span>
+                                </div>
+                                <div id="detailApprovalSteps" style="margin-top: 6px; padding-top: 8px; border-top: 1px dashed #e2e8f0; display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem;"></div>
                                 <div id="detailAlasanContainer" style="display: none; background: #fef2f2; border-left: 3px solid #ef4444; padding: 8px 12px; border-radius: 6px; margin-top: 4px;">
                                     <strong style="color: #991b1b;">Alasan Penolakan:</strong> <span id="detailAlasanPenolakan" style="color: #7f1d1d;"></span>
                                 </div>
                             </div>
+                        </div>
+                        <div id="modalActionButtons" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -3074,17 +3078,16 @@
     <!-- JS Data Pass -->
     <script>
         window.bookingData = <?= json_encode($jadwal_peminjaman ? $jadwal_peminjaman : []) ?: '[]' ?>;
-        window.kategoriList = <?= json_encode($kategori ? $kategori : []) ?: '[]' ?>;
-        window.ruanganList = <?= json_encode($ruangan ? $ruangan : []) ?: '[]' ?>;
+        window.kategoriList = <?= json_encode($kategori_aset ? $kategori_aset : []) ?: '[]' ?>;
+        window.ruanganList = <?= json_encode($all_ruangan ? $all_ruangan : []) ?: '[]' ?>;
 
         window.isLoggedIn = <?= $this->session->userdata('logged_in') ? 'true' : 'false' ?>;
         window.userRoleId = <?= json_encode($this->session->userdata('role_id')) ?>;
 
-        window.ajukanBookingUrl = '<?= base_url('ajukan-booking') ?>';
-        window.approveBookingUrl = '<?= base_url('dashboard/approve_booking') ?>';
-        window.rejectBookingUrl = '<?= base_url('dashboard/reject_booking') ?>';
-        window.deleteBookingUrl = '<?= base_url('dashboard/delete_booking') ?>';
-        window.getUpdatedBookingsUrl = '<?= base_url('dashboard/get_updated_bookings') ?>';
+        window.ajukanBookingUrl = '<?= site_url('peminjaman_barang') ?>';
+        window.riwayatBookingUrl = '<?= site_url('peminjaman_barang/riwayat') ?>';
+        window.scannerUrl = '<?= site_url('peminjamanbarang/scanner') ?>';
+        window.getUpdatedBookingsUrl = '<?= site_url('peminjaman_barang/get_updated_peminjaman') ?>';
     </script>
 
     <!-- Unified Calendar & Multi-Search JS Engine -->
@@ -3096,22 +3099,22 @@
         // Status style helper
         function getStatusStyle(status) {
             const s = (status || '').toLowerCase();
-            if (s === 'pending' || s === 'menunggu persetujuan') {
-                return { bg: '#f59e0b', border: '#d97706', badgeBg: '#fffbeb', badgeColor: '#b45309', dot: '#f59e0b', label: 'Menunggu Persetujuan' };
-            } else if (s.includes('ditolak') || s.includes('reject')) {
-                return { bg: '#ef4444', border: '#dc2626', badgeBg: '#fef2f2', badgeColor: '#991b1b', dot: '#ef4444', label: 'Ditolak' };
-            } else if (s.includes('ka. ur') || s.includes('kaur')) {
-                return { bg: '#10b981', border: '#059669', badgeBg: '#f0fdf4', badgeColor: '#166534', dot: '#10b981', label: 'Disetujui Ka. Ur' };
-            } else if (s.includes('laboran')) {
-                return { bg: '#3b82f6', border: '#2563eb', badgeBg: '#eff6ff', badgeColor: '#1d4ed8', dot: '#3b82f6', label: 'Disetujui Laboran' };
-            } else if (s.includes('admin')) {
-                return { bg: '#8b5cf6', border: '#7c3aed', badgeBg: '#f5f3ff', badgeColor: '#6d28d9', dot: '#8b5cf6', label: 'Disetujui Admin' };
-            } else if (s.includes('disetujui')) {
+            if (s.includes('menunggu') || s.includes('pending')) {
+                // If specific mention of kaprodi or laboran, display cleanly
+                let lbl = 'Menunggu';
+                if (s.includes('kaprodi')) lbl = 'Menunggu Kaprodi';
+                else if (s.includes('laboran')) lbl = 'Menunggu Laboran';
+                return { bg: '#f59e0b', border: '#d97706', badgeBg: '#fffbeb', badgeColor: '#b45309', dot: '#f59e0b', label: lbl };
+            } else if (s.includes('sedang dipinjam') || s.includes('dipinjam')) {
+                return { bg: '#3b82f6', border: '#2563eb', badgeBg: '#eff6ff', badgeColor: '#1d4ed8', dot: '#3b82f6', label: 'Sedang Dipinjam' };
+            } else if (s.includes('disetujui') || s.includes('pengambilan')) {
                 return { bg: '#10b981', border: '#059669', badgeBg: '#f0fdf4', badgeColor: '#166534', dot: '#10b981', label: 'Disetujui' };
-            } else if (s === 'selesai') {
-                return { bg: '#64748b', border: '#475569', badgeBg: '#f8fafc', badgeColor: '#475569', dot: '#94a3b8', label: 'Selesai' };
+            } else if (s.includes('selesai') || s.includes('dikembalikan')) {
+                return { bg: '#059669', border: '#047857', badgeBg: '#ecfdf5', badgeColor: '#065f46', dot: '#059669', label: 'Selesai' };
+            } else if (s.includes('ditolak') || s.includes('reject') || s.includes('kedaluwarsa') || s.includes('batal')) {
+                return { bg: '#ef4444', border: '#dc2626', badgeBg: '#fef2f2', badgeColor: '#991b1b', dot: '#ef4444', label: 'Ditolak' };
             }
-            return { bg: '#7c3aed', border: '#6d28d9', badgeBg: '#f5f3ff', badgeColor: '#6d28d9', dot: '#7c3aed', label: status || 'Pending' };
+            return { bg: '#8b5cf6', border: '#7c3aed', badgeBg: '#f5f3ff', badgeColor: '#6d28d9', dot: '#8b5cf6', label: status || 'Proses' };
         }
 
         // ==========================================
@@ -3876,62 +3879,14 @@
         window.activeStatPillFilter = 'all'; // 'all', 'pending', 'all_approved', 'laboran', 'kaur', 'admin', 'rejected'
 
         function filterByStatPill(type) {
-            closeApprovedSubMenu();
-            if (type === 'all') {
+            if (window.activeStatPillFilter === type) {
                 window.activeStatPillFilter = 'all';
-            } else if (type === 'pending') {
-                if (window.activeStatPillFilter === 'pending') {
-                    window.activeStatPillFilter = 'all';
-                } else {
-                    window.activeStatPillFilter = 'pending';
-                }
-            } else if (type === 'rejected') {
-                if (window.activeStatPillFilter === 'rejected') {
-                    window.activeStatPillFilter = 'all';
-                } else {
-                    window.activeStatPillFilter = 'rejected';
-                }
+            } else {
+                window.activeStatPillFilter = type;
             }
             currentTablePage = 1;
             renderTableView();
         }
-
-        function toggleApprovedSubMenu(e) {
-            if (e) e.stopPropagation();
-            const menu = document.getElementById('approvedSubMenu');
-            const chev = document.getElementById('approvedStatChevron');
-            if (menu) {
-                const isShowing = menu.classList.contains('show');
-                if (isShowing) {
-                    closeApprovedSubMenu();
-                } else {
-                    menu.classList.add('show');
-                    if (chev) chev.style.transform = 'rotate(180deg)';
-                }
-            }
-        }
-
-        function closeApprovedSubMenu() {
-            const menu = document.getElementById('approvedSubMenu');
-            const chev = document.getElementById('approvedStatChevron');
-            if (menu) menu.classList.remove('show');
-            if (chev) chev.style.transform = 'rotate(0deg)';
-        }
-
-        function selectApprovedSub(subType, e) {
-            if (e) e.stopPropagation();
-            closeApprovedSubMenu();
-            window.activeStatPillFilter = subType;
-            currentTablePage = 1;
-            renderTableView();
-        }
-
-        document.addEventListener('click', function(e) {
-            const wrap = document.querySelector('.stat-pill-approved-wrap');
-            if (wrap && !wrap.contains(e.target)) {
-                closeApprovedSubMenu();
-            }
-        });
 
         function renderTableView(customData) {
             const rawBase = (typeof customData !== 'undefined') ? customData : (lastFilteredData || window.bookingData || []);
@@ -3939,47 +3894,39 @@
             // 1. Calculate overall stats from rawBase
             const totalCount = rawBase.length;
             const pendingCount = rawBase.filter(b => (b.status || '').toLowerCase().includes('pending') || (b.status || '').toLowerCase().includes('menunggu')).length;
-            const allApprovedCount = rawBase.filter(b => (b.status || '').toLowerCase().includes('setuju')).length;
-            const rejectedCount = rawBase.filter(b => (b.status || '').toLowerCase().includes('ditolak') || (b.status || '').toLowerCase().includes('reject')).length;
-            const laboranCount = rawBase.filter(b => (b.status || '').toLowerCase().includes('laboran')).length;
-            const kaurCount = rawBase.filter(b => (b.status || '').toLowerCase().includes('ka. ur') || (b.status || '').toLowerCase().includes('kaur')).length;
-            const adminCount = rawBase.filter(b => (b.status || '').toLowerCase().includes('admin')).length;
+            const allApprovedCount = rawBase.filter(b => (b.status || '').toLowerCase().includes('setuju') || (b.status || '').toLowerCase().includes('pengambilan')).length;
+            const dipinjamCount = rawBase.filter(b => (b.status || '').toLowerCase().includes('sedang dipinjam') || (b.status || '').toLowerCase().includes('dipinjam')).length;
+            const selesaiCount = rawBase.filter(b => (b.status || '').toLowerCase().includes('selesai') || (b.status || '').toLowerCase().includes('dikembalikan')).length;
+            const rejectedCount = rawBase.filter(b => (b.status || '').toLowerCase().includes('ditolak') || (b.status || '').toLowerCase().includes('reject') || (b.status || '').toLowerCase().includes('kedaluwarsa') || (b.status || '').toLowerCase().includes('batal')).length;
 
             // Update DOM counters
             const statTotal = document.getElementById('tableStatTotal');
             const statPending = document.getElementById('tableStatPending');
             const statApproved = document.getElementById('tableStatApproved');
+            const statDipinjam = document.getElementById('tableStatDipinjam');
+            const statSelesai = document.getElementById('tableStatSelesai');
             const statRejected = document.getElementById('tableStatRejected');
             if (statTotal) statTotal.innerText = totalCount;
             if (statPending) statPending.innerText = pendingCount;
             if (statApproved) statApproved.innerText = allApprovedCount;
+            if (statDipinjam) statDipinjam.innerText = dipinjamCount;
+            if (statSelesai) statSelesai.innerText = selesaiCount;
             if (statRejected) statRejected.innerText = rejectedCount;
-
-            const scAll = document.getElementById('subCountAllApproved');
-            const scLab = document.getElementById('subCountLaboran');
-            const scKaur = document.getElementById('subCountKaur');
-            const scAdm = document.getElementById('subCountAdmin');
-            if (scAll) scAll.innerText = allApprovedCount;
-            if (scLab) scLab.innerText = laboranCount;
-            if (scKaur) scKaur.innerText = kaurCount;
-            if (scAdm) scAdm.innerText = adminCount;
 
             // Update Active UI States
             const pillTot = document.getElementById('statPillTotal');
             const pillPen = document.getElementById('statPillPending');
             const pillApp = document.getElementById('statPillApproved');
+            const pillDip = document.getElementById('statPillDipinjam');
+            const pillSel = document.getElementById('statPillSelesai');
             const pillRej = document.getElementById('statPillRejected');
-            const labelApp = document.getElementById('approvedStatLabel');
 
             if (pillTot) pillTot.classList.remove('active');
             if (pillPen) pillPen.classList.remove('active');
             if (pillApp) pillApp.classList.remove('active');
+            if (pillDip) pillDip.classList.remove('active');
+            if (pillSel) pillSel.classList.remove('active');
             if (pillRej) pillRej.classList.remove('active');
-
-            ['subOptAllApproved', 'subOptLaboran', 'subOptKaur', 'subOptAdmin'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.classList.remove('active');
-            });
 
             // 2. Filter data by activeStatPillFilter
             let data = [...rawBase];
@@ -3988,40 +3935,20 @@
             if (activeFilter === 'pending') {
                 data = data.filter(b => (b.status || '').toLowerCase().includes('pending') || (b.status || '').toLowerCase().includes('menunggu'));
                 if (pillPen) pillPen.classList.add('active');
-                if (labelApp) labelApp.innerText = 'Disetujui:';
+            } else if (activeFilter === 'approved') {
+                data = data.filter(b => (b.status || '').toLowerCase().includes('setuju') || (b.status || '').toLowerCase().includes('pengambilan'));
+                if (pillApp) pillApp.classList.add('active');
+            } else if (activeFilter === 'dipinjam') {
+                data = data.filter(b => (b.status || '').toLowerCase().includes('sedang dipinjam') || (b.status || '').toLowerCase().includes('dipinjam'));
+                if (pillDip) pillDip.classList.add('active');
+            } else if (activeFilter === 'selesai') {
+                data = data.filter(b => (b.status || '').toLowerCase().includes('selesai') || (b.status || '').toLowerCase().includes('dikembalikan'));
+                if (pillSel) pillSel.classList.add('active');
             } else if (activeFilter === 'rejected') {
-                data = data.filter(b => (b.status || '').toLowerCase().includes('ditolak') || (b.status || '').toLowerCase().includes('reject'));
+                data = data.filter(b => (b.status || '').toLowerCase().includes('ditolak') || (b.status || '').toLowerCase().includes('reject') || (b.status || '').toLowerCase().includes('kedaluwarsa') || (b.status || '').toLowerCase().includes('batal'));
                 if (pillRej) pillRej.classList.add('active');
-                if (labelApp) labelApp.innerText = 'Disetujui:';
-            } else if (activeFilter === 'all_approved') {
-                data = data.filter(b => (b.status || '').toLowerCase().includes('setuju'));
-                if (pillApp) pillApp.classList.add('active');
-                if (labelApp) labelApp.innerText = 'Disetujui:';
-                const el = document.getElementById('subOptAllApproved');
-                if (el) el.classList.add('active');
-            } else if (activeFilter === 'laboran') {
-                data = data.filter(b => (b.status || '').toLowerCase().includes('laboran'));
-                if (pillApp) pillApp.classList.add('active');
-                if (labelApp) labelApp.innerText = 'Laboran:';
-                const el = document.getElementById('subOptLaboran');
-                if (el) el.classList.add('active');
-            } else if (activeFilter === 'kaur') {
-                data = data.filter(b => (b.status || '').toLowerCase().includes('ka. ur') || (b.status || '').toLowerCase().includes('kaur'));
-                if (pillApp) pillApp.classList.add('active');
-                if (labelApp) labelApp.innerText = 'Ka. Ur:';
-                const el = document.getElementById('subOptKaur');
-                if (el) el.classList.add('active');
-            } else if (activeFilter === 'admin') {
-                data = data.filter(b => (b.status || '').toLowerCase().includes('admin'));
-                if (pillApp) pillApp.classList.add('active');
-                if (labelApp) labelApp.innerText = 'Admin:';
-                const el = document.getElementById('subOptAdmin');
-                if (el) el.classList.add('active');
             } else {
                 if (pillTot) pillTot.classList.add('active');
-                if (labelApp) labelApp.innerText = 'Disetujui:';
-                const el = document.getElementById('subOptAllApproved');
-                if (el) el.classList.add('active');
             }
 
             // Sort data according to selector
@@ -4075,53 +4002,51 @@
             let html = '';
             pageData.forEach(b => {
                 const st = getStatusStyle(b.status);
-                const jMulai = b.jam_mulai ? b.jam_mulai.substring(0, 5) : '00:00';
-                const jSelesai = b.jam_selesai ? b.jam_selesai.substring(0, 5) : '00:00';
-                const lokasi = (b.lokasi || '').replace(/"/g, '&quot;');
-                const kapasitas = b.kapasitas || '';
-                const namaKategori = (b.nama_kategori || 'Ruangan').replace(/"/g, '&quot;');
+                const namaAset = (b.nama_aset || b.title || 'Aset Lab').replace(/"/g, '&quot;');
+                const kodeAset = (b.kode_aset || '-').replace(/"/g, '&quot;');
+                const jumlahPinjam = (b.jumlah_pinjam || 1) + ' Unit';
+                const namaPeminjam = (b.nama_lengkap || b.nama_peminjam || '-').replace(/"/g, '&quot;');
+                const nimNip = (b.nim_nip || '').replace(/"/g, '&quot;');
+                const prodi = (b.prodi || '').replace(/"/g, '&quot;');
+                const keperluan = (b.keperluan || b.keterangan || '-').replace(/"/g, '&quot;');
+                const labAsal = (b.nama_ruangan || 'Lab Terpadu FIK').replace(/"/g, '&quot;');
+                const kondisiPinjam = (b.kondisi_saat_pinjam || 'Baik').replace(/"/g, '&quot;');
 
-                let metaHtml = '';
-                if (lokasi || kapasitas) {
-                    metaHtml = `
-                        <div class="rht-meta">
-                            ${lokasi ? `<span>📍 ${lokasi}</span>` : ''}
-                            ${kapasitas ? `<span>👥 ${kapasitas} Orang</span>` : ''}
-                        </div>
-                    `;
-                }
-
-                const roomCodesBadge = (b.kode_ruangan || '').split(',').map(c => c.trim()).filter(Boolean).map(c => `<span style="display:inline-block; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; padding:1px 6px; font-size:0.68rem; font-weight:700; color:#334155; margin-right:3px;">${c}</span>`).join('');
+                const assetBadge = `<span style="display:inline-block; background:#fff7ed; border:1px solid #fed7aa; border-radius:6px; padding:1px 6px; font-size:0.68rem; font-weight:800; color:#ea580c; margin-right:4px;">${kodeAset}</span><span style="display:inline-block; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; padding:1px 6px; font-size:0.68rem; font-weight:700; color:#334155;">${jumlahPinjam}</span>`;
 
                 html += `
-                    <div class="table-row-card" onclick="openDetailBookingModal('${b.id}')" title="Klik untuk melihat detail peminjaman">
+                    <div class="table-row-card" onclick="openDetailBookingModal('${b.id}')" title="Klik untuk melihat detail peminjaman barang">
                         <div class="tr-room-col">
-                            <div class="tr-room-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1e293b" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                            <div class="tr-room-icon" style="background:#fff7ed; color:#ea580c; display:flex; align-items:center; justify-content:center;">
+                                <i class="fa-solid fa-box-open" style="font-size:1.05rem; color:#ea580c;"></i>
                             </div>
-                            <div class="tr-room-info" title="${(b.nama_ruangan || '') + (b.kode_ruangan ? ' (' + b.kode_ruangan + ')' : '')}">
-                                <div class="tr-room-name" style="font-weight:700; color:#0f172a;">${b.nama_ruangan || '-'}</div>
-                                <div class="tr-room-code" style="margin-top:2px;">${roomCodesBadge || '<span style="color:#94a3b8; font-size:0.75rem;">-</span>'}</div>
+                            <div class="tr-room-info" title="${namaAset} (${kodeAset})">
+                                <div class="tr-room-name" style="font-weight:700; color:#0f172a;">${namaAset}</div>
+                                <div class="tr-room-code" style="margin-top:2px;">${assetBadge}</div>
                             </div>
 
-                            <!-- Floating Room Detail Tooltip on Hover (Direct child of tr-room-col) -->
+                            <!-- Floating Asset Detail Tooltip on Hover -->
                             <div class="room-hover-tooltip">
                                 <div class="rht-header">
-                                    <span class="rht-code">${b.kode_ruangan || '-'}</span>
-                                    <span class="rht-cat">${namaKategori}</span>
+                                    <span class="rht-code">${kodeAset}</span>
+                                    <span class="rht-cat">${jumlahPinjam}</span>
                                 </div>
-                                <div class="rht-title">${b.nama_ruangan || '-'}</div>
-                                ${metaHtml}
+                                <div class="rht-title">${namaAset}</div>
+                                <div class="rht-meta">
+                                    <span>📍 Ruang Asal: ${labAsal}</span>
+                                    <span>⚙️ Kondisi Awal: ${kondisiPinjam}</span>
+                                </div>
                             </div>
                         </div>
 
                         <div class="tr-user-time-col">
-                            <div class="tr-pill-user" title="${b.nama_lengkap || '-'}">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1e293b" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                                <span>${b.nama_lengkap || '-'}</span>
+                            <div class="tr-pill-user" title="${namaPeminjam}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1e293b" stroke-width="2.2" style="flex-shrink:0;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                <span>${namaPeminjam}</span>
                             </div>
-                            <div class="tr-pill-time">
-                                <span>${jMulai} - ${jSelesai}</span>
+                            <div class="tr-pill-time" title="${prodi || 'Civitas FIK'}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.2" style="flex-shrink:0;"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h10"/><path d="M7 12h10"/><path d="M7 17h6"/></svg>
+                                <span>${prodi || 'Civitas FIK'}</span>
                             </div>
                         </div>
 
@@ -4129,13 +4054,13 @@
                             ${formatIndoDateRange(b.tanggal_mulai, b.tanggal_selesai)}
                         </div>
 
-                        <div class="tr-desc-col" title="${b.keterangan || '-'}">
-                            <span class="tr-desc-text">${b.keterangan || '-'}</span>
+                        <div class="tr-desc-col" title="${keperluan}">
+                            <span class="tr-desc-text">${keperluan}</span>
 
-                            <!-- Floating Keterangan Detail Tooltip on Hover -->
+                            <!-- Floating Keperluan Detail Tooltip on Hover -->
                             <div class="desc-hover-tooltip">
-                                <span class="dht-badge">📝 Keterangan / Keperluan</span>
-                                <div class="dht-content">${b.keterangan || '-'}</div>
+                                <span class="dht-badge">📝 Keperluan Peminjaman</span>
+                                <div class="dht-content">${keperluan}</div>
                             </div>
                         </div>
 
@@ -4217,21 +4142,31 @@
                     const cat = rule.category;
 
                     if (cat === 'keyword') {
-                        const kode = (booking.kode_ruangan || '').toLowerCase();
-                        const nama = (booking.nama_ruangan || '').toLowerCase();
-                        const user = (booking.nama_lengkap || '').toLowerCase();
-                        const ket  = (booking.keterangan || '').toLowerCase();
+                        const aset = (booking.nama_aset || '').toLowerCase();
+                        const kode = (booking.kode_aset || '').toLowerCase();
+                        const user = (booking.nama_lengkap || booking.nama_peminjam || '').toLowerCase();
+                        const nim  = (booking.nim_nip || '').toLowerCase();
+                        const prodi= (booking.prodi || '').toLowerCase();
+                        const ket  = (booking.keperluan || booking.keterangan || '').toLowerCase();
                         const stat = (booking.status || '').toLowerCase();
-                        return kode.includes(val) || nama.includes(val) || user.includes(val) || ket.includes(val) || stat.includes(val);
-                    } else if (cat === 'kategori') {
-                        const kat = (booking.nama_kategori || '').toLowerCase();
-                        return kat.includes(val);
-                    } else if (cat === 'ruangan') {
-                        const kode = (booking.kode_ruangan || '').toLowerCase();
-                        const nama = (booking.nama_ruangan || '').toLowerCase();
-                        return kode.includes(val) || nama.includes(val);
+                        const lab  = (booking.nama_ruangan || '').toLowerCase();
+                        return aset.includes(val) || kode.includes(val) || user.includes(val) || nim.includes(val) || prodi.includes(val) || ket.includes(val) || stat.includes(val) || lab.includes(val);
+                    } else if (cat === 'barang') {
+                        const aset = (booking.nama_aset || '').toLowerCase();
+                        const kode = (booking.kode_aset || '').toLowerCase();
+                        return aset.includes(val) || kode.includes(val);
+                    } else if (cat === 'peminjam') {
+                        const user = (booking.nama_lengkap || booking.nama_peminjam || '').toLowerCase();
+                        const nim  = (booking.nim_nip || '').toLowerCase();
+                        const prodi= (booking.prodi || '').toLowerCase();
+                        return user.includes(val) || nim.includes(val) || prodi.includes(val);
                     } else if (cat === 'status') {
                         const stat = (booking.status || '').toLowerCase();
+                        if (val === 'menunggu') return stat.includes('menunggu') || stat.includes('pending');
+                        if (val === 'disetujui') return stat.includes('setuju') || stat.includes('pengambilan');
+                        if (val === 'dipinjam') return stat.includes('sedang dipinjam') || stat.includes('dipinjam');
+                        if (val === 'selesai') return stat.includes('selesai') || stat.includes('dikembalikan');
+                        if (val === 'ditolak') return stat.includes('ditolak') || stat.includes('reject') || stat.includes('kedaluwarsa') || stat.includes('batal');
                         return stat.includes(val);
                     } else if (cat === 'tanggal') {
                         if (val.includes(' to ')) {
@@ -4334,11 +4269,15 @@
                         const st = getStatusStyle(booking.status);
                         const timeLabel = `${sHour}:${sMin.toString().padStart(2,'0')} - ${eHour}:${eMin.toString().padStart(2,'0')}`;
 
+                        const displayTitle = booking.nama_aset || booking.title || booking.nama_ruangan || 'Aset';
+                        const displayUser = booking.nama_lengkap || booking.nama_peminjam || '-';
+                        const displayQty = (booking.jumlah_pinjam || 1) + ' Unit';
+
                         dayColsHTML += `
                             <div class="gcal-event" onclick="openDetailBookingModal('${booking.id}')" style="top:${topPx}px; height:${heightPx}px; background:${st.bg}; border-left:3px solid ${st.border}; cursor:pointer;"
-                                 title="${booking.nama_ruangan} — ${booking.nama_lengkap} (${st.label})">
-                                <div class="gcal-event-title">${booking.nama_ruangan}</div>
-                                <div class="gcal-event-time">${timeLabel}</div>
+                                 title="${displayTitle} (${displayQty}) — ${displayUser} (${st.label})">
+                                <div class="gcal-event-title">${displayTitle}</div>
+                                <div class="gcal-event-time">📦 ${displayQty} • ${displayUser}</div>
                                 <div class="gcal-event-status">${st.label}</div>
                             </div>
                         `;
@@ -4429,14 +4368,14 @@
             if (!listEl) return;
 
             if (countEl) {
-                countEl.innerText = `${list.length} Peminjaman Ruangan`;
+                countEl.innerText = `${list.length} Peminjaman Barang`;
             }
 
             if (!list || list.length === 0) {
                 listEl.innerHTML = `
                     <div style="text-align: center; padding: 30px 16px; color: #94a3b8; font-size: 0.84rem;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 6px; opacity: 0.6;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        <div>Tidak ada ruangan yang cocok</div>
+                        <div>Tidak ada peminjaman barang yang cocok</div>
                     </div>
                 `;
                 return;
@@ -4446,14 +4385,16 @@
             list.forEach(b => {
                 const isActive = String(b.id) === String(activeId);
                 const st = getStatusStyle(b.status);
-                const jMulai = b.jam_mulai ? b.jam_mulai.substring(0, 5) : '00:00';
-                const jSelesai = b.jam_selesai ? b.jam_selesai.substring(0, 5) : '00:00';
+                const namaAset = b.nama_aset || b.title || 'Aset Laboratorium';
+                const kodeAset = b.kode_aset || '-';
+                const peminjam = b.nama_peminjam || b.nama_lengkap || '-';
+                const qty = b.jumlah_pinjam ? `${b.jumlah_pinjam} Unit` : '1 Unit';
 
                 html += `
                     <div class="modal-daily-item ${isActive ? 'active' : ''}" onclick="selectBookingInDailyModal('${b.id}')">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; gap: 6px;">
-                            <span style="font-size: 0.72rem; font-weight: 700; color: #7c3aed; background: #ede9fe; padding: 2px 7px; border-radius: 6px; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block;" title="${b.kode_ruangan || '-'}">
-                                ${formatRoomCodeCompact(b.kode_ruangan)}
+                            <span style="font-size: 0.72rem; font-weight: 700; color: #ea580c; background: #fff7ed; padding: 2px 7px; border-radius: 6px; border: 1px solid #ffedd5; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block;" title="${kodeAset}">
+                                ${kodeAset}
                             </span>
                             <span style="display:inline-flex; align-items:center; gap:4px; font-size:0.7rem; font-weight:700; color:${st.badgeColor}; flex-shrink:0;">
                                 <span style="width:6px; height:6px; border-radius:50%; background:${st.dot};"></span>
@@ -4461,14 +4402,14 @@
                             </span>
                         </div>
                         <div style="font-size: 0.86rem; font-weight: 800; color: #0f172a; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                            ${b.nama_ruangan || '-'}
+                            ${namaAset}
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #64748b;">
                             <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">
-                                👤 ${b.nama_lengkap || '-'}
+                                👤 ${peminjam}
                             </span>
-                            <span style="font-weight: 700; color: #ea580c;">
-                                ⏰ ${jMulai} - ${jSelesai}
+                            <span style="font-weight: 700; color: #ea580c; background: #fff7ed; padding: 1px 6px; border-radius: 4px;">
+                                📦 ${qty}
                             </span>
                         </div>
                     </div>
@@ -4486,13 +4427,14 @@
             }
 
             const filtered = activeDailyBookings.filter(b => {
-                const kode = (b.kode_ruangan || '').toLowerCase();
-                const nama = (b.nama_ruangan || '').toLowerCase();
-                const kat  = (b.nama_kategori || '').toLowerCase();
-                const user = (b.nama_lengkap || '').toLowerCase();
-                const ket  = (b.keterangan || '').toLowerCase();
+                const kode = (b.kode_aset || '').toLowerCase();
+                const nama = (b.nama_aset || b.title || '').toLowerCase();
+                const user = (b.nama_peminjam || b.nama_lengkap || '').toLowerCase();
+                const nim  = (b.nim_nip || '').toLowerCase();
+                const prodi = (b.prodi || '').toLowerCase();
+                const ket  = (b.keperluan || b.keterangan || '').toLowerCase();
                 const stat = (b.status || '').toLowerCase();
-                return kode.includes(query) || nama.includes(query) || kat.includes(query) || user.includes(query) || ket.includes(query) || stat.includes(query);
+                return kode.includes(query) || nama.includes(query) || user.includes(query) || nim.includes(query) || prodi.includes(query) || ket.includes(query) || stat.includes(query);
             });
 
             renderDailyModalList(filtered, selectedDailyBookingId);
@@ -4517,33 +4459,27 @@
             document.getElementById('detailBookingId').value = booking.id;
             
             const detailKodeEl = document.getElementById('detailKodeRuangan');
-            const rawCodes = String(booking.kode_ruangan || '').split(',').map(c => c.trim()).filter(Boolean);
-            if (rawCodes.length > 0) {
-                if (rawCodes.length === 1) {
-                    detailKodeEl.innerHTML = `<span style="display:inline-block; background:#ede9fe; color:#7c3aed; font-size:0.75rem; font-weight:700; padding:3px 10px; border-radius:20px; border:1px solid #ddd6fe; margin-bottom:4px;">Ruang: ${rawCodes[0]}</span>`;
-                } else {
-                    const badges = rawCodes.map(c => `<span style="display:inline-block; background:#ede9fe; color:#7c3aed; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:6px; border:1px solid #ddd6fe;">${c}</span>`).join('');
-                    detailKodeEl.innerHTML = `
-                        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:5px; margin-bottom:6px;">
-                            <span style="font-size:0.74rem; font-weight:700; color:#64748b;">Sub Ruangan (${rawCodes.length}):</span>
-                            ${badges}
-                        </div>
-                    `;
-                }
-                detailKodeEl.style.display = 'block';
-            } else {
-                detailKodeEl.style.display = 'none';
-            }
+            const kodeAset = booking.kode_aset || '-';
+            detailKodeEl.innerHTML = `<span style="display:inline-block; background:#fff7ed; color:#ea580c; font-size:0.75rem; font-weight:700; padding:3px 10px; border-radius:20px; border:1px solid #ffedd5; margin-bottom:4px;">Kode Aset: ${kodeAset}</span>`;
+            detailKodeEl.style.display = 'block';
 
-            document.getElementById('detailNamaRuangan').innerText = booking.nama_ruangan || '';
-            document.getElementById('detailNamaLengkap').innerText = booking.nama_lengkap || '-';
+            document.getElementById('detailNamaRuangan').innerText = booking.nama_aset || booking.title || 'Aset Laboratorium';
+            document.getElementById('detailNamaLengkap').innerText = booking.nama_peminjam || booking.nama_lengkap || '-';
+            
+            const nimProdi = `${booking.nim_nip || '-'} ${booking.prodi ? '• ' + booking.prodi : ''}`;
+            const detailNimProdiEl = document.getElementById('detailNimProdi');
+            if (detailNimProdiEl) detailNimProdiEl.innerText = nimProdi;
+
+            const detailQtyEl = document.getElementById('detailJumlahPinjam');
+            if (detailQtyEl) detailQtyEl.innerText = `${booking.jumlah_pinjam || 1} Unit`;
 
             document.getElementById('detailTanggal').innerText = formatIndoDateRange(booking.tanggal_mulai, booking.tanggal_selesai);
+            document.getElementById('detailKeterangan').innerText = booking.keperluan || booking.keterangan || '-';
 
-            const jMulai = booking.jam_mulai ? booking.jam_mulai.substring(0, 5) : '00:00';
-            const jSelesai = booking.jam_selesai ? booking.jam_selesai.substring(0, 5) : '00:00';
-            document.getElementById('detailWaktu').innerText = jMulai + ' - ' + jSelesai;
-            document.getElementById('detailKeterangan').innerText = booking.keterangan || '-';
+            const detailKondisiPinjamEl = document.getElementById('detailKondisiPinjam');
+            if (detailKondisiPinjamEl) {
+                detailKondisiPinjamEl.innerText = booking.kondisi_saat_pinjam || 'Baik';
+            }
 
             const st = getStatusStyle(booking.status);
             document.getElementById('detailStatusBadge').innerHTML = `
@@ -4553,14 +4489,80 @@
                 </span>
             `;
 
+            // Approval Steps Rendering
+            const stepsEl = document.getElementById('detailApprovalSteps');
+            if (stepsEl) {
+                const getStepBadge = (label, statusVal, catatan) => {
+                    const s = (statusVal || '').toLowerCase();
+                    let color = '#64748b';
+                    let bg = '#f1f5f9';
+                    let icon = 'fa-circle-question';
+                    if (s.includes('setuju') || s.includes('disetujui')) {
+                        color = '#15803d'; bg = '#dcfce7'; icon = 'fa-circle-check';
+                    } else if (s.includes('tolak') || s.includes('ditolak')) {
+                        color = '#b91c1c'; bg = '#fee2e2'; icon = 'fa-circle-xmark';
+                    } else if (s.includes('tunggu') || s.includes('pending')) {
+                        color = '#b45309'; bg = '#fef3c7'; icon = 'fa-clock';
+                    }
+                    return `
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:${bg}; padding:5px 10px; border-radius:8px;">
+                            <span style="font-weight:700; color:#334155;">${label}</span>
+                            <span style="font-size:0.75rem; font-weight:700; color:${color}; display:inline-flex; align-items:center; gap:4px;">
+                                <i class="fa-solid ${icon}"></i> ${statusVal || 'Pending'}
+                            </span>
+                        </div>
+                    `;
+                };
+
+                stepsEl.innerHTML = `
+                    <div style="font-weight:700; color:#64748b; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">Progres Persetujuan</div>
+                    ${getStepBadge('ACC Kaprodi', booking.status_kaprodi || 'Pending')}
+                    ${getStepBadge('ACC Laboran', booking.status_laboran || 'Pending')}
+                    ${getStepBadge('ACC Kaur Laboratorium', booking.status_kaur || 'Pending')}
+                `;
+            }
+
+            // Action Buttons
+            const actionContainer = document.getElementById('modalActionButtons');
+            if (actionContainer) {
+                let actionHtml = '';
+                const roleId = parseInt(window.userRoleId);
+                const isStaff = (roleId === 1 || roleId === 21); // Admin or Laboran
+                const groupId = booking.group_id || booking.id;
+
+                if (isStaff) {
+                    if (booking.status === 'Disetujui (Menunggu Pengambilan)') {
+                        actionHtml += `
+                            <a href="${window.scannerUrl}" class="btn" style="flex:1; background:#10b981; color:#fff; font-weight:700; font-size:0.8rem; padding:8px 14px; border-radius:8px; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+                                <i class="fa-solid fa-qrcode"></i> Buka Scanner QR Serah Terima
+                            </a>
+                        `;
+                    } else if (booking.status === 'Sedang Dipinjam') {
+                        actionHtml += `
+                            <a href="<?= site_url('peminjamanbarang/serah_terima/') ?>${encodeURIComponent(groupId)}" class="btn" style="flex:1; background:#3b82f6; color:#fff; font-weight:700; font-size:0.8rem; padding:8px 14px; border-radius:8px; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+                                <i class="fa-solid fa-hand-holding-box"></i> Validasi Pengembalian
+                            </a>
+                        `;
+                    }
+                }
+
+                actionHtml += `
+                    <a href="${window.riwayatBookingUrl}" class="btn" style="background:#f8fafc; border:1px solid #cbd5e1; color:#475569; font-weight:700; font-size:0.8rem; padding:8px 14px; border-radius:8px; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Peminjaman
+                    </a>
+                `;
+
+                actionContainer.innerHTML = actionHtml;
+            }
+
             const alasBox = document.getElementById('detailAlasanContainer');
-            if (booking.status === 'Ditolak' && booking.alasan_penolakan) {
-                document.getElementById('detailAlasanPenolakan').innerText = booking.alasan_penolakan;
+            if (booking.status === 'Ditolak' && (booking.catatan_kaprodi || booking.catatan_laboran || booking.catatan_kaur)) {
+                const note = booking.catatan_kaprodi || booking.catatan_laboran || booking.catatan_kaur;
+                document.getElementById('detailAlasanPenolakan').innerText = note;
                 alasBox.style.display = 'block';
             } else {
                 alasBox.style.display = 'none';
             }
-
         }
 
         function closeDetailBookingModal() {

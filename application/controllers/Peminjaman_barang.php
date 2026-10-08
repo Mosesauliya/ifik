@@ -351,4 +351,27 @@ class Peminjaman_barang extends CI_Controller {
         }
         $this->load->view('peminjaman_barang/detail_barang', $data);
     }
+
+    /**
+     * Halaman Kalender & Tabel Jadwal Peminjaman Barang
+     * URL: http://localhost/ifik/peminjaman_barang/kalender
+     */
+    public function kalender() {
+        $data['title'] = 'Kalender & Tabel Peminjaman Barang - IFIK';
+        $data['jadwal_peminjaman'] = $this->Peminjaman_barang_model->get_calendar_peminjaman_barang();
+        $data['kategori_aset'] = $this->Peminjaman_barang_model->get_kategori_aset_list();
+        $data['all_ruangan'] = $this->db->get('ruangan')->result();
+        
+        $this->attach_notifikasi($data);
+        $this->load->view('peminjaman_barang/kalender', $data);
+    }
+
+    /**
+     * Endpoint API JSON untuk Live / Realtime Sync Data Peminjaman Barang
+     */
+    public function get_updated_peminjaman() {
+        header('Content-Type: application/json');
+        $data = $this->Peminjaman_barang_model->get_calendar_peminjaman_barang();
+        echo json_encode($data ?: []);
+    }
 }
