@@ -146,8 +146,8 @@
             <div class="min-w-0">
                 <p class="text-sm font-semibold text-slate-800 truncate"><?= htmlspecialchars($bk['nama_berkas']??strtoupper($kode)) ?></p>
                 <?php 
-                $st = $bk['status'] ?? 'Pending'; 
-                $sc = ($st === 'Valid') ? 'text-green-600' : (($st === 'Invalid') ? 'text-red-600' : 'text-amber-600'); 
+                $st = $bk['status_verifikasi'] ?? ($bk['status'] ?? 'Pending'); 
+                $sc = ($st === 'Valid' || $st === 'Approved') ? 'text-green-600' : (($st === 'Invalid' || $st === 'Rejected') ? 'text-red-600' : 'text-amber-600'); 
                 ?>
                 <p class="text-[11px] text-slate-400 font-medium truncate"><?= htmlspecialchars($bk['file_name']??'-') ?> &middot; <span class="font-bold <?= $sc ?>"><?= $st ?></span></p>
             </div>
