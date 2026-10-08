@@ -306,13 +306,18 @@ $is_serah_terima = ($workflow_stage === 'serah_terima');
                                         <th class="px-4 py-3.5">Nama Aset / Barang</th>
                                         <th class="px-4 py-3.5">Kode Aset</th>
                                         <th class="px-4 py-3.5">Ruangan / Lab</th>
+                                        <th class="px-4 py-3.5 text-center w-32">Sisa Stok</th>
                                         <th class="px-4 py-3.5 text-center w-28">Diajukan</th>
                                         <th class="px-4 py-3.5 text-right w-44">Diserahkan</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
                                     <?php foreach (($peminjaman->detail_barang ?? []) as $item): ?>
-                                        <?php $jumlah_pinjam = (int)($item->jumlah_pinjam ?? 0); ?>
+                                        <?php 
+                                            $jumlah_pinjam = (int)($item->jumlah_pinjam ?? 0); 
+                                            $tersedia = (int)($item->jumlah_tersedia ?? 0);
+                                            $total    = (int)($item->jumlah_total ?? 0);
+                                        ?>
                                         <tr class="hover:bg-slate-50/60 transition-colors">
                                             <td class="px-4 py-3.5">
                                                 <div class="font-bold text-slate-900"><?= html_escape($item->nama_aset ?? '-') ?></div>
@@ -322,6 +327,17 @@ $is_serah_terima = ($workflow_stage === 'serah_terima');
                                             </td>
                                             <td class="px-4 py-3.5 text-slate-600">
                                                 <?= html_escape($item->nama_ruangan ?? '-') ?>
+                                            </td>
+                                            <td class="px-4 py-3.5 text-center">
+                                                <div class="inline-flex flex-col items-center">
+                                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold <?= $tersedia > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/70' : 'bg-rose-50 text-rose-700 border border-rose-200/70' ?>" title="Sisa stok tersedia fisik di lab saat ini">
+                                                        <span class="w-1.5 h-1.5 rounded-full <?= $tersedia > 0 ? 'bg-emerald-500' : 'bg-rose-500' ?>"></span>
+                                                        <?= $tersedia ?> unit
+                                                    </span>
+                                                    <?php if ($total > 0): ?>
+                                                        <span class="text-[10px] text-slate-400 mt-0.5 font-medium">Total: <?= $total ?> unit</span>
+                                                    <?php endif; ?>
+                                                </div>
                                             </td>
                                             <td class="px-4 py-3.5 text-center font-bold text-slate-600">
                                                 <?= $jumlah_pinjam ?> unit
@@ -478,6 +494,33 @@ $is_serah_terima = ($workflow_stage === 'serah_terima');
                 let val = parseInt(input.value || '0', 10);
                 if (val < max) {
                     input.value = val + 1;
+                } else {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Maksimal Sesuai Pengajuan',
+                        text: `Barang yang diserahkan tidak boleh melebihi kuantitas yang diajukan peminjam (${max} unit).`,
+                        confirmButtonColor: '#ea580c'
+                    });
+                }
+            });
+        });
+
+        // Validasi Real-time Input Manual Keyboard
+        document.querySelectorAll('.jumlah-input').forEach(input => {
+            input.addEventListener('change', () => {
+                const max = parseInt(input.getAttribute('data-max') || input.getAttribute('max') || '999', 10);
+                const min = parseInt(input.getAttribute('min') || '0', 10);
+                let val = parseInt(input.value || '0', 10);
+                if (val > max) {
+                    input.value = max;
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Melebihi Kuota Pengajuan',
+                        text: `Jumlah yang diserahkan (${val} unit) melebihi kuantitas yang disetujui (${max} unit). Nilai otomatis dikembalikan ke ${max} unit.`,
+                        confirmButtonColor: '#ea580c'
+                    });
+                } else if (val < min || isNaN(val)) {
+                    input.value = min;
                 }
             });
         });
@@ -604,7 +647,26 @@ $is_serah_terima = ($workflow_stage === 'serah_terima');
 
                 const inputs = form.querySelectorAll('.jumlah-input');
                 let totalUnits = 0;
-                inputs.forEach(i => totalUnits += parseInt(i.value || '0', 10));
+                let invalidItem = null;
+
+                inputs.forEach(i => {
+                    const val = parseInt(i.value || '0', 10);
+                    const max = parseInt(i.getAttribute('data-max') || i.getAttribute('max') || '999', 10);
+                    if (val > max) {
+                        invalidItem = { max, val };
+                    }
+                    totalUnits += val;
+                });
+
+                if (invalidItem) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Kuantitas Melebihi Pengajuan',
+                        text: `Jumlah barang yang diserahkan (${invalidItem.val} unit) tidak boleh melebihi kuantitas yang diajukan (${invalidItem.max} unit).`,
+                        confirmButtonColor: '#ea580c'
+                    });
+                    return;
+                }
 
                 if (totalUnits === 0) {
                     Swal.fire({

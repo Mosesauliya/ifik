@@ -1166,6 +1166,10 @@ class PeminjamanBarang_model extends CI_Model {
                 a.nama_aset,
                 a.kode_aset,
                 a.id_ruangan,
+                a.jumlah_total,
+                a.jumlah_tersedia,
+                a.jumlah_reserved,
+                a.jumlah_dipinjam,
                 r.ruangan AS nama_ruangan_db
             ', FALSE);
             $this->db->from($this->table_peminjaman . ' as p');
@@ -1201,6 +1205,10 @@ class PeminjamanBarang_model extends CI_Model {
             pd.*,
             aset.nama_aset,
             aset.kode_aset,
+            aset.jumlah_total,
+            aset.jumlah_tersedia,
+            aset.jumlah_reserved,
+            aset.jumlah_dipinjam,
             COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan
         ');
         $this->db->from($this->table_peminjaman_detail . ' pd');
@@ -1222,6 +1230,10 @@ class PeminjamanBarang_model extends CI_Model {
                 $this->db->select('
                     aset.nama_aset,
                     aset.kode_aset,
+                    aset.jumlah_total,
+                    aset.jumlah_tersedia,
+                    aset.jumlah_reserved,
+                    aset.jumlah_dipinjam,
                     COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan
                 ');
                 $this->db->from('aset');
@@ -1236,6 +1248,10 @@ class PeminjamanBarang_model extends CI_Model {
                     'jumlah_pinjam' => $main->jumlah_pinjam,
                     'nama_aset' => $aset->nama_aset ?? 'Tidak diketahui',
                     'kode_aset' => $aset->kode_aset ?? '-',
+                    'jumlah_total' => $aset->jumlah_total ?? 0,
+                    'jumlah_tersedia' => $aset->jumlah_tersedia ?? 0,
+                    'jumlah_reserved' => $aset->jumlah_reserved ?? 0,
+                    'jumlah_dipinjam' => $aset->jumlah_dipinjam ?? 0,
                     'nama_ruangan' => $aset->nama_ruangan ?? '-',
                     'created_at' => $main->created_at
                 ];
