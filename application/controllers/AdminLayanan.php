@@ -183,7 +183,7 @@ class AdminLayanan extends CI_Controller {
             return;
         }
 
-        if (($detail['status_approval_wali'] ?? '') !== 'Approved') {
+        if (strcasecmp($detail['status_approval_wali'] ?? '', 'Approved') !== 0) {
             $this->output
                  ->set_content_type('application/json')
                  ->set_output(json_encode(array('success' => false, 'message' => 'Mahasiswa ini belum disetujui oleh Dosen Wali.')));
@@ -372,15 +372,12 @@ class AdminLayanan extends CI_Controller {
 
         // Mark view_adminlaa = 1 in file_pendaftaran when Admin LAA views student's berkas
         if ($this->db->table_exists('file_pendaftaran')) {
-            $u_id = null;
-            $user_tbl = $this->db->table_exists('user') ? 'user' : ($this->db->table_exists('users') ? 'users' : null);
-            if ($user_tbl) {
-                $u = $this->db->where('nim', $nim)->or_where('nidn_nim', $nim)->or_where('username', $nim)->get($user_tbl)->row_array();
-                if ($u && !empty($u['id'])) $u_id = $u['id'];
-            }
-            $target_ids = array_values(array_unique(array_filter([$u_id, $nim])));
+            $target_ids = $this->AdminLayanan_model->get_student_target_ids($nim);
             if ($this->db->field_exists('view_adminlaa', 'file_pendaftaran')) {
-                $this->db->where_in('id_mhs', $target_ids)
+                $this->db->group_start()
+                         ->where_in('id_mhs', $target_ids)
+                         ->or_like('id_mhs', $nim)
+                         ->group_end()
                          ->update('file_pendaftaran', ['view_adminlaa' => 1]);
             }
         }
