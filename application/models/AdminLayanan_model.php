@@ -764,37 +764,80 @@ class AdminLayanan_model extends CI_Model {
             return array();
         }
 
-        $all_nims = array_keys($student_map);
+        $all_search_ids = array();
+        foreach ($student_map as $nim_key => $info) {
+            $all_search_ids[] = (string)$nim_key;
+            if (!empty($info['raw_ids'])) {
+                foreach ($info['raw_ids'] as $rid) {
+                    $all_search_ids[] = (string)$rid;
+                }
+            }
+        }
+        $all_search_ids = array_values(array_unique(array_filter($all_search_ids)));
 
         $user_map = array();
-        if ($user_tbl) {
-            $name_col = $this->db->field_exists('name', $user_tbl) ? 'name' : ($this->db->field_exists('nama', $user_tbl) ? 'nama' : ($this->db->field_exists('nama_depan', $user_tbl) ? 'nama_depan' : null));
-            $nim_col  = $this->db->field_exists('nim', $user_tbl) ? 'nim' : ($this->db->field_exists('username', $user_tbl) ? 'username' : 'id');
-            if ($name_col) {
-                $u_rows = $this->db->select("{$nim_col} as nim, {$name_col} as full_name")
-                    ->where_in($nim_col, $all_nims)
-                    ->get($user_tbl)
-                    ->result_array();
-                foreach ($u_rows as $ur) {
-                    if (!empty($ur['nim'])) {
-                        $user_map[$ur['nim']] = $ur['full_name'];
-                    }
-                }
+        if ($user_tbl && !empty($all_search_ids)) {
+            $has_id   = $this->db->field_exists('id', $user_tbl);
+            $has_nim  = $this->db->field_exists('nim', $user_tbl);
+            $has_user = $this->db->field_exists('username', $user_tbl);
+
+            $this->db->select('*');
+            $this->db->group_start();
+            if ($has_id)   $this->db->where_in('id', $all_search_ids);
+            if ($has_nim)  $this->db->or_where_in('nim', $all_search_ids);
+            if ($has_user) $this->db->or_where_in('username', $all_search_ids);
+            $this->db->group_end();
+            $u_rows = $this->db->get($user_tbl)->result_array();
+
+            foreach ($u_rows as $ur) {
+                if (!empty($ur['id']))       $user_map[(string)$ur['id']] = $ur;
+                if (!empty($ur['nim']))      $user_map[(string)$ur['nim']] = $ur;
+                if (!empty($ur['username'])) $user_map[(string)$ur['username']] = $ur;
             }
         }
 
         $mhs_map = array();
-        if ($has_mhs) {
-            $m_rows = $this->db->select('*')->where_in('nim', $all_nims)->get('mahasiswa')->result_array();
+        if ($has_mhs && !empty($all_search_ids)) {
+            $has_m_id  = $this->db->field_exists('id', 'mahasiswa');
+            $has_m_nim = $this->db->field_exists('nim', 'mahasiswa');
+
+            $this->db->select('*');
+            $this->db->group_start();
+            if ($has_m_nim) $this->db->where_in('nim', $all_search_ids);
+            if ($has_m_id)  $this->db->or_where_in('id', $all_search_ids);
+            $this->db->group_end();
+            $m_rows = $this->db->get('mahasiswa')->result_array();
+
             foreach ($m_rows as $mr) {
-                $mhs_map[$mr['nim']] = $mr;
+                if (!empty($mr['nim'])) $mhs_map[(string)$mr['nim']] = $mr;
+                if (!empty($mr['id']))  $mhs_map[(string)$mr['id']] = $mr;
             }
         }
 
         $results = array();
-        foreach ($student_map as $nim => $info) {
-            $has_user_rec = !empty($user_map[$nim]);
-            $has_mhs_rec  = !empty($mhs_map[$nim]);
+        foreach ($student_map as $nim_key => $info) {
+            $u_rec = $user_map[(string)$nim_key] ?? null;
+            if (!$u_rec && !empty($info['raw_ids'])) {
+                foreach ($info['raw_ids'] as $rid) {
+                    if (!empty($user_map[(string)$rid])) {
+                        $u_rec = $user_map[(string)$rid];
+                        break;
+                    }
+                }
+            }
+
+            $m_rec = $mhs_map[(string)$nim_key] ?? null;
+            if (!$m_rec && !empty($info['raw_ids'])) {
+                foreach ($info['raw_ids'] as $rid) {
+                    if (!empty($mhs_map[(string)$rid])) {
+                        $m_rec = $mhs_map[(string)$rid];
+                        break;
+                    }
+                }
+            }
+
+            $has_user_rec = !empty($u_rec);
+            $has_mhs_rec  = !empty($m_rec);
             $has_g_rec    = !empty($info['guidance']);
 
             // Ignore orphan dummy test rows in file_pendaftaran (e.g. 6ac718f3c6e49, 6abb2313edc3b)
@@ -803,14 +846,21 @@ class AdminLayanan_model extends CI_Model {
                 continue;
             }
 
-            $full_name = 'Mahasiswa';
-            if (!empty($user_map[$nim])) {
-                $full_name = $user_map[$nim];
-            } elseif (!empty($mhs_map[$nim]['nama_depan'])) {
-                $full_name = trim($mhs_map[$nim]['nama_depan'] . ' ' . ($mhs_map[$nim]['nama_belakang'] ?? ''));
-            } elseif (!empty($info['name_from_fp'])) {
+            $full_name = null;
+            if ($u_rec) {
+                $full_name = $u_rec['name'] ?? ($u_rec['nama'] ?? ($u_rec['nama_depan'] ?? null));
+            }
+            if (empty($full_name) && $m_rec) {
+                $full_name = trim(($m_rec['nama_depan'] ?? '') . ' ' . ($m_rec['nama_belakang'] ?? ''));
+            }
+            if (empty($full_name) && !empty($info['name_from_fp'])) {
                 $full_name = $info['name_from_fp'];
             }
+            if (empty($full_name)) {
+                $full_name = 'Mahasiswa';
+            }
+
+            $real_nim = $u_rec['nim'] ?? ($m_rec['nim'] ?? $nim_key);
 
             $parts = explode(' ', trim($full_name));
             $nama_depan = array_shift($parts) ?: 'Mahasiswa';
@@ -821,7 +871,7 @@ class AdminLayanan_model extends CI_Model {
             $total_required = count($required_kodes);
 
             // Check pendaftaran_berkas table first
-            $p_berkas_map = $this->get_student_berkas_map($nim);
+            $p_berkas_map = $this->get_student_berkas_map($real_nim);
             $pb_valid_count = 0;
             $pb_invalid_count = 0;
             foreach ($required_kodes as $rk) {
@@ -887,17 +937,17 @@ class AdminLayanan_model extends CI_Model {
             $created_at = $info['latest_date'] ?? ($g_data['date'] ?? date('Y-m-d H:i:s'));
 
             $results[] = array(
-                'id'                    => 'legacy_' . $nim,
-                'nim'                   => $nim,
+                'id'                    => 'legacy_' . $real_nim,
+                'nim'                   => $real_nim,
                 'nama_depan'            => $nama_depan,
                 'nama_belakang'         => $nama_belakang,
                 'nama_lengkap'          => trim($nama_depan . ' ' . $nama_belakang),
-                'nama_dosen_wali'       => 'Dosen Wali LAA',
-                'prodi'                 => $mhs_map[$nim]['prodi'] ?? 'Desain Komunikasi Visual',
-                'konsentrasi_dkv'       => $g_data['peminatan'] ?? ($mhs_map[$nim]['konsentrasi_dkv'] ?? 'Desain Komunikasi Visual'),
-                'email'                 => $mhs_map[$nim]['email'] ?? '',
-                'no_hp'                 => $mhs_map[$nim]['no_hp'] ?? '',
-                'alamat'                => $mhs_map[$nim]['alamat'] ?? '',
+                'nama_dosen_wali'       => $u_rec['dosen_wali'] ?? 'Dosen Wali LAA',
+                'prodi'                 => $m_rec['prodi'] ?? 'Desain Komunikasi Visual',
+                'konsentrasi_dkv'       => $g_data['peminatan'] ?? ($m_rec['konsentrasi_dkv'] ?? 'Desain Komunikasi Visual'),
+                'email'                 => $m_rec['email'] ?? ($u_rec['email'] ?? ''),
+                'no_hp'                 => $m_rec['no_hp'] ?? ($u_rec['phone'] ?? ''),
+                'alamat'                => $m_rec['alamat'] ?? '',
                 'judul_1'               => $g_data['judul_1'] ?? 'Perancangan Tugas Akhir Mahasiswa',
                 'judul'                 => $g_data['judul_1'] ?? 'Perancangan Tugas Akhir Mahasiswa',
                 'judul_en'              => $g_data['judul_en'] ?? '',
