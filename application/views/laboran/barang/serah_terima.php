@@ -1,6 +1,10 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+$workflow_stage = $workflow_stage ?? 'serah_terima';
 $boleh_serah = !empty($qr_valid);
+$is_verifikasi_laboran = ($workflow_stage === 'verifikasi_laboran');
+$is_menunggu_kaur = ($workflow_stage === 'menunggu_kaur');
+$is_serah_terima = ($workflow_stage === 'serah_terima');
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -164,10 +168,27 @@ $boleh_serah = !empty($qr_valid);
                         </div>
                     </div>
                     <div>
-                        <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold <?= $boleh_serah ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200' ?>">
-                            <i class="bi <?= $boleh_serah ? 'bi-check-circle-fill text-emerald-500' : 'bi-exclamation-circle-fill text-amber-500' ?>"></i>
-                            <span><?= html_escape($peminjaman->status ?? '-') ?></span>
-                        </span>
+                        <?php if ($is_verifikasi_laboran): ?>
+                            <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                <i class="bi bi-clock-history text-blue-500"></i>
+                                <span>Tahap 3 &bull; Menunggu Verifikasi Laboran</span>
+                            </span>
+                        <?php elseif ($is_menunggu_kaur): ?>
+                            <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                <i class="bi bi-hourglass-split text-amber-500"></i>
+                                <span>Tahap 4 &bull; Menunggu ACC Kaur</span>
+                            </span>
+                        <?php elseif ($is_serah_terima): ?>
+                            <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <i class="bi bi-check-circle-fill text-emerald-500"></i>
+                                <span>Tahap 5/6 &bull; Siap Serah Terima Fisik</span>
+                            </span>
+                        <?php else: ?>
+                            <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-50 text-slate-700 border border-slate-200">
+                                <i class="bi bi-info-circle text-slate-500"></i>
+                                <span><?= html_escape($peminjaman->status ?? '-') ?></span>
+                            </span>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -198,8 +219,77 @@ $boleh_serah = !empty($qr_valid);
                 </div>
             </div>
 
-            <?php if ($boleh_serah): ?>
-                <form id="handoverForm" method="post" enctype="multipart/form-data" action="<?= site_url('peminjamanbarang/proses_serah/' . rawurlencode($peminjaman->group_id)) ?>">
+            <!-- Callout Stage Banners -->
+            <?php if ($is_verifikasi_laboran): ?>
+                <div class="bg-blue-50/90 border border-blue-200 rounded-3xl p-5 sm:p-6 mb-6">
+                    <div class="flex items-start gap-4">
+                        <div class="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-md shadow-blue-500/20">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-blue-700 uppercase tracking-wider">Tahap 3 &bull; Verifikasi Kelayakan Laboran</div>
+                            <h3 class="text-base font-extrabold text-blue-950 mt-0.5">Pemeriksaan Barang &amp; Penerusan ke Kaur</h3>
+                            <p class="text-xs sm:text-sm text-blue-800/90 mt-1 leading-relaxed">
+                                Pengajuan ini telah disetujui Kaprodi. Silakan periksa kelayakan fisik dan stok barang di laboratorium. Klik tombol <strong>"Verifikasi &amp; Teruskan ke Kaur"</strong> untuk menyimpan hasil verifikasi dan meneruskan transaksi ke Kepala Urusan (Kaur). <em>Barang fisik belum diserahterimakan pada tahap ini.</em>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            <?php elseif ($is_menunggu_kaur): ?>
+                <div class="bg-amber-50 border-2 border-amber-300 rounded-3xl p-5 sm:p-6 mb-6 shadow-sm">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div class="flex items-start gap-4">
+                            <div class="w-11 h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-md shadow-amber-500/20">
+                                <i class="bi bi-hourglass-split"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs font-bold text-amber-800 uppercase tracking-wider">Tahap 4 &bull; Menunggu Persetujuan Ka. Ur</div>
+                                <h3 class="text-base font-extrabold text-amber-950 mt-0.5">Menunggu ACC Kepala Urusan (Kaur)</h3>
+                                <p class="text-xs sm:text-sm text-amber-800/90 mt-1 leading-relaxed">
+                                    Pengajuan ini sudah diverifikasi Laboran dan saat ini <strong>menunggu persetujuan resmi Kepala Urusan (Kaur)</strong>. Fisik barang <u>belum boleh diserahterimakan</u> ke peminjam sebelum Kaur menyetujuinya.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2.5 pt-2 md:pt-0">
+                            <form method="post" action="<?= site_url('peminjamanbarang/approve_kaur/' . rawurlencode($peminjaman->group_id)) ?>" class="inline">
+                                <button type="submit" onclick="return confirm('Apakah Anda yakin menyetujui peminjaman barang ini sebagai Kepala Urusan (Kaur)?')" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md shadow-emerald-600/20 transition-all">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <span>Setujui (ACC Kaur)</span>
+                                </button>
+                            </form>
+                            <form method="post" action="<?= site_url('peminjamanbarang/tolak_kaur/' . rawurlencode($peminjaman->group_id)) ?>" class="inline">
+                                <button type="submit" onclick="return confirm('Apakah Anda yakin ingin menolak pengajuan ini?')" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md shadow-rose-600/20 transition-all">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                    <span>Tolak Pengajuan</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            <?php elseif ($is_serah_terima): ?>
+                <div class="bg-emerald-50/80 border border-emerald-200 rounded-3xl p-5 sm:p-6 mb-6">
+                    <div class="flex items-start gap-4">
+                        <div class="w-11 h-11 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-md shadow-emerald-500/20">
+                            <i class="bi bi-box-seam-fill"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Tahap 5 &amp; 6 &bull; Siap Serah Terima Fisik</div>
+                            <h3 class="text-base font-extrabold text-emerald-950 mt-0.5">Persetujuan Lengkap (Kaprodi &bull; Laboran &bull; Kaur)</h3>
+                            <p class="text-xs sm:text-sm text-emerald-800/90 mt-1 leading-relaxed">
+                                Pengajuan telah resmi disetujui oleh Kaur. Silakan serahkan unit fisik barang ke peminjam, jepret foto bukti serah terima, dan klik tombol konfirmasi serah terima di bawah. Status akan diperbarui menjadi <strong>Sedang Dipinjam</strong>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($is_verifikasi_laboran || $is_serah_terima): ?>
+                <?php
+                    $form_target = $is_verifikasi_laboran
+                        ? site_url('peminjamanbarang/verifikasi_laboran/' . rawurlencode($peminjaman->group_id))
+                        : site_url('peminjamanbarang/proses_serah/' . rawurlencode($peminjaman->group_id));
+                ?>
+                <form id="handoverForm" method="post" enctype="multipart/form-data" action="<?= $form_target ?>">
                     
                     <!-- Table Rincian Barang Card -->
                     <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-5 sm:p-6 mb-6">
@@ -317,9 +407,9 @@ $boleh_serah = !empty($qr_valid);
                         </a>
                         <button type="button"
                                 id="openHandoverConfirmation"
-                                class="px-7 py-3 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm shadow-lg shadow-orange-600/30 transition-all flex items-center gap-2">
-                            <i class="bi bi-check2-circle text-base"></i>
-                            <span>Periksa &amp; Konfirmasi Serah Terima</span>
+                                class="px-7 py-3 rounded-2xl <?= $is_verifikasi_laboran ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/30' : 'bg-orange-600 hover:bg-orange-700 shadow-orange-600/30' ?> text-white font-bold text-sm shadow-lg transition-all flex items-center gap-2">
+                            <i class="bi <?= $is_verifikasi_laboran ? 'bi-shield-check' : 'bi-check2-circle' ?> text-base"></i>
+                            <span><?= $is_verifikasi_laboran ? 'Verifikasi &amp; Teruskan ke Kaur' : 'Periksa &amp; Konfirmasi Serah Terima' ?></span>
                         </button>
                     </div>
 
@@ -371,16 +461,18 @@ $boleh_serah = !empty($qr_valid);
         </main>
     </div>
 
-    <?php if ($boleh_serah): ?>
+    <?php if ($is_verifikasi_laboran || $is_serah_terima): ?>
     <!-- Confirmation Modal Component -->
     <div id="handoverConfirmationModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between pb-4 border-b border-slate-100">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-9 h-9 rounded-xl bg-orange-500/10 text-orange-600 flex items-center justify-center font-bold text-base">
-                        <i class="bi bi-shield-check"></i>
+                    <div class="w-9 h-9 rounded-xl <?= $is_verifikasi_laboran ? 'bg-blue-500/10 text-blue-600' : 'bg-orange-500/10 text-orange-600' ?> flex items-center justify-center font-bold text-base">
+                        <i class="bi <?= $is_verifikasi_laboran ? 'bi-shield-check' : 'bi-box-seam-fill' ?>"></i>
                     </div>
-                    <h3 class="text-base font-extrabold text-slate-900">Konfirmasi Serah Terima</h3>
+                    <h3 class="text-base font-extrabold text-slate-900">
+                        <?= $is_verifikasi_laboran ? 'Konfirmasi Verifikasi Laboran' : 'Konfirmasi Serah Terima Fisik' ?>
+                    </h3>
                 </div>
                 <button type="button" id="btnCloseConfirmModal" class="text-slate-400 hover:text-slate-600 text-lg">
                     <i class="bi bi-x-lg"></i>
@@ -390,27 +482,38 @@ $boleh_serah = !empty($qr_valid);
             <div class="py-4 space-y-4">
                 <?php $loan_action_item = $peminjaman; include APPPATH . 'views/shared/loan_action_summary.php'; unset($loan_action_item); ?>
 
-                <div class="bg-orange-50/80 border border-orange-200/80 rounded-2xl p-4 flex items-center justify-between">
+                <div class="<?= $is_verifikasi_laboran ? 'bg-blue-50/80 border-blue-200/80' : 'bg-orange-50/80 border-orange-200/80' ?> border rounded-2xl p-4 flex items-center justify-between">
                     <div>
-                        <div class="text-xs font-bold text-orange-950 uppercase tracking-wide">Total Unit Diserahkan</div>
-                        <div class="text-xs text-orange-800/80 mt-0.5">Sesuai penyesuaian fisik laboran</div>
+                        <div class="text-xs font-bold <?= $is_verifikasi_laboran ? 'text-blue-950' : 'text-orange-950' ?> uppercase tracking-wide">
+                            <?= $is_verifikasi_laboran ? 'Total Unit Diverifikasi' : 'Total Unit Diserahkan' ?>
+                        </div>
+                        <div class="text-xs <?= $is_verifikasi_laboran ? 'text-blue-800/80' : 'text-orange-800/80' ?> mt-0.5">
+                            <?= $is_verifikasi_laboran ? 'Ketersediaan stok yang akan diteruskan ke Kaur' : 'Sesuai penyerahan fisik langsung ke peminjam' ?>
+                        </div>
                     </div>
-                    <div id="modalConfirmUnits" class="text-xl font-extrabold text-orange-600">0 unit</div>
+                    <div id="modalConfirmUnits" class="text-xl font-extrabold <?= $is_verifikasi_laboran ? 'text-blue-600' : 'text-orange-600' ?>">0 unit</div>
                 </div>
 
-                <p class="text-xs text-slate-500 leading-relaxed">
-                    <i class="bi bi-info-circle text-orange-500 me-1"></i>
-                    Dengan menekan tombol setujui, status peminjaman akan diperbarui menjadi <strong>Sedang Dipinjam</strong> dan diteruskan ke Kaur untuk pencatatan resmi.
-                </p>
+                <?php if ($is_verifikasi_laboran): ?>
+                    <p class="text-xs text-slate-500 leading-relaxed">
+                        <i class="bi bi-info-circle text-blue-500 me-1"></i>
+                        Dengan menekan tombol simpan, pengajuan akan berstatus <strong>Menunggu ACC Kaur</strong>. Barang <u>belum diserahkan</u> dan akan menunggu persetujuan resmi Kepala Urusan (Kaur).
+                    </p>
+                <?php else: ?>
+                    <p class="text-xs text-slate-500 leading-relaxed">
+                        <i class="bi bi-info-circle text-orange-500 me-1"></i>
+                        Dengan menekan tombol setujui, status peminjaman akan diperbarui menjadi <strong>Sedang Dipinjam</strong>. Pastikan barang fisik telah diserahkan langsung kepada peminjam.
+                    </p>
+                <?php endif; ?>
             </div>
 
             <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
                 <button type="button" id="btnCancelConfirmModal" class="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50">
                     Batal Periksa
                 </button>
-                <button type="button" id="btnSubmitHandover" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm flex items-center gap-1.5 shadow-md shadow-emerald-600/30">
-                    <i class="bi bi-check2-circle"></i>
-                    <span>Setujui Serah Terima</span>
+                <button type="button" id="btnSubmitHandover" class="px-6 py-2.5 rounded-xl <?= $is_verifikasi_laboran ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/30' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30' ?> text-white font-bold text-sm flex items-center gap-1.5 shadow-md">
+                    <i class="bi <?= $is_verifikasi_laboran ? 'bi-send-check' : 'bi-check2-circle' ?>"></i>
+                    <span><?= $is_verifikasi_laboran ? 'Simpan &amp; Teruskan ke Kaur' : 'Setujui Serah Terima' ?></span>
                 </button>
             </div>
         </div>

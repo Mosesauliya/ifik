@@ -113,7 +113,8 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
         case 2: // Kaur / Ka Lab (Kepala Urusan / Kepala Lab & Dosen) - Full Super Admin Access
             $defaultNavItems = [
                 ['category' => 'Persetujuan Resmi & Lab'],
-                ['heading' => 'Approval Peminjaman', 'href' => site_url('kaur/approval'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Approval Ruangan', 'href' => site_url('kaur/approval'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Approval Peminjaman Barang', 'href' => site_url('kaur/barang'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
                 ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
                 ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
                 ['heading' => 'Tanda Tangan Digital', 'href' => site_url('kaur/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],

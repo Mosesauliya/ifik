@@ -524,4 +524,118 @@ class Kaur extends CI_Controller {
 
         force_download($downloadName, file_get_contents($filePath));
     }
+
+    /**
+     * Modul Approval Peminjaman Barang untuk Ka. Ur / Kepala Lab
+     */
+    public function barang()
+    {
+        $this->load->model('PeminjamanBarang_model', 'Peminjaman_model');
+        $this->load->helper(['loan_progress', 'scm_date', 'fik_prodi']);
+
+        $tab = $this->input->get('tab', true) ?: 'pending';
+        $filters = ['action_role' => 'kaur'];
+
+        if ($tab === 'pending') {
+            $filters['status'] = 'Menunggu ACC Kaur';
+        } elseif ($tab === 'approved') {
+            $filters['status_in'] = ['Disetujui (Menunggu Pengambilan)', 'Disetujui (Menunggu Finalisasi QR)', 'Sedang Dipinjam', 'Selesai', 'Dikembalikan'];
+        } elseif ($tab === 'rejected') {
+            $filters['status'] = 'Ditolak';
+        }
+
+        $data['title'] = 'Approval Peminjaman Barang - Ka. Ur / Kepala Lab';
+        $data['active_tab'] = $tab;
+        $data['pending_count'] = $this->Peminjaman_model->count_actionable_peminjaman('kaur');
+        $data['peminjaman_list'] = $this->Peminjaman_model->get_visible_peminjaman($filters, 50, 0);
+
+        $this->load->view('kaur/barang/index', $data);
+    }
+
+    public function approve_barang($group_id)
+    {
+        $this->load->model('PeminjamanBarang_model', 'Peminjaman_model');
+        $group_id = rawurldecode($group_id);
+        $peminjaman = $this->Peminjaman_model->get_peminjaman_by_group_id($group_id);
+        if (!$peminjaman) {
+            $this->session->set_flashdata('error', 'Transaksi tidak ditemukan.');
+            redirect('kaur/barang');
+        }
+
+        $catatan = trim((string)$this->input->post('catatan_kaur', true));
+        $update = [
+            'status' => 'Disetujui (Menunggu Pengambilan)',
+            'status_kaur' => 'Disetujui',
+            'catatan_kaur' => $catatan,
+            'tgl_approve_kaur' => date('Y-m-d H:i:s'),
+            'id_approver_kaur' => $this->session->userdata('id_user') ?: $this->session->userdata('username'),
+            'qr_locked' => 1,
+        ];
+
+        $ok = $this->Peminjaman_model->approve_group_with_reservation(
+            $group_id,
+            ['Menunggu ACC Kaur', 'Menunggu Verifikasi Laboran'],
+            $update
+        );
+
+        if ($ok) {
+            if (!empty($peminjaman->id_user)) {
+                $this->Peminjaman_model->create_notifikasi(
+                    null,
+                    $peminjaman->id_user,
+                    'Peminjaman Disetujui Kaur',
+                    'Pengajuan peminjaman barang Anda telah disetujui resmi oleh Ka. Ur / Kepala Lab. Silakan ambil barang di Laboratorium.',
+                    site_url('peminjaman_barang/riwayat')
+                );
+            }
+            $this->Peminjaman_model->create_notifikasi(
+                'laboran',
+                null,
+                'Barang Siap Diserahkan',
+                ($peminjaman->nama_peminjam ?? 'Peminjam') . ' sudah di-ACC Kaur. Barang siap diserahterimakan.',
+                site_url('peminjamanbarang/scanner')
+            );
+            $this->session->set_flashdata('success', 'Pengajuan berhasil disetujui resmi oleh Ka. Ur! Status sekarang siap untuk serah terima fisik barang.');
+        } else {
+            $this->session->set_flashdata('error', 'Gagal menyetujui pengajuan peminjaman barang.');
+        }
+        redirect('kaur/barang');
+    }
+
+    public function reject_barang($group_id)
+    {
+        $this->load->model('PeminjamanBarang_model', 'Peminjaman_model');
+        $group_id = rawurldecode($group_id);
+        $peminjaman = $this->Peminjaman_model->get_peminjaman_by_group_id($group_id);
+        if (!$peminjaman) {
+            $this->session->set_flashdata('error', 'Transaksi tidak ditemukan.');
+            redirect('kaur/barang');
+        }
+
+        $catatan = trim((string)$this->input->post('catatan_kaur', true) ?: 'Ditolak oleh Kepala Urusan');
+        $update = [
+            'status' => 'Ditolak',
+            'status_kaur' => 'Ditolak',
+            'catatan_kaur' => $catatan,
+            'tgl_approve_kaur' => date('Y-m-d H:i:s'),
+            'id_approver_kaur' => $this->session->userdata('id_user') ?: $this->session->userdata('username'),
+        ];
+
+        $ok = $this->Peminjaman_model->reject_group_and_release($group_id, $update, ['Menunggu ACC Kaur', 'Menunggu Verifikasi Laboran']);
+        if ($ok) {
+            if (!empty($peminjaman->id_user)) {
+                $this->Peminjaman_model->create_notifikasi(
+                    null,
+                    $peminjaman->id_user,
+                    'Peminjaman Ditolak Kaur',
+                    'Pengajuan peminjaman barang Anda ditolak oleh Kaur: ' . $catatan,
+                    site_url('peminjaman_barang/riwayat')
+                );
+            }
+            $this->session->set_flashdata('success', 'Pengajuan peminjaman barang berhasil ditolak.');
+        } else {
+            $this->session->set_flashdata('error', 'Gagal menolak pengajuan.');
+        }
+        redirect('kaur/barang');
+    }
 }
