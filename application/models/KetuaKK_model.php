@@ -434,7 +434,10 @@ class KetuaKK_model extends CI_Model {
                 $fp_update['komentar'] = $catatan;
             }
 
-            $this->db->where_in('id_mhs', $target_mhs_ids);
+            $this->db->group_start()
+                     ->where_in('id_mhs', $target_mhs_ids)
+                     ->or_like('id_mhs', $nim)
+                     ->group_end();
             $this->db->update('file_pendaftaran', $fp_update);
         }
 
