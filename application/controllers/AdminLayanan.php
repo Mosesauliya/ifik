@@ -770,7 +770,8 @@ class AdminLayanan extends CI_Controller {
                     $this->db->where_in('id_mhs', $target_ids)
                              ->group_start()
                              ->like('nama', $kode_berkas)
-                             ->or_like('file', $kode_berkas);
+                             ->or_like('file', $kode_berkas)
+                             ->or_like('id', $kode_berkas);
                     if ($kode_berkas === 'bebas_lab') {
                         $this->db->or_like('nama', 'bebas')
                                  ->or_like('nama', 'lab')
