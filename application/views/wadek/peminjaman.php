@@ -3,7 +3,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
  * Approval Peminjaman Luar Kampus - Wakil Dekan (Wadek)
- * Layout & UI Architecture strictly aligned with Kaprodi Approval module.
+ * Clean, high-contrast UI aligned with Kaprodi approval module.
  * 
  * @var array $pengajuan
  * @var array $filters
@@ -88,7 +88,7 @@ if (!function_exists('render_wadek_client_filter')) {
             <input type="hidden" name="per_page" value="<?= (int) $per_page ?>">
             <input type="hidden" name="sort_by" value="<?= html_escape($_GET['sort_by'] ?? '') ?>">
             <input type="hidden" name="sort_dir" value="<?= html_escape($_GET['sort_dir'] ?? 'desc') ?>">
-            <div id="<?= html_escape($id) ?>" class="kp-multi-filter scm-search-filter" data-kp-multi-filter data-max-filters="4">
+            <div id="<?= html_escape($id) ?>" class="kp-multi-filter" data-kp-multi-filter data-max-filters="4">
                 <div class="kp-multi-filter-heading">
                     <h3><i class="bi bi-funnel me-2" aria-hidden="true"></i>Filter pencarian</h3>
                 </div>
@@ -113,9 +113,9 @@ if (!function_exists('render_wadek_client_filter')) {
                     </div>
                     <?php endforeach; ?>
                 </div>
-                <div class="scm-search-filter__actions mt-3">
-                    <button type="submit" class="btn scm-search-filter__apply" data-kp-filter-apply><i class="bi bi-search"></i> Terapkan filter</button>
-                    <a href="<?= current_url() ?>" class="btn scm-search-filter__reset"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
+                <div class="scm-search-filter__actions mt-3 d-flex align-items-center gap-2">
+                    <button type="submit" class="btn btn-orange-primary px-4 py-2" data-kp-filter-apply><i class="bi bi-search me-1"></i> Terapkan filter</button>
+                    <a href="<?= current_url() ?>" class="btn btn-outline-secondary px-3 py-2 rounded-pill"><i class="bi bi-arrow-counterclockwise me-1"></i> Reset</a>
                 </div>
             </div>
         </form>
@@ -133,53 +133,99 @@ if (!function_exists('render_wadek_client_filter')) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="<?= base_url('assets/dashboard-theme.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/loan-progress.css'); ?>?v=<?= @filemtime(FCPATH . 'assets/css/loan-progress.css'); ?>">
-    <?php include APPPATH . 'views/shared/theme_assets.php'; ?>
     
     <style>
         .modal { display: none; }
-        
-        .wadek-loan-page {
-            --kp-bg: var(--scm-theme-bg, #f4f5f7);
-            --kp-surface: var(--scm-theme-surface, #ffffff);
-            --kp-surface-soft: var(--scm-theme-surface-soft, #f7f8fa);
-            --kp-border: var(--scm-theme-border, #dfe3e8);
-            --kp-text: var(--scm-theme-text, #18202b);
-            --kp-muted: var(--scm-theme-muted, #6c7784);
-            --kp-orange: #ff6b00;
-            --kp-orange-soft: #fff5e9;
-            min-height: 100vh;
-            background: var(--kp-bg);
-            color: var(--kp-text);
+
+        body {
+            background-color: #f4f5f7 !important;
+            color: #18202b !important;
             font-family: Poppins, sans-serif;
             font-size: 14px;
+            margin: 0;
+            padding: 0;
         }
 
-        .kp-page-content {
-            padding-top: 22px;
-            padding-bottom: 32px;
+        /* Topbar Header */
+        .kp-clean-topbar {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+            padding: 12px 24px;
         }
 
         .brand-mark {
             display: inline-flex;
-            width: 42px;
-            height: 42px;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            background: rgba(234, 91, 26, .16);
-            color: #ea5b1a;
-            font-size: 1.35rem;
-        }
-
-        .notif-bell {
-            display: inline-flex;
             width: 38px;
             height: 38px;
-            flex: 0 0 38px;
             align-items: center;
             justify-content: center;
+            border-radius: 10px;
+            background: rgba(234, 91, 26, 0.12);
+            color: #ea5b1a;
+            font-size: 1.25rem;
+        }
+
+        .notif-bell, .theme-toggle {
+            width: 38px;
+            height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #475569;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .notif-bell:hover, .theme-toggle:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+            color: #0f172a;
+        }
+
+        .btn-topbar-user {
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #475569;
+            font-weight: 600;
+            font-size: 0.78rem;
+            padding: 7px 16px;
+            border-radius: 999px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-topbar-user:hover {
+            background: #f8fafc;
+            color: #0f172a;
+            border-color: #94a3b8;
+        }
+
+        .btn-topbar-logout {
+            background: #ea580c;
+            border: 1px solid #ea580c;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 0.78rem;
+            padding: 7px 18px;
+            border-radius: 999px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-topbar-logout:hover {
+            background: #c2410c;
+            border-color: #c2410c;
+            color: #ffffff;
         }
 
         .notif-menu {
@@ -188,27 +234,10 @@ if (!function_exists('render_wadek_client_filter')) {
             overflow-y: auto;
         }
 
-        .theme-toggle {
-            width: 38px;
-            height: 38px;
-            flex: 0 0 38px !important;
-            padding: 0 !important;
-        }
-
-        html.scm-theme-light {
-            --scm-bg: #f3f4f6;
-            --scm-surface: #ffffff;
-            --scm-surface-strong: #eef0f2;
-            --scm-border: #dfe3e6;
-            --scm-text: #1c2024;
-            --scm-muted: #68727b;
-            --scm-orange-soft: rgba(234, 91, 26, .1);
-        }
-
-        html.scm-theme-light .topbar {
-            border-color: #e3e6e8 !important;
-            background: #ffffff !important;
-            box-shadow: 0 5px 18px rgba(35, 42, 47, .06);
+        /* Page Content */
+        .kp-page-content {
+            padding-top: 24px;
+            padding-bottom: 36px;
         }
 
         .kp-page-heading {
@@ -217,7 +246,7 @@ if (!function_exists('render_wadek_client_filter')) {
 
         .kp-page-heading h1 {
             margin: 0 0 4px;
-            color: var(--kp-text);
+            color: #0f172a;
             font-size: clamp(1.4rem, 2vw, 1.85rem);
             font-weight: 700;
         }
@@ -228,16 +257,17 @@ if (!function_exists('render_wadek_client_filter')) {
             align-items: center;
             justify-content: flex-end;
             gap: 8px;
-            color: var(--kp-muted);
-            font-size: .76rem;
+            color: #64748b;
+            font-size: 0.78rem;
         }
 
+        /* Cards */
         .kp-card {
             overflow: hidden;
-            border: 1px solid var(--kp-border);
-            border-radius: 9px;
-            background: var(--kp-surface);
-            box-shadow: 0 5px 18px rgba(25, 36, 50, .045);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            background: #ffffff;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
         }
 
         .kp-summary {
@@ -245,61 +275,37 @@ if (!function_exists('render_wadek_client_filter')) {
             align-items: center;
             justify-content: space-between;
             gap: 18px;
-            padding: 17px 20px;
+            padding: 18px 22px;
         }
 
         .kp-section-title {
             margin: 0 0 3px;
-            color: var(--kp-text);
+            color: #0f172a;
             font-size: 1rem;
             font-weight: 700;
         }
 
         .kp-section-copy {
             margin: 0;
-            color: var(--kp-muted);
-            font-size: .76rem;
+            color: #64748b;
+            font-size: 0.78rem;
         }
 
-        .kp-count-badge,
-        .kp-status-badge {
+        .kp-count-badge {
             display: inline-flex;
             align-items: center;
             gap: 7px;
             width: max-content;
             min-height: 29px;
-            padding: 5px 11px;
-            border: 1px solid transparent;
+            padding: 6px 14px;
+            border: 1px solid #fed7aa;
+            background: #fff7ed;
+            color: #c2410c;
             border-radius: 999px;
-            font-size: .68rem;
+            font-size: 0.72rem;
             font-weight: 600;
             line-height: 1;
             white-space: nowrap;
-        }
-
-        .kp-count-badge,
-        .kp-status-badge.is-current {
-            border-color: #f4bd70;
-            background: var(--kp-orange-soft);
-            color: #965600;
-        }
-
-        .kp-status-badge.is-completed {
-            border-color: #9ed7bd;
-            background: #eaf8f1;
-            color: #13734d;
-        }
-
-        .kp-status-badge.is-pending {
-            border-color: #d6dbe1;
-            background: #f2f4f6;
-            color: #66717d;
-        }
-
-        .kp-status-badge.is-rejected {
-            border-color: #efb2b2;
-            background: #fff0f0;
-            color: #b4232d;
         }
 
         .kp-status-dot {
@@ -310,60 +316,97 @@ if (!function_exists('render_wadek_client_filter')) {
             background: currentColor;
         }
 
-        .kp-multi-filter { padding: 18px 20px; }
-        .kp-filter-card .kp-multi-filter { padding: 18px 20px; }
+        /* Filter Section */
+        .kp-multi-filter { padding: 18px 22px; }
         .kp-multi-filter-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
-        .kp-multi-filter-heading h3 { margin: 0; color: var(--kp-text); font-size: .95rem; font-weight: 700; }
-        .kp-multi-filter-heading h3 i { color: var(--kp-orange); }
-        .kp-multi-filter-list { display: grid; gap: 9px; }
-        .kp-multi-filter-row { display: grid; grid-template-columns: minmax(205px, .72fr) minmax(270px, 1.55fr) auto; align-items: center; gap: 9px; }
-        .kp-multi-filter-row .form-select, .kp-multi-filter-row .form-control { min-height: 42px; border-color: #cbd3dc; background-color: var(--kp-surface); color: var(--kp-text); font-size: .74rem; box-shadow: none; }
-        .kp-multi-filter-row .form-select:focus, .kp-multi-filter-row .form-control:focus { border-color: var(--kp-orange); box-shadow: 0 0 0 .2rem rgba(255, 107, 0, .12); }
-        .kp-multi-filter-tools { display: flex; align-items: center; gap: 8px; }
-        .kp-multi-filter-icon { width: 42px; height: 42px; display: inline-flex; flex: 0 0 42px; align-items: center; justify-content: center; padding: 0; border-radius: 50%; }
-        .kp-multi-filter-add { border-color: var(--kp-orange); color: var(--kp-orange); }
-        .kp-multi-filter-add:hover { border-color: var(--kp-orange); background: var(--kp-orange); color: #fff; }
-        .kp-multi-filter-icon:disabled { opacity: .38; }
-
-        .kp-table-card {
-            margin-top: 12px;
+        .kp-multi-filter-heading h3 { margin: 0; color: #0f172a; font-size: 0.95rem; font-weight: 700; }
+        .kp-multi-filter-heading h3 i { color: #ea580c; }
+        .kp-multi-filter-list { display: grid; gap: 10px; }
+        .kp-multi-filter-row { display: grid; grid-template-columns: minmax(205px, .72fr) minmax(270px, 1.55fr) auto; align-items: center; gap: 10px; }
+        
+        .kp-multi-filter-row .form-select, 
+        .kp-multi-filter-row .form-control,
+        .kp-page-size select,
+        .kp-loan-modal textarea {
+            min-height: 42px;
+            border: 1.5px solid #cbd5e1 !important;
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            font-size: 0.8rem;
+            box-shadow: none !important;
+            border-radius: 8px;
         }
+
+        .kp-multi-filter-row .form-control::placeholder,
+        .kp-loan-modal textarea::placeholder {
+            color: #94a3b8 !important;
+            opacity: 1;
+        }
+
+        .kp-multi-filter-row .form-select:focus, 
+        .kp-multi-filter-row .form-control:focus,
+        .kp-loan-modal textarea:focus {
+            border-color: #ea580c !important;
+            box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12) !important;
+        }
+
+        .kp-multi-filter-tools { display: flex; align-items: center; gap: 8px; }
+        .kp-multi-filter-icon { width: 42px; height: 42px; display: inline-flex; flex: 0 0 42px; align-items: center; justify-content: center; padding: 0; border-radius: 50%; border: 1.5px solid #cbd5e1; background: #ffffff; color: #64748b; }
+        .kp-multi-filter-add { border-color: #ea580c !important; color: #ea580c !important; }
+        .kp-multi-filter-add:hover { background: #ea580c !important; color: #ffffff !important; }
+        .kp-multi-filter-icon:disabled { opacity: 0.38; }
+
+        .btn-orange-primary {
+            background-color: #ea580c;
+            border: 1px solid #ea580c;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 0.78rem;
+            border-radius: 999px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-orange-primary:hover {
+            background-color: #c2410c;
+            border-color: #c2410c;
+            color: #ffffff;
+        }
+
+        /* Table Card */
+        .kp-table-card { margin-top: 14px; }
+        .kp-section-header { padding: 16px 22px; border-bottom: 1px solid #e2e8f0; }
 
         .kp-table {
             min-width: 1120px;
             margin: 0;
-            color: var(--kp-text);
+            color: #0f172a;
         }
 
         .kp-table > :not(caption) > * > * {
-            padding: 11px 14px;
-            border-bottom-color: var(--kp-border);
+            padding: 13px 16px;
+            border-bottom-color: #f1f5f9;
             vertical-align: middle;
         }
 
         .kp-table thead th {
-            border-bottom-width: 1px;
-            background: var(--kp-surface-soft);
-            color: #5f6974;
-            font-size: .62rem;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: #475569;
+            font-size: 0.68rem;
             font-weight: 700;
-            letter-spacing: .025em;
+            letter-spacing: 0.04em;
             text-transform: uppercase;
             white-space: nowrap;
         }
 
         .kp-table tbody td {
-            background: var(--kp-surface);
-            color: var(--kp-text);
-            font-size: .72rem;
-        }
-
-        .kp-table tbody tr:last-child td {
-            border-bottom: 0;
+            background: #ffffff;
+            color: #0f172a;
+            font-size: 0.78rem;
         }
 
         .kp-table tbody tr:hover td {
-            background: var(--kp-surface-soft);
+            background: #f8fafc;
         }
 
         .kp-sort-button {
@@ -378,368 +421,201 @@ if (!function_exists('render_wadek_client_filter')) {
             font-weight: inherit;
             letter-spacing: inherit;
             text-transform: inherit;
+            text-decoration: none;
         }
 
-        .kp-sort-button i {
-            color: #8c96a1;
-            font-size: .68rem;
-        }
+        .kp-sort-button i { color: #94a3b8; font-size: 0.72rem; }
 
-        .kp-primary-text {
-            color: var(--kp-text);
-            font-size: .72rem;
-            font-weight: 700;
-        }
-
-        .kp-secondary-text {
-            margin-top: 2px;
-            color: var(--kp-muted);
-            font-size: .61rem;
-        }
-
-        .kp-item-list {
-            display: grid;
-            gap: 3px;
-        }
-
-        .kp-item-meta {
-            margin-left: 8px;
-            color: var(--kp-muted);
-            font-size: .61rem;
-            white-space: nowrap;
-        }
+        .kp-primary-text { color: #0f172a; font-size: 0.8rem; font-weight: 700; }
+        .kp-secondary-text { margin-top: 2px; color: #64748b; font-size: 0.68rem; }
+        .kp-item-list { display: grid; gap: 3px; }
+        .kp-item-meta { margin-left: 8px; color: #ea580c; font-weight: 600; font-size: 0.7rem; }
 
         .kp-detail-button {
-            min-height: 30px;
-            padding: 5px 13px;
-            border-color: #0d6efd;
+            min-height: 32px;
+            padding: 5px 16px;
+            border: 1.5px solid #0284c7;
+            color: #0284c7;
+            background: transparent;
             border-radius: 999px;
-            font-size: .67rem;
-            font-weight: 600;
+            font-size: 0.72rem;
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }
+
+        .kp-detail-button:hover {
+            background: #0284c7;
+            color: #ffffff;
         }
 
         .kp-empty-row td {
-            padding: 38px 18px !important;
-            color: var(--kp-muted) !important;
+            padding: 42px 18px !important;
+            color: #64748b !important;
             text-align: center;
         }
 
-        .kp-section-header {
-            padding: 16px 19px;
-            border-bottom: 1px solid var(--kp-border);
-        }
-
+        /* Pagination Footer */
         .kp-pagination-footer {
             display: grid;
             grid-template-columns: 1fr auto 1fr;
             align-items: center;
             gap: 14px;
-            padding: 14px 19px;
-            border-top: 1px solid var(--kp-border);
-            background: var(--kp-surface);
+            padding: 14px 22px;
+            border-top: 1px solid #e2e8f0;
+            background: #ffffff;
         }
 
-        .kp-page-size {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            color: var(--kp-muted);
-            font-size: .7rem;
-        }
-
-        .kp-page-size select {
-            width: auto;
-            min-width: 66px;
-            height: 31px;
-            border-color: #cbd3dc;
-            background: var(--kp-surface);
-            color: var(--kp-text);
-            font-size: .7rem;
-        }
-
-        .kp-page-status {
-            color: var(--kp-muted);
-            font-size: .7rem;
-            text-align: center;
-        }
-
-        .kp-pagination-nav {
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        .kp-pagination {
-            display: flex;
-            gap: 4px;
-            margin: 0;
-            padding: 0;
-            list-style: none;
-        }
+        .kp-page-size { display: flex; align-items: center; gap: 9px; color: #64748b; font-size: 0.75rem; }
+        .kp-page-size select { width: auto; min-width: 68px; height: 32px; min-height: 32px; font-size: 0.75rem; }
+        .kp-page-status { color: #64748b; font-size: 0.75rem; text-align: center; }
+        .kp-pagination-nav { display: flex; justify-content: flex-end; }
+        .kp-pagination { display: flex; gap: 4px; margin: 0; padding: 0; list-style: none; }
 
         .kp-page-button {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 31px;
-            height: 31px;
-            padding: 0 7px;
-            border: 1px solid #cbd3dc;
+            min-width: 32px;
+            height: 32px;
+            padding: 0 8px;
+            border: 1px solid #cbd5e1;
             border-radius: 6px;
-            background: var(--kp-surface);
-            color: var(--kp-text);
-            font-size: .69rem;
-            font-weight: 500;
+            background: #ffffff;
+            color: #334155;
+            font-size: 0.72rem;
+            font-weight: 600;
             text-decoration: none;
-            transition: all .16s ease;
+            transition: all 0.16s ease;
         }
 
         .kp-page-button:hover:not(.disabled):not(.is-active) {
-            border-color: var(--kp-orange);
-            background: var(--kp-orange-soft);
-            color: #965600;
+            border-color: #ea580c;
+            background: #fff7ed;
+            color: #c2410c;
         }
 
         .kp-page-button.is-active {
-            border-color: var(--kp-orange);
-            background: var(--kp-orange);
-            color: #fff;
+            border-color: #ea580c;
+            background: #ea580c;
+            color: #ffffff;
             font-weight: 700;
         }
 
         .kp-page-button.disabled {
-            border-color: var(--kp-border);
-            color: #9da7b2;
+            border-color: #e2e8f0;
+            color: #94a3b8;
             pointer-events: none;
         }
 
         /* Modal Styles */
-        .kp-loan-modal .modal-dialog {
-            max-width: 780px;
-        }
+        .kp-loan-modal .modal-dialog { max-width: 780px; }
+        .kp-loan-modal .modal-content { border: 1px solid #e2e8f0; border-radius: 16px; background: #ffffff; box-shadow: 0 20px 50px rgba(15, 23, 42, 0.15); overflow: hidden; }
+        .kp-loan-modal .modal-header { padding: 18px 24px 16px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
+        .kp-modal-kicker { color: #64748b; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+        .kp-loan-modal .modal-title { margin-top: 2px; color: #0f172a; font-size: 1.2rem; font-weight: 700; }
+        .kp-modal-meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+        .kp-meta-box { padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; }
+        .kp-meta-label { color: #64748b; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+        .kp-meta-value { margin-top: 3px; color: #0f172a; font-size: 0.78rem; font-weight: 700; }
+        .kp-loan-modal .modal-body { padding: 22px 24px; }
+        .kp-modal-section + .kp-modal-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; }
+        .kp-modal-section-title { margin: 0 0 10px; color: #0f172a; font-size: 0.85rem; font-weight: 700; }
+        .kp-purpose { margin: 7px 0 0; color: #1e293b; font-size: 0.8rem; line-height: 1.6; }
 
-        .kp-loan-modal .modal-content {
-            border: 1px solid var(--kp-border);
-            border-radius: 12px;
-            background: var(--kp-surface);
-            box-shadow: 0 16px 45px rgba(25, 36, 50, .14);
-        }
+        .kp-detail-table { overflow: hidden; margin-top: 9px; border: 1px solid #e2e8f0; border-radius: 8px; }
+        .kp-detail-table table { margin: 0; color: #0f172a; }
+        .kp-detail-table th, .kp-detail-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.75rem; vertical-align: middle; }
+        .kp-detail-table th { background: #f8fafc; color: #64748b; font-size: 0.65rem; letter-spacing: 0.04em; text-transform: uppercase; }
+        .kp-detail-table td { background: #ffffff; color: #0f172a; }
 
-        .kp-loan-modal .modal-header {
-            padding: 17px 21px 15px;
-            border-bottom-color: var(--kp-border);
-            background: var(--kp-surface-soft);
-        }
+        .kp-loan-modal .modal-footer { gap: 8px; padding: 16px 24px; border-top: 1px solid #e2e8f0; background: #f8fafc; }
+        .kp-loan-modal .modal-footer .btn { min-width: 95px; min-height: 38px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
 
-        .kp-modal-kicker {
-            color: var(--kp-muted);
-            font-size: .64rem;
-            font-weight: 700;
-            letter-spacing: .04em;
-            text-transform: uppercase;
-        }
-
-        .kp-loan-modal .modal-title {
-            margin-top: 1px;
-            color: var(--kp-text);
-            font-size: 1.15rem;
-            font-weight: 700;
-        }
-
-        .kp-modal-meta {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 10px;
-            margin-top: 12px;
-        }
-
-        .kp-meta-box {
-            padding: 9px 12px;
-            border: 1px solid var(--kp-border);
-            border-radius: 7px;
-            background: var(--kp-surface);
-        }
-
-        .kp-meta-label {
-            color: var(--kp-muted);
-            font-size: .6rem;
-            font-weight: 700;
-            letter-spacing: .045em;
-            text-transform: uppercase;
-        }
-
-        .kp-meta-value {
-            margin-top: 3px;
-            color: var(--kp-text);
-            font-size: .75rem;
-            font-weight: 600;
-        }
-
-        .kp-loan-modal .modal-body {
-            padding: 19px 21px;
-        }
-
-        .kp-modal-section + .kp-modal-section {
-            margin-top: 18px;
-            padding-top: 18px;
-            border-top: 1px solid var(--kp-border);
-        }
-
-        .kp-modal-section-title {
-            margin: 0 0 8px;
-            color: var(--kp-text);
-            font-size: .82rem;
-            font-weight: 700;
-        }
-
-        .kp-purpose {
-            margin: 7px 0 0;
-            color: var(--kp-text);
-            font-size: .76rem;
-            line-height: 1.65;
-        }
-
-        .kp-detail-table {
-            overflow: hidden;
-            margin-top: 9px;
-            border: 1px solid var(--kp-border);
-            border-radius: 8px;
-        }
-
-        .kp-detail-table table {
-            margin: 0;
-            color: var(--kp-text);
-        }
-
-        .kp-detail-table th,
-        .kp-detail-table td {
-            padding: 9px 10px;
-            border-bottom-color: var(--kp-border);
-            font-size: .67rem;
-            vertical-align: middle;
-        }
-
-        .kp-detail-table th {
-            background: var(--kp-surface-soft);
-            color: var(--kp-muted);
-            font-size: .59rem;
-            letter-spacing: .035em;
-            text-transform: uppercase;
-        }
-
-        .kp-detail-table td {
-            background: var(--kp-surface);
-            color: var(--kp-text);
-        }
-
-        .kp-loan-modal textarea {
-            margin-top: 8px;
-            min-height: 92px;
-            resize: vertical;
-            border-color: #cbd3dc;
-            background: var(--kp-surface);
-            color: var(--kp-text);
-            font-size: .73rem;
-        }
-
-        .kp-loan-modal textarea:focus {
-            border-color: var(--kp-orange);
-            box-shadow: 0 0 0 .2rem rgba(255, 107, 0, .12);
-        }
-
-        .kp-loan-modal .modal-footer {
-            gap: 8px;
-            padding: 14px 21px;
-            border-top-color: var(--kp-border);
-            background: var(--kp-surface-soft);
-        }
-
-        .kp-loan-modal .modal-footer .btn {
-            min-width: 92px;
-            min-height: 36px;
+        .kp-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
             border-radius: 999px;
-            font-size: .7rem;
-            font-weight: 600;
+            font-size: 0.7rem;
+            font-weight: 700;
         }
+        .kp-status-badge.is-current { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+        .kp-status-badge.is-completed { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+        .kp-status-badge.is-rejected { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+        .kp-status-badge.is-pending { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
 
         @media (max-width: 767.98px) {
             .kp-multi-filter { padding: 14px; }
-            .kp-multi-filter-heading { flex-direction: column; gap: 7px; }
-            .kp-multi-filter-row { grid-template-columns: 1fr; gap: 8px; padding: 11px; border: 1px solid var(--kp-border); border-radius: 9px; }
+            .kp-multi-filter-row { grid-template-columns: 1fr; gap: 8px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; }
             .kp-multi-filter-tools { justify-content: flex-end; }
-            .kp-page-content { padding-top: 16px; }
-            .kp-page-heading, .kp-summary { align-items: flex-start; }
-            .kp-context { justify-content: flex-start; }
-            .kp-summary { flex-direction: column; padding: 15px; }
-            .kp-pagination-footer { grid-template-columns: 1fr; justify-items: center; padding-block: 12px; }
-            .kp-page-size, .kp-pagination-nav { justify-content: center; }
+            .kp-pagination-footer { grid-template-columns: 1fr; justify-items: center; }
             .kp-modal-meta { grid-template-columns: 1fr; }
-            .kp-loan-modal .modal-header, .kp-loan-modal .modal-body, .kp-loan-modal .modal-footer { padding-inline: 16px; }
-            .kp-loan-modal .modal-footer .btn { flex: 1 1 auto; min-width: 0; }
         }
     </style>
 </head>
-<body class="scm-dashboard scm-dashboard-kaprodi wadek-loan-page">
+<body>
 
     <!-- Curved Sidebar Navigation -->
     <?php $this->load->view('components/curved_sidebar'); ?>
 
     <div id="laaMainContentWrapper" class="page-wrapper-for-sidebar">
-        <!-- Topbar -->
-        <header class="topbar sticky-top">
-            <div class="container-fluid px-3 px-lg-4 py-3">
-                <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-                    <div class="dashboard-topbar-brand d-flex align-items-center gap-3">
-                        <span class="brand-mark"><i class="bi bi-shield-check"></i></span>
-                        <div>
-                            <div class="fw-bold">Panel Wakil Dekan (Wadek)</div>
-                        </div>
+        <!-- Clean Light Topbar -->
+        <header class="kp-clean-topbar sticky-top">
+            <div class="d-flex align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="brand-mark"><i class="bi bi-shield-check"></i></span>
+                    <div>
+                        <div class="fw-bold text-dark" style="font-size: 0.95rem;">Panel Wakil Dekan (Wadek)</div>
                     </div>
-                    <div class="topbar-actions d-flex align-items-center gap-2 ms-auto">
-                        <div class="dropdown">
-                            <button
-                                id="wadekNotificationButton"
-                                class="btn btn-outline-light btn-sm rounded-circle notif-bell position-relative"
-                                type="button"
-                                data-bs-toggle="dropdown"
-                                aria-expanded="false"
-                                aria-label="Notifikasi"
-                            >
-                                <i class="bi bi-bell"></i>
-                                <?php if ($notif_count > 0): ?>
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"><?= $notif_count ?></span>
-                                <?php endif; ?>
-                            </button>
-                            <div class="dropdown-menu dropdown-menu-end shadow border-0 p-2 notif-menu">
-                                <div class="fw-bold px-2 py-1">Notifikasi</div>
-                                <?php if (empty($notif_items)): ?>
-                                    <div class="small text-muted px-2 py-3">Belum ada notifikasi.</div>
-                                <?php else: ?>
-                                    <?php foreach ($notif_items as $notification): ?>
-                                        <div class="dropdown-item rounded-3 py-2 <?= empty($notification->is_read) ? 'bg-light' : '' ?>">
-                                            <div class="fw-semibold small"><?= html_escape($notification->judul) ?></div>
-                                            <div class="small text-muted text-wrap"><?= html_escape($notification->pesan) ?></div>
-                                            <div class="small text-muted mt-1"><?= html_escape(waktu_indonesia($notification->created_at)) ?></div>
-                                        </div>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </div>
-                        </div>
+                </div>
+                <div class="d-flex align-items-center gap-2 ms-auto">
+                    <div class="dropdown">
                         <button
+                            id="wadekNotificationButton"
+                            class="notif-bell position-relative"
                             type="button"
-                            class="btn btn-outline-light btn-sm rounded-circle theme-toggle"
-                            data-theme-toggle
-                            aria-label="Ubah tema"
-                            title="Ubah tema"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Notifikasi"
                         >
-                            <i class="bi bi-moon-stars" aria-hidden="true"></i>
+                            <i class="bi bi-bell"></i>
+                            <?php if ($notif_count > 0): ?>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 9px;"><?= $notif_count ?></span>
+                            <?php endif; ?>
                         </button>
-                        <a href="<?= site_url('peminjaman_barang') ?>" class="btn btn-sm btn-outline-light rounded-pill px-3">
-                            <i class="bi bi-box-seam me-1"></i> Web User
-                        </a>
-                        <a href="<?= site_url('login/logout') ?>" class="btn btn-sm btn-fik rounded-pill px-3">
-                            <i class="bi bi-box-arrow-right me-1"></i> Logout
-                        </a>
+                        <div class="dropdown-menu dropdown-menu-end shadow border-0 p-2 notif-menu">
+                            <div class="fw-bold px-2 py-1" style="font-size: 0.85rem;">Notifikasi</div>
+                            <?php if (empty($notif_items)): ?>
+                                <div class="small text-muted px-2 py-3">Belum ada notifikasi.</div>
+                            <?php else: ?>
+                                <?php foreach ($notif_items as $notification): ?>
+                                    <div class="dropdown-item rounded-3 py-2 <?= empty($notification->is_read) ? 'bg-light' : '' ?>">
+                                        <div class="fw-semibold small"><?= html_escape($notification->judul) ?></div>
+                                        <div class="small text-muted text-wrap"><?= html_escape($notification->pesan) ?></div>
+                                        <div class="small text-muted mt-1" style="font-size: 10px;"><?= html_escape(waktu_indonesia($notification->created_at)) ?></div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
                     </div>
+                    <button
+                        type="button"
+                        class="theme-toggle"
+                        data-theme-toggle
+                        aria-label="Ubah tema"
+                        title="Ubah tema"
+                    >
+                        <i class="bi bi-moon-stars" aria-hidden="true"></i>
+                    </button>
+                    <a href="<?= site_url('peminjaman_barang') ?>" class="btn-topbar-user">
+                        <i class="bi bi-box-seam"></i>
+                        <span>Web User</span>
+                    </a>
+                    <a href="<?= site_url('login/logout') ?>" class="btn-topbar-logout">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Logout</span>
+                    </a>
                 </div>
             </div>
         </header>
@@ -780,7 +656,7 @@ if (!function_exists('render_wadek_client_filter')) {
             </section>
 
             <!-- Filter Pencarian Card -->
-            <section class="kp-card kp-filter-card mt-3" aria-label="Filter pengajuan peminjaman luar kampus">
+            <section class="kp-card mt-3" aria-label="Filter pengajuan peminjaman luar kampus">
                 <?php render_wadek_client_filter('wadekApprovalFilters', $filter_rows ?? [], $per_page); ?>
             </section>
 
@@ -795,7 +671,7 @@ if (!function_exists('render_wadek_client_filter')) {
                             <tr>
                                 <?php foreach (['number' => 'No. Peminjaman', 'peminjam' => 'Nama Peminjam', 'barang' => 'Barang', 'lab' => 'Laboratorium', 'masa' => 'Masa Pinjam', 'status' => 'Status'] as $sort_key => $sort_label): ?>
                                     <th scope="col" aria-sort="<?= scm_sort_aria($sort_key, $approval_sort, $approval_dir) ?>">
-                                        <a class="kp-sort-button scm-sort-control <?= $approval_sort === $sort_key ? 'is-active' : '' ?>" href="<?= scm_sort_url($sort_key, $approval_sort, $approval_dir) ?>">
+                                        <a class="kp-sort-button <?= $approval_sort === $sort_key ? 'text-primary fw-bold' : '' ?>" href="<?= scm_sort_url($sort_key, $approval_sort, $approval_dir) ?>">
                                             <?= html_escape($sort_label) ?>
                                             <i class="bi <?= scm_sort_icon_class($sort_key, $approval_sort, $approval_dir) ?>" aria-hidden="true"></i>
                                         </a>
@@ -822,7 +698,6 @@ if (!function_exists('render_wadek_client_filter')) {
                                         }
                                     }
                                     $laboratories = array_values(array_unique($laboratories));
-                                    $period = masa_pinjam_indonesia($p->tanggal_pinjam ?? null, $p->tanggal_kembali_rencana ?? null);
                                     $status = $p->status ?? '-';
                                     $can_act = scm_loan_can_act($p, 'wadek');
                                     ?>
@@ -838,7 +713,7 @@ if (!function_exists('render_wadek_client_filter')) {
                                         <td>
                                             <div class="kp-item-list">
                                                 <?php if (empty($p->detail_barang)): ?>
-                                                    <span><?= html_escape($p->nama_aset ?? 'Barang') ?> (<?= (int)($p->jumlah_pinjam ?? 1) ?> unit)</span>
+                                                    <span><?= html_escape($p->nama_aset ?? 'Barang') ?> <span class="kp-item-meta"><?= (int)($p->jumlah_pinjam ?? 1) ?> unit</span></span>
                                                 <?php else: ?>
                                                     <?php foreach ($p->detail_barang as $detail): ?>
                                                         <div>
@@ -866,7 +741,7 @@ if (!function_exists('render_wadek_client_filter')) {
                                         <td class="text-end">
                                             <button
                                                 type="button"
-                                                class="btn btn-sm btn-outline-primary kp-detail-button"
+                                                class="btn kp-detail-button"
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#wadekApproval<?= (int) $p->id_peminjaman ?>"
                                             >
@@ -1140,16 +1015,6 @@ if (!function_exists('render_wadek_client_filter')) {
                 var row = event.target.closest('[data-filter-row]');
                 syncInput(row, true);
                 row.querySelector('.kp-multi-filter-value').focus();
-            });
-            root.querySelector('[data-kp-filter-reset]')?.addEventListener('click', function () {
-                var rows = Array.prototype.slice.call(list.querySelectorAll('[data-filter-row]'));
-                rows.slice(1).forEach(function (row) { row.remove(); });
-                if (rows[0]) {
-                    var select = rows[0].querySelector('.kp-multi-filter-field');
-                    if (select) select.selectedIndex = 0;
-                    syncInput(rows[0], true);
-                }
-                updateButtons();
             });
             return root;
         }
