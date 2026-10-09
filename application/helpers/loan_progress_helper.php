@@ -18,10 +18,9 @@ if (!function_exists('scm_loan_progress')) {
             ['label' => 'Persetujuan Kaprodi', 'description' => 'Kaprodi memeriksa dan menyetujui pengajuan.'],
             ['label' => 'Verifikasi Laboran', 'description' => 'Laboran memeriksa barang, stok, dan kelayakan peminjaman.'],
             ['label' => 'Persetujuan Kaur', 'description' => 'Kaur memberikan persetujuan akhir peminjaman.'],
-            ['label' => 'Finalisasi QR', 'description' => 'Laboran mengunci transaksi dan mengaktifkan QR.'],
-            ['label' => 'Pengambilan Barang', 'description' => 'Barang diserahterimakan kepada peminjam.'],
+            ['label' => 'Pengambilan Barang', 'description' => 'Barang diserahterimakan kepada peminjam melalui scan QR oleh laboran.'],
             ['label' => 'Peminjaman & Pengembalian', 'description' => 'Barang sedang digunakan dan menunggu dikembalikan.'],
-            ['label' => 'Selesai', 'description' => 'Barang telah diterima kembali dan transaksi selesai.'],
+            ['label' => 'Selesai', 'description' => 'Barang telah diterima kembali melalui scan QR pengembalian.'],
         ];
 
         $current_index = 0;
@@ -52,13 +51,8 @@ if (!function_exists('scm_loan_progress')) {
                 break;
 
             case 'Disetujui (Menunggu Finalisasi QR)':
-                $current_index = 4;
-                $stage_label = 'Finalisasi QR';
-                $status_label = 'Menunggu Finalisasi QR oleh Laboran';
-                break;
-
             case 'Disetujui (Menunggu Pengambilan)':
-                $current_index = 5;
+                $current_index = 4;
                 $stage_label = 'Pengambilan';
                 $status_label = 'QR Aktif — Menunggu Pengambilan';
                 $tone = 'ready';
@@ -66,7 +60,7 @@ if (!function_exists('scm_loan_progress')) {
 
             case 'Sedang Dipinjam':
             case 'Dipinjam':
-                $current_index = 6;
+                $current_index = 5;
                 $stage_label = 'Pengembalian';
                 $status_label = 'Sedang Dipinjam — Menunggu Pengembalian';
                 $tone = 'active';
@@ -74,7 +68,7 @@ if (!function_exists('scm_loan_progress')) {
 
             case 'Dikembalikan':
             case 'Selesai':
-                $current_index = 7;
+                $current_index = 6;
                 $stage_label = 'Selesai';
                 $status_label = 'Selesai — Barang Dikembalikan';
                 $tone = 'complete';
@@ -178,12 +172,8 @@ if (!function_exists('scm_loan_can_act')) {
             return $status === 'Menunggu ACC Kaur'
                 && $kaprodi === 'Disetujui' && $laboran === 'Disetujui' && $kaur === 'Pending';
         }
-        if ($role === 'finalisasi_qr') {
-            return $status === 'Disetujui (Menunggu Finalisasi QR)'
-                && $kaprodi === 'Disetujui' && $laboran === 'Disetujui' && $kaur === 'Disetujui';
-        }
-        if ($role === 'serah_terima') {
-            return $status === 'Disetujui (Menunggu Pengambilan)' && (int) ($loan->qr_locked ?? 0) === 1;
+        if ($role === 'finalisasi_qr' || $role === 'serah_terima') {
+            return in_array($status, ['Disetujui (Menunggu Pengambilan)', 'Disetujui (Menunggu Finalisasi QR)'], true);
         }
         if ($role === 'pengembalian') {
             return in_array($status, ['Sedang Dipinjam', 'Dipinjam'], true);

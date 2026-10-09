@@ -53,14 +53,14 @@ class Peminjaman extends CI_Controller {
             redirect('kaur/dashboard/peminjaman');
         }
         $update = [
-            'status' => 'Disetujui (Menunggu Finalisasi QR)',
+            'status' => 'Disetujui (Menunggu Pengambilan)',
             'status_kaur' => 'Disetujui',
             'catatan_kaur' => $this->input->post('catatan_kaur', true),
             'tgl_approve_kaur' => date('Y-m-d H:i:s'),
             'id_approver_kaur' => $this->session->userdata('id_user'),
-            'qr_locked' => 0,
-            'qr_finalized_at' => null,
-            'qr_finalized_by' => null,
+            'qr_locked' => 1,
+            'qr_finalized_at' => date('Y-m-d H:i:s'),
+            'qr_finalized_by' => $this->session->userdata('id_user'),
         ];
 
         $ok = $this->PeminjamanBarang_model->approve_group_with_reservation($group_id, ['Menunggu ACC Kaur'], $update);
@@ -69,7 +69,7 @@ class Peminjaman extends CI_Controller {
                 null,
                 $peminjaman->id_user,
                 'Peminjaman disetujui Kaur',
-                'Peminjaman sudah di-ACC Kaur dan sedang difinalkan Laboran sebelum QR transaksi ditampilkan.',
+                'Peminjaman Anda telah disetujui resmi oleh Kaur. QR Code transaksi sudah aktif, silakan lakukan pengambilan barang di laboratorium.',
                 site_url('peminjaman/riwayat')
             );
         }
@@ -77,13 +77,13 @@ class Peminjaman extends CI_Controller {
             $this->PeminjamanBarang_model->create_notifikasi(
                 'laboran',
                 null,
-                'Finalisasi QR transaksi',
-                ($peminjaman->nama_peminjam ?? 'Peminjam') . ' sudah disetujui Kaur. Cek data lalu finalkan QR transaksi sebelum serah terima.',
+                'Barang Siap Diserahterimakan',
+                ($peminjaman->nama_peminjam ?? 'Peminjam') . ' sudah disetujui Kaur dan siap untuk serah terima fisik barang.',
                 site_url('admin/peminjaman')
             );
         }
 
-        $this->session->set_flashdata($ok ? 'success' : 'error', $ok ? 'Pengajuan disetujui. Data menunggu finalisasi QR oleh Laboran.' : 'Gagal menyetujui pengajuan.');
+        $this->session->set_flashdata($ok ? 'success' : 'error', $ok ? 'Pengajuan berhasil disetujui. QR Code sudah aktif untuk pengambilan barang.' : 'Gagal menyetujui pengajuan.');
         redirect('kaur/dashboard/peminjaman');
     }
 
@@ -210,23 +210,23 @@ class Peminjaman extends CI_Controller {
                     continue;
                 }
                 $ok = $this->PeminjamanBarang_model->approve_group_with_reservation($group_id, ['Menunggu ACC Kaur'], [
-                    'status' => 'Disetujui (Menunggu Finalisasi QR)',
+                    'status' => 'Disetujui (Menunggu Pengambilan)',
                     'status_kaur' => 'Disetujui',
                     'catatan_kaur' => '',
                     'tgl_approve_kaur' => date('Y-m-d H:i:s'),
                     'id_approver_kaur' => $this->session->userdata('id_user'),
-                    'qr_locked' => 0,
-                    'qr_finalized_at' => null,
-                    'qr_finalized_by' => null,
+                    'qr_locked' => 1,
+                    'qr_finalized_at' => date('Y-m-d H:i:s'),
+                    'qr_finalized_by' => $this->session->userdata('id_user'),
                 ]);
                 if ($ok && !empty($peminjaman->id_user)) {
                     $this->PeminjamanBarang_model->create_notifikasi(null, $peminjaman->id_user, 'Peminjaman disetujui Kaur',
-                        'Peminjaman sudah di-ACC Kaur dan sedang difinalkan Laboran sebelum QR transaksi ditampilkan.',
+                        'Peminjaman Anda telah disetujui resmi oleh Kaur. QR Code transaksi sudah aktif, silakan lakukan pengambilan barang di laboratorium.',
                         site_url('peminjaman/riwayat'));
                 }
                 if ($ok) {
-                    $this->PeminjamanBarang_model->create_notifikasi('laboran', null, 'Finalisasi QR transaksi',
-                        ($peminjaman->nama_peminjam ?? 'Peminjam') . ' sudah disetujui Kaur. Cek data lalu finalkan QR transaksi sebelum serah terima.',
+                    $this->PeminjamanBarang_model->create_notifikasi('laboran', null, 'Barang Siap Diserahterimakan',
+                        ($peminjaman->nama_peminjam ?? 'Peminjam') . ' sudah disetujui Kaur dan siap untuk serah terima fisik barang.',
                         site_url('admin/peminjaman'));
                 }
             } else {
@@ -262,7 +262,7 @@ class Peminjaman extends CI_Controller {
                 'partial' => $processed > 0 && $skipped > 0,
                 'message' => $message,
                 'action' => $action,
-                'status' => $action === 'approve' ? 'Disetujui (Menunggu Finalisasi QR)' : 'Ditolak',
+                'status' => $action === 'approve' ? 'Disetujui (Menunggu Pengambilan)' : 'Ditolak',
                 'processed' => $processed,
                 'skipped' => $skipped,
                 'processed_ids' => $processed_ids,
