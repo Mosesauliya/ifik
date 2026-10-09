@@ -278,18 +278,36 @@ class Peminjaman_barang extends CI_Controller {
         $allowed_filter_fields = ['all', 'barang', 'kode', 'status', 'tanggal'];
         $filter_rows = [];
 
-        foreach ($filter_fields as $index => $field) {
-            if (count($filter_rows) >= 4) break;
-            $field = (string) $field;
-            if (!in_array($field, $allowed_filter_fields, true)) continue;
+        $search_q = trim((string) $this->input->get('q', true));
+        $search_cat = trim((string) $this->input->get('cat', true) ?: 'all');
+        if (!in_array($search_cat, $allowed_filter_fields, true)) {
+            $search_cat = 'all';
+        }
+
+        if (!empty($filter_fields)) {
+            foreach ($filter_fields as $index => $field) {
+                if (count($filter_rows) >= 4) break;
+                $field = (string) $field;
+                if (!in_array($field, $allowed_filter_fields, true)) continue;
+                $val = trim((string) ($filter_values[$index] ?? ''));
+                if ($val !== '') {
+                    $filter_rows[] = [
+                        'field' => $field,
+                        'value' => $val,
+                    ];
+                }
+            }
+        }
+
+        if (empty($filter_rows) && $search_q !== '') {
             $filter_rows[] = [
-                'field' => $field,
-                'value' => trim((string) ($filter_values[$index] ?? '')),
+                'field' => $search_cat,
+                'value' => $search_q,
             ];
         }
 
         if (empty($filter_rows)) {
-            $filter_rows = [['field' => 'all', 'value' => '']];
+            $filter_rows = [['field' => $search_cat, 'value' => $search_q]];
         }
 
         $criteria = array_values(array_filter(
@@ -336,6 +354,8 @@ class Peminjaman_barang extends CI_Controller {
             );
         }
 
+        $data['search'] = $search_q ?: ($filter_rows[0]['value'] ?? '');
+        $data['cat'] = $search_cat ?: ($filter_rows[0]['field'] ?? 'all');
         $data['filter_rows'] = $filter_rows;
         $data['history_sort'] = $history_sort;
         $data['history_dir'] = $history_dir;
@@ -348,6 +368,23 @@ class Peminjaman_barang extends CI_Controller {
 
         $this->attach_notifikasi($data);
         $this->load->view('peminjaman_barang/riwayat', $data);
+    }
+
+    /**
+     * Endpoint Autocomplete Pencarian Riwayat Peminjaman Barang (Mirip Admin LAA)
+     */
+    public function autocomplete() {
+        $term = trim((string) $this->input->get('q', true));
+        $cat  = trim((string) $this->input->get('cat', true) ?: 'all');
+        $nim_nip = (string) $this->session->userdata('username');
+        $peminjam = $this->Peminjaman_barang_model->get_peminjam_by_nim_nip($nim_nip);
+        $id_peminjam = $peminjam ? $peminjam->id_peminjam : 0;
+
+        $results = $this->Peminjaman_barang_model->autocomplete_riwayat($id_peminjam, $term, $cat);
+
+        $this->output
+             ->set_content_type('application/json')
+             ->set_output(json_encode($results ?: []));
     }
 
     public function detail_barang($id_aset) {
