@@ -818,7 +818,7 @@ class PeminjamanBarang_model extends CI_Model {
         } elseif (!$has_explicit_sort && $action_role === 'laboran') {
             $this->db->order_by("CASE WHEN MAX(p.status) IN ('Menunggu Verifikasi Laboran','Menunggu Pengecekan Laboran','Menunggu Persetujuan') AND MAX(p.status_kaprodi) = 'Disetujui' AND MAX(p.status_laboran) = 'Pending' THEN 0 ELSE 1 END", 'ASC', false);
         } elseif (!$has_explicit_sort && $action_role === 'kaur') {
-            $this->db->order_by("CASE WHEN MAX(p.status) = 'Menunggu ACC Kaur' AND MAX(p.status_kaprodi) = 'Disetujui' AND MAX(p.status_laboran) = 'Disetujui' AND MAX(p.status_kaur) = 'Pending' THEN 0 ELSE 1 END", 'ASC', false);
+            $this->db->order_by("CASE WHEN MAX(p.status) = 'Menunggu ACC Kaur' AND MAX(p.status_kaprodi) = 'Disetujui' AND MAX(p.status_kaur) = 'Pending' THEN 0 ELSE 1 END", 'ASC', false);
         }
 
         if ($sort_key === 'barang') {
@@ -923,7 +923,7 @@ class PeminjamanBarang_model extends CI_Model {
             $this->db->where('p.status_kaprodi', 'Disetujui')->where('p.status_laboran', 'Pending');
         } elseif ($role === 'kaur') {
             $this->db->where('p.status', 'Menunggu ACC Kaur');
-            $this->db->where('p.status_kaprodi', 'Disetujui')->where('p.status_laboran', 'Disetujui')->where('p.status_kaur', 'Pending');
+            $this->db->where('p.status_kaprodi', 'Disetujui')->where('p.status_kaur', 'Pending');
         } else {
             return 0;
         }

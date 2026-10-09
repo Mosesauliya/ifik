@@ -170,7 +170,7 @@ if (!function_exists('scm_loan_can_act')) {
         }
         if ($role === 'kaur') {
             return $status === 'Menunggu ACC Kaur'
-                && $kaprodi === 'Disetujui' && $laboran === 'Disetujui' && $kaur === 'Pending';
+                && $kaprodi === 'Disetujui' && $kaur === 'Pending';
         }
         if ($role === 'finalisasi_qr' || $role === 'serah_terima') {
             return in_array($status, ['Disetujui (Menunggu Pengambilan)', 'Disetujui (Menunggu Finalisasi QR)'], true);
