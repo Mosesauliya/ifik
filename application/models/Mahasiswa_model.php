@@ -413,10 +413,10 @@ class Mahasiswa_model extends CI_Model {
             $fname = '';
             if (!empty($pt_data['file_' . $k])) {
                 $fname = $pt_data['file_' . $k];
-            } elseif ($b_obj && !empty($b_obj['file_name'])) {
-                $fname = $b_obj['file_name'];
             } elseif ($f_obj && !empty($f_obj['file'])) {
                 $fname = basename($f_obj['file']);
+            } elseif ($b_obj && !empty($b_obj['file_name'])) {
+                $fname = $b_obj['file_name'];
             }
             $files_result['file_' . $k] = $fname;
 
@@ -451,9 +451,10 @@ class Mahasiswa_model extends CI_Model {
             }
             $files_result['catatan_file_' . $k] = $c_dw;
 
-            $st_laa = $b_obj['status_verifikasi'] ?? ($f_obj['status_adminlaa'] ?? 'Pending');
+            // Ambil status & komentar Admin Layanan murni dari table file_pendaftaran
+            $st_laa = !empty($f_obj['status_adminlaa']) ? $f_obj['status_adminlaa'] : 'Pending';
             $files_result['status_' . $k] = $st_laa;
-            $files_result['catatan_admin_' . $k] = $b_obj['catatan'] ?? ($f_obj['catatan_adminlaa'] ?? '');
+            $files_result['catatan_admin_' . $k] = $f_obj['komentar'] ?? '';
             
             $st_laa_clean = strtolower(trim((string)$st_laa));
             if ($st_laa_clean === 'invalid' || strpos($st_laa_clean, 'revisi') !== false || strpos($st_laa_clean, 'tolak') !== false || strpos($st_laa_clean, 'rejected') !== false) {
