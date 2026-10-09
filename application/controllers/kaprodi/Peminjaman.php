@@ -282,7 +282,7 @@ class Peminjaman extends CI_Controller {
     }
 
     private function is_loan_in_scope($peminjaman) {
-        return true; // Mode Demo: Mengizinkan pemrosesan seluruh pengajuan
+        return true; // Mode Demo: Izinkan approval semua data peminjaman tanpa penyaringan prodi yang ketat
     }
 
     private function scope_filters() {

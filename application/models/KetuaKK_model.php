@@ -416,9 +416,17 @@ class KetuaKK_model extends CI_Model {
                 } else {
                     $tl_data = array(
                         'id_guidance' => $gId,
-                        'status'      => $status,
-                        'created_at'  => date('Y-m-d H:i:s')
+                        'status'      => $status
                     );
+                    if ($this->db->field_exists('created_at', 'thesis_lecturers')) {
+                        $tl_data['created_at'] = date('Y-m-d H:i:s');
+                    }
+                    if ($this->db->field_exists('date', 'thesis_lecturers')) {
+                        $tl_data['date'] = date('Y-m-d H:i:s');
+                    }
+                    if ($this->db->field_exists('date_edit', 'thesis_lecturers')) {
+                        $tl_data['date_edit'] = date('Y-m-d H:i:s');
+                    }
                     $this->db->insert('thesis_lecturers', $tl_data);
                 }
             }
@@ -434,7 +442,10 @@ class KetuaKK_model extends CI_Model {
                 $fp_update['komentar'] = $catatan;
             }
 
-            $this->db->where_in('id_mhs', $target_mhs_ids);
+            $this->db->group_start()
+                     ->where_in('id_mhs', $target_mhs_ids)
+                     ->or_like('id_mhs', $nim)
+                     ->group_end();
             $this->db->update('file_pendaftaran', $fp_update);
         }
 

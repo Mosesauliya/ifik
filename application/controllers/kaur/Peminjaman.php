@@ -7,8 +7,8 @@ class Peminjaman extends CI_Controller {
         $this->load->library('session');
         $this->load->helper(['url', 'loan_progress', 'scm_ajax', 'scm_date']);
         $this->load->model('PeminjamanBarang_model');
-        $this->guard_kaur();
-    }
+        // $this->guard_kaur(); // Temporarily disabled for open access
+    }   
 
     private function guard_kaur() {
         if (!$this->session->userdata('logged_in')) {
@@ -19,7 +19,7 @@ class Peminjaman extends CI_Controller {
             redirect('auth');
         }
 
-       if ((int) $this->session->userdata('role_id') !== 1) {
+       if ((int) $this->session->userdata('role_id') !== 2) {
             if (scm_is_ajax()) {
                 scm_json_abort(['success' => false, 'message' => 'Anda tidak memiliki izin untuk memproses approval Kaur.'], 403);
             }

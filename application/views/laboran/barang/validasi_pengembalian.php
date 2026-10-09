@@ -218,13 +218,18 @@ $boleh_kembali = !empty($qr_valid) && in_array(($peminjaman->status ?? ''), ['Se
                                         <th class="px-4 py-3.5">Nama Aset / Barang</th>
                                         <th class="px-4 py-3.5">Kode Aset</th>
                                         <th class="px-4 py-3.5">Ruangan / Lab</th>
+                                        <th class="px-4 py-3.5 text-center w-32">Stok Saat Ini</th>
                                         <th class="px-4 py-3.5 text-center w-28">Dipinjam</th>
                                         <th class="px-4 py-3.5 text-right w-44">Dikembalikan</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
                                     <?php foreach (($peminjaman->detail_barang ?? []) as $item): ?>
-                                        <?php $jumlah_pinjam = (int)($item->jumlah_pinjam ?? 0); ?>
+                                        <?php 
+                                            $jumlah_pinjam = (int)($item->jumlah_pinjam ?? 0); 
+                                            $tersedia = (int)($item->jumlah_tersedia ?? 0);
+                                            $total    = (int)($item->jumlah_total ?? 0);
+                                        ?>
                                         <tr class="hover:bg-slate-50/60 transition-colors">
                                             <td class="px-4 py-3.5">
                                                 <div class="font-bold text-slate-900"><?= html_escape($item->nama_aset ?? '-') ?></div>
@@ -234,6 +239,17 @@ $boleh_kembali = !empty($qr_valid) && in_array(($peminjaman->status ?? ''), ['Se
                                             </td>
                                             <td class="px-4 py-3.5 text-slate-600">
                                                 <?= html_escape($item->nama_ruangan ?? '-') ?>
+                                            </td>
+                                            <td class="px-4 py-3.5 text-center">
+                                                <div class="inline-flex flex-col items-center">
+                                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold <?= $tersedia > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/70' : 'bg-rose-50 text-rose-700 border border-rose-200/70' ?>" title="Stok tersedia di lab saat ini">
+                                                        <span class="w-1.5 h-1.5 rounded-full <?= $tersedia > 0 ? 'bg-emerald-500' : 'bg-rose-500' ?>"></span>
+                                                        <?= $tersedia ?> unit
+                                                    </span>
+                                                    <?php if ($total > 0): ?>
+                                                        <span class="text-[10px] text-slate-400 mt-0.5 font-medium">Total: <?= $total ?> unit</span>
+                                                    <?php endif; ?>
+                                                </div>
                                             </td>
                                             <td class="px-4 py-3.5 text-center font-bold text-slate-600">
                                                 <?= $jumlah_pinjam ?> unit

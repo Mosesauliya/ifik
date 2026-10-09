@@ -20,6 +20,11 @@ $barangNavItems = [
         'href'    => site_url('peminjaman_barang/riwayat'),
         'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'
     ],
+    [
+        'heading' => 'Kalender & Jadwal',
+        'href'    => site_url('peminjaman_barang/kalender'),
+        'icon_3d' => 'assets/images/icons_3d/kalender.png'
+    ],
 ];
 
 // Menu khusus Laboran / Admin untuk scanner serah terima fisik barang

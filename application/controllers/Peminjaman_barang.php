@@ -54,15 +54,21 @@ class Peminjaman_barang extends CI_Controller {
 
     private function attach_notifikasi(&$data) {
         $role = strtolower((string) $this->session->userdata('role'));
-        if (in_array($role, ['admin', 'laboran'], true)) {
+        $roleId = (int) ($this->session->userdata('role_id') ?? 0);
+        $userId = $this->session->userdata('id_user') ?: $this->session->userdata('user_id');
+
+        if (in_array($role, ['admin', 'laboran'], true) || in_array($roleId, [1, 21], true)) {
             $data['notifikasi'] = $this->Peminjaman_barang_model->get_notifikasi('laboran', null);
             $data['unread_notifikasi'] = $this->Peminjaman_barang_model->count_notifikasi_unread('laboran', null);
-        } elseif ($role === 'kaur') {
+        } elseif ($role === 'kaur' || $roleId === 2) {
             $data['notifikasi'] = $this->Peminjaman_barang_model->get_notifikasi('kaur', null);
             $data['unread_notifikasi'] = $this->Peminjaman_barang_model->count_notifikasi_unread('kaur', null);
+        } elseif ($role === 'kaprodi') {
+            $data['notifikasi'] = $this->Peminjaman_barang_model->get_notifikasi('kaprodi', null);
+            $data['unread_notifikasi'] = $this->Peminjaman_barang_model->count_notifikasi_unread('kaprodi', null);
         } else {
-            $data['notifikasi'] = $this->Peminjaman_barang_model->get_notifikasi(null, $this->session->userdata('id_user'));
-            $data['unread_notifikasi'] = $this->Peminjaman_barang_model->count_notifikasi_unread(null, $this->session->userdata('id_user'));
+            $data['notifikasi'] = $this->Peminjaman_barang_model->get_notifikasi(null, $userId);
+            $data['unread_notifikasi'] = $this->Peminjaman_barang_model->count_notifikasi_unread(null, $userId);
         }
     }
 
@@ -350,5 +356,28 @@ class Peminjaman_barang extends CI_Controller {
             show_404();
         }
         $this->load->view('peminjaman_barang/detail_barang', $data);
+    }
+
+    /**
+     * Halaman Kalender & Tabel Jadwal Peminjaman Barang
+     * URL: http://localhost/ifik/peminjaman_barang/kalender
+     */
+    public function kalender() {
+        $data['title'] = 'Kalender & Tabel Peminjaman Barang - IFIK';
+        $data['jadwal_peminjaman'] = $this->Peminjaman_barang_model->get_calendar_peminjaman_barang();
+        $data['kategori_aset'] = $this->Peminjaman_barang_model->get_kategori_aset_list();
+        $data['all_ruangan'] = $this->db->get('ruangan')->result();
+        
+        $this->attach_notifikasi($data);
+        $this->load->view('peminjaman_barang/kalender', $data);
+    }
+
+    /**
+     * Endpoint API JSON untuk Live / Realtime Sync Data Peminjaman Barang
+     */
+    public function get_updated_peminjaman() {
+        header('Content-Type: application/json');
+        $data = $this->Peminjaman_barang_model->get_calendar_peminjaman_barang();
+        echo json_encode($data ?: []);
     }
 }
