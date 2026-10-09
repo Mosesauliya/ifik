@@ -416,9 +416,17 @@ class KetuaKK_model extends CI_Model {
                 } else {
                     $tl_data = array(
                         'id_guidance' => $gId,
-                        'status'      => $status,
-                        'created_at'  => date('Y-m-d H:i:s')
+                        'status'      => $status
                     );
+                    if ($this->db->field_exists('created_at', 'thesis_lecturers')) {
+                        $tl_data['created_at'] = date('Y-m-d H:i:s');
+                    }
+                    if ($this->db->field_exists('date', 'thesis_lecturers')) {
+                        $tl_data['date'] = date('Y-m-d H:i:s');
+                    }
+                    if ($this->db->field_exists('date_edit', 'thesis_lecturers')) {
+                        $tl_data['date_edit'] = date('Y-m-d H:i:s');
+                    }
                     $this->db->insert('thesis_lecturers', $tl_data);
                 }
             }
