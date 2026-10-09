@@ -21,8 +21,8 @@ class Peminjaman extends CI_Controller {
         }
         $role_id = (int) ($this->session->userdata('role_id') ?? 0);
         $role = strtolower((string) $this->session->userdata('role'));
-        // Allow Wadek, Admin System (1), Super Admin (22), or Kaur/Kaprodi test
-        $allowed_roles = [1, 2, 8, 10, 16, 22];
+        // Allow Wadek, Dosen (3), Admin System (1), Super Admin (22), or Kaur/Kaprodi test
+        $allowed_roles = [1, 2, 3, 7, 8, 9, 10, 16, 22];
         $is_wadek_role = in_array($role_id, $allowed_roles, true) || strpos($role, 'wadek') !== false || strpos($role, 'dekan') !== false || $role === 'admin';
         if (!$is_wadek_role) {
             if (scm_is_ajax()) {
