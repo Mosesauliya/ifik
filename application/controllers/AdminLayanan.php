@@ -205,25 +205,10 @@ class AdminLayanan extends CI_Controller {
         $student_berkas_map = $this->AdminLayanan_model->get_student_berkas_map($nim);
         $file_name = $student_berkas_map[$kode_berkas]['file_name'] ?? ($detail['file_' . $kode_berkas] ?? ($kode_berkas . '_' . $nim . '.pdf'));
 
-        // Save status in pendaftaran_berkas table
+        // Save status directly to file_pendaftaran and pendaftaran_berkas
         $this->AdminLayanan_model->save_student_berkas($nim, $kode_berkas, $file_name, $status, $catatan);
 
-        // Update legacy column if exists (status_ksm, status_transkrip, etc)
-        if ($this->db->table_exists('pendaftaran_ta')) {
-            $legacy_update = array();
-            if (in_array($kode_berkas, array('ksm', 'transkrip', 'pernyataan', 'bebas_lab'))) {
-                $legacy_update['status_' . $kode_berkas] = $status;
-            }
-            if ($this->db->field_exists('catatan_file_' . $kode_berkas, 'pendaftaran_ta')) {
-                $legacy_update['catatan_file_' . $kode_berkas] = ($status === 'Invalid') ? $catatan : '';
-            }
-            if (!empty($legacy_update)) {
-                $this->db->where('nim', $nim);
-                $this->db->update('pendaftaran_ta', $legacy_update);
-            }
-        }
-
-        // Recompute all berkas summary and sync overall status across tables (pendaftaran_ta & file_pendaftaran)
+        // Recompute all berkas summary and sync overall status
         $sync_res = $this->AdminLayanan_model->sync_overall_status($nim, $catatan);
         $summary = $sync_res['summary'];
 
@@ -816,51 +801,18 @@ class AdminLayanan extends CI_Controller {
                              ->delete('file_pendaftaran');
                 }
 
-                // Reset status & file_path di pendaftaran_ta jika ada
-                if ($this->db->table_exists('pendaftaran_ta')) {
-                    $ta_up = [];
-                    if ($this->db->field_exists('file_' . $kode_berkas, 'pendaftaran_ta')) $ta_up['file_' . $kode_berkas] = null;
-                    if ($this->db->field_exists('status_' . $kode_berkas, 'pendaftaran_ta')) $ta_up['status_' . $kode_berkas] = 'Pending';
-                    if ($this->db->field_exists('status_file_' . $kode_berkas, 'pendaftaran_ta')) $ta_up['status_file_' . $kode_berkas] = 'Pending';
-                    
-                    if (!empty($ta_up)) {
-                        $this->db->where('nim', $nim)->update('pendaftaran_ta', $ta_up);
-                    }
-                }
-
                 // Sync status keseluruhan
                 $this->AdminLayanan_model->sync_overall_status($nim);
             } else {
                 // Reset semua file untuk NIM ini
-                $this->db->where('nim', $nim)->delete('pendaftaran_berkas');
+                if ($this->db->table_exists('pendaftaran_berkas')) {
+                    $this->db->where('nim', $nim)->delete('pendaftaran_berkas');
+                }
 
                 // Hapus SEMUA file milik mahasiswa dari file_pendaftaran
                 if ($this->db->table_exists('file_pendaftaran')) {
-                    $this->db->group_start()
-                             ->where_in('id_mhs', $target_ids)
-                             ->or_like('id_mhs', $nim)
-                             ->group_end()
+                    $this->db->where_in('id_mhs', $target_ids)
                              ->delete('file_pendaftaran');
-                }
-
-                // Reset pendaftaran_ta sepenuhnya agar mahasiswa harus upload ulang
-                if ($this->db->table_exists('pendaftaran_ta')) {
-                    $ta_fields = $this->db->list_fields('pendaftaran_ta');
-                    $ta_up = [
-                        'status_approval_admin' => 'Pending',
-                        'status_approval_wali'  => 'Pending',
-                        'berkas_kurang'         => null,
-                        'catatan_admin'         => null,
-                        'catatan_wali'          => null,
-                        'current_stage'         => 'Mahasiswa',
-                    ];
-                    if (in_array('is_submitted', $ta_fields)) $ta_up['is_submitted'] = 0;
-                    foreach (['ksm', 'transkrip', 'pernyataan', 'bebas_lab'] as $k) {
-                        if (in_array('file_' . $k, $ta_fields)) $ta_up['file_' . $k] = null;
-                        if (in_array('status_' . $k, $ta_fields)) $ta_up['status_' . $k] = 'Pending';
-                        if (in_array('status_file_' . $k, $ta_fields)) $ta_up['status_file_' . $k] = 'Pending';
-                    }
-                    $this->db->where('nim', $nim)->update('pendaftaran_ta', $ta_up);
                 }
 
                 // Reset status di guidance jika ada
@@ -868,10 +820,7 @@ class AdminLayanan extends CI_Controller {
                     $g_up = [];
                     if ($this->db->field_exists('keterangan', 'guidance')) $g_up['keterangan'] = 'Pending';
                     if (!empty($g_up)) {
-                        $this->db->group_start()
-                                 ->where_in('id_mhs', $target_ids)
-                                 ->or_like('id_mhs', $nim)
-                                 ->group_end()
+                        $this->db->where_in('id_mhs', $target_ids)
                                  ->update('guidance', $g_up);
                     }
                 }

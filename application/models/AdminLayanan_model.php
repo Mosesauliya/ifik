@@ -241,7 +241,7 @@ class AdminLayanan_model extends CI_Model {
     }
 
     /**
-     * Compute and synchronize overall LAA approval status across all tables (pendaftaran_ta & file_pendaftaran)
+     * Compute and synchronize overall LAA approval status directly from file_pendaftaran
      */
     public function sync_overall_status($nim, $catatan = null) {
         $active_syarat = $this->get_active_syarat_berkas();
@@ -255,69 +255,36 @@ class AdminLayanan_model extends CI_Model {
         }
 
         $overall_status = 'Pending';
-        $current_stage  = 'Admin Layanan';
-        $berkas_kurang  = NULL;
-
         if (!empty($invalid_kodes)) {
             $overall_status = 'Rejected';
-            $current_stage  = 'Admin Layanan';
-            $berkas_kurang  = json_encode($invalid_kodes);
         } elseif ($summary['valid_count'] === $summary['total_count'] && $summary['total_count'] > 0) {
             $overall_status = 'Approved';
-            $current_stage  = 'Koordinator TA';
-            $berkas_kurang  = NULL;
-        } else {
-            $overall_status = 'Pending';
-            $current_stage  = 'Admin Layanan';
-            $berkas_kurang  = NULL;
         }
 
-        // 1. Sync to pendaftaran_ta
-        if ($this->db->table_exists('pendaftaran_ta')) {
-            $ta_data = [
-                'status_approval_admin' => $overall_status,
-                'berkas_kurang'         => $berkas_kurang,
-                'current_stage'         => $current_stage
-            ];
-            if ($catatan !== null) {
-                $ta_data['catatan_admin'] = $catatan;
-            } elseif ($overall_status === 'Approved') {
-                $ta_data['catatan_admin'] = 'Seluruh berkas persyaratan telah lengkap & valid.';
-            }
-            $this->db->where('nim', $nim)->update('pendaftaran_ta', $ta_data);
-        }
-
-        // 2. Sync to file_pendaftaran - ensure view_adminlaa is recorded and only sync all Approved when whole submission is Approved
-        if ($this->db->table_exists('file_pendaftaran')) {
+        // When all files are Approved, ensure all rows in file_pendaftaran are set to Approved and view_adminlaa = 1
+        if ($overall_status === 'Approved' && $this->db->table_exists('file_pendaftaran')) {
             $target_ids = $this->get_student_target_ids($nim);
             $fp_update = array();
+            if ($this->db->field_exists('status_adminlaa', 'file_pendaftaran')) {
+                $fp_update['status_adminlaa'] = 'Approved';
+            }
+            if ($this->db->field_exists('status_admin', 'file_pendaftaran')) {
+                $fp_update['status_admin'] = 'Approved';
+            }
+            if ($this->db->field_exists('status_laa', 'file_pendaftaran')) {
+                $fp_update['status_laa'] = 'Approved';
+            }
+            if ($this->db->field_exists('status_admin_laa', 'file_pendaftaran')) {
+                $fp_update['status_admin_laa'] = 'Approved';
+            }
             if ($this->db->field_exists('view_adminlaa', 'file_pendaftaran')) {
                 $fp_update['view_adminlaa'] = 1;
-            }
-            if ($overall_status === 'Approved') {
-                if ($this->db->field_exists('status_adminlaa', 'file_pendaftaran')) {
-                    $fp_update['status_adminlaa'] = 'Approved';
-                }
-                if ($this->db->field_exists('status_admin', 'file_pendaftaran')) {
-                    $fp_update['status_admin'] = 'Approved';
-                }
-                if ($this->db->field_exists('status_laa', 'file_pendaftaran')) {
-                    $fp_update['status_laa'] = 'Approved';
-                }
-                if ($this->db->field_exists('status_admin_laa', 'file_pendaftaran')) {
-                    $fp_update['status_admin_laa'] = 'Approved';
-                }
             }
             if ($this->db->field_exists('date_edit', 'file_pendaftaran')) {
                 $fp_update['date_edit'] = date('Y-m-d H:i:s');
             }
-
-            if (!empty($fp_update) && !empty($target_ids)) {
-                $this->db->group_start()
-                         ->where_in('id_mhs', $target_ids)
-                         ->or_like('id_mhs', $nim)
-                         ->group_end()
-                         ->update('file_pendaftaran', $fp_update);
+            if (!empty($fp_update)) {
+                $this->db->where_in('id_mhs', $target_ids)->update('file_pendaftaran', $fp_update);
             }
         }
 
@@ -328,8 +295,6 @@ class AdminLayanan_model extends CI_Model {
     }
 
     public function save_student_berkas($nim, $kode_berkas, $file_name, $status = 'Pending', $arg5 = null, $arg6 = null) {
-        if (!$this->db->table_exists('pendaftaran_berkas')) return false;
-
         $nama_berkas = null;
         $catatan     = null;
 
@@ -353,9 +318,7 @@ class AdminLayanan_model extends CI_Model {
             }
         }
 
-        $existing = $this->db->get_where('pendaftaran_berkas', ['nim' => $nim, 'kode_berkas' => $kode_berkas])->row_array();
-
-        // Convert long status string to enum ('Pending'|'Valid'|'Invalid') for pendaftaran_berkas column status_verifikasi
+        // Standardize status
         $enum_status = 'Pending';
         $st_lower = strtolower($status);
         if ($st_lower === 'valid' || strpos($st_lower, 'setuju') !== false || strpos($st_lower, 'approved') !== false || $st_lower === 'acc') {
@@ -363,124 +326,76 @@ class AdminLayanan_model extends CI_Model {
         } else if ($st_lower === 'invalid' || strpos($st_lower, 'revisi') !== false || strpos($st_lower, 'tolak') !== false || strpos($st_lower, 'rejected') !== false) {
             $enum_status = 'Invalid';
         }
+        $fp_status = ($enum_status === 'Valid') ? 'Approved' : (($enum_status === 'Invalid') ? 'Rejected' : 'Pending');
 
-        $data = [
-            'file_name'         => $file_name,
-            'status_verifikasi' => $enum_status,
-            'updated_at'        => date('Y-m-d H:i:s')
-        ];
-
-        if (!empty($nama_berkas) && $this->db->field_exists('nama_berkas', 'pendaftaran_berkas')) {
-            $data['nama_berkas'] = $nama_berkas;
+        // 1. Sync to pendaftaran_berkas if table exists (backward compatibility)
+        if ($this->db->table_exists('pendaftaran_berkas')) {
+            $existing = $this->db->get_where('pendaftaran_berkas', ['nim' => $nim, 'kode_berkas' => $kode_berkas])->row_array();
+            $data = [
+                'file_name'         => $file_name,
+                'status_verifikasi' => $enum_status,
+                'updated_at'        => date('Y-m-d H:i:s')
+            ];
+            if (!empty($nama_berkas) && $this->db->field_exists('nama_berkas', 'pendaftaran_berkas')) {
+                $data['nama_berkas'] = $nama_berkas;
+            }
+            if ($catatan !== null && $this->db->field_exists('catatan', 'pendaftaran_berkas')) {
+                $data['catatan'] = $catatan;
+            }
+            if ($existing) {
+                $this->db->where('id', $existing['id'])->update('pendaftaran_berkas', $data);
+            } else {
+                $data['nim']         = $nim;
+                $data['kode_berkas'] = $kode_berkas;
+                $data['created_at']  = date('Y-m-d H:i:s');
+                $this->db->insert('pendaftaran_berkas', $data);
+            }
         }
 
-        if ($catatan !== null && $this->db->field_exists('catatan', 'pendaftaran_berkas')) {
-            $data['catatan'] = $catatan;
-        }
-
-        if ($existing) {
-            $this->db->where('id', $existing['id']);
-            $res = $this->db->update('pendaftaran_berkas', $data);
-        } else {
-            $data['nim']         = $nim;
-            $data['kode_berkas'] = $kode_berkas;
-            $data['created_at']  = date('Y-m-d H:i:s');
-            $res = $this->db->insert('pendaftaran_berkas', $data);
-        }
-
-        // Sync legacy status columns in pendaftaran_ta if applicable
-        if (in_array($kode_berkas, array('ksm', 'transkrip', 'pernyataan', 'bebas_lab')) && $this->db->table_exists('pendaftaran_ta')) {
-            $this->db->where('nim', $nim)->update('pendaftaran_ta', array('status_' . $kode_berkas => $status));
-        }
-
-        // Sync individual file matching row to file_pendaftaran table if present (matching DosenWali logic)
+        // 2. PRIMARY: Update file_pendaftaran table directly (matching DosenWali logic)
         if ($this->db->table_exists('file_pendaftaran')) {
             $target_ids = $this->get_student_target_ids($nim);
             $clean_nim  = preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', (string)$nim);
-            $fp_status  = ($enum_status === 'Valid') ? 'Approved' : (($enum_status === 'Invalid') ? 'Rejected' : 'Pending');
 
-            $check = $this->db->group_start()
-                ->where_in('id_mhs', $target_ids)
-                ->or_like('id_mhs', $nim)
-                ->group_end()
+            $check = $this->db->where_in('id_mhs', $target_ids)
                 ->group_start()
                     ->like('nama', $kode_berkas)
-                    ->or_like('file', $kode_berkas);
-            if ($kode_berkas === 'bebas_lab') {
-                $this->db->or_like('nama', 'bebas')
-                         ->or_like('nama', 'lab')
-                         ->or_like('file', 'bebas')
-                         ->or_like('file', 'lab');
-            } elseif ($kode_berkas === 'pernyataan') {
-                $this->db->or_like('nama', 'pernyataan')
-                         ->or_like('file', 'pernyataan');
-            } elseif ($kode_berkas === 'transkrip') {
-                $this->db->or_like('nama', 'transkrip')
-                         ->or_like('file', 'transkrip');
-            } elseif ($kode_berkas === 'ksm') {
-                $this->db->or_like('nama', 'ksm')
-                         ->or_like('file', 'ksm');
-            }
-            $check = $this->db->group_end()
+                    ->or_like('file', $kode_berkas)
+                ->group_end()
                 ->get('file_pendaftaran')
                 ->row_array();
 
-            if ($check) {
-                $fp_update = array();
-                if ($this->db->field_exists('status_adminlaa', 'file_pendaftaran')) {
-                    $fp_update['status_adminlaa'] = $fp_status;
-                }
-                if ($this->db->field_exists('view_adminlaa', 'file_pendaftaran')) {
-                    $fp_update['view_adminlaa'] = 1;
-                }
-                if ($this->db->field_exists('status_admin', 'file_pendaftaran')) {
-                    $fp_update['status_admin'] = $fp_status;
-                }
-                if ($this->db->field_exists('status_laa', 'file_pendaftaran')) {
-                    $fp_update['status_laa'] = $fp_status;
-                }
-                if ($this->db->field_exists('status_admin_laa', 'file_pendaftaran')) {
-                    $fp_update['status_admin_laa'] = $fp_status;
-                }
-                if ($catatan !== null && $this->db->field_exists('komentar', 'file_pendaftaran')) {
-                    $fp_update['komentar'] = $catatan;
-                }
-                if ($this->db->field_exists('date_edit', 'file_pendaftaran')) {
-                    $fp_update['date_edit'] = date('Y-m-d H:i:s');
-                }
+            $fp_update = array();
+            if ($this->db->field_exists('status_adminlaa', 'file_pendaftaran')) {
+                $fp_update['status_adminlaa'] = $fp_status;
+            }
+            if ($this->db->field_exists('view_adminlaa', 'file_pendaftaran')) {
+                $fp_update['view_adminlaa'] = 1;
+            }
+            if ($this->db->field_exists('status_admin', 'file_pendaftaran')) {
+                $fp_update['status_admin'] = $fp_status;
+            }
+            if ($this->db->field_exists('status_laa', 'file_pendaftaran')) {
+                $fp_update['status_laa'] = $fp_status;
+            }
+            if ($this->db->field_exists('status_admin_laa', 'file_pendaftaran')) {
+                $fp_update['status_admin_laa'] = $fp_status;
+            }
+            if ($catatan !== null && $this->db->field_exists('komentar', 'file_pendaftaran')) {
+                $fp_update['komentar'] = $catatan;
+            }
+            if ($this->db->field_exists('date_edit', 'file_pendaftaran')) {
+                $fp_update['date_edit'] = date('Y-m-d H:i:s');
+            }
 
-                if (!empty($fp_update)) {
-                    $this->db->group_start()
-                        ->where_in('id_mhs', $target_ids)
-                        ->or_like('id_mhs', $nim)
-                    ->group_end()
-                    ->group_start()
-                        ->like('nama', $kode_berkas)
-                        ->or_like('file', $kode_berkas);
-                    if ($kode_berkas === 'bebas_lab') {
-                        $this->db->or_like('nama', 'bebas')
-                                 ->or_like('nama', 'lab')
-                                 ->or_like('file', 'bebas')
-                                 ->or_like('file', 'lab');
-                    } elseif ($kode_berkas === 'pernyataan') {
-                        $this->db->or_like('nama', 'pernyataan')
-                                 ->or_like('file', 'pernyataan');
-                    } elseif ($kode_berkas === 'transkrip') {
-                        $this->db->or_like('nama', 'transkrip')
-                                 ->or_like('file', 'transkrip');
-                    } elseif ($kode_berkas === 'ksm') {
-                        $this->db->or_like('nama', 'ksm')
-                                 ->or_like('file', 'ksm');
-                    }
-                    $this->db->group_end()
-                        ->update('file_pendaftaran', $fp_update);
-                }
+            if ($check) {
+                $this->db->where('id', $check['id'])->update('file_pendaftaran', $fp_update);
             } else {
                 $u_id = !empty($target_ids) ? $target_ids[0] : ('usr_mhs_' . $clean_nim);
                 $ins_fp = array(
                     'id_mhs'          => $u_id,
                     'nama'            => $kode_berkas,
-                    'file'            => $file_name ?: ($kode_berkas . '_' . $nim . '.pdf'),
+                    'file'            => $file_name ?: ($kode_berkas . '_' . $clean_nim . '.pdf'),
                     'status_adminlaa' => $fp_status,
                     'komentar'        => $catatan ?: '',
                     'date'            => date('Y-m-d H:i:s'),
@@ -494,19 +409,12 @@ class AdminLayanan_model extends CI_Model {
             }
         }
 
-        // Re-compute and sync overall status (across pendaftaran_ta & file_pendaftaran)
-        $this->sync_overall_status($nim, $catatan);
-
-        return $res;
+        return true;
     }
 
     public function update_verifikasi($nim, $status_input, $catatan = '', $extra_catatan = null, $berkas_valid = array(), $berkas_kurang = array()) {
         $active_syarat  = $this->get_active_syarat_berkas();
         $student_berkas = $this->get_student_berkas_map($nim);
-
-        $invalid_items = array();
-        $has_invalid   = false;
-        $has_pending   = false;
 
         $is_explicit_approve = (is_string($status_input) && in_array(strtolower($status_input), array('approve', 'approved')));
 
@@ -521,112 +429,29 @@ class AdminLayanan_model extends CI_Model {
                 $st = 'Pending';
             }
 
-            $file_name = $student_berkas[$kode]['file_name'] ?? '';
-            if (empty($file_name)) {
-                if ($this->db->table_exists('pendaftaran_ta')) {
-                    $p_row = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
-                    $file_name = $p_row['file_' . $kode] ?? ('berkas_' . $kode . '_' . $nim . '.pdf');
-                } else {
-                    $file_name = 'berkas_' . $kode . '_' . $nim . '.pdf';
-                }
-            }
-
+            $file_name = $student_berkas[$kode]['file_name'] ?? ('berkas_' . $kode . '_' . $nim . '.pdf');
             $this->save_student_berkas($nim, $kode, $file_name, $st, $sb['nama_berkas'] ?? null, $catatan);
-
-            // Update legacy column if exists
-            if (in_array($kode, array('ksm', 'transkrip', 'pernyataan', 'bebas_lab')) && $this->db->table_exists('pendaftaran_ta')) {
-                $this->db->where('nim', $nim)->update('pendaftaran_ta', array('status_' . $kode => $st));
-            }
-
-            if ($st === 'Invalid') {
-                $has_invalid = true;
-                $invalid_items[] = ($sb['nama_berkas'] ?? $kode) . ' (Tidak Sesuai / Invalid)';
-            } elseif ($st === 'Pending') {
-                $has_pending = true;
-            }
         }
 
-        if ($has_invalid || (is_string($status_input) && in_array(strtolower($status_input), array('reject', 'rejected')))) {
-            $status_approval = 'Rejected';
-            $berkas_kurang_str = !empty($invalid_items) ? implode(', ', $invalid_items) : ($extra_catatan ?: 'Dokumen Persyaratan Perlu Revisi');
-            $current_stage = 'Admin Layanan';
-        } elseif ($has_pending) {
-            $status_approval = 'Pending';
-            $berkas_kurang_str = NULL;
-            $current_stage = 'Admin Layanan';
-        } else {
-            $status_approval = 'Approved';
-            $berkas_kurang_str = NULL;
-            $current_stage = 'Koordinator TA';
-        }
-
-        if ($this->db->table_exists('pendaftaran_ta')) {
-            $data = array(
-                'status_approval_admin' => $status_approval,
-                'catatan_admin'         => $catatan,
-                'berkas_kurang'         => $berkas_kurang_str,
-                'current_stage'         => $current_stage
-            );
-
-            $this->db->where('nim', $nim);
-            $this->db->update('pendaftaran_ta', $data);
-        }
-
-        // Also ensure view_adminlaa is recorded on file_pendaftaran table
         if ($this->db->table_exists('file_pendaftaran')) {
             $target_ids = $this->get_student_target_ids($nim);
-            $fp_update = array();
-            if ($this->db->field_exists('view_adminlaa', 'file_pendaftaran')) {
-                $fp_update['view_adminlaa'] = 1;
+            $fp_up = [
+                'view_adminlaa' => 1,
+                'date_edit'     => date('Y-m-d H:i:s')
+            ];
+            if ($is_explicit_approve) {
+                if ($this->db->field_exists('status_adminlaa', 'file_pendaftaran')) $fp_up['status_adminlaa'] = 'Approved';
+                if ($this->db->field_exists('status_admin', 'file_pendaftaran')) $fp_up['status_admin'] = 'Approved';
+                if ($this->db->field_exists('status_laa', 'file_pendaftaran')) $fp_up['status_laa'] = 'Approved';
+                if ($this->db->field_exists('status_admin_laa', 'file_pendaftaran')) $fp_up['status_admin_laa'] = 'Approved';
             }
-            if ($status_approval === 'Approved') {
-                if ($this->db->field_exists('status_adminlaa', 'file_pendaftaran')) {
-                    $fp_update['status_adminlaa'] = 'Approved';
-                }
-                if ($this->db->field_exists('status_admin', 'file_pendaftaran')) {
-                    $fp_update['status_admin'] = 'Approved';
-                }
-                if ($this->db->field_exists('status_laa', 'file_pendaftaran')) {
-                    $fp_update['status_laa'] = 'Approved';
-                }
-                if ($this->db->field_exists('status_admin_laa', 'file_pendaftaran')) {
-                    $fp_update['status_admin_laa'] = 'Approved';
-                }
-            }
-            if ($this->db->field_exists('date_edit', 'file_pendaftaran')) {
-                $fp_update['date_edit'] = date('Y-m-d H:i:s');
-            }
-
-            if (!empty($fp_update) && !empty($target_ids)) {
-                $this->db->group_start()
-                         ->where_in('id_mhs', $target_ids)
-                         ->or_like('id_mhs', $nim)
-                         ->group_end()
-                         ->update('file_pendaftaran', $fp_update);
-            }
+            $this->db->where_in('id_mhs', $target_ids)->update('file_pendaftaran', $fp_up);
         }
 
         return true;
     }
 
-
     public function reset_verifikasi_pending($nim) {
-        if ($this->db->table_exists('pendaftaran_ta')) {
-            $data = array(
-                'status_approval_admin' => 'Pending',
-                'catatan_admin'         => NULL,
-                'berkas_kurang'         => NULL,
-                'current_stage'         => 'Admin Layanan',
-                'status_ksm'            => 'Pending',
-                'status_transkrip'      => 'Pending',
-                'status_pernyataan'     => 'Pending',
-                'status_bebas_lab'      => 'Pending'
-            );
-
-            $this->db->where('nim', $nim);
-            $this->db->update('pendaftaran_ta', $data);
-        }
-
         if ($this->db->table_exists('file_pendaftaran')) {
             $target_ids = $this->get_student_target_ids($nim);
             $fp_update = array();
@@ -646,16 +471,15 @@ class AdminLayanan_model extends CI_Model {
                 $fp_update['komentar'] = NULL;
             }
             if (!empty($fp_update)) {
-                $this->db->group_start()
-                         ->where_in('id_mhs', $target_ids)
-                         ->or_like('id_mhs', $nim)
-                         ->group_end()
-                         ->update('file_pendaftaran', $fp_update);
+                $this->db->where_in('id_mhs', $target_ids)->update('file_pendaftaran', $fp_update);
             }
         }
 
-        $this->db->where('nim', $nim);
-        return $this->db->update('pendaftaran_berkas', ['status_verifikasi' => 'Pending']);
+        if ($this->db->table_exists('pendaftaran_berkas')) {
+            $this->db->where('nim', $nim)->update('pendaftaran_berkas', ['status_verifikasi' => 'Pending']);
+        }
+
+        return true;
     }
 
     public function get_batch_details_by_nims($nims) {
