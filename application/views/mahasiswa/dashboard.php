@@ -77,7 +77,7 @@
             $title = $sb['nama_berkas'];
 
             $st_dw  = $pendaftaran['status_file_' . $k] ?? null;
-            $st_laa = $student_berkas[$k]['status_verifikasi'] ?? ($pendaftaran['status_' . $k] ?? null);
+            $st_laa = $pendaftaran['status_' . $k] ?? 'Pending';
 
             $is_in_kurang = false;
             if (!empty($bk_raw)) {
@@ -100,13 +100,17 @@
             }
 
             $file_rej_by = null;
-            if ($st_laa === 'Invalid' || $is_in_kurang) {
+            $st_laa_clean = strtolower(trim((string)$st_laa));
+            $is_laa_app = ($st_laa_clean === 'valid' || $st_laa_clean === 'approved' || $st_laa_clean === 'acc' || strpos($st_laa_clean, 'setuju') !== false);
+            $is_laa_rej = ($st_laa_clean === 'invalid' || $st_laa_clean === 'rejected' || strpos($st_laa_clean, 'revisi') !== false || strpos($st_laa_clean, 'tolak') !== false);
+
+            if ($is_laa_rej || $is_in_kurang) {
                 $status = 'Rejected';
                 $file_rej_by = 'admin';
             } elseif ($st_dw === 'Rejected') {
                 $status = 'Rejected';
                 $file_rej_by = 'wali';
-            } elseif ($st_laa === 'Valid') {
+            } elseif ($is_laa_app) {
                 $status = 'Approved';
             } elseif ($st_dw === 'Approved') {
                 $status = 'Approved';
@@ -114,11 +118,11 @@
                 $status = 'Pending';
             }
 
-            $filename = $student_berkas[$k]['file_name'] ?? ($pendaftaran['file_' . $k] ?? '');
+            $filename = !empty($pendaftaran['file_' . $k]) ? $pendaftaran['file_' . $k] : ($student_berkas[$k]['file_name'] ?? '');
 
             $note = '';
             if ($file_rej_by === 'admin') {
-                $note = $student_berkas[$k]['catatan'] ?? ($pendaftaran['catatan_admin_' . $k] ?? '');
+                $note = !empty($pendaftaran['catatan_admin_' . $k]) ? $pendaftaran['catatan_admin_' . $k] : ($student_berkas[$k]['catatan'] ?? '');
                 if (empty($note) && !empty($pendaftaran['catatan_admin'])) {
                     $note = $pendaftaran['catatan_admin'];
                 }
@@ -138,7 +142,7 @@
                     }
                 }
             } else {
-                $note = $student_berkas[$k]['catatan'] ?? ($pendaftaran['catatan_admin_' . $k] ?? ($pendaftaran['catatan_file_' . $k] ?? ''));
+                $note = !empty($pendaftaran['catatan_admin_' . $k]) ? $pendaftaran['catatan_admin_' . $k] : ($pendaftaran['catatan_file_' . $k] ?? '');
             }
 
             $files_list[] = [
@@ -278,7 +282,60 @@
                 }
             }, 4000);
             </script>
-        <?php endif; ?>        <!-- Hero Welcome & Progress Radial Card (3D Rich Orange Bento Layout) -->
+        <?php endif; ?>
+
+        <?php if($this->session->flashdata('error')): ?>
+            <!-- Floating Side Toast Alert (Error) -->
+            <div id="sideToastAlertError" class="fixed top-20 right-6 z-[9999] max-w-sm w-full bg-slate-900/95 text-white p-4 rounded-2xl shadow-2xl border border-rose-500/50 backdrop-blur-md flex items-start gap-3 transition-all duration-300">
+                <div class="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center text-base font-bold shrink-0 shadow-md box-3d">
+                    <i class="bi bi-x-circle-fill"></i>
+                </div>
+                <div class="flex-grow min-w-0">
+                    <h4 class="text-xs font-bold text-rose-400 uppercase tracking-wider">Gagal / Perhatian</h4>
+                    <p class="text-xs text-slate-200 font-medium leading-snug mt-0.5"><?= $this->session->flashdata('error'); ?></p>
+                </div>
+                <button type="button" onclick="document.getElementById('sideToastAlertError').remove()" class="text-slate-400 hover:text-white font-bold text-xs p-1 transition cursor-pointer">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <script>
+            setTimeout(function() {
+                const toast = document.getElementById('sideToastAlertError');
+                if (toast) {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(30px)';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 6000);
+            </script>
+        <?php endif; ?>
+
+        <?php if($this->session->flashdata('warning')): ?>
+            <!-- Floating Side Toast Alert (Warning) -->
+            <div id="sideToastAlertWarning" class="fixed top-20 right-6 z-[9999] max-w-sm w-full bg-slate-900/95 text-white p-4 rounded-2xl shadow-2xl border border-amber-500/50 backdrop-blur-md flex items-start gap-3 transition-all duration-300">
+                <div class="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center text-base font-bold shrink-0 shadow-md box-3d">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+                <div class="flex-grow min-w-0">
+                    <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Perhatian</h4>
+                    <p class="text-xs text-slate-200 font-medium leading-snug mt-0.5"><?= $this->session->flashdata('warning'); ?></p>
+                </div>
+                <button type="button" onclick="document.getElementById('sideToastAlertWarning').remove()" class="text-slate-400 hover:text-white font-bold text-xs p-1 transition cursor-pointer">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <script>
+            setTimeout(function() {
+                const toast = document.getElementById('sideToastAlertWarning');
+                if (toast) {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(30px)';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 6000);
+            </script>
+        <?php endif; ?>
+        <!-- Hero Welcome & Progress Radial Card (3D Rich Orange Bento Layout) -->
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <!-- Left Hero Panel (3 Cols) - Rich Orange 3D Card with Clear Campus Building Background -->
             <div class="lg:col-span-3 card-3d-orange rounded-2xl p-7 sm:p-8 relative overflow-hidden flex flex-col justify-between text-white">
@@ -308,32 +365,100 @@
                     </p>
                 </div>
 
-                <div class="relative z-10 pt-5 mt-6 border-t border-white/25 flex flex-wrap items-center justify-between gap-4">
-                    <div class="flex items-center gap-6">
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold text-base box-3d border border-white/30">
-                                <i class="bi bi-person-badge"></i>
+                <!-- Compact 4-Step Approval Workflow (Glassmorphism Bento Cards) -->
+                <div class="relative z-10 pt-4 mt-5 border-t border-white/20">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+                        <!-- Step 1: Dosen Wali -->
+                        <?php 
+                            $step1_bg = $w_is_app ? 'bg-emerald-950/40 border-emerald-400/50 text-white ring-1 ring-emerald-400/30' : ($w_is_rej ? 'bg-rose-950/50 border-rose-400/60 text-white ring-1 ring-rose-400/30' : 'bg-black/25 border-white/20 text-white');
+                            $step1_dot = $w_is_app ? 'bg-emerald-400' : ($w_is_rej ? 'bg-rose-400' : 'bg-amber-300');
+                            $step1_txt = $w_is_app ? 'text-emerald-300' : ($w_is_rej ? 'text-rose-300' : 'text-amber-100');
+                        ?>
+                        <div class="backdrop-blur-md rounded-xl p-2.5 sm:p-3 border <?= $step1_bg; ?> flex flex-col justify-between transition hover:bg-black/35">
+                            <div class="flex items-center justify-between gap-1 mb-1">
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-amber-200/90">Tahap 01</span>
+                                <span class="w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-bold <?= $w_is_app ? 'bg-emerald-500 text-white' : ($w_is_rej ? 'bg-rose-500 text-white' : 'bg-white/20 text-white'); ?>">
+                                    <i class="bi <?= $w_is_app ? 'bi-check-lg' : ($w_is_rej ? 'bi-x-lg' : 'bi-person-check'); ?>"></i>
+                                </span>
                             </div>
                             <div>
-                                <span class="text-xs font-bold uppercase tracking-wider text-amber-200 block leading-none">NIM</span>
-                                <span class="text-sm font-extrabold text-white mt-0.5 block"><?= htmlspecialchars($mahasiswa['nim'] ?? ($this->session->userdata('nim') ?? '')); ?></span>
+                                <h4 class="text-xs sm:text-sm font-bold text-white truncate leading-tight">Dosen Wali</h4>
+                                <p class="text-[10px] text-amber-100/70 truncate hidden sm:block mt-0.5">Persetujuan akademik</p>
+                            </div>
+                            <div class="mt-2 flex items-center gap-1.5 pt-1.5 border-t border-white/10">
+                                <span class="w-1.5 h-1.5 rounded-full <?= $step1_dot; ?>"></span>
+                                <span class="text-[11px] font-bold <?= $step1_txt; ?> truncate"><?= $w_status; ?></span>
                             </div>
                         </div>
-                        <div class="h-7 w-px bg-white/25 hidden sm:block"></div>
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold text-base box-3d border border-white/30">
-                                <i class="bi bi-book"></i>
-                            </div>
-                            <div>
-                                <span class="text-xs font-bold uppercase tracking-wider text-amber-200 block leading-none">PRODI</span>
-                                <span class="text-sm font-extrabold text-white mt-0.5 block"><?= $mahasiswa['prodi'] ?? 'Informatika / DKV'; ?></span>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl border border-white/30 text-xs font-bold text-white">
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-                        <span>Status: Mahasiswa Aktif</span>
+                        <!-- Step 2: Admin Layanan -->
+                        <?php 
+                            $step2_bg = $a_is_app ? 'bg-emerald-950/40 border-emerald-400/50 text-white ring-1 ring-emerald-400/30' : ($a_is_rej ? 'bg-rose-950/50 border-rose-400/60 text-white ring-1 ring-rose-400/30' : 'bg-black/25 border-white/20 text-white');
+                            $step2_dot = $a_is_app ? 'bg-emerald-400' : ($a_is_rej ? 'bg-rose-400' : 'bg-amber-300');
+                            $step2_txt = $a_is_app ? 'text-emerald-300' : ($a_is_rej ? 'text-rose-300' : 'text-amber-100');
+                        ?>
+                        <div class="backdrop-blur-md rounded-xl p-2.5 sm:p-3 border <?= $step2_bg; ?> flex flex-col justify-between transition hover:bg-black/35">
+                            <div class="flex items-center justify-between gap-1 mb-1">
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-amber-200/90">Tahap 02</span>
+                                <span class="w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-bold <?= $a_is_app ? 'bg-emerald-500 text-white' : ($a_is_rej ? 'bg-rose-500 text-white' : 'bg-white/20 text-white'); ?>">
+                                    <i class="bi <?= $a_is_app ? 'bi-check-lg' : ($a_is_rej ? 'bi-x-lg' : 'bi-shield-check'); ?>"></i>
+                                </span>
+                            </div>
+                            <div>
+                                <h4 class="text-xs sm:text-sm font-bold text-white truncate leading-tight">Admin Layanan</h4>
+                                <p class="text-[10px] text-amber-100/70 truncate hidden sm:block mt-0.5">Verifikasi berkas PDF</p>
+                            </div>
+                            <div class="mt-2 flex items-center gap-1.5 pt-1.5 border-t border-white/10">
+                                <span class="w-1.5 h-1.5 rounded-full <?= $step2_dot; ?>"></span>
+                                <span class="text-[11px] font-bold <?= $step2_txt; ?> truncate"><?= $a_status; ?></span>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Koordinator TA -->
+                        <?php 
+                            $step3_bg = $k_is_app ? 'bg-emerald-950/40 border-emerald-400/50 text-white ring-1 ring-emerald-400/30' : ($k_is_rej ? 'bg-rose-950/50 border-rose-400/60 text-white ring-1 ring-rose-400/30' : 'bg-black/25 border-white/20 text-white');
+                            $step3_dot = $k_is_app ? 'bg-emerald-400' : ($k_is_rej ? 'bg-rose-400' : 'bg-amber-300');
+                            $step3_txt = $k_is_app ? 'text-emerald-300' : ($k_is_rej ? 'text-rose-300' : 'text-amber-100');
+                        ?>
+                        <div class="backdrop-blur-md rounded-xl p-2.5 sm:p-3 border <?= $step3_bg; ?> flex flex-col justify-between transition hover:bg-black/35">
+                            <div class="flex items-center justify-between gap-1 mb-1">
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-amber-200/90">Tahap 03</span>
+                                <span class="w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-bold <?= $k_is_app ? 'bg-emerald-500 text-white' : ($k_is_rej ? 'bg-rose-500 text-white' : 'bg-white/20 text-white'); ?>">
+                                    <i class="bi <?= $k_is_app ? 'bi-check-lg' : ($k_is_rej ? 'bi-x-lg' : 'bi-award'); ?>"></i>
+                                </span>
+                            </div>
+                            <div>
+                                <h4 class="text-xs sm:text-sm font-bold text-white truncate leading-tight">Koordinator TA</h4>
+                                <p class="text-[10px] text-amber-100/70 truncate hidden sm:block mt-0.5">Penetapan Pembimbing</p>
+                            </div>
+                            <div class="mt-2 flex items-center gap-1.5 pt-1.5 border-t border-white/10">
+                                <span class="w-1.5 h-1.5 rounded-full <?= $step3_dot; ?>"></span>
+                                <span class="text-[11px] font-bold <?= $step3_txt; ?> truncate"><?= $k_status; ?></span>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Ketua KK -->
+                        <?php 
+                            $step4_bg = $kk_is_app ? 'bg-emerald-950/40 border-emerald-400/50 text-white ring-1 ring-emerald-400/30' : ($kk_is_rej ? 'bg-rose-950/50 border-rose-400/60 text-white ring-1 ring-rose-400/30' : 'bg-black/25 border-white/20 text-white');
+                            $step4_dot = $kk_is_app ? 'bg-emerald-400' : ($kk_is_rej ? 'bg-rose-400' : 'bg-amber-300');
+                            $step4_txt = $kk_is_app ? 'text-emerald-300' : ($kk_is_rej ? 'text-rose-300' : 'text-amber-100');
+                        ?>
+                        <div class="backdrop-blur-md rounded-xl p-2.5 sm:p-3 border <?= $step4_bg; ?> flex flex-col justify-between transition hover:bg-black/35">
+                            <div class="flex items-center justify-between gap-1 mb-1">
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-amber-200/90">Tahap 04</span>
+                                <span class="w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-bold <?= $kk_is_app ? 'bg-emerald-500 text-white' : ($kk_is_rej ? 'bg-rose-500 text-white' : 'bg-white/20 text-white'); ?>">
+                                    <i class="bi <?= $kk_is_app ? 'bi-check-lg' : ($kk_is_rej ? 'bi-x-lg' : 'bi-mortarboard'); ?>"></i>
+                                </span>
+                            </div>
+                            <div>
+                                <h4 class="text-xs sm:text-sm font-bold text-white truncate leading-tight">Ketua KK</h4>
+                                <p class="text-[10px] text-amber-100/70 truncate hidden sm:block mt-0.5">Persetujuan topik &amp; KK</p>
+                            </div>
+                            <div class="mt-2 flex items-center gap-1.5 pt-1.5 border-t border-white/10">
+                                <span class="w-1.5 h-1.5 rounded-full <?= $step4_dot; ?>"></span>
+                                <span class="text-[11px] font-bold <?= $step4_txt; ?> truncate"><?= $kk_status; ?></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -371,9 +496,15 @@
 
                 <div class="w-full pt-3.5 border-t border-orange-100 text-xs flex items-center justify-between">
                     <span class="font-medium text-slate-600">Akses Bimbingan:</span>
-                    <a href="<?= site_url('mahasiswa/bimbingan'); ?>" class="font-extrabold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-3 py-1.5 rounded-xl border border-emerald-300 text-xs flex items-center gap-1.5 transition shadow-2xs">
-                        <i class="bi bi-unlock-fill text-emerald-600"></i> Buka Bimbingan TA &rarr;
-                    </a>
+                    <?php if ($approved_count === 4): ?>
+                        <a href="<?= site_url('mahasiswa/bimbingan'); ?>" class="font-extrabold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-3 py-1.5 rounded-xl border border-emerald-300 text-xs flex items-center gap-1.5 transition shadow-2xs">
+                            <i class="bi bi-unlock-fill text-emerald-600"></i> Buka Bimbingan TA &rarr;
+                        </a>
+                    <?php else: ?>
+                        <span class="font-bold text-slate-400 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200 text-xs flex items-center gap-1.5 cursor-not-allowed select-none" title="Akses bimbingan baru terbuka setelah seluruh 4 tahap disetujui">
+                            <i class="bi bi-lock-fill text-slate-400"></i> Terkunci (<?= $approved_count; ?>/4)
+                        </span>
+                    <?php endif; ?>
                 </div>
 
             </div>
@@ -557,184 +688,30 @@
             </div>
         <?php endif; ?>
 
-        <!-- Workflow Approval Chain Tracker (3D Stepper Line) -->
-        <div class="card-3d-warm card-no-hover rounded-2xl p-6 sm:p-7 relative">
-            <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <!-- Status Akses Bimbingan Akademik (Slim Bar) -->
+        <div class="card-3d-warm card-no-hover rounded-2xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl <?= ($approved_count === 4) ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'; ?> flex items-center justify-center text-lg font-bold shrink-0 box-3d">
+                    <i class="bi <?= ($approved_count === 4) ? 'bi-unlock-fill' : 'bi-lock-fill'; ?>"></i>
+                </div>
                 <div>
-                    <span class="text-xs font-bold uppercase tracking-wider text-orange-600 block mb-0.5">REAL-TIME WORKFLOW</span>
-                    <h2 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                        <i class="bi bi-diagram-3-fill text-orange-500"></i> Status Approval 4 Tahap
-                    </h2>
-                </div>
-                <div class="flex items-center gap-2 bg-orange-100/90 border border-orange-300 px-3.5 py-1.5 rounded-full text-xs font-bold text-orange-800 badge-3d">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
-                    <span>Live Tracking</span>
+                    <h4 class="font-bold text-sm text-slate-900">Status Akses Bimbingan Akademik</h4>
+                    <p class="text-xs text-slate-500 font-medium">
+                        <?= ($approved_count === 4) ? 'Persetujuan 4 tahap selesai. Dosen Pembimbing resmi ditetapkan.' : 'Memerlukan persetujuan lengkap 4 tahap (Dosen Wali, Admin Layanan, Koordinator TA, dan Ketua KK)'; ?>
+                    </p>
                 </div>
             </div>
 
-            <!-- Stepper Container -->
-            <div class="stepper-connector relative">
-                <!-- Line Progress Background (Desktop Only) -->
-                <div class="stepper-line hidden lg:block">
-                    <?php 
-                        $stepper_pct = 0;
-                        if ($w_status === 'Approved') $stepper_pct = 33;
-                        if ($w_status === 'Approved' && $a_status === 'Approved') $stepper_pct = 66;
-                        if ($w_status === 'Approved' && $a_status === 'Approved' && $k_status === 'Approved') $stepper_pct = 90;
-                        if ($w_status === 'Approved' && $a_status === 'Approved' && $k_status === 'Approved' && $kk_status === 'Approved') $stepper_pct = 100;
-                    ?>
-                    <div class="stepper-line-progress" style="width: <?= $stepper_pct; ?>%;"></div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 relative z-10">
-                    <!-- Stage 1: Dosen Wali -->
-                    <?php 
-                        $w_card_bg = $w_is_app ? 'border-2 border-emerald-400 bg-emerald-50/50 shadow-md shadow-emerald-500/10' : ($w_is_rej ? 'border-rose-300 bg-rose-50/60' : ($has_ta ? 'border-orange-300 bg-orange-100/50' : 'border-slate-200 bg-slate-50/80'));
-                        $w_icon_bg = $w_is_app ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/50 ring-4 ring-emerald-400/25' : ($w_is_rej ? 'bg-gradient-to-tr from-rose-600 to-red-400 text-white' : ($has_ta ? 'bg-gradient-to-tr from-orange-500 to-amber-500 text-white' : 'bg-slate-200 text-slate-500'));
-                        $w_badge_cls = $w_is_app ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : ($w_is_rej ? 'bg-rose-100 text-rose-800 border-rose-300' : ($has_ta ? 'bg-orange-200 text-orange-900 border-orange-300' : 'bg-slate-100 text-slate-600 border-slate-200'));
-                    ?>
-                    <div class="bg-white/95 p-5 rounded-2xl border <?= $w_card_bg; ?> shadow-xs hover-card-elevate flex flex-col justify-between">
-                        <div class="flex items-center justify-between mb-3.5">
-                            <span class="text-xs font-extrabold tracking-wider uppercase text-slate-400">Tahap 01</span>
-                            <div class="w-9 h-9 rounded-xl <?= $w_icon_bg; ?> flex items-center justify-center text-base font-bold box-3d">
-                                <i class="bi <?= $w_is_app ? 'bi-check-lg text-lg' : ($w_is_rej ? 'bi-x-lg' : 'bi-person-check'); ?>"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-sm sm:text-base text-slate-900 mb-1">Dosen Wali</h3>
-                            <p class="text-xs text-slate-500 mb-3 font-medium">Persetujuan akademik</p>
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg border <?= $w_badge_cls; ?> badge-3d">
-                                <span class="w-2 h-2 rounded-full <?= $w_is_app ? 'bg-emerald-500' : ($w_is_rej ? 'bg-rose-500' : ($has_ta ? 'bg-orange-600' : 'bg-slate-400')); ?>"></span>
-                                <?= $w_status; ?>
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Stage 2: Admin Layanan -->
-                    <?php 
-                        $a_card_bg = $a_is_app ? 'border-2 border-emerald-400 bg-emerald-50/50 shadow-md shadow-emerald-500/10' : ($a_is_rej ? 'border-rose-300 bg-rose-50/60' : 'border-slate-200 bg-slate-50/80');
-                        $a_icon_bg = $a_is_app ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/50 ring-4 ring-emerald-400/25' : ($a_is_rej ? 'bg-gradient-to-tr from-rose-600 to-red-400 text-white' : 'bg-slate-200 text-slate-500');
-                        $a_badge_cls = $a_is_app ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : ($a_is_rej ? 'bg-rose-100 text-rose-800 border-rose-300' : 'bg-slate-100 text-slate-600 border-slate-200');
-                        $laa_note = $pendaftaran['catatan_admin'] ?? '';
-                    ?>
-                    <div class="bg-white/95 p-5 rounded-2xl border <?= $a_card_bg; ?> shadow-xs hover-card-elevate flex flex-col justify-between">
-                        <div class="flex items-center justify-between mb-3.5">
-                            <span class="text-xs font-extrabold tracking-wider uppercase text-slate-400">Tahap 02</span>
-                            <div class="w-9 h-9 rounded-xl <?= $a_icon_bg; ?> flex items-center justify-center text-base font-bold box-3d">
-                                <i class="bi <?= $a_is_app ? 'bi-check-lg text-lg' : ($a_is_rej ? 'bi-x-lg' : 'bi-shield-check'); ?>"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-sm sm:text-base text-slate-900 mb-1">Admin Layanan</h3>
-                            <p class="text-xs text-slate-500 mb-3 font-medium">Verifikasi berkas PDF</p>
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg border <?= $a_badge_cls; ?> badge-3d">
-                                <span class="w-2 h-2 rounded-full <?= $a_is_app ? 'bg-emerald-500' : ($a_is_rej ? 'bg-rose-500' : 'bg-slate-400'); ?>"></span>
-                                <?= $a_status; ?>
-                            </span>
-
-                            <?php if($a_is_rej && (!empty($raw_kurang) || !empty($laa_note))): ?>
-                                <div class="mt-2.5 p-2 rounded-lg text-[10px] bg-rose-50 border border-rose-200 text-rose-900">
-                                    <span class="font-bold block mb-0.5"><i class="bi bi-chat-text"></i> Catatan LAA:</span>
-                                    <?php if(!empty($laa_note)): ?>
-                                        <p class="line-clamp-3 leading-snug">"<?= htmlspecialchars($laa_note); ?>"</p>
-                                    <?php else: ?>
-                                        <p class="line-clamp-3 leading-snug">File kurang: <?= implode(', ', array_map('strtoupper', $raw_kurang)); ?></p>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-
-                    <!-- Stage 3: Koordinator TA -->
-                    <?php 
-                        $k_card_bg = $k_is_app ? 'border-2 border-emerald-400 bg-emerald-50/50 shadow-md shadow-emerald-500/10' : ($k_is_rej ? 'border-rose-300 bg-rose-50/60' : 'border-slate-200 bg-slate-50/80');
-                        $k_icon_bg = $k_is_app ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/50 ring-4 ring-emerald-400/25' : ($k_is_rej ? 'bg-gradient-to-tr from-rose-600 to-red-400 text-white' : 'bg-slate-200 text-slate-500');
-                        $k_badge_cls = $k_is_app ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : ($k_is_rej ? 'bg-rose-100 text-rose-800 border-rose-300' : 'bg-slate-100 text-slate-600 border-slate-200');
-                    ?>
-                    <div class="bg-white/95 p-5 rounded-2xl border <?= $k_card_bg; ?> shadow-xs hover-card-elevate flex flex-col justify-between">
-                        <div class="flex items-center justify-between mb-3.5">
-                            <span class="text-xs font-extrabold tracking-wider uppercase text-slate-400">Tahap 03</span>
-                            <div class="w-9 h-9 rounded-xl <?= $k_icon_bg; ?> flex items-center justify-center text-base font-bold box-3d">
-                                <i class="bi <?= $k_is_app ? 'bi-check-lg text-lg' : ($k_is_rej ? 'bi-x-lg' : 'bi-award'); ?>"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-sm sm:text-base text-slate-900 mb-1">Koordinator TA</h3>
-                            <p class="text-xs text-slate-500 mb-3 font-medium">Penetapan Pembimbing</p>
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg border <?= $k_badge_cls; ?> badge-3d">
-                                <span class="w-2 h-2 rounded-full <?= $k_is_app ? 'bg-emerald-500' : ($k_is_rej ? 'bg-rose-500' : 'bg-slate-400'); ?>"></span>
-                                <?= $k_status; ?>
-                            </span>
-
-                            <?php if($k_is_rej && !empty($pendaftaran['catatan_koor'])): ?>
-                                <div class="mt-2.5 p-2 rounded-lg text-[10px] bg-rose-50 border border-rose-200 text-rose-900">
-                                    <span class="font-bold block mb-0.5"><i class="bi bi-chat-text"></i> Catatan Koor:</span>
-                                    <p class="line-clamp-3 leading-snug">"<?= htmlspecialchars($pendaftaran['catatan_koor']); ?>"</p>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-
-                    <!-- Stage 4: Ketua KK -->
-                    <?php 
-                        $kk_card_bg = $kk_is_app ? 'border-2 border-emerald-400 bg-emerald-50/50 shadow-md shadow-emerald-500/10' : ($kk_is_rej ? 'border-rose-300 bg-rose-50/60' : 'border-slate-200 bg-slate-50/80');
-                        $kk_icon_bg = $kk_is_app ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/50 ring-4 ring-emerald-400/25' : ($kk_is_rej ? 'bg-gradient-to-tr from-rose-600 to-red-400 text-white' : 'bg-slate-200 text-slate-500');
-                        $kk_badge_cls = $kk_is_app ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : ($kk_is_rej ? 'bg-rose-100 text-rose-800 border-rose-300' : 'bg-slate-100 text-slate-600 border-slate-200');
-                    ?>
-                    <div class="bg-white/95 p-5 rounded-2xl border <?= $kk_card_bg; ?> shadow-xs hover-card-elevate flex flex-col justify-between">
-                        <div class="flex items-center justify-between mb-3.5">
-                            <span class="text-xs font-extrabold tracking-wider uppercase text-slate-400">Tahap 04</span>
-                            <div class="w-9 h-9 rounded-xl <?= $kk_icon_bg; ?> flex items-center justify-center text-base font-bold box-3d">
-                                <i class="bi <?= $kk_is_app ? 'bi-check-lg text-lg' : ($kk_is_rej ? 'bi-x-lg' : 'bi-mortarboard'); ?>"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-sm sm:text-base text-slate-900 mb-1">Ketua KK</h3>
-                            <p class="text-xs text-slate-500 mb-3 font-medium">Persetujuan topik &amp; KK</p>
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg border <?= $kk_badge_cls; ?> badge-3d">
-                                <span class="w-2 h-2 rounded-full <?= $kk_is_app ? 'bg-emerald-500' : ($kk_is_rej ? 'bg-rose-500' : 'bg-slate-400'); ?>"></span>
-                                <?= $kk_status; ?>
-                            </span>
-
-                            <?php if($kk_is_rej && !empty($pendaftaran['catatan_kk'])): ?>
-                                <div class="mt-2.5 p-2 rounded-lg text-[10px] bg-rose-50 border border-rose-200 text-rose-900">
-                                    <span class="font-bold block mb-0.5"><i class="bi bi-chat-text"></i> Catatan KK:</span>
-                                    <p class="line-clamp-3 leading-snug">"<?= htmlspecialchars($pendaftaran['catatan_kk']); ?>"</p>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Bimbingan Status Bottom Bar -->
-            <div class="mt-6 pt-4 border-t border-orange-100 flex flex-wrap items-center justify-between gap-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl <?= $k_is_app ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'; ?> flex items-center justify-center text-lg font-bold shrink-0 box-3d">
-                        <i class="bi <?= $k_is_app ? 'bi-unlock-fill' : 'bi-lock-fill'; ?>"></i>
-                    </div>
-                    <div>
-                        <h4 class="font-bold text-sm text-slate-900">Status Akses Bimbingan Akademik</h4>
-                        <p class="text-xs text-slate-500 font-medium">
-                            <?= $k_is_app ? 'Persetujuan 4 tahap selesai. Dosen Pembimbing resmi ditetapkan.' : 'Memerlukan persetujuan hingga Tahap 04 Koordinator TA (Penetapan Pembimbing)'; ?>
-                        </p>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2.5">
-                    <?php if($k_is_app): ?>
-                        <a href="<?= site_url('mahasiswa/bimbingan'); ?>" class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-bold rounded-xl flex items-center gap-2 box-3d shadow-md hover:scale-105 active:scale-95 transition-all">
-                            <i class="bi bi-patch-check-fill text-base"></i> UNLOCKED — Masuk Bimbingan &amp; Upload Preview 1 <i class="bi bi-arrow-right text-xs"></i>
-                        </a>
-                    <?php else: ?>
-                        <span class="px-5 py-2.5 bg-gradient-to-r from-orange-600 to-amber-600 text-white text-xs font-bold rounded-xl flex items-center gap-2 box-3d">
-                            <i class="bi bi-clock-fill text-base"></i> LOCKED — Menunggu
-                        </span>
-                        <a href="<?= site_url('mahasiswa/bimbingan'); ?>" class="px-3.5 py-2 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-800 text-[11px] font-bold transition flex items-center gap-1.5" title="Uji Coba Langsung Modul Bimbingan & Preview 1">
-                            <i class="bi bi-box-arrow-up-right"></i> Buka Bimbingan (Testing)
-                        </a>
-                    <?php endif; ?>
-                </div>
+            <div class="flex items-center gap-2.5">
+                <?php if($approved_count === 4): ?>
+                    <a href="<?= site_url('mahasiswa/bimbingan'); ?>" class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-bold rounded-xl flex items-center gap-2 box-3d shadow-md hover:scale-105 active:scale-95 transition-all">
+                        <i class="bi bi-patch-check-fill text-base"></i> UNLOCKED — Masuk Bimbingan &amp; Upload Preview 1 <i class="bi bi-arrow-right text-xs"></i>
+                    </a>
+                <?php else: ?>
+                    <span class="px-4 py-2 bg-gradient-to-r from-orange-600 to-amber-600 text-white text-xs font-bold rounded-xl flex items-center gap-2 box-3d select-none">
+                        <i class="bi bi-lock-fill text-xs"></i> LOCKED — Menunggu (<?= $approved_count; ?>/4 Tahap)
+                    </span>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -887,8 +864,31 @@
             }
         </style>
         <div id="modalFileBreakdown" style="display: none; z-index: 100050 !important;" onclick="if(event.target === this) closeFileBreakdownModal()" class="fixed inset-0 z-[100050] flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 sm:p-6 md:p-8 overflow-hidden">
-            <div class="bg-white rounded-3xl max-w-3xl lg:max-w-4xl w-full shadow-2xl border border-orange-100 max-h-[88vh] flex flex-col overflow-hidden my-auto mx-auto">
-                <form action="<?= site_url('mahasiswa/upload_revisi_berkas'); ?>" method="POST" enctype="multipart/form-data" class="flex flex-col flex-1 min-h-0">
+            <div class="bg-white rounded-3xl max-w-3xl lg:max-w-4xl w-full shadow-2xl border border-orange-100 max-h-[88vh] flex flex-col overflow-hidden my-auto mx-auto relative">
+                <!-- Loading Overlay saat upload revisi berjalan -->
+                <div id="loadingOverlayRevisi" class="hidden absolute inset-0 z-[100] bg-slate-900/75 backdrop-blur-xs flex flex-col items-center justify-center text-center p-6 transition-all duration-300">
+                    <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-orange-100 space-y-4">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-400 text-white flex items-center justify-center text-3xl mx-auto shadow-lg shadow-orange-500/30">
+                            <i class="bi bi-cloud-arrow-up-fill animate-bounce"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-orange-600 bg-orange-100 px-3 py-1 rounded-full border border-orange-200">MENGUNGGAH BERKAS</span>
+                            <h4 class="text-base font-extrabold text-slate-900 mt-2">Sedang Mengirimkan Revisi Berkas</h4>
+                            <p class="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
+                                Mohon tunggu, berkas perbaikan sedang diunggah dan disimpan ke server. Halaman akan dimuat ulang setelah selesai.
+                            </p>
+                        </div>
+                        <div class="flex items-center justify-center gap-2 text-xs font-bold text-orange-600 pt-1">
+                            <svg class="animate-spin h-5 w-5 text-orange-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Memproses pengiriman, tombol dikunci...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="formRevisiBerkas" action="<?= site_url('mahasiswa/upload_revisi_berkas'); ?>" method="POST" enctype="multipart/form-data" class="flex flex-col flex-1 min-h-0" onsubmit="return handleFormRevisiSubmit(event)">
                     <!-- Header Modal (Fixed) -->
                     <div class="p-5 sm:p-6 pb-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
                         <div class="flex items-center gap-3">
@@ -1143,8 +1143,8 @@
                                                     <span class="text-[10px] font-bold text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full">PDF &bull; Maks 5MB</span>
                                                 </div>
 
-                                                <input type="file" name="<?= $f['field']; ?>" accept=".pdf" 
-                                                       onchange="highlightSelectedRevisiFile(this, 'badge_revisi_<?= $f['field']; ?>')"
+                                                <input type="file" name="<?= $f['field']; ?>" accept=".pdf,application/pdf" 
+                                                       onchange="highlightSelectedRevisiFile(this, 'badge_revisi_<?= $f['field']; ?>', 'error_revisi_<?= $f['field']; ?>')"
                                                        class="block w-full text-xs text-slate-700 font-bold file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:uppercase file:tracking-wider file:bg-gradient-to-r file:from-orange-600 file:to-amber-600 file:text-white hover:file:from-orange-700 hover:file:to-amber-700 cursor-pointer border-2 border-slate-200 rounded-xl p-1.5 bg-slate-50 hover:bg-orange-50/30 transition shadow-2xs">
 
                                                 <!-- Highlight Box Preview Saat File Baru Dipilih -->
@@ -1162,6 +1162,19 @@
                                                     <span class="text-emerald-700 text-xs font-black shrink-0 hidden sm:flex items-center gap-1">
                                                         <i class="bi bi-check-circle-fill text-emerald-600 text-sm"></i> Terpilih
                                                     </span>
+                                                </div>
+
+                                                <!-- Error Box Saat File Gagal Validasi (Bukan PDF atau > 5MB) -->
+                                                <div id="error_revisi_<?= $f['field']; ?>" class="hidden p-3 rounded-xl bg-rose-50 border-2 border-rose-300 text-rose-950 flex items-center gap-2.5 shadow-xs transition-all">
+                                                    <div class="w-8 h-8 rounded-lg bg-rose-600 text-white flex items-center justify-center text-base font-bold shrink-0 shadow-xs">
+                                                        <i class="bi bi-exclamation-triangle-fill"></i>
+                                                    </div>
+                                                    <div class="min-w-0 flex-1">
+                                                        <div class="flex items-center gap-1.5">
+                                                            <span class="text-[9px] font-black uppercase tracking-wider text-rose-800 bg-rose-200/80 px-2 py-0.5 rounded-full">File Gagal / Tidak Sesuai</span>
+                                                        </div>
+                                                        <p class="text-xs font-semibold text-rose-900 mt-1 file-error-label leading-snug"></p>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1325,7 +1338,7 @@
                             Tutup
                         </button>
                         <?php if($rej_items > 0): ?>
-                            <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-black uppercase tracking-wider text-xs shadow-md transition box-3d hover:scale-105 active:scale-95 cursor-pointer">
+                            <button type="submit" id="btnSubmitRevisi" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-black uppercase tracking-wider text-xs shadow-md transition box-3d hover:scale-105 active:scale-95 cursor-pointer">
                                 <i class="bi bi-cloud-arrow-up-fill text-sm"></i> Simpan &amp; Kirim Perbaikan (<?= $rej_items; ?> Revisi)
                             </button>
                         <?php endif; ?>
@@ -1427,22 +1440,180 @@
         }
     }
 
-    function highlightSelectedRevisiFile(input, badgeId) {
+    function highlightSelectedRevisiFile(input, badgeId, errorId) {
         const badge = document.getElementById(badgeId);
-        if (!badge) return;
-        if (input.files && input.files[0]) {
-            const file = input.files[0];
+        const errBox = document.getElementById(errorId);
+        if (errBox) errBox.classList.add('hidden');
+        if (badge) badge.classList.add('hidden');
+
+        if (!input.files || !input.files[0]) {
+            return;
+        }
+
+        const file = input.files[0];
+        const maxSizeBytes = 5 * 1024 * 1024; // 5 MB
+        const fileName = file.name || '';
+        const isPdf = fileName.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+
+        if (!isPdf) {
+            input.value = ''; // Reset input agar tidak terkirim
+            const errMsg = 'Format file salah! Berkas harus berformat PDF (.pdf). File "' + fileName + '" ditolak.';
+            if (errBox) {
+                const errLabel = errBox.querySelector('.file-error-label');
+                if (errLabel) errLabel.textContent = errMsg;
+                errBox.classList.remove('hidden');
+            }
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Format File Tidak Sesuai',
+                    text: errMsg,
+                    confirmButtonColor: '#e11d48',
+                    confirmButtonText: 'Pilih File Lain'
+                });
+            } else {
+                alert(errMsg);
+            }
+            return;
+        }
+
+        if (file.size > maxSizeBytes) {
+            input.value = ''; // Reset input agar tidak terkirim
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            const errMsg = 'Ukuran file melebihi batas (' + sizeMB + ' MB)! Maksimal ukuran file yang diizinkan adalah 5 MB.';
+            if (errBox) {
+                const errLabel = errBox.querySelector('.file-error-label');
+                if (errLabel) errLabel.textContent = errMsg;
+                errBox.classList.remove('hidden');
+            }
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Ukuran File Terlalu Besar',
+                    text: errMsg,
+                    confirmButtonColor: '#e11d48',
+                    confirmButtonText: 'Pilih File Lain'
+                });
+            } else {
+                alert(errMsg);
+            }
+            return;
+        }
+
+        // Jika memenuhi kedua kriteria (PDF & <= 5MB)
+        if (badge) {
             const nameEl = badge.querySelector('.file-name-label');
             const sizeEl = badge.querySelector('.file-size-label');
             if (nameEl) nameEl.textContent = file.name;
             if (sizeEl) {
-                const sizeKB = (file.size / 1024).toFixed(1);
-                sizeEl.textContent = `(${sizeKB} KB)`;
+                const sizeFormatted = file.size > 1024 * 1024
+                    ? (file.size / (1024 * 1024)).toFixed(2) + ' MB'
+                    : (file.size / 1024).toFixed(1) + ' KB';
+                sizeEl.textContent = '(' + sizeFormatted + ')';
             }
             badge.classList.remove('hidden');
-        } else {
-            badge.classList.add('hidden');
         }
+    }
+
+    let isSubmittingRevisi = false;
+    function handleFormRevisiSubmit(e) {
+        if (isSubmittingRevisi) {
+            if (e && e.preventDefault) e.preventDefault();
+            return false;
+        }
+
+        const form = document.getElementById('formRevisiBerkas');
+        if (!form) return true;
+
+        const fileInputs = form.querySelectorAll('input[type="file"]');
+        const textInputs = form.querySelectorAll('input[type="text"]');
+        let hasAnyInputFilled = false;
+        let hasInvalidFile = false;
+        let invalidMsg = '';
+
+        fileInputs.forEach(inp => {
+            if (inp.files && inp.files[0]) {
+                const file = inp.files[0];
+                const isPdf = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+                const isSizeOk = file.size <= 5 * 1024 * 1024;
+                if (!isPdf) {
+                    hasInvalidFile = true;
+                    invalidMsg = 'File "' + file.name + '" bukan format PDF. Harap unggah berkas berekstensi .pdf!';
+                } else if (!isSizeOk) {
+                    hasInvalidFile = true;
+                    invalidMsg = 'File "' + file.name + '" berukuran ' + (file.size / (1024*1024)).toFixed(2) + ' MB (maksimal 5 MB)!';
+                } else {
+                    hasAnyInputFilled = true;
+                }
+            }
+        });
+
+        if (hasInvalidFile) {
+            if (e && e.preventDefault) e.preventDefault();
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'File Tidak Sesuai Kriteria',
+                    text: invalidMsg + ' Pastikan seluruh berkas berformat PDF dan maksimal berukuran 5 MB.',
+                    confirmButtonColor: '#e11d48'
+                });
+            } else {
+                alert(invalidMsg);
+            }
+            return false;
+        }
+
+        textInputs.forEach(inp => {
+            if (inp.value && inp.value.trim().length > 0) {
+                hasAnyInputFilled = true;
+            }
+        });
+
+        if (!hasAnyInputFilled) {
+            if (e && e.preventDefault) e.preventDefault();
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Belum Ada Perubahan',
+                    text: 'Silakan pilih berkas PDF perbaikan atau isi perubahan judul sebelum mengirim.',
+                    confirmButtonColor: '#f97316'
+                });
+            } else {
+                alert('Silakan pilih berkas PDF perbaikan atau isi perubahan judul sebelum mengirim.');
+            }
+            return false;
+        }
+
+        // Aktifkan state loading untuk meminimalisir multiple requests / spam klik
+        isSubmittingRevisi = true;
+
+        const btnSubmit = document.getElementById('btnSubmitRevisi');
+        if (btnSubmit) {
+            btnSubmit.disabled = true;
+            btnSubmit.classList.add('opacity-75', 'cursor-not-allowed', 'pointer-events-none');
+            btnSubmit.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Mengunggah Revisi, Mohon Tunggu...
+            `;
+        }
+
+        // Kunci tombol penutup modal agar proses pengunggahan tidak terinterupsi
+        const closeBtns = document.querySelectorAll('#modalFileBreakdown button[onclick*="closeFileBreakdownModal"]');
+        closeBtns.forEach(b => {
+            b.disabled = true;
+            b.classList.add('opacity-40', 'pointer-events-none');
+        });
+
+        // Tampilkan modal overlay loading animasi
+        const loadingBanner = document.getElementById('loadingOverlayRevisi');
+        if (loadingBanner) {
+            loadingBanner.classList.remove('hidden');
+        }
+
+        return true;
     }
 
     function setModalFilter(type) {

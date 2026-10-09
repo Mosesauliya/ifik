@@ -1099,6 +1099,7 @@ if (!function_exists('render_kaprodi_client_filter')) {
     </style>
 </head>
 <body class="scm-dashboard scm-dashboard-kaprodi kaprodi-loan-page">
+<!-- SIDEBAR LAMA (DIKOMENTARI):
 <aside class="dashboard-sidebar" aria-label="Navigasi Panel Kaprodi">
     <a class="sidebar-brand" href="<?= base_url('index.php/kaprodi/dashboard?tab=panel') ?>">
         <span class="sidebar-brand-mark"><i class="bi bi-building-check"></i></span>
@@ -1123,8 +1124,11 @@ if (!function_exists('render_kaprodi_client_filter')) {
         <span class="sidebar-status-dot"></span><span>System operational</span>
     </div>
 </aside>
+-->
 
-<div class="dashboard-content">
+<?php $this->load->view('components/curved_sidebar'); ?>
+
+<div class="dashboard-content page-wrapper-for-sidebar">
 <header class="topbar sticky-top">
     <div class="container-fluid px-3 px-lg-4 py-3">
         <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">

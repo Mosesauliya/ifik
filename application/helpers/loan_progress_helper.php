@@ -200,7 +200,7 @@ if (!function_exists('scm_loan_can_act')) {
         }
         if ($role === 'kaur') {
             return $status === 'Menunggu ACC Kaur'
-                && $kaprodi === 'Disetujui' && $laboran === 'Disetujui' && $kaur === 'Pending';
+                && $kaprodi === 'Disetujui' && $kaur === 'Pending';
         }
         if ($role === 'wadek') {
             return $is_external
