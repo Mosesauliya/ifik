@@ -1,18 +1,11 @@
-﻿<?php
+<?php
 /**
  * DASHBOARD UNIFIED — 4 Role: P1, P2, U1, U2
  *
- * Controller wajib mengirimkan variabel: $role ('p1'|'p2'|'u1'|'u2')
- * Jika tidak, default ke 'p1'.
- *
- * Changelog (2026-10-09):
- *  - Max floating panel: 5 mahasiswa (dari 4)
- *  - Status Review: 3 badge (ACC / Revisi / Pending) — selalu tampil
- *  - Fullscreen: mode overlay CSS (bukan Fullscreen API) — action bar tetap bisa diklik
- *  - Auto-refresh floating panel & preview card saat SSE update
- *  - Auto-close preview & student card setelah semua file final (tidak Pending)
- *  - Tombol Komentar dihapus untuk PIC tahap aktif (P1@Preview1, U1@Preview2/3/Sidang)
- *  - Fix: komentar dari ACC/Revisi (catatan_file_*) kini muncul di kolom Komentar
+ * Changelog (2026-10-09 r3):
+ *  - Tombol Nilai/Edit Nilai dipindah dari panel header & preview footer
+ *    → ke kolom "Lulus Tahap" di tabel (khusus tahap Sidang).
+ *  - Lock tombol Nilai jika mahasiswa belum upload file sidang.
  */
 
 $role             = $role ?? 'p1';
@@ -288,22 +281,15 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             width: 624px; max-width: 75vw; height: 85vh; max-height: 90vh;
         }
 
-        /* Fullscreen mode via CSS overlay (menggantikan Fullscreen API) */
+        /* Fullscreen mode via CSS overlay */
         .preview-card-item.preview-fullscreen-mode {
             position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            max-width: 100vw !important;
-            max-height: 100vh !important;
+            top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+            width: 100vw !important; height: 100vh !important;
+            max-width: 100vw !important; max-height: 100vh !important;
             z-index: 999999 !important;
-            border-radius: 0 !important;
-            border: none !important;
-            box-shadow: none !important;
-            margin: 0 !important;
+            border-radius: 0 !important; border: none !important;
+            box-shadow: none !important; margin: 0 !important;
         }
         .preview-card-item.preview-fullscreen-mode .preview-header {
             background: rgba(15, 23, 42, 0.96) !important;
@@ -317,8 +303,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.12);
         }
         .preview-card-item.preview-fullscreen-mode .preview-body {
-            flex: 1 !important;
-            min-height: 0 !important;
+            flex: 1 !important; min-height: 0 !important;
         }
 
         .preview-card-item .preview-body {
@@ -491,9 +476,9 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         }
 
         #modalPenilaianSidang {
-            position: fixed; left: 1.5rem; bottom: 1.5rem; z-index: 10000; display: none;
-            align-items: flex-end; justify-content: flex-start;
-            background: transparent; pointer-events: none; padding: 0;
+            position: fixed; inset: 0; z-index: 10000; display: none;
+            align-items: center; justify-content: center;
+            background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); pointer-events: none; padding: 0;
         }
         #modalPenilaianSidang.active { display: flex; }
         #modalPenilaianSidang .penilaian-box {
@@ -708,7 +693,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                                     <th id="thBapCol" class="py-4 px-4 text-center" style="display: none;">BAP</th>
                                     <th class="py-4 px-4 text-center">Aksi</th>
                                     <th class="py-4 px-4 pr-6 text-center">
-                                        <i class="bi bi-mortarboard-fill text-purple-500 mr-1"></i>Lulus Tahap
+                                        <i class="bi bi-mortarboard-fill text-purple-500 mr-1"></i>Lulus Tahap / Nilai
                                     </th>
                                 </tr>
                             </thead>
@@ -1028,11 +1013,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             });
             return { approved, revision, pending, missing, total: types.length };
         }
-
-        /**
-         * Gabungkan semua komentar per-file (catatan_file_*) menjadi satu string HTML.
-         * Ini yang membuat komentar dari tombol ACC/Revisi/Komentar muncul di kolom Komentar.
-         */
         function getAggregatedFileComments(preview, tahap) {
             if (!preview) return '';
             const types = getFileTypesForTahap(tahap);
@@ -1047,7 +1027,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             });
             return parts.join('');
         }
-
         function getTableColspan() {
             let cols = 7;
             if (IS_P1) cols++;
@@ -1069,7 +1048,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             if (IS_U2) return preview.catatan_penguji_2    || '';
             return '';
         }
-
         function setCurrentComment(preview, value) {
             if (IS_P1) preview.catatan_pembimbing   = value;
             else if (IS_P2) preview.catatan_pembimbing_2 = value;
@@ -1285,7 +1263,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                             updateFilterCounts();
                             renderTable();
 
-                            // Auto-refresh floating panel & preview cards agar data tidak basi
                             if ((window.activeLihatBerkasIndices && window.activeLihatBerkasIndices.length > 0)
                                 || (window.activePreviews && window.activePreviews.length > 0)) {
                                 try { refreshLihatBerkasView(); } catch(e) { console.warn('refreshLihatBerkasView error:', e); }
@@ -1345,7 +1322,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             const isLulus = isStageLulus(latest);
             const c = countFileStatuses(latest, currentTahap);
 
-            // Selalu tampilkan ketiga badge (ACC / Revisi / Pending)
             const badgeApproved = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold border inline-flex items-center gap-1 ${c.approved > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-400 border-slate-200'}"><i class="bi bi-check-circle-fill"></i> ${c.approved} ACC</span>`;
             const badgeRevision = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold border inline-flex items-center gap-1 ${c.revision > 0 ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-slate-50 text-slate-400 border-slate-200'}"><i class="bi bi-x-circle-fill"></i> ${c.revision} Revisi</span>`;
             const badgePending  = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold border inline-flex items-center gap-1 ${c.pending > 0 ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-50 text-slate-400 border-slate-200'}"><i class="bi bi-clock-fill"></i> ${c.pending} Pending</span>`;
@@ -1362,31 +1338,68 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             `;
         }
 
+        /**
+         * Kolom "Lulus Tahap / Nilai".
+         * - Tahap Sidang: tampilkan tombol "Beri Nilai" / "Edit Nilai".
+         *   · Jika mahasiswa belum upload file sidang → tombol LOCK.
+         *   · Siapa saja (P1, P2, U1, U2) boleh memberi nilai.
+         * - Tahap Preview 1/2/3: tombol Lulus Tahap + Downgrade (hanya PIC).
+         */
         function renderLulusTahapCell(mhs) {
+            const order = ['Preview 1', 'Preview 2', 'Preview 3', 'Sidang'];
+            const currIdx = order.indexOf(currentTahap);
+
+            // ===== SIDANG: tombol Nilai =====
+            if (currentTahap === 'Sidang') {
+                const latest = mhs.latest_preview;
+                const hasFile = !!(latest && (latest.file_sidang || latest.file_draft));
+
+                if (!hasFile) {
+                    return `<div class="flex flex-col gap-1.5 items-center max-w-[170px] mx-auto">
+                        <button type="button" disabled title="Mahasiswa belum mengunggah berkas sidang"
+                                class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap">
+                            <i class="bi bi-lock-fill"></i> Belum Ada Berkas
+                        </button>
+                    </div>`;
+                }
+
+                let nilaiTersimpan = null;
+                if (MODEL_POSISI === 1 && latest.nilaisidang_pembimbing1 && parseFloat(latest.nilaisidang_pembimbing1) > 0) nilaiTersimpan = parseFloat(latest.nilaisidang_pembimbing1);
+                else if (MODEL_POSISI === 2 && latest.nilaisidang_pembimbing2 && parseFloat(latest.nilaisidang_pembimbing2) > 0) nilaiTersimpan = parseFloat(latest.nilaisidang_pembimbing2);
+                else if (MODEL_POSISI === 3 && latest.nilaisidang_penguji1 && parseFloat(latest.nilaisidang_penguji1) > 0) nilaiTersimpan = parseFloat(latest.nilaisidang_penguji1);
+                else if (MODEL_POSISI === 4 && latest.nilaisidang_penguji2 && parseFloat(latest.nilaisidang_penguji2) > 0) nilaiTersimpan = parseFloat(latest.nilaisidang_penguji2);
+
+                const label = nilaiTersimpan ? 'Edit Nilai' : 'Beri Nilai';
+                const icon  = nilaiTersimpan ? 'bi-pencil-square' : 'bi-star-fill';
+
+                return `<div class="flex flex-col gap-1.5 items-center max-w-[170px] mx-auto">
+                    <button type="button"
+                            onclick="openModalPenilaianSidang('${mhs.nim}')"
+                            class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap active:scale-95">
+                        <i class="bi ${icon}"></i> ${label}
+                    </button>
+                </div>`;
+            }
+
+            // ===== PREVIEW 1/2/3: hanya PIC =====
             if (!mhs.latest_preview) return `<span class="text-slate-400 italic text-[11px]">—</span>`;
             if (!isCurrentUserPIC())  return `<span class="text-slate-400 italic text-[11px]">—</span>`;
 
             const latest = mhs.latest_preview;
             const isLulus = isStageLulus(latest);
             const c = countFileStatuses(latest, currentTahap);
-            const order = ['Preview 1', 'Preview 2', 'Preview 3', 'Sidang'];
-            const currIdx = order.indexOf(currentTahap);
 
             let btnLulus = '';
-            if (currentTahap !== 'Sidang') {
-                if (isLulus) {
-                    btnLulus = `<span class="px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-300 text-[11px] font-bold inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> Sudah Lulus</span>`;
-                } else if (c.approved > 0) {
-                    btnLulus = `<button onclick="handleLulusStage('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> Lulus Tahap</button>`;
-                } else {
-                    btnLulus = `<button disabled title="Belum ada berkas yang di-ACC" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Lulus Tahap</button>`;
-                }
+            if (isLulus) {
+                btnLulus = `<span class="px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-300 text-[11px] font-bold inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> Sudah Lulus</span>`;
+            } else if (c.approved > 0) {
+                btnLulus = `<button onclick="handleLulusStage('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> Lulus Tahap</button>`;
+            } else {
+                btnLulus = `<button disabled title="Belum ada berkas yang di-ACC" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Lulus Tahap</button>`;
             }
 
-            // Downgrade: di tab X → tombol "Downgrade ke X" untuk tarik dari X+1 ke X.
-            // Hanya muncul jika mahasiswa sudah lulus tahap X.
             let btnDowngrade = '';
-            if (currentTahap !== 'Sidang' && isLulus && currIdx >= 0 && (currIdx + 1) < order.length) {
+            if (isLulus && currIdx >= 0 && (currIdx + 1) < order.length) {
                 const nextTahap = order[currIdx + 1];
                 btnDowngrade = `<button onclick="handleDowngradeStageTo('${mhs.nim}', '${nextTahap}', '${currentTahap}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap" title="Tarik kembali dari ${nextTahap} ke ${currentTahap}"><i class="bi bi-arrow-down-circle"></i> Downgrade ke ${currentTahap}</button>`;
             }
@@ -1504,7 +1517,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                     checkboxHtml = `<input type="checkbox" disabled class="w-4 h-4 rounded border-slate-200 cursor-not-allowed opacity-50" title="Belum ada berkas atau file hilang">`;
                 }
 
-                // Aggregated comment: gabungkan komentar per-file (dari ACC/Revisi/Komentar) ke role PIC aktif
                 const picRoleCurrent = (currentTahap === 'Preview 1') ? 'p1' : 'u1';
                 const aggregatedFileComments = mhs.latest_preview ? getAggregatedFileComments(mhs.latest_preview, currentTahap) : '';
 
@@ -1561,7 +1573,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                             </td>
                         ` : ''}
                         <td class="aksi-cell py-4 px-4 text-center">${btnHtml}</td>
-                        <td data-label="Lulus Tahap" class="py-4 px-4 text-center">${lulusTahapHtml}</td>
+                        <td data-label="Lulus Tahap / Nilai" class="py-4 px-4 text-center">${lulusTahapHtml}</td>
                     </tr>
                 `;
             });
@@ -2181,7 +2193,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             const mhs = bimbinganData.find(m => m.nim === nim);
             if (!mhs || !mhs.riwayat_previews) return;
 
-            // 1. Auto-close preview card jika semua file di preview itu sudah tidak Pending
             window.activePreviews = (window.activePreviews || []).filter(p => {
                 if (p.nim !== nim) return true;
                 const prev = mhs.riwayat_previews[p.fileIndex];
@@ -2191,7 +2202,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 return files.some(f => getFileStatus(prev, f.type) === 'Pending');
             });
 
-            // 2. Auto-close student card jika SEMUA previews sudah tidak Pending
             const matchIdx = (window.activeLihatBerkasIndices || []).findIndex(i => {
                 const m = bimbinganData[i];
                 return m && m.nim === nim;
@@ -2207,7 +2217,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 }
             }
 
-            // 3. Refresh atau tutup panel
             if (window.activeLihatBerkasIndices.length === 0) {
                 closeLihatBerkasPanel();
             } else {
@@ -2349,24 +2358,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                         else if (status === 'Revision') statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Revisi</span>';
                         else statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending</span>';
 
-                        let actionButtons = '';
-                        if (currentTahap === 'Sidang') {
-                            let nilaiTersimpan = null;
-                            if (MODEL_POSISI === 1 && preview.nilaisidang_pembimbing1 && parseFloat(preview.nilaisidang_pembimbing1) > 0) nilaiTersimpan = parseFloat(preview.nilaisidang_pembimbing1);
-                            else if (MODEL_POSISI === 2 && preview.nilaisidang_pembimbing2 && parseFloat(preview.nilaisidang_pembimbing2) > 0) nilaiTersimpan = parseFloat(preview.nilaisidang_pembimbing2);
-                            else if (MODEL_POSISI === 3 && preview.nilaisidang_penguji1 && parseFloat(preview.nilaisidang_penguji1) > 0) nilaiTersimpan = parseFloat(preview.nilaisidang_penguji1);
-                            else if (MODEL_POSISI === 4 && preview.nilaisidang_penguji2 && parseFloat(preview.nilaisidang_penguji2) > 0) nilaiTersimpan = parseFloat(preview.nilaisidang_penguji2);
-
-                            const label = nilaiTersimpan ? 'Edit Nilai' : 'Nilai';
-                            const icon  = nilaiTersimpan ? 'bi-pencil-square' : 'bi-star-fill';
-                            actionButtons = `
-                                <button onclick="openModalPenilaianSidang('${mhs.nim}')"
-                                        class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white border-none text-[10px] font-bold transition cursor-pointer flex items-center gap-1 shadow-2xs">
-                                    <i class="bi ${icon} text-[10px]"></i><span>${label}</span>
-                                </button>
-                            `;
-                        }
-
+                        // Tombol Nilai SUDAH DIPINDAH ke kolom "Lulus Tahap" di tabel.
                         itemsHtml += `
                             <div class="mb-1.5 flex items-center justify-between gap-2 px-1">
                                 <div class="flex items-center gap-1.5">
@@ -2374,7 +2366,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                                     <span class="text-[11px] font-bold text-slate-700">Pengajuan #${realIdx + 1}</span>
                                     ${statusBadge}
                                 </div>
-                                <div class="flex items-center gap-1">${actionButtons}</div>
                             </div>
                         `;
 
@@ -2393,8 +2384,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                                 const fileStatus = getFileStatus(preview, f.type);
                                 const fileStatusBadge = renderFileStatusBadge(preview, f.type);
 
-                                // Action buttons per-file — PIC: hanya ACC/Revisi (Pending) atau Reset (final).
-                                // Tombol Komentar DIHAPUS untuk PIC karena sudah include di ACC/Revisi.
                                 let fileActionBtns = '';
                                 if (currentTahap !== 'Sidang' && isCurrentUserPIC()) {
                                     if (fileStatus === 'Pending') {
@@ -2531,41 +2520,27 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                     return;
                 }
 
+                // Action buttons — TIDAK ada tombol Nilai di sini (dipindah ke kolom Lulus Tahap).
                 let actionButtons = '';
-                if (currentTahap === 'Sidang') {
-                    let nilaiTersimpan = null;
-                    if (MODEL_POSISI === 1 && preview.nilaisidang_pembimbing1 && parseFloat(preview.nilaisidang_pembimbing1) > 0) nilaiTersimpan = parseFloat(preview.nilaisidang_pembimbing1);
-                    else if (MODEL_POSISI === 2 && preview.nilaisidang_pembimbing2 && parseFloat(preview.nilaisidang_pembimbing2) > 0) nilaiTersimpan = parseFloat(preview.nilaisidang_pembimbing2);
-                    else if (MODEL_POSISI === 3 && preview.nilaisidang_penguji1 && parseFloat(preview.nilaisidang_penguji1) > 0) nilaiTersimpan = parseFloat(preview.nilaisidang_penguji1);
-                    else if (MODEL_POSISI === 4 && preview.nilaisidang_penguji2 && parseFloat(preview.nilaisidang_penguji2) > 0) nilaiTersimpan = parseFloat(preview.nilaisidang_penguji2);
-
-                    const label = nilaiTersimpan ? 'Edit Nilai' : 'Nilai';
-                    const icon  = nilaiTersimpan ? 'bi-pencil-square' : 'bi-star-fill';
-                    actionButtons = `
-                        <button onclick="openModalPenilaianSidang('${p.nim}')"
-                                class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white border-none text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-md">
-                            <i class="bi ${icon}"></i><span>${label}</span>
-                        </button>
-                    `;
-                } else if (isCurrentUserPIC()) {
-                    const ftype = fileType;
-                    const fst   = getFileStatus(preview, ftype);
-                    // PIC: hanya ACC/Revisi (Pending) atau Reset (final). Tombol Komentar dihapus.
-                    if (fst === 'Pending') {
-                        actionButtons = `
-                            <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${ftype}', 'Approved')" class="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1">✓ ACC</button>
-                            <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${ftype}', 'Revision')" class="px-2.5 py-1 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1">✗ Revisi</button>
-                        `;
+                if (currentTahap !== 'Sidang') {
+                    if (isCurrentUserPIC()) {
+                        const ftype = fileType;
+                        const fst   = getFileStatus(preview, ftype);
+                        if (fst === 'Pending') {
+                            actionButtons = `
+                                <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${ftype}', 'Approved')" class="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1">✓ ACC</button>
+                                <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${ftype}', 'Revision')" class="px-2.5 py-1 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1">✗ Revisi</button>
+                            `;
+                        } else {
+                            actionButtons = `
+                                <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${ftype}', 'Reset')" class="px-2.5 py-1 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 border border-slate-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
+                            `;
+                        }
                     } else {
                         actionButtons = `
-                            <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${ftype}', 'Reset')" class="px-2.5 py-1 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 border border-slate-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
+                            <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${fileType}', 'Comment')" class="px-2.5 py-1 rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border border-indigo-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1">💬 Komentar</button>
                         `;
                     }
-                } else {
-                    // Non-PIC tetap bisa Komentar
-                    actionButtons = `
-                        <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${fileType}', 'Comment')" class="px-2.5 py-1 rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border border-indigo-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1">💬 Komentar</button>
-                    `;
                 }
 
                 const previewKey = fileItemKey('preview', p.nim, p.fileIndex, fileType);
@@ -2699,7 +2674,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             const idx = window.activeLihatBerkasIndices.indexOf(index);
             if (idx > -1) { removeStudentFromLihatBerkas(index); return; }
 
-            // Max 5 mahasiswa
             if (window.activeLihatBerkasIndices.length >= 5) {
                 const removed = window.activeLihatBerkasIndices.shift();
                 const removedMhs = bimbinganData[removed];
@@ -2754,7 +2728,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                // Priority 1: exit fullscreen mode
                 const fsCard = document.querySelector('.preview-card-item.preview-fullscreen-mode');
                 if (fsCard) {
                     fsCard.classList.remove('preview-fullscreen-mode');
@@ -2819,7 +2792,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
 
         // ============================================================
         // ACTION: Downgrade Tahap (dari X+1 ke X)
-        // Dipanggil dari tab X → menarik mahasiswa yang sudah naik ke X+1 kembali ke X.
         // ============================================================
         function handleDowngradeStageTo(nim, dariTahap, keTahap) {
             const mhs = bimbinganData.find(m => m.nim === nim);
