@@ -876,7 +876,7 @@ $history_query['per_page'] = $history_per_page;
                         }
 
                         if (q.length >= 2 && autoDropdown && autoResults) {
-                            fetch(`<?= site_url('peminjaman_barang/autocomplete'); ?>?q=${encodeURIComponent(q)}&cat=${encodeURIComponent(currentCat)}`)
+                            fetch(`<?= site_url('peminjaman_barang/autocomplete'); ?>?type=riwayat&q=${encodeURIComponent(q)}&cat=${encodeURIComponent(currentCat)}`)
                                 .then(res => res.json())
                                 .then(data => {
                                     if (data && data.length > 0) {

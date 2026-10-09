@@ -1365,6 +1365,55 @@ class PeminjamanBarang_model extends CI_Model {
         return $out;
     }
 
+    /**
+     * Autocomplete search for catalog items matching Admin LAA style
+     */
+    public function autocomplete_katalog($term, $cat = 'all') {
+        if (empty($term)) return [];
+
+        $this->db->select('a.id_aset, a.nama_aset, a.kode_aset, a.kondisi, a.jumlah_tersedia, a.gambar, COALESCE(r.ruangan, "Umum") as nama_ruangan');
+        $this->db->from('aset a');
+        $this->db->join('ruangan r', 'r.id = a.id_ruangan', 'left');
+        $this->db->where('a.is_deleted', 0);
+
+        if ($cat === 'nama') {
+            $this->db->like('a.nama_aset', $term);
+        } elseif ($cat === 'kode') {
+            $this->db->like('a.kode_aset', $term);
+        } elseif ($cat === 'ruangan') {
+            $this->db->like('r.ruangan', $term);
+        } elseif ($cat === 'kondisi') {
+            $this->db->like('a.kondisi', $term);
+        } elseif ($cat === 'stok') {
+            $this->db->where('a.jumlah_tersedia >=', (int)$term);
+        } else {
+            $this->db->group_start()
+                     ->like('a.nama_aset', $term)
+                     ->or_like('a.kode_aset', $term)
+                     ->or_like('r.ruangan', $term)
+                     ->or_like('a.kondisi', $term)
+                     ->group_end();
+        }
+
+        $this->db->order_by('a.nama_aset', 'ASC');
+        $this->db->limit(8);
+        $query = $this->db->get()->result();
+
+        $out = [];
+        foreach ($query as $r) {
+            $out[] = [
+                'id_aset'         => $r->id_aset,
+                'nama_aset'       => $r->nama_aset ?: 'Alat Studio',
+                'kode_aset'       => $r->kode_aset ?: '-',
+                'kondisi'         => $r->kondisi ?: 'Baik',
+                'jumlah_tersedia' => (int) $r->jumlah_tersedia,
+                'ruangan'         => $r->nama_ruangan,
+                'gambar'          => $r->gambar ?: '',
+            ];
+        }
+        return $out;
+    }
+
     public function get_detail_by_group_id($group_id) {
         $this->db->select('
             p.id_peminjaman,

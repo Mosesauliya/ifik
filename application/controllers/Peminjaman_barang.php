@@ -371,16 +371,21 @@ class Peminjaman_barang extends CI_Controller {
     }
 
     /**
-     * Endpoint Autocomplete Pencarian Riwayat Peminjaman Barang (Mirip Admin LAA)
+     * Endpoint Autocomplete Pencarian Katalog & Riwayat Peminjaman Barang (Mirip Admin LAA)
      */
     public function autocomplete() {
         $term = trim((string) $this->input->get('q', true));
         $cat  = trim((string) $this->input->get('cat', true) ?: 'all');
-        $nim_nip = (string) $this->session->userdata('username');
-        $peminjam = $this->Peminjaman_barang_model->get_peminjam_by_nim_nip($nim_nip);
-        $id_peminjam = $peminjam ? $peminjam->id_peminjam : 0;
+        $type = trim((string) $this->input->get('type', true) ?: 'katalog');
 
-        $results = $this->Peminjaman_barang_model->autocomplete_riwayat($id_peminjam, $term, $cat);
+        if ($type === 'riwayat') {
+            $nim_nip = (string) $this->session->userdata('username');
+            $peminjam = $this->Peminjaman_barang_model->get_peminjam_by_nim_nip($nim_nip);
+            $id_peminjam = $peminjam ? $peminjam->id_peminjam : 0;
+            $results = $this->Peminjaman_barang_model->autocomplete_riwayat($id_peminjam, $term, $cat);
+        } else {
+            $results = $this->Peminjaman_barang_model->autocomplete_katalog($term, $cat);
+        }
 
         $this->output
              ->set_content_type('application/json')
