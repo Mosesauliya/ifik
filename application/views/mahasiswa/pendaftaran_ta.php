@@ -217,6 +217,87 @@
                             Tentukan jenis tugas akhir yang sesuai dengan jalur akademik Anda dan masukkan usulan judul Bahasa Indonesia & Bahasa Inggris.
                         </p>
 
+                        <!-- Panduan & Contoh Template Judul TA (Benar vs Salah) -->
+                        <div class="rounded-2xl border-2 border-amber-200 bg-amber-50/70 p-4 sm:p-5 transition-all shadow-xs">
+                            <div class="flex items-center justify-between cursor-pointer select-none" onclick="toggleGuideTemplate('guideJudulTemplate', 'iconGuideJudul', 'labelGuideJudul')">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center text-base font-bold shadow-xs box-3d shrink-0">
+                                        <i class="bi bi-lightbulb-fill"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs sm:text-sm font-bold text-amber-950 flex flex-wrap items-center gap-2">
+                                            Panduan &amp; Template Judul Tugas Akhir
+                                            <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-200/90 text-amber-900 border border-amber-300">Tips Lolos Review</span>
+                                        </h4>
+                                        <p class="text-[11px] text-amber-800/90 font-medium mt-0.5">Lihat contoh penulisan judul yang benar agar cepat disetujui oleh Dosen Wali &amp; Ketua KK.</p>
+                                    </div>
+                                </div>
+                                <button type="button" class="text-amber-800 text-xs font-bold flex items-center gap-1.5 hover:text-amber-950 transition shrink-0 bg-white/80 border border-amber-300 px-3 py-1.5 rounded-xl cursor-pointer shadow-2xs">
+                                    <span class="text-[11px] hidden sm:inline" id="labelGuideJudul">Buka Panduan</span>
+                                    <i class="bi bi-chevron-down text-xs transition-transform duration-200" id="iconGuideJudul"></i>
+                                </button>
+                            </div>
+
+                            <!-- Collapsible Guide Content -->
+                            <div id="guideJudulTemplate" class="hidden mt-4 pt-4 border-t border-amber-200 space-y-3.5">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
+                                    <!-- CONTOH BENAR -->
+                                    <div class="p-4 rounded-xl bg-white border-2 border-emerald-400 shadow-xs space-y-3">
+                                        <div class="flex items-center gap-2 text-emerald-800 font-black text-xs uppercase tracking-wider">
+                                            <span class="w-5 h-5 rounded-md bg-emerald-500 text-white flex items-center justify-center text-xs">
+                                                <i class="bi bi-check-lg"></i>
+                                            </span>
+                                            Contoh Judul yang BENAR (Disetujui)
+                                        </div>
+                                        <div class="space-y-2 text-[11px]">
+                                            <div class="p-2.5 rounded-lg bg-emerald-50/80 border border-emerald-200 space-y-1">
+                                                <strong class="text-emerald-950 font-bold block leading-snug">"Klasifikasi Citra Medis MRI Otak untuk Diagnosis Tumor Menggunakan Convolutional Neural Network"</strong>
+                                                <p class="text-slate-600 text-[10px] leading-relaxed">
+                                                    <span class="text-emerald-700 font-bold">&check; Alasan:</span> Memiliki objek spesifik (MRI Otak), tujuan jelas (Diagnosis Tumor), dan metode eksplisit (CNN).
+                                                </p>
+                                            </div>
+                                            <div class="p-2.5 rounded-lg bg-emerald-50/80 border border-emerald-200 space-y-1">
+                                                <strong class="text-emerald-950 font-bold block leading-snug">"Rancang Bangun Sistem Informasi Pemantauan Logistik Berbasis Internet of Things pada Gudang Distribusi"</strong>
+                                                <p class="text-slate-600 text-[10px] leading-relaxed">
+                                                    <span class="text-emerald-700 font-bold">&check; Alasan:</span> Skala sistem jelas, menggunakan Title Case (huruf kapital di awal kata), dan tata bahasa baku.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="p-2 rounded-lg bg-emerald-100/70 border border-emerald-200 text-[10px] text-emerald-900 font-medium">
+                                            💡 <strong>Rumus Judul Ideal:</strong> [Tindakan / Metode] + [Objek Penelitian] + [Tujuan / Solusi] + [Studi Kasus / Lokasi jika ada]
+                                        </div>
+                                    </div>
+
+                                    <!-- CONTOH SALAH -->
+                                    <div class="p-4 rounded-xl bg-white border-2 border-rose-300 shadow-xs space-y-3">
+                                        <div class="flex items-center gap-2 text-rose-800 font-black text-xs uppercase tracking-wider">
+                                            <span class="w-5 h-5 rounded-md bg-rose-500 text-white flex items-center justify-center text-xs">
+                                                <i class="bi bi-x-lg"></i>
+                                            </span>
+                                            Contoh Judul yang SALAH (Sering Ditolak)
+                                        </div>
+                                        <div class="space-y-2 text-[11px]">
+                                            <div class="p-2.5 rounded-lg bg-rose-50/80 border border-rose-200 space-y-1">
+                                                <strong class="text-rose-950 font-bold block leading-snug">"SISTEM INFORMASI KESEHATAN"</strong>
+                                                <p class="text-slate-600 text-[10px] leading-relaxed">
+                                                    <span class="text-rose-700 font-bold">&times; Kesalahan:</span> Huruf kapital semua (ALL CAPS), terlalu umum/singkat, tidak ada metode maupun batasan masalah.
+                                                </p>
+                                            </div>
+                                            <div class="p-2.5 rounded-lg bg-rose-50/80 border border-rose-200 space-y-1">
+                                                <strong class="text-rose-950 font-bold block leading-snug">"Bikin Aplikasi Kasir Toko Baju Online Pakai PHP &amp; MySQL"</strong>
+                                                <p class="text-slate-600 text-[10px] leading-relaxed">
+                                                    <span class="text-rose-700 font-bold">&times; Kesalahan:</span> Bahasa informal/slang ("Bikin", "Pakai"), topik setara tugas kuliah biasa (kurang bobot skripsi).
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="p-2 rounded-lg bg-rose-100/70 border border-rose-200 text-[10px] text-rose-900 font-medium">
+                                            ⚠️ <strong>Hindari:</strong> Menulis judul kurang dari 5 kata, menggunakan singkatan tidak baku, atau tidak menyebutkan teknologi/metode yang diuji.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="space-y-4 pt-2">
                             <!-- Jenis TA -->
                             <div>
@@ -356,6 +437,105 @@
                         <p class="text-xs text-slate-600 leading-relaxed font-normal">
                             Unggah seluruh dokumen persyaratan pendaftaran Tugas Akhir yang disyaratkan oleh Layanan Akademik (Format PDF, Maksimal 5MB per berkas).
                         </p>
+
+                        <!-- Panduan & Contoh Template Berkas TA (Benar vs Salah) -->
+                        <div class="rounded-2xl border-2 border-indigo-200 bg-indigo-50/70 p-4 sm:p-5 transition-all shadow-xs">
+                            <div class="flex items-center justify-between cursor-pointer select-none" onclick="toggleGuideTemplate('guideBerkasTemplate', 'iconGuideBerkas', 'labelGuideBerkas')">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-base font-bold shadow-xs box-3d shrink-0">
+                                        <i class="bi bi-file-earmark-check-fill"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs sm:text-sm font-bold text-indigo-950 flex flex-wrap items-center gap-2">
+                                            Panduan &amp; Template Dokumen Persyaratan
+                                            <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-indigo-200/90 text-indigo-900 border border-indigo-300">Format &amp; Ketentuan</span>
+                                        </h4>
+                                        <p class="text-[11px] text-indigo-800/90 font-medium mt-0.5">Panduan dokumen yang lolos verifikasi Admin Layanan vs dokumen yang sering ditolak.</p>
+                                    </div>
+                                </div>
+                                <button type="button" class="text-indigo-800 text-xs font-bold flex items-center gap-1.5 hover:text-indigo-950 transition shrink-0 bg-white/80 border border-indigo-300 px-3 py-1.5 rounded-xl cursor-pointer shadow-2xs">
+                                    <span class="text-[11px] hidden sm:inline" id="labelGuideBerkas">Buka Panduan</span>
+                                    <i class="bi bi-chevron-down text-xs transition-transform duration-200" id="iconGuideBerkas"></i>
+                                </button>
+                            </div>
+
+                            <!-- Collapsible Guide Content -->
+                            <div id="guideBerkasTemplate" class="hidden mt-4 pt-4 border-t border-indigo-200 space-y-3.5">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
+                                    <!-- CONTOH BENAR -->
+                                    <div class="p-4 rounded-xl bg-white border-2 border-emerald-400 shadow-xs space-y-3">
+                                        <div class="flex items-center gap-2 text-emerald-800 font-black text-xs uppercase tracking-wider">
+                                            <span class="w-5 h-5 rounded-md bg-emerald-500 text-white flex items-center justify-center text-xs">
+                                                <i class="bi bi-check-lg"></i>
+                                            </span>
+                                            Dokumen yang BENAR (Lolos Verifikasi)
+                                        </div>
+                                        <div class="space-y-2 text-[11px]">
+                                            <div class="p-2.5 rounded-lg bg-emerald-50/80 border border-emerald-200 space-y-1">
+                                                <strong class="text-emerald-950 font-bold block flex items-center gap-1.5">
+                                                    <i class="bi bi-file-earmark-pdf-fill text-emerald-600"></i> Format PDF Asli / Scan Resolusi Tinggi
+                                                </strong>
+                                                <p class="text-slate-600 text-[10px] leading-relaxed">
+                                                    <span class="text-emerald-700 font-bold">&check; Ketentuan:</span> File berekstensi <code>.pdf</code> resmi, teks dapat dibaca jelas tanpa blur, orientasi tegak lurus, ukuran &le; 5 MB.
+                                                </p>
+                                            </div>
+                                            <div class="p-2.5 rounded-lg bg-emerald-50/80 border border-emerald-200 space-y-1">
+                                                <strong class="text-emerald-950 font-bold block flex items-center gap-1.5">
+                                                    <i class="bi bi-calendar-check-fill text-emerald-600"></i> KSM Semester Berjalan
+                                                </strong>
+                                                <p class="text-slate-600 text-[10px] leading-relaxed">
+                                                    <span class="text-emerald-700 font-bold">&check; Ketentuan:</span> Mencantumkan semester aktif dan mata kuliah Tugas Akhir dengan stempel/tanda tangan digital i-Gracias.
+                                                </p>
+                                            </div>
+                                            <div class="p-2.5 rounded-lg bg-emerald-50/80 border border-emerald-200 space-y-1">
+                                                <strong class="text-emerald-950 font-bold block flex items-center gap-1.5">
+                                                    <i class="bi bi-pen-fill text-emerald-600"></i> Surat Pernyataan Lengkap &amp; Tertandatangani
+                                                </strong>
+                                                <p class="text-slate-600 text-[10px] leading-relaxed">
+                                                    <span class="text-emerald-700 font-bold">&check; Ketentuan:</span> Bertanda tangan basah atau tersertifikasi, dan dibubuhi meterai jika disyaratkan.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- CONTOH SALAH -->
+                                    <div class="p-4 rounded-xl bg-white border-2 border-rose-300 shadow-xs space-y-3">
+                                        <div class="flex items-center gap-2 text-rose-800 font-black text-xs uppercase tracking-wider">
+                                            <span class="w-5 h-5 rounded-md bg-rose-500 text-white flex items-center justify-center text-xs">
+                                                <i class="bi bi-x-lg"></i>
+                                            </span>
+                                            Kesalahan Dokumen (Pasti DITOLAK)
+                                        </div>
+                                        <div class="space-y-2 text-[11px]">
+                                            <div class="p-2.5 rounded-lg bg-rose-50/80 border border-rose-200 space-y-1">
+                                                <strong class="text-rose-950 font-bold block flex items-center gap-1.5">
+                                                    <i class="bi bi-exclamation-octagon-fill text-rose-600"></i> Rename Manual Foto Menjadi .PDF
+                                                </strong>
+                                                <p class="text-slate-600 text-[10px] leading-relaxed">
+                                                    <span class="text-rose-700 font-bold">&times; Kesalahan:</span> Mengubah nama file <code>foto.jpg</code> langsung ke <code>foto.pdf</code> (file corrupt dan gagal dibuka).
+                                                </p>
+                                            </div>
+                                            <div class="p-2.5 rounded-lg bg-rose-50/80 border border-rose-200 space-y-1">
+                                                <strong class="text-rose-950 font-bold block flex items-center gap-1.5">
+                                                    <i class="bi bi-camera-fill text-rose-600"></i> Foto Kamera Gelap / Miring / Terpotong
+                                                </strong>
+                                                <p class="text-slate-600 text-[10px] leading-relaxed">
+                                                    <span class="text-rose-700 font-bold">&times; Kesalahan:</span> Tulisan transkrip atau KSM tidak terbaca, ada bayangan jari, atau halaman terpotong.
+                                                </p>
+                                            </div>
+                                            <div class="p-2.5 rounded-lg bg-rose-50/80 border border-rose-200 space-y-1">
+                                                <strong class="text-rose-950 font-bold block flex items-center gap-1.5">
+                                                    <i class="bi bi-clock-history text-rose-600"></i> Dokumen Kadaluarsa / KSM Semester Lama
+                                                </strong>
+                                                <p class="text-slate-600 text-[10px] leading-relaxed">
+                                                    <span class="text-rose-700 font-bold">&times; Kesalahan:</span> Mengunggah KSM semester lalu yang bukan semester aktif pendaftaran.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Dynamic Document List Loop -->
                         <div class="space-y-6 pt-2 w-full max-w-full overflow-hidden" id="dynamicDocContainer">
@@ -582,6 +762,20 @@
         window.SAVE_DRAFT_AJAX_URL = "<?= site_url('mahasiswa/ajax_save_draft_ta'); ?>";
         window.SERVER_DRAFT_STEP = <?= (int)($server_draft_step ?? 1); ?>;
         window.SERVER_HAS_DRAFT = <?= $has_saved_draft ? 'true' : 'false'; ?>;
+
+        function toggleGuideTemplate(contentId, iconId, labelId) {
+            const el = document.getElementById(contentId);
+            const icon = document.getElementById(iconId);
+            const label = labelId ? document.getElementById(labelId) : null;
+            if (!el) return;
+            const isHidden = el.classList.toggle('hidden');
+            if (icon) {
+                icon.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
+            }
+            if (label) {
+                label.textContent = isHidden ? 'Buka Panduan' : 'Tutup Panduan';
+            }
+        }
     </script>
     <script src="<?= base_url('assets/js/navbar_animated.js'); ?>?v=<?= time(); ?>"></script>
     <script src="<?= base_url('assets/js/pendaftaran_ta_stepper.js'); ?>?v=<?= time(); ?>"></script>
