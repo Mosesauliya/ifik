@@ -875,7 +875,7 @@ $history_query['per_page'] = $history_per_page;
                             searchIcon.className = 'fa-solid fa-magnifying-glass text-secondary me-2 flex-shrink-0';
                         }
 
-                        if (q.length >= 2 && autoDropdown && autoResults) {
+                        if (q.length >= 1 && autoDropdown && autoResults) {
                             fetch(`<?= site_url('peminjaman_barang/autocomplete'); ?>?type=riwayat&q=${encodeURIComponent(q)}&cat=${encodeURIComponent(currentCat)}`)
                                 .then(res => res.json())
                                 .then(data => {
@@ -910,6 +910,7 @@ $history_query['per_page'] = $history_per_page;
                                         });
                                         autoResults.innerHTML = html;
                                         autoDropdown.classList.remove('d-none');
+                                        autoDropdown.style.display = 'block';
                                         currentFocusIdx = -1;
 
                                         // Click item handler
@@ -918,20 +919,31 @@ $history_query['per_page'] = $history_per_page;
                                                 const selectedName = this.getAttribute('data-name');
                                                 inputSearch.value = selectedName;
                                                 autoDropdown.classList.add('d-none');
+                                                autoDropdown.style.display = 'none';
                                                 if (formSearch) formSearch.submit();
                                             };
                                         });
                                     } else {
-                                        autoDropdown.classList.add('d-none');
+                                        autoResults.innerHTML = `
+                                            <div class="px-4 py-3 text-muted text-center italic" style="font-size: 0.8rem;">
+                                                Tidak ada riwayat untuk "<strong>${q}</strong>"
+                                            </div>
+                                        `;
+                                        autoDropdown.classList.remove('d-none');
+                                        autoDropdown.style.display = 'block';
                                     }
                                 })
                                 .catch(() => {
                                     autoDropdown.classList.add('d-none');
+                                    autoDropdown.style.display = 'none';
                                 });
                         } else {
-                            if (autoDropdown) autoDropdown.classList.add('d-none');
+                            if (autoDropdown) {
+                                autoDropdown.classList.add('d-none');
+                                autoDropdown.style.display = 'none';
+                            }
                         }
-                    }, 280);
+                    }, 220);
                 });
 
                 // Keyboard navigation

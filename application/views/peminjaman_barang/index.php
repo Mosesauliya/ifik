@@ -1592,7 +1592,7 @@ foreach ($catalog_page_size_query as $query_name => $query_value) {
                             searchIconKatalog.className = 'fa-solid fa-magnifying-glass text-secondary me-2 flex-shrink-0';
                         }
 
-                        if (q.length >= 2 && autoDropdownKatalog && autoResultsKatalog) {
+                        if (q.length >= 1 && autoDropdownKatalog && autoResultsKatalog) {
                             fetch(`<?= site_url('peminjaman_barang/autocomplete'); ?>?type=katalog&q=${encodeURIComponent(q)}&cat=${encodeURIComponent(currentCat)}`)
                                 .then(res => res.json())
                                 .then(data => {
@@ -1627,6 +1627,7 @@ foreach ($catalog_page_size_query as $query_name => $query_value) {
                                         });
                                         autoResultsKatalog.innerHTML = html;
                                         autoDropdownKatalog.classList.remove('d-none');
+                                        autoDropdownKatalog.style.display = 'block';
                                         currentFocusKatalogIdx = -1;
 
                                         // Click item handler
@@ -1635,20 +1636,31 @@ foreach ($catalog_page_size_query as $query_name => $query_value) {
                                                 const selectedName = this.getAttribute('data-name');
                                                 inputSearchKatalog.value = selectedName;
                                                 autoDropdownKatalog.classList.add('d-none');
+                                                autoDropdownKatalog.style.display = 'none';
                                                 if (formSearchKatalog) formSearchKatalog.submit();
                                             };
                                         });
                                     } else {
-                                        autoDropdownKatalog.classList.add('d-none');
+                                        autoResultsKatalog.innerHTML = `
+                                            <div class="px-4 py-3 text-muted text-center italic" style="font-size: 0.8rem;">
+                                                Tidak ada alat ditemukan untuk "<strong>${q}</strong>"
+                                            </div>
+                                        `;
+                                        autoDropdownKatalog.classList.remove('d-none');
+                                        autoDropdownKatalog.style.display = 'block';
                                     }
                                 })
                                 .catch(() => {
                                     autoDropdownKatalog.classList.add('d-none');
+                                    autoDropdownKatalog.style.display = 'none';
                                 });
                         } else {
-                            if (autoDropdownKatalog) autoDropdownKatalog.classList.add('d-none');
+                            if (autoDropdownKatalog) {
+                                autoDropdownKatalog.classList.add('d-none');
+                                autoDropdownKatalog.style.display = 'none';
+                            }
                         }
-                    }, 280);
+                    }, 220);
                 });
 
                 // Keyboard navigation

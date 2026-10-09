@@ -1319,7 +1319,7 @@ class PeminjamanBarang_model extends CI_Model {
     /**
      * Autocomplete search for user's loan history matching Admin LAA style
      */
-    public function autocomplete_riwayat($id_peminjam, $term, $cat = 'all') {
+    public function autocomplete_riwayat($id_peminjam, $term, $cat = 'all', $id_user = null) {
         if (empty($term)) return [];
 
         $this->db->select('peminjaman.id_peminjaman, peminjaman.group_id, peminjaman.status, peminjaman.tanggal_pinjam, peminjaman.tanggal_kembali_rencana, aset.nama_aset, aset.kode_aset, COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan');
@@ -1328,6 +1328,8 @@ class PeminjamanBarang_model extends CI_Model {
         $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan', 'left');
         if ($id_peminjam) {
             $this->db->where('peminjaman.id_peminjam', (int) $id_peminjam);
+        } elseif ($id_user) {
+            $this->db->where('peminjaman.id_user', (int) $id_user);
         }
 
         if ($cat === 'barang') {
@@ -1374,7 +1376,6 @@ class PeminjamanBarang_model extends CI_Model {
         $this->db->select('a.id_aset, a.nama_aset, a.kode_aset, a.kondisi, a.jumlah_tersedia, a.gambar, COALESCE(r.ruangan, "Umum") as nama_ruangan');
         $this->db->from('aset a');
         $this->db->join('ruangan r', 'r.id = a.id_ruangan', 'left');
-        $this->db->where('a.is_deleted', 0);
 
         if ($cat === 'nama') {
             $this->db->like('a.nama_aset', $term);

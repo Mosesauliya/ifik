@@ -380,9 +380,10 @@ class Peminjaman_barang extends CI_Controller {
 
         if ($type === 'riwayat') {
             $nim_nip = (string) $this->session->userdata('username');
+            $id_user = $this->session->userdata('id_user');
             $peminjam = $this->Peminjaman_barang_model->get_peminjam_by_nim_nip($nim_nip);
             $id_peminjam = $peminjam ? $peminjam->id_peminjam : 0;
-            $results = $this->Peminjaman_barang_model->autocomplete_riwayat($id_peminjam, $term, $cat);
+            $results = $this->Peminjaman_barang_model->autocomplete_riwayat($id_peminjam, $term, $cat, $id_user);
         } else {
             $results = $this->Peminjaman_barang_model->autocomplete_katalog($term, $cat);
         }
