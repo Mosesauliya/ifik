@@ -25,11 +25,6 @@ $barangNavItems = [
         'href'    => site_url('peminjaman_barang/kalender'),
         'icon_3d' => 'assets/images/icons_3d/kalender.png'
     ],
-    [
-        'heading' => 'Approval Wadek',
-        'href'    => site_url('wadek/peminjaman'),
-        'icon_3d' => 'assets/images/icons_3d/approval.png'
-    ],
 ];
 
 // Menu khusus Laboran / Admin untuk scanner serah terima fisik barang

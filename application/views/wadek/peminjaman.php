@@ -256,8 +256,8 @@ $wadek_query['per_page'] = $per_page;
 </head>
 <body>
 
-    <!-- Dedicated Sidebar Component (Pola Peminjaman Barang & LAA) -->
-    <?php $this->load->view('peminjaman_barang/sidebar'); ?>
+    <!-- Curved Sidebar Component -->
+    <?php $this->load->view('components/curved_sidebar'); ?>
 
 <div id="laaMainContentWrapper">
     <!-- Sub Navigation Page Title Bar -->
