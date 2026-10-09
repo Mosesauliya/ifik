@@ -141,6 +141,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['category' => 'Portal Akademik & Dosen', 'has_divider' => true],
                 ['heading' => 'Dosen Pembimbing', 'href' => site_url('dosen/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
                 ['heading' => 'Dosen Wali', 'href' => site_url('dosen/wali'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Approval Peminjaman Wadek', 'href' => site_url('wadek/peminjaman'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
 
                 ['category' => 'Layanan & Bantuan', 'has_divider' => true],
                 ['heading' => 'Bantuan & Live Chat', 'href' => site_url('kaur/help'), 'icon_3d' => 'assets/images/icons_3d/help_chat.png'],
@@ -184,6 +185,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['category' => 'Bimbingan & Pengujian'],
                 ['heading' => 'Dosen Pembimbing', 'href' => site_url('dosen/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
                 ['heading' => 'Dosen Wali', 'href' => site_url('dosen/wali'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Approval Peminjaman Wadek', 'href' => site_url('wadek/peminjaman'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
                 ['heading' => 'Tanda Tangan Digital', 'href' => site_url('dosen/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
 
                 ['category' => 'Layanan & Bantuan', 'has_divider' => true],
@@ -255,6 +257,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['category' => 'Portal Dosen & Pembimbing', 'has_divider' => true],
                 ['heading' => 'Dosen Pembimbing', 'href' => site_url('dosen/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
                 ['heading' => 'Dosen Wali', 'href' => site_url('dosen/wali'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Approval Peminjaman Wadek', 'href' => site_url('wadek/peminjaman'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
                 ['heading' => 'Tanda Tangan Digital', 'href' => site_url('dosen/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
 
                 ['category' => 'Layanan & Bantuan', 'has_divider' => true],
