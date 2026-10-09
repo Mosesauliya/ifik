@@ -77,12 +77,13 @@ class Mahasiswa extends CI_Controller {
         return $userId ? $userId : null;
     }
 
-    private function _do_upload($field_name, $config) {
+    private function _do_upload($field_name, $config, &$error = null) {
         $this->upload->initialize($config);
         if ($this->upload->do_upload($field_name)) {
             $upload_data = $this->upload->data();
             return $upload_data['file_name'];
         }
+        $error = strip_tags($this->upload->display_errors('', ''));
         return null;
     }
 
@@ -340,12 +341,14 @@ class Mahasiswa extends CI_Controller {
 
         $updated_data = [];
         $uploaded_count = 0;
+        $upload_errors = [];
 
         foreach ($active_syarat as $sb) {
             $k = $sb['kode_berkas'];
             $f = 'file_' . $k;
             if (!empty($_FILES[$f]['name'])) {
-                $new_file = $this->_do_upload($f, $config);
+                $err = null;
+                $new_file = $this->_do_upload($f, $config, $err);
                 if ($new_file) {
                     $uploaded_count++;
                     $this->AdminLayanan_model->save_student_berkas($nim, $k, $new_file, 'Pending');
@@ -407,6 +410,9 @@ class Mahasiswa extends CI_Controller {
                             $updated_data[$col_legacy_status] = 'Pending';
                         }
                     }
+                } else {
+                    $label = !empty($sb['nama_berkas']) ? $sb['nama_berkas'] : strtoupper($k);
+                    $upload_errors[] = $label . ' (' . ($err ?: 'harus PDF dan maksimal 5 MB') . ')';
                 }
             }
         }
@@ -517,9 +523,23 @@ class Mahasiswa extends CI_Controller {
             if ($this->db->table_exists('pendaftaran_ta')) {
                 $this->db->where('nim', $nim)->update('pendaftaran_ta', $updated_data);
             }
-            $this->session->set_flashdata('success', 'Berhasil mengunggah ' . ($uploaded_count ? $uploaded_count . ' berkas perbaikan' : 'perubahan usulan') . ' untuk diverifikasi kembali!');
+
+            if (!empty($upload_errors)) {
+                $msg = 'Sebagian berkas gagal diunggah: ' . implode('; ', $upload_errors) . '. Pastikan berkas berformat PDF dan ukuran maksimal 5 MB.';
+                if ($uploaded_count > 0 || !empty($this->input->post('judul_1')) || !empty($this->input->post('jenis_ta'))) {
+                    $this->session->set_flashdata('warning', $msg . ' Namun berkas yang valid telah berhasil disimpan.');
+                } else {
+                    $this->session->set_flashdata('error', $msg);
+                }
+            } else {
+                $this->session->set_flashdata('success', 'Berhasil mengunggah ' . ($uploaded_count ? $uploaded_count . ' berkas perbaikan' : 'perubahan usulan') . ' untuk diverifikasi kembali!');
+            }
         } else {
-            $this->session->set_flashdata('error', 'Tidak ada file baru yang diunggah. Silakan pilih file PDF yang valid.');
+            if (!empty($upload_errors)) {
+                $this->session->set_flashdata('error', 'Gagal mengunggah berkas: ' . implode('; ', $upload_errors) . '. Pastikan file berformat PDF dan ukuran maksimal 5 MB.');
+            } else {
+                $this->session->set_flashdata('error', 'Tidak ada file baru yang diunggah. Silakan pilih file PDF yang valid (Maksimal 5 MB).');
+            }
         }
 
         redirect('mahasiswa');
@@ -1029,6 +1049,8 @@ class Mahasiswa extends CI_Controller {
     }
 
     public function ajax_save_draft_ta() {
+        $prev_debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
         try {
             $nim = $this->input->post('nim') ?: $this->_get_current_nim();
             $mhs = $this->Mahasiswa_model->get_mahasiswa($nim);
@@ -1166,6 +1188,7 @@ class Mahasiswa extends CI_Controller {
                 }
             }
 
+            $this->db->db_debug = $prev_debug;
             $this->output
                 ->set_content_type('application/json')
                 ->set_output(json_encode([
@@ -1174,6 +1197,7 @@ class Mahasiswa extends CI_Controller {
                     'message' => 'Draft formulir & berkas berhasil tersimpan di database server.'
                 ]));
         } catch (\Throwable $e) {
+            $this->db->db_debug = $prev_debug;
             log_message('error', 'ajax_save_draft_ta exception: ' . $e->getMessage());
             $this->output
                 ->set_content_type('application/json')

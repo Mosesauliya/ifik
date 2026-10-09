@@ -107,10 +107,27 @@ class Dosen_bimbingan extends CI_Controller {
 
     public function bimbingan() {
         $nim = $this->_get_current_nim();
+        $role_id = (int) $this->session->userdata('role_id');
+
+        // Jika mahasiswa, pastikan seluruh 4 tahap approval pendaftaran TA sudah disetujui (Approved)
+        if ($role_id === 4) {
+            $pendaftaran = $this->Mahasiswa_model->get_status_pendaftaran($nim);
+            $w_app  = ($pendaftaran['status_approval_wali']  ?? '') === 'Approved';
+            $a_app  = ($pendaftaran['status_approval_admin'] ?? '') === 'Approved';
+            $k_app  = ($pendaftaran['status_approval_koor']  ?? '') === 'Approved';
+            $kk_app = ($pendaftaran['status_approval_kk']    ?? '') === 'Approved';
+            $is_full_approved = ($w_app && $a_app && $k_app && $kk_app);
+
+            if (!$is_full_approved) {
+                $this->session->set_flashdata('warning', 'Akses modul Bimbingan TA masih terkunci. Pengajuan Tugas Akhir Anda harus disetujui lengkap oleh 4 tahap (Dosen Wali, Admin Layanan, Koordinator TA, dan Ketua KK).');
+                redirect('mahasiswa');
+                return;
+            }
+        }
 
         $data['title']       = 'Bimbingan & Evaluasi Preview TA';
         $data['mahasiswa']   = $this->Mahasiswa_model->get_mahasiswa($nim);
-        $data['pendaftaran'] = $this->Mahasiswa_model->get_status_pendaftaran($nim);
+        $data['pendaftaran'] = !empty($pendaftaran) ? $pendaftaran : $this->Mahasiswa_model->get_status_pendaftaran($nim);
 
         $pembimbing_penguji = $this->Mahasiswa_model->get_pembimbing_penguji($nim);
 

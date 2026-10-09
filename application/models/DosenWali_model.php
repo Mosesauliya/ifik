@@ -122,6 +122,20 @@ class DosenWali_model extends CI_Model {
             $this->_update_file_approval_file_pendaftaran($nim, $file_type, $ver, $comment);
         }
 
+        // 2. Update juga pendaftaran_berkas jika ada agar selalu sinkron
+        if ($this->db->table_exists('pendaftaran_berkas')) {
+            $this->db->where('nim', $nim)
+                ->group_start()
+                    ->where('kode_berkas', $file_type)
+                    ->or_like('kode_berkas', $file_type)
+                ->group_end()
+                ->update('pendaftaran_berkas', [
+                    'status_verifikasi' => $pb_ver,
+                    'catatan'           => $comment,
+                    'updated_at'        => date('Y-m-d H:i:s')
+                ]);
+        }
+
         return true;
     }
 
@@ -140,11 +154,21 @@ class DosenWali_model extends CI_Model {
             ];
         }
 
+        $pb_ver = ($status === 'Approved') ? 'Valid' : (($status === 'Rejected') ? 'Invalid' : 'Pending');
+
         // Sync ke file_pendaftaran jika ada
         if ($this->db->table_exists('file_pendaftaran')) {
             foreach ($active_syarat as $asb) {
                 $this->_update_file_approval_file_pendaftaran($nim, $asb['kode_berkas'], $status);
             }
+        }
+
+        // Sync ke pendaftaran_berkas jika ada
+        if ($this->db->table_exists('pendaftaran_berkas')) {
+            $this->db->where('nim', $nim)->update('pendaftaran_berkas', [
+                'status_verifikasi' => $pb_ver,
+                'updated_at'        => date('Y-m-d H:i:s')
+            ]);
         }
 
         return true;
@@ -801,8 +825,8 @@ class DosenWali_model extends CI_Model {
                 $is_draft = true;
             }
 
-            // Jika statusnya masih Draft (belum difinalisasi oleh mahasiswa), jangan munculkan di dashboard approval Dosen Wali
-            if ($is_draft) {
+            // Jika statusnya masih Draft (belum difinalisasi oleh mahasiswa) atau berkas kosong (setelah direset Admin LAA), jangan munculkan di dashboard approval Dosen Wali
+            if ($is_draft || empty($info['files'])) {
                 continue;
             }
 
@@ -899,7 +923,7 @@ class DosenWali_model extends CI_Model {
             $st_kk     = 'Pending';
             $cur_stage = ($status_wali === 'Approved') ? 'Admin Layanan' : ($status_wali === 'Rejected' ? 'Dosen Wali (Ditolak)' : 'Dosen Wali');
 
-            $results[] = [
+            $row_data = [
                 'id'                     => $idMhs,
                 'nim'                    => $nim,
                 'nama_depan'             => $namaMhs,
@@ -939,6 +963,14 @@ class DosenWali_model extends CI_Model {
                 'berkas_map'             => $bMap,
                 'total_berkas'           => count($bMap)
             ];
+
+            foreach ($bMap as $bk => $bv) {
+                $row_data['file_' . $bk] = $bv['file_name'];
+                $row_data['status_file_' . $bk] = ($bv['status_verifikasi'] === 'Valid') ? 'Approved' : (($bv['status_verifikasi'] === 'Invalid') ? 'Rejected' : 'Pending');
+                $row_data['catatan_file_' . $bk] = $bv['catatan'] ?? '';
+            }
+
+            $results[] = $row_data;
         }
 
         return $results;
@@ -1088,7 +1120,7 @@ class DosenWali_model extends CI_Model {
         $st_kk     = 'Pending';
         $cur_stage = ($status_wali === 'Approved') ? 'Admin Layanan' : ($status_wali === 'Rejected' ? 'Dosen Wali (Ditolak)' : 'Dosen Wali');
 
-        return [
+        $res = [
             'id'                     => $user_row['id'] ?? $nim,
             'nim'                    => $nim,
             'nama_depan'             => $namaMhs,
@@ -1128,6 +1160,14 @@ class DosenWali_model extends CI_Model {
             'berkas_map'             => $bMap,
             'total_berkas'           => count($bMap)
         ];
+
+        foreach ($bMap as $bk => $bv) {
+            $res['file_' . $bk] = $bv['file_name'];
+            $res['status_file_' . $bk] = ($bv['status_verifikasi'] === 'Valid') ? 'Approved' : (($bv['status_verifikasi'] === 'Invalid') ? 'Rejected' : 'Pending');
+            $res['catatan_file_' . $bk] = $bv['catatan'] ?? '';
+        }
+
+        return $res;
     }
 
     /**
