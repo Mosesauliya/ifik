@@ -105,17 +105,33 @@ class Peminjaman_barang extends CI_Controller {
         $id_ruangan = $this->input->get('id_ruangan', true);
         $fields = (array) $this->input->get('filter_field', true);
         $values = (array) $this->input->get('filter_value', true);
+        $allowed_fields = ['all', 'nama', 'kode', 'ruangan', 'kondisi', 'stok'];
+        
+        $filter_rows = [];
         $filters = [];
-        foreach (array_slice($fields, 0, 4) as $index => $field) {
-            $value = trim((string) ($values[$index] ?? ''));
-            if ($value !== '') $filters[] = ['field' => (string) $field, 'value' => $value];
+        if (!empty($fields)) {
+            foreach (array_slice($fields, 0, 4) as $index => $field) {
+                $field = (string) $field;
+                if (!in_array($field, $allowed_fields, true)) continue;
+                $value = trim((string) ($values[$index] ?? ''));
+                $filter_rows[] = ['field' => $field, 'value' => $value];
+                if ($value !== '') {
+                    $filters[] = ['field' => $field, 'value' => $value];
+                }
+            }
         }
+        if (empty($filter_rows)) {
+            $filter_rows = [['field' => 'all', 'value' => '']];
+        }
+
         $per_page = $this->read_per_page($this->input->get('per_page', true));
         $total = $this->Peminjaman_barang_model->count_katalog_barang($filters, $id_ruangan);
         $total_pages = max(1, (int) ceil($total / $per_page));
         $page = min(max(1, (int) $this->input->get('page', true)), $total_pages);
         $data['barang'] = $this->Peminjaman_barang_model->get_katalog_barang($filters, $per_page, ($page - 1) * $per_page, $id_ruangan);
-        $data['filter_rows'] = $filters;
+        $data['filter_rows'] = $filter_rows;
+        $data['catalog_total'] = $total;
+        $data['catalog_per_page'] = $per_page;
         $data['pagination'] = compact('page', 'per_page', 'total', 'total_pages');
         
         if ($id_ruangan) {
@@ -279,10 +295,8 @@ class Peminjaman_barang extends CI_Controller {
         $filter_rows = [];
 
         $search_q = trim((string) $this->input->get('q', true));
-        $search_cat = trim((string) $this->input->get('cat', true) ?: 'all');
-        if (!in_array($search_cat, $allowed_filter_fields, true)) {
-            $search_cat = 'all';
-        }
+        $get_cat = trim((string) $this->input->get('cat', true));
+        $search_cat = in_array($get_cat, $allowed_filter_fields, true) ? $get_cat : '';
 
         if (!empty($filter_fields)) {
             foreach ($filter_fields as $index => $field) {
@@ -290,24 +304,22 @@ class Peminjaman_barang extends CI_Controller {
                 $field = (string) $field;
                 if (!in_array($field, $allowed_filter_fields, true)) continue;
                 $val = trim((string) ($filter_values[$index] ?? ''));
-                if ($val !== '') {
-                    $filter_rows[] = [
-                        'field' => $field,
-                        'value' => $val,
-                    ];
-                }
+                $filter_rows[] = [
+                    'field' => $field,
+                    'value' => $val,
+                ];
             }
         }
 
         if (empty($filter_rows) && $search_q !== '') {
             $filter_rows[] = [
-                'field' => $search_cat,
+                'field' => $search_cat ?: 'all',
                 'value' => $search_q,
             ];
         }
 
         if (empty($filter_rows)) {
-            $filter_rows = [['field' => $search_cat, 'value' => $search_q]];
+            $filter_rows = [['field' => $search_cat ?: 'all', 'value' => $search_q]];
         }
 
         $criteria = array_values(array_filter(
@@ -354,8 +366,8 @@ class Peminjaman_barang extends CI_Controller {
             );
         }
 
-        $data['search'] = $search_q ?: ($filter_rows[0]['value'] ?? '');
-        $data['cat'] = $search_cat ?: ($filter_rows[0]['field'] ?? 'all');
+        $data['search'] = $filter_rows[0]['value'] ?? $search_q;
+        $data['cat'] = $filter_rows[0]['field'] ?? ($search_cat ?: 'all');
         $data['filter_rows'] = $filter_rows;
         $data['history_sort'] = $history_sort;
         $data['history_dir'] = $history_dir;

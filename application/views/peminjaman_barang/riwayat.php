@@ -361,8 +361,8 @@ $history_query['per_page'] = $history_per_page;
                 'status'  => 'Cari status (misal: Disetujui, Dipinjam)...',
                 'tanggal' => 'Cari tanggal (YYYY-MM-DD)...'
             ];
-            $current_main_cat = $cat ?? ($filter_rows[0]['field'] ?? 'all');
-            $current_main_val = $search ?? ($filter_rows[0]['value'] ?? '');
+            $current_main_cat = $filter_rows[0]['field'] ?? ($cat ?? 'all');
+            $current_main_val = $filter_rows[0]['value'] ?? ($search ?? '');
             $extra_rows = array_slice($filter_rows ?? [], 1);
             $total_active_rows = 1 + count($extra_rows);
         ?>
