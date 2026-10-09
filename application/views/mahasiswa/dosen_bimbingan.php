@@ -1,7 +1,7 @@
 ﻿<?php
 /**
  * DASHBOARD UNIFIED — 4 Role: P1, P2, U1, U2
- * 
+ *
  * Controller wajib mengirimkan variabel: $role ('p1'|'p2'|'u1'|'u2')
  * Jika tidak, default ke 'p1'.
  */
@@ -247,9 +247,10 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         }
         #lihatBerkasContainer.active { display: flex; }
 
+        /* === CHANGED: card diperbesar 20% (width: 30% → 36%, min/max disesuaikan) === */
         #wrapperDaftarMhs {
             display: flex; flex-direction: column; gap: 1rem;
-            width: 30%; min-width: 320px; max-width: 420px;
+            width: 36%; min-width: 384px; max-width: 504px;
             overflow-y: auto; overflow-x: hidden; flex-shrink: 0;
             padding: 0.25rem; max-height: 90vh; pointer-events: none;
         }
@@ -271,12 +272,30 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             flex-direction: column; flex-shrink: 0; width: 100%; max-height: 90vh;
         }
 
+        /* === CHANGED: preview card diperbesar 20% (520px → 624px) === */
         .preview-card-item {
             pointer-events: auto; background: white; border-radius: 1.5rem;
             box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3);
             border: 1px solid #e2e8f0; overflow: hidden; display: flex;
             flex-direction: column; flex-shrink: 0;
-            width: 520px; max-width: 70vw; height: 85vh; max-height: 90vh;
+            width: 624px; max-width: 75vw; height: 85vh; max-height: 90vh;
+        }
+        /* Fullscreen state */
+        .preview-card-item:fullscreen {
+            width: 100vw !important;
+            max-width: 100vw !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            border-radius: 0 !important;
+            border: none !important;
+        }
+        .preview-card-item:-webkit-full-screen {
+            width: 100vw !important;
+            max-width: 100vw !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            border-radius: 0 !important;
+            border: none !important;
         }
         .preview-card-item .preview-body {
             flex: 1; min-height: 0; position: relative; background: #e2e8f0; overflow: hidden;
@@ -299,35 +318,9 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         }
         .btn-3d-orange:hover { transform: scale(1.03); box-shadow: 0 6px 20px rgba(234,88,12,0.4); }
 
-        #commentActionModal {
-            position: fixed; left: 1.5rem; bottom: 1.5rem; z-index: 10000; display: none;
-            align-items: flex-end; justify-content: flex-start;
-            background: transparent; pointer-events: none; padding: 0;
-        }
-        #commentActionModal.active { display: flex; }
-        #commentActionModal .modal-box {
-            pointer-events: auto;
-            background: white; border-radius: 1.5rem; width: 440px; max-width: 92vw;
-            max-height: 80vh; overflow: hidden;
-            box-shadow: 0 25px 60px -10px rgba(15, 23, 42, 0.4), 0 0 0 1px rgba(226, 232, 240, 0.8);
-            display: flex; flex-direction: column;
-            animation: popInCard 0.3s cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
-        }
-        #commentActionModal .modal-header {
-            padding: 1.25rem 1.5rem; background: #1e293b; color: white;
-            display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
-            transition: background 0.25s ease;
-        }
-        #commentActionModal .modal-header.p1-approve-theme { background: linear-gradient(135deg, #047857, #10b981); }
-        #commentActionModal .modal-header.p1-revision-theme { background: linear-gradient(135deg, #9f1239, #f43f5e); }
-        #commentActionModal .modal-header.u1-theme { background: linear-gradient(135deg, #047857, #10b981); }
-        #commentActionModal .modal-header.u2-theme { background: linear-gradient(135deg, #6d28d9, #a855f7); }
-        #commentActionModal .modal-header.p2-theme { background: linear-gradient(135deg, #4338ca, #6366f1); }
-        #commentActionModal .modal-body { padding: 1.5rem; overflow-y: auto; flex: 1; }
-        #commentActionModal .modal-footer {
-            padding: 1rem 1.5rem; border-top: 1px solid #e2e8f0;
-            display: flex; justify-content: flex-end; gap: 0.75rem; flex-shrink: 0;
-        }
+        /* Inline comment editor wrapper (muncul di bawah preview file) */
+        .inline-comment-slot { display: block; }
+        .inline-comment-slot.hidden { display: none !important; }
 
         .role-switch-btn {
             display: flex; flex-direction: column; align-items: center; gap: 6px;
@@ -690,11 +683,14 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                                     <?php endif; ?>
                                     <th class="py-4 px-4 text-center">Komentar</th>
                                     <th id="thBapCol" class="py-4 px-4 text-center" style="display: none;">BAP</th>
-                                    <th class="py-4 px-4 pr-6 text-right">Aksi</th>
+                                    <th class="py-4 px-4 text-center">Aksi</th>
+                                    <th class="py-4 px-4 pr-6 text-center">
+                                        <i class="bi bi-mortarboard-fill text-purple-500 mr-1"></i>Lulus Tahap
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 font-medium bg-white" id="bimbinganTableBody">
-                                <tr><td colspan="<?= $is_p1 ? 7 : 6 ?>" class="text-center py-10 text-slate-500"><i class="bi bi-arrow-repeat animate-spin mr-2"></i> Memuat data...</td></tr>
+                                <tr><td colspan="8" class="text-center py-10 text-slate-500"><i class="bi bi-arrow-repeat animate-spin mr-2"></i> Memuat data...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -702,7 +698,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             </div>
 
             <div id="lihatBerkasContainer" class="fixed inset-0 pointer-events-none z-50 flex items-stretch p-3 sm:p-5 gap-4 overflow-hidden" style="display: none;">
-                <div id="wrapperDaftarMhs" class="flex flex-col gap-3 w-[30%] min-w-[320px] max-w-[420px] overflow-y-auto flex-shrink-0"></div>
+                <div id="wrapperDaftarMhs" class="flex flex-col gap-3 overflow-y-auto flex-shrink-0"></div>
                 <div id="wrapperPreviewBerkas" class="flex-1 overflow-x-auto overflow-y-hidden gap-4 flex items-stretch hidden"></div>
             </div>
 
@@ -723,30 +719,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                     </div>
 
                     <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm text-slate-800 font-medium leading-relaxed overflow-y-auto flex-1" id="commentModalContent"></div>
-                </div>
-            </div>
-
-            <div id="commentActionModal">
-                <div class="modal-box relative">
-                    <div class="modal-header" id="commentActionHeader">
-                        <h3 class="text-sm font-extrabold flex items-center gap-2">
-                            <i class="bi bi-chat-text text-orange-400" id="commentActionIcon"></i>
-                            <span id="commentActionTitle">Beri Komentar</span>
-                        </h3>
-                        <button type="button" onclick="closeCommentActionModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer">
-                            <i class="bi bi-x-lg text-sm"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <p class="text-xs text-slate-500 font-medium mb-3" id="commentActionSubtitle">Komentar bersifat opsional.</p>
-                        <textarea id="commentActionTextarea" rows="6" class="w-full p-3 rounded-xl border border-slate-300 focus:ring-orange-500 focus:border-orange-500 text-sm font-medium" placeholder="Tuliskan komentar..."></textarea>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" onclick="closeCommentActionModal()" class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition cursor-pointer">Batal</button>
-                        <button type="button" id="commentActionSubmit" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold shadow-md transition flex items-center gap-2 cursor-pointer">
-                            <i class="bi bi-check-lg"></i> Simpan & Proses
-                        </button>
-                    </div>
                 </div>
             </div>
 
@@ -1007,6 +979,45 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             return `<span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">⏱ Pending</span>`;
         }
 
+        // ============================================================
+        // FILE-TYPE HELPERS (NEW)
+        // ============================================================
+        function getFileTypesForTahap(tahap) {
+            if (tahap === 'Preview 3') return ['sitasi', 'bimbingan', 'persyaratan'];
+            if (tahap === 'Sidang')    return ['sidang'];
+            return ['draft'];
+        }
+        function getFileNameByType(preview, type) {
+            if (!preview) return '';
+            if (type === 'draft')       return preview.file_draft || '';
+            if (type === 'sitasi')      return preview.file_sitasi || '';
+            if (type === 'bimbingan')   return preview.file_bimbingan || '';
+            if (type === 'persyaratan') return preview.file_persyaratan || '';
+            if (type === 'sidang')      return preview.file_sidang || preview.file_draft || '';
+            return '';
+        }
+        function countFileStatuses(preview, tahap) {
+            const types = getFileTypesForTahap(tahap);
+            let approved = 0, revision = 0, pending = 0, missing = 0;
+            types.forEach(t => {
+                if (!preview) { missing++; return; }
+                const fname = getFileNameByType(preview, t);
+                if (!fname) { missing++; return; }
+                const st = getFileStatus(preview, t);
+                if (st === 'Approved') approved++;
+                else if (st === 'Revision') revision++;
+                else pending++;
+            });
+            return { approved, revision, pending, missing, total: types.length };
+        }
+        function getTableColspan() {
+            let cols = 7; // checkbox, mhs, waktu, status, komentar, aksi, lulus-tahap
+            if (IS_P1) cols++;
+            const showBap = IS_U1 && currentTahap === 'Sidang';
+            if (showBap) cols++;
+            return cols;
+        }
+
         function getUploadBaseUrl(tahap) {
             return (tahap === 'Sidang')
                 ? '<?= base_url('uploads/sidang/') ?>'
@@ -1038,6 +1049,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
 
         window.activeLihatBerkasIndices = [];
         window.activePreviews           = [];
+        window.activeInlineEditorKey    = null;
         let pendingAction = null;
 
         // ============================================================
@@ -1109,28 +1121,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             renderTable();
         }
         window.doSearch = doMultiSearchDW;
-
-        // ============================================================
-        // TINYMCE
-        // ============================================================
-        let commentEditor = null;
-        function initCommentTinyMCE() {
-            if (commentEditor) { try { commentEditor.destroy(); } catch(e){} commentEditor = null; }
-            if (typeof tinymce !== 'undefined' && tinymce.get('commentActionTextarea')) {
-                try { tinymce.get('commentActionTextarea').remove(); } catch(e){}
-            }
-            tinymce.init({
-                selector: '#commentActionTextarea',
-                menubar: false, statusbar: false,
-                plugins: 'lists link',
-                toolbar: 'bold italic underline | bullist numlist | link',
-                height: 150, skin: 'oxide',
-                setup: function (editor) {
-                    commentEditor = editor;
-                    editor.on('change', function () { tinymce.triggerSave(); });
-                }
-            });
-        }
 
         // ============================================================
         // PAGINATION
@@ -1205,6 +1195,9 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         }
 
         function switchDosenTab(tab) {
+            // Close any open inline editor before switching
+            closeInlineComment();
+
             if (tab === 'preview1') {
                 if (!IS_PEMBIMBING) return;
                 currentTahap = 'Preview 1';
@@ -1228,7 +1221,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         // ============================================================
         function fetchBimbinganData(silent = false) {
             const tbody = document.getElementById('bimbinganTableBody');
-            const colspan = IS_P1 ? 7 : 6;
+            const colspan = getTableColspan();
             if (!silent) tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-10 text-slate-500"><i class="bi bi-arrow-repeat animate-spin text-xl"></i> Memuat data...</td></tr>`;
 
             fetch(`<?= site_url('mahasiswa/ajax_get_dosen_bimbingan') ?>?${FETCH_QUERY}&tahap=${encodeURIComponent(currentTahap)}`)
@@ -1295,6 +1288,70 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         }
 
         // ============================================================
+        // RENDER CELLS (NEW)
+        // ============================================================
+        function renderStatusReviewCell(mhs) {
+            if (!mhs.latest_preview) {
+                return `<span class="badge badge-secondary"><i class="bi bi-dash"></i> Kosong</span>`;
+            }
+            const latest = mhs.latest_preview;
+            const isLulus = isStageLulus(latest);
+            const c = countFileStatuses(latest, currentTahap);
+
+            const badges = [];
+            if (c.approved > 0) badges.push(`<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1"><i class="bi bi-check-circle-fill"></i> ${c.approved} ACC</span>`);
+            if (c.revision > 0) badges.push(`<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 inline-flex items-center gap-1"><i class="bi bi-x-circle-fill"></i> ${c.revision} Revisi</span>`);
+            if (c.pending > 0)  badges.push(`<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 inline-flex items-center gap-1"><i class="bi bi-clock-fill"></i> ${c.pending} Pending</span>`);
+
+            if (badges.length === 0 && c.missing === c.total) {
+                badges.push(`<span class="badge badge-secondary"><i class="bi bi-dash"></i> Kosong</span>`);
+            }
+
+            const lulusBadge = isLulus
+                ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 inline-flex items-center gap-1"><i class="bi bi-mortarboard-fill"></i> Lulus Tahap</span>`
+                : '';
+
+            return `
+                <div class="flex flex-col gap-1 items-center">
+                    ${lulusBadge}
+                    <div class="flex flex-wrap gap-1 justify-center">${badges.join('')}</div>
+                </div>
+            `;
+        }
+
+        function renderLulusTahapCell(mhs) {
+            if (!mhs.latest_preview) return `<span class="text-slate-400 italic text-[11px]">—</span>`;
+            if (!isCurrentUserPIC())  return `<span class="text-slate-400 italic text-[11px]">—</span>`;
+
+            const latest = mhs.latest_preview;
+            const isLulus = isStageLulus(latest);
+            const c = countFileStatuses(latest, currentTahap);
+            const order = ['Preview 1', 'Preview 2', 'Preview 3', 'Sidang'];
+            const currIdx = order.indexOf(currentTahap);
+
+            let btnLulus = '';
+            if (currentTahap !== 'Sidang') {
+                if (isLulus) {
+                    btnLulus = `<span class="px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-300 text-[11px] font-bold inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> Sudah Lulus</span>`;
+                } else if (c.approved > 0) {
+                    btnLulus = `<button onclick="handleLulusStage('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> Lulus Tahap</button>`;
+                } else {
+                    btnLulus = `<button disabled title="Belum ada berkas yang di-ACC" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Lulus Tahap</button>`;
+                }
+            }
+
+            let btnDowngrade = '';
+            if (currIdx > 0) {
+                const targetTahap = order[currIdx - 1];
+                btnDowngrade = `<button onclick="handleDowngradeStage('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-arrow-down-circle"></i> Ke ${targetTahap}</button>`;
+            }
+
+            if (!btnLulus && !btnDowngrade) return `<span class="text-slate-400 italic text-[11px]">—</span>`;
+
+            return `<div class="flex flex-col gap-1.5 items-center max-w-[150px] mx-auto">${btnLulus}${btnDowngrade}</div>`;
+        }
+
+        // ============================================================
         // RENDER TABLE
         // ============================================================
         function renderTable() {
@@ -1354,7 +1411,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
 
                 let previewHtml = `<span class="text-slate-400 italic text-xs">Belum ada berkas</span>`;
                 let timeHtml    = `-`;
-                let statusBadge = `<span class="badge badge-secondary"><i class="bi bi-dash"></i> Kosong</span>`;
+                let statusReviewHtml = renderStatusReviewCell(mhs);
                 let rekomenCell = '';
                 let btnHtml = `<button disabled class="px-3 py-1.5 bg-slate-100 text-slate-400 rounded-lg text-xs font-bold cursor-not-allowed border border-slate-200">Belum ada file</button>`;
 
@@ -1371,13 +1428,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                     const dt = new Date(latest.created_at);
                     timeHtml = `<div class="text-xs font-semibold text-slate-700">${dt.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'})}</div><div class="text-[10px] text-slate-500">${dt.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})} WIB</div>`;
 
-                    const isLulus = isStageLulus(latest);
-                    let st = latest.status_pembimbing;
-                    if (isLulus) statusBadge = `<span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold inline-flex items-center gap-1"><i class="bi bi-mortarboard-fill"></i> Lulus Tahap</span>`;
-                    else if (st === 'Approved') statusBadge = `<span class="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold inline-flex items-center gap-1"><i class="bi bi-check-circle-fill"></i> Berkas di-ACC</span>`;
-                    else if (st === 'Revision') statusBadge = `<span class="badge badge-danger"><i class="bi bi-x-circle-fill"></i> Revisi</span>`;
-                    else statusBadge = `<span class="badge badge-warning"><i class="bi bi-clock-fill"></i> Pending</span>`;
-
                     if (IS_P1) {
                         let rekomenBadge = `<button onclick="openRekomendasiModal('${mhs.nim}', '${latest.id}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl text-xs font-bold shadow-xs transition cursor-pointer whitespace-nowrap"><i class="bi bi-plus-circle-fill"></i> Rekomendasi</button>`;
                         if (mhs.rekomendasi) {
@@ -1392,6 +1442,11 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                     }
 
                     btnHtml = previewHtml;
+                }
+
+                // P1 without preview: masih butuh kolom rekomendasi kosong
+                if (IS_P1 && !mhs.latest_preview) {
+                    rekomenCell = `<td data-label="Rekomendasi" class="py-4 px-4 text-center"><span class="text-slate-400 italic text-xs">-</span></td>`;
                 }
 
                 let checkboxHtml = '';
@@ -1423,6 +1478,8 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
 
                 const namaEscaped = (mhs.nama_mahasiswa || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
+                const lulusTahapHtml = renderLulusTahapCell(mhs);
+
                 html += `
                     <tr class="hover:bg-slate-50 transition-colors" data-index="${index}" data-nim="${mhs.nim}">
                         <td class="dosen-cb-cell py-4 px-4 text-center">${checkboxHtml}</td>
@@ -1434,7 +1491,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                             ${mhs.judul ? `<div class="text-[10px] text-slate-500 font-medium italic mt-1 line-clamp-2 max-w-[250px]" title="${mhs.judul}">"${mhs.judul}"</div>` : ''}
                         </td>
                         <td data-label="Waktu Upload" class="py-4 px-4 text-center">${timeHtml}</td>
-                        <td data-label="Status" class="py-4 px-4 text-center">${statusBadge}</td>
+                        <td data-label="Status Review" class="py-4 px-4 text-center">${statusReviewHtml}</td>
                         ${rekomenCell}
                         <td data-label="Komentar" class="py-4 px-4 text-center">${commentBtnHtml}</td>
                         ${showBapCol ? `
@@ -1449,12 +1506,13 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                                 </div>
                             </td>
                         ` : ''}
-                        <td class="aksi-cell py-4 px-4 pr-6 text-right">${btnHtml}</td>
+                        <td class="aksi-cell py-4 px-4 text-center">${btnHtml}</td>
+                        <td data-label="Lulus Tahap" class="py-4 px-4 text-center">${lulusTahapHtml}</td>
                     </tr>
                 `;
             });
 
-            const emptyColspan = IS_P1 ? 7 : (showBapCol ? 7 : 6);
+            const emptyColspan = getTableColspan();
             if (pageData.length === 0) {
                 html = `<tr><td colspan="${emptyColspan}" class="text-center py-10 text-slate-500 font-medium">Tidak ada data mahasiswa ditemukan.</td></tr>`;
             }
@@ -1537,23 +1595,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             const checkAll = document.getElementById('checkAllDosenStudents');
             if (checkAll) checkAll.checked = false;
             updateDosenBatchBar();
-        }
-
-        function openSingleBatchModal(index) {
-            const mhs = bimbinganData[index];
-            if (!mhs || !mhs.latest_preview) return;
-            const cb = {
-                getAttribute: function(attr) {
-                    if (attr === 'data-name')    return mhs.nama_mahasiswa;
-                    if (attr === 'data-file')    return mhs.latest_preview.file_draft;
-                    if (attr === 'data-id')      return mhs.latest_preview.id;
-                    if (attr === 'data-status')  return mhs.latest_preview.status_pembimbing || 'Pending';
-                    if (attr === 'data-catatan') return encodeURIComponent(mhs.latest_preview.catatan_pembimbing || '');
-                    if (attr === 'data-catatan2')return encodeURIComponent(mhs.latest_preview.catatan_pembimbing_2 || '');
-                    return null;
-                }
-            };
-            renderBatchModal([cb]);
         }
 
         function openDosenBatchModal() {
@@ -1878,7 +1919,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         }
 
         // ============================================================
-        // COMMENT MODAL UNIFIED
+        // COMMENT MODAL UNIFIED (READ-ONLY)
         // ============================================================
         let _commentData = { p1: '', p2: '', u1: '', u2: '' };
         let _activeCommentTab = 'p1';
@@ -1932,93 +1973,120 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         }
 
         // ============================================================
-        // COMMENT ACTION MODAL (Komentar only — untuk P2/U2)
+        // INLINE COMMENT EDITOR (NEW — menggantikan modal komentar lama)
         // ============================================================
-        function handleFileAction(nim, fileIndex, action) {
-            pendingAction = { nim, fileIndex, action };
+        function fileItemKey(scope, nim, fileIndex, fileType) {
+            return `${scope}__${nim}__${fileIndex}__${fileType}`;
+        }
+
+        function openInlineComment(scope, nim, fileIndex, fileType, action) {
+            const key = fileItemKey(scope, nim, fileIndex, fileType);
+            const slot = document.getElementById('inlineSlot_' + key);
+            if (!slot) {
+                console.warn('Inline slot not found:', key);
+                return;
+            }
+
+            // Toggle close jika slot yang sama
+            if (window.activeInlineEditorKey === key) {
+                closeInlineComment();
+                return;
+            }
+            // Tutup editor lain terlebih dahulu
+            closeInlineComment();
+
             const mhs = bimbinganData.find(m => m.nim === nim);
             if (!mhs) return;
             const preview = mhs.riwayat_previews[fileIndex];
             if (!preview) return;
 
-            const header    = document.getElementById('commentActionHeader');
-            const iconEl    = document.getElementById('commentActionIcon');
-            const titleEl   = document.getElementById('commentActionTitle');
-            const subtitleEl= document.getElementById('commentActionSubtitle');
-            const submitBtn = document.getElementById('commentActionSubmit');
+            const existingComment = getFileCatatan(preview, fileType) || '';
+            const editorId = 'inlineEditor__' + key;
 
-            if (submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('bg-emerald-500'); }
-            if (header) header.classList.remove('p2-theme', 'p1-approve-theme', 'p1-revision-theme', 'u1-theme', 'u2-theme');
+            const headerLabels = {
+                'Approved': '✓ ACC Berkas',
+                'Revision': '✗ Revisi Berkas',
+                'Reset':    '↺ Reset Status Berkas',
+                'Comment':  '💬 Komentar Berkas',
+            };
+            const headerColors = {
+                'Approved': 'from-emerald-500 to-teal-500',
+                'Revision': 'from-rose-500 to-pink-500',
+                'Reset':    'from-slate-500 to-slate-700',
+                'Comment':  'from-indigo-500 to-purple-500',
+            };
 
-            let currentComment = getCurrentComment(preview);
+            const headerLabel = headerLabels[action] || 'Komentar';
+            const headerColor = headerColors[action] || 'from-slate-500 to-slate-700';
 
-            if (action === 'Approved') {
-                pendingAction = { nim, fileIndex, action };
-                submitFileAction(currentComment);
-                return;
-            }
+            slot.innerHTML = `
+                <div class="mt-1.5 p-3 rounded-xl border-2 border-dashed border-orange-300 bg-orange-50/40 animate-pop-in" data-inline-key="${key}">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-md bg-gradient-to-r ${headerColor} text-white shadow-xs">${headerLabel}</span>
+                        <button type="button" onclick="closeInlineComment()" class="w-6 h-6 rounded-md bg-white hover:bg-slate-100 text-slate-500 flex items-center justify-center text-[10px] cursor-pointer border border-slate-200">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                    <textarea id="${editorId}" rows="3" class="w-full p-2.5 rounded-lg border border-slate-300 text-xs font-medium resize-none focus:outline-none focus:ring-2 focus:ring-orange-400/25 focus:border-orange-400" placeholder="Tuliskan komentar (opsional)...">${existingComment}</textarea>
+                    <div class="flex items-center justify-end gap-1.5 mt-2">
+                        <button type="button" onclick="closeInlineComment()" class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-[11px] font-bold cursor-pointer">Batal</button>
+                        <button type="button" onclick="submitInlineComment('${nim}', ${fileIndex}, '${fileType}', '${action}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r ${headerColor} text-white text-[11px] font-bold cursor-pointer shadow-xs inline-flex items-center gap-1">
+                            <i class="bi bi-send-fill text-[10px]"></i> Simpan
+                        </button>
+                    </div>
+                </div>
+            `;
+            slot.classList.remove('hidden');
+            slot.classList.add('inline-comment-slot');
+            window.activeInlineEditorKey = key;
 
-            if (action === 'Comment') {
-                if (IS_P2) {
-                    header.classList.add('p2-theme');
-                    iconEl.className = 'bi bi-chat-dots-fill text-indigo-200';
-                    titleEl.textContent = 'Komentar untuk Pembimbing 1';
-                    subtitleEl.textContent = 'Catatan ini akan dibaca oleh Pembimbing 1 (opsional).';
-                    submitBtn.className = 'px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold shadow-md transition flex items-center gap-2 cursor-pointer';
-                    submitBtn.innerHTML = '<i class="bi bi-chat-dots-fill"></i> Simpan Komentar';
-                } else if (IS_U1) {
-                    header.classList.add('u1-theme');
-                    iconEl.className = 'bi bi-chat-dots-fill text-emerald-100';
-                    titleEl.textContent = 'Komentar Penguji 1';
-                    subtitleEl.textContent = 'Catatan ini bersifat opsional dan tidak mengubah status review.';
-                    submitBtn.className = 'px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold shadow-md transition flex items-center gap-2 cursor-pointer';
-                    submitBtn.innerHTML = '<i class="bi bi-chat-dots-fill"></i> Simpan Komentar';
-                } else {
-                    header.classList.add('u2-theme');
-                    iconEl.className = 'bi bi-chat-dots-fill text-purple-100';
-                    titleEl.textContent = 'Komentar Penguji 2';
-                    subtitleEl.textContent = 'Catatan ini bersifat opsional dan tidak mengubah status review.';
-                    submitBtn.className = 'px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-fuchsia-500 hover:from-purple-600 hover:to-fuchsia-600 text-white font-bold shadow-md transition flex items-center gap-2 cursor-pointer';
-                    submitBtn.innerHTML = '<i class="bi bi-chat-dots-fill"></i> Simpan Komentar';
+            // Init TinyMCE dengan delay supaya DOM siap
+            setTimeout(() => {
+                const el = document.getElementById(editorId);
+                if (!el) return;
+                try {
+                    const existing = tinymce.get(editorId);
+                    if (existing) existing.remove();
+                } catch(e){}
+                tinymce.init({
+                    selector: '#' + editorId,
+                    menubar: false, statusbar: false,
+                    plugins: 'lists link',
+                    toolbar: 'bold italic underline | bullist numlist | link',
+                    height: 130, skin: 'oxide',
+                    setup: function(editor) {
+                        editor.on('change', function() { tinymce.triggerSave(); });
+                    }
+                });
+            }, 30);
+        }
+
+        function closeInlineComment() {
+            if (!window.activeInlineEditorKey) return;
+            const key = window.activeInlineEditorKey;
+            const slot = document.getElementById('inlineSlot_' + key);
+            if (slot) {
+                const ta = slot.querySelector('textarea');
+                if (ta && ta.id) {
+                    try {
+                        const ed = tinymce.get(ta.id);
+                        if (ed) ed.remove();
+                    } catch(e){ console.warn(e); }
                 }
-            } else {
-                header.classList.add('p1-revision-theme');
-                iconEl.className = 'bi bi-exclamation-triangle-fill text-rose-200';
-                titleEl.textContent = 'Revisi Berkas';
-                subtitleEl.textContent = 'Berikan saran revisi (opsional).';
-                submitBtn.className = 'px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold shadow-md transition flex items-center gap-2 cursor-pointer';
-                submitBtn.innerHTML = '<i class="bi bi-send-fill"></i> Simpan & Minta Revisi';
+                slot.innerHTML = '';
+                slot.classList.add('hidden');
+                slot.classList.remove('inline-comment-slot');
             }
-
-            if (commentEditor) commentEditor.setContent(currentComment);
-            else document.getElementById('commentActionTextarea').value = currentComment;
-
-            const modal = document.getElementById('commentActionModal');
-            modal.classList.add('active');
-            modal.style.display = 'flex';
-
-            submitBtn.onclick = function() { submitFileAction(); };
-            if (!commentEditor) initCommentTinyMCE();
+            window.activeInlineEditorKey = null;
         }
 
-        function closeCommentActionModal() {
-            const modal = document.getElementById('commentActionModal');
-            modal.classList.remove('active');
-            modal.style.display = 'none';
-            pendingAction = null;
-            if (commentEditor) { try { commentEditor.destroy(); } catch(e){} commentEditor = null; }
-            if (typeof tinymce !== 'undefined' && tinymce.get('commentActionTextarea')) {
-                try { tinymce.get('commentActionTextarea').remove(); } catch(e){}
-            }
-        }
+        function submitInlineComment(nim, fileIndex, fileType, action) {
+            if (!window.activeInlineEditorKey) return;
+            const key = window.activeInlineEditorKey;
+            const editorId = 'inlineEditor__' + key;
 
-        function submitFileAction(directComment = null) {
-            if (!pendingAction) return;
-            const { nim, fileIndex, action } = pendingAction;
-
-            let comment = '';
-            if (directComment !== null) comment = directComment;
-            else comment = commentEditor ? commentEditor.getContent() : document.getElementById('commentActionTextarea').value;
+            if (tinymce.get(editorId)) tinymce.triggerSave();
+            const catatan = document.getElementById(editorId)?.value || '';
 
             const mhs = bimbinganData.find(m => m.nim === nim);
             if (!mhs) return;
@@ -2027,63 +2095,61 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
 
             const fd = new FormData();
             fd.append('id_preview', preview.id);
-            fd.append('posisi', MODEL_POSISI);
-            fd.append('catatan_pembimbing', comment);
-            if (action !== 'Comment') fd.append('status_pembimbing', action);
+            fd.append('file_type', fileType);
+            fd.append('action', action);
+            fd.append('catatan', catatan);
 
-            const btn = document.getElementById('commentActionSubmit');
-            const originalBtnHtml = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Menyimpan...';
+            Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
 
-            fetch('<?= site_url('mahasiswa/review_preview_ajax') ?>', {
+            fetch('<?= site_url("dosen_bimbingan/review_file_ajax") ?>', {
                 method: 'POST', body: fd,
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
             .then(r => r.json())
             .then(data => {
                 if (data.status) {
-                    showToast(data.message, 'success');
-                    closeCommentActionModal();
-
-                    if (action === 'Comment') {
-                        setCurrentComment(preview, comment);
-                        refreshLihatBerkasView();
-                        fetchBimbinganData(true);
-                    } else {
-                        preview.status_pembimbing = action;
-                        setCurrentComment(preview, comment);
-                        closeStudentAndPreview(nim);
-                        refreshLihatBerkasView();
-                        fetchBimbinganData(true);
-                    }
+                    Swal.fire({ icon: 'success', title: 'Berhasil', text: data.message, timer: 1400, showConfirmButton: false })
+                        .then(() => {
+                            closeInlineComment();
+                            fetchBimbinganData(true);
+                        });
                 } else {
-                    showToast(data.message || 'Gagal menyimpan', 'error');
-                    btn.disabled = false;
-                    btn.innerHTML = originalBtnHtml;
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: data.message || 'Gagal menyimpan.' });
                 }
             })
             .catch(err => {
                 console.error(err);
-                showToast('Kesalahan koneksi', 'error');
-                btn.disabled = false;
-                btn.innerHTML = originalBtnHtml;
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Kesalahan koneksi.' });
             });
         }
 
-        function closeStudentAndPreview(nim) {
-            let foundIndex = -1;
-            window.activeLihatBerkasIndices.forEach((dataIdx, idx) => {
-                const mhs = bimbinganData[dataIdx];
-                if (mhs && mhs.nim === nim) foundIndex = idx;
-            });
-            if (foundIndex !== -1) {
-                window.activeLihatBerkasIndices.splice(foundIndex, 1);
-                window.activePreviews = window.activePreviews.filter(p => p.nim !== nim);
-                if (window.activeLihatBerkasIndices.length === 0) closeLihatBerkasPanel();
-                else refreshLihatBerkasView();
-                updateTableButtonHighlights();
+        // ============================================================
+        // FULLSCREEN PREVIEW (NEW)
+        // ============================================================
+        function toggleFullscreenPreview(uniqueKey) {
+            const card = document.getElementById('previewCard_' + uniqueKey);
+            if (!card) return;
+
+            const isFs = document.fullscreenElement === card || document.webkitFullscreenElement === card;
+            if (!isFs) {
+                if (card.requestFullscreen) card.requestFullscreen();
+                else if (card.webkitRequestFullscreen) card.webkitRequestFullscreen();
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
             }
+        }
+
+        document.addEventListener('fullscreenchange', updateFullscreenIcons);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenIcons);
+
+        function updateFullscreenIcons() {
+            document.querySelectorAll('[data-fs-icon]').forEach(icon => {
+                const key = icon.getAttribute('data-fs-key');
+                const card = document.getElementById('previewCard_' + key);
+                const isFs = (document.fullscreenElement === card) || (document.webkitFullscreenElement === card);
+                icon.className = isFs ? 'bi bi-fullscreen-exit' : 'bi bi-arrows-fullscreen';
+            });
         }
 
         // ============================================================
@@ -2148,7 +2214,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             }
 
             if (isMobile) wrapperDaftar.className = 'flex flex-col gap-3 w-full overflow-y-auto flex-shrink-0';
-            else          wrapperDaftar.className = 'flex flex-col gap-3 w-[30%] min-w-[320px] max-w-[420px] overflow-y-auto flex-shrink-0';
+            else          wrapperDaftar.className = 'flex flex-col gap-3 w-[36%] min-w-[384px] max-w-[504px] overflow-y-auto flex-shrink-0';
 
             if (isPreviewActive) {
                 wrapperPreview.classList.add('active');
@@ -2197,7 +2263,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                     itemsHtml = `<div class="p-3 text-center text-slate-400 text-xs">Tidak ada riwayat berkas.</div>`;
                 } else {
                     fileList.forEach((preview, idx) => {
-                        // Dapatkan index asli di riwayat_previews (sebelum reverse)
                         const realIdx = allPreviews.findIndex(p => p.id === preview.id);
                         const files = getPreviewFiles(preview);
                         const status = preview.status_pembimbing || 'Pending';
@@ -2207,6 +2272,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                         else if (status === 'Revision') statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Revisi</span>';
                         else statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending</span>';
 
+                        // Action buttons di header pengajuan — untuk non-PIC (komentar per-preview via modal lama)
                         let actionButtons = '';
                         if (currentTahap === 'Sidang') {
                             let nilaiTersimpan = null;
@@ -2223,23 +2289,8 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                                     <i class="bi ${icon} text-[10px]"></i><span>${label}</span>
                                 </button>
                             `;
-                        } else if (isCurrentUserPIC()) {
-                            actionButtons = '';
-                        } else {
-                            const hasComment = getCurrentComment(preview).trim().length > 0;
-                            const label = hasComment ? 'Edit Komentar' : 'Komentari';
-                            const icon  = hasComment ? 'bi-chat-dots-fill' : 'bi-chat-dots';
-                            const cls   = IS_P2 ? 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border-indigo-300'
-                                       : IS_U1 ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border-emerald-300'
-                                       :         'bg-purple-100 hover:bg-purple-200 text-purple-700 border-purple-300';
-                            actionButtons = `
-                                <button onclick="handleFileAction('${mhs.nim}', ${realIdx}, 'Comment')"
-                                        class="px-2.5 py-1 rounded-lg ${cls} border text-[10px] font-bold transition cursor-pointer flex items-center gap-1"
-                                        title="Beri komentar">
-                                    <i class="bi ${icon} text-[10px]"></i><span>${label}</span>
-                                </button>
-                            `;
                         }
+                        // Untuk non-Sidang, action buttons dipindah ke per-file item di bawah
 
                         itemsHtml += `
                             <div class="mb-1.5 flex items-center justify-between gap-2 px-1">
@@ -2267,15 +2318,24 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                                 const fileStatus = getFileStatus(preview, f.type);
                                 const fileStatusBadge = renderFileStatusBadge(preview, f.type);
 
-                                let picButtons = '';
-                                if (isCurrentUserPIC() && currentTahap !== 'Sidang') {
-                                    if (fileStatus !== 'Approved') {
-                                        picButtons += `<button type="button" onclick="event.stopPropagation(); handleFileStatus('${mhs.nim}', ${realIdx}, '${f.type}', 'Approved')" class="px-2 h-7 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-300 text-[10px] font-bold transition cursor-pointer flex items-center gap-1" title="ACC Berkas"><i class="bi bi-check-lg"></i>ACC</button>`;
-                                    }
-                                    if (fileStatus !== 'Revision') {
-                                        picButtons += `<button type="button" onclick="event.stopPropagation(); handleFileStatus('${mhs.nim}', ${realIdx}, '${f.type}', 'Revision')" class="px-2 h-7 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300 text-[10px] font-bold transition cursor-pointer flex items-center gap-1" title="Revisi Berkas"><i class="bi bi-x-lg"></i>Revisi</button>`;
+                                // Action buttons per-file (inline comment)
+                                let fileActionBtns = '';
+                                if (currentTahap !== 'Sidang' && isCurrentUserPIC()) {
+                                    if (fileStatus === 'Pending') {
+                                        fileActionBtns = `
+                                            <button type="button" onclick="event.stopPropagation(); openInlineComment('card', '${mhs.nim}', ${realIdx}, '${f.type}', 'Approved')" class="px-2 h-7 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-300 text-[10px] font-bold transition cursor-pointer flex items-center gap-1"><i class="bi bi-check-lg"></i>ACC</button>
+                                            <button type="button" onclick="event.stopPropagation(); openInlineComment('card', '${mhs.nim}', ${realIdx}, '${f.type}', 'Revision')" class="px-2 h-7 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300 text-[10px] font-bold transition cursor-pointer flex items-center gap-1"><i class="bi bi-x-lg"></i>Revisi</button>
+                                            <button type="button" onclick="event.stopPropagation(); openInlineComment('card', '${mhs.nim}', ${realIdx}, '${f.type}', 'Comment')" class="px-2 h-7 rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border border-indigo-300 text-[10px] font-bold transition cursor-pointer flex items-center gap-1"><i class="bi bi-chat-dots"></i>Komentar</button>
+                                        `;
+                                    } else {
+                                        fileActionBtns = `
+                                            <button type="button" onclick="event.stopPropagation(); openInlineComment('card', '${mhs.nim}', ${realIdx}, '${f.type}', 'Reset')" class="px-2 h-7 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 border border-slate-300 text-[10px] font-bold transition cursor-pointer flex items-center gap-1"><i class="bi bi-arrow-counterclockwise"></i>Reset</button>
+                                            <button type="button" onclick="event.stopPropagation(); openInlineComment('card', '${mhs.nim}', ${realIdx}, '${f.type}', 'Comment')" class="px-2 h-7 rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border border-indigo-300 text-[10px] font-bold transition cursor-pointer flex items-center gap-1"><i class="bi bi-chat-dots"></i>Komentar</button>
+                                        `;
                                     }
                                 }
+
+                                const cardKey = fileItemKey('card', mhs.nim, realIdx, f.type);
 
                                 itemsHtml += `
                                     <div class="p-2 px-2.5 rounded-xl border shadow-2xs hover:shadow-xs transition-all flex flex-col gap-1.5 ${activeCardBorder}">
@@ -2303,44 +2363,13 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                                                 </a>
                                             </div>
                                         </div>
-                                        ${picButtons ? `<div class="flex items-center gap-1.5 flex-wrap pl-5">${picButtons}</div>` : ''}
+                                        ${fileActionBtns ? `<div class="flex items-center gap-1.5 flex-wrap pl-5">${fileActionBtns}</div>` : ''}
+                                        <div id="inlineSlot_${cardKey}" class="hidden"></div>
                                     </div>
                                 `;
                             });
                         }
                     });
-                }
-
-                // === Stage actions: Lulus Tahap + Downgrade ===
-                let stageActionsHtml = '';
-                const latestPreview = fileList[0] || null;
-
-                if (latestPreview && isCurrentUserPIC()) {
-                    const order = ['Preview 1', 'Preview 2', 'Preview 3', 'Sidang'];
-                    const currIdx = order.indexOf(currentTahap);
-
-                    let lulusBtnHtml = '';
-                    let downgradeBtnHtml = '';
-
-                    // Tombol Lulus Tahap (semua tahap kecuali Sidang)
-                    if (currentTahap !== 'Sidang') {
-                        const alreadyLulus = isStageLulus(latestPreview);
-
-                        if (alreadyLulus) {
-                            lulusBtnHtml = `<span class="px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-300 text-[11px] font-bold flex items-center gap-1.5"><i class="bi bi-mortarboard-fill"></i> Sudah Lulus Tahap ${currentTahap}</span>`;
-                        } else {
-                            lulusBtnHtml = `<button type="button" onclick="handleLulusStage('${mhs.nim}')" class="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md flex items-center gap-1.5 cursor-pointer"><i class="bi bi-mortarboard-fill"></i> Lulus Tahap ${currentTahap}</button>`;
-                        }
-                    }
-
-                    // Tombol Downgrade (semua tahap kecuali Preview 1)
-                    if (currIdx > 0) {
-                        downgradeBtnHtml = `<button type="button" onclick="handleDowngradeStage('${mhs.nim}')" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-[11px] shadow-md flex items-center gap-1.5 cursor-pointer"><i class="bi bi-arrow-down-circle"></i> Downgrade ke ${order[currIdx - 1]}</button>`;
-                    }
-
-                    if (lulusBtnHtml || downgradeBtnHtml) {
-                        stageActionsHtml = `<div class="mt-2 pt-2 border-t border-slate-200 flex items-center justify-center gap-2 flex-wrap">${lulusBtnHtml}${downgradeBtnHtml}</div>`;
-                    }
                 }
 
                 cardsHtml += `
@@ -2359,7 +2388,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                                 </button>
                             </div>
                         </div>
-                        <div class="p-2.5 space-y-1.5 bg-slate-50/50 overflow-y-auto">${itemsHtml}${stageActionsHtml}</div>
+                        <div class="p-2.5 space-y-1.5 bg-slate-50/50 overflow-y-auto">${itemsHtml}</div>
                     </div>
                 `;
             });
@@ -2429,6 +2458,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                     return;
                 }
 
+                // Action buttons per-file
                 let actionButtons = '';
                 if (currentTahap === 'Sidang') {
                     let nilaiTersimpan = null;
@@ -2448,29 +2478,26 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 } else if (isCurrentUserPIC()) {
                     const ftype = fileType;
                     const fst   = getFileStatus(preview, ftype);
-                    actionButtons = `
-                        <span class="text-[10px] font-bold text-slate-500 mr-1">${fileLabel}:</span>
-                        ${fst === 'Approved'
-                            ? `<span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-300 text-[11px] font-bold">✓ ACC</span>`
-                            : `<button onclick="handleFileStatus('${p.nim}', ${p.fileIndex}, '${ftype}', 'Approved')" class="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-300 text-[11px] font-bold transition cursor-pointer">✓ ACC</button>`}
-                        ${fst === 'Revision'
-                            ? `<span class="px-2.5 py-1 rounded-lg bg-rose-100 text-rose-700 border border-rose-300 text-[11px] font-bold ml-1">✗ Revisi</span>`
-                            : `<button onclick="handleFileStatus('${p.nim}', ${p.fileIndex}, '${ftype}', 'Revision')" class="px-2.5 py-1 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300 text-[11px] font-bold transition cursor-pointer ml-1">✗ Revisi</button>`}
-                    `;
+                    if (fst === 'Pending') {
+                        actionButtons = `
+                            <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${ftype}', 'Approved')" class="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1">✓ ACC</button>
+                            <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${ftype}', 'Revision')" class="px-2.5 py-1 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1">✗ Revisi</button>
+                            <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${ftype}', 'Comment')" class="px-2.5 py-1 rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border border-indigo-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1">💬 Komentar</button>
+                        `;
+                    } else {
+                        actionButtons = `
+                            <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${ftype}', 'Reset')" class="px-2.5 py-1 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 border border-slate-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
+                            <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${ftype}', 'Comment')" class="px-2.5 py-1 rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border border-indigo-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1">💬 Komentar</button>
+                        `;
+                    }
                 } else {
-                    const hasComment = getCurrentComment(preview).trim().length > 0;
-                    const label = hasComment ? 'Edit Komentar' : 'Komentari';
-                    const icon  = hasComment ? 'bi-chat-dots-fill' : 'bi-chat-dots';
-                    const cls   = IS_P2 ? 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border-indigo-300'
-                               : IS_U1 ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border-emerald-300'
-                               :         'bg-purple-100 hover:bg-purple-200 text-purple-700 border-purple-300';
+                    // Non-PIC: hanya komentar
                     actionButtons = `
-                        <button onclick="handleFileAction('${p.nim}', ${p.fileIndex}, 'Comment')"
-                                class="px-3 py-1.5 rounded-lg ${cls} border text-xs font-bold transition cursor-pointer flex items-center gap-1.5">
-                            <i class="bi ${icon}"></i><span>${label}</span>
-                        </button>
+                        <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${ftype || fileType}', 'Comment')" class="px-2.5 py-1 rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border border-indigo-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1">💬 Komentar</button>
                     `;
                 }
+
+                const previewKey = fileItemKey('preview', p.nim, p.fileIndex, fileType);
 
                 html += `
                     <div class="preview-card-item pointer-events-auto bg-white rounded-3xl shadow-2xl border border-slate-200/90 overflow-hidden flex flex-col shrink-0 animate-preview-in" id="previewCard_${uniqueKey}">
@@ -2488,6 +2515,9 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                                 <button type="button" onclick="togglePreviewIframeInteraction('${p.nim}', ${p.fileIndex}, '${fileType}')" id="btnPreviewInteract_${uniqueKey}" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Kursor Terkunci (Normal)">
                                     <i class="bi bi-arrow-pointer" id="iconPreviewInteract_${uniqueKey}"></i>
                                 </button>
+                                <button type="button" onclick="toggleFullscreenPreview('${uniqueKey}')" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Toggle Fullscreen">
+                                    <i class="bi bi-arrows-fullscreen" data-fs-icon data-fs-key="${uniqueKey}"></i>
+                                </button>
                                 <a href="${fileUrl}" target="_blank" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Buka di tab baru">
                                     <i class="bi bi-box-arrow-up-right"></i>
                                 </a>
@@ -2497,22 +2527,18 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                             </div>
                         </div>
 
-                        <div class="preview-body" style="height: 85vh; min-height: 300px; max-height: 90vh;">
+                        <div class="preview-body" style="min-height: 200px;">
                             <div class="loader" id="previewLoader_${uniqueKey}">
                                 <i class="bi bi-arrow-repeat"></i> Memuat dokumen...
                             </div>
                             <iframe id="iframePreviewBerkas_${uniqueKey}" src="${fileUrl}#toolbar=0&navpanes=0" class="w-full h-full border-0 relative z-10 pointer-events-none" onload="document.getElementById('previewLoader_${uniqueKey}').style.display='none'" title="Pratinjau Berkas"></iframe>
                         </div>
 
+                        <div id="inlineSlot_${previewKey}" class="hidden"></div>
+
                         <div class="preview-footer p-2 px-3 bg-white flex items-center justify-between text-xs shrink-0 gap-2 border-t border-slate-200">
                             <div class="flex items-center gap-1.5 flex-wrap">
                                 ${actionButtons}
-                                ${isCurrentUserPIC() && currentTahap !== 'Sidang' && !isStageLulus(preview)
-                                    ? `<button onclick="handleLulusStage('${p.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ml-1"><i class="bi bi-mortarboard-fill"></i> Lulus ${currentTahap}</button>`
-                                    : ''}
-                                ${isStageLulus(preview)
-                                    ? `<span class="px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-300 text-xs font-bold flex items-center gap-1.5 ml-1"><i class="bi bi-mortarboard-fill"></i> Lulus ${currentTahap}</span>`
-                                    : ''}
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <a href="${fileUrl}" download="${fileName}" target="_blank" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs text-[11px]">
@@ -2622,6 +2648,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         }
 
         function closeLihatBerkasPanel() {
+            closeInlineComment();
             const container = document.getElementById('lihatBerkasContainer');
             if (container) { container.style.display = 'none'; container.classList.remove('active'); }
             const wrapperDaftar = document.getElementById('wrapperDaftarMhs');
@@ -2657,7 +2684,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             if (e.key === 'Escape') {
                 const mp = document.getElementById('modalPenilaianSidang');
                 if (mp && mp.classList.contains('active')) { closeModalPenilaianSidang(); return; }
-                if (document.getElementById('commentActionModal').classList.contains('active')) { closeCommentActionModal(); return; }
+                if (window.activeInlineEditorKey) { closeInlineComment(); return; }
                 if (window.activeLihatBerkasIndices && window.activeLihatBerkasIndices.length > 0) closeLihatBerkasPanel();
             }
         });
@@ -2665,61 +2692,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         window.addEventListener('resize', () => {
             if (window.activeLihatBerkasIndices && window.activeLihatBerkasIndices.length > 0) updateLihatBerkasLayout();
         });
-
-        // ============================================================
-        // ACTION: ACC / Revisi per file (TANPA KOMENTAR)
-        // ============================================================
-        function handleFileStatus(nim, fileIndex, fileType, action) {
-            const mhs = bimbinganData.find(m => m.nim === nim);
-            if (!mhs) { showToast('Data mahasiswa tidak ditemukan.', 'error'); return; }
-            const preview = mhs.riwayat_previews[fileIndex];
-            if (!preview) { showToast('Preview tidak ditemukan.', 'error'); return; }
-
-            const actionLabel = (action === 'Approved') ? 'ACC' : 'Revisi';
-            const iconColor   = (action === 'Approved') ? '#10b981' : '#ef4444';
-            const iconType    = (action === 'Approved') ? 'question' : 'warning';
-            const fileLabelMap = { draft:'Draft', sitasi:'Sitasi', bimbingan:'Bimbingan', persyaratan:'Persyaratan', sidang:'Sidang' };
-            const fileLabel = fileLabelMap[fileType] || fileType;
-
-            Swal.fire({
-                title: `${actionLabel} Berkas ${fileLabel}?`,
-                text: `Apakah Anda yakin ingin menandai berkas "${fileLabel}" sebagai "${actionLabel}"?`,
-                icon: iconType,
-                showCancelButton: true,
-                confirmButtonColor: iconColor,
-                cancelButtonColor: '#64748b',
-                confirmButtonText: `Ya, ${actionLabel}`,
-                cancelButtonText: 'Batal',
-            }).then((res) => {
-                if (!res.isConfirmed) return;
-
-                const fd = new FormData();
-                fd.append('id_preview', preview.id);
-                fd.append('file_type', fileType);
-                fd.append('action', action);
-                fd.append('catatan', '');
-
-                Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
-
-                fetch('<?= site_url("dosen_bimbingan/review_file_ajax") ?>', {
-                    method: 'POST', body: fd,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.status) {
-                        Swal.fire({ icon: 'success', title: 'Berhasil', text: data.message, timer: 1500, showConfirmButton: false })
-                            .then(() => fetchBimbinganData(true));
-                    } else {
-                        Swal.fire({ icon: 'error', title: 'Gagal', text: data.message || 'Gagal menyimpan.' });
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    Swal.fire({ icon: 'error', title: 'Error', text: 'Kesalahan koneksi.' });
-                });
-            });
-        }
 
         // ============================================================
         // ACTION: Lulus Tahap
@@ -2764,7 +2736,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         }
 
         // ============================================================
-        // ACTION: Downgrade Tahap (TANPA KOMENTAR)
+        // ACTION: Downgrade Tahap
         // ============================================================
         function handleDowngradeStage(nim) {
             const mhs = bimbinganData.find(m => m.nim === nim);
@@ -2836,9 +2808,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         window.showHoverPanel          = showHoverPanel;
         window.scheduleHidePanel       = scheduleHidePanel;
         window.submitHoverReview       = submitHoverReview;
-        window.handleFileAction        = handleFileAction;
-        window.closeCommentActionModal = closeCommentActionModal;
-        window.openSingleBatchModal    = openSingleBatchModal;
         window.openDosenBatchModal     = openDosenBatchModal;
         window.closeDosenBatchModal    = closeDosenBatchModal;
         window.submitBatchItemReview   = submitBatchItemReview;
@@ -2858,11 +2827,15 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         window.doMultiSearchDW         = doMultiSearchDW;
         window.resetFiltersDW          = resetFiltersDW;
         window.getUploadBaseUrl        = getUploadBaseUrl;
-        window.handleFileStatus        = handleFileStatus;
         window.handleLulusStage        = handleLulusStage;
         window.handleDowngradeStage    = handleDowngradeStage;
         window.getResponsibleRole      = getResponsibleRole;
         window.isCurrentUserPIC        = isCurrentUserPIC;
+        // NEW: inline editor & fullscreen
+        window.openInlineComment       = openInlineComment;
+        window.closeInlineComment      = closeInlineComment;
+        window.submitInlineComment     = submitInlineComment;
+        window.toggleFullscreenPreview = toggleFullscreenPreview;
     </script>
 
     <script>
