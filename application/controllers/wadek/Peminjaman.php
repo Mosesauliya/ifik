@@ -256,4 +256,14 @@ class Peminjaman extends CI_Controller {
         $this->session->set_flashdata($processed > 0 ? 'success' : 'error', $message);
         redirect('wadek/peminjaman');
     }
+
+    public function autocomplete() {
+        $term = trim((string) $this->input->get('q', true));
+        $cat  = trim((string) $this->input->get('cat', true) ?: 'all');
+        $results = $this->PeminjamanBarang_model->autocomplete_wadek($term, $cat);
+
+        $this->output
+             ->set_content_type('application/json')
+             ->set_output(json_encode($results ?: []));
+    }
 }
