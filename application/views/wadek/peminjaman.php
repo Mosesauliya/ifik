@@ -638,157 +638,164 @@ $wadek_query['per_page'] = $per_page;
                                 </div>
                             </td>
                         </tr>
-
-                        <!-- Modal Detail -->
-                        <div class="modal fade" id="modalDetail<?= $p->id_peminjaman ?>" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered modal-lg">
-                                <div class="modal-content rounded-4 border-0 shadow-lg">
-                                    <div class="modal-header border-bottom py-3 px-4">
-                                        <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
-                                            <i class="bi bi-info-circle text-primary"></i> Detail Pengajuan Peminjaman Eksternal
-                                        </h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body p-4">
-                                        <div class="row g-3 mb-3">
-                                            <div class="col-sm-6">
-                                                <span class="text-muted small d-block">Nama Peminjam</span>
-                                                <strong class="text-dark"><?= html_escape($p->nama_peminjam ?? '-') ?></strong>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <span class="text-muted small d-block">NIM / NIP</span>
-                                                <strong class="text-dark"><?= html_escape($p->nim_nip ?? '-') ?></strong>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <span class="text-muted small d-block">Program Studi</span>
-                                                <strong class="text-dark"><?= html_escape($p->prodi ?? '-') ?></strong>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <span class="text-muted small d-block">Masa Pinjam</span>
-                                                <strong class="text-dark"><?= tanggal_indonesia($p->tanggal_pinjam) ?> s.d. <?= tanggal_indonesia($p->tanggal_kembali_rencana) ?></strong>
-                                            </div>
-                                            <div class="col-12">
-                                                <span class="text-muted small d-block">Keperluan / Kegiatan Luar Kampus</span>
-                                                <div class="p-2.5 bg-light rounded-3 text-dark mt-1" style="font-size: 12.5px;">
-                                                    <?= nl2br(html_escape($p->keperluan ?? '-')) ?>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <h6 class="fw-bold text-dark border-bottom pb-2 mt-4 mb-3">Daftar Barang yang Diajukan</h6>
-                                        <div class="table-responsive rounded-3 border">
-                                            <table class="table table-sm mb-0">
-                                                <thead class="bg-light">
-                                                    <tr>
-                                                        <th class="ps-3 py-2 text-muted small">No</th>
-                                                        <th class="py-2 text-muted small">Nama Barang</th>
-                                                        <th class="py-2 text-muted small">Kode Aset</th>
-                                                        <th class="py-2 text-muted small text-center">Jumlah</th>
-                                                        <th class="pe-3 py-2 text-muted small">Ruangan Asal</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <?php if(!empty($items)): ?>
-                                                        <?php foreach($items as $i_idx => $it): ?>
-                                                            <tr>
-                                                                <td class="ps-3 py-2"><?= $i_idx + 1 ?></td>
-                                                                <td class="py-2 fw-semibold"><?= html_escape($it->nama_aset) ?></td>
-                                                                <td class="py-2 text-muted"><?= html_escape($it->kode_aset) ?></td>
-                                                                <td class="py-2 text-center fw-bold text-fik-orange"><?= (int)$it->jumlah_pinjam ?> unit</td>
-                                                                <td class="pe-3 py-2 text-muted"><?= html_escape($it->nama_ruangan) ?></td>
-                                                            </tr>
-                                                        <?php endforeach; ?>
-                                                    <?php else: ?>
-                                                        <tr>
-                                                            <td class="ps-3 py-2">1</td>
-                                                            <td class="py-2 fw-semibold"><?= html_escape($p->nama_aset ?? 'Barang') ?></td>
-                                                            <td class="py-2 text-muted"><?= html_escape($p->kode_aset ?? '-') ?></td>
-                                                            <td class="py-2 text-center fw-bold text-fik-orange"><?= (int)($p->jumlah_pinjam ?? 1) ?> unit</td>
-                                                            <td class="pe-3 py-2 text-muted">-</td>
-                                                        </tr>
-                                                    <?php endif; ?>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer border-top py-2.5 px-4">
-                                        <button type="button" class="btn btn-sm btn-secondary rounded-3" data-bs-dismiss="modal">Tutup</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Modal Setujui -->
-                        <?php if($can_act): ?>
-                        <div class="modal fade" id="modalApprove<?= $p->id_peminjaman ?>" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content rounded-4 border-0 shadow-lg">
-                                    <form action="<?= site_url('wadek/peminjaman/setujui/' . $p->id_peminjaman); ?>" method="POST">
-                                        <div class="modal-header border-bottom py-3 px-4">
-                                            <h5 class="modal-title fw-bold text-success d-flex align-items-center gap-2">
-                                                <i class="bi bi-check-circle-fill"></i> Persetujuan Wadek
-                                            </h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body p-4">
-                                            <p class="text-dark mb-3">Apakah Anda yakin menyetujui peminjaman luar kampus untuk <strong><?= html_escape($p->nama_peminjam ?? 'Peminjam') ?></strong>?</p>
-                                            
-                                            <div class="mb-3">
-                                                <label class="form-label text-muted small fw-bold">Catatan / Arahan Wakil Dekan (Opsional)</label>
-                                                <textarea name="catatan_wadek" rows="3" class="form-control rounded-3" placeholder="Contoh: Disetujui dengan pengawasan dosen pendamping..."></textarea>
-                                            </div>
-
-                                            <div class="p-3 bg-light rounded-3 text-muted" style="font-size: 11.5px;">
-                                                <i class="bi bi-info-circle text-primary me-1"></i> Setelah disetujui, QR Code serah terima barang akan langsung aktif dan peminjam dapat mengambil barang di laboratorium.
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer border-top py-2.5 px-4">
-                                            <button type="button" class="btn btn-sm btn-secondary rounded-3" data-bs-dismiss="modal">Batal</button>
-                                            <button type="submit" class="btn btn-sm btn-success fw-bold rounded-3 px-3">
-                                                <i class="bi bi-check-lg me-1"></i> Ya, Setujui Pengajuan
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Modal Tolak -->
-                        <div class="modal fade" id="modalReject<?= $p->id_peminjaman ?>" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content rounded-4 border-0 shadow-lg">
-                                    <form action="<?= site_url('wadek/peminjaman/tolak/' . $p->id_peminjaman); ?>" method="POST">
-                                        <div class="modal-header border-bottom py-3 px-4">
-                                            <h5 class="modal-title fw-bold text-danger d-flex align-items-center gap-2">
-                                                <i class="bi bi-x-circle-fill"></i> Tolak Pengajuan Wadek
-                                            </h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body p-4">
-                                            <p class="text-dark mb-3">Tolak pengajuan peminjaman luar kampus untuk <strong><?= html_escape($p->nama_peminjam ?? 'Peminjam') ?></strong>?</p>
-                                            
-                                            <div class="mb-3">
-                                                <label class="form-label text-danger small fw-bold">Alasan Penolakan <span class="text-danger">*</span></label>
-                                                <textarea name="catatan_wadek" rows="3" class="form-control rounded-3" required placeholder="Tuliskan alasan penolakan..."></textarea>
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer border-top py-2.5 px-4">
-                                            <button type="button" class="btn btn-sm btn-secondary rounded-3" data-bs-dismiss="modal">Batal</button>
-                                            <button type="submit" class="btn btn-sm btn-danger fw-bold rounded-3 px-3">
-                                                <i class="bi bi-x-lg me-1"></i> Tolak Pengajuan
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </tbody>
             </table>
         </div>
+
+        <!-- Modals Container (Placed outside table) -->
+        <?php if(!empty($pengajuan)): ?>
+            <?php foreach($pengajuan as $p): 
+                $can_act = scm_loan_can_act($p, 'wadek');
+                $items = !empty($p->detail_barang) ? $p->detail_barang : [];
+            ?>
+                <!-- Modal Detail -->
+                <div class="modal fade" id="modalDetail<?= $p->id_peminjaman ?>" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content rounded-4 border-0 shadow-lg">
+                            <div class="modal-header border-bottom py-3 px-4">
+                                <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                                    <i class="bi bi-info-circle text-primary"></i> Detail Pengajuan Peminjaman Eksternal
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body p-4">
+                                <div class="row g-3 mb-3">
+                                    <div class="col-sm-6">
+                                        <span class="text-muted small d-block">Nama Peminjam</span>
+                                        <strong class="text-dark"><?= html_escape($p->nama_peminjam ?? '-') ?></strong>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <span class="text-muted small d-block">NIM / NIP</span>
+                                        <strong class="text-dark"><?= html_escape($p->nim_nip ?? '-') ?></strong>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <span class="text-muted small d-block">Program Studi</span>
+                                        <strong class="text-dark"><?= html_escape($p->prodi ?? '-') ?></strong>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <span class="text-muted small d-block">Masa Pinjam</span>
+                                        <strong class="text-dark"><?= tanggal_indonesia($p->tanggal_pinjam) ?> s.d. <?= tanggal_indonesia($p->tanggal_kembali_rencana) ?></strong>
+                                    </div>
+                                    <div class="col-12">
+                                        <span class="text-muted small d-block">Keperluan / Kegiatan Luar Kampus</span>
+                                        <div class="p-2.5 bg-light rounded-3 text-dark mt-1" style="font-size: 12.5px;">
+                                            <?= nl2br(html_escape($p->keperluan ?? '-')) ?>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <h6 class="fw-bold text-dark border-bottom pb-2 mt-4 mb-3">Daftar Barang yang Diajukan</h6>
+                                <div class="table-responsive rounded-3 border">
+                                    <table class="table table-sm mb-0">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th class="ps-3 py-2 text-muted small">No</th>
+                                                <th class="py-2 text-muted small">Nama Barang</th>
+                                                <th class="py-2 text-muted small">Kode Aset</th>
+                                                <th class="py-2 text-muted small text-center">Jumlah</th>
+                                                <th class="pe-3 py-2 text-muted small">Ruangan Asal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php if(!empty($items)): ?>
+                                                <?php foreach($items as $i_idx => $it): ?>
+                                                    <tr>
+                                                        <td class="ps-3 py-2"><?= $i_idx + 1 ?></td>
+                                                        <td class="py-2 fw-semibold"><?= html_escape($it->nama_aset) ?></td>
+                                                        <td class="py-2 text-muted"><?= html_escape($it->kode_aset) ?></td>
+                                                        <td class="py-2 text-center fw-bold text-fik-orange"><?= (int)$it->jumlah_pinjam ?> unit</td>
+                                                        <td class="pe-3 py-2 text-muted"><?= html_escape($it->nama_ruangan) ?></td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            <?php else: ?>
+                                                <tr>
+                                                    <td class="ps-3 py-2">1</td>
+                                                    <td class="py-2 fw-semibold"><?= html_escape($p->nama_aset ?? 'Barang') ?></td>
+                                                    <td class="py-2 text-muted"><?= html_escape($p->kode_aset ?? '-') ?></td>
+                                                    <td class="py-2 text-center fw-bold text-fik-orange"><?= (int)($p->jumlah_pinjam ?? 1) ?> unit</td>
+                                                    <td class="pe-3 py-2 text-muted">-</td>
+                                                </tr>
+                                            <?php endif; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-top py-2.5 px-4">
+                                <button type="button" class="btn btn-sm btn-secondary rounded-3" data-bs-dismiss="modal">Tutup</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Setujui -->
+                <?php if($can_act): ?>
+                <div class="modal fade" id="modalApprove<?= $p->id_peminjaman ?>" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content rounded-4 border-0 shadow-lg">
+                            <form action="<?= site_url('wadek/peminjaman/setujui/' . $p->id_peminjaman); ?>" method="POST">
+                                <div class="modal-header border-bottom py-3 px-4">
+                                    <h5 class="modal-title fw-bold text-success d-flex align-items-center gap-2">
+                                        <i class="bi bi-check-circle-fill"></i> Persetujuan Wadek
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body p-4">
+                                    <p class="text-dark mb-3">Apakah Anda yakin menyetujui peminjaman luar kampus untuk <strong><?= html_escape($p->nama_peminjam ?? 'Peminjam') ?></strong>?</p>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted small fw-bold">Catatan / Arahan Wakil Dekan (Opsional)</label>
+                                        <textarea name="catatan_wadek" rows="3" class="form-control rounded-3" placeholder="Contoh: Disetujui dengan pengawasan dosen pendamping..."></textarea>
+                                    </div>
+
+                                    <div class="p-3 bg-light rounded-3 text-muted" style="font-size: 11.5px;">
+                                        <i class="bi bi-info-circle text-primary me-1"></i> Setelah disetujui, QR Code serah terima barang akan langsung aktif dan peminjam dapat mengambil barang di laboratorium.
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-top py-2.5 px-4">
+                                    <button type="button" class="btn btn-sm btn-secondary rounded-3" data-bs-dismiss="modal">Batal</button>
+                                    <button type="submit" class="btn btn-sm btn-success fw-bold rounded-3 px-3">
+                                        <i class="bi bi-check-lg me-1"></i> Ya, Setujui Pengajuan
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Tolak -->
+                <div class="modal fade" id="modalReject<?= $p->id_peminjaman ?>" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content rounded-4 border-0 shadow-lg">
+                            <form action="<?= site_url('wadek/peminjaman/tolak/' . $p->id_peminjaman); ?>" method="POST">
+                                <div class="modal-header border-bottom py-3 px-4">
+                                    <h5 class="modal-title fw-bold text-danger d-flex align-items-center gap-2">
+                                        <i class="bi bi-x-circle-fill"></i> Tolak Pengajuan Wadek
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body p-4">
+                                    <p class="text-dark mb-3">Tolak pengajuan peminjaman luar kampus untuk <strong><?= html_escape($p->nama_peminjam ?? 'Peminjam') ?></strong>?</p>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label text-danger small fw-bold">Alasan Penolakan <span class="text-danger">*</span></label>
+                                        <textarea name="catatan_wadek" rows="3" class="form-control rounded-3" required placeholder="Tuliskan alasan penolakan..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-top py-2.5 px-4">
+                                    <button type="button" class="btn btn-sm btn-secondary rounded-3" data-bs-dismiss="modal">Batal</button>
+                                    <button type="submit" class="btn btn-sm btn-danger fw-bold rounded-3 px-3">
+                                        <i class="bi bi-x-lg me-1"></i> Tolak Pengajuan
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        <?php endif; ?>
 
         <!-- Pagination Footer -->
         <?php if($total_pages > 1): ?>
