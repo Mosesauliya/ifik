@@ -177,6 +177,8 @@ class AdminLayanan_model extends CI_Model {
                     }
                 }
             }
+        }
+
         return $map;
     }
 
