@@ -165,7 +165,10 @@ $history_query['per_page'] = $history_per_page;
             max-height: 340px;
             overflow-y: auto;
             border-radius: 18px;
-            box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.2), 0 8px 24px -4px rgba(234, 88, 12, 0.15);
+            background: #ffffff !important;
+            box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.25), 0 8px 24px -4px rgba(234, 88, 12, 0.2) !important;
+            z-index: 2050 !important;
+            position: absolute !important;
             transition: opacity 0.25s ease, transform 0.25s ease;
         }
         .autocomplete-item-row {
@@ -363,8 +366,8 @@ $history_query['per_page'] = $history_per_page;
             $extra_rows = array_slice($filter_rows ?? [], 1);
             $total_active_rows = 1 + count($extra_rows);
         ?>
-        <div class="card border-0 shadow-sm p-3 mb-4 rounded-4 position-relative bg-white" data-aos="fade-up">
-            <form action="<?= site_url('peminjaman_barang/riwayat'); ?>" method="GET" id="formSearchRiwayat" class="position-relative">
+        <div class="card border-0 shadow-sm p-3 mb-4 rounded-4 position-relative bg-white" data-aos="fade-up" style="position: relative; z-index: 1050;">
+            <form action="<?= site_url('peminjaman_barang/riwayat'); ?>" method="GET" id="formSearchRiwayat" class="position-relative" style="position: relative; z-index: 1051;">
                 <input type="hidden" name="per_page" value="<?= (int)$history_per_page; ?>">
                 <input type="hidden" name="sort_by" value="<?= htmlspecialchars($history_sort ?? ''); ?>">
                 <input type="hidden" name="sort_dir" value="<?= htmlspecialchars($history_dir ?? 'desc'); ?>">

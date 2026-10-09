@@ -506,7 +506,10 @@ foreach ($catalog_page_size_query as $query_name => $query_value) {
             max-height: 340px;
             overflow-y: auto;
             border-radius: 18px;
-            box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.2), 0 8px 24px -4px rgba(234, 88, 12, 0.15);
+            background: #ffffff !important;
+            box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.25), 0 8px 24px -4px rgba(234, 88, 12, 0.2) !important;
+            z-index: 2050 !important;
+            position: absolute !important;
             transition: opacity 0.25s ease, transform 0.25s ease;
         }
         .autocomplete-item-row {
@@ -808,8 +811,8 @@ foreach ($catalog_page_size_query as $query_name => $query_value) {
             $extra_rows = array_slice($filter_rows ?? [], 1);
             $total_active_rows = 1 + count($extra_rows);
         ?>
-        <div class="card border-0 shadow-sm p-3 mb-4 rounded-4 position-relative bg-white" data-aos="fade-up">
-            <form action="<?= html_escape(current_url()) ?>" method="GET" id="formSearchKatalog" class="position-relative">
+        <div class="card border-0 shadow-sm p-3 mb-4 rounded-4 position-relative bg-white" data-aos="fade-up" style="position: relative; z-index: 1050;">
+            <form action="<?= html_escape(current_url()) ?>" method="GET" id="formSearchKatalog" class="position-relative" style="position: relative; z-index: 1051;">
                 <input type="hidden" name="id_ruangan" value="<?= htmlspecialchars($this->input->get('id_ruangan', true) ?? ''); ?>">
                 <input type="hidden" name="per_page" value="<?= (int)$catalog_per_page; ?>">
                 <input type="hidden" name="filter_field[]" id="mainCategorySelectKatalog" value="<?= htmlspecialchars($current_main_cat); ?>">
@@ -825,7 +828,7 @@ foreach ($catalog_page_size_query as $query_name => $query_value) {
                                 </span>
                                 <i class="fa-solid fa-chevron-down text-secondary ms-1 dropdown-arrow transition-all" id="arrow-filter-main-cat" style="font-size: 9px;"></i>
                             </button>
-                            <div id="menu-filter-main-cat" class="custom-dropdown-menu hidden position-absolute top-100 start-0 mt-2 bg-white border border-light-subtle rounded-3 shadow-lg p-1" style="width: 220px; z-index: 1050;">
+                            <div id="menu-filter-main-cat" class="custom-dropdown-menu hidden position-absolute top-100 start-0 mt-2 bg-white border border-light-subtle rounded-3 shadow-lg p-1" style="width: 220px; z-index: 2060;">
                                 <?php foreach($cat_labels as $ck => $clabel): ?>
                                     <div onclick="selectKatalogMainCategory('<?= $ck ?>', '<?= htmlspecialchars($clabel, ENT_QUOTES) ?>', '<?= htmlspecialchars($cat_placeholders[$ck], ENT_QUOTES) ?>', this)" 
                                          class="dropdown-item-opt <?= $current_main_cat === $ck ? 'active' : '' ?>">
@@ -864,7 +867,7 @@ foreach ($catalog_page_size_query as $query_name => $query_value) {
                 </div>
 
                 <!-- Autocomplete Dropdown -->
-                <div id="autocompleteDropdownKatalog" class="d-none position-absolute start-0 end-0 top-100 mt-2 bg-white border border-light-subtle rounded-4 shadow-lg overflow-hidden autocomplete-box" style="z-index: 1060;">
+                <div id="autocompleteDropdownKatalog" class="d-none position-absolute start-0 end-0 top-100 mt-2 bg-white border border-light-subtle rounded-4 shadow-lg overflow-hidden autocomplete-box" style="z-index: 2050;">
                     <div id="autocompleteResultsKatalog" class="p-0"></div>
                 </div>
 
