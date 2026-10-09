@@ -1084,7 +1084,7 @@
         /* MODERN CLEAN TABLE COLUMN HEADER */
         .table-column-header {
             display: grid;
-            grid-template-columns: minmax(180px, 1.2fr) minmax(160px, 1.1fr) 140px minmax(130px, 1fr) minmax(150px, auto);
+            grid-template-columns: minmax(180px, 1.2fr) minmax(160px, 1.1fr) 140px minmax(130px, 1fr) 170px;
             align-items: center;
             gap: 12px;
             padding: 10px 14px;
@@ -1117,8 +1117,8 @@
             padding-left: 8px;
         }
         .th-col.th-status {
-            justify-content: flex-end;
-            padding-right: 4px;
+            justify-content: center;
+            text-align: center;
         }
 
         /* CLEAN FLAT LIST WITH SUBTLE DIVIDERS (NO HEAVY CARD BOXES) */
@@ -1131,7 +1131,7 @@
 
         .table-row-card {
             display: grid;
-            grid-template-columns: minmax(180px, 1.2fr) minmax(160px, 1.1fr) 140px minmax(130px, 1fr) minmax(150px, auto);
+            grid-template-columns: minmax(180px, 1.2fr) minmax(160px, 1.1fr) 140px minmax(130px, 1fr) 170px;
             align-items: center;
             background: transparent;
             border-bottom: 1px solid #e8e2d5;
@@ -1415,13 +1415,14 @@
             line-height: 1.4;
         }
 
-        /* STATUS BADGE WITH FLEXIBLE AUTO WIDTH */
+        /* STATUS BADGE WITH BALANCED UNIFORM PILL & CENTERED */
         .tr-status-col {
             display: flex;
-            justify-content: flex-end;
+            justify-content: center;
+            align-items: center;
             min-width: 0;
-            width: auto;
-            flex-shrink: 0;
+            width: 100%;
+            box-sizing: border-box;
         }
         .tr-status-badge {
             display: inline-flex;
@@ -1430,13 +1431,16 @@
             gap: 7px;
             font-size: 0.78rem;
             font-weight: 700;
-            padding: 5px 12px;
+            padding: 6px 14px;
             border-radius: 999px;
             white-space: nowrap;
-            width: auto;
+            width: 156px;
             max-width: 100%;
             box-sizing: border-box;
             text-align: center;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            letter-spacing: 0.01em;
         }
 
         .table-pagination-wrap {

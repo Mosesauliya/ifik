@@ -125,11 +125,19 @@ class PeminjamanBarang extends CI_Controller {
     }
 
     public function approve_kaur($group_id) {
+        $roleId = (int)$this->session->userdata('role_id');
+        if ($roleId !== 2 && $roleId !== 1 && $roleId !== 22) {
+            $this->session->set_flashdata('error', 'Akses ditolak! Hanya Kepala Urusan (Kaur) yang berhak menyetujui tahap ini.');
+            redirect('peminjamanbarang/serah_terima/' . rawurlencode($group_id));
+            return;
+        }
+
         $group_id = rawurldecode($group_id);
         $peminjaman = $this->Peminjaman_model->get_peminjaman_by_group_id($group_id);
         if (!$peminjaman) {
             $this->session->set_flashdata('error', 'Transaksi tidak ditemukan.');
             redirect('peminjamanbarang/scanner');
+            return;
         }
 
         $catatan = trim((string)$this->input->post('catatan_kaur', true));
@@ -173,11 +181,19 @@ class PeminjamanBarang extends CI_Controller {
     }
 
     public function tolak_kaur($group_id) {
+        $roleId = (int)$this->session->userdata('role_id');
+        if ($roleId !== 2 && $roleId !== 1 && $roleId !== 22) {
+            $this->session->set_flashdata('error', 'Akses ditolak! Hanya Kepala Urusan (Kaur) yang berhak menolak tahap ini.');
+            redirect('peminjamanbarang/serah_terima/' . rawurlencode($group_id));
+            return;
+        }
+
         $group_id = rawurldecode($group_id);
         $peminjaman = $this->Peminjaman_model->get_peminjaman_by_group_id($group_id);
         if (!$peminjaman) {
             $this->session->set_flashdata('error', 'Transaksi tidak ditemukan.');
             redirect('peminjamanbarang/scanner');
+            return;
         }
 
         $catatan = trim((string)$this->input->post('catatan_kaur', true) ?: 'Ditolak oleh Kepala Urusan');

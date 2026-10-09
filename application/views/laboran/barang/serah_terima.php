@@ -5,6 +5,7 @@ $boleh_serah = !empty($qr_valid);
 $is_verifikasi_laboran = ($workflow_stage === 'verifikasi_laboran');
 $is_menunggu_kaur = ($workflow_stage === 'menunggu_kaur');
 $is_serah_terima = ($workflow_stage === 'serah_terima');
+$is_kaur_user = ((int)$this->session->userdata('role_id') === 2);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -250,6 +251,7 @@ $is_serah_terima = ($workflow_stage === 'serah_terima');
                                 </p>
                             </div>
                         </div>
+                        <?php if ($is_kaur_user): ?>
                         <div class="flex flex-wrap items-center gap-2.5 pt-2 md:pt-0">
                             <form method="post" action="<?= site_url('peminjamanbarang/approve_kaur/' . rawurlencode($peminjaman->group_id)) ?>" class="inline">
                                 <button type="submit" onclick="return confirm('Apakah Anda yakin menyetujui peminjaman barang ini sebagai Kepala Urusan (Kaur)?')" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md shadow-emerald-600/20 transition-all">
@@ -264,6 +266,14 @@ $is_serah_terima = ($workflow_stage === 'serah_terima');
                                 </button>
                             </form>
                         </div>
+                        <?php else: ?>
+                        <div class="flex items-center gap-2 pt-2 md:pt-0">
+                            <span class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-amber-100/90 border border-amber-300 text-amber-900 text-xs sm:text-sm font-bold shadow-xs">
+                                <i class="bi bi-shield-lock-fill text-amber-600 text-base"></i>
+                                <span>Menunggu Tindakan Resmi Kaur</span>
+                            </span>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             <?php elseif ($is_serah_terima): ?>
