@@ -4,6 +4,15 @@
  *
  * Controller wajib mengirimkan variabel: $role ('p1'|'p2'|'u1'|'u2')
  * Jika tidak, default ke 'p1'.
+ *
+ * Changelog (2026-10-09):
+ *  - Max floating panel: 5 mahasiswa (dari 4)
+ *  - Status Review: 3 badge (ACC / Revisi / Pending) — selalu tampil
+ *  - Fullscreen: mode overlay CSS (bukan Fullscreen API) — action bar tetap bisa diklik
+ *  - Auto-refresh floating panel & preview card saat SSE update
+ *  - Auto-close preview & student card setelah semua file final (tidak Pending)
+ *  - Tombol Komentar dihapus untuk PIC tahap aktif (P1@Preview1, U1@Preview2/3/Sidang)
+ *  - Fix: komentar dari ACC/Revisi (catatan_file_*) kini muncul di kolom Komentar
  */
 
 $role             = $role ?? 'p1';
@@ -247,7 +256,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         }
         #lihatBerkasContainer.active { display: flex; }
 
-        /* === CHANGED: card diperbesar 20% (width: 30% → 36%, min/max disesuaikan) === */
         #wrapperDaftarMhs {
             display: flex; flex-direction: column; gap: 1rem;
             width: 36%; min-width: 384px; max-width: 504px;
@@ -272,7 +280,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             flex-direction: column; flex-shrink: 0; width: 100%; max-height: 90vh;
         }
 
-        /* === CHANGED: preview card diperbesar 20% (520px → 624px) === */
         .preview-card-item {
             pointer-events: auto; background: white; border-radius: 1.5rem;
             box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3);
@@ -280,23 +287,40 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             flex-direction: column; flex-shrink: 0;
             width: 624px; max-width: 75vw; height: 85vh; max-height: 90vh;
         }
-        /* Fullscreen state */
-        .preview-card-item:fullscreen {
+
+        /* Fullscreen mode via CSS overlay (menggantikan Fullscreen API) */
+        .preview-card-item.preview-fullscreen-mode {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
             width: 100vw !important;
-            max-width: 100vw !important;
             height: 100vh !important;
+            max-width: 100vw !important;
             max-height: 100vh !important;
+            z-index: 999999 !important;
             border-radius: 0 !important;
             border: none !important;
+            box-shadow: none !important;
+            margin: 0 !important;
         }
-        .preview-card-item:-webkit-full-screen {
-            width: 100vw !important;
-            max-width: 100vw !important;
-            height: 100vh !important;
-            max-height: 100vh !important;
-            border-radius: 0 !important;
-            border: none !important;
+        .preview-card-item.preview-fullscreen-mode .preview-header {
+            background: rgba(15, 23, 42, 0.96) !important;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
+        .preview-card-item.preview-fullscreen-mode .preview-footer {
+            background: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.12);
+        }
+        .preview-card-item.preview-fullscreen-mode .preview-body {
+            flex: 1 !important;
+            min-height: 0 !important;
+        }
+
         .preview-card-item .preview-body {
             flex: 1; min-height: 0; position: relative; background: #e2e8f0; overflow: hidden;
         }
@@ -318,7 +342,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         }
         .btn-3d-orange:hover { transform: scale(1.03); box-shadow: 0 6px 20px rgba(234,88,12,0.4); }
 
-        /* Inline comment editor wrapper (muncul di bawah preview file) */
         .inline-comment-slot { display: block; }
         .inline-comment-slot.hidden { display: none !important; }
 
@@ -941,7 +964,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
 
         // ============================================================
         // PIC (Penanggung Jawab) per Tahap
-        // Preview 1 → P1, Preview 2/3/Sidang → U1
         // ============================================================
         function getResponsibleRole(tahap) {
             return (tahap === 'Preview 1') ? 'p1' : 'u1';
@@ -968,10 +990,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             const key = getTahapKey(currentTahap);
             return String(preview['lulus_' + key] ?? 0) === '1';
         }
-        function areAllFilesApproved(preview, fileList) {
-            if (!fileList || fileList.length === 0) return false;
-            return fileList.every(f => getFileStatus(preview, f.type) === 'Approved');
-        }
         function renderFileStatusBadge(preview, fileType) {
             const st = getFileStatus(preview, fileType);
             if (st === 'Approved') return `<span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">✓ ACC</span>`;
@@ -980,7 +998,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         }
 
         // ============================================================
-        // FILE-TYPE HELPERS (NEW)
+        // FILE-TYPE HELPERS
         // ============================================================
         function getFileTypesForTahap(tahap) {
             if (tahap === 'Preview 3') return ['sitasi', 'bimbingan', 'persyaratan'];
@@ -1010,8 +1028,28 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             });
             return { approved, revision, pending, missing, total: types.length };
         }
+
+        /**
+         * Gabungkan semua komentar per-file (catatan_file_*) menjadi satu string HTML.
+         * Ini yang membuat komentar dari tombol ACC/Revisi/Komentar muncul di kolom Komentar.
+         */
+        function getAggregatedFileComments(preview, tahap) {
+            if (!preview) return '';
+            const types = getFileTypesForTahap(tahap);
+            const labels = { draft:'Draft', sitasi:'Sitasi', bimbingan:'Bimbingan', persyaratan:'Persyaratan', sidang:'Sidang' };
+            const parts = [];
+            types.forEach(t => {
+                const col = 'catatan_file_' + t;
+                const c = preview[col];
+                if (c && String(c).replace(/<[^>]*>/g, '').trim()) {
+                    parts.push(`<div class="mb-1"><span class="text-slate-500 text-[10px] font-bold">[${labels[t] || t}]</span> ${c}</div>`);
+                }
+            });
+            return parts.join('');
+        }
+
         function getTableColspan() {
-            let cols = 7; // checkbox, mhs, waktu, status, komentar, aksi, lulus-tahap
+            let cols = 7;
             if (IS_P1) cols++;
             const showBap = IS_U1 && currentTahap === 'Sidang';
             if (showBap) cols++;
@@ -1050,7 +1088,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         window.activeLihatBerkasIndices = [];
         window.activePreviews           = [];
         window.activeInlineEditorKey    = null;
-        let pendingAction = null;
 
         // ============================================================
         // MULTI-CRITERIA FILTER
@@ -1195,7 +1232,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         }
 
         function switchDosenTab(tab) {
-            // Close any open inline editor before switching
             closeInlineComment();
 
             if (tab === 'preview1') {
@@ -1220,40 +1256,51 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         // FETCH DATA
         // ============================================================
         function fetchBimbinganData(silent = false) {
-            const tbody = document.getElementById('bimbinganTableBody');
-            const colspan = getTableColspan();
-            if (!silent) tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-10 text-slate-500"><i class="bi bi-arrow-repeat animate-spin text-xl"></i> Memuat data...</td></tr>`;
+            return new Promise((resolve) => {
+                const tbody = document.getElementById('bimbinganTableBody');
+                const colspan = getTableColspan();
+                if (!silent) tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-10 text-slate-500"><i class="bi bi-arrow-repeat animate-spin text-xl"></i> Memuat data...</td></tr>`;
 
-            fetch(`<?= site_url('mahasiswa/ajax_get_dosen_bimbingan') ?>?${FETCH_QUERY}&tahap=${encodeURIComponent(currentTahap)}`)
-                .then(res => {
-                    if (!res.ok) throw new Error('HTTP ' + res.status);
-                    return res.text();
-                })
-                .then(text => {
-                    let res;
-                    try { res = JSON.parse(text); }
-                    catch(e) {
-                        console.error('Server response (not JSON):', text);
-                        tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-10 text-rose-500 text-xs">Server mengembalikan response tidak valid. Cek Console (F12).</td></tr>`;
-                        return;
-                    }
-                    if (res.status) {
-                        bimbinganData = res.data;
-                        bimbinganData.sort((a, b) => {
-                            let dateA = a.latest_preview ? new Date(a.latest_preview.created_at).getTime() : 0;
-                            let dateB = b.latest_preview ? new Date(b.latest_preview.created_at).getTime() : 0;
-                            return dateB - dateA;
-                        });
-                        updateFilterCounts();
-                        renderTable();
-                    } else {
-                        tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-10 text-rose-500">${res.message}</td></tr>`;
-                    }
-                })
-                .catch(err => {
-                    console.error('Fetch error:', err);
-                    tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-10 text-rose-500">Terjadi kesalahan koneksi: ${err.message}</td></tr>`;
-                });
+                fetch(`<?= site_url('mahasiswa/ajax_get_dosen_bimbingan') ?>?${FETCH_QUERY}&tahap=${encodeURIComponent(currentTahap)}`)
+                    .then(res => {
+                        if (!res.ok) throw new Error('HTTP ' + res.status);
+                        return res.text();
+                    })
+                    .then(text => {
+                        let res;
+                        try { res = JSON.parse(text); }
+                        catch(e) {
+                            console.error('Server response (not JSON):', text);
+                            tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-10 text-rose-500 text-xs">Server mengembalikan response tidak valid. Cek Console (F12).</td></tr>`;
+                            resolve();
+                            return;
+                        }
+                        if (res.status) {
+                            bimbinganData = res.data;
+                            bimbinganData.sort((a, b) => {
+                                let dateA = a.latest_preview ? new Date(a.latest_preview.created_at).getTime() : 0;
+                                let dateB = b.latest_preview ? new Date(b.latest_preview.created_at).getTime() : 0;
+                                return dateB - dateA;
+                            });
+                            updateFilterCounts();
+                            renderTable();
+
+                            // Auto-refresh floating panel & preview cards agar data tidak basi
+                            if ((window.activeLihatBerkasIndices && window.activeLihatBerkasIndices.length > 0)
+                                || (window.activePreviews && window.activePreviews.length > 0)) {
+                                try { refreshLihatBerkasView(); } catch(e) { console.warn('refreshLihatBerkasView error:', e); }
+                            }
+                        } else {
+                            tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-10 text-rose-500">${res.message}</td></tr>`;
+                        }
+                        resolve();
+                    })
+                    .catch(err => {
+                        console.error('Fetch error:', err);
+                        tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-10 text-rose-500">Terjadi kesalahan koneksi: ${err.message}</td></tr>`;
+                        resolve();
+                    });
+            });
         }
 
         function setDosenFilter(filter) {
@@ -1288,7 +1335,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         }
 
         // ============================================================
-        // RENDER CELLS (NEW)
+        // RENDER CELLS
         // ============================================================
         function renderStatusReviewCell(mhs) {
             if (!mhs.latest_preview) {
@@ -1298,14 +1345,10 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             const isLulus = isStageLulus(latest);
             const c = countFileStatuses(latest, currentTahap);
 
-            const badges = [];
-            if (c.approved > 0) badges.push(`<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1"><i class="bi bi-check-circle-fill"></i> ${c.approved} ACC</span>`);
-            if (c.revision > 0) badges.push(`<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 inline-flex items-center gap-1"><i class="bi bi-x-circle-fill"></i> ${c.revision} Revisi</span>`);
-            if (c.pending > 0)  badges.push(`<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 inline-flex items-center gap-1"><i class="bi bi-clock-fill"></i> ${c.pending} Pending</span>`);
-
-            if (badges.length === 0 && c.missing === c.total) {
-                badges.push(`<span class="badge badge-secondary"><i class="bi bi-dash"></i> Kosong</span>`);
-            }
+            // Selalu tampilkan ketiga badge (ACC / Revisi / Pending)
+            const badgeApproved = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold border inline-flex items-center gap-1 ${c.approved > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-400 border-slate-200'}"><i class="bi bi-check-circle-fill"></i> ${c.approved} ACC</span>`;
+            const badgeRevision = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold border inline-flex items-center gap-1 ${c.revision > 0 ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-slate-50 text-slate-400 border-slate-200'}"><i class="bi bi-x-circle-fill"></i> ${c.revision} Revisi</span>`;
+            const badgePending  = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold border inline-flex items-center gap-1 ${c.pending > 0 ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-50 text-slate-400 border-slate-200'}"><i class="bi bi-clock-fill"></i> ${c.pending} Pending</span>`;
 
             const lulusBadge = isLulus
                 ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 inline-flex items-center gap-1"><i class="bi bi-mortarboard-fill"></i> Lulus Tahap</span>`
@@ -1314,7 +1357,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             return `
                 <div class="flex flex-col gap-1 items-center">
                     ${lulusBadge}
-                    <div class="flex flex-wrap gap-1 justify-center">${badges.join('')}</div>
+                    <div class="flex flex-wrap gap-1 justify-center">${badgeApproved}${badgeRevision}${badgePending}</div>
                 </div>
             `;
         }
@@ -1340,15 +1383,17 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 }
             }
 
+            // Downgrade: di tab X → tombol "Downgrade ke X" untuk tarik dari X+1 ke X.
+            // Hanya muncul jika mahasiswa sudah lulus tahap X.
             let btnDowngrade = '';
-            if (currIdx > 0) {
-                const targetTahap = order[currIdx - 1];
-                btnDowngrade = `<button onclick="handleDowngradeStage('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-arrow-down-circle"></i> Ke ${targetTahap}</button>`;
+            if (currentTahap !== 'Sidang' && isLulus && currIdx >= 0 && (currIdx + 1) < order.length) {
+                const nextTahap = order[currIdx + 1];
+                btnDowngrade = `<button onclick="handleDowngradeStageTo('${mhs.nim}', '${nextTahap}', '${currentTahap}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap" title="Tarik kembali dari ${nextTahap} ke ${currentTahap}"><i class="bi bi-arrow-down-circle"></i> Downgrade ke ${currentTahap}</button>`;
             }
 
             if (!btnLulus && !btnDowngrade) return `<span class="text-slate-400 italic text-[11px]">—</span>`;
 
-            return `<div class="flex flex-col gap-1.5 items-center max-w-[150px] mx-auto">${btnLulus}${btnDowngrade}</div>`;
+            return `<div class="flex flex-col gap-1.5 items-center max-w-[170px] mx-auto">${btnLulus}${btnDowngrade}</div>`;
         }
 
         // ============================================================
@@ -1444,7 +1489,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                     btnHtml = previewHtml;
                 }
 
-                // P1 without preview: masih butuh kolom rekomendasi kosong
                 if (IS_P1 && !mhs.latest_preview) {
                     rekomenCell = `<td data-label="Rekomendasi" class="py-4 px-4 text-center"><span class="text-slate-400 italic text-xs">-</span></td>`;
                 }
@@ -1460,10 +1504,20 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                     checkboxHtml = `<input type="checkbox" disabled class="w-4 h-4 rounded border-slate-200 cursor-not-allowed opacity-50" title="Belum ada berkas atau file hilang">`;
                 }
 
+                // Aggregated comment: gabungkan komentar per-file (dari ACC/Revisi/Komentar) ke role PIC aktif
+                const picRoleCurrent = (currentTahap === 'Preview 1') ? 'p1' : 'u1';
+                const aggregatedFileComments = mhs.latest_preview ? getAggregatedFileComments(mhs.latest_preview, currentTahap) : '';
+
                 let p1Comment = mhs.latest_preview ? (mhs.latest_preview.catatan_pembimbing   || '') : '';
                 let p2Comment = mhs.latest_preview ? (mhs.latest_preview.catatan_pembimbing_2 || '') : '';
                 let u1Comment = mhs.latest_preview ? (mhs.latest_preview.catatan_penguji_1    || '') : '';
                 let u2Comment = mhs.latest_preview ? (mhs.latest_preview.catatan_penguji_2    || '') : '';
+
+                if (aggregatedFileComments) {
+                    if (picRoleCurrent === 'p1') p1Comment = aggregatedFileComments;
+                    else if (picRoleCurrent === 'u1') u1Comment = aggregatedFileComments;
+                }
+
                 let hasAnyComment = p1Comment.trim().length > 0 || p2Comment.trim().length > 0 || u1Comment.trim().length > 0 || u2Comment.trim().length > 0;
 
                 let commentCountParts = [];
@@ -1973,7 +2027,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         }
 
         // ============================================================
-        // INLINE COMMENT EDITOR (NEW — menggantikan modal komentar lama)
+        // INLINE COMMENT EDITOR
         // ============================================================
         function fileItemKey(scope, nim, fileIndex, fileType) {
             return `${scope}__${nim}__${fileIndex}__${fileType}`;
@@ -1987,12 +2041,10 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 return;
             }
 
-            // Toggle close jika slot yang sama
             if (window.activeInlineEditorKey === key) {
                 closeInlineComment();
                 return;
             }
-            // Tutup editor lain terlebih dahulu
             closeInlineComment();
 
             const mhs = bimbinganData.find(m => m.nim === nim);
@@ -2040,7 +2092,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             slot.classList.add('inline-comment-slot');
             window.activeInlineEditorKey = key;
 
-            // Init TinyMCE dengan delay supaya DOM siap
             setTimeout(() => {
                 const el = document.getElementById(editorId);
                 if (!el) return;
@@ -2111,7 +2162,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                     Swal.fire({ icon: 'success', title: 'Berhasil', text: data.message, timer: 1400, showConfirmButton: false })
                         .then(() => {
                             closeInlineComment();
-                            fetchBimbinganData(true);
+                            fetchBimbinganData(true).then(() => autoCloseAfterReview(nim));
                         });
                 } else {
                     Swal.fire({ icon: 'error', title: 'Gagal', text: data.message || 'Gagal menyimpan.' });
@@ -2124,32 +2175,58 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         }
 
         // ============================================================
-        // FULLSCREEN PREVIEW (NEW)
+        // AUTO-CLOSE setelah semua file final (tidak Pending)
+        // ============================================================
+        function autoCloseAfterReview(nim) {
+            const mhs = bimbinganData.find(m => m.nim === nim);
+            if (!mhs || !mhs.riwayat_previews) return;
+
+            // 1. Auto-close preview card jika semua file di preview itu sudah tidak Pending
+            window.activePreviews = (window.activePreviews || []).filter(p => {
+                if (p.nim !== nim) return true;
+                const prev = mhs.riwayat_previews[p.fileIndex];
+                if (!prev) return false;
+                const files = getPreviewFiles(prev);
+                if (files.length === 0) return true;
+                return files.some(f => getFileStatus(prev, f.type) === 'Pending');
+            });
+
+            // 2. Auto-close student card jika SEMUA previews sudah tidak Pending
+            const matchIdx = (window.activeLihatBerkasIndices || []).findIndex(i => {
+                const m = bimbinganData[i];
+                return m && m.nim === nim;
+            });
+            if (matchIdx > -1) {
+                const allFinal = mhs.riwayat_previews.every(prev => {
+                    const files = getPreviewFiles(prev);
+                    if (files.length === 0) return true;
+                    return files.every(f => getFileStatus(prev, f.type) !== 'Pending');
+                });
+                if (allFinal) {
+                    window.activeLihatBerkasIndices.splice(matchIdx, 1);
+                }
+            }
+
+            // 3. Refresh atau tutup panel
+            if (window.activeLihatBerkasIndices.length === 0) {
+                closeLihatBerkasPanel();
+            } else {
+                refreshLihatBerkasView();
+            }
+        }
+
+        // ============================================================
+        // FULLSCREEN PREVIEW (CSS overlay mode)
         // ============================================================
         function toggleFullscreenPreview(uniqueKey) {
             const card = document.getElementById('previewCard_' + uniqueKey);
             if (!card) return;
 
-            const isFs = document.fullscreenElement === card || document.webkitFullscreenElement === card;
-            if (!isFs) {
-                if (card.requestFullscreen) card.requestFullscreen();
-                else if (card.webkitRequestFullscreen) card.webkitRequestFullscreen();
-            } else {
-                if (document.exitFullscreen) document.exitFullscreen();
-                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-            }
-        }
+            const enteringFs = !card.classList.contains('preview-fullscreen-mode');
+            card.classList.toggle('preview-fullscreen-mode');
 
-        document.addEventListener('fullscreenchange', updateFullscreenIcons);
-        document.addEventListener('webkitfullscreenchange', updateFullscreenIcons);
-
-        function updateFullscreenIcons() {
-            document.querySelectorAll('[data-fs-icon]').forEach(icon => {
-                const key = icon.getAttribute('data-fs-key');
-                const card = document.getElementById('previewCard_' + key);
-                const isFs = (document.fullscreenElement === card) || (document.webkitFullscreenElement === card);
-                icon.className = isFs ? 'bi bi-fullscreen-exit' : 'bi bi-arrows-fullscreen';
-            });
+            const icon = card.querySelector('[data-fs-icon]');
+            if (icon) icon.className = enteringFs ? 'bi bi-fullscreen-exit' : 'bi bi-arrows-fullscreen';
         }
 
         // ============================================================
@@ -2241,7 +2318,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                     <div class="bg-slate-900 text-white px-3.5 py-2 rounded-2xl flex items-center justify-between shadow-lg border border-slate-800 shrink-0 pointer-events-auto w-full animate-bar-in">
                         <div class="flex items-center gap-2">
                             <i class="bi bi-people-fill text-orange-400 text-xs"></i>
-                            <span class="text-xs font-bold">${totalActive} Mahasiswa <span class="text-slate-400 font-normal text-[10px]">(Maks. 4)</span></span>
+                            <span class="text-xs font-bold">${totalActive} Mahasiswa <span class="text-slate-400 font-normal text-[10px]">(Maks. 5)</span></span>
                         </div>
                         <button type="button" onclick="closeLihatBerkasPanel()" class="text-[11px] text-slate-300 hover:text-rose-400 font-bold transition cursor-pointer">Tutup Semua</button>
                     </div>
@@ -2272,7 +2349,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                         else if (status === 'Revision') statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Revisi</span>';
                         else statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending</span>';
 
-                        // Action buttons di header pengajuan — untuk non-PIC (komentar per-preview via modal lama)
                         let actionButtons = '';
                         if (currentTahap === 'Sidang') {
                             let nilaiTersimpan = null;
@@ -2290,7 +2366,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                                 </button>
                             `;
                         }
-                        // Untuk non-Sidang, action buttons dipindah ke per-file item di bawah
 
                         itemsHtml += `
                             <div class="mb-1.5 flex items-center justify-between gap-2 px-1">
@@ -2318,19 +2393,18 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                                 const fileStatus = getFileStatus(preview, f.type);
                                 const fileStatusBadge = renderFileStatusBadge(preview, f.type);
 
-                                // Action buttons per-file (inline comment)
+                                // Action buttons per-file — PIC: hanya ACC/Revisi (Pending) atau Reset (final).
+                                // Tombol Komentar DIHAPUS untuk PIC karena sudah include di ACC/Revisi.
                                 let fileActionBtns = '';
                                 if (currentTahap !== 'Sidang' && isCurrentUserPIC()) {
                                     if (fileStatus === 'Pending') {
                                         fileActionBtns = `
                                             <button type="button" onclick="event.stopPropagation(); openInlineComment('card', '${mhs.nim}', ${realIdx}, '${f.type}', 'Approved')" class="px-2 h-7 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-300 text-[10px] font-bold transition cursor-pointer flex items-center gap-1"><i class="bi bi-check-lg"></i>ACC</button>
                                             <button type="button" onclick="event.stopPropagation(); openInlineComment('card', '${mhs.nim}', ${realIdx}, '${f.type}', 'Revision')" class="px-2 h-7 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300 text-[10px] font-bold transition cursor-pointer flex items-center gap-1"><i class="bi bi-x-lg"></i>Revisi</button>
-                                            <button type="button" onclick="event.stopPropagation(); openInlineComment('card', '${mhs.nim}', ${realIdx}, '${f.type}', 'Comment')" class="px-2 h-7 rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border border-indigo-300 text-[10px] font-bold transition cursor-pointer flex items-center gap-1"><i class="bi bi-chat-dots"></i>Komentar</button>
                                         `;
                                     } else {
                                         fileActionBtns = `
                                             <button type="button" onclick="event.stopPropagation(); openInlineComment('card', '${mhs.nim}', ${realIdx}, '${f.type}', 'Reset')" class="px-2 h-7 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 border border-slate-300 text-[10px] font-bold transition cursor-pointer flex items-center gap-1"><i class="bi bi-arrow-counterclockwise"></i>Reset</button>
-                                            <button type="button" onclick="event.stopPropagation(); openInlineComment('card', '${mhs.nim}', ${realIdx}, '${f.type}', 'Comment')" class="px-2 h-7 rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border border-indigo-300 text-[10px] font-bold transition cursor-pointer flex items-center gap-1"><i class="bi bi-chat-dots"></i>Komentar</button>
                                         `;
                                     }
                                 }
@@ -2423,7 +2497,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 const fileLabel = fileObj.label;
                 const fullName  = mhs.nama_mahasiswa || 'Mahasiswa';
                 const slotNum   = idx + 1;
-                const status    = preview.status_pembimbing || 'Pending';
                 const uniqueKey = previewItemKey(p.nim, p.fileIndex, fileType);
 
                 if (preview.file_missing) {
@@ -2458,7 +2531,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                     return;
                 }
 
-                // Action buttons per-file
                 let actionButtons = '';
                 if (currentTahap === 'Sidang') {
                     let nilaiTersimpan = null;
@@ -2478,22 +2550,21 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 } else if (isCurrentUserPIC()) {
                     const ftype = fileType;
                     const fst   = getFileStatus(preview, ftype);
+                    // PIC: hanya ACC/Revisi (Pending) atau Reset (final). Tombol Komentar dihapus.
                     if (fst === 'Pending') {
                         actionButtons = `
                             <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${ftype}', 'Approved')" class="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1">✓ ACC</button>
                             <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${ftype}', 'Revision')" class="px-2.5 py-1 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1">✗ Revisi</button>
-                            <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${ftype}', 'Comment')" class="px-2.5 py-1 rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border border-indigo-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1">💬 Komentar</button>
                         `;
                     } else {
                         actionButtons = `
                             <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${ftype}', 'Reset')" class="px-2.5 py-1 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 border border-slate-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
-                            <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${ftype}', 'Comment')" class="px-2.5 py-1 rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border border-indigo-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1">💬 Komentar</button>
                         `;
                     }
                 } else {
-                    // Non-PIC: hanya komentar
+                    // Non-PIC tetap bisa Komentar
                     actionButtons = `
-                        <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${ftype || fileType}', 'Comment')" class="px-2.5 py-1 rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border border-indigo-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1">💬 Komentar</button>
+                        <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${fileType}', 'Comment')" class="px-2.5 py-1 rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border border-indigo-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1">💬 Komentar</button>
                     `;
                 }
 
@@ -2628,7 +2699,8 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             const idx = window.activeLihatBerkasIndices.indexOf(index);
             if (idx > -1) { removeStudentFromLihatBerkas(index); return; }
 
-            if (window.activeLihatBerkasIndices.length >= 4) {
+            // Max 5 mahasiswa
+            if (window.activeLihatBerkasIndices.length >= 5) {
                 const removed = window.activeLihatBerkasIndices.shift();
                 const removedMhs = bimbinganData[removed];
                 if (removedMhs) window.activePreviews = window.activePreviews.filter(p => p.nim !== removedMhs.nim);
@@ -2682,6 +2754,16 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
+                // Priority 1: exit fullscreen mode
+                const fsCard = document.querySelector('.preview-card-item.preview-fullscreen-mode');
+                if (fsCard) {
+                    fsCard.classList.remove('preview-fullscreen-mode');
+                    const icon = fsCard.querySelector('[data-fs-icon]');
+                    if (icon) icon.className = 'bi bi-arrows-fullscreen';
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                }
                 const mp = document.getElementById('modalPenilaianSidang');
                 if (mp && mp.classList.contains('active')) { closeModalPenilaianSidang(); return; }
                 if (window.activeInlineEditorKey) { closeInlineComment(); return; }
@@ -2736,28 +2818,20 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         }
 
         // ============================================================
-        // ACTION: Downgrade Tahap
+        // ACTION: Downgrade Tahap (dari X+1 ke X)
+        // Dipanggil dari tab X → menarik mahasiswa yang sudah naik ke X+1 kembali ke X.
         // ============================================================
-        function handleDowngradeStage(nim) {
+        function handleDowngradeStageTo(nim, dariTahap, keTahap) {
             const mhs = bimbinganData.find(m => m.nim === nim);
             if (!mhs) return;
 
-            const order = ['Preview 1', 'Preview 2', 'Preview 3', 'Sidang'];
-            const currIdx = order.indexOf(currentTahap);
-            if (currIdx <= 0) {
-                Swal.fire({ icon: 'info', title: 'Tidak Bisa Downgrade', text: 'Preview 1 adalah tahap paling awal.' });
-                return;
-            }
-
-            const targetTahap = order[currIdx - 1];
-
             Swal.fire({
-                title: 'Downgrade Tahap?',
-                html: `Mahasiswa akan diturunkan dari <strong>${currentTahap}</strong> ke <strong>${targetTahap}</strong>.<br><br>
+                title: `Downgrade ke ${keTahap}?`,
+                html: `Mahasiswa akan diturunkan dari <strong>${dariTahap}</strong> ke <strong>${keTahap}</strong>.<br><br>
                        <div style="text-align:left;font-size:11px;color:#64748b;background:#f1f5f9;padding:8px 12px;border-radius:8px;">
                            <strong>Efek:</strong><br>
-                           • Semua berkas di <strong>${targetTahap}</strong> di-reset ke <strong>Pending</strong><br>
-                           • Data berkas di <strong>${currentTahap}</strong> akan dihapus<br>
+                           • Semua berkas di <strong>${keTahap}</strong> di-reset ke <strong>Pending</strong><br>
+                           • Data berkas di <strong>${dariTahap}</strong> akan dihapus<br>
                            • Flag "Lulus" akan direset
                        </div>`,
                 icon: 'warning',
@@ -2771,8 +2845,8 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
 
                 const fd = new FormData();
                 fd.append('nim', nim);
-                fd.append('dari', currentTahap);
-                fd.append('ke', targetTahap);
+                fd.append('dari', dariTahap);
+                fd.append('ke', keTahap);
                 fd.append('alasan', 'Downgrade oleh ' + ROLE.toUpperCase());
 
                 Swal.fire({ title: 'Memproses...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
@@ -2828,14 +2902,14 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         window.resetFiltersDW          = resetFiltersDW;
         window.getUploadBaseUrl        = getUploadBaseUrl;
         window.handleLulusStage        = handleLulusStage;
-        window.handleDowngradeStage    = handleDowngradeStage;
+        window.handleDowngradeStageTo  = handleDowngradeStageTo;
         window.getResponsibleRole      = getResponsibleRole;
         window.isCurrentUserPIC        = isCurrentUserPIC;
-        // NEW: inline editor & fullscreen
         window.openInlineComment       = openInlineComment;
         window.closeInlineComment      = closeInlineComment;
         window.submitInlineComment     = submitInlineComment;
         window.toggleFullscreenPreview = toggleFullscreenPreview;
+        window.autoCloseAfterReview    = autoCloseAfterReview;
     </script>
 
     <script>
