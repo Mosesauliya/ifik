@@ -421,7 +421,7 @@ class AdminLayanan_model extends CI_Model {
                     'date_edit'       => date('Y-m-d H:i:s'),
                     'view_adminlaa'   => 1,
                     'view_doswal'     => 1,
-                    'status_doswal'   => 'Approved'
+                    'status_doswal'   => ($status === 'Valid' || $status === 'Approved') ? 'Approved' : 'Pending'
                 );
                 $this->db->insert('file_pendaftaran', $ins_fp);
             }
@@ -740,6 +740,8 @@ class AdminLayanan_model extends CI_Model {
                     }
                     if ($kode) {
                         $student_map[$nim]['fp_doswal_map'][$kode] = $fp['status_doswal'];
+                        $student_map[$nim]['fp_files_map'][$kode]  = $fp['file'] ?? '';
+                        $student_map[$nim]['fp_admin_map'][$kode]  = $st_adm;
                     }
                 }
                 if (!empty($fp['komentar'])) {
@@ -945,11 +947,9 @@ class AdminLayanan_model extends CI_Model {
                 }
             }
 
-            $has_fp_doswal_approved = in_array('Approved', $status_doswal_list) || in_array('Valid', $status_doswal_list);
-
             if ($g_ket === 'Rejected' || $has_file_rejected) {
                 $st_wali = 'Rejected';
-            } elseif ($has_fp_doswal_approved || ($all_files_approved && $g_ket === 'Approved')) {
+            } elseif ($all_files_approved && !empty($required_kodes) && $g_ket === 'Approved') {
                 $st_wali = 'Approved';
             } else {
                 $st_wali = 'Pending';
@@ -957,6 +957,10 @@ class AdminLayanan_model extends CI_Model {
 
             $current_stage = ($st_wali === 'Approved') ? (($st_admin === 'Approved') ? 'Koordinator TA' : 'Admin Layanan') : (($st_wali === 'Rejected') ? 'Dosen Wali (Ditolak)' : 'Dosen Wali');
             $created_at = $info['latest_date'] ?? ($g_data['date'] ?? date('Y-m-d H:i:s'));
+
+            $fp_doswal_map = $info['fp_doswal_map'] ?? array();
+            $fp_files_map  = $info['fp_files_map'] ?? array();
+            $fp_admin_map  = $info['fp_admin_map'] ?? array();
 
             $results[] = array(
                 'id'                    => 'legacy_' . $real_nim,
@@ -981,14 +985,18 @@ class AdminLayanan_model extends CI_Model {
                 'is_submitted'          => 1,
                 'created_at'            => $created_at,
                 'updated_at'            => $created_at,
-                'status_ksm'            => $st_admin,
-                'status_transkrip'      => $st_admin,
-                'status_pernyataan'     => $st_admin,
-                'status_bebas_lab'      => $st_admin,
-                'file_ksm'              => $info['files'][0] ?? '',
-                'file_transkrip'        => $info['files'][1] ?? '',
-                'file_pernyataan'       => $info['files'][2] ?? '',
-                'file_bebas_lab'        => $info['files'][3] ?? '',
+                'status_ksm'            => $p_berkas_map['ksm']['status_verifikasi'] ?? ($fp_doswal_map['ksm'] ?? 'Pending'),
+                'status_transkrip'      => $p_berkas_map['transkrip']['status_verifikasi'] ?? ($fp_doswal_map['transkrip'] ?? 'Pending'),
+                'status_pernyataan'     => $p_berkas_map['pernyataan']['status_verifikasi'] ?? ($fp_doswal_map['pernyataan'] ?? 'Pending'),
+                'status_bebas_lab'      => $p_berkas_map['bebas_lab']['status_verifikasi'] ?? ($fp_doswal_map['bebas_lab'] ?? 'Pending'),
+                'file_ksm'              => $p_berkas_map['ksm']['file_name'] ?? ($fp_files_map['ksm'] ?? ($info['files'][0] ?? '')),
+                'file_transkrip'        => $p_berkas_map['transkrip']['file_name'] ?? ($fp_files_map['transkrip'] ?? ($info['files'][1] ?? '')),
+                'file_pernyataan'       => $p_berkas_map['pernyataan']['file_name'] ?? ($fp_files_map['pernyataan'] ?? ($info['files'][2] ?? '')),
+                'file_bebas_lab'        => $p_berkas_map['bebas_lab']['file_name'] ?? ($fp_files_map['bebas_lab'] ?? ($info['files'][3] ?? '')),
+                'total_berkas'          => $total_required,
+                'berkas_valid_count'    => $pb_valid_count,
+                'berkas_invalid_count'  => $pb_invalid_count,
+                'berkas_pending_count'  => max(0, $total_required - $pb_valid_count - $pb_invalid_count),
             );
         }
 

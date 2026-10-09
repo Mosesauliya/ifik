@@ -496,9 +496,15 @@
 
                 <div class="w-full pt-3.5 border-t border-orange-100 text-xs flex items-center justify-between">
                     <span class="font-medium text-slate-600">Akses Bimbingan:</span>
-                    <a href="<?= site_url('mahasiswa/bimbingan'); ?>" class="font-extrabold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-3 py-1.5 rounded-xl border border-emerald-300 text-xs flex items-center gap-1.5 transition shadow-2xs">
-                        <i class="bi bi-unlock-fill text-emerald-600"></i> Buka Bimbingan TA &rarr;
-                    </a>
+                    <?php if ($approved_count === 4): ?>
+                        <a href="<?= site_url('mahasiswa/bimbingan'); ?>" class="font-extrabold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-3 py-1.5 rounded-xl border border-emerald-300 text-xs flex items-center gap-1.5 transition shadow-2xs">
+                            <i class="bi bi-unlock-fill text-emerald-600"></i> Buka Bimbingan TA &rarr;
+                        </a>
+                    <?php else: ?>
+                        <span class="font-bold text-slate-400 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200 text-xs flex items-center gap-1.5 cursor-not-allowed select-none" title="Akses bimbingan baru terbuka setelah seluruh 4 tahap disetujui">
+                            <i class="bi bi-lock-fill text-slate-400"></i> Terkunci (<?= $approved_count; ?>/4)
+                        </span>
+                    <?php endif; ?>
                 </div>
 
             </div>
@@ -685,29 +691,26 @@
         <!-- Status Akses Bimbingan Akademik (Slim Bar) -->
         <div class="card-3d-warm card-no-hover rounded-2xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl <?= $k_is_app ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'; ?> flex items-center justify-center text-lg font-bold shrink-0 box-3d">
-                    <i class="bi <?= $k_is_app ? 'bi-unlock-fill' : 'bi-lock-fill'; ?>"></i>
+                <div class="w-10 h-10 rounded-xl <?= ($approved_count === 4) ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'; ?> flex items-center justify-center text-lg font-bold shrink-0 box-3d">
+                    <i class="bi <?= ($approved_count === 4) ? 'bi-unlock-fill' : 'bi-lock-fill'; ?>"></i>
                 </div>
                 <div>
                     <h4 class="font-bold text-sm text-slate-900">Status Akses Bimbingan Akademik</h4>
                     <p class="text-xs text-slate-500 font-medium">
-                        <?= $k_is_app ? 'Persetujuan 4 tahap selesai. Dosen Pembimbing resmi ditetapkan.' : 'Memerlukan persetujuan hingga Tahap 04 Koordinator TA (Penetapan Pembimbing)'; ?>
+                        <?= ($approved_count === 4) ? 'Persetujuan 4 tahap selesai. Dosen Pembimbing resmi ditetapkan.' : 'Memerlukan persetujuan lengkap 4 tahap (Dosen Wali, Admin Layanan, Koordinator TA, dan Ketua KK)'; ?>
                     </p>
                 </div>
             </div>
 
             <div class="flex items-center gap-2.5">
-                <?php if($k_is_app): ?>
+                <?php if($approved_count === 4): ?>
                     <a href="<?= site_url('mahasiswa/bimbingan'); ?>" class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-bold rounded-xl flex items-center gap-2 box-3d shadow-md hover:scale-105 active:scale-95 transition-all">
                         <i class="bi bi-patch-check-fill text-base"></i> UNLOCKED — Masuk Bimbingan &amp; Upload Preview 1 <i class="bi bi-arrow-right text-xs"></i>
                     </a>
                 <?php else: ?>
-                    <span class="px-4 py-2 bg-gradient-to-r from-orange-600 to-amber-600 text-white text-xs font-bold rounded-xl flex items-center gap-2 box-3d">
-                        <i class="bi bi-clock-fill text-xs"></i> LOCKED — Menunggu
+                    <span class="px-4 py-2 bg-gradient-to-r from-orange-600 to-amber-600 text-white text-xs font-bold rounded-xl flex items-center gap-2 box-3d select-none">
+                        <i class="bi bi-lock-fill text-xs"></i> LOCKED — Menunggu (<?= $approved_count; ?>/4 Tahap)
                     </span>
-                    <a href="<?= site_url('mahasiswa/bimbingan'); ?>" class="px-3.5 py-2 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-800 text-[11px] font-bold transition flex items-center gap-1.5" title="Uji Coba Langsung Modul Bimbingan & Preview 1">
-                        <i class="bi bi-box-arrow-up-right"></i> Buka Bimbingan (Testing)
-                    </a>
                 <?php endif; ?>
             </div>
         </div>

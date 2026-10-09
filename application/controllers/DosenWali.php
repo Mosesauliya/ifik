@@ -194,6 +194,8 @@ class DosenWali extends CI_Controller {
                     $this->DosenWali_model->update_file_approval($nim, $bk, 'Rejected', $note);
                 } else if (in_array($bk, $berkas_valid_arr) || $status === 'Approved') {
                     $this->DosenWali_model->update_file_approval($nim, $bk, 'Approved', '');
+                } else {
+                    $this->DosenWali_model->update_file_approval($nim, $bk, 'Pending', '');
                 }
             }
 

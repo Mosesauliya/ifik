@@ -451,8 +451,12 @@
                         $sb_idx = 1;
                         foreach ($active_sb as $sb) {
                             $k = $sb['kode_berkas'];
-                            $file_val = $student_berkas[$k]['file_name'] ?? ($detail['file_' . $k] ?? ($k . '_' . ($detail['nim'] ?? ($nim ?? '')) . '.pdf'));
+                            $file_val = $detail['file_' . $k] ?? ($detail['berkas_map'][$k]['file_name'] ?? ($student_berkas[$k]['file_name'] ?? ($k . '_' . ($detail['nim'] ?? ($nim ?? '')) . '.pdf')));
                             $st_val = $detail['status_file_' . $k] ?? 'Pending';
+                            if ($st_val === 'Pending' && !empty($detail['berkas_map'][$k]['status_verifikasi'])) {
+                                $ver = $detail['berkas_map'][$k]['status_verifikasi'];
+                                $st_val = ($ver === 'Valid') ? 'Approved' : (($ver === 'Invalid') ? 'Rejected' : 'Pending');
+                            }
                             if ($st_val === 'Pending' && !empty($student_berkas[$k]['status_verifikasi'])) {
                                 $ver = $student_berkas[$k]['status_verifikasi'];
                                 $st_val = ($ver === 'Valid') ? 'Approved' : (($ver === 'Invalid') ? 'Rejected' : 'Pending');
