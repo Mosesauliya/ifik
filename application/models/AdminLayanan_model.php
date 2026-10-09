@@ -357,11 +357,29 @@ class AdminLayanan_model extends CI_Model {
             $target_ids = $this->get_student_target_ids($nim);
             $clean_nim  = preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', (string)$nim);
 
-            $check = $this->db->where_in('id_mhs', $target_ids)
+            $this->db->where_in('id_mhs', $target_ids)
                 ->group_start()
                     ->like('nama', $kode_berkas)
                     ->or_like('file', $kode_berkas)
-                ->group_end()
+                    ->or_like('id', $kode_berkas);
+
+            if ($kode_berkas === 'bebas_lab') {
+                $this->db->or_like('nama', 'bebas')
+                         ->or_like('nama', 'lab')
+                         ->or_like('file', 'bebas')
+                         ->or_like('file', 'lab');
+            } elseif ($kode_berkas === 'pernyataan') {
+                $this->db->or_like('nama', 'pernyataan')
+                         ->or_like('file', 'pernyataan');
+            } elseif ($kode_berkas === 'transkrip') {
+                $this->db->or_like('nama', 'transkrip')
+                         ->or_like('file', 'transkrip');
+            } elseif ($kode_berkas === 'ksm') {
+                $this->db->or_like('nama', 'ksm')
+                         ->or_like('file', 'ksm');
+            }
+
+            $check = $this->db->group_end()
                 ->get('file_pendaftaran')
                 ->row_array();
 

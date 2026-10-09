@@ -358,11 +358,8 @@ class AdminLayanan extends CI_Controller {
         // Mark view_adminlaa = 1 in file_pendaftaran when Admin LAA views student's berkas
         if ($this->db->table_exists('file_pendaftaran')) {
             $target_ids = $this->AdminLayanan_model->get_student_target_ids($nim);
-            if ($this->db->field_exists('view_adminlaa', 'file_pendaftaran')) {
-                $this->db->group_start()
-                         ->where_in('id_mhs', $target_ids)
-                         ->or_like('id_mhs', $nim)
-                         ->group_end()
+            if ($this->db->field_exists('view_adminlaa', 'file_pendaftaran') && !empty($target_ids)) {
+                $this->db->where_in('id_mhs', $target_ids)
                          ->update('file_pendaftaran', ['view_adminlaa' => 1]);
             }
         }
