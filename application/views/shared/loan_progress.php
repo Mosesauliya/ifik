@@ -22,7 +22,7 @@ $loan_progress_target = $loan_progress_external_target !== '' ? $loan_progress_e
         <span class="loan-progress__stage"><?= html_escape($loan_progress['stage_label']); ?></span>
         <span class="loan-progress__count">Tahap <?= (int) $loan_progress['current_index'] + 1; ?> dari <?= (int) $loan_progress['total_steps']; ?></span>
     </div>
-    <div class="loan-progress__track" role="list" aria-label="Delapan tahap alur peminjaman">
+    <div class="loan-progress__track" role="list" aria-label="Alur progres peminjaman barang">
         <?php foreach ($loan_progress['steps'] as $loan_progress_step): ?>
             <span class="loan-progress__unit <?= html_escape($loan_progress_step['state']); ?>" role="listitem" tabindex="0"
                 title="Tahap <?= (int) $loan_progress_step['number']; ?>: <?= html_escape($loan_progress_step['label']); ?> — <?= html_escape($loan_progress_step['state_label']); ?>"
@@ -43,7 +43,7 @@ $loan_progress_target = $loan_progress_external_target !== '' ? $loan_progress_e
             class="loan-progress-detail-button"
             data-bs-toggle="modal"
             data-bs-target="<?= html_escape($loan_progress_target); ?>"
-            aria-label="Lihat detail delapan tahap peminjaman <?= html_escape($loan_progress_item->group_id ?? $loan_progress_record_id); ?>"
+            aria-label="Lihat detail progres peminjaman <?= html_escape($loan_progress_item->group_id ?? $loan_progress_record_id); ?>"
         >
             <i class="bi bi-diagram-3" aria-hidden="true"></i>
             <span>Lihat Detail</span>

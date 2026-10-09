@@ -1604,13 +1604,8 @@
                         if (searchIcon) {
                             searchIcon.className = 'fa-solid fa-magnifying-glass text-slate-400 text-xs mr-2 shrink-0 transition-transform duration-200';
                         }
-                        
-                        // Update live search di tabel
-                        currentLAAState.search = q;
-                        currentLAAState.page = 1;
-                        refreshLAATable();
 
-                        // Jalankan Autocomplete Dropdown jika ada query
+                        // Jalankan Autocomplete Dropdown jika ada query (TIDAK auto search tabel, search dilakukan saat ditekan Enter / klik Cari)
                         if (q.length >= 2 && autoDropdown && autoResults) {
                             fetch(`<?= site_url('adminlayanan/autocomplete'); ?>?q=${encodeURIComponent(q)}`)
                                 .then(res => res.json())

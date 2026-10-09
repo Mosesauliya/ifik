@@ -52,6 +52,7 @@ foreach ($catalog_page_size_query as $query_name => $query_value) {
     <!-- Bootstrap 5 & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     
     <!-- AOS Animation -->
@@ -453,6 +454,154 @@ foreach ($catalog_page_size_query as $query_name => $query_value) {
         html.scm-theme-dark .catalog-filter-hint,
         html.scm-theme-dark .catalog-pagination-footer { color:var(--scm-theme-muted); }
 
+        /* Unified Search Pill & Custom Multi-Filter (Exact Admin LAA & Riwayat Style) */
+        .unified-search-pill {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(12px);
+            border: 1.5px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 3px 14px;
+            height: 48px;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+            position: relative;
+        }
+        .unified-search-pill:focus-within, .unified-search-pill.active {
+            border-color: #ea580c !important;
+            background: #ffffff !important;
+            box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.14), 0 10px 25px -5px rgba(234, 88, 12, 0.12) !important;
+        }
+        .unified-divider {
+            width: 1px;
+            height: 24px;
+            background: #e2e8f0;
+            margin: 0 10px;
+        }
+        .custom-dropdown-menu {
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-origin: top left;
+        }
+        .custom-dropdown-menu.hidden {
+            display: none !important;
+        }
+        .dropdown-item-opt {
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #334155;
+            transition: background-color 0.15s ease, color 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .dropdown-item-opt:hover, .dropdown-item-opt.active {
+            background-color: #fff7ed;
+            color: #ea580c;
+            font-weight: 600;
+        }
+        .autocomplete-box {
+            max-height: 340px;
+            overflow-y: auto;
+            border-radius: 18px;
+            background: #ffffff !important;
+            box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.25), 0 8px 24px -4px rgba(234, 88, 12, 0.2) !important;
+            z-index: 2050 !important;
+            position: absolute !important;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+        .autocomplete-item-row {
+            padding: 10px 16px;
+            transition: all 0.18s ease;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .autocomplete-item-row:last-child {
+            border-bottom: none;
+        }
+        .autocomplete-item-row:hover, .autocomplete-item-row.active-nav {
+            background-color: #fff7ed;
+            color: #ea580c;
+        }
+        .autocomplete-item-row mark {
+            background: #ffedd5;
+            color: #ea580c;
+            font-weight: 800;
+            border-radius: 4px;
+            padding: 0 3px;
+        }
+        .btn-standalone-add {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #fff7ed;
+            border: 1.5px solid #ffedd5;
+            border-radius: 16px;
+            padding: 6px 14px;
+            height: 48px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #ea580c;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(234, 88, 12, 0.06);
+        }
+        .btn-standalone-add:hover {
+            background: #ffedd5;
+            border-color: #fdba74;
+            transform: scale(1.02);
+        }
+        .badge-standalone-count {
+            background: #ea580c;
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 1.5px 8px;
+            border-radius: 99px;
+        }
+        .btn-remove-row {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            background: #fff1f2;
+            border: 1.5px solid #fecdd3;
+            border-radius: 14px;
+            color: #e11d48;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        .btn-remove-row:hover {
+            background: #ffe4e6;
+            border-color: #fda4af;
+            color: #be123c;
+            transform: scale(1.05);
+        }
+        .extra-rows-card {
+            display: none;
+            position: relative;
+            margin-top: 12px;
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 14px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+            transition: all 0.25s ease;
+        }
+        .extra-rows-card.open {
+            display: block !important;
+        }
+        .extra-filter-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .sop-modal-content {
             border: none;
             border-radius: 14px;
@@ -640,26 +789,136 @@ foreach ($catalog_page_size_query as $query_name => $query_value) {
         </div>
 
         <?php if (isset($catalog_total)): ?>
-        <div class="catalog-toolbar">
-            <?php
-                $multi_filter_id = 'catalogMultiFilter';
-                $multi_filter_mode = 'server';
-                $multi_filter_fields = [
-                    'all' => ['label' => 'Semua data alat', 'placeholder' => 'Cari nama alat, kode aset, ruangan, kondisi, atau stok...'],
-                    'nama' => ['label' => 'Nama alat', 'placeholder' => 'Cari nama alat...'],
-                    'kode' => ['label' => 'Kode aset', 'placeholder' => 'Cari kode aset...'],
-                    'ruangan' => ['label' => 'Ruangan / laboratorium', 'placeholder' => 'Cari ruangan atau laboratorium...'],
-                    'kondisi' => ['label' => 'Kondisi', 'placeholder' => 'Cari kondisi alat...'],
-                    'stok' => ['label' => 'Stok tersedia', 'placeholder' => 'Cari jumlah stok...'],
-                ];
-                $multi_filter_rows = $filter_rows ?? [['field' => 'all', 'value' => '']];
-                $multi_filter_action = current_url();
-                $multi_filter_hidden = ['id_ruangan' => $this->input->get('id_ruangan', true), 'per_page' => $catalog_per_page, 'page' => 1];
-                $multi_filter_meta_id = 'catalogFilterMeta';
-                $multi_filter_meta = number_format($catalog_total, 0, ',', '.') . ' aset tersedia';
-                include APPPATH . 'views/admin/_multi_filter.php';
-                unset($multi_filter_id, $multi_filter_mode, $multi_filter_fields, $multi_filter_rows, $multi_filter_meta_id, $multi_filter_meta);
-            ?>
+        <?php
+            $cat_labels = [
+                'all'     => '🔍 Semua Data Alat',
+                'nama'    => '📦 Nama Alat',
+                'kode'    => '🏷️ Kode Aset',
+                'ruangan' => '🏛️ Ruangan / Lab',
+                'kondisi' => '✨ Kondisi',
+                'stok'    => '🔢 Stok Minimal'
+            ];
+            $cat_placeholders = [
+                'all'     => 'Cari nama alat, kode aset, ruangan, kondisi, atau stok...',
+                'nama'    => 'Cari nama alat...',
+                'kode'    => 'Cari kode aset (misal: AST-DKV-01)...',
+                'ruangan' => 'Cari ruangan atau laboratorium...',
+                'kondisi' => 'Cari kondisi (misal: Baik, Rusak)...',
+                'stok'    => 'Cari jumlah stok minimal (angka)...'
+            ];
+            $current_main_cat = $filter_rows[0]['field'] ?? 'all';
+            $current_main_val = $filter_rows[0]['value'] ?? '';
+            $extra_rows = array_slice($filter_rows ?? [], 1);
+            $total_active_rows = 1 + count($extra_rows);
+        ?>
+        <div class="card border-0 shadow-sm p-3 mb-4 rounded-4 position-relative bg-white" data-aos="fade-up" style="position: relative; z-index: 1050;">
+            <form action="<?= html_escape(current_url()) ?>" method="GET" id="formSearchKatalog" class="position-relative" style="position: relative; z-index: 1051;">
+                <input type="hidden" name="id_ruangan" value="<?= htmlspecialchars($this->input->get('id_ruangan', true) ?? ''); ?>">
+                <input type="hidden" name="per_page" value="<?= (int)$catalog_per_page; ?>">
+                <input type="hidden" name="filter_field[]" id="mainCategorySelectKatalog" value="<?= htmlspecialchars($current_main_cat); ?>">
+                
+                <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2">
+                    <!-- Main Search Pill -->
+                    <div class="unified-search-pill flex-grow-1 d-flex align-items-center justify-content-between min-w-0" id="mainSearchPillKatalog">
+                        <!-- Main Category Selector Dropdown -->
+                        <div class="position-relative flex-shrink-0">
+                            <button type="button" onclick="toggleKatalogCustomDropdown('main-cat', event)" class="d-flex align-items-center gap-1 bg-transparent border-0 text-dark fw-bold cursor-pointer py-1 px-1" style="font-size: 0.8rem;">
+                                <span id="label-filter-main-cat" class="text-truncate" style="max-width: 140px;">
+                                    <?= $cat_labels[$current_main_cat] ?? '🔍 Semua Data Alat'; ?>
+                                </span>
+                                <i class="fa-solid fa-chevron-down text-secondary ms-1 dropdown-arrow transition-all" id="arrow-filter-main-cat" style="font-size: 9px;"></i>
+                            </button>
+                            <div id="menu-filter-main-cat" class="custom-dropdown-menu hidden position-absolute top-100 start-0 mt-2 bg-white border border-light-subtle rounded-3 shadow-lg p-1" style="width: 220px; z-index: 2060;">
+                                <?php foreach($cat_labels as $ck => $clabel): ?>
+                                    <div onclick="selectKatalogMainCategory('<?= $ck ?>', '<?= htmlspecialchars($clabel, ENT_QUOTES) ?>', '<?= htmlspecialchars($cat_placeholders[$ck], ENT_QUOTES) ?>', this)" 
+                                         class="dropdown-item-opt <?= $current_main_cat === $ck ? 'active' : '' ?>">
+                                        <span><?= $clabel ?></span>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+
+                        <div class="unified-divider flex-shrink-0"></div>
+
+                        <!-- Input Text Container -->
+                        <div id="mainValueContainerKatalog" class="flex-grow-1 d-flex align-items-center min-w-0 px-1">
+                            <i id="searchIconKatalog" class="fa-solid fa-magnifying-glass text-secondary me-2 flex-shrink-0" style="font-size: 13px;"></i>
+                            <input type="text" name="filter_value[]" id="inputSearchKatalog" autocomplete="off" value="<?= htmlspecialchars($current_main_val); ?>" 
+                                   placeholder="<?= htmlspecialchars($cat_placeholders[$current_main_cat] ?? $cat_placeholders['all']); ?>" 
+                                   class="form-control border-0 shadow-none bg-transparent p-0 text-dark fw-semibold" style="font-size: 0.82rem;">
+                            
+                            <button type="button" id="btnClearSearchKatalog" onclick="clearKatalogSearch()" class="<?= empty($current_main_val) ? 'd-none' : ''; ?> btn btn-link p-0 text-secondary text-decoration-none me-2" title="Hapus pencarian">
+                                <i class="fa-solid fa-circle-xmark fs-6"></i>
+                            </button>
+                        </div>
+
+                        <!-- Tombol Cari -->
+                        <button type="submit" id="btnSubmitSearchKatalog" class="btn text-white fw-bold d-flex align-items-center gap-1 rounded-3 px-3 py-1 flex-shrink-0 shadow-sm" style="background: linear-gradient(135deg, #ea580c, #f97316); font-size: 0.78rem;">
+                            <i class="fa-solid fa-magnifying-glass" style="font-size: 11px;"></i>
+                            <span class="d-none d-sm-inline">Cari</span>
+                        </button>
+                    </div>
+
+                    <!-- Standalone Add Filter Button (+ 1/4) -->
+                    <button type="button" id="standaloneAddBtnKatalog" onclick="toggleKatalogMultiFilter(event)" class="btn-standalone-add flex-shrink-0 justify-content-center" title="Buka / Tambah Filter Baru (Maks 4)">
+                        <i class="fa-solid fa-plus fs-6"></i>
+                        <span id="filterCountBadgeKatalog" class="badge-standalone-count"><?= min(4, max(1, $total_active_rows)) ?>/4</span>
+                    </button>
+                </div>
+
+                <!-- Autocomplete Dropdown -->
+                <div id="autocompleteDropdownKatalog" class="d-none position-absolute start-0 end-0 top-100 mt-2 bg-white border border-light-subtle rounded-4 shadow-lg overflow-hidden autocomplete-box" style="z-index: 2050;">
+                    <div id="autocompleteResultsKatalog" class="p-0"></div>
+                </div>
+
+                <!-- Extra Filter Rows Card Popover -->
+                <div id="extraRowsCardKatalog" class="extra-rows-card <?= !empty($extra_rows) ? 'open' : '' ?>">
+                    <div id="additionalFilterRowsContainerKatalog" class="d-flex flex-column gap-2 mb-2">
+                        <?php if(!empty($extra_rows)): ?>
+                            <?php foreach($extra_rows as $idx => $erow): 
+                                $erow_id = 'katalog-extra-row-' . ($idx + 1);
+                                $erow_cat = $erow['field'] ?? 'nama';
+                                $erow_val = $erow['value'] ?? '';
+                            ?>
+                                <div class="extra-filter-row" id="<?= $erow_id ?>">
+                                    <input type="hidden" name="filter_field[]" id="field-<?= $erow_id ?>" value="<?= htmlspecialchars($erow_cat) ?>">
+                                    <div class="unified-search-pill flex-grow-1 d-flex align-items-center justify-content-between min-w-0" style="height: 44px;">
+                                        <div class="position-relative flex-shrink-0">
+                                            <button type="button" onclick="toggleKatalogCustomDropdown('<?= $erow_id ?>', event)" class="d-flex align-items-center gap-1 bg-transparent border-0 text-dark fw-bold cursor-pointer py-1 px-1" style="font-size: 0.8rem;">
+                                                <span id="label-filter-<?= $erow_id ?>" class="text-truncate" style="max-width: 140px;"><?= $cat_labels[$erow_cat] ?? '📦 Nama Alat' ?></span>
+                                                <i class="fa-solid fa-chevron-down text-secondary ms-1 dropdown-arrow transition-all" id="arrow-filter-<?= $erow_id ?>" style="font-size: 9px;"></i>
+                                            </button>
+                                            <div id="menu-filter-<?= $erow_id ?>" class="custom-dropdown-menu hidden position-absolute top-100 start-0 mt-2 bg-white border border-light-subtle rounded-3 shadow-lg p-1" style="width: 220px; z-index: 1050;">
+                                                <?php foreach($cat_labels as $ck => $clabel): ?>
+                                                    <div onclick="selectKatalogExtraCategory('<?= $erow_id ?>', '<?= $ck ?>', '<?= htmlspecialchars($clabel, ENT_QUOTES) ?>', '<?= htmlspecialchars($cat_placeholders[$ck], ENT_QUOTES) ?>', this)" 
+                                                         class="dropdown-item-opt <?= $erow_cat === $ck ? 'active' : '' ?>">
+                                                        <span><?= $clabel ?></span>
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        </div>
+                                        <div class="unified-divider flex-shrink-0"></div>
+                                        <div class="flex-grow-1 d-flex align-items-center min-w-0 px-1">
+                                            <i class="fa-solid fa-magnifying-glass text-secondary me-2 flex-shrink-0" style="font-size: 12px;"></i>
+                                            <input type="text" name="filter_value[]" value="<?= htmlspecialchars($erow_val) ?>" placeholder="<?= htmlspecialchars($cat_placeholders[$erow_cat] ?? '') ?>" class="form-control border-0 shadow-none bg-transparent p-0 text-dark fw-semibold extra-row-input" style="font-size: 0.82rem;">
+                                        </div>
+                                    </div>
+                                    <button type="button" onclick="removeKatalogFilterRow(this)" class="btn-remove-row" title="Hapus Kriteria Ini">
+                                        <i class="fa-solid fa-trash text-xs"></i>
+                                    </button>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <div class="d-flex align-items-center justify-content-between border-top border-light-subtle pt-2 mt-2" style="font-size: 0.78rem;">
+                        <span class="text-muted"><i class="fa-solid fa-circle-info me-1"></i>Tekan Enter atau klik tombol Cari untuk mencari alat.</span>
+                        <button type="button" onclick="resetKatalogMultiSearch()" class="btn btn-link btn-sm text-danger fw-bold text-decoration-none p-0">
+                            Reset All Filters
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
         <?php endif; ?>
         
@@ -1096,120 +1355,354 @@ foreach ($catalog_page_size_query as $query_name => $query_value) {
             enableAssetVisualTilt();
             enableInteractiveAssetViewers();
 
-            if (catalogGrid && catalogItems.length && catalogFilterRoot?.dataset.mode === 'client' && catalogPageSize && catalogPageNav) {
-                let catalogPage = 1;
+            // ==========================================
+            // UNIFIED SEARCH & MULTI-FILTER (KATALOG BARANG)
+            // ==========================================
+            const katalogCatLabels = {
+                'all': '🔍 Semua Data Alat',
+                'nama': '📦 Nama Alat',
+                'kode': '🏷️ Kode Aset',
+                'ruangan': '🏛️ Ruangan / Lab',
+                'kondisi': '✨ Kondisi',
+                'stok': '🔢 Stok Minimal'
+            };
 
-                function filteredCatalogItems() {
-                    const criteria = window.AdminMultiFilter?.getCriteria(catalogFilterRoot) || [];
-                    return catalogItems.filter(function (item) {
-                        return window.AdminMultiFilter?.matches(item, criteria) ?? true;
-                    });
+            const katalogCatPlaceholders = {
+                'all': 'Cari nama alat, kode aset, ruangan, kondisi, atau stok...',
+                'nama': 'Cari nama alat...',
+                'kode': 'Cari kode aset (misal: AST-DKV-01)...',
+                'ruangan': 'Cari ruangan atau laboratorium...',
+                'kondisi': 'Cari kondisi (misal: Baik, Rusak)...',
+                'stok': 'Cari jumlah stok minimal (angka)...'
+            };
+
+            window.toggleKatalogCustomDropdown = function(id, event) {
+                if (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                const menu = document.getElementById('menu-filter-' + id);
+                const arrow = document.getElementById('arrow-filter-' + id);
+                
+                document.querySelectorAll('.custom-dropdown-menu').forEach(m => {
+                    if (m !== menu) m.classList.add('hidden');
+                });
+                document.querySelectorAll('.dropdown-arrow').forEach(a => {
+                    if (a !== arrow) a.classList.remove('rotate-180');
+                });
+
+                if (menu) {
+                    menu.classList.toggle('hidden');
+                    if (arrow) arrow.classList.toggle('rotate-180');
+                }
+            };
+
+            window.selectKatalogMainCategory = function(catKey, catLabel, placeholder, el) {
+                const inputCat = document.getElementById('mainCategorySelectKatalog');
+                const labelEl = document.getElementById('label-filter-main-cat');
+                const inputSearch = document.getElementById('inputSearchKatalog');
+
+                if (inputCat) inputCat.value = catKey;
+                if (labelEl) labelEl.textContent = catLabel;
+                if (inputSearch) {
+                    inputSearch.placeholder = placeholder;
+                    inputSearch.focus();
                 }
 
-                function catalogSizeFor(total) {
-                    return catalogPageSize.value === 'all'
-                        ? Math.max(total, 1)
-                        : Math.max(Number(catalogPageSize.value) || 10, 1);
+                document.querySelectorAll('#menu-filter-main-cat .dropdown-item-opt').forEach(opt => opt.classList.remove('active'));
+                if (el) el.classList.add('active');
+
+                const menu = document.getElementById('menu-filter-main-cat');
+                const arrow = document.getElementById('arrow-filter-main-cat');
+                if (menu) menu.classList.add('hidden');
+                if (arrow) arrow.classList.remove('rotate-180');
+            };
+
+            window.updateKatalogFilterBadge = function() {
+                const container = document.getElementById('additionalFilterRowsContainerKatalog');
+                const rowsCount = container ? container.querySelectorAll('.extra-filter-row').length : 0;
+                const total = 1 + rowsCount;
+                const badge = document.getElementById('filterCountBadgeKatalog');
+                if (badge) {
+                    badge.textContent = Math.min(4, total) + '/4';
                 }
+            };
 
-                function addCatalogPageButton(label, target, disabled, active, ariaLabel, ellipsis) {
-                    const item = document.createElement('li');
-                    if (ellipsis) {
-                        item.className = 'page-item disabled';
-                        item.setAttribute('aria-hidden', 'true');
-                        const separator = document.createElement('span');
-                        separator.className = 'page-link';
-                        separator.textContent = '...';
-                        item.appendChild(separator);
-                        catalogPageNav.appendChild(item);
-                        return;
-                    }
-                    const link = document.createElement('button');
-                    item.className = 'page-item' + (disabled ? ' disabled' : '') + (active ? ' active' : '');
-                    link.type = 'button';
-                    link.className = 'page-link';
-                    link.textContent = label;
-                    link.disabled = disabled;
-                    if (ariaLabel) link.setAttribute('aria-label', ariaLabel);
-                    if (active) link.setAttribute('aria-current', 'page');
-                    link.addEventListener('click', function () {
-                        catalogPage = target;
-                        renderCatalog();
-                        catalogGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    });
-                    item.appendChild(link);
-                    catalogPageNav.appendChild(item);
+            window.toggleKatalogMultiFilter = function(event) {
+                if (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
                 }
+                const extraCard = document.getElementById('extraRowsCardKatalog');
+                const container = document.getElementById('additionalFilterRowsContainerKatalog');
+                const currentRows = container ? container.querySelectorAll('.extra-filter-row').length : 0;
 
-                function renderCatalogPagination(totalPages) {
-                    catalogPageNav.innerHTML = '';
-                    addCatalogPageButton('Previous', Math.max(1, catalogPage - 1), catalogPage <= 1, false, 'Halaman sebelumnya');
-
-                    const pageTokens = totalPages <= 7
-                        ? Array.from({ length: totalPages }, (_, index) => index + 1)
-                        : catalogPage <= 3
-                            ? [1, 2, 3, 4, 5, 'ellipsis', totalPages]
-                            : catalogPage >= totalPages - 2
-                                ? [totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages]
-                                : [1, 'ellipsis', catalogPage - 2, catalogPage - 1, catalogPage, catalogPage + 1, catalogPage + 2, 'ellipsis', totalPages];
-                    pageTokens.forEach((token) => {
-                        if (typeof token === 'string') {
-                            addCatalogPageButton('...', catalogPage, true, false, 'Pemisah halaman', true);
-                        } else {
-                            addCatalogPageButton(String(token), token, false, token === catalogPage, 'Halaman ' + token);
+                if (extraCard) {
+                    if (!extraCard.classList.contains('open')) {
+                        extraCard.classList.add('open');
+                        if (currentRows === 0) {
+                            addKatalogFilterRow();
                         }
-                    });
+                    } else {
+                        if (currentRows < 3) {
+                            addKatalogFilterRow();
+                        } else {
+                            extraCard.classList.remove('open');
+                        }
+                    }
+                }
+                updateKatalogFilterBadge();
+            };
 
-                    addCatalogPageButton('Next', Math.min(totalPages, catalogPage + 1), catalogPage >= totalPages, false, 'Halaman berikutnya');
+            let katalogExtraRowSeq = Date.now();
+
+            window.addKatalogFilterRow = function() {
+                const container = document.getElementById('additionalFilterRowsContainerKatalog');
+                if (!container) return;
+
+                const existingRows = container.querySelectorAll('.extra-filter-row').length;
+                if (existingRows >= 3) return; // Total max 4 rows
+
+                katalogExtraRowSeq++;
+                const rowId = 'katalog-extra-row-' + katalogExtraRowSeq;
+                const defaultCat = existingRows === 0 ? 'nama' : (existingRows === 1 ? 'kode' : 'ruangan');
+
+                let dropdownOptsHtml = '';
+                for (const [key, label] of Object.entries(katalogCatLabels)) {
+                    const isActive = (key === defaultCat) ? 'active' : '';
+                    dropdownOptsHtml += `
+                        <div onclick="selectKatalogExtraCategory('${rowId}', '${key}', '${label}', '${katalogCatPlaceholders[key]}', this)" class="dropdown-item-opt ${isActive}">
+                            <span>${label}</span>
+                        </div>
+                    `;
                 }
 
-                function renderCatalog() {
-                    const visibleItems = filteredCatalogItems();
-                    const pageSize = catalogSizeFor(visibleItems.length);
-                    const totalPages = Math.max(1, Math.ceil(visibleItems.length / pageSize));
-                    catalogPage = Math.max(1, Math.min(catalogPage, totalPages));
-                    const start = (catalogPage - 1) * pageSize;
-                    const end = start + pageSize;
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'extra-filter-row';
+                rowDiv.id = rowId;
+                rowDiv.innerHTML = `
+                    <input type="hidden" name="filter_field[]" id="field-${rowId}" value="${defaultCat}">
+                    <div class="unified-search-pill flex-grow-1 d-flex align-items-center justify-content-between min-w-0" style="height: 44px;">
+                        <div class="position-relative flex-shrink-0">
+                            <button type="button" onclick="toggleKatalogCustomDropdown('${rowId}', event)" class="d-flex align-items-center gap-1 bg-transparent border-0 text-dark fw-bold cursor-pointer py-1 px-1" style="font-size: 0.8rem;">
+                                <span id="label-filter-${rowId}" class="text-truncate" style="max-width: 140px;">${katalogCatLabels[defaultCat]}</span>
+                                <i class="fa-solid fa-chevron-down text-secondary ms-1 dropdown-arrow transition-all" id="arrow-filter-${rowId}" style="font-size: 9px;"></i>
+                            </button>
+                            <div id="menu-filter-${rowId}" class="custom-dropdown-menu hidden position-absolute top-100 start-0 mt-2 bg-white border border-light-subtle rounded-3 shadow-lg p-1" style="width: 220px; z-index: 1050;">
+                                ${dropdownOptsHtml}
+                            </div>
+                        </div>
+                        <div class="unified-divider flex-shrink-0"></div>
+                        <div class="flex-grow-1 d-flex align-items-center min-w-0 px-1">
+                            <i class="fa-solid fa-magnifying-glass text-secondary me-2 flex-shrink-0" style="font-size: 12px;"></i>
+                            <input type="text" name="filter_value[]" placeholder="${katalogCatPlaceholders[defaultCat]}" class="form-control border-0 shadow-none bg-transparent p-0 text-dark fw-semibold extra-row-input" style="font-size: 0.82rem;">
+                        </div>
+                    </div>
+                    <button type="button" onclick="removeKatalogFilterRow(this)" class="btn-remove-row" title="Hapus Kriteria Ini">
+                        <i class="fa-solid fa-trash text-xs"></i>
+                    </button>
+                `;
 
-                    catalogItems.forEach(function (item) {
-                        item.hidden = true;
-                        item.removeAttribute('data-aos');
-                    });
+                container.appendChild(rowDiv);
+                updateKatalogFilterBadge();
 
-                    visibleItems.forEach(function (item, index) {
-                        catalogGrid.insertBefore(item, catalogEmptyResult || null);
-                        item.hidden = index < start || index >= end;
-                    });
+                const newInput = rowDiv.querySelector('input.extra-row-input');
+                if (newInput) newInput.focus();
+            };
 
-                    if (catalogEmptyResult) catalogEmptyResult.hidden = visibleItems.length !== 0;
-                    if (catalogTotalItems) catalogTotalItems.textContent = String(visibleItems.length);
-                    if (catalogHeaderTotal) catalogHeaderTotal.textContent = String(visibleItems.length);
-                    if (catalogFilterMeta) catalogFilterMeta.textContent = new Intl.NumberFormat('id-ID').format(visibleItems.length) + (window.AdminMultiFilter.getCriteria(catalogFilterRoot).length ? ' hasil ditemukan' : ' aset tersedia');
-                    if (catalogPageStatus) catalogPageStatus.textContent = 'Halaman: ' + catalogPage + ' dari ' + totalPages;
-                    renderCatalogPagination(totalPages);
+            window.removeKatalogFilterRow = function(btn) {
+                const row = btn.closest('.extra-filter-row');
+                if (row) row.remove();
+
+                const extraCard = document.getElementById('extraRowsCardKatalog');
+                const remainingRows = document.querySelectorAll('.extra-filter-row').length;
+                if (remainingRows === 0 && extraCard) {
+                    extraCard.classList.remove('open');
                 }
 
-                catalogFilterRoot.addEventListener('admin-multi-filter-change', function () {
-                    catalogPage = 1;
-                    renderCatalog();
+                updateKatalogFilterBadge();
+            };
+
+            window.selectKatalogExtraCategory = function(rowId, catKey, catLabel, placeholder, el) {
+                const fieldEl = document.getElementById('field-' + rowId);
+                const labelEl = document.getElementById('label-filter-' + rowId);
+                const inputEl = document.querySelector(`#${rowId} input.extra-row-input`);
+
+                if (fieldEl) fieldEl.value = catKey;
+                if (labelEl) labelEl.textContent = catLabel;
+                if (inputEl) {
+                    inputEl.placeholder = placeholder;
+                    inputEl.focus();
+                }
+
+                document.querySelectorAll(`#menu-filter-${rowId} .dropdown-item-opt`).forEach(m => m.classList.remove('active'));
+                if (el) el.classList.add('active');
+
+                const menu = document.getElementById('menu-filter-' + rowId);
+                const arrow = document.getElementById('arrow-filter-' + rowId);
+                if (menu) menu.classList.add('hidden');
+                if (arrow) arrow.classList.remove('rotate-180');
+            };
+
+            window.clearKatalogSearch = function() {
+                const input = document.getElementById('inputSearchKatalog');
+                const btnClear = document.getElementById('btnClearSearchKatalog');
+                if (input) {
+                    input.value = '';
+                    input.focus();
+                }
+                if (btnClear) btnClear.classList.add('d-none');
+                
+                const form = document.getElementById('formSearchKatalog');
+                if (form) form.submit();
+            };
+
+            window.resetKatalogMultiSearch = function() {
+                window.location.href = '<?= site_url("peminjaman_barang"); ?>';
+            };
+
+            // Autocomplete & Keyboard Nav untuk Katalog (TIDAK Auto-Search saat mengetik, hanya saat Enter / Submit)
+            const inputSearchKatalog = document.getElementById('inputSearchKatalog');
+            const btnClearKatalog = document.getElementById('btnClearSearchKatalog');
+            const autoDropdownKatalog = document.getElementById('autocompleteDropdownKatalog');
+            const autoResultsKatalog = document.getElementById('autocompleteResultsKatalog');
+            const searchIconKatalog = document.getElementById('searchIconKatalog');
+            const formSearchKatalog = document.getElementById('formSearchKatalog');
+
+            let katalogAutoDebounceTimer = null;
+            let currentFocusKatalogIdx = -1;
+
+            if (inputSearchKatalog) {
+                inputSearchKatalog.addEventListener('input', function() {
+                    const q = this.value.trim();
+                    const currentCat = document.getElementById('mainCategorySelectKatalog')?.value || 'all';
+
+                    if (btnClearKatalog) {
+                        if (q.length > 0) {
+                            btnClearKatalog.classList.remove('d-none');
+                        } else {
+                            btnClearKatalog.classList.add('d-none');
+                        }
+                    }
+
+                    if (searchIconKatalog) {
+                        searchIconKatalog.className = 'fa-solid fa-spinner fa-spin text-orange-500 text-xs me-2 flex-shrink-0';
+                    }
+
+                    clearTimeout(katalogAutoDebounceTimer);
+                    katalogAutoDebounceTimer = setTimeout(() => {
+                        if (searchIconKatalog) {
+                            searchIconKatalog.className = 'fa-solid fa-magnifying-glass text-secondary me-2 flex-shrink-0';
+                        }
+
+                        if (q.length >= 1 && autoDropdownKatalog && autoResultsKatalog) {
+                            fetch(`<?= site_url('peminjaman_barang/autocomplete'); ?>?type=katalog&q=${encodeURIComponent(q)}&cat=${encodeURIComponent(currentCat)}`)
+                                .then(res => res.json())
+                                .then(data => {
+                                    if (data && data.length > 0) {
+                                        let html = '';
+                                        data.forEach((item) => {
+                                            const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                                            const highlightedNama = (item.nama_aset || '').replace(regex, '<mark>$1</mark>');
+                                            const highlightedKode = (item.kode_aset || '').replace(regex, '<mark>$1</mark>');
+                                            const highlightedRuangan = (item.ruangan || '').replace(regex, '<mark>$1</mark>');
+
+                                            html += `
+                                                <div class="autocomplete-item-row d-flex align-items-center justify-content-between gap-3" data-name="${item.nama_aset}">
+                                                    <div class="d-flex align-items-center gap-2.5 min-w-0">
+                                                        <span class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 32px; height: 32px; background: rgba(234, 91, 26, 0.12); color: #ea5b1a; font-size: 13px;">
+                                                            <i class="fa-solid fa-box-open"></i>
+                                                        </span>
+                                                        <div class="min-w-0">
+                                                            <div class="fw-bold text-dark text-truncate" style="font-size: 0.82rem;">
+                                                                ${highlightedNama} <span class="badge bg-light text-secondary border ms-1" style="font-size: 10px;">${highlightedKode}</span>
+                                                            </div>
+                                                            <div class="text-muted text-truncate" style="font-size: 11px;">
+                                                                <i class="fa-solid fa-location-dot me-1 text-secondary"></i>${highlightedRuangan || 'Umum'} &bull; <i class="fa-solid fa-layer-group ms-1 me-1 text-secondary"></i>Stok: ${item.jumlah_tersedia}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <span class="badge bg-orange-subtle text-fik-orange border border-warning-subtle flex-shrink-0" style="font-size: 10.5px; border-radius: 99px;">
+                                                        ${item.kondisi || 'Baik'}
+                                                    </span>
+                                                </div>
+                                            `;
+                                        });
+                                        autoResultsKatalog.innerHTML = html;
+                                        autoDropdownKatalog.classList.remove('d-none');
+                                        autoDropdownKatalog.style.display = 'block';
+                                        currentFocusKatalogIdx = -1;
+
+                                        // Click item handler
+                                        autoResultsKatalog.querySelectorAll('.autocomplete-item-row').forEach(row => {
+                                            row.onclick = function() {
+                                                const selectedName = this.getAttribute('data-name');
+                                                inputSearchKatalog.value = selectedName;
+                                                autoDropdownKatalog.classList.add('d-none');
+                                                autoDropdownKatalog.style.display = 'none';
+                                                if (formSearchKatalog) formSearchKatalog.submit();
+                                            };
+                                        });
+                                    } else {
+                                        autoResultsKatalog.innerHTML = `
+                                            <div class="px-4 py-3 text-muted text-center italic" style="font-size: 0.8rem;">
+                                                Tidak ada alat ditemukan untuk "<strong>${q}</strong>"
+                                            </div>
+                                        `;
+                                        autoDropdownKatalog.classList.remove('d-none');
+                                        autoDropdownKatalog.style.display = 'block';
+                                    }
+                                })
+                                .catch(() => {
+                                    autoDropdownKatalog.classList.add('d-none');
+                                    autoDropdownKatalog.style.display = 'none';
+                                });
+                        } else {
+                            if (autoDropdownKatalog) {
+                                autoDropdownKatalog.classList.add('d-none');
+                                autoDropdownKatalog.style.display = 'none';
+                            }
+                        }
+                    }, 220);
                 });
 
-                catalogPageSize.addEventListener('change', function () {
-                    catalogPage = 1;
-                    renderCatalog();
+                // Keyboard navigation
+                inputSearchKatalog.addEventListener('keydown', function(e) {
+                    if (!autoDropdownKatalog || autoDropdownKatalog.classList.contains('d-none')) return;
+                    const items = autoResultsKatalog.querySelectorAll('.autocomplete-item-row');
+                    if (!items.length) return;
+
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        currentFocusKatalogIdx = (currentFocusKatalogIdx + 1) % items.length;
+                        items.forEach((it, i) => it.classList.toggle('active-nav', i === currentFocusKatalogIdx));
+                        items[currentFocusKatalogIdx]?.scrollIntoView({ block: 'nearest' });
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        currentFocusKatalogIdx = (currentFocusKatalogIdx - 1 + items.length) % items.length;
+                        items.forEach((it, i) => it.classList.toggle('active-nav', i === currentFocusKatalogIdx));
+                        items[currentFocusKatalogIdx]?.scrollIntoView({ block: 'nearest' });
+                    } else if (e.key === 'Enter') {
+                        if (currentFocusKatalogIdx >= 0 && items[currentFocusKatalogIdx]) {
+                            e.preventDefault();
+                            items[currentFocusKatalogIdx].click();
+                        }
+                    } else if (e.key === 'Escape') {
+                        autoDropdownKatalog.classList.add('d-none');
+                    }
                 });
-
-                const catalogReset = catalogFilterRoot.querySelector('[data-filter-reset]');
-                if (catalogReset) {
-                    catalogReset.addEventListener('click', function () {
-                        catalogPageSize.value = '10';
-                        catalogPage = 1;
-                        renderCatalog();
-                    });
-                }
-
-                renderCatalog();
             }
+
+            // Outside click closer
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.custom-dropdown-container') && !e.target.closest('.custom-dropdown-menu')) {
+                    document.querySelectorAll('.custom-dropdown-menu').forEach(m => m.classList.add('hidden'));
+                    document.querySelectorAll('.dropdown-arrow').forEach(a => a.classList.remove('rotate-180'));
+                }
+                if (!e.target.closest('#autocompleteDropdownKatalog') && !e.target.closest('#inputSearchKatalog')) {
+                    if (autoDropdownKatalog) autoDropdownKatalog.classList.add('d-none');
+                }
+            });
 
             const internalDocsModal = document.getElementById('internalDocsModal');
             const internalDocsFrame = document.querySelector('.js-internal-doc-frame');

@@ -1316,6 +1316,105 @@ class PeminjamanBarang_model extends CI_Model {
         return (int) $this->db->count_all_results();
     }
 
+    /**
+     * Autocomplete search for user's loan history matching Admin LAA style
+     */
+    public function autocomplete_riwayat($id_peminjam, $term, $cat = 'all', $id_user = null) {
+        if (empty($term)) return [];
+
+        $this->db->select('peminjaman.id_peminjaman, peminjaman.group_id, peminjaman.status, peminjaman.tanggal_pinjam, peminjaman.tanggal_kembali_rencana, aset.nama_aset, aset.kode_aset, COALESCE(ruangan.ruangan, "Umum") AS nama_ruangan');
+        $this->db->from($this->table_peminjaman . ' as peminjaman');
+        $this->db->join('aset', 'aset.id_aset = peminjaman.id_aset', 'left');
+        $this->db->join('ruangan', 'ruangan.id = aset.id_ruangan', 'left');
+        if ($id_peminjam) {
+            $this->db->where('peminjaman.id_peminjam', (int) $id_peminjam);
+        } elseif ($id_user) {
+            $this->db->where('peminjaman.id_user', (int) $id_user);
+        }
+
+        if ($cat === 'barang') {
+            $this->db->like('aset.nama_aset', $term);
+        } elseif ($cat === 'kode') {
+            $this->db->like('aset.kode_aset', $term);
+        } elseif ($cat === 'status') {
+            $this->db->like('peminjaman.status', $term);
+        } else {
+            $this->db->group_start()
+                     ->like('aset.nama_aset', $term)
+                     ->or_like('aset.kode_aset', $term)
+                     ->or_like('peminjaman.status', $term)
+                     ->or_like('peminjaman.group_id', $term)
+                     ->group_end();
+        }
+
+        $this->db->order_by('peminjaman.id_peminjaman', 'DESC');
+        $this->db->limit(8);
+        $query = $this->db->get()->result();
+
+        $out = [];
+        foreach ($query as $r) {
+            $out[] = [
+                'id_peminjaman'   => $r->id_peminjaman,
+                'group_id'        => $r->group_id,
+                'nama_aset'       => $r->nama_aset ?: 'Barang',
+                'kode_aset'       => $r->kode_aset ?: '-',
+                'status'          => $r->status,
+                'ruangan'         => $r->nama_ruangan,
+                'tanggal_pinjam'  => $r->tanggal_pinjam,
+                'tanggal_kembali' => $r->tanggal_kembali_rencana,
+            ];
+        }
+        return $out;
+    }
+
+    /**
+     * Autocomplete search for catalog items matching Admin LAA style
+     */
+    public function autocomplete_katalog($term, $cat = 'all') {
+        if (empty($term)) return [];
+
+        $this->db->select('a.id_aset, a.nama_aset, a.kode_aset, a.kondisi, a.jumlah_tersedia, a.gambar, COALESCE(r.ruangan, "Umum") as nama_ruangan');
+        $this->db->from('aset a');
+        $this->db->join('ruangan r', 'r.id = a.id_ruangan', 'left');
+
+        if ($cat === 'nama') {
+            $this->db->like('a.nama_aset', $term);
+        } elseif ($cat === 'kode') {
+            $this->db->like('a.kode_aset', $term);
+        } elseif ($cat === 'ruangan') {
+            $this->db->like('r.ruangan', $term);
+        } elseif ($cat === 'kondisi') {
+            $this->db->like('a.kondisi', $term);
+        } elseif ($cat === 'stok') {
+            $this->db->where('a.jumlah_tersedia >=', (int)$term);
+        } else {
+            $this->db->group_start()
+                     ->like('a.nama_aset', $term)
+                     ->or_like('a.kode_aset', $term)
+                     ->or_like('r.ruangan', $term)
+                     ->or_like('a.kondisi', $term)
+                     ->group_end();
+        }
+
+        $this->db->order_by('a.nama_aset', 'ASC');
+        $this->db->limit(8);
+        $query = $this->db->get()->result();
+
+        $out = [];
+        foreach ($query as $r) {
+            $out[] = [
+                'id_aset'         => $r->id_aset,
+                'nama_aset'       => $r->nama_aset ?: 'Alat Studio',
+                'kode_aset'       => $r->kode_aset ?: '-',
+                'kondisi'         => $r->kondisi ?: 'Baik',
+                'jumlah_tersedia' => (int) $r->jumlah_tersedia,
+                'ruangan'         => $r->nama_ruangan,
+                'gambar'          => $r->gambar ?: '',
+            ];
+        }
+        return $out;
+    }
+
     public function get_detail_by_group_id($group_id) {
         $this->db->select('
             p.id_peminjaman,
