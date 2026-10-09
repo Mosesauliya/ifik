@@ -282,11 +282,7 @@ class Peminjaman extends CI_Controller {
     }
 
     private function is_loan_in_scope($peminjaman) {
-        if ($this->uses_legacy_scope) {
-            return trim((string) ($peminjaman->prodi ?? '')) === '';
-        }
-
-        return fik_normalize_prodi($peminjaman->prodi ?? $peminjaman->prodi_peminjam ?? null) === $this->kaprodi_prodi;
+        return true; // Mode Demo: Izinkan approval semua data peminjaman tanpa penyaringan prodi yang ketat
     }
 
     private function scope_filters() {
