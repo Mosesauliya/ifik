@@ -282,7 +282,60 @@
                 }
             }, 4000);
             </script>
-        <?php endif; ?>        <!-- Hero Welcome & Progress Radial Card (3D Rich Orange Bento Layout) -->
+        <?php endif; ?>
+
+        <?php if($this->session->flashdata('error')): ?>
+            <!-- Floating Side Toast Alert (Error) -->
+            <div id="sideToastAlertError" class="fixed top-20 right-6 z-[9999] max-w-sm w-full bg-slate-900/95 text-white p-4 rounded-2xl shadow-2xl border border-rose-500/50 backdrop-blur-md flex items-start gap-3 transition-all duration-300">
+                <div class="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center text-base font-bold shrink-0 shadow-md box-3d">
+                    <i class="bi bi-x-circle-fill"></i>
+                </div>
+                <div class="flex-grow min-w-0">
+                    <h4 class="text-xs font-bold text-rose-400 uppercase tracking-wider">Gagal / Perhatian</h4>
+                    <p class="text-xs text-slate-200 font-medium leading-snug mt-0.5"><?= $this->session->flashdata('error'); ?></p>
+                </div>
+                <button type="button" onclick="document.getElementById('sideToastAlertError').remove()" class="text-slate-400 hover:text-white font-bold text-xs p-1 transition cursor-pointer">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <script>
+            setTimeout(function() {
+                const toast = document.getElementById('sideToastAlertError');
+                if (toast) {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(30px)';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 6000);
+            </script>
+        <?php endif; ?>
+
+        <?php if($this->session->flashdata('warning')): ?>
+            <!-- Floating Side Toast Alert (Warning) -->
+            <div id="sideToastAlertWarning" class="fixed top-20 right-6 z-[9999] max-w-sm w-full bg-slate-900/95 text-white p-4 rounded-2xl shadow-2xl border border-amber-500/50 backdrop-blur-md flex items-start gap-3 transition-all duration-300">
+                <div class="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center text-base font-bold shrink-0 shadow-md box-3d">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+                <div class="flex-grow min-w-0">
+                    <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Perhatian</h4>
+                    <p class="text-xs text-slate-200 font-medium leading-snug mt-0.5"><?= $this->session->flashdata('warning'); ?></p>
+                </div>
+                <button type="button" onclick="document.getElementById('sideToastAlertWarning').remove()" class="text-slate-400 hover:text-white font-bold text-xs p-1 transition cursor-pointer">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <script>
+            setTimeout(function() {
+                const toast = document.getElementById('sideToastAlertWarning');
+                if (toast) {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(30px)';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 6000);
+            </script>
+        <?php endif; ?>
+        <!-- Hero Welcome & Progress Radial Card (3D Rich Orange Bento Layout) -->
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <!-- Left Hero Panel (3 Cols) - Rich Orange 3D Card with Clear Campus Building Background -->
             <div class="lg:col-span-3 card-3d-orange rounded-2xl p-7 sm:p-8 relative overflow-hidden flex flex-col justify-between text-white">
@@ -808,8 +861,31 @@
             }
         </style>
         <div id="modalFileBreakdown" style="display: none; z-index: 100050 !important;" onclick="if(event.target === this) closeFileBreakdownModal()" class="fixed inset-0 z-[100050] flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 sm:p-6 md:p-8 overflow-hidden">
-            <div class="bg-white rounded-3xl max-w-3xl lg:max-w-4xl w-full shadow-2xl border border-orange-100 max-h-[88vh] flex flex-col overflow-hidden my-auto mx-auto">
-                <form action="<?= site_url('mahasiswa/upload_revisi_berkas'); ?>" method="POST" enctype="multipart/form-data" class="flex flex-col flex-1 min-h-0">
+            <div class="bg-white rounded-3xl max-w-3xl lg:max-w-4xl w-full shadow-2xl border border-orange-100 max-h-[88vh] flex flex-col overflow-hidden my-auto mx-auto relative">
+                <!-- Loading Overlay saat upload revisi berjalan -->
+                <div id="loadingOverlayRevisi" class="hidden absolute inset-0 z-[100] bg-slate-900/75 backdrop-blur-xs flex flex-col items-center justify-center text-center p-6 transition-all duration-300">
+                    <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-orange-100 space-y-4">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-400 text-white flex items-center justify-center text-3xl mx-auto shadow-lg shadow-orange-500/30">
+                            <i class="bi bi-cloud-arrow-up-fill animate-bounce"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-orange-600 bg-orange-100 px-3 py-1 rounded-full border border-orange-200">MENGUNGGAH BERKAS</span>
+                            <h4 class="text-base font-extrabold text-slate-900 mt-2">Sedang Mengirimkan Revisi Berkas</h4>
+                            <p class="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
+                                Mohon tunggu, berkas perbaikan sedang diunggah dan disimpan ke server. Halaman akan dimuat ulang setelah selesai.
+                            </p>
+                        </div>
+                        <div class="flex items-center justify-center gap-2 text-xs font-bold text-orange-600 pt-1">
+                            <svg class="animate-spin h-5 w-5 text-orange-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Memproses pengiriman, tombol dikunci...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="formRevisiBerkas" action="<?= site_url('mahasiswa/upload_revisi_berkas'); ?>" method="POST" enctype="multipart/form-data" class="flex flex-col flex-1 min-h-0" onsubmit="return handleFormRevisiSubmit(event)">
                     <!-- Header Modal (Fixed) -->
                     <div class="p-5 sm:p-6 pb-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
                         <div class="flex items-center gap-3">
@@ -1064,8 +1140,8 @@
                                                     <span class="text-[10px] font-bold text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full">PDF &bull; Maks 5MB</span>
                                                 </div>
 
-                                                <input type="file" name="<?= $f['field']; ?>" accept=".pdf" 
-                                                       onchange="highlightSelectedRevisiFile(this, 'badge_revisi_<?= $f['field']; ?>')"
+                                                <input type="file" name="<?= $f['field']; ?>" accept=".pdf,application/pdf" 
+                                                       onchange="highlightSelectedRevisiFile(this, 'badge_revisi_<?= $f['field']; ?>', 'error_revisi_<?= $f['field']; ?>')"
                                                        class="block w-full text-xs text-slate-700 font-bold file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:uppercase file:tracking-wider file:bg-gradient-to-r file:from-orange-600 file:to-amber-600 file:text-white hover:file:from-orange-700 hover:file:to-amber-700 cursor-pointer border-2 border-slate-200 rounded-xl p-1.5 bg-slate-50 hover:bg-orange-50/30 transition shadow-2xs">
 
                                                 <!-- Highlight Box Preview Saat File Baru Dipilih -->
@@ -1083,6 +1159,19 @@
                                                     <span class="text-emerald-700 text-xs font-black shrink-0 hidden sm:flex items-center gap-1">
                                                         <i class="bi bi-check-circle-fill text-emerald-600 text-sm"></i> Terpilih
                                                     </span>
+                                                </div>
+
+                                                <!-- Error Box Saat File Gagal Validasi (Bukan PDF atau > 5MB) -->
+                                                <div id="error_revisi_<?= $f['field']; ?>" class="hidden p-3 rounded-xl bg-rose-50 border-2 border-rose-300 text-rose-950 flex items-center gap-2.5 shadow-xs transition-all">
+                                                    <div class="w-8 h-8 rounded-lg bg-rose-600 text-white flex items-center justify-center text-base font-bold shrink-0 shadow-xs">
+                                                        <i class="bi bi-exclamation-triangle-fill"></i>
+                                                    </div>
+                                                    <div class="min-w-0 flex-1">
+                                                        <div class="flex items-center gap-1.5">
+                                                            <span class="text-[9px] font-black uppercase tracking-wider text-rose-800 bg-rose-200/80 px-2 py-0.5 rounded-full">File Gagal / Tidak Sesuai</span>
+                                                        </div>
+                                                        <p class="text-xs font-semibold text-rose-900 mt-1 file-error-label leading-snug"></p>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1246,7 +1335,7 @@
                             Tutup
                         </button>
                         <?php if($rej_items > 0): ?>
-                            <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-black uppercase tracking-wider text-xs shadow-md transition box-3d hover:scale-105 active:scale-95 cursor-pointer">
+                            <button type="submit" id="btnSubmitRevisi" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-black uppercase tracking-wider text-xs shadow-md transition box-3d hover:scale-105 active:scale-95 cursor-pointer">
                                 <i class="bi bi-cloud-arrow-up-fill text-sm"></i> Simpan &amp; Kirim Perbaikan (<?= $rej_items; ?> Revisi)
                             </button>
                         <?php endif; ?>
@@ -1348,22 +1437,180 @@
         }
     }
 
-    function highlightSelectedRevisiFile(input, badgeId) {
+    function highlightSelectedRevisiFile(input, badgeId, errorId) {
         const badge = document.getElementById(badgeId);
-        if (!badge) return;
-        if (input.files && input.files[0]) {
-            const file = input.files[0];
+        const errBox = document.getElementById(errorId);
+        if (errBox) errBox.classList.add('hidden');
+        if (badge) badge.classList.add('hidden');
+
+        if (!input.files || !input.files[0]) {
+            return;
+        }
+
+        const file = input.files[0];
+        const maxSizeBytes = 5 * 1024 * 1024; // 5 MB
+        const fileName = file.name || '';
+        const isPdf = fileName.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+
+        if (!isPdf) {
+            input.value = ''; // Reset input agar tidak terkirim
+            const errMsg = 'Format file salah! Berkas harus berformat PDF (.pdf). File "' + fileName + '" ditolak.';
+            if (errBox) {
+                const errLabel = errBox.querySelector('.file-error-label');
+                if (errLabel) errLabel.textContent = errMsg;
+                errBox.classList.remove('hidden');
+            }
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Format File Tidak Sesuai',
+                    text: errMsg,
+                    confirmButtonColor: '#e11d48',
+                    confirmButtonText: 'Pilih File Lain'
+                });
+            } else {
+                alert(errMsg);
+            }
+            return;
+        }
+
+        if (file.size > maxSizeBytes) {
+            input.value = ''; // Reset input agar tidak terkirim
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            const errMsg = 'Ukuran file melebihi batas (' + sizeMB + ' MB)! Maksimal ukuran file yang diizinkan adalah 5 MB.';
+            if (errBox) {
+                const errLabel = errBox.querySelector('.file-error-label');
+                if (errLabel) errLabel.textContent = errMsg;
+                errBox.classList.remove('hidden');
+            }
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Ukuran File Terlalu Besar',
+                    text: errMsg,
+                    confirmButtonColor: '#e11d48',
+                    confirmButtonText: 'Pilih File Lain'
+                });
+            } else {
+                alert(errMsg);
+            }
+            return;
+        }
+
+        // Jika memenuhi kedua kriteria (PDF & <= 5MB)
+        if (badge) {
             const nameEl = badge.querySelector('.file-name-label');
             const sizeEl = badge.querySelector('.file-size-label');
             if (nameEl) nameEl.textContent = file.name;
             if (sizeEl) {
-                const sizeKB = (file.size / 1024).toFixed(1);
-                sizeEl.textContent = `(${sizeKB} KB)`;
+                const sizeFormatted = file.size > 1024 * 1024
+                    ? (file.size / (1024 * 1024)).toFixed(2) + ' MB'
+                    : (file.size / 1024).toFixed(1) + ' KB';
+                sizeEl.textContent = '(' + sizeFormatted + ')';
             }
             badge.classList.remove('hidden');
-        } else {
-            badge.classList.add('hidden');
         }
+    }
+
+    let isSubmittingRevisi = false;
+    function handleFormRevisiSubmit(e) {
+        if (isSubmittingRevisi) {
+            if (e && e.preventDefault) e.preventDefault();
+            return false;
+        }
+
+        const form = document.getElementById('formRevisiBerkas');
+        if (!form) return true;
+
+        const fileInputs = form.querySelectorAll('input[type="file"]');
+        const textInputs = form.querySelectorAll('input[type="text"]');
+        let hasAnyInputFilled = false;
+        let hasInvalidFile = false;
+        let invalidMsg = '';
+
+        fileInputs.forEach(inp => {
+            if (inp.files && inp.files[0]) {
+                const file = inp.files[0];
+                const isPdf = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+                const isSizeOk = file.size <= 5 * 1024 * 1024;
+                if (!isPdf) {
+                    hasInvalidFile = true;
+                    invalidMsg = 'File "' + file.name + '" bukan format PDF. Harap unggah berkas berekstensi .pdf!';
+                } else if (!isSizeOk) {
+                    hasInvalidFile = true;
+                    invalidMsg = 'File "' + file.name + '" berukuran ' + (file.size / (1024*1024)).toFixed(2) + ' MB (maksimal 5 MB)!';
+                } else {
+                    hasAnyInputFilled = true;
+                }
+            }
+        });
+
+        if (hasInvalidFile) {
+            if (e && e.preventDefault) e.preventDefault();
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'File Tidak Sesuai Kriteria',
+                    text: invalidMsg + ' Pastikan seluruh berkas berformat PDF dan maksimal berukuran 5 MB.',
+                    confirmButtonColor: '#e11d48'
+                });
+            } else {
+                alert(invalidMsg);
+            }
+            return false;
+        }
+
+        textInputs.forEach(inp => {
+            if (inp.value && inp.value.trim().length > 0) {
+                hasAnyInputFilled = true;
+            }
+        });
+
+        if (!hasAnyInputFilled) {
+            if (e && e.preventDefault) e.preventDefault();
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Belum Ada Perubahan',
+                    text: 'Silakan pilih berkas PDF perbaikan atau isi perubahan judul sebelum mengirim.',
+                    confirmButtonColor: '#f97316'
+                });
+            } else {
+                alert('Silakan pilih berkas PDF perbaikan atau isi perubahan judul sebelum mengirim.');
+            }
+            return false;
+        }
+
+        // Aktifkan state loading untuk meminimalisir multiple requests / spam klik
+        isSubmittingRevisi = true;
+
+        const btnSubmit = document.getElementById('btnSubmitRevisi');
+        if (btnSubmit) {
+            btnSubmit.disabled = true;
+            btnSubmit.classList.add('opacity-75', 'cursor-not-allowed', 'pointer-events-none');
+            btnSubmit.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Mengunggah Revisi, Mohon Tunggu...
+            `;
+        }
+
+        // Kunci tombol penutup modal agar proses pengunggahan tidak terinterupsi
+        const closeBtns = document.querySelectorAll('#modalFileBreakdown button[onclick*="closeFileBreakdownModal"]');
+        closeBtns.forEach(b => {
+            b.disabled = true;
+            b.classList.add('opacity-40', 'pointer-events-none');
+        });
+
+        // Tampilkan modal overlay loading animasi
+        const loadingBanner = document.getElementById('loadingOverlayRevisi');
+        if (loadingBanner) {
+            loadingBanner.classList.remove('hidden');
+        }
+
+        return true;
     }
 
     function setModalFilter(type) {

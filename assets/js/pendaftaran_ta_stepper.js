@@ -637,6 +637,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         ['dragenter', 'dragover'].forEach(eventName => {
             zone.addEventListener(eventName, (e) => {
+                if (window.IS_LOCKED_SUBMISSION) return;
                 e.preventDefault();
                 zone.classList.add('border-orange-500', 'bg-orange-50');
             }, false);
@@ -644,6 +645,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         ['dragleave', 'drop'].forEach(eventName => {
             zone.addEventListener(eventName, (e) => {
+                if (window.IS_LOCKED_SUBMISSION) return;
                 e.preventDefault();
                 zone.classList.remove('border-orange-500', 'bg-orange-50');
             }, false);
@@ -651,6 +653,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Drop Event
         zone.addEventListener('drop', (e) => {
+            if (window.IS_LOCKED_SUBMISSION) return;
             const files = e.dataTransfer.files;
             if (files.length > 0) {
                 if (files[0].type === 'application/pdf' || files[0].name.toLowerCase().endsWith('.pdf')) {
@@ -663,9 +666,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // Click Zone (unless clicking buttons)
+        // Click Zone (unless clicking buttons or locked)
         zone.addEventListener('click', (e) => {
-            if (e.target.closest('.btn-change-file') || e.target.closest('.btn-reset-file')) return;
+            if (window.IS_LOCKED_SUBMISSION) return;
+            if (e.target.closest('.btn-change-file') || e.target.closest('.btn-reset-file') || e.target.closest('a')) return;
             if (e.target !== fileInput) {
                 fileInput.click();
             }

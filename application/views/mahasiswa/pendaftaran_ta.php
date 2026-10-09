@@ -416,18 +416,22 @@
                                                         <span class="text-[9px] font-bold text-emerald-700 uppercase tracking-wider bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300 shrink-0">FILE TERPILIH</span>
                                                         <h5 class="file-name font-bold text-xs text-slate-900 truncate max-w-[130px] sm:max-w-[200px] md:max-w-[280px] lg:max-w-[340px] block"><?= htmlspecialchars($old_filename ?: 'file.pdf'); ?></h5>
                                                     </div>
-                                                    <p class="file-size text-[10px] text-slate-500 font-medium mt-0.5">Berkas Tersimpan (Siap Diperbarui Jika Perlu)</p>
+                                                    <p class="file-size text-[10px] text-slate-500 font-medium mt-0.5">
+                                                        <?= (!empty($is_locked) || !empty($pendaftaran['is_submitted'])) ? 'Berkas Diajukan (Sedang Ditinjau Dosen Wali)' : 'Berkas Tersimpan (Siap Diperbarui Jika Perlu)'; ?>
+                                                    </p>
                                                 </div>
                                             </div>
 
-                                            <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-                                                <button type="button" class="btn-change-file text-xs bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 cursor-pointer">
-                                                    <i class="bi bi-arrow-repeat text-xs"></i> Ganti File
-                                                </button>
-                                                <button type="button" class="btn-reset-file text-xs bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 cursor-pointer">
-                                                    <i class="bi bi-trash3 text-xs"></i> Hapus
-                                                </button>
-                                            </div>
+                                            <?php if(empty($is_locked) && empty($pendaftaran['is_submitted'])): ?>
+                                                <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                                                    <button type="button" class="btn-change-file text-xs bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 cursor-pointer">
+                                                        <i class="bi bi-arrow-repeat text-xs"></i> Ganti File
+                                                    </button>
+                                                    <button type="button" class="btn-reset-file text-xs bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 cursor-pointer">
+                                                        <i class="bi bi-trash3 text-xs"></i> Hapus
+                                                    </button>
+                                                </div>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                 </div>
@@ -572,6 +576,7 @@
     ?>
     <script>
         window.CURRENT_USER_NIM = "<?= htmlspecialchars($mahasiswa['nim'] ?? ($this->session->userdata('nim') ?: ($this->session->userdata('nidn_nim') ?: ''))); ?>";
+        window.IS_LOCKED_SUBMISSION = <?= (!empty($is_locked) || !empty($pendaftaran['is_submitted'])) ? 'true' : 'false'; ?>;
         window.UPLOAD_AJAX_URL = "<?= site_url('mahasiswa/ajax_upload_file_ta'); ?>";
         window.DELETE_FILE_AJAX_URL = "<?= site_url('mahasiswa/ajax_delete_file_ta'); ?>";
         window.SAVE_DRAFT_AJAX_URL = "<?= site_url('mahasiswa/ajax_save_draft_ta'); ?>";
