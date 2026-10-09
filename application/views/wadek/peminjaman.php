@@ -50,6 +50,7 @@ $wadek_query['per_page'] = $per_page;
         .text-fik-brown { color: #5d3315 !important; }
 
         /* Custom Table Styling */
+        .modal { display: none; }
         .table-custom { border-radius: 12px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); width: 100%; table-layout: fixed; }
         .table-custom thead th { background-color: #5d3315; color: white; font-weight: 600; border: none; padding: 14px 15px; font-size: 0.82rem; letter-spacing: 0.3px; vertical-align: middle; }
         .table-custom tbody td { padding: 14px 15px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; background: white; font-size: 0.83rem; }
@@ -618,7 +619,13 @@ $wadek_query['per_page'] = $per_page;
 
                             <!-- 4. Pipeline Progress -->
                             <td>
-                                <?php $loan_progress_item = $p; $loan_progress_compact = true; include APPPATH . 'views/shared/loan_progress.php'; ?>
+                                <?php 
+                                    $loan_progress_item = $p; 
+                                    $loan_progress_compact = true; 
+                                    $loan_progress_detail_target = '#modalDetail' . $p->id_peminjaman;
+                                    include APPPATH . 'views/shared/loan_progress.php'; 
+                                    unset($loan_progress_detail_target);
+                                ?>
                             </td>
 
                             <!-- 5. Aksi Wadek -->
@@ -651,17 +658,17 @@ $wadek_query['per_page'] = $per_page;
                 $items = !empty($p->detail_barang) ? $p->detail_barang : [];
             ?>
                 <!-- Modal Detail -->
-                <div class="modal fade" id="modalDetail<?= $p->id_peminjaman ?>" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal fade" id="modalDetail<?= $p->id_peminjaman ?>" tabindex="-1" aria-labelledby="modalDetailLabel<?= $p->id_peminjaman ?>" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
                         <div class="modal-content rounded-4 border-0 shadow-lg">
                             <div class="modal-header border-bottom py-3 px-4">
-                                <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                                <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2" id="modalDetailLabel<?= $p->id_peminjaman ?>">
                                     <i class="bi bi-info-circle text-primary"></i> Detail Pengajuan Peminjaman Eksternal
                                 </h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body p-4">
-                                <div class="row g-3 mb-3">
+                                <div class="row g-3 mb-4">
                                     <div class="col-sm-6">
                                         <span class="text-muted small d-block">Nama Peminjam</span>
                                         <strong class="text-dark"><?= html_escape($p->nama_peminjam ?? '-') ?></strong>
@@ -686,7 +693,14 @@ $wadek_query['per_page'] = $per_page;
                                     </div>
                                 </div>
 
-                                <h6 class="fw-bold text-dark border-bottom pb-2 mt-4 mb-3">Daftar Barang yang Diajukan</h6>
+                                <div class="mb-4">
+                                    <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="bi bi-diagram-3 me-1 text-primary"></i> Progress &amp; Alur Peminjaman</h6>
+                                    <div class="p-3 bg-light rounded-3">
+                                        <?php $loan_progress_item = $p; $loan_progress_compact = false; include APPPATH . 'views/shared/loan_progress.php'; ?>
+                                    </div>
+                                </div>
+
+                                <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="bi bi-box-seam me-1 text-fik-orange"></i> Daftar Barang yang Diajukan</h6>
                                 <div class="table-responsive rounded-3 border">
                                     <table class="table table-sm mb-0">
                                         <thead class="bg-light">
@@ -722,8 +736,18 @@ $wadek_query['per_page'] = $per_page;
                                     </table>
                                 </div>
                             </div>
-                            <div class="modal-footer border-top py-2.5 px-4">
+                            <div class="modal-footer border-top py-2.5 px-4 d-flex justify-content-between">
                                 <button type="button" class="btn btn-sm btn-secondary rounded-3" data-bs-dismiss="modal">Tutup</button>
+                                <?php if($can_act): ?>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-sm btn-outline-danger fw-semibold rounded-3 px-3" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#modalReject<?= $p->id_peminjaman ?>">
+                                            <i class="bi bi-x-circle me-1"></i> Tolak
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-success fw-bold rounded-3 px-3" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#modalApprove<?= $p->id_peminjaman ?>">
+                                            <i class="bi bi-check-circle me-1"></i> Setujui
+                                        </button>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
