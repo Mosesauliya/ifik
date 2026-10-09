@@ -891,9 +891,16 @@ document.addEventListener('DOMContentLoaded', function () {
                         return resData;
                     })
                     .then(resData => {
-                        setDbStatus('saved', 'Draft tersimpan di database');
-                        if (notifyUser) {
-                            showInPageAlert('✅ Draft formulir dan seluruh berkas berhasil disimpan di database server!', 'success');
+                        if (resData && resData.success === false) {
+                            setDbStatus('error', resData.message || 'Gagal menyimpan draft');
+                            if (notifyUser) {
+                                showInPageAlert('⚠️ ' + (resData.message || 'Gagal menyimpan draft.'), 'error');
+                            }
+                        } else {
+                            setDbStatus('saved', 'Draft tersimpan di database');
+                            if (notifyUser) {
+                                showInPageAlert('✅ Draft formulir dan seluruh berkas berhasil disimpan di database server!', 'success');
+                            }
                         }
                     })
                     .catch(err => {

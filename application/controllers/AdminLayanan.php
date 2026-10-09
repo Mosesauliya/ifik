@@ -801,6 +801,33 @@ class AdminLayanan extends CI_Controller {
                              ->delete('file_pendaftaran');
                 }
 
+                // Kembalikan status pendaftaran ke Draft agar mahasiswa bisa mengunggah ulang file yang direset
+                if ($this->db->table_exists('guidance')) {
+                    $g_up = [];
+                    if ($this->db->field_exists('keterangan', 'guidance')) $g_up['keterangan'] = 'Draft';
+                    if (!empty($g_up)) {
+                        $this->db->group_start()
+                                 ->where_in('id_mhs', $target_ids)
+                                 ->or_where('id', 'gdn_' . $nim)
+                                 ->group_end()
+                                 ->update('guidance', $g_up);
+                    }
+                }
+                if ($this->db->table_exists('pendaftaran_ta')) {
+                    $pt_up = [
+                        'is_submitted'          => 0,
+                        'status_approval_wali'  => 'Draft',
+                        'current_stage'         => 'Draft',
+                    ];
+                    if ($this->db->field_exists('file_' . $kode_berkas, 'pendaftaran_ta')) {
+                        $pt_up['file_' . $kode_berkas] = NULL;
+                    }
+                    if ($this->db->field_exists('status_' . $kode_berkas, 'pendaftaran_ta')) {
+                        $pt_up['status_' . $kode_berkas] = 'Pending';
+                    }
+                    $this->db->where('nim', $nim)->update('pendaftaran_ta', $pt_up);
+                }
+
                 // Sync status keseluruhan
                 $this->AdminLayanan_model->sync_overall_status($nim);
             } else {
@@ -811,18 +838,45 @@ class AdminLayanan extends CI_Controller {
 
                 // Hapus SEMUA file milik mahasiswa dari file_pendaftaran
                 if ($this->db->table_exists('file_pendaftaran')) {
-                    $this->db->where_in('id_mhs', $target_ids)
+                    $this->db->group_start()
+                             ->where_in('id_mhs', $target_ids)
+                             ->or_like('id_mhs', $nim)
+                             ->group_end()
                              ->delete('file_pendaftaran');
                 }
 
-                // Reset status di guidance jika ada
+                // Reset status di guidance ke 'Draft' (bukan 'Pending' agar form mahasiswa terbuka kembali dan tidak gantung di Dosen Wali)
                 if ($this->db->table_exists('guidance')) {
                     $g_up = [];
-                    if ($this->db->field_exists('keterangan', 'guidance')) $g_up['keterangan'] = 'Pending';
+                    if ($this->db->field_exists('keterangan', 'guidance')) $g_up['keterangan'] = 'Draft';
+                    if ($this->db->field_exists('status_file', 'guidance')) $g_up['status_file'] = NULL;
+                    if ($this->db->field_exists('status_preview', 'guidance')) $g_up['status_preview'] = NULL;
                     if (!empty($g_up)) {
-                        $this->db->where_in('id_mhs', $target_ids)
+                        $this->db->group_start()
+                                 ->where_in('id_mhs', $target_ids)
+                                 ->or_where('id', 'gdn_' . $nim)
+                                 ->group_end()
                                  ->update('guidance', $g_up);
                     }
+                }
+
+                if ($this->db->table_exists('pendaftaran_ta')) {
+                    $this->db->where('nim', $nim)->update('pendaftaran_ta', [
+                        'is_submitted'          => 0,
+                        'status_approval_wali'  => 'Draft',
+                        'status_approval_admin' => 'Pending',
+                        'status_approval_koor'  => 'Pending',
+                        'status_approval_kk'    => 'Pending',
+                        'current_stage'         => 'Draft',
+                        'file_ksm'              => NULL,
+                        'file_transkrip'        => NULL,
+                        'file_pernyataan'       => NULL,
+                        'file_bebas_lab'        => NULL,
+                        'status_ksm'            => 'Pending',
+                        'status_transkrip'      => 'Pending',
+                        'status_pernyataan'     => 'Pending',
+                        'status_bebas_lab'      => 'Pending',
+                    ]);
                 }
 
                 // Sync status keseluruhan

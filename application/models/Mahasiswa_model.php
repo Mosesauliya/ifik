@@ -368,6 +368,19 @@ class Mahasiswa_model extends CI_Model {
             $is_submitted = 1;
         }
 
+        // Safety fallback: jika semua berkas fisik kosong (karena baru direset Admin LAA atau belum upload),
+        // formulir harus berstatus belum diajukan (draft) agar mahasiswa dapat mengunggah berkas.
+        $has_any_file_uploaded = false;
+        foreach ($active_keys as $k) {
+            if (!empty($files[$k]['file']) || !empty($berkas_rows[$k]['file_name']) || !empty($pt_data['file_' . $k])) {
+                $has_any_file_uploaded = true;
+                break;
+            }
+        }
+        if (!$has_any_file_uploaded) {
+            $is_submitted = 0;
+        }
+
         $status_judul = $pt_data['status_judul'] ?? null;
         $catatan_judul = $pt_data['catatan_judul'] ?? null;
 

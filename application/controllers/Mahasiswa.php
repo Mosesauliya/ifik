@@ -1049,6 +1049,8 @@ class Mahasiswa extends CI_Controller {
     }
 
     public function ajax_save_draft_ta() {
+        $prev_debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
         try {
             $nim = $this->input->post('nim') ?: $this->_get_current_nim();
             $mhs = $this->Mahasiswa_model->get_mahasiswa($nim);
@@ -1186,6 +1188,7 @@ class Mahasiswa extends CI_Controller {
                 }
             }
 
+            $this->db->db_debug = $prev_debug;
             $this->output
                 ->set_content_type('application/json')
                 ->set_output(json_encode([
@@ -1194,6 +1197,7 @@ class Mahasiswa extends CI_Controller {
                     'message' => 'Draft formulir & berkas berhasil tersimpan di database server.'
                 ]));
         } catch (\Throwable $e) {
+            $this->db->db_debug = $prev_debug;
             log_message('error', 'ajax_save_draft_ta exception: ' . $e->getMessage());
             $this->output
                 ->set_content_type('application/json')

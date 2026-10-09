@@ -188,11 +188,19 @@ class AdminLayanan_model extends CI_Model {
                 $this->db->db_debug = $prev_debug;
                 if (!empty($rows)) {
                     foreach ($rows as $r) {
+                        $k_code = $r['kode_berkas'];
                         $st_v = $r['status_verifikasi'] ?? 'Pending';
                         $cleanSt = ($st_v === 'Approved' || $st_v === 'Valid') ? 'Valid' : (($st_v === 'Rejected' || $st_v === 'Invalid') ? 'Invalid' : 'Pending');
                         $r['status'] = $cleanSt;
                         $r['status_verifikasi'] = $cleanSt;
-                        $map[$r['kode_berkas']] = $r;
+                        if (!isset($map[$k_code])) {
+                            $map[$k_code] = $r;
+                        } else {
+                            if (empty($r['file_name']) && !empty($map[$k_code]['file_name'])) {
+                                $r['file_name'] = $map[$k_code]['file_name'];
+                            }
+                            $map[$k_code] = $r;
+                        }
                     }
                 }
             } catch (Throwable $e) {
@@ -221,11 +229,12 @@ class AdminLayanan_model extends CI_Model {
             $prev_debug = $this->db->db_debug;
             $this->db->db_debug = FALSE;
             try {
-                $u = $this->db->where('nim', $clean_nim)
-                              ->or_where('nidn_nim', $clean_nim)
-                              ->or_where('username', $clean_nim)
-                              ->get($user_tbl)
-                              ->row_array();
+                $this->db->group_start();
+                if ($this->db->field_exists('nim', $user_tbl)) $this->db->where('nim', $clean_nim);
+                if ($this->db->field_exists('nidn_nim', $user_tbl)) $this->db->or_where('nidn_nim', $clean_nim);
+                if ($this->db->field_exists('username', $user_tbl)) $this->db->or_where('username', $clean_nim);
+                $this->db->group_end();
+                $u = $this->db->get($user_tbl)->row_array();
                 if ($u && !empty($u['id'])) {
                     $ids[] = $u['id'];
                     $ids[] = (string)$u['id'];
@@ -389,10 +398,20 @@ class AdminLayanan_model extends CI_Model {
             }
 
             if ($check) {
-                $this->db->where('id', $check['id'])->update('file_pendaftaran', $fp_update);
+                if (!empty($check['id'])) {
+                    $this->db->where('id', $check['id'])->update('file_pendaftaran', $fp_update);
+                } else {
+                    $this->db->where_in('id_mhs', $target_ids)
+                        ->group_start()
+                            ->like('nama', $kode_berkas)
+                            ->or_like('file', $kode_berkas)
+                        ->group_end()
+                        ->update('file_pendaftaran', $fp_update);
+                }
             } else {
                 $u_id = !empty($target_ids) ? $target_ids[0] : ('usr_mhs_' . $clean_nim);
                 $ins_fp = array(
+                    'id'              => 'fp_' . $clean_nim . '_' . $kode_berkas . '_' . time(),
                     'id_mhs'          => $u_id,
                     'nama'            => $kode_berkas,
                     'file'            => $file_name ?: ($kode_berkas . '_' . $clean_nim . '.pdf'),
@@ -400,11 +419,10 @@ class AdminLayanan_model extends CI_Model {
                     'komentar'        => $catatan ?: '',
                     'date'            => date('Y-m-d H:i:s'),
                     'date_edit'       => date('Y-m-d H:i:s'),
-                    'view_adminlaa'   => 1
+                    'view_adminlaa'   => 1,
+                    'view_doswal'     => 1,
+                    'status_doswal'   => 'Approved'
                 );
-                if ($this->db->field_exists('status_doswal', 'file_pendaftaran')) {
-                    $ins_fp['status_doswal'] = 'Approved';
-                }
                 $this->db->insert('file_pendaftaran', $ins_fp);
             }
         }
@@ -1312,7 +1330,13 @@ class AdminLayanan_model extends CI_Model {
             $pb_rows = $this->db->where_in('nim', $nims)->get('pendaftaran_berkas')->result_array();
             if (!empty($pb_rows)) {
                 foreach ($pb_rows as $r) {
-                    $student_maps[$r['nim']][$r['kode_berkas']] = $r;
+                    $c_nim = $r['nim'];
+                    $k_code = $r['kode_berkas'];
+                    if (!isset($student_maps[$c_nim][$k_code])) {
+                        $student_maps[$c_nim][$k_code] = $r;
+                    } else if (empty($student_maps[$c_nim][$k_code]['file_name']) && !empty($r['file_name'])) {
+                        $student_maps[$c_nim][$k_code]['file_name'] = $r['file_name'];
+                    }
                 }
             }
         }

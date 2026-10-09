@@ -801,8 +801,8 @@ class DosenWali_model extends CI_Model {
                 $is_draft = true;
             }
 
-            // Jika statusnya masih Draft (belum difinalisasi oleh mahasiswa), jangan munculkan di dashboard approval Dosen Wali
-            if ($is_draft) {
+            // Jika statusnya masih Draft (belum difinalisasi oleh mahasiswa) atau berkas kosong (setelah direset Admin LAA), jangan munculkan di dashboard approval Dosen Wali
+            if ($is_draft || empty($info['files'])) {
                 continue;
             }
 
