@@ -140,8 +140,13 @@ class AdminLayanan_model extends CI_Model {
 
         // 1. Fetch from file_pendaftaran
         if ($this->db->table_exists('file_pendaftaran')) {
-            $target_ids = array_unique(['usr_mhs_' . $nim, 'mhs_' . $nim, 'usr_' . $nim, $nim]);
-            $fp_rows = $this->db->where_in('id_mhs', $target_ids)->get('file_pendaftaran')->result_array();
+            $target_ids = $this->get_student_target_ids($nim);
+            $fp_rows = $this->db->group_start()
+                                ->where_in('id_mhs', $target_ids)
+                                ->or_like('id_mhs', $nim)
+                                ->group_end()
+                                ->get('file_pendaftaran')
+                                ->result_array();
             if (!empty($fp_rows)) {
                 foreach ($fp_rows as $fp) {
                     $namaDoc = strtolower($fp['nama'] ?? '');
@@ -282,27 +287,26 @@ class AdminLayanan_model extends CI_Model {
             $this->db->where('nim', $nim)->update('pendaftaran_ta', $ta_data);
         }
 
-        // 2. Sync to file_pendaftaran
+        // 2. Sync to file_pendaftaran - ensure view_adminlaa is recorded and only sync all Approved when whole submission is Approved
         if ($this->db->table_exists('file_pendaftaran')) {
             $target_ids = $this->get_student_target_ids($nim);
             $fp_update = array();
-            if ($this->db->field_exists('status_adminlaa', 'file_pendaftaran')) {
-                $fp_update['status_adminlaa'] = $overall_status;
-            }
             if ($this->db->field_exists('view_adminlaa', 'file_pendaftaran')) {
                 $fp_update['view_adminlaa'] = 1;
             }
-            if ($this->db->field_exists('status_admin', 'file_pendaftaran')) {
-                $fp_update['status_admin'] = $overall_status;
-            }
-            if ($this->db->field_exists('status_laa', 'file_pendaftaran')) {
-                $fp_update['status_laa'] = $overall_status;
-            }
-            if ($this->db->field_exists('status_admin_laa', 'file_pendaftaran')) {
-                $fp_update['status_admin_laa'] = $overall_status;
-            }
-            if ($catatan !== null && $this->db->field_exists('komentar', 'file_pendaftaran')) {
-                $fp_update['komentar'] = $catatan;
+            if ($overall_status === 'Approved') {
+                if ($this->db->field_exists('status_adminlaa', 'file_pendaftaran')) {
+                    $fp_update['status_adminlaa'] = 'Approved';
+                }
+                if ($this->db->field_exists('status_admin', 'file_pendaftaran')) {
+                    $fp_update['status_admin'] = 'Approved';
+                }
+                if ($this->db->field_exists('status_laa', 'file_pendaftaran')) {
+                    $fp_update['status_laa'] = 'Approved';
+                }
+                if ($this->db->field_exists('status_admin_laa', 'file_pendaftaran')) {
+                    $fp_update['status_admin_laa'] = 'Approved';
+                }
             }
             if ($this->db->field_exists('date_edit', 'file_pendaftaran')) {
                 $fp_update['date_edit'] = date('Y-m-d H:i:s');
@@ -333,7 +337,7 @@ class AdminLayanan_model extends CI_Model {
             $nama_berkas = $arg5;
             $catatan     = $arg6;
         } else if ($arg5 !== null) {
-            if ($status === 'Pending' || ($this->db->table_exists('syarat_berkas_ta') && $this->db->get_where('syarat_berkas_ta', ['nama_berkas' => $arg5])->num_rows() > 0)) {
+            if ($this->db->table_exists('syarat_berkas_ta') && $this->db->get_where('syarat_berkas_ta', ['nama_berkas' => $arg5])->num_rows() > 0) {
                 $nama_berkas = $arg5;
             } else {
                 $catatan = $arg5;
@@ -389,55 +393,104 @@ class AdminLayanan_model extends CI_Model {
             $this->db->where('nim', $nim)->update('pendaftaran_ta', array('status_' . $kode_berkas => $status));
         }
 
-        // Sync individual file matching row to file_pendaftaran table if present
+        // Sync individual file matching row to file_pendaftaran table if present (matching DosenWali logic)
         if ($this->db->table_exists('file_pendaftaran')) {
             $target_ids = $this->get_student_target_ids($nim);
-            $fp_status = ($enum_status === 'Valid') ? 'Approved' : (($enum_status === 'Invalid') ? 'Rejected' : 'Pending');
-            $fp_update = array();
-            if ($this->db->field_exists('status_adminlaa', 'file_pendaftaran')) {
-                $fp_update['status_adminlaa'] = $fp_status;
-            }
-            if ($this->db->field_exists('view_adminlaa', 'file_pendaftaran')) {
-                $fp_update['view_adminlaa'] = 1;
-            }
-            if ($this->db->field_exists('status_admin', 'file_pendaftaran')) {
-                $fp_update['status_admin'] = $fp_status;
-            }
-            if ($this->db->field_exists('status_laa', 'file_pendaftaran')) {
-                $fp_update['status_laa'] = $fp_status;
-            }
-            if ($this->db->field_exists('status_admin_laa', 'file_pendaftaran')) {
-                $fp_update['status_admin_laa'] = $fp_status;
-            }
-            if ($catatan !== null && $this->db->field_exists('komentar', 'file_pendaftaran')) {
-                $fp_update['komentar'] = $catatan;
-            }
-            if ($this->db->field_exists('date_edit', 'file_pendaftaran')) {
-                $fp_update['date_edit'] = date('Y-m-d H:i:s');
-            }
+            $clean_nim  = preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', (string)$nim);
+            $fp_status  = ($enum_status === 'Valid') ? 'Approved' : (($enum_status === 'Invalid') ? 'Rejected' : 'Pending');
 
-            if (!empty($fp_update) && !empty($target_ids)) {
-                $this->db->where_in('id_mhs', $target_ids);
-                $this->db->group_start();
-                    $this->db->like('nama', $kode_berkas);
-                    $this->db->or_like('file', $kode_berkas);
+            $check = $this->db->group_start()
+                ->where_in('id_mhs', $target_ids)
+                ->or_like('id_mhs', $nim)
+                ->group_end()
+                ->group_start()
+                    ->like('nama', $kode_berkas)
+                    ->or_like('file', $kode_berkas);
+            if ($kode_berkas === 'bebas_lab') {
+                $this->db->or_like('nama', 'bebas')
+                         ->or_like('nama', 'lab')
+                         ->or_like('file', 'bebas')
+                         ->or_like('file', 'lab');
+            } elseif ($kode_berkas === 'pernyataan') {
+                $this->db->or_like('nama', 'pernyataan')
+                         ->or_like('file', 'pernyataan');
+            } elseif ($kode_berkas === 'transkrip') {
+                $this->db->or_like('nama', 'transkrip')
+                         ->or_like('file', 'transkrip');
+            } elseif ($kode_berkas === 'ksm') {
+                $this->db->or_like('nama', 'ksm')
+                         ->or_like('file', 'ksm');
+            }
+            $check = $this->db->group_end()
+                ->get('file_pendaftaran')
+                ->row_array();
+
+            if ($check) {
+                $fp_update = array();
+                if ($this->db->field_exists('status_adminlaa', 'file_pendaftaran')) {
+                    $fp_update['status_adminlaa'] = $fp_status;
+                }
+                if ($this->db->field_exists('view_adminlaa', 'file_pendaftaran')) {
+                    $fp_update['view_adminlaa'] = 1;
+                }
+                if ($this->db->field_exists('status_admin', 'file_pendaftaran')) {
+                    $fp_update['status_admin'] = $fp_status;
+                }
+                if ($this->db->field_exists('status_laa', 'file_pendaftaran')) {
+                    $fp_update['status_laa'] = $fp_status;
+                }
+                if ($this->db->field_exists('status_admin_laa', 'file_pendaftaran')) {
+                    $fp_update['status_admin_laa'] = $fp_status;
+                }
+                if ($catatan !== null && $this->db->field_exists('komentar', 'file_pendaftaran')) {
+                    $fp_update['komentar'] = $catatan;
+                }
+                if ($this->db->field_exists('date_edit', 'file_pendaftaran')) {
+                    $fp_update['date_edit'] = date('Y-m-d H:i:s');
+                }
+
+                if (!empty($fp_update)) {
+                    $this->db->group_start()
+                        ->where_in('id_mhs', $target_ids)
+                        ->or_like('id_mhs', $nim)
+                    ->group_end()
+                    ->group_start()
+                        ->like('nama', $kode_berkas)
+                        ->or_like('file', $kode_berkas);
                     if ($kode_berkas === 'bebas_lab') {
-                        $this->db->or_like('nama', 'bebas');
-                        $this->db->or_like('nama', 'lab');
-                        $this->db->or_like('file', 'bebas');
-                        $this->db->or_like('file', 'lab');
+                        $this->db->or_like('nama', 'bebas')
+                                 ->or_like('nama', 'lab')
+                                 ->or_like('file', 'bebas')
+                                 ->or_like('file', 'lab');
                     } elseif ($kode_berkas === 'pernyataan') {
-                        $this->db->or_like('nama', 'pernyataan');
-                        $this->db->or_like('file', 'pernyataan');
+                        $this->db->or_like('nama', 'pernyataan')
+                                 ->or_like('file', 'pernyataan');
                     } elseif ($kode_berkas === 'transkrip') {
-                        $this->db->or_like('nama', 'transkrip');
-                        $this->db->or_like('file', 'transkrip');
+                        $this->db->or_like('nama', 'transkrip')
+                                 ->or_like('file', 'transkrip');
                     } elseif ($kode_berkas === 'ksm') {
-                        $this->db->or_like('nama', 'ksm');
-                        $this->db->or_like('file', 'ksm');
+                        $this->db->or_like('nama', 'ksm')
+                                 ->or_like('file', 'ksm');
                     }
-                $this->db->group_end();
-                $this->db->update('file_pendaftaran', $fp_update);
+                    $this->db->group_end()
+                        ->update('file_pendaftaran', $fp_update);
+                }
+            } else {
+                $u_id = !empty($target_ids) ? $target_ids[0] : ('usr_mhs_' . $clean_nim);
+                $ins_fp = array(
+                    'id_mhs'          => $u_id,
+                    'nama'            => $kode_berkas,
+                    'file'            => $file_name ?: ($kode_berkas . '_' . $nim . '.pdf'),
+                    'status_adminlaa' => $fp_status,
+                    'komentar'        => $catatan ?: '',
+                    'date'            => date('Y-m-d H:i:s'),
+                    'date_edit'       => date('Y-m-d H:i:s'),
+                    'view_adminlaa'   => 1
+                );
+                if ($this->db->field_exists('status_doswal', 'file_pendaftaran')) {
+                    $ins_fp['status_doswal'] = 'Approved';
+                }
+                $this->db->insert('file_pendaftaran', $ins_fp);
             }
         }
 
@@ -519,27 +572,26 @@ class AdminLayanan_model extends CI_Model {
             $this->db->update('pendaftaran_ta', $data);
         }
 
-        // Also sync overall status to file_pendaftaran table for decoupled DB architecture
+        // Also ensure view_adminlaa is recorded on file_pendaftaran table
         if ($this->db->table_exists('file_pendaftaran')) {
             $target_ids = $this->get_student_target_ids($nim);
             $fp_update = array();
-            if ($this->db->field_exists('status_adminlaa', 'file_pendaftaran')) {
-                $fp_update['status_adminlaa'] = $status_approval;
-            }
             if ($this->db->field_exists('view_adminlaa', 'file_pendaftaran')) {
                 $fp_update['view_adminlaa'] = 1;
             }
-            if ($this->db->field_exists('status_admin', 'file_pendaftaran')) {
-                $fp_update['status_admin'] = $status_approval;
-            }
-            if ($this->db->field_exists('status_laa', 'file_pendaftaran')) {
-                $fp_update['status_laa'] = $status_approval;
-            }
-            if ($this->db->field_exists('status_admin_laa', 'file_pendaftaran')) {
-                $fp_update['status_admin_laa'] = $status_approval;
-            }
-            if ($catatan !== null && $this->db->field_exists('komentar', 'file_pendaftaran')) {
-                $fp_update['komentar'] = $catatan;
+            if ($status_approval === 'Approved') {
+                if ($this->db->field_exists('status_adminlaa', 'file_pendaftaran')) {
+                    $fp_update['status_adminlaa'] = 'Approved';
+                }
+                if ($this->db->field_exists('status_admin', 'file_pendaftaran')) {
+                    $fp_update['status_admin'] = 'Approved';
+                }
+                if ($this->db->field_exists('status_laa', 'file_pendaftaran')) {
+                    $fp_update['status_laa'] = 'Approved';
+                }
+                if ($this->db->field_exists('status_admin_laa', 'file_pendaftaran')) {
+                    $fp_update['status_admin_laa'] = 'Approved';
+                }
             }
             if ($this->db->field_exists('date_edit', 'file_pendaftaran')) {
                 $fp_update['date_edit'] = date('Y-m-d H:i:s');
@@ -576,7 +628,7 @@ class AdminLayanan_model extends CI_Model {
         }
 
         if ($this->db->table_exists('file_pendaftaran')) {
-            $target_ids = array_unique(['usr_mhs_' . $nim, 'mhs_' . $nim, $nim]);
+            $target_ids = $this->get_student_target_ids($nim);
             $fp_update = array();
             if ($this->db->field_exists('status_adminlaa', 'file_pendaftaran')) {
                 $fp_update['status_adminlaa'] = 'Pending';
@@ -594,7 +646,11 @@ class AdminLayanan_model extends CI_Model {
                 $fp_update['komentar'] = NULL;
             }
             if (!empty($fp_update)) {
-                $this->db->where_in('id_mhs', $target_ids)->update('file_pendaftaran', $fp_update);
+                $this->db->group_start()
+                         ->where_in('id_mhs', $target_ids)
+                         ->or_like('id_mhs', $nim)
+                         ->group_end()
+                         ->update('file_pendaftaran', $fp_update);
             }
         }
 
