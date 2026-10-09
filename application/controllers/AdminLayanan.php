@@ -205,7 +205,7 @@ class AdminLayanan extends CI_Controller {
         $student_berkas_map = $this->AdminLayanan_model->get_student_berkas_map($nim);
         $file_name = $student_berkas_map[$kode_berkas]['file_name'] ?? ($detail['file_' . $kode_berkas] ?? ($kode_berkas . '_' . $nim . '.pdf'));
 
-        // Save status directly to file_pendaftaran and pendaftaran_berkas
+        // Save status directly to file_pendaftaran
         $this->AdminLayanan_model->save_student_berkas($nim, $kode_berkas, $file_name, $status, $catatan);
 
         // Recompute all berkas summary and sync overall status
@@ -358,11 +358,8 @@ class AdminLayanan extends CI_Controller {
         // Mark view_adminlaa = 1 in file_pendaftaran when Admin LAA views student's berkas
         if ($this->db->table_exists('file_pendaftaran')) {
             $target_ids = $this->AdminLayanan_model->get_student_target_ids($nim);
-            if ($this->db->field_exists('view_adminlaa', 'file_pendaftaran')) {
-                $this->db->group_start()
-                         ->where_in('id_mhs', $target_ids)
-                         ->or_like('id_mhs', $nim)
-                         ->group_end()
+            if ($this->db->field_exists('view_adminlaa', 'file_pendaftaran') && !empty($target_ids)) {
+                $this->db->where_in('id_mhs', $target_ids)
                          ->update('file_pendaftaran', ['view_adminlaa' => 1]);
             }
         }
@@ -768,20 +765,13 @@ class AdminLayanan extends CI_Controller {
             $target_ids = $this->AdminLayanan_model->get_student_target_ids($nim);
 
             if (!empty($kode_berkas) && count($nims) === 1) {
-                // Reset satu file
-                $this->db->where('nim', $nim)
-                         ->where('kode_berkas', $kode_berkas)
-                         ->delete('pendaftaran_berkas');
-
                 // Hapus dari file_pendaftaran jika ada
                 if ($this->db->table_exists('file_pendaftaran')) {
-                    $this->db->group_start()
-                             ->where_in('id_mhs', $target_ids)
-                             ->or_like('id_mhs', $nim)
-                             ->group_end()
+                    $this->db->where_in('id_mhs', $target_ids)
                              ->group_start()
                              ->like('nama', $kode_berkas)
-                             ->or_like('file', $kode_berkas);
+                             ->or_like('file', $kode_berkas)
+                             ->or_like('id', $kode_berkas);
                     if ($kode_berkas === 'bebas_lab') {
                         $this->db->or_like('nama', 'bebas')
                                  ->or_like('nama', 'lab')
@@ -804,11 +794,6 @@ class AdminLayanan extends CI_Controller {
                 // Sync status keseluruhan
                 $this->AdminLayanan_model->sync_overall_status($nim);
             } else {
-                // Reset semua file untuk NIM ini
-                if ($this->db->table_exists('pendaftaran_berkas')) {
-                    $this->db->where('nim', $nim)->delete('pendaftaran_berkas');
-                }
-
                 // Hapus SEMUA file milik mahasiswa dari file_pendaftaran
                 if ($this->db->table_exists('file_pendaftaran')) {
                     $this->db->where_in('id_mhs', $target_ids)
