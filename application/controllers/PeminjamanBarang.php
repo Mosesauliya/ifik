@@ -60,21 +60,33 @@ class PeminjamanBarang extends CI_Controller {
         $st = (string)($peminjaman->status ?? '');
         $status_kaur = (string)($peminjaman->status_kaur ?? 'Pending');
         $status_kaprodi = (string)($peminjaman->status_kaprodi ?? 'Pending');
+        $status_wadek = (string)($peminjaman->status_wadek1 ?? 'Pending');
+        $is_external = (($peminjaman->jenis_peminjaman ?? '') === 'luar_kampus' || ($peminjaman->jenis_peminjaman ?? '') === 'external');
 
-        if (in_array($st, ['Selesai', 'Dikembalikan', 'Ditolak'], true)) {
+        if (in_array($st, ['Selesai', 'Dikembalikan', 'Ditolak', 'Kedaluwarsa / Ditolak Otomatis'], true)) {
             $workflow_stage = 'invalid';
             $qr_valid = false;
             $qr_message = $this->qr_message_for($peminjaman);
-        } elseif ($st === 'Menunggu ACC Kaprodi' && $status_kaprodi !== 'Disetujui') {
+        } elseif ($st === 'Menunggu ACC Kaprodi' || $status_kaprodi !== 'Disetujui') {
             $workflow_stage = 'menunggu_acc';
             $qr_valid = false;
             $qr_message = 'Pengajuan masih menunggu persetujuan Kaprodi. Barang belum boleh diserahterimakan.';
-        } else {
-            // Semua status pengajuan (Menunggu Verifikasi Laboran, Menunggu ACC Kaur, Disetujui, dll)
-            // langsung siap untuk diverifikasi dan dikonfirmasi serah terima oleh Laboran di meja lab
+        } elseif (in_array($st, ['Menunggu ACC Kaur', 'Menunggu Verifikasi Laboran'], true) || $status_kaur !== 'Disetujui') {
+            $workflow_stage = 'menunggu_acc';
+            $qr_valid = false;
+            $qr_message = 'Pengajuan masih menunggu persetujuan Kepala Urusan (Kaur). Barang belum boleh diserahterimakan.';
+        } elseif ($is_external && (in_array($st, ['Menunggu ACC Wadek', 'Menunggu Persetujuan Wadek'], true) || $status_wadek !== 'Disetujui')) {
+            $workflow_stage = 'menunggu_acc';
+            $qr_valid = false;
+            $qr_message = 'Pengajuan peminjaman luar kampus masih menunggu persetujuan Wakil Dekan (Wadek). Barang belum boleh diserahterimakan.';
+        } elseif (in_array($st, ['Disetujui (Menunggu Pengambilan)', 'Disetujui (Menunggu Finalisasi QR)'], true)) {
             $workflow_stage = 'serah_terima';
             $qr_valid = true;
-            $qr_message = 'Pengajuan siap untuk verifikasi fisik dan serah terima barang oleh Laboran.';
+            $qr_message = 'Pengajuan telah disetujui lengkap dan siap untuk verifikasi fisik serta serah terima barang oleh Laboran.';
+        } else {
+            $workflow_stage = 'invalid';
+            $qr_valid = false;
+            $qr_message = 'Status transaksi (' . $st . ') tidak valid untuk serah terima barang.';
         }
 
         $data['title'] = 'Serah Terima & Verifikasi Barang';
@@ -269,14 +281,33 @@ class PeminjamanBarang extends CI_Controller {
         }
 
         // Cek bahwa transaksi belum ditolak atau sudah selesai
-        if (in_array(($peminjaman->status ?? ''), ['Ditolak', 'Selesai', 'Dikembalikan', 'Sedang Dipinjam'], true)) {
+        if (in_array(($peminjaman->status ?? ''), ['Ditolak', 'Selesai', 'Dikembalikan', 'Sedang Dipinjam', 'Kedaluwarsa / Ditolak Otomatis'], true)) {
             $this->session->set_flashdata('error', 'Status transaksi (' . $peminjaman->status . ') tidak valid untuk serah terima.');
             redirect('peminjamanbarang/serah_terima/' . rawurlencode($group_id));
             return;
         }
 
-        if (($peminjaman->status_kaprodi ?? '') !== 'Disetujui' && ($peminjaman->status ?? '') === 'Menunggu ACC Kaprodi') {
+        if (($peminjaman->status_kaprodi ?? '') !== 'Disetujui') {
             $this->session->set_flashdata('error', 'Pengajuan belum disetujui oleh Kaprodi.');
+            redirect('peminjamanbarang/serah_terima/' . rawurlencode($group_id));
+            return;
+        }
+
+        if (($peminjaman->status_kaur ?? '') !== 'Disetujui') {
+            $this->session->set_flashdata('error', 'Pengajuan belum disetujui resmi oleh Kepala Urusan (Kaur).');
+            redirect('peminjamanbarang/serah_terima/' . rawurlencode($group_id));
+            return;
+        }
+
+        $is_external = (($peminjaman->jenis_peminjaman ?? '') === 'luar_kampus' || ($peminjaman->jenis_peminjaman ?? '') === 'external');
+        if ($is_external && ($peminjaman->status_wadek1 ?? 'Pending') !== 'Disetujui') {
+            $this->session->set_flashdata('error', 'Pengajuan peminjaman luar kampus belum disetujui oleh Wakil Dekan (Wadek).');
+            redirect('peminjamanbarang/serah_terima/' . rawurlencode($group_id));
+            return;
+        }
+
+        if (!in_array(($peminjaman->status ?? ''), ['Disetujui (Menunggu Pengambilan)', 'Disetujui (Menunggu Finalisasi QR)'], true)) {
+            $this->session->set_flashdata('error', 'Status pengajuan belum siap untuk serah terima barang.');
             redirect('peminjamanbarang/serah_terima/' . rawurlencode($group_id));
             return;
         }
@@ -314,7 +345,6 @@ class PeminjamanBarang extends CI_Controller {
         $this->Peminjaman_model->update_group_status($group_id, [
             'status' => 'Sedang Dipinjam',
             'status_laboran' => 'Disetujui',
-            'status_kaur' => 'Disetujui',
             'qr_locked' => 1,
             'tgl_approve_laboran' => date('Y-m-d H:i:s'),
             'id_approver_laboran' => $laboran_id,
@@ -341,7 +371,7 @@ class PeminjamanBarang extends CI_Controller {
                 $peminjaman->id_user,
                 'Barang sudah dipinjam',
                 'Serah terima barang sudah dikonfirmasi Laboran. Gunakan QR transaksi yang sama saat pengembalian.',
-                site_url('peminjamanbarang/riwayat')
+                site_url('peminjaman_barang/riwayat')
             );
         }
 

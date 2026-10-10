@@ -240,7 +240,7 @@ $boleh_serah = !empty($qr_valid) && $is_serah_terima;
                 </div>
             <?php endif; ?>
 
-            <?php if ($is_serah_terima): ?>
+            <?php if ($is_serah_terima && !empty($qr_valid)): ?>
                 <form id="handoverForm" method="post" enctype="multipart/form-data" action="<?= site_url('peminjamanbarang/proses_serah/' . rawurlencode($peminjaman->group_id)) ?>">
                     <!-- Table Rincian Barang Card -->
                     <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-5 sm:p-6 mb-6">

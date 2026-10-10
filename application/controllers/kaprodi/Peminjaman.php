@@ -123,8 +123,18 @@ class Peminjaman extends CI_Controller {
             'catatan_kaprodi' => trim((string) $this->input->post('catatan_kaprodi', true)),
             'tgl_approve_kaprodi' => date('Y-m-d H:i:s'),
             'id_approver_kaprodi' => $this->session->userdata('id_user'),
+            'status_kaur' => 'Pending',
         ]);
         if ($ok) {
+            if (!empty($peminjaman->id_user)) {
+                $this->PeminjamanBarang_model->create_notifikasi(
+                    null,
+                    $peminjaman->id_user,
+                    'Peminjaman Disetujui Kaprodi',
+                    'Pengajuan peminjaman barang Anda telah disetujui Kaprodi dan diteruskan ke Kaur untuk persetujuan resmi.',
+                    site_url('peminjaman_barang/riwayat')
+                );
+            }
             $this->PeminjamanBarang_model->create_notifikasi('kaur', null, 'Peminjaman disetujui Kaprodi',
                 ($peminjaman->nama_peminjam ?? 'Peminjam') . ' sudah di-ACC Kaprodi dan menunggu persetujuan Anda sebagai Kaur.',
                 site_url('kaur/barang'));
@@ -220,8 +230,18 @@ class Peminjaman extends CI_Controller {
                     'catatan_kaprodi' => '',
                     'tgl_approve_kaprodi' => date('Y-m-d H:i:s'),
                     'id_approver_kaprodi' => $this->session->userdata('id_user'),
+                    'status_kaur' => 'Pending',
                 ]);
                 if ($ok) {
+                    if (!empty($peminjaman->id_user)) {
+                        $this->PeminjamanBarang_model->create_notifikasi(
+                            null,
+                            $peminjaman->id_user,
+                            'Peminjaman Disetujui Kaprodi',
+                            'Pengajuan peminjaman barang Anda telah disetujui Kaprodi dan diteruskan ke Kaur untuk persetujuan resmi.',
+                            site_url('peminjaman_barang/riwayat')
+                        );
+                    }
                     $this->PeminjamanBarang_model->create_notifikasi('kaur', null, 'Peminjaman disetujui Kaprodi',
                         ($peminjaman->nama_peminjam ?? 'Peminjam') . ' sudah di-ACC Kaprodi dan menunggu persetujuan Anda sebagai Kaur.',
                         site_url('kaur/barang'));

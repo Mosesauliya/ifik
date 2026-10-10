@@ -538,17 +538,28 @@ $history_query['per_page'] = $history_per_page;
                             </td>
                             <td class="text-center">
                                 <?php
-                                    $is_kaprodi_valid = (($r->status_kaprodi ?? '') === 'Disetujui') 
-                                        || !in_array($r->status, ['Menunggu ACC Kaprodi', 'Ditolak', 'Kedaluwarsa / Ditolak Otomatis'], true);
-                                    $is_not_rejected = !in_array($r->status, ['Ditolak', 'Kedaluwarsa / Ditolak Otomatis'], true);
-                                    $show_qr = $is_kaprodi_valid && $is_not_rejected;
+                                    $is_ready_for_pickup = in_array($r->status, ['Disetujui (Menunggu Pengambilan)', 'Disetujui (Menunggu Finalisasi QR)'], true);
+                                    $is_borrowed = in_array($r->status, ['Sedang Dipinjam', 'Dipinjam'], true);
+                                    $show_qr = $is_ready_for_pickup || $is_borrowed;
                                 ?>
                                 <?php if($show_qr): ?>
                                     <button class="btn btn-sm btn-outline-dark fw-semibold px-3" data-bs-toggle="modal" data-bs-target="#qrModal<?= $r->id_peminjaman ?>">
                                         <i class="bi bi-qr-code-scan me-1"></i> QR Transaksi
                                     </button>
                                 <?php else: ?>
-                                    <span class="small text-muted">QR belum aktif</span>
+                                    <?php if ($r->status === 'Menunggu ACC Kaprodi'): ?>
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle py-1.5 px-2.5">Menunggu Kaprodi</span>
+                                    <?php elseif ($r->status === 'Menunggu ACC Kaur' || $r->status === 'Menunggu Verifikasi Laboran'): ?>
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle py-1.5 px-2.5">Menunggu Kaur</span>
+                                    <?php elseif (in_array($r->status, ['Menunggu ACC Wadek', 'Menunggu Persetujuan Wadek'], true)): ?>
+                                        <span class="badge bg-purple-subtle text-primary border border-primary-subtle py-1.5 px-2.5">Menunggu Wadek</span>
+                                    <?php elseif (in_array($r->status, ['Ditolak', 'Kedaluwarsa / Ditolak Otomatis'], true)): ?>
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle py-1.5 px-2.5">Ditolak</span>
+                                    <?php elseif (in_array($r->status, ['Selesai', 'Dikembalikan'], true)): ?>
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle py-1.5 px-2.5">Selesai</span>
+                                    <?php else: ?>
+                                        <span class="small text-muted">QR belum aktif</span>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -579,10 +590,9 @@ $history_query['per_page'] = $history_per_page;
     <?php if(!empty($riwayat)): ?>
         <?php foreach($riwayat as $r): ?>
         <?php
-            $is_kaprodi_valid = (($r->status_kaprodi ?? '') === 'Disetujui') 
-                || !in_array($r->status, ['Menunggu ACC Kaprodi', 'Ditolak', 'Kedaluwarsa / Ditolak Otomatis'], true);
-            $is_not_rejected = !in_array($r->status, ['Ditolak', 'Kedaluwarsa / Ditolak Otomatis'], true);
-            $show_qr = $is_kaprodi_valid && $is_not_rejected;
+            $is_ready_for_pickup = in_array($r->status, ['Disetujui (Menunggu Pengambilan)', 'Disetujui (Menunggu Finalisasi QR)'], true);
+            $is_borrowed = in_array($r->status, ['Sedang Dipinjam', 'Dipinjam'], true);
+            $show_qr = $is_ready_for_pickup || $is_borrowed;
             if(!$show_qr) { continue; }
             $show_return_qr = in_array($r->status, ['Sedang Dipinjam', 'Dipinjam'], true);
             $qr_url = site_url('peminjamanbarang/serah_terima/'.rawurlencode($r->group_id));

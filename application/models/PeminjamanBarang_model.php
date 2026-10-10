@@ -789,12 +789,23 @@ class PeminjamanBarang_model extends CI_Model {
             MAX(p.tanggal_kembali_rencana) as tanggal_kembali_rencana,
             MAX(p.tanggal_kembali_actual) as tanggal_kembali_actual,
             MAX(p.status) as status,
+            MAX(p.jenis_peminjaman) as jenis_peminjaman,
             MAX(p.status_kaprodi) as status_kaprodi,
+            MAX(p.catatan_kaprodi) as catatan_kaprodi,
+            MAX(p.tgl_approve_kaprodi) as tgl_approve_kaprodi,
             MAX(p.kaprodi_approval_limit_days) as kaprodi_approval_limit_days,
             MAX(p.kaprodi_deadline_at) as kaprodi_deadline_at,
             MAX(p.kaprodi_expired_at) as kaprodi_expired_at,
             MAX(p.status_laboran) as status_laboran,
+            MAX(p.catatan_laboran) as catatan_laboran,
+            MAX(p.tgl_approve_laboran) as tgl_approve_laboran,
             MAX(p.status_kaur) as status_kaur,
+            MAX(p.catatan_kaur) as catatan_kaur,
+            MAX(p.tgl_approve_kaur) as tgl_approve_kaur,
+            MAX(p.status_wadek1) as status_wadek1,
+            MAX(p.catatan_wadek1) as catatan_wadek1,
+            MAX(p.tgl_approve_wadek1) as tgl_approve_wadek1,
+            MAX(p.id_approver_wadek1) as id_approver_wadek1,
             MAX(p.keperluan) as keperluan,
             MAX(p.foto_pengembalian) as foto_pengembalian,
             MAX(p.foto_bukti) as foto_bukti,
@@ -944,7 +955,7 @@ class PeminjamanBarang_model extends CI_Model {
             $this->db->where_in('p.status', ['Menunggu Verifikasi Laboran', 'Menunggu Pengecekan Laboran', 'Menunggu Persetujuan']);
             $this->db->where('p.status_kaprodi', 'Disetujui')->where('p.status_laboran', 'Pending');
         } elseif ($role === 'kaur') {
-            $this->db->where('p.status', 'Menunggu ACC Kaur');
+            $this->db->where_in('p.status', ['Menunggu ACC Kaur', 'Menunggu Verifikasi Laboran', 'Menunggu Pengecekan Laboran', 'Menunggu Persetujuan']);
             $this->db->where('p.status_kaprodi', 'Disetujui')->where('p.status_kaur', 'Pending');
         } elseif ($role === 'wadek') {
             $this->db->where_in('p.status', ['Menunggu ACC Wadek', 'Menunggu Persetujuan Wadek']);

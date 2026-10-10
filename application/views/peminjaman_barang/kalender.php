@@ -4520,12 +4520,16 @@
                     `;
                 };
 
-                stepsEl.innerHTML = `
+                let stepsHtml = `
                     <div style="font-weight:700; color:#64748b; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">Progres Persetujuan</div>
                     ${getStepBadge('ACC Kaprodi', booking.status_kaprodi || 'Pending')}
-                    ${getStepBadge('ACC Laboran', booking.status_laboran || 'Pending')}
                     ${getStepBadge('ACC Kaur Laboratorium', booking.status_kaur || 'Pending')}
                 `;
+                if (booking.jenis_peminjaman === 'luar_kampus' || booking.jenis_peminjaman === 'external') {
+                    stepsHtml += `${getStepBadge('ACC Wadek (Eksternal)', booking.status_wadek1 || 'Pending')}`;
+                }
+                stepsHtml += `${getStepBadge('Serah Terima Laboran', booking.status_laboran || 'Pending')}`;
+                stepsEl.innerHTML = stepsHtml;
             }
 
             // Action Buttons
