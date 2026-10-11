@@ -155,14 +155,36 @@ $barangNavGroups[] = [
     border: 1.5px solid rgba(255, 255, 255, 0.9) !important;
 }
 
+.curved-sidebar-inner {
+    padding: 58px 10px 18px 10px !important;
+}
+
+.curved-nav-item {
+    padding: 5px 6px !important;
+    overflow: visible !important;
+}
+
+.curved-nav-content {
+    gap: 8px !important;
+}
+
+.curved-nav-heading {
+    font-size: 0.78rem !important;
+    letter-spacing: -0.015em !important;
+    white-space: nowrap !important;
+}
+
 .curved-nav-item.is-current {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
 }
-.curved-nav-item.is-current .curved-nav-heading {
+.curved-nav-item.is-current .curved-nav-heading,
+.curved-nav-item.is-current .curved-nav-letter {
     color: #ea580c !important;
     font-weight: 800 !important;
+    font-size: 0.78rem !important;
+    letter-spacing: -0.015em !important;
 }
 .curved-nav-item.is-current .curved-nav-3d-wrap {
     transform: translateY(-1px) scale(1.08);
@@ -172,6 +194,10 @@ $barangNavGroups[] = [
 .curved-nav-item:hover {
     background: rgba(245, 158, 11, 0.12) !important;
     backdrop-filter: blur(8px) !important;
+}
+.curved-nav-item:hover .curved-nav-heading {
+    transform: translateX(1px);
+    color: #ea580c;
 }
 
 /* User Profile Card inside Sidebar */
