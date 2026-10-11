@@ -71,13 +71,6 @@
     <!-- Dedicated Admin LAA Sidebar Component -->
     <?php $this->load->view('admin_layanan/sidebar'); ?>
 
-    <!-- Header Navbar Partial -->
-    <?php $this->load->view('partials/app_navbar', [
-        'user_role_label'   => 'Admin Layanan (LAA)',
-        'user_display_name' => 'Admin Layanan FIK',
-        'user_display_sub'  => 'Unit Akademik & Kelulusan'
-    ]); ?>
-
     <!-- Sub Navigation Page Title Bar -->
     <div class="glass-header px-4 sm:px-6 py-4 mb-8">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">

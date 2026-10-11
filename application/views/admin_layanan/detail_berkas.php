@@ -85,12 +85,6 @@
     <!-- Dedicated Admin LAA Sidebar Component -->
     <?php $this->load->view('admin_layanan/sidebar'); ?>
 
-    <!-- Header Navbar Partial -->
-    <?php $this->load->view('partials/app_navbar', [
-        'user_role_label'   => 'Layanan Akademik (LAA)',
-        'user_display_name' => 'Admin Layanan FIK',
-        'user_display_sub'  => 'Verifikasi Dokumen TA'
-    ]); ?>
 
     <!-- Main Container -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full space-y-6">

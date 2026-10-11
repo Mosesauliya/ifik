@@ -236,21 +236,28 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
             break;
         case 5: // Admin LAA
             $defaultNavItems = [
-                ['category' => 'Layanan Akademik'],
-                ['heading' => 'Verifikasi Berkas', 'href' => site_url('adminlayanan'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
-                ['heading' => 'Pengaturan Syarat Berkas', 'href' => site_url('adminlayanan/pengaturan_berkas'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
-                ['heading' => 'Pengaturan Jalur TA', 'href' => site_url('adminlayanan/pengaturan_jalur'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
+                ['category' => 'Pengelolaan Tugas Akhir'],
+                ['heading' => 'Pendaftaran TA', 'href' => site_url('adminlayanan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
+                ['heading' => 'Pendaftaran Sidang', 'href' => site_url('adminlayanan/pendaftaran_sidang'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
+                ['heading' => 'Sudah Lulus Sidang', 'href' => site_url('adminlayanan/lulus_sidang'), 'icon_3d' => 'assets/images/icons_3d/preview2.png'],
+                ['heading' => 'Status Peserta TA', 'href' => site_url('adminlayanan/status_peserta_ta'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Lihat Pembimbing', 'href' => site_url('adminlayanan/lihat_pembimbing'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+                ['heading' => 'Yudisium', 'href' => site_url('adminlayanan/yudisium'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Jadwal Sidang', 'href' => site_url('adminlayanan/jadwal_sidang'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+                ['heading' => 'BAP Sidang', 'href' => site_url('adminlayanan/bap_sidang'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
+                ['heading' => 'Reset File TA', 'href' => site_url('adminlayanan/reset_file_ta'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
 
-                ['category' => 'Layanan Ticketing & Bantuan', 'has_divider' => true],
+                ['category' => 'Layanan & Bantuan', 'has_divider' => true],
                 ['heading' => 'Bantuan & Live Chat', 'href' => site_url('adminlayanan/help'), 'icon_3d' => 'assets/images/icons_3d/help_chat.png'],
-                ['heading' => 'Respon Ticketing LAA', 'href' => site_url('adminlayanan/ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
-                ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
-                ['heading' => 'Riwayat Tiket Saya', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+                ['heading' => 'Kelola Tiket LAA', 'href' => site_url('adminlayanan/ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
 
-                ['category' => 'Fasilitas & Jadwal', 'has_divider' => true],
-                ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
-                ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
-                ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+                ['category' => 'Pengaturan & Informasi', 'has_divider' => true],
+                ['heading' => 'Pengaturan Syarat Berkas', 'href' => site_url('adminlayanan/pengaturan_berkas'), 'icon_3d' => 'assets/images/icons_3d/settings.png'],
+                ['heading' => 'Pengaturan Jalur TA', 'href' => site_url('adminlayanan/pengaturan_jalur'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
+                ['heading' => 'Pendaftaran Akun Baru', 'href' => site_url('import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
+                ['heading' => 'Kelola Berita', 'href' => site_url('adminlayanan/berita'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
+
+                ['category' => 'Akun', 'has_divider' => true],
                 ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
             ];
             break;
