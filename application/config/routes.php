@@ -428,6 +428,14 @@ $route['prodi/ticketing/simpan']                      = 'ProdiTicketing/simpan';
 $route['prodi/ticketing/riwayat']                     = 'ProdiTicketing/riwayat';
 $route['prodi/ticketing/detail/(:any)']               = 'ProdiTicketing/riwayat_detail/$1';
 
+// Program Studi Peminjaman Routes (Role 16)
+$route['prodi/peminjaman']                            = 'kaprodi/peminjaman/index';
+$route['prodi/peminjaman/setujui/(:any)']             = 'kaprodi/peminjaman/setujui/$1';
+$route['prodi/peminjaman/tolak/(:any)']               = 'kaprodi/peminjaman/tolak/$1';
+$route['prodi/peminjaman/bulk']                       = 'kaprodi/peminjaman/bulk';
+$route['prodi/peminjaman/(:any)']                     = 'kaprodi/peminjaman/$1';
+$route['prodi/peminjaman/(:any)/(:any)']              = 'kaprodi/peminjaman/$1/$2';
+
 // Dosen Help Chat Routes (Harus sebelum Laboran Help routes)
 $route['dosen/help'] = 'DosenHelp/index';
 $route['dosen/help/channel'] = 'DosenHelp/help_get_channel_ajax';

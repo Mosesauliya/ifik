@@ -1116,7 +1116,7 @@ if (!function_exists('render_kaprodi_client_filter')) {
         <a class="sidebar-link" href="<?= base_url('index.php/kaprodi/dashboard?tab=riwayat') ?>">
             <i class="bi bi-clock-history"></i><span>Riwayat Pengajuan</span>
         </a>
-        <a class="sidebar-link active" href="<?= base_url('index.php/kaprodi/peminjaman') ?>" aria-current="page">
+        <a class="sidebar-link active" href="<?= site_url('prodi/peminjaman') ?>" aria-current="page">
             <i class="bi bi-patch-check"></i><span>Approval Peminjaman</span>
         </a>
     </nav>
@@ -1231,7 +1231,7 @@ if (!function_exists('render_kaprodi_client_filter')) {
             <h2 id="kaprodiApprovalTitle" class="kp-section-title">Pengajuan Menunggu ACC</h2>
         </div>
         <?php if (!empty($pengajuan)): ?>
-        <form id="kaprodiBulkForm" method="post" action="<?= base_url('index.php/kaprodi/peminjaman/bulk') ?>" class="approval-bulk-toolbar m-3" data-bulk-form data-bulk-toolbar hidden>
+        <form id="kaprodiBulkForm" method="post" action="<?= site_url('prodi/peminjaman/bulk') ?>" class="approval-bulk-toolbar m-3" data-bulk-form data-bulk-toolbar hidden>
             <input type="hidden" name="bulk_note" value="">
             <span class="approval-bulk-toolbar__count" data-bulk-count>0 data terpilih</span>
             <button type="submit" name="action" value="approve" class="btn btn-sm btn-success rounded-pill px-3" data-bulk-approve-action><i class="bi bi-check2-circle me-1"></i>ACC Terpilih</button>
@@ -1502,7 +1502,7 @@ if (!function_exists('render_kaprodi_client_filter')) {
             <form
                 method="post"
                 class="modal-content"
-                action="<?= base_url('index.php/kaprodi/peminjaman/setujui/' . $p->id_peminjaman) ?>"
+                action="<?= site_url('prodi/peminjaman/setujui/' . $p->id_peminjaman) ?>"
             >
                 <div class="modal-header">
                     <div class="w-100 pe-3">
@@ -1595,7 +1595,7 @@ if (!function_exists('render_kaprodi_client_filter')) {
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
                     <button
                         type="submit"
-                        formaction="<?= base_url('index.php/kaprodi/peminjaman/tolak/' . $p->id_peminjaman) ?>"
+                        formaction="<?= site_url('prodi/peminjaman/tolak/' . $p->id_peminjaman) ?>"
                         class="btn btn-outline-danger"
                         <?= $can_kaprodi_review ? '' : 'disabled'; ?>
                     >

@@ -2539,6 +2539,7 @@
                 ['heading' => 'Membuat Ticketing', 'href' => site_url('prodi/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
                 ['heading' => 'Respon Ticketing', 'href' => site_url('prodi/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
                 ['heading' => 'Riwayat', 'href' => site_url('prodi/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
+                ['heading' => 'Peminjaman', 'href' => site_url('prodi/peminjaman'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
 
                 ['category' => 'Akun', 'has_divider' => true],
                 ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],

@@ -17,6 +17,18 @@ class Peminjaman extends CI_Controller {
         // legacy tetap dapat menyelesaikan data tersebut, tanpa mendapat
         // akses ke pengajuan yang sudah memiliki prodi.
         $this->uses_legacy_scope = !$this->kaprodi_prodi;
+
+        if ($this->uri->segment(1) === 'kaprodi' && $this->uri->segment(2) === 'peminjaman') {
+            $segments = $this->uri->segment_array();
+            array_shift($segments); // remove kaprodi
+            array_shift($segments); // remove peminjaman
+            $target = 'prodi/peminjaman' . ($segments ? '/' . implode('/', $segments) : '');
+            $qs = $this->input->server('QUERY_STRING');
+            if ($qs) {
+                $target .= '?' . $qs;
+            }
+            redirect($target, 'location', 301);
+        }
     }
 
     private function guard_kaprodi() {
@@ -107,14 +119,14 @@ class Peminjaman extends CI_Controller {
         $peminjaman = $this->PeminjamanBarang_model->get_peminjaman_by_id($id_peminjaman);
         if (!$peminjaman || !$this->is_loan_in_scope($peminjaman) || !scm_loan_can_act($peminjaman, 'kaprodi')) {
             $this->session->set_flashdata('error', 'Pengajuan tidak ditemukan, bukan dari prodi Anda, atau sudah diproses.');
-            redirect('kaprodi/peminjaman');
+            redirect('prodi/peminjaman');
         }
 
         $group_id = $peminjaman->group_id ?: 'single-' . (int) $peminjaman->id_peminjaman;
         $stock_shortages = $this->PeminjamanBarang_model->get_group_stock_shortages($group_id);
         if (!empty($stock_shortages)) {
             $this->session->set_flashdata('error', $this->stock_shortage_message($stock_shortages));
-            redirect('kaprodi/peminjaman');
+            redirect('prodi/peminjaman');
         }
 
         $ok = $this->PeminjamanBarang_model->approve_group_with_reservation($group_id, ['Menunggu ACC Kaprodi'], [
@@ -140,7 +152,7 @@ class Peminjaman extends CI_Controller {
                 site_url('admin/peminjaman'));
         }
         $this->session->set_flashdata($ok ? 'success' : 'error', $ok ? 'Pengajuan disetujui dan diteruskan ke Laboran untuk scan & verifikasi fisik barang.' : 'Gagal memproses pengajuan atau reservasi stok tidak tersedia.');
-        redirect('kaprodi/peminjaman');
+        redirect('prodi/peminjaman');
     }
 
     public function tolak($id_peminjaman) {
@@ -148,13 +160,13 @@ class Peminjaman extends CI_Controller {
         if (!$peminjaman || !$this->is_loan_in_scope($peminjaman) || ($peminjaman->status ?? '') !== 'Menunggu ACC Kaprodi'
             || ($peminjaman->status_kaprodi ?? 'Pending') !== 'Pending') {
             $this->session->set_flashdata('error', 'Pengajuan tidak ditemukan atau sudah diproses.');
-            redirect('kaprodi/peminjaman');
+            redirect('prodi/peminjaman');
         }
 
         $catatan = trim((string) $this->input->post('catatan_kaprodi', true));
         if ($catatan === '') {
             $this->session->set_flashdata('error', 'Alasan penolakan wajib diisi.');
-            redirect('kaprodi/peminjaman');
+            redirect('prodi/peminjaman');
         }
         $group_id = $peminjaman->group_id ?: 'single-' . (int) $peminjaman->id_peminjaman;
         $ok = $this->PeminjamanBarang_model->reject_group_and_release($group_id, [
@@ -170,7 +182,7 @@ class Peminjaman extends CI_Controller {
                 site_url('peminjaman/riwayat'));
         }
         $this->session->set_flashdata($ok ? 'success' : 'error', $ok ? 'Pengajuan ditolak.' : 'Gagal memproses pengajuan.');
-        redirect('kaprodi/peminjaman');
+        redirect('prodi/peminjaman');
     }
 
     public function bulk() {
@@ -180,7 +192,7 @@ class Peminjaman extends CI_Controller {
                 scm_json_response(['success' => false, 'message' => 'Metode request tidak diizinkan.'], 405);
                 return;
             }
-            redirect('kaprodi/peminjaman');
+            redirect('prodi/peminjaman');
         }
 
         $action = strtolower(trim((string) $this->input->post('action', true)));
@@ -192,7 +204,7 @@ class Peminjaman extends CI_Controller {
                 return;
             }
             $this->session->set_flashdata('error', 'Pilih minimal satu pengajuan yang dapat diproses.');
-            redirect('kaprodi/peminjaman');
+            redirect('prodi/peminjaman');
         }
         if ($action === 'reject' && $catatan === '') {
             if ($ajax) {
@@ -200,7 +212,7 @@ class Peminjaman extends CI_Controller {
                 return;
             }
             $this->session->set_flashdata('error', 'Alasan penolakan terpilih wajib diisi.');
-            redirect('kaprodi/peminjaman');
+            redirect('prodi/peminjaman');
         }
 
         $processed = 0;
@@ -289,7 +301,7 @@ class Peminjaman extends CI_Controller {
             return;
         }
         $this->session->set_flashdata($processed > 0 ? 'success' : 'error', $message);
-        redirect('kaprodi/peminjaman');
+        redirect('prodi/peminjaman');
     }
 
     private function bulk_ids() {
