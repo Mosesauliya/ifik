@@ -68,10 +68,95 @@ if ($is_laboran_or_admin) {
     ];
 }
 
+$is_dosen_or_pejabat = in_array($sessionRoleId, [2, 3, 7, 9, 16], true);
+
+if ($is_dosen_or_pejabat) {
+    // Menu Persetujuan / Approval
+    $approvalItems = [];
+    if ($sessionRoleId === 16 || $sessionRoleId === 3) {
+        $approvalItems[] = [
+            'heading' => 'Approval Peminjaman Prodi',
+            'href'    => site_url('prodi/peminjaman'),
+            'icon_3d' => 'assets/images/icons_3d/approval.png',
+            'is_active' => (strpos($curr_uri, 'prodi/peminjaman') === 0 || strpos($curr_uri, 'kaprodi/peminjaman') === 0)
+        ];
+    }
+    if ($sessionRoleId === 3 || $sessionRoleId === 7 || $sessionRoleId === 9) {
+        $approvalItems[] = [
+            'heading' => 'Approval Usulan TA (KK)',
+            'href'    => site_url('ketuakk'),
+            'icon_3d' => 'assets/images/icons_3d/approval.png',
+            'is_active' => (strpos($curr_uri, 'ketuakk') === 0)
+        ];
+    }
+    if ($sessionRoleId === 3) {
+        $approvalItems[] = [
+            'heading' => 'Approval Peminjaman Wadek',
+            'href'    => site_url('wadek/peminjaman'),
+            'icon_3d' => 'assets/images/icons_3d/approval.png',
+            'is_active' => (strpos($curr_uri, 'wadek/peminjaman') === 0)
+        ];
+    }
+    if ($sessionRoleId === 2 || $sessionRoleId === 3) {
+        $approvalItems[] = [
+            'heading' => 'Approval Peminjaman Kaur',
+            'href'    => site_url('kaur/barang'),
+            'icon_3d' => 'assets/images/icons_3d/approval.png',
+            'is_active' => (strpos($curr_uri, 'kaur/barang') === 0)
+        ];
+    }
+
+    if (!empty($approvalItems)) {
+        $barangNavGroups[] = [
+            'category' => 'Persetujuan & Wewenang Jabatan',
+            'has_divider' => true,
+            'items' => $approvalItems
+        ];
+    }
+
+    // Portal Akademik & Bimbingan TA
+    $barangNavGroups[] = [
+        'category' => 'Portal Akademik & Dosen',
+        'has_divider' => true,
+        'items' => [
+            [
+                'heading' => 'Dosen Pembimbing',
+                'href'    => site_url('dosen/bimbingan'),
+                'icon_3d' => 'assets/images/icons_3d/daftar.png',
+                'is_active' => (strpos($curr_uri, 'dosen/bimbingan') === 0)
+            ],
+            [
+                'heading' => 'Dosen Wali',
+                'href'    => site_url('dosen/wali'),
+                'icon_3d' => 'assets/images/icons_3d/approval.png',
+                'is_active' => (strpos($curr_uri, 'dosen/wali') === 0)
+            ],
+            [
+                'heading' => 'Tanda Tangan Digital',
+                'href'    => site_url('dosen/tanda-tangan'),
+                'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png',
+                'is_active' => (strpos($curr_uri, 'dosen/tanda-tangan') === 0)
+            ],
+        ]
+    ];
+}
+
 $barangNavGroups[] = [
-    'category' => 'Navigasi Utama',
+    'category' => 'Peminjaman Ruangan & Jadwal',
     'has_divider' => true,
     'items' => [
+        [
+            'heading' => 'Ajukan Peminjaman Ruangan',
+            'href'    => site_url('ajukan-booking'),
+            'icon_3d' => 'assets/images/icons_3d/ruangan.png',
+            'is_active' => (strpos($curr_uri, 'ajukan-booking') === 0)
+        ],
+        [
+            'heading' => 'Riwayat Booking Ruangan',
+            'href'    => site_url('riwayat-booking'),
+            'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png',
+            'is_active' => (strpos($curr_uri, 'riwayat-booking') === 0)
+        ],
         [
             'heading' => 'Dashboard Utama',
             'href'    => site_url('dashboard'),
