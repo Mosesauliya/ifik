@@ -440,15 +440,14 @@
         </li> -->
 
         <?php
-            $role_id_top       = $this->session->userdata('role_id');
-            $user_email_top    = $this->session->userdata('email') ?? '';
-            $user_name_top     = $this->session->userdata('name') ?? '';
-            $is_mahasiswa      = ($role_id_top == 4 || strpos($user_email_top, '@student.') !== false);
-            $role_id           = $role_id_top;
-            $user_email        = $user_email_top;
+            $role_id       = (int)($this->session->userdata('role_id') ?? 0);
+            $user_email    = $this->session->userdata('email') ?? '';
+            $user_name_top = $this->session->userdata('name') ?? '';
+            $is_mahasiswa  = ($role_id === 4 || strpos($user_email, '@student.') !== false);
+            $is_role_dosen = ($role_id === 3 || in_array($role_id, [2, 6, 7, 9, 16], true));
         ?>
 
-        <?php if (!$is_mahasiswa): ?>
+        <?php if ($is_role_dosen): ?>
         <li class="nav-item">
             <a href="<?= site_url('peminjaman_barang') ?>" class="nav-link"><span>Peminjaman Barang</span></a>
         </li>
