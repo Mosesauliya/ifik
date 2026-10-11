@@ -11,6 +11,21 @@ class PeminjamanBarang extends CI_Controller {
         parent::__construct();
         $this->load->library(['session', 'upload']);
         $this->load->helper(['url', 'scm_date']);
+
+        if (!$this->session->userdata('logged_in')) {
+            $this->session->set_flashdata('error', 'Silakan login terlebih dahulu.');
+            redirect('login');
+            return;
+        }
+
+        $role_id = (int)$this->session->userdata('role_id');
+        $allowed = [1, 2, 21, 22]; // Admin, Kaur, Laboran, Super Admin
+        if (!in_array($role_id, $allowed, true)) {
+            $this->session->set_flashdata('error', 'Akses ditolak!');
+            redirect('dashboard');
+            return;
+        }
+
         $this->load->model('PeminjamanBarang_model', 'Peminjaman_model');
         $this->load->model('Aset_model');
     }

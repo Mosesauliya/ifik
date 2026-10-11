@@ -439,19 +439,24 @@
             </div>
         </li> -->
 
+        <?php
+            $role_id_top       = $this->session->userdata('role_id');
+            $user_email_top    = $this->session->userdata('email') ?? '';
+            $user_name_top     = $this->session->userdata('name') ?? '';
+            $is_mahasiswa      = ($role_id_top == 4 || strpos($user_email_top, '@student.') !== false);
+            $role_id           = $role_id_top;
+            $user_email        = $user_email_top;
+        ?>
+
+        <?php if (!$is_mahasiswa): ?>
         <li class="nav-item">
             <a href="<?= site_url('peminjaman_barang') ?>" class="nav-link"><span>Peminjaman Barang</span></a>
         </li>
+        <?php endif; ?>
 
         <li class="nav-item">
             <a href="<?= site_url('welcome') ?>" class="nav-link"><span>Galeri Karya FIK</span></a>
         </li>
-
-        <?php
-            $role_id       = $this->session->userdata('role_id');
-            $user_email    = $this->session->userdata('email') ?? '';
-            $user_name_top = $this->session->userdata('name') ?? '';
-            $is_mahasiswa  = ($role_id == 4 || strpos($user_email, '@student.') !== false);
 
             // ====== Tentukan label & URL panel berdasarkan role ======
             $panel_label = 'Panel Admin';
