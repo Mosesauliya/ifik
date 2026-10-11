@@ -210,7 +210,7 @@ if (!function_exists('render_kaprodi_client_filter')) {
         }
 
         .kp-page-content {
-            padding-top: 22px;
+            padding-top: 0;
             padding-bottom: 32px;
         }
 
@@ -1096,6 +1096,180 @@ if (!function_exists('render_kaprodi_client_filter')) {
                 min-width: 0;
             }
         }
+
+        /* =========================================================
+           POLISHED GLASS HEADER (MATCHING PEMINJAMAN_BARANG)
+           ========================================================= */
+        .glass-header-ifik {
+            background: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+            border-bottom: 1.5px solid rgba(226, 232, 240, 0.9) !important;
+            box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04) !important;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            padding-top: 14px !important;
+            padding-bottom: 14px !important;
+            min-height: 72px;
+        }
+
+        .header-inner-pad {
+            padding-left: 56px;
+            padding-right: 12px;
+        }
+        @media (min-width: 992px) {
+            body:not(.curved-sidebar-desktop-collapsed) .header-inner-pad {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+            body.curved-sidebar-desktop-collapsed .header-inner-pad {
+                padding-left: 56px;
+                padding-right: 12px;
+            }
+        }
+
+        /* Polished User Profile Button */
+        .btn-ifik-profile {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 3px 14px 3px 4px;
+            height: 40px;
+            border-radius: 9999px;
+            border: 1.5px solid #e2e8f0;
+            background: #ffffff;
+            color: #1e293b;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+        }
+        .btn-ifik-profile:hover,
+        .btn-ifik-profile[aria-expanded="true"] {
+            background: #ffffff;
+            border-color: #fdba74;
+            box-shadow: 0 6px 16px rgba(234, 88, 12, 0.12);
+        }
+        .btn-ifik-profile::after {
+            display: none !important;
+        }
+        .profile-avatar-box {
+            width: 32px;
+            height: 32px;
+            border-radius: 9999px;
+            background: linear-gradient(135deg, #ea580c, #f97316);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.88rem;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(234, 88, 12, 0.3);
+        }
+        .profile-text-group {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+            line-height: 1.2;
+        }
+        .profile-name {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #1e293b;
+            max-width: 260px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .profile-role {
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #ea580c;
+        }
+        .profile-chevron {
+            font-size: 0.72rem;
+            color: #94a3b8;
+            transition: transform 0.25s ease, color 0.2s ease;
+            margin-left: 2px;
+        }
+        .dropdown.show .profile-chevron,
+        .btn-ifik-profile[aria-expanded="true"] .profile-chevron {
+            transform: rotate(180deg);
+            color: #ea580c;
+        }
+
+        /* Polished Dropdown Menu */
+        .dropdown-menu-ifik {
+            border: 1.5px solid #e2e8f0 !important;
+            border-radius: 18px !important;
+            box-shadow: 0 20px 40px -8px rgba(15, 23, 42, 0.15) !important;
+            padding: 8px !important;
+            min-width: 230px !important;
+            background: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: blur(12px) !important;
+        }
+        .dropdown-menu-ifik .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 14px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #334155;
+            transition: all 0.18s ease;
+        }
+        .dropdown-menu-ifik .dropdown-item:hover {
+            background: #fff7ed;
+            color: #ea580c;
+            transform: translateX(2px);
+        }
+        .dropdown-menu-ifik .dropdown-item.text-danger:hover {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        /* Dark mode overrides for glass header */
+        html.scm-theme-dark .glass-header-ifik {
+            background: rgba(30, 41, 59, 0.95) !important;
+            border-bottom: 1.5px solid rgba(51, 65, 85, 0.9) !important;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.2) !important;
+        }
+        html.scm-theme-dark .glass-header-ifik h1 {
+            color: #f8fafc !important;
+        }
+        html.scm-theme-dark .btn-ifik-profile {
+            background: #1e293b;
+            border-color: #334155;
+            color: #f1f5f9;
+        }
+        html.scm-theme-dark .btn-ifik-profile:hover,
+        html.scm-theme-dark .btn-ifik-profile[aria-expanded="true"] {
+            background: #334155;
+            border-color: #ea580c;
+        }
+        html.scm-theme-dark .profile-name {
+            color: #f8fafc;
+        }
+        html.scm-theme-dark .dropdown-menu-ifik {
+            background: rgba(30, 41, 59, 0.98) !important;
+            border-color: #334155 !important;
+        }
+        html.scm-theme-dark .dropdown-menu-ifik .dropdown-item {
+            color: #e2e8f0;
+        }
+        html.scm-theme-dark .dropdown-menu-ifik .dropdown-item:hover {
+            background: rgba(234, 88, 12, 0.15);
+            color: #fb923c;
+        }
+        html.scm-theme-dark .dropdown-menu-ifik .dropdown-item.text-danger:hover {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+        }
     </style>
 </head>
 <body class="scm-dashboard scm-dashboard-kaprodi kaprodi-loan-page">
@@ -1129,64 +1303,66 @@ if (!function_exists('render_kaprodi_client_filter')) {
 <?php $this->load->view('components/curved_sidebar'); ?>
 
 <div class="dashboard-content page-wrapper-for-sidebar">
-<header class="topbar sticky-top">
-    <div class="container-fluid px-3 px-lg-4 py-3">
-        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-            <div class="dashboard-topbar-brand d-flex align-items-center gap-3">
-                <span class="brand-mark"><i class="bi bi-building-check"></i></span>
-                <div>
-                    <div class="fw-bold">Panel Kaprodi</div>
-                </div>
+<header class="glass-header-ifik mb-4">
+    <div class="container-fluid px-3 px-lg-4 d-flex flex-wrap align-items-center justify-content-between gap-3 header-inner-pad">
+        <div class="d-flex align-items-center gap-3">
+            <div class="rounded-3 d-flex align-items-center justify-content-center shadow-xs flex-shrink-0" style="width: 44px; height: 44px; background: rgba(234, 91, 26, 0.12); color: #ea5b1a; font-size: 1.35rem;">
+                <i class="bi bi-patch-check"></i>
             </div>
-            <div class="topbar-actions d-flex align-items-center gap-2">
-                <div class="dropdown">
-                    <button
-                        id="kaprodiNotificationButton"
-                        class="btn btn-outline-light btn-sm rounded-circle notif-bell position-relative"
-                        type="button"
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false"
-                        aria-label="Notifikasi"
-                    >
-                        <i class="bi bi-bell"></i>
-                        <?php if ($notif_count > 0): ?>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"><?= $notif_count ?></span>
-                        <?php endif; ?>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-end shadow border-0 p-2 notif-menu">
-                        <div class="fw-bold px-2 py-1">Notifikasi</div>
-                        <?php if (empty($notif_items)): ?>
-                            <div class="small text-muted px-2 py-3">Belum ada notifikasi.</div>
-                        <?php else: ?>
-                            <?php foreach ($notif_items as $notification): ?>
-                                <?php $notification_link = base_url('index.php/kaprodi/dashboard/notifikasi/' . (int) $notification->id_notifikasi); ?>
-                                <a
-                                    class="dropdown-item rounded-3 py-2 <?= empty($notification->is_read) ? 'bg-light' : '' ?>"
-                                    href="<?= html_escape($notification_link) ?>"
-                                >
-                                    <div class="fw-semibold small"><?= html_escape($notification->judul) ?></div>
-                                    <div class="small text-muted text-wrap"><?= html_escape($notification->pesan) ?></div>
-                                    <div class="small text-muted mt-1"><?= html_escape(waktu_indonesia($notification->created_at)) ?></div>
-                                </a>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </div>
+            <div>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <h1 class="h5 fw-bold text-dark mb-0 tracking-tight">Approval Peminjaman Barang</h1>
+                    <span class="badge rounded-pill px-2.5 py-1" style="background: rgba(234, 91, 26, 0.12); color: #ea5b1a; font-weight: 700; font-size: 11px;"><?= html_escape($kaprodi_prodi ?: 'Program Studi') ?></span>
                 </div>
-                <button
-                    type="button"
-                    class="btn btn-outline-light btn-sm rounded-circle theme-toggle"
-                    data-theme-toggle
-                    aria-label="Ubah tema"
-                    title="Ubah tema"
-                >
-                    <i class="bi bi-moon-stars" aria-hidden="true"></i>
+                <p class="text-muted small mb-0 d-none d-sm-block" style="font-size: 12px;">Persetujuan dan pemantauan pengajuan peminjaman barang program studi · <?= tanggal_indonesia(date('Y-m-d')) ?></p>
+            </div>
+        </div>
+
+        <!-- Profile Dropdown -->
+        <div class="d-flex align-items-center gap-2 ms-auto">
+            <div class="dropdown">
+                <button class="btn-ifik-profile" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="profile-avatar-box">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <div class="profile-text-group d-none d-sm-flex">
+                        <span class="profile-name"><?= html_escape($this->session->userdata('nama') ?: ($this->session->userdata('username') ?: 'Program Studi')); ?></span>
+                        <span class="profile-role"><?= html_escape($kaprodi_prodi ?: 'Program Studi'); ?></span>
+                    </div>
+                    <i class="bi bi-chevron-down profile-chevron"></i>
                 </button>
-                <a href="<?= base_url('index.php/dashboard') ?>" class="btn btn-sm btn-outline-light rounded-pill px-3">
-                    <i class="bi bi-globe me-1"></i> Web User
-                </a>
-                <a href="<?= base_url('index.php/auth/logout') ?>" class="btn btn-sm btn-fik rounded-pill px-3">
-                    <i class="bi bi-box-arrow-right me-1"></i> Logout
-                </a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-ifik mt-2">
+                    <li class="px-3 py-2 border-bottom mb-1">
+                        <span class="d-block text-muted" style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Login Sebagai</span>
+                        <span class="fw-bold text-dark d-block text-truncate" style="font-size: 13px;"><?= html_escape($this->session->userdata('username') ?: ($this->session->userdata('nama') ?: 'Program Studi')); ?></span>
+                        <span class="badge rounded-pill mt-1" style="background: #fff7ed; color: #ea580c; font-size: 10px; font-weight: 700;"><?= html_escape($kaprodi_prodi ?: 'Program Studi'); ?></span>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="<?= site_url('prodi/peminjaman') ?>">
+                            <i class="bi bi-patch-check text-warning"></i>
+                            <span>Approval Peminjaman</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="<?= site_url('prodi/respon-ticketing') ?>">
+                            <i class="bi bi-ticket-perforated text-primary"></i>
+                            <span>Respon Ticketing</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="<?= site_url('prodi/ticketing/input') ?>">
+                            <i class="bi bi-plus-circle text-success"></i>
+                            <span>Membuat Ticketing</span>
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider my-1"></li>
+                    <li>
+                        <a class="dropdown-item text-danger fw-bold" href="<?= site_url('login/logout') ?>">
+                            <i class="bi bi-box-arrow-right"></i>
+                            <span>Keluar</span>
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>
@@ -1199,20 +1375,6 @@ if (!function_exists('render_kaprodi_client_filter')) {
     <?php if ($this->session->flashdata('error')): ?>
         <div class="alert alert-danger"><?= html_escape($this->session->flashdata('error')) ?></div>
     <?php endif; ?>
-
-    <div class="kp-page-heading">
-        <div class="row align-items-end">
-            <div class="col-lg">
-                <h1>Approval Peminjaman</h1>
-            </div>
-            <div class="col-lg-auto">
-                <div class="kp-context">
-                    <span><i class="bi bi-mortarboard me-1"></i><?= html_escape($kaprodi_prodi ?? '-') ?></span>
-                    <span><i class="bi bi-calendar3 me-1"></i><?= tanggal_indonesia(date('Y-m-d')) ?></span>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <section class="kp-card kp-summary">
         <div><h2 class="kp-section-title">Progress Seluruh Peminjaman</h2><p class="kp-section-copy mt-1">Semua tahap dapat dipantau; aksi hanya tersedia saat menunggu Kaprodi.</p></div>
