@@ -333,6 +333,7 @@ class AdminLayanan_model extends CI_Model {
     }
 
     public function save_student_berkas($nim, $kode_berkas, $file_name, $status = 'Pending', $arg5 = null, $arg6 = null) {
+        $this->clear_cache();
         $nama_berkas = null;
         $catatan     = null;
 
@@ -454,6 +455,7 @@ class AdminLayanan_model extends CI_Model {
     }
 
     public function update_verifikasi($nim, $status_input, $catatan = '', $extra_catatan = null, $berkas_valid = array(), $berkas_kurang = array()) {
+        $this->clear_cache();
         $active_syarat  = $this->get_active_syarat_berkas();
         $student_berkas = $this->get_student_berkas_map($nim);
 
@@ -493,6 +495,7 @@ class AdminLayanan_model extends CI_Model {
     }
 
     public function reset_verifikasi_pending($nim) {
+        $this->clear_cache();
         if ($this->db->table_exists('file_pendaftaran')) {
             $target_ids = $this->get_student_target_ids($nim);
             $fp_update = array();
@@ -1795,6 +1798,7 @@ class AdminLayanan_model extends CI_Model {
     }
 
     public function revert_to_preview3($nim) {
+        $this->clear_cache();
         if (!$this->db->table_exists('pendaftaran_ta')) return false;
 
         $this->db->where('nim', $nim);
