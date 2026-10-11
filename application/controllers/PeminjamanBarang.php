@@ -19,7 +19,7 @@ class PeminjamanBarang extends CI_Controller {
         }
 
         $role_id = (int)$this->session->userdata('role_id');
-        $allowed = [1, 2, 3, 21, 22]; // Admin, Kaur, Dosen, Laboran, Super Admin
+        $allowed = [1, 2, 21, 22]; // Admin, Kaur, Laboran, Super Admin
         if (!in_array($role_id, $allowed, true)) {
             $this->session->set_flashdata('error', 'Akses ditolak!');
             redirect('dashboard');
@@ -36,6 +36,10 @@ class PeminjamanBarang extends CI_Controller {
 
     public function scanner() {
         $role_id = (int)$this->session->userdata('role_id');
+        if ($role_id === 2) {
+            redirect('kaur/barang');
+            return;
+        }
         $data['title'] = 'Scanner QR Serah Terima';
         $data['scanner_label'] = 'Scanner QR Peminjaman';
         $data['scanner_desc'] = 'Scan QR transaksi dari akun peminjam untuk proses serah barang.';
