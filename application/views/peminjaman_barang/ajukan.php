@@ -348,7 +348,7 @@ $has_uploaded_visual = !empty($asset_media);
     <!-- Dedicated Sidebar Component (Pola Admin LAA) -->
     <?php $this->load->view('peminjaman_barang/sidebar'); ?>
 
-<div id="laaMainContentWrapper">
+<div id="laaMainContentWrapper" class="page-wrapper-for-sidebar">
     <!-- Sub Navigation Page Title Bar (Admin LAA style) -->
     <header class="glass-header-ifik mb-4">
         <div class="container d-flex flex-wrap align-items-center justify-content-between gap-3 header-inner-pad">

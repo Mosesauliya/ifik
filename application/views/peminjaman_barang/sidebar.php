@@ -2,92 +2,16 @@
 /**
  * Dedicated Sidebar Component for Modul Peminjaman Barang & Alat
  * Path: application/views/peminjaman_barang/sidebar.php
- * Mengadopsi pola curved sidebar mandiri seperti di Admin Layanan (LAA)
+ * Unified with standard Curved Animated Sidebar (components/curved_sidebar.php)
  */
-
-$current_full = rtrim(current_url(), '/');
-$session_role_id = (int)($this->session->userdata('role_id') ?? 0);
-$is_laboran_or_admin = in_array($session_role_id, [1, 21]);
-
-$barangNavItems = [
-    [
-        'heading' => 'Katalog Alat',
-        'href'    => site_url('peminjaman_barang'),
-        'icon_3d' => 'assets/images/icons_3d/ruangan.png'
-    ],
-    [
-        'heading' => 'Riwayat Peminjaman',
-        'href'    => site_url('peminjaman_barang/riwayat'),
-        'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'
-    ],
-    [
-        'heading' => 'Kalender & Jadwal',
-        'href'    => site_url('peminjaman_barang/kalender'),
-        'icon_3d' => 'assets/images/icons_3d/kalender.png'
-    ],
-];
-
-// Menu khusus Laboran / Admin untuk scanner serah terima fisik barang
-if ($is_laboran_or_admin) {
-    $barangNavItems[] = [
-        'heading' => 'Scanner QR Serah Terima',
-        'href'    => site_url('peminjamanbarang/scanner'),
-        'icon_3d' => 'assets/images/icons_3d/preview2.png'
-    ];
-}
-
-// Navigasi umum IFIK
-$barangNavItems[] = [
-    'heading' => 'Dashboard Utama',
-    'href'    => site_url('dashboard'),
-    'icon_3d' => 'assets/images/icons_3d/home.png'
-];
-
-$barangNavItems[] = [
-    'heading' => 'Keluar',
-    'href'    => site_url('login/logout'),
-    'icon_3d' => 'assets/images/icons_3d/logout.png'
-];
 ?>
 
-<!-- LAA Standalone Sidebar Stylesheet -->
-<link rel="stylesheet" href="<?= base_url('assets/css/laa_sidebar.css?v=' . time()); ?>">
+<!-- Font Awesome (Ensure available across all peminjaman_barang views) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
-/* Dedicated Accordion Animation */
-.laa-nav-submenu-wrapper {
-    display: grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows 0.38s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.laa-nav-dropdown.is-open .laa-nav-submenu-wrapper {
-    grid-template-rows: 1fr;
-}
-
-.laa-nav-submenu-inner {
-    overflow: hidden;
-    opacity: 0;
-    transform: translateY(-6px);
-    transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.laa-nav-dropdown.is-open .laa-nav-submenu-inner {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.laa-dropdown-chevron {
-    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.3s ease;
-}
-
-.laa-nav-dropdown.is-open .laa-dropdown-chevron {
-    transform: rotate(180deg);
-    color: #ea580c;
-}
-
 /* =========================================================
-   POLISHED HEADER & ACTION BUTTONS (ADMIN LAA STYLE)
+   POLISHED HEADER & ACTION BUTTONS (MATCHING IFIK STANDARD)
    ========================================================= */
 .glass-header-ifik {
     background: rgba(255, 255, 255, 0.98) !important;
@@ -104,13 +28,47 @@ $barangNavItems[] = [
 }
 
 .header-inner-pad {
-    padding-left: 78px;
+    padding-left: 56px;
     padding-right: 12px;
 }
-@media (min-width: 1024px) {
-    body.laa-sidebar-pushed .header-inner-pad {
+@media (min-width: 992px) {
+    body:not(.curved-sidebar-desktop-collapsed) .header-inner-pad {
         padding-left: 12px;
         padding-right: 12px;
+    }
+    body.curved-sidebar-desktop-collapsed .header-inner-pad {
+        padding-left: 56px;
+        padding-right: 12px;
+    }
+}
+
+/* Push Content Layout for Peminjaman Barang (Unified 270px width) */
+#laaMainContentWrapper,
+.page-wrapper-for-sidebar {
+    width: 100%;
+    min-width: 0;
+    transition: margin-left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+    box-sizing: border-box;
+}
+
+@media (min-width: 992px) {
+    body:not(.curved-sidebar-desktop-collapsed) #laaMainContentWrapper,
+    body:not(.curved-sidebar-desktop-collapsed) .page-wrapper-for-sidebar {
+        margin-left: 270px;
+        width: calc(100% - 270px);
+    }
+    body.curved-sidebar-desktop-collapsed #laaMainContentWrapper,
+    body.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar {
+        margin-left: 0;
+        width: 100%;
+    }
+}
+
+@media (max-width: 991.98px) {
+    #laaMainContentWrapper,
+    .page-wrapper-for-sidebar {
+        margin-left: 0 !important;
+        width: 100% !important;
     }
 }
 
@@ -256,116 +214,5 @@ $barangNavItems[] = [
 }
 </style>
 
-<!-- Floating Trigger Button (Top Left) -->
-<button type="button" id="curvedSidebarToggle" class="curved-sidebar-toggle-btn" aria-label="Toggle Sidebar Menu" title="Buka Menu Navigasi Peminjaman">
-    <div class="curved-sidebar-burger">
-        <span></span>
-        <span></span>
-        <span></span>
-    </div>
-</button>
-
-<!-- Backdrop Blur Overlay -->
-<div id="curvedSidebarBackdrop" class="curved-sidebar-backdrop"></div>
-
-<!-- Sliding Sidebar Panel with Morphing Curved SVG (Left Side) -->
-<aside id="curvedSidebarPanel" class="curved-sidebar-panel" aria-label="Sidebar Navigasi Peminjaman Barang">
-    <div class="curved-sidebar-inner">
-        <!-- Top Section: Header & Nav Links -->
-        <div>
-            <div class="curved-sidebar-header">
-                <p>Peminjaman Barang &amp; Alat</p>
-            </div>
-            
-            <nav class="curved-sidebar-nav">
-                <?php foreach ($barangNavItems as $idx => $item): 
-                    $num = sprintf('%02d', $idx + 1);
-                    $icon3d = $item['icon_3d'] ?? null;
-                    $hasChildren = !empty($item['children']);
-                ?>
-                    <?php if ($hasChildren): 
-                        $hasActiveChild = false;
-                        foreach ($item['children'] as $child) {
-                            if (rtrim($child['href'], '/') === $current_full) {
-                                $hasActiveChild = true;
-                                break;
-                            }
-                        }
-                    ?>
-                        <div class="laa-nav-dropdown <?= $hasActiveChild ? 'is-open' : ''; ?>">
-                            <button type="button" class="curved-nav-item laa-nav-dropdown-toggle w-full text-left flex items-center justify-between" onclick="toggleBarangSidebarDropdown(this)">
-                                <div class="curved-nav-content">
-                                    <?php if (!empty($icon3d)): ?>
-                                        <div class="curved-nav-3d-wrap">
-                                            <img src="<?= base_url($icon3d); ?>" alt="" class="curved-nav-3d-img" loading="lazy" />
-                                        </div>
-                                    <?php else: ?>
-                                        <span class="curved-nav-index"><?= $num ?>.</span>
-                                    <?php endif; ?>
-                                    <div class="curved-nav-text">
-                                        <span class="curved-nav-heading"><?= htmlspecialchars($item['heading']); ?></span>
-                                    </div>
-                                </div>
-                                <i class="bi bi-chevron-down laa-dropdown-chevron text-slate-400 text-xs"></i>
-                            </button>
-                            <div class="laa-nav-submenu-wrapper">
-                                <div class="laa-nav-submenu-inner pl-11 pr-2 py-1 space-y-1">
-                                    <?php foreach ($item['children'] as $child): 
-                                        $isChildActive = (rtrim($child['href'], '/') === $current_full);
-                                    ?>
-                                        <a href="<?= htmlspecialchars($child['href']); ?>" class="block px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 <?= $isChildActive ? 'bg-orange-100/90 text-orange-700 font-bold border-l-2 border-orange-500 shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80' ?>">
-                                            <span class="w-1.5 h-1.5 rounded-full <?= $isChildActive ? 'bg-orange-500' : 'bg-slate-300' ?>"></span>
-                                            <?= htmlspecialchars($child['heading']); ?>
-                                        </a>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-                        </div>
-                    <?php else: 
-                        $isItemActive = (rtrim($item['href'], '/') === $current_full);
-                    ?>
-                        <a href="<?= htmlspecialchars($item['href']); ?>" class="curved-nav-item <?= $isItemActive ? 'active' : ''; ?>">
-                            <div class="curved-nav-content">
-                                <?php if (!empty($icon3d)): ?>
-                                    <div class="curved-nav-3d-wrap">
-                                        <img src="<?= base_url($icon3d); ?>" alt="" class="curved-nav-3d-img" loading="lazy" />
-                                    </div>
-                                <?php else: ?>
-                                    <span class="curved-nav-index"><?= $num ?>.</span>
-                                <?php endif; ?>
-                                <div class="curved-nav-text">
-                                    <span class="curved-nav-heading"><?= htmlspecialchars($item['heading']); ?></span>
-                                </div>
-                            </div>
-                        </a>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            </nav>
-        </div>
-
-        <!-- Bottom Section: Portal Info & Version -->
-        <div class="curved-sidebar-footer">
-            <div class="curved-sidebar-footer-brand">
-                <i class="bi bi-box-seam text-orange-500"></i>
-                <span>Peminjaman Barang • IFIK</span>
-            </div>
-            <span class="curved-sidebar-footer-version">v2.0</span>
-        </div>
-    </div>
-
-    <!-- Morphing Bezier Curve SVG (Right Edge of Left Sidebar) -->
-    <svg id="curvedSidebarSvg" class="curved-sidebar-svg">
-        <path id="curvedSidebarPath" />
-    </svg>
-</aside>
-
-<script>
-function toggleBarangSidebarDropdown(btn) {
-    const parent = btn.closest('.laa-nav-dropdown');
-    if (!parent) return;
-    parent.classList.toggle('is-open');
-}
-</script>
-
-<!-- LAA Sidebar Standalone Script -->
-<script src="<?= base_url('assets/js/laa_sidebar.js?v=' . time()); ?>"></script>
+<!-- Load Unified Curved Sidebar Component -->
+<?php $this->load->view('components/curved_sidebar'); ?>
