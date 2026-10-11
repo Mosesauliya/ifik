@@ -390,6 +390,75 @@ if (!function_exists('riwayat_loan_status_tone')) {
         html.scm-theme-dark .kp-loan-modal .modal-title {
             color: #f8fafc;
         }
+
+        .kp-modal-section-title {
+            color: #64748b;
+            font-size: .62rem;
+            font-weight: 700;
+            letter-spacing: .045em;
+            text-transform: uppercase;
+        }
+        .kp-modal-section + .kp-modal-section {
+            margin-top: 18px;
+            padding-top: 18px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .kp-purpose {
+            margin: 7px 0 0;
+            color: #1e293b;
+            font-size: .76rem;
+            line-height: 1.65;
+        }
+        .kp-detail-table {
+            overflow: hidden;
+            margin-top: 9px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+        .kp-detail-table table {
+            margin: 0;
+            color: #1e293b;
+        }
+        .kp-detail-table th,
+        .kp-detail-table td {
+            padding: 9px 10px;
+            border-bottom-color: #e2e8f0;
+            font-size: .67rem;
+            vertical-align: middle;
+        }
+        .kp-detail-table th {
+            background: #f8fafc;
+            color: #64748b;
+            font-size: .59rem;
+            letter-spacing: .035em;
+            text-transform: uppercase;
+        }
+        .kp-detail-table td {
+            background: #ffffff;
+            color: #1e293b;
+        }
+        html.scm-theme-dark .kp-modal-section + .kp-modal-section {
+            border-color: #334155;
+        }
+        html.scm-theme-dark .kp-modal-section-title {
+            color: #94a3b8;
+        }
+        html.scm-theme-dark .kp-purpose {
+            color: #e2e8f0;
+        }
+        html.scm-theme-dark .kp-detail-table {
+            border-color: #334155;
+        }
+        html.scm-theme-dark .kp-detail-table th {
+            background: #0f172a;
+            color: #94a3b8;
+            border-color: #334155;
+        }
+        html.scm-theme-dark .kp-detail-table td {
+            background: #1e293b;
+            color: #f8fafc;
+            border-color: #334155;
+        }
     </style>
     <?php include APPPATH . 'views/shared/theme_assets.php'; ?>
 </head>
@@ -798,21 +867,40 @@ if (!function_exists('riwayat_loan_status_tone')) {
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                         </div>
                         <div class="modal-body">
-                            <div class="loan-progress loan-progress--detailed" aria-label="Status peminjaman: <?= html_escape($loan_progress['status_label']); ?>">
-                                <div class="loan-progress__all-heading"><i class="bi bi-list-check" aria-hidden="true"></i>Alur lengkap peminjaman</div>
-                                <ol class="loan-progress__steps loan-progress__steps--visible">
-                                    <?php foreach ($loan_progress['steps'] as $loan_progress_step): ?>
-                                        <li class="loan-progress__step <?= html_escape($loan_progress_step['state']); ?>">
-                                            <span class="loan-progress__step-number" aria-hidden="true"><?= (int) $loan_progress_step['number']; ?></span>
-                                            <span class="loan-progress__step-copy">
-                                                <strong><?= html_escape($loan_progress_step['label']); ?></strong>
-                                                <small><?= html_escape($loan_progress_step['description']); ?></small>
-                                                <em><?= html_escape($loan_progress_step['state_label']); ?></em>
-                                            </span>
-                                        </li>
-                                    <?php endforeach; ?>
-                                </ol>
-                            </div>
+                            <section class="kp-modal-section">
+                                <div class="kp-modal-section-title">Progress Peminjaman</div>
+                                <?php $loan_progress_item = $r; $loan_progress_compact = false; include APPPATH . 'views/shared/loan_progress.php'; ?>
+                            </section>
+                            <section class="kp-modal-section">
+                                <div class="kp-modal-section-title">Keperluan</div>
+                                <p class="kp-purpose"><?= nl2br(html_escape($r->keperluan ?? '-')) ?></p>
+                            </section>
+                            <section class="kp-modal-section">
+                                <div class="kp-modal-section-title">Detail Barang</div>
+                                <div class="kp-detail-table table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                        <tr>
+                                            <th>Barang</th>
+                                            <th>Kode</th>
+                                            <th>Laboratorium</th>
+                                            <th class="text-center">Jumlah</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <?php $detail_list = !empty($r->detail_barang) ? $r->detail_barang : [$r]; ?>
+                                        <?php foreach ($detail_list as $detail): ?>
+                                            <tr>
+                                                <td class="fw-semibold"><?= html_escape($detail->nama_aset ?? '-') ?></td>
+                                                <td><?= html_escape($detail->kode_aset ?? '-') ?></td>
+                                                <td><?= html_escape($detail->nama_ruangan ?? '-') ?></td>
+                                                <td class="text-center"><?= (int) ($detail->jumlah_pinjam ?? 1) ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </section>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
