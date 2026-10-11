@@ -549,7 +549,9 @@ $history_query['per_page'] = $history_per_page;
                                 <?php else: ?>
                                     <?php if ($r->status === 'Menunggu ACC Kaprodi'): ?>
                                         <span class="badge bg-warning-subtle text-warning border border-warning-subtle py-1.5 px-2.5">Menunggu Kaprodi</span>
-                                    <?php elseif ($r->status === 'Menunggu ACC Kaur' || $r->status === 'Menunggu Verifikasi Laboran'): ?>
+                                    <?php elseif (in_array($r->status, ['Menunggu Verifikasi Laboran', 'Menunggu Pengecekan Laboran', 'Menunggu Scan Laboran'], true)): ?>
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle py-1.5 px-2.5">Menunggu Scan Laboran</span>
+                                    <?php elseif ($r->status === 'Menunggu ACC Kaur'): ?>
                                         <span class="badge bg-primary-subtle text-primary border border-primary-subtle py-1.5 px-2.5">Menunggu Kaur</span>
                                     <?php elseif (in_array($r->status, ['Menunggu ACC Wadek', 'Menunggu Persetujuan Wadek'], true)): ?>
                                         <span class="badge bg-purple-subtle text-primary border border-primary-subtle py-1.5 px-2.5">Menunggu Wadek</span>

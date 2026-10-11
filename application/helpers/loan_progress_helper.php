@@ -20,6 +20,7 @@ if (!function_exists('scm_loan_progress')) {
             $steps = [
                 ['label' => 'Pengajuan Dibuat', 'description' => 'Peminjam mengirim pengajuan barang luar kampus.'],
                 ['label' => 'Persetujuan Kaprodi', 'description' => 'Kaprodi memeriksa dan menyetujui pengajuan.'],
+                ['label' => 'Scan Laboran', 'description' => 'Laboran memverifikasi fisik dan ketersediaan barang melalui scan/pemeriksaan.'],
                 ['label' => 'Persetujuan Kaur', 'description' => 'Kaur memeriksa dan menyetujui pengajuan.'],
                 ['label' => 'Persetujuan Wadek', 'description' => 'Wakil Dekan memberikan persetujuan peminjaman eksternal.'],
                 ['label' => 'Pengambilan Barang', 'description' => 'Barang diserahterimakan kepada peminjam melalui scan QR oleh laboran.'],
@@ -30,6 +31,7 @@ if (!function_exists('scm_loan_progress')) {
             $steps = [
                 ['label' => 'Pengajuan Dibuat', 'description' => 'Peminjam mengirim pengajuan barang.'],
                 ['label' => 'Persetujuan Kaprodi', 'description' => 'Kaprodi memeriksa dan menyetujui pengajuan.'],
+                ['label' => 'Scan Laboran', 'description' => 'Laboran memverifikasi fisik dan ketersediaan barang melalui scan/pemeriksaan.'],
                 ['label' => 'Persetujuan Kaur', 'description' => 'Kaur memberikan persetujuan akhir peminjaman.'],
                 ['label' => 'Pengambilan Barang', 'description' => 'Barang diserahterimakan kepada peminjam melalui scan QR oleh laboran.'],
                 ['label' => 'Peminjaman & Pengembalian', 'description' => 'Barang sedang digunakan dan menunggu dikembalikan.'],
@@ -50,25 +52,46 @@ if (!function_exists('scm_loan_progress')) {
                 $status_label = 'Menunggu Persetujuan Kaprodi';
                 break;
 
-            case 'Menunggu ACC Kaur':
             case 'Menunggu Verifikasi Laboran':
             case 'Menunggu Pengecekan Laboran':
-            case 'Menunggu Persetujuan':
+            case 'Menunggu Scan Laboran':
                 $current_index = 2;
+                $stage_label = 'Laboran';
+                $status_label = 'Menunggu Scan Laboran';
+                break;
+
+            case 'Menunggu ACC Kaur':
+                $current_index = 3;
                 $stage_label = 'Kaur';
                 $status_label = 'Menunggu Persetujuan Kaur';
                 break;
 
+            case 'Menunggu Persetujuan':
+                if ($kaprodi === 'Disetujui' && $laboran === 'Pending') {
+                    $current_index = 2;
+                    $stage_label = 'Laboran';
+                    $status_label = 'Menunggu Scan Laboran';
+                } elseif ($kaprodi === 'Disetujui' && $laboran === 'Disetujui' && $kaur === 'Pending') {
+                    $current_index = 3;
+                    $stage_label = 'Kaur';
+                    $status_label = 'Menunggu Persetujuan Kaur';
+                } else {
+                    $current_index = 1;
+                    $stage_label = 'Kaprodi';
+                    $status_label = 'Menunggu Persetujuan Kaprodi';
+                }
+                break;
+
             case 'Menunggu ACC Wadek':
             case 'Menunggu Persetujuan Wadek':
-                $current_index = $is_external ? 3 : 2;
+                $current_index = $is_external ? 4 : 3;
                 $stage_label = 'Wadek';
                 $status_label = 'Menunggu Persetujuan Wakil Dekan (Wadek)';
                 break;
 
             case 'Disetujui (Menunggu Finalisasi QR)':
             case 'Disetujui (Menunggu Pengambilan)':
-                $current_index = $is_external ? 4 : 3;
+                $current_index = $is_external ? 5 : 4;
                 $stage_label = 'Pengambilan';
                 $status_label = 'QR Aktif — Menunggu Pengambilan';
                 $tone = 'ready';
@@ -76,7 +99,7 @@ if (!function_exists('scm_loan_progress')) {
 
             case 'Sedang Dipinjam':
             case 'Dipinjam':
-                $current_index = $is_external ? 5 : 4;
+                $current_index = $is_external ? 6 : 5;
                 $stage_label = 'Pengembalian';
                 $status_label = 'Sedang Dipinjam — Menunggu Pengembalian';
                 $tone = 'active';
@@ -84,7 +107,7 @@ if (!function_exists('scm_loan_progress')) {
 
             case 'Dikembalikan':
             case 'Selesai':
-                $current_index = $is_external ? 6 : 5;
+                $current_index = $is_external ? 7 : 6;
                 $stage_label = 'Selesai';
                 $status_label = 'Selesai — Barang Dikembalikan';
                 $tone = 'complete';
@@ -95,12 +118,16 @@ if (!function_exists('scm_loan_progress')) {
                     $rejected_index = 1;
                     $stage_label = 'Kaprodi';
                     $status_label = 'Ditolak oleh Kaprodi';
-                } elseif ($kaur === 'Ditolak' || $laboran === 'Ditolak') {
+                } elseif ($laboran === 'Ditolak') {
                     $rejected_index = 2;
+                    $stage_label = 'Laboran';
+                    $status_label = 'Ditolak oleh Laboran';
+                } elseif ($kaur === 'Ditolak') {
+                    $rejected_index = 3;
                     $stage_label = 'Kaur';
                     $status_label = 'Ditolak oleh Kaur';
                 } elseif ($wadek === 'Ditolak') {
-                    $rejected_index = $is_external ? 3 : 2;
+                    $rejected_index = $is_external ? 4 : 3;
                     $stage_label = 'Wadek';
                     $status_label = 'Ditolak oleh Wakil Dekan';
                 } else {
@@ -184,11 +211,11 @@ if (!function_exists('scm_loan_can_act')) {
             return $status === 'Menunggu ACC Kaprodi' && $kaprodi === 'Pending';
         }
         if ($role === 'laboran') {
-            return in_array($status, ['Menunggu Verifikasi Laboran', 'Menunggu Pengecekan Laboran', 'Menunggu Persetujuan'], true)
+            return in_array($status, ['Menunggu Verifikasi Laboran', 'Menunggu Pengecekan Laboran', 'Menunggu Scan Laboran', 'Menunggu Persetujuan'], true)
                 && $kaprodi === 'Disetujui' && $laboran === 'Pending';
         }
         if ($role === 'kaur') {
-            return in_array($status, ['Menunggu ACC Kaur', 'Menunggu Verifikasi Laboran', 'Menunggu Pengecekan Laboran', 'Menunggu Persetujuan'], true)
+            return in_array($status, ['Menunggu ACC Kaur', 'Menunggu Verifikasi Laboran', 'Menunggu Pengecekan Laboran', 'Menunggu Scan Laboran', 'Menunggu Persetujuan'], true)
                 && $kaprodi === 'Disetujui' && $kaur === 'Pending';
         }
         if ($role === 'wadek') {
