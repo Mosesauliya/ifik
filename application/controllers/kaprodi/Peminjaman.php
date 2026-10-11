@@ -98,16 +98,19 @@ class Peminjaman extends CI_Controller {
     }
 
     private function read_filters() {
-        $allowed = ['number', 'peminjam', 'barang', 'lab', 'masa', 'status'];
+        $allowed = ['all', 'number', 'peminjam', 'barang', 'lab', 'masa', 'status'];
         $fields = (array) $this->input->get('filter_field', true);
         $values = (array) $this->input->get('filter_value', true);
         $rows = [];
         foreach ($fields as $index => $field) {
             $field = trim((string) $field);
             if (count($rows) >= 4 || !in_array($field, $allowed, true)) continue;
-            $rows[] = ['field' => $field, 'value' => trim((string) ($values[$index] ?? ''))];
+            $val = trim((string) ($values[$index] ?? ''));
+            if ($val !== '') {
+                $rows[] = ['field' => $field, 'value' => $val];
+            }
         }
-        return $rows ?: [['field' => 'number', 'value' => '']];
+        return $rows ?: [['field' => 'all', 'value' => '']];
     }
 
     private function read_per_page() {
@@ -330,5 +333,15 @@ class Peminjaman extends CI_Controller {
                 . ' unit, tersedia ' . (int) ($shortage['available'] ?? 0) . ' unit';
         }
         return 'Pengajuan belum dapat diteruskan ke Laboran karena stok tidak cukup: ' . implode('; ', $items) . '.';
+    }
+
+    public function autocomplete() {
+        $term = trim((string) $this->input->get('q', true));
+        $cat  = trim((string) $this->input->get('cat', true) ?: 'all');
+        $results = $this->PeminjamanBarang_model->autocomplete_kaprodi($term, $cat, $this->kaprodi_prodi);
+
+        $this->output
+             ->set_content_type('application/json')
+             ->set_output(json_encode($results ?: []));
     }
 }
