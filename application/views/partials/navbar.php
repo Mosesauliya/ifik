@@ -440,7 +440,7 @@
         </li> -->
 
         <li class="nav-item">
-            <a href="<?= site_url('peminjaman') ?>" class="nav-link"><span>Peminjaman Barang</span></a>
+            <a href="<?= site_url('peminjaman_barang') ?>" class="nav-link"><span>Peminjaman Barang</span></a>
         </li>
 
         <li class="nav-item">
