@@ -25,6 +25,36 @@ $history_total = (int) $history_pagination['total'];
 $history_per_page = (int) $history_pagination['per_page'];
 $history_query = $_GET;
 $history_query['per_page'] = $history_per_page;
+
+if (!function_exists('riwayat_loan_status_tone')) {
+    function riwayat_loan_status_tone($status)
+    {
+        $normalized = strtolower(trim((string) $status));
+
+        if (strpos($normalized, 'tolak') !== false || strpos($normalized, 'reject') !== false) {
+            return 'is-rejected';
+        }
+
+        if (
+            strpos($normalized, 'dikembalikan') !== false ||
+            strpos($normalized, 'selesai') !== false ||
+            strpos($normalized, 'disetujui') !== false
+        ) {
+            return 'is-completed';
+        }
+
+        if (
+            strpos($normalized, 'menunggu') !== false ||
+            strpos($normalized, 'dipinjam') !== false ||
+            strpos($normalized, 'sedang') !== false ||
+            strpos($normalized, 'proses') !== false
+        ) {
+            return 'is-current';
+        }
+
+        return 'is-pending';
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -259,6 +289,106 @@ $history_query['per_page'] = $history_per_page;
             display: flex;
             align-items: center;
             gap: 8px;
+        }
+
+        /* Modal Progress (Sama dengan kaprodi/peminjaman) */
+        .kp-loan-modal .modal-dialog {
+            max-width: 760px;
+        }
+        .kp-loan-modal .modal-content {
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            border-radius: 13px;
+            background: #ffffff;
+            box-shadow: 0 22px 60px rgba(15, 23, 42, .2);
+        }
+        .kp-loan-modal .modal-header {
+            align-items: flex-start;
+            padding: 19px 21px 17px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .kp-modal-kicker {
+            margin-bottom: 4px;
+            color: #64748b;
+            font-size: .62rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+        .kp-loan-modal .modal-title {
+            color: #1e293b;
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+        .kp-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            width: max-content;
+            min-height: 29px;
+            padding: 5px 11px;
+            border: 1px solid transparent;
+            border-radius: 999px;
+            font-size: .68rem;
+            font-weight: 600;
+            line-height: 1;
+            white-space: nowrap;
+        }
+        .kp-status-badge.is-current {
+            border-color: #f4bd70;
+            background: #fff4ea;
+            color: #965600;
+        }
+        .kp-status-badge.is-completed {
+            border-color: #9ed7bd;
+            background: #eaf8f1;
+            color: #13734d;
+        }
+        .kp-status-badge.is-pending {
+            border-color: #d6dbe1;
+            background: #f2f4f6;
+            color: #66717d;
+        }
+        .kp-status-badge.is-rejected {
+            border-color: #efb2b2;
+            background: #fff0f0;
+            color: #b4232d;
+        }
+        .kp-status-dot {
+            width: 7px;
+            height: 7px;
+            flex: 0 0 7px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        .kp-loan-modal .modal-body {
+            padding: 19px 21px;
+        }
+        .kp-loan-modal .modal-footer {
+            gap: 8px;
+            padding: 14px 21px;
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+        .kp-loan-modal .modal-footer .btn {
+            min-width: 92px;
+            min-height: 36px;
+            border-radius: 999px;
+            font-size: .7rem;
+            font-weight: 600;
+        }
+        html.scm-theme-dark .kp-loan-modal .modal-content {
+            background: #1e293b;
+            border-color: #334155;
+            color: #f8fafc;
+        }
+        html.scm-theme-dark .kp-loan-modal .modal-header,
+        html.scm-theme-dark .kp-loan-modal .modal-footer {
+            border-color: #334155;
+            background: #0f172a;
+        }
+        html.scm-theme-dark .kp-loan-modal .modal-title {
+            color: #f8fafc;
         }
     </style>
     <?php include APPPATH . 'views/shared/theme_assets.php'; ?>
@@ -534,7 +664,13 @@ $history_query['per_page'] = $history_per_page;
                                 </span>
                             </td>
                             <td>
-                                <?php $loan_progress_item = $r; $loan_progress_compact = true; include APPPATH . 'views/shared/loan_progress.php'; ?>
+                                <?php
+                                    $loan_progress_item = $r;
+                                    $loan_progress_compact = true;
+                                    $loan_progress_detail_target = '#riwayatProgressModal' . (int) $r->id_peminjaman;
+                                    include APPPATH . 'views/shared/loan_progress.php';
+                                    unset($loan_progress_detail_target);
+                                ?>
                             </td>
                             <td class="text-center">
                                 <?php
@@ -625,6 +761,65 @@ $history_query['per_page'] = $history_per_page;
                 </div>
             </div>
         </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
+
+    <!-- MODAL DETAIL PROGRESS PEMINJAMAN (MENGIKUTI STYLE KAPRODI/PEMINJAMAN TANPA META KOTAK) -->
+    <?php if(!empty($riwayat)): ?>
+        <?php foreach($riwayat as $r): ?>
+            <?php
+                $loan_progress = scm_loan_progress($r);
+                $pjm_number = $r->group_id ?: ('PJM_' . $r->id_peminjaman);
+            ?>
+            <div
+                class="modal fade kp-loan-modal"
+                id="riwayatProgressModal<?= (int) $r->id_peminjaman ?>"
+                tabindex="-1"
+                aria-labelledby="riwayatProgressModalTitle<?= (int) $r->id_peminjaman ?>"
+                aria-hidden="true"
+                data-loan-progress-modal
+            >
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <div class="w-100 pe-3">
+                                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                    <div>
+                                        <div class="kp-modal-kicker">Peminjaman</div>
+                                        <h2 id="riwayatProgressModalTitle<?= (int) $r->id_peminjaman ?>" class="modal-title">
+                                            <?= html_escape($pjm_number) ?>
+                                        </h2>
+                                    </div>
+                                    <span class="kp-status-badge <?= riwayat_loan_status_tone($r->status) ?>">
+                                        <span class="kp-status-dot"></span><?= html_escape($r->status) ?>
+                                    </span>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="loan-progress loan-progress--detailed" aria-label="Status peminjaman: <?= html_escape($loan_progress['status_label']); ?>">
+                                <div class="loan-progress__all-heading"><i class="bi bi-list-check" aria-hidden="true"></i>Alur lengkap peminjaman</div>
+                                <ol class="loan-progress__steps loan-progress__steps--visible">
+                                    <?php foreach ($loan_progress['steps'] as $loan_progress_step): ?>
+                                        <li class="loan-progress__step <?= html_escape($loan_progress_step['state']); ?>">
+                                            <span class="loan-progress__step-number" aria-hidden="true"><?= (int) $loan_progress_step['number']; ?></span>
+                                            <span class="loan-progress__step-copy">
+                                                <strong><?= html_escape($loan_progress_step['label']); ?></strong>
+                                                <small><?= html_escape($loan_progress_step['description']); ?></small>
+                                                <em><?= html_escape($loan_progress_step['state_label']); ?></em>
+                                            </span>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ol>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         <?php endforeach; ?>
     <?php endif; ?>
 
