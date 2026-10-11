@@ -538,9 +538,10 @@ $history_query['per_page'] = $history_per_page;
                             </td>
                             <td class="text-center">
                                 <?php
+                                    $is_laboran_scan = in_array($r->status, ['Menunggu Verifikasi Laboran', 'Menunggu Pengecekan Laboran', 'Menunggu Scan Laboran'], true);
                                     $is_ready_for_pickup = in_array($r->status, ['Disetujui (Menunggu Pengambilan)', 'Disetujui (Menunggu Finalisasi QR)'], true);
                                     $is_borrowed = in_array($r->status, ['Sedang Dipinjam', 'Dipinjam'], true);
-                                    $show_qr = $is_ready_for_pickup || $is_borrowed;
+                                    $show_qr = $is_laboran_scan || $is_ready_for_pickup || $is_borrowed;
                                 ?>
                                 <?php if($show_qr): ?>
                                     <button class="btn btn-sm btn-outline-dark fw-semibold px-3" data-bs-toggle="modal" data-bs-target="#qrModal<?= $r->id_peminjaman ?>">
@@ -592,9 +593,10 @@ $history_query['per_page'] = $history_per_page;
     <?php if(!empty($riwayat)): ?>
         <?php foreach($riwayat as $r): ?>
         <?php
+            $is_laboran_scan = in_array($r->status, ['Menunggu Verifikasi Laboran', 'Menunggu Pengecekan Laboran', 'Menunggu Scan Laboran'], true);
             $is_ready_for_pickup = in_array($r->status, ['Disetujui (Menunggu Pengambilan)', 'Disetujui (Menunggu Finalisasi QR)'], true);
             $is_borrowed = in_array($r->status, ['Sedang Dipinjam', 'Dipinjam'], true);
-            $show_qr = $is_ready_for_pickup || $is_borrowed;
+            $show_qr = $is_laboran_scan || $is_ready_for_pickup || $is_borrowed;
             if(!$show_qr) { continue; }
             $show_return_qr = in_array($r->status, ['Sedang Dipinjam', 'Dipinjam'], true);
             $qr_url = site_url('peminjamanbarang/serah_terima/'.rawurlencode($r->group_id));
@@ -603,7 +605,7 @@ $history_query['per_page'] = $history_per_page;
             <div class="modal-dialog modal-sm modal-dialog-centered">
                 <div class="modal-content text-center p-4 border-0 shadow-lg" style="border-radius: 20px;">
                     <h5 class="fw-bold text-fik-orange mb-1" id="qrModalLabel<?= $r->id_peminjaman ?>">QR Transaksi Laboratorium</h5>
-                    <p class="small text-muted mb-4"><?= $show_return_qr ? 'Tunjukkan QR yang sama kepada Laboran saat mengembalikan barang.' : 'Tunjukkan QR ini kepada Laboran saat serah terima barang. QR yang sama dipakai kembali saat pengembalian.' ?></p>
+                    <p class="small text-muted mb-4"><?= $show_return_qr ? 'Tunjukkan QR ini kepada Laboran saat mengembalikan barang.' : ($is_laboran_scan ? 'Tunjukkan QR ini kepada Laboran untuk scan & verifikasi fisik barang.' : 'Tunjukkan QR ini saat serah terima barang di laboratorium.') ?></p>
                     
                     <!-- QR transaksi tunggal: dipakai untuk serah barang dan pengembalian -->
                     <div class="bg-white p-3 rounded-4 mb-3 mx-auto shadow-sm border" style="display: inline-block;">

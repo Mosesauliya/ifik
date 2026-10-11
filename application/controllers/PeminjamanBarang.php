@@ -85,11 +85,15 @@ class PeminjamanBarang extends CI_Controller {
         } elseif ($st === 'Menunggu ACC Kaprodi' || $status_kaprodi !== 'Disetujui') {
             $workflow_stage = 'menunggu_acc';
             $qr_valid = false;
-            $qr_message = 'Pengajuan masih menunggu persetujuan Kaprodi. Barang belum boleh diserahterimakan.';
-        } elseif (in_array($st, ['Menunggu ACC Kaur', 'Menunggu Verifikasi Laboran'], true) || $status_kaur !== 'Disetujui') {
+            $qr_message = 'Pengajuan masih menunggu persetujuan Kaprodi. Barang belum dapat diverifikasi oleh Laboran.';
+        } elseif (in_array($st, ['Menunggu Verifikasi Laboran', 'Menunggu Pengecekan Laboran', 'Menunggu Scan Laboran'], true)) {
+            $workflow_stage = 'verifikasi_laboran';
+            $qr_valid = true;
+            $qr_message = 'QR Peminjaman valid! Pengajuan telah disetujui Kaprodi dan siap diverifikasi fisik oleh Laboran.';
+        } elseif ($st === 'Menunggu ACC Kaur' || $status_kaur !== 'Disetujui') {
             $workflow_stage = 'menunggu_acc';
             $qr_valid = false;
-            $qr_message = 'Pengajuan masih menunggu persetujuan Kepala Urusan (Kaur). Barang belum boleh diserahterimakan.';
+            $qr_message = 'Pengajuan telah diverifikasi Laboran dan saat ini sedang menunggu persetujuan Kepala Urusan (Kaur).';
         } elseif ($is_external && (in_array($st, ['Menunggu ACC Wadek', 'Menunggu Persetujuan Wadek'], true) || $status_wadek !== 'Disetujui')) {
             $workflow_stage = 'menunggu_acc';
             $qr_valid = false;
@@ -97,7 +101,7 @@ class PeminjamanBarang extends CI_Controller {
         } elseif (in_array($st, ['Disetujui (Menunggu Pengambilan)', 'Disetujui (Menunggu Finalisasi QR)'], true)) {
             $workflow_stage = 'serah_terima';
             $qr_valid = true;
-            $qr_message = 'Pengajuan telah disetujui lengkap dan siap untuk verifikasi fisik serta serah terima barang oleh Laboran.';
+            $qr_message = 'Pengajuan telah disetujui lengkap dan siap untuk serah terima fisik barang oleh Laboran.';
         } else {
             $workflow_stage = 'invalid';
             $qr_valid = false;

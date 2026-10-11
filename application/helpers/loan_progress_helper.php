@@ -20,10 +20,10 @@ if (!function_exists('scm_loan_progress')) {
             $steps = [
                 ['label' => 'Pengajuan Dibuat', 'description' => 'Peminjam mengirim pengajuan barang luar kampus.'],
                 ['label' => 'Persetujuan Kaprodi', 'description' => 'Kaprodi memeriksa dan menyetujui pengajuan.'],
-                ['label' => 'Scan Laboran', 'description' => 'Laboran memverifikasi fisik dan ketersediaan barang melalui scan/pemeriksaan.'],
+                ['label' => 'Scan Laboran', 'description' => 'Laboran melakukan scan QR peminjaman dan verifikasi fisik ketersediaan barang.'],
                 ['label' => 'Persetujuan Kaur', 'description' => 'Kaur memeriksa dan menyetujui pengajuan.'],
                 ['label' => 'Persetujuan Wadek', 'description' => 'Wakil Dekan memberikan persetujuan peminjaman eksternal.'],
-                ['label' => 'Pengambilan Barang', 'description' => 'Barang diserahterimakan kepada peminjam melalui scan QR oleh laboran.'],
+                ['label' => 'Pengambilan Barang', 'description' => 'Peminjam mengambil fisik barang di laboratorium setelah seluruh persetujuan selesai.'],
                 ['label' => 'Peminjaman & Pengembalian', 'description' => 'Barang sedang digunakan di luar kampus dan menunggu dikembalikan.'],
                 ['label' => 'Selesai', 'description' => 'Barang telah diterima kembali melalui scan QR pengembalian.'],
             ];
@@ -31,9 +31,9 @@ if (!function_exists('scm_loan_progress')) {
             $steps = [
                 ['label' => 'Pengajuan Dibuat', 'description' => 'Peminjam mengirim pengajuan barang.'],
                 ['label' => 'Persetujuan Kaprodi', 'description' => 'Kaprodi memeriksa dan menyetujui pengajuan.'],
-                ['label' => 'Scan Laboran', 'description' => 'Laboran memverifikasi fisik dan ketersediaan barang melalui scan/pemeriksaan.'],
+                ['label' => 'Scan Laboran', 'description' => 'Laboran melakukan scan QR peminjaman dan verifikasi fisik ketersediaan barang.'],
                 ['label' => 'Persetujuan Kaur', 'description' => 'Kaur memberikan persetujuan akhir peminjaman.'],
-                ['label' => 'Pengambilan Barang', 'description' => 'Barang diserahterimakan kepada peminjam melalui scan QR oleh laboran.'],
+                ['label' => 'Pengambilan Barang', 'description' => 'Peminjam mengambil fisik barang di laboratorium setelah seluruh persetujuan selesai.'],
                 ['label' => 'Peminjaman & Pengembalian', 'description' => 'Barang sedang digunakan dan menunggu dikembalikan.'],
                 ['label' => 'Selesai', 'description' => 'Barang telah diterima kembali melalui scan QR pengembalian.'],
             ];

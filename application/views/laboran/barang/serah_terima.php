@@ -2,7 +2,8 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 $workflow_stage = $workflow_stage ?? 'serah_terima';
 $is_serah_terima = ($workflow_stage === 'serah_terima');
-$boleh_serah = !empty($qr_valid) && $is_serah_terima;
+$is_verifikasi_laboran = ($workflow_stage === 'verifikasi_laboran');
+$boleh_proses = !empty($qr_valid) && ($is_serah_terima || $is_verifikasi_laboran);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -208,7 +209,22 @@ $boleh_serah = !empty($qr_valid) && $is_serah_terima;
             </div>
 
             <!-- Callout Stage Banners -->
-            <?php if ($is_serah_terima): ?>
+            <?php if ($is_verifikasi_laboran && !empty($qr_valid)): ?>
+                <div class="bg-blue-50/90 border border-blue-200 rounded-3xl p-5 sm:p-6 mb-6">
+                    <div class="flex items-start gap-4">
+                        <div class="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-md shadow-blue-500/20">
+                            <i class="bi bi-qr-code-scan"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-blue-700 uppercase tracking-wider">Tahap Scan QR Pertama</div>
+                            <h3 class="text-base font-extrabold text-blue-950 mt-0.5">Scan &amp; Verifikasi Fisik oleh Laboran</h3>
+                            <p class="text-xs sm:text-sm text-blue-800/90 mt-1 leading-relaxed">
+                                Pengajuan telah disetujui Kaprodi. Silakan periksa ketersediaan dan kelayakan fisik barang di laboratorium. Klik <strong>Konfirmasi Scan &amp; Teruskan ke Kaur</strong> untuk meneruskan pengajuan ke Kepala Urusan (Kaur).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            <?php elseif ($is_serah_terima && !empty($qr_valid)): ?>
                 <div class="bg-emerald-50/80 border border-emerald-200 rounded-3xl p-5 sm:p-6 mb-6">
                     <div class="flex items-start gap-4">
                         <div class="w-11 h-11 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-md shadow-emerald-500/20">
@@ -218,7 +234,7 @@ $boleh_serah = !empty($qr_valid) && $is_serah_terima;
                             <div class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Siap Serah Terima Fisik</div>
                             <h3 class="text-base font-extrabold text-emerald-950 mt-0.5">Verifikasi Fisik &amp; Serah Terima Barang</h3>
                             <p class="text-xs sm:text-sm text-emerald-800/90 mt-1 leading-relaxed">
-                                Pengajuan telah disetujui. Silakan periksa kelayakan fisik barang di laboratorium, sesuaikan jumlah yang diserahkan jika ada kekurangan stok fisik, ambil foto bukti dokumentasi, dan klik <strong>Konfirmasi &amp; Serahkan Barang</strong> di bawah. Status akan langsung diperbarui menjadi <strong>Sedang Dipinjam</strong>.
+                                Pengajuan telah disetujui lengkap. Silakan periksa kelayakan fisik barang di laboratorium, sesuaikan jumlah yang diserahkan jika ada kekurangan stok fisik, ambil foto bukti dokumentasi, dan klik <strong>Konfirmasi &amp; Serahkan Barang</strong> di bawah. Status akan langsung diperbarui menjadi <strong>Sedang Dipinjam</strong>.
                             </p>
                         </div>
                     </div>
@@ -240,8 +256,13 @@ $boleh_serah = !empty($qr_valid) && $is_serah_terima;
                 </div>
             <?php endif; ?>
 
-            <?php if ($is_serah_terima && !empty($qr_valid)): ?>
-                <form id="handoverForm" method="post" enctype="multipart/form-data" action="<?= site_url('peminjamanbarang/proses_serah/' . rawurlencode($peminjaman->group_id)) ?>">
+            <?php if ($boleh_proses): ?>
+                <?php 
+                    $form_action = $is_verifikasi_laboran 
+                        ? site_url('peminjamanbarang/verifikasi_laboran/' . rawurlencode($peminjaman->group_id))
+                        : site_url('peminjamanbarang/proses_serah/' . rawurlencode($peminjaman->group_id));
+                ?>
+                <form id="handoverForm" method="post" enctype="multipart/form-data" action="<?= $form_action ?>">
                     <!-- Table Rincian Barang Card -->
                     <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-5 sm:p-6 mb-6">
                         <div class="flex items-center justify-between mb-4">
@@ -364,7 +385,7 @@ $boleh_serah = !empty($qr_valid) && $is_serah_terima;
                         <button type="button" id="btnSubmitSerah"
                                 class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-orange-600 hover:bg-orange-700 shadow-orange-600/25 text-white font-bold text-sm shadow-lg transition-all active:scale-[0.98]">
                             <i class="bi bi-check2-circle text-lg"></i>
-                            <span>Konfirmasi &amp; Serahkan Barang</span>
+                            <span><?= !empty($is_verifikasi_laboran) ? 'Konfirmasi Scan &amp; Teruskan ke Kaur' : 'Konfirmasi &amp; Serahkan Barang' ?></span>
                         </button>
                     </div>
                 </form>
@@ -630,14 +651,21 @@ $boleh_serah = !empty($qr_valid) && $is_serah_terima;
                     return;
                 }
 
+                const isVerifikasi = <?= !empty($is_verifikasi_laboran) ? 'true' : 'false' ?>;
+                const modalTitle = isVerifikasi ? 'Konfirmasi Scan & Verifikasi Laboran' : 'Konfirmasi Serah Terima Fisik';
+                const modalHtml = isVerifikasi
+                    ? `Apakah Anda yakin ingin memverifikasi peminjaman total <b>${totalUnits} unit</b> barang ini dan meneruskannya ke Kaur?`
+                    : `Apakah Anda yakin ingin menyerahkan total <b>${totalUnits} unit</b> barang ini kepada peminjam? Status akan langsung diperbarui menjadi <b>Sedang Dipinjam</b>.`;
+                const btnConfirm = isVerifikasi ? 'Ya, Teruskan ke Kaur' : 'Ya, Serahkan Barang';
+
                 Swal.fire({
-                    title: 'Konfirmasi Serah Terima Fisik',
-                    html: `Apakah Anda yakin ingin menyerahkan total <b>${totalUnits} unit</b> barang ini kepada peminjam? Status akan langsung diperbarui menjadi <b>Sedang Dipinjam</b>.`,
+                    title: modalTitle,
+                    html: modalHtml,
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonColor: '#ea580c',
                     cancelButtonColor: '#64748b',
-                    confirmButtonText: 'Ya, Serahkan Barang',
+                    confirmButtonText: btnConfirm,
                     cancelButtonText: 'Batal'
                 }).then((res) => {
                     if (res.isConfirmed) {
