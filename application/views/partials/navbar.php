@@ -458,6 +458,7 @@
             <a href="<?= site_url('welcome') ?>" class="nav-link"><span>Galeri Karya FIK</span></a>
         </li>
 
+        <?php
             // ====== Tentukan label & URL panel berdasarkan role ======
             $panel_label = 'Panel Admin';
             $panel_url   = base_url('ImportEmail');
