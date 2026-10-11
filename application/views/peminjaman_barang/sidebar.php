@@ -7,7 +7,7 @@
 
 $current_full = rtrim(current_url(), '/');
 $session_role_id = (int)($this->session->userdata('role_id') ?? 0);
-$is_laboran_or_admin = in_array($session_role_id, [1, 21]);
+$is_laboran_or_admin = in_array($session_role_id, [1, 2, 3, 21, 22]);
 
 $barangNavItems = [
     [

@@ -367,6 +367,13 @@ $has_uploaded_visual = !empty($asset_media);
 
             <!-- Profile & Quick Action -->
             <div class="d-flex align-items-center gap-2 ms-auto">
+                <?php if (in_array((int)($this->session->userdata('role_id') ?? 0), [1, 2, 3, 21, 22], true)): ?>
+                <a href="<?= site_url('peminjamanbarang/scanner'); ?>" class="btn-ifik-action" style="background: rgba(16, 185, 129, 0.1); color: #059669; border-color: rgba(16, 185, 129, 0.3);" title="Buka Scanner QR Serah Terima Laboran">
+                    <i class="bi bi-qr-code-scan"></i>
+                    <span>Scan Laboran</span>
+                </a>
+                <?php endif; ?>
+
                 <a href="<?= site_url('peminjaman_barang'); ?>" class="btn-ifik-action" title="Kembali ke Katalog Barang">
                     <i class="bi bi-box-seam"></i>
                     <span>Katalog Alat</span>
@@ -389,6 +396,14 @@ $has_uploaded_visual = !empty($asset_media);
                             <span class="fw-bold text-dark d-block text-truncate" style="font-size: 13px;"><?= html_escape($this->session->userdata('username') ?: $display_nama); ?></span>
                             <span class="badge rounded-pill mt-1" style="background: #fff7ed; color: #ea580c; font-size: 10px; font-weight: 700;"><?= html_escape($user_role_label); ?></span>
                         </li>
+                        <?php if (in_array((int)($this->session->userdata('role_id') ?? 0), [1, 2, 3, 21, 22], true)): ?>
+                        <li>
+                            <a class="dropdown-item text-success fw-bold" href="<?= site_url('peminjamanbarang/scanner') ?>">
+                                <i class="bi bi-qr-code-scan"></i>
+                                <span>Scan Laboran (QR)</span>
+                            </a>
+                        </li>
+                        <?php endif; ?>
                         <li>
                             <a class="dropdown-item" href="<?= site_url('peminjaman_barang/riwayat') ?>">
                                 <i class="bi bi-clock-history text-primary"></i>
