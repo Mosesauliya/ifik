@@ -11,8 +11,9 @@ class Peminjaman extends CI_Controller {
         $this->load->model('PeminjamanBarang_model');
         $this->load->model('User_model');
         $this->guard_kaprodi();
-        $account = $this->User_model->get_by_id($this->session->userdata('id_user'));
-        $this->kaprodi_prodi = fik_normalize_prodi($account->prodi ?? null);
+        $userId = $this->current_user_id();
+        $account = $userId ? $this->User_model->get_by_id($userId) : null;
+        $this->kaprodi_prodi = fik_normalize_prodi($account->prodi ?? ($this->session->userdata('prodi') ?: null));
         // Data peminjaman lama belum selalu mempunyai prodi. Akun Kaprodi
         // legacy tetap dapat menyelesaikan data tersebut, tanpa mendapat
         // akses ke pengajuan yang sudah memiliki prodi.
@@ -31,6 +32,10 @@ class Peminjaman extends CI_Controller {
         }
     }
 
+    private function current_user_id() {
+        return $this->session->userdata('id_user') ?: ($this->session->userdata('user_id') ?: $this->session->userdata('id'));
+    }
+
     private function guard_kaprodi() {
         if (!$this->session->userdata('logged_in')) {
             if (scm_is_ajax()) {
@@ -38,14 +43,19 @@ class Peminjaman extends CI_Controller {
             }
             redirect('auth');
         }
-        $role_id = (int) $this->session->userdata('role_id');
+        $role_id = (int) ($this->session->userdata('role_id') ?? 0);
+        $role = strtolower((string) ($this->session->userdata('role') ?? ''));
         $username = strtolower((string)($this->session->userdata('username') ?? ''));
         $email = strtolower((string)($this->session->userdata('email') ?? ''));
         $name = strtolower((string)($this->session->userdata('name') ?? ''));
         $koor = strtolower((string)($this->session->userdata('koordinator') ?? ''));
-        $is_kaprodi_user = ($role_id === 16) || ($role_id === 1) || ($role_id === 22)
+
+        // Allow Kaprodi (16), Dosen (3), Wadek/KK/Kaur (2, 7, 8, 9, 10), Admin (1), Super Admin (22)
+        $allowed_roles = [1, 2, 3, 6, 7, 8, 9, 10, 16, 22];
+        $is_kaprodi_user = in_array($role_id, $allowed_roles, true)
             || ($username === 'moses' || strpos($email, 'moses') !== false || strpos($name, 'moses') !== false)
-            || (strpos($koor, 'kaprodi') !== false || strpos($koor, 'prodi') !== false);
+            || (strpos($koor, 'kaprodi') !== false || strpos($koor, 'prodi') !== false)
+            || (strpos($role, 'kaprodi') !== false || strpos($role, 'prodi') !== false || strpos($role, 'dosen') !== false);
 
         if (!$is_kaprodi_user) {
             if (scm_is_ajax()) {
@@ -100,8 +110,8 @@ class Peminjaman extends CI_Controller {
             'return_sort' => $return_sort,
             'return_dir' => $return_dir,
             'kaprodi_prodi' => $this->kaprodi_prodi,
-            'notifikasi' => $this->PeminjamanBarang_model->get_notifikasi(null, $this->session->userdata('id_user'), 20),
-            'unread_notifikasi' => $this->PeminjamanBarang_model->count_notifikasi_unread(null, $this->session->userdata('id_user')),
+            'notifikasi' => $this->PeminjamanBarang_model->get_notifikasi(null, $this->current_user_id(), 20),
+            'unread_notifikasi' => $this->PeminjamanBarang_model->count_notifikasi_unread(null, $this->current_user_id()),
         ];
         $this->load->view('kaprodi/peminjaman', $data);
     }
@@ -146,7 +156,7 @@ class Peminjaman extends CI_Controller {
             'status_kaprodi' => 'Disetujui',
             'catatan_kaprodi' => trim((string) $this->input->post('catatan_kaprodi', true)),
             'tgl_approve_kaprodi' => date('Y-m-d H:i:s'),
-            'id_approver_kaprodi' => $this->session->userdata('id_user'),
+            'id_approver_kaprodi' => $this->current_user_id(),
             'status_laboran' => 'Pending',
         ]);
         if ($ok) {
@@ -186,7 +196,7 @@ class Peminjaman extends CI_Controller {
             'status_kaprodi' => 'Ditolak',
             'catatan_kaprodi' => $catatan,
             'tgl_approve_kaprodi' => date('Y-m-d H:i:s'),
-            'id_approver_kaprodi' => $this->session->userdata('id_user'),
+            'id_approver_kaprodi' => $this->current_user_id(),
         ], ['Menunggu ACC Kaprodi']);
         if ($ok && !empty($peminjaman->id_user)) {
             $this->PeminjamanBarang_model->create_notifikasi(null, $peminjaman->id_user, 'Peminjaman ditolak Kaprodi',
@@ -253,7 +263,7 @@ class Peminjaman extends CI_Controller {
                     'status_kaprodi' => 'Disetujui',
                     'catatan_kaprodi' => '',
                     'tgl_approve_kaprodi' => date('Y-m-d H:i:s'),
-                    'id_approver_kaprodi' => $this->session->userdata('id_user'),
+                    'id_approver_kaprodi' => $this->current_user_id(),
                     'status_laboran' => 'Pending',
                 ]);
                 if ($ok) {
@@ -276,7 +286,7 @@ class Peminjaman extends CI_Controller {
                     'status_kaprodi' => 'Ditolak',
                     'catatan_kaprodi' => $catatan,
                     'tgl_approve_kaprodi' => date('Y-m-d H:i:s'),
-                    'id_approver_kaprodi' => $this->session->userdata('id_user'),
+                    'id_approver_kaprodi' => $this->current_user_id(),
                 ], ['Menunggu ACC Kaprodi']);
                 if ($ok && !empty($peminjaman->id_user)) {
                     $this->PeminjamanBarang_model->create_notifikasi(null, $peminjaman->id_user, 'Peminjaman ditolak Kaprodi',
