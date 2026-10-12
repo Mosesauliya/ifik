@@ -244,41 +244,41 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
 
         #lihatBerkasContainer {
             position: fixed; inset: 0; pointer-events: none; z-index: 50; display: none;
-            align-items: stretch; justify-content: center; padding: 1rem; gap: 1.5rem;
-            overflow: hidden; background: rgba(15, 23, 42, 0.15); backdrop-filter: blur(0.5px);
+            align-items: center; justify-content: center; padding: 1rem 1.25rem; gap: 1.25rem;
+            overflow: hidden; background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(5px);
         }
         #lihatBerkasContainer.active { display: flex; }
 
         #wrapperDaftarMhs {
             display: flex; flex-direction: column; gap: 1rem;
-            width: 36%; min-width: 384px; max-width: 504px;
+            width: 360px; min-width: 340px; max-width: 400px;
             overflow-y: auto; overflow-x: hidden; flex-shrink: 0;
-            padding: 0.25rem; max-height: 90vh; pointer-events: none;
+            padding: 0.25rem; height: 92vh; max-height: 94vh; pointer-events: none;
         }
         #wrapperDaftarMhs::-webkit-scrollbar { width: 4px; }
         #wrapperDaftarMhs::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.5); border-radius: 9999px; }
 
         #wrapperPreviewBerkas {
-            display: none; flex: 1; overflow-x: auto; overflow-y: hidden; gap: 1rem;
-            padding: 0.25rem; align-items: stretch; max-height: 90vh; pointer-events: none;
+            display: none; flex: 1; overflow-x: auto; overflow-y: hidden; gap: 1.25rem;
+            padding: 0.25rem; align-items: stretch; height: 92vh; max-height: 94vh; pointer-events: none;
         }
         #wrapperPreviewBerkas.active { display: flex; }
         #wrapperPreviewBerkas::-webkit-scrollbar { height: 4px; }
         #wrapperPreviewBerkas::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.5); border-radius: 9999px; }
 
         .student-card-item {
-            pointer-events: auto; background: white; border-radius: 1.5rem;
+            pointer-events: auto; background: white; border-radius: 1.25rem;
             box-shadow: 0 20px 40px -12px rgba(0,0,0,0.25);
             border: 1px solid #e2e8f0; overflow: hidden; display: flex;
-            flex-direction: column; flex-shrink: 0; width: 100%; max-height: 90vh;
+            flex-direction: column; flex-shrink: 0; width: 100%; max-height: 92vh;
         }
 
         .preview-card-item {
-            pointer-events: auto; background: white; border-radius: 1.5rem;
+            pointer-events: auto; background: white; border-radius: 1.25rem;
             box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3);
             border: 1px solid #e2e8f0; overflow: hidden; display: flex;
             flex-direction: column; flex-shrink: 0;
-            width: 624px; max-width: 75vw; height: 85vh; max-height: 90vh;
+            width: 900px; max-width: 75vw; height: 92vh; max-height: 94vh;
         }
 
         /* Fullscreen mode via CSS overlay */
@@ -687,7 +687,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                                     <th class="py-4 px-4 text-center">Waktu Upload</th>
                                     <th class="py-4 px-4 text-center">Status Review</th>
                                     <?php if ($is_p1): ?>
-                                        <th class="py-4 px-4 text-center">Rekomendasi</th>
+                                        <th id="thRekomendasiCol" class="py-4 px-4 text-center">Rekomendasi</th>
                                     <?php endif; ?>
                                     <th class="py-4 px-4 text-center">Komentar</th>
                                     <th id="thBapCol" class="py-4 px-4 text-center" style="display: none;">BAP</th>
@@ -1029,7 +1029,8 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         }
         function getTableColspan() {
             let cols = 7;
-            if (IS_P1) cols++;
+            const showRekomendasi = IS_P1 && currentTahap === 'Preview 3';
+            if (showRekomendasi) cols++;
             const showBap = IS_U1 && currentTahap === 'Sidang';
             if (showBap) cols++;
             return cols;
@@ -1319,20 +1320,14 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 return `<span class="badge badge-secondary"><i class="bi bi-dash"></i> Kosong</span>`;
             }
             const latest = mhs.latest_preview;
-            const isLulus = isStageLulus(latest);
             const c = countFileStatuses(latest, currentTahap);
 
             const badgeApproved = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold border inline-flex items-center gap-1 ${c.approved > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-400 border-slate-200'}"><i class="bi bi-check-circle-fill"></i> ${c.approved} ACC</span>`;
             const badgeRevision = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold border inline-flex items-center gap-1 ${c.revision > 0 ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-slate-50 text-slate-400 border-slate-200'}"><i class="bi bi-x-circle-fill"></i> ${c.revision} Revisi</span>`;
             const badgePending  = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold border inline-flex items-center gap-1 ${c.pending > 0 ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-50 text-slate-400 border-slate-200'}"><i class="bi bi-clock-fill"></i> ${c.pending} Pending</span>`;
 
-            const lulusBadge = isLulus
-                ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 inline-flex items-center gap-1"><i class="bi bi-mortarboard-fill"></i> Lulus Tahap</span>`
-                : '';
-
             return `
                 <div class="flex flex-col gap-1 items-center">
-                    ${lulusBadge}
                     <div class="flex flex-wrap gap-1 justify-center">${badgeApproved}${badgeRevision}${badgePending}</div>
                 </div>
             `;
@@ -1391,18 +1386,20 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
 
             let btnLulus = '';
             if (isLulus) {
-                btnLulus = `<span class="px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-300 text-[11px] font-bold inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> Sudah Lulus</span>`;
+                btnLulus = `<span class="px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-300 text-[11px] font-bold inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> ${currentTahap}</span>`;
             } else if (c.approved > 0) {
-                btnLulus = `<button onclick="handleLulusStage('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> Lulus Tahap</button>`;
+                btnLulus = `<button onclick="handleLulusStage('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> ${currentTahap}</button>`;
             } else {
-                btnLulus = `<button disabled title="Belum ada berkas yang di-ACC" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Lulus Tahap</button>`;
+                btnLulus = `<button disabled title="Belum ada berkas yang di-ACC" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> ${currentTahap}</button>`;
             }
 
             let btnDowngrade = '';
+            /* Button downgrade dikomentari terlebih dahulu
             if (isLulus && currIdx >= 0 && (currIdx + 1) < order.length) {
                 const nextTahap = order[currIdx + 1];
                 btnDowngrade = `<button onclick="handleDowngradeStageTo('${mhs.nim}', '${nextTahap}', '${currentTahap}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap" title="Tarik kembali dari ${nextTahap} ke ${currentTahap}"><i class="bi bi-arrow-down-circle"></i> Downgrade ke ${currentTahap}</button>`;
             }
+            */
 
             if (!btnLulus && !btnDowngrade) return `<span class="text-slate-400 italic text-[11px]">—</span>`;
 
@@ -1418,6 +1415,10 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             const showBapCol = (typeof IS_U1 !== 'undefined' && IS_U1) && currentTahap === 'Sidang';
             const thBapEl = document.getElementById('thBapCol');
             if (thBapEl) thBapEl.style.display = showBapCol ? '' : 'none';
+
+            const showRekomendasiCol = (typeof IS_P1 !== 'undefined' && IS_P1) && currentTahap === 'Preview 3';
+            const thRekomendasiEl = document.getElementById('thRekomendasiCol');
+            if (thRekomendasiEl) thRekomendasiEl.style.display = showRekomendasiCol ? '' : 'none';
 
             const filteredData = [];
             bimbinganData.forEach((mhs, originalIndex) => {
@@ -1486,7 +1487,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                     const dt = new Date(latest.created_at);
                     timeHtml = `<div class="text-xs font-semibold text-slate-700">${dt.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'})}</div><div class="text-[10px] text-slate-500">${dt.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})} WIB</div>`;
 
-                    if (IS_P1) {
+                    if (IS_P1 && currentTahap === 'Preview 3') {
                         let rekomenBadge = `<button onclick="openRekomendasiModal('${mhs.nim}', '${latest.id}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl text-xs font-bold shadow-xs transition cursor-pointer whitespace-nowrap"><i class="bi bi-plus-circle-fill"></i> Rekomendasi</button>`;
                         if (mhs.rekomendasi) {
                             if (mhs.rekomendasi.recommendation_type === 'sidang') {
@@ -1502,7 +1503,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                     btnHtml = previewHtml;
                 }
 
-                if (IS_P1 && !mhs.latest_preview) {
+                if (IS_P1 && currentTahap === 'Preview 3' && !mhs.latest_preview) {
                     rekomenCell = `<td data-label="Rekomendasi" class="py-4 px-4 text-center"><span class="text-slate-400 italic text-xs">-</span></td>`;
                 }
 
@@ -2045,7 +2046,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             return `${scope}__${nim}__${fileIndex}__${fileType}`;
         }
 
-        function openInlineComment(scope, nim, fileIndex, fileType, action) {
+        function openInlineComment(scope, nim, fileIndex, fileType, action = 'Comment') {
             const key = fileItemKey(scope, nim, fileIndex, fileType);
             const slot = document.getElementById('inlineSlot_' + key);
             if (!slot) {
@@ -2053,8 +2054,8 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 return;
             }
 
-            if (window.activeInlineEditorKey === key) {
-                closeInlineComment();
+            // Jika editor untuk slot ini sudah terbuka, jangan tutup jika dipanggil dari auto-open
+            if (window.activeInlineEditorKey === key && slot.classList.contains('inline-comment-slot') && !slot.classList.contains('hidden')) {
                 return;
             }
             closeInlineComment();
@@ -2066,37 +2067,39 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
 
             const existingComment = getFileCatatan(preview, fileType) || '';
             const editorId = 'inlineEditor__' + key;
+            const canReview = currentTahap !== 'Sidang' && isCurrentUserPIC();
 
-            const headerLabels = {
-                'Approved': '✓ ACC Berkas',
-                'Revision': '✗ Revisi Berkas',
-                'Reset':    '↺ Reset Status Berkas',
-                'Comment':  '💬 Komentar Berkas',
-            };
-            const headerColors = {
-                'Approved': 'from-emerald-500 to-teal-500',
-                'Revision': 'from-rose-500 to-pink-500',
-                'Reset':    'from-slate-500 to-slate-700',
-                'Comment':  'from-indigo-500 to-purple-500',
-            };
-
-            const headerLabel = headerLabels[action] || 'Komentar';
-            const headerColor = headerColors[action] || 'from-slate-500 to-slate-700';
+            let footerActionBtn = '';
+            if (canReview) {
+                footerActionBtn = `
+                    <button type="button" onclick="promptSaveReviewAction('${nim}', ${fileIndex}, '${fileType}')" class="px-3.5 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-[11px] font-bold cursor-pointer shadow-xs inline-flex items-center gap-1.5 transition">
+                        <i class="bi bi-floppy-fill text-[11px]"></i> Simpan
+                    </button>
+                `;
+            } else {
+                footerActionBtn = `
+                    <button type="button" onclick="submitInlineComment('${nim}', ${fileIndex}, '${fileType}', 'Comment')" class="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold cursor-pointer shadow-xs inline-flex items-center gap-1.5 transition">
+                        <i class="bi bi-send-fill text-[11px]"></i> Simpan Komentar
+                    </button>
+                `;
+            }
 
             slot.innerHTML = `
-                <div class="mt-1.5 p-3 rounded-xl border-2 border-dashed border-orange-300 bg-orange-50/40 animate-pop-in" data-inline-key="${key}">
+                <div class="p-3 bg-slate-50 border-t border-slate-200 animate-pop-in" data-inline-key="${key}">
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-md bg-gradient-to-r ${headerColor} text-white shadow-xs">${headerLabel}</span>
-                        <button type="button" onclick="closeInlineComment()" class="w-6 h-6 rounded-md bg-white hover:bg-slate-100 text-slate-500 flex items-center justify-center text-[10px] cursor-pointer border border-slate-200">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-orange-100 text-orange-700 border border-orange-200 flex items-center gap-1">
+                                <i class="bi bi-chat-left-dots-fill text-[9px]"></i> Catatan / Review
+                            </span>
+                            <span class="text-[10px] text-slate-500 font-medium">Ketik catatan revisi atau apresiasi berkas</span>
+                        </div>
                     </div>
-                    <textarea id="${editorId}" rows="3" class="w-full p-2.5 rounded-lg border border-slate-300 text-xs font-medium resize-none focus:outline-none focus:ring-2 focus:ring-orange-400/25 focus:border-orange-400" placeholder="Tuliskan komentar (opsional)...">${existingComment}</textarea>
-                    <div class="flex items-center justify-end gap-1.5 mt-2">
-                        <button type="button" onclick="closeInlineComment()" class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-[11px] font-bold cursor-pointer">Batal</button>
-                        <button type="button" onclick="submitInlineComment('${nim}', ${fileIndex}, '${fileType}', '${action}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r ${headerColor} text-white text-[11px] font-bold cursor-pointer shadow-xs inline-flex items-center gap-1">
-                            <i class="bi bi-send-fill text-[10px]"></i> Simpan
-                        </button>
+                    <textarea id="${editorId}" rows="3" class="w-full p-2.5 rounded-lg border border-slate-300 text-xs font-medium resize-none focus:outline-none focus:ring-2 focus:ring-orange-400/25 focus:border-orange-400" placeholder="Tuliskan catatan / review berkas...">${existingComment}</textarea>
+                    <div class="flex items-center justify-between gap-1.5 mt-2">
+                        <span class="text-[10px] text-slate-400 italic">*Klik Simpan untuk menentukan status ACC atau Revisi</span>
+                        <div class="flex items-center gap-1.5">
+                            ${footerActionBtn}
+                        </div>
                     </div>
                 </div>
             `;
@@ -2116,12 +2119,38 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                     menubar: false, statusbar: false,
                     plugins: 'lists link',
                     toolbar: 'bold italic underline | bullist numlist | link',
-                    height: 130, skin: 'oxide',
+                    height: 120, skin: 'oxide',
                     setup: function(editor) {
                         editor.on('change', function() { tinymce.triggerSave(); });
                     }
                 });
             }, 30);
+        }
+
+        function promptSaveReviewAction(nim, fileIndex, fileType) {
+            const key = window.activeInlineEditorKey;
+            const editorId = 'inlineEditor__' + key;
+            if (tinymce.get(editorId)) tinymce.triggerSave();
+
+            Swal.fire({
+                title: 'Tentukan Status Berkas',
+                text: 'Pilih status persetujuan untuk berkas ini:',
+                icon: 'question',
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonColor: '#10b981',
+                denyButtonColor: '#f43f5e',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: '<i class="bi bi-check-circle-fill mr-1"></i> ACC (Setujui)',
+                denyButtonText: '<i class="bi bi-x-circle-fill mr-1"></i> Revisi',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    submitInlineComment(nim, fileIndex, fileType, 'Approved');
+                } else if (result.isDenied) {
+                    submitInlineComment(nim, fileIndex, fileType, 'Revision');
+                }
+            });
         }
 
         function closeInlineComment() {
@@ -2300,7 +2329,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             }
 
             if (isMobile) wrapperDaftar.className = 'flex flex-col gap-3 w-full overflow-y-auto flex-shrink-0';
-            else          wrapperDaftar.className = 'flex flex-col gap-3 w-[36%] min-w-[384px] max-w-[504px] overflow-y-auto flex-shrink-0';
+            else          wrapperDaftar.className = 'flex flex-col gap-3 w-[360px] min-w-[340px] max-w-[400px] overflow-y-auto flex-shrink-0';
 
             if (isPreviewActive) {
                 wrapperPreview.classList.add('active');
@@ -2384,22 +2413,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                                 const fileStatus = getFileStatus(preview, f.type);
                                 const fileStatusBadge = renderFileStatusBadge(preview, f.type);
 
-                                let fileActionBtns = '';
-                                if (currentTahap !== 'Sidang' && isCurrentUserPIC()) {
-                                    if (fileStatus === 'Pending') {
-                                        fileActionBtns = `
-                                            <button type="button" onclick="event.stopPropagation(); openInlineComment('card', '${mhs.nim}', ${realIdx}, '${f.type}', 'Approved')" class="px-2 h-7 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-300 text-[10px] font-bold transition cursor-pointer flex items-center gap-1"><i class="bi bi-check-lg"></i>ACC</button>
-                                            <button type="button" onclick="event.stopPropagation(); openInlineComment('card', '${mhs.nim}', ${realIdx}, '${f.type}', 'Revision')" class="px-2 h-7 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300 text-[10px] font-bold transition cursor-pointer flex items-center gap-1"><i class="bi bi-x-lg"></i>Revisi</button>
-                                        `;
-                                    } else {
-                                        fileActionBtns = `
-                                            <button type="button" onclick="event.stopPropagation(); openInlineComment('card', '${mhs.nim}', ${realIdx}, '${f.type}', 'Reset')" class="px-2 h-7 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 border border-slate-300 text-[10px] font-bold transition cursor-pointer flex items-center gap-1"><i class="bi bi-arrow-counterclockwise"></i>Reset</button>
-                                        `;
-                                    }
-                                }
-
-                                const cardKey = fileItemKey('card', mhs.nim, realIdx, f.type);
-
                                 itemsHtml += `
                                     <div class="p-2 px-2.5 rounded-xl border shadow-2xs hover:shadow-xs transition-all flex flex-col gap-1.5 ${activeCardBorder}">
                                         <div class="flex items-center justify-between gap-2">
@@ -2420,14 +2433,12 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                                                     <i class="bi ${previewBtnIcon} text-[11px]"></i><span>${previewBtnLabel}</span>
                                                 </button>
                                                 <a href="${fileUrl}" download="${fileName}" target="_blank"
-                                                   class="w-7 h-7 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold transition flex items-center justify-center cursor-pointer shadow-2xs active:scale-95"
-                                                   title="Unduh Berkas">
+                                                    class="w-7 h-7 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold transition flex items-center justify-center cursor-pointer shadow-2xs active:scale-95"
+                                                    title="Unduh Berkas">
                                                     <i class="bi bi-download text-xs"></i>
                                                 </a>
                                             </div>
                                         </div>
-                                        ${fileActionBtns ? `<div class="flex items-center gap-1.5 flex-wrap pl-5">${fileActionBtns}</div>` : ''}
-                                        <div id="inlineSlot_${cardKey}" class="hidden"></div>
                                     </div>
                                 `;
                             });
@@ -2520,29 +2531,6 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                     return;
                 }
 
-                // Action buttons — TIDAK ada tombol Nilai di sini (dipindah ke kolom Lulus Tahap).
-                let actionButtons = '';
-                if (currentTahap !== 'Sidang') {
-                    if (isCurrentUserPIC()) {
-                        const ftype = fileType;
-                        const fst   = getFileStatus(preview, ftype);
-                        if (fst === 'Pending') {
-                            actionButtons = `
-                                <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${ftype}', 'Approved')" class="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1">✓ ACC</button>
-                                <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${ftype}', 'Revision')" class="px-2.5 py-1 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1">✗ Revisi</button>
-                            `;
-                        } else {
-                            actionButtons = `
-                                <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${ftype}', 'Reset')" class="px-2.5 py-1 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 border border-slate-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
-                            `;
-                        }
-                    } else {
-                        actionButtons = `
-                            <button onclick="openInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${fileType}', 'Comment')" class="px-2.5 py-1 rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border border-indigo-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1">💬 Komentar</button>
-                        `;
-                    }
-                }
-
                 const previewKey = fileItemKey('preview', p.nim, p.fileIndex, fileType);
 
                 html += `
@@ -2584,7 +2572,9 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
 
                         <div class="preview-footer p-2 px-3 bg-white flex items-center justify-between text-xs shrink-0 gap-2 border-t border-slate-200">
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                ${actionButtons}
+                                <span class="text-[11px] font-semibold text-slate-500 flex items-center gap-1">
+                                    <i class="bi bi-info-circle text-slate-400"></i> ${renderFileStatusBadge(preview, fileType)}
+                                </span>
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <a href="${fileUrl}" download="${fileName}" target="_blank" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs text-[11px]">
@@ -2600,6 +2590,12 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             });
 
             wrapper.innerHTML = html;
+
+            // Otomatis buka kolom komentar TinyMCE untuk pratinjau yang aktif
+            window.activePreviews.forEach(p => {
+                const ft = p.fileType || 'draft';
+                openInlineComment('preview', p.nim, p.fileIndex, ft);
+            });
         }
 
         function previewBerkasItem(nim, fileIndex, fileType = 'draft') {
@@ -2878,6 +2874,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         window.getResponsibleRole      = getResponsibleRole;
         window.isCurrentUserPIC        = isCurrentUserPIC;
         window.openInlineComment       = openInlineComment;
+        window.promptSaveReviewAction  = promptSaveReviewAction;
         window.closeInlineComment      = closeInlineComment;
         window.submitInlineComment     = submitInlineComment;
         window.toggleFullscreenPreview = toggleFullscreenPreview;
