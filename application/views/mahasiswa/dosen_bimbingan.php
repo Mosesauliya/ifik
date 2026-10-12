@@ -207,7 +207,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         }
 
         #hoverPreviewPanel {
-            position: fixed; z-index: 999; width: 520px; max-width: 95vw; background: #fff;
+            position: fixed; z-index: 999; width: 680px; max-width: 96vw; background: #fff;
             border-radius: 20px;
             box-shadow: 0 24px 64px -12px rgba(234,88,12,0.18), 0 8px 24px rgba(71,85,105,0.10);
             border: 1.5px solid #fed7aa; overflow: hidden; display: none;
@@ -216,22 +216,22 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         #hoverPreviewPanel.visible { display: block; }
         #hoverPreviewPanel .panel-header {
             background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
-            color: #fff; padding: 14px 18px; font-weight: 800; font-size: 13px;
+            color: #fff; padding: 15px 20px; font-weight: 800; font-size: 15px;
             display: flex; align-items: center; gap: 8px;
         }
         #hoverPreviewPanel .pdf-frame-wrap {
-            background: #f1f5f9; border-bottom: 1px solid #e2e8f0; height: 200px;
+            background: #f1f5f9; border-bottom: 1px solid #e2e8f0; height: 290px;
             position: relative; overflow: hidden;
         }
         #hoverPreviewPanel .pdf-frame-wrap iframe { width: 100%; height: 100%; border: none; }
         #hoverPreviewPanel .pdf-no-file {
-            display: flex; align-items: center; justify-content: center; height: 200px;
-            color: #94a3b8; font-size: 13px; font-weight: 600;
+            display: flex; align-items: center; justify-content: center; height: 290px;
+            color: #94a3b8; font-size: 14px; font-weight: 600;
             flex-direction: column; gap: 8px;
         }
-        #hoverPreviewPanel .panel-body { padding: 16px 18px 18px; max-height: 400px; overflow-y: auto; }
+        #hoverPreviewPanel .panel-body { padding: 18px 20px 20px; max-height: 480px; overflow-y: auto; }
         #hoverPreviewPanel .panel-label {
-            font-size: 10px; font-weight: 800; text-transform: uppercase;
+            font-size: 11px; font-weight: 800; text-transform: uppercase;
             letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 6px;
         }
 
@@ -251,7 +251,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
 
         #wrapperDaftarMhs {
             display: flex; flex-direction: column; gap: 1rem;
-            width: 360px; min-width: 340px; max-width: 400px;
+            width: 520px; min-width: 460px; max-width: 580px;
             overflow-y: auto; overflow-x: hidden; flex-shrink: 0;
             padding: 0.25rem; height: 92vh; max-height: 94vh; pointer-events: none;
         }
@@ -1394,12 +1394,12 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             }
 
             let btnDowngrade = '';
-            /* Button downgrade dikomentari terlebih dahulu
-            if (isLulus && currIdx >= 0 && (currIdx + 1) < order.length) {
-                const nextTahap = order[currIdx + 1];
-                btnDowngrade = `<button onclick="handleDowngradeStageTo('${mhs.nim}', '${nextTahap}', '${currentTahap}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap" title="Tarik kembali dari ${nextTahap} ke ${currentTahap}"><i class="bi bi-arrow-down-circle"></i> Downgrade ke ${currentTahap}</button>`;
-            }
-            */
+            // Button downgrade dikomentari terlebih dahulu
+            // if (isLulus && currIdx >= 0 && (currIdx + 1) < order.length) {
+            //     const nextTahap = order[currIdx + 1];
+            //     btnDowngrade = `<button onclick="handleDowngradeStageTo('${mhs.nim}', '${nextTahap}', '${currentTahap}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap" title="Tarik kembali dari ${nextTahap} ke ${currentTahap}"><i class="bi bi-arrow-down-circle"></i> Downgrade ke ${currentTahap}</button>`;
+            // }
+            
 
             if (!btnLulus && !btnDowngrade) return `<span class="text-slate-400 italic text-[11px]">—</span>`;
 
@@ -1924,11 +1924,11 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 let left = rect.left + window.scrollX;
                 let top  = rect.bottom + window.scrollY + 8;
 
-                const panelW = 520;
+                const panelW = 680;
                 if (left + panelW > window.innerWidth - 16) left = window.innerWidth - panelW - 16;
                 if (left < 8) left = 8;
 
-                const panelEstH = 480;
+                const panelEstH = 600;
                 if (top + panelEstH > window.innerHeight + window.scrollY - 16) {
                     top = rect.top + window.scrollY - panelEstH - 8;
                 }
@@ -2042,9 +2042,15 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         // ============================================================
         // INLINE COMMENT EDITOR
         // ============================================================
+        // ============================================================
+        // INLINE COMMENT EDITOR (Supports multi-preview simultaneously)
+        // ============================================================
         function fileItemKey(scope, nim, fileIndex, fileType) {
             return `${scope}__${nim}__${fileIndex}__${fileType}`;
         }
+
+        // Simpan status sembunyikan/tampilkan per berkas
+        window.inlineCommentStates = window.inlineCommentStates || {};
 
         function openInlineComment(scope, nim, fileIndex, fileType, action = 'Comment') {
             const key = fileItemKey(scope, nim, fileIndex, fileType);
@@ -2054,11 +2060,19 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 return;
             }
 
-            // Jika editor untuk slot ini sudah terbuka, jangan tutup jika dipanggil dari auto-open
-            if (window.activeInlineEditorKey === key && slot.classList.contains('inline-comment-slot') && !slot.classList.contains('hidden')) {
+            // Jika statusnya disembunyikan oleh pengguna, jangan buka paksa saat auto-open
+            if (window.inlineCommentStates[key] === 'hidden') {
+                slot.classList.add('hidden');
+                slot.classList.remove('inline-comment-slot');
+                updateCommentToggleBtn(key, false);
                 return;
             }
-            closeInlineComment();
+
+            // Jika sudah ter-render dan terbuka, cukup pastikan statusnya
+            if (slot.classList.contains('inline-comment-slot') && !slot.classList.contains('hidden')) {
+                updateCommentToggleBtn(key, true);
+                return;
+            }
 
             const mhs = bimbinganData.find(m => m.nim === nim);
             if (!mhs) return;
@@ -2093,6 +2107,10 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                             </span>
                             <span class="text-[10px] text-slate-500 font-medium">Ketik catatan revisi atau apresiasi berkas</span>
                         </div>
+                        <button type="button" onclick="toggleHideInlineComment('${scope}', '${nim}', ${fileIndex}, '${fileType}')" class="text-[11px] font-bold text-slate-500 hover:text-slate-800 bg-white hover:bg-slate-200 border border-slate-200 px-2.5 py-1 rounded-lg transition inline-flex items-center gap-1 cursor-pointer shadow-2xs" title="Sembunyikan kolom catatan">
+                            <i class="bi bi-eye-slash-fill text-[11px] text-slate-400"></i>
+                            <span>Sembunyikan</span>
+                        </button>
                     </div>
                     <textarea id="${editorId}" rows="3" class="w-full p-2.5 rounded-lg border border-slate-300 text-xs font-medium resize-none focus:outline-none focus:ring-2 focus:ring-orange-400/25 focus:border-orange-400" placeholder="Tuliskan catatan / review berkas...">${existingComment}</textarea>
                     <div class="flex items-center justify-between gap-1.5 mt-2">
@@ -2105,7 +2123,8 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             `;
             slot.classList.remove('hidden');
             slot.classList.add('inline-comment-slot');
-            window.activeInlineEditorKey = key;
+            window.inlineCommentStates[key] = 'visible';
+            updateCommentToggleBtn(key, true);
 
             setTimeout(() => {
                 const el = document.getElementById(editorId);
@@ -2127,8 +2146,40 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             }, 30);
         }
 
+        function toggleHideInlineComment(scope, nim, fileIndex, fileType) {
+            const key = fileItemKey(scope, nim, fileIndex, fileType);
+            const slot = document.getElementById('inlineSlot_' + key);
+            if (!slot) return;
+
+            const isCurrentlyHidden = slot.classList.contains('hidden') || !slot.classList.contains('inline-comment-slot');
+            if (isCurrentlyHidden) {
+                // Tampilkan kembali
+                window.inlineCommentStates[key] = 'visible';
+                openInlineComment(scope, nim, fileIndex, fileType);
+            } else {
+                // Sembunyikan
+                window.inlineCommentStates[key] = 'hidden';
+                slot.classList.add('hidden');
+                updateCommentToggleBtn(key, false);
+            }
+        }
+
+        function updateCommentToggleBtn(key, isVisible) {
+            const btn = document.getElementById('btnToggleComment_' + key);
+            if (!btn) return;
+            if (isVisible) {
+                btn.className = 'px-2.5 py-1 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs text-[11px]';
+                btn.innerHTML = '<i class="bi bi-eye-slash-fill text-[11px]"></i><span>Sembunyikan Catatan</span>';
+                btn.title = 'Sembunyikan kolom catatan / TinyMCE';
+            } else {
+                btn.className = 'px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs text-[11px]';
+                btn.innerHTML = '<i class="bi bi-pencil-square text-[11px]"></i><span>Tampilkan Catatan</span>';
+                btn.title = 'Tampilkan kolom catatan / TinyMCE';
+            }
+        }
+
         function promptSaveReviewAction(nim, fileIndex, fileType) {
-            const key = window.activeInlineEditorKey;
+            const key = fileItemKey('preview', nim, fileIndex, fileType);
             const editorId = 'inlineEditor__' + key;
             if (tinymce.get(editorId)) tinymce.triggerSave();
 
@@ -2153,11 +2204,27 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             });
         }
 
-        function closeInlineComment() {
-            if (!window.activeInlineEditorKey) return;
-            const key = window.activeInlineEditorKey;
-            const slot = document.getElementById('inlineSlot_' + key);
-            if (slot) {
+        function closeInlineComment(specificKey = null) {
+            if (specificKey) {
+                const slot = document.getElementById('inlineSlot_' + specificKey);
+                if (slot) {
+                    const ta = slot.querySelector('textarea');
+                    if (ta && ta.id) {
+                        try {
+                            const ed = tinymce.get(ta.id);
+                            if (ed) ed.remove();
+                        } catch(e){ console.warn(e); }
+                    }
+                    slot.innerHTML = '';
+                    slot.classList.add('hidden');
+                    slot.classList.remove('inline-comment-slot');
+                }
+                delete window.inlineCommentStates[specificKey];
+                return;
+            }
+
+            // Bersihkan semua inline editor yang aktif
+            document.querySelectorAll('.inline-comment-slot').forEach(slot => {
                 const ta = slot.querySelector('textarea');
                 if (ta && ta.id) {
                     try {
@@ -2168,13 +2235,13 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 slot.innerHTML = '';
                 slot.classList.add('hidden');
                 slot.classList.remove('inline-comment-slot');
-            }
+            });
             window.activeInlineEditorKey = null;
+            window.inlineCommentStates = {};
         }
 
         function submitInlineComment(nim, fileIndex, fileType, action) {
-            if (!window.activeInlineEditorKey) return;
-            const key = window.activeInlineEditorKey;
+            const key = fileItemKey('preview', nim, fileIndex, fileType);
             const editorId = 'inlineEditor__' + key;
 
             if (tinymce.get(editorId)) tinymce.triggerSave();
@@ -2202,7 +2269,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 if (data.status) {
                     Swal.fire({ icon: 'success', title: 'Berhasil', text: data.message, timer: 1400, showConfirmButton: false })
                         .then(() => {
-                            closeInlineComment();
+                            closeInlineComment(key);
                             fetchBimbinganData(true).then(() => autoCloseAfterReview(nim));
                         });
                 } else {
@@ -2329,7 +2396,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             }
 
             if (isMobile) wrapperDaftar.className = 'flex flex-col gap-3 w-full overflow-y-auto flex-shrink-0';
-            else          wrapperDaftar.className = 'flex flex-col gap-3 w-[360px] min-w-[340px] max-w-[400px] overflow-y-auto flex-shrink-0';
+            else          wrapperDaftar.className = 'flex flex-col gap-3 w-[520px] min-w-[460px] max-w-[580px] overflow-y-auto flex-shrink-0';
 
             if (isPreviewActive) {
                 wrapperPreview.classList.add('active');
@@ -2353,12 +2420,12 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             let headerSummaryBar = '';
             if (totalActive > 1) {
                 headerSummaryBar = `
-                    <div class="bg-slate-900 text-white px-3.5 py-2 rounded-2xl flex items-center justify-between shadow-lg border border-slate-800 shrink-0 pointer-events-auto w-full animate-bar-in">
+                    <div class="bg-slate-900 text-white px-4 py-2.5 rounded-2xl flex items-center justify-between shadow-lg border border-slate-800 shrink-0 pointer-events-auto w-full animate-bar-in">
                         <div class="flex items-center gap-2">
-                            <i class="bi bi-people-fill text-orange-400 text-xs"></i>
-                            <span class="text-xs font-bold">${totalActive} Mahasiswa <span class="text-slate-400 font-normal text-[10px]">(Maks. 5)</span></span>
+                            <i class="bi bi-people-fill text-orange-400 text-sm"></i>
+                            <span class="text-xs font-bold">${totalActive} Mahasiswa <span class="text-slate-400 font-normal text-[11px]">(Maks. 5)</span></span>
                         </div>
-                        <button type="button" onclick="closeLihatBerkasPanel()" class="text-[11px] text-slate-300 hover:text-rose-400 font-bold transition cursor-pointer">Tutup Semua</button>
+                        <button type="button" onclick="closeLihatBerkasPanel()" class="text-xs text-slate-300 hover:text-rose-400 font-bold transition cursor-pointer">Tutup Semua</button>
                     </div>
                 `;
             }
@@ -2383,23 +2450,23 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                         const status = preview.status_pembimbing || 'Pending';
 
                         let statusBadge = '';
-                        if (status === 'Approved') statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">✓ Disetujui</span>';
-                        else if (status === 'Revision') statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Revisi</span>';
-                        else statusBadge = '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending</span>';
+                        if (status === 'Approved') statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">✓ Disetujui</span>';
+                        else if (status === 'Revision') statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Revisi</span>';
+                        else statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending</span>';
 
                         // Tombol Nilai SUDAH DIPINDAH ke kolom "Lulus Tahap" di tabel.
                         itemsHtml += `
-                            <div class="mb-1.5 flex items-center justify-between gap-2 px-1">
+                            <div class="mb-2 flex items-center justify-between gap-2 px-1">
                                 <div class="flex items-center gap-1.5">
-                                    <i class="bi bi-folder2-open text-orange-500 text-xs"></i>
-                                    <span class="text-[11px] font-bold text-slate-700">Pengajuan #${realIdx + 1}</span>
+                                    <i class="bi bi-folder2-open text-orange-500 text-sm"></i>
+                                    <span class="text-xs font-bold text-slate-700">Pengajuan #${realIdx + 1}</span>
                                     ${statusBadge}
                                 </div>
                             </div>
                         `;
 
                         if (files.length === 0) {
-                            itemsHtml += `<div class="p-2 text-center text-slate-400 text-[11px] italic">Tidak ada file pada pengajuan ini.</div>`;
+                            itemsHtml += `<div class="p-2.5 text-center text-slate-400 text-xs italic">Tidak ada file pada pengajuan ini.</div>`;
                         } else {
                             files.forEach((f) => {
                                 const fileUrl   = getUploadBaseUrl(currentTahap) + encodeURIComponent(f.file);
@@ -2414,26 +2481,26 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                                 const fileStatusBadge = renderFileStatusBadge(preview, f.type);
 
                                 itemsHtml += `
-                                    <div class="p-2 px-2.5 rounded-xl border shadow-2xs hover:shadow-xs transition-all flex flex-col gap-1.5 ${activeCardBorder}">
-                                        <div class="flex items-center justify-between gap-2">
+                                    <div class="p-3 px-3.5 rounded-xl border shadow-2xs hover:shadow-xs transition-all flex flex-col gap-2 ${activeCardBorder}">
+                                        <div class="flex items-center justify-between gap-3">
                                             <div class="min-w-0 flex-1">
-                                                <div class="flex items-center gap-1.5 flex-wrap">
-                                                    <i class="bi ${f.icon} text-orange-500 text-xs shrink-0"></i>
-                                                    <span class="font-bold text-slate-800 text-[11px] truncate">${f.label}</span>
+                                                <div class="flex items-center gap-2 flex-wrap">
+                                                    <i class="bi ${f.icon} text-orange-500 text-sm shrink-0"></i>
+                                                    <span class="font-bold text-slate-800 text-xs truncate">${f.label}</span>
                                                     ${fileStatusBadge}
                                                 </div>
-                                                <p class="text-[10px] font-mono text-slate-400 truncate mt-0.5" title="${fileName}">
-                                                    <i class="bi bi-file-pdf text-rose-500 mr-1 text-[9px]"></i>${fileName}
+                                                <p class="text-[11px] font-mono text-slate-400 truncate mt-0.5" title="${fileName}">
+                                                    <i class="bi bi-file-pdf text-rose-500 mr-1 text-[10px]"></i>${fileName}
                                                 </p>
                                             </div>
-                                            <div class="flex items-center gap-1.5 shrink-0">
+                                            <div class="flex items-center gap-2 shrink-0">
                                                 <button type="button"
                                                         onclick="event.stopPropagation(); previewBerkasItem('${mhs.nim}', ${realIdx}, '${f.type}')"
-                                                        class="px-2.5 h-7 rounded-lg border text-[10px] font-bold transition flex items-center justify-center gap-1 cursor-pointer active:scale-95 whitespace-nowrap ${previewBtnStyle}">
-                                                    <i class="bi ${previewBtnIcon} text-[11px]"></i><span>${previewBtnLabel}</span>
+                                                        class="px-3 h-8 rounded-lg border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 whitespace-nowrap ${previewBtnStyle}">
+                                                    <i class="bi ${previewBtnIcon} text-xs"></i><span>${previewBtnLabel}</span>
                                                 </button>
                                                 <a href="${fileUrl}" download="${fileName}" target="_blank"
-                                                    class="w-7 h-7 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold transition flex items-center justify-center cursor-pointer shadow-2xs active:scale-95"
+                                                    class="w-8 h-8 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold transition flex items-center justify-center cursor-pointer shadow-2xs active:scale-95"
                                                     title="Unduh Berkas">
                                                     <i class="bi bi-download text-xs"></i>
                                                 </a>
@@ -2448,21 +2515,21 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
 
                 cardsHtml += `
                     <div class="student-card-item pointer-events-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200/90 overflow-hidden flex flex-col shrink-0 w-full animate-pop-in" id="cardMhs_${mhs.nim}">
-                        <div class="p-2.5 px-3.5 bg-slate-900 text-white flex items-center justify-between gap-2 shrink-0 border-b border-slate-800">
-                            <div class="flex items-center gap-2 min-w-0">
-                                <div class="w-6 h-6 rounded-lg bg-orange-600/30 border border-orange-500/50 text-orange-400 flex items-center justify-center font-bold text-[11px] shrink-0 shadow-2xs">${cardNum}</div>
+                        <div class="p-3 px-4 bg-slate-900 text-white flex items-center justify-between gap-3 shrink-0 border-b border-slate-800">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <div class="w-7 h-7 rounded-lg bg-orange-600/30 border border-orange-500/50 text-orange-400 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">${cardNum}</div>
                                 <div class="min-w-0 flex items-center gap-2">
-                                    <h4 class="text-xs font-bold text-white truncate max-w-[150px] sm:max-w-[180px]">${mhs.nama_mahasiswa}</h4>
-                                    <span class="px-1.5 py-0.2 rounded bg-white/10 text-orange-300 font-mono text-[10px] font-bold">${mhs.nim}</span>
+                                    <h4 class="text-sm font-bold text-white truncate max-w-[200px] sm:max-w-[240px]">${mhs.nama_mahasiswa}</h4>
+                                    <span class="px-2 py-0.5 rounded bg-white/10 text-orange-300 font-mono text-[11px] font-bold">${mhs.nim}</span>
                                 </div>
                             </div>
                             <div class="flex items-center gap-1 shrink-0">
-                                <button type="button" onclick="removeStudentFromLihatBerkas(${index})" class="w-6 h-6 rounded-md bg-white/10 hover:bg-rose-600/80 text-slate-300 hover:text-white flex items-center justify-center text-[11px] font-bold transition-colors cursor-pointer" title="Tutup Mahasiswa Ini">
+                                <button type="button" onclick="removeStudentFromLihatBerkas(${index})" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-rose-600/80 text-slate-300 hover:text-white flex items-center justify-center text-xs font-bold transition-colors cursor-pointer" title="Tutup Mahasiswa Ini">
                                     <i class="bi bi-x-lg"></i>
                                 </button>
                             </div>
                         </div>
-                        <div class="p-2.5 space-y-1.5 bg-slate-50/50 overflow-y-auto">${itemsHtml}</div>
+                        <div class="p-3 space-y-2 bg-slate-50/50 overflow-y-auto">${itemsHtml}</div>
                     </div>
                 `;
             });
@@ -2577,6 +2644,9 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                                 </span>
                             </div>
                             <div class="flex items-center gap-1.5">
+                                <button type="button" id="btnToggleComment_${previewKey}" onclick="toggleHideInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${fileType}')" class="px-2.5 py-1 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs text-[11px]" title="Sembunyikan / Tampilkan Catatan">
+                                    <i class="bi bi-eye-slash-fill text-[11px]"></i><span>Sembunyikan Catatan</span>
+                                </button>
                                 <a href="${fileUrl}" download="${fileName}" target="_blank" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs text-[11px]">
                                     <i class="bi bi-download"></i><span>Unduh</span>
                                 </a>
@@ -2591,7 +2661,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
 
             wrapper.innerHTML = html;
 
-            // Otomatis buka kolom komentar TinyMCE untuk pratinjau yang aktif
+            // Otomatis buka kolom komentar TinyMCE untuk setiap pratinjau yang aktif
             window.activePreviews.forEach(p => {
                 const ft = p.fileType || 'draft';
                 openInlineComment('preview', p.nim, p.fileIndex, ft);
@@ -2874,6 +2944,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         window.getResponsibleRole      = getResponsibleRole;
         window.isCurrentUserPIC        = isCurrentUserPIC;
         window.openInlineComment       = openInlineComment;
+        window.toggleHideInlineComment = toggleHideInlineComment;
         window.promptSaveReviewAction  = promptSaveReviewAction;
         window.closeInlineComment      = closeInlineComment;
         window.submitInlineComment     = submitInlineComment;
