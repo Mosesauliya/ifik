@@ -118,6 +118,116 @@ class AdminLayanan_model extends CI_Model {
         return $this->db->delete('syarat_berkas_ta');
     }
 
+    // =========================================================================
+    // MASTER JENIS TUGAS AKHIR (DINAMIS)
+    // =========================================================================
+
+    public function _init_master_jenis_ta() {
+        $prev_debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+        try {
+            if (!$this->db->table_exists('master_jenis_ta')) {
+                $this->db->query("CREATE TABLE IF NOT EXISTS `master_jenis_ta` (
+                    `id` INT AUTO_INCREMENT PRIMARY KEY,
+                    `nama_jenis` VARCHAR(150) NOT NULL,
+                    `keterangan` VARCHAR(255) NULL,
+                    `is_active` TINYINT(1) DEFAULT 1,
+                    `urutan` INT DEFAULT 1,
+                    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+            }
+
+            // Check if empty, seed defaults
+            $count = $this->db->count_all('master_jenis_ta');
+            if ($count === 0) {
+                $default_jenis = [
+                    ['nama_jenis' => 'TA Reguler',  'keterangan' => 'Jalur skema reguler sidang tugas akhir', 'is_active' => 1, 'urutan' => 1],
+                    ['nama_jenis' => 'TA Jurnal',   'keterangan' => 'Jalur publikasi jurnal ilmiah terindeks', 'is_active' => 1, 'urutan' => 2],
+                    ['nama_jenis' => 'TA HKI',      'keterangan' => 'Jalur pendaftaran Hak Kekayaan Intelektual / Paten', 'is_active' => 1, 'urutan' => 3],
+                    ['nama_jenis' => 'TA PROYEK',   'keterangan' => 'Jalur proyek kolaboratif industri / magang', 'is_active' => 1, 'urutan' => 4],
+                    ['nama_jenis' => 'Pengkaryaan', 'keterangan' => 'Jalur pembuatan karya seni / desain orisinal', 'is_active' => 1, 'urutan' => 5],
+                    ['nama_jenis' => 'Penulisan',   'keterangan' => 'Jalur penulisan monograf / karya ilmiah mendalam', 'is_active' => 1, 'urutan' => 6],
+                ];
+                $this->db->insert_batch('master_jenis_ta', $default_jenis);
+            }
+        } catch (Throwable $e) {
+            // Silently fallback if db connection issues
+        }
+        $this->db->db_debug = $prev_debug;
+    }
+
+    public function get_all_jenis_ta() {
+        $this->_init_master_jenis_ta();
+        $prev_debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+        try {
+            $rows = $this->db->order_by('urutan', 'ASC')->order_by('id', 'ASC')->get('master_jenis_ta')->result_array();
+            $this->db->db_debug = $prev_debug;
+            return $rows ?: [];
+        } catch (Throwable $e) {
+            $this->db->db_debug = $prev_debug;
+            return [
+                ['id' => 1, 'nama_jenis' => 'TA Reguler',  'keterangan' => 'Jalur skema reguler sidang tugas akhir', 'is_active' => 1, 'urutan' => 1],
+                ['id' => 2, 'nama_jenis' => 'TA Jurnal',   'keterangan' => 'Jalur publikasi jurnal ilmiah terindeks', 'is_active' => 1, 'urutan' => 2],
+                ['id' => 3, 'nama_jenis' => 'TA HKI',      'keterangan' => 'Jalur pendaftaran Hak Kekayaan Intelektual / Paten', 'is_active' => 1, 'urutan' => 3],
+                ['id' => 4, 'nama_jenis' => 'TA PROYEK',   'keterangan' => 'Jalur proyek kolaboratif industri / magang', 'is_active' => 1, 'urutan' => 4],
+                ['id' => 5, 'nama_jenis' => 'Pengkaryaan', 'keterangan' => 'Jalur pembuatan karya seni / desain orisinal', 'is_active' => 1, 'urutan' => 5],
+                ['id' => 6, 'nama_jenis' => 'Penulisan',   'keterangan' => 'Jalur penulisan monograf / karya ilmiah mendalam', 'is_active' => 1, 'urutan' => 6],
+            ];
+        }
+    }
+
+    public function get_active_jenis_ta() {
+        $fallback = ['TA Reguler', 'TA Jurnal', 'TA HKI', 'TA PROYEK', 'Pengkaryaan', 'Penulisan'];
+        $prev_debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+        try {
+            $this->_init_master_jenis_ta();
+            $rows = $this->db->where('is_active', 1)->order_by('urutan', 'ASC')->order_by('id', 'ASC')->get('master_jenis_ta')->result_array();
+            $this->db->db_debug = $prev_debug;
+            if (empty($rows)) {
+                return $fallback;
+            }
+            return array_map(function($r) {
+                return $r['nama_jenis'];
+            }, $rows);
+        } catch (Throwable $e) {
+            $this->db->db_debug = $prev_debug;
+            return $fallback;
+        }
+    }
+
+    public function get_jenis_ta_by_id($id) {
+        $this->_init_master_jenis_ta();
+        return $this->db->get_where('master_jenis_ta', ['id' => $id])->row_array();
+    }
+
+    public function save_jenis_ta($data, $id = null) {
+        $this->_init_master_jenis_ta();
+        if (!empty($id)) {
+            $this->db->where('id', $id);
+            return $this->db->update('master_jenis_ta', $data);
+        } else {
+            return $this->db->insert('master_jenis_ta', $data);
+        }
+    }
+
+    public function toggle_jenis_ta($id) {
+        $this->_init_master_jenis_ta();
+        $row = $this->db->get_where('master_jenis_ta', ['id' => $id])->row_array();
+        if (!$row) return false;
+        $new_status = ($row['is_active'] == 1) ? 0 : 1;
+        $this->db->where('id', $id);
+        return $this->db->update('master_jenis_ta', ['is_active' => $new_status]);
+    }
+
+    public function delete_jenis_ta($id) {
+        $this->_init_master_jenis_ta();
+        $this->db->where('id', $id);
+        return $this->db->delete('master_jenis_ta');
+    }
+
     private function _parse_fp_admin_status($fp_row) {
         if (empty($fp_row) || !is_array($fp_row)) return 'Pending';
         if (!empty($fp_row['status_adminlaa']) && strcasecmp($fp_row['status_adminlaa'], 'Pending') !== 0) {
@@ -1976,15 +2086,71 @@ class AdminLayanan_model extends CI_Model {
     }
 
     /**
+     * Inisialisasi otomatis tabel syarat_berkas_sidang
+     */
+    public function _init_syarat_berkas_sidang() {
+        $prev_debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+
+        try {
+            if (!$this->db->table_exists('syarat_berkas_sidang')) {
+                $this->db->query("CREATE TABLE IF NOT EXISTS `syarat_berkas_sidang` (
+                    `id` INT AUTO_INCREMENT PRIMARY KEY,
+                    `kode_berkas` VARCHAR(100) NOT NULL UNIQUE,
+                    `nama_berkas` VARCHAR(255) NOT NULL,
+                    `deskripsi` TEXT NULL,
+                    `file_template` VARCHAR(255) NULL,
+                    `is_required` TINYINT(1) DEFAULT 1,
+                    `is_active` TINYINT(1) DEFAULT 1,
+                    `urutan` INT DEFAULT 1,
+                    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+            } else {
+                $fields = $this->db->list_fields('syarat_berkas_sidang');
+                if (!in_array('file_template', $fields)) {
+                    $this->db->query("ALTER TABLE `syarat_berkas_sidang` ADD COLUMN `file_template` VARCHAR(255) NULL AFTER `deskripsi`");
+                }
+                if (!in_array('is_required', $fields)) {
+                    $this->db->query("ALTER TABLE `syarat_berkas_sidang` ADD COLUMN `is_required` TINYINT(1) DEFAULT 1 AFTER `file_template`");
+                }
+                if (!in_array('is_active', $fields)) {
+                    $this->db->query("ALTER TABLE `syarat_berkas_sidang` ADD COLUMN `is_active` TINYINT(1) DEFAULT 1 AFTER `is_required`");
+                }
+                if (!in_array('urutan', $fields)) {
+                    $this->db->query("ALTER TABLE `syarat_berkas_sidang` ADD COLUMN `urutan` INT DEFAULT 1 AFTER `is_active`");
+                }
+                if (!in_array('updated_at', $fields)) {
+                    $this->db->query("ALTER TABLE `syarat_berkas_sidang` ADD COLUMN `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `created_at`");
+                }
+            }
+
+            if ($this->db->count_all('syarat_berkas_sidang') === 0) {
+                $default_syarat = [
+                    ['kode_berkas' => 'surat_izin_wali', 'nama_berkas' => 'Surat Izin Sidang yang Telah Ditandatangani Dosen Wali', 'deskripsi' => 'Surat rekomendasi izin pendaftaran sidang dari dosen wali akademik', 'file_template' => null, 'is_required' => 1, 'is_active' => 1, 'urutan' => 1],
+                    ['kode_berkas' => 'formulir_sidang', 'nama_berkas' => 'Formulir Pendaftaran Sidang',                             'deskripsi' => 'Formulir bukti pendaftaran sidang tugas akhir lengkap', 'file_template' => null, 'is_required' => 1, 'is_active' => 1, 'urutan' => 2],
+                    ['kode_berkas' => 'daftar_nilai',    'nama_berkas' => 'Daftar Nilai yang Telah Divalidasi oleh Ka Prodi',        'deskripsi' => 'Transkrip / daftar nilai akademik kelulusan mata kuliah tervalidasi Kaprodi', 'file_template' => null, 'is_required' => 1, 'is_active' => 1, 'urutan' => 3],
+                    ['kode_berkas' => 'sertifikat_eprt', 'nama_berkas' => 'Sertifikat EPRT',                                         'deskripsi' => 'Sertifikat kelulusan tes Bahasa Inggris / EPRT dengan skor memenuhi syarat', 'file_template' => null, 'is_required' => 1, 'is_active' => 1, 'urutan' => 4],
+                    ['kode_berkas' => 'sertifikat_tak',  'nama_berkas' => 'Sertifikat TAK',                                          'deskripsi' => 'Sertifikat Transkrip Aktivitas Kemahasiswaan (TAK) minimum poin terpenuhi', 'file_template' => null, 'is_required' => 1, 'is_active' => 1, 'urutan' => 5],
+                    ['kode_berkas' => 'bukti_bimbingan', 'nama_berkas' => 'Bukti Bimbingan (Logbook)',                               'deskripsi' => 'Logbook asistensi / bimbingan tugas akhir dengan pembimbing 1 & 2', 'file_template' => null, 'is_required' => 1, 'is_active' => 1, 'urutan' => 6],
+                    ['kode_berkas' => 'bukti_skpi',      'nama_berkas' => 'Bukti SKPI',                                              'deskripsi' => 'Dokumen Surat Keterangan Pendamping Ijazah & sertifikat pendukung', 'file_template' => null, 'is_required' => 1, 'is_active' => 1, 'urutan' => 7]
+                ];
+                $this->db->insert_batch('syarat_berkas_sidang', $default_syarat);
+            }
+        } catch (Throwable $e) {}
+
+        $this->db->db_debug = $prev_debug;
+    }
+
+    /**
      * Ambil master berkas persyaratan pendaftaran sidang (Hanya yang aktif)
      */
     public function get_master_syarat_sidang() {
-        if ($this->db->table_exists('syarat_berkas_sidang')) {
-            $this->db->order_by('urutan', 'ASC');
-            $query = $this->db->get_where('syarat_berkas_sidang', ['is_active' => 1]);
-            if ($query && $query->num_rows() > 0) {
-                return $query->result_array();
-            }
+        $this->_init_syarat_berkas_sidang();
+        $this->db->order_by('urutan', 'ASC')->order_by('id', 'ASC');
+        $query = $this->db->get_where('syarat_berkas_sidang', ['is_active' => 1]);
+        if ($query && $query->num_rows() > 0) {
+            return $query->result_array();
         }
 
         // Fallback default 7 berkas jika tabel belum ada / kosong
@@ -2003,12 +2169,11 @@ class AdminLayanan_model extends CI_Model {
      * Ambil SELURUH master berkas persyaratan sidang (Aktif & Nonaktif untuk Admin Management)
      */
     public function get_all_master_syarat_sidang() {
-        if ($this->db->table_exists('syarat_berkas_sidang')) {
-            $this->db->order_by('urutan', 'ASC');
-            $query = $this->db->get('syarat_berkas_sidang');
-            if ($query && $query->num_rows() > 0) {
-                return $query->result_array();
-            }
+        $this->_init_syarat_berkas_sidang();
+        $this->db->order_by('urutan', 'ASC')->order_by('id', 'ASC');
+        $query = $this->db->get('syarat_berkas_sidang');
+        if ($query && $query->num_rows() > 0) {
+            return $query->result_array();
         }
         return $this->get_master_syarat_sidang();
     }
@@ -2017,9 +2182,7 @@ class AdminLayanan_model extends CI_Model {
      * Tambah atau update 1 master syarat sidang
      */
     public function save_master_syarat_item($id = null, $data = []) {
-        if (!$this->db->table_exists('syarat_berkas_sidang')) {
-            return false;
-        }
+        $this->_init_syarat_berkas_sidang();
 
         if (!empty($id)) {
             $this->db->where('id', $id)->update('syarat_berkas_sidang', $data);
@@ -2034,10 +2197,8 @@ class AdminLayanan_model extends CI_Model {
      * Hapus master syarat berkas sidang
      */
     public function delete_master_syarat_item($id) {
-        if ($this->db->table_exists('syarat_berkas_sidang')) {
-            return $this->db->where('id', $id)->delete('syarat_berkas_sidang');
-        }
-        return false;
+        $this->_init_syarat_berkas_sidang();
+        return $this->db->where('id', $id)->delete('syarat_berkas_sidang');
     }
 
     /**

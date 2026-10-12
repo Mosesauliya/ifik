@@ -234,11 +234,13 @@ class Mahasiswa extends CI_Controller {
         $has_revisi = ($w_status === 'Rejected' || $a_status === 'Rejected' || $k_status === 'Rejected' || $kk_status === 'Rejected' || !empty($pendaftaran['berkas_kurang']) || $st_judul === 'Rejected');
         $is_locked = !$has_revisi;
 
+        $this->load->model('AdminLayanan_model');
         $data['title'] = $is_locked ? 'Detail / Ringkasan Formulir Tugas Akhir' : 'Edit Formulir Tugas Akhir (Revisi)';
         $data['mahasiswa'] = $this->Mahasiswa_model->get_mahasiswa($nim);
         $data['pendaftaran'] = $pendaftaran;
         $data['is_locked'] = $is_locked;
         $data['has_revisi'] = $has_revisi;
+        $data['opsi_jenis_ta'] = $this->AdminLayanan_model->get_active_jenis_ta();
 
         if ($this->input->post()) {
             if ($is_locked) {
@@ -604,6 +606,7 @@ class Mahasiswa extends CI_Controller {
         $data['has_ta']         = $has_ta;
         $data['server_draft_step'] = $server_draft_step;
         $data['syarat_berkas']  = $this->AdminLayanan_model->get_active_syarat_berkas();
+        $data['opsi_jenis_ta']  = $this->AdminLayanan_model->get_active_jenis_ta();
         $data['student_berkas'] = $student_berkas;
 
         if ($this->input->post()) {
