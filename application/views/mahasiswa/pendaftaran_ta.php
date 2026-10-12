@@ -307,7 +307,7 @@
 
                                 <?php
                                     $current_jenis_val = !empty(trim($pendaftaran['jenis_ta'] ?? '')) ? trim($pendaftaran['jenis_ta']) : '';
-                                    $standard_jenis_opts = ['TA Reguler', 'TA Jurnal', 'TA HKI', 'TA PROYEK', 'Pengkaryaan', 'Penulisan'];
+                                    $standard_jenis_opts = !empty($opsi_jenis_ta) ? $opsi_jenis_ta : ['TA Reguler', 'TA Jurnal', 'TA HKI', 'TA PROYEK', 'Pengkaryaan', 'Penulisan'];
                                     if (!empty($current_jenis_val) && !in_array($current_jenis_val, $standard_jenis_opts)) {
                                         $standard_jenis_opts[] = $current_jenis_val;
                                     }

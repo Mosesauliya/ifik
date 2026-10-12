@@ -51,6 +51,8 @@ if ($isLoggedIn && $activeRoleId === 0) {
         $activeRoleId = 15; // SDM dan Keuangan
     } elseif (strpos($currentUri, 'prodi') === 0) {
         $activeRoleId = 16; // Program Studi
+    } elseif (strpos($currentUri, 'superadmin') === 0 || strpos($currentUri, 'kelompok_keahlian') === 0 || strpos($currentUri, 'kelompok-keahlian') === 0) {
+        $activeRoleId = (int)($this->session->userdata('role_id') ?: 22);
     } elseif (strpos($currentUri, 'admin') === 0 || strpos($currentUri, 'kelolabooking') === 0) {
         $activeRoleId = 1; // Admin
     } elseif (strpos($currentUri, 'importemail') === 0 || strpos($currentUri, 'import-email') === 0) {
@@ -94,8 +96,9 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['heading' => 'Kelola & Pendaftaran Akun', 'href' => site_url('import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png', 'subheading' => 'Edit, Hapus & Import Akun'],
 
                 ['category' => 'Pengaturan Tugas Akhir & Sidang', 'has_divider' => true],
-                ['heading' => 'Syarat Berkas TA', 'href' => site_url('adminlayanan/pengaturan_berkas'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png', 'subheading' => 'Dinamis Berkas & Template'],
-                ['heading' => 'Syarat Berkas Sidang', 'href' => site_url('adminlayanan/pendaftaran_sidang?manage_syarat=1'), 'icon_3d' => 'assets/images/icons_3d/sidang.png', 'subheading' => 'Dinamis Persyaratan Sidang'],
+                ['heading' => 'Dinamis Kelompok Keahlian', 'href' => site_url('superadmin/kelompok_keahlian'), 'icon_3d' => 'assets/images/icons_3d/approval.png', 'subheading' => 'Master Kelompok Keahlian (KK)'],
+                ['heading' => 'Syarat Berkas & Jenis TA', 'href' => site_url('adminlayanan/pengaturan_berkas'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png', 'subheading' => 'Dinamis Berkas & Jenis TA'],
+                ['heading' => 'Syarat Berkas Sidang', 'href' => site_url('adminlayanan/pengaturan_berkas_sidang'), 'icon_3d' => 'assets/images/icons_3d/sidang.png', 'subheading' => 'Dinamis Persyaratan Sidang'],
                 ['heading' => 'Pengaturan Jalur TA', 'href' => site_url('adminlayanan/pengaturan_jalur'), 'icon_3d' => 'assets/images/icons_3d/daftar.png', 'subheading' => 'Jalur Sidang & Non-Sidang'],
 
                 ['category' => 'Akun', 'has_divider' => true],
@@ -221,8 +224,9 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['heading' => 'Kelola & Pendaftaran Akun', 'href' => site_url('import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png', 'subheading' => 'Edit, Hapus & Import Akun'],
 
                 ['category' => 'Pengaturan Tugas Akhir & Sidang', 'has_divider' => true],
-                ['heading' => 'Syarat Berkas TA', 'href' => site_url('adminlayanan/pengaturan_berkas'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png', 'subheading' => 'Dinamis Berkas & Template'],
-                ['heading' => 'Syarat Berkas Sidang', 'href' => site_url('adminlayanan/pendaftaran_sidang?manage_syarat=1'), 'icon_3d' => 'assets/images/icons_3d/sidang.png', 'subheading' => 'Dinamis Persyaratan Sidang'],
+                ['heading' => 'Dinamis Kelompok Keahlian', 'href' => site_url('superadmin/kelompok_keahlian'), 'icon_3d' => 'assets/images/icons_3d/approval.png', 'subheading' => 'Master Kelompok Keahlian (KK)'],
+                ['heading' => 'Syarat Berkas & Jenis TA', 'href' => site_url('adminlayanan/pengaturan_berkas'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png', 'subheading' => 'Dinamis Berkas & Jenis TA'],
+                ['heading' => 'Syarat Berkas Sidang', 'href' => site_url('adminlayanan/pengaturan_berkas_sidang'), 'icon_3d' => 'assets/images/icons_3d/sidang.png', 'subheading' => 'Dinamis Persyaratan Sidang'],
                 ['heading' => 'Pengaturan Jalur TA', 'href' => site_url('adminlayanan/pengaturan_jalur'), 'icon_3d' => 'assets/images/icons_3d/daftar.png', 'subheading' => 'Jalur Sidang & Non-Sidang'],
 
                 ['category' => 'Manajemen Sistem & Fasilitas', 'has_divider' => true],

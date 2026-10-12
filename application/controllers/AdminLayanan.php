@@ -241,23 +241,177 @@ class AdminLayanan extends CI_Controller {
      * Halaman Pengaturan Master Syarat Berkas TA oleh LAA
      */
     public function pengaturan_berkas() {
-        $data['title'] = 'Pengaturan Syarat Berkas TA - Admin Layanan';
+        $data['title']         = 'Pengaturan Syarat Berkas & Jenis TA - Admin Layanan';
         $data['syarat_berkas'] = $this->AdminLayanan_model->get_all_syarat_berkas();
+        $data['jenis_ta_list'] = $this->AdminLayanan_model->get_all_jenis_ta();
+        $data['active_tab']    = $this->input->get('tab') ?: 'berkas';
         $this->load->view('admin_layanan/pengaturan_berkas', $data);
     }
 
     /**
-     * Halaman Pengaturan Jalur Sidang & Non-Sidang (Dinamis)
+     * Halaman Pengaturan Master Syarat Berkas Sidang (Dinamis Persyaratan Sidang)
      */
-    public function pengaturan_jalur() {
-        $data['title'] = 'Pengaturan Jalur Sidang & Non-Sidang (Dinamis)';
-        $this->load->model('Rekomendasi_model');
-        $data['options'] = $this->Rekomendasi_model->get_all_options();
-        $data['options_grouped'] = $this->Rekomendasi_model->get_all_options_grouped();
-        $this->load->view('admin_layanan/pengaturan_jalur', $data);
+    public function pengaturan_berkas_sidang() {
+        $data['title']         = 'Pengaturan Syarat Berkas Sidang - Admin Layanan';
+        $data['syarat_sidang'] = $this->AdminLayanan_model->get_all_master_syarat_sidang();
+        $this->load->view('admin_layanan/pengaturan_berkas_sidang', $data);
     }
 
+    /**
+     * Simpan / Tambah / Edit Syarat Berkas Sidang
+     */
+    public function simpan_syarat_sidang() {
+        $id          = $this->input->post('id');
+        $nama_berkas = trim($this->input->post('nama_berkas') ?? '');
+        $kode_berkas = trim($this->input->post('kode_berkas') ?? '');
+        $deskripsi   = trim($this->input->post('deskripsi') ?? '');
+        $is_required = $this->input->post('is_required') ? 1 : 0;
+        $is_active   = $this->input->post('is_active') ? 1 : 0;
+        $urutan      = (int)($this->input->post('urutan') ?: 1);
 
+        $isAjax = $this->input->is_ajax_request() || 
+                  (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
+
+        if (empty($nama_berkas)) {
+            if ($isAjax) {
+                $this->output->set_content_type('application/json')
+                             ->set_output(json_encode(['success' => false, 'message' => 'Nama berkas wajib diisi!']));
+                return;
+            }
+            $this->session->set_flashdata('error', 'Nama berkas sidang wajib diisi!');
+            redirect('adminlayanan/pengaturan_berkas_sidang');
+            return;
+        }
+
+        if (empty($kode_berkas)) {
+            $kode_berkas = strtolower(preg_replace('/[^a-zA-Z0-9_]+/', '_', trim($nama_berkas)));
+        }
+
+        // Handle File Template jika ada diunggah
+        $uploaded_template = null;
+        if (!empty($_FILES['file_template']['name'])) {
+            $upload_dir = FCPATH . 'uploads/templates/';
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
+            }
+
+            $orig_ext = strtolower(pathinfo($_FILES['file_template']['name'], PATHINFO_EXTENSION));
+            $allowed_exts = array('pdf', 'doc', 'docx', 'xlsx', 'xls', 'zip');
+
+            if (!in_array($orig_ext, $allowed_exts)) {
+                if ($isAjax) {
+                    $this->output->set_content_type('application/json')
+                                 ->set_output(json_encode(['success' => false, 'message' => 'Format file template tidak didukung! Gunakan .pdf, .docx, .doc, .xlsx, atau .zip.']));
+                    return;
+                }
+                $this->session->set_flashdata('error', 'Format file template tidak didukung! Gunakan .pdf, .docx, .doc, .xlsx, atau .zip.');
+                redirect('adminlayanan/pengaturan_berkas_sidang');
+                return;
+            }
+
+            $clean_name = preg_replace('/[^a-zA-Z0-9_-]/', '_', pathinfo($_FILES['file_template']['name'], PATHINFO_FILENAME));
+            $safe_filename = 'template_sidang_' . $clean_name . '_' . time() . '.' . $orig_ext;
+            $target_file = $upload_dir . $safe_filename;
+
+            if (move_uploaded_file($_FILES['file_template']['tmp_name'], $target_file)) {
+                $uploaded_template = $safe_filename;
+            }
+        }
+
+        $hapus_template = (int)($this->input->post('hapus_template') ?: 0);
+
+        $payload = [
+            'kode_berkas' => $kode_berkas,
+            'nama_berkas' => $nama_berkas,
+            'deskripsi'   => $deskripsi,
+            'is_required' => $is_required,
+            'is_active'   => $is_active,
+            'urutan'      => max(1, $urutan),
+            'updated_at'  => date('Y-m-d H:i:s')
+        ];
+
+        if ($uploaded_template !== null) {
+            $payload['file_template'] = $uploaded_template;
+        } elseif ($hapus_template === 1) {
+            $payload['file_template'] = null;
+        }
+
+        $res = $this->AdminLayanan_model->save_master_syarat_item($id ?: null, $payload);
+
+        $msg = !empty($id) ? "Berkas persyaratan sidang [{$nama_berkas}] berhasil diperbarui." : "Berkas persyaratan sidang baru berhasil ditambahkan.";
+
+        if ($isAjax) {
+            $this->output->set_content_type('application/json')
+                         ->set_output(json_encode(['success' => true, 'message' => $msg, 'id' => $res]));
+            return;
+        }
+
+        $this->session->set_flashdata('success', $msg);
+        redirect('adminlayanan/pengaturan_berkas_sidang');
+    }
+
+    /**
+     * Toggle status aktif syarat berkas sidang
+     */
+    public function toggle_syarat_sidang($id) {
+        $id = (int)$id;
+        $this->AdminLayanan_model->_init_syarat_berkas_sidang();
+        $row = $this->db->get_where('syarat_berkas_sidang', ['id' => $id])->row_array();
+        
+        $isAjax = $this->input->is_ajax_request() || 
+                  (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
+
+        if (!$row) {
+            if ($isAjax) {
+                $this->output->set_content_type('application/json')
+                             ->set_output(json_encode(['success' => false, 'message' => 'Berkas tidak ditemukan.']));
+                return;
+            }
+            $this->session->set_flashdata('error', 'Berkas tidak ditemukan.');
+            redirect('adminlayanan/pengaturan_berkas_sidang');
+            return;
+        }
+
+        $new_status = ($row['is_active'] == 1) ? 0 : 1;
+        $this->db->where('id', $id)->update('syarat_berkas_sidang', [
+            'is_active'  => $new_status,
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+
+        $stText = ($new_status == 1) ? 'diaktifkan' : 'dinonaktifkan';
+        $msg = "Berkas [{$row['nama_berkas']}] berhasil {$stText}.";
+
+        if ($isAjax) {
+            $this->output->set_content_type('application/json')
+                         ->set_output(json_encode(['success' => true, 'message' => $msg, 'is_active' => $new_status]));
+            return;
+        }
+
+        $this->session->set_flashdata('success', $msg);
+        redirect('adminlayanan/pengaturan_berkas_sidang');
+    }
+
+    /**
+     * Hapus syarat berkas sidang
+     */
+    public function hapus_syarat_sidang($id) {
+        $id = (int)$id;
+        $this->AdminLayanan_model->delete_master_syarat_item($id);
+
+        $isAjax = $this->input->is_ajax_request() || 
+                  (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
+
+        $msg = 'Persyaratan berkas sidang berhasil dihapus.';
+
+        if ($isAjax) {
+            $this->output->set_content_type('application/json')
+                         ->set_output(json_encode(['success' => true, 'message' => $msg]));
+            return;
+        }
+
+        $this->session->set_flashdata('success', $msg);
+        redirect('adminlayanan/pengaturan_berkas_sidang');
+    }
 
     /**
      * Simpan / Tambah / Edit Syarat Berkas TA
@@ -381,7 +535,53 @@ class AdminLayanan extends CI_Controller {
     public function hapus_syarat_berkas($id) {
         $this->AdminLayanan_model->delete_syarat_berkas($id);
         $this->session->set_flashdata('success', 'Syarat berkas berhasil dihapus!');
-        redirect('adminlayanan/pengaturan_berkas');
+        redirect('adminlayanan/pengaturan_berkas?tab=berkas');
+    }
+
+    /**
+     * Simpan / Tambah / Edit Master Jenis Tugas Akhir
+     */
+    public function simpan_jenis_ta() {
+        $id          = $this->input->post('id');
+        $nama_jenis  = trim($this->input->post('nama_jenis') ?? '');
+        $keterangan  = trim($this->input->post('keterangan') ?? '');
+        $is_active   = $this->input->post('is_active') ? 1 : 0;
+        $urutan      = (int)($this->input->post('urutan') ?: 1);
+
+        if (empty($nama_jenis)) {
+            $this->session->set_flashdata('error', 'Nama Jenis Tugas Akhir wajib diisi!');
+            redirect('adminlayanan/pengaturan_berkas?tab=jenis_ta');
+            return;
+        }
+
+        $data_jenis = [
+            'nama_jenis' => $nama_jenis,
+            'keterangan' => $keterangan,
+            'is_active'  => $is_active,
+            'urutan'     => $urutan,
+        ];
+
+        $this->AdminLayanan_model->save_jenis_ta($data_jenis, $id);
+        $this->session->set_flashdata('success', 'Master Jenis Tugas Akhir berhasil disimpan!');
+        redirect('adminlayanan/pengaturan_berkas?tab=jenis_ta');
+    }
+
+    /**
+     * Toggle Aktif / Non-Aktif Master Jenis Tugas Akhir
+     */
+    public function toggle_jenis_ta($id) {
+        $this->AdminLayanan_model->toggle_jenis_ta($id);
+        $this->session->set_flashdata('success', 'Status keaktifan Jenis Tugas Akhir berhasil diperbarui!');
+        redirect('adminlayanan/pengaturan_berkas?tab=jenis_ta');
+    }
+
+    /**
+     * Hapus Master Jenis Tugas Akhir
+     */
+    public function hapus_jenis_ta($id) {
+        $this->AdminLayanan_model->delete_jenis_ta($id);
+        $this->session->set_flashdata('success', 'Jenis Tugas Akhir berhasil dihapus!');
+        redirect('adminlayanan/pengaturan_berkas?tab=jenis_ta');
     }
 
     /**
@@ -1118,6 +1318,11 @@ class AdminLayanan extends CI_Controller {
      * Halaman List Pendaftar Sidang
      */
     public function pendaftaran_sidang() {
+        if ($this->input->get('manage_syarat') == '1') {
+            redirect('adminlayanan/pengaturan_berkas_sidang');
+            return;
+        }
+
         $search        = trim($this->input->get('q') ?? '');
         $cat           = trim($this->input->get('cat') ?? 'query');
         $filter_jenis  = trim($this->input->get('jenis') ?? 'all');   // 'all', 'sidang', 'non-sidang'

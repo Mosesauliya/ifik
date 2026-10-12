@@ -262,7 +262,7 @@
                 </p>
 
                 <?php 
-                    $opsi_jenis = [
+                    $opsi_jenis = !empty($opsi_jenis_ta) ? $opsi_jenis_ta : [
                         'TA Reguler',
                         'TA Jurnal',
                         'TA HKI',

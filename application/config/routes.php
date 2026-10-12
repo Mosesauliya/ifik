@@ -235,11 +235,20 @@ $route['adminlayanan/ajax_get_table'] = 'AdminLayanan/ajax_get_table';
 $route['adminlayanan/berita'] = 'News/newsroom';
 $route['adminlayanan/newsroom'] = 'News/newsroom';
 $route['adminlayanan/pengaturan_berkas'] = 'AdminLayanan/pengaturan_berkas';
+$route['adminlayanan/pengaturan_berkas_sidang'] = 'AdminLayanan/pengaturan_berkas_sidang';
+$route['adminlayanan/simpan_syarat_sidang'] = 'AdminLayanan/simpan_syarat_sidang';
+$route['adminlayanan/toggle_syarat_sidang/(:any)'] = 'AdminLayanan/toggle_syarat_sidang/$1';
+$route['adminlayanan/hapus_syarat_sidang/(:any)'] = 'AdminLayanan/hapus_syarat_sidang/$1';
+$route['superadmin/syarat_sidang'] = 'AdminLayanan/pengaturan_berkas_sidang';
+$route['superadmin/pengaturan_berkas_sidang'] = 'AdminLayanan/pengaturan_berkas_sidang';
 $route['adminlayanan/pengaturan_jalur'] = 'AdminLayanan/pengaturan_jalur';
 $route['koordinatorta/pengaturan_jalur'] = 'KoordinatorTA/pengaturan_jalur';
 $route['adminlayanan/simpan_syarat_berkas'] = 'AdminLayanan/simpan_syarat_berkas';
 $route['adminlayanan/toggle_syarat_berkas/(:any)'] = 'AdminLayanan/toggle_syarat_berkas/$1';
 $route['adminlayanan/hapus_syarat_berkas/(:any)'] = 'AdminLayanan/hapus_syarat_berkas/$1';
+$route['adminlayanan/simpan_jenis_ta'] = 'AdminLayanan/simpan_jenis_ta';
+$route['adminlayanan/toggle_jenis_ta/(:any)'] = 'AdminLayanan/toggle_jenis_ta/$1';
+$route['adminlayanan/hapus_jenis_ta/(:any)'] = 'AdminLayanan/hapus_jenis_ta/$1';
 $route['adminlayanan/autocomplete'] = 'AdminLayanan/autocomplete';
 $route['adminlayanan/detail_berkas/(:any)'] = 'AdminLayanan/detail_berkas/$1';
 $route['adminlayanan/submit_verifikasi/(:any)'] = 'AdminLayanan/submit_verifikasi/$1';
@@ -260,8 +269,27 @@ $route['adminlayanan/(:any)/(:any)'] = 'AdminLayanan/$1/$2';
 // [TEMPORARY SIMULASI] Admin Layanan (LAA) Ticketing Simulation Routes
 $route['adminlayanan/ticketing'] = 'AdminLayananTicketing/index';
 $route['adminlayanan/ticketing/detail/(:any)'] = 'AdminLayananTicketing/detail/$1';
-$route['adminlayanan/ticketing/simpan_tanggapan'] = 'AdminLayananTicketing/simpan_tanggapan';
+// [SUPER ADMIN] Dinamis Kelompok Keahlian (KK) Routes
+$route['superadmin/kelompok_keahlian']                = 'KelompokKeahlian/index';
+$route['superadmin/kelompok-keahlian']                = 'KelompokKeahlian/index';
+$route['superadmin/kelompok_keahlian/simpan']         = 'KelompokKeahlian/simpan';
+$route['superadmin/kelompok_keahlian/toggle/(:any)']  = 'KelompokKeahlian/toggle_status/$1';
+$route['superadmin/kelompok_keahlian/hapus/(:any)']   = 'KelompokKeahlian/hapus/$1';
+$route['superadmin/kelompok_keahlian/get_json/(:any)']= 'KelompokKeahlian/get_json/$1';
+$route['superadmin/kelompok_keahlian/members/(:any)'] = 'KelompokKeahlian/members/$1';
 
+$route['admin/kelompok_keahlian']                     = 'KelompokKeahlian/index';
+$route['admin/kelompok-keahlian']                     = 'KelompokKeahlian/index';
+$route['admin/kelompok_keahlian/simpan']              = 'KelompokKeahlian/simpan';
+$route['admin/kelompok_keahlian/toggle/(:any)']       = 'KelompokKeahlian/toggle_status/$1';
+$route['admin/kelompok_keahlian/hapus/(:any)']        = 'KelompokKeahlian/hapus/$1';
+$route['admin/kelompok_keahlian/get_json/(:any)']     = 'KelompokKeahlian/get_json/$1';
+$route['admin/kelompok_keahlian/members/(:any)']      = 'KelompokKeahlian/members/$1';
+
+$route['kelompok-keahlian']                           = 'KelompokKeahlian/index';
+$route['kelompok_keahlian']                           = 'KelompokKeahlian/index';
+$route['kelompok_keahlian/(:any)']                    = 'KelompokKeahlian/$1';
+$route['kelompok_keahlian/(:any)/(:any)']             = 'KelompokKeahlian/$1/$2';
 
 // Ketua KK Routes
 $route['ketuakk'] = 'KetuaKK/index';
