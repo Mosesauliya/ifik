@@ -99,7 +99,13 @@ $laaNavGroups = [
                 'heading' => 'Pengaturan Syarat Berkas',
                 'href'    => site_url('adminlayanan/pengaturan_berkas'),
                 'icon_3d' => 'assets/images/icons_3d/settings.png',
-                'is_active' => (strpos($curr_uri, 'adminlayanan/pengaturan_berkas') === 0)
+                'is_active' => (strpos($curr_uri, 'adminlayanan/pengaturan_berkas') === 0 && strpos($curr_uri, 'adminlayanan/pengaturan_berkas_sidang') === false)
+            ],
+            [
+                'heading' => 'Syarat Berkas Sidang',
+                'href'    => site_url('adminlayanan/pengaturan_berkas_sidang'),
+                'icon_3d' => 'assets/images/icons_3d/sidang.png',
+                'is_active' => (strpos($curr_uri, 'adminlayanan/pengaturan_berkas_sidang') === 0)
             ],
             [
                 'heading' => 'Pengaturan Jalur TA',

@@ -51,6 +51,8 @@ if ($isLoggedIn && $activeRoleId === 0) {
         $activeRoleId = 15; // SDM dan Keuangan
     } elseif (strpos($currentUri, 'prodi') === 0) {
         $activeRoleId = 16; // Program Studi
+    } elseif (strpos($currentUri, 'superadmin') === 0 || strpos($currentUri, 'kelompok_keahlian') === 0 || strpos($currentUri, 'kelompok-keahlian') === 0) {
+        $activeRoleId = (int)($this->session->userdata('role_id') ?: 22);
     } elseif (strpos($currentUri, 'admin') === 0 || strpos($currentUri, 'kelolabooking') === 0) {
         $activeRoleId = 1; // Admin
     } elseif (strpos($currentUri, 'importemail') === 0 || strpos($currentUri, 'import-email') === 0) {
@@ -88,10 +90,16 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
     $defaultNavItems = $navItems;
 } else {
     switch ($activeRoleId) {
-        case 22: // Super Admin (Khusus Import Akun)
+        case 22: // Super Admin
             $defaultNavItems = [
-                ['category' => 'Super Admin'],
-                ['heading' => 'Pendaftaran Akun Baru', 'href' => site_url('import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
+                ['category' => 'Manajemen Akun & User'],
+                ['heading' => 'Kelola & Pendaftaran Akun', 'href' => site_url('import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png', 'subheading' => 'Edit, Hapus & Import Akun'],
+
+                ['category' => 'Pengaturan Tugas Akhir & Sidang', 'has_divider' => true],
+                ['heading' => 'Dinamis Kelompok Keahlian', 'href' => site_url('superadmin/kelompok_keahlian'), 'icon_3d' => 'assets/images/icons_3d/approval.png', 'subheading' => 'Master Kelompok Keahlian (KK)'],
+                ['heading' => 'Syarat Berkas & Jenis TA', 'href' => site_url('adminlayanan/pengaturan_berkas'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png', 'subheading' => 'Dinamis Berkas & Jenis TA'],
+                ['heading' => 'Syarat Berkas Sidang', 'href' => site_url('adminlayanan/pengaturan_berkas_sidang'), 'icon_3d' => 'assets/images/icons_3d/sidang.png', 'subheading' => 'Dinamis Persyaratan Sidang'],
+                ['heading' => 'Pengaturan Jalur TA', 'href' => site_url('adminlayanan/pengaturan_jalur'), 'icon_3d' => 'assets/images/icons_3d/daftar.png', 'subheading' => 'Jalur Sidang & Non-Sidang'],
 
                 ['category' => 'Akun', 'has_divider' => true],
                 ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
@@ -127,13 +135,17 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
 
         case 2: // Kaur / Ka Lab (Kepala Urusan / Kepala Lab & Dosen) - Full Super Admin Access
             $defaultNavItems = [
-                ['category' => 'Persetujuan Resmi & Lab'],
-                ['heading' => 'Approval Ruangan', 'href' => site_url('kaur/approval'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
-                ['heading' => 'Approval Peminjaman Barang', 'href' => site_url('kaur/barang'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
-                ['heading' => 'Kelola Master Barang', 'href' => site_url('admin/barang'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
+                ['category' => 'Peminjaman Ruangan & Lab'],
+                ['heading' => 'Approval Peminjaman Ruangan', 'href' => site_url('kaur/approval'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
                 ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
                 ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
                 ['heading' => 'Tanda Tangan Digital', 'href' => site_url('kaur/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
+
+                ['category' => 'Peminjaman Barang & Aset', 'has_divider' => true],
+                ['heading' => 'Approval Peminjaman Barang', 'href' => site_url('kaur/barang'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Kalender & Jadwal Barang', 'href' => site_url('peminjaman_barang/kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+                ['heading' => 'Katalog & Pengajuan Alat', 'href' => site_url('peminjaman_barang'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
+                ['heading' => 'Kelola Master Barang', 'href' => site_url('admin/barang'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
 
                 ['category' => 'Manajemen Akun & User', 'has_divider' => true],
                 ['heading' => 'Pendaftaran Akun Baru', 'href' => site_url('import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
@@ -149,8 +161,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['heading' => 'Riwayat Ticketing', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
 
                 ['category' => 'Informasi & Jadwal', 'has_divider' => true],
-                ['heading' => 'Kalender Jadwal Ruangan', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
-                ['heading' => 'Kalender Jadwal Barang', 'href' => site_url('peminjaman_barang/kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+                ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
                 ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
             ];
             break;
@@ -218,7 +229,13 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
 
                 ['category' => 'Manajemen Akun & User', 'has_divider' => true],
-                ['heading' => 'Pendaftaran Akun Baru', 'href' => site_url('import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
+                ['heading' => 'Kelola & Pendaftaran Akun', 'href' => site_url('import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png', 'subheading' => 'Edit, Hapus & Import Akun'],
+
+                ['category' => 'Pengaturan Tugas Akhir & Sidang', 'has_divider' => true],
+                ['heading' => 'Dinamis Kelompok Keahlian', 'href' => site_url('superadmin/kelompok_keahlian'), 'icon_3d' => 'assets/images/icons_3d/approval.png', 'subheading' => 'Master Kelompok Keahlian (KK)'],
+                ['heading' => 'Syarat Berkas & Jenis TA', 'href' => site_url('adminlayanan/pengaturan_berkas'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png', 'subheading' => 'Dinamis Berkas & Jenis TA'],
+                ['heading' => 'Syarat Berkas Sidang', 'href' => site_url('adminlayanan/pengaturan_berkas_sidang'), 'icon_3d' => 'assets/images/icons_3d/sidang.png', 'subheading' => 'Dinamis Persyaratan Sidang'],
+                ['heading' => 'Pengaturan Jalur TA', 'href' => site_url('adminlayanan/pengaturan_jalur'), 'icon_3d' => 'assets/images/icons_3d/daftar.png', 'subheading' => 'Jalur Sidang & Non-Sidang'],
 
                 ['category' => 'Manajemen Sistem & Fasilitas', 'has_divider' => true],
                 ['heading' => 'Kelola Fasilitas & Ruangan', 'href' => site_url('kelolaruangan'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
@@ -253,6 +270,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
 
                 ['category' => 'Pengaturan & Informasi', 'has_divider' => true],
                 ['heading' => 'Pengaturan Syarat Berkas', 'href' => site_url('adminlayanan/pengaturan_berkas'), 'icon_3d' => 'assets/images/icons_3d/settings.png'],
+                ['heading' => 'Syarat Berkas Sidang', 'href' => site_url('adminlayanan/pengaturan_berkas_sidang'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
                 ['heading' => 'Pengaturan Jalur TA', 'href' => site_url('adminlayanan/pengaturan_jalur'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
                 ['heading' => 'Pendaftaran Akun Baru', 'href' => site_url('import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
                 ['heading' => 'Kelola Berita', 'href' => site_url('adminlayanan/berita'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
@@ -597,7 +615,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
 
                     $cleanHref = trim(str_replace([site_url(), base_url()], '', $item['href']), '/');
                     $hasHash = (strpos($cleanHref, '#') !== false);
-                    $cleanHrefUri = strtok($cleanHref, '#');
+                    $cleanHrefUri = strtok(strtok($cleanHref, '#'), '?');
 
                     if ($hasHash) {
                         // Links with # hashes are client-side tabs, will be activated dynamically via JS

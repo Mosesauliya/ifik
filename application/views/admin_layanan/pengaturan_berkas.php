@@ -62,30 +62,58 @@
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased pb-16">
 
-    <!-- Dedicated Admin LAA Sidebar Component -->
-    <?php $this->load->view('admin_layanan/sidebar'); ?>
+    <!-- Auto Role-Aware Sidebar Component -->
+    <?php 
+    $roleId = (int)$this->session->userdata('role_id');
+    if ($roleId === 5) {
+        $this->load->view('admin_layanan/sidebar');
+    } else {
+        $this->load->view('components/curved_sidebar');
+    }
 
-    <!-- Sub Navigation Page Title Bar -->
-    <div class="glass-header px-4 sm:px-6 py-4 mb-8">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div class="flex items-start sm:items-center gap-3.5">
-                <a href="<?= site_url('adminlayanan'); ?>" class="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 text-brand-600 flex items-center justify-center font-bold text-lg hover:bg-orange-100 transition shrink-0 mt-0.5 sm:mt-0">
-                    <i class="fa-solid fa-arrow-left"></i>
-                </a>
-                <div>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <h1 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">Pengaturan Persyaratan Berkas TA (Dinamis)</h1>
-                        <span class="bg-orange-100 text-brand-700 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border border-orange-200 uppercase tracking-wider">LAA System</span>
+    $roleLabel = ($roleId === 22) ? 'Super Admin' : (($roleId === 1) ? 'Panel Admin' : 'Admin Layanan (LAA)');
+    $roleSub   = ($roleId === 22 || $roleId === 1) ? 'Pusat Kontrol Super Admin' : 'Unit Akademik & Kelulusan';
+    $backUrl   = ($roleId === 22 || $roleId === 1) ? site_url('import-email') : site_url('adminlayanan');
+    $badgeText = ($roleId === 22) ? 'Super Admin' : (($roleId === 1) ? 'Admin Panel' : 'LAA System');
+    ?>
+
+    <div id="mainPageContent" class="page-wrapper-for-sidebar min-h-screen flex flex-col">
+        <?php if ($roleId !== 5): ?>
+        <!-- Header Navbar Partial -->
+        <?php $this->load->view('partials/app_navbar', [
+            'user_role_label'   => $roleLabel,
+            'user_display_name' => $this->session->userdata('nama') ?: ($this->session->userdata('name') ?: 'Administrator'),
+            'user_display_sub'  => $roleSub
+        ]); ?>
+        <?php endif; ?>
+
+        <!-- Sub Navigation Page Title Bar -->
+        <div class="glass-header px-4 sm:px-6 py-4 mb-8">
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="flex items-start sm:items-center gap-3.5">
+                    <a href="<?= $backUrl; ?>" class="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 text-brand-600 flex items-center justify-center font-bold text-lg hover:bg-orange-100 transition shrink-0 mt-0.5 sm:mt-0" title="Kembali">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </a>
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h1 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">Pengaturan Syarat Berkas &amp; Jenis TA (Dinamis)</h1>
+                            <span class="bg-orange-100 text-brand-700 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border border-orange-200 uppercase tracking-wider"><?= $badgeText; ?></span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-0.5">Kelola berkas pendaftaran Tugas Akhir serta master pilihan Jenis Tugas Akhir mahasiswa secara dinamis.</p>
                     </div>
-                    <p class="text-xs text-slate-500 mt-0.5">Kelola jenis, jumlah, status wajib, dan keaktifan berkas pendaftaran Tugas Akhir secara fleksibel tanpa hardcode.</p>
                 </div>
-            </div>
 
-            <!-- Header Action Button -->
-            <button onclick="openModalAdd()" class="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-brand-600 hover:from-orange-600 hover:to-brand-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md transition transform hover:-translate-y-0.5 shrink-0">
-                <i class="fa-solid fa-plus"></i>
-                <span>Tambah Syarat Berkas Baru</span>
-            </button>
+            <!-- Header Action Buttons -->
+            <div class="flex items-center gap-2">
+                <button id="btnHeaderAddBerkas" onclick="openModalAdd()" class="<?= ($active_tab === 'jenis_ta') ? 'hidden' : ''; ?> inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-brand-600 hover:from-orange-600 hover:to-brand-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md transition transform hover:-translate-y-0.5 shrink-0">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Tambah Syarat Berkas</span>
+                </button>
+                <button id="btnHeaderAddJenis" onclick="openModalAddJenis()" class="<?= ($active_tab !== 'jenis_ta') ? 'hidden' : ''; ?> inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md transition transform hover:-translate-y-0.5 shrink-0">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Tambah Jenis TA Baru</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -117,8 +145,22 @@
             </div>
         <?php endif; ?>
 
-        <!-- List Syarat Berkas Table Card -->
-        <div class="card-custom p-4 sm:p-6">
+        <!-- Navigation Section Tabs -->
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4 mb-6">
+            <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <button type="button" onclick="switchTab('berkas')" id="tabBtn_berkas" class="px-4 py-2.5 rounded-xl font-extrabold text-xs tracking-wider uppercase transition <?= ($active_tab !== 'jenis_ta') ? 'bg-orange-600 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'; ?>">
+                    <i class="fa-solid fa-file-lines mr-1.5"></i> 1. Syarat Berkas TA (<?= count($syarat_berkas); ?>)
+                </button>
+                <button type="button" onclick="switchTab('jenis_ta')" id="tabBtn_jenis_ta" class="px-4 py-2.5 rounded-xl font-extrabold text-xs tracking-wider uppercase transition <?= ($active_tab === 'jenis_ta') ? 'bg-orange-600 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'; ?>">
+                    <i class="fa-solid fa-graduation-cap mr-1.5"></i> 2. Master Jenis Tugas Akhir (<?= count($jenis_ta_list ?? []); ?>)
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 1: SYARAT BERKAS TA -->
+        <div id="sectionTab_berkas" class="<?= ($active_tab === 'jenis_ta') ? 'hidden' : ''; ?> space-y-6">
+            <!-- List Syarat Berkas Table Card -->
+            <div class="card-custom p-4 sm:p-6">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                 <div>
                     <h2 class="text-base font-bold text-slate-900">Daftar Persyaratan Berkas Pendaftaran TA</h2>
@@ -137,6 +179,7 @@
                             <th class="py-3.5 px-4 text-center w-12">Urutan</th>
                             <th class="py-3.5 px-4">Nama & Kode Berkas</th>
                             <th class="py-3.5 px-4">Deskripsi / Petunjuk Mahasiswa</th>
+                            <th class="py-3.5 px-4 text-center">Template Dokumen</th>
                             <th class="py-3.5 px-4 text-center">Sifat Berkas</th>
                             <th class="py-3.5 px-4 text-center">Status Keaktifan</th>
                             <th class="py-3.5 px-4 text-right w-36">Aksi</th>
@@ -157,6 +200,18 @@
                                     </td>
                                     <td class="py-4 px-4 text-slate-600 max-w-xs">
                                         <?= htmlspecialchars($sb['deskripsi'] ?: '-'); ?>
+                                    </td>
+                                    <td class="py-4 px-4 text-center">
+                                        <?php if(!empty($sb['file_template'])): ?>
+                                            <a href="<?= base_url('uploads/templates/' . $sb['file_template']); ?>" target="_blank"
+                                               class="inline-flex items-center gap-1.5 bg-orange-50 hover:bg-orange-100 text-brand-700 border border-orange-200 px-2.5 py-1 rounded-lg text-[11px] font-bold shadow-2xs transition"
+                                               title="Unduh: <?= htmlspecialchars($sb['file_template']); ?>">
+                                                <i class="fa-solid fa-file-arrow-down text-orange-600"></i>
+                                                <span>Ada Template</span>
+                                            </a>
+                                        <?php else: ?>
+                                            <span class="text-slate-400 text-[11px] italic">Tidak ada</span>
+                                        <?php endif; ?>
                                     </td>
                                     <td class="py-4 px-4 text-center">
                                         <?php if($sb['is_required'] == 1): ?>
@@ -183,8 +238,8 @@
                                     <td class="py-4 px-4 text-right space-x-1">
                                         <!-- Button Toggle -->
                                         <a href="<?= site_url('adminlayanan/toggle_syarat_berkas/' . $sb['id']); ?>" 
-                                           title="<?= $sb['is_active'] == 1 ? 'Non-aktifkan Berkas' : 'Aktifkan Berkas'; ?>"
-                                           class="p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 transition inline-block">
+                                            title="<?= $sb['is_active'] == 1 ? 'Non-aktifkan Berkas' : 'Aktifkan Berkas'; ?>"
+                                            class="p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 transition inline-block">
                                             <i class="fa-solid <?= $sb['is_active'] == 1 ? 'fa-toggle-on text-emerald-600' : 'fa-toggle-off text-slate-400'; ?> text-base"></i>
                                         </a>
 
@@ -197,9 +252,9 @@
 
                                         <!-- Button Delete -->
                                         <a href="<?= site_url('adminlayanan/hapus_syarat_berkas/' . $sb['id']); ?>" 
-                                           onclick="return confirm('Apakah Anda yakin ingin menghapus persyaratan berkas ini?');"
-                                           title="Hapus Syarat Berkas"
-                                           class="p-2 rounded-lg border border-slate-200 text-rose-500 hover:bg-rose-50 hover:border-rose-200 transition inline-block">
+                                            onclick="return confirm('Apakah Anda yakin ingin menghapus persyaratan berkas ini?');"
+                                            title="Hapus Syarat Berkas"
+                                            class="p-2 rounded-lg border border-slate-200 text-rose-500 hover:bg-rose-50 hover:border-rose-200 transition inline-block">
                                             <i class="fa-solid fa-trash-can"></i>
                                         </a>
                                     </td>
@@ -207,7 +262,7 @@
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="6" class="py-8 text-center text-slate-400 font-medium">
+                                <td colspan="7" class="py-8 text-center text-slate-400 font-medium">
                                     Belum ada data persyaratan berkas. Klik tombol <strong>Tambah Syarat Berkas Baru</strong> di atas.
                                 </td>
                             </tr>
@@ -258,6 +313,17 @@
                                     <?= htmlspecialchars($sb['deskripsi']); ?>
                                 </div>
                             <?php endif; ?>
+                            <?php if (!empty($sb['file_template'])): ?>
+                                <div class="flex items-center justify-between bg-orange-50/70 p-2 rounded-xl border border-orange-200 text-[11px]">
+                                    <span class="text-slate-600 font-medium flex items-center gap-1.5">
+                                        <i class="fa-solid fa-file-arrow-down text-orange-600"></i>
+                                        <span>Template Dokumen</span>
+                                    </span>
+                                    <a href="<?= base_url('uploads/templates/' . $sb['file_template']); ?>" target="_blank" class="text-brand-600 font-bold hover:underline">
+                                        Unduh
+                                    </a>
+                                </div>
+                            <?php endif; ?>
                             <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
                                 <span class="text-slate-400 text-[10px]">Aksi Pengaturan:</span>
                                 <div class="flex items-center gap-1.5">
@@ -292,7 +358,190 @@
                 <?php endif; ?>
             </div>
         </div>
+        </div>
+        <!-- END TAB 1 -->
+
+        <!-- TAB 2: MASTER JENIS TUGAS AKHIR -->
+        <div id="sectionTab_jenis_ta" class="<?= ($active_tab !== 'jenis_ta') ? 'hidden' : ''; ?> space-y-6">
+            <div class="card-custom p-4 sm:p-6">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">Daftar Pilihan Jenis Tugas Akhir (Dinamis)</h2>
+                        <p class="text-xs text-slate-500">Pilihan jenis TA ini otomatis tampil pada dropdown pendaftaran TA dan form edit mahasiswa.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg border border-slate-200 shrink-0">
+                            Total: <?= count($jenis_ta_list ?? []); ?> Jenis TA
+                        </span>
+                        <button type="button" onclick="openModalAddJenis()" class="inline-flex items-center gap-1.5 bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg shadow-xs transition cursor-pointer">
+                            <i class="fa-solid fa-plus"></i> Tambah Jenis TA
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Desktop Table View -->
+                <div class="hidden md:block overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full min-w-[700px] text-left text-xs text-slate-700">
+                        <thead class="bg-slate-100/80 text-slate-700 font-bold border-b border-slate-200 uppercase tracking-wider text-[11px]">
+                            <tr>
+                                <th class="py-3.5 px-4 text-center w-16">Urutan</th>
+                                <th class="py-3.5 px-4">Nama Jenis Tugas Akhir</th>
+                                <th class="py-3.5 px-4">Keterangan / Deskripsi</th>
+                                <th class="py-3.5 px-4 text-center w-32">Status</th>
+                                <th class="py-3.5 px-4 text-center w-36">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 font-medium">
+                            <?php if(!empty($jenis_ta_list)): ?>
+                                <?php foreach($jenis_ta_list as $j): ?>
+                                    <tr class="hover:bg-slate-50/80 transition">
+                                        <td class="py-3.5 px-4 text-center font-bold text-slate-600 font-mono">
+                                            <?= htmlspecialchars($j['urutan']); ?>
+                                        </td>
+                                        <td class="py-3.5 px-4">
+                                            <div class="flex items-center gap-2.5">
+                                                <div class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-sm shrink-0">
+                                                    <i class="fa-solid fa-graduation-cap"></i>
+                                                </div>
+                                                <span class="font-extrabold text-slate-900 text-xs sm:text-sm">
+                                                    <?= htmlspecialchars($j['nama_jenis']); ?>
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td class="py-3.5 px-4 text-slate-500 max-w-xs">
+                                            <?= !empty($j['keterangan']) ? htmlspecialchars($j['keterangan']) : '<span class="italic text-slate-400">Tidak ada keterangan</span>'; ?>
+                                        </td>
+                                        <td class="py-3.5 px-4 text-center">
+                                            <a href="<?= site_url('adminlayanan/toggle_jenis_ta/' . $j['id']); ?>" 
+                                               class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border transition <?= ($j['is_active'] == 1) ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'; ?>"
+                                               title="Klik untuk mengubah status aktif/nonaktif">
+                                                <span class="w-1.5 h-1.5 rounded-full <?= ($j['is_active'] == 1) ? 'bg-emerald-500' : 'bg-slate-400'; ?>"></span>
+                                                <span><?= ($j['is_active'] == 1) ? 'Aktif' : 'Non-Aktif'; ?></span>
+                                            </a>
+                                        </td>
+                                        <td class="py-3.5 px-4 text-center">
+                                            <div class="flex items-center justify-center gap-1.5">
+                                                <button type="button" onclick='openModalEditJenis(<?= json_encode($j); ?>)'
+                                                        class="w-7 h-7 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold border border-amber-200 transition cursor-pointer"
+                                                        title="Edit Jenis TA">
+                                                    <i class="fa-solid fa-pen"></i>
+                                                </button>
+                                                <a href="<?= site_url('adminlayanan/hapus_jenis_ta/' . $j['id']); ?>" 
+                                                   onclick="return confirm('Apakah Anda yakin ingin menghapus jenis TA: <?= addslashes($j['nama_jenis']); ?>?');"
+                                                   class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 flex items-center justify-center text-xs font-bold border border-rose-200 transition"
+                                                   title="Hapus Jenis TA">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="5" class="py-8 text-center text-slate-400 font-medium text-xs">
+                                        Belum ada data jenis tugas akhir.
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Mobile Cards View (< 768px) -->
+                <div class="md:hidden space-y-3">
+                    <?php if(!empty($jenis_ta_list)): ?>
+                        <?php foreach($jenis_ta_list as $j): ?>
+                            <div class="p-4 rounded-xl border border-slate-200 bg-white space-y-3">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-7 h-7 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-xs shrink-0">
+                                            <?= htmlspecialchars($j['urutan']); ?>
+                                        </div>
+                                        <h3 class="font-bold text-slate-900 text-xs"><?= htmlspecialchars($j['nama_jenis']); ?></h3>
+                                    </div>
+                                    <a href="<?= site_url('adminlayanan/toggle_jenis_ta/' . $j['id']); ?>" class="px-2 py-0.5 rounded-full text-[10px] font-bold border <?= ($j['is_active'] == 1) ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'; ?>">
+                                        <?= ($j['is_active'] == 1) ? 'Aktif' : 'Non-Aktif'; ?>
+                                    </a>
+                                </div>
+                                <p class="text-xs text-slate-500"><?= !empty($j['keterangan']) ? htmlspecialchars($j['keterangan']) : '<span class="italic text-slate-400">Tidak ada keterangan</span>'; ?></p>
+                                <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+                                    <button type="button" onclick='openModalEditJenis(<?= json_encode($j); ?>)' class="px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-xs font-bold cursor-pointer">
+                                        <i class="fa-solid fa-pen mr-1"></i> Edit
+                                    </button>
+                                    <a href="<?= site_url('adminlayanan/hapus_jenis_ta/' . $j['id']); ?>" onclick="return confirm('Hapus jenis TA ini?');" class="px-2.5 py-1.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold">
+                                        <i class="fa-solid fa-trash mr-1"></i> Hapus
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="py-8 text-center text-slate-400 text-xs">Belum ada data jenis tugas akhir.</div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        <!-- END TAB 2 -->
     </main>
+    </div>
+
+    <!-- Modal Form Tambah / Edit Master Jenis Tugas Akhir -->
+    <div id="modalFormJenis" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all">
+            <div class="bg-gradient-to-r from-amber-500 to-orange-600 p-5 text-white flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-lg font-bold">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <div>
+                        <h3 id="modalTitleJenis" class="font-bold text-base">Tambah Jenis Tugas Akhir</h3>
+                        <p class="text-xs text-amber-100">Pilihan jenis TA untuk form pendaftaran mahasiswa.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModalJenis()" class="text-white/80 hover:text-white text-xl font-bold cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form action="<?= site_url('adminlayanan/simpan_jenis_ta'); ?>" method="POST" class="p-6 space-y-4">
+                <input type="hidden" id="field_jenis_id" name="id" value="">
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Nama Jenis Tugas Akhir <span class="text-rose-500">*</span></label>
+                    <input type="text" id="field_nama_jenis" name="nama_jenis" required placeholder="Contoh: TA Magang MBKM / Pengkaryaan"
+                           class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Keterangan / Penjelasan Singkat</label>
+                    <textarea id="field_keterangan_jenis" name="keterangan" rows="3" placeholder="Deskripsikan ruang lingkup jenis tugas akhir ini..."
+                              class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 items-center">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Urutan Tampilan</label>
+                        <input type="number" id="field_urutan_jenis" name="urutan" min="1" value="1"
+                               class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                    </div>
+                    <div class="pt-5">
+                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="field_is_active_jenis" name="is_active" value="1" checked class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500 border-slate-300">
+                            <span class="text-xs font-bold text-slate-700">Aktifkan di Sistem</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-200">
+                    <button type="button" onclick="closeModalJenis()" class="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-100 transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-xs shadow-md transition cursor-pointer">
+                        Simpan Jenis TA
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Modal Form Tambah / Edit Syarat Berkas -->
     <div id="modalForm" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
@@ -312,7 +561,7 @@
                 </button>
             </div>
 
-            <form action="<?= site_url('adminlayanan/simpan_syarat_berkas'); ?>" method="POST" class="p-6 space-y-4">
+            <form action="<?= site_url('adminlayanan/simpan_syarat_berkas'); ?>" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
                 <input type="hidden" id="field_id" name="id" value="">
 
                 <div>
@@ -332,6 +581,33 @@
                     <label class="block text-xs font-bold text-slate-700 mb-1">Deskripsi / Petunjuk Pengunggahan</label>
                     <textarea id="field_deskripsi" name="deskripsi" rows="3" placeholder="Jelaskan spesifikasi file yang harus diunggah mahasiswa..."
                               class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"></textarea>
+                </div>
+
+                <!-- Input Upload File Template Resmi (Dinamis) -->
+                <div class="p-3.5 bg-orange-50/70 border border-orange-200 rounded-xl space-y-2">
+                    <label class="block text-xs font-bold text-slate-800 flex items-center justify-between">
+                        <span class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-arrow-up text-brand-600"></i>
+                            <span>File Template / Contoh Dokumen Resmi</span>
+                        </span>
+                        <span class="text-[10px] text-slate-400 font-normal">(.pdf, .docx, .doc, .xlsx, .zip)</span>
+                    </label>
+                    <input type="file" id="field_file_template" name="file_template" accept=".pdf,.doc,.docx,.xlsx,.xls,.zip"
+                           class="w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-brand-600 file:text-white hover:file:bg-brand-700 cursor-pointer">
+                    
+                    <div id="boxExistingTemplate" class="hidden flex items-center justify-between pt-1 border-t border-orange-200/80 text-[11px]">
+                        <span class="text-slate-600 flex items-center gap-1 truncate max-w-xs font-mono">
+                            <i class="fa-solid fa-paperclip text-orange-600"></i>
+                            <span id="nameExistingTemplate"></span>
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <a href="#" id="linkDownloadTemplate" target="_blank" class="text-brand-600 font-bold hover:underline">Unduh</a>
+                            <label class="inline-flex items-center gap-1 text-rose-600 cursor-pointer font-bold">
+                                <input type="checkbox" id="checkHapusTemplate" name="hapus_template" value="1" class="rounded border-rose-300 text-rose-600 focus:ring-rose-500">
+                                <span>Hapus</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -369,6 +645,7 @@
 
     <script>
         const TOTAL_BERKAS_COUNT = <?= (int)$total_count; ?>;
+        const BASE_TEMPLATE_URL  = '<?= base_url("uploads/templates/"); ?>';
 
         function validateUrutanInput(input) {
             const maxVal = parseInt(input.getAttribute('max')) || 1;
@@ -388,6 +665,11 @@
             document.getElementById('field_nama_berkas').value = '';
             document.getElementById('field_kode_berkas').value = '';
             document.getElementById('field_deskripsi').value = '';
+            document.getElementById('field_file_template').value = '';
+            
+            const checkHapus = document.getElementById('checkHapusTemplate');
+            if (checkHapus) checkHapus.checked = false;
+            document.getElementById('boxExistingTemplate').classList.add('hidden');
             
             const maxAdd = TOTAL_BERKAS_COUNT + 1;
             const inputUrutan = document.getElementById('field_urutan');
@@ -407,6 +689,19 @@
             document.getElementById('field_nama_berkas').value = data.nama_berkas || '';
             document.getElementById('field_kode_berkas').value = data.kode_berkas || '';
             document.getElementById('field_deskripsi').value = data.deskripsi || '';
+            document.getElementById('field_file_template').value = '';
+            
+            const checkHapus = document.getElementById('checkHapusTemplate');
+            if (checkHapus) checkHapus.checked = false;
+
+            const boxExisting = document.getElementById('boxExistingTemplate');
+            if (data.file_template && data.file_template.trim() !== '') {
+                document.getElementById('nameExistingTemplate').innerText = data.file_template;
+                document.getElementById('linkDownloadTemplate').href = BASE_TEMPLATE_URL + encodeURIComponent(data.file_template);
+                boxExisting.classList.remove('hidden');
+            } else {
+                boxExisting.classList.add('hidden');
+            }
             
             const maxEdit = Math.max(1, TOTAL_BERKAS_COUNT);
             const inputUrutan = document.getElementById('field_urutan');
@@ -424,6 +719,72 @@
 
         function closeModal() {
             document.getElementById('modalForm').classList.add('hidden');
+        }
+
+        // =========================================================================
+        // TAB SWITCHING & MODAL JENIS TA
+        // =========================================================================
+        const TOTAL_JENIS_COUNT = <?= (int)count($jenis_ta_list ?? []); ?>;
+
+        function switchTab(tab) {
+            const secBerkas = document.getElementById('sectionTab_berkas');
+            const secJenis = document.getElementById('sectionTab_jenis_ta');
+            const tabBtnBerkas = document.getElementById('tabBtn_berkas');
+            const tabBtnJenis = document.getElementById('tabBtn_jenis_ta');
+            const btnAddBerkas = document.getElementById('btnHeaderAddBerkas');
+            const btnAddJenis = document.getElementById('btnHeaderAddJenis');
+
+            if (tab === 'jenis_ta') {
+                secBerkas.classList.add('hidden');
+                secJenis.classList.remove('hidden');
+
+                tabBtnBerkas.className = 'px-4 py-2.5 rounded-xl font-extrabold text-xs tracking-wider uppercase transition bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 cursor-pointer';
+                tabBtnJenis.className = 'px-4 py-2.5 rounded-xl font-extrabold text-xs tracking-wider uppercase transition bg-orange-600 text-white shadow-md cursor-pointer';
+
+                if (btnAddBerkas) btnAddBerkas.classList.add('hidden');
+                if (btnAddJenis) btnAddJenis.classList.remove('hidden');
+
+                const newUrl = new URL(window.location);
+                newUrl.searchParams.set('tab', 'jenis_ta');
+                window.history.replaceState({}, '', newUrl);
+            } else {
+                secJenis.classList.add('hidden');
+                secBerkas.classList.remove('hidden');
+
+                tabBtnJenis.className = 'px-4 py-2.5 rounded-xl font-extrabold text-xs tracking-wider uppercase transition bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 cursor-pointer';
+                tabBtnBerkas.className = 'px-4 py-2.5 rounded-xl font-extrabold text-xs tracking-wider uppercase transition bg-orange-600 text-white shadow-md cursor-pointer';
+
+                if (btnAddJenis) btnAddJenis.classList.add('hidden');
+                if (btnAddBerkas) btnAddBerkas.classList.remove('hidden');
+
+                const newUrl = new URL(window.location);
+                newUrl.searchParams.delete('tab');
+                window.history.replaceState({}, '', newUrl);
+            }
+        }
+
+        function openModalAddJenis() {
+            document.getElementById('modalTitleJenis').innerText = 'Tambah Jenis Tugas Akhir';
+            document.getElementById('field_jenis_id').value = '';
+            document.getElementById('field_nama_jenis').value = '';
+            document.getElementById('field_keterangan_jenis').value = '';
+            document.getElementById('field_urutan_jenis').value = TOTAL_JENIS_COUNT + 1;
+            document.getElementById('field_is_active_jenis').checked = true;
+            document.getElementById('modalFormJenis').classList.remove('hidden');
+        }
+
+        function openModalEditJenis(data) {
+            document.getElementById('modalTitleJenis').innerText = 'Edit Jenis Tugas Akhir';
+            document.getElementById('field_jenis_id').value = data.id || '';
+            document.getElementById('field_nama_jenis').value = data.nama_jenis || '';
+            document.getElementById('field_keterangan_jenis').value = data.keterangan || '';
+            document.getElementById('field_urutan_jenis').value = data.urutan || 1;
+            document.getElementById('field_is_active_jenis').checked = (data.is_active == 1);
+            document.getElementById('modalFormJenis').classList.remove('hidden');
+        }
+
+        function closeModalJenis() {
+            document.getElementById('modalFormJenis').classList.add('hidden');
         }
     </script>
 </body>

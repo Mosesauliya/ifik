@@ -133,8 +133,9 @@ class Mahasiswa extends CI_Controller {
             $this->form_validation->set_rules('konfirmasi_password', 'Konfirmasi Password', 'required|matches[password_baru]');
 
             if ($this->form_validation->run() === TRUE) {
-                $password_hashed = password_hash($this->input->post('password_baru'), PASSWORD_BCRYPT);
-                $this->Mahasiswa_model->update_password($nim, $password_hashed);
+                $salt = bin2hex(random_bytes(16));
+                $password_hashed = password_hash($this->input->post('password_baru') . $salt, PASSWORD_BCRYPT);
+                $this->Mahasiswa_model->update_password($nim, $password_hashed, $salt);
                 $this->session->set_flashdata('success', 'Password berhasil diubah!');
                 redirect('mahasiswa');
             }
@@ -233,11 +234,13 @@ class Mahasiswa extends CI_Controller {
         $has_revisi = ($w_status === 'Rejected' || $a_status === 'Rejected' || $k_status === 'Rejected' || $kk_status === 'Rejected' || !empty($pendaftaran['berkas_kurang']) || $st_judul === 'Rejected');
         $is_locked = !$has_revisi;
 
+        $this->load->model('AdminLayanan_model');
         $data['title'] = $is_locked ? 'Detail / Ringkasan Formulir Tugas Akhir' : 'Edit Formulir Tugas Akhir (Revisi)';
         $data['mahasiswa'] = $this->Mahasiswa_model->get_mahasiswa($nim);
         $data['pendaftaran'] = $pendaftaran;
         $data['is_locked'] = $is_locked;
         $data['has_revisi'] = $has_revisi;
+        $data['opsi_jenis_ta'] = $this->AdminLayanan_model->get_active_jenis_ta();
 
         if ($this->input->post()) {
             if ($is_locked) {
@@ -360,6 +363,8 @@ class Mahasiswa extends CI_Controller {
                         $update_fp = [
                             'file'            => 'uploads/persyaratan_ta/' . $new_file,
                             'status_adminlaa' => 'Pending',
+                            'view_adminlaa'   => 0,
+                            'view_doswal'     => 0,
                             'date_edit'       => date('Y-m-d H:i:s')
                         ];
                         if (($pendaftaran['status_approval_wali'] ?? '') !== 'Approved') {
@@ -601,6 +606,7 @@ class Mahasiswa extends CI_Controller {
         $data['has_ta']         = $has_ta;
         $data['server_draft_step'] = $server_draft_step;
         $data['syarat_berkas']  = $this->AdminLayanan_model->get_active_syarat_berkas();
+        $data['opsi_jenis_ta']  = $this->AdminLayanan_model->get_active_jenis_ta();
         $data['student_berkas'] = $student_berkas;
 
         if ($this->input->post()) {
@@ -953,6 +959,8 @@ class Mahasiswa extends CI_Controller {
                     if (in_array('file', $fp_fields)) $fp_payload['file'] = $rel_file_path;
                     if (in_array('status_doswal', $fp_fields)) $fp_payload['status_doswal'] = 'Pending';
                     if (in_array('status_adminlaa', $fp_fields)) $fp_payload['status_adminlaa'] = 'Pending';
+                    if (in_array('view_adminlaa', $fp_fields)) $fp_payload['view_adminlaa'] = 0;
+                    if (in_array('view_doswal', $fp_fields)) $fp_payload['view_doswal'] = 0;
                     if (in_array('date_edit', $fp_fields)) $fp_payload['date_edit'] = date('Y-m-d H:i:s');
 
                     if ($ex_fp) {
