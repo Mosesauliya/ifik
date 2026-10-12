@@ -728,6 +728,9 @@ class Mahasiswa_model extends CI_Model {
         $optional_guidance = [
             'lulus_preview1', 'lulus_preview2', 'lulus_preview3', 'lulus_sidang',
             'lulus_by_role', 'lulus_at',
+            'kelayakan2', 'nilai_pembimbing1', 'nilai_pembimbing2', 'nilai_penguji1', 'nilai_penguji2',
+            'penilaian_pembimbing1', 'penilaian_pembimbing2', 'penilaian_penguji1', 'penilaian_penguji2',
+            'tanggal_presentasi', 'waktu_presentasi', 'ruang_sidang', 'link_presentasi', 'komentar_kelayakan2',
         ];
         foreach ($optional_guidance as $col) {
             if ($this->db->field_exists($col, 'guidance')) {
@@ -944,7 +947,22 @@ class Mahasiswa_model extends CI_Model {
             COALESCE(u.nim, g.id_mhs)   AS nim,
             g.judul_1                    AS judul,
             g.peminatan                  AS konsentrasi_dkv,
-            COALESCE(u.name, m.nama_depan, g.id_mhs) AS nama_mahasiswa
+            COALESCE(u.name, m.nama_depan, g.id_mhs) AS nama_mahasiswa,
+            g.kelayakan2                 AS status_de,
+            g.nilai_pembimbing1,
+            g.nilai_pembimbing2,
+            g.nilai_penguji1,
+            g.nilai_penguji2,
+            g.penilaian_pembimbing1      AS catatan_p1,
+            g.penilaian_pembimbing2      AS catatan_p2,
+            g.penilaian_penguji1         AS catatan_u1,
+            g.penilaian_penguji2         AS catatan_u2,
+            g.tanggal_presentasi         AS de_tanggal,
+            g.waktu_presentasi           AS de_waktu,
+            g.ruang_sidang               AS de_ruangan,
+            g.link_presentasi            AS de_link,
+            g.komentar_kelayakan2        AS de_catatan,
+            g.lulus_preview2
         ", FALSE);
         $this->db->from('thesis_lecturers tl');
         $this->db->join('guidance g',  'g.id = tl.id_guidance', 'inner');
@@ -1563,6 +1581,29 @@ class Mahasiswa_model extends CI_Model {
             return ['status' => false, 'message' => 'Preview tidak ditemukan.'];
         }
 
+        if ($tahap_key === 'preview2') {
+            $kel2 = strtoupper(trim($g['kelayakan2'] ?? ''));
+            if ($kel2 === 'DE') {
+                $p1 = $g['nilai_pembimbing1'] ?? null;
+                $p2 = $g['nilai_pembimbing2'] ?? null;
+                $u1 = $g['nilai_penguji1'] ?? null;
+                $u2 = $g['nilai_penguji2'] ?? null;
+                if ($p1 === null || $p1 === '' || $p2 === null || $p2 === '' || $u1 === null || $u1 === '' || $u2 === null || $u2 === '') {
+                    return [
+                        'status'  => false,
+                        'message' => 'Mahasiswa berstatus DE belum dapat diluluskan: ke-4 dosen (Pembimbing 1, Pembimbing 2, Penguji 1, Penguji 2) wajib memberikan nilai terlebih dahulu.'
+                    ];
+                }
+                $avg = ((float)$p1 + (float)$p2 + (float)$u1 + (float)$u2) / 4.0;
+                if ($avg <= 60) {
+                    return [
+                        'status'  => false,
+                        'message' => 'Mahasiswa berstatus DE tidak memenuhi syarat kelulusan: rata-rata nilai DE adalah ' . number_format($avg, 2) . ' (syarat minimal > 60).'
+                    ];
+                }
+            }
+        }
+
         $col_lulus = 'lulus_' . $tahap_key;
         if (!$this->db->field_exists($col_lulus, 'guidance')) {
             return ['status' => false, 'message' => 'Kolom ' . $col_lulus . ' belum ada. Jalankan migrasi SQL dulu.'];
@@ -1735,6 +1776,206 @@ class Mahasiswa_model extends CI_Model {
             'message' => 'Mahasiswa berhasil di-downgrade ke ' . ucfirst($ke) . '. Semua berkas di-reset ke Pending.',
             'dari'    => $dari,
             'ke'      => $ke,
+        ];
+    }
+
+    // =================================================================
+    // DESK EVALUATION (DE) PREVIEW 2
+    // =================================================================
+
+    public function set_keputusan_preview2($nim, $keputusan, $role = 'u1') {
+        if (!$this->db->table_exists('guidance')) {
+            return ['status' => false, 'message' => 'Tabel guidance tidak ditemukan.'];
+        }
+
+        $g = $this->get_guidance_by_nim($nim);
+        if (!$g) {
+            return ['status' => false, 'message' => 'Data bimbingan mahasiswa tidak ditemukan.'];
+        }
+
+        $keputusan = strtoupper(trim($keputusan)) === 'DE' ? 'DE' : 'Non-DE';
+
+        if ($keputusan === 'Non-DE') {
+            $this->db->where('id', $g['id'])->update('guidance', ['kelayakan2' => 'Non-DE']);
+            return $this->set_stage_lulus($nim, 'preview2', $role);
+        } else {
+            $update = ['kelayakan2' => 'DE'];
+            if ($this->db->field_exists('lulus_preview2', 'guidance')) {
+                $update['lulus_preview2'] = 0;
+            }
+            $this->db->where('id', $g['id'])->update('guidance', $update);
+
+            if ($this->db->table_exists('log_approval_history')) {
+                $this->db->insert('log_approval_history', [
+                    'modul'         => 'Kelulusan Preview 2',
+                    'ref_id'        => (string)$nim,
+                    'target_name'   => $nim,
+                    'action'        => 'Pilih DE',
+                    'actor_id'      => $this->session->userdata('user_id'),
+                    'actor_name'    => $this->session->userdata('name') ?: '-',
+                    'actor_role'    => strtoupper((string)$role),
+                    'actor_nip_nim' => $this->session->userdata('nip') ?: $this->session->userdata('username'),
+                    'catatan'       => json_encode(['tahap' => 'preview2', 'keputusan' => 'DE'], JSON_UNESCAPED_UNICODE),
+                    'created_at'    => date('Y-m-d H:i:s'),
+                ]);
+            }
+
+            return [
+                'status'    => true,
+                'keputusan' => 'DE',
+                'message'   => 'Mahasiswa berhasil diarahkan ke Desk Evaluation (DE). Silakan jadwalkan DE dan lakukan penilaian.'
+            ];
+        }
+    }
+
+    public function simpan_jadwal_de($nim, $tanggal, $waktu, $ruangan, $link = '', $catatan = '') {
+        if (!$this->db->table_exists('guidance')) {
+            return ['status' => false, 'message' => 'Tabel guidance tidak ditemukan.'];
+        }
+
+        $g = $this->get_guidance_by_nim($nim);
+        if (!$g) {
+            return ['status' => false, 'message' => 'Data bimbingan mahasiswa tidak ditemukan.'];
+        }
+
+        $update = [];
+        if ($this->db->field_exists('tanggal_presentasi', 'guidance')) {
+            $update['tanggal_presentasi'] = !empty($tanggal) ? $tanggal : null;
+        }
+        if ($this->db->field_exists('waktu_presentasi', 'guidance')) {
+            $update['waktu_presentasi'] = !empty($waktu) ? $waktu : null;
+        }
+        if ($this->db->field_exists('ruang_sidang', 'guidance')) {
+            $update['ruang_sidang'] = $ruangan ?: null;
+        }
+        if ($this->db->field_exists('link_presentasi', 'guidance')) {
+            $update['link_presentasi'] = $link ?: null;
+        }
+        if ($this->db->field_exists('komentar_kelayakan2', 'guidance')) {
+            $update['komentar_kelayakan2'] = $catatan ?: null;
+        }
+
+        if (empty($update)) {
+            return ['status' => false, 'message' => 'Tidak ada kolom guidance yang tersedia untuk jadwal.'];
+        }
+
+        $this->db->where('id', $g['id'])->update('guidance', $update);
+
+        if ($this->db->table_exists('log_approval_history')) {
+            $this->db->insert('log_approval_history', [
+                'modul'         => 'Jadwal DE',
+                'ref_id'        => (string)$nim,
+                'target_name'   => $nim,
+                'action'        => 'Simpan Jadwal DE',
+                'actor_id'      => $this->session->userdata('user_id'),
+                'actor_name'    => $this->session->userdata('name') ?: '-',
+                'actor_role'    => 'U1',
+                'actor_nip_nim' => $this->session->userdata('nip') ?: $this->session->userdata('username'),
+                'catatan'       => json_encode($update, JSON_UNESCAPED_UNICODE),
+                'created_at'    => date('Y-m-d H:i:s'),
+            ]);
+        }
+
+        return ['status' => true, 'message' => 'Jadwal Desk Evaluation (DE) berhasil disimpan.'];
+    }
+
+    public function simpan_nilai_de($nim, $posisi, $nilai, $catatan = '') {
+        if (!$this->db->table_exists('guidance')) {
+            return ['status' => false, 'message' => 'Tabel guidance tidak ditemukan.'];
+        }
+
+        $g = $this->get_guidance_by_nim($nim);
+        if (!$g) {
+            return ['status' => false, 'message' => 'Data bimbingan mahasiswa tidak ditemukan.'];
+        }
+
+        $posisi = (int)$posisi;
+        $map = [
+            1 => ['nilai' => 'nilai_pembimbing1', 'catatan' => 'penilaian_pembimbing1', 'label' => 'Pembimbing 1'],
+            2 => ['nilai' => 'nilai_pembimbing2', 'catatan' => 'penilaian_pembimbing2', 'label' => 'Pembimbing 2'],
+            3 => ['nilai' => 'nilai_penguji1',    'catatan' => 'penilaian_penguji1',    'label' => 'Penguji 1'],
+            4 => ['nilai' => 'nilai_penguji2',    'catatan' => 'penilaian_penguji2',    'label' => 'Penguji 2'],
+        ];
+
+        if (!isset($map[$posisi])) {
+            return ['status' => false, 'message' => 'Posisi dosen tidak valid.'];
+        }
+
+        $col = $map[$posisi];
+        $nilai_num = max(0, min(100, (float)$nilai));
+
+        $update = [];
+        if ($this->db->field_exists($col['nilai'], 'guidance')) {
+            $update[$col['nilai']] = (string)$nilai_num;
+        }
+        if ($this->db->field_exists($col['catatan'], 'guidance')) {
+            $update[$col['catatan']] = (string)$catatan;
+        }
+
+        if (empty($update)) {
+            return ['status' => false, 'message' => 'Kolom nilai tidak tersedia di tabel guidance.'];
+        }
+
+        $this->db->where('id', $g['id'])->update('guidance', $update);
+
+        if ($this->db->table_exists('log_approval_history')) {
+            $this->db->insert('log_approval_history', [
+                'modul'         => 'Nilai DE',
+                'ref_id'        => (string)$nim,
+                'target_name'   => $nim,
+                'action'        => 'Input Nilai DE (' . $col['label'] . ')',
+                'actor_id'      => $this->session->userdata('user_id'),
+                'actor_name'    => $this->session->userdata('name') ?: '-',
+                'actor_role'    => ($posisi <= 2 ? 'P' . $posisi : 'U' . ($posisi - 2)),
+                'actor_nip_nim' => $this->session->userdata('nip') ?: $this->session->userdata('username'),
+                'catatan'       => json_encode(['posisi' => $posisi, 'nilai' => $nilai_num, 'catatan' => $catatan], JSON_UNESCAPED_UNICODE),
+                'created_at'    => date('Y-m-d H:i:s'),
+            ]);
+        }
+
+        return ['status' => true, 'message' => 'Nilai DE dari ' . $col['label'] . ' berhasil disimpan.'];
+    }
+
+    public function get_de_detail($nim) {
+        $g = $this->get_guidance_by_nim($nim);
+        if (!$g) return null;
+
+        $is_de = (!empty($g['kelayakan2']) && strtoupper(trim($g['kelayakan2'])) === 'DE');
+        $is_non_de = (!empty($g['kelayakan2']) && strtoupper(trim($g['kelayakan2'])) === 'NON-DE');
+
+        $p1 = ($g['nilai_pembimbing1'] !== null && $g['nilai_pembimbing1'] !== '' && is_numeric($g['nilai_pembimbing1'])) ? (float)$g['nilai_pembimbing1'] : null;
+        $p2 = ($g['nilai_pembimbing2'] !== null && $g['nilai_pembimbing2'] !== '' && is_numeric($g['nilai_pembimbing2'])) ? (float)$g['nilai_pembimbing2'] : null;
+        $u1 = ($g['nilai_penguji1'] !== null && $g['nilai_penguji1'] !== '' && is_numeric($g['nilai_penguji1'])) ? (float)$g['nilai_penguji1'] : null;
+        $u2 = ($g['nilai_penguji2'] !== null && $g['nilai_penguji2'] !== '' && is_numeric($g['nilai_penguji2'])) ? (float)$g['nilai_penguji2'] : null;
+
+        $scores = array_filter([$p1, $p2, $u1, $u2], function($v) { return $v !== null; });
+        $count_graded = count($scores);
+        $semua_dinilai = ($count_graded === 4);
+        $avg = $semua_dinilai ? (($p1 + $p2 + $u1 + $u2) / 4.0) : ($count_graded > 0 ? (array_sum($scores) / $count_graded) : 0);
+        $is_lulus_syarat = ($semua_dinilai && $avg > 60);
+
+        return [
+            'status_de'          => $g['kelayakan2'] ?? null,
+            'is_de'              => $is_de,
+            'is_non_de'          => $is_non_de,
+            'lulus_preview2'     => (int)($g['lulus_preview2'] ?? 0),
+            'tanggal_presentasi' => $g['tanggal_presentasi'] ?? null,
+            'waktu_presentasi'   => $g['waktu_presentasi'] ?? null,
+            'ruang_sidang'       => $g['ruang_sidang'] ?? null,
+            'link_presentasi'    => $g['link_presentasi'] ?? null,
+            'komentar_kelayakan2'=> $g['komentar_kelayakan2'] ?? null,
+            'nilai_pembimbing1'  => $p1,
+            'nilai_pembimbing2'  => $p2,
+            'nilai_penguji1'     => $u1,
+            'nilai_penguji2'     => $u2,
+            'catatan_p1'         => $g['penilaian_pembimbing1'] ?? '',
+            'catatan_p2'         => $g['penilaian_pembimbing2'] ?? '',
+            'catatan_u1'         => $g['penilaian_penguji1'] ?? '',
+            'catatan_u2'         => $g['penilaian_penguji2'] ?? '',
+            'rata_rata'          => round($avg, 2),
+            'count_graded'       => $count_graded,
+            'semua_dinilai'      => $semua_dinilai,
+            'is_lulus_syarat'    => $is_lulus_syarat,
         ];
     }
 }

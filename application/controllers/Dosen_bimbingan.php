@@ -187,6 +187,9 @@ class Dosen_bimbingan extends CI_Controller {
         $data['catatan_sidang']      = $data['pendaftaran']['catatan_koor']       ?? '';
         $data['is_sidang_scheduled'] = (!empty($data['tgl_sidang']) && !empty($data['jam_mulai_sidang']));
 
+        $data['de_detail']           = $this->Mahasiswa_model->get_de_detail($nim);
+        $data['is_de']               = !empty($data['de_detail']['is_de']);
+
         $this->load->view('mahasiswa/bimbingan_preview1', $data);
     }
 
@@ -712,6 +715,7 @@ class Dosen_bimbingan extends CI_Controller {
                 'has_app_bimbingan'   => $has_app_bimbingan,
                 'has_app_sitasi'      => $has_app_sitasi,
                 'has_app_persyaratan' => $has_app_persyaratan,
+                'de_detail'           => $this->Mahasiswa_model->get_de_detail($nim),
             ];
 
             $json = json_encode($data);
@@ -813,7 +817,22 @@ class Dosen_bimbingan extends CI_Controller {
                 'konsentrasi_dkv'  => $student['konsentrasi_dkv'] ?? '',
                 'latest_preview'   => $latest,
                 'riwayat_previews' => $previews,
-                'rekomendasi'      => $rekomen
+                'rekomendasi'      => $rekomen,
+                'status_de'        => $student['status_de'] ?? ($latest['kelayakan2'] ?? null),
+                'nilai_pembimbing1'=> $student['nilai_pembimbing1'] ?? ($latest['nilai_pembimbing1'] ?? null),
+                'nilai_pembimbing2'=> $student['nilai_pembimbing2'] ?? ($latest['nilai_pembimbing2'] ?? null),
+                'nilai_penguji1'   => $student['nilai_penguji1'] ?? ($latest['nilai_penguji1'] ?? null),
+                'nilai_penguji2'   => $student['nilai_penguji2'] ?? ($latest['nilai_penguji2'] ?? null),
+                'catatan_p1'       => $student['catatan_p1'] ?? ($latest['penilaian_pembimbing1'] ?? ''),
+                'catatan_p2'       => $student['catatan_p2'] ?? ($latest['penilaian_pembimbing2'] ?? ''),
+                'catatan_u1'       => $student['catatan_u1'] ?? ($latest['penilaian_penguji1'] ?? ''),
+                'catatan_u2'       => $student['catatan_u2'] ?? ($latest['penilaian_penguji2'] ?? ''),
+                'de_tanggal'       => $student['de_tanggal'] ?? ($latest['tanggal_presentasi'] ?? null),
+                'de_waktu'         => $student['de_waktu'] ?? ($latest['waktu_presentasi'] ?? null),
+                'de_ruangan'       => $student['de_ruangan'] ?? ($latest['ruang_sidang'] ?? null),
+                'de_link'          => $student['de_link'] ?? ($latest['link_presentasi'] ?? null),
+                'de_catatan'       => $student['de_catatan'] ?? ($latest['komentar_kelayakan2'] ?? null),
+                'lulus_preview2'   => $student['lulus_preview2'] ?? ($latest['lulus_preview2'] ?? 0),
             ];
         }
 
@@ -879,8 +898,9 @@ class Dosen_bimbingan extends CI_Controller {
 
     /** Helper: role PIC untuk suatu tahap. */
     private function _get_responsible_role($tahap) {
-        if ($tahap === 'Sidang') return 'u1';
-        return 'p1';
+        $t = strtolower(trim($tahap));
+        if ($t === 'preview1' || $t === 'preview 1') return 'p1';
+        return 'u1';
     }
 
     /** Helper: cek apakah user yang login = PIC untuk mahasiswa ini di tahap tsb. */
@@ -1057,5 +1077,124 @@ class Dosen_bimbingan extends CI_Controller {
 
         $res = $this->Mahasiswa_model->downgrade_stage($nim, $dari, $ke, $pic_role, $alasan);
         echo json_encode($res);
+    }
+
+    // =================================================================
+    // DESK EVALUATION (DE) PREVIEW 2
+    // =================================================================
+
+    public function set_keputusan_preview2_ajax() {
+        header('Content-Type: application/json');
+
+        if (!$this->_is_authorized_reviewer()) {
+            echo json_encode(['status' => false, 'message' => 'Unauthorized']);
+            return;
+        }
+
+        $nim       = $this->input->post('nim');
+        $keputusan = $this->input->post('keputusan');
+
+        if (empty($nim) || empty($keputusan)) {
+            echo json_encode(['status' => false, 'message' => 'Parameter tidak lengkap.']);
+            return;
+        }
+
+        $pic_role = 'u1';
+        if (!$this->_is_pic_for_student($nim, $pic_role)) {
+            echo json_encode([
+                'status'  => false,
+                'message' => 'Hanya Penguji 1 (U1) yang berhak menentukan kelulusan Preview 2 (DE / Non-DE).'
+            ]);
+            return;
+        }
+
+        $res = $this->Mahasiswa_model->set_keputusan_preview2($nim, $keputusan, $pic_role);
+        echo json_encode($res);
+    }
+
+    public function simpan_jadwal_de_ajax() {
+        header('Content-Type: application/json');
+
+        if (!$this->_is_authorized_reviewer()) {
+            echo json_encode(['status' => false, 'message' => 'Unauthorized']);
+            return;
+        }
+
+        $nim     = $this->input->post('nim');
+        $tanggal = $this->input->post('tanggal');
+        $waktu   = $this->input->post('waktu');
+        $ruangan = $this->input->post('ruangan');
+        $link    = $this->input->post('link') ?? '';
+        $catatan = $this->input->post('catatan') ?? '';
+
+        if (empty($nim) || empty($tanggal) || empty($waktu)) {
+            echo json_encode(['status' => false, 'message' => 'NIM, Tanggal, dan Waktu DE wajib diisi.']);
+            return;
+        }
+
+        $pic_role = 'u1';
+        if (!$this->_is_pic_for_student($nim, $pic_role)) {
+            echo json_encode([
+                'status'  => false,
+                'message' => 'Hanya Penguji 1 (U1) yang dapat menjadwalkan Desk Evaluation (DE).'
+            ]);
+            return;
+        }
+
+        $res = $this->Mahasiswa_model->simpan_jadwal_de($nim, $tanggal, $waktu, $ruangan, $link, $catatan);
+        echo json_encode($res);
+    }
+
+    public function simpan_nilai_de_ajax() {
+        header('Content-Type: application/json');
+
+        if (!$this->_is_authorized_reviewer()) {
+            echo json_encode(['status' => false, 'message' => 'Unauthorized']);
+            return;
+        }
+
+        $nim     = $this->input->post('nim');
+        $posisi  = (int)$this->input->post('posisi');
+        $nilai   = $this->input->post('nilai');
+        $catatan = $this->input->post('catatan') ?? '';
+
+        if (empty($nim) || !in_array($posisi, [1, 2, 3, 4], true)) {
+            echo json_encode(['status' => false, 'message' => 'Parameter posisi atau NIM tidak valid.']);
+            return;
+        }
+
+        if ($nilai === null || $nilai === '' || !is_numeric($nilai) || (float)$nilai < 0 || (float)$nilai > 100) {
+            echo json_encode(['status' => false, 'message' => 'Nilai wajib diisi angka antara 0 sampai 100.']);
+            return;
+        }
+
+        $role_id = (int)$this->session->userdata('role_id');
+        if ($role_id !== 1) {
+            $dosen_id = $this->session->userdata('user_id');
+            $students = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, $posisi);
+            $nims = array_column($students, 'nim');
+            if (!in_array($nim, $nims, true)) {
+                echo json_encode(['status' => false, 'message' => 'Anda tidak memiliki hak akses memberi nilai untuk mahasiswa ini pada posisi ini.']);
+                return;
+            }
+        }
+
+        $res = $this->Mahasiswa_model->simpan_nilai_de($nim, $posisi, (float)$nilai, $catatan);
+        echo json_encode($res);
+    }
+
+    public function get_de_detail_ajax() {
+        header('Content-Type: application/json');
+        $nim = $this->input->get('nim') ?: $this->input->post('nim');
+        if (empty($nim)) {
+            echo json_encode(['status' => false, 'message' => 'NIM wajib diisi.']);
+            return;
+        }
+        $detail = $this->Mahasiswa_model->get_de_detail($nim);
+        if (!$detail) {
+            echo json_encode(['status' => false, 'message' => 'Data bimbingan tidak ditemukan.']);
+            return;
+        }
+        echo json_encode(['status' => true, 'data' => $detail]);
     }
 }

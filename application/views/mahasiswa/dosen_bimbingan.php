@@ -475,20 +475,20 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             .filter-col-dw { min-width: 100%; }
         }
 
-        #modalPenilaianSidang {
+        #modalPenilaianSidang, #modalJadwalDE, #modalNilaiDE {
             position: fixed; inset: 0; z-index: 10000; display: none;
             align-items: center; justify-content: center;
             background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); pointer-events: none; padding: 0;
         }
-        #modalPenilaianSidang.active { display: flex; }
-        #modalPenilaianSidang .penilaian-box {
+        #modalPenilaianSidang.active, #modalJadwalDE.active, #modalNilaiDE.active { display: flex; }
+        #modalPenilaianSidang .penilaian-box, #modalJadwalDE .penilaian-box, #modalNilaiDE .penilaian-box {
             pointer-events: auto;
             background: #fff; border-radius: 1.5rem; width: 500px; max-width: 95vw;
             max-height: 85vh; overflow: hidden; display: flex; flex-direction: column;
             box-shadow: 0 25px 65px -10px rgba(15,23,42,0.45), 0 0 0 1px rgba(226,232,240,0.8);
             animation: popInCard 0.3s cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
         }
-        #modalPenilaianSidang .penilaian-body { overflow-y: auto; flex: 1; padding: 1.5rem; }
+        #modalPenilaianSidang .penilaian-body, #modalJadwalDE .penilaian-body, #modalNilaiDE .penilaian-body { overflow-y: auto; flex: 1; padding: 1.5rem; }
         .rubrik-row {
             display: flex; flex-direction: column; gap: 10px;
             padding: 14px; border: 1px solid #e2e8f0; border-radius: 14px;
@@ -923,6 +923,160 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                     <button type="submit" id="btnSubmitPenilaianSidang"
                         class="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-md shadow-amber-500/20 transition flex items-center gap-2 cursor-pointer active:scale-95">
                         <i class="bi bi-save-fill"></i> Simpan Penilaian Sidang
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= MODAL JADWAL DE (DESK EVALUATION) ================= -->
+    <div id="modalJadwalDE">
+        <div class="penilaian-box relative z-10">
+            <div class="p-5 sm:p-6 px-7 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-indigo-50/90 via-blue-50/40 to-white shrink-0">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 to-blue-600 text-white flex items-center justify-center font-bold text-xl shadow-md shadow-indigo-500/25 shrink-0">
+                        <i class="bi bi-calendar-event-fill"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h3 class="text-base sm:text-lg font-extrabold text-slate-900">Jadwal Desk Evaluation (DE)</h3>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">Penguji 1</span>
+                        </div>
+                        <p class="text-xs font-medium text-slate-500 mt-0.5">Atur jadwal pelaksanaan DE untuk mahasiswa bimbingan Preview 2.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModalJadwalDE()" class="w-9 h-9 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer">
+                    <i class="bi bi-x-lg text-base"></i>
+                </button>
+            </div>
+
+            <form id="formJadwalDE" onsubmit="submitJadwalDE(event)" class="penilaian-body space-y-4">
+                <input type="hidden" id="jadwalDeNim">
+
+                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-1">
+                    <div class="text-[11px] font-extrabold text-indigo-600 uppercase tracking-wider">Mahasiswa</div>
+                    <div id="jadwalDeNamaMhs" class="text-sm font-bold text-slate-900">-</div>
+                    <div id="jadwalDeNimMhs" class="text-xs text-slate-500 font-mono">-</div>
+                    <div id="jadwalDeJudulTa" class="text-xs text-slate-600 italic line-clamp-2 mt-1">-</div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 block mb-1">Tanggal DE <span class="text-rose-500">*</span></label>
+                        <input type="date" id="jadwalDeTanggal" required class="w-full text-xs p-3 border border-slate-300 rounded-xl bg-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 font-bold">
+                    </div>
+                    <div>
+                        <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 block mb-1">Waktu Pelaksanaan <span class="text-rose-500">*</span></label>
+                        <input type="time" id="jadwalDeWaktu" required class="w-full text-xs p-3 border border-slate-300 rounded-xl bg-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 font-bold">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 block mb-1">Ruangan / Tempat</label>
+                    <input type="text" id="jadwalDeRuangan" placeholder="Contoh: Ruang Rapat FAKULTAS atau Lab A" class="w-full text-xs p-3 border border-slate-300 rounded-xl bg-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
+                </div>
+
+                <div>
+                    <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 block mb-1">Link Pertemuan Online (Opsional)</label>
+                    <input type="url" id="jadwalDeLink" placeholder="https://meet.google.com/... atau Zoom" class="w-full text-xs p-3 border border-slate-300 rounded-xl bg-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
+                </div>
+
+                <div>
+                    <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 block mb-1">Catatan / Arahan (Opsional)</label>
+                    <textarea id="jadwalDeCatatan" rows="3" placeholder="Tuliskan catatan teknis atau persiapan berkas untuk DE..." class="w-full text-xs p-3 border border-slate-300 rounded-xl bg-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none"></textarea>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3 flex-wrap">
+                    <button type="button" onclick="closeModalJadwalDE()" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-50 transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="submit" id="btnSubmitJadwalDE" class="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-500/20 transition flex items-center gap-2 cursor-pointer active:scale-95">
+                        <i class="bi bi-calendar-check-fill"></i> Simpan Jadwal DE
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= MODAL NILAI DE (DESK EVALUATION) ================= -->
+    <div id="modalNilaiDE">
+        <div class="penilaian-box relative z-10">
+            <div class="p-5 sm:p-6 px-7 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-amber-50/90 via-orange-50/40 to-white shrink-0">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-600 text-white flex items-center justify-center font-bold text-xl shadow-md shadow-orange-500/25 shrink-0">
+                        <i class="bi bi-star-fill"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h3 class="text-base sm:text-lg font-extrabold text-slate-900">Penilaian Desk Evaluation (DE)</h3>
+                            <span id="nilaiDeRoleBadge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200"><?= $role_label ?></span>
+                        </div>
+                        <p class="text-xs font-medium text-slate-500 mt-0.5">Beri nilai DE untuk mahasiswa (Skala 0 - 100).</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModalNilaiDE()" class="w-9 h-9 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer">
+                    <i class="bi bi-x-lg text-base"></i>
+                </button>
+            </div>
+
+            <form id="formNilaiDE" onsubmit="submitNilaiDE(event)" class="penilaian-body space-y-4">
+                <input type="hidden" id="nilaiDeNim">
+                <input type="hidden" id="nilaiDePosisi">
+
+                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-1">
+                    <div class="text-[11px] font-extrabold text-orange-600 uppercase tracking-wider">Mahasiswa</div>
+                    <div id="nilaiDeNamaMhs" class="text-sm font-bold text-slate-900">-</div>
+                    <div id="nilaiDeNimMhs" class="text-xs text-slate-500 font-mono">-</div>
+                    <div id="nilaiDeJudulTa" class="text-xs text-slate-600 italic line-clamp-2 mt-1">-</div>
+                </div>
+
+                <div class="bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-white rounded-2xl p-4 border border-amber-300/80">
+                    <div class="text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-2 flex items-center gap-1.5">
+                        <i class="bi bi-card-checklist text-orange-600"></i> Rekap Nilai DE 4 Dosen
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="p-2.5 bg-white rounded-xl border border-slate-200">
+                            <span class="text-[10px] text-slate-500 block font-semibold">Pembimbing 1:</span>
+                            <span id="rekapDeP1" class="font-bold text-slate-800">-</span>
+                        </div>
+                        <div class="p-2.5 bg-white rounded-xl border border-slate-200">
+                            <span class="text-[10px] text-slate-500 block font-semibold">Pembimbing 2:</span>
+                            <span id="rekapDeP2" class="font-bold text-slate-800">-</span>
+                        </div>
+                        <div class="p-2.5 bg-white rounded-xl border border-slate-200">
+                            <span class="text-[10px] text-slate-500 block font-semibold">Penguji 1:</span>
+                            <span id="rekapDeU1" class="font-bold text-slate-800">-</span>
+                        </div>
+                        <div class="p-2.5 bg-white rounded-xl border border-slate-200">
+                            <span class="text-[10px] text-slate-500 block font-semibold">Penguji 2:</span>
+                            <span id="rekapDeU2" class="font-bold text-slate-800">-</span>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-2.5 border-t border-amber-200 flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-700">Rata-rata: <span id="rekapDeAvg" class="text-base font-black text-slate-900">-</span></span>
+                        <span id="rekapDeStatusBadge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">Menunggu Nilai</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 block mb-1.5">
+                        Input Nilai DE Anda (0 - 100) <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="number" step="0.01" min="0" max="100" id="inputNilaiDeScore" required placeholder="0 - 100"
+                        class="w-full text-xl font-black text-center p-3.5 border-2 border-orange-300 rounded-2xl bg-white focus:border-orange-500 focus:outline-none focus:ring-4 focus:ring-orange-500/20 text-slate-900">
+                </div>
+
+                <div>
+                    <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 block mb-1">Catatan Evaluasi DE (Opsional)</label>
+                    <textarea id="inputNilaiDeCatatan" rows="3" placeholder="Masukkan catatan atau poin evaluasi DE..." class="w-full text-xs p-3 border border-slate-300 rounded-xl bg-white focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 resize-none"></textarea>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3 flex-wrap">
+                    <button type="button" onclick="closeModalNilaiDE()" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-50 transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="submit" id="btnSubmitNilaiDE" class="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold text-xs rounded-xl shadow-md shadow-orange-500/20 transition flex items-center gap-2 cursor-pointer active:scale-95">
+                        <i class="bi bi-save-fill"></i> Simpan Nilai DE
                     </button>
                 </div>
             </form>
@@ -1376,7 +1530,93 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 </div>`;
             }
 
-            // ===== PREVIEW 1/2/3: hanya PIC =====
+            // ===== PREVIEW 2: DE & NON-DE =====
+            if (currentTahap === 'Preview 2') {
+                const isDE = (mhs.status_de || '').toUpperCase() === 'DE';
+
+                if (isDE) {
+                    let myNilai = null;
+                    if (MODEL_POSISI === 1 && mhs.nilai_pembimbing1 !== null && mhs.nilai_pembimbing1 !== '') myNilai = parseFloat(mhs.nilai_pembimbing1);
+                    else if (MODEL_POSISI === 2 && mhs.nilai_pembimbing2 !== null && mhs.nilai_pembimbing2 !== '') myNilai = parseFloat(mhs.nilai_pembimbing2);
+                    else if (MODEL_POSISI === 3 && mhs.nilai_penguji1 !== null && mhs.nilai_penguji1 !== '') myNilai = parseFloat(mhs.nilai_penguji1);
+                    else if (MODEL_POSISI === 4 && mhs.nilai_penguji2 !== null && mhs.nilai_penguji2 !== '') myNilai = parseFloat(mhs.nilai_penguji2);
+
+                    const labelNilai = (myNilai !== null && !isNaN(myNilai)) ? `Nilai: ${myNilai}` : 'Beri Nilai DE';
+                    const iconNilai  = (myNilai !== null && !isNaN(myNilai)) ? 'bi-pencil-square' : 'bi-star-fill';
+                    const btnNilai = `<button type="button" onclick="openModalNilaiDE('${mhs.nim}', ${MODEL_POSISI})"
+                            class="px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-[11px] shadow-xs inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap active:scale-95">
+                        <i class="bi ${iconNilai}"></i> ${labelNilai}
+                    </button>`;
+
+                    const p1 = (mhs.nilai_pembimbing1 !== null && mhs.nilai_pembimbing1 !== '' && !isNaN(parseFloat(mhs.nilai_pembimbing1))) ? parseFloat(mhs.nilai_pembimbing1) : null;
+                    const p2 = (mhs.nilai_pembimbing2 !== null && mhs.nilai_pembimbing2 !== '' && !isNaN(parseFloat(mhs.nilai_pembimbing2))) ? parseFloat(mhs.nilai_pembimbing2) : null;
+                    const u1 = (mhs.nilai_penguji1 !== null && mhs.nilai_penguji1 !== '' && !isNaN(parseFloat(mhs.nilai_penguji1))) ? parseFloat(mhs.nilai_penguji1) : null;
+                    const u2 = (mhs.nilai_penguji2 !== null && mhs.nilai_penguji2 !== '' && !isNaN(parseFloat(mhs.nilai_penguji2))) ? parseFloat(mhs.nilai_penguji2) : null;
+
+                    const countGraded = (p1 !== null ? 1 : 0) + (p2 !== null ? 1 : 0) + (u1 !== null ? 1 : 0) + (u2 !== null ? 1 : 0);
+                    const allGraded = countGraded === 4;
+                    const avgDE = allGraded ? ((p1 + p2 + u1 + u2) / 4.0) : 0;
+                    const isLulusSyarat = allGraded && avgDE > 60;
+                    const isStageDone = (mhs.lulus_preview2 == 1) || (mhs.latest_preview && isStageLulus(mhs.latest_preview));
+
+                    let u1ActionHtml = '';
+                    if (isCurrentUserPIC()) {
+                        const btnJadwal = `<button type="button" onclick="openModalJadwalDE('${mhs.nim}')"
+                                class="px-2.5 py-1.5 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white font-bold text-[11px] shadow-xs inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap">
+                            <i class="bi bi-calendar-event"></i> Jadwal DE
+                        </button>`;
+
+                        let btnLulusDE = '';
+                        if (isStageDone) {
+                            btnLulusDE = `<span class="px-2.5 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-300 text-[11px] font-bold inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> Lulus DE (${avgDE.toFixed(1)})</span>`;
+                        } else if (allGraded && isLulusSyarat) {
+                            btnLulusDE = `<button type="button" onclick="handleLulusStageDE('${mhs.nim}', ${avgDE.toFixed(1)})"
+                                    class="px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap">
+                                <i class="bi bi-mortarboard-fill"></i> Luluskan DE (${avgDE.toFixed(1)})
+                            </button>`;
+                        } else if (allGraded && !isLulusSyarat) {
+                            btnLulusDE = `<button type="button" disabled title="Rata-rata nilai DE (${avgDE.toFixed(1)}) tidak memenuhi syarat (> 60)"
+                                    class="px-2.5 py-1.5 rounded-lg bg-rose-100 text-rose-700 border border-rose-300 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap">
+                                <i class="bi bi-x-circle-fill"></i> Rata-rata ≤ 60 (${avgDE.toFixed(1)})
+                            </button>`;
+                        } else {
+                            btnLulusDE = `<button type="button" disabled title="Semua 4 dosen wajib memberi nilai (saat ini ${countGraded}/4) dan rata-rata > 60"
+                                    class="px-2.5 py-1.5 rounded-lg bg-slate-200 text-slate-500 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap">
+                                <i class="bi bi-lock-fill"></i> Lulus DE (${countGraded}/4)
+                            </button>`;
+                        }
+
+                        u1ActionHtml = btnJadwal + btnLulusDE;
+                    } else {
+                        let statusText = isStageDone ? `<span class="px-2 py-1 rounded-md bg-emerald-100 text-emerald-700 text-[10px] font-bold">Lulus DE (${avgDE > 0 ? avgDE.toFixed(1) : ''})</span>`
+                            : `<span class="px-2 py-1 rounded-md bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-semibold">DE: ${countGraded}/4 Dinilai ${allGraded ? '• Avg: ' + avgDE.toFixed(1) : ''}</span>`;
+                        u1ActionHtml = statusText;
+                    }
+
+                    return `<div class="flex flex-col gap-1.5 items-center max-w-[170px] mx-auto">${btnNilai}${u1ActionHtml}</div>`;
+                }
+
+                // Jika Non-DE atau belum ditentukan
+                if (!mhs.latest_preview) return `<span class="text-slate-400 italic text-[11px]">—</span>`;
+                if (!isCurrentUserPIC())  return `<span class="text-slate-400 italic text-[11px]">—</span>`;
+
+                const latest = mhs.latest_preview;
+                const isLulus = isStageLulus(latest) || (mhs.lulus_preview2 == 1);
+                const c = countFileStatuses(latest, currentTahap);
+
+                let btnLulus = '';
+                if (isLulus) {
+                    btnLulus = `<span class="px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-300 text-[11px] font-bold inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> Preview 2</span>`;
+                } else if (c.approved > 0) {
+                    btnLulus = `<button onclick="handleLulusStagePreview2('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> Preview 2</button>`;
+                } else {
+                    btnLulus = `<button disabled title="Belum ada berkas yang di-ACC" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Preview 2</button>`;
+                }
+
+                return `<div class="flex flex-col gap-1.5 items-center max-w-[170px] mx-auto">${btnLulus}</div>`;
+            }
+
+            // ===== PREVIEW 1 / 3: hanya PIC =====
             if (!mhs.latest_preview) return `<span class="text-slate-400 italic text-[11px]">—</span>`;
             if (!isCurrentUserPIC())  return `<span class="text-slate-400 italic text-[11px]">—</span>`;
 
@@ -1393,17 +1633,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 btnLulus = `<button disabled title="Belum ada berkas yang di-ACC" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> ${currentTahap}</button>`;
             }
 
-            let btnDowngrade = '';
-            // Button downgrade dikomentari terlebih dahulu
-            // if (isLulus && currIdx >= 0 && (currIdx + 1) < order.length) {
-            //     const nextTahap = order[currIdx + 1];
-            //     btnDowngrade = `<button onclick="handleDowngradeStageTo('${mhs.nim}', '${nextTahap}', '${currentTahap}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap" title="Tarik kembali dari ${nextTahap} ke ${currentTahap}"><i class="bi bi-arrow-down-circle"></i> Downgrade ke ${currentTahap}</button>`;
-            // }
-            
-
-            if (!btnLulus && !btnDowngrade) return `<span class="text-slate-400 italic text-[11px]">—</span>`;
-
-            return `<div class="flex flex-col gap-1.5 items-center max-w-[170px] mx-auto">${btnLulus}${btnDowngrade}</div>`;
+            return `<div class="flex flex-col gap-1.5 items-center max-w-[170px] mx-auto">${btnLulus}</div>`;
         }
 
         // ============================================================
@@ -2805,6 +3035,10 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 }
                 const mp = document.getElementById('modalPenilaianSidang');
                 if (mp && mp.classList.contains('active')) { closeModalPenilaianSidang(); return; }
+                const mj = document.getElementById('modalJadwalDE');
+                if (mj && mj.classList.contains('active')) { closeModalJadwalDE(); return; }
+                const mn = document.getElementById('modalNilaiDE');
+                if (mn && mn.classList.contains('active')) { closeModalNilaiDE(); return; }
                 if (window.activeInlineEditorKey) { closeInlineComment(); return; }
                 if (window.activeLihatBerkasIndices && window.activeLihatBerkasIndices.length > 0) closeLihatBerkasPanel();
             }
@@ -2853,6 +3087,325 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                     console.error(err);
                     Swal.fire({ icon: 'error', title: 'Error', text: 'Kesalahan koneksi.' });
                 });
+            });
+        }
+
+        // ============================================================
+        // PREVIEW 2: DE & NON-DE WORKFLOW
+        // ============================================================
+        function handleLulusStagePreview2(nim) {
+            const mhs = bimbinganData.find(m => m.nim === nim);
+            const namaMhs = mhs ? mhs.nama_mahasiswa : nim;
+
+            Swal.fire({
+                title: 'Kelulusan Preview 2',
+                html: `
+                    <p class="text-xs text-slate-600 mb-4">
+                        Mahasiswa: <strong class="text-slate-800">${namaMhs}</strong> (${nim})<br>
+                        Silakan tentukan apakah mahasiswa dinyatakan <strong>Non-DE (Lulus Langsung)</strong> atau diarahkan ke <strong>Desk Evaluation (DE)</strong>:
+                    </p>
+                    <div class="flex flex-col gap-2.5">
+                        <button type="button" id="btnPilihNonDE" class="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md flex items-center justify-center gap-2 cursor-pointer transition">
+                            <i class="bi bi-check2-circle text-base"></i>
+                            <span>Non-DE (Lulus Langsung ke Preview 3)</span>
+                        </button>
+                        <button type="button" id="btnPilihDE" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs shadow-md flex items-center justify-center gap-2 cursor-pointer transition">
+                            <i class="bi bi-calendar-event text-base"></i>
+                            <span>DE (Desk Evaluation & Penjadwalan)</span>
+                        </button>
+                    </div>
+                `,
+                showConfirmButton: false,
+                showCancelButton: true,
+                cancelButtonText: 'Batal',
+                didOpen: () => {
+                    document.getElementById('btnPilihNonDE').addEventListener('click', () => {
+                        Swal.close();
+                        submitKeputusanPreview2(nim, 'Non-DE');
+                    });
+                    document.getElementById('btnPilihDE').addEventListener('click', () => {
+                        Swal.close();
+                        submitKeputusanPreview2(nim, 'DE');
+                    });
+                }
+            });
+        }
+
+        function submitKeputusanPreview2(nim, keputusan) {
+            Swal.fire({ title: 'Memproses...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+
+            const fd = new FormData();
+            fd.append('nim', nim);
+            fd.append('keputusan', keputusan);
+
+            fetch('<?= site_url("dosen_bimbingan/set_keputusan_preview2_ajax") ?>', {
+                method: 'POST', body: fd,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: data.message,
+                        timer: 1800,
+                        showConfirmButton: false
+                    }).then(() => {
+                        fetchBimbinganData(true);
+                        if (keputusan === 'DE') {
+                            setTimeout(() => { openModalJadwalDE(nim); }, 350);
+                        }
+                    });
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: data.message || 'Gagal menyimpan keputusan.' });
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Terjadi kesalahan sistem.' });
+            });
+        }
+
+        function handleLulusStageDE(nim, avg) {
+            Swal.fire({
+                title: 'Luluskan Preview 2 (DE)?',
+                html: `Mahasiswa telah dinilai lengkap oleh 4 dosen dengan rata-rata <strong>${avg}</strong> (&gt; 60).<br>Luluskan mahasiswa ke <strong>Preview 3</strong>?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#a855f7',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: '<i class="bi bi-mortarboard-fill"></i> Ya, Luluskan DE',
+                cancelButtonText: 'Batal',
+            }).then((res) => {
+                if (!res.isConfirmed) return;
+
+                const fd = new FormData();
+                fd.append('nim', nim);
+                fd.append('tahap', 'Preview 2');
+
+                Swal.fire({ title: 'Memproses...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+
+                fetch('<?= site_url("dosen_bimbingan/lulus_stage_ajax") ?>', {
+                    method: 'POST', body: fd,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status) {
+                        Swal.fire({ icon: 'success', title: 'Berhasil!', text: data.message, timer: 1800, showConfirmButton: false })
+                            .then(() => fetchBimbinganData(true));
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Gagal', text: data.message || 'Gagal meluluskan.' });
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Kesalahan koneksi.' });
+                });
+            });
+        }
+
+        // ================= MODAL JADWAL DE =================
+        function openModalJadwalDE(nim) {
+            const mhs = bimbinganData.find(m => m.nim === nim);
+            document.getElementById('jadwalDeNim').value = nim;
+            document.getElementById('jadwalDeNamaMhs').textContent = mhs ? mhs.nama_mahasiswa : 'Memuat...';
+            document.getElementById('jadwalDeNimMhs').textContent = 'NIM: ' + nim;
+            document.getElementById('jadwalDeJudulTa').textContent = mhs && mhs.judul ? `"${mhs.judul}"` : '-';
+
+            document.getElementById('jadwalDeTanggal').value = '';
+            document.getElementById('jadwalDeWaktu').value = '';
+            document.getElementById('jadwalDeRuangan').value = '';
+            document.getElementById('jadwalDeLink').value = '';
+            document.getElementById('jadwalDeCatatan').value = '';
+
+            const modal = document.getElementById('modalJadwalDE');
+            if (modal) modal.classList.add('active');
+
+            fetch(`<?= site_url("dosen_bimbingan/get_de_detail_ajax") ?>?nim=${encodeURIComponent(nim)}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.status && res.data) {
+                    const d = res.data;
+                    document.getElementById('jadwalDeTanggal').value = d.tanggal_presentasi || '';
+                    document.getElementById('jadwalDeWaktu').value = d.waktu_presentasi || '';
+                    document.getElementById('jadwalDeRuangan').value = d.ruang_sidang || '';
+                    document.getElementById('jadwalDeLink').value = d.link_presentasi || '';
+                    document.getElementById('jadwalDeCatatan').value = d.komentar_kelayakan2 || '';
+                }
+            })
+            .catch(err => console.error(err));
+        }
+
+        function closeModalJadwalDE() {
+            const modal = document.getElementById('modalJadwalDE');
+            if (modal) modal.classList.remove('active');
+        }
+
+        function submitJadwalDE(e) {
+            e.preventDefault();
+            const nim = document.getElementById('jadwalDeNim').value;
+            const tanggal = document.getElementById('jadwalDeTanggal').value;
+            const waktu = document.getElementById('jadwalDeWaktu').value;
+            const ruangan = document.getElementById('jadwalDeRuangan').value;
+            const link = document.getElementById('jadwalDeLink').value;
+            const catatan = document.getElementById('jadwalDeCatatan').value;
+
+            if (!nim || !tanggal || !waktu) {
+                Swal.fire({ icon: 'warning', title: 'Data Belum Lengkap', text: 'Tanggal dan Waktu DE wajib diisi.' });
+                return;
+            }
+
+            const btn = document.getElementById('btnSubmitJadwalDE');
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Menyimpan...'; }
+
+            const fd = new FormData();
+            fd.append('nim', nim);
+            fd.append('tanggal', tanggal);
+            fd.append('waktu', waktu);
+            fd.append('ruangan', ruangan);
+            fd.append('link', link);
+            fd.append('catatan', catatan);
+
+            fetch('<?= site_url("dosen_bimbingan/simpan_jadwal_de_ajax") ?>', {
+                method: 'POST', body: fd,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.status) {
+                    closeModalJadwalDE();
+                    Swal.fire({ icon: 'success', title: 'Berhasil', text: res.message || 'Jadwal DE tersimpan.', timer: 1800, showConfirmButton: false })
+                        .then(() => fetchBimbinganData(true));
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: res.message || 'Gagal menyimpan jadwal.' });
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Terjadi kesalahan sistem.' });
+            })
+            .finally(() => {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-calendar-check-fill"></i> Simpan Jadwal DE'; }
+            });
+        }
+
+        // ================= MODAL NILAI DE =================
+        function openModalNilaiDE(nim, posisi) {
+            const mhs = bimbinganData.find(m => m.nim === nim);
+            document.getElementById('nilaiDeNim').value = nim;
+            document.getElementById('nilaiDePosisi').value = posisi || MODEL_POSISI;
+            document.getElementById('nilaiDeNamaMhs').textContent = mhs ? mhs.nama_mahasiswa : 'Memuat...';
+            document.getElementById('nilaiDeNimMhs').textContent = 'NIM: ' + nim;
+            document.getElementById('nilaiDeJudulTa').textContent = mhs && mhs.judul ? `"${mhs.judul}"` : '-';
+
+            document.getElementById('inputNilaiDeScore').value = '';
+            document.getElementById('inputNilaiDeCatatan').value = '';
+            document.getElementById('rekapDeP1').textContent = '-';
+            document.getElementById('rekapDeP2').textContent = '-';
+            document.getElementById('rekapDeU1').textContent = '-';
+            document.getElementById('rekapDeU2').textContent = '-';
+            document.getElementById('rekapDeAvg').textContent = '-';
+            document.getElementById('rekapDeStatusBadge').textContent = 'Memuat...';
+            document.getElementById('rekapDeStatusBadge').className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600';
+
+            const modal = document.getElementById('modalNilaiDE');
+            if (modal) modal.classList.add('active');
+
+            fetch(`<?= site_url("dosen_bimbingan/get_de_detail_ajax") ?>?nim=${encodeURIComponent(nim)}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.status && res.data) {
+                    const d = res.data;
+                    document.getElementById('rekapDeP1').textContent = d.nilai_pembimbing1 !== null ? d.nilai_pembimbing1 : 'Belum';
+                    document.getElementById('rekapDeP2').textContent = d.nilai_pembimbing2 !== null ? d.nilai_pembimbing2 : 'Belum';
+                    document.getElementById('rekapDeU1').textContent = d.nilai_penguji1 !== null ? d.nilai_penguji1 : 'Belum';
+                    document.getElementById('rekapDeU2').textContent = d.nilai_penguji2 !== null ? d.nilai_penguji2 : 'Belum';
+
+                    if (d.semua_dinilai) {
+                        document.getElementById('rekapDeAvg').textContent = d.rata_rata;
+                        if (d.rata_rata > 60) {
+                            document.getElementById('rekapDeStatusBadge').textContent = 'Lulus Syarat (> 60)';
+                            document.getElementById('rekapDeStatusBadge').className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800';
+                        } else {
+                            document.getElementById('rekapDeStatusBadge').textContent = 'Tidak Memenuhi (≤ 60)';
+                            document.getElementById('rekapDeStatusBadge').className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800';
+                        }
+                    } else {
+                        document.getElementById('rekapDeAvg').textContent = d.rata_rata > 0 ? `${d.rata_rata} (Sementara)` : '-';
+                        document.getElementById('rekapDeStatusBadge').textContent = `${d.count_graded}/4 Dinilai`;
+                        document.getElementById('rekapDeStatusBadge').className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800';
+                    }
+
+                    // Tampilkan nilai saya
+                    const myPos = parseInt(posisi || MODEL_POSISI);
+                    let myScore = null, myNote = '';
+                    if (myPos === 1) { myScore = d.nilai_pembimbing1; myNote = d.catatan_p1; }
+                    else if (myPos === 2) { myScore = d.nilai_pembimbing2; myNote = d.catatan_p2; }
+                    else if (myPos === 3) { myScore = d.nilai_penguji1; myNote = d.catatan_u1; }
+                    else if (myPos === 4) { myScore = d.nilai_penguji2; myNote = d.catatan_u2; }
+
+                    if (myScore !== null && !isNaN(myScore)) {
+                        document.getElementById('inputNilaiDeScore').value = myScore;
+                    }
+                    document.getElementById('inputNilaiDeCatatan').value = myNote || '';
+                }
+            })
+            .catch(err => console.error(err));
+        }
+
+        function closeModalNilaiDE() {
+            const modal = document.getElementById('modalNilaiDE');
+            if (modal) modal.classList.remove('active');
+        }
+
+        function submitNilaiDE(e) {
+            e.preventDefault();
+            const nim = document.getElementById('nilaiDeNim').value;
+            const posisi = document.getElementById('nilaiDePosisi').value;
+            const nilai = document.getElementById('inputNilaiDeScore').value;
+            const catatan = document.getElementById('inputNilaiDeCatatan').value;
+
+            const n = parseFloat(nilai);
+            if (isNaN(n) || n < 0 || n > 100) {
+                Swal.fire({ icon: 'warning', title: 'Nilai Tidak Valid', text: 'Nilai harus berupa angka antara 0 sampai 100.' });
+                return;
+            }
+
+            const btn = document.getElementById('btnSubmitNilaiDE');
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Menyimpan...'; }
+
+            const fd = new FormData();
+            fd.append('nim', nim);
+            fd.append('posisi', posisi);
+            fd.append('nilai', n);
+            fd.append('catatan', catatan);
+
+            fetch('<?= site_url("dosen_bimbingan/simpan_nilai_de_ajax") ?>', {
+                method: 'POST', body: fd,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.status) {
+                    closeModalNilaiDE();
+                    Swal.fire({ icon: 'success', title: 'Berhasil', text: res.message || 'Nilai DE berhasil disimpan.', timer: 1800, showConfirmButton: false })
+                        .then(() => fetchBimbinganData(true));
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: res.message || 'Gagal menyimpan nilai DE.' });
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Terjadi kesalahan sistem.' });
+            })
+            .finally(() => {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-save-fill"></i> Simpan Nilai DE'; }
             });
         }
 
@@ -2940,6 +3493,14 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         window.resetFiltersDW          = resetFiltersDW;
         window.getUploadBaseUrl        = getUploadBaseUrl;
         window.handleLulusStage        = handleLulusStage;
+        window.handleLulusStagePreview2= handleLulusStagePreview2;
+        window.handleLulusStageDE      = handleLulusStageDE;
+        window.openModalJadwalDE       = openModalJadwalDE;
+        window.closeModalJadwalDE      = closeModalJadwalDE;
+        window.submitJadwalDE          = submitJadwalDE;
+        window.openModalNilaiDE        = openModalNilaiDE;
+        window.closeModalNilaiDE       = closeModalNilaiDE;
+        window.submitNilaiDE           = submitNilaiDE;
         window.handleDowngradeStageTo  = handleDowngradeStageTo;
         window.getResponsibleRole      = getResponsibleRole;
         window.isCurrentUserPIC        = isCurrentUserPIC;
