@@ -341,7 +341,7 @@
                             <div class="relative z-10 flex items-start justify-between gap-3">
                                 <div class="flex-1 min-w-0">
                                     <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-brand-600 transition-colors truncate">Total Mahasiswa TA</p>
-                                    <h3 class="text-2xl font-black text-slate-900 mt-1 tracking-tight"><?= $candidatesCount; ?></h3>
+                                    <h3 id="statCountTotal" class="text-2xl font-black text-slate-900 mt-1 tracking-tight"><?= $candidatesCount; ?></h3>
                                     <p class="text-xs font-medium text-slate-500 mt-1 line-clamp-1">Pengajuan &amp; Bimbingan</p>
                                 </div>
                                 
@@ -377,7 +377,7 @@
                             <div class="relative z-10 flex items-start justify-between gap-3">
                                 <div class="flex-1 min-w-0">
                                     <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-rose-600 transition-colors truncate">Tahap Sidang TA</p>
-                                    <h3 class="text-2xl font-black text-slate-900 mt-1 tracking-tight"><?= $countSidang; ?> <span class="text-xs font-semibold text-rose-600 font-normal">(<?= $candidatesCount > 0 ? round(($countSidang/$candidatesCount)*100) : 0; ?>%)</span></h3>
+                                    <h3 id="statCountSidang" class="text-2xl font-black text-slate-900 mt-1 tracking-tight"><?= $countSidang; ?> <span class="text-xs font-semibold text-rose-600 font-normal">(<?= $candidatesCount > 0 ? round(($countSidang/$candidatesCount)*100) : 0; ?>%)</span></h3>
                                     <p class="text-xs font-medium text-slate-500 mt-1 line-clamp-1">Sidang Akhir &amp; Kelulusan</p>
                                 </div>
                                 
@@ -413,7 +413,7 @@
                             <div class="relative z-10 flex items-start justify-between gap-3">
                                 <div class="flex-1 min-w-0">
                                     <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-cyan-600 transition-colors truncate">Tahap Preview 3</p>
-                                    <h3 class="text-2xl font-black text-slate-900 mt-1 tracking-tight"><?= $countP3; ?> <span class="text-xs font-semibold text-cyan-600 font-normal">(<?= $candidatesCount > 0 ? round(($countP3/$candidatesCount)*100) : 0; ?>%)</span></h3>
+                                    <h3 id="statCountP3" class="text-2xl font-black text-slate-900 mt-1 tracking-tight"><?= $countP3; ?> <span class="text-xs font-semibold text-cyan-600 font-normal">(<?= $candidatesCount > 0 ? round(($countP3/$candidatesCount)*100) : 0; ?>%)</span></h3>
                                     <p class="text-xs font-medium text-slate-500 mt-1 line-clamp-1">Pra-Sidang Tugas Akhir</p>
                                 </div>
                                 
@@ -449,7 +449,7 @@
                             <div class="relative z-10 flex items-start justify-between gap-3">
                                 <div class="flex-1 min-w-0">
                                     <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-emerald-600 transition-colors truncate">Tahap Preview 2</p>
-                                    <h3 class="text-2xl font-black text-slate-900 mt-1 tracking-tight"><?= $countP2; ?> <span class="text-xs font-semibold text-emerald-600 font-normal">(<?= $candidatesCount > 0 ? round(($countP2/$candidatesCount)*100) : 0; ?>%)</span></h3>
+                                    <h3 id="statCountP2" class="text-2xl font-black text-slate-900 mt-1 tracking-tight"><?= $countP2; ?> <span class="text-xs font-semibold text-emerald-600 font-normal">(<?= $candidatesCount > 0 ? round(($countP2/$candidatesCount)*100) : 0; ?>%)</span></h3>
                                     <p class="text-xs font-medium text-slate-500 mt-1 line-clamp-1">Presentasi &amp; Uji Dosen</p>
                                 </div>
                                 
@@ -485,7 +485,7 @@
                             <div class="relative z-10 flex items-start justify-between gap-3">
                                 <div class="flex-1 min-w-0">
                                     <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-indigo-600 transition-colors truncate">Riwayat Downgrade</p>
-                                    <h3 class="text-2xl font-black text-slate-900 mt-1 tracking-tight"><?= $totalLogs; ?> <span class="text-xs font-semibold text-indigo-600 font-normal">Aksi</span></h3>
+                                    <h3 id="statCountAudit" class="text-2xl font-black text-slate-900 mt-1 tracking-tight"><?= $totalLogs; ?> <span class="text-xs font-semibold text-indigo-600 font-normal">Aksi</span></h3>
                                     <p class="text-xs font-medium text-slate-500 mt-1 line-clamp-1">Log Audit Tersimpan</p>
                                 </div>
                                 
@@ -517,7 +517,7 @@
                     <i class="fa-solid fa-list-check"></i> <span>Daftar Mahasiswa &amp; Eksekusi</span>
                 </button>
                 <button type="button" id="btnMainTabLog" onclick="switchMainTab('tabLogAudit')" class="w-full py-3 px-4 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center justify-center gap-2 transition cursor-pointer">
-                    <i class="fa-solid fa-clock-rotate-left"></i> <span>Riwayat Audit Log (<?= $totalLogs; ?>)</span>
+                    <i class="fa-solid fa-clock-rotate-left"></i> <span id="tabLogAuditCount">Riwayat Audit Log (<?= $totalLogs; ?>)</span>
                 </button>
             </div>
 
@@ -616,11 +616,11 @@
                         <!-- Stage Filter Pills -->
                         <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs scrollbar-none">
                             <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1 hidden sm:inline">Pill:</span>
-                            <button type="button" onclick="setStageFilter('all', this)" class="stage-pill active px-3 py-1.5 rounded-lg font-bold bg-slate-900 text-white transition cursor-pointer whitespace-nowrap">Semua (<?= $candidatesCount; ?>)</button>
-                            <button type="button" onclick="setStageFilter('sidang', this)" class="stage-pill px-3 py-1.5 rounded-lg font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer whitespace-nowrap">Sidang (<?= $countSidang; ?>)</button>
-                            <button type="button" onclick="setStageFilter('preview3', this)" class="stage-pill px-3 py-1.5 rounded-lg font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer whitespace-nowrap">Preview 3 (<?= $countP3; ?>)</button>
-                            <button type="button" onclick="setStageFilter('preview2', this)" class="stage-pill px-3 py-1.5 rounded-lg font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer whitespace-nowrap">Preview 2 (<?= $countP2; ?>)</button>
-                            <button type="button" onclick="setStageFilter('preview1', this)" class="stage-pill px-3 py-1.5 rounded-lg font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer whitespace-nowrap">Preview 1 (<?= $countP1; ?>)</button>
+                            <button type="button" onclick="setStageFilter('all', this)" class="stage-pill active px-3 py-1.5 rounded-lg font-bold bg-slate-900 text-white transition cursor-pointer whitespace-nowrap">Semua (<span id="pillCountAll"><?= $candidatesCount; ?></span>)</button>
+                            <button type="button" onclick="setStageFilter('sidang', this)" class="stage-pill px-3 py-1.5 rounded-lg font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer whitespace-nowrap">Sidang (<span id="pillCountSidang"><?= $countSidang; ?></span>)</button>
+                            <button type="button" onclick="setStageFilter('preview3', this)" class="stage-pill px-3 py-1.5 rounded-lg font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer whitespace-nowrap">Preview 3 (<span id="pillCountP3"><?= $countP3; ?></span>)</button>
+                            <button type="button" onclick="setStageFilter('preview2', this)" class="stage-pill px-3 py-1.5 rounded-lg font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer whitespace-nowrap">Preview 2 (<span id="pillCountP2"><?= $countP2; ?></span>)</button>
+                            <button type="button" onclick="setStageFilter('preview1', this)" class="stage-pill px-3 py-1.5 rounded-lg font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer whitespace-nowrap">Preview 1 (<span id="pillCountP1"><?= $countP1; ?></span>)</button>
                         </div>
 
                         <!-- Page Size & Counter Right (Exact Style from Screenshot) -->
@@ -790,7 +790,7 @@
                                     <th class="py-3 px-4">Eksekutor (Koordinator TA)</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                            <tbody class="divide-y divide-slate-100 font-medium text-slate-700" id="auditLogTableBody">
                                 <?php if (!empty($audit_logs)): ?>
                                     <?php $no = 1; foreach ($audit_logs as $log): ?>
                                         <tr class="hover:bg-slate-50/70 transition">
@@ -1551,7 +1551,278 @@
         });
         filterTableRows(true);
 
+        // Candidate mapping dictionary
+        window.allCandidatesMap = window.allCandidatesMap || {};
+        <?php if (!empty($candidates)): ?>
+            <?php foreach ($candidates as $c): ?>
+                <?php 
+                    $stageKey   = $c['stage_key'] ?? ($c['stageKey'] ?? 'pendaftaran');
+                    $stageLabel = $c['progres_stage'] ?? ($c['progresStage'] ?? 'Pendaftaran');
+                    $stageColor = $c['stage_color'] ?? ($c['stageColor'] ?? 'slate');
+                    $judul      = !empty($c['judul_1']) ? $c['judul_1'] : (!empty($c['judul']) ? $c['judul'] : '-');
+                    $p1         = $c['nama_pembimbing_1'] ?? ($c['pembimbing_1_name'] ?? ($c['pembimbing_1'] ?? '-'));
+                    $p2         = $c['nama_pembimbing_2'] ?? ($c['pembimbing_2_name'] ?? ($c['pembimbing_2'] ?? ''));
+                    $u1         = $c['nama_penguji_1'] ?? ($c['penguji_1_name'] ?? ($c['penguji_1'] ?? ''));
+                    $u2         = $c['nama_penguji_2'] ?? ($c['penguji_2_name'] ?? ($c['penguji_2'] ?? ''));
+                ?>
+                window.allCandidatesMap['<?= $c['nim']; ?>'] = <?= json_encode([
+                    'nim' => $c['nim'],
+                    'nama' => $c['nama'] ?? $c['nim'],
+                    'judul' => $judul,
+                    'stageKey' => $stageKey,
+                    'stageLabel' => $stageLabel,
+                    'stageColor' => $stageColor,
+                    'pembimbing_1' => $p1,
+                    'pembimbing_2' => $p2,
+                    'penguji_1' => $u1,
+                    'penguji_2' => $u2,
+                    'allowed_targets' => $c['allowed_targets'] ?? []
+                ]); ?>;
+            <?php endforeach; ?>
+        <?php endif; ?>
+
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function formatDateWIB(dateStr) {
+            if (!dateStr) return '-';
+            try {
+                const d = new Date(dateStr.replace(/-/g, '/'));
+                if (isNaN(d.getTime())) return dateStr;
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = months[d.getMonth()] || '';
+                const year = d.getFullYear();
+                const hours = String(d.getHours()).padStart(2, '0');
+                const minutes = String(d.getMinutes()).padStart(2, '0');
+                return `${day} ${month} ${year}, ${hours}:${minutes} WIB`;
+            } catch(e) {
+                return dateStr;
+            }
+        }
+
+        function getStageBadgeClass(stageKey) {
+            if (stageKey === 'lulus') return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+            if (stageKey === 'sidang') return 'bg-rose-50 text-rose-700 border-rose-200';
+            if (stageKey === 'preview3') return 'bg-cyan-50 text-cyan-700 border-cyan-200';
+            if (stageKey === 'preview2') return 'bg-indigo-50 text-indigo-700 border-indigo-200';
+            if (stageKey === 'preview1') return 'bg-teal-50 text-teal-700 border-teal-200';
+            if (stageKey === 'ketua_kk') return 'bg-purple-50 text-purple-700 border-purple-200';
+            if (stageKey === 'koordinator_ta') return 'bg-orange-50 text-orange-700 border-orange-200';
+            if (stageKey === 'admin_layanan') return 'bg-amber-50 text-amber-700 border-amber-200';
+            if (stageKey === 'dosen_wali') return 'bg-blue-50 text-blue-700 border-blue-200';
+            return 'bg-slate-100 text-slate-700 border-slate-200';
+        }
+
+        function updateDOMWithCandidates(candidates) {
+            window.allCandidatesMap = {};
+            const tbody = document.getElementById('candidateTableBody');
+            if (!tbody) return;
+
+            if (!candidates || candidates.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="py-12 text-center text-slate-400">
+                            <i class="fa-solid fa-user-slash text-3xl mb-2 text-slate-300"></i>
+                            <p class="font-medium text-xs">Belum ada mahasiswa dalam antrean bimbingan aktif.</p>
+                        </td>
+                    </tr>
+                `;
+            } else {
+                let html = '';
+                candidates.forEach((c, idx) => {
+                    const stageKey = c.stage_key || c.stageKey || 'pendaftaran';
+                    const stageLabel = c.progres_stage || c.progresStage || 'Pendaftaran';
+                    const stageColor = c.stage_color || c.stageColor || 'slate';
+                    const judul = c.judul_1 || c.judul || '-';
+                    const p1 = c.nama_pembimbing_1 || c.pembimbing_1_name || c.pembimbing_1 || '-';
+                    const p2 = c.nama_pembimbing_2 || c.pembimbing_2_name || c.pembimbing_2 || '';
+                    const u1 = c.nama_penguji_1 || c.penguji_1_name || c.penguji_1 || '';
+                    const u2 = c.nama_penguji_2 || c.penguji_2_name || c.penguji_2 || '';
+
+                    const cObj = {
+                        nim: c.nim,
+                        nama: c.nama || c.nim,
+                        judul: judul,
+                        stageKey: stageKey,
+                        stageLabel: stageLabel,
+                        stageColor: stageColor,
+                        pembimbing_1: p1,
+                        pembimbing_2: p2,
+                        penguji_1: u1,
+                        penguji_2: u2,
+                        allowed_targets: c.allowed_targets || []
+                    };
+                    window.allCandidatesMap[c.nim] = cObj;
+
+                    const badgeCls = getStageBadgeClass(stageKey);
+                    const searchData = `${c.nim || ''} ${c.nama || ''} ${judul} ${p1} ${u1} ${stageLabel}`.toLowerCase();
+                    const dosenData = `${p1} ${p2} ${u1} ${u2}`.toLowerCase();
+
+                    let pembimbingPengujiHtml = `<div class="text-slate-700"><span class="text-slate-400 font-medium">P1:</span> ${escapeHtml(p1)}</div>`;
+                    if (p2 && p2 !== '-') {
+                        pembimbingPengujiHtml += `<div class="text-slate-700"><span class="text-slate-400 font-medium">P2:</span> ${escapeHtml(p2)}</div>`;
+                    }
+                    if (u1 && u1 !== '-') {
+                        pembimbingPengujiHtml += `<div class="text-indigo-600 font-medium"><span class="text-slate-400 font-normal">U1:</span> ${escapeHtml(u1)}</div>`;
+                    }
+                    if (u2 && u2 !== '-') {
+                        pembimbingPengujiHtml += `<div class="text-indigo-600 font-medium"><span class="text-slate-400 font-normal">U2:</span> ${escapeHtml(u2)}</div>`;
+                    }
+
+                    html += `
+                        <tr class="candidate-row hover:bg-slate-50/70 transition" 
+                            data-stage="${escapeHtml(stageKey.toLowerCase())}" 
+                            data-nama="${escapeHtml((c.nama || '').toLowerCase())}"
+                            data-nim="${escapeHtml((c.nim || '').toLowerCase())}"
+                            data-judul="${escapeHtml(judul.toLowerCase())}"
+                            data-dosen="${escapeHtml(dosenData)}"
+                            data-search="${escapeHtml(searchData)}">
+                            <td class="py-3.5 px-4 text-center font-mono text-slate-400">${idx + 1}</td>
+                            <td class="py-3.5 px-4">
+                                <div class="font-bold text-slate-900 text-xs sm:text-sm">${escapeHtml(c.nama || '-')}</div>
+                                <div class="font-mono text-slate-500 text-[11px] mt-0.5">${escapeHtml(c.nim || '-')}</div>
+                            </td>
+                            <td class="py-3.5 px-4 max-w-xs sm:max-w-sm">
+                                <div class="line-clamp-2 text-slate-800 text-xs font-normal" title="${escapeHtml(judul)}">
+                                    ${escapeHtml(judul)}
+                                </div>
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border ${badgeCls}">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                                    ${escapeHtml(stageLabel)}
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-4 text-[11px] space-y-0.5">
+                                ${pembimbingPengujiHtml}
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                <button type="button" onclick="openDangerDowngradeModal(window.allCandidatesMap['${escapeHtml(c.nim)}'])" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 hover:border-red-600 transition shadow-2xs cursor-pointer">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                    Downgrade
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            }
+
+            // Update Counter Stats
+            const totalCount = candidates ? candidates.length : 0;
+            let countSidang = 0;
+            let countP3 = 0;
+            let countP2 = 0;
+            let countP1 = 0;
+
+            if (candidates) {
+                candidates.forEach(c => {
+                    const sk = (c.stage_key || c.stageKey || '').toLowerCase();
+                    if (sk === 'sidang' || sk === 'lulus') countSidang++;
+                    else if (sk === 'preview3') countP3++;
+                    else if (sk === 'preview2') countP2++;
+                    else if (sk === 'preview1') countP1++;
+                });
+            }
+
+            // Stat Cards
+            const elTotal = document.getElementById('statCountTotal');
+            const elSidang = document.getElementById('statCountSidang');
+            const elP3 = document.getElementById('statCountP3');
+            const elP2 = document.getElementById('statCountP2');
+
+            if (elTotal) elTotal.textContent = totalCount;
+            if (elSidang) elSidang.innerHTML = `${countSidang} <span class="text-xs font-semibold text-rose-600 font-normal">(${totalCount > 0 ? Math.round((countSidang / totalCount) * 100) : 0}%)</span>`;
+            if (elP3) elP3.innerHTML = `${countP3} <span class="text-xs font-semibold text-cyan-600 font-normal">(${totalCount > 0 ? Math.round((countP3 / totalCount) * 100) : 0}%)</span>`;
+            if (elP2) elP2.innerHTML = `${countP2} <span class="text-xs font-semibold text-emerald-600 font-normal">(${totalCount > 0 ? Math.round((countP2 / totalCount) * 100) : 0}%)</span>`;
+
+            // Stage Filter Pills
+            const pillAll = document.getElementById('pillCountAll');
+            const pillSidang = document.getElementById('pillCountSidang');
+            const pillP3 = document.getElementById('pillCountP3');
+            const pillP2 = document.getElementById('pillCountP2');
+            const pillP1 = document.getElementById('pillCountP1');
+
+            if (pillAll) pillAll.textContent = totalCount;
+            if (pillSidang) pillSidang.textContent = countSidang;
+            if (pillP3) pillP3.textContent = countP3;
+            if (pillP2) pillP2.textContent = countP2;
+            if (pillP1) pillP1.textContent = countP1;
+
+            // Refresh active filters & pagination without resetting current page
+            filterTableRows(false);
+        }
+
+        function updateAuditLogsDOM(auditLogs) {
+            const tbody = document.getElementById('auditLogTableBody');
+            if (!tbody) return;
+
+            if (!auditLogs || auditLogs.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="py-12 text-center text-slate-400">
+                            <i class="fa-solid fa-clock-rotate-left text-3xl mb-2 text-slate-300"></i>
+                            <p class="font-medium text-xs">Belum ada riwayat aktivitas penurunan tahapan.</p>
+                        </td>
+                    </tr>
+                `;
+            } else {
+                let html = '';
+                auditLogs.forEach((log, idx) => {
+                    const dateStr = formatDateWIB(log.created_at);
+                    const nipStr = log.actor_nip_nim ? escapeHtml(log.actor_nip_nim) : '-';
+                    html += `
+                        <tr class="hover:bg-slate-50/70 transition">
+                            <td class="py-3 px-4 text-center font-mono text-slate-400">${idx + 1}</td>
+                            <td class="py-3 px-4 whitespace-nowrap text-slate-500 font-mono text-[11px]">
+                                ${dateStr}
+                            </td>
+                            <td class="py-3 px-4">
+                                <div class="font-bold text-slate-900">${escapeHtml(log.nama || '-')}</div>
+                                <div class="font-mono text-slate-500 text-[11px]">${escapeHtml(log.nim || '-')}</div>
+                            </td>
+                            <td class="py-3 px-4 whitespace-nowrap">
+                                <div class="inline-flex items-center gap-1.5 text-xs font-bold">
+                                    <span class="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200">${escapeHtml(log.dari || '-')}</span>
+                                    <i class="fa-solid fa-arrow-right text-[10px] text-slate-400"></i>
+                                    <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">${escapeHtml(log.ke || '-')}</span>
+                                </div>
+                            </td>
+                            <td class="py-3 px-4 max-w-xs">
+                                <p class="text-xs text-slate-600 line-clamp-2" title="${escapeHtml(log.alasan || '-')}">
+                                    ${escapeHtml(log.alasan || '-')}
+                                </p>
+                            </td>
+                            <td class="py-3 px-4 whitespace-nowrap">
+                                <div class="font-semibold text-slate-800">${escapeHtml(log.actor_name || '-')}</div>
+                                <div class="text-[10px] text-slate-400 font-mono">NIP: ${nipStr}</div>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            }
+
+            const logCount = auditLogs ? auditLogs.length : 0;
+            const statAudit = document.getElementById('statCountAudit');
+            const tabLogCount = document.getElementById('tabLogAuditCount');
+
+            if (statAudit) statAudit.innerHTML = `${logCount} <span class="text-xs font-semibold text-indigo-600 font-normal">Aksi</span>`;
+            if (tabLogCount) tabLogCount.textContent = `Riwayat Audit Log (${logCount})`;
+        }
+
         function openDangerDowngradeModal(candidate) {
+            if (typeof candidate === 'string') {
+                candidate = (window.allCandidatesMap && window.allCandidatesMap[candidate]) ? window.allCandidatesMap[candidate] : null;
+            }
             if (!candidate) return;
 
             document.getElementById('modalInputNim').value = candidate.nim;
@@ -1625,7 +1896,7 @@
                 title: 'Konfirmasi Terakhir!',
                 html: `<div class="text-left text-xs space-y-2">
                     <p class="font-bold text-red-600">Apakah Anda benar-benar yakin ingin mengeksekusi tindakan ini?</p>
-                    <p>Status mahasiswa <strong>NIM ${nim}</strong> akan diturunkan ke <strong>${targetSelectText}</strong>.</p>
+                    <p>Status mahasiswa <strong>NIM ${escapeHtml(nim)}</strong> akan diturunkan ke <strong>${escapeHtml(targetSelectText)}</strong>.</p>
                     <p class="text-slate-500">Seluruh nilai dan berkas revisi terkait akan <strong>DIHAPUS TOTAL</strong> dari server tanpa backup.</p>
                 </div>`,
                 icon: 'warning',
@@ -1636,9 +1907,47 @@
                 cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    const submitBtn = document.getElementById('btnExecuteSubmit');
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses...';
+                    closeDangerDowngradeModal();
+
+                    // Tampilkan SweetAlert Loading Bar & Animasi Realtime
+                    let progress = 15;
+                    let progressTimer = null;
+
+                    Swal.fire({
+                        title: 'Mengeksekusi Tindakan...',
+                        html: `
+                            <div class="space-y-3 py-2 text-left">
+                                <p class="text-xs text-slate-600">Sedang membersihkan berkas nilai, reset tahapan, dan sinkronisasi log...</p>
+                                <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden border border-slate-200">
+                                    <div id="downgradeProgressBar" class="h-full bg-gradient-to-r from-orange-500 via-rose-500 to-red-600 rounded-full transition-all duration-300" style="width: 15%;"></div>
+                                </div>
+                                <div class="flex items-center justify-between text-[11px] text-slate-500 font-mono">
+                                    <span id="downgradeProgressStatus"><i class="fa-solid fa-circle-notch fa-spin text-orange-500 mr-1"></i> Menghapus berkas &amp; nilai...</span>
+                                    <span id="downgradeProgressPercent" class="font-bold text-slate-700">15%</span>
+                                </div>
+                            </div>
+                        `,
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            const bar = document.getElementById('downgradeProgressBar');
+                            const status = document.getElementById('downgradeProgressStatus');
+                            const percent = document.getElementById('downgradeProgressPercent');
+                            
+                            progressTimer = setInterval(() => {
+                                if (progress < 85) {
+                                    progress += Math.floor(Math.random() * 6) + 4;
+                                    if (progress > 85) progress = 85;
+                                    if (bar) bar.style.width = progress + '%';
+                                    if (percent) percent.textContent = progress + '%';
+                                    if (progress > 50 && status) {
+                                        status.innerHTML = '<i class="fa-solid fa-sync fa-spin text-rose-500 mr-1"></i> Memperbarui status &amp; sinkronisasi...';
+                                    }
+                                }
+                            }, 180);
+                        }
+                    });
 
                     $.ajax({
                         url: EXECUTE_DOWNGRADE_URL,
@@ -1651,19 +1960,35 @@
                             confirm: 1
                         },
                         success: function(resp) {
+                            if (progressTimer) clearInterval(progressTimer);
+
                             if (resp && resp.status) {
-                                closeDangerDowngradeModal();
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Berhasil Di-downgrade',
-                                    text: resp.message || 'Status mahasiswa berhasil diturunkan.',
-                                    confirmButtonColor: '#ea580c'
-                                }).then(() => {
-                                    window.location.reload();
-                                });
+                                const bar = document.getElementById('downgradeProgressBar');
+                                const percent = document.getElementById('downgradeProgressPercent');
+                                const status = document.getElementById('downgradeProgressStatus');
+                                if (bar) bar.style.width = '100%';
+                                if (percent) percent.textContent = '100%';
+                                if (status) status.innerHTML = '<i class="fa-solid fa-check text-emerald-500 mr-1"></i> Berhasil diperbarui!';
+
+                                setTimeout(() => {
+                                    // Update DOM secara realtime tanpa reload
+                                    if (resp.candidates) {
+                                        updateDOMWithCandidates(resp.candidates);
+                                    }
+                                    if (resp.audit_logs) {
+                                        updateAuditLogsDOM(resp.audit_logs);
+                                    }
+
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Berhasil Di-downgrade',
+                                        text: resp.message || 'Status mahasiswa berhasil diturunkan.',
+                                        confirmButtonColor: '#ea580c',
+                                        timer: 2500,
+                                        timerProgressBar: true
+                                    });
+                                }, 400);
                             } else {
-                                submitBtn.disabled = false;
-                                submitBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i> Ya, Hapus Data &amp; Downgrade';
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Gagal Eksekusi',
@@ -1672,8 +1997,7 @@
                             }
                         },
                         error: function(xhr, status, error) {
-                            submitBtn.disabled = false;
-                            submitBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i> Ya, Hapus Data &amp; Downgrade';
+                            if (progressTimer) clearInterval(progressTimer);
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Kesalahan Sistem',

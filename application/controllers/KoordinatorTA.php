@@ -143,6 +143,10 @@ class KoordinatorTA extends CI_Controller {
         ];
 
         $result = $this->KoordinatorTA_model->execute_downgrade_stage($nim, $targetStage, $alasan, $actorData);
+        if (!empty($result['status'])) {
+            $result['candidates'] = $this->KoordinatorTA_model->get_candidates_for_downgrade('all');
+            $result['audit_logs'] = $this->KoordinatorTA_model->get_downgrade_audit_logs(50);
+        }
         echo json_encode($result);
     }
 
