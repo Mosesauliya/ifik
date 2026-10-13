@@ -25,6 +25,36 @@ $history_total = (int) $history_pagination['total'];
 $history_per_page = (int) $history_pagination['per_page'];
 $history_query = $_GET;
 $history_query['per_page'] = $history_per_page;
+
+if (!function_exists('riwayat_loan_status_tone')) {
+    function riwayat_loan_status_tone($status)
+    {
+        $normalized = strtolower(trim((string) $status));
+
+        if (strpos($normalized, 'tolak') !== false || strpos($normalized, 'reject') !== false) {
+            return 'is-rejected';
+        }
+
+        if (
+            strpos($normalized, 'dikembalikan') !== false ||
+            strpos($normalized, 'selesai') !== false ||
+            strpos($normalized, 'disetujui') !== false
+        ) {
+            return 'is-completed';
+        }
+
+        if (
+            strpos($normalized, 'menunggu') !== false ||
+            strpos($normalized, 'dipinjam') !== false ||
+            strpos($normalized, 'sedang') !== false ||
+            strpos($normalized, 'proses') !== false
+        ) {
+            return 'is-current';
+        }
+
+        return 'is-pending';
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -260,6 +290,175 @@ $history_query['per_page'] = $history_per_page;
             align-items: center;
             gap: 8px;
         }
+
+        /* Modal Progress (Sama dengan kaprodi/peminjaman) */
+        .kp-loan-modal .modal-dialog {
+            max-width: 760px;
+        }
+        .kp-loan-modal .modal-content {
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            border-radius: 13px;
+            background: #ffffff;
+            box-shadow: 0 22px 60px rgba(15, 23, 42, .2);
+        }
+        .kp-loan-modal .modal-header {
+            align-items: flex-start;
+            padding: 19px 21px 17px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .kp-modal-kicker {
+            margin-bottom: 4px;
+            color: #64748b;
+            font-size: .62rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+        .kp-loan-modal .modal-title {
+            color: #1e293b;
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+        .kp-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            width: max-content;
+            min-height: 29px;
+            padding: 5px 11px;
+            border: 1px solid transparent;
+            border-radius: 999px;
+            font-size: .68rem;
+            font-weight: 600;
+            line-height: 1;
+            white-space: nowrap;
+        }
+        .kp-status-badge.is-current {
+            border-color: #f4bd70;
+            background: #fff4ea;
+            color: #965600;
+        }
+        .kp-status-badge.is-completed {
+            border-color: #9ed7bd;
+            background: #eaf8f1;
+            color: #13734d;
+        }
+        .kp-status-badge.is-pending {
+            border-color: #d6dbe1;
+            background: #f2f4f6;
+            color: #66717d;
+        }
+        .kp-status-badge.is-rejected {
+            border-color: #efb2b2;
+            background: #fff0f0;
+            color: #b4232d;
+        }
+        .kp-status-dot {
+            width: 7px;
+            height: 7px;
+            flex: 0 0 7px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        .kp-loan-modal .modal-body {
+            padding: 19px 21px;
+        }
+        .kp-loan-modal .modal-footer {
+            gap: 8px;
+            padding: 14px 21px;
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+        .kp-loan-modal .modal-footer .btn {
+            min-width: 92px;
+            min-height: 36px;
+            border-radius: 999px;
+            font-size: .7rem;
+            font-weight: 600;
+        }
+        html.scm-theme-dark .kp-loan-modal .modal-content {
+            background: #1e293b;
+            border-color: #334155;
+            color: #f8fafc;
+        }
+        html.scm-theme-dark .kp-loan-modal .modal-header,
+        html.scm-theme-dark .kp-loan-modal .modal-footer {
+            border-color: #334155;
+            background: #0f172a;
+        }
+        html.scm-theme-dark .kp-loan-modal .modal-title {
+            color: #f8fafc;
+        }
+
+        .kp-modal-section-title {
+            color: #64748b;
+            font-size: .62rem;
+            font-weight: 700;
+            letter-spacing: .045em;
+            text-transform: uppercase;
+        }
+        .kp-modal-section + .kp-modal-section {
+            margin-top: 18px;
+            padding-top: 18px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .kp-purpose {
+            margin: 7px 0 0;
+            color: #1e293b;
+            font-size: .76rem;
+            line-height: 1.65;
+        }
+        .kp-detail-table {
+            overflow: hidden;
+            margin-top: 9px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+        .kp-detail-table table {
+            margin: 0;
+            color: #1e293b;
+        }
+        .kp-detail-table th,
+        .kp-detail-table td {
+            padding: 9px 10px;
+            border-bottom-color: #e2e8f0;
+            font-size: .67rem;
+            vertical-align: middle;
+        }
+        .kp-detail-table th {
+            background: #f8fafc;
+            color: #64748b;
+            font-size: .59rem;
+            letter-spacing: .035em;
+            text-transform: uppercase;
+        }
+        .kp-detail-table td {
+            background: #ffffff;
+            color: #1e293b;
+        }
+        html.scm-theme-dark .kp-modal-section + .kp-modal-section {
+            border-color: #334155;
+        }
+        html.scm-theme-dark .kp-modal-section-title {
+            color: #94a3b8;
+        }
+        html.scm-theme-dark .kp-purpose {
+            color: #e2e8f0;
+        }
+        html.scm-theme-dark .kp-detail-table {
+            border-color: #334155;
+        }
+        html.scm-theme-dark .kp-detail-table th {
+            background: #0f172a;
+            color: #94a3b8;
+            border-color: #334155;
+        }
+        html.scm-theme-dark .kp-detail-table td {
+            background: #1e293b;
+            color: #f8fafc;
+            border-color: #334155;
+        }
     </style>
     <?php include APPPATH . 'views/shared/theme_assets.php'; ?>
 </head>
@@ -268,7 +467,7 @@ $history_query['per_page'] = $history_per_page;
     <!-- Dedicated Sidebar Component (Pola Admin LAA) -->
     <?php $this->load->view('peminjaman_barang/sidebar'); ?>
 
-<div id="laaMainContentWrapper">
+<div id="laaMainContentWrapper" class="page-wrapper-for-sidebar">
     <!-- Sub Navigation Page Title Bar (Admin LAA style) -->
     <header class="glass-header-ifik mb-4">
         <div class="container d-flex flex-wrap align-items-center justify-content-between gap-3 header-inner-pad">
@@ -534,21 +733,41 @@ $history_query['per_page'] = $history_per_page;
                                 </span>
                             </td>
                             <td>
-                                <?php $loan_progress_item = $r; $loan_progress_compact = true; include APPPATH . 'views/shared/loan_progress.php'; ?>
+                                <?php
+                                    $loan_progress_item = $r;
+                                    $loan_progress_compact = true;
+                                    $loan_progress_detail_target = '#riwayatProgressModal' . (int) $r->id_peminjaman;
+                                    include APPPATH . 'views/shared/loan_progress.php';
+                                    unset($loan_progress_detail_target);
+                                ?>
                             </td>
                             <td class="text-center">
                                 <?php
-                                    $is_kaprodi_valid = (($r->status_kaprodi ?? '') === 'Disetujui') 
-                                        || !in_array($r->status, ['Menunggu ACC Kaprodi', 'Ditolak', 'Kedaluwarsa / Ditolak Otomatis'], true);
-                                    $is_not_rejected = !in_array($r->status, ['Ditolak', 'Kedaluwarsa / Ditolak Otomatis'], true);
-                                    $show_qr = $is_kaprodi_valid && $is_not_rejected;
+                                    $is_laboran_scan = in_array($r->status, ['Menunggu Verifikasi Laboran', 'Menunggu Pengecekan Laboran', 'Menunggu Scan Laboran'], true);
+                                    $is_ready_for_pickup = in_array($r->status, ['Disetujui (Menunggu Pengambilan)', 'Disetujui (Menunggu Finalisasi QR)'], true);
+                                    $is_borrowed = in_array($r->status, ['Sedang Dipinjam', 'Dipinjam'], true);
+                                    $show_qr = $is_laboran_scan || $is_ready_for_pickup || $is_borrowed;
                                 ?>
                                 <?php if($show_qr): ?>
                                     <button class="btn btn-sm btn-outline-dark fw-semibold px-3" data-bs-toggle="modal" data-bs-target="#qrModal<?= $r->id_peminjaman ?>">
                                         <i class="bi bi-qr-code-scan me-1"></i> QR Transaksi
                                     </button>
                                 <?php else: ?>
-                                    <span class="small text-muted">QR belum aktif</span>
+                                    <?php if ($r->status === 'Menunggu ACC Kaprodi'): ?>
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle py-1.5 px-2.5">Menunggu Kaprodi</span>
+                                    <?php elseif (in_array($r->status, ['Menunggu Verifikasi Laboran', 'Menunggu Pengecekan Laboran', 'Menunggu Scan Laboran'], true)): ?>
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle py-1.5 px-2.5">Menunggu Scan Laboran</span>
+                                    <?php elseif ($r->status === 'Menunggu ACC Kaur'): ?>
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle py-1.5 px-2.5">Menunggu Kaur</span>
+                                    <?php elseif (in_array($r->status, ['Menunggu ACC Wadek', 'Menunggu Persetujuan Wadek'], true)): ?>
+                                        <span class="badge bg-purple-subtle text-primary border border-primary-subtle py-1.5 px-2.5">Menunggu Wadek</span>
+                                    <?php elseif (in_array($r->status, ['Ditolak', 'Kedaluwarsa / Ditolak Otomatis'], true)): ?>
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle py-1.5 px-2.5">Ditolak</span>
+                                    <?php elseif (in_array($r->status, ['Selesai', 'Dikembalikan'], true)): ?>
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle py-1.5 px-2.5">Selesai</span>
+                                    <?php else: ?>
+                                        <span class="small text-muted">QR belum aktif</span>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -579,10 +798,10 @@ $history_query['per_page'] = $history_per_page;
     <?php if(!empty($riwayat)): ?>
         <?php foreach($riwayat as $r): ?>
         <?php
-            $is_kaprodi_valid = (($r->status_kaprodi ?? '') === 'Disetujui') 
-                || !in_array($r->status, ['Menunggu ACC Kaprodi', 'Ditolak', 'Kedaluwarsa / Ditolak Otomatis'], true);
-            $is_not_rejected = !in_array($r->status, ['Ditolak', 'Kedaluwarsa / Ditolak Otomatis'], true);
-            $show_qr = $is_kaprodi_valid && $is_not_rejected;
+            $is_laboran_scan = in_array($r->status, ['Menunggu Verifikasi Laboran', 'Menunggu Pengecekan Laboran', 'Menunggu Scan Laboran'], true);
+            $is_ready_for_pickup = in_array($r->status, ['Disetujui (Menunggu Pengambilan)', 'Disetujui (Menunggu Finalisasi QR)'], true);
+            $is_borrowed = in_array($r->status, ['Sedang Dipinjam', 'Dipinjam'], true);
+            $show_qr = $is_laboran_scan || $is_ready_for_pickup || $is_borrowed;
             if(!$show_qr) { continue; }
             $show_return_qr = in_array($r->status, ['Sedang Dipinjam', 'Dipinjam'], true);
             $qr_url = site_url('peminjamanbarang/serah_terima/'.rawurlencode($r->group_id));
@@ -591,7 +810,7 @@ $history_query['per_page'] = $history_per_page;
             <div class="modal-dialog modal-sm modal-dialog-centered">
                 <div class="modal-content text-center p-4 border-0 shadow-lg" style="border-radius: 20px;">
                     <h5 class="fw-bold text-fik-orange mb-1" id="qrModalLabel<?= $r->id_peminjaman ?>">QR Transaksi Laboratorium</h5>
-                    <p class="small text-muted mb-4"><?= $show_return_qr ? 'Tunjukkan QR yang sama kepada Laboran saat mengembalikan barang.' : 'Tunjukkan QR ini kepada Laboran saat serah terima barang. QR yang sama dipakai kembali saat pengembalian.' ?></p>
+                    <p class="small text-muted mb-4"><?= $show_return_qr ? 'Tunjukkan QR ini kepada Laboran saat mengembalikan barang.' : ($is_laboran_scan ? 'Tunjukkan QR ini kepada Laboran untuk scan & verifikasi fisik barang.' : 'Tunjukkan QR ini saat serah terima barang di laboratorium.') ?></p>
                     
                     <!-- QR transaksi tunggal: dipakai untuk serah barang dan pengembalian -->
                     <div class="bg-white p-3 rounded-4 mb-3 mx-auto shadow-sm border" style="display: inline-block;">
@@ -611,6 +830,84 @@ $history_query['per_page'] = $history_per_page;
                 </div>
             </div>
         </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
+
+    <!-- MODAL DETAIL PROGRESS PEMINJAMAN (MENGIKUTI STYLE KAPRODI/PEMINJAMAN TANPA META KOTAK) -->
+    <?php if(!empty($riwayat)): ?>
+        <?php foreach($riwayat as $r): ?>
+            <?php
+                $loan_progress = scm_loan_progress($r);
+                $pjm_number = $r->group_id ?: ('PJM_' . $r->id_peminjaman);
+            ?>
+            <div
+                class="modal fade kp-loan-modal"
+                id="riwayatProgressModal<?= (int) $r->id_peminjaman ?>"
+                tabindex="-1"
+                aria-labelledby="riwayatProgressModalTitle<?= (int) $r->id_peminjaman ?>"
+                aria-hidden="true"
+                data-loan-progress-modal
+            >
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <div class="w-100 pe-3">
+                                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                    <div>
+                                        <div class="kp-modal-kicker">Peminjaman</div>
+                                        <h2 id="riwayatProgressModalTitle<?= (int) $r->id_peminjaman ?>" class="modal-title">
+                                            <?= html_escape($pjm_number) ?>
+                                        </h2>
+                                    </div>
+                                    <span class="kp-status-badge <?= riwayat_loan_status_tone($r->status) ?>">
+                                        <span class="kp-status-dot"></span><?= html_escape($r->status) ?>
+                                    </span>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                        </div>
+                        <div class="modal-body">
+                            <section class="kp-modal-section">
+                                <div class="kp-modal-section-title">Progress Peminjaman</div>
+                                <?php $loan_progress_item = $r; $loan_progress_compact = false; include APPPATH . 'views/shared/loan_progress.php'; ?>
+                            </section>
+                            <section class="kp-modal-section">
+                                <div class="kp-modal-section-title">Keperluan</div>
+                                <p class="kp-purpose"><?= nl2br(html_escape($r->keperluan ?? '-')) ?></p>
+                            </section>
+                            <section class="kp-modal-section">
+                                <div class="kp-modal-section-title">Detail Barang</div>
+                                <div class="kp-detail-table table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                        <tr>
+                                            <th>Barang</th>
+                                            <th>Kode</th>
+                                            <th>Laboratorium</th>
+                                            <th class="text-center">Jumlah</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <?php $detail_list = !empty($r->detail_barang) ? $r->detail_barang : [$r]; ?>
+                                        <?php foreach ($detail_list as $detail): ?>
+                                            <tr>
+                                                <td class="fw-semibold"><?= html_escape($detail->nama_aset ?? '-') ?></td>
+                                                <td><?= html_escape($detail->kode_aset ?? '-') ?></td>
+                                                <td><?= html_escape($detail->nama_ruangan ?? '-') ?></td>
+                                                <td class="text-center"><?= (int) ($detail->jumlah_pinjam ?? 1) ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </section>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         <?php endforeach; ?>
     <?php endif; ?>
 

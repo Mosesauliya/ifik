@@ -31,7 +31,6 @@
 </head>
 <body class="bg-gradient-to-br from-slate-50 via-orange-50/20 to-slate-100 min-h-screen text-slate-800 antialiased">
 <?php $this->load->view('admin_layanan/sidebar'); ?>
-<?php $this->load->view('partials/app_navbar',['user_role_id'=>$this->session->userdata('role_id')??5,'user_role_label'=>'Admin Layanan (LAA)','user_display_name'=>'Unit Layanan FIK','user_display_sub'=>'Reset File TA']); ?>
 <main class="min-h-screen p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto">
 <div class="mb-6 sm:mb-8">
     <div class="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold text-slate-400 mb-2 pl-11 sm:pl-0 pt-0.5">

@@ -465,6 +465,14 @@ $route['prodi/ticketing/simpan']                      = 'ProdiTicketing/simpan';
 $route['prodi/ticketing/riwayat']                     = 'ProdiTicketing/riwayat';
 $route['prodi/ticketing/detail/(:any)']               = 'ProdiTicketing/riwayat_detail/$1';
 
+// Program Studi Peminjaman Routes (Role 16)
+$route['prodi/peminjaman']                            = 'kaprodi/peminjaman/index';
+$route['prodi/peminjaman/setujui/(:any)']             = 'kaprodi/peminjaman/setujui/$1';
+$route['prodi/peminjaman/tolak/(:any)']               = 'kaprodi/peminjaman/tolak/$1';
+$route['prodi/peminjaman/bulk']                       = 'kaprodi/peminjaman/bulk';
+$route['prodi/peminjaman/(:any)']                     = 'kaprodi/peminjaman/$1';
+$route['prodi/peminjaman/(:any)/(:any)']              = 'kaprodi/peminjaman/$1/$2';
+
 // Dosen Help Chat Routes (Harus sebelum Laboran Help routes)
 $route['dosen/help'] = 'DosenHelp/index';
 $route['dosen/help/channel'] = 'DosenHelp/help_get_channel_ajax';
@@ -517,6 +525,36 @@ $route['peminjaman-barang/serah_terima/(:any)']         = 'PeminjamanBarang/sera
 $route['peminjaman-barang/proses_serah/(:any)']         = 'PeminjamanBarang/proses_serah/$1';
 $route['peminjaman-barang/validasi_pengembalian/(:any)']= 'PeminjamanBarang/validasi_pengembalian/$1';
 $route['peminjaman-barang/kembalikan/(:any)']           = 'PeminjamanBarang/kembalikan/$1';
+$route['peminjaman/scanner']                            = 'PeminjamanBarang/scanner';
+$route['peminjaman/serah_terima/(:any)']                = 'PeminjamanBarang/serah_terima/$1';
+$route['peminjaman/proses_serah/(:any)']                = 'PeminjamanBarang/proses_serah/$1';
+$route['peminjaman/validasi_pengembalian/(:any)']       = 'PeminjamanBarang/validasi_pengembalian/$1';
+$route['peminjaman/kembalikan/(:any)']                  = 'PeminjamanBarang/kembalikan/$1';
+
+// Modul Peminjaman Barang / Alat Mahasiswa & Dosen (Katalog, Ajukan, Riwayat, Kalender)
+$route['peminjaman']                                     = 'Peminjaman_barang';
+$route['peminjaman/riwayat']                             = 'Peminjaman_barang/riwayat';
+$route['peminjaman/kalender']                            = 'Peminjaman_barang/kalender';
+$route['peminjaman/ajukan/(:any)']                       = 'Peminjaman_barang/ajukan/$1';
+$route['peminjaman/detail_barang/(:any)']                = 'Peminjaman_barang/detail_barang/$1';
+$route['peminjaman/(:any)']                              = 'Peminjaman_barang/$1';
+$route['peminjaman/(:any)/(:any)']                       = 'Peminjaman_barang/$1/$2';
+
+$route['peminjaman-barang']                              = 'Peminjaman_barang';
+$route['peminjaman-barang/riwayat']                      = 'Peminjaman_barang/riwayat';
+$route['peminjaman-barang/kalender']                     = 'Peminjaman_barang/kalender';
+$route['peminjaman-barang/ajukan/(:any)']                = 'Peminjaman_barang/ajukan/$1';
+$route['peminjaman-barang/detail_barang/(:any)']         = 'Peminjaman_barang/detail_barang/$1';
+$route['peminjaman-barang/(:any)']                       = 'Peminjaman_barang/$1';
+$route['peminjaman-barang/(:any)/(:any)']                = 'Peminjaman_barang/$1/$2';
+
+$route['peminjaman_barang']                              = 'Peminjaman_barang';
+$route['peminjaman_barang/riwayat']                      = 'Peminjaman_barang/riwayat';
+$route['peminjaman_barang/kalender']                     = 'Peminjaman_barang/kalender';
+$route['peminjaman_barang/ajukan/(:any)']                = 'Peminjaman_barang/ajukan/$1';
+$route['peminjaman_barang/detail_barang/(:any)']         = 'Peminjaman_barang/detail_barang/$1';
+$route['peminjaman_barang/(:any)']                       = 'Peminjaman_barang/$1';
+$route['peminjaman_barang/(:any)/(:any)']                = 'Peminjaman_barang/$1/$2';
 
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;

@@ -98,12 +98,14 @@
     ?>
 
     <div id="mainPageContent" class="page-wrapper-for-sidebar min-h-screen flex flex-col">
+        <?php if ($roleId !== 5): ?>
         <?php $this->load->view('partials/app_navbar', [
             'user_role_id'      => $roleId ?: 5,
             'user_role_label'   => $roleLabel,
             'user_display_name' => $this->session->userdata('nama') ?: ($this->session->userdata('name') ?: 'Administrator'),
             'user_display_sub'  => $roleSub
         ]); ?>
+        <?php endif; ?>
 
         <main class="min-h-screen p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto flex-1 w-full">
 

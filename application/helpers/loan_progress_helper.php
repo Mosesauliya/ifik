@@ -20,10 +20,10 @@ if (!function_exists('scm_loan_progress')) {
             $steps = [
                 ['label' => 'Pengajuan Dibuat', 'description' => 'Peminjam mengirim pengajuan barang luar kampus.'],
                 ['label' => 'Persetujuan Kaprodi', 'description' => 'Kaprodi memeriksa dan menyetujui pengajuan.'],
-                ['label' => 'Verifikasi Laboran', 'description' => 'Laboran memeriksa barang, stok, dan kelayakan peminjaman.'],
+                ['label' => 'Scan Laboran', 'description' => 'Laboran melakukan scan QR peminjaman dan verifikasi fisik ketersediaan barang.'],
                 ['label' => 'Persetujuan Kaur', 'description' => 'Kaur memeriksa dan menyetujui pengajuan.'],
                 ['label' => 'Persetujuan Wadek', 'description' => 'Wakil Dekan memberikan persetujuan peminjaman eksternal.'],
-                ['label' => 'Pengambilan Barang', 'description' => 'Barang diserahterimakan kepada peminjam melalui scan QR oleh laboran.'],
+                ['label' => 'Pengambilan Barang', 'description' => 'Peminjam mengambil fisik barang di laboratorium setelah seluruh persetujuan selesai.'],
                 ['label' => 'Peminjaman & Pengembalian', 'description' => 'Barang sedang digunakan di luar kampus dan menunggu dikembalikan.'],
                 ['label' => 'Selesai', 'description' => 'Barang telah diterima kembali melalui scan QR pengembalian.'],
             ];
@@ -31,9 +31,9 @@ if (!function_exists('scm_loan_progress')) {
             $steps = [
                 ['label' => 'Pengajuan Dibuat', 'description' => 'Peminjam mengirim pengajuan barang.'],
                 ['label' => 'Persetujuan Kaprodi', 'description' => 'Kaprodi memeriksa dan menyetujui pengajuan.'],
-                ['label' => 'Verifikasi Laboran', 'description' => 'Laboran memeriksa barang, stok, dan kelayakan peminjaman.'],
+                ['label' => 'Scan Laboran', 'description' => 'Laboran melakukan scan QR peminjaman dan verifikasi fisik ketersediaan barang.'],
                 ['label' => 'Persetujuan Kaur', 'description' => 'Kaur memberikan persetujuan akhir peminjaman.'],
-                ['label' => 'Pengambilan Barang', 'description' => 'Barang diserahterimakan kepada peminjam melalui scan QR oleh laboran.'],
+                ['label' => 'Pengambilan Barang', 'description' => 'Peminjam mengambil fisik barang di laboratorium setelah seluruh persetujuan selesai.'],
                 ['label' => 'Peminjaman & Pengembalian', 'description' => 'Barang sedang digunakan dan menunggu dikembalikan.'],
                 ['label' => 'Selesai', 'description' => 'Barang telah diterima kembali melalui scan QR pengembalian.'],
             ];
@@ -54,16 +54,32 @@ if (!function_exists('scm_loan_progress')) {
 
             case 'Menunggu Verifikasi Laboran':
             case 'Menunggu Pengecekan Laboran':
-            case 'Menunggu Persetujuan':
+            case 'Menunggu Scan Laboran':
                 $current_index = 2;
                 $stage_label = 'Laboran';
-                $status_label = 'Menunggu Verifikasi Laboran';
+                $status_label = 'Menunggu Scan Laboran';
                 break;
 
             case 'Menunggu ACC Kaur':
                 $current_index = 3;
                 $stage_label = 'Kaur';
                 $status_label = 'Menunggu Persetujuan Kaur';
+                break;
+
+            case 'Menunggu Persetujuan':
+                if ($kaprodi === 'Disetujui' && $laboran === 'Pending') {
+                    $current_index = 2;
+                    $stage_label = 'Laboran';
+                    $status_label = 'Menunggu Scan Laboran';
+                } elseif ($kaprodi === 'Disetujui' && $laboran === 'Disetujui' && $kaur === 'Pending') {
+                    $current_index = 3;
+                    $stage_label = 'Kaur';
+                    $status_label = 'Menunggu Persetujuan Kaur';
+                } else {
+                    $current_index = 1;
+                    $stage_label = 'Kaprodi';
+                    $status_label = 'Menunggu Persetujuan Kaprodi';
+                }
                 break;
 
             case 'Menunggu ACC Wadek':
@@ -195,11 +211,11 @@ if (!function_exists('scm_loan_can_act')) {
             return $status === 'Menunggu ACC Kaprodi' && $kaprodi === 'Pending';
         }
         if ($role === 'laboran') {
-            return in_array($status, ['Menunggu Verifikasi Laboran', 'Menunggu Pengecekan Laboran', 'Menunggu Persetujuan'], true)
+            return in_array($status, ['Menunggu Verifikasi Laboran', 'Menunggu Pengecekan Laboran', 'Menunggu Scan Laboran', 'Menunggu Persetujuan'], true)
                 && $kaprodi === 'Disetujui' && $laboran === 'Pending';
         }
         if ($role === 'kaur') {
-            return $status === 'Menunggu ACC Kaur'
+            return in_array($status, ['Menunggu ACC Kaur', 'Menunggu Verifikasi Laboran', 'Menunggu Pengecekan Laboran', 'Menunggu Scan Laboran', 'Menunggu Persetujuan'], true)
                 && $kaprodi === 'Disetujui' && $kaur === 'Pending';
         }
         if ($role === 'wadek') {
@@ -208,7 +224,12 @@ if (!function_exists('scm_loan_can_act')) {
                 && $kaprodi === 'Disetujui' && $kaur === 'Disetujui' && $wadek === 'Pending';
         }
         if ($role === 'finalisasi_qr' || $role === 'serah_terima') {
-            return in_array($status, ['Disetujui (Menunggu Pengambilan)', 'Disetujui (Menunggu Finalisasi QR)'], true);
+            if ($is_external) {
+                return in_array($status, ['Disetujui (Menunggu Pengambilan)', 'Disetujui (Menunggu Finalisasi QR)'], true)
+                    && $kaprodi === 'Disetujui' && $kaur === 'Disetujui' && $wadek === 'Disetujui';
+            }
+            return in_array($status, ['Disetujui (Menunggu Pengambilan)', 'Disetujui (Menunggu Finalisasi QR)'], true)
+                && $kaprodi === 'Disetujui' && $kaur === 'Disetujui';
         }
         if ($role === 'pengembalian') {
             return in_array($status, ['Sedang Dipinjam', 'Dipinjam'], true);

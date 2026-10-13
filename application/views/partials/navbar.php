@@ -439,20 +439,25 @@
             </div>
         </li> -->
 
+        <?php
+            $role_id       = (int)($this->session->userdata('role_id') ?? 0);
+            $user_email    = $this->session->userdata('email') ?? '';
+            $user_name_top = $this->session->userdata('name') ?? '';
+            $is_mahasiswa  = ($role_id === 4 || strpos($user_email, '@student.') !== false);
+            $is_role_dosen = ($role_id === 3 || in_array($role_id, [2, 6, 7, 9, 16], true));
+        ?>
+
+        <?php if ($is_role_dosen): ?>
         <li class="nav-item">
-            <a href="<?= site_url('peminjaman') ?>" class="nav-link"><span>Peminjaman Barang</span></a>
+            <a href="<?= site_url('peminjaman_barang') ?>" class="nav-link"><span>Peminjaman Barang</span></a>
         </li>
+        <?php endif; ?>
 
         <li class="nav-item">
             <a href="<?= site_url('welcome') ?>" class="nav-link"><span>Galeri Karya FIK</span></a>
         </li>
 
         <?php
-            $role_id       = $this->session->userdata('role_id');
-            $user_email    = $this->session->userdata('email') ?? '';
-            $user_name_top = $this->session->userdata('name') ?? '';
-            $is_mahasiswa  = ($role_id == 4 || strpos($user_email, '@student.') !== false);
-
             // ====== Tentukan label & URL panel berdasarkan role ======
             $panel_label = 'Panel Admin';
             $panel_url   = base_url('ImportEmail');

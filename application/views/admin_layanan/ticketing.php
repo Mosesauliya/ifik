@@ -20,13 +20,6 @@
     <!-- Dedicated Admin LAA Sidebar Component -->
     <?php $this->load->view('admin_layanan/sidebar'); ?>
 
-    <!-- Header Navbar -->
-    <?php $this->load->view('partials/app_navbar', [
-        'user_role_label'   => 'Admin Layanan (LAA)',
-        'user_display_name' => 'Admin Layanan FIK',
-        'user_display_sub'  => 'Unit Layanan Ticketing & Akademik'
-    ]); ?>
-
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
 
         <!-- Flash Messages -->

@@ -78,12 +78,14 @@
     ?>
 
     <div id="mainPageContent" class="page-wrapper-for-sidebar min-h-screen flex flex-col">
+        <?php if ($roleId !== 5): ?>
         <!-- Header Navbar Partial -->
         <?php $this->load->view('partials/app_navbar', [
             'user_role_label'   => $roleLabel,
             'user_display_name' => $this->session->userdata('nama') ?: ($this->session->userdata('name') ?: 'Administrator'),
             'user_display_sub'  => $roleSub
         ]); ?>
+        <?php endif; ?>
 
         <!-- Sub Navigation Page Title Bar -->
         <div class="glass-header px-4 sm:px-6 py-4 mb-8">

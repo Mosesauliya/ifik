@@ -74,7 +74,7 @@ class Peminjaman extends CI_Controller {
     }
 
     private function read_filters() {
-        $allowed = ['number', 'peminjam', 'barang', 'lab', 'masa', 'status'];
+        $allowed = ['all', 'number', 'peminjam', 'barang', 'lab', 'masa', 'status'];
         $fields = (array) $this->input->get('filter_field', true);
         $values = (array) $this->input->get('filter_value', true);
         $rows = [];
@@ -83,7 +83,7 @@ class Peminjaman extends CI_Controller {
             if (count($rows) >= 4 || !in_array($field, $allowed, true)) continue;
             $rows[] = ['field' => $field, 'value' => trim((string) ($values[$index] ?? ''))];
         }
-        return $rows ?: [['field' => 'number', 'value' => '']];
+        return $rows ?: [['field' => 'all', 'value' => '']];
     }
 
     private function read_per_page($default = 10) {

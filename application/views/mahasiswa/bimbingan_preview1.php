@@ -742,6 +742,153 @@
                             </p>
                         </div>
                     </div>
+
+                    <!-- ================= CONTAINER CARD DE PREVIEW 2 ================= -->
+                    <div id="deContainerPreview2" class="space-y-6 <?= (!empty($de_detail['is_de']) ? '' : 'hidden'); ?>">
+                        <!-- Card Jadwal Desk Evaluation (DE) -->
+                        <div class="card-3d-warm rounded-3xl p-7 sm:p-8 space-y-4 shadow-md shadow-indigo-500/5 border-2 border-indigo-200/80 bg-gradient-to-b from-indigo-50/40 to-white">
+                            <div class="border-b border-indigo-100 pb-3 flex items-center justify-between">
+                                <div>
+                                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700 block mb-0.5">JADWAL PELAKSANAAN</span>
+                                    <h3 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+                                        <i class="bi bi-calendar-event-fill text-indigo-600"></i> Desk Evaluation (DE)
+                                    </h3>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-indigo-100 text-indigo-800 border border-indigo-200 uppercase">Tahap DE</span>
+                            </div>
+
+                            <div class="space-y-3 text-xs sm:text-sm">
+                                <div class="flex items-start gap-3 p-3 bg-white/90 rounded-2xl border border-indigo-100">
+                                    <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 text-base">
+                                        <i class="bi bi-calendar3"></i>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Tanggal & Waktu</span>
+                                        <span id="deJadwalWaktuText" class="font-bold text-slate-800">
+                                            <?php
+                                                $tgl_de = !empty($de_detail['tanggal_presentasi']) ? date('d M Y', strtotime($de_detail['tanggal_presentasi'])) : null;
+                                                $jam_de = !empty($de_detail['waktu_presentasi']) ? substr($de_detail['waktu_presentasi'], 0, 5) . ' WIB' : null;
+                                                if ($tgl_de && $jam_de) echo htmlspecialchars($tgl_de . ' • ' . $jam_de);
+                                                elseif ($tgl_de) echo htmlspecialchars($tgl_de);
+                                                else echo '<span class="text-slate-400 italic">Belum Dijadwalkan</span>';
+                                            ?>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start gap-3 p-3 bg-white/90 rounded-2xl border border-indigo-100">
+                                    <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 text-base">
+                                        <i class="bi bi-geo-alt-fill"></i>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Ruangan / Tempat</span>
+                                        <span id="deJadwalRuangText" class="font-bold text-slate-800">
+                                            <?= !empty($de_detail['ruang_sidang']) ? htmlspecialchars($de_detail['ruang_sidang']) : '<span class="text-slate-400 italic">Belum Ditentukan</span>'; ?>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <?php if (!empty($de_detail['link_presentasi'])): ?>
+                                <div id="deJadwalLinkWrap" class="p-3 bg-indigo-50/70 rounded-2xl border border-indigo-200 flex items-center justify-between gap-2">
+                                    <div class="min-w-0 flex-1 truncate text-xs text-indigo-900 font-semibold">
+                                        <i class="bi bi-camera-video-fill text-indigo-600 mr-1.5"></i>
+                                        <span id="deJadwalLinkText" class="truncate"><?= htmlspecialchars($de_detail['link_presentasi']); ?></span>
+                                    </div>
+                                    <a id="deJadwalLinkBtn" href="<?= htmlspecialchars($de_detail['link_presentasi']); ?>" target="_blank" rel="noopener noreferrer"
+                                        class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shrink-0 inline-flex items-center gap-1 shadow-xs transition">
+                                        <i class="bi bi-box-arrow-up-right"></i> Buka Link
+                                    </a>
+                                </div>
+                                <?php else: ?>
+                                <div id="deJadwalLinkWrap" class="hidden p-3 bg-indigo-50/70 rounded-2xl border border-indigo-200 items-center justify-between gap-2">
+                                    <div class="min-w-0 flex-1 truncate text-xs text-indigo-900 font-semibold">
+                                        <i class="bi bi-camera-video-fill text-indigo-600 mr-1.5"></i>
+                                        <span id="deJadwalLinkText" class="truncate">-</span>
+                                    </div>
+                                    <a id="deJadwalLinkBtn" href="#" target="_blank" rel="noopener noreferrer"
+                                        class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shrink-0 inline-flex items-center gap-1 shadow-xs transition">
+                                        <i class="bi bi-box-arrow-up-right"></i> Buka Link
+                                    </a>
+                                </div>
+                                <?php endif; ?>
+
+                                <?php if (!empty($de_detail['komentar_kelayakan2'])): ?>
+                                <div id="deJadwalCatatanWrap" class="p-3 bg-slate-50 rounded-2xl border border-slate-200">
+                                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Catatan Penguji</span>
+                                    <p id="deJadwalCatatanText" class="text-xs text-slate-700 leading-relaxed italic"><?= nl2br(htmlspecialchars($de_detail['komentar_kelayakan2'])); ?></p>
+                                </div>
+                                <?php else: ?>
+                                <div id="deJadwalCatatanWrap" class="hidden p-3 bg-slate-50 rounded-2xl border border-slate-200">
+                                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Catatan Penguji</span>
+                                    <p id="deJadwalCatatanText" class="text-xs text-slate-700 leading-relaxed italic">-</p>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <!-- Card Nilai Desk Evaluation (DE) -->
+                        <div class="card-3d-warm rounded-3xl p-7 sm:p-8 space-y-4 shadow-md shadow-orange-500/5 border-2 border-amber-200/80 bg-gradient-to-b from-amber-50/30 to-white">
+                            <div class="border-b border-amber-100 pb-3 flex items-center justify-between">
+                                <div>
+                                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-amber-700 block mb-0.5">EVALUASI 4 DOSEN</span>
+                                    <h3 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+                                        <i class="bi bi-award-fill text-amber-600"></i> Nilai Desk Evaluation
+                                    </h3>
+                                </div>
+                                <span class="text-[10px] font-bold text-slate-500">Syarat: Rata-rata &gt; 60</span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2.5">
+                                <div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-2xs">
+                                    <span class="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider block truncate" title="Pembimbing 1">P1 (<?= htmlspecialchars($pembimbing_1 ?: 'Pembimbing 1'); ?>)</span>
+                                    <span id="deNilaiP1" class="text-lg font-black text-slate-900 block mt-1">
+                                        <?= (isset($de_detail['nilai_pembimbing1']) && $de_detail['nilai_pembimbing1'] !== null) ? htmlspecialchars($de_detail['nilai_pembimbing1']) : '<span class="text-slate-300 text-xs font-bold italic">Belum</span>'; ?>
+                                    </span>
+                                </div>
+                                <div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-2xs">
+                                    <span class="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider block truncate" title="Pembimbing 2">P2 (<?= htmlspecialchars($pembimbing_2 ?: 'Pembimbing 2'); ?>)</span>
+                                    <span id="deNilaiP2" class="text-lg font-black text-slate-900 block mt-1">
+                                        <?= (isset($de_detail['nilai_pembimbing2']) && $de_detail['nilai_pembimbing2'] !== null) ? htmlspecialchars($de_detail['nilai_pembimbing2']) : '<span class="text-slate-300 text-xs font-bold italic">Belum</span>'; ?>
+                                    </span>
+                                </div>
+                                <div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-2xs">
+                                    <span class="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider block truncate" title="Penguji 1">U1 (<?= htmlspecialchars($penguji_1 ?: 'Penguji 1'); ?>)</span>
+                                    <span id="deNilaiU1" class="text-lg font-black text-slate-900 block mt-1">
+                                        <?= (isset($de_detail['nilai_penguji1']) && $de_detail['nilai_penguji1'] !== null) ? htmlspecialchars($de_detail['nilai_penguji1']) : '<span class="text-slate-300 text-xs font-bold italic">Belum</span>'; ?>
+                                    </span>
+                                </div>
+                                <div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-2xs">
+                                    <span class="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider block truncate" title="Penguji 2">U2 (<?= htmlspecialchars($penguji_2 ?: 'Penguji 2'); ?>)</span>
+                                    <span id="deNilaiU2" class="text-lg font-black text-slate-900 block mt-1">
+                                        <?= (isset($de_detail['nilai_penguji2']) && $de_detail['nilai_penguji2'] !== null) ? htmlspecialchars($de_detail['nilai_penguji2']) : '<span class="text-slate-300 text-xs font-bold italic">Belum</span>'; ?>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-transparent rounded-2xl border border-amber-300/80 flex items-center justify-between gap-3">
+                                <div>
+                                    <span class="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider block">Nilai Rata-rata</span>
+                                    <span id="deNilaiAvg" class="text-2xl font-black text-slate-900">
+                                        <?= (!empty($de_detail['rata_rata']) && $de_detail['rata_rata'] > 0) ? htmlspecialchars($de_detail['rata_rata']) : '-'; ?>
+                                    </span>
+                                </div>
+                                <div class="text-right">
+                                    <span id="deStatusLulusBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black <?= (!empty($de_detail['is_lulus_syarat']) ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : (!empty($de_detail['semua_dinilai']) ? 'bg-rose-100 text-rose-800 border border-rose-300' : 'bg-amber-100 text-amber-800 border border-amber-300')); ?>">
+                                        <?php
+                                            if (!empty($de_detail['is_lulus_syarat'])) {
+                                                echo '<i class="bi bi-check-circle-fill text-emerald-600"></i> Memenuhi Syarat (&gt; 60)';
+                                            } elseif (!empty($de_detail['semua_dinilai'])) {
+                                                echo '<i class="bi bi-x-circle-fill text-rose-600"></i> Rata-rata ≤ 60';
+                                            } else {
+                                                $cnt = $de_detail['count_graded'] ?? 0;
+                                                echo '<i class="bi bi-hourglass-split text-amber-600"></i> ' . $cnt . '/4 Dinilai';
+                                            }
+                                        ?>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -2253,6 +2400,88 @@
                 </div>`;
         }
 
+        function renderDeCardPreview2(d) {
+            const container = document.getElementById('deContainerPreview2');
+            if (!container) return;
+
+            if (!d || !d.is_de) {
+                container.classList.add('hidden');
+                return;
+            }
+
+            container.classList.remove('hidden');
+
+            // Jadwal DE
+            const waktuEl = document.getElementById('deJadwalWaktuText');
+            if (waktuEl) {
+                let tglText = 'Belum Dijadwalkan';
+                if (d.tanggal_presentasi) {
+                    try {
+                        const dt = new Date(d.tanggal_presentasi + (d.waktu_presentasi ? 'T' + d.waktu_presentasi : ''));
+                        tglText = dt.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+                            + (d.waktu_presentasi ? ' • ' + d.waktu_presentasi.substring(0, 5) + ' WIB' : '');
+                    } catch(e) { tglText = d.tanggal_presentasi; }
+                }
+                waktuEl.textContent = tglText;
+            }
+
+            const ruangEl = document.getElementById('deJadwalRuangText');
+            if (ruangEl) ruangEl.textContent = d.ruang_sidang || 'Belum Ditentukan';
+
+            const linkWrap = document.getElementById('deJadwalLinkWrap');
+            const linkText = document.getElementById('deJadwalLinkText');
+            const linkBtn  = document.getElementById('deJadwalLinkBtn');
+            if (linkWrap && linkText && linkBtn) {
+                if (d.link_presentasi) {
+                    linkWrap.classList.remove('hidden');
+                    linkWrap.style.display = 'flex';
+                    linkText.textContent = d.link_presentasi;
+                    linkBtn.href = d.link_presentasi;
+                } else {
+                    linkWrap.classList.add('hidden');
+                    linkWrap.style.display = 'none';
+                }
+            }
+
+            const catWrap = document.getElementById('deJadwalCatatanWrap');
+            const catText = document.getElementById('deJadwalCatatanText');
+            if (catWrap && catText) {
+                if (d.komentar_kelayakan2) {
+                    catWrap.classList.remove('hidden');
+                    catText.textContent = d.komentar_kelayakan2;
+                } else {
+                    catWrap.classList.add('hidden');
+                }
+            }
+
+            // Nilai DE
+            const p1El = document.getElementById('deNilaiP1');
+            const p2El = document.getElementById('deNilaiP2');
+            const u1El = document.getElementById('deNilaiU1');
+            const u2El = document.getElementById('deNilaiU2');
+            if (p1El) p1El.innerHTML = (d.nilai_pembimbing1 !== null && d.nilai_pembimbing1 !== '') ? d.nilai_pembimbing1 : '<span class="text-slate-300 text-xs font-bold italic">Belum</span>';
+            if (p2El) p2El.innerHTML = (d.nilai_pembimbing2 !== null && d.nilai_pembimbing2 !== '') ? d.nilai_pembimbing2 : '<span class="text-slate-300 text-xs font-bold italic">Belum</span>';
+            if (u1El) u1El.innerHTML = (d.nilai_penguji1 !== null && d.nilai_penguji1 !== '') ? d.nilai_penguji1 : '<span class="text-slate-300 text-xs font-bold italic">Belum</span>';
+            if (u2El) u2El.innerHTML = (d.nilai_penguji2 !== null && d.nilai_penguji2 !== '') ? d.nilai_penguji2 : '<span class="text-slate-300 text-xs font-bold italic">Belum</span>';
+
+            const avgEl = document.getElementById('deNilaiAvg');
+            if (avgEl) avgEl.textContent = (d.rata_rata && d.rata_rata > 0) ? d.rata_rata : '-';
+
+            const badgeEl = document.getElementById('deStatusLulusBadge');
+            if (badgeEl) {
+                if (d.is_lulus_syarat) {
+                    badgeEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300';
+                    badgeEl.innerHTML = '<i class="bi bi-check-circle-fill text-emerald-600"></i> Memenuhi Syarat (> 60)';
+                } else if (d.semua_dinilai) {
+                    badgeEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-rose-100 text-rose-800 border border-rose-300';
+                    badgeEl.innerHTML = '<i class="bi bi-x-circle-fill text-rose-600"></i> Rata-rata ≤ 60';
+                } else {
+                    badgeEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-amber-100 text-amber-800 border border-amber-300';
+                    badgeEl.innerHTML = `<i class="bi bi-hourglass-split text-amber-600"></i> ${d.count_graded || 0}/4 Dinilai`;
+                }
+            }
+        }
+
         // ===================== SSE REALTIME =====================
         let mahasiswaEventSource = null;
         function startMahasiswaSSE() {
@@ -2269,6 +2498,9 @@
                             renderLogTable(data.riwayat_sidang, 'logTableSidang', 'sidang');
                         }
                         renderStatusCard(data);
+                        if (data.de_detail) {
+                            renderDeCardPreview2(data.de_detail);
+                        }
                         
                         const orig_is_p1_app = <?php echo $is_p1_app ? 'true' : 'false'; ?>;
                         const orig_is_p2_app = <?php echo $is_p2_app ? 'true' : 'false'; ?>;

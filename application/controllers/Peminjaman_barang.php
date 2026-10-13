@@ -45,6 +45,15 @@ class Peminjaman_barang extends CI_Controller {
             $this->session->set_userdata('role', $roleName);
         }
 
+        // 2b. Proteksi Hak Akses: Peminjaman barang laboratorium HANYA untuk Dosen / Staff (bukan mahasiswa)
+        $email = strtolower((string) ($this->session->userdata('email') ?? ''));
+        $is_mahasiswa = ($roleId === 4 || strpos($email, '@student.') !== false);
+        if ($is_mahasiswa) {
+            $this->session->set_flashdata('error', 'Mohon maaf, peminjaman barang laboratorium saat ini hanya diperuntukkan bagi Dosen.');
+            redirect('dashboard');
+            return;
+        }
+
         // 3. Load Helper & Model
         $this->load->helper(['loan_progress', 'scm_pagination', 'scm_sort', 'scm_date', 'fik_prodi', 'url']);
         $this->load->model('Peminjaman_barang_model');
@@ -198,8 +207,8 @@ class Peminjaman_barang extends CI_Controller {
         $jumlah_pinjam = (int) $this->input->post('jumlah_pinjam');
         $tanggal_pinjam = $this->input->post('tanggal_pinjam');
         $tanggal_kembali = $this->input->post('tanggal_kembali_rencana');
-        $prodi = fik_normalize_prodi($this->input->post('prodi', true)) ?: 'S1 Desain Komunikasi Visual (DKV)';
-        $jenis_peminjam = fik_normalize_jenis_peminjam($this->input->post('jenis_pengguna', true)) ?: 'Mahasiswa';
+        $prodi = fik_normalize_prodi($this->input->post('prodi', true)) ?: ($this->session->userdata('prodi') ?: 'S1 Desain Komunikasi Visual (DKV)');
+        $jenis_peminjam = 'Dosen';
 
         $aset = $this->Peminjaman_barang_model->get_aset_by_id($id_aset);
         if (!$aset) {
@@ -235,7 +244,7 @@ class Peminjaman_barang extends CI_Controller {
             redirect('peminjaman_barang/ajukan/'.$id_aset);
         } else {
             $upload_data = $this->upload->data();
-            $nama_peminjam = $this->session->userdata('nama') ?? 'Mahasiswa';
+            $nama_peminjam = $this->session->userdata('nama') ?? 'Dosen';
             $nim_nip = $this->session->userdata('username') ?? '123456';
             $id_user = $this->session->userdata('id_user');
 
@@ -297,12 +306,12 @@ class Peminjaman_barang extends CI_Controller {
         $id_user = $this->session->userdata('id_user');
         $peminjam = $this->Peminjaman_barang_model->get_peminjam_by_nim_nip($nim_nip);
         if (!$peminjam && $nim_nip) {
-            $nama = $this->session->userdata('nama') ?? 'Mahasiswa';
+            $nama = $this->session->userdata('nama') ?? 'Dosen';
             $id_peminjam_new = $this->Peminjaman_barang_model->get_or_create_peminjam(
                 $nim_nip,
                 $nama,
-                'S1 Desain Komunikasi Visual (DKV)',
-                'Mahasiswa'
+                $this->session->userdata('prodi') ?: 'S1 Desain Komunikasi Visual (DKV)',
+                'Dosen'
             );
             $peminjam = $this->Peminjaman_barang_model->get_peminjam_by_id($id_peminjam_new);
         }
