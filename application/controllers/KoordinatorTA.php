@@ -74,6 +74,78 @@ class KoordinatorTA extends CI_Controller {
         $this->monitoring();
     }
 
+    // Halaman Khusus Koordinator TA: Kelola Status & Downgrade / Reset Tahapan Tugas Akhir
+    public function kelola_tahap() {
+        $nip_koor = $this->session->userdata('nip') ?: ($this->session->userdata('username') ?: '1987010102');
+        $data['title'] = 'Kelola Status & Downgrade Tahapan TA — IK Labs Portal';
+        $data['nip_koor'] = $nip_koor;
+        $data['candidates'] = $this->KoordinatorTA_model->get_candidates_for_downgrade('all');
+        $data['audit_logs'] = $this->KoordinatorTA_model->get_downgrade_audit_logs(50);
+
+        $this->load->view('koordinator_ta/kelola_tahap', $data);
+    }
+
+    // AJAX Endpoint: Filter & Search Candidates for Downgrade
+    public function ajax_get_downgrade_candidates() {
+        header('Content-Type: application/json');
+
+        $stage = $this->input->get('stage') ?: ($this->input->post('stage') ?: 'all');
+        $search = $this->input->get('search') ?: ($this->input->post('search') ?: '');
+
+        $candidates = $this->KoordinatorTA_model->get_candidates_for_downgrade($stage, $search);
+        echo json_encode([
+            'status' => true,
+            'total' => count($candidates),
+            'data' => $candidates
+        ]);
+    }
+
+    // AJAX Endpoint: Eksekusi Downgrade / Reset Tahapan Mahasiswa
+    public function ajax_execute_downgrade() {
+        header('Content-Type: application/json');
+
+        // Pastikan hanya Koordinator TA yang berwenang
+        $role_id = (int)$this->session->userdata('role_id');
+        if ($role_id !== 6 && $role_id !== 1) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Akses ditolak: Hanya Koordinator Tugas Akhir yang berwenang melakukan penurunan atau reset tahapan bimbingan.'
+            ]);
+            return;
+        }
+
+        $nim = trim($this->input->post('nim') ?? '');
+        $targetStage = trim($this->input->post('target_stage') ?? '');
+        $alasan = trim($this->input->post('alasan') ?? '');
+        $confirm = $this->input->post('confirm');
+
+        if (empty($nim)) {
+            echo json_encode(['status' => false, 'message' => 'NIM mahasiswa wajib dipilih.']);
+            return;
+        }
+        if (empty($targetStage)) {
+            echo json_encode(['status' => false, 'message' => 'Tahap tujuan penurunan wajib ditentukan.']);
+            return;
+        }
+        if (empty($alasan) || strlen($alasan) < 5) {
+            echo json_encode(['status' => false, 'message' => 'Alasan downgrade / reset wajib diisi dengan jelas (minimal 5 karakter).']);
+            return;
+        }
+        if (!$confirm) {
+            echo json_encode(['status' => false, 'message' => 'Anda wajib menyetujui pernyataan konsekuensi penghapusan permanen tanpa backup sebelum melanjutkan.']);
+            return;
+        }
+
+        $actorData = [
+            'id' => $this->session->userdata('user_id'),
+            'name' => $this->session->userdata('name') ?: 'Koordinator TA',
+            'nip' => $this->session->userdata('nip') ?: $this->session->userdata('username'),
+        ];
+
+        $result = $this->KoordinatorTA_model->execute_downgrade_stage($nim, $targetStage, $alasan, $actorData);
+        echo json_encode($result);
+    }
+
     // AJAX Endpoint: Realtime Monitoring Sync (Background Polling for Monitoring Peserta TA)
     public function ajax_realtime_monitoring() {
         header('Content-Type: application/json');

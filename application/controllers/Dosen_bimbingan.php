@@ -1026,57 +1026,12 @@ class Dosen_bimbingan extends CI_Controller {
     public function downgrade_stage_ajax() {
         header('Content-Type: application/json');
 
-        if (!$this->_is_authorized_reviewer()) {
-            echo json_encode(['status' => false, 'message' => 'Unauthorized']);
-            return;
-        }
-
-        $nim    = $this->input->post('nim');
-        $dari   = $this->input->post('dari');
-        $ke     = $this->input->post('ke');
-        $alasan = $this->input->post('alasan') ?? '';
-
-        if (empty($nim) || empty($dari) || empty($ke)) {
-            echo json_encode(['status' => false, 'message' => 'Parameter tidak lengkap.']);
-            return;
-        }
-
-        $normalize = function ($t) {
-            $map = [
-                'Preview 1' => 'preview1', 'Preview 2' => 'preview2',
-                'Preview 3' => 'preview3', 'Sidang'   => 'sidang',
-                'preview1' => 'preview1', 'preview2' => 'preview2',
-                'preview3' => 'preview3', 'sidang'   => 'sidang',
-            ];
-            return $map[$t] ?? null;
-        };
-
-        $dari_key = $normalize($dari);
-        $ke_key   = $normalize($ke);
-
-        if (!$dari_key || !$ke_key) {
-            echo json_encode(['status' => false, 'message' => 'Tahap tidak valid.']);
-            return;
-        }
-
-        $hierarchy = ['preview1' => 1, 'preview2' => 2, 'preview3' => 3, 'sidang' => 4];
-        if ($hierarchy[$dari_key] - $hierarchy[$ke_key] !== 1) {
-            echo json_encode(['status' => false, 'message' => 'Downgrade hanya boleh turun 1 tingkat.']);
-            return;
-        }
-
-        $pic_role = ($dari_key === 'preview1') ? 'p1' : 'u1';
-
-        if (!$this->_is_pic_for_student($nim, $pic_role)) {
-            echo json_encode([
-                'status'  => false,
-                'message' => 'Hanya ' . strtoupper($pic_role) . ' yang dapat melakukan downgrade dari tahap ini.',
-            ]);
-            return;
-        }
-
-        $res = $this->Mahasiswa_model->downgrade_stage($nim, $dari, $ke, $pic_role, $alasan);
-        echo json_encode($res);
+        // Wewenang downgrade / reset tahap dialihkan sepenuhnya secara eksklusif ke Koordinator TA
+        echo json_encode([
+            'status'  => false,
+            'message' => 'Akses ditolak: Wewenang penurunan atau reset tahapan bimbingan telah dialihkan secara terpusat ke akun Koordinator TA.'
+        ]);
+        return;
     }
 
     // =================================================================

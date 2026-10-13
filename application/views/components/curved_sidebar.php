@@ -173,6 +173,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['heading' => 'Tahap Preview 2', 'href' => site_url('koordinatorta#preview2'), 'icon_3d' => 'assets/images/icons_3d/preview2.png'],
                 ['heading' => 'Jadwal Sidang TA', 'href' => site_url('koordinatorta#sidang'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
                 ['heading' => 'Monitoring Status Peserta', 'href' => site_url('koordinatorta/monitoring'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Kelola Status & Downgrade TA', 'href' => site_url('koordinatorta/kelola_tahap'), 'icon_3d' => 'assets/images/icons_3d/settings.png'],
 
                 ['category' => 'Manajemen Akun Koordinator', 'has_divider' => true],
                 ['heading' => 'Pendaftaran Akun Baru', 'href' => site_url('import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],

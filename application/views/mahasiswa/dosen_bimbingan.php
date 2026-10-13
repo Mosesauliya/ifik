@@ -1633,6 +1633,9 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 btnLulus = `<button disabled title="Belum ada berkas yang di-ACC" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> ${currentTahap}</button>`;
             }
 
+            // Tombol downgrade telah dipindahkan secara eksklusif ke akun Koordinator TA
+            if (!btnLulus) return `<span class="text-slate-400 italic text-[11px]">—</span>`;
+
             return `<div class="flex flex-col gap-1.5 items-center max-w-[170px] mx-auto">${btnLulus}</div>`;
         }
 
