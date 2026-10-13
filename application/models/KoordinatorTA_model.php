@@ -12,7 +12,18 @@ class KoordinatorTA_model extends CI_Model {
      * Ambil list semua dosen dari tabel user (role_id = 2 / Kaur, 3 / Dosen, 6 / Koor, 7 / PIC, 9 / Ketua KK)
      */
     public function get_dosen_list() {
-        $this->db->select('id, name as nama_dosen, nip, email, kode_dosen, no_telp as no_hp, koordinator, kelompok_keahlian, id_kk');
+        $userCols = $this->db->list_fields('user');
+        $selectCols = array('id', 'name as nama_dosen');
+
+        if (in_array('nip', $userCols)) $selectCols[] = 'nip';
+        if (in_array('email', $userCols)) $selectCols[] = 'email';
+        if (in_array('kode_dosen', $userCols)) $selectCols[] = 'kode_dosen';
+        if (in_array('no_telp', $userCols)) $selectCols[] = 'no_telp as no_hp';
+        if (in_array('koordinator', $userCols)) $selectCols[] = 'koordinator';
+        if (in_array('kelompok_keahlian', $userCols)) $selectCols[] = 'kelompok_keahlian';
+        if (in_array('id_kk', $userCols)) $selectCols[] = 'id_kk';
+
+        $this->db->select(implode(', ', $selectCols));
         $this->db->from('user');
         $this->db->where_in('role_id', array(2, 3, 6, 7, 9));
         $this->db->order_by('name', 'ASC');
@@ -23,6 +34,13 @@ class KoordinatorTA_model extends CI_Model {
             foreach ($query->result_array() as $row) {
                 $nipKey = !empty($row['nip']) ? (string)$row['nip'] : (string)$row['id'];
                 $kkVal = !empty($row['koordinator']) ? $row['koordinator'] : ($row['kelompok_keahlian'] ?? '');
+                if (empty($kkVal) && !empty($row['id_kk']) && $this->db->table_exists('kelompok_keahlian')) {
+                    $kkRow = $this->db->get_where('kelompok_keahlian', array('id' => $row['id_kk']))->row_array();
+                    if ($kkRow) {
+                        $kkVal = $kkRow['kode_kk'] ?: $kkRow['nama_kk'];
+                    }
+                }
+
                 $result[$nipKey] = array(
                     'id'                => $row['id'],
                     'nip'               => $nipKey,
