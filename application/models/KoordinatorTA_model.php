@@ -2044,32 +2044,58 @@ class KoordinatorTA_model extends CI_Model {
             $isAdminFullyApproved = ($validBerkas >= 4 || ($validBerkas === $totalBerkas && $totalBerkas > 0)) && ($invalidBerkas === 0 && $pendingBerkas === 0) && (strcasecmp($statusAdmin, 'Approved') === 0 || strcasecmp($statusAdmin, 'Valid') === 0);
 
             // Deteksi Tahap Progres Terkini (Pipeline 1 s/d 9)
-            // Prioritas tertinggi: Deteksi tahap bimbingan/preview/sidang terlebih dahulu bila mahasiswa sudah masuk ke tahapan tersebut
+            // 1. Prioritas Utama: Lulus Sidang (Tahap 9)
             if ($isLulus) {
                 $progresStage = 'Lulus';
                 $stageKey     = 'lulus';
                 $stageIndex   = 9;
                 $stageDesc    = 'Lulus Sidang Tugas Akhir';
                 $stageColor   = 'emerald';
-            } elseif ($hasSidang || $statusPrev === 'sidang' || $statusPrev === 'lulus' || $statusPrev === 'selesai' || !empty($tInfo['has_sidang']) || !empty($tInfo['p3_app']) || $isNilaiLengkap) {
+            // 2. Tahap Bimbingan & Sidang Eksplisit dari guidance.status_preview (Single Source of Truth)
+            } elseif ($statusPrev === 'sidang') {
                 $progresStage = 'Sidang TA';
                 $stageKey     = 'sidang';
                 $stageIndex   = 8;
                 $stageDesc    = $isNilaiLengkap ? ($isPublished ? 'Sidang Selesai' : 'Nilai Masuk (Menunggu Publish)') : 'Pelaksanaan Sidang Akhir';
                 $stageColor   = 'rose';
-            } elseif ($statusPrev === 'preview3' || !empty($tInfo['has_p3']) || !empty($tInfo['p2_app'])) {
+            } elseif ($statusPrev === 'preview3') {
                 $progresStage = 'Preview 3';
                 $stageKey     = 'preview3';
                 $stageIndex   = 7;
                 $stageDesc    = 'Pra-Sidang & Finalisasi Dokumen TA';
                 $stageColor   = 'cyan';
-            } elseif ($statusPrev === 'preview2' || !empty($tInfo['has_p2']) || !empty($tInfo['p1_app']) || $hasPenguji || !empty($gRow['tanggal_presentasi'])) {
+            } elseif ($statusPrev === 'preview2') {
                 $progresStage = 'Preview 2';
                 $stageKey     = 'preview2';
                 $stageIndex   = 6;
                 $stageDesc    = 'Evaluasi Progres & Presentasi Penguji';
                 $stageColor   = 'indigo';
-            } elseif (($statusPrev === 'preview1' || !empty($tInfo['has_p1']) || strcasecmp($statusKk, 'Approved') === 0) && $statusPrev !== 'pending' && strcasecmp($statusKoor, 'Pending') !== 0) {
+            } elseif ($statusPrev === 'preview1') {
+                $progresStage = 'Preview 1';
+                $stageKey     = 'preview1';
+                $stageIndex   = 5;
+                $stageDesc    = 'Bimbingan Bab 1-3 Bersama Pembimbing';
+                $stageColor   = 'teal';
+            // 3. Fallback jika status_preview di guidance masih kosong, pending, atau bukan preview
+            } elseif ($hasSidang || $statusPrev === 'lulus' || $statusPrev === 'selesai' || !empty($tInfo['has_sidang']) || !empty($tInfo['p3_app']) || $isNilaiLengkap) {
+                $progresStage = 'Sidang TA';
+                $stageKey     = 'sidang';
+                $stageIndex   = 8;
+                $stageDesc    = $isNilaiLengkap ? ($isPublished ? 'Sidang Selesai' : 'Nilai Masuk (Menunggu Publish)') : 'Pelaksanaan Sidang Akhir';
+                $stageColor   = 'rose';
+            } elseif (!empty($tInfo['has_p3']) || !empty($tInfo['p2_app'])) {
+                $progresStage = 'Preview 3';
+                $stageKey     = 'preview3';
+                $stageIndex   = 7;
+                $stageDesc    = 'Pra-Sidang & Finalisasi Dokumen TA';
+                $stageColor   = 'cyan';
+            } elseif (!empty($tInfo['has_p2']) || !empty($tInfo['p1_app']) || $hasPenguji || !empty($gRow['tanggal_presentasi'])) {
+                $progresStage = 'Preview 2';
+                $stageKey     = 'preview2';
+                $stageIndex   = 6;
+                $stageDesc    = 'Evaluasi Progres & Presentasi Penguji';
+                $stageColor   = 'indigo';
+            } elseif (!empty($tInfo['has_p1']) || (strcasecmp($statusKk, 'Approved') === 0 && strcasecmp($statusKoor, 'Pending') !== 0)) {
                 $progresStage = 'Preview 1';
                 $stageKey     = 'preview1';
                 $stageIndex   = 5;
@@ -2501,13 +2527,13 @@ class KoordinatorTA_model extends CI_Model {
         if ($this->db->table_exists('thesis')) {
             $stagesToDelete = array();
             if (in_array($targetStage, array('reset_total', 'koordinator_ta', 'ketua_kk'))) {
-                $stagesToDelete = array('preview1', 'preview2', 'preview3', 'sidang');
+                $stagesToDelete = array('preview1', 'Preview 1', 'preview 1', 'preview2', 'Preview 2', 'preview 2', 'preview3', 'Preview 3', 'preview 3', 'sidang', 'Sidang', 'sidang ta', 'Sidang TA');
             } elseif ($targetStage === 'preview1') {
-                $stagesToDelete = array('preview2', 'preview3', 'sidang');
+                $stagesToDelete = array('preview2', 'Preview 2', 'preview 2', 'preview3', 'Preview 3', 'preview 3', 'sidang', 'Sidang', 'sidang ta', 'Sidang TA');
             } elseif ($targetStage === 'preview2') {
-                $stagesToDelete = array('preview3', 'sidang');
+                $stagesToDelete = array('preview3', 'Preview 3', 'preview 3', 'sidang', 'Sidang', 'sidang ta', 'Sidang TA');
             } elseif ($targetStage === 'preview3') {
-                $stagesToDelete = array('sidang');
+                $stagesToDelete = array('sidang', 'Sidang', 'sidang ta', 'Sidang TA');
             }
 
             if (!empty($stagesToDelete)) {
@@ -2528,6 +2554,21 @@ class KoordinatorTA_model extends CI_Model {
                 $this->db->where('id_guidance', $gId);
                 $this->db->where_in('tahapan_preview', $stagesToDelete);
                 $this->db->delete('thesis');
+            }
+
+            // Reset status approval & revisi pada tahapan target agar tidak dianggap telah disetujui sebelumnya
+            if ($targetStage === 'preview2') {
+                $this->db->where('id_guidance', $gId)
+                         ->where_in('tahapan_preview', array('preview2', 'Preview 2', 'preview 2', 'PREVIEW 2'))
+                         ->update('thesis', array('status' => 'Pending', 'correction3' => null, 'correction4' => null));
+            } elseif ($targetStage === 'preview1') {
+                $this->db->where('id_guidance', $gId)
+                         ->where_in('tahapan_preview', array('preview1', 'Preview 1', 'preview 1', 'PREVIEW 1'))
+                         ->update('thesis', array('status' => 'Pending', 'correction1' => null, 'correction2' => null));
+            } elseif ($targetStage === 'preview3') {
+                $this->db->where('id_guidance', $gId)
+                         ->where_in('tahapan_preview', array('preview3', 'Preview 3', 'preview 3', 'PREVIEW 3'))
+                         ->update('thesis', array('status' => 'Pending'));
             }
         }
 
