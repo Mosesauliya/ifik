@@ -13,6 +13,15 @@ class User_model extends CI_Model {
         $this->load->database();
         $this->tbl_user = $this->db->table_exists('user') ? 'user' : 'users';
         $this->tbl_role = $this->db->table_exists('user_role') ? 'user_role' : 'roles';
+
+        if ($this->db->table_exists($this->tbl_user)) {
+            if (!$this->db->field_exists('jabatan', $this->tbl_user)) {
+                $this->db->query("ALTER TABLE `{$this->tbl_user}` ADD `jabatan` varchar(50) DEFAULT 'dosen' AFTER `role_id`");
+            }
+            if (!$this->db->field_exists('prodi', $this->tbl_user)) {
+                $this->db->query("ALTER TABLE `{$this->tbl_user}` ADD `prodi` varchar(120) DEFAULT NULL AFTER `jabatan`");
+            }
+        }
     }
 
     /**

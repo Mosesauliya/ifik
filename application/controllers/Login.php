@@ -133,6 +133,7 @@ class Login extends CI_Controller {
 				$session_data = array(
 					'id'               => $user->id,
 					'user_id'          => $user->id,
+					'id_user'          => $user->id,
 					'username'         => !empty($user->username) ? $user->username : (!empty($user->nidn_nim) ? $user->nidn_nim : $user->email),
 					'role_id'          => $user->role_id,
 					'name'             => $user->name,
@@ -145,6 +146,7 @@ class Login extends CI_Controller {
 					'kelompok_keahlian'=> !empty($user->kelompok_keahlian) ? $user->kelompok_keahlian : (isset($user->koordinator) ? $user->koordinator : ''),
 					'dosen_wali'       => isset($user->dosen_wali) ? $user->dosen_wali : '',
 					'prodi'            => isset($user->prodi) ? $user->prodi : '',
+					'jabatan'          => !empty($user->jabatan) ? strtolower(trim($user->jabatan)) : 'dosen',
 					'password_changed' => $passwordChanged,
 					'logged_in'        => TRUE
 				);

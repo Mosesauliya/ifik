@@ -20,15 +20,21 @@ class Peminjaman extends CI_Controller {
             redirect('login');
         }
         $role_id = (int) ($this->session->userdata('role_id') ?? 0);
-        $role = strtolower((string) $this->session->userdata('role'));
-        // Allow Wadek, Dosen (3), Admin System (1), Super Admin (22), or Kaur/Kaprodi test
-        $allowed_roles = [1, 2, 3, 7, 8, 9, 10, 16, 22];
-        $is_wadek_role = in_array($role_id, $allowed_roles, true) || strpos($role, 'wadek') !== false || strpos($role, 'dekan') !== false || $role === 'admin';
-        if (!$is_wadek_role) {
+        $role = strtolower((string) ($this->session->userdata('role') ?? ''));
+        $jabatan = strtolower((string) ($this->session->userdata('jabatan') ?? ''));
+
+        // Izinkan jika Admin (1/22), Dosen berjabatan Wadek, atau role mengandung wadek/dekan
+        $is_wadek = ($role_id === 1 || $role_id === 22)
+            || ($jabatan === 'wadek')
+            || ($role_id === 15)
+            || strpos($role, 'wadek') !== false
+            || strpos($role, 'dekan') !== false;
+
+        if (!$is_wadek) {
             if (scm_is_ajax()) {
                 scm_json_abort(['success' => false, 'message' => 'Akses ditolak. Halaman ini khusus Wakil Dekan (Wadek).'], 403);
             }
-            $this->session->set_flashdata('error', 'Akses ditolak. Approval peminjaman luar kampus khusus Wakil Dekan.');
+            $this->session->set_flashdata('error', 'Akses ditolak. Approval peminjaman luar kampus khusus Wakil Dekan (Wadek).');
             redirect('dashboard');
         }
     }

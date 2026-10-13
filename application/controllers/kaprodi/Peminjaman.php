@@ -22,15 +22,26 @@ class Peminjaman extends CI_Controller {
     private function guard_kaprodi() {
         if (!$this->session->userdata('logged_in')) {
             if (scm_is_ajax()) {
-                scm_json_abort(['success' => false, 'message' => 'Sesi Anda berakhir. Silakan login kembali.', 'redirect' => site_url('auth')], 401);
+                scm_json_abort(['success' => false, 'message' => 'Sesi Anda berakhir. Silakan login kembali.', 'redirect' => site_url('login')], 401);
             }
-            redirect('auth');
+            redirect('login');
         }
-        if ((int) $this->session->userdata('role_id') !== 16)  {
+
+        $role_id = (int) ($this->session->userdata('role_id') ?? 0);
+        $role = strtolower((string) ($this->session->userdata('role') ?? ''));
+        $jabatan = strtolower((string) ($this->session->userdata('jabatan') ?? ''));
+
+        // Izinkan jika Admin (1/22), Dosen berjabatan Kaprodi, atau role_id 14
+        $is_kaprodi = ($role_id === 1 || $role_id === 22)
+            || ($jabatan === 'kaprodi')
+            || ($role_id === 14)
+            || strpos($role, 'kaprodi') !== false;
+
+        if (!$is_kaprodi) {
             if (scm_is_ajax()) {
-                scm_json_abort(['success' => false, 'message' => 'Anda tidak memiliki izin untuk memproses approval Kaprodi.'], 403);
+                scm_json_abort(['success' => false, 'message' => 'Anda tidak memiliki izin untuk memproses approval Kaprodi. Khusus Dosen Kaprodi.'], 403);
             }
-            $this->session->set_flashdata('error', 'Akses approval peminjaman khusus Kaprodi.');
+            $this->session->set_flashdata('error', 'Akses approval peminjaman khusus Dosen Kaprodi.');
             redirect('dashboard');
         }
     }
