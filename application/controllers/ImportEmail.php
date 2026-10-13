@@ -134,6 +134,9 @@ class ImportEmail extends CI_Controller {
             }
         }
 
+        $this->load->helper('fik_prodi');
+        $data['prodi_list'] = function_exists('fik_program_studi') ? fik_program_studi() : [];
+
         $data['title'] = $title;
         $data['user_role_id'] = $roleId;
         $data['is_laboran'] = $isLaboran;
@@ -583,6 +586,8 @@ class ImportEmail extends CI_Controller {
         $nimNip = isset($json['nim_nip']) ? trim($json['nim_nip']) : '';
         $name = trim($json['name']);
         $rawToken = isset($json['token']) && !empty($json['token']) ? trim($json['token']) : null;
+        $jabatan = isset($json['jabatan']) ? strtolower(trim((string)$json['jabatan'])) : '';
+        $prodi = isset($json['prodi']) ? trim((string)$json['prodi']) : '';
 
         if ($targetUserId) {
             // EDIT EXISTING USER BY ID (STRICTLY SUPER ADMIN ONLY)
@@ -616,6 +621,8 @@ class ImportEmail extends CI_Controller {
             ];
             if ($this->db->field_exists('username', $userTbl)) $updateData['username'] = $username;
             if ($this->db->field_exists('nidn_nim', $userTbl)) $updateData['nidn_nim'] = $nimNip;
+            if ($this->db->field_exists('jabatan', $userTbl)) $updateData['jabatan'] = $jabatan ?: 'dosen';
+            if ($this->db->field_exists('prodi', $userTbl)) $updateData['prodi'] = $prodi;
             if ((int)$targetRoleId !== 4) {
                 // Non-Mahasiswa (Dosen, Laboran, Kaur, dll): simpan ke nip
                 if ($this->db->field_exists('nip', $userTbl)) $updateData['nip'] = $nimNip;
@@ -652,7 +659,9 @@ class ImportEmail extends CI_Controller {
                 'email' => $email,
                 'role_id' => $targetRoleId,
                 'nidn_nim' => $nimNip,
-                'token' => $rawToken
+                'token' => $rawToken,
+                'jabatan' => $jabatan ?: 'dosen',
+                'prodi' => $prodi
             ];
             $this->User_model->upsert_user($userData);
         }
@@ -782,6 +791,9 @@ class ImportEmail extends CI_Controller {
                 'name' => $u['name'],
                 'email' => $u['email'],
                 'role' => $roleDisplay,
+                'role_id' => (int)$u['role_id'],
+                'jabatan' => !empty($u['jabatan']) ? strtolower(trim($u['jabatan'])) : 'dosen',
+                'prodi' => !empty($u['prodi']) ? trim($u['prodi']) : '',
                 'nim_nip' => !empty($u['nidn_nim']) ? $u['nidn_nim'] : '-',
                 'token' => !empty($u['token']) ? $u['token'] : '',
                 'token_display' => !empty($u['token']) ? (strlen($u['token']) > 12 ? substr($u['token'], 0, 8) . '...' . substr($u['token'], -4) : $u['token']) : '',

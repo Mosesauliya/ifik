@@ -651,6 +651,12 @@ class User_model extends CI_Model {
                 // Mahasiswa: simpan ke nim
                 if ($this->db->field_exists('nim', $this->tbl_user)) $updateData['nim'] = isset($data['nidn_nim']) ? $data['nidn_nim'] : ($existing->nim ?? '');
             }
+            if (isset($data['jabatan']) && $this->db->field_exists('jabatan', $this->tbl_user)) {
+                $updateData['jabatan'] = strtolower(trim((string)$data['jabatan']));
+            }
+            if (isset($data['prodi']) && $this->db->field_exists('prodi', $this->tbl_user)) {
+                $updateData['prodi'] = trim((string)$data['prodi']);
+            }
             if ($this->db->field_exists('updated_at', $this->tbl_user)) $updateData['updated_at'] = date('Y-m-d H:i:s');
 
             $isUserProtected = (!empty($existing->password_changed) && (int)$existing->password_changed === 1) || (!empty($existing->is_active) && (int)$existing->is_active === 1);
@@ -683,6 +689,12 @@ class User_model extends CI_Model {
             ];
             if ($this->db->field_exists('salt', $this->tbl_user)) $insertData['salt'] = $salt;
             if ($this->db->field_exists('nidn_nim', $this->tbl_user)) $insertData['nidn_nim'] = isset($data['nidn_nim']) ? $data['nidn_nim'] : '';
+            if (isset($data['jabatan']) && $this->db->field_exists('jabatan', $this->tbl_user)) {
+                $insertData['jabatan'] = strtolower(trim((string)$data['jabatan']));
+            }
+            if (isset($data['prodi']) && $this->db->field_exists('prodi', $this->tbl_user)) {
+                $insertData['prodi'] = trim((string)$data['prodi']);
+            }
             $roleCheck = isset($data['role_id']) ? (int)$data['role_id'] : 4;
             if ($roleCheck !== 4) {
                 // Non-Mahasiswa: simpan ke nip, nim biarkan kosong
