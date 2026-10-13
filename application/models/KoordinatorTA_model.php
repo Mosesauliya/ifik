@@ -2069,7 +2069,7 @@ class KoordinatorTA_model extends CI_Model {
                 $stageIndex   = 6;
                 $stageDesc    = 'Evaluasi Progres & Presentasi Penguji';
                 $stageColor   = 'indigo';
-            } elseif ($statusPrev === 'preview1' || !empty($tInfo['has_p1']) || strcasecmp($statusKk, 'Approved') === 0) {
+            } elseif (($statusPrev === 'preview1' || !empty($tInfo['has_p1']) || strcasecmp($statusKk, 'Approved') === 0) && $statusPrev !== 'pending' && strcasecmp($statusKoor, 'Pending') !== 0) {
                 $progresStage = 'Preview 1';
                 $stageKey     = 'preview1';
                 $stageIndex   = 5;
@@ -2348,29 +2348,37 @@ class KoordinatorTA_model extends CI_Model {
 
             // Hitung opsi target downgrade yang diizinkan untuk mahasiswa ini
             $hierarchy = array(
-                'dosen_wali'     => 0,
-                'admin_layanan'  => 0,
-                'koordinator_ta' => 0,
-                'ketua_kk'       => 0,
-                'pendaftaran'    => 0,
-                'preview1'       => 1,
-                'preview2'       => 2,
-                'preview3'       => 3,
-                'sidang'         => 4,
-                'lulus'          => 5
+                'dosen_wali'     => 1,
+                'admin_layanan'  => 2,
+                'koordinator_ta' => 3,
+                'ketua_kk'       => 4,
+                'pendaftaran'    => 4,
+                'preview1'       => 5,
+                'preview2'       => 6,
+                'preview3'       => 7,
+                'sidang'         => 8,
+                'lulus'          => 9
             );
-            $currRank = $hierarchy[$stageKey] ?? 0;
+            $currRank = $hierarchy[$stageKey] ?? 1;
 
             $allowedTargets = array();
-            if ($currRank >= 4) { // Sidang atau Lulus
+            if ($currRank >= 9) { // Lulus
+                $allowedTargets[] = array('key' => 'sidang', 'label' => 'Sidang Akhir TA (Batalkan Kelulusan)');
+            }
+            if ($currRank >= 8) { // Sidang atau Lulus
                 $allowedTargets[] = array('key' => 'preview3', 'label' => 'Preview 3 (Pra-Sidang)');
+            }
+            if ($currRank >= 7) { // Preview 3 ke atas
                 $allowedTargets[] = array('key' => 'preview2', 'label' => 'Preview 2 (Presentasi Penguji)');
+            }
+            if ($currRank >= 6) { // Preview 2 ke atas
                 $allowedTargets[] = array('key' => 'preview1', 'label' => 'Preview 1 (Bimbingan Bab 1-3)');
-            } elseif ($currRank === 3) { // Preview 3
-                $allowedTargets[] = array('key' => 'preview2', 'label' => 'Preview 2 (Presentasi Penguji)');
-                $allowedTargets[] = array('key' => 'preview1', 'label' => 'Preview 1 (Bimbingan Bab 1-3)');
-            } elseif ($currRank === 2) { // Preview 2
-                $allowedTargets[] = array('key' => 'preview1', 'label' => 'Preview 1 (Bimbingan Bab 1-3)');
+            }
+            if ($currRank >= 5) { // Preview 1 ke atas
+                $allowedTargets[] = array('key' => 'ketua_kk', 'label' => 'Tahap Ketua KK (Konfirmasi Distribusi Riset)');
+                $allowedTargets[] = array('key' => 'koordinator_ta', 'label' => 'Tahap Koordinator TA (Plotting Ulang Pembimbing)');
+            } elseif ($currRank >= 4) { // Ketua KK ke atas
+                $allowedTargets[] = array('key' => 'koordinator_ta', 'label' => 'Tahap Koordinator TA (Plotting Ulang Pembimbing)');
             }
             // Reset total selalu tersedia untuk semua tahap
             $allowedTargets[] = array('key' => 'reset_total', 'label' => 'Reset Total (Kembali ke Pendaftaran Awal)');
@@ -2399,7 +2407,7 @@ class KoordinatorTA_model extends CI_Model {
         }
 
         $gId = $g['id'];
-        $validTargets = array('reset_total', 'preview1', 'preview2', 'preview3');
+        $validTargets = array('reset_total', 'koordinator_ta', 'ketua_kk', 'preview1', 'preview2', 'preview3', 'sidang');
         if (!in_array($targetStage, $validTargets)) {
             return array('status' => false, 'message' => 'Target tahapan penurunan tidak valid.');
         }
@@ -2418,77 +2426,80 @@ class KoordinatorTA_model extends CI_Model {
         $currentStageLabel = $currentInfo['progres_stage'] ?? ($currentInfo['progresStage'] ?? ucfirst($currentStageKey));
 
         $hierarchy = array(
-            'dosen_wali'     => 0,
-            'admin_layanan'  => 0,
-            'koordinator_ta' => 0,
-            'ketua_kk'       => 0,
-            'pendaftaran'    => 0,
-            'preview1'       => 1,
-            'preview2'       => 2,
-            'preview3'       => 3,
-            'sidang'         => 4,
-            'lulus'          => 5
+            'dosen_wali'     => 1,
+            'admin_layanan'  => 2,
+            'koordinator_ta' => 3,
+            'ketua_kk'       => 4,
+            'pendaftaran'    => 4,
+            'preview1'       => 5,
+            'preview2'       => 6,
+            'preview3'       => 7,
+            'sidang'         => 8,
+            'lulus'          => 9
         );
         $currRank = $hierarchy[$currentStageKey] ?? 1;
 
         if ($targetStage !== 'reset_total') {
-            $targetRank = $hierarchy[$targetStage] ?? 0;
+            $targetRank = $hierarchy[$targetStage] ?? 1;
             if ($targetRank >= $currRank) {
                 return array('status' => false, 'message' => 'Target penurunan harus ke tahap yang lebih rendah dari tahap saat ini (' . $currentStageLabel . ').');
             }
         } else {
-            $targetRank = 0;
+            $targetRank = 1;
         }
 
         $this->db->trans_start();
 
         // 1. Tangani tabel thesis dan unlink file fisik berkas draft/revisi
         if ($this->db->table_exists('thesis')) {
-            $this->db->select('*');
-            $this->db->where('id_guidance', $gId);
             $stagesToDelete = array();
-            if ($targetStage !== 'reset_total') {
-                foreach ($hierarchy as $stg => $rk) {
-                    if ($rk >= $targetRank && in_array($stg, array('preview1', 'preview2', 'preview3', 'sidang'))) {
-                        $stagesToDelete[] = $stg;
-                    }
-                }
-                if (!empty($stagesToDelete)) {
-                    $this->db->where_in('tahapan_preview', $stagesToDelete);
-                }
+            if (in_array($targetStage, array('reset_total', 'koordinator_ta', 'ketua_kk'))) {
+                $stagesToDelete = array('preview1', 'preview2', 'preview3', 'sidang');
+            } elseif ($targetStage === 'preview1') {
+                $stagesToDelete = array('preview2', 'preview3', 'sidang');
+            } elseif ($targetStage === 'preview2') {
+                $stagesToDelete = array('preview3', 'sidang');
+            } elseif ($targetStage === 'preview3') {
+                $stagesToDelete = array('sidang');
             }
-            $thesisRows = $this->db->get('thesis')->result_array();
 
-            foreach ($thesisRows as $tr) {
-                foreach (array('pdf_file', 'file_sitasi', 'file_bimbingan', 'file_persyaratan', 'file_sidang') as $col) {
-                    if (!empty($tr[$col])) {
-                        $fName = $tr[$col];
-                        $paths = array(
-                            FCPATH . 'uploads/preview_ta/' . $fName,
-                            FCPATH . 'uploads/sidang/' . $fName,
-                            FCPATH . 'uploads/persyaratan_ta/' . $fName
-                        );
-                        foreach ($paths as $p) {
-                            if (file_exists($p) && is_file($p)) @unlink($p);
+            if (!empty($stagesToDelete)) {
+                $this->db->select('*');
+                $this->db->where('id_guidance', $gId);
+                $this->db->where_in('tahapan_preview', $stagesToDelete);
+                $thesisRows = $this->db->get('thesis')->result_array();
+
+                foreach ($thesisRows as $tr) {
+                    foreach (array('pdf_file', 'file_sitasi', 'file_bimbingan', 'file_persyaratan', 'file_sidang') as $col) {
+                        if (!empty($tr[$col])) {
+                            $fName = $tr[$col];
+                            $paths = array(
+                                FCPATH . 'uploads/preview_ta/' . $fName,
+                                FCPATH . 'uploads/sidang/' . $fName,
+                                FCPATH . 'uploads/persyaratan_ta/' . $fName
+                            );
+                            foreach ($paths as $p) {
+                                if (file_exists($p) && is_file($p)) @unlink($p);
+                            }
                         }
                     }
                 }
-            }
 
-            // Hapus record thesis
-            $this->db->where('id_guidance', $gId);
-            if ($targetStage !== 'reset_total' && !empty($stagesToDelete)) {
+                // Hapus record thesis
+                $this->db->where('id_guidance', $gId);
                 $this->db->where_in('tahapan_preview', $stagesToDelete);
+                $this->db->delete('thesis');
             }
-            $this->db->delete('thesis');
         }
 
-        // 2. Update dan bersihkan field-field di guidance
+        // 2. Update dan bersihkan field-field di guidance & thesis_lecturers & file_pendaftaran
         $updateGuidance = array();
 
         if ($targetStage === 'reset_total') {
+            $updateGuidance['keterangan']  = 'Pending';
+            $updateGuidance['komentar']    = null;
+            $updateGuidance['status_file'] = 'pending';
             $updateGuidance['status_preview'] = 'pending';
-            $updateGuidance['status_file']    = 'pending';
             $updateGuidance['status_filesidang'] = null;
             $updateGuidance['lulus_preview1'] = 0;
             $updateGuidance['lulus_preview2'] = 0;
@@ -2532,8 +2543,125 @@ class KoordinatorTA_model extends CI_Model {
             $updateGuidance['bap2']                = null;
             $updateGuidance['status_bap2']         = null;
 
+            // Hapus record di thesis_lecturers agar plotting pembimbing & status KK benar-benar ter-reset
+            if ($this->db->table_exists('thesis_lecturers')) {
+                $this->db->where('id_guidance', $gId)->delete('thesis_lecturers');
+            }
+
+            // Reset status doswal & adminlaa di file_pendaftaran agar kembali ke tahap awal (Dosen Wali)
+            if ($this->db->table_exists('file_pendaftaran')) {
+                $idMhsCandidates = array_unique(array_filter([$g['id_mhs'], $nim, 'usr_mhs_' . $nim, 'mhs_' . $nim]));
+                $fpUpdate = array();
+                if ($this->db->field_exists('status_doswal', 'file_pendaftaran')) $fpUpdate['status_doswal'] = 'Pending';
+                if ($this->db->field_exists('status_adminlaa', 'file_pendaftaran')) $fpUpdate['status_adminlaa'] = 'Pending';
+                if ($this->db->field_exists('status_kk', 'file_pendaftaran')) $fpUpdate['status_kk'] = 'Pending';
+                if (!empty($fpUpdate)) {
+                    $this->db->where_in('id_mhs', $idMhsCandidates)->update('file_pendaftaran', $fpUpdate);
+                }
+            }
+        } elseif ($targetStage === 'koordinator_ta') {
+            $updateGuidance['keterangan']  = 'Pending';
+            $updateGuidance['komentar']    = null;
+            $updateGuidance['status_file'] = 'pending';
+            $updateGuidance['status_preview'] = 'pending';
+            $updateGuidance['status_filesidang'] = null;
+            $updateGuidance['lulus_preview1'] = 0;
+            $updateGuidance['lulus_preview2'] = 0;
+            $updateGuidance['lulus_preview3'] = 0;
+            $updateGuidance['lulus_sidang']   = 0;
+            $updateGuidance['lulus_by_role']  = null;
+            $updateGuidance['lulus_at']       = null;
+
+            $updateGuidance['penilaian_pembimbing1'] = null;
+            $updateGuidance['nilai_pembimbing1']     = null;
+            $updateGuidance['penilaian_pembimbing2'] = null;
+            $updateGuidance['nilai_pembimbing2']     = null;
+            $updateGuidance['penilaian_penguji1']    = null;
+            $updateGuidance['nilai_penguji1']        = null;
+            $updateGuidance['penilaian_penguji2']    = null;
+            $updateGuidance['nilai_penguji2']        = null;
+
+            $updateGuidance['nilaisidang_pembimbing1'] = null;
+            $updateGuidance['nilaisidang_pembimbing2'] = null;
+            $updateGuidance['nilaisidang_penguji1']    = null;
+            $updateGuidance['nilaisidang_penguji2']    = null;
+            $updateGuidance['penilaiansidang_pembimbing1'] = null;
+            $updateGuidance['penilaiansidang_pembimbing2'] = null;
+            $updateGuidance['penilaiansidang_penguji1']    = null;
+            $updateGuidance['penilaiansidang_penguji2']    = null;
+
+            $updateGuidance['kelayakan']           = null;
+            $updateGuidance['komentar_kelayakan']  = null;
+            $updateGuidance['kelayakan2']          = null;
+            $updateGuidance['komentar_kelayakan2'] = null;
+            $updateGuidance['kelayakan3']          = null;
+            $updateGuidance['tanggal_presentasi']  = null;
+            $updateGuidance['waktu_presentasi']    = null;
+            $updateGuidance['link_presentasi']     = null;
+            $updateGuidance['ruang_sidang']        = null;
+            $updateGuidance['tanggal_sidang']      = null;
+            $updateGuidance['waktu_sidang']        = null;
+            $updateGuidance['link_sidang']         = null;
+            $updateGuidance['bap']                 = null;
+            $updateGuidance['status_bap']          = null;
+            $updateGuidance['bap2']                = null;
+            $updateGuidance['status_bap2']         = null;
+
+            // Hapus thesis_lecturers agar Koordinator TA bisa melakukan plotting ulang pembimbing
+            if ($this->db->table_exists('thesis_lecturers')) {
+                $this->db->where('id_guidance', $gId)->delete('thesis_lecturers');
+            }
+        } elseif ($targetStage === 'ketua_kk') {
+            $updateGuidance['keterangan']  = 'Approved';
+            $updateGuidance['status_file'] = 'Approved';
+            $updateGuidance['status_preview'] = 'pending';
+            $updateGuidance['status_filesidang'] = null;
+            $updateGuidance['lulus_preview1'] = 0;
+            $updateGuidance['lulus_preview2'] = 0;
+            $updateGuidance['lulus_preview3'] = 0;
+            $updateGuidance['lulus_sidang']   = 0;
+            $updateGuidance['lulus_by_role']  = null;
+            $updateGuidance['lulus_at']       = null;
+
+            $updateGuidance['penilaian_pembimbing1'] = null;
+            $updateGuidance['nilai_pembimbing1']     = null;
+            $updateGuidance['penilaian_pembimbing2'] = null;
+            $updateGuidance['nilai_pembimbing2']     = null;
+            $updateGuidance['penilaian_penguji1']    = null;
+            $updateGuidance['nilai_penguji1']        = null;
+            $updateGuidance['penilaian_penguji2']    = null;
+            $updateGuidance['nilai_penguji2']        = null;
+
+            $updateGuidance['nilaisidang_pembimbing1'] = null;
+            $updateGuidance['nilaisidang_pembimbing2'] = null;
+            $updateGuidance['nilaisidang_penguji1']    = null;
+            $updateGuidance['nilaisidang_penguji2']    = null;
+            $updateGuidance['penilaiansidang_pembimbing1'] = null;
+            $updateGuidance['penilaiansidang_pembimbing2'] = null;
+            $updateGuidance['penilaiansidang_penguji1']    = null;
+            $updateGuidance['penilaiansidang_penguji2']    = null;
+
+            $updateGuidance['kelayakan']           = null;
+            $updateGuidance['komentar_kelayakan']  = null;
+            $updateGuidance['kelayakan2']          = null;
+            $updateGuidance['komentar_kelayakan2'] = null;
+            $updateGuidance['kelayakan3']          = null;
+            $updateGuidance['tanggal_presentasi']  = null;
+            $updateGuidance['waktu_presentasi']    = null;
+            $updateGuidance['link_presentasi']     = null;
+            $updateGuidance['ruang_sidang']        = null;
+            $updateGuidance['tanggal_sidang']      = null;
+            $updateGuidance['waktu_sidang']        = null;
+            $updateGuidance['link_sidang']         = null;
+            $updateGuidance['bap']                 = null;
+            $updateGuidance['status_bap']          = null;
+            $updateGuidance['bap2']                = null;
+            $updateGuidance['status_bap2']         = null;
+
+            // Di thesis_lecturers: Pembimbing 1 & 2 tetap ada, status dijadikan Pending agar menunggu approval Ketua KK
             if ($this->db->table_exists('thesis_lecturers')) {
                 $this->db->where('id_guidance', $gId)->update('thesis_lecturers', array(
+                    'status'         => 'Pending',
                     'dosen_penguji1' => '',
                     'dosen_penguji2' => '',
                     'date_edit'      => date('Y-m-d H:i:s')
@@ -2541,6 +2669,9 @@ class KoordinatorTA_model extends CI_Model {
             }
         } elseif ($targetStage === 'preview1') {
             $updateGuidance['status_preview'] = 'preview1';
+            $updateGuidance['keterangan']     = 'Approved';
+            $updateGuidance['status_file']    = 'Approved';
+            $updateGuidance['status_filesidang'] = null;
             $updateGuidance['lulus_preview1'] = 0;
             $updateGuidance['lulus_preview2'] = 0;
             $updateGuidance['lulus_preview3'] = 0;
@@ -2583,6 +2714,7 @@ class KoordinatorTA_model extends CI_Model {
 
             if ($this->db->table_exists('thesis_lecturers')) {
                 $this->db->where('id_guidance', $gId)->update('thesis_lecturers', array(
+                    'status'         => 'Approved',
                     'dosen_penguji1' => '',
                     'dosen_penguji2' => '',
                     'date_edit'      => date('Y-m-d H:i:s')
@@ -2643,6 +2775,18 @@ class KoordinatorTA_model extends CI_Model {
             $updateGuidance['penilaiansidang_pembimbing2'] = null;
             $updateGuidance['penilaiansidang_penguji1']    = null;
             $updateGuidance['penilaiansidang_penguji2']    = null;
+        } elseif ($targetStage === 'sidang') {
+            $updateGuidance['status_preview'] = 'sidang';
+            $updateGuidance['lulus_sidang']   = 0;
+            $updateGuidance['lulus_by_role']  = null;
+            $updateGuidance['lulus_at']       = null;
+            $updateGuidance['status_bap']     = 'Pending';
+
+            if ($this->db->table_exists('log_approval_history')) {
+                $this->db->where('modul', 'Publish Nilai Sidang')
+                         ->where('ref_id', (string)$nim)
+                         ->delete('log_approval_history');
+            }
         }
 
         $guidanceFields = $this->db->list_fields('guidance');
@@ -2657,6 +2801,17 @@ class KoordinatorTA_model extends CI_Model {
             $this->db->where('id', $gId)->update('guidance', $finalUpdate);
         }
 
+        $targetLabelMap = array(
+            'reset_total'    => 'Pendaftaran TA (Reset Total)',
+            'koordinator_ta' => 'Tahap Koordinator TA (Plotting Ulang Pembimbing)',
+            'ketua_kk'       => 'Tahap Ketua KK (Konfirmasi Distribusi Riset)',
+            'preview1'       => 'Preview 1 (Bimbingan Bab 1-3)',
+            'preview2'       => 'Preview 2 (Presentasi Penguji)',
+            'preview3'       => 'Preview 3 (Pra-Sidang)',
+            'sidang'         => 'Sidang Akhir TA (Batalkan Kelulusan)'
+        );
+        $targetLabelText = $targetLabelMap[$targetStage] ?? ucfirst($targetStage);
+
         // 3. Catat ke downgrade_log di guidance
         if ($this->db->field_exists('downgrade_log', 'guidance')) {
             $currLogStr = $g['downgrade_log'] ?? '';
@@ -2665,7 +2820,6 @@ class KoordinatorTA_model extends CI_Model {
                 $decoded = json_decode($currLogStr, true);
                 if (is_array($decoded)) $logArr = $decoded;
             }
-            $targetLabelText = ($targetStage === 'reset_total') ? 'Pendaftaran TA (Reset Total)' : ucfirst($targetStage);
             $logArr[] = array(
                 'dari'       => $currentStageLabel,
                 'dari_key'   => $currentStageKey,
@@ -2684,7 +2838,6 @@ class KoordinatorTA_model extends CI_Model {
         // 4. Catat ke log_approval_history
         if ($this->db->table_exists('log_approval_history')) {
             $actionName = ($targetStage === 'reset_total') ? 'Reset Total Pendaftaran' : 'Downgrade Tahap';
-            $targetLabelText = ($targetStage === 'reset_total') ? 'Pendaftaran TA (Reset Total)' : ucfirst($targetStage);
             $catatanData = array(
                 'dari'       => $currentStageLabel,
                 'ke'         => $targetLabelText,
@@ -2711,12 +2864,11 @@ class KoordinatorTA_model extends CI_Model {
             return array('status' => false, 'message' => 'Gagal memproses downgrade karena kesalahan transaksi database.');
         }
 
-        $targetLabel = ($targetStage === 'reset_total') ? 'Pendaftaran Awal (Reset Total)' : ucfirst($targetStage);
         return array(
             'status'  => true,
-            'message' => 'Mahasiswa ' . ($currentInfo['nama'] ?? $nim) . ' (' . $nim . ') berhasil di-downgrade ke ' . $targetLabel . '. Seluruh nilai, berkas, dan catatan revisi pada tahapan terkait telah dihapus permanen.',
+            'message' => 'Mahasiswa ' . ($currentInfo['nama'] ?? $nim) . ' (' . $nim . ') berhasil di-downgrade ke ' . $targetLabelText . '. Seluruh nilai, berkas, dan catatan revisi pada tahapan terkait telah dihapus permanen.',
             'dari'    => $currentStageLabel,
-            'ke'      => $targetLabel
+            'ke'      => $targetLabelText
         );
     }
 
