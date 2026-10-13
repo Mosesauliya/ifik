@@ -39,29 +39,32 @@ class Peminjaman extends CI_Controller {
     private function guard_kaprodi() {
         if (!$this->session->userdata('logged_in')) {
             if (scm_is_ajax()) {
-                scm_json_abort(['success' => false, 'message' => 'Sesi Anda berakhir. Silakan login kembali.', 'redirect' => site_url('auth')], 401);
+                scm_json_abort(['success' => false, 'message' => 'Sesi Anda berakhir. Silakan login kembali.', 'redirect' => site_url('login')], 401);
             }
-            redirect('auth');
+            redirect('login');
         }
         $role_id = (int) ($this->session->userdata('role_id') ?? 0);
         $role = strtolower((string) ($this->session->userdata('role') ?? ''));
+        $jabatan = strtolower((string) ($this->session->userdata('jabatan') ?? ''));
         $username = strtolower((string)($this->session->userdata('username') ?? ''));
         $email = strtolower((string)($this->session->userdata('email') ?? ''));
         $name = strtolower((string)($this->session->userdata('name') ?? ''));
         $koor = strtolower((string)($this->session->userdata('koordinator') ?? ''));
 
-        // Allow Kaprodi (16), Dosen (3), Wadek/KK/Kaur (2, 7, 8, 9, 10), Admin (1), Super Admin (22)
-        $allowed_roles = [1, 2, 3, 6, 7, 8, 9, 10, 16, 22];
+        // Izinkan Admin (1/22), Dosen berjabatan Kaprodi, atau role/akun Kaprodi
+        $allowed_roles = [1, 2, 6, 7, 8, 9, 10, 14, 16, 22];
         $is_kaprodi_user = in_array($role_id, $allowed_roles, true)
+            || ($jabatan === 'kaprodi')
+            || ($role_id === 3 && $jabatan === 'kaprodi')
             || ($username === 'moses' || strpos($email, 'moses') !== false || strpos($name, 'moses') !== false)
             || (strpos($koor, 'kaprodi') !== false || strpos($koor, 'prodi') !== false)
-            || (strpos($role, 'kaprodi') !== false || strpos($role, 'prodi') !== false || strpos($role, 'dosen') !== false);
+            || (strpos($role, 'kaprodi') !== false);
 
         if (!$is_kaprodi_user) {
             if (scm_is_ajax()) {
-                scm_json_abort(['success' => false, 'message' => 'Anda tidak memiliki izin untuk memproses approval Kaprodi.'], 403);
+                scm_json_abort(['success' => false, 'message' => 'Anda tidak memiliki izin untuk memproses approval Kaprodi. Khusus Dosen Kaprodi.'], 403);
             }
-            $this->session->set_flashdata('error', 'Akses approval peminjaman khusus Kaprodi.');
+            $this->session->set_flashdata('error', 'Akses approval peminjaman khusus Dosen Kaprodi.');
             redirect('dashboard');
         }
     }

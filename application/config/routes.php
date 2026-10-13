@@ -350,11 +350,20 @@ $route['verifikasi/surat/cetak/(:num)'] = 'Verifikasi/cetak/$1';
 $route['validasi/surat/(:num)'] = 'Verifikasi/surat/$1';
 $route['verifikasi/(:num)'] = 'Verifikasi/surat/$1';
 
-// Laboran & Kaur Dedicated Routes
+// Kaprodi, Wadek, Laboran & Kaur Dedicated Routes
+$route['kaprodi/peminjaman'] = 'kaprodi/Peminjaman';
+$route['kaprodi/peminjaman/(:any)'] = 'kaprodi/Peminjaman/$1';
+$route['kaprodi/peminjaman/(:any)/(:any)'] = 'kaprodi/Peminjaman/$1/$2';
+
+$route['wadek/peminjaman'] = 'wadek/Peminjaman';
+$route['wadek/peminjaman/(:any)'] = 'wadek/Peminjaman/$1';
+$route['wadek/peminjaman/(:any)/(:any)'] = 'wadek/Peminjaman/$1/$2';
+
 $route['laboran'] = 'Laboran/booking';
 $route['laboran/booking'] = 'Laboran/booking';
 $route['kaur/peminjaman'] = 'kaur/Peminjaman';
 $route['kaur/peminjaman/(:any)'] = 'kaur/Peminjaman/$1';
+$route['kaur/peminjaman/(:any)/(:any)'] = 'kaur/Peminjaman/$1/$2';
 // $route['kaur/dashboard/peminjaman'] = 'kaur/Peminjaman';
 // $route['kaur/dashboard/peminjaman/(:any)'] = 'kaur/Peminjaman/$1';
 $route['kaur'] = 'KaurDashboard/approval';

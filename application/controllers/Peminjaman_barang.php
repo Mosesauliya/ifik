@@ -166,9 +166,23 @@ class Peminjaman_barang extends CI_Controller {
 
         $data['aset'] = $this->Peminjaman_barang_model->get_aset_by_id($id_aset);
         $data['program_studi'] = fik_program_studi();
-        $data['jenis_peminjam_options'] = ['Dosen'];
-        $data['user_prodi'] = $this->session->userdata('prodi') ?: 'S1 Desain Komunikasi Visual (DKV)';
-        $data['user_jenis'] = 'Dosen';
+        $data['jenis_peminjam_options'] = fik_jenis_peminjam();
+
+        $sessionRole = strtolower((string)($this->session->userdata('role') ?? ''));
+        $roleId = (int) ($this->session->userdata('role_id') ?? 0);
+
+        if ($roleId === 3 || $roleId === 4 && strpos($sessionRole, 'dosen') !== false || strpos($sessionRole, 'dosen') !== false) {
+            $user_jenis = 'Dosen';
+        } elseif ($roleId === 4 || $roleId === 5 || strpos($sessionRole, 'mahasiswa') !== false) {
+            $user_jenis = 'Mahasiswa';
+        } else {
+            $user_jenis = 'Staff';
+        }
+
+        $user_prodi = fik_normalize_prodi($this->session->userdata('prodi')) ?: 'S1 Desain Komunikasi Visual (DKV)';
+
+        $data['user_prodi'] = $user_prodi;
+        $data['user_jenis'] = $user_jenis;
         
         if(!$data['aset']) {
             $this->session->set_flashdata('error', 'Aset tidak ditemukan!');
