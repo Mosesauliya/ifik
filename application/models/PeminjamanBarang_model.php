@@ -789,12 +789,23 @@ class PeminjamanBarang_model extends CI_Model {
             MAX(p.tanggal_kembali_rencana) as tanggal_kembali_rencana,
             MAX(p.tanggal_kembali_actual) as tanggal_kembali_actual,
             MAX(p.status) as status,
+            MAX(p.jenis_peminjaman) as jenis_peminjaman,
             MAX(p.status_kaprodi) as status_kaprodi,
+            MAX(p.catatan_kaprodi) as catatan_kaprodi,
+            MAX(p.tgl_approve_kaprodi) as tgl_approve_kaprodi,
             MAX(p.kaprodi_approval_limit_days) as kaprodi_approval_limit_days,
             MAX(p.kaprodi_deadline_at) as kaprodi_deadline_at,
             MAX(p.kaprodi_expired_at) as kaprodi_expired_at,
             MAX(p.status_laboran) as status_laboran,
+            MAX(p.catatan_laboran) as catatan_laboran,
+            MAX(p.tgl_approve_laboran) as tgl_approve_laboran,
             MAX(p.status_kaur) as status_kaur,
+            MAX(p.catatan_kaur) as catatan_kaur,
+            MAX(p.tgl_approve_kaur) as tgl_approve_kaur,
+            MAX(p.status_wadek1) as status_wadek1,
+            MAX(p.catatan_wadek1) as catatan_wadek1,
+            MAX(p.tgl_approve_wadek1) as tgl_approve_wadek1,
+            MAX(p.id_approver_wadek1) as id_approver_wadek1,
             MAX(p.keperluan) as keperluan,
             MAX(p.foto_pengembalian) as foto_pengembalian,
             MAX(p.foto_bukti) as foto_bukti,
@@ -944,7 +955,7 @@ class PeminjamanBarang_model extends CI_Model {
             $this->db->where_in('p.status', ['Menunggu Verifikasi Laboran', 'Menunggu Pengecekan Laboran', 'Menunggu Persetujuan']);
             $this->db->where('p.status_kaprodi', 'Disetujui')->where('p.status_laboran', 'Pending');
         } elseif ($role === 'kaur') {
-            $this->db->where('p.status', 'Menunggu ACC Kaur');
+            $this->db->where_in('p.status', ['Menunggu ACC Kaur', 'Menunggu Verifikasi Laboran', 'Menunggu Pengecekan Laboran', 'Menunggu Persetujuan']);
             $this->db->where('p.status_kaprodi', 'Disetujui')->where('p.status_kaur', 'Pending');
         } elseif ($role === 'wadek') {
             $this->db->where_in('p.status', ['Menunggu ACC Wadek', 'Menunggu Persetujuan Wadek']);
@@ -1411,6 +1422,63 @@ class PeminjamanBarang_model extends CI_Model {
             $this->db->group_start()->like('p.nama_peminjam', $term)->or_like('peminjam.nama_peminjam', $term)->or_like('p.nim_nip', $term)->group_end();
         } elseif ($cat === 'kode' || $cat === 'number') {
             $this->db->group_start()->like('a.kode_aset', $term)->or_like('p.group_id', $term)->or_where('p.id_peminjaman', (int)$term)->group_end();
+        } elseif ($cat === 'lab') {
+            $this->db->like('r.ruangan', $term);
+        } elseif ($cat === 'status') {
+            $this->db->like('p.status', $term);
+        } else {
+            $this->db->group_start()
+                     ->like('a.nama_aset', $term)
+                     ->or_like('a.kode_aset', $term)
+                     ->or_like('p.nama_peminjam', $term)
+                     ->or_like('p.nim_nip', $term)
+                     ->or_like('p.status', $term)
+                     ->or_like('p.group_id', $term)
+                     ->or_like('r.ruangan', $term)
+                     ->group_end();
+        }
+
+        $this->db->order_by('p.id_peminjaman', 'DESC');
+        $this->db->limit(8);
+        $query = $this->db->get()->result();
+
+        $out = [];
+        foreach ($query as $r) {
+            $out[] = [
+                'id_peminjaman'   => $r->id_peminjaman,
+                'group_id'        => $r->group_id,
+                'nama_peminjam'   => $r->nama_peminjam ?: 'Peminjam',
+                'nim_nip'         => $r->nim_nip ?: '-',
+                'nama_aset'       => $r->nama_aset ?: 'Barang',
+                'kode_aset'       => $r->kode_aset ?: '-',
+                'status'          => $r->status,
+                'ruangan'         => $r->nama_ruangan,
+                'tanggal_pinjam'  => $r->tanggal_pinjam,
+                'tanggal_kembali' => $r->tanggal_kembali_rencana,
+            ];
+        }
+        return $out;
+    }
+
+    public function autocomplete_kaprodi($term, $cat = 'all', $prodi = null) {
+        if (empty($term)) return [];
+
+        $this->db->select('p.id_peminjaman, p.group_id, p.status, p.tanggal_pinjam, p.tanggal_kembali_rencana, p.nama_peminjam, p.nim_nip, a.nama_aset, a.kode_aset, COALESCE(r.ruangan, "Umum") AS nama_ruangan');
+        $this->db->from($this->table_peminjaman . ' as p');
+        $this->db->join('peminjam', 'peminjam.id_peminjam = p.id_peminjam', 'left');
+        $this->db->join('aset a', 'a.id_aset = p.id_aset', 'left');
+        $this->db->join('ruangan r', 'r.id = a.id_ruangan', 'left');
+
+        if (!empty($prodi)) {
+            $this->db->where('p.prodi', (string) $prodi);
+        }
+
+        if ($cat === 'barang') {
+            $this->db->like('a.nama_aset', $term);
+        } elseif ($cat === 'peminjam') {
+            $this->db->group_start()->like('p.nama_peminjam', $term)->or_like('peminjam.nama_peminjam', $term)->or_like('p.nim_nip', $term)->group_end();
+        } elseif ($cat === 'number') {
+            $this->db->group_start()->like('p.group_id', $term)->or_where('p.id_peminjaman', (int)$term)->group_end();
         } elseif ($cat === 'lab') {
             $this->db->like('r.ruangan', $term);
         } elseif ($cat === 'status') {

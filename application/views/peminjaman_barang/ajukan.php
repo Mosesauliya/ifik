@@ -348,7 +348,7 @@ $has_uploaded_visual = !empty($asset_media);
     <!-- Dedicated Sidebar Component (Pola Admin LAA) -->
     <?php $this->load->view('peminjaman_barang/sidebar'); ?>
 
-<div id="laaMainContentWrapper">
+<div id="laaMainContentWrapper" class="page-wrapper-for-sidebar">
     <!-- Sub Navigation Page Title Bar (Admin LAA style) -->
     <header class="glass-header-ifik mb-4">
         <div class="container d-flex flex-wrap align-items-center justify-content-between gap-3 header-inner-pad">
@@ -497,7 +497,7 @@ $has_uploaded_visual = !empty($asset_media);
                             <div class="col-md-7">
                                 <label for="prodi" class="form-label fw-semibold text-muted small">Program Studi <span class="text-danger">*</span></label>
                                 <?php if ($user_prodi): ?>
-                                    <input type="text" id="prodi" class="form-control bg-light" value="<?= html_escape($user_prodi) ?>" readonly>
+                                    <input type="text" name="prodi" id="prodi" class="form-control bg-light" value="<?= html_escape($user_prodi) ?>" readonly>
                                 <?php else: ?>
                                     <select name="prodi" id="prodi" class="form-select" required>
                                         <option value="" selected disabled>Pilih program studi</option>
@@ -510,7 +510,7 @@ $has_uploaded_visual = !empty($asset_media);
                             <div class="col-md-5">
                                 <label for="jenis_pengguna" class="form-label fw-semibold text-muted small">Status Peminjam <span class="text-danger">*</span></label>
                                 <?php if ($user_jenis): ?>
-                                    <input type="text" id="jenis_pengguna" class="form-control bg-light" value="<?= html_escape($user_jenis) ?>" readonly>
+                                    <input type="text" name="jenis_pengguna" id="jenis_pengguna" class="form-control bg-light" value="<?= html_escape($user_jenis) ?>" readonly>
                                 <?php else: ?>
                                     <select name="jenis_pengguna" id="jenis_pengguna" class="form-select" required>
                                         <option value="" selected disabled>Pilih status</option>

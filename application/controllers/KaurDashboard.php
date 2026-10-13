@@ -537,9 +537,9 @@ class KaurDashboard extends CI_Controller {
         $filters = ['action_role' => 'kaur'];
 
         if ($tab === 'pending') {
-            $filters['status'] = 'Menunggu ACC Kaur';
+            $filters['status_in'] = ['Menunggu ACC Kaur', 'Menunggu Verifikasi Laboran'];
         } elseif ($tab === 'approved') {
-            $filters['status_in'] = ['Disetujui (Menunggu Pengambilan)', 'Disetujui (Menunggu Finalisasi QR)', 'Sedang Dipinjam', 'Selesai', 'Dikembalikan'];
+            $filters['status_in'] = ['Menunggu ACC Wadek', 'Menunggu Persetujuan Wadek', 'Disetujui (Menunggu Pengambilan)', 'Disetujui (Menunggu Finalisasi QR)', 'Sedang Dipinjam', 'Selesai', 'Dikembalikan'];
         } elseif ($tab === 'rejected') {
             $filters['status'] = 'Ditolak';
         }
@@ -582,6 +582,8 @@ class KaurDashboard extends CI_Controller {
                 'tgl_approve_kaur' => date('Y-m-d H:i:s'),
                 'id_approver_kaur' => $this->session->userdata('id_user') ?: $this->session->userdata('username'),
                 'qr_locked' => 1,
+                'qr_finalized_at' => date('Y-m-d H:i:s'),
+                'qr_finalized_by' => $this->session->userdata('id_user') ?: $this->session->userdata('username'),
             ];
         }
 
