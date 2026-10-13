@@ -2297,14 +2297,42 @@ class KoordinatorTA_model extends CI_Model {
         $searchLower = strtolower(trim((string)$search));
 
         foreach ($monitoring as $m) {
-            $stageKey = $m['stageKey'] ?? 'pendaftaran';
+            $stageKey = $m['stage_key'] ?? ($m['stageKey'] ?? 'pendaftaran');
+            $stageLabel = $m['progres_stage'] ?? ($m['progresStage'] ?? 'Pendaftaran');
+            $stageColor = $m['stage_color'] ?? ($m['stageColor'] ?? 'slate');
+            $judul = !empty($m['judul_1']) ? $m['judul_1'] : (!empty($m['judul']) ? $m['judul'] : '-');
+            $p1 = $m['nama_pembimbing_1'] ?? ($m['pembimbing_1_name'] ?? ($m['pembimbing_1'] ?? '-'));
+            $p2 = $m['nama_pembimbing_2'] ?? ($m['pembimbing_2_name'] ?? ($m['pembimbing_2'] ?? ''));
+            $u1 = $m['nama_penguji_1'] ?? ($m['penguji_1_name'] ?? ($m['penguji_1'] ?? ''));
+            $u2 = $m['nama_penguji_2'] ?? ($m['penguji_2_name'] ?? ($m['penguji_2'] ?? ''));
+
             $nimLower = strtolower(trim((string)$m['nim']));
             $namaLower = strtolower(trim((string)($m['nama'] ?? '')));
-            $judulLower = strtolower(trim((string)($m['judul'] ?? '')));
+            $judulLower = strtolower(trim((string)$judul));
+
+            // Normalize fields on $m so both camelCase and snake_case work everywhere
+            $m['stage_key']          = $stageKey;
+            $m['stageKey']           = $stageKey;
+            $m['progres_stage']      = $stageLabel;
+            $m['progresStage']       = $stageLabel;
+            $m['stage_color']        = $stageColor;
+            $m['stageColor']         = $stageColor;
+            $m['judul']              = $judul;
+            $m['judul_1']            = $judul;
+            $m['pembimbing_1_name']  = $p1;
+            $m['pembimbing_2_name']  = $p2;
+            $m['penguji_1_name']     = $u1;
+            $m['penguji_2_name']     = $u2;
 
             // Filter search jika ada
             if (!empty($searchLower)) {
-                if (strpos($nimLower, $searchLower) === false && strpos($namaLower, $searchLower) === false && strpos($judulLower, $searchLower) === false) {
+                $p1Lower = strtolower(trim((string)$p1));
+                $u1Lower = strtolower(trim((string)$u1));
+                if (strpos($nimLower, $searchLower) === false && 
+                    strpos($namaLower, $searchLower) === false && 
+                    strpos($judulLower, $searchLower) === false &&
+                    strpos($p1Lower, $searchLower) === false &&
+                    strpos($u1Lower, $searchLower) === false) {
                     continue;
                 }
             }
@@ -2315,11 +2343,22 @@ class KoordinatorTA_model extends CI_Model {
                 if ($stageFilter === 'preview2' && $stageKey !== 'preview2') continue;
                 if ($stageFilter === 'preview3' && $stageKey !== 'preview3') continue;
                 if ($stageFilter === 'sidang' && !in_array($stageKey, array('sidang', 'lulus'))) continue;
-                if ($stageFilter === 'pendaftaran' && !in_array($stageKey, array('dosen_wali', 'admin_layanan', 'koordinator_ta', 'ketua_kk'))) continue;
+                if ($stageFilter === 'pendaftaran' && !in_array($stageKey, array('dosen_wali', 'admin_layanan', 'koordinator_ta', 'ketua_kk', 'pendaftaran'))) continue;
             }
 
             // Hitung opsi target downgrade yang diizinkan untuk mahasiswa ini
-            $hierarchy = array('pendaftaran' => 0, 'preview1' => 1, 'preview2' => 2, 'preview3' => 3, 'sidang' => 4, 'lulus' => 5);
+            $hierarchy = array(
+                'dosen_wali'     => 0,
+                'admin_layanan'  => 0,
+                'koordinator_ta' => 0,
+                'ketua_kk'       => 0,
+                'pendaftaran'    => 0,
+                'preview1'       => 1,
+                'preview2'       => 2,
+                'preview3'       => 3,
+                'sidang'         => 4,
+                'lulus'          => 5
+            );
             $currRank = $hierarchy[$stageKey] ?? 0;
 
             $allowedTargets = array();
@@ -2375,10 +2414,21 @@ class KoordinatorTA_model extends CI_Model {
             }
         }
 
-        $currentStageKey = $currentInfo['stageKey'] ?? ($g['status_preview'] ?? 'preview1');
-        $currentStageLabel = $currentInfo['progresStage'] ?? ucfirst($currentStageKey);
+        $currentStageKey = $currentInfo['stage_key'] ?? ($currentInfo['stageKey'] ?? ($g['status_preview'] ?? 'preview1'));
+        $currentStageLabel = $currentInfo['progres_stage'] ?? ($currentInfo['progresStage'] ?? ucfirst($currentStageKey));
 
-        $hierarchy = array('pendaftaran' => 0, 'preview1' => 1, 'preview2' => 2, 'preview3' => 3, 'sidang' => 4, 'lulus' => 5);
+        $hierarchy = array(
+            'dosen_wali'     => 0,
+            'admin_layanan'  => 0,
+            'koordinator_ta' => 0,
+            'ketua_kk'       => 0,
+            'pendaftaran'    => 0,
+            'preview1'       => 1,
+            'preview2'       => 2,
+            'preview3'       => 3,
+            'sidang'         => 4,
+            'lulus'          => 5
+        );
         $currRank = $hierarchy[$currentStageKey] ?? 1;
 
         if ($targetStage !== 'reset_total') {

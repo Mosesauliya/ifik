@@ -315,7 +315,7 @@
                 $countP1 = 0;
                 if (!empty($candidates)) {
                     foreach ($candidates as $c) {
-                        $sk = $c['stageKey'] ?? '';
+                        $sk = $c['stage_key'] ?? ($c['stageKey'] ?? '');
                         if (in_array($sk, ['sidang', 'lulus'])) $countSidang++;
                         elseif ($sk === 'preview3') $countP3++;
                         elseif ($sk === 'preview2') $countP2++;
@@ -658,21 +658,27 @@
                                 <?php if (!empty($candidates)): ?>
                                     <?php $no = 1; foreach ($candidates as $c): ?>
                                         <?php 
-                                            $stageColor = $c['stageColor'] ?? 'slate';
-                                            $stageLabel = $c['progresStage'] ?? 'Pendaftaran';
-                                            $stageKey   = $c['stageKey'] ?? 'pendaftaran';
+                                            $stageKey   = $c['stage_key'] ?? ($c['stageKey'] ?? 'pendaftaran');
+                                            $stageLabel = $c['progres_stage'] ?? ($c['progresStage'] ?? 'Pendaftaran');
+                                            $stageColor = $c['stage_color'] ?? ($c['stageColor'] ?? 'slate');
+                                            $judul      = !empty($c['judul_1']) ? $c['judul_1'] : (!empty($c['judul']) ? $c['judul'] : '-');
+                                            $p1         = $c['nama_pembimbing_1'] ?? ($c['pembimbing_1_name'] ?? ($c['pembimbing_1'] ?? '-'));
+                                            $p2         = $c['nama_pembimbing_2'] ?? ($c['pembimbing_2_name'] ?? ($c['pembimbing_2'] ?? ''));
+                                            $u1         = $c['nama_penguji_1'] ?? ($c['penguji_1_name'] ?? ($c['penguji_1'] ?? ''));
+                                            $u2         = $c['nama_penguji_2'] ?? ($c['penguji_2_name'] ?? ($c['penguji_2'] ?? ''));
+
                                             $targetsJson = htmlspecialchars(json_encode($c['allowed_targets'] ?? []), ENT_QUOTES, 'UTF-8');
                                             $candidateJson = htmlspecialchars(json_encode([
                                                 'nim' => $c['nim'],
                                                 'nama' => $c['nama'] ?? $c['nim'],
-                                                'judul' => $c['judul'] ?? '-',
+                                                'judul' => $judul,
                                                 'stageKey' => $stageKey,
                                                 'stageLabel' => $stageLabel,
                                                 'stageColor' => $stageColor,
-                                                'pembimbing_1' => $c['pembimbing_1_name'] ?? '-',
-                                                'pembimbing_2' => $c['pembimbing_2_name'] ?? '-',
-                                                'penguji_1' => $c['penguji_1_name'] ?? '-',
-                                                'penguji_2' => $c['penguji_2_name'] ?? '-',
+                                                'pembimbing_1' => $p1,
+                                                'pembimbing_2' => $p2,
+                                                'penguji_1' => $u1,
+                                                'penguji_2' => $u2,
                                                 'allowed_targets' => $c['allowed_targets'] ?? []
                                             ]), ENT_QUOTES, 'UTF-8');
                                         ?>
@@ -680,26 +686,31 @@
                                             data-stage="<?= strtolower($stageKey); ?>" 
                                             data-nama="<?= strtolower(htmlspecialchars($c['nama'] ?? '')); ?>"
                                             data-nim="<?= strtolower(htmlspecialchars($c['nim'] ?? '')); ?>"
-                                            data-judul="<?= strtolower(htmlspecialchars($c['judul'] ?? '')); ?>"
-                                            data-dosen="<?= strtolower(htmlspecialchars(($c['pembimbing_1_name'] ?? '') . ' ' . ($c['pembimbing_2_name'] ?? '') . ' ' . ($c['penguji_1_name'] ?? '') . ' ' . ($c['penguji_2_name'] ?? ''))); ?>"
-                                            data-search="<?= strtolower(htmlspecialchars(($c['nim'] ?? '') . ' ' . ($c['nama'] ?? '') . ' ' . ($c['judul'] ?? '') . ' ' . ($c['pembimbing_1_name'] ?? '') . ' ' . ($c['penguji_1_name'] ?? '') . ' ' . $stageLabel)); ?>">
+                                            data-judul="<?= strtolower(htmlspecialchars($judul)); ?>"
+                                            data-dosen="<?= strtolower(htmlspecialchars($p1 . ' ' . $p2 . ' ' . $u1 . ' ' . $u2)); ?>"
+                                            data-search="<?= strtolower(htmlspecialchars(($c['nim'] ?? '') . ' ' . ($c['nama'] ?? '') . ' ' . $judul . ' ' . $p1 . ' ' . $u1 . ' ' . $stageLabel)); ?>">
                                             <td class="py-3.5 px-4 text-center font-mono text-slate-400"><?= $no++; ?></td>
                                             <td class="py-3.5 px-4">
                                                 <div class="font-bold text-slate-900 text-xs sm:text-sm"><?= htmlspecialchars($c['nama'] ?? '-'); ?></div>
                                                 <div class="font-mono text-slate-500 text-[11px] mt-0.5"><?= htmlspecialchars($c['nim'] ?? '-'); ?></div>
                                             </td>
                                             <td class="py-3.5 px-4 max-w-xs sm:max-w-sm">
-                                                <div class="line-clamp-2 text-slate-800 text-xs font-normal" title="<?= htmlspecialchars($c['judul'] ?? '-'); ?>">
-                                                    <?= htmlspecialchars($c['judul'] ?? '-'); ?>
+                                                <div class="line-clamp-2 text-slate-800 text-xs font-normal" title="<?= htmlspecialchars($judul); ?>">
+                                                    <?= htmlspecialchars($judul); ?>
                                                 </div>
                                             </td>
                                             <td class="py-3.5 px-4">
                                                 <?php 
                                                     $bgBadge = 'bg-slate-100 text-slate-700 border-slate-200';
-                                                    if ($stageKey === 'sidang' || $stageKey === 'lulus') $bgBadge = 'bg-rose-50 text-rose-700 border-rose-200';
+                                                    if ($stageKey === 'lulus') $bgBadge = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                                                    elseif ($stageKey === 'sidang') $bgBadge = 'bg-rose-50 text-rose-700 border-rose-200';
                                                     elseif ($stageKey === 'preview3') $bgBadge = 'bg-cyan-50 text-cyan-700 border-cyan-200';
                                                     elseif ($stageKey === 'preview2') $bgBadge = 'bg-indigo-50 text-indigo-700 border-indigo-200';
                                                     elseif ($stageKey === 'preview1') $bgBadge = 'bg-teal-50 text-teal-700 border-teal-200';
+                                                    elseif ($stageKey === 'ketua_kk') $bgBadge = 'bg-purple-50 text-purple-700 border-purple-200';
+                                                    elseif ($stageKey === 'koordinator_ta') $bgBadge = 'bg-orange-50 text-orange-700 border-orange-200';
+                                                    elseif ($stageKey === 'admin_layanan') $bgBadge = 'bg-amber-50 text-amber-700 border-amber-200';
+                                                    elseif ($stageKey === 'dosen_wali') $bgBadge = 'bg-blue-50 text-blue-700 border-blue-200';
                                                 ?>
                                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border <?= $bgBadge; ?>">
                                                     <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
@@ -707,12 +718,15 @@
                                                 </span>
                                             </td>
                                             <td class="py-3.5 px-4 text-[11px] space-y-0.5">
-                                                <div class="text-slate-700"><span class="text-slate-400 font-medium">P1:</span> <?= htmlspecialchars($c['pembimbing_1_name'] ?? '-'); ?></div>
-                                                <?php if (!empty($c['pembimbing_2_name'])): ?>
-                                                    <div class="text-slate-700"><span class="text-slate-400 font-medium">P2:</span> <?= htmlspecialchars($c['pembimbing_2_name']); ?></div>
+                                                <div class="text-slate-700"><span class="text-slate-400 font-medium">P1:</span> <?= htmlspecialchars($p1); ?></div>
+                                                <?php if (!empty($p2) && $p2 !== '-'): ?>
+                                                    <div class="text-slate-700"><span class="text-slate-400 font-medium">P2:</span> <?= htmlspecialchars($p2); ?></div>
                                                 <?php endif; ?>
-                                                <?php if (!empty($c['penguji_1_name'])): ?>
-                                                    <div class="text-indigo-600 font-medium"><span class="text-slate-400 font-normal">U1:</span> <?= htmlspecialchars($c['penguji_1_name']); ?></div>
+                                                <?php if (!empty($u1) && $u1 !== '-'): ?>
+                                                    <div class="text-indigo-600 font-medium"><span class="text-slate-400 font-normal">U1:</span> <?= htmlspecialchars($u1); ?></div>
+                                                <?php endif; ?>
+                                                <?php if (!empty($u2) && $u2 !== '-'): ?>
+                                                    <div class="text-indigo-600 font-medium"><span class="text-slate-400 font-normal">U2:</span> <?= htmlspecialchars($u2); ?></div>
                                                 <?php endif; ?>
                                             </td>
                                             <td class="py-3.5 px-4 text-center">
