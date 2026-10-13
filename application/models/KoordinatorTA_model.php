@@ -2324,6 +2324,21 @@ class KoordinatorTA_model extends CI_Model {
             $m['penguji_1_name']     = $u1;
             $m['penguji_2_name']     = $u2;
 
+            // ATURAN VISIBILITAS:
+            // Mahasiswa di tahap awal (dosen_wali atau pendaftaran) HANYA ditampilkan jika sudah masuk ke Dosen Wali DAN sudah ada berkas yang diunggah.
+            // Mahasiswa yang belum unggah berkas sama sekali atau telah di-reset total tidak ditampilkan di tabel.
+            $totalBerkas = (int)($m['berkas_summary']['total_count'] ?? 0);
+            $hasUploadedBerkas = ($totalBerkas > 0) || 
+                !empty($m['file_ksm']) || 
+                !empty($m['file_transkrip']) || 
+                !empty($m['file_pernyataan']) || 
+                !empty($m['file_bebas_lab']) || 
+                (!empty($m['berkas_status_code']) && $m['berkas_status_code'] !== 'kosong');
+
+            if (in_array($stageKey, array('dosen_wali', 'pendaftaran')) && !$hasUploadedBerkas) {
+                continue;
+            }
+
             // Filter search jika ada
             if (!empty($searchLower)) {
                 $p1Lower = strtolower(trim((string)$p1));
@@ -2450,6 +2465,38 @@ class KoordinatorTA_model extends CI_Model {
 
         $this->db->trans_start();
 
+        // Helper untuk unlink file fisik di semua lokasi direktori upload
+        $unlinkFile = function($rawName) {
+            if (empty($rawName)) return;
+            $rawName = trim((string)$rawName);
+            $decoded = rawurldecode($rawName);
+            $base1 = basename($rawName);
+            $base2 = basename($decoded);
+            $paths = array(
+                FCPATH . $rawName,
+                FCPATH . $decoded,
+                FCPATH . 'uploads/' . $rawName,
+                FCPATH . 'uploads/' . $decoded,
+                FCPATH . 'uploads/persyaratan_ta/' . $rawName,
+                FCPATH . 'uploads/persyaratan_ta/' . $decoded,
+                FCPATH . 'uploads/persyaratan_ta/' . $base1,
+                FCPATH . 'uploads/persyaratan_ta/' . $base2,
+                FCPATH . 'uploads/preview_ta/' . $base1,
+                FCPATH . 'uploads/preview_ta/' . $base2,
+                FCPATH . 'uploads/sidang/' . $base1,
+                FCPATH . 'uploads/sidang/' . $base2,
+                FCPATH . 'uploads/pendaftaran/' . $base1,
+                FCPATH . 'uploads/pendaftaran/' . $base2,
+                FCPATH . 'uploads/pendaftaran_berkas/' . $base1,
+                FCPATH . 'uploads/pendaftaran_berkas/' . $base2,
+            );
+            foreach (array_unique($paths) as $p) {
+                if (!empty($p) && file_exists($p) && is_file($p)) {
+                    @unlink($p);
+                }
+            }
+        };
+
         // 1. Tangani tabel thesis dan unlink file fisik berkas draft/revisi
         if ($this->db->table_exists('thesis')) {
             $stagesToDelete = array();
@@ -2472,15 +2519,7 @@ class KoordinatorTA_model extends CI_Model {
                 foreach ($thesisRows as $tr) {
                     foreach (array('pdf_file', 'file_sitasi', 'file_bimbingan', 'file_persyaratan', 'file_sidang') as $col) {
                         if (!empty($tr[$col])) {
-                            $fName = $tr[$col];
-                            $paths = array(
-                                FCPATH . 'uploads/preview_ta/' . $fName,
-                                FCPATH . 'uploads/sidang/' . $fName,
-                                FCPATH . 'uploads/persyaratan_ta/' . $fName
-                            );
-                            foreach ($paths as $p) {
-                                if (file_exists($p) && is_file($p)) @unlink($p);
-                            }
+                            $unlinkFile($tr[$col]);
                         }
                     }
                 }
@@ -2496,69 +2535,75 @@ class KoordinatorTA_model extends CI_Model {
         $updateGuidance = array();
 
         if ($targetStage === 'reset_total') {
-            $updateGuidance['keterangan']  = 'Pending';
-            $updateGuidance['komentar']    = null;
-            $updateGuidance['status_file'] = 'pending';
-            $updateGuidance['status_preview'] = 'pending';
-            $updateGuidance['status_filesidang'] = null;
-            $updateGuidance['lulus_preview1'] = 0;
-            $updateGuidance['lulus_preview2'] = 0;
-            $updateGuidance['lulus_preview3'] = 0;
-            $updateGuidance['lulus_sidang']   = 0;
-            $updateGuidance['lulus_by_role']  = null;
-            $updateGuidance['lulus_at']       = null;
+            $cleanNim = preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', (string)$nim);
+            $targetIds = array_unique(array_filter([$nim, $cleanNim, $g['id_mhs'] ?? null, 'usr_' . $cleanNim, 'mhs_' . $cleanNim, 'usr_mhs_' . $cleanNim]));
 
-            $updateGuidance['penilaian_pembimbing1'] = null;
-            $updateGuidance['nilai_pembimbing1']     = null;
-            $updateGuidance['penilaian_pembimbing2'] = null;
-            $updateGuidance['nilai_pembimbing2']     = null;
-            $updateGuidance['penilaian_penguji1']    = null;
-            $updateGuidance['nilai_penguji1']        = null;
-            $updateGuidance['penilaian_penguji2']    = null;
-            $updateGuidance['nilai_penguji2']        = null;
+            // A. Hapus berkas fisik & record di file_pendaftaran
+            if ($this->db->table_exists('file_pendaftaran')) {
+                $fpQ = $this->db->group_start()
+                                ->where_in('id_mhs', $targetIds)
+                                ->or_like('id_mhs', $cleanNim)
+                                ->group_end()
+                                ->get('file_pendaftaran');
+                if ($fpQ) {
+                    foreach ($fpQ->result_array() as $fpRow) {
+                        $unlinkFile($fpRow['file'] ?? '');
+                    }
+                }
+                $this->db->group_start()
+                         ->where_in('id_mhs', $targetIds)
+                         ->or_like('id_mhs', $cleanNim)
+                         ->group_end()
+                         ->delete('file_pendaftaran');
+            }
 
-            $updateGuidance['nilaisidang_pembimbing1'] = null;
-            $updateGuidance['nilaisidang_pembimbing2'] = null;
-            $updateGuidance['nilaisidang_penguji1']    = null;
-            $updateGuidance['nilaisidang_penguji2']    = null;
-            $updateGuidance['penilaiansidang_pembimbing1'] = null;
-            $updateGuidance['penilaiansidang_pembimbing2'] = null;
-            $updateGuidance['penilaiansidang_penguji1']    = null;
-            $updateGuidance['penilaiansidang_penguji2']    = null;
+            // B. Hapus berkas fisik & record di pendaftaran_berkas jika ada
+            if ($this->db->table_exists('pendaftaran_berkas')) {
+                $pbQ = $this->db->group_start()
+                                ->where_in('nim', $targetIds)
+                                ->or_like('nim', $cleanNim)
+                                ->group_end()
+                                ->get('pendaftaran_berkas');
+                if ($pbQ) {
+                    foreach ($pbQ->result_array() as $pbRow) {
+                        $unlinkFile($pbRow['file_name'] ?? '');
+                        if (!empty($pbRow['file'])) $unlinkFile($pbRow['file']);
+                    }
+                }
+                $this->db->group_start()
+                         ->where_in('nim', $targetIds)
+                         ->or_like('nim', $cleanNim)
+                         ->group_end()
+                         ->delete('pendaftaran_berkas');
+            }
 
-            $updateGuidance['kelayakan']           = null;
-            $updateGuidance['komentar_kelayakan']  = null;
-            $updateGuidance['kelayakan2']          = null;
-            $updateGuidance['komentar_kelayakan2'] = null;
-            $updateGuidance['kelayakan3']          = null;
-            $updateGuidance['tanggal_presentasi']  = null;
-            $updateGuidance['waktu_presentasi']    = null;
-            $updateGuidance['link_presentasi']     = null;
-            $updateGuidance['ruang_sidang']        = null;
-            $updateGuidance['tanggal_sidang']      = null;
-            $updateGuidance['waktu_sidang']        = null;
-            $updateGuidance['link_sidang']         = null;
-            $updateGuidance['bap']                 = null;
-            $updateGuidance['status_bap']          = null;
-            $updateGuidance['bap2']                = null;
-            $updateGuidance['status_bap2']         = null;
+            // C. Hapus seluruh thesis tersisa untuk mahasiswa ini jika ada
+            if ($this->db->table_exists('thesis')) {
+                $thAll = $this->db->get_where('thesis', array('id_guidance' => $gId))->result_array();
+                foreach ($thAll as $tr) {
+                    foreach (array('pdf_file', 'file_sitasi', 'file_bimbingan', 'file_persyaratan', 'file_sidang') as $col) {
+                        if (!empty($tr[$col])) $unlinkFile($tr[$col]);
+                    }
+                }
+                $this->db->where('id_guidance', $gId)->delete('thesis');
+            }
 
-            // Hapus record di thesis_lecturers agar plotting pembimbing & status KK benar-benar ter-reset
+            // D. Hapus record di thesis_lecturers agar plotting pembimbing & status KK benar-benar bersih
             if ($this->db->table_exists('thesis_lecturers')) {
                 $this->db->where('id_guidance', $gId)->delete('thesis_lecturers');
             }
 
-            // Reset status doswal & adminlaa di file_pendaftaran agar kembali ke tahap awal (Dosen Wali)
-            if ($this->db->table_exists('file_pendaftaran')) {
-                $idMhsCandidates = array_unique(array_filter([$g['id_mhs'], $nim, 'usr_mhs_' . $nim, 'mhs_' . $nim]));
-                $fpUpdate = array();
-                if ($this->db->field_exists('status_doswal', 'file_pendaftaran')) $fpUpdate['status_doswal'] = 'Pending';
-                if ($this->db->field_exists('status_adminlaa', 'file_pendaftaran')) $fpUpdate['status_adminlaa'] = 'Pending';
-                if ($this->db->field_exists('status_kk', 'file_pendaftaran')) $fpUpdate['status_kk'] = 'Pending';
-                if (!empty($fpUpdate)) {
-                    $this->db->where_in('id_mhs', $idMhsCandidates)->update('file_pendaftaran', $fpUpdate);
-                }
-            }
+            // E. Unlink berkas bap / bap2 dari guidance jika ada
+            if (!empty($g['bap']))  $unlinkFile($g['bap']);
+            if (!empty($g['bap2'])) $unlinkFile($g['bap2']);
+
+            // F. Hapus baris guidance mahasiswa secara permanen (reset total dari bersih)
+            $this->db->group_start()
+                     ->where('id', $gId)
+                     ->or_where('id', 'gdn_' . $cleanNim)
+                     ->or_where_in('id_mhs', $targetIds)
+                     ->group_end()
+                     ->delete('guidance');
         } elseif ($targetStage === 'koordinator_ta') {
             $updateGuidance['keterangan']  = 'Pending';
             $updateGuidance['komentar']    = null;
@@ -2789,16 +2834,18 @@ class KoordinatorTA_model extends CI_Model {
             }
         }
 
-        $guidanceFields = $this->db->list_fields('guidance');
-        $finalUpdate = array();
-        foreach ($updateGuidance as $col => $val) {
-            if (in_array($col, $guidanceFields)) {
-                $finalUpdate[$col] = $val;
+        if ($targetStage !== 'reset_total') {
+            $guidanceFields = $this->db->list_fields('guidance');
+            $finalUpdate = array();
+            foreach ($updateGuidance as $col => $val) {
+                if (in_array($col, $guidanceFields)) {
+                    $finalUpdate[$col] = $val;
+                }
             }
-        }
 
-        if (!empty($finalUpdate)) {
-            $this->db->where('id', $gId)->update('guidance', $finalUpdate);
+            if (!empty($finalUpdate)) {
+                $this->db->where('id', $gId)->update('guidance', $finalUpdate);
+            }
         }
 
         $targetLabelMap = array(
@@ -2812,8 +2859,8 @@ class KoordinatorTA_model extends CI_Model {
         );
         $targetLabelText = $targetLabelMap[$targetStage] ?? ucfirst($targetStage);
 
-        // 3. Catat ke downgrade_log di guidance
-        if ($this->db->field_exists('downgrade_log', 'guidance')) {
+        // 3. Catat ke downgrade_log di guidance (hanya jika guidance tidak dihapus)
+        if ($targetStage !== 'reset_total' && $this->db->field_exists('downgrade_log', 'guidance')) {
             $currLogStr = $g['downgrade_log'] ?? '';
             $logArr = array();
             if (!empty($currLogStr)) {
@@ -2864,9 +2911,13 @@ class KoordinatorTA_model extends CI_Model {
             return array('status' => false, 'message' => 'Gagal memproses downgrade karena kesalahan transaksi database.');
         }
 
+        $actionDesc = ($targetStage === 'reset_total')
+            ? 'berhasil di-reset total dari sistem. Seluruh berkas pendaftaran, bimbingan, nilai, dan relasi pembimbing telah dibersihkan bersih. Mahasiswa dapat mendaftar ulang dari awal melalui portal mahasiswa.'
+            : 'berhasil di-downgrade ke ' . $targetLabelText . '. Seluruh nilai, berkas, dan catatan revisi pada tahapan terkait telah dihapus permanen.';
+
         return array(
             'status'  => true,
-            'message' => 'Mahasiswa ' . ($currentInfo['nama'] ?? $nim) . ' (' . $nim . ') berhasil di-downgrade ke ' . $targetLabelText . '. Seluruh nilai, berkas, dan catatan revisi pada tahapan terkait telah dihapus permanen.',
+            'message' => 'Mahasiswa ' . ($currentInfo['nama'] ?? $nim) . ' (' . $nim . ') ' . $actionDesc,
             'dari'    => $currentStageLabel,
             'ke'      => $targetLabelText
         );
