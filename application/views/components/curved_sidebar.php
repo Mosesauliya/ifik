@@ -96,6 +96,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['heading' => 'Kelola & Pendaftaran Akun', 'href' => site_url('import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png', 'subheading' => 'Edit, Hapus & Import Akun'],
 
                 ['category' => 'Pengaturan Tugas Akhir & Sidang', 'has_divider' => true],
+                ['heading' => 'Dinamis Program Studi', 'href' => site_url('superadmin/program_studi'), 'icon_3d' => 'assets/images/icons_3d/preview2.png', 'subheading' => 'Master Program Studi (Prodi)'],
                 ['heading' => 'Dinamis Kelompok Keahlian', 'href' => site_url('superadmin/kelompok_keahlian'), 'icon_3d' => 'assets/images/icons_3d/approval.png', 'subheading' => 'Master Kelompok Keahlian (KK)'],
                 ['heading' => 'Syarat Berkas & Jenis TA', 'href' => site_url('adminlayanan/pengaturan_berkas'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png', 'subheading' => 'Dinamis Berkas & Jenis TA'],
                 ['heading' => 'Syarat Berkas Sidang', 'href' => site_url('adminlayanan/pengaturan_berkas_sidang'), 'icon_3d' => 'assets/images/icons_3d/sidang.png', 'subheading' => 'Dinamis Persyaratan Sidang'],
@@ -242,6 +243,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['heading' => 'Kelola & Pendaftaran Akun', 'href' => site_url('import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png', 'subheading' => 'Edit, Hapus & Import Akun'],
 
                 ['category' => 'Pengaturan Tugas Akhir & Sidang', 'has_divider' => true],
+                ['heading' => 'Dinamis Program Studi', 'href' => site_url('superadmin/program_studi'), 'icon_3d' => 'assets/images/icons_3d/preview2.png', 'subheading' => 'Master Program Studi (Prodi)'],
                 ['heading' => 'Dinamis Kelompok Keahlian', 'href' => site_url('superadmin/kelompok_keahlian'), 'icon_3d' => 'assets/images/icons_3d/approval.png', 'subheading' => 'Master Kelompok Keahlian (KK)'],
                 ['heading' => 'Syarat Berkas & Jenis TA', 'href' => site_url('adminlayanan/pengaturan_berkas'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png', 'subheading' => 'Dinamis Berkas & Jenis TA'],
                 ['heading' => 'Syarat Berkas Sidang', 'href' => site_url('adminlayanan/pengaturan_berkas_sidang'), 'icon_3d' => 'assets/images/icons_3d/sidang.png', 'subheading' => 'Dinamis Persyaratan Sidang'],
@@ -735,3 +737,6 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
 
 <!-- Curved Sidebar Core Script -->
 <script src="<?= base_url('assets/js/curved_sidebar.js?v=' . time()); ?>"></script>
+
+<!-- Global Custom Circle Cursor -->
+<?php $this->load->view('partials/custom_cursor'); ?>

@@ -1,3 +1,9 @@
+<?php
+if (defined('CUSTOM_CURSOR_INCLUDED')) {
+    return;
+}
+define('CUSTOM_CURSOR_INCLUDED', true);
+?>
 <!-- Global Custom Cursor Partial: Glowing Orange Solid Circle (Ultra-Fast 60+ FPS GPU Accelerated) -->
 <style>
     /* Ensure SweetAlert2 popups always render in front of all modal overlays */
@@ -102,6 +108,9 @@
 
 <script>
 (function() {
+    if (window.__customCursorInitialized) return;
+    window.__customCursorInitialized = true;
+
     function setupCursor() {
         if (window.innerWidth <= 900 || window.matchMedia('(pointer: coarse)').matches) {
             const el = document.getElementById('customCursorCircle');

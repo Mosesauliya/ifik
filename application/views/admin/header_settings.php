@@ -3126,5 +3126,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
       setupDropzoneDekanat();
       initRuanganDropzones();
   </script>
+
+  <!-- Global Custom Circle Cursor -->
+  <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>

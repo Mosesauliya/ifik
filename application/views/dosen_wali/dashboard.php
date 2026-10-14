@@ -619,13 +619,16 @@
                             <span>Prodi:</span>
                             <div class="relative inline-flex items-center">
                                 <?php 
-                                    $currentProdi = $dosen_info['prodi'] ?? ($dosen_info['kejuruan'] ?? 'Desain Komunikasi Visual');
-                                    $prodiOptions = ['Desain Komunikasi Visual', 'Informatika'];
+                                    $this->load->helper('fik_prodi');
+                                    $currentProdi = $dosen_info['prodi'] ?? ($dosen_info['kejuruan'] ?? 'S1 Desain Komunikasi Visual (DKV)');
+                                    $prodiOptions = function_exists('fik_program_studi') ? fik_program_studi() : ['S1 Desain Komunikasi Visual (DKV)', 'S1 Informatika'];
                                 ?>
                                 <select name="prodi" onchange="this.form.submit()" 
                                         class="appearance-none font-bold text-slate-800 bg-orange-50/70 hover:bg-orange-100/80 pl-2 pr-6 py-1 rounded-lg border border-orange-200/70 cursor-pointer text-xs outline-none transition-all hover:border-orange-400">
-                                    <?php foreach ($prodiOptions as $po): ?>
-                                        <option value="<?= $po; ?>" <?= ($currentProdi === $po) ? 'selected' : ''; ?>><?= $po; ?></option>
+                                    <?php foreach ($prodiOptions as $po): 
+                                        $isSelected = (strcasecmp($currentProdi, $po) === 0 || stripos($po, $currentProdi) !== false || stripos($currentProdi, $po) !== false);
+                                    ?>
+                                        <option value="<?= $po; ?>" <?= $isSelected ? 'selected' : ''; ?>><?= $po; ?></option>
                                     <?php endforeach; ?>
                                 </select>
                                 <i class="bi bi-chevron-down absolute right-2 text-[9px] text-orange-600 pointer-events-none"></i>

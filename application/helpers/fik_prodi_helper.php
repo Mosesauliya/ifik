@@ -4,6 +4,18 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 if (!function_exists('fik_program_studi')) {
     function fik_program_studi()
     {
+        $CI =& get_instance();
+        if (isset($CI->db) && $CI->db->table_exists('master_prodi')) {
+            $rows = $CI->db->select('nama_prodi')
+                           ->where('is_active', 1)
+                           ->order_by('urutan', 'ASC')
+                           ->get('master_prodi')
+                           ->result_array();
+            if (!empty($rows)) {
+                return array_column($rows, 'nama_prodi');
+            }
+        }
+
         return [
             'S1 Desain Komunikasi Visual (DKV)',
             'S1 Desain Interior',
@@ -12,6 +24,7 @@ if (!function_exists('fik_program_studi')) {
             'S1 Seni Rupa',
             'S1 Film & Animasi',
             'S2 Magister Desain',
+            'S1 Informatika',
         ];
     }
 }

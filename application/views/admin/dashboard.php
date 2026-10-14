@@ -350,5 +350,7 @@
         &copy; <?= date('Y'); ?> Fakultas Industri Kreatif - Telkom University. Central Admin Control Panel.
     </footer>
 
+    <!-- Global Custom Circle Cursor -->
+    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>

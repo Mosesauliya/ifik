@@ -535,5 +535,8 @@ $master_base_query = ['filter_field' => array_column($master_filters['criteria']
         btnTriggerBulkDelete?.addEventListener('click', handleBulkDelete);
         topBtnBulkDelete?.addEventListener('click', handleBulkDelete);
     </script>
+
+    <!-- Global Custom Circle Cursor -->
+    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>
