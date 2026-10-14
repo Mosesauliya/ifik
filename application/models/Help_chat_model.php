@@ -383,6 +383,21 @@ class Help_chat_model extends CI_Model {
 
         $isStaff = in_array(strtolower($sender_role), ['laboran', 'kaur', 'admin_layanan', 'staff', 'admin']);
 
+        // Anti-duplicate / rapid click protection:
+        // Jika pesan identik dikirimkan oleh pengirim yang sama dalam rentang 2 detik terakhir, abaikan duplikasi
+        $lastMsg = $this->db->select('id, sender_id, message, created_at')
+                            ->from($this->table_messages)
+                            ->where('conversation_id', $conversation_id)
+                            ->order_by('id', 'DESC')
+                            ->limit(1)
+                            ->get()->row();
+        if ($lastMsg && $lastMsg->sender_id == $sender_id && trim($lastMsg->message) === trim($message)) {
+            $diffSeconds = time() - strtotime($lastMsg->created_at);
+            if ($diffSeconds <= 2) {
+                return $lastMsg->id;
+            }
+        }
+
         $msgData = [
             'conversation_id' => $conversation_id,
             'sender_id'       => $sender_id,
@@ -496,6 +511,23 @@ class Help_chat_model extends CI_Model {
         $targetRole = strtolower($data['target_role'] ?? 'laboran');
         if (!in_array($targetRole, ['laboran', 'kaur', 'admin_layanan'])) {
             $targetRole = 'laboran';
+        }
+
+        // Anti-duplicate creation jika request ganda terkirim dalam rentang 3 detik
+        if (!empty($data['user_id']) && !empty($data['message'])) {
+            $recent = $this->db->select('id, last_message, created_at')
+                               ->from($this->table_conversations)
+                               ->where('user_id', $data['user_id'])
+                               ->where('target_role', $targetRole)
+                               ->order_by('id', 'DESC')
+                               ->limit(1)
+                               ->get()->row();
+            if ($recent && trim($recent->last_message) === trim($data['message'])) {
+                $diff = time() - strtotime($recent->created_at);
+                if ($diff <= 3) {
+                    return $recent->id;
+                }
+            }
         }
 
         $convData = [
