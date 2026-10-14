@@ -1789,6 +1789,32 @@ class Mahasiswa_model extends CI_Model {
             $this->db->where('id', $g['id'])->update('guidance', $update_g);
         }
 
+        // Jika target rank <= 2 (turun ke Preview 2 atau Preview 1), hapus rekomendasi sidang / non-sidang
+        if ($target_rank <= 2) {
+            if ($this->db->table_exists('rekomen_submission')) {
+                $sub = $this->db->get_where('rekomen_submission', ['nim' => $nim])->result_array();
+                foreach ($sub as $s) {
+                    if (!empty($s['form_data_json'])) {
+                        $fjson = json_decode($s['form_data_json'], true);
+                        if (is_array($fjson)) {
+                            foreach ($fjson as $fj) {
+                                if (is_array($fj) && !empty($fj['file'])) {
+                                    $p = FCPATH . 'uploads/rekomendasi_ta/' . basename($fj['file']);
+                                    if (file_exists($p)) @unlink($p);
+                                    $p2 = FCPATH . 'uploads/persyaratan_ta/' . basename($fj['file']);
+                                    if (file_exists($p2)) @unlink($p2);
+                                } elseif (is_string($fj) && !empty($fj)) {
+                                    $p = FCPATH . 'uploads/persyaratan_ta/' . basename($fj);
+                                    if (file_exists($p)) @unlink($p);
+                                }
+                            }
+                        }
+                    }
+                }
+                $this->db->where('nim', $nim)->delete('rekomen_submission');
+            }
+        }
+
         if ($this->db->table_exists('pendaftaran_ta')) {
             $stage_map_title = ['preview1' => 'Preview 1', 'preview2' => 'Preview 2', 'preview3' => 'Preview 3'];
             $update_ta = ['current_stage' => 'Bimbingan (' . ($stage_map_title[$ke] ?? ucfirst($ke)) . ')'];

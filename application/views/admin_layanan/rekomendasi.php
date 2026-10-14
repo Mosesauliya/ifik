@@ -109,53 +109,162 @@
             font-size: 0.75rem;
             font-weight: 700;
         }
+
+        /* Multi Preview Cards (Matching dosen_bimbingan) */
+        .preview-card-item {
+            pointer-events: auto;
+            background: #ffffff;
+            border-radius: 1.25rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+            border: 1px solid #cbd5e1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            width: 780px;
+            max-width: 72vw;
+            height: 88vh;
+            max-height: 90vh;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .preview-card-item.preview-fullscreen-mode {
+            position: fixed !important;
+            top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+            width: 100vw !important; height: 100vh !important;
+            max-width: 100vw !important; max-height: 100vh !important;
+            z-index: 999999 !important;
+            border-radius: 0 !important; border: none !important;
+            box-shadow: none !important; margin: 0 !important;
+        }
+
+        @keyframes cardFadeIn {
+            from { opacity: 0; transform: translateY(12px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-card-in {
+            animation: cardFadeIn 0.2s ease-out forwards;
+        }
+
+        @media (max-width: 768px) {
+            .preview-card-item {
+                width: 92vw !important;
+                max-width: 92vw !important;
+                height: 80vh !important;
+                max-height: 80vh !important;
+            }
+        }
+
+        /* Multi Filter Search Styles (Persis dosen_bimbingan) */
+        .filter-row-dw {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .filter-col-dw {
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            background: #fff;
+            color: #1e293b;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            flex-shrink: 0;
+            min-width: 170px;
+        }
+        .filter-col-dw:focus {
+            border-color: #ea580c;
+            box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12);
+        }
+        .filter-val-dw {
+            flex: 1;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #f8fafc;
+            color: #1e293b;
+            outline: none;
+            transition: all 0.18s ease;
+        }
+        .filter-val-dw:focus {
+            border-color: #ea580c;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12);
+        }
+        .btn-remove-filter-dw {
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            background: #ffe4e6;
+            color: #e11d48;
+            border: 1.5px solid #fecdd3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+        .btn-remove-filter-dw:hover { background: #fecdd3; transform: scale(1.05); }
+        .btn-remove-filter-dw:active { transform: scale(0.95); }
+        @media (max-width: 768px) {
+            .filter-row-dw { flex-wrap: wrap; }
+            .filter-col-dw { min-width: 100%; }
+        }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased pb-16">
+<body class="bg-slate-50 text-slate-800 antialiased">
 
     <!-- Dedicated Admin LAA Sidebar Component -->
     <?php $this->load->view('admin_layanan/sidebar'); ?>
 
-    <!-- Sub Navigation Page Title Bar -->
-    <div class="glass-header sticky top-0 z-30 px-4 sm:px-6 py-3.5 mb-6">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-                <a href="<?= site_url('adminlayanan'); ?>" class="w-10 h-10 rounded-xl bg-orange-100/70 border border-orange-200 text-brand-600 flex items-center justify-center font-bold text-sm shadow-xs shrink-0 hover:bg-orange-200/80 transition">
-                    <i class="fa-solid fa-arrow-left"></i>
-                </a>
-                <div>
-                    <div class="flex items-center gap-2">
-                        <span class="px-2.5 py-0.5 rounded-full bg-orange-100 text-brand-600 text-[10px] font-extrabold uppercase tracking-wide border border-orange-200">
-                            Admin Layanan LAA
-                        </span>
-                        <h1 class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">Rekomendasi &amp; Kelola Tahap TA</h1>
+    <div class="page-wrapper-for-sidebar flex flex-col min-h-screen flex-grow pb-16">
+        <!-- Sub Navigation Page Title Bar -->
+        <div class="glass-header sticky top-0 z-30 px-4 sm:px-6 lg:px-8 py-3.5 mb-6">
+            <div class="w-full flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <a href="<?= site_url('adminlayanan'); ?>" class="w-10 h-10 rounded-xl bg-orange-100/70 border border-orange-200 text-brand-600 flex items-center justify-center font-bold text-sm shadow-xs shrink-0 hover:bg-orange-200/80 transition">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </a>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded-full bg-orange-100 text-brand-600 text-[10px] font-extrabold uppercase tracking-wide border border-orange-200">
+                                Admin Layanan LAA
+                            </span>
+                            <h1 class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">Rekomendasi &amp; Kelola Tahap TA</h1>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-0.5">Peninjauan berkas submission rekomendasi Pembimbing 1 dan kontrol penyesuaian (downgrade) tahap bimbingan.</p>
                     </div>
-                    <p class="text-xs text-slate-500 mt-0.5">Peninjauan berkas submission rekomendasi Pembimbing 1 dan kontrol penyesuaian (downgrade) tahap bimbingan.</p>
                 </div>
-            </div>
 
-            <!-- Profile & Quick Actions -->
-            <div class="flex items-center gap-2.5 sm:gap-3 justify-end">
-                <a href="<?= site_url('adminlayanan/pengaturan_jalur'); ?>" class="btn-3d-kinetic inline-flex items-center gap-2 shrink-0">
-                    <span class="bg"></span>
-                    <span class="wrap">
-                        <i class="bi bi-sliders text-white text-xs mr-1.5"></i>
-                        <span class="char">Pengaturan Jalur</span>
-                    </span>
-                </a>
-                <div class="hidden lg:flex flex-col text-right ml-2">
-                    <span class="text-xs font-bold text-slate-800 leading-tight">Admin Layanan LAA</span>
-                    <span class="text-[10px] font-semibold text-slate-500">Layanan Akademik FIK</span>
-                </div>
-                <div class="hidden sm:flex w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 text-brand-600 items-center justify-center font-bold text-base shadow-xs shrink-0">
-                    <i class="fa-solid fa-user-check"></i>
+                <!-- Profile & Quick Actions -->
+                <div class="flex items-center gap-2.5 sm:gap-3 justify-end">
+                    <a href="<?= site_url('adminlayanan/pengaturan_jalur'); ?>" class="btn-3d-kinetic inline-flex items-center gap-2 shrink-0">
+                        <span class="bg"></span>
+                        <span class="wrap">
+                            <i class="bi bi-sliders text-white text-xs mr-1.5"></i>
+                            <span class="char">Pengaturan Jalur</span>
+                        </span>
+                    </a>
+                    <div class="hidden lg:flex flex-col text-right ml-2">
+                        <span class="text-xs font-bold text-slate-800 leading-tight">Admin Layanan LAA</span>
+                        <span class="text-[10px] font-semibold text-slate-500">Layanan Akademik FIK</span>
+                    </div>
+                    <div class="hidden sm:flex w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 text-brand-600 items-center justify-center font-bold text-base shadow-xs shrink-0">
+                        <i class="fa-solid fa-user-check"></i>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Main Container -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6">
+        <!-- Main Container -->
+        <main class="w-full px-4 sm:px-6 lg:px-8 flex-grow">
 
         <!-- Stats Overview Cards Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-8">
@@ -224,54 +333,65 @@
             </a>
         </div>
 
-        <!-- Filter & Search Bar Container -->
-        <div class="card-custom p-4 sm:p-5 mb-6">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                
-                <!-- Filter Tabs -->
-                <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-                    <a href="<?= site_url('adminlayanan/rekomendasi?filter=all' . (!empty($search) ? '&q=' . urlencode($search) : '')); ?>" 
-                       class="px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap <?= $filter_type === 'all' ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' ?>">
-                        Semua
-                    </a>
-                    <a href="<?= site_url('adminlayanan/rekomendasi?filter=non_sidang' . (!empty($search) ? '&q=' . urlencode($search) : '')); ?>" 
-                       class="px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap <?= $filter_type === 'non_sidang' ? 'bg-purple-600 text-white shadow-md shadow-purple-500/25' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' ?>">
-                        <i class="bi bi-award-fill mr-1"></i> Non-Sidang (<?= $stats['non_sidang']; ?>)
-                    </a>
-                    <a href="<?= site_url('adminlayanan/rekomendasi?filter=sidang' . (!empty($search) ? '&q=' . urlencode($search) : '')); ?>" 
-                       class="px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap <?= $filter_type === 'sidang' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/25' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' ?>">
-                        <i class="bi bi-mortarboard-fill mr-1"></i> Sidang Reguler (<?= $stats['sidang']; ?>)
-                    </a>
-                    <a href="<?= site_url('adminlayanan/rekomendasi?filter=pending' . (!empty($search) ? '&q=' . urlencode($search) : '')); ?>" 
-                       class="px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap <?= $filter_type === 'pending' ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' ?>">
-                        <i class="fa-solid fa-clock mr-1"></i> Belum Rekomendasi (<?= $stats['pending']; ?>)
-                    </a>
+        <!-- Filter Tabs & Multi-Criteria Search Panel -->
+        <div class="card-custom p-4 sm:p-5 mb-6 space-y-4">
+            <!-- Filter Tabs -->
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                <a href="<?= site_url('adminlayanan/rekomendasi?filter=all'); ?>" 
+                   class="px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap <?= $filter_type === 'all' ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' ?>">
+                    Semua
+                </a>
+                <a href="<?= site_url('adminlayanan/rekomendasi?filter=non_sidang'); ?>" 
+                   class="px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap <?= $filter_type === 'non_sidang' ? 'bg-purple-600 text-white shadow-md shadow-purple-500/25' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' ?>">
+                    <i class="bi bi-award-fill mr-1"></i> Non-Sidang (<?= $stats['non_sidang']; ?>)
+                </a>
+                <a href="<?= site_url('adminlayanan/rekomendasi?filter=sidang'); ?>" 
+                   class="px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap <?= $filter_type === 'sidang' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/25' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' ?>">
+                    <i class="bi bi-mortarboard-fill mr-1"></i> Sidang Reguler (<?= $stats['sidang']; ?>)
+                </a>
+                <a href="<?= site_url('adminlayanan/rekomendasi?filter=pending'); ?>" 
+                   class="px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap <?= $filter_type === 'pending' ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' ?>">
+                    <i class="fa-solid fa-clock mr-1"></i> Belum Rekomendasi (<?= $stats['pending']; ?>)
+                </a>
+            </div>
+
+            <!-- Multi-Criteria Filter Panel (Identik dosen_bimbingan.php) -->
+            <div id="multiFilterPanelDW" class="bg-slate-50/70 rounded-2xl border border-slate-200 p-4 shadow-2xs">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-orange-700 flex items-center gap-1.5">
+                        <i class="bi bi-funnel-fill"></i> Filter Multi-Kriteria (Maksimal 4 Kriteria)
+                    </span>
+                    <div class="flex items-center gap-2">
+                        <button type="button" id="btnAddFilterDW" onclick="addFilterRowDW()"
+                                class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 transition cursor-pointer">
+                            <i class="bi bi-plus-lg"></i> Tambah Filter
+                            <span id="filterCountBadgeDW" class="bg-white/30 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">1/4</span>
+                        </button>
+                        <button type="button" onclick="resetFiltersDW()"
+                                class="px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-600 hover:bg-orange-50 transition cursor-pointer flex items-center gap-1.5">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reset
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Search Input Form -->
-                <form action="<?= site_url('adminlayanan/rekomendasi'); ?>" method="GET" class="flex items-center gap-2 w-full md:w-80">
-                    <input type="hidden" name="filter" value="<?= htmlspecialchars($filter_type); ?>">
-                    <div class="relative w-full">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                        <input type="text" name="q" value="<?= htmlspecialchars($search); ?>" placeholder="Cari nama, NIM, judul, jalur..." 
-                               class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:bg-white transition">
-                    </div>
-                    <?php if(!empty($search)): ?>
-                        <a href="<?= site_url('adminlayanan/rekomendasi?filter=' . htmlspecialchars($filter_type)); ?>" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 text-xs shrink-0" title="Reset Pencarian">
-                            <i class="fa-solid fa-xmark"></i>
-                        </a>
-                    <?php endif; ?>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs shadow-sm shrink-0 transition">
-                        Cari
+                <div id="filterRowsDW" class="space-y-2 mb-3"></div>
+
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-200">
+                    <p class="text-[10px] text-slate-400 font-medium italic">
+                        <i class="bi bi-info-circle"></i> Tekan <strong>Enter</strong> atau klik <strong>Cari</strong> untuk menyaring data seketika.
+                    </p>
+                    <button type="button" onclick="doMultiSearchDW()"
+                            class="px-5 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold shadow-md flex items-center gap-1.5 transition cursor-pointer">
+                        <i class="bi bi-search"></i> Cari
                     </button>
-                </form>
+                </div>
             </div>
         </div>
 
         <!-- Table Data Card -->
         <div class="card-custom overflow-hidden mb-12">
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+                <table class="w-full text-left border-collapse" id="rekomendasiTable">
                     <thead>
                         <tr class="border-b border-slate-100 bg-slate-50/70 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                             <th class="py-3.5 px-4 w-12 text-center">No</th>
@@ -283,8 +403,19 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-xs">
+                        <!-- Row state saat filter tidak menemukan hasil -->
+                        <tr id="noDataFilterRow" class="hidden">
+                            <td colspan="6" class="py-16 text-center text-slate-400 font-medium">
+                                <div class="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3 text-2xl">
+                                    <i class="bi bi-search"></i>
+                                </div>
+                                <p class="font-bold text-slate-600">Tidak ada data mahasiswa ditemukan</p>
+                                <p class="text-[11px] text-slate-400 mt-1">Coba sesuaikan kata kunci pencarian pada filter.</p>
+                            </td>
+                        </tr>
+
                         <?php if(empty($list)): ?>
-                            <tr>
+                            <tr id="emptyDbRow">
                                 <td colspan="6" class="py-16 text-center text-slate-400 font-medium">
                                     <div class="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3 text-2xl">
                                         <i class="bi bi-inbox-fill"></i>
@@ -295,10 +426,17 @@
                             </tr>
                         <?php else: ?>
                             <?php $no = 1; foreach($list as $r): ?>
-                                <tr class="hover:bg-orange-50/30 transition-colors group">
+                                <tr class="mhs-row hover:bg-orange-50/30 transition-colors group"
+                                    data-nim="<?= htmlspecialchars(strtolower($r['nim'])); ?>"
+                                    data-nama="<?= htmlspecialchars(strtolower($r['nama_mahasiswa'])); ?>"
+                                    data-judul="<?= htmlspecialchars(strtolower($r['judul'] ?? '')); ?>"
+                                    data-dosen="<?= htmlspecialchars(strtolower($r['pembimbing_1'] . ' ' . $r['pembimbing_2'] . ' ' . $r['penguji_1'])); ?>"
+                                    data-tahap="<?= htmlspecialchars(strtolower($r['tahap_terkini'] . ' ' . $r['tahap_key'])); ?>"
+                                    data-jalur="<?= htmlspecialchars(strtolower(($r['recommendation_type'] ?? '') . ' ' . ($r['jalur_title'] ?? ''))); ?>"
+                                    data-all="<?= htmlspecialchars(strtolower($r['nim'] . ' ' . $r['nama_mahasiswa'] . ' ' . ($r['judul'] ?? '') . ' ' . $r['pembimbing_1'] . ' ' . $r['pembimbing_2'] . ' ' . $r['penguji_1'] . ' ' . $r['tahap_terkini'] . ' ' . ($r['recommendation_type'] ?? '') . ' ' . ($r['jalur_title'] ?? ''))); ?>">
                                     
                                     <!-- 1. No -->
-                                    <td class="py-4 px-4 text-center font-bold text-slate-400">
+                                    <td class="py-4 px-4 text-center font-bold text-slate-400 row-number">
                                         <?= $no++; ?>
                                     </td>
 
@@ -388,9 +526,9 @@
                                                         <?php foreach($r['files_uploaded'] as $fkey => $fitem): ?>
                                                             <?php if(is_array($fitem) && !empty($fitem['file'])): ?>
                                                                 <button type="button" 
-                                                                        onclick="openPdfPreview('<?= htmlspecialchars($fitem['file']); ?>', '<?= htmlspecialchars(addslashes($fitem['label'] ?? $fkey)); ?>', '<?= htmlspecialchars(addslashes($r['nama_mahasiswa'])); ?> (<?= htmlspecialchars($r['nim']); ?>)')"
+                                                                        onclick="previewBerkasDynamic('<?= htmlspecialchars($fitem['file']); ?>', '<?= htmlspecialchars(addslashes($fitem['label'] ?? $fkey)); ?>', '<?= htmlspecialchars(addslashes($r['nama_mahasiswa'])); ?>', '<?= htmlspecialchars($r['nim']); ?>')"
                                                                         class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-orange-50 hover:bg-orange-100 text-brand-700 border border-orange-200 text-[10px] font-bold transition cursor-pointer"
-                                                                        title="Buka Dokumen di Pop-up">
+                                                                        title="Buka Pratinjau Dokumen (Bisa Buka Banyak)">
                                                                     <i class="bi bi-file-earmark-pdf-fill"></i>
                                                                     <span><?= htmlspecialchars($fitem['label'] ?? $fkey); ?></span>
                                                                     <i class="bi bi-eye-fill text-[8px] opacity-70"></i>
@@ -435,6 +573,7 @@
         </div>
 
     </main>
+    </div> <!-- End .page-wrapper-for-sidebar -->
 
     <!-- ============================================================== -->
     <!-- MODAL DOWNGRADE TAHAP PREVIEW (LAA) -->
@@ -560,64 +699,316 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- MODAL PRATINJAU DOKUMEN PDF (POP-UP CEK DOKUMEN) -->
+    <!-- OVERLAY MULTI-DOKUMEN PREVIEW (MIRIP DOSEN_BIMBINGAN DINAMIS) -->
     <!-- ============================================================== -->
-    <div id="pdfModal" class="fixed inset-0 z-[10001] bg-slate-900/80 backdrop-blur-xs hidden items-center justify-center p-3 sm:p-5">
-        <div class="bg-white rounded-2xl max-w-5xl w-full h-[88vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
-            <div class="p-3.5 px-5 bg-slate-900 text-white flex items-center justify-between shrink-0">
-                <div class="flex items-center gap-3 truncate mr-4">
-                    <div class="w-8 h-8 rounded-xl bg-orange-600/30 border border-orange-500/50 text-orange-400 flex items-center justify-center font-bold text-sm shrink-0">
-                        <i class="fa-solid fa-file-pdf"></i>
-                    </div>
-                    <div class="truncate">
-                        <h3 class="text-xs font-bold text-white flex items-center gap-2 truncate" id="pdfModalTitle">Pratinjau Dokumen</h3>
-                        <p class="text-[10px] text-slate-400 truncate" id="pdfModalSubtitle">Memuat tampilan dokumen...</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2 shrink-0">
-                    <a id="pdfModalNewTab" href="#" target="_blank" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer" title="Buka di Tab Baru">
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                    </a>
-                    <button type="button" onclick="closePdfModal()" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer" title="Tutup">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
-                </div>
+    <div id="lihatBerkasContainer" class="fixed inset-0 pointer-events-none z-[10001] flex flex-col p-3 sm:p-5 gap-3 overflow-hidden bg-slate-900/60 backdrop-blur-xs" style="display: none;">
+        <!-- Top Summary Bar -->
+        <div id="previewHeaderBar" class="pointer-events-auto shrink-0 flex items-center justify-between bg-slate-900 text-white px-4 py-2.5 rounded-2xl shadow-xl border border-slate-700 max-w-full">
+            <div class="flex items-center gap-2.5 truncate mr-3">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+                <span class="font-extrabold text-xs" id="previewCountBadge">1 Dokumen Terbuka</span>
+                <span class="text-[11px] text-slate-400 hidden md:inline">• Anda dapat membuka lebih dari 1 file sekaligus dan menggeser ke samping</span>
             </div>
-            <div class="flex-1 bg-slate-100 relative overflow-hidden">
-                <iframe id="pdfFrame" src="about:blank" class="w-full h-full border-none"></iframe>
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="closeAllPreviews()" class="px-3 py-1 rounded-xl bg-rose-600/90 hover:bg-rose-600 text-white font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-xs">
+                    <i class="bi bi-x-circle-fill"></i>
+                    <span>Tutup Semua</span>
+                </button>
             </div>
+        </div>
+
+        <!-- Horizontal Scrollable Cards Container -->
+        <div id="wrapperPreviewBerkas" class="pointer-events-auto flex-1 overflow-x-auto overflow-y-hidden gap-4 flex items-stretch pb-1">
+            <!-- Populated dynamically via JS -->
         </div>
     </div>
 
     <!-- Script Handling -->
     <script>
-        // Modal PDF Viewer Handler (mirip Cek Dokumen Massal Popup)
-        function openPdfPreview(url, title, subtitle) {
-            const modal = document.getElementById('pdfModal');
-            const frame = document.getElementById('pdfFrame');
-            const titleEl = document.getElementById('pdfModalTitle');
-            const subEl = document.getElementById('pdfModalSubtitle');
-            const newTabEl = document.getElementById('pdfModalNewTab');
+        // ==============================================================
+        // MULTI-CRITERIA FILTER (IDENTIK DOSEN_BIMBINGAN)
+        // ==============================================================
+        let filtersDW = [{ col: 'all', val: <?= !empty($search) ? json_encode($search) : "''" ?> }];
 
-            if (titleEl) titleEl.textContent = title || 'Pratinjau Dokumen';
-            if (subEl) subEl.textContent = subtitle || url;
-            if (newTabEl) newTabEl.href = url;
-            if (frame) frame.src = url;
-
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            document.body.style.overflow = 'hidden';
+        function addFilterRowDW(col = 'all', val = '') {
+            if (filtersDW.length >= 4) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Maksimal 4 kriteria filter.', timer: 1500, showConfirmButton: false });
+                } else {
+                    alert('Maksimal 4 kriteria filter.');
+                }
+                return;
+            }
+            filtersDW.push({ col, val });
+            renderFilterRowsDW();
         }
 
-        function closePdfModal() {
-            const modal = document.getElementById('pdfModal');
-            const frame = document.getElementById('pdfFrame');
-            if (frame) frame.src = 'about:blank';
-            if (modal) {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
+        function removeFilterRowDW(idx) {
+            if (filtersDW.length <= 1) return;
+            filtersDW.splice(idx, 1);
+            renderFilterRowsDW();
+            doMultiSearchDW();
+        }
+
+        function renderFilterRowsDW() {
+            const container = document.getElementById('filterRowsDW');
+            if (!container) return;
+            const COLUMNS = [
+                { label: 'Semua Kolom', value: 'all' },
+                { label: 'Nama Mahasiswa', value: 'nama' },
+                { label: 'NIM', value: 'nim' },
+                { label: 'Judul Tugas Akhir', value: 'judul' },
+                { label: 'Pembimbing / Penguji', value: 'dosen' },
+                { label: 'Tahap Bimbingan', value: 'tahap' },
+                { label: 'Jalur Rekomendasi', value: 'jalur' }
+            ];
+
+            container.innerHTML = filtersDW.map((f, i) => `
+                <div class="filter-row-dw">
+                    <span class="text-[10px] font-bold text-slate-500 w-14 shrink-0">Filter #${i + 1}:</span>
+                    <select class="filter-col-dw" data-idx="${i}">
+                        ${COLUMNS.map(c => `<option value="${c.value}" ${c.value === f.col ? 'selected' : ''}>${c.label}</option>`).join('')}
+                    </select>
+                    <input type="text" class="filter-val-dw" data-idx="${i}"
+                           value="${(f.val || '').replace(/"/g, '&quot;')}"
+                           placeholder="Ketik kata kunci pencarian..."
+                           onkeydown="if(event.key==='Enter'){event.preventDefault();doMultiSearchDW();}">
+                    ${i > 0 ? `<button type="button" class="btn-remove-filter-dw" onclick="removeFilterRowDW(${i})" title="Hapus filter"><i class="bi bi-x-lg"></i></button>` : ''}
+                </div>
+            `).join('');
+
+            updateFilterBadgeDW();
+        }
+
+        function updateFilterBadgeDW() {
+            const badge = document.getElementById('filterCountBadgeDW');
+            const btnAdd = document.getElementById('btnAddFilterDW');
+            if (badge) badge.textContent = `${filtersDW.length}/4`;
+            if (btnAdd) {
+                btnAdd.style.opacity = filtersDW.length >= 4 ? '0.5' : '1';
+                btnAdd.style.pointerEvents = filtersDW.length >= 4 ? 'none' : 'auto';
             }
-            document.body.style.overflow = '';
+        }
+
+        function doMultiSearchDW() {
+            document.querySelectorAll('.filter-col-dw').forEach(sel => {
+                const idx = parseInt(sel.dataset.idx);
+                if (filtersDW[idx]) filtersDW[idx].col = sel.value;
+            });
+            document.querySelectorAll('.filter-val-dw').forEach(inp => {
+                const idx = parseInt(inp.dataset.idx);
+                if (filtersDW[idx]) filtersDW[idx].val = inp.value;
+            });
+
+            const rows = document.querySelectorAll('.mhs-row');
+            const noDataRow = document.getElementById('noDataFilterRow');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                let matchAll = true;
+
+                for (let f of filtersDW) {
+                    const query = (f.val || '').trim().toLowerCase();
+                    if (!query) continue;
+
+                    let haystack = '';
+                    if (f.col === 'all') {
+                        haystack = row.getAttribute('data-all') || '';
+                    } else {
+                        haystack = row.getAttribute('data-' + f.col) || '';
+                    }
+
+                    if (!haystack.toLowerCase().includes(query)) {
+                        matchAll = false;
+                        break;
+                    }
+                }
+
+                if (matchAll) {
+                    row.style.display = '';
+                    visibleCount++;
+                    const numCell = row.querySelector('.row-number');
+                    if (numCell) numCell.textContent = visibleCount;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            if (noDataRow) {
+                if (visibleCount === 0 && rows.length > 0) {
+                    noDataRow.classList.remove('hidden');
+                } else {
+                    noDataRow.classList.add('hidden');
+                }
+            }
+        }
+
+        function resetFiltersDW() {
+            filtersDW = [{ col: 'all', val: '' }];
+            renderFilterRowsDW();
+            doMultiSearchDW();
+        }
+
+        window.addFilterRowDW = addFilterRowDW;
+        window.removeFilterRowDW = removeFilterRowDW;
+        window.renderFilterRowsDW = renderFilterRowsDW;
+        window.doMultiSearchDW = doMultiSearchDW;
+        window.resetFiltersDW = resetFiltersDW;
+
+        // ==============================================================
+        // DYNAMIC MULTI-FILE PREVIEW SYSTEM (MIRIP DOSEN_BIMBINGAN)
+        // ==============================================================
+        window.activePreviews = [];
+
+        function previewBerkasDynamic(fileUrl, label, studentName, nim) {
+            if (!fileUrl) return;
+
+            // Check if already open
+            const existingIdx = window.activePreviews.findIndex(p => p.fileUrl === fileUrl);
+            if (existingIdx > -1) {
+                const card = document.getElementById('previewCard_' + window.activePreviews[existingIdx].id);
+                if (card) {
+                    card.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                    card.classList.add('ring-4', 'ring-orange-500');
+                    setTimeout(() => card.classList.remove('ring-4', 'ring-orange-500'), 1000);
+                }
+                return;
+            }
+
+            // Limit to max 6 documents simultaneously
+            if (window.activePreviews.length >= 6) {
+                window.activePreviews.shift();
+            }
+
+            const uniqueId = 'pv_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+            window.activePreviews.push({
+                id: uniqueId,
+                fileUrl: fileUrl,
+                label: label || 'Dokumen',
+                studentName: studentName || 'Mahasiswa',
+                nim: nim || '-'
+            });
+
+            renderAllPreviewCards();
+
+            // Smooth scroll to newest card
+            setTimeout(() => {
+                const newCard = document.getElementById('previewCard_' + uniqueId);
+                if (newCard) newCard.scrollIntoView({ behavior: 'smooth', inline: 'end' });
+            }, 60);
+        }
+
+        function renderAllPreviewCards() {
+            const container = document.getElementById('lihatBerkasContainer');
+            const wrapper   = document.getElementById('wrapperPreviewBerkas');
+            const countEl   = document.getElementById('previewCountBadge');
+
+            if (!container || !wrapper) return;
+
+            if (window.activePreviews.length === 0) {
+                container.style.display = 'none';
+                wrapper.innerHTML = '';
+                document.body.style.overflow = '';
+                return;
+            }
+
+            container.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+
+            if (countEl) {
+                countEl.textContent = `${window.activePreviews.length} Dokumen Terbuka`;
+            }
+
+            const total = window.activePreviews.length;
+            let html = '';
+
+            window.activePreviews.forEach((p, idx) => {
+                const uniqueKey = p.id;
+                const slotNum = idx + 1;
+
+                html += `
+                    <div class="preview-card-item pointer-events-auto bg-white rounded-3xl shadow-2xl border border-slate-300 overflow-hidden flex flex-col shrink-0 animate-card-in" id="previewCard_${uniqueKey}">
+                        <div class="p-2.5 px-3.5 bg-slate-900 text-white flex items-center justify-between gap-2.5 shrink-0 border-b border-slate-800">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <div class="w-7 h-7 rounded-lg bg-orange-600/30 border border-orange-500/50 text-orange-400 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                                    ${total > 1 ? slotNum : '<i class="bi bi-file-pdf"></i>'}
+                                </div>
+                                <div class="min-w-0">
+                                    <h4 class="text-xs font-bold text-white truncate max-w-[200px] sm:max-w-[280px]" title="${p.label}">${p.label}</h4>
+                                    <p class="text-[10px] text-slate-300 font-medium truncate">${p.studentName} · <span class="font-mono text-slate-400">${p.nim}</span></p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1 shrink-0">
+                                <button type="button" onclick="toggleFullscreenPreview('${uniqueKey}')" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Layar Penuh">
+                                    <i class="bi bi-arrows-fullscreen" id="fsIcon_${uniqueKey}"></i>
+                                </button>
+                                <a href="${p.fileUrl}" target="_blank" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Buka di Tab Baru">
+                                    <i class="bi bi-box-arrow-up-right"></i>
+                                </a>
+                                <button type="button" onclick="closeSinglePreview(${idx})" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-rose-600/80 text-slate-300 hover:text-white flex items-center justify-center text-xs font-bold transition cursor-pointer ml-0.5" title="Tutup Dokumen Ini">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex-1 relative bg-slate-100 overflow-hidden" style="min-height: 250px;">
+                            <div class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 text-xs z-0" id="previewLoader_${uniqueKey}">
+                                <i class="bi bi-arrow-repeat animate-spin text-2xl mb-1 text-orange-500"></i>
+                                <span>Memuat dokumen...</span>
+                            </div>
+                            <iframe src="${p.fileUrl}#toolbar=0&navpanes=0" class="w-full h-full border-0 relative z-10" onload="document.getElementById('previewLoader_${uniqueKey}').style.display='none'" title="${p.label}"></iframe>
+                        </div>
+
+                        <div class="p-2.5 px-3.5 bg-white flex items-center justify-between text-xs shrink-0 gap-2 border-t border-slate-200">
+                            <div class="flex items-center gap-2 truncate mr-2">
+                                <span class="font-mono text-[11px] font-bold text-orange-600">${p.nim}</span>
+                                <span class="text-slate-300">|</span>
+                                <span class="text-[11px] text-slate-600 font-semibold truncate">${p.studentName}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <a href="${p.fileUrl}" download target="_blank" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs text-[11px]">
+                                    <i class="bi bi-download"></i><span>Unduh</span>
+                                </a>
+                                <button type="button" onclick="closeSinglePreview(${idx})" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold transition cursor-pointer text-[11px] shadow-2xs">
+                                    Tutup
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            wrapper.innerHTML = html;
+        }
+
+        function closeSinglePreview(index) {
+            if (index < 0 || index >= window.activePreviews.length) return;
+            window.activePreviews.splice(index, 1);
+            renderAllPreviewCards();
+        }
+
+        function closeAllPreviews() {
+            window.activePreviews = [];
+            renderAllPreviewCards();
+        }
+
+        function toggleFullscreenPreview(uniqueKey) {
+            const card = document.getElementById('previewCard_' + uniqueKey);
+            const icon = document.getElementById('fsIcon_' + uniqueKey);
+            if (!card) return;
+
+            const isFs = card.classList.toggle('preview-fullscreen-mode');
+            if (icon) {
+                icon.className = isFs ? 'bi bi-fullscreen-exit text-orange-400 font-bold' : 'bi bi-arrows-fullscreen';
+            }
+        }
+
+        // Backward compatibility fallback
+        function openPdfPreview(url, title, subtitle) {
+            previewBerkasDynamic(url, title, subtitle || '', '');
+        }
+        function closePdfModal() {
+            closeAllPreviews();
         }
 
         // Logic dampak data yang dihapus / di-reset berdasarkan tahap asal & tujuan
@@ -838,7 +1229,7 @@
                                     <span class="text-[10px] text-slate-400 truncate block">${item.original_name || 'Dokumen'}</span>
                                 </div>
                             </div>
-                            <button type="button" onclick="openPdfPreview('${item.file}', '${safeLabel}', '${safeNama} (${nim})')" class="px-3 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-bold text-[11px] shrink-0 transition flex items-center gap-1 shadow-xs cursor-pointer">
+                            <button type="button" onclick="previewBerkasDynamic('${item.file}', '${safeLabel}', '${safeNama}', '${nim}')" class="px-3 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-bold text-[11px] shrink-0 transition flex items-center gap-1 shadow-xs cursor-pointer">
                                 <i class="bi bi-eye-fill text-[11px]"></i>
                                 <span>Buka File</span>
                             </button>
@@ -859,12 +1250,17 @@
             document.getElementById('modalDetailBerkas').classList.add('hidden');
         }
 
-        // Close modals on dark backdrop click & Escape key
+        // Initialize filters and close modals on dark backdrop click & Escape key
         document.addEventListener('DOMContentLoaded', () => {
-            const pdfModal = document.getElementById('pdfModal');
-            if (pdfModal) {
-                pdfModal.addEventListener('click', (e) => {
-                    if (e.target === pdfModal) closePdfModal();
+            renderFilterRowsDW();
+            if (filtersDW[0].val) {
+                doMultiSearchDW();
+            }
+
+            const lbContainer = document.getElementById('lihatBerkasContainer');
+            if (lbContainer) {
+                lbContainer.addEventListener('click', (e) => {
+                    if (e.target === lbContainer) closeAllPreviews();
                 });
             }
 
@@ -885,9 +1281,15 @@
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                const pdfModal = document.getElementById('pdfModal');
-                if (pdfModal && !pdfModal.classList.contains('hidden')) {
-                    closePdfModal();
+                const fsCard = document.querySelector('.preview-card-item.preview-fullscreen-mode');
+                if (fsCard) {
+                    fsCard.classList.remove('preview-fullscreen-mode');
+                    const icon = fsCard.querySelector('[id^="fsIcon_"]');
+                    if (icon) icon.className = 'bi bi-arrows-fullscreen';
+                    return;
+                }
+                if (window.activePreviews && window.activePreviews.length > 0) {
+                    closeSinglePreview(window.activePreviews.length - 1);
                     return;
                 }
                 const modalDetail = document.getElementById('modalDetailBerkas');
