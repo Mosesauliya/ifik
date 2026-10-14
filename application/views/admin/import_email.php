@@ -1470,10 +1470,10 @@
                     </div>
                 </div>
 
-                <!-- Field Khusus Dosen: Jabatan & Program Studi -->
+                <!-- Field Dinamis: Jabatan Dosen & Program Studi -->
                 <div id="container-dosen-fields" class="space-y-4 pt-1 border-t border-slate-100 hidden">
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
+                    <div class="grid grid-cols-2 gap-3" id="row-prodi-jabatan">
+                        <div id="wrapper-jabatan">
                             <label class="block text-xs font-bold text-slate-700 mb-1">
                                 <i class="fa-solid fa-user-tag text-brand-600 mr-1"></i> Jabatan Dosen
                             </label>
@@ -1483,7 +1483,7 @@
                                 <option value="wadek">Wakil Dekan (Wadek)</option>
                             </select>
                         </div>
-                        <div>
+                        <div id="wrapper-prodi">
                             <label class="block text-xs font-bold text-slate-700 mb-1">
                                 <i class="fa-solid fa-graduation-cap text-brand-600 mr-1"></i> Program Studi
                             </label>
@@ -1493,14 +1493,6 @@
                                     <?php foreach ($prodi_list as $p): ?>
                                         <option value="<?= htmlspecialchars($p) ?>"><?= htmlspecialchars($p) ?></option>
                                     <?php endforeach; ?>
-                                <?php else: ?>
-                                    <option value="S1 Desain Komunikasi Visual (DKV)">S1 Desain Komunikasi Visual (DKV)</option>
-                                    <option value="S1 Desain Interior">S1 Desain Interior</option>
-                                    <option value="S1 Desain Produk">S1 Desain Produk</option>
-                                    <option value="S1 Kriya Tekstil dan Mode">S1 Kriya Tekstil dan Mode</option>
-                                    <option value="S1 Seni Rupa">S1 Seni Rupa</option>
-                                    <option value="S1 Film & Animasi">S1 Film & Animasi</option>
-                                    <option value="S2 Magister Desain">S2 Magister Desain</option>
                                 <?php endif; ?>
                             </select>
                         </div>
@@ -4350,11 +4342,26 @@
 
         // 10. ADD / EDIT MANUAL ACCOUNT MODAL
         function handleRoleChange(roleVal) {
-            const container = document.getElementById('container-dosen-fields');
+            const container   = document.getElementById('container-dosen-fields');
+            const wrapJabatan = document.getElementById('wrapper-jabatan');
+            const wrapProdi   = document.getElementById('wrapper-prodi');
+            const rowFields   = document.getElementById('row-prodi-jabatan');
             if (!container) return;
-            const isDosen = roleVal && roleVal.toLowerCase().includes('dosen');
+
+            const rLower  = (roleVal || '').toLowerCase();
+            const isDosen = rLower.includes('dosen');
+            const isMhs   = rLower.includes('mahasiswa');
+
             if (isDosen) {
                 container.classList.remove('hidden');
+                if (wrapJabatan) wrapJabatan.classList.remove('hidden');
+                if (wrapProdi) wrapProdi.classList.remove('hidden');
+                if (rowFields) rowFields.className = 'grid grid-cols-2 gap-3';
+            } else if (isMhs) {
+                container.classList.remove('hidden');
+                if (wrapJabatan) wrapJabatan.classList.add('hidden');
+                if (wrapProdi) wrapProdi.classList.remove('hidden');
+                if (rowFields) rowFields.className = 'grid grid-cols-1 gap-3';
             } else {
                 container.classList.add('hidden');
             }
@@ -4415,8 +4422,9 @@
             const role = document.getElementById('acc-role').value;
             const nim_nip = document.getElementById('acc-nim-nip').value.trim();
             const isDosen = role && role.toLowerCase().includes('dosen');
+            const isMhs = role && role.toLowerCase().includes('mahasiswa');
             const jabatan = isDosen && document.getElementById('acc-jabatan') ? document.getElementById('acc-jabatan').value : 'dosen';
-            const prodi = isDosen && document.getElementById('acc-prodi') ? document.getElementById('acc-prodi').value : '';
+            const prodi = (isDosen || isMhs) && document.getElementById('acc-prodi') ? document.getElementById('acc-prodi').value : '';
 
             if (!isValidTelkomEmail(email)) {
                 emailInput.focus();

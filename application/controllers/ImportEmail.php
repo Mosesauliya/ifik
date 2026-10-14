@@ -648,6 +648,14 @@ class ImportEmail extends CI_Controller {
 
             $this->User_model->update($targetUserId, $updateData);
 
+            // Sync prodi to mahasiswa table if this is a student account
+            if ((int)$targetRoleId === 4 && !empty($prodi) && $this->db->table_exists('mahasiswa')) {
+                $targetNim = !empty($nimNip) ? $nimNip : ($currentUser->nim ?? '');
+                if (!empty($targetNim)) {
+                    $this->db->where('nim', $targetNim)->update('mahasiswa', ['prodi' => $prodi]);
+                }
+            }
+
             // If email changed, cleanup old user_token entry
             if ($currentUser->email && strtolower(trim($currentUser->email)) !== $email && $this->db->table_exists('user_token')) {
                 $this->db->where('email', strtolower(trim($currentUser->email)))->delete('user_token');

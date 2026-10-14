@@ -291,6 +291,26 @@ $route['kelompok_keahlian']                           = 'KelompokKeahlian/index'
 $route['kelompok_keahlian/(:any)']                    = 'KelompokKeahlian/$1';
 $route['kelompok_keahlian/(:any)/(:any)']             = 'KelompokKeahlian/$1/$2';
 
+// [SUPER ADMIN] Dinamis Program Studi (Prodi) Routes
+$route['superadmin/program_studi']                    = 'ProgramStudi/index';
+$route['superadmin/program-studi']                    = 'ProgramStudi/index';
+$route['superadmin/program_studi/simpan']             = 'ProgramStudi/simpan';
+$route['superadmin/program_studi/toggle/(:any)']      = 'ProgramStudi/toggle_status/$1';
+$route['superadmin/program_studi/hapus/(:any)']       = 'ProgramStudi/hapus/$1';
+$route['superadmin/program_studi/get_json/(:any)']    = 'ProgramStudi/get_json/$1';
+
+$route['admin/program_studi']                         = 'ProgramStudi/index';
+$route['admin/program-studi']                         = 'ProgramStudi/index';
+$route['admin/program_studi/simpan']                  = 'ProgramStudi/simpan';
+$route['admin/program_studi/toggle/(:any)']           = 'ProgramStudi/toggle_status/$1';
+$route['admin/program_studi/hapus/(:any)']            = 'ProgramStudi/hapus/$1';
+$route['admin/program_studi/get_json/(:any)']         = 'ProgramStudi/get_json/$1';
+
+$route['program-studi']                               = 'ProgramStudi/index';
+$route['program_studi']                               = 'ProgramStudi/index';
+$route['program_studi/(:any)']                        = 'ProgramStudi/$1';
+$route['program_studi/(:any)/(:any)']                 = 'ProgramStudi/$1/$2';
+
 // Ketua KK Routes
 $route['ketuakk'] = 'KetuaKK/index';
 $route['ketuakk/ajax_get_table'] = 'KetuaKK/ajax_get_table';

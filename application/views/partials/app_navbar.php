@@ -203,3 +203,6 @@
         </div>
     </div>
 </header>
+
+<!-- Global Custom Circle Cursor -->
+<?php $this->load->view('partials/custom_cursor'); ?>

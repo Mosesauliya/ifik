@@ -417,3 +417,6 @@ body.curved-sidebar-desktop-collapsed .glass-header {
 
 <!-- Curved Sidebar Script -->
 <script src="<?= base_url('assets/js/curved_sidebar.js?v=' . time()); ?>"></script>
+
+<!-- Global Custom Circle Cursor -->
+<?php $this->load->view('partials/custom_cursor'); ?>
