@@ -1014,6 +1014,7 @@ class KoordinatorTA extends CI_Controller {
         $userNama  = $this->session->userdata('name') ?: 'Dr. Koordinator TA, M.T.';
         $userEmail = $this->session->userdata('email') ?: 'koordinator.ta@telkomuniversity.ac.id';
         $userNip   = $this->session->userdata('nip') ?: ($this->session->userdata('username') ?: '1987010102');
+        session_write_close();
 
         $conv = $this->Help_chat_model->get_or_create_channel($userId, $userNama, $userEmail, 'Koordinator TA', $userNip, $target_role);
 

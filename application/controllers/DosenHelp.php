@@ -61,6 +61,7 @@ class DosenHelp extends CI_Controller {
         $userNama  = $this->session->userdata('name') ?: 'Dosen IFIK';
         $userEmail = $this->session->userdata('email') ?: 'dosen@telkomuniversity.ac.id';
         $userNip   = $this->session->userdata('nip') ?: ($this->session->userdata('username') ?: '-');
+        session_write_close();
 
         $conv = $this->Help_chat_model->get_or_create_channel(
             $userId, $userNama, $userEmail, 'Dosen', $userNip, $target_role
