@@ -5,49 +5,6 @@ class ProgramStudi_model extends CI_Model {
 
     public function __construct() {
         parent::__construct();
-        $this->_init_table();
-    }
-
-    /**
-     * Auto inisialisasi tabel master_prodi dan default seed jika belum ada
-     */
-    public function _init_table() {
-        if (!$this->db->table_exists('master_prodi')) {
-            $this->db->query("CREATE TABLE IF NOT EXISTS `master_prodi` (
-                `id` INT AUTO_INCREMENT PRIMARY KEY,
-                `kode_prodi` VARCHAR(20) NOT NULL UNIQUE,
-                `nama_prodi` VARCHAR(150) NOT NULL,
-                `jenjang` VARCHAR(10) DEFAULT 'S1',
-                `keterangan` TEXT NULL,
-                `is_active` TINYINT(1) DEFAULT 1,
-                `urutan` INT DEFAULT 1,
-                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-                `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-        } else {
-            $fields = $this->db->list_fields('master_prodi');
-            if (!in_array('jenjang', $fields)) {
-                $this->db->query("ALTER TABLE `master_prodi` ADD COLUMN `jenjang` VARCHAR(10) DEFAULT 'S1' AFTER `nama_prodi`");
-            }
-            if (!in_array('keterangan', $fields)) {
-                $this->db->query("ALTER TABLE `master_prodi` ADD COLUMN `keterangan` TEXT NULL AFTER `jenjang`");
-            }
-        }
-
-        // Seed default jika tabel masih kosong
-        if ($this->db->count_all('master_prodi') === 0) {
-            $default_prodi = [
-                ['kode_prodi' => 'DKV', 'nama_prodi' => 'S1 Desain Komunikasi Visual (DKV)', 'jenjang' => 'S1', 'is_active' => 1, 'urutan' => 1],
-                ['kode_prodi' => 'DI',  'nama_prodi' => 'S1 Desain Interior',               'jenjang' => 'S1', 'is_active' => 1, 'urutan' => 2],
-                ['kode_prodi' => 'DP',  'nama_prodi' => 'S1 Desain Produk',                 'jenjang' => 'S1', 'is_active' => 1, 'urutan' => 3],
-                ['kode_prodi' => 'KTF', 'nama_prodi' => 'S1 Kriya Tekstil dan Mode',        'jenjang' => 'S1', 'is_active' => 1, 'urutan' => 4],
-                ['kode_prodi' => 'SR',  'nama_prodi' => 'S1 Seni Rupa',                     'jenjang' => 'S1', 'is_active' => 1, 'urutan' => 5],
-                ['kode_prodi' => 'FA',  'nama_prodi' => 'S1 Film & Animasi',                'jenjang' => 'S1', 'is_active' => 1, 'urutan' => 6],
-                ['kode_prodi' => 'MD',  'nama_prodi' => 'S2 Magister Desain',               'jenjang' => 'S2', 'is_active' => 1, 'urutan' => 7],
-                ['kode_prodi' => 'IF',  'nama_prodi' => 'S1 Informatika',                   'jenjang' => 'S1', 'is_active' => 1, 'urutan' => 8],
-            ];
-            $this->db->insert_batch('master_prodi', $default_prodi);
-        }
     }
 
     /**
