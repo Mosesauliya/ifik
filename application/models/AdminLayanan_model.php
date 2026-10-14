@@ -2708,5 +2708,114 @@ class AdminLayanan_model extends CI_Model {
         }
         return null;
     }
+
+    /**
+     * Ambil daftar submission rekomendasi bimbingan TA dan status tahap mahasiswa untuk Admin LAA
+     */
+    public function get_rekomendasi_submissions_list($search = '', $filter_type = 'all') {
+        $this->db->select('
+            g.id AS id_guidance,
+            g.id_mhs AS nim,
+            g.status_preview,
+            g.lulus_preview1,
+            g.lulus_preview2,
+            g.lulus_preview3,
+            g.lulus_sidang,
+            g.judul_1 AS judul,
+            g.peminatan,
+            TRIM(CONCAT(IFNULL(m.nama_depan, ""), " ", IFNULL(m.nama_belakang, ""))) AS nama_mhs,
+            u.name AS nama_user,
+            rs.id AS id_rekomen,
+            rs.recommendation_type,
+            rs.jalur_id,
+            rs.jalur_title,
+            rs.form_data_json,
+            rs.catatan_dosen,
+            rs.status AS status_rekomen,
+            rs.created_at AS rekomen_at,
+            u_p1.name AS nama_pembimbing1,
+            u_p2.name AS nama_pembimbing2,
+            u_pj1.name AS nama_penguji1,
+            u_pj2.name AS nama_penguji2
+        ');
+        $this->db->from('guidance g');
+        $this->db->join('user u', 'u.id = g.id_mhs OR u.nim = g.id_mhs', 'left');
+        $this->db->join('mahasiswa m', 'm.nim = u.nim OR m.nim = g.id_mhs', 'left');
+        $this->db->join('thesis_lecturers tl', 'tl.id_guidance = g.id', 'left');
+        $this->db->join('user u_p1', '(tl.dosen_pembimbing1 IS NOT NULL AND tl.dosen_pembimbing1 != "" AND (u_p1.nip = tl.dosen_pembimbing1 OR u_p1.id = tl.dosen_pembimbing1))', 'left');
+        $this->db->join('user u_p2', '(tl.dosen_pembimbing2 IS NOT NULL AND tl.dosen_pembimbing2 != "" AND (u_p2.nip = tl.dosen_pembimbing2 OR u_p2.id = tl.dosen_pembimbing2))', 'left');
+        $this->db->join('user u_pj1', '(tl.dosen_penguji1 IS NOT NULL AND tl.dosen_penguji1 != "" AND (u_pj1.nip = tl.dosen_penguji1 OR u_pj1.id = tl.dosen_penguji1))', 'left');
+        $this->db->join('user u_pj2', '(tl.dosen_penguji2 IS NOT NULL AND tl.dosen_penguji2 != "" AND (u_pj2.nip = tl.dosen_penguji2 OR u_pj2.id = tl.dosen_penguji2))', 'left');
+        $this->db->join('rekomen_submission rs', 'rs.nim = g.id_mhs OR rs.nim = u.nim', 'left');
+
+        if ($filter_type === 'sidang') {
+            $this->db->where('rs.recommendation_type', 'sidang');
+        } elseif ($filter_type === 'non_sidang' || $filter_type === 'non-sidang') {
+            $this->db->where('rs.recommendation_type', 'non_sidang');
+        } elseif ($filter_type === 'pending' || $filter_type === 'belum') {
+            $this->db->where('rs.id IS NULL', null, false);
+        }
+
+        if (!empty($search)) {
+            $this->db->group_start();
+            $this->db->like('g.id_mhs', $search);
+            $this->db->or_like('u.nim', $search);
+            $this->db->or_like('m.nama_depan', $search);
+            $this->db->or_like('m.nama_belakang', $search);
+            $this->db->or_like('u.name', $search);
+            $this->db->or_like('g.judul_1', $search);
+            $this->db->or_like('rs.jalur_title', $search);
+            $this->db->group_end();
+        }
+
+        $this->db->order_by('rs.created_at', 'DESC');
+        $this->db->order_by('g.id', 'DESC');
+        $results = $this->db->get()->result_array();
+
+        // Process distinct per nim (keep latest recommendation if duplicates)
+        $unique = [];
+        foreach ($results as $row) {
+            $nim = !empty($row['nim']) ? $row['nim'] : ($row['id_guidance'] ?? '');
+            if (isset($unique[$nim])) continue;
+
+            $row['nama_mahasiswa'] = !empty($row['nama_mhs']) ? $row['nama_mhs'] : (!empty($row['nama_user']) ? $row['nama_user'] : $nim);
+            $row['pembimbing_1'] = !empty($row['nama_pembimbing1']) ? $row['nama_pembimbing1'] : '-';
+            $row['pembimbing_2'] = !empty($row['nama_pembimbing2']) ? $row['nama_pembimbing2'] : '-';
+            $row['penguji_1']    = !empty($row['nama_penguji1']) ? $row['nama_penguji1'] : '-';
+            $row['penguji_2']    = !empty($row['nama_penguji2']) ? $row['nama_penguji2'] : '-';
+
+            // Decode form_data_json if available
+            $row['files_uploaded'] = [];
+            if (!empty($row['form_data_json'])) {
+                $dec = json_decode($row['form_data_json'], true);
+                if (is_array($dec)) {
+                    $row['files_uploaded'] = $dec;
+                }
+            }
+
+            // Normalisasi status preview terkini
+            $sp = strtolower(trim($row['status_preview'] ?? 'preview1'));
+            if ($sp === 'preview1' || empty($sp)) {
+                $row['tahap_terkini'] = 'Preview 1';
+                $row['tahap_key']     = 'preview1';
+            } elseif ($sp === 'preview2') {
+                $row['tahap_terkini'] = 'Preview 2';
+                $row['tahap_key']     = 'preview2';
+            } elseif ($sp === 'preview3') {
+                $row['tahap_terkini'] = 'Preview 3';
+                $row['tahap_key']     = 'preview3';
+            } elseif ($sp === 'sidang') {
+                $row['tahap_terkini'] = 'Sidang';
+                $row['tahap_key']     = 'sidang';
+            } else {
+                $row['tahap_terkini'] = ucfirst($sp);
+                $row['tahap_key']     = $sp;
+            }
+
+            $unique[$nim] = $row;
+        }
+
+        return array_values($unique);
+    }
 }
 

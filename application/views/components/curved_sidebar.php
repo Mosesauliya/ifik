@@ -265,6 +265,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
             $defaultNavItems = [
                 ['category' => 'Pengelolaan Tugas Akhir'],
                 ['heading' => 'Pendaftaran TA', 'href' => site_url('adminlayanan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
+                ['heading' => 'Rekomendasi & Downgrade', 'href' => site_url('adminlayanan/rekomendasi'), 'icon_3d' => 'assets/images/icons_3d/approval.png', 'subheading' => 'Review Rekomendasi P1 & Downgrade'],
                 ['heading' => 'Pendaftaran Sidang', 'href' => site_url('adminlayanan/pendaftaran_sidang'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
                 ['heading' => 'Sudah Lulus Sidang', 'href' => site_url('adminlayanan/lulus_sidang'), 'icon_3d' => 'assets/images/icons_3d/preview2.png'],
                 ['heading' => 'Status Peserta TA', 'href' => site_url('adminlayanan/status_peserta_ta'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],

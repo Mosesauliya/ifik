@@ -1604,6 +1604,39 @@ class Mahasiswa_model extends CI_Model {
             }
         }
 
+        if ($tahap_key === 'preview3') {
+            // 1. Cek apakah mahasiswa sudah mengirim berkas persyaratan sidang
+            $has_syarat = false;
+            if (!empty($preview['file_persyaratan'])) {
+                $has_syarat = true;
+            } else {
+                $this->load->model('AdminLayanan_model');
+                $bs = $this->AdminLayanan_model->get_berkas_pendaftaran_sidang($nim);
+                foreach ($bs as $b) {
+                    if (!empty($b['file_name']) && $b['file_name'] !== '-') {
+                        $has_syarat = true;
+                        break;
+                    }
+                }
+            }
+            if (!$has_syarat) {
+                return [
+                    'status'  => false,
+                    'message' => 'Mahasiswa belum dapat diluluskan: Mahasiswa belum mengunggah berkas Persyaratan Sidang.'
+                ];
+            }
+
+            // 2. Cek apakah Pembimbing 1 sudah memberikan rekomendasi (Sidang / Non-Sidang)
+            $this->load->model('Rekomendasi_model');
+            $rek = $this->Rekomendasi_model->get_latest_submission($nim);
+            if (!$rek) {
+                return [
+                    'status'  => false,
+                    'message' => 'Mahasiswa belum dapat diluluskan: Pembimbing 1 wajib memberikan Rekomendasi (Sidang / Non-Sidang) terlebih dahulu.'
+                ];
+            }
+        }
+
         $col_lulus = 'lulus_' . $tahap_key;
         if (!$this->db->field_exists($col_lulus, 'guidance')) {
             return ['status' => false, 'message' => 'Kolom ' . $col_lulus . ' belum ada. Jalankan migrasi SQL dulu.'];
@@ -1732,8 +1765,37 @@ class Mahasiswa_model extends CI_Model {
         if ($this->db->field_exists('lulus_by_role', 'guidance')) $update_g['lulus_by_role'] = $role;
         if ($this->db->field_exists('lulus_at', 'guidance'))      $update_g['lulus_at']      = date('Y-m-d H:i:s');
 
+        // Jika di-downgrade dari tahap sidang atau ke preview, hapus nilai sidang
+        if ($dari === 'sidang' || $target_rank < 4) {
+            $sidang_score_cols = [
+                'nilaisidang_pembimbing1', 'nilaisidang_pembimbing_1', 'nilai_sidang_pembimbing1', 'nilai_sidang_pembimbing_1',
+                'nilaisidang_pembimbing2', 'nilaisidang_pembimbing_2', 'nilai_sidang_pembimbing2', 'nilai_sidang_pembimbing_2',
+                'nilaisidang_penguji1', 'nilaisidang_penguji_1', 'nilai_sidang_penguji1', 'nilai_sidang_penguji_1',
+                'nilaisidang_penguji2', 'nilaisidang_penguji_2', 'nilai_sidang_penguji2', 'nilai_sidang_penguji_2',
+                'penilaiansidang_pembimbing1', 'penilaiansidang_pembimbing_1', 'evaluasi_pembimbing1',
+                'penilaiansidang_pembimbing2', 'penilaiansidang_pembimbing_2', 'evaluasi_pembimbing2',
+                'penilaiansidang_penguji1', 'penilaiansidang_penguji_1', 'evaluasi_penguji1',
+                'penilaiansidang_penguji2', 'penilaiansidang_penguji_2', 'evaluasi_penguji2',
+                'nilai_akhir_sidang', 'skor_akhir_sidang', 'kelulusan_sidang', 'lulus_sidang'
+            ];
+            foreach ($sidang_score_cols as $sc) {
+                if ($this->db->field_exists($sc, 'guidance')) {
+                    $update_g[$sc] = null;
+                }
+            }
+        }
+
         if (!empty($update_g)) {
             $this->db->where('id', $g['id'])->update('guidance', $update_g);
+        }
+
+        if ($this->db->table_exists('pendaftaran_ta')) {
+            $stage_map_title = ['preview1' => 'Preview 1', 'preview2' => 'Preview 2', 'preview3' => 'Preview 3'];
+            $update_ta = ['current_stage' => 'Bimbingan (' . ($stage_map_title[$ke] ?? ucfirst($ke)) . ')'];
+            if ($this->db->field_exists('status_sidang', 'pendaftaran_ta')) {
+                $update_ta['status_sidang'] = 'Belum Dijadwalkan';
+            }
+            $this->db->where('nim', $nim)->update('pendaftaran_ta', $update_ta);
         }
 
         if ($this->db->field_exists('downgrade_log', 'guidance')) {

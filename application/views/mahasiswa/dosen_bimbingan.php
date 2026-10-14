@@ -1105,7 +1105,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         // PIC (Penanggung Jawab) per Tahap
         // ============================================================
         function getResponsibleRole(tahap) {
-            return (tahap === 'Preview 1') ? 'p1' : 'u1';
+            return (tahap === 'Preview 1' || tahap === 'Preview 3') ? 'p1' : 'u1';
         }
         function isCurrentUserPIC() {
             const pic = getResponsibleRole(currentTahap);
@@ -1128,6 +1128,16 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             if (!preview) return false;
             const key = getTahapKey(currentTahap);
             return String(preview['lulus_' + key] ?? 0) === '1';
+        }
+        function renderTahapBadgeLulus(stageName, extraText = '') {
+            let badgeClass = 'bg-slate-100 text-slate-700 border-slate-200';
+            if (stageName === 'Preview 1') badgeClass = 'bg-blue-50 text-blue-700 border-blue-200';
+            else if (stageName === 'Preview 2') badgeClass = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+            else if (stageName === 'Preview 3') badgeClass = 'bg-purple-50 text-purple-700 border-purple-200';
+            else if (stageName === 'Sidang')   badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-300 font-extrabold';
+
+            const label = extraText ? `${stageName} ${extraText}` : stageName;
+            return `<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold border ${badgeClass} whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> ${label}</span>`;
         }
         function renderFileStatusBadge(preview, fileType) {
             const st = getFileStatus(preview, fileType);
@@ -1568,7 +1578,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
 
                         let btnLulusDE = '';
                         if (isStageDone) {
-                            btnLulusDE = `<span class="px-2.5 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-300 text-[11px] font-bold inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> Lulus DE (${avgDE.toFixed(1)})</span>`;
+                            btnLulusDE = renderTahapBadgeLulus('Preview 2', `(DE: ${avgDE > 0 ? avgDE.toFixed(1) : ''})`);
                         } else if (allGraded && isLulusSyarat) {
                             btnLulusDE = `<button type="button" onclick="handleLulusStageDE('${mhs.nim}', ${avgDE.toFixed(1)})"
                                     class="px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap">
@@ -1588,7 +1598,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
 
                         u1ActionHtml = btnJadwal + btnLulusDE;
                     } else {
-                        let statusText = isStageDone ? `<span class="px-2 py-1 rounded-md bg-emerald-100 text-emerald-700 text-[10px] font-bold">Lulus DE (${avgDE > 0 ? avgDE.toFixed(1) : ''})</span>`
+                        let statusText = isStageDone ? renderTahapBadgeLulus('Preview 2', `(DE: ${avgDE > 0 ? avgDE.toFixed(1) : ''})`)
                             : `<span class="px-2 py-1 rounded-md bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-semibold">DE: ${countGraded}/4 Dinilai ${allGraded ? '• Avg: ' + avgDE.toFixed(1) : ''}</span>`;
                         u1ActionHtml = statusText;
                     }
@@ -1606,7 +1616,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
 
                 let btnLulus = '';
                 if (isLulus) {
-                    btnLulus = `<span class="px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-300 text-[11px] font-bold inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> Preview 2</span>`;
+                    btnLulus = renderTahapBadgeLulus('Preview 2');
                 } else if (c.approved > 0) {
                     btnLulus = `<button onclick="handleLulusStagePreview2('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> Preview 2</button>`;
                 } else {
@@ -1626,9 +1636,16 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
 
             let btnLulus = '';
             if (isLulus) {
-                btnLulus = `<span class="px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-300 text-[11px] font-bold inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> ${currentTahap}</span>`;
+                btnLulus = renderTahapBadgeLulus(currentTahap);
             } else if (c.approved > 0) {
-                btnLulus = `<button onclick="handleLulusStage('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> ${currentTahap}</button>`;
+                if (currentTahap === 'Preview 3' && (!mhs.has_persyaratan_sidang || !mhs.rekomendasi)) {
+                    const alasanLock = !mhs.has_persyaratan_sidang 
+                        ? 'Mahasiswa belum mengunggah berkas Persyaratan Sidang'
+                        : 'Pembimbing 1 belum memberikan Rekomendasi (Sidang / Non-Sidang)';
+                    btnLulus = `<button disabled title="Terkunci: ${alasanLock}" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Preview 3</button>`;
+                } else {
+                    btnLulus = `<button onclick="handleLulusStage('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> ${currentTahap}</button>`;
+                }
             } else {
                 btnLulus = `<button disabled title="Belum ada berkas yang di-ACC" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> ${currentTahap}</button>`;
             }

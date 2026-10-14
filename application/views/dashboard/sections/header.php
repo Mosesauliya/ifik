@@ -353,10 +353,14 @@
 
     .dekanat-img-right {
         position: absolute;
-        bottom: 0; right: 20px;
-        max-height: 380px;
+        bottom: 0; right: 24px;
+        max-height: 520px;
+        width: auto;
+        object-fit: contain;
         z-index: 20;
         pointer-events: none;
+        filter: drop-shadow(0 15px 30px rgba(0,0,0,0.35));
+        transition: max-height 0.3s ease, right 0.3s ease;
     }
 
     .read-more-container {
@@ -428,7 +432,7 @@
         .slide1-card-title { font-size: 1.4rem; margin-bottom: 10px; }
         .slide1-card-desc { font-size: 0.78rem; line-height: 1.55; }
         .read-more-btn { padding: 6px 14px; font-size: 0.75rem; }
-        .dekanat-img-right { max-height: 220px; opacity: 1; right: 10px; }
+        .dekanat-img-right { max-height: 280px; opacity: 1; right: 14px; }
 
         .scroll-hint { display: none; }
 
@@ -476,7 +480,7 @@
         .slide1-card-title { font-size: 1.15rem; margin-bottom: 8px; }
         .slide1-card-desc { font-size: 0.72rem; }
         .read-more-btn { padding: 5px 11px; font-size: 0.7rem; }
-        .dekanat-img-right { max-height: 150px; opacity: 1; }
+        .dekanat-img-right { max-height: 185px; opacity: 0.95; right: 8px; bottom: 0; }
 
         .carousel-indicators { left: 8px; right: 8px; bottom: 10px; }
         .carousel-indicators-track { gap: 6px; }
