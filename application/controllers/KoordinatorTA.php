@@ -899,10 +899,27 @@ class KoordinatorTA extends CI_Controller {
         $peminatan    = $this->input->post('peminatan');
         $judul_rubrik = $this->input->post('judul_rubrik');
         $kriteria_raw = $this->input->post('kriteria');
+        $status       = $this->input->post('status') ?: 'published';
+        $is_publish   = (bool)$this->input->post('is_publish');
 
         $kriteria = is_string($kriteria_raw) ? json_decode($kriteria_raw, true) : $kriteria_raw;
 
-        $res = $this->KoordinatorTA_model->simpan_master_rubrik($prodi, $peminatan, $judul_rubrik, $kriteria);
+        $res = $this->KoordinatorTA_model->simpan_master_rubrik($prodi, $peminatan, $judul_rubrik, $kriteria, 100, $status, $is_publish);
+        echo json_encode($res);
+    }
+
+    // AJAX Endpoint: Publikasikan Master Rubrik (Mulai Berlaku & Catat Tanggal Publish)
+    public function ajax_publish_master_rubrik() {
+        header('Content-Type: application/json');
+
+        $prodi        = $this->input->post('prodi');
+        $peminatan    = $this->input->post('peminatan');
+        $judul_rubrik = $this->input->post('judul_rubrik');
+        $kriteria_raw = $this->input->post('kriteria');
+
+        $kriteria = is_string($kriteria_raw) ? json_decode($kriteria_raw, true) : $kriteria_raw;
+
+        $res = $this->KoordinatorTA_model->simpan_master_rubrik($prodi, $peminatan, $judul_rubrik, $kriteria, 100, 'published', true);
         echo json_encode($res);
     }
 

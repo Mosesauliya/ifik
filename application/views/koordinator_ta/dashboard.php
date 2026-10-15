@@ -2025,6 +2025,32 @@
                     </div>
                 </div>
 
+                <!-- Status & Masa Berlaku / Tanggal Publish Banner -->
+                <div class="p-3.5 sm:p-4 bg-gradient-to-r from-emerald-50/70 via-slate-50 to-slate-50 border border-emerald-200/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <span id="masterRubrikStatusBadge" class="px-2.5 py-1 rounded-full text-[10.5px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5 shrink-0">
+                            <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                            <span id="masterRubrikStatusText">Published</span>
+                        </span>
+                        <div>
+                            <div class="flex items-center gap-1.5 text-xs text-slate-700 font-bold">
+                                <i class="fa-solid fa-clock-rotate-left text-violet-600 text-[11px]"></i>
+                                <span>Tanggal Publish:</span>
+                                <span id="masterRubrikTglPublishText" class="font-extrabold text-slate-900">-</span>
+                            </div>
+                            <p class="text-[10.5px] text-slate-500 mt-0.5">
+                                Nilai mahasiswa yang sudah dipublikasikan sebelumnya terlindungi aman dan tidak akan terpengaruh jika rubrik diperbarui.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button type="button" id="btnPublishDirectMasterRubrik" onclick="submitPublishMasterRubrik()" class="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer active:scale-95" title="Publikasikan rubrik ini sebagai standar penilaian aktif baru dan perbarui masa berlaku">
+                            <i class="fa-solid fa-cloud-arrow-up text-xs"></i>
+                            <span>Publish Rubrik</span>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- 2. Dynamic Criteria Items Container -->
                 <div class="space-y-3">
                     <div class="flex items-center justify-between flex-wrap gap-2">
@@ -3258,6 +3284,7 @@
             ajaxGetHistoryPenilaianSidangUrl: "<?= site_url('koordinatorta/ajax_get_history_penilaian_sidang'); ?>",
             ajaxGetAllMasterRubrikUrl: "<?= site_url('koordinatorta/ajax_get_all_master_rubrik'); ?>",
             ajaxSimpanMasterRubrikUrl: "<?= site_url('koordinatorta/ajax_simpan_master_rubrik'); ?>",
+            ajaxPublishMasterRubrikUrl: "<?= site_url('koordinatorta/ajax_publish_master_rubrik'); ?>",
             ajaxTerapkanRubrikMassalUrl: "<?= site_url('koordinatorta/ajax_terapkan_rubrik_massal'); ?>",
             ajaxResetDefaultRubrikUrl: "<?= site_url('koordinatorta/ajax_reset_default_rubrik'); ?>",
             detailUrlPrefix: "<?= site_url('koordinatorta/detail_mahasiswa/'); ?>"

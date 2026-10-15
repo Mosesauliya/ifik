@@ -8967,6 +8967,35 @@
             if (judulInput) judulInput.value = `Rubrik Sidang TA ${prodi} - ${pem}`;
         }
 
+        // Update Status & Tanggal Publish Banner
+        const statusBadge = document.getElementById('masterRubrikStatusBadge');
+        const statusText = document.getElementById('masterRubrikStatusText');
+        const tglText = document.getElementById('masterRubrikTglPublishText');
+
+        if (masterItem) {
+            const isPub = (masterItem.status || 'published').toLowerCase() === 'published';
+            if (statusBadge) {
+                if (isPub) {
+                    statusBadge.className = 'px-2.5 py-1 rounded-full text-[10.5px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5 shrink-0';
+                    statusBadge.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-600"></i><span id="masterRubrikStatusText">Published (Aktif)</span>';
+                } else {
+                    statusBadge.className = 'px-2.5 py-1 rounded-full text-[10.5px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1.5 shrink-0';
+                    statusBadge.innerHTML = '<i class="fa-solid fa-file-pen text-amber-600"></i><span id="masterRubrikStatusText">Draft</span>';
+                }
+            }
+            if (tglText) {
+                tglText.textContent = masterItem.tanggal_publish_formatted || masterItem.tanggal_publish || 'Belum Pernah Dipublikasikan';
+            }
+        } else {
+            if (statusBadge) {
+                statusBadge.className = 'px-2.5 py-1 rounded-full text-[10.5px] font-black uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-300 flex items-center gap-1.5 shrink-0';
+                statusBadge.innerHTML = '<i class="fa-solid fa-sparkles text-slate-500"></i><span id="masterRubrikStatusText">Standar Default</span>';
+            }
+            if (tglText) {
+                tglText.textContent = 'Standar Bawaan Kurikulum';
+            }
+        }
+
         renderMasterRubrikCriteriaList();
         validateMasterRubrikBobot();
     }
@@ -9247,6 +9276,7 @@
         formData.append('peminatan', pem);
         formData.append('judul_rubrik', judul || `Rubrik Sidang TA ${prodi} - ${pem}`);
         formData.append('kriteria', JSON.stringify(state.activeMasterRubrikCriteria));
+        formData.append('status', 'published');
 
         const url = window.DASHBOARD_CONFIG?.ajaxSimpanMasterRubrikUrl || cfg.ajaxSimpanMasterRubrikUrl || 'koordinatorta/ajax_simpan_master_rubrik';
 
@@ -9271,8 +9301,10 @@
                 }
                 RUBRIK_PENILAIAN_PRODI[prodi].peminatan[pem] = JSON.parse(JSON.stringify(state.activeMasterRubrikCriteria));
 
-                // Refresh state list
-                fetchMasterRubrikList();
+                // Refresh state list & reload UI editor
+                fetchMasterRubrikList(() => {
+                    loadMasterRubrikIntoEditor();
+                });
 
                 if (typeof callbackSuccess === 'function') {
                     callbackSuccess();
@@ -9297,6 +9329,108 @@
             if (btn) {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-floppy-disk text-xs"></i> <span>Simpan Template Rubrik</span>';
+            }
+        });
+    };
+
+    window.submitPublishMasterRubrik = function () {
+        const prodi = document.getElementById('masterRubrikProdiSelect')?.value;
+        const pem = document.getElementById('masterRubrikPeminatanSelect')?.value;
+        const judul = document.getElementById('masterRubrikJudulInput')?.value;
+
+        if (!validateMasterRubrikBobot()) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Total Bobot Belum 100%',
+                text: 'Pastikan seluruh persentase bobot kriteria berjumlah tepat 100% sebelum dipublikasikan.'
+            });
+            return;
+        }
+
+        const emptyTitle = state.activeMasterRubrikCriteria.some(c => !c.title || !c.title.trim());
+        if (emptyTitle) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Judul Kriteria Kosong',
+                text: 'Harap isi seluruh judul kriteria penilaian sebelum dipublikasikan.'
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: 'Publikasikan Master Rubrik?',
+            html: `Rubrik untuk <b>${escapeHtml(prodi)} - ${escapeHtml(pem)}</b> akan resmi dipublikasikan dan mulai berlaku sebagai standar ujian sidang aktif.<br><br><span class="text-xs text-slate-500">Catatan: Nilai mahasiswa lama yang sudah dipublikasikan sebelumnya terlindungi aman dan tidak akan terpengaruh.</span>`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fa-solid fa-cloud-arrow-up mr-1.5"></i> Ya, Publikasikan Sekarang',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#059669',
+            cancelButtonColor: '#64748b'
+        }).then(result => {
+            if (result.isConfirmed) {
+                const btn = document.getElementById('btnPublishDirectMasterRubrik');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i> Mempublikasikan...';
+                }
+
+                const formData = new FormData();
+                formData.append('prodi', prodi);
+                formData.append('peminatan', pem);
+                formData.append('judul_rubrik', judul || `Rubrik Sidang TA ${prodi} - ${pem}`);
+                formData.append('kriteria', JSON.stringify(state.activeMasterRubrikCriteria));
+                formData.append('status', 'published');
+                formData.append('is_publish', '1');
+
+                const url = window.DASHBOARD_CONFIG?.ajaxPublishMasterRubrikUrl || cfg.ajaxPublishMasterRubrikUrl || 'koordinatorta/ajax_publish_master_rubrik';
+
+                fetch(url, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(async r => {
+                    const text = await r.text();
+                    try {
+                        return JSON.parse(text);
+                    } catch (err) {
+                        throw new Error('Respon server: ' + text.substring(0, 150));
+                    }
+                })
+                .then(res => {
+                    if (res && res.status) {
+                        if (!RUBRIK_PENILAIAN_PRODI[prodi]) {
+                            RUBRIK_PENILAIAN_PRODI[prodi] = { name: prodi, peminatan: {} };
+                        }
+                        RUBRIK_PENILAIAN_PRODI[prodi].peminatan[pem] = JSON.parse(JSON.stringify(state.activeMasterRubrikCriteria));
+
+                        fetchMasterRubrikList(() => {
+                            loadMasterRubrikIntoEditor();
+                        });
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Rubrik Berhasil Dipublikasikan!',
+                            html: `Standar penilaian <b>${escapeHtml(prodi)} - ${escapeHtml(pem)}</b> resmi aktif per <b>${res.tanggal_publish_formatted || 'hari ini'}</b>.<br><span class="text-xs text-slate-500">Riwayat nilai mahasiswa yang sudah dipublikasikan tetap aman/terkunci.</span>`,
+                            confirmButtonColor: '#059669'
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal Mempublikasikan',
+                            text: res.message || 'Terjadi kesalahan sistem.'
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error('Publish master rubrik error:', err);
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Gagal menghubungi server.' });
+                })
+                .finally(() => {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up text-xs"></i> <span>Publish Rubrik</span>';
+                    }
+                });
             }
         });
     };

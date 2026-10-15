@@ -1830,32 +1830,400 @@ class KoordinatorTA_model extends CI_Model {
         );
     }
 
+    /**
+     * Pastikan kolom tanggal_publish, status, dan versi tersedia di tabel master_rubrik
+     */
+    public function _ensure_master_rubrik_tables() {
+        if ($this->db->table_exists('master_rubrik')) {
+            if (!$this->db->field_exists('tanggal_publish', 'master_rubrik')) {
+                @$this->db->query("ALTER TABLE `master_rubrik` ADD COLUMN `tanggal_publish` DATETIME NULL AFTER `total_bobot`;");
+            }
+            if (!$this->db->field_exists('status', 'master_rubrik')) {
+                @$this->db->query("ALTER TABLE `master_rubrik` ADD COLUMN `status` VARCHAR(20) NOT NULL DEFAULT 'published' AFTER `tanggal_publish`;");
+            }
+            if (!$this->db->field_exists('versi', 'master_rubrik')) {
+                @$this->db->query("ALTER TABLE `master_rubrik` ADD COLUMN `versi` INT NOT NULL DEFAULT 1 AFTER `status`;");
+            }
+        }
+    }
+
     public function _seed_default_master_rubrik() {
+        if (!$this->db->table_exists('master_rubrik') || !$this->db->table_exists('master_rubrik_kriteria')) {
+            return false;
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $defaultTemplates = array(
+            array(
+                'prodi'        => 'DKV',
+                'peminatan'    => 'Multimedia',
+                'judul_rubrik' => 'Rubrik Sidang Tugas Akhir DKV - Multimedia',
+                'kriteria'     => array(
+                    array('id' => 'k1', 'title' => 'Konsep & Storyboard Multimedia', 'desc' => 'Kedalaman gagasan, orisinalitas ide, alur narasi, dan struktur storyboard visual.', 'bobot' => 25),
+                    array('id' => 'k2', 'title' => 'Penguasaan Teknis Audio Visual & Animasi', 'desc' => 'Kualitas editing, rendering, compositing, motion graphic, dan sinkronisasi audio-visual.', 'bobot' => 30),
+                    array('id' => 'k3', 'title' => 'Interaktivitas & User Experience (UI/UX)', 'desc' => 'Kemudahan interaksi antarmuka, responsivitas, dan fungsionalitas media multimedia terapan.', 'bobot' => 25),
+                    array('id' => 'k4', 'title' => 'Komprehensi & Presentasi Sidang', 'desc' => 'Kelancaran penyampaian argumen karya, penguasaan materi, dan pertanggungjawaban desain.', 'bobot' => 20)
+                )
+            ),
+            array(
+                'prodi'        => 'DKV',
+                'peminatan'    => 'Game',
+                'judul_rubrik' => 'Rubrik Sidang Tugas Akhir DKV - Game',
+                'kriteria'     => array(
+                    array('id' => 'k1', 'title' => 'Game Design Document (GDD) & Core Concept', 'desc' => 'Kelengkapan GDD, target audience, core loop, dan inovasi genre mekanika game.', 'bobot' => 25),
+                    array('id' => 'k2', 'title' => 'Game Mechanics, Balancing & Asset Art 2D/3D', 'desc' => 'Kualitas asset grafis karakter/lingkungan, animasi, balancing kesulitan, dan level design.', 'bobot' => 30),
+                    array('id' => 'k3', 'title' => 'Playability, Prototype Testing & Bug Handling', 'desc' => 'Kelancaran gameplay (playability), performa frame rate, dan hasil uji coba playtest pengguna.', 'bobot' => 25),
+                    array('id' => 'k4', 'title' => 'Live Demo & Argumentasi Teknis Sidang', 'desc' => 'Penguasaan implementasi game engine, demonstrasi gameplay langsung, dan respon tanya jawab.', 'bobot' => 20)
+                )
+            ),
+            array(
+                'prodi'        => 'DKV',
+                'peminatan'    => 'Designpreneur',
+                'judul_rubrik' => 'Rubrik Sidang Tugas Akhir DKV - Designpreneur',
+                'kriteria'     => array(
+                    array('id' => 'k1', 'title' => 'Riset Pasar & Business Model Canvas (BMC)', 'desc' => 'Validasi problem-solution fit, positioning pasar, analisis kompetitor, dan segmen konsumen.', 'bobot' => 25),
+                    array('id' => 'k2', 'title' => 'Identitas Visual & Desain Produk/Kemasan', 'desc' => 'Kekuatan branding, packaging design, konsistensi collateral visual, dan daya tarik jual.', 'bobot' => 30),
+                    array('id' => 'k3', 'title' => 'Strategi Go-To-Market & Kelayakan Finansial', 'desc' => 'Kesiapan strategi peluncuran, proyeksi biaya produksi (COGS), dan harga jual komersial.', 'bobot' => 25),
+                    array('id' => 'k4', 'title' => 'Pitching Presentasi & Respon Penguji', 'desc' => 'Kemampuan pitching bisnis di depan dewan penguji dan keyakinan eksekusi usaha.', 'bobot' => 20)
+                )
+            ),
+            array(
+                'prodi'        => 'DKV',
+                'peminatan'    => 'VIID',
+                'judul_rubrik' => 'Rubrik Sidang Tugas Akhir DKV - VIID',
+                'kriteria'     => array(
+                    array('id' => 'k1', 'title' => 'Konsep Desain Identitas Visual Terintegrasi', 'desc' => 'Kedalaman brand architecture, diferensiasi identitas visual, dan filosofi desain.', 'bobot' => 25),
+                    array('id' => 'k2', 'title' => 'Desain Informasi, Tipografi & Layout Sistem', 'desc' => 'Hirarki informasi, legibilitas tipografi, grid system, dan konsistensi pedoman manual (GSM).', 'bobot' => 30),
+                    array('id' => 'k3', 'title' => 'Implementasi Multi-Platform Media Cetak & Digital', 'desc' => 'Aplikasi identitas ke berbagai touchpoint fisik (stationary, signage) dan digital (web, app).', 'bobot' => 25),
+                    array('id' => 'k4', 'title' => 'Presentasi Manual Book & Tanggung Jawab Desain', 'desc' => 'Kualitas buku pedoman visual (GSM) dan ketepatan argumentasi saat ujian sidang.', 'bobot' => 20)
+                )
+            ),
+            array(
+                'prodi'        => 'DI',
+                'peminatan'    => 'Komersial',
+                'judul_rubrik' => 'Rubrik Sidang Tugas Akhir Desain Interior - Komersial',
+                'kriteria'     => array(
+                    array('id' => 'k1', 'title' => 'Konsep Desain & Program Ruang Komersial', 'desc' => 'Kesesuaian programming ruang, zoning, flow sirkulasi pengunjung, dan konsep tematik interior.', 'bobot' => 25),
+                    array('id' => 'k2', 'title' => 'Gambar Kerja Teknis & Detail Konstruksi', 'desc' => 'Kelengkapan denah, potongan, tampak, detail material finish, dan sistem MEP interior.', 'bobot' => 30),
+                    array('id' => 'k3', 'title' => 'Visualisasi 3D Rendering & Pemilihan Material', 'desc' => 'Kualitas visual 3D photorealistic, lighting ambient, pemilihan furniture, dan sample material board.', 'bobot' => 25),
+                    array('id' => 'k4', 'title' => 'Presentasi Konsep & Ketepatan Menjawab Penguji', 'desc' => 'Kemampuan komunikasi arsitektural dan pertanggungjawaban teknis di hadapan dewan penguji.', 'bobot' => 20)
+                )
+            )
+        );
+
+        foreach ($defaultTemplates as $tpl) {
+            $existing = $this->db->get_where('master_rubrik', array(
+                'prodi'     => $tpl['prodi'],
+                'peminatan' => $tpl['peminatan']
+            ))->row_array();
+
+            $rId = null;
+            if ($existing) {
+                $rId = $existing['id'];
+                $this->db->where('id', $rId)->update('master_rubrik', array(
+                    'judul_rubrik'    => $tpl['judul_rubrik'],
+                    'total_bobot'     => 100,
+                    'status'          => 'published',
+                    'tanggal_publish' => $existing['tanggal_publish'] ?: $now,
+                    'updated_at'      => $now
+                ));
+            } else {
+                $this->db->insert('master_rubrik', array(
+                    'prodi'           => $tpl['prodi'],
+                    'peminatan'       => $tpl['peminatan'],
+                    'judul_rubrik'    => $tpl['judul_rubrik'],
+                    'total_bobot'     => 100,
+                    'status'          => 'published',
+                    'versi'           => 1,
+                    'tanggal_publish' => $now,
+                    'updated_at'      => $now
+                ));
+                $rId = $this->db->insert_id();
+            }
+
+            if ($rId) {
+                $this->db->where('rubrik_id', $rId)->delete('master_rubrik_kriteria');
+                $urutan = 1;
+                foreach ($tpl['kriteria'] as $crit) {
+                    $this->db->insert('master_rubrik_kriteria', array(
+                        'rubrik_id'     => $rId,
+                        'kode_kriteria' => $crit['id'],
+                        'nama_kriteria' => $crit['title'],
+                        'deskripsi'     => $crit['desc'],
+                        'bobot'         => $crit['bobot'],
+                        'urutan'        => $urutan++
+                    ));
+                }
+            }
+        }
+
         return true;
     }
 
     public function get_all_master_rubrik() {
+        $this->_ensure_master_rubrik_tables();
+
+        if (!$this->db->table_exists('master_rubrik')) {
+            return array();
+        }
+
+        $this->db->select('*');
+        $this->db->from('master_rubrik');
+        $this->db->order_by('prodi', 'ASC');
+        $this->db->order_by('peminatan', 'ASC');
+        $rubriks = $this->db->get()->result_array();
+
+        if (empty($rubriks)) {
+            $this->_seed_default_master_rubrik();
+            $this->db->select('*');
+            $this->db->from('master_rubrik');
+            $this->db->order_by('prodi', 'ASC');
+            $this->db->order_by('peminatan', 'ASC');
+            $rubriks = $this->db->get()->result_array();
+        }
+
+        if (empty($rubriks)) {
+            return array();
+        }
+
+        $rubrikIds = array_column($rubriks, 'id');
+        $kriteriaMap = array();
+
+        if (!empty($rubrikIds) && $this->db->table_exists('master_rubrik_kriteria')) {
+            $this->db->select('*');
+            $this->db->from('master_rubrik_kriteria');
+            $this->db->where_in('rubrik_id', $rubrikIds);
+            $this->db->order_by('urutan', 'ASC');
+            $this->db->order_by('id', 'ASC');
+            $kList = $this->db->get()->result_array();
+
+            foreach ($kList as $k) {
+                $rId = $k['rubrik_id'];
+                if (!isset($kriteriaMap[$rId])) {
+                    $kriteriaMap[$rId] = array();
+                }
+                $kriteriaMap[$rId][] = array(
+                    'id'    => $k['kode_kriteria'] ?: ('k' . $k['urutan']),
+                    'title' => $k['nama_kriteria'],
+                    'desc'  => $k['deskripsi'] ?? '',
+                    'bobot' => (float)$k['bobot']
+                );
+            }
+        }
+
+        $result = array();
+        foreach ($rubriks as $r) {
+            $rId = $r['id'];
+            $tglPub = !empty($r['tanggal_publish']) ? $r['tanggal_publish'] : $r['updated_at'];
+            $result[] = array(
+                'id'                        => (int)$r['id'],
+                'prodi'                     => $r['prodi'],
+                'peminatan'                 => $r['peminatan'],
+                'judul_rubrik'              => $r['judul_rubrik'],
+                'total_bobot'               => (int)($r['total_bobot'] ?? 100),
+                'status'                    => $r['status'] ?? 'published',
+                'versi'                     => (int)($r['versi'] ?? 1),
+                'tanggal_publish'           => $r['tanggal_publish'] ?? null,
+                'tanggal_publish_formatted' => !empty($tglPub) ? date('d M Y, H:i', strtotime($tglPub)) . ' WIB' : 'Belum Dipublikasikan',
+                'updated_at'                => $r['updated_at'] ?? null,
+                'kriteria'                  => $kriteriaMap[$rId] ?? array()
+            );
+        }
+
+        return $result;
+    }
+
+    public function simpan_master_rubrik($prodi, $peminatan, $judul_rubrik, $kriteria = array(), $total_bobot = 100, $status = 'published', $is_publish = false) {
+        $this->_ensure_master_rubrik_tables();
+
+        $prodi = trim($prodi);
+        $peminatan = trim($peminatan);
+        $judul_rubrik = trim($judul_rubrik);
+
+        if (empty($prodi) || empty($peminatan)) {
+            return array('status' => false, 'message' => 'Prodi dan peminatan wajib diisi.');
+        }
+
+        if (empty($judul_rubrik)) {
+            $judul_rubrik = "Rubrik Sidang Tugas Akhir {$prodi} - {$peminatan}";
+        }
+
+        $existing = $this->db->get_where('master_rubrik', array(
+            'prodi'     => $prodi,
+            'peminatan' => $peminatan
+        ))->row_array();
+
+        $now = date('Y-m-d H:i:s');
+
+        $dataRubrik = array(
+            'prodi'        => $prodi,
+            'peminatan'    => $peminatan,
+            'judul_rubrik' => $judul_rubrik,
+            'total_bobot'  => (int)$total_bobot,
+            'status'       => $status,
+            'updated_at'   => $now
+        );
+
+        if ($is_publish || $status === 'published') {
+            $dataRubrik['tanggal_publish'] = $now;
+        }
+
+        if ($existing) {
+            $rubrik_id = $existing['id'];
+            if ($is_publish) {
+                $dataRubrik['versi'] = ((int)($existing['versi'] ?? 1)) + 1;
+            }
+            $this->db->where('id', $rubrik_id)->update('master_rubrik', $dataRubrik);
+        } else {
+            if (!isset($dataRubrik['tanggal_publish'])) {
+                $dataRubrik['tanggal_publish'] = $now;
+            }
+            $dataRubrik['versi'] = 1;
+            $this->db->insert('master_rubrik', $dataRubrik);
+            $rubrik_id = $this->db->insert_id();
+        }
+
+        // Simpan / perbarui butir-butir kriteria
+        if (!empty($rubrik_id) && is_array($kriteria)) {
+            $this->db->where('rubrik_id', $rubrik_id)->delete('master_rubrik_kriteria');
+
+            $urutan = 1;
+            foreach ($kriteria as $crit) {
+                $kode = !empty($crit['id']) ? $crit['id'] : ('k' . $urutan);
+                $title = trim($crit['title'] ?? ($crit['name'] ?? ''));
+                $desc = trim($crit['desc'] ?? ($crit['deskripsi'] ?? ''));
+                $bobot = (float)($crit['bobot'] ?? 0);
+
+                if (!empty($title)) {
+                    $this->db->insert('master_rubrik_kriteria', array(
+                        'rubrik_id'     => $rubrik_id,
+                        'kode_kriteria' => $kode,
+                        'nama_kriteria' => $title,
+                        'deskripsi'     => $desc,
+                        'bobot'         => $bobot,
+                        'urutan'        => $urutan
+                    ));
+                    $urutan++;
+                }
+            }
+        }
+
+        // Catat ke log approval history
+        if ($this->db->table_exists('log_approval_history')) {
+            $this->db->insert('log_approval_history', array(
+                'modul'         => 'Master Rubrik',
+                'ref_id'        => (string)$rubrik_id,
+                'target_name'   => "{$prodi} - {$peminatan}",
+                'action'        => $is_publish ? 'Published' : 'Updated',
+                'actor_id'      => $this->session->userdata('user_id'),
+                'actor_name'    => $this->session->userdata('name') ?: 'Koordinator TA',
+                'actor_role'    => 'Koordinator TA',
+                'actor_nip_nim' => $this->session->userdata('nip') ?: $this->session->userdata('username'),
+                'catatan'       => json_encode(array(
+                    'judul_rubrik'    => $judul_rubrik,
+                    'total_kriteria'  => count($kriteria),
+                    'total_bobot'     => $total_bobot,
+                    'status'          => $status,
+                    'tanggal_publish' => $now
+                ), JSON_UNESCAPED_UNICODE),
+                'created_at'    => $now
+            ));
+        }
+
+        $msg = $is_publish 
+            ? "Master rubrik {$prodi} - {$peminatan} berhasil dipublikasikan (Masa berlaku aktif per {$now})!"
+            : "Master rubrik {$prodi} - {$peminatan} berhasil diperbarui.";
+
         return array(
-            array(
-                'prodi'        => 'Informatika',
-                'peminatan'    => 'Informatika',
-                'judul_rubrik' => 'Standar Penilaian Sidang Tugas Akhir Informatika',
-                'kriteria'     => array(
-                    array('name' => 'Penguasaan Materi & Teori', 'bobot' => 30),
-                    array('name' => 'Implementasi Sistem & Metodologi', 'bobot' => 40),
-                    array('name' => 'Penyusunan Laporan & Dokumen TA', 'bobot' => 15),
-                    array('name' => 'Presentasi & Sikap', 'bobot' => 15)
-                )
-            )
+            'status'                    => true,
+            'message'                   => $msg,
+            'rubrik_id'                 => $rubrik_id,
+            'tanggal_publish'           => $now,
+            'tanggal_publish_formatted' => date('d M Y, H:i', strtotime($now)) . ' WIB'
         );
     }
 
-    public function simpan_master_rubrik($prodi, $peminatan, $judul_rubrik, $kriteria = array(), $total_bobot = 100) {
-        return array('status' => true, 'message' => 'Master rubrik berhasil diperbarui.');
-    }
-
     public function terapkan_rubrik_massal($prodi, $peminatan, $nim_list = array()) {
-        return array('status' => true, 'message' => 'Rubrik berhasil diterapkan ke mahasiswa terpilih.');
+        $this->_ensure_master_rubrik_tables();
+
+        if (empty($prodi) || empty($peminatan)) {
+            return array('status' => false, 'message' => 'Prodi dan peminatan wajib dipilih.');
+        }
+
+        $rubrik = $this->db->get_where('master_rubrik', array(
+            'prodi'     => $prodi,
+            'peminatan' => $peminatan
+        ))->row_array();
+
+        if (!$rubrik) {
+            return array('status' => false, 'message' => "Master rubrik untuk {$prodi} - {$peminatan} belum tersedia.");
+        }
+
+        $all = $this->get_all_mahasiswa_ta();
+        $targetNims = array();
+        $skippedPublished = 0;
+
+        foreach ($all as $mhs) {
+            $mProdi = $mhs['prodi'] ?? ($mhs['konsentrasi_dkv'] ?? '');
+            if (strcasecmp($mProdi, $prodi) !== 0 && stripos($mProdi, $prodi) === false) {
+                continue;
+            }
+
+            $nim = $mhs['nim'];
+            if (!empty($nim_list) && !in_array($nim, $nim_list)) {
+                continue;
+            }
+
+            // PERLINDUNGAN NILAI MAHASISWA LAMA:
+            // Sesuai arahan pembimbing: Jangan ubah mahasiswa yang nilainya sudah dipublikasikan!
+            $statusPublish = strtolower($mhs['status_publish_sidang'] ?? 'draft');
+            if ($statusPublish === 'published') {
+                $skippedPublished++;
+                continue;
+            }
+
+            $targetNims[] = $nim;
+        }
+
+        if (empty($targetNims)) {
+            if ($skippedPublished > 0) {
+                return array(
+                    'status'  => true,
+                    'message' => "Seluruh {$skippedPublished} mahasiswa pada peminatan ini nilainya sudah dipublikasikan (terkunci aman), tidak ada yang ditimpa."
+                );
+            }
+            return array('status' => false, 'message' => 'Tidak ada mahasiswa aktif yang memenuhi syarat untuk diterapkan rubrik.');
+        }
+
+        $this->db->where_in('username', $targetNims)->update('user', array('prodi' => $prodi));
+
+        if ($this->db->table_exists('log_approval_history')) {
+            $this->db->insert('log_approval_history', array(
+                'modul'         => 'Terapkan Rubrik Massal',
+                'ref_id'        => (string)$rubrik['id'],
+                'target_name'   => "{$prodi} - {$peminatan}",
+                'action'        => 'Applied',
+                'actor_id'      => $this->session->userdata('user_id'),
+                'actor_name'    => $this->session->userdata('name') ?: 'Koordinator TA',
+                'actor_role'    => 'Koordinator TA',
+                'actor_nip_nim' => $this->session->userdata('nip') ?: $this->session->userdata('username'),
+                'catatan'       => json_encode(array(
+                    'prodi'             => $prodi,
+                    'peminatan'         => $peminatan,
+                    'applied_count'     => count($targetNims),
+                    'skipped_published' => $skippedPublished,
+                    'nims'              => $targetNims
+                ), JSON_UNESCAPED_UNICODE),
+                'created_at'    => date('Y-m-d H:i:s')
+            ));
+        }
+
+        $msg = "Master rubrik berhasil diterapkan ke " . count($targetNims) . " mahasiswa aktif.";
+        if ($skippedPublished > 0) {
+            $msg .= " ({$skippedPublished} mahasiswa yang nilainya sudah dipublikasikan tetap terkunci aman).";
+        }
+
+        return array('status' => true, 'message' => $msg, 'applied_nims' => $targetNims);
     }
 
     /**
