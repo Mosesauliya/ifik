@@ -2026,28 +2026,42 @@
                 </div>
 
                 <!-- Status & Masa Berlaku / Tanggal Publish Banner -->
-                <div class="p-3.5 sm:p-4 bg-gradient-to-r from-emerald-50/70 via-slate-50 to-slate-50 border border-emerald-200/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div class="flex items-center gap-3">
-                        <span id="masterRubrikStatusBadge" class="px-2.5 py-1 rounded-full text-[10.5px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5 shrink-0">
-                            <i class="fa-solid fa-circle-check text-emerald-600"></i>
-                            <span id="masterRubrikStatusText">Published</span>
-                        </span>
-                        <div>
-                            <div class="flex items-center gap-1.5 text-xs text-slate-700 font-bold">
-                                <i class="fa-solid fa-clock-rotate-left text-violet-600 text-[11px]"></i>
-                                <span>Tanggal Publish:</span>
-                                <span id="masterRubrikTglPublishText" class="font-extrabold text-slate-900">-</span>
+                <div class="p-3.5 sm:p-4 bg-gradient-to-r from-emerald-50/70 via-slate-50 to-slate-50 border border-emerald-200/80 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="space-y-2">
+                        <div class="flex items-center flex-wrap gap-2">
+                            <span id="masterRubrikVersiBadge" class="px-2.5 py-1 rounded-full text-[10.5px] font-black uppercase tracking-wider bg-violet-100 text-violet-800 border border-violet-300 flex items-center gap-1.5 shrink-0">
+                                <i class="fa-solid fa-code-branch text-violet-600"></i>
+                                <span id="masterRubrikVersiText">Versi 1</span>
+                            </span>
+                            <span id="masterRubrikStatusBadge" class="px-2.5 py-1 rounded-full text-[10.5px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5 shrink-0">
+                                <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                                <span id="masterRubrikStatusText">Published (Aktif)</span>
+                            </span>
+                            <div id="masterRubrikHistoryWrapper" class="hidden items-center gap-1.5 text-xs text-slate-600">
+                                <span class="text-[11px] font-bold text-slate-500">Riwayat Versi:</span>
+                                <select id="masterRubrikVersionSelector" onchange="switchMasterRubrikVersion(this.value)" class="px-2 py-0.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:ring-1 focus:ring-violet-500">
+                                    <!-- Populated dynamically -->
+                                </select>
                             </div>
-                            <p class="text-[10.5px] text-slate-500 mt-0.5">
-                                Nilai mahasiswa yang sudah dipublikasikan sebelumnya terlindungi aman dan tidak akan terpengaruh jika rubrik diperbarui.
-                            </p>
                         </div>
+
+                        <p class="text-[11px] text-slate-600 leading-relaxed max-w-xl">
+                            <strong class="text-slate-800">Perlindungan Nilai Mahasiswa:</strong> Pembaharuan atau penambahan butir kriteria akan dipublikasikan sebagai versi baru. Mahasiswa lama yang sudah dinilai tetap menggunakan kriteria rubrik saat masa berlaku sidang berlangsung.
+                        </p>
                     </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        <button type="button" id="btnPublishDirectMasterRubrik" onclick="submitPublishMasterRubrik()" class="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer active:scale-95" title="Publikasikan rubrik ini sebagai standar penilaian aktif baru dan perbarui masa berlaku">
-                            <i class="fa-solid fa-cloud-arrow-up text-xs"></i>
-                            <span>Publish Rubrik</span>
-                        </button>
+
+                    <div class="flex flex-col sm:flex-row md:flex-col lg:flex-row items-start sm:items-center md:items-end lg:items-center gap-2.5 shrink-0 bg-white/80 p-3 rounded-xl border border-slate-200/90 shadow-2xs">
+                        <div>
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">
+                                <i class="fa-solid fa-calendar-check text-emerald-600 mr-1"></i>Tanggal &amp; Waktu Publish:
+                            </label>
+                            <div class="flex items-center gap-1.5">
+                                <input type="datetime-local" id="masterRubrikTglPublishInput" class="px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                                <button type="button" onclick="setMasterRubrikTglPublishNow()" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs border border-slate-200 transition cursor-pointer" title="Gunakan waktu sekarang">
+                                    Sekarang
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -2095,19 +2109,23 @@
             </div>
 
             <!-- Modal Footer -->
-            <div class="p-4 sm:p-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/50">
-                <button type="button" onclick="applyMasterRubrikMassalDirect()" class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95">
-                    <i class="fa-solid fa-users-gear text-xs"></i>
-                    <span>Terapkan Massal ke Mahasiswa Peminatan Ini</span>
+            <div class="p-4 sm:p-5 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-3 bg-slate-50/50">
+                <button type="button" onclick="applyMasterRubrikMassalDirect()" class="w-full md:w-auto px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-users-gear text-xs text-slate-600"></i>
+                    <span>Terapkan Massal ke Mahasiswa</span>
                 </button>
 
-                <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
-                    <button type="button" onclick="closeModalMasterRubrik()" class="px-5 py-2.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer">
-                        Batal
+                <div class="flex items-center flex-wrap gap-2 w-full md:w-auto justify-end">
+                    <button type="button" onclick="closeModalMasterRubrik()" class="px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer">
+                        Tutup
                     </button>
-                    <button type="button" id="btnSaveMasterRubrik" onclick="submitSaveMasterRubrik()" class="px-6 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl shadow-md shadow-violet-600/25 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95">
+                    <button type="button" id="btnSaveMasterRubrik" onclick="submitSaveMasterRubrik()" class="px-5 py-2.5 bg-white hover:bg-violet-50 text-violet-700 border border-violet-300 text-xs font-bold rounded-xl transition shadow-2xs flex items-center justify-center gap-2 cursor-pointer active:scale-95" title="Simpan perubahan judul/bobot pada versi ini">
                         <i class="fa-solid fa-floppy-disk text-xs"></i>
-                        <span>Simpan Template Rubrik</span>
+                        <span>Simpan Perubahan</span>
+                    </button>
+                    <button type="button" id="btnPublishDirectMasterRubrik" onclick="submitPublishMasterRubrik()" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/25 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95" title="Publikasikan sebagai versi baru (versi lama diarsipkan)">
+                        <i class="fa-solid fa-cloud-arrow-up text-xs"></i>
+                        <span id="btnPublishDirectText">Publish Versi Baru</span>
                     </button>
                 </div>
             </div>

@@ -8944,6 +8944,64 @@
         loadMasterRubrikIntoEditor();
     };
 
+    window.setMasterRubrikTglPublishNow = function () {
+        const input = document.getElementById('masterRubrikTglPublishInput');
+        if (!input) return;
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        const formatted = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+        input.value = formatted;
+    };
+
+    window.switchMasterRubrikVersion = function (selectedId) {
+        const prodiSelect = document.getElementById('masterRubrikProdiSelect');
+        const pemSelect = document.getElementById('masterRubrikPeminatanSelect');
+        const prodi = prodiSelect ? prodiSelect.value : 'DKV';
+        const pem = pemSelect ? pemSelect.value : 'Multimedia';
+
+        const masterGroup = (state.masterRubrikList || []).find(m => m.prodi === prodi && m.peminatan === pem);
+        if (!masterGroup || !Array.isArray(masterGroup.history_versions)) return;
+
+        const target = masterGroup.history_versions.find(v => String(v.id) === String(selectedId));
+        if (!target) return;
+
+        if (target.kriteria && target.kriteria.length > 0) {
+            state.activeMasterRubrikCriteria = JSON.parse(JSON.stringify(target.kriteria));
+        }
+
+        const judulInput = document.getElementById('masterRubrikJudulInput');
+        if (judulInput) judulInput.value = target.judul_rubrik || `Rubrik Sidang TA ${prodi} - ${pem}`;
+
+        const versiText = document.getElementById('masterRubrikVersiText');
+        if (versiText) versiText.textContent = `Versi ${target.versi || 1}`;
+
+        const statusBadge = document.getElementById('masterRubrikStatusBadge');
+        const isPub = (target.status || 'published').toLowerCase() === 'published';
+        if (statusBadge) {
+            if (isPub) {
+                statusBadge.className = 'px-2.5 py-1 rounded-full text-[10.5px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5 shrink-0';
+                statusBadge.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-600"></i><span id="masterRubrikStatusText">Published (Aktif)</span>';
+            } else {
+                statusBadge.className = 'px-2.5 py-1 rounded-full text-[10.5px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1.5 shrink-0';
+                statusBadge.innerHTML = '<i class="fa-solid fa-box-archive text-amber-600"></i><span id="masterRubrikStatusText">Arsip / Lampau</span>';
+            }
+        }
+
+        const tglInput = document.getElementById('masterRubrikTglPublishInput');
+        if (tglInput && target.tanggal_publish) {
+            try {
+                const d = new Date(target.tanggal_publish);
+                const pad = n => String(n).padStart(2, '0');
+                tglInput.value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            } catch (e) {
+                tglInput.value = '';
+            }
+        }
+
+        renderMasterRubrikCriteriaList();
+        validateMasterRubrikBobot();
+    };
+
     function loadMasterRubrikIntoEditor() {
         const prodiSelect = document.getElementById('masterRubrikProdiSelect');
         const pemSelect = document.getElementById('masterRubrikPeminatanSelect');
@@ -8967,10 +9025,15 @@
             if (judulInput) judulInput.value = `Rubrik Sidang TA ${prodi} - ${pem}`;
         }
 
-        // Update Status & Tanggal Publish Banner
+        // Update Version Badge
+        const versiText = document.getElementById('masterRubrikVersiText');
+        if (versiText) {
+            versiText.textContent = `Versi ${masterItem?.versi || 1}`;
+        }
+
+        // Update Status & Tanggal Publish Input
         const statusBadge = document.getElementById('masterRubrikStatusBadge');
-        const statusText = document.getElementById('masterRubrikStatusText');
-        const tglText = document.getElementById('masterRubrikTglPublishText');
+        const tglInput = document.getElementById('masterRubrikTglPublishInput');
 
         if (masterItem) {
             const isPub = (masterItem.status || 'published').toLowerCase() === 'published';
@@ -8983,16 +9046,49 @@
                     statusBadge.innerHTML = '<i class="fa-solid fa-file-pen text-amber-600"></i><span id="masterRubrikStatusText">Draft</span>';
                 }
             }
-            if (tglText) {
-                tglText.textContent = masterItem.tanggal_publish_formatted || masterItem.tanggal_publish || 'Belum Pernah Dipublikasikan';
+
+            if (tglInput) {
+                if (masterItem.tanggal_publish) {
+                    try {
+                        const d = new Date(masterItem.tanggal_publish);
+                        const pad = n => String(n).padStart(2, '0');
+                        tglInput.value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                    } catch (e) {
+                        setMasterRubrikTglPublishNow();
+                    }
+                } else {
+                    setMasterRubrikTglPublishNow();
+                }
             }
         } else {
             if (statusBadge) {
                 statusBadge.className = 'px-2.5 py-1 rounded-full text-[10.5px] font-black uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-300 flex items-center gap-1.5 shrink-0';
                 statusBadge.innerHTML = '<i class="fa-solid fa-sparkles text-slate-500"></i><span id="masterRubrikStatusText">Standar Default</span>';
             }
-            if (tglText) {
-                tglText.textContent = 'Standar Bawaan Kurikulum';
+            if (tglInput) {
+                setMasterRubrikTglPublishNow();
+            }
+        }
+
+        // Setup History Version Dropdown
+        const histWrapper = document.getElementById('masterRubrikHistoryWrapper');
+        const verSelector = document.getElementById('masterRubrikVersionSelector');
+        if (histWrapper && verSelector) {
+            const versions = (masterItem && Array.isArray(masterItem.history_versions)) ? masterItem.history_versions : [];
+            if (versions.length > 1) {
+                histWrapper.classList.remove('hidden');
+                histWrapper.classList.add('flex');
+                let optHtml = '';
+                versions.forEach(v => {
+                    const isSel = (v.id === masterItem.id);
+                    const tag = v.status === 'published' ? 'Aktif' : 'Arsip';
+                    optHtml += `<option value="${v.id}" ${isSel ? 'selected' : ''}>v${v.versi} (${tag})</option>`;
+                });
+                verSelector.innerHTML = optHtml;
+            } else {
+                histWrapper.classList.add('hidden');
+                histWrapper.classList.remove('flex');
+                verSelector.innerHTML = '';
             }
         }
 
@@ -9271,12 +9367,16 @@
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i> Menyimpan...';
         }
 
+        const tglPublish = document.getElementById('masterRubrikTglPublishInput')?.value || '';
+
         const formData = new FormData();
         formData.append('prodi', prodi);
         formData.append('peminatan', pem);
         formData.append('judul_rubrik', judul || `Rubrik Sidang TA ${prodi} - ${pem}`);
         formData.append('kriteria', JSON.stringify(state.activeMasterRubrikCriteria));
         formData.append('status', 'published');
+        formData.append('tanggal_publish', tglPublish);
+        formData.append('as_new_version', '0');
 
         const url = window.DASHBOARD_CONFIG?.ajaxSimpanMasterRubrikUrl || cfg.ajaxSimpanMasterRubrikUrl || 'koordinatorta/ajax_simpan_master_rubrik';
 
@@ -9328,7 +9428,7 @@
         .finally(() => {
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-floppy-disk text-xs"></i> <span>Simpan Template Rubrik</span>';
+                btn.innerHTML = '<i class="fa-solid fa-floppy-disk text-xs"></i> <span>Simpan Perubahan</span>';
             }
         });
     };
@@ -9357,12 +9457,19 @@
             return;
         }
 
+        const tglPublish = document.getElementById('masterRubrikTglPublishInput')?.value || '';
+        const tglDisplay = tglPublish ? tglPublish.replace('T', ' ') + ' WIB' : 'Sekarang';
+
         Swal.fire({
-            title: 'Publikasikan Master Rubrik?',
-            html: `Rubrik untuk <b>${escapeHtml(prodi)} - ${escapeHtml(pem)}</b> akan resmi dipublikasikan dan mulai berlaku sebagai standar ujian sidang aktif.<br><br><span class="text-xs text-slate-500">Catatan: Nilai mahasiswa lama yang sudah dipublikasikan sebelumnya terlindungi aman dan tidak akan terpengaruh.</span>`,
+            title: 'Publikasikan Versi Baru?',
+            html: `Rubrik untuk <b>${escapeHtml(prodi)} - ${escapeHtml(pem)}</b> akan resmi dipublikasikan sebagai <b>Versi Baru</b>.<br><br>
+                   <div class="text-left text-xs bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5 text-slate-600">
+                       <div><i class="fa-solid fa-calendar-check text-emerald-600 mr-1.5"></i><b>Masa Berlaku Aktif:</b> ${escapeHtml(tglDisplay)}</div>
+                       <div><i class="fa-solid fa-shield-halved text-violet-600 mr-1.5"></i><b>Perlindungan Nilai Mahasiswa:</b> Mahasiswa lama yang sudah dinilai/dipublikasikan tetap menggunakan rubrik versi lampau dan tidak terpengaruh.</div>
+                   </div>`,
             icon: 'question',
             showCancelButton: true,
-            confirmButtonText: '<i class="fa-solid fa-cloud-arrow-up mr-1.5"></i> Ya, Publikasikan Sekarang',
+            confirmButtonText: '<i class="fa-solid fa-cloud-arrow-up mr-1.5"></i> Ya, Publikasikan Versi Baru',
             cancelButtonText: 'Batal',
             confirmButtonColor: '#059669',
             cancelButtonColor: '#64748b'
@@ -9381,6 +9488,8 @@
                 formData.append('kriteria', JSON.stringify(state.activeMasterRubrikCriteria));
                 formData.append('status', 'published');
                 formData.append('is_publish', '1');
+                formData.append('as_new_version', '1');
+                formData.append('tanggal_publish', tglPublish);
 
                 const url = window.DASHBOARD_CONFIG?.ajaxPublishMasterRubrikUrl || cfg.ajaxPublishMasterRubrikUrl || 'koordinatorta/ajax_publish_master_rubrik';
 
@@ -9410,7 +9519,7 @@
                         Swal.fire({
                             icon: 'success',
                             title: 'Rubrik Berhasil Dipublikasikan!',
-                            html: `Standar penilaian <b>${escapeHtml(prodi)} - ${escapeHtml(pem)}</b> resmi aktif per <b>${res.tanggal_publish_formatted || 'hari ini'}</b>.<br><span class="text-xs text-slate-500">Riwayat nilai mahasiswa yang sudah dipublikasikan tetap aman/terkunci.</span>`,
+                            html: `Standar penilaian <b>${escapeHtml(prodi)} - ${escapeHtml(pem)}</b> resmi aktif sebagai <b>Versi ${res.versi || 'Baru'}</b> per <b>${res.tanggal_publish_formatted || 'hari ini'}</b>.<br><span class="text-xs text-slate-500">Riwayat nilai mahasiswa yang sudah dipublikasikan tetap aman/terkunci.</span>`,
                             confirmButtonColor: '#059669'
                         });
                     } else {
@@ -9428,7 +9537,7 @@
                 .finally(() => {
                     if (btn) {
                         btn.disabled = false;
-                        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up text-xs"></i> <span>Publish Rubrik</span>';
+                        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up text-xs"></i> <span id="btnPublishDirectText">Publish Versi Baru</span>';
                     }
                 });
             }

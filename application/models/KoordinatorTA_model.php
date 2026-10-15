@@ -1831,19 +1831,44 @@ class KoordinatorTA_model extends CI_Model {
     }
 
     /**
-     * Pastikan kolom tanggal_publish, status, dan versi tersedia di tabel master_rubrik
+     * Pastikan kolom tanggal_publish, tanggal_berakhir, status, versi, dan index multi-versi tersedia di tabel master_rubrik
      */
     public function _ensure_master_rubrik_tables() {
-        if ($this->db->table_exists('master_rubrik')) {
-            if (!$this->db->field_exists('tanggal_publish', 'master_rubrik')) {
-                @$this->db->query("ALTER TABLE `master_rubrik` ADD COLUMN `tanggal_publish` DATETIME NULL AFTER `total_bobot`;");
-            }
-            if (!$this->db->field_exists('status', 'master_rubrik')) {
-                @$this->db->query("ALTER TABLE `master_rubrik` ADD COLUMN `status` VARCHAR(20) NOT NULL DEFAULT 'published' AFTER `tanggal_publish`;");
-            }
-            if (!$this->db->field_exists('versi', 'master_rubrik')) {
-                @$this->db->query("ALTER TABLE `master_rubrik` ADD COLUMN `versi` INT NOT NULL DEFAULT 1 AFTER `status`;");
-            }
+        if (!$this->db->table_exists('master_rubrik')) {
+            return;
+        }
+
+        if (!$this->db->field_exists('tanggal_publish', 'master_rubrik')) {
+            @$this->db->query("ALTER TABLE `master_rubrik` ADD COLUMN `tanggal_publish` DATETIME NULL AFTER `total_bobot`;");
+        }
+        if (!$this->db->field_exists('tanggal_berakhir', 'master_rubrik')) {
+            @$this->db->query("ALTER TABLE `master_rubrik` ADD COLUMN `tanggal_berakhir` DATETIME NULL AFTER `tanggal_publish`;");
+        }
+        if (!$this->db->field_exists('status', 'master_rubrik')) {
+            @$this->db->query("ALTER TABLE `master_rubrik` ADD COLUMN `status` VARCHAR(20) NOT NULL DEFAULT 'published' AFTER `tanggal_berakhir`;");
+        }
+        if (!$this->db->field_exists('versi', 'master_rubrik')) {
+            @$this->db->query("ALTER TABLE `master_rubrik` ADD COLUMN `versi` INT NOT NULL DEFAULT 1 AFTER `status`;");
+        }
+
+        // Pastikan index mengizinkan multi-versi per prodi dan peminatan
+        $indexes = $this->db->query("SHOW INDEX FROM `master_rubrik`")->result_array();
+        $indexMap = array();
+        foreach ($indexes as $idx) {
+            $indexMap[$idx['Key_name']] = $idx;
+        }
+
+        if (isset($indexMap['idx_prodi_peminatan']) && (int)$indexMap['idx_prodi_peminatan']['Non_unique'] === 0) {
+            @$this->db->query("ALTER TABLE `master_rubrik` DROP INDEX `idx_prodi_peminatan`");
+            unset($indexMap['idx_prodi_peminatan']);
+        }
+
+        if (!isset($indexMap['idx_prodi_peminatan_versi'])) {
+            @$this->db->query("ALTER TABLE `master_rubrik` ADD UNIQUE KEY `idx_prodi_peminatan_versi` (`prodi`, `peminatan`, `versi`)");
+        }
+
+        if (!isset($indexMap['idx_prodi_peminatan'])) {
+            @$this->db->query("ALTER TABLE `master_rubrik` ADD INDEX `idx_prodi_peminatan` (`prodi`, `peminatan`)");
         }
     }
 
@@ -1912,7 +1937,7 @@ class KoordinatorTA_model extends CI_Model {
         );
 
         foreach ($defaultTemplates as $tpl) {
-            $existing = $this->db->get_where('master_rubrik', array(
+            $existing = $this->db->order_by('versi', 'DESC')->get_where('master_rubrik', array(
                 'prodi'     => $tpl['prodi'],
                 'peminatan' => $tpl['peminatan']
             ))->row_array();
@@ -1971,22 +1996,26 @@ class KoordinatorTA_model extends CI_Model {
         $this->db->from('master_rubrik');
         $this->db->order_by('prodi', 'ASC');
         $this->db->order_by('peminatan', 'ASC');
-        $rubriks = $this->db->get()->result_array();
+        $this->db->order_by('versi', 'DESC');
+        $this->db->order_by('id', 'DESC');
+        $allRows = $this->db->get()->result_array();
 
-        if (empty($rubriks)) {
+        if (empty($allRows)) {
             $this->_seed_default_master_rubrik();
             $this->db->select('*');
             $this->db->from('master_rubrik');
             $this->db->order_by('prodi', 'ASC');
             $this->db->order_by('peminatan', 'ASC');
-            $rubriks = $this->db->get()->result_array();
+            $this->db->order_by('versi', 'DESC');
+            $this->db->order_by('id', 'DESC');
+            $allRows = $this->db->get()->result_array();
         }
 
-        if (empty($rubriks)) {
+        if (empty($allRows)) {
             return array();
         }
 
-        $rubrikIds = array_column($rubriks, 'id');
+        $rubrikIds = array_column($allRows, 'id');
         $kriteriaMap = array();
 
         if (!empty($rubrikIds) && $this->db->table_exists('master_rubrik_kriteria')) {
@@ -2011,29 +2040,43 @@ class KoordinatorTA_model extends CI_Model {
             }
         }
 
-        $result = array();
-        foreach ($rubriks as $r) {
+        // Kelompokkan per (prodi, peminatan).
+        // Baris pertama per prodi-peminatan adalah versi terbaru / aktif karena order by versi DESC
+        $grouped = array();
+        foreach ($allRows as $r) {
+            $key = $r['prodi'] . '___' . $r['peminatan'];
             $rId = $r['id'];
             $tglPub = !empty($r['tanggal_publish']) ? $r['tanggal_publish'] : $r['updated_at'];
-            $result[] = array(
-                'id'                        => (int)$r['id'],
-                'prodi'                     => $r['prodi'],
-                'peminatan'                 => $r['peminatan'],
-                'judul_rubrik'              => $r['judul_rubrik'],
-                'total_bobot'               => (int)($r['total_bobot'] ?? 100),
-                'status'                    => $r['status'] ?? 'published',
-                'versi'                     => (int)($r['versi'] ?? 1),
-                'tanggal_publish'           => $r['tanggal_publish'] ?? null,
-                'tanggal_publish_formatted' => !empty($tglPub) ? date('d M Y, H:i', strtotime($tglPub)) . ' WIB' : 'Belum Dipublikasikan',
-                'updated_at'                => $r['updated_at'] ?? null,
-                'kriteria'                  => $kriteriaMap[$rId] ?? array()
+            $tglEnd = !empty($r['tanggal_berakhir']) ? $r['tanggal_berakhir'] : null;
+
+            $versionItem = array(
+                'id'                         => (int)$r['id'],
+                'prodi'                      => $r['prodi'],
+                'peminatan'                  => $r['peminatan'],
+                'judul_rubrik'               => $r['judul_rubrik'],
+                'total_bobot'                => (int)($r['total_bobot'] ?? 100),
+                'status'                     => $r['status'] ?? 'published',
+                'versi'                      => (int)($r['versi'] ?? 1),
+                'tanggal_publish'            => $r['tanggal_publish'] ?? null,
+                'tanggal_publish_formatted'  => !empty($tglPub) ? date('d M Y, H:i', strtotime($tglPub)) . ' WIB' : 'Belum Dipublikasikan',
+                'tanggal_berakhir'           => $tglEnd,
+                'tanggal_berakhir_formatted' => !empty($tglEnd) ? date('d M Y, H:i', strtotime($tglEnd)) . ' WIB' : 'Aktif (Sekarang)',
+                'updated_at'                 => $r['updated_at'] ?? null,
+                'kriteria'                   => $kriteriaMap[$rId] ?? array()
             );
+
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = $versionItem;
+                $grouped[$key]['history_versions'] = array();
+            }
+
+            $grouped[$key]['history_versions'][] = $versionItem;
         }
 
-        return $result;
+        return array_values($grouped);
     }
 
-    public function simpan_master_rubrik($prodi, $peminatan, $judul_rubrik, $kriteria = array(), $total_bobot = 100, $status = 'published', $is_publish = false) {
+    public function simpan_master_rubrik($prodi, $peminatan, $judul_rubrik, $kriteria = array(), $total_bobot = 100, $status = 'published', $is_publish = false, $custom_tanggal_publish = null, $as_new_version = false) {
         $this->_ensure_master_rubrik_tables();
 
         $prodi = trim($prodi);
@@ -2048,43 +2091,88 @@ class KoordinatorTA_model extends CI_Model {
             $judul_rubrik = "Rubrik Sidang Tugas Akhir {$prodi} - {$peminatan}";
         }
 
-        $existing = $this->db->get_where('master_rubrik', array(
-            'prodi'     => $prodi,
-            'peminatan' => $peminatan
-        ))->row_array();
-
         $now = date('Y-m-d H:i:s');
+        $effectivePublishDate = !empty($custom_tanggal_publish)
+            ? date('Y-m-d H:i:s', strtotime($custom_tanggal_publish))
+            : $now;
 
-        $dataRubrik = array(
-            'prodi'        => $prodi,
-            'peminatan'    => $peminatan,
-            'judul_rubrik' => $judul_rubrik,
-            'total_bobot'  => (int)$total_bobot,
-            'status'       => $status,
-            'updated_at'   => $now
-        );
+        // Ambil versi terbaru yang ada saat ini
+        $this->db->where('prodi', $prodi);
+        $this->db->where('peminatan', $peminatan);
+        $this->db->order_by('versi', 'DESC');
+        $this->db->order_by('id', 'DESC');
+        $current = $this->db->get('master_rubrik')->row_array();
 
-        if ($is_publish || $status === 'published') {
-            $dataRubrik['tanggal_publish'] = $now;
-        }
+        $currentVersi = $current ? (int)($current['versi'] ?? 1) : 1;
+        $rubrik_id = null;
+        $savedVersi = $currentVersi;
 
-        if ($existing) {
-            $rubrik_id = $existing['id'];
-            if ($is_publish) {
-                $dataRubrik['versi'] = ((int)($existing['versi'] ?? 1)) + 1;
-            }
-            $this->db->where('id', $rubrik_id)->update('master_rubrik', $dataRubrik);
-        } else {
-            if (!isset($dataRubrik['tanggal_publish'])) {
-                $dataRubrik['tanggal_publish'] = $now;
-            }
-            $dataRubrik['versi'] = 1;
+        // Jika ini adalah Publish Versi Baru ($as_new_version || $is_publish)
+        // Dan sudah ada record sebelumnya, kita buat baris baru agar riwayat dan nilai mahasiswa lama tetap utuh!
+        if (($as_new_version || $is_publish) && $current) {
+            $newVersi = $currentVersi + 1;
+            $savedVersi = $newVersi;
+
+            // 1. Arsipkan versi-versi sebelumnya yang masih berstatus published
+            $this->db->where('prodi', $prodi);
+            $this->db->where('peminatan', $peminatan);
+            $this->db->where('status', 'published');
+            $this->db->update('master_rubrik', array(
+                'status'           => 'archived',
+                'tanggal_berakhir' => $effectivePublishDate,
+                'updated_at'       => $now
+            ));
+
+            // 2. Buat baris baru untuk versi baru yang aktif
+            $dataRubrik = array(
+                'prodi'            => $prodi,
+                'peminatan'        => $peminatan,
+                'judul_rubrik'     => $judul_rubrik,
+                'total_bobot'      => (int)$total_bobot,
+                'status'           => 'published',
+                'versi'            => $newVersi,
+                'tanggal_publish'  => $effectivePublishDate,
+                'tanggal_berakhir' => null,
+                'updated_at'       => $now
+            );
             $this->db->insert('master_rubrik', $dataRubrik);
             $rubrik_id = $this->db->insert_id();
+
+        } elseif ($current) {
+            // Edit versi yang sedang aktif tanpa membuat versi baru (misal update minor / perbaiki penulisan)
+            $rubrik_id = $current['id'];
+            $dataUpdate = array(
+                'judul_rubrik' => $judul_rubrik,
+                'total_bobot'  => (int)$total_bobot,
+                'status'       => $status,
+                'updated_at'   => $now
+            );
+            if (!empty($custom_tanggal_publish)) {
+                $dataUpdate['tanggal_publish'] = $effectivePublishDate;
+            }
+            $this->db->where('id', $rubrik_id)->update('master_rubrik', $dataUpdate);
+
+        } else {
+            // Belum pernah ada data sama sekali (insert versi 1)
+            $dataRubrik = array(
+                'prodi'            => $prodi,
+                'peminatan'        => $peminatan,
+                'judul_rubrik'     => $judul_rubrik,
+                'total_bobot'      => (int)$total_bobot,
+                'status'           => $status,
+                'versi'            => 1,
+                'tanggal_publish'  => $effectivePublishDate,
+                'tanggal_berakhir' => null,
+                'updated_at'       => $now
+            );
+            $this->db->insert('master_rubrik', $dataRubrik);
+            $rubrik_id = $this->db->insert_id();
+            $savedVersi = 1;
         }
 
-        // Simpan / perbarui butir-butir kriteria
+        // Simpan butir-butir kriteria untuk rubrik_id ini
         if (!empty($rubrik_id) && is_array($kriteria)) {
+            // Hapus kriteria milik rubrik_id ini saja (tidak menyentuh rubrik_id versi lama!)
             $this->db->where('rubrik_id', $rubrik_id)->delete('master_rubrik_kriteria');
 
             $urutan = 1;
@@ -2110,37 +2198,104 @@ class KoordinatorTA_model extends CI_Model {
 
         // Catat ke log approval history
         if ($this->db->table_exists('log_approval_history')) {
+            $actionLabel = ($as_new_version || $is_publish) ? "Published Versi {$savedVersi}" : "Updated Versi {$savedVersi}";
             $this->db->insert('log_approval_history', array(
                 'modul'         => 'Master Rubrik',
                 'ref_id'        => (string)$rubrik_id,
-                'target_name'   => "{$prodi} - {$peminatan}",
-                'action'        => $is_publish ? 'Published' : 'Updated',
+                'target_name'   => "{$prodi} - {$peminatan} (v{$savedVersi})",
+                'action'        => $actionLabel,
                 'actor_id'      => $this->session->userdata('user_id'),
                 'actor_name'    => $this->session->userdata('name') ?: 'Koordinator TA',
                 'actor_role'    => 'Koordinator TA',
                 'actor_nip_nim' => $this->session->userdata('nip') ?: $this->session->userdata('username'),
                 'catatan'       => json_encode(array(
+                    'versi'           => $savedVersi,
                     'judul_rubrik'    => $judul_rubrik,
                     'total_kriteria'  => count($kriteria),
                     'total_bobot'     => $total_bobot,
                     'status'          => $status,
-                    'tanggal_publish' => $now
+                    'tanggal_publish' => $effectivePublishDate
                 ), JSON_UNESCAPED_UNICODE),
                 'created_at'    => $now
             ));
         }
 
-        $msg = $is_publish 
-            ? "Master rubrik {$prodi} - {$peminatan} berhasil dipublikasikan (Masa berlaku aktif per {$now})!"
-            : "Master rubrik {$prodi} - {$peminatan} berhasil diperbarui.";
+        $msg = ($as_new_version || $is_publish)
+            ? "Master rubrik {$prodi} - {$peminatan} berhasil dipublikasikan sebagai Versi {$savedVersi} (Masa berlaku aktif per " . date('d M Y, H:i', strtotime($effectivePublishDate)) . " WIB)!"
+            : "Master rubrik {$prodi} - {$peminatan} Versi {$savedVersi} berhasil diperbarui.";
 
         return array(
             'status'                    => true,
             'message'                   => $msg,
             'rubrik_id'                 => $rubrik_id,
-            'tanggal_publish'           => $now,
-            'tanggal_publish_formatted' => date('d M Y, H:i', strtotime($now)) . ' WIB'
+            'versi'                     => $savedVersi,
+            'tanggal_publish'           => $effectivePublishDate,
+            'tanggal_publish_formatted' => date('d M Y, H:i', strtotime($effectivePublishDate)) . ' WIB'
         );
+    }
+
+    /**
+     * Ambil rubrik aktif berdasarkan prodi, peminatan, dan tanggal sidang/penilaian.
+     * Sesuai arsitektur versioning:
+     * - Mahasiswa yang dinilai pada tanggal X akan menggunakan versi rubrik yang berlaku pada tanggal X.
+     * - Data nilai lama tetap aman dan utuh meskipun ada kriteria baru yang ditambahkan di masa depan.
+     */
+    public function get_active_rubrik_for_evaluation($prodi, $peminatan, $evaluation_date = null) {
+        $this->_ensure_master_rubrik_tables();
+
+        if (empty($evaluation_date)) {
+            $evaluation_date = date('Y-m-d H:i:s');
+        } else {
+            $evaluation_date = date('Y-m-d H:i:s', strtotime($evaluation_date));
+        }
+
+        // Cari versi yang berlaku pada rentang waktu: tanggal_publish <= $evaluation_date AND (tanggal_berakhir IS NULL OR tanggal_berakhir > $evaluation_date)
+        $this->db->select('*');
+        $this->db->from('master_rubrik');
+        $this->db->where('prodi', $prodi);
+        $this->db->where('peminatan', $peminatan);
+        $this->db->where('tanggal_publish <=', $evaluation_date);
+        $this->db->group_start();
+        $this->db->where('tanggal_berakhir IS NULL', null, false);
+        $this->db->or_where('tanggal_berakhir >', $evaluation_date);
+        $this->db->group_end();
+        $this->db->order_by('versi', 'DESC');
+        $this->db->order_by('id', 'DESC');
+        $rubrik = $this->db->get()->row_array();
+
+        // Fallback jika tidak ada yang cocok dengan rentang tanggal (misal penilaian lampau sebelum tanggal_publish)
+        if (!$rubrik) {
+            $this->db->select('*');
+            $this->db->from('master_rubrik');
+            $this->db->where('prodi', $prodi);
+            $this->db->where('peminatan', $peminatan);
+            $this->db->order_by('versi', 'ASC');
+            $this->db->limit(1);
+            $rubrik = $this->db->get()->row_array();
+        }
+
+        if (!$rubrik) {
+            return null;
+        }
+
+        // Ambil kriteria untuk rubrik_id ini
+        $this->db->select('*');
+        $this->db->from('master_rubrik_kriteria');
+        $this->db->where('rubrik_id', $rubrik['id']);
+        $this->db->order_by('urutan', 'ASC');
+        $kriteria = $this->db->get()->result_array();
+
+        $rubrik['kriteria'] = array();
+        foreach ($kriteria as $k) {
+            $rubrik['kriteria'][] = array(
+                'id'    => $k['kode_kriteria'] ?: ('k' . $k['urutan']),
+                'title' => $k['nama_kriteria'],
+                'desc'  => $k['deskripsi'] ?? '',
+                'bobot' => (float)$k['bobot']
+            );
+        }
+
+        return $rubrik;
     }
 
     public function terapkan_rubrik_massal($prodi, $peminatan, $nim_list = array()) {
