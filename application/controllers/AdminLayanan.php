@@ -1736,5 +1736,88 @@ class AdminLayanan extends CI_Controller {
     public function newsroom() {
         redirect('news/newsroom');
     }
+
+    /**
+     * Halaman Review Rekomendasi Pembimbing 1 & Downgrade Tahap Preview
+     */
+    public function rekomendasi() {
+        $filter_type = $this->input->get('filter') ?: 'all';
+        $search      = trim($this->input->get('q') ?? '');
+
+        $all_data = $this->AdminLayanan_model->get_rekomendasi_submissions_list('', 'all');
+        
+        $stats = [
+            'total'      => count($all_data),
+            'sidang'     => 0,
+            'non_sidang' => 0,
+            'pending'    => 0
+        ];
+        foreach ($all_data as $item) {
+            $t = strtolower($item['recommendation_type'] ?? '');
+            if ($t === 'sidang') {
+                $stats['sidang']++;
+            } elseif ($t === 'non_sidang' || $t === 'non-sidang') {
+                $stats['non_sidang']++;
+            } else {
+                $stats['pending']++;
+            }
+        }
+
+        $list = $this->AdminLayanan_model->get_rekomendasi_submissions_list($search, $filter_type);
+
+        $data['title']       = 'Review Rekomendasi & Downgrade Tahap';
+        $data['stats']       = $stats;
+        $data['list']        = $list;
+        $data['filter_type'] = $filter_type;
+        $data['search']      = $search;
+
+        $this->load->view('admin_layanan/rekomendasi', $data);
+    }
+
+    /**
+     * AJAX Endpoint: Get realtime rekomendasi list
+     */
+    public function ajax_get_rekomendasi() {
+        header('Content-Type: application/json');
+        $filter_type = $this->input->get('filter') ?: 'all';
+        $search      = trim($this->input->get('q') ?? '');
+
+        $list = $this->AdminLayanan_model->get_rekomendasi_submissions_list($search, $filter_type);
+        echo json_encode([
+            'status' => true,
+            'data'   => $list
+        ]);
+    }
+
+    /**
+     * AJAX Endpoint: Downgrade Tahap Preview Mahasiswa
+     */
+    public function downgrade_preview_ajax() {
+        header('Content-Type: application/json');
+
+        $nim      = trim($this->input->post('nim') ?? '');
+        $ke_tahap = trim($this->input->post('ke_tahap') ?? '');
+        $alasan   = trim($this->input->post('alasan') ?? '');
+
+        if (empty($nim) || empty($ke_tahap)) {
+            echo json_encode(['status' => false, 'message' => 'Parameter NIM dan tujuan tahap tidak lengkap.']);
+            return;
+        }
+
+        $this->load->model('Mahasiswa_model');
+        $g = $this->Mahasiswa_model->get_guidance_by_nim($nim);
+        if (!$g) {
+            echo json_encode(['status' => false, 'message' => 'Data bimbingan mahasiswa tidak ditemukan.']);
+            return;
+        }
+
+        $curr_stage = strtolower(trim($g['status_preview'] ?? 'preview1'));
+        if (empty($curr_stage)) $curr_stage = 'preview1';
+
+        $role_actor = 'Admin LAA';
+        $res = $this->Mahasiswa_model->downgrade_stage($nim, $curr_stage, $ke_tahap, $role_actor, $alasan);
+
+        echo json_encode($res);
+    }
 }
 

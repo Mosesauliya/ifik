@@ -810,29 +810,46 @@ class Dosen_bimbingan extends CI_Controller {
                 }
             }
 
+            $has_syarat_sidang = false;
+            if ($tahap === 'Preview 3') {
+                if (!empty($latest['file_persyaratan'])) {
+                    $has_syarat_sidang = true;
+                } else {
+                    $this->load->model('AdminLayanan_model');
+                    $bs = $this->AdminLayanan_model->get_berkas_pendaftaran_sidang($student['nim']);
+                    foreach ($bs as $b) {
+                        if (!empty($b['file_name']) && $b['file_name'] !== '-') {
+                            $has_syarat_sidang = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
             $data[] = [
-                'nim'              => $student['nim'],
-                'nama_mahasiswa'   => $student['nama_mahasiswa'] ?? $student['nim'],
-                'judul'            => $student['judul'] ?? '-',
-                'konsentrasi_dkv'  => $student['konsentrasi_dkv'] ?? '',
-                'latest_preview'   => $latest,
-                'riwayat_previews' => $previews,
-                'rekomendasi'      => $rekomen,
-                'status_de'        => $student['status_de'] ?? ($latest['kelayakan2'] ?? null),
-                'nilai_pembimbing1'=> $student['nilai_pembimbing1'] ?? ($latest['nilai_pembimbing1'] ?? null),
-                'nilai_pembimbing2'=> $student['nilai_pembimbing2'] ?? ($latest['nilai_pembimbing2'] ?? null),
-                'nilai_penguji1'   => $student['nilai_penguji1'] ?? ($latest['nilai_penguji1'] ?? null),
-                'nilai_penguji2'   => $student['nilai_penguji2'] ?? ($latest['nilai_penguji2'] ?? null),
-                'catatan_p1'       => $student['catatan_p1'] ?? ($latest['penilaian_pembimbing1'] ?? ''),
-                'catatan_p2'       => $student['catatan_p2'] ?? ($latest['penilaian_pembimbing2'] ?? ''),
-                'catatan_u1'       => $student['catatan_u1'] ?? ($latest['penilaian_penguji1'] ?? ''),
-                'catatan_u2'       => $student['catatan_u2'] ?? ($latest['penilaian_penguji2'] ?? ''),
-                'de_tanggal'       => $student['de_tanggal'] ?? ($latest['tanggal_presentasi'] ?? null),
-                'de_waktu'         => $student['de_waktu'] ?? ($latest['waktu_presentasi'] ?? null),
-                'de_ruangan'       => $student['de_ruangan'] ?? ($latest['ruang_sidang'] ?? null),
-                'de_link'          => $student['de_link'] ?? ($latest['link_presentasi'] ?? null),
-                'de_catatan'       => $student['de_catatan'] ?? ($latest['komentar_kelayakan2'] ?? null),
-                'lulus_preview2'   => $student['lulus_preview2'] ?? ($latest['lulus_preview2'] ?? 0),
+                'nim'                    => $student['nim'],
+                'nama_mahasiswa'         => $student['nama_mahasiswa'] ?? $student['nim'],
+                'judul'                  => $student['judul'] ?? '-',
+                'konsentrasi_dkv'        => $student['konsentrasi_dkv'] ?? '',
+                'latest_preview'         => $latest,
+                'riwayat_previews'       => $previews,
+                'rekomendasi'            => $rekomen,
+                'has_persyaratan_sidang' => $has_syarat_sidang,
+                'status_de'              => $student['status_de'] ?? ($latest['kelayakan2'] ?? null),
+                'nilai_pembimbing1'      => $student['nilai_pembimbing1'] ?? ($latest['nilai_pembimbing1'] ?? null),
+                'nilai_pembimbing2'      => $student['nilai_pembimbing2'] ?? ($latest['nilai_pembimbing2'] ?? null),
+                'nilai_penguji1'         => $student['nilai_penguji1'] ?? ($latest['nilai_penguji1'] ?? null),
+                'nilai_penguji2'         => $student['nilai_penguji2'] ?? ($latest['nilai_penguji2'] ?? null),
+                'catatan_p1'             => $student['catatan_p1'] ?? ($latest['penilaian_pembimbing1'] ?? ''),
+                'catatan_p2'             => $student['catatan_p2'] ?? ($latest['penilaian_pembimbing2'] ?? ''),
+                'catatan_u1'             => $student['catatan_u1'] ?? ($latest['penilaian_penguji1'] ?? ''),
+                'catatan_u2'             => $student['catatan_u2'] ?? ($latest['penilaian_penguji2'] ?? ''),
+                'de_tanggal'             => $student['de_tanggal'] ?? ($latest['tanggal_presentasi'] ?? null),
+                'de_waktu'               => $student['de_waktu'] ?? ($latest['waktu_presentasi'] ?? null),
+                'de_ruangan'             => $student['de_ruangan'] ?? ($latest['ruang_sidang'] ?? null),
+                'de_link'                => $student['de_link'] ?? ($latest['link_presentasi'] ?? null),
+                'de_catatan'             => $student['de_catatan'] ?? ($latest['komentar_kelayakan2'] ?? null),
+                'lulus_preview2'         => $student['lulus_preview2'] ?? ($latest['lulus_preview2'] ?? 0),
             ];
         }
 
@@ -899,7 +916,7 @@ class Dosen_bimbingan extends CI_Controller {
     /** Helper: role PIC untuk suatu tahap. */
     private function _get_responsible_role($tahap) {
         $t = strtolower(trim($tahap));
-        if ($t === 'preview1' || $t === 'preview 1') return 'p1';
+        if ($t === 'preview1' || $t === 'preview 1' || $t === 'preview3' || $t === 'preview 3') return 'p1';
         return 'u1';
     }
 

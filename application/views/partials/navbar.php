@@ -39,9 +39,9 @@
             justify-content: center;
             list-style: none;
             margin: 0;
-            padding: 0 24px;
+            padding: 0 150px;
             box-sizing: border-box;
-            gap: 22px;
+            gap: 28px;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -73,11 +73,11 @@
             color: #1e293b;
             background: transparent;
             font-weight: 700;
-            font-size: 0.78rem;
+            font-size: 0.8rem;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.5px;
             text-decoration: none;
-            padding: 6px 5px;
+            padding: 8px 14px;
             display: inline-flex;
             align-items: center;
             gap: 6px;
@@ -155,7 +155,7 @@
         }
 
         @media (min-width: 993px) {
-            .nav-list { padding: 0 200px 0 24px; }   /* sisakan ruang kanan utk login */
+            .nav-list { padding: 0 150px; }   /* seimbang kiri & kanan agar menu tepat di tengah */
 
             .nav-item:has(.nav-link-login) {
                 position: absolute;
@@ -209,22 +209,22 @@
         }
 
         @media (max-width: 1400px) and (min-width: 993px) {
-            .nav-list { gap: 14px; padding: 0 185px 0 20px; }
-            .nav-link { font-size: 0.72rem; letter-spacing: 0.2px; padding: 6px 3px; gap: 4px; }
-            .nav-link-login { font-size: 0.75rem; padding: 6px 12px 6px 8px; }
+            .nav-list { gap: 24px; padding: 0 140px; }
+            .nav-link { font-size: 0.78rem; letter-spacing: 0.3px; padding: 8px 12px; gap: 4px; }
+            .nav-link-login { font-size: 0.8rem; padding: 7px 16px 7px 9px; }
         }
         @media (max-width: 1200px) and (min-width: 993px) {
-            .nav-list { gap: 9px; padding: 0 165px 0 14px; }
-            .nav-link { font-size: 0.68rem; letter-spacing: 0px; padding: 5px 2px; gap: 3px; }
+            .nav-list { gap: 20px; padding: 0 130px; }
+            .nav-link { font-size: 0.74rem; letter-spacing: 0.2px; padding: 7px 10px; gap: 3px; }
             .nav-link .btn-box { display: none; }
-            .nav-link-login { font-size: 0.70rem; padding: 5px 10px 5px 6px; }
+            .nav-link-login { font-size: 0.76rem; padding: 6px 14px 6px 8px; }
             .nav-dropdown { padding: 12px; gap: 8px; }
             .nav-dropdown a { padding: 8px 12px; }
         }
         @media (max-width: 1080px) and (min-width: 993px) {
-            .nav-list { gap: 6px; padding: 0 150px 0 10px; }
-            .nav-link { font-size: 0.64rem; padding: 4px 1px; gap: 2px; }
-            .nav-link-login { font-size: 0.67rem; padding: 5px 8px 5px 6px; }
+            .nav-list { gap: 18px; padding: 0 120px; }
+            .nav-link { font-size: 0.72rem; padding: 6px 8px; gap: 2px; }
+            .nav-link-login { font-size: 0.72rem; padding: 6px 12px 6px 7px; }
         }
 
         /* ===== MOBILE: sidebar ===== */
@@ -358,7 +358,6 @@
             </a>
         </li>
 
-        <li class="nav-item">
         <!-- <li class="nav-item">
             <a href="<?= site_url('welcome') ?>" class="nav-link"><span>Layanan LAB</span></a>
             <div class="nav-dropdown">

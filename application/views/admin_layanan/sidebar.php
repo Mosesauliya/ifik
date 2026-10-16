@@ -24,6 +24,12 @@ $laaNavGroups = [
                 'is_active' => ($curr_uri === 'adminlayanan' || $curr_uri === 'adminlayanan/index')
             ],
             [
+                'heading' => 'Rekomendasi & Downgrade',
+                'href'    => site_url('adminlayanan/rekomendasi'),
+                'icon_3d' => 'assets/images/icons_3d/approval.png',
+                'is_active' => (strpos($curr_uri, 'adminlayanan/rekomendasi') === 0)
+            ],
+            [
                 'heading' => 'Pendaftaran Sidang',
                 'href'    => site_url('adminlayanan/pendaftaran_sidang'),
                 'icon_3d' => 'assets/images/icons_3d/sidang.png',
