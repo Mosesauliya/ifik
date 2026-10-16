@@ -40,14 +40,8 @@ class Help_chat_model extends CI_Model {
                 INDEX (`target_role`),
                 INDEX (`user_id`),
                 INDEX (`created_at`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
             $this->db->query($sql1);
-        } else {
-            // Pastikan kolom target_role ada di tabel help_conversations
-            if (!$this->db->field_exists('target_role', $this->table_conversations)) {
-                $this->db->query("ALTER TABLE `{$this->table_conversations}` ADD COLUMN `target_role` VARCHAR(50) DEFAULT 'laboran' AFTER `user_nim_nip`;");
-                $this->db->query("ALTER TABLE `{$this->table_conversations}` ADD INDEX (`target_role`);");
-            }
         }
 
         if (!$this->db->table_exists($this->table_messages)) {
@@ -65,27 +59,11 @@ class Help_chat_model extends CI_Model {
                 INDEX (`sender_role`),
                 INDEX (`is_read`),
                 INDEX (`created_at`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
             $this->db->query($sql2);
 
             // Buat sample percakapan awal
             $this->_seed_initial_sample_data();
-        } else {
-            // Pastikan kolom sender_role bisa menyimpan string panjang seperti 'koordinator_ta', 'admin_layanan', 'laboran', 'kaur'
-            $this->db->query("ALTER TABLE `{$this->table_messages}` MODIFY COLUMN `sender_role` VARCHAR(50) NOT NULL;");
-        }
-
-        // Pastikan tabel dan kolom mendukung 4-byte UTF-8 emoji (utf8mb4)
-        if ($this->db->table_exists($this->table_conversations)) {
-            @$this->db->query("ALTER TABLE `{$this->table_conversations}` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
-            @$this->db->query("ALTER TABLE `{$this->table_conversations}` MODIFY `last_message` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL;");
-            @$this->db->query("ALTER TABLE `{$this->table_conversations}` MODIFY `topik` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;");
-            @$this->db->query("ALTER TABLE `{$this->table_conversations}` MODIFY `user_nama` VARCHAR(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;");
-        }
-        if ($this->db->table_exists($this->table_messages)) {
-            @$this->db->query("ALTER TABLE `{$this->table_messages}` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
-            @$this->db->query("ALTER TABLE `{$this->table_messages}` MODIFY `message` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;");
-            @$this->db->query("ALTER TABLE `{$this->table_messages}` MODIFY `sender_name` VARCHAR(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;");
         }
     }
 
@@ -222,59 +200,31 @@ class Help_chat_model extends CI_Model {
      * Ambil statistik percakapan help desk
      */
     public function get_stats($target_role = null, $user_id = null) {
-        $this->db->from($this->table_conversations);
+        $where = [];
         if (!empty($target_role) && $target_role !== 'all') {
-            $this->db->where('target_role', $target_role);
+            $where[] = "`target_role` = " . $this->db->escape($target_role);
         }
         if (!empty($user_id)) {
-            $this->db->where('user_id', $user_id);
+            $where[] = "`user_id` = " . (int)$user_id;
         }
-        $total = $this->db->count_all_results();
+        $whereSql = !empty($where) ? " WHERE " . implode(' AND ', $where) : "";
 
-        $this->db->from($this->table_conversations);
-        $this->db->where('status', 'open');
-        if (!empty($target_role) && $target_role !== 'all') {
-            $this->db->where('target_role', $target_role);
-        }
-        if (!empty($user_id)) {
-            $this->db->where('user_id', $user_id);
-        }
-        $open = $this->db->count_all_results();
+        $unreadCol = !empty($user_id) ? 'unread_user' : 'unread_laboran';
 
-        $this->db->from($this->table_conversations);
-        $this->db->where('status', 'resolved');
-        if (!empty($target_role) && $target_role !== 'all') {
-            $this->db->where('target_role', $target_role);
-        }
-        if (!empty($user_id)) {
-            $this->db->where('user_id', $user_id);
-        }
-        $resolved = $this->db->count_all_results();
+        $sql = "SELECT 
+                    COUNT(*) as total,
+                    SUM(CASE WHEN `status` = 'open' THEN 1 ELSE 0 END) as `open`,
+                    SUM(CASE WHEN `status` = 'resolved' THEN 1 ELSE 0 END) as `resolved`,
+                    COALESCE(SUM(`{$unreadCol}`), 0) as `unread`
+                FROM `{$this->table_conversations}`" . $whereSql;
 
-        // Unread counter
-        $this->db->from($this->table_conversations);
-        if (!empty($user_id)) {
-            $this->db->select_sum('unread_user');
-            $this->db->where('user_id', $user_id);
-            if (!empty($target_role) && $target_role !== 'all') {
-                $this->db->where('target_role', $target_role);
-            }
-            $unreadQuery = $this->db->get()->row();
-            $unread = (int)($unreadQuery->unread_user ?? 0);
-        } else {
-            $this->db->select_sum('unread_laboran');
-            if (!empty($target_role) && $target_role !== 'all') {
-                $this->db->where('target_role', $target_role);
-            }
-            $unreadQuery = $this->db->get()->row();
-            $unread = (int)($unreadQuery->unread_laboran ?? 0);
-        }
+        $res = $this->db->query($sql)->row();
 
         return [
-            'total'    => (int)$total,
-            'open'     => (int)$open,
-            'resolved' => (int)$resolved,
-            'unread'   => (int)$unread
+            'total'    => (int)($res->total ?? 0),
+            'open'     => (int)($res->open ?? 0),
+            'resolved' => (int)($res->resolved ?? 0),
+            'unread'   => (int)($res->unread ?? 0)
         ];
     }
 
@@ -382,6 +332,21 @@ class Help_chat_model extends CI_Model {
         @$this->db->query("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
 
         $isStaff = in_array(strtolower($sender_role), ['laboran', 'kaur', 'admin_layanan', 'staff', 'admin']);
+
+        // Anti-duplicate / rapid click protection:
+        // Jika pesan identik dikirimkan oleh pengirim yang sama dalam rentang 2 detik terakhir, abaikan duplikasi
+        $lastMsg = $this->db->select('id, sender_id, message, created_at')
+                            ->from($this->table_messages)
+                            ->where('conversation_id', $conversation_id)
+                            ->order_by('id', 'DESC')
+                            ->limit(1)
+                            ->get()->row();
+        if ($lastMsg && $lastMsg->sender_id == $sender_id && trim($lastMsg->message) === trim($message)) {
+            $diffSeconds = time() - strtotime($lastMsg->created_at);
+            if ($diffSeconds <= 2) {
+                return $lastMsg->id;
+            }
+        }
 
         $msgData = [
             'conversation_id' => $conversation_id,
@@ -496,6 +461,23 @@ class Help_chat_model extends CI_Model {
         $targetRole = strtolower($data['target_role'] ?? 'laboran');
         if (!in_array($targetRole, ['laboran', 'kaur', 'admin_layanan'])) {
             $targetRole = 'laboran';
+        }
+
+        // Anti-duplicate creation jika request ganda terkirim dalam rentang 3 detik
+        if (!empty($data['user_id']) && !empty($data['message'])) {
+            $recent = $this->db->select('id, last_message, created_at')
+                               ->from($this->table_conversations)
+                               ->where('user_id', $data['user_id'])
+                               ->where('target_role', $targetRole)
+                               ->order_by('id', 'DESC')
+                               ->limit(1)
+                               ->get()->row();
+            if ($recent && trim($recent->last_message) === trim($data['message'])) {
+                $diff = time() - strtotime($recent->created_at);
+                if ($diff <= 3) {
+                    return $recent->id;
+                }
+            }
         }
 
         $convData = [

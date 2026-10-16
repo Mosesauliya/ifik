@@ -1441,6 +1441,9 @@
         let activeConversationStatus = 'open';
         let pollingTimer = null;
         let isSending = false;
+        let activeMessageXhr = null;
+        let conversationCache = {};
+        let messageCache = {};
 
         let lastConversationsJson = '';
         let renderedConversationId = null;
@@ -1504,12 +1507,18 @@
         }
 
         function renderConversationList(conversations) {
+            if (conversations && conversations.length > 0) {
+                conversations.forEach(c => {
+                    conversationCache[c.id] = c;
+                });
+            }
+
             const newJson = JSON.stringify(conversations);
             if (newJson === lastConversationsJson) {
                 // Periksa apakah item aktif masih memiliki class active
                 if (activeConversationId) {
                     $(`.conversation-item`).removeClass('active');
-                    $(`.conversation-item[onclick="selectConversation(${activeConversationId})"]`).addClass('active');
+                    $(`.conversation-item[data-id="${activeConversationId}"]`).addClass('active');
                 }
                 return;
             }
@@ -1533,17 +1542,12 @@
                 const initials = getInitials(c.user_nama);
                 const roleClass = c.user_role.toLowerCase() === 'dosen' ? 'role-dosen' : 'role-mahasiswa';
                 const rolePillClass = c.user_role.toLowerCase() === 'dosen' ? 'dosen' : 'mahasiswa';
-                /*
-                const statusPill = (c.status === 'resolved') 
-                    ? `<span class="status-pill resolved"><i class="fa-solid fa-check"></i> Selesai</span>` 
-                    : `<span class="status-pill open"><i class="fa-solid fa-clock"></i> Menunggu</span>`;
-                */
                 const statusPill = '';
                 
                 const unread = (c.unread_laboran > 0) ? `<span class="unread-badge">${c.unread_laboran}</span>` : '';
 
                 const html = `
-                    <div class="conversation-item ${isActive}" onclick="selectConversation(${c.id})">
+                    <div class="conversation-item ${isActive}" data-id="${c.id}" onclick="selectConversation(${c.id})">
                         <div class="conv-avatar ${roleClass}">${initials}</div>
                         <div class="conv-info">
                             <div class="conv-header-line">
@@ -1564,11 +1568,13 @@
         }
 
         function selectConversation(id) {
-            if (activeConversationId !== id) {
-                activeConversationId = id;
-                renderedConversationId = null;
-                renderedMessageIds.clear();
+            if (activeMessageXhr && activeMessageXhr.readyState !== 4) {
+                activeMessageXhr.abort();
             }
+
+            const isDifferent = (activeConversationId !== id);
+            activeConversationId = id;
+
             $('#chatWorkspace').addClass('mobile-active');
             if (window.innerWidth <= 900) {
                 $('body').addClass('mobile-chat-open');
@@ -1576,20 +1582,48 @@
             $('#emptyChatState').hide();
             $('#activeChatWrap').css('display', 'flex');
 
-            // Update active style in list
+            // Update active style in list immediately (0ms visual response)
             $('.conversation-item').removeClass('active');
-            $(`.conversation-item[onclick="selectConversation(${id})"]`).addClass('active');
+            $(`.conversation-item[data-id="${id}"]`).addClass('active');
 
-            loadMessages(id, true);
+            // Instantly render active header from cached conversation info
+            if (conversationCache[id]) {
+                renderActiveHeader(conversationCache[id]);
+            }
+
+            if (isDifferent) {
+                renderedConversationId = null;
+                renderedMessageIds.clear();
+
+                // If cached messages exist in memory, render instantly (0ms instant switch!)
+                if (messageCache[id] && messageCache[id].length > 0) {
+                    renderMessages(messageCache[id], true);
+                } else {
+                    // Show smooth fast loader so old chat messages don't linger
+                    $('#chatMessages').html(`
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 220px; color: #94a3b8; padding: 40px;">
+                            <i class="fa-solid fa-circle-notch fa-spin fa-2x" style="color: #ea580c; margin-bottom: 12px;"></i>
+                            <p style="font-size: 0.86rem; font-weight: 500;">Memuat pesan...</p>
+                        </div>
+                    `);
+                }
+            }
+
+            loadMessages(id, isDifferent);
         }
 
         function loadMessages(id, scrollToBottom = true) {
-            $.ajax({
+            activeMessageXhr = $.ajax({
                 url: '<?= site_url("laboran/help/messages") ?>/' + id,
                 type: 'GET',
                 dataType: 'json',
                 success: function(res) {
-                    if (res.status === 'success') {
+                    // If user has already switched to another conversation, ignore this response
+                    if (activeConversationId !== id) return;
+
+                    if (res && res.status === 'success') {
+                        conversationCache[id] = res.conversation;
+                        messageCache[id] = res.messages;
                         renderActiveHeader(res.conversation);
                         renderMessages(res.messages, scrollToBottom);
                     }

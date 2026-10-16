@@ -77,6 +77,9 @@ class LaboranHelp extends CI_Controller {
             }
         }
 
+        // Release PHP session lock so concurrent polling and chat-switching requests execute immediately
+        session_write_close();
+
         $conversations = $this->Help_chat_model->get_conversations($status, $search, $targetRole);
         $stats = $this->Help_chat_model->get_stats($targetRole);
 
@@ -113,6 +116,10 @@ class LaboranHelp extends CI_Controller {
     public function get_messages_ajax($conversation_id) {
         header('Content-Type: application/json');
 
+        $currentUserId = $this->session->userdata('user_id');
+        // Release session lock immediately so other requests (e.g. background polling) do not hang
+        session_write_close();
+
         $conversation = $this->Help_chat_model->get_conversation_by_id($conversation_id);
         if (!$conversation) {
             echo json_encode([
@@ -126,7 +133,6 @@ class LaboranHelp extends CI_Controller {
         $this->Help_chat_model->mark_as_read_by_laboran($conversation_id);
 
         $messages = $this->Help_chat_model->get_messages($conversation_id);
-        $currentUserId = $this->session->userdata('user_id');
         $formattedMessages = [];
 
         foreach ($messages as $m) {

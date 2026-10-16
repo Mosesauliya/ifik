@@ -1439,12 +1439,31 @@
             }
         }
 
+        let isSending = false;
+
         // Send Direct Message
         function sendDirectMessage() {
+            if (isSending) return;
+
             const input = $('#composerInput');
             const message = input.val().trim();
 
             if (!message) return;
+
+            isSending = true;
+            input.val('');
+            input.prop('disabled', true);
+            $('#btnSendChat').prop('disabled', true).addClass('opacity-50 cursor-not-allowed');
+
+            const textarea = document.getElementById('composerInput');
+            if (textarea) textarea.style.height = '42px';
+
+            const finishSend = function() {
+                isSending = false;
+                input.prop('disabled', false);
+                $('#btnSendChat').prop('disabled', false).removeClass('opacity-50 cursor-not-allowed');
+                setTimeout(() => input.focus(), 50);
+            };
 
             if (!activeConversationId) {
                 // If no active conv id yet, create conversation directly
@@ -1458,18 +1477,18 @@
                     },
                     dataType: 'json',
                     success: function(res) {
-                        input.val('');
-                        if (res.status === 'success') {
+                        finishSend();
+                        if (res && res.status === 'success') {
+                            activeConversationId = res.conversation_id;
                             refreshActiveChannel(true);
                         }
+                    },
+                    error: function() {
+                        finishSend();
                     }
                 });
                 return;
             }
-
-            input.val('');
-            const textarea = document.getElementById('composerInput');
-            if (textarea) textarea.style.height = '42px';
 
             $.ajax({
                 url: '<?= site_url("dosen/help/send") ?>',
@@ -1480,7 +1499,8 @@
                 },
                 dataType: 'json',
                 success: function(res) {
-                    if (res.status === 'success') {
+                    finishSend();
+                    if (res && res.status === 'success') {
                         refreshActiveChannel(true);
                     } else {
                         Swal.fire({
@@ -1490,6 +1510,9 @@
                             confirmButtonColor: '#ea580c'
                         });
                     }
+                },
+                error: function() {
+                    finishSend();
                 }
             });
         }
@@ -1497,7 +1520,9 @@
         function handleComposerKey(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                sendDirectMessage();
+                if (!isSending) {
+                    sendDirectMessage();
+                }
             }
         }
 
