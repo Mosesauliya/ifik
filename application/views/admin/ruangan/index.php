@@ -1570,6 +1570,7 @@
 
         let currentNewPhotoFiles = [];
         let currentExistingPhotos = [];
+        let isDeleteModel3D = false;
 
         function clearAllPhotos(e) {
             if (e) { e.preventDefault(); e.stopPropagation(); }
@@ -1686,7 +1687,11 @@
         }
 
         function clearFileModel(e) {
-            if (e) { e.preventDefault(); e.stopPropagation(); }
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                isDeleteModel3D = true;
+            }
             const input = document.getElementById('inputModel3D');
             if (input) input.value = '';
             const previewBox = document.getElementById('previewModelBox');
@@ -1695,6 +1700,7 @@
 
         function handleModelFile(file) {
             if (!file) return;
+            isDeleteModel3D = false;
             const maxMb = 50;
             if (file.size > maxMb * 1024 * 1024) {
                 Swal.fire('File Terlalu Besar', `Ukuran berkas 3D (${formatFileSize(file.size)}) melebihi batas maksimum ${maxMb}MB.`, 'warning');
@@ -2067,6 +2073,7 @@
 
         function openModalTambah() {
             isEditMode = false;
+            isDeleteModel3D = false;
             currentEditOriginalName = '';
             document.body.style.overflow = 'hidden';
             document.getElementById('modalTitle').innerText = '🏢 Tambah Ruangan / Lab Baru';
@@ -2095,6 +2102,7 @@
 
         function openModalEdit(data) {
             isEditMode = true;
+            isDeleteModel3D = false;
             document.body.style.overflow = 'hidden';
             document.getElementById('modalTitle').innerText = '✏️ Edit Data Ruangan & Berkas';
             document.getElementById('ruanganId').value = data.id;
@@ -2222,6 +2230,8 @@
             currentExistingPhotos.forEach(path => {
                 formData.append('existing_foto[]', path);
             });
+            formData.append('delete_model_3d', (isEditMode && isDeleteModel3D) ? '1' : '0');
+            formData.append('photo_gallery_touched', isEditMode ? '1' : '0');
 
             const targetUrl = isEditMode ? '<?= base_url('kelolaruangan/update') ?>' : '<?= base_url('kelolaruangan/tambah') ?>';
 

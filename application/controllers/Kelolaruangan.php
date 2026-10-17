@@ -400,12 +400,17 @@ class Kelolaruangan extends CI_Controller {
             }
         }
 
+        $delete_model_3d = $this->input->post('delete_model_3d') === '1';
+        $photo_gallery_touched = $this->input->post('photo_gallery_touched') === '1';
+
         // Gabungkan foto lama yang dipertahankan dengan foto baru yang diunggah
         if ($existing_fotos !== null) {
             $cleaned_existing = is_array($existing_fotos) ? $existing_fotos : [$existing_fotos];
             $cleaned_existing = array_values(array_filter(array_map('trim', $cleaned_existing)));
             $combined_fotos = array_merge($cleaned_existing, $uploaded_fotos);
             $final_foto = !empty($combined_fotos) ? implode(',', $combined_fotos) : '';
+        } elseif ($photo_gallery_touched) {
+            $final_foto = !empty($uploaded_fotos) ? implode(',', $uploaded_fotos) : '';
         } else {
             if (!empty($uploaded_fotos)) {
                 $final_foto = implode(',', $uploaded_fotos);
@@ -414,20 +419,26 @@ class Kelolaruangan extends CI_Controller {
             }
         }
 
-        $final_model = $model_3d_path ? $model_3d_path : $old_model;
+        if ($model_3d_path) {
+            $final_model = $model_3d_path;
+        } elseif ($delete_model_3d) {
+            $final_model = null;
+        } else {
+            $final_model = !empty($old_model) ? $old_model : null;
+        }
 
         if (in_array('foto', $fields)) {
-            $base_data['foto'] = $final_foto;
+            $base_data['foto'] = $final_foto ? $final_foto : '';
         }
-        if (in_array('model_3d', $fields) && $final_model) {
-            $base_data['model_3d'] = $final_model;
+        if (in_array('model_3d', $fields)) {
+            $base_data['model_3d'] = !empty($final_model) ? $final_model : null;
         }
 
         if (in_array('images', $fields)) {
             $combined = '';
-            if ($final_foto && $final_model) $combined = $final_foto . '|' . $final_model;
+            if ($final_foto && !empty($final_model)) $combined = $final_foto . '|' . $final_model;
             elseif ($final_foto) $combined = $final_foto;
-            elseif ($final_model) $combined = '|' . $final_model;
+            elseif (!empty($final_model)) $combined = '|' . $final_model;
             $base_data['images'] = $combined;
         }
 
