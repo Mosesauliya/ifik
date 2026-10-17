@@ -46,7 +46,7 @@ $render_filter_row = static function ($row) use ($multi_filter_fields, $multi_fi
     <template data-filter-template><?php $render_filter_row(['field' => array_key_first($multi_filter_fields), 'value' => '']); ?></template>
     <?php foreach ($multi_filter_hidden as $hidden_name => $hidden_value): ?><input type="hidden" name="<?= html_escape($hidden_name) ?>" value="<?= html_escape($hidden_value) ?>"><?php endforeach; ?>
     <div class="admin-multi-filter__footer">
-        <button type="button" class="btn admin-multi-filter__apply" data-filter-apply><i class="bi bi-search"></i> Terapkan filter</button>
+        <button type="<?= $multi_filter_mode === 'server' ? 'submit' : 'button' ?>" class="btn admin-multi-filter__apply" data-filter-apply><i class="bi bi-search"></i> Terapkan filter</button>
         <button type="button" class="btn admin-multi-filter__reset" data-filter-reset><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
     </div>
     <?php if ($multi_filter_meta !== ''): ?><p<?= $multi_filter_meta_id !== '' ? ' id="' . html_escape($multi_filter_meta_id) . '"' : '' ?> class="admin-multi-filter__meta" aria-live="polite"><?= html_escape($multi_filter_meta) ?></p><?php endif; ?>

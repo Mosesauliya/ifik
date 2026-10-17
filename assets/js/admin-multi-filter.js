@@ -133,8 +133,17 @@
             if (rows[0]) configureValue(root, rows[0]);
             refresh(root);
             notify(root, Boolean(immediate));
-        }
+        },
+        init: init
     };
 
-    document.querySelectorAll('[data-admin-multi-filter]').forEach(init);
+    function bootstrap() {
+        document.querySelectorAll('[data-admin-multi-filter]').forEach(init);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootstrap);
+    } else {
+        bootstrap();
+    }
 }(window, document));

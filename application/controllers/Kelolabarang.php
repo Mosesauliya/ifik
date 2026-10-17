@@ -158,10 +158,6 @@ class Kelolabarang extends CI_Controller {
             $this->db->insert('aset', $aset);
             $id_aset = $this->db->insert_id();
             if ($id_aset) {
-                $this->db->where('id_aset', $id_aset)->update('aset', [
-                    'qr_code' => 'ASET-' . $id_aset . '-' . strtoupper(substr(md5($kode), 0, 6)),
-                    'qr_url' => site_url('peminjaman/detail_barang/' . $id_aset),
-                ]);
                 $inserted++;
             }
         }

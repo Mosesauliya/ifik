@@ -316,9 +316,19 @@
                             <div class="row g-3 mb-4 p-3 bg-light rounded-4 border">
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold text-dark small">TOTAL UNIT FISIK <span class="text-danger">*</span></label>
-                                    <input type="number" name="jumlah_total" class="form-control rounded-3" min="1" value="<?= isset($aset) ? $aset->jumlah_total : '1' ?>" <?= isset($aset) ? 'readonly title="Stok awal tidak bisa diubah via form edit dasar."' : 'required' ?>>
+                                    <?php
+                                    $min_total = 1;
+                                    $allocated = 0;
+                                    if (isset($aset)) {
+                                        $allocated = max(0, (int) ($aset->jumlah_reserved ?? 0)) + max(0, (int) ($aset->jumlah_dipinjam ?? 0));
+                                        $min_total = max(1, $allocated);
+                                    }
+                                    ?>
+                                    <input type="number" name="jumlah_total" class="form-control rounded-3" min="<?= $min_total ?>" value="<?= isset($aset) ? (int) $aset->jumlah_total : '1' ?>" required>
                                     <?php if (isset($aset)): ?>
-                                        <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">Stok fisik tidak dapat diubah dari form edit dasar.</small>
+                                        <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">
+                                            Minimal <?= $min_total ?> unit<?= $allocated > 0 ? ' (karena ' . $allocated . ' unit sedang dialokasikan/dipinjam)' : '' ?>.
+                                        </small>
                                     <?php endif; ?>
                                 </div>
                                 <div class="col-md-6">
