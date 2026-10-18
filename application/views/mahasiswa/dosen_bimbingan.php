@@ -587,20 +587,20 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 <?php if ($is_pembimbing): ?>
                     <button onclick="switchDosenTab('preview1')" id="dosenTab1"
                         class="px-5 py-2.5 rounded-xl font-bold text-sm <?= $is_p1 || $is_p2 ? 'bg-orange-100 text-orange-700 border border-orange-300' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200' ?>">
-                        Preview 1
+                        Preview 1 <span id="tabCount1" class="ml-1.5 px-2 py-0.5 rounded-full text-xs bg-orange-200/80 text-orange-800 font-extrabold hidden">0</span>
                     </button>
                 <?php endif; ?>
                 <button onclick="switchDosenTab('preview2')" id="dosenTab2"
                     class="px-5 py-2.5 rounded-xl font-bold text-sm <?= $is_penguji ? 'bg-orange-100 text-orange-700 border border-orange-300' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200' ?>">
-                    Preview 2
+                    Preview 2 <span id="tabCount2" class="ml-1.5 px-2 py-0.5 rounded-full text-xs bg-slate-200 text-slate-700 font-extrabold hidden">0</span>
                 </button>
                 <button onclick="switchDosenTab('preview3')" id="dosenTab3"
                     class="px-5 py-2.5 rounded-xl font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200">
-                    Preview 3
+                    Preview 3 <span id="tabCount3" class="ml-1.5 px-2 py-0.5 rounded-full text-xs bg-slate-200 text-slate-700 font-extrabold hidden">0</span>
                 </button>
                 <button onclick="switchDosenTab('sidang')" id="dosenTab4"
                     class="px-5 py-2.5 rounded-xl font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200">
-                    Sidang
+                    Sidang <span id="tabCount4" class="ml-1.5 px-2 py-0.5 rounded-full text-xs bg-slate-200 text-slate-700 font-extrabold hidden">0</span>
                 </button>
             </div>
 
@@ -1364,6 +1364,12 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         function setTabActive(id) {
             const activeCls   = ['bg-orange-100','text-orange-700','border','border-orange-300'];
             const inactiveCls = ['bg-slate-100','text-slate-600','hover:bg-slate-200','border','border-slate-200'];
+            const tabBadges   = {
+                'dosenTab1': 'tabCount1',
+                'dosenTab2': 'tabCount2',
+                'dosenTab3': 'tabCount3',
+                'dosenTab4': 'tabCount4'
+            };
             ['dosenTab1','dosenTab2','dosenTab3','dosenTab4'].forEach(tid => {
                 const el = document.getElementById(tid);
                 if (!el) return;
@@ -1371,6 +1377,15 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 inactiveCls.forEach(c => el.classList.remove(c));
                 if (tid === id) activeCls.forEach(c => el.classList.add(c));
                 else inactiveCls.forEach(c => el.classList.add(c));
+
+                const bEl = document.getElementById(tabBadges[tid]);
+                if (bEl) {
+                    if (tid === id) {
+                        bEl.className = 'ml-1.5 px-2 py-0.5 rounded-full text-xs bg-orange-200/90 text-orange-900 font-extrabold';
+                    } else {
+                        bEl.className = 'ml-1.5 px-2 py-0.5 rounded-full text-xs bg-slate-200 text-slate-600 font-extrabold';
+                    }
+                }
             });
         }
 
@@ -1419,6 +1434,21 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                             return;
                         }
                         if (res.status) {
+                            if (res.tab_counts) {
+                                const mapTabs = {
+                                    'Preview 1': 'tabCount1',
+                                    'Preview 2': 'tabCount2',
+                                    'Preview 3': 'tabCount3',
+                                    'Sidang':    'tabCount4'
+                                };
+                                for (const [thp, cid] of Object.entries(mapTabs)) {
+                                    const el = document.getElementById(cid);
+                                    if (el) {
+                                        el.textContent = res.tab_counts[thp] ?? 0;
+                                        el.classList.remove('hidden');
+                                    }
+                                }
+                            }
                             bimbinganData = res.data;
                             bimbinganData.sort((a, b) => {
                                 let dateA = a.latest_preview ? new Date(a.latest_preview.created_at).getTime() : 0;
