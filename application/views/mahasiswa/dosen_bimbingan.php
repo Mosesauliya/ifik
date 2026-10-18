@@ -583,48 +583,121 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 </div>
             </div>
 
-            <div class="flex flex-wrap gap-4 border-b border-slate-200 pb-4">
+            <!-- ========================================================
+                 KARTU TAHAP PREVIEW & SIDANG (Interactive Stage Cards)
+                 ======================================================== -->
+            <div class="grid <?= $is_pembimbing ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-3' ?> gap-3.5 sm:gap-4.5 my-2" id="stageCardsContainer">
+                
                 <?php if ($is_pembimbing): ?>
-                    <button onclick="switchDosenTab('preview1')" id="dosenTab1"
-                        class="px-5 py-2.5 rounded-xl font-bold text-sm <?= $is_p1 || $is_p2 ? 'bg-orange-100 text-orange-700 border border-orange-300' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200' ?>">
-                        Preview 1 <span id="tabCount1" class="ml-1.5 px-2 py-0.5 rounded-full text-xs bg-orange-200/80 text-orange-800 font-extrabold hidden">0</span>
-                    </button>
+                <!-- CARD PREVIEW 1 -->
+                <div onclick="switchDosenTab('preview1')" id="stageCard_preview1"
+                     class="stage-tab-card group relative p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between <?= ($default_tahap === 'Preview 1') ? 'border-orange-500 bg-gradient-to-br from-orange-50/90 via-white to-amber-50/50 shadow-md shadow-orange-500/10 ring-2 ring-orange-500/20 active-card' : 'border-slate-200/90 bg-white hover:border-orange-300 hover:bg-orange-50/25 hover:shadow-xs' ?>">
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div class="stage-icon-wrap w-11 h-11 rounded-xl flex items-center justify-center text-lg transition-all <?= ($default_tahap === 'Preview 1') ? 'bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm shadow-orange-500/30' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-600' ?>">
+                            <i class="bi bi-journal-text"></i>
+                        </div>
+                        <span class="stage-badge-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all <?= ($default_tahap === 'Preview 1') ? 'bg-orange-500 text-white shadow-xs' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-700' ?>">
+                            <?= ($default_tahap === 'Preview 1') ? '<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Aktif' : 'Tahap 1' ?>
+                        </span>
+                    </div>
+                    <div>
+                        <div class="flex items-baseline gap-1.5 mb-1">
+                            <span id="stageCount_preview1" class="stage-count text-2xl sm:text-3xl font-black transition-colors <?= ($default_tahap === 'Preview 1') ? 'text-orange-600' : 'text-slate-800 group-hover:text-orange-600' ?>">
+                                <?= $tab_counts['Preview 1'] ?? 0 ?>
+                            </span>
+                            <span class="text-xs font-bold text-slate-400">Mahasiswa</span>
+                        </div>
+                        <h4 class="font-extrabold text-sm sm:text-base text-slate-800 tracking-tight group-hover:text-orange-600 transition-colors">
+                            Preview 1
+                        </h4>
+                        <p class="text-[11px] font-medium text-slate-500 mt-0.5 line-clamp-1">
+                            Bimbingan Bab 1–3
+                        </p>
+                    </div>
+                </div>
                 <?php endif; ?>
-                <button onclick="switchDosenTab('preview2')" id="dosenTab2"
-                    class="px-5 py-2.5 rounded-xl font-bold text-sm <?= $is_penguji ? 'bg-orange-100 text-orange-700 border border-orange-300' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200' ?>">
-                    Preview 2 <span id="tabCount2" class="ml-1.5 px-2 py-0.5 rounded-full text-xs bg-slate-200 text-slate-700 font-extrabold hidden">0</span>
-                </button>
-                <button onclick="switchDosenTab('preview3')" id="dosenTab3"
-                    class="px-5 py-2.5 rounded-xl font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200">
-                    Preview 3 <span id="tabCount3" class="ml-1.5 px-2 py-0.5 rounded-full text-xs bg-slate-200 text-slate-700 font-extrabold hidden">0</span>
-                </button>
-                <button onclick="switchDosenTab('sidang')" id="dosenTab4"
-                    class="px-5 py-2.5 rounded-xl font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200">
-                    Sidang <span id="tabCount4" class="ml-1.5 px-2 py-0.5 rounded-full text-xs bg-slate-200 text-slate-700 font-extrabold hidden">0</span>
-                </button>
-            </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4 mb-2" id="filterCardsContainer">
-                <div onclick="setDosenFilter('all')" id="fCard_all" class="p-3 rounded-xl border border-orange-300 bg-orange-50 cursor-pointer transition text-center shadow-xs">
-                    <div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Semua</div>
-                    <div class="text-xl font-black text-slate-800" id="fCount_all">0</div>
+                <!-- CARD PREVIEW 2 -->
+                <div onclick="switchDosenTab('preview2')" id="stageCard_preview2"
+                     class="stage-tab-card group relative p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between <?= ($default_tahap === 'Preview 2') ? 'border-orange-500 bg-gradient-to-br from-orange-50/90 via-white to-amber-50/50 shadow-md shadow-orange-500/10 ring-2 ring-orange-500/20 active-card' : 'border-slate-200/90 bg-white hover:border-orange-300 hover:bg-orange-50/25 hover:shadow-xs' ?>">
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div class="stage-icon-wrap w-11 h-11 rounded-xl flex items-center justify-center text-lg transition-all <?= ($default_tahap === 'Preview 2') ? 'bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm shadow-orange-500/30' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-600' ?>">
+                            <i class="bi bi-easel2-fill"></i>
+                        </div>
+                        <span class="stage-badge-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all <?= ($default_tahap === 'Preview 2') ? 'bg-orange-500 text-white shadow-xs' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-700' ?>">
+                            <?= ($default_tahap === 'Preview 2') ? '<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Aktif' : 'Tahap 2' ?>
+                        </span>
+                    </div>
+                    <div>
+                        <div class="flex items-baseline gap-1.5 mb-1">
+                            <span id="stageCount_preview2" class="stage-count text-2xl sm:text-3xl font-black transition-colors <?= ($default_tahap === 'Preview 2') ? 'text-orange-600' : 'text-slate-800 group-hover:text-orange-600' ?>">
+                                <?= $tab_counts['Preview 2'] ?? 0 ?>
+                            </span>
+                            <span class="text-xs font-bold text-slate-400">Mahasiswa</span>
+                        </div>
+                        <h4 class="font-extrabold text-sm sm:text-base text-slate-800 tracking-tight group-hover:text-orange-600 transition-colors">
+                            Preview 2
+                        </h4>
+                        <p class="text-[11px] font-medium text-slate-500 mt-0.5 line-clamp-1">
+                            Evaluasi Progres &amp; DE
+                        </p>
+                    </div>
                 </div>
-                <div onclick="setDosenFilter('approved')" id="fCard_approved" class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 cursor-pointer transition text-center">
-                    <div class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Disetujui</div>
-                    <div class="text-xl font-black text-emerald-700" id="fCount_approved">0</div>
+
+                <!-- CARD PREVIEW 3 -->
+                <div onclick="switchDosenTab('preview3')" id="stageCard_preview3"
+                     class="stage-tab-card group relative p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between <?= ($default_tahap === 'Preview 3') ? 'border-orange-500 bg-gradient-to-br from-orange-50/90 via-white to-amber-50/50 shadow-md shadow-orange-500/10 ring-2 ring-orange-500/20 active-card' : 'border-slate-200/90 bg-white hover:border-orange-300 hover:bg-orange-50/25 hover:shadow-xs' ?>">
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div class="stage-icon-wrap w-11 h-11 rounded-xl flex items-center justify-center text-lg transition-all <?= ($default_tahap === 'Preview 3') ? 'bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm shadow-orange-500/30' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-600' ?>">
+                            <i class="bi bi-file-earmark-check-fill"></i>
+                        </div>
+                        <span class="stage-badge-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all <?= ($default_tahap === 'Preview 3') ? 'bg-orange-500 text-white shadow-xs' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-700' ?>">
+                            <?= ($default_tahap === 'Preview 3') ? '<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Aktif' : 'Tahap 3' ?>
+                        </span>
+                    </div>
+                    <div>
+                        <div class="flex items-baseline gap-1.5 mb-1">
+                            <span id="stageCount_preview3" class="stage-count text-2xl sm:text-3xl font-black transition-colors <?= ($default_tahap === 'Preview 3') ? 'text-orange-600' : 'text-slate-800 group-hover:text-orange-600' ?>">
+                                <?= $tab_counts['Preview 3'] ?? 0 ?>
+                            </span>
+                            <span class="text-xs font-bold text-slate-400">Mahasiswa</span>
+                        </div>
+                        <h4 class="font-extrabold text-sm sm:text-base text-slate-800 tracking-tight group-hover:text-orange-600 transition-colors">
+                            Preview 3
+                        </h4>
+                        <p class="text-[11px] font-medium text-slate-500 mt-0.5 line-clamp-1">
+                            Pra-Sidang &amp; Berkas
+                        </p>
+                    </div>
                 </div>
-                <div onclick="setDosenFilter('pending')" id="fCard_pending" class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-amber-50 hover:border-amber-200 cursor-pointer transition text-center">
-                    <div class="text-[10px] text-amber-600 font-bold uppercase tracking-wider">Pending</div>
-                    <div class="text-xl font-black text-amber-700" id="fCount_pending">0</div>
+
+                <!-- CARD SIDANG -->
+                <div onclick="switchDosenTab('sidang')" id="stageCard_sidang"
+                     class="stage-tab-card group relative p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between <?= ($default_tahap === 'Sidang') ? 'border-orange-500 bg-gradient-to-br from-orange-50/90 via-white to-amber-50/50 shadow-md shadow-orange-500/10 ring-2 ring-orange-500/20 active-card' : 'border-slate-200/90 bg-white hover:border-orange-300 hover:bg-orange-50/25 hover:shadow-xs' ?>">
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div class="stage-icon-wrap w-11 h-11 rounded-xl flex items-center justify-center text-lg transition-all <?= ($default_tahap === 'Sidang') ? 'bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm shadow-orange-500/30' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-600' ?>">
+                            <i class="bi bi-mortarboard-fill"></i>
+                        </div>
+                        <span class="stage-badge-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all <?= ($default_tahap === 'Sidang') ? 'bg-orange-500 text-white shadow-xs' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-700' ?>">
+                            <?= ($default_tahap === 'Sidang') ? '<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Aktif' : 'Tahap Akhir' ?>
+                        </span>
+                    </div>
+                    <div>
+                        <div class="flex items-baseline gap-1.5 mb-1">
+                            <span id="stageCount_sidang" class="stage-count text-2xl sm:text-3xl font-black transition-colors <?= ($default_tahap === 'Sidang') ? 'text-orange-600' : 'text-slate-800 group-hover:text-orange-600' ?>">
+                                <?= $tab_counts['Sidang'] ?? 0 ?>
+                            </span>
+                            <span class="text-xs font-bold text-slate-400">Mahasiswa</span>
+                        </div>
+                        <h4 class="font-extrabold text-sm sm:text-base text-slate-800 tracking-tight group-hover:text-orange-600 transition-colors">
+                            Sidang TA
+                        </h4>
+                        <p class="text-[11px] font-medium text-slate-500 mt-0.5 line-clamp-1">
+                            Sidang Akhir &amp; Nilai
+                        </p>
+                    </div>
                 </div>
-                <div onclick="setDosenFilter('revision')" id="fCard_revision" class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-rose-50 hover:border-rose-200 cursor-pointer transition text-center">
-                    <div class="text-[10px] text-rose-600 font-bold uppercase tracking-wider">Revisi</div>
-                    <div class="text-xl font-black text-rose-700" id="fCount_revision">0</div>
-                </div>
-                <div onclick="setDosenFilter('empty')" id="fCard_empty" class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 cursor-pointer transition text-center">
-                    <div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Kosong</div>
-                    <div class="text-xl font-black text-slate-700" id="fCount_empty">0</div>
-                </div>
+
             </div>
 
             <div id="dosenTableContainer" class="space-y-4">
@@ -1348,42 +1421,71 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         }
 
         // ============================================================
-        // INIT
+        // INIT & STAGE TABS
         // ============================================================
+        const STAGE_MAP = {
+            'preview1': { cardId: 'stageCard_preview1', countId: 'stageCount_preview1', label: 'Tahap 1', tahap: 'Preview 1' },
+            'preview2': { cardId: 'stageCard_preview2', countId: 'stageCount_preview2', label: 'Tahap 2', tahap: 'Preview 2' },
+            'preview3': { cardId: 'stageCard_preview3', countId: 'stageCount_preview3', label: 'Tahap 3', tahap: 'Preview 3' },
+            'sidang':   { cardId: 'stageCard_sidang',   countId: 'stageCount_sidang',   label: 'Tahap Akhir', tahap: 'Sidang' }
+        };
+
         document.addEventListener('DOMContentLoaded', function() {
             if (IS_PEMBIMBING) {
-                if (document.getElementById('dosenTab1')) setTabActive('dosenTab1');
+                setTabActive('preview1');
             } else if (IS_PENGUJI) {
-                setTabActive('dosenTab2');
+                setTabActive('preview2');
             }
             renderFilterRowsDW();
             fetchBimbinganData();
             startDosenSSE();
         });
 
-        function setTabActive(id) {
-            const activeCls   = ['bg-orange-100','text-orange-700','border','border-orange-300'];
-            const inactiveCls = ['bg-slate-100','text-slate-600','hover:bg-slate-200','border','border-slate-200'];
-            const tabBadges   = {
-                'dosenTab1': 'tabCount1',
-                'dosenTab2': 'tabCount2',
-                'dosenTab3': 'tabCount3',
-                'dosenTab4': 'tabCount4'
+        function setTabActive(stageKey) {
+            const aliasMap = {
+                'dosenTab1': 'preview1',
+                'dosenTab2': 'preview2',
+                'dosenTab3': 'preview3',
+                'dosenTab4': 'sidang',
+                'Preview 1': 'preview1',
+                'Preview 2': 'preview2',
+                'Preview 3': 'preview3',
+                'Sidang':    'sidang'
             };
-            ['dosenTab1','dosenTab2','dosenTab3','dosenTab4'].forEach(tid => {
-                const el = document.getElementById(tid);
-                if (!el) return;
-                activeCls.forEach(c => el.classList.remove(c));
-                inactiveCls.forEach(c => el.classList.remove(c));
-                if (tid === id) activeCls.forEach(c => el.classList.add(c));
-                else inactiveCls.forEach(c => el.classList.add(c));
+            const activeKey = aliasMap[stageKey] || stageKey;
 
-                const bEl = document.getElementById(tabBadges[tid]);
-                if (bEl) {
-                    if (tid === id) {
-                        bEl.className = 'ml-1.5 px-2 py-0.5 rounded-full text-xs bg-orange-200/90 text-orange-900 font-extrabold';
-                    } else {
-                        bEl.className = 'ml-1.5 px-2 py-0.5 rounded-full text-xs bg-slate-200 text-slate-600 font-extrabold';
+            Object.entries(STAGE_MAP).forEach(([key, cfg]) => {
+                const card = document.getElementById(cfg.cardId);
+                if (!card) return;
+
+                const isSelected = (key === activeKey);
+                const iconWrap   = card.querySelector('.stage-icon-wrap');
+                const badgePill  = card.querySelector('.stage-badge-pill');
+                const countText  = card.querySelector('.stage-count');
+
+                if (isSelected) {
+                    card.className = 'stage-tab-card group relative p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between border-orange-500 bg-gradient-to-br from-orange-50/90 via-white to-amber-50/50 shadow-md shadow-orange-500/10 ring-2 ring-orange-500/20 active-card';
+                    if (iconWrap) {
+                        iconWrap.className = 'stage-icon-wrap w-11 h-11 rounded-xl flex items-center justify-center text-lg transition-all bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm shadow-orange-500/30';
+                    }
+                    if (badgePill) {
+                        badgePill.className = 'stage-badge-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all bg-orange-500 text-white shadow-xs';
+                        badgePill.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Aktif';
+                    }
+                    if (countText) {
+                        countText.className = 'stage-count text-2xl sm:text-3xl font-black transition-colors text-orange-600';
+                    }
+                } else {
+                    card.className = 'stage-tab-card group relative p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between border-slate-200/90 bg-white hover:border-orange-300 hover:bg-orange-50/25 hover:shadow-xs';
+                    if (iconWrap) {
+                        iconWrap.className = 'stage-icon-wrap w-11 h-11 rounded-xl flex items-center justify-center text-lg transition-all bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-600';
+                    }
+                    if (badgePill) {
+                        badgePill.className = 'stage-badge-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-700';
+                        badgePill.textContent = cfg.label;
+                    }
+                    if (countText) {
+                        countText.className = 'stage-count text-2xl sm:text-3xl font-black transition-colors text-slate-800 group-hover:text-orange-600';
                     }
                 }
             });
@@ -1395,16 +1497,16 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             if (tab === 'preview1') {
                 if (!IS_PEMBIMBING) return;
                 currentTahap = 'Preview 1';
-                setTabActive('dosenTab1');
+                setTabActive('preview1');
             } else if (tab === 'preview2') {
                 currentTahap = 'Preview 2';
-                setTabActive('dosenTab2');
+                setTabActive('preview2');
             } else if (tab === 'preview3') {
                 currentTahap = 'Preview 3';
-                setTabActive('dosenTab3');
+                setTabActive('preview3');
             } else if (tab === 'sidang') {
                 currentTahap = 'Sidang';
-                setTabActive('dosenTab4');
+                setTabActive('sidang');
             }
             currentPage = 1;
             fetchBimbinganData();
@@ -1435,17 +1537,16 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                         }
                         if (res.status) {
                             if (res.tab_counts) {
-                                const mapTabs = {
-                                    'Preview 1': 'tabCount1',
-                                    'Preview 2': 'tabCount2',
-                                    'Preview 3': 'tabCount3',
-                                    'Sidang':    'tabCount4'
+                                const mapCounts = {
+                                    'Preview 1': 'stageCount_preview1',
+                                    'Preview 2': 'stageCount_preview2',
+                                    'Preview 3': 'stageCount_preview3',
+                                    'Sidang':    'stageCount_sidang'
                                 };
-                                for (const [thp, cid] of Object.entries(mapTabs)) {
+                                for (const [thp, cid] of Object.entries(mapCounts)) {
                                     const el = document.getElementById(cid);
-                                    if (el) {
-                                        el.textContent = res.tab_counts[thp] ?? 0;
-                                        el.classList.remove('hidden');
+                                    if (el && res.tab_counts[thp] !== undefined) {
+                                        el.textContent = res.tab_counts[thp];
                                     }
                                 }
                             }
@@ -1478,32 +1579,11 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         function setDosenFilter(filter) {
             currentDosenFilter = filter;
             currentPage = 1;
-            ['all', 'approved', 'pending', 'revision', 'empty'].forEach(f => {
-                let card = document.getElementById('fCard_' + f);
-                if (!card) return;
-                card.classList.remove('border-orange-300', 'bg-orange-50', 'shadow-xs');
-                if (f === filter) card.classList.add('border-orange-300', 'bg-orange-50', 'shadow-xs');
-                else card.classList.add('border-slate-200', 'bg-slate-50');
-            });
             renderTable();
         }
 
         function updateFilterCounts() {
-            let counts = { all: 0, approved: 0, pending: 0, revision: 0, empty: 0 };
-            bimbinganData.forEach(mhs => {
-                counts.all++;
-                if (!mhs.latest_preview) counts.empty++;
-                else {
-                    let st = mhs.latest_preview.status_pembimbing;
-                    if (st === 'Approved') counts.approved++;
-                    else if (st === 'Revision') counts.revision++;
-                    else counts.pending++;
-                }
-            });
-            for (const [key, val] of Object.entries(counts)) {
-                const el = document.getElementById('fCount_' + key);
-                if (el) el.textContent = val;
-            }
+            // Function maintained for compatibility
         }
 
         // ============================================================

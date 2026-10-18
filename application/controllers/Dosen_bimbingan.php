@@ -755,11 +755,27 @@ class Dosen_bimbingan extends CI_Controller {
         $display_posisi = in_array($role, ['p1', 'u1'], true) ? 1 : 2;
         $is_pembimbing  = in_array($role, ['p1', 'p2'], true);
 
+        $dosen_id = $this->session->userdata('user_id');
+        $students = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, $model_posisi);
+        $tab_counts = [
+            'Preview 1' => 0,
+            'Preview 2' => 0,
+            'Preview 3' => 0,
+            'Sidang'    => 0,
+        ];
+        foreach ($students as $st) {
+            $thp = $this->Mahasiswa_model->get_student_current_tahap($st);
+            if (isset($tab_counts[$thp])) {
+                $tab_counts[$thp]++;
+            }
+        }
+
         $data = [
             'title'        => $is_pembimbing ? 'Dashboard Bimbingan Dosen' : 'Dashboard Dosen Penguji',
             'role'         => $role,
             'posisi'       => $display_posisi,
             'model_posisi' => $model_posisi,
+            'tab_counts'   => $tab_counts,
         ];
 
         $this->load->view('mahasiswa/dosen_bimbingan', $data);
