@@ -663,7 +663,6 @@
     const LAB_KEYS = <?= json_encode(!empty($dyn_lab_keys) ? array_values($dyn_lab_keys) : []) ?>;
     const TOTAL_LABS = LAB_KEYS.length;
     const SPLIT_POINT_LAB = <?= $split_point_lab ?>;
-    const DEKANAT_IMG_URL = "<?= base_url('assets/images/' . (!empty($header_settings->dekanat_image) ? $header_settings->dekanat_image : 'dekanat2.png')) ?>";
     let activeLabIndex = 0; // Mulai dari Multimedia (Indeks 0)
 
     let isMoving = false;
@@ -697,7 +696,6 @@
                     <a href="${data.url}" class="btn-apple-action">${data.btnText}</a>
                 </div>
             </div>
-            <img src="${DEKANAT_IMG_URL}" alt="Dekanat" class="dekanat-img-right">
         `;
     }
 
