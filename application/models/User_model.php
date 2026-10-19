@@ -13,15 +13,6 @@ class User_model extends CI_Model {
         $this->load->database();
         $this->tbl_user = $this->db->table_exists('user') ? 'user' : 'users';
         $this->tbl_role = $this->db->table_exists('user_role') ? 'user_role' : 'roles';
-
-        if ($this->db->table_exists($this->tbl_user)) {
-            if (!$this->db->field_exists('jabatan', $this->tbl_user)) {
-                $this->db->query("ALTER TABLE `{$this->tbl_user}` ADD `jabatan` varchar(50) DEFAULT 'dosen' AFTER `role_id`");
-            }
-            if (!$this->db->field_exists('prodi', $this->tbl_user)) {
-                $this->db->query("ALTER TABLE `{$this->tbl_user}` ADD `prodi` varchar(120) DEFAULT NULL AFTER `jabatan`");
-            }
-        }
     }
 
     /**
@@ -534,6 +525,8 @@ class User_model extends CI_Model {
             $name = isset($acc['name']) && !empty($acc['name']) ? trim($acc['name']) : 'User';
             $nimNip = isset($acc['nim_nip']) ? trim($acc['nim_nip']) : '';
             $emailStatus = isset($acc['email_status']) ? $acc['email_status'] : 'belum';
+            $jabatan = isset($acc['jabatan']) ? strtolower(trim((string)$acc['jabatan'])) : '';
+            $prodi = isset($acc['prodi']) ? trim((string)$acc['prodi']) : '';
 
             if (isset($existingMap[$email])) {
                 // Update existing user
@@ -550,6 +543,12 @@ class User_model extends CI_Model {
                     if ((int)$roleId !== 4 || empty($updateData['nim'])) {
                         $updateData['nip'] = $nimNip;
                     }
+                }
+                if ($jabatan && $this->db->field_exists('jabatan', $this->tbl_user)) {
+                    $updateData['jabatan'] = $jabatan;
+                }
+                if ($prodi && $this->db->field_exists('prodi', $this->tbl_user)) {
+                    $updateData['prodi'] = $prodi;
                 }
                 if ($this->db->field_exists('updated_at', $this->tbl_user)) $updateData['updated_at'] = $now;
 
@@ -584,6 +583,12 @@ class User_model extends CI_Model {
                     if ((int)$roleId !== 4 || empty($insertRow['nim'])) {
                         $insertRow['nip'] = $nimNip;
                     }
+                }
+                if ($this->db->field_exists('jabatan', $this->tbl_user)) {
+                    $insertRow['jabatan'] = $jabatan ? $jabatan : 'dosen';
+                }
+                if ($this->db->field_exists('prodi', $this->tbl_user)) {
+                    $insertRow['prodi'] = $prodi ? $prodi : null;
                 }
                 if ($this->db->field_exists('token', $this->tbl_user)) $insertRow['token'] = $token;
                 if ($this->db->field_exists('password_changed', $this->tbl_user)) $insertRow['password_changed'] = 0;

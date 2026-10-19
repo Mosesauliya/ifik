@@ -2403,8 +2403,6 @@
                 ['heading' => 'Pendaftaran Akun Baru', 'href' => site_url('import-email'), 'icon_3d' => 'assets/images/icons_3d/email_token.png'],
 
                 ['category' => 'Manajemen Sistem & Fasilitas', 'has_divider' => true],
-                ['heading' => 'Kelola Fasilitas & Ruangan', 'href' => site_url('kelolaruangan'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
-                ['heading' => 'Pengaturan Header', 'href' => site_url('adminheader'), 'icon_3d' => 'assets/images/icons_3d/header_setting.png'],
                 ['heading' => 'Pengaturan Footer', 'href' => site_url('adminfooter'), 'icon_3d' => 'assets/images/icons_3d/footer_setting.png'],
                 ['heading' => 'Pengaturan Unit Ticketing', 'href' => site_url('admin#unit-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
                 ['heading' => 'Respon Ticketing Lab', 'href' => site_url('laboran/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],

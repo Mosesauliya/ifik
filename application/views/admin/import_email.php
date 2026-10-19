@@ -1480,6 +1480,7 @@
                             <select id="acc-jabatan" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none">
                                 <option value="dosen">Dosen Biasa</option>
                                 <option value="kaprodi">Kaprodi (Kepala Program Studi)</option>
+                                <option value="kaur">Ka. Ur Laboratorium (Kepala Urusan)</option>
                                 <option value="wadek">Wakil Dekan (Wadek)</option>
                             </select>
                         </div>
@@ -2423,6 +2424,21 @@
                 let nim_nip = row.NIM || row.nim || row.NIP || row.nip || row.ID || row.id || '';
                 let token = row.Token || row.token || '';
 
+                let rawJabatan = row.Jabatan !== undefined ? row.Jabatan : (row.jabatan !== undefined ? row.jabatan : (row.Position !== undefined ? row.Position : (row.position !== undefined ? row.position : '')));
+                let jabatan = rawJabatan ? rawJabatan.toString().trim().toLowerCase() : '';
+                if (jabatan === 'ka. ur' || jabatan === 'kaur' || jabatan.includes('kepala urusan') || jabatan.includes('ka lab')) {
+                    jabatan = 'kaur';
+                } else if (jabatan.includes('kaprodi') || jabatan.includes('ketua prodi')) {
+                    jabatan = 'kaprodi';
+                } else if (jabatan.includes('wadek') || jabatan.includes('wakil dekan')) {
+                    jabatan = 'wadek';
+                } else if (jabatan) {
+                    jabatan = 'dosen';
+                }
+
+                let rawProdi = row.Prodi !== undefined ? row.Prodi : (row.prodi !== undefined ? row.prodi : (row.ProgramStudi !== undefined ? row.ProgramStudi : (row['Program Studi'] !== undefined ? row['Program Studi'] : '')));
+                let prodi = rawProdi ? rawProdi.toString().trim() : '';
+
                 email = email ? email.trim() : '';
                 name = name ? name.trim() : 'User';
                 let emailLower = email.toLowerCase();
@@ -2500,6 +2516,8 @@
                     role: roleDisplay,
                     rawRole: roleStr,
                     nim_nip,
+                    jabatan: jabatan || 'dosen',
+                    prodi: prodi || null,
                     token: token.trim(),
                     status,
                     statusText,
@@ -2682,7 +2700,14 @@
                             <td class="p-3 text-center font-mono text-slate-400 text-xs">${idx + 1}</td>
                             <td class="p-3 font-bold text-slate-800">${r.name}</td>
                             <td class="p-3 font-mono text-slate-600">${r.email || '-'}</td>
-                            <td class="p-3"><span class="px-2 py-0.5 text-[10px] font-semibold bg-slate-100 border border-slate-200 rounded text-slate-700">${r.role}</span></td>
+                            <td class="p-3">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="px-2 py-0.5 text-[10px] font-semibold bg-slate-100 border border-slate-200 rounded text-slate-700">${r.role}</span>
+                                    ${r.jabatan === 'kaur' ? '<span class="px-1.5 py-0.2 text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 rounded">Ka. Ur Lab</span>' : ''}
+                                    ${r.jabatan === 'kaprodi' ? '<span class="px-1.5 py-0.2 text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-300 rounded">Kaprodi</span>' : ''}
+                                    ${r.jabatan === 'wadek' ? '<span class="px-1.5 py-0.2 text-[9px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-300 rounded">Wadek</span>' : ''}
+                                </div>
+                            </td>
                             <td class="p-3 font-mono text-slate-600">${r.nim_nip || '-'}</td>
                             <td class="p-3 text-center">${badgeHtml}</td>
                         </tr>
@@ -3052,6 +3077,7 @@
                                 <div class="shrink-0 flex flex-col items-end gap-1">
                                     <span class="inline-block px-2.5 py-0.5 text-[10px] font-medium border rounded-md ${roleClass}">${acc.role}</span>
                                     ${acc.jabatan === 'kaprodi' ? `<span class="inline-block px-2 py-0.2 text-[9px] font-bold text-amber-700 bg-amber-100/90 rounded border border-amber-300">Kaprodi</span>` : ''}
+                                    ${acc.jabatan === 'kaur' ? `<span class="inline-block px-2 py-0.2 text-[9px] font-bold text-emerald-700 bg-emerald-100/90 rounded border border-emerald-300">Ka. Ur Lab</span>` : ''}
                                     ${acc.jabatan === 'wadek' ? `<span class="inline-block px-2 py-0.2 text-[9px] font-bold text-indigo-700 bg-indigo-100/90 rounded border border-indigo-300">Wadek</span>` : ''}
                                 </div>
                             </div>
@@ -4653,14 +4679,15 @@
             } else {
                 // Super Admin / Ka. Ur / Admin: All Roles
                 sampleData = [
-                    { 'Nama': 'Dr. Ir. Ahmad Sudrajat, M.T.', 'Email': 'ahmad.sudrajat@telkomuniversity.ac.id', 'Role': 3, 'NIM': '197804122005011002' },
-                    { 'Nama': 'Budi Santoso', 'Email': 'budi.santoso@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210045' },
-                    { 'Nama': 'Siti Rahmawati, S.Kom.', 'Email': 'siti.rahmawati@telkomuniversity.ac.id', 'Role': 2, 'NIM': '2019080104' },
-                    { 'Nama': 'Dewi Lestari', 'Email': 'dewi.lestari@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210088' },
-                    { 'Nama': 'Prof. Dr. Hendra Wijaya', 'Email': 'hendra.wijaya@telkomuniversity.ac.id', 'Role': 3, 'NIM': '196503151990021001' },
-                    { 'Nama': 'Admin LAA Petugas', 'Email': 'laa.petugas@telkomuniversity.ac.id', 'Role': 5, 'NIM': '2020080105' },
-                    { 'Nama': 'Koordinator Tugas Akhir', 'Email': 'koorta@telkomuniversity.ac.id', 'Role': 6, 'NIM': '198506152010021003' },
-                    { 'Nama': 'Laboran Informatika', 'Email': 'laboran.ifik@telkomuniversity.ac.id', 'Role': 21, 'NIM': '2021080121' }
+                    { 'Nama': 'Dr. Ir. Ahmad Sudrajat, M.T.', 'Email': 'ahmad.sudrajat@telkomuniversity.ac.id', 'Role': 3, 'NIM': '197804122005011002', 'Jabatan': 'kaur', 'Prodi': '' },
+                    { 'Nama': 'Budi Santoso, S.T., M.T.', 'Email': 'budi.santoso@telkomuniversity.ac.id', 'Role': 3, 'NIM': '198205102008011001', 'Jabatan': 'kaprodi', 'Prodi': 'S1 Desain Komunikasi Visual (DKV)' },
+                    { 'Nama': 'Prof. Dr. Sri Wahyuni, M.Kom.', 'Email': 'sri.wahyuni@telkomuniversity.ac.id', 'Role': 3, 'NIM': '197503152001022001', 'Jabatan': 'wadek', 'Prodi': '' },
+                    { 'Nama': 'Dr. Hendra Gunawan, M.Cs.', 'Email': 'hendra.gunawan@telkomuniversity.ac.id', 'Role': 3, 'NIM': '198603151990021001', 'Jabatan': 'dosen', 'Prodi': 'S1 Informatika' },
+                    { 'Nama': 'Budi Santoso Mahasiswa', 'Email': 'budi.mhs@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210045', 'Jabatan': '', 'Prodi': 'S1 Desain Komunikasi Visual (DKV)' },
+                    { 'Nama': 'Dewi Lestari', 'Email': 'dewi.lestari@student.telkomuniversity.ac.id', 'Role': 4, 'NIM': '1301210088', 'Jabatan': '', 'Prodi': 'S1 Desain Interior' },
+                    { 'Nama': 'Admin LAA Petugas', 'Email': 'laa.petugas@telkomuniversity.ac.id', 'Role': 5, 'NIM': '2020080105', 'Jabatan': '', 'Prodi': '' },
+                    { 'Nama': 'Koordinator Tugas Akhir', 'Email': 'koorta@telkomuniversity.ac.id', 'Role': 6, 'NIM': '198506152010021003', 'Jabatan': '', 'Prodi': '' },
+                    { 'Nama': 'Laboran Informatika', 'Email': 'laboran.ifik@telkomuniversity.ac.id', 'Role': 21, 'NIM': '2021080121', 'Jabatan': '', 'Prodi': '' }
                 ];
                 guideData = [
                     { 'Role ID': 1, 'Nama Role': 'Admin', 'Keterangan': 'Administrator Utama' },

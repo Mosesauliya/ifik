@@ -19,7 +19,14 @@ class Peminjaman extends CI_Controller {
             redirect('auth');
         }
 
-       if ((int) $this->session->userdata('role_id') !== 2) {
+       $role_id = (int) $this->session->userdata('role_id');
+       $jabatan = strtolower((string) ($this->session->userdata('jabatan') ?? ''));
+       $is_kaur = ($role_id === 2)
+           || ($role_id === 1 || $role_id === 22)
+           || ($jabatan === 'kaur')
+           || ($role_id === 3 && $jabatan === 'kaur');
+
+       if (!$is_kaur) {
             if (scm_is_ajax()) {
                 scm_json_abort(['success' => false, 'message' => 'Anda tidak memiliki izin untuk memproses approval Kaur.'], 403);
             }

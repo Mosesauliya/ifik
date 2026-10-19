@@ -599,5 +599,95 @@ class Booking_model extends CI_Model {
         $filePath = FCPATH . 'uploads/signatures/' . $ttd;
         return file_exists($filePath);
     }
+
+    // =======================================================
+    // MASTER DINAMIS KATEGORI RUANGAN
+    // =======================================================
+
+    /**
+     * Ambil semua data kategori ruangan beserta hitungan ruangan yang terhubung
+     */
+    public function get_all_kategori_with_counts($search = '')
+    {
+        $table = $this->db->table_exists('kategori_ruangan') ? 'kategori_ruangan' : 'kategori';
+        $this->db->select("{$table}.*, COUNT(ruangan.id) as jumlah_ruangan");
+        $this->db->from($table);
+        $this->db->join('ruangan', "ruangan.id_kategori = {$table}.id", 'left');
+
+        if (!empty($search)) {
+            $this->db->group_start();
+            $this->db->like("{$table}.nama_kategori", $search);
+            if ($this->db->field_exists('keterangan', $table)) {
+                $this->db->or_like("{$table}.keterangan", $search);
+            }
+            $this->db->group_end();
+        }
+
+        $this->db->group_by("{$table}.id");
+        $this->db->order_by("{$table}.id", 'ASC');
+        return $this->db->get()->result();
+    }
+
+    /**
+     * Ambil satu data kategori berdasarkan ID
+     */
+    public function get_kategori_by_id($id)
+    {
+        $table = $this->db->table_exists('kategori_ruangan') ? 'kategori_ruangan' : 'kategori';
+        $this->db->select("{$table}.*, COUNT(ruangan.id) as jumlah_ruangan");
+        $this->db->from($table);
+        $this->db->join('ruangan', "ruangan.id_kategori = {$table}.id", 'left');
+        $this->db->where("{$table}.id", (int)$id);
+        $this->db->group_by("{$table}.id");
+        return $this->db->get()->row();
+    }
+
+    /**
+     * Simpan (Insert / Update) Kategori Ruangan
+     */
+    public function save_kategori($id = null, $data = [])
+    {
+        $table = $this->db->table_exists('kategori_ruangan') ? 'kategori_ruangan' : 'kategori';
+        if (!empty($id)) {
+            $this->db->where('id', (int)$id);
+            $this->db->update($table, $data);
+            return (int)$id;
+        } else {
+            $this->db->insert($table, $data);
+            return $this->db->insert_id();
+        }
+    }
+
+    /**
+     * Cek apakah nama kategori sudah digunakan (untuk validasi duplikasi)
+     */
+    public function is_nama_kategori_exists($nama, $exclude_id = null)
+    {
+        $table = $this->db->table_exists('kategori_ruangan') ? 'kategori_ruangan' : 'kategori';
+        $this->db->where('LOWER(TRIM(nama_kategori))', strtolower(trim($nama)));
+        if (!empty($exclude_id)) {
+            $this->db->where('id !=', (int)$exclude_id);
+        }
+        return $this->db->count_all_results($table) > 0;
+    }
+
+    /**
+     * Cek jumlah ruangan yang masih menggunakan kategori ini
+     */
+    public function count_linked_rooms_kategori($id)
+    {
+        $this->db->where('id_kategori', (string)$id);
+        return $this->db->count_all_results('ruangan');
+    }
+
+    /**
+     * Hapus kategori ruangan
+     */
+    public function delete_kategori($id)
+    {
+        $table = $this->db->table_exists('kategori_ruangan') ? 'kategori_ruangan' : 'kategori';
+        $this->db->where('id', (int)$id);
+        return $this->db->delete($table);
+    }
 }
 

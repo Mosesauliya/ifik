@@ -1121,12 +1121,50 @@ if (!function_exists('render_kaprodi_client_filter')) {
         }
         @media (min-width: 992px) {
             body:not(.curved-sidebar-desktop-collapsed) .header-inner-pad {
-                padding-left: 12px;
-                padding-right: 12px;
+                padding-left: 1.5rem !important;
+                padding-right: 1.5rem !important;
             }
             body.curved-sidebar-desktop-collapsed .header-inner-pad {
-                padding-left: 56px;
-                padding-right: 12px;
+                padding-left: 56px !important;
+                padding-right: 1.5rem !important;
+            }
+        }
+
+        /* Push Content Layout for Curved Sidebar */
+        .page-wrapper-for-sidebar,
+        #laaMainContentWrapper {
+            width: 100%;
+            min-width: 0;
+            transition: margin-left 0.75s cubic-bezier(0.76, 0, 0.24, 1), width 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+            box-sizing: border-box;
+        }
+
+        @media (min-width: 992px) {
+            body:not(.curved-sidebar-desktop-collapsed) .page-wrapper-for-sidebar,
+            body:not(.curved-sidebar-desktop-collapsed) #laaMainContentWrapper,
+            .page-wrapper-for-sidebar,
+            #laaMainContentWrapper {
+                margin-left: 270px !important;
+                width: calc(100% - 270px) !important;
+            }
+
+            body.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar,
+            body.curved-sidebar-desktop-collapsed #laaMainContentWrapper {
+                margin-left: 0 !important;
+                width: 100% !important;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .page-wrapper-for-sidebar,
+            #laaMainContentWrapper {
+                margin-left: 0 !important;
+                width: 100% !important;
+            }
+
+            .header-inner-pad {
+                padding-left: 56px !important;
+                padding-right: 12px !important;
             }
         }
 
@@ -1501,7 +1539,7 @@ if (!function_exists('render_kaprodi_client_filter')) {
 
 <?php $this->load->view('components/curved_sidebar'); ?>
 
-<div class="dashboard-content page-wrapper-for-sidebar">
+<div id="laaMainContentWrapper" class="page-wrapper-for-sidebar">
 <header class="glass-header-ifik mb-4">
     <div class="container-fluid px-3 px-lg-4 d-flex flex-wrap align-items-center justify-content-between gap-3 header-inner-pad">
         <div class="d-flex align-items-center gap-3">
