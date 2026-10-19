@@ -47,6 +47,9 @@ $peminjaman_list = $peminjaman_list ?? [];
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         }
 
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
         .page-wrapper-for-sidebar {
             width: 100%;
             min-width: 0;
@@ -82,62 +85,63 @@ $peminjaman_list = $peminjaman_list ?? [];
     <?php $this->load->view('components/curved_sidebar'); ?>
 
     <div class="page-wrapper-for-sidebar">
-        <!-- Top Navbar -->
-        <header class="bg-white/80 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 px-4 sm:px-8 py-3.5 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-2xl bg-emerald-600/10 text-emerald-600 flex items-center justify-center font-bold text-lg">
+        <!-- Top Navbar (Responsive with dedicated toggle space on mobile) -->
+        <header class="bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 pl-14 pr-3 sm:px-8 py-2.5 sm:py-3.5 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-emerald-600/10 text-emerald-600 flex items-center justify-center font-bold text-base sm:text-lg shrink-0">
                     <i class="bi bi-shield-check"></i>
                 </div>
-                <div>
-                    <h1 class="text-base sm:text-lg font-extrabold text-slate-900 leading-tight">Persetujuan Resmi Ka. Ur</h1>
-                    <p class="text-xs text-slate-500">Peminjaman Barang &amp; Aset Laboratorium Fakultas</p>
+                <div class="min-w-0">
+                    <h1 class="text-sm sm:text-lg font-extrabold text-slate-900 leading-tight truncate">Persetujuan Ka. Ur</h1>
+                    <p class="text-[11px] sm:text-xs text-slate-500 truncate">Peminjaman Barang &amp; Aset Lab</p>
                 </div>
             </div>
 
-            <div class="flex items-center gap-2">
-                <a href="<?= site_url('kaur/approval') ?>" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors flex items-center gap-1.5">
+            <div class="flex items-center gap-2 shrink-0">
+                <a href="<?= site_url('kaur/approval') ?>" class="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors flex items-center gap-1.5 whitespace-nowrap">
                     <i class="bi bi-door-open"></i>
                     <span class="hidden sm:inline">Persetujuan Ruangan</span>
+                    <span class="sm:hidden">Ruangan</span>
                 </a>
             </div>
         </header>
 
         <!-- Main Content -->
-        <main class="max-w-7xl mx-auto px-4 sm:px-8 py-6">
+        <main class="max-w-7xl mx-auto px-3.5 sm:px-8 py-4 sm:py-6">
 
             <!-- Flashdata Notifications -->
             <?php if ($this->session->flashdata('success')): ?>
-                <div class="mb-5 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm font-semibold flex items-center gap-3 shadow-sm">
+                <div class="mb-4 sm:mb-5 p-3.5 sm:p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm font-semibold flex items-center gap-3 shadow-sm">
                     <i class="bi bi-check-circle-fill text-emerald-500 text-lg flex-shrink-0"></i>
                     <span><?= html_escape($this->session->flashdata('success')) ?></span>
                 </div>
             <?php endif; ?>
             <?php if ($this->session->flashdata('error')): ?>
-                <div class="mb-5 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs sm:text-sm font-semibold flex items-center gap-3 shadow-sm">
+                <div class="mb-4 sm:mb-5 p-3.5 sm:p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs sm:text-sm font-semibold flex items-center gap-3 shadow-sm">
                     <i class="bi bi-exclamation-triangle-fill text-rose-500 text-lg flex-shrink-0"></i>
                     <span><?= html_escape($this->session->flashdata('error')) ?></span>
                 </div>
             <?php endif; ?>
 
             <!-- Header Banner -->
-            <div class="bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-800 rounded-3xl p-6 sm:p-8 text-white shadow-lg mb-6 relative overflow-hidden">
+            <div class="bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-800 rounded-2xl sm:rounded-3xl p-4 sm:p-7 text-white shadow-lg mb-4 sm:mb-6 relative overflow-hidden">
                 <div class="relative z-10 max-w-2xl">
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/20 backdrop-blur-md text-emerald-100 border border-white/20 mb-3">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold bg-white/20 backdrop-blur-md text-emerald-100 border border-white/20 mb-2 sm:mb-3">
                         <i class="bi bi-award-fill"></i>
                         <span>Otoritas Kepala Urusan (Kaur)</span>
                     </span>
-                    <h2 class="text-xl sm:text-2xl font-black tracking-tight mb-2">Verifikasi &amp; Pengesahan Peminjaman Barang</h2>
-                    <p class="text-xs sm:text-sm text-emerald-100/90 leading-relaxed">
+                    <h2 class="text-lg sm:text-2xl font-black tracking-tight mb-1 sm:mb-2">Verifikasi &amp; Pengesahan Peminjaman Barang</h2>
+                    <p class="text-[11px] sm:text-sm text-emerald-100/90 leading-relaxed">
                         Pengajuan barang yang telah disetujui Kaprodi dan diverifikasi fisik oleh Laboran memerlukan persetujuan resmi Ka. Ur agar kode QR serah terima aktif dan barang dapat diambil oleh peminjam.
                     </p>
                 </div>
-                <div class="absolute -right-6 -bottom-6 w-44 h-44 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="absolute -right-6 -bottom-6 w-36 sm:w-44 h-36 sm:h-44 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
             </div>
 
-            <!-- Tabs Navigation -->
-            <div class="flex items-center gap-2 border-b border-slate-200 pb-3 mb-6 overflow-x-auto">
+            <!-- Tabs Navigation (Native-like horizontal swipe pill tabs) -->
+            <div class="flex items-center gap-2 border-b border-slate-200/80 pb-3 mb-5 sm:mb-6 overflow-x-auto no-scrollbar -mx-3.5 px-3.5 sm:mx-0 sm:px-0">
                 <a href="<?= site_url('kaur/barang?tab=pending') ?>"
-                   class="px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all <?= $active_tab === 'pending' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50' ?>">
+                   class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0 transition-all <?= $active_tab === 'pending' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50' ?>">
                     <i class="bi bi-hourglass-split"></i>
                     <span>Menunggu ACC Kaur</span>
                     <?php if ($pending_count > 0): ?>
@@ -148,13 +152,13 @@ $peminjaman_list = $peminjaman_list ?? [];
                 </a>
 
                 <a href="<?= site_url('kaur/barang?tab=approved') ?>"
-                   class="px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all <?= $active_tab === 'approved' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50' ?>">
+                   class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0 transition-all <?= $active_tab === 'approved' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50' ?>">
                     <i class="bi bi-check2-circle"></i>
                     <span>Disetujui / Selesai</span>
                 </a>
 
                 <a href="<?= site_url('kaur/barang?tab=rejected') ?>"
-                   class="px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all <?= $active_tab === 'rejected' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50' ?>">
+                   class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0 transition-all <?= $active_tab === 'rejected' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50' ?>">
                     <i class="bi bi-x-circle"></i>
                     <span>Ditolak</span>
                 </a>
@@ -179,26 +183,26 @@ $peminjaman_list = $peminjaman_list ?? [];
                             $group_id = $item->group_id ?? ('single-' . ($item->id_peminjaman ?? '0'));
                             $is_need_action = ($item->status === 'Menunggu ACC Kaur' || (($item->status_laboran ?? '') === 'Disetujui' && ($item->status_kaur ?? '') === 'Pending'));
                         ?>
-                        <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow p-5 sm:p-6">
+                        <div class="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow p-4 sm:p-6">
                             <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-                                <div class="space-y-2 flex-1">
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <span class="font-mono text-xs font-bold px-2.5 py-1 rounded-xl bg-slate-100 text-slate-700 border border-slate-200">
+                                <div class="space-y-2 flex-1 min-w-0">
+                                    <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                                        <span class="font-mono text-[11px] sm:text-xs font-bold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-slate-100 text-slate-700 border border-slate-200">
                                             <?= html_escape($group_id) ?>
                                         </span>
-                                        <span class="px-2.5 py-1 rounded-xl text-xs font-bold <?= $is_need_action ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200' ?>">
+                                        <span class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold <?= $is_need_action ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200' ?>">
                                             <i class="bi <?= $is_need_action ? 'bi-hourglass-split' : 'bi-check-circle-fill' ?> me-1"></i>
                                             <?= html_escape($progress['status_label'] ?? ($item->status ?? '-')) ?>
                                         </span>
                                         <?php if (!empty($item->prodi)): ?>
-                                            <span class="px-2.5 py-1 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                            <span class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
                                                 <?= html_escape($item->prodi) ?>
                                             </span>
                                         <?php endif; ?>
                                     </div>
 
                                     <div>
-                                        <h3 class="text-base sm:text-lg font-extrabold text-slate-900">
+                                        <h3 class="text-sm sm:text-lg font-extrabold text-slate-900 leading-snug">
                                             <?= html_escape($item->nama_peminjam ?? 'Mahasiswa') ?>
                                             <span class="text-xs font-medium text-slate-400 ms-1">(<?= html_escape($item->nim_nip ?? '-') ?>)</span>
                                         </h3>
@@ -207,13 +211,13 @@ $peminjaman_list = $peminjaman_list ?? [];
                                         </p>
                                     </div>
 
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-600 pt-2">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 text-xs text-slate-600 pt-1.5 sm:pt-2">
                                         <div class="flex items-center gap-2">
-                                            <i class="bi bi-calendar-event text-emerald-600 text-sm"></i>
+                                            <i class="bi bi-calendar-event text-emerald-600 text-sm shrink-0"></i>
                                             <span>Masa Pinjam: <strong><?= date('d/m/Y', strtotime($item->tanggal_pinjam)) ?> &ndash; <?= date('d/m/Y', strtotime($item->tanggal_kembali_rencana)) ?></strong></span>
                                         </div>
                                         <div class="flex items-center gap-2">
-                                            <i class="bi bi-person-check text-emerald-600 text-sm"></i>
+                                            <i class="bi bi-person-check text-emerald-600 text-sm shrink-0"></i>
                                             <span>Verifikasi Laboran: <strong class="text-emerald-700"><?= html_escape($item->status_laboran ?? 'Disetujui') ?></strong></span>
                                         </div>
                                     </div>
@@ -222,9 +226,9 @@ $peminjaman_list = $peminjaman_list ?? [];
                                     <?php if (!empty($item->detail_barang)): ?>
                                         <div class="pt-2">
                                             <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Barang yang Dipinjam:</div>
-                                            <div class="flex flex-wrap gap-2">
+                                            <div class="flex flex-wrap gap-1.5 sm:gap-2">
                                                 <?php foreach ($item->detail_barang as $brg): ?>
-                                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700">
+                                                    <span class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700">
                                                         <i class="bi bi-box-seam text-slate-400"></i>
                                                         <?= html_escape($brg->nama_aset ?? '-') ?>
                                                         <span class="font-bold text-emerald-600">(<?= (int)($brg->jumlah_pinjam ?? 1) ?> unit)</span>
@@ -236,17 +240,17 @@ $peminjaman_list = $peminjaman_list ?? [];
                                 </div>
 
                                 <!-- Action Buttons -->
-                                <div class="flex flex-row lg:flex-col items-center lg:items-end justify-end gap-2 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100 flex-shrink-0">
+                                <div class="grid grid-cols-2 sm:flex lg:flex-col items-stretch gap-2 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100 flex-shrink-0 w-full sm:w-auto lg:w-48">
                                     <?php if ($is_need_action): ?>
                                         <button type="button"
                                                 onclick="openApproveModal('<?= html_escape($group_id) ?>', '<?= html_escape(addslashes($item->nama_peminjam ?? '')) ?>')"
-                                                class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md shadow-emerald-600/20 transition-all">
+                                                class="col-span-1 sm:flex-1 lg:w-full justify-center px-4 py-2 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 shadow-md shadow-emerald-600/20 transition-all">
                                             <i class="bi bi-check-circle-fill"></i>
                                             <span>ACC Kaur</span>
                                         </button>
                                         <button type="button"
                                                 onclick="openRejectModal('<?= html_escape($group_id) ?>', '<?= html_escape(addslashes($item->nama_peminjam ?? '')) ?>')"
-                                                class="px-4 py-2.5 rounded-xl bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-colors">
+                                                class="col-span-1 sm:flex-1 lg:w-full justify-center px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-colors">
                                             <i class="bi bi-x-circle"></i>
                                             <span>Tolak</span>
                                         </button>
@@ -269,7 +273,7 @@ $peminjaman_list = $peminjaman_list ?? [];
                                                     ];
                                                 }, $item->detail_barang ?? [])
                                             ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP)) ?>)'
-                                            class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-colors">
+                                            class="<?= $is_need_action ? 'col-span-2' : 'col-span-2' ?> sm:flex-1 lg:w-full justify-center px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-colors">
                                         <i class="bi bi-eye"></i>
                                         <span>Rincian</span>
                                     </button>

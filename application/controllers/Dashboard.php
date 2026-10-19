@@ -138,16 +138,18 @@ class Dashboard extends CI_Controller {
         header('Content-Type: application/json');
         $this->load->model('Booking_model');
         $role_id = (int)$this->session->userdata('role_id');
+        $jabatan = strtolower((string)($this->session->userdata('jabatan') ?? ''));
+        $is_kaur_user = ($role_id == 2) || ($role_id == 3 && $jabatan === 'kaur');
 
-        if (!in_array($role_id, [1, 2, 21, 22])) {
+        if (!in_array($role_id, [1, 2, 21, 22]) && !$is_kaur_user) {
             echo json_encode(['status' => 'error', 'message' => 'Anda tidak memiliki hak akses untuk menyetujui peminjaman ini.']);
             return;
         }
 
         // Validasi: Cek tanda tangan jika Laboran atau Ka. Ur
-        if (in_array($role_id, [2, 21])) {
+        if ($is_kaur_user || $role_id == 21) {
             if (!$this->Booking_model->has_signature($this->session->userdata('user_id'), $role_id)) {
-                $targetUrl = ($role_id == 2) ? site_url('kaur/tanda-tangan') : site_url('laboran/tanda-tangan');
+                $targetUrl = $is_kaur_user ? site_url('kaur/tanda-tangan') : site_url('laboran/tanda-tangan');
                 echo json_encode([
                     'status'          => 'error',
                     'needs_signature' => true,
@@ -158,7 +160,7 @@ class Dashboard extends CI_Controller {
             }
         }
 
-        if ($role_id == 2) {
+        if ($is_kaur_user) {
             $status = 'Disetujui Ka. Ur';
         } elseif ($role_id == 21) {
             $status = 'Disetujui Laboran';
@@ -414,7 +416,7 @@ class Dashboard extends CI_Controller {
             );
         }
 
-        $data['title'] = 'Riwayat Peminjaman Ruangan Saya - IFIK';
+        $data['title'] = 'Riwayat Peminjaman Ruangan & Lab - IFIK';
         $data['peminjaman'] = $peminjaman;
         $data['riwayat'] = $peminjaman;
         $data['total_pengajuan'] = $totalCount;

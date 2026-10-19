@@ -41,7 +41,9 @@ class Kelolaruangan extends CI_Controller {
         }
         
         $role_id = (int)$this->session->userdata('role_id');
-        if ($role_id !== 1 && $role_id !== 2 && $role_id !== 21 && $role_id !== 22) {
+        $jabatan = strtolower((string)$this->session->userdata('jabatan'));
+        $isKaur  = ($role_id === 3 && $jabatan === 'kaur');
+        if ($role_id !== 1 && $role_id !== 2 && $role_id !== 21 && $role_id !== 22 && !$isKaur) {
             if ($is_ajax) {
                 if (ob_get_length()) ob_clean();
                 header('Content-Type: application/json');
@@ -55,23 +57,11 @@ class Kelolaruangan extends CI_Controller {
             $this->session->set_flashdata('error', 'Hanya Admin System, Ka. Ur, dan Laboran yang dapat mengakses halaman Kelola Ruangan.');
             redirect('dashboard');
         }
-
-        // Pastikan kolom foto & images bertipe TEXT agar muat banyak path foto
-        try {
-            $this->db->query("ALTER TABLE ruangan MODIFY COLUMN foto TEXT NULL");
-            $this->db->query("ALTER TABLE ruangan MODIFY COLUMN images TEXT NULL");
-        } catch (\Throwable $e) {
-            // Lewati jika sudah di-alter atau user db tidak memiliki permission alter
-        }
     }
 
     public function index()
     {
-        $data['title']    = 'Kelola Data Ruangan — Admin FIK';
-        $data['kategori'] = $this->Booking_model->get_all_kategori();
-        $data['ruangan']  = $this->Booking_model->get_all_ruangan_grouped();
-
-        $this->load->view('admin/ruangan/index', $data);
+        redirect('adminheader?tab=fasilitas');
     }
 
 
@@ -400,12 +390,17 @@ class Kelolaruangan extends CI_Controller {
             }
         }
 
+        $delete_model_3d = $this->input->post('delete_model_3d') === '1';
+        $photo_gallery_touched = $this->input->post('photo_gallery_touched') === '1';
+
         // Gabungkan foto lama yang dipertahankan dengan foto baru yang diunggah
         if ($existing_fotos !== null) {
             $cleaned_existing = is_array($existing_fotos) ? $existing_fotos : [$existing_fotos];
             $cleaned_existing = array_values(array_filter(array_map('trim', $cleaned_existing)));
             $combined_fotos = array_merge($cleaned_existing, $uploaded_fotos);
             $final_foto = !empty($combined_fotos) ? implode(',', $combined_fotos) : '';
+        } elseif ($photo_gallery_touched) {
+            $final_foto = !empty($uploaded_fotos) ? implode(',', $uploaded_fotos) : '';
         } else {
             if (!empty($uploaded_fotos)) {
                 $final_foto = implode(',', $uploaded_fotos);
@@ -414,20 +409,26 @@ class Kelolaruangan extends CI_Controller {
             }
         }
 
-        $final_model = $model_3d_path ? $model_3d_path : $old_model;
+        if ($model_3d_path) {
+            $final_model = $model_3d_path;
+        } elseif ($delete_model_3d) {
+            $final_model = null;
+        } else {
+            $final_model = !empty($old_model) ? $old_model : null;
+        }
 
         if (in_array('foto', $fields)) {
-            $base_data['foto'] = $final_foto;
+            $base_data['foto'] = $final_foto ? $final_foto : '';
         }
-        if (in_array('model_3d', $fields) && $final_model) {
-            $base_data['model_3d'] = $final_model;
+        if (in_array('model_3d', $fields)) {
+            $base_data['model_3d'] = !empty($final_model) ? $final_model : null;
         }
 
         if (in_array('images', $fields)) {
             $combined = '';
-            if ($final_foto && $final_model) $combined = $final_foto . '|' . $final_model;
+            if ($final_foto && !empty($final_model)) $combined = $final_foto . '|' . $final_model;
             elseif ($final_foto) $combined = $final_foto;
-            elseif ($final_model) $combined = '|' . $final_model;
+            elseif (!empty($final_model)) $combined = '|' . $final_model;
             $base_data['images'] = $combined;
         }
 
@@ -516,5 +517,130 @@ class Kelolaruangan extends CI_Controller {
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Gagal menemukan atau menghapus data ruangan.']);
         }
+    }
+
+    // =======================================================
+    // AJAX ENDPOINT DINAMIS KATEGORI RUANGAN
+    // =======================================================
+
+    /**
+     * Ambil semua data kategori ruangan (JSON) untuk modal & dropdown
+     */
+    public function kategori_list()
+    {
+        $search = trim($this->input->get('q', true) ?? '');
+        $data = $this->Booking_model->get_all_kategori_with_counts($search);
+
+        if (ob_get_length()) ob_clean();
+        return $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode([
+                'status' => 'success',
+                'data'   => $data
+            ]));
+    }
+
+    /**
+     * Ambil 1 data kategori untuk populate form edit
+     */
+    public function kategori_get_json($id)
+    {
+        $id = (int)$id;
+        $kategori = $this->Booking_model->get_kategori_by_id($id);
+
+        if (ob_get_length()) ob_clean();
+        if (!$kategori) {
+            return $this->output
+                ->set_content_type('application/json')
+                ->set_status_header(404)
+                ->set_output(json_encode(['status' => 'error', 'message' => 'Data Kategori Ruangan tidak ditemukan.']));
+        }
+
+        return $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode(['status' => 'success', 'data' => $kategori]));
+    }
+
+    /**
+     * Simpan / Tambah / Update Kategori Ruangan
+     */
+    public function kategori_simpan()
+    {
+        $id            = $this->input->post('id', true);
+        $nama_kategori = trim($this->input->post('nama_kategori', true) ?? '');
+        $keterangan    = trim($this->input->post('keterangan', true) ?? '');
+
+        if (ob_get_length()) ob_clean();
+
+        if (empty($nama_kategori)) {
+            return $this->output
+                ->set_content_type('application/json')
+                ->set_status_header(422)
+                ->set_output(json_encode(['status' => 'error', 'message' => 'Nama Kategori Ruangan wajib diisi.']));
+        }
+
+        // Cek duplikasi nama kategori
+        if ($this->Booking_model->is_nama_kategori_exists($nama_kategori, $id)) {
+            return $this->output
+                ->set_content_type('application/json')
+                ->set_status_header(422)
+                ->set_output(json_encode(['status' => 'error', 'message' => "Kategori Ruangan [{$nama_kategori}] sudah ada."]));
+        }
+
+        $payload = [
+            'nama_kategori' => $nama_kategori,
+            'keterangan'    => $keterangan
+        ];
+
+        $savedId = $this->Booking_model->save_kategori($id ?: null, $payload);
+        $actionText = !empty($id) ? "diperbarui" : "ditambahkan";
+
+        return $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode([
+                'status'  => 'success',
+                'message' => "Kategori Ruangan [{$nama_kategori}] berhasil {$actionText}.",
+                'id'      => $savedId
+            ]));
+    }
+
+    /**
+     * Hapus kategori ruangan (dengan proteksi jika masih digunakan)
+     */
+    public function kategori_hapus($id = null)
+    {
+        if (empty($id)) {
+            $id = $this->input->post('id', true);
+        }
+        $id = (int)$id;
+        $kategori = $this->Booking_model->get_kategori_by_id($id);
+
+        if (ob_get_length()) ob_clean();
+
+        if (!$kategori) {
+            return $this->output
+                ->set_content_type('application/json')
+                ->set_status_header(404)
+                ->set_output(json_encode(['status' => 'error', 'message' => 'Data Kategori Ruangan tidak ditemukan.']));
+        }
+
+        $linkedRooms = $this->Booking_model->count_linked_rooms_kategori($id);
+        if ($linkedRooms > 0) {
+            return $this->output
+                ->set_content_type('application/json')
+                ->set_status_header(422)
+                ->set_output(json_encode([
+                    'status'  => 'error',
+                    'message' => "Kategori [{$kategori->nama_kategori}] tidak dapat dihapus karena masih digunakan oleh {$linkedRooms} ruangan aktif."
+                ]));
+        }
+
+        $this->Booking_model->delete_kategori($id);
+        return $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode([
+                'status'  => 'success',
+                'message' => "Kategori Ruangan [{$kategori->nama_kategori}] berhasil dihapus."
+            ]));
     }
 }

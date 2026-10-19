@@ -1,0 +1,6 @@
+kode_aset,nama_aset,ruangan,jumlah_total,jumlah_tersedia,kondisi,deskripsi
+AST-001,Kamera Canon EOS 80D,Lab Multimedia & Fotografi,5,5,Baik,Kamera DSLR dengan lensa 18-55mm IS STM
+AST-002,Tripod Manfrotto Compact,Lab Multimedia & Fotografi,10,10,Baik,Tripod aluminium portable dengan ball head
+AST-003,Wacom Intuos Pro M,Lab Komputer Multimedia,8,8,Baik,Pen tablet grafis wireless USB
+AST-004,Microphone Wireless Rode,Lab Audio Visual,4,4,Baik,Mic wireless clip-on omnidirectional
+AST-005,Lighting Softbox Godox,Lab Fotografi,6,6,Baik,Lampu studio continuous light 50x70cm

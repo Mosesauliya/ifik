@@ -946,8 +946,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
       <!-- Top Header -->
       <div class="flex items-center justify-between mb-6">
         <div>
-            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Pengaturan Portal FIK</h1>
-            <p class="text-gray-500 mt-1">Kelola banner carousel, dan ketersediaan data fasilitas &amp; laboratorium.</p>
+            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Dashboard Control</h1>
+            <p class="text-gray-500 mt-1">Akses terpadu pengaturan banner carousel portal serta kelola fasilitas &amp; ruangan laboratorium.</p>
         </div>
         <a href="<?= base_url('dashboard') ?>" class="inline-flex items-center gap-1 text-brand font-bold hover:underline">
             &larr; Kembali ke Dashboard
@@ -1229,6 +1229,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                 <p class="text-sm text-gray-500 mt-0.5">Kelola data ruangan, spesifikasi perangkat, jam operasional, foto &amp; model 3D.</p>
             </div>
             <div class="flex items-center gap-3">
+                <button type="button" onclick="openModalKategoriRuangan()" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-orange-600 transition shadow-xs cursor-pointer">
+                    📁 Kelola Kategori Ruangan
+                </button>
                 <button type="button" onclick="openModalTambah()" class="btn-brand inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm shadow-md">
                     + Tambah Ruangan Baru
                 </button>
@@ -1241,24 +1244,16 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                 <span class="stat-label">Total Ruangan / Lab</span>
                 <span class="stat-value"><?= count($ruangan ?? []) ?></span>
             </div>
-            <div class="stat-card">
-                <span class="stat-label">Lab Komputer</span>
-                <span class="stat-value">
-                    <?= count(array_filter($ruangan ?? [], function($r){ return $r->id_kategori == 1; })) ?>
-                </span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-label">Lab Desain &amp; Studio</span>
-                <span class="stat-value">
-                    <?= count(array_filter($ruangan ?? [], function($r){ return $r->id_kategori == 2; })) ?>
-                </span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-label">Rapat &amp; Auditorium</span>
-                <span class="stat-value">
-                    <?= count(array_filter($ruangan ?? [], function($r){ return $r->id_kategori == 3; })) ?>
-                </span>
-            </div>
+            <?php if (!empty($kategori)): ?>
+                <?php foreach ($kategori as $kat): ?>
+                    <div class="stat-card">
+                        <span class="stat-label"><?= htmlspecialchars($kat->nama_kategori) ?></span>
+                        <span class="stat-value">
+                            <?= count(array_filter($ruangan ?? [], function($r) use ($kat){ return $r->id_kategori == $kat->id; })) ?>
+                        </span>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
 
         <!-- Filter & Search Bar -->
@@ -1774,6 +1769,89 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                   <button type="submit" class="btn-brand px-6 py-2 rounded-xl font-bold">Simpan Ruangan</button>
               </div>
           </form>
+      </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL KELOLA KATEGORI RUANGAN              -->
+  <!-- ========================================== -->
+  <div id="modalKategoriRuangan" class="modal-overlay" onclick="if(event.target===this)closeModalKategoriRuangan()">
+      <div class="modal-card" style="max-width: 650px; max-height: 85vh;">
+          <div class="modal-header">
+              <div>
+                  <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #fff;">📁 Kelola Kategori Ruangan</h3>
+                  <div style="font-size: 0.72rem; color: #94a3b8; font-weight: 500; margin-top: 2px;">Tambah, ubah, atau hapus kategori ruangan/fasilitas secara dinamis.</div>
+              </div>
+              <button type="button" class="modal-close" onclick="closeModalKategoriRuangan()">&times;</button>
+          </div>
+
+          <div class="modal-body" style="padding: 22px 24px; gap: 18px;">
+              <!-- Mini Form Tambah / Edit Kategori -->
+              <div style="background: #fff7ed; border: 1.5px solid #fed7aa; border-radius: 14px; padding: 16px; width: 100%; box-sizing: border-box;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                      <span id="labelFormKategori" style="font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #ea580c; display: flex; align-items: center; gap: 6px;">
+                          ➕ Tambah Kategori Baru
+                      </span>
+                      <button type="button" id="btnBatalEditKategori" onclick="resetFormKategori()" style="font-size: 0.75rem; font-weight: 700; color: #64748b; background: none; border: none; cursor: pointer; display: none;">
+                          ✕ Batal Edit
+                      </button>
+                  </div>
+
+                  <form id="formKategoriRuangan" onsubmit="handleFormKategoriSubmit(event)" style="display: block !important; flex: none !important; overflow: visible !important;">
+                      <input type="hidden" id="kategoriId" name="id" value="">
+                      <div style="display: flex; flex-direction: column; gap: 10px;">
+                          <div>
+                              <label style="display: block; font-size: 0.76rem; font-weight: 700; color: #334155; margin-bottom: 4px;">Nama Kategori Ruangan *</label>
+                              <input type="text" id="inputNamaKategori" name="nama_kategori" required placeholder="Contoh: Ruang Rapat / Sidang, Lab Multimedia" class="form-input" style="width: 100%; font-size: 0.85rem; padding: 8px 12px;">
+                          </div>
+                          <div>
+                              <label style="display: block; font-size: 0.76rem; font-weight: 700; color: #334155; margin-bottom: 4px;">Keterangan (Opsional)</label>
+                              <input type="text" id="inputKeteranganKategori" name="keterangan" placeholder="Contoh: Ruangan rapat resmi dekanat & prodi" class="form-input" style="width: 100%; font-size: 0.85rem; padding: 8px 12px;">
+                          </div>
+                          <div style="display: flex; justify-content: flex-end; margin-top: 4px;">
+                              <button type="submit" id="btnSubmitKategori" class="btn-brand" style="font-size: 0.78rem; padding: 7px 16px; border-radius: 10px; font-weight: 700; cursor: pointer;">
+                                  Simpan Kategori
+                              </button>
+                          </div>
+                      </div>
+                  </form>
+              </div>
+
+              <!-- Daftar Kategori yang Tersedia -->
+              <div style="width: 100%; box-sizing: border-box;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                      <h4 style="margin: 0; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: #334155;">
+                          Daftar Kategori Tersedia
+                      </h4>
+                      <span id="totalKategoriBadge" style="padding: 2px 8px; border-radius: 9999px; font-size: 0.7rem; font-weight: 800; background: #f1f5f9; color: #475569;">
+                          Memuat...
+                      </span>
+                  </div>
+
+                  <div style="border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #fff;">
+                      <table style="width: 100%; border-collapse: collapse; font-size: 0.78rem; text-align: left;">
+                          <thead>
+                              <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #475569; font-weight: 700;">
+                                  <th style="padding: 10px 14px;">Nama Kategori</th>
+                                  <th style="padding: 10px 12px; text-align: center; width: 110px;">Ruangan</th>
+                                  <th style="padding: 10px 14px; text-align: right; width: 95px;">Aksi</th>
+                              </tr>
+                          </thead>
+                          <tbody id="listKategoriTableBody">
+                              <tr>
+                                  <td colspan="3" style="padding: 20px; text-align: center; color: #94a3b8;">Memuat data kategori...</td>
+                              </tr>
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+          </div>
+
+          <div class="modal-footer" style="padding: 12px 24px;">
+              <button type="button" onclick="closeModalKategoriRuangan()" class="px-4 py-2 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300 text-xs">
+                  Tutup
+              </button>
+          </div>
       </div>
   </div>
 
@@ -2362,6 +2440,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
       let currentNewPhotoFiles = [];
       let currentExistingPhotos = [];
+      let isDeleteModel3D = false;
 
       function clearAllPhotos(e) {
           if (e) { e.preventDefault(); e.stopPropagation(); }
@@ -2478,7 +2557,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
       }
 
       function clearFileModel(e) {
-          if (e) { e.preventDefault(); e.stopPropagation(); }
+          if (e) {
+              e.preventDefault();
+              e.stopPropagation();
+              isDeleteModel3D = true;
+          }
           const input = document.getElementById('inputModel3D');
           if (input) input.value = '';
           const previewBox = document.getElementById('previewModelBox');
@@ -2487,6 +2570,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
       function handleModelFile(file) {
           if (!file) return;
+          isDeleteModel3D = false;
           const maxMb = 50;
           if (file.size > maxMb * 1024 * 1024) {
               Swal.fire('File Terlalu Besar', `Ukuran berkas 3D (${formatFileSize(file.size)}) melebihi batas maksimum ${maxMb}MB.`, 'warning');
@@ -2822,6 +2906,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
       function openModalTambah() {
           isEditMode = false;
+          isDeleteModel3D = false;
           currentEditOriginalName = '';
           document.body.style.overflow = 'hidden';
           document.getElementById('modalTitle').innerText = '🏢 Tambah Ruangan / Lab Baru';
@@ -2850,6 +2935,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
       function openModalEdit(data) {
           isEditMode = true;
+          isDeleteModel3D = false;
           document.body.style.overflow = 'hidden';
           document.getElementById('modalTitle').innerText = '✏️ Edit Data Ruangan & Berkas';
           document.getElementById('ruanganId').value = data.id;
@@ -2870,7 +2956,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
           renderRoomPillsGrid();
           switchFloorTab('all');
 
-          document.getElementById('inputKategori').value = data.id_kategori || 1;
+          const katSelect = document.getElementById('inputKategori');
+          katSelect.value = data.id_kategori || (katSelect.options[0]?.value || '');
           document.getElementById('inputStatus').value = data.status || 'Tersedia';
           document.getElementById('inputTagline').value = data.tagline || '';
           document.getElementById('inputJumlahUnit').value = data.jumlah_unit || '';
@@ -2975,6 +3062,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
           currentExistingPhotos.forEach(path => {
               formData.append('existing_foto[]', path);
           });
+          formData.append('delete_model_3d', (isEditMode && isDeleteModel3D) ? '1' : '0');
+          formData.append('photo_gallery_touched', isEditMode ? '1' : '0');
 
           const targetUrl = isEditMode ? '<?= base_url('kelolaruangan/update') ?>' : '<?= base_url('kelolaruangan/tambah') ?>';
 
@@ -3120,6 +3209,228 @@ defined('BASEPATH') OR exit('No direct script access allowed');
               filterTable();
               input.focus();
           }
+      }
+
+      // ===== MODAL KELOLA KATEGORI RUANGAN LOGIC =====
+      let kategoriRuanganCache = [];
+      let kategoriHasChanged = false;
+
+      function openModalKategoriRuangan() {
+          const modal = document.getElementById('modalKategoriRuangan');
+          if (modal) {
+              modal.classList.add('active');
+              loadKategoriRuanganList();
+          }
+      }
+
+      function closeModalKategoriRuangan() {
+          const modal = document.getElementById('modalKategoriRuangan');
+          if (modal) {
+              modal.classList.remove('active');
+              resetFormKategori();
+              if (kategoriHasChanged) {
+                  window.location.href = '<?= base_url('adminheader?tab=fasilitas') ?>';
+              }
+          }
+      }
+
+      function loadKategoriRuanganList() {
+          const tbody = document.getElementById('listKategoriTableBody');
+          if (tbody) {
+              tbody.innerHTML = '<tr><td colspan="3" style="padding: 20px; text-align: center; color: #94a3b8;">Memuat data kategori...</td></tr>';
+          }
+
+          fetch('<?= base_url('kelolaruangan/kategori_list') ?>', {
+              headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          })
+          .then(res => res.json())
+          .then(res => {
+              if (res.status === 'success') {
+                  kategoriRuanganCache = res.data || [];
+                  renderKategoriTable(kategoriRuanganCache);
+                  syncKategoriDropdown(kategoriRuanganCache);
+              } else {
+                  if (tbody) tbody.innerHTML = '<tr><td colspan="3" style="padding: 20px; text-align: center; color: #ef4444;">Gagal memuat data kategori.</td></tr>';
+              }
+          })
+          .catch(err => {
+              console.error('Error fetching kategori:', err);
+              if (tbody) tbody.innerHTML = '<tr><td colspan="3" style="padding: 20px; text-align: center; color: #ef4444;">Koneksi terputus.</td></tr>';
+          });
+      }
+
+      function renderKategoriTable(items) {
+          const tbody = document.getElementById('listKategoriTableBody');
+          const badge = document.getElementById('totalKategoriBadge');
+          if (badge) badge.textContent = `${items.length} Kategori`;
+
+          if (!tbody) return;
+          if (!items || items.length === 0) {
+              tbody.innerHTML = '<tr><td colspan="3" style="padding: 25px; text-align: center; color: #94a3b8;">Belum ada data kategori ruangan.</td></tr>';
+              return;
+          }
+
+          let html = '';
+          items.forEach(item => {
+              const count = parseInt(item.jumlah_ruangan || 0, 10);
+              const safeName = (item.nama_kategori || '').replace(/"/g, '&quot;').replace(/'/g, "\\'");
+              const safeKet = (item.keterangan || '').replace(/"/g, '&quot;').replace(/'/g, "\\'");
+              
+              html += `
+              <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                  <td style="padding: 10px 14px;">
+                      <div style="font-weight: 800; color: #0f172a; font-size: 0.85rem;">${item.nama_kategori}</div>
+                      ${item.keterangan ? `<div style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">${item.keterangan}</div>` : ''}
+                  </td>
+                  <td style="padding: 10px 12px; text-align: center;">
+                      <span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 0.7rem; font-weight: 800; ${count > 0 ? 'background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa;' : 'background: #f1f5f9; color: #64748b;'}">
+                          ${count} Ruangan
+                      </span>
+                  </td>
+                  <td style="padding: 10px 14px; text-align: right; white-space: nowrap;">
+                      <div style="display: inline-flex; align-items: center; gap: 6px;">
+                          <button type="button" onclick="editKategoriRuangan(${item.id}, '${safeName}', '${safeKet}')" style="background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; padding: 4px 8px; border-radius: 8px; font-size: 0.72rem; font-weight: 700; cursor: pointer;" title="Edit Kategori">
+                              ✏️ Edit
+                          </button>
+                          <button type="button" onclick="hapusKategoriRuangan(${item.id}, '${safeName}', ${count})" style="background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 4px 8px; border-radius: 8px; font-size: 0.72rem; font-weight: 700; cursor: pointer;" title="Hapus Kategori">
+                              🗑️ Hapus
+                          </button>
+                      </div>
+                  </td>
+              </tr>`;
+          });
+          tbody.innerHTML = html;
+      }
+
+      function syncKategoriDropdown(items) {
+          const select = document.getElementById('inputKategori');
+          if (!select) return;
+          const currentVal = select.value;
+          select.innerHTML = '';
+          items.forEach(k => {
+              const opt = document.createElement('option');
+              opt.value = k.id;
+              opt.textContent = k.nama_kategori;
+              if (String(k.id) === String(currentVal)) opt.selected = true;
+              select.appendChild(opt);
+          });
+      }
+
+      function editKategoriRuangan(id, nama, keterangan) {
+          document.getElementById('kategoriId').value = id;
+          document.getElementById('inputNamaKategori').value = nama;
+          document.getElementById('inputKeteranganKategori').value = keterangan || '';
+          
+          document.getElementById('labelFormKategori').innerHTML = `✏️ Edit Kategori: <span style="color:#0f172a; font-weight:800; margin-left:4px;">${nama}</span>`;
+          document.getElementById('btnSubmitKategori').textContent = 'Perbarui Kategori';
+          document.getElementById('btnBatalEditKategori').style.display = 'inline-block';
+
+          document.getElementById('inputNamaKategori').focus();
+      }
+
+      function resetFormKategori() {
+          document.getElementById('kategoriId').value = '';
+          document.getElementById('inputNamaKategori').value = '';
+          document.getElementById('inputKeteranganKategori').value = '';
+          
+          document.getElementById('labelFormKategori').innerHTML = '➕ Tambah Kategori Baru';
+          document.getElementById('btnSubmitKategori').textContent = 'Simpan Kategori';
+          document.getElementById('btnBatalEditKategori').style.display = 'none';
+      }
+
+      function handleFormKategoriSubmit(e) {
+          e.preventDefault();
+          const form = document.getElementById('formKategoriRuangan');
+          const formData = new FormData(form);
+
+          Swal.fire({
+              title: 'Menyimpan Kategori...',
+              allowOutsideClick: false,
+              didOpen: () => { Swal.showLoading(); }
+          });
+
+          fetch('<?= base_url('kelolaruangan/kategori_simpan') ?>', {
+              method: 'POST',
+              body: formData,
+              headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          })
+          .then(res => res.json())
+          .then(res => {
+              if (res.status === 'success') {
+                  kategoriHasChanged = true;
+                  Swal.fire({
+                      icon: 'success',
+                      title: 'Berhasil!',
+                      text: res.message,
+                      timer: 1500,
+                      showConfirmButton: false
+                  });
+                  resetFormKategori();
+                  loadKategoriRuanganList();
+              } else {
+                  Swal.fire('Gagal Menyimpan', res.message || 'Terjadi kesalahan.', 'error');
+              }
+          })
+          .catch(err => {
+              console.error('Save kategori error:', err);
+              Swal.fire('Error Koneksi', 'Gagal terhubung ke server.', 'error');
+          });
+      }
+
+      function hapusKategoriRuangan(id, nama, linkedRooms) {
+          if (linkedRooms > 0) {
+              Swal.fire({
+                  icon: 'warning',
+                  title: 'Kategori Sedang Digunakan',
+                  html: `Kategori <b>${nama}</b> tidak dapat dihapus karena masih digunakan oleh <b>${linkedRooms} ruangan</b> aktif.<br><small style="color:#64748b;">Pindahkan atau ubah kategori pada ruangan terkait terlebih dahulu.</small>`,
+                  confirmButtonColor: '#ea580c'
+              });
+              return;
+          }
+
+          Swal.fire({
+              title: 'Hapus Kategori?',
+              html: `Apakah Anda yakin ingin menghapus kategori <b>${nama}</b>?`,
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#ef4444',
+              cancelButtonColor: '#94a3b8',
+              confirmButtonText: 'Ya, Hapus',
+              cancelButtonText: 'Batal'
+          }).then((result) => {
+              if (result.isConfirmed) {
+                  Swal.fire({
+                      title: 'Menghapus...',
+                      allowOutsideClick: false,
+                      didOpen: () => { Swal.showLoading(); }
+                  });
+
+                  fetch(`<?= base_url('kelolaruangan/kategori_hapus/') ?>${id}`, {
+                      method: 'POST',
+                      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                  })
+                  .then(res => res.json())
+                  .then(res => {
+                      if (res.status === 'success') {
+                          kategoriHasChanged = true;
+                          Swal.fire({
+                              icon: 'success',
+                              title: 'Terhapus!',
+                              text: res.message,
+                              timer: 1500,
+                              showConfirmButton: false
+                          });
+                          loadKategoriRuanganList();
+                      } else {
+                          Swal.fire('Gagal Menghapus', res.message || 'Terjadi kesalahan.', 'error');
+                      }
+                  })
+                  .catch(err => {
+                      console.error('Delete kategori error:', err);
+                      Swal.fire('Error Koneksi', 'Gagal terhubung ke server.', 'error');
+                  });
+              }
+          });
       }
 
       // Inisialisasi dropzone dekanat & dropzone ruangan (foto/3D) setelah DOM siap

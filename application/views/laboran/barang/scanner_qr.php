@@ -115,17 +115,27 @@
         <main class="min-h-screen p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
 
             <!-- Top Header Navigation -->
-            <div class="mb-6">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold uppercase tracking-wider mb-2">
-                    <i class="bi bi-qr-code-scan"></i>
-                    <span>Peminjaman Aset &amp; Barang</span>
+            <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold uppercase tracking-wider mb-2">
+                        <i class="bi bi-qr-code-scan"></i>
+                        <span>Peminjaman Aset &amp; Barang</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                        Scanner QR Serah Terima &amp; Pengembalian
+                    </h1>
+                    <p class="text-sm text-slate-500 mt-1">
+                        Arahkan kamera ke QR Code bukti ACC peminjaman atau pengembalian barang dosen/mahasiswa.
+                    </p>
                 </div>
-                <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                    Scanner QR Serah Terima &amp; Pengembalian
-                </h1>
-                <p class="text-sm text-slate-500 mt-1">
-                    Arahkan kamera ke QR Code bukti ACC peminjaman atau pengembalian barang dosen/mahasiswa.
-                </p>
+
+                <div class="flex items-center gap-2 self-start sm:self-auto">
+                    <a href="<?= site_url('peminjamanbarang') ?>"
+                       class="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-white border border-slate-200 text-slate-700 hover:border-orange-300 hover:text-orange-600 text-xs sm:text-sm font-bold shadow-sm transition-all whitespace-nowrap">
+                        <i class="bi bi-arrow-left text-orange-600"></i>
+                        <span>Kembali ke Approval</span>
+                    </a>
+                </div>
             </div>
 
             <!-- Flash Messages -->
@@ -269,45 +279,6 @@
 
                 <!-- Guidance & Instructions (Right) -->
                 <div class="lg:col-span-5 space-y-4">
-                    <!-- Quick Test Transactions Card -->
-                    <div class="bg-gradient-to-br from-orange-500 to-amber-500 text-white rounded-3xl p-5 shadow-lg shadow-orange-500/20">
-                        <div class="flex items-center justify-between mb-3">
-                            <h3 class="text-sm font-extrabold flex items-center gap-2">
-                                <i class="bi bi-lightning-charge-fill"></i>
-                                <span>Simulasi Peminjaman (Demo)</span>
-                            </h3>
-                            <span class="text-[10px] bg-white/20 font-bold px-2 py-0.5 rounded-full uppercase">Demo</span>
-                        </div>
-                        <p class="text-xs text-orange-100 mb-3 leading-relaxed">
-                            Klik tombol di bawah untuk langsung mencoba alur peminjaman tanpa scan kamera:
-                        </p>
-                        <div class="space-y-2">
-                            <a href="<?= site_url('peminjamanbarang/serah_terima/PINJAM-2026-001') ?>"
-                               class="flex items-center justify-between p-3 rounded-2xl bg-white text-slate-800 hover:bg-orange-50 transition-all font-semibold text-xs shadow-sm">
-                                <div>
-                                    <div class="font-extrabold text-slate-900 flex items-center gap-1.5">
-                                        <i class="bi bi-box-seam text-orange-600"></i>
-                                        <span>PINJAM-2026-001</span>
-                                    </div>
-                                    <div class="text-[11px] text-slate-500 mt-0.5">Dr. Budi Santoso (Serah Terima)</div>
-                                </div>
-                                <i class="bi bi-chevron-right text-orange-600 font-bold"></i>
-                            </a>
-
-                            <a href="<?= site_url('peminjamanbarang/serah_terima/PINJAM-2026-002') ?>"
-                               class="flex items-center justify-between p-3 rounded-2xl bg-white text-slate-800 hover:bg-orange-50 transition-all font-semibold text-xs shadow-sm">
-                                <div>
-                                    <div class="font-extrabold text-slate-900 flex items-center gap-1.5">
-                                        <i class="bi bi-arrow-counterclockwise text-blue-600"></i>
-                                        <span>PINJAM-2026-002</span>
-                                    </div>
-                                    <div class="text-[11px] text-slate-500 mt-0.5">Ahmad Dzaky (Pengembalian)</div>
-                                </div>
-                                <i class="bi bi-chevron-right text-blue-600 font-bold"></i>
-                            </a>
-                        </div>
-                    </div>
-
                     <!-- Workflow Steps Card -->
                     <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-5 sm:p-6">
                         <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">

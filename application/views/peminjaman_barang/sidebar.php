@@ -59,14 +59,7 @@ $barangNavGroups = [
     ]
 ];
 
-if ($is_laboran_or_admin) {
-    $barangNavGroups[0]['items'][] = [
-        'heading' => 'Scanner QR Serah Terima',
-        'href'    => site_url('peminjamanbarang/scanner'),
-        'icon_3d' => 'assets/images/icons_3d/preview2.png',
-        'is_active' => (strpos($curr_uri, 'peminjamanbarang/scanner') === 0)
-    ];
-}
+
 
 $barangNavGroups[] = [
     'category' => 'Navigasi Utama',

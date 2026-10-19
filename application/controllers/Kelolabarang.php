@@ -22,8 +22,9 @@ class Kelolabarang extends CI_Controller {
         // Proteksi Role: Admin (1), Kaur/Ka Lab (2), Laboran (21), Super Admin (22)
         $role_id = (int) $this->session->userdata('role_id');
         $role_str = strtolower((string) $this->session->userdata('role'));
-        if (!in_array($role_id, [1, 2, 21, 22], true) && !in_array($role_str, ['admin', 'laboran', 'kaur'], true)) {
-            $this->session->set_flashdata('error', 'Akses ditolak! Halaman ini khusus Admin / Laboran.');
+        $jabatan = strtolower((string) $this->session->userdata('jabatan'));
+        if (!in_array($role_id, [1, 2, 21, 22], true) && !in_array($role_str, ['admin', 'laboran', 'kaur'], true) && $jabatan !== 'kaur') {
+            $this->session->set_flashdata('error', 'Akses ditolak! Halaman ini khusus Admin / Laboran / Ka. Ur.');
             redirect('dashboard');
         }
 
@@ -158,10 +159,6 @@ class Kelolabarang extends CI_Controller {
             $this->db->insert('aset', $aset);
             $id_aset = $this->db->insert_id();
             if ($id_aset) {
-                $this->db->where('id_aset', $id_aset)->update('aset', [
-                    'qr_code' => 'ASET-' . $id_aset . '-' . strtoupper(substr(md5($kode), 0, 6)),
-                    'qr_url' => site_url('peminjaman/detail_barang/' . $id_aset),
-                ]);
                 $inserted++;
             }
         }
