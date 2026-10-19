@@ -20,7 +20,7 @@ if (!function_exists('scm_loan_progress')) {
             $steps = [
                 ['label' => 'Pengajuan Dibuat', 'description' => 'Peminjam mengirim pengajuan barang luar kampus.'],
                 ['label' => 'Persetujuan Kaprodi', 'description' => 'Kaprodi memeriksa dan menyetujui pengajuan.'],
-                ['label' => 'Scan Laboran', 'description' => 'Laboran melakukan scan QR peminjaman dan verifikasi fisik ketersediaan barang.'],
+                ['label' => 'Verifikasi Laboran', 'description' => 'Laboran memeriksa ketersediaan stok fisik dan kelayakan alat laboratorium.'],
                 ['label' => 'Persetujuan Kaur', 'description' => 'Kaur memeriksa dan menyetujui pengajuan.'],
                 ['label' => 'Persetujuan Wadek', 'description' => 'Wakil Dekan memberikan persetujuan peminjaman eksternal.'],
                 ['label' => 'Pengambilan Barang', 'description' => 'Peminjam mengambil fisik barang di laboratorium setelah seluruh persetujuan selesai.'],
@@ -31,7 +31,7 @@ if (!function_exists('scm_loan_progress')) {
             $steps = [
                 ['label' => 'Pengajuan Dibuat', 'description' => 'Peminjam mengirim pengajuan barang.'],
                 ['label' => 'Persetujuan Kaprodi', 'description' => 'Kaprodi memeriksa dan menyetujui pengajuan.'],
-                ['label' => 'Scan Laboran', 'description' => 'Laboran melakukan scan QR peminjaman dan verifikasi fisik ketersediaan barang.'],
+                ['label' => 'Verifikasi Laboran', 'description' => 'Laboran memeriksa ketersediaan stok fisik dan kelayakan alat laboratorium.'],
                 ['label' => 'Persetujuan Kaur', 'description' => 'Kaur memberikan persetujuan akhir peminjaman.'],
                 ['label' => 'Pengambilan Barang', 'description' => 'Peminjam mengambil fisik barang di laboratorium setelah seluruh persetujuan selesai.'],
                 ['label' => 'Peminjaman & Pengembalian', 'description' => 'Barang sedang digunakan dan menunggu dikembalikan.'],
@@ -57,7 +57,7 @@ if (!function_exists('scm_loan_progress')) {
             case 'Menunggu Scan Laboran':
                 $current_index = 2;
                 $stage_label = 'Laboran';
-                $status_label = 'Menunggu Scan Laboran';
+                $status_label = 'Menunggu Verifikasi Laboran';
                 break;
 
             case 'Menunggu ACC Kaur':
@@ -70,7 +70,7 @@ if (!function_exists('scm_loan_progress')) {
                 if ($kaprodi === 'Disetujui' && $laboran === 'Pending') {
                     $current_index = 2;
                     $stage_label = 'Laboran';
-                    $status_label = 'Menunggu Scan Laboran';
+                    $status_label = 'Menunggu Verifikasi Laboran';
                 } elseif ($kaprodi === 'Disetujui' && $laboran === 'Disetujui' && $kaur === 'Pending') {
                     $current_index = 3;
                     $stage_label = 'Kaur';

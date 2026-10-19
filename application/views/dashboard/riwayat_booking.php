@@ -1881,13 +1881,21 @@
             <div class="page-header-card">
             <div class="header-title-group">
                 <h1>
-                    <span>📋</span>
-                    <span>Riwayat Peminjaman Ruangan</span>
+                    <span>🏛️</span>
+                    <span>Riwayat Peminjaman Ruangan &amp; Lab</span>
                 </h1>
-                <p>Pantau status persetujuan, cetak Surat QR Resmi, dan kelola pengajuan laboratorium Anda.</p>
+                <p>Pantau status persetujuan, cek ketersediaan kalender ruangan, dan ajukan peminjaman baru.</p>
             </div>
             <div class="header-actions">
-                <a href="<?= site_url('dashboard') ?>" class="btn-action-main btn-outline-secondary">
+                <a href="<?= site_url('ajukan-booking') ?>" class="btn-action-main btn-primary-orange" title="Ajukan permohonan peminjaman ruangan baru">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Ajukan Booking Ruangan</span>
+                </a>
+                <a href="<?= site_url('kalender') ?>" class="btn-action-main btn-outline-secondary" title="Lihat kalender jadwal ketersediaan ruangan">
+                    <i class="fa-solid fa-calendar-days" style="color: #ea580c;"></i>
+                    <span>Kalender &amp; Jadwal</span>
+                </a>
+                <a href="<?= site_url('dashboard') ?>" class="btn-action-main btn-outline-secondary" title="Kembali ke Dashboard">
                     <i class="fa-solid fa-arrow-left"></i>
                     <span>Dashboard</span>
                 </a>

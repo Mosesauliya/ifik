@@ -45,6 +45,8 @@ uploads/signatures/*
 !uploads/signatures/index.html
 uploads/ticketing/*
 !uploads/ticketing/index.html
+assets/uploads/bukti_peminjaman/*
+!assets/uploads/bukti_peminjaman/.gitkeep
 
 # Temp files
 cookie*.txt

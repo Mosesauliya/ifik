@@ -101,11 +101,16 @@ $boleh_proses = !empty($qr_valid) && ($is_serah_terima || $is_verifikasi_laboran
             <!-- Top Header Navigation -->
             <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <div class="flex items-center gap-2 mb-2">
-                        <a href="<?= site_url('peminjamanbarang/scanner') ?>"
+                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                        <a href="<?= site_url('peminjamanbarang') ?>"
                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-600 hover:text-orange-600 hover:border-orange-300 text-xs font-semibold shadow-sm transition-colors">
                             <i class="bi bi-arrow-left"></i>
-                            <span>Kembali ke Scanner</span>
+                            <span>Approval</span>
+                        </a>
+                        <a href="<?= site_url('peminjamanbarang/scanner') ?>"
+                           class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-600 hover:text-orange-600 hover:border-orange-300 text-xs font-semibold shadow-sm transition-colors">
+                            <i class="bi bi-qr-code-scan"></i>
+                            <span>Scanner</span>
                         </a>
                         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold uppercase tracking-wider">
                             <i class="bi bi-box-seam"></i>

@@ -192,9 +192,11 @@ class Kelolabooking extends CI_Controller {
     public function approve($id)
     {
         $role_id = (int)$this->session->userdata('role_id');
+        $jabatan = strtolower((string)($this->session->userdata('jabatan') ?? ''));
+        $is_kaur_user = ($role_id == 2) || ($role_id == 3 && $jabatan === 'kaur');
 
         // Status disesuaikan per role, sesuai ENUM di DB
-        if ($role_id == 2) {
+        if ($is_kaur_user) {
             $status = 'Disetujui Ka. Ur';
         } elseif ($role_id == 21) {
             $status = 'Disetujui Laboran';
@@ -259,7 +261,10 @@ class Kelolabooking extends CI_Controller {
         }
 
         $role_id = (int)$this->session->userdata('role_id');
-        if ($role_id == 2) {
+        $jabatan = strtolower((string)($this->session->userdata('jabatan') ?? ''));
+        $is_kaur_user = ($role_id == 2) || ($role_id == 3 && $jabatan === 'kaur');
+
+        if ($is_kaur_user) {
             $status = 'Disetujui Ka. Ur';
         } elseif ($role_id == 21) {
             $status = 'Disetujui Laboran';

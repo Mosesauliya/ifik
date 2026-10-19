@@ -31,7 +31,136 @@ class PeminjamanBarang extends CI_Controller {
     }
 
     public function index() {
-        redirect('peminjamanbarang/scanner');
+        $role_id = (int)$this->session->userdata('role_id');
+        if ($role_id === 2) {
+            redirect('kaur/barang');
+            return;
+        }
+
+        $this->load->helper(['loan_progress', 'scm_date', 'fik_prodi']);
+
+        $tab = $this->input->get('tab', true) ?: 'pending';
+        $filters = ['action_role' => 'laboran'];
+
+        if ($tab === 'pending') {
+            $filters['status_in'] = ['Menunggu Verifikasi Laboran', 'Menunggu Pengecekan Laboran', 'Menunggu Persetujuan'];
+        } elseif ($tab === 'approved') {
+            $filters['status_in'] = ['Menunggu ACC Kaur', 'Menunggu ACC Wadek', 'Disetujui (Menunggu Pengambilan)', 'Disetujui (Menunggu Finalisasi QR)', 'Sedang Dipinjam'];
+        } elseif ($tab === 'history') {
+            $filters['status_in'] = ['Selesai', 'Dikembalikan', 'Ditolak', 'Kedaluwarsa / Ditolak Otomatis'];
+        }
+
+        $data['title'] = 'Approval & Verifikasi Peminjaman Barang - Laboran';
+        $data['active_tab'] = $tab;
+        $data['pending_count'] = $this->Peminjaman_model->count_actionable_peminjaman('laboran');
+        $data['peminjaman_list'] = $this->Peminjaman_model->get_visible_peminjaman($filters, 50, 0);
+
+        $this->load->view('laboran/barang/index', $data);
+    }
+
+    public function setujui($group_id) {
+        $group_id = rawurldecode($group_id);
+        $peminjaman = $this->Peminjaman_model->get_peminjaman_by_group_id($group_id);
+        if (!$peminjaman) {
+            $this->session->set_flashdata('error', 'Transaksi pengajuan tidak ditemukan.');
+            redirect('peminjamanbarang');
+            return;
+        }
+
+        $this->load->helper('loan_progress');
+        if (!scm_loan_can_act($peminjaman, 'laboran')) {
+            $this->session->set_flashdata('error', 'Pengajuan belum disetujui Kaprodi atau sudah diproses sebelumnya.');
+            redirect('peminjamanbarang');
+            return;
+        }
+
+        $catatan = trim((string)$this->input->post('catatan_laboran', true));
+        $update = [
+            'status' => 'Menunggu ACC Kaur',
+            'status_laboran' => 'Disetujui',
+            'catatan_laboran' => $catatan,
+            'tgl_approve_laboran' => date('Y-m-d H:i:s'),
+            'id_approver_laboran' => $this->session->userdata('id_user') ?: $this->session->userdata('username'),
+            'status_kaur' => 'Pending',
+        ];
+
+        $ok = $this->Peminjaman_model->approve_group_with_reservation(
+            $group_id,
+            ['Menunggu Verifikasi Laboran', 'Menunggu Pengecekan Laboran', 'Menunggu Persetujuan'],
+            $update
+        );
+
+        if ($ok) {
+            if (!empty($peminjaman->id_user)) {
+                $this->Peminjaman_model->create_notifikasi(
+                    null,
+                    $peminjaman->id_user,
+                    'Verifikasi Laboran Selesai',
+                    'Pengajuan peminjaman barang Anda telah disetujui & diverifikasi oleh Laboran, diteruskan ke Kaur untuk persetujuan resmi.',
+                    site_url('peminjaman_barang/riwayat')
+                );
+            }
+            $this->Peminjaman_model->create_notifikasi(
+                'kaur',
+                null,
+                'Pengajuan Menunggu ACC Kaur',
+                ($peminjaman->nama_peminjam ?? 'Peminjam') . ' sudah diverifikasi Laboran dan menunggu persetujuan Anda.',
+                site_url('kaur/barang')
+            );
+            $this->session->set_flashdata('success', 'Pengajuan berhasil diverifikasi Laboran dan diteruskan ke Kaur untuk persetujuan resmi.');
+        } else {
+            $this->session->set_flashdata('error', 'Gagal memproses verifikasi atau reservasi stok barang tidak mencukupi.');
+        }
+        redirect('peminjamanbarang');
+    }
+
+    public function tolak($group_id) {
+        $group_id = rawurldecode($group_id);
+        $peminjaman = $this->Peminjaman_model->get_peminjaman_by_group_id($group_id);
+        if (!$peminjaman) {
+            $this->session->set_flashdata('error', 'Transaksi pengajuan tidak ditemukan.');
+            redirect('peminjamanbarang');
+            return;
+        }
+
+        $this->load->helper('loan_progress');
+        if (!scm_loan_can_act($peminjaman, 'laboran')) {
+            $this->session->set_flashdata('error', 'Pengajuan belum berada pada tahap verifikasi Laboran atau sudah diproses.');
+            redirect('peminjamanbarang');
+            return;
+        }
+
+        $catatan = trim((string)$this->input->post('catatan_laboran', true) ?: 'Ditolak oleh Laboran');
+        $update = [
+            'status' => 'Ditolak',
+            'status_laboran' => 'Ditolak',
+            'catatan_laboran' => $catatan,
+            'tgl_approve_laboran' => date('Y-m-d H:i:s'),
+            'id_approver_laboran' => $this->session->userdata('id_user') ?: $this->session->userdata('username'),
+            'status_kaur' => 'Pending',
+        ];
+
+        $ok = $this->Peminjaman_model->reject_group_and_release(
+            $group_id,
+            $update,
+            ['Menunggu Verifikasi Laboran', 'Menunggu Pengecekan Laboran', 'Menunggu Persetujuan']
+        );
+
+        if ($ok) {
+            if (!empty($peminjaman->id_user)) {
+                $this->Peminjaman_model->create_notifikasi(
+                    null,
+                    $peminjaman->id_user,
+                    'Pengajuan Ditolak Laboran',
+                    'Pengajuan peminjaman barang Anda ditolak pada tahap pengecekan Laboran. Catatan: ' . $catatan,
+                    site_url('peminjaman_barang/riwayat')
+                );
+            }
+            $this->session->set_flashdata('success', 'Pengajuan peminjaman barang berhasil ditolak dan reservasi stok dilepas.');
+        } else {
+            $this->session->set_flashdata('error', 'Gagal menolak pengajuan.');
+        }
+        redirect('peminjamanbarang');
     }
 
     public function scanner() {
