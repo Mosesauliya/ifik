@@ -66,7 +66,6 @@ $peminjaman_list = $peminjaman_list ?? [];
             body.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar {
                 margin-left: 0;
                 width: 100%;
-                padding-left: 76px;
             }
         }
 
@@ -77,6 +76,61 @@ $peminjaman_list = $peminjaman_list ?? [];
                 padding-bottom: 90px;
             }
         }
+
+        /* Responsive Top Header Navbar */
+        .top-navbar-header {
+            padding-left: 1rem;
+            padding-right: 1rem;
+            transition: padding-left 0.3s cubic-bezier(0.76, 0, 0.24, 1);
+        }
+
+        @media (min-width: 640px) {
+            .top-navbar-header {
+                padding-left: 2rem;
+                padding-right: 2rem;
+            }
+        }
+
+        @media (max-width: 1023.98px) {
+            .top-navbar-header {
+                padding-left: 3.75rem !important;
+            }
+        }
+
+        body.curved-sidebar-desktop-collapsed .top-navbar-header {
+            padding-left: 3.75rem !important;
+        }
+
+        /* Mobile Filter Pills Scroll Dots Indicator */
+        .filter-pills-dots {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            margin-top: 2px;
+            margin-bottom: 16px;
+        }
+
+        .filter-pills-dots .pill-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #cbd5e1;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .filter-pills-dots .pill-dot.active {
+            width: 18px;
+            background: #ea580c;
+            border-radius: 999px;
+        }
+
+        @media (max-width: 768px) {
+            .filter-pills-dots {
+                display: flex;
+            }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen">
@@ -85,8 +139,8 @@ $peminjaman_list = $peminjaman_list ?? [];
     <?php $this->load->view('components/curved_sidebar'); ?>
 
     <div class="page-wrapper-for-sidebar">
-        <!-- Top Navbar (Responsive with dedicated toggle space on mobile) -->
-        <header class="bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 pl-14 pr-3 sm:px-8 py-2.5 sm:py-3.5 flex items-center justify-between gap-2">
+        <!-- Top Navbar (Responsive with integrated space for hamburger toggle) -->
+        <header class="top-navbar-header bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 py-2.5 sm:py-3.5 flex items-center justify-between gap-2">
             <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
                 <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-orange-600/10 text-orange-600 flex items-center justify-center font-bold text-base sm:text-lg shrink-0">
                     <i class="bi bi-patch-check-fill"></i>
@@ -123,25 +177,41 @@ $peminjaman_list = $peminjaman_list ?? [];
                 </div>
             <?php endif; ?>
 
-            <!-- Header Banner -->
-            <div class="bg-gradient-to-r from-orange-700 via-orange-600 to-amber-700 rounded-2xl sm:rounded-3xl p-4 sm:p-7 text-white shadow-lg mb-4 sm:mb-6 relative overflow-hidden">
-                <div class="relative z-10 max-w-2xl">
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold bg-white/20 backdrop-blur-md text-orange-100 border border-white/20 mb-2 sm:mb-3">
-                        <i class="bi bi-tools"></i>
-                        <span>Panel Petugas Laboran</span>
-                    </span>
-                    <h2 class="text-lg sm:text-2xl font-black tracking-tight mb-1 sm:mb-2">Verifikasi Kelaikan Fisik &amp; Stok Alat</h2>
-                    <p class="text-[11px] sm:text-sm text-orange-100/90 leading-relaxed">
-                        Pengajuan peminjaman barang yang telah disetujui Kaprodi memerlukan pengecekan fisik dan ketersediaan stok oleh Laboran. Klik <strong>Setujui &amp; Teruskan</strong> agar pengajuan dapat diproses untuk persetujuan resmi Kepala Urusan (Kaur).
-                    </p>
+            <!-- Header Banner with 3D Illustration -->
+            <div class="bg-gradient-to-r from-orange-700 via-orange-600 to-amber-700 rounded-2xl sm:rounded-3xl p-5 sm:p-7 text-white shadow-xl mb-4 sm:mb-6 relative overflow-hidden">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+                    <div class="flex-1 max-w-xl lg:max-w-2xl text-left">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold bg-white/20 backdrop-blur-md text-orange-100 border border-white/20 mb-2 sm:mb-3 shadow-sm">
+                            <i class="bi bi-tools"></i>
+                            <span>Panel Petugas Laboran</span>
+                        </span>
+                        <h2 class="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight mb-2 leading-tight">
+                            Verifikasi Kelaikan Fisik &amp; Stok Alat
+                        </h2>
+                        <p class="text-xs sm:text-sm text-orange-100/90 leading-relaxed">
+                            Pengajuan peminjaman barang yang telah disetujui Kaprodi memerlukan pengecekan fisik dan ketersediaan stok oleh Laboran. Klik <strong>Setujui &amp; Teruskan</strong> agar pengajuan dapat diproses untuk persetujuan resmi Kepala Urusan (Kaur).
+                        </p>
+                    </div>
+
+                    <div class="hidden md:flex shrink-0 items-center justify-center">
+                        <div class="relative group">
+                            <div class="absolute -inset-1 bg-gradient-to-r from-amber-300/40 to-orange-400/40 rounded-3xl blur-md opacity-70 group-hover:opacity-100 transition duration-300"></div>
+                            <img src="<?= base_url('assets/images/laboran_banner_3d.jpg') ?>" 
+                                 alt="3D Asset Verification & Inventory Illustration" 
+                                 class="relative w-56 sm:w-64 md:w-72 lg:w-80 h-auto rounded-2xl sm:rounded-3xl shadow-2xl border-2 border-white/40 object-cover transform group-hover:scale-[1.02] transition-transform duration-300">
+                        </div>
+                    </div>
                 </div>
-                <div class="absolute -right-6 -bottom-6 w-36 sm:w-44 h-36 sm:h-44 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
+
+                <!-- Ambient Lighting Effects -->
+                <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-amber-400/25 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute top-0 right-1/3 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
             </div>
 
             <!-- Tabs Navigation (Native-like horizontal swipe pill tabs) -->
-            <div class="flex items-center gap-2 border-b border-slate-200/80 pb-3 mb-5 sm:mb-6 overflow-x-auto no-scrollbar -mx-3.5 px-3.5 sm:mx-0 sm:px-0">
+            <div id="filterPillsWrap" class="flex items-center gap-2 border-b border-slate-200/80 pb-3 mb-2 sm:mb-6 overflow-x-auto no-scrollbar -mx-3.5 px-3.5 sm:mx-0 sm:px-0 scroll-smooth">
                 <a href="<?= site_url('peminjamanbarang?tab=pending') ?>"
-                   class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0 transition-all <?= $active_tab === 'pending' ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50' ?>">
+                   class="filter-tab-pill px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0 transition-all <?= $active_tab === 'pending' ? 'active-tab bg-orange-600 text-white shadow-md shadow-orange-600/20' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50' ?>">
                     <i class="bi bi-hourglass-split"></i>
                     <span>Perlu Verifikasi (Pending)</span>
                     <?php if ($pending_count > 0): ?>
@@ -152,17 +222,20 @@ $peminjaman_list = $peminjaman_list ?? [];
                 </a>
 
                 <a href="<?= site_url('peminjamanbarang?tab=approved') ?>"
-                   class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0 transition-all <?= $active_tab === 'approved' ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50' ?>">
+                   class="filter-tab-pill px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0 transition-all <?= $active_tab === 'approved' ? 'active-tab bg-orange-600 text-white shadow-md shadow-orange-600/20' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50' ?>">
                     <i class="bi bi-check2-circle"></i>
                     <span>Disetujui / Berjalan</span>
                 </a>
 
                 <a href="<?= site_url('peminjamanbarang?tab=history') ?>"
-                   class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0 transition-all <?= $active_tab === 'history' ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50' ?>">
+                   class="filter-tab-pill px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0 transition-all <?= $active_tab === 'history' ? 'active-tab bg-orange-600 text-white shadow-md shadow-orange-600/20' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50' ?>">
                     <i class="bi bi-clock-history"></i>
                     <span>Riwayat Selesai &amp; Ditolak</span>
                 </a>
             </div>
+
+            <!-- Mobile Filter Pills Dots Indicator -->
+            <div class="filter-pills-dots" id="filterPillsDots"></div>
 
             <!-- Data List -->
             <?php if (empty($peminjaman_list)): ?>
@@ -264,18 +337,6 @@ $peminjaman_list = $peminjaman_list ?? [];
                                             <i class="bi bi-x-circle"></i>
                                             <span>Tolak</span>
                                         </button>
-                                    <?php elseif ($is_ready_pickup): ?>
-                                        <a href="<?= site_url('peminjamanbarang/serah_terima/' . rawurlencode($group_id)) ?>"
-                                           class="col-span-2 sm:flex-1 lg:w-full justify-center px-4 py-2 sm:py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 shadow-md shadow-blue-600/20 transition-all">
-                                            <i class="bi bi-box-seam-fill"></i>
-                                            <span>Serah Terima Fisik</span>
-                                        </a>
-                                    <?php elseif ($is_active_loan): ?>
-                                        <a href="<?= site_url('peminjamanbarang/serah_terima/' . rawurlencode($group_id)) ?>"
-                                           class="col-span-2 sm:flex-1 lg:w-full justify-center px-4 py-2 sm:py-2.5 rounded-xl bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 shadow-md shadow-slate-700/20 transition-all">
-                                            <i class="bi bi-arrow-return-left"></i>
-                                            <span>Validasi Pengembalian</span>
-                                        </a>
                                     <?php endif; ?>
 
                                     <button type="button"
@@ -511,6 +572,81 @@ $peminjaman_list = $peminjaman_list ?? [];
         function closeDetailModal() {
             document.getElementById('modalDetail').classList.add('hidden');
         }
+
+        // ==========================================
+        // MOBILE FILTER PILLS DOTS LOGIC
+        // ==========================================
+        function initFilterPillsDots() {
+            const wrap = document.getElementById('filterPillsWrap');
+            const dotsContainer = document.getElementById('filterPillsDots');
+            if (!wrap || !dotsContainer) return;
+
+            const pills = Array.from(wrap.querySelectorAll('.filter-tab-pill'));
+            if (pills.length <= 1) return;
+
+            dotsContainer.innerHTML = '';
+            pills.forEach((pill, idx) => {
+                const dot = document.createElement('span');
+                dot.className = 'pill-dot' + (idx === 0 ? ' active' : '');
+                dot.setAttribute('title', pill.textContent.trim());
+                dot.addEventListener('click', () => {
+                    pill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                });
+                dotsContainer.appendChild(dot);
+            });
+
+            const dots = dotsContainer.querySelectorAll('.pill-dot');
+            const updateDots = () => {
+                const maxScroll = wrap.scrollWidth - wrap.clientWidth;
+                if (maxScroll <= 5) {
+                    dotsContainer.style.display = 'none';
+                    return;
+                } else if (window.innerWidth <= 768) {
+                    dotsContainer.style.display = 'flex';
+                }
+
+                const scrollLeft = wrap.scrollLeft;
+                let activeIdx = 0;
+                if (scrollLeft <= 10) {
+                    activeIdx = 0;
+                } else if (scrollLeft >= maxScroll - 10) {
+                    activeIdx = dots.length - 1;
+                } else {
+                    const wrapRect = wrap.getBoundingClientRect();
+                    let minDiff = Infinity;
+                    pills.forEach((pill, i) => {
+                        const pillRect = pill.getBoundingClientRect();
+                        const diff = Math.abs(pillRect.left - wrapRect.left);
+                        if (diff < minDiff) {
+                            minDiff = diff;
+                            activeIdx = i;
+                        }
+                    });
+                }
+
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === activeIdx);
+                });
+            };
+
+            wrap.addEventListener('scroll', updateDots, { passive: true });
+            window.addEventListener('resize', updateDots, { passive: true });
+
+            // If active tab exists, scroll into view on mobile so current tab is seen
+            const activeTab = wrap.querySelector('.active-tab');
+            if (activeTab) {
+                setTimeout(() => {
+                    activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    updateDots();
+                }, 100);
+            } else {
+                updateDots();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initFilterPillsDots();
+        });
     </script>
 </body>
 </html>
