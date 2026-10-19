@@ -372,28 +372,63 @@ class Peminjaman_barang extends CI_Controller {
         $requested_page = $this->input->get('page', true);
         $page = is_scalar($requested_page) ? max(1, (int) $requested_page) : 1;
 
-        $total = 0;
-        $total_pages = 1;
-        $offset = 0;
-        $data['riwayat'] = [];
-
         $idPeminjamVal = $peminjam ? $peminjam->id_peminjam : 0;
-        if ($idPeminjamVal || $id_user) {
-            $total = (int) $this->Peminjaman_barang_model->count_peminjaman_by_peminjam(
-                $idPeminjamVal,
-                $filters
-            );
-            $total_pages = max(1, (int) ceil($total / $per_page));
-            $page = min($page, $total_pages);
-            $offset = ($page - 1) * $per_page;
-            $data['riwayat'] = $this->Peminjaman_barang_model->get_peminjaman_by_peminjam(
-                $idPeminjamVal,
-                $filters,
-                $per_page,
-                $offset
-            );
+        $raw_all = ($idPeminjamVal || $id_user) ? (array)$this->Peminjaman_barang_model->get_peminjaman_by_peminjam($idPeminjamVal, [], 2000, 0) : [];
+        $totalCount = count($raw_all);
+        $pendingCount = 0;
+        $approvedCount = 0;
+        $rejectedCount = 0;
+
+        foreach ($raw_all as $item) {
+            $st = strtolower($item->status ?? '');
+            if (strpos($st, 'tolak') !== false || strpos($st, 'batal') !== false || strpos($st, 'reject') !== false || strpos($st, 'kedaluwarsa') !== false) {
+                $rejectedCount++;
+            } elseif (strpos($st, 'disetujui') !== false || strpos($st, 'selesai') !== false || strpos($st, 'dikembalikan') !== false || strpos($st, 'dipinjam') !== false) {
+                $approvedCount++;
+            } else {
+                $pendingCount++;
+            }
         }
 
+        $tab = strtolower(trim((string)$this->input->get('tab', true)));
+        if (!empty($tab) && $tab !== 'all') {
+            if ($tab === 'menunggu') {
+                $filters['criteria'][] = ['field' => 'status', 'value' => 'Menunggu'];
+            } elseif ($tab === 'disetujui') {
+                $filters['criteria'][] = ['field' => 'status', 'value' => 'Disetujui'];
+            } elseif ($tab === 'ditolak') {
+                $filters['criteria'][] = ['field' => 'status', 'value' => 'Ditolak'];
+            }
+        }
+
+        $data['riwayat'] = $raw_all;
+        $data['total'] = $totalCount;
+
+        $role_id = (int)$this->session->userdata('role_id');
+        $backUrl = site_url('dashboard');
+        $backLabel = 'Dashboard';
+        if ($role_id === 3) {
+            $backUrl = site_url('dosen/bimbingan');
+            $backLabel = 'Portal Dosen';
+        } elseif ($role_id === 4) {
+            $backUrl = site_url('mahasiswa');
+            $backLabel = 'Portal Mahasiswa';
+        } elseif ($role_id === 6) {
+            $backUrl = site_url('koordinatorta');
+            $backLabel = 'Portal Koordinator';
+        }
+
+        $total = $totalCount;
+        $total_pages = $per_page > 0 ? (int) ceil($total / $per_page) : 1;
+
+        $data['title'] = 'Riwayat Peminjaman Barang & Alat - IFIK';
+        $data['back_url'] = $backUrl;
+        $data['back_label'] = $backLabel;
+        $data['total_pengajuan'] = $totalCount;
+        $data['total_menunggu'] = $pendingCount;
+        $data['total_disetujui'] = $approvedCount;
+        $data['total_ditolak'] = $rejectedCount;
+        $data['current_tab'] = $tab ?: 'all';
         $data['search'] = $filter_rows[0]['value'] ?? $search_q;
         $data['cat'] = $filter_rows[0]['field'] ?? ($search_cat ?: 'all');
         $data['filter_rows'] = $filter_rows;
