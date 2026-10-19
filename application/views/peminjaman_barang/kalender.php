@@ -2355,9 +2355,8 @@
                 ['heading' => 'Riwayat Tiket Saya', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
 
                 ['category' => 'Fasilitas & Jadwal', 'has_divider' => true],
-                ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
-                ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
-                ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+                ['heading' => 'Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
+                ['heading' => 'Peminjaman Barang', 'href' => site_url('peminjaman_barang/riwayat'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
                 ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
             ];
             break;
@@ -2378,12 +2377,8 @@
 
                 ['category' => 'Fasilitas & Jadwal', 'has_divider' => true],
                 ['heading' => 'Approval Peminjaman Wadek', 'href' => site_url('wadek/peminjaman'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
-                ['heading' => 'Ajukan Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
-                ['heading' => 'Riwayat Booking Saya', 'href' => site_url('riwayat-booking'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
-                ['heading' => 'Katalog & Pengajuan Alat', 'href' => site_url('peminjaman_barang'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
-                ['heading' => 'Kalender Jadwal Barang', 'href' => site_url('peminjaman_barang/kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
-                ['heading' => 'Riwayat Peminjaman Alat', 'href' => site_url('peminjaman_barang/riwayat'), 'icon_3d' => 'assets/images/icons_3d/riwayat_booking.png'],
-                ['heading' => 'Kalender Jadwal', 'href' => site_url('kalender'), 'icon_3d' => 'assets/images/icons_3d/kalender.png'],
+                ['heading' => 'Peminjaman Ruangan', 'href' => site_url('ajukan-booking'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
+                ['heading' => 'Peminjaman Barang', 'href' => site_url('peminjaman_barang/riwayat'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
                 ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
             ];
             break;

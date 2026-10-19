@@ -486,9 +486,13 @@ if (!function_exists('riwayat_loan_status_tone')) {
 
             <!-- Profile & Quick Action -->
             <div class="d-flex align-items-center gap-2 ms-auto">
-                <a href="<?= site_url('peminjaman_barang'); ?>" class="btn-ifik-action" title="Kembali ke Katalog Barang">
-                    <i class="bi bi-box-seam"></i>
-                    <span>Katalog Alat</span>
+                <a href="<?= site_url('peminjaman_barang/kalender'); ?>" class="btn-ifik-action" title="Lihat Kalender Jadwal Peminjaman Barang">
+                    <i class="bi bi-calendar3"></i>
+                    <span>Kalender Jadwal</span>
+                </a>
+                <a href="<?= site_url('peminjaman_barang'); ?>" class="btn btn-sm text-white d-inline-flex align-items-center gap-1.5 px-3 py-2 rounded-3 fw-bold shadow-xs" style="background: #ea5b1a; font-size: 12px; transition: all 0.2s ease;" title="Ajukan Peminjaman Barang Baru">
+                    <i class="bi bi-plus-circle-fill"></i>
+                    <span>+ Ajukan Peminjaman</span>
                 </a>
                 
                 <div class="dropdown">
