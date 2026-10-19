@@ -184,7 +184,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
 
                 ['category' => 'Fasilitas & Peminjaman', 'has_divider' => true],
                 ['heading' => 'Peminjaman Ruangan', 'href' => site_url('peminjaman-ruangan'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
-                ['heading' => 'Peminjaman Barang', 'href' => site_url('peminjaman_barang/riwayat'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
+                ['heading' => 'Peminjaman Barang', 'href' => site_url('peminjaman-barang'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
                 ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
             ];
             break;
@@ -207,7 +207,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
 
             // Menu fasilitas yang berlaku untuk semua Dosen (bisa minjam) - disederhanakan jadi 2 menu utama
             $fasilitasItems[] = ['heading' => 'Peminjaman Ruangan', 'href' => site_url('peminjaman-ruangan'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'];
-            $fasilitasItems[] = ['heading' => 'Peminjaman Barang', 'href' => site_url('peminjaman_barang/riwayat'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'];
+            $fasilitasItems[] = ['heading' => 'Peminjaman Barang', 'href' => site_url('peminjaman-barang'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'];
             $fasilitasItems[] = ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'];
 
             $defaultNavItems = array_merge([
@@ -302,7 +302,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['category' => 'Fasilitas & Peminjaman', 'has_divider' => true],
                 ['heading' => 'Approval Peminjaman Wadek', 'href' => site_url('wadek/peminjaman'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
                 ['heading' => 'Peminjaman Ruangan', 'href' => site_url('peminjaman-ruangan'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
-                ['heading' => 'Peminjaman Barang', 'href' => site_url('peminjaman_barang/riwayat'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
+                ['heading' => 'Peminjaman Barang', 'href' => site_url('peminjaman-barang'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
                 ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
             ];
             break;
@@ -316,7 +316,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
 
                 ['category' => 'Fasilitas & Peminjaman', 'has_divider' => true],
                 ['heading' => 'Peminjaman Ruangan', 'href' => site_url('peminjaman-ruangan'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
-                ['heading' => 'Peminjaman Barang', 'href' => site_url('peminjaman_barang/riwayat'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
+                ['heading' => 'Peminjaman Barang', 'href' => site_url('peminjaman-barang'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
 
                 ['category' => 'Layanan Ticketing', 'has_divider' => true],
                 ['heading' => 'Buat Tiket Kendala', 'href' => site_url('mahasiswa/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
@@ -379,7 +379,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
 
                 ['category' => 'Fasilitas & Peminjaman', 'has_divider' => true],
                 ['heading' => 'Peminjaman Ruangan', 'href' => site_url('peminjaman-ruangan'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
-                ['heading' => 'Peminjaman Barang', 'href' => site_url('peminjaman_barang/riwayat'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
+                ['heading' => 'Peminjaman Barang', 'href' => site_url('peminjaman-barang'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
 
                 ['category' => 'Akun', 'has_divider' => true],
                 ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
@@ -628,6 +628,8 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                             } elseif ($cleanHrefUri === 'mahasiswa/bimbingan' && strpos($curr_uri, 'bimbingan') !== false) {
                                 $isCurrent = true;
                             } elseif ($cleanHrefUri === 'peminjaman-ruangan' && in_array($curr_uri, ['peminjaman-ruangan', 'peminjaman_ruangan', 'riwayat-booking', 'ajukan-booking', 'kalender', 'dashboard/riwayat', 'dashboard/ajukan', 'dashboard/kalender'])) {
+                                $isCurrent = true;
+                            } elseif ($cleanHrefUri === 'peminjaman-barang' && in_array($curr_uri, ['peminjaman-barang', 'peminjaman_barang', 'peminjaman_barang/riwayat', 'peminjaman-barang/riwayat', 'peminjaman_barang/kalender', 'peminjaman-barang/kalender', 'peminjaman_barang/katalog', 'peminjaman-barang/katalog'])) {
                                 $isCurrent = true;
                             }
                         }
