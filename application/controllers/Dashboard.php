@@ -414,7 +414,7 @@ class Dashboard extends CI_Controller {
             );
         }
 
-        $data['title'] = 'Riwayat Peminjaman Ruangan Saya - IFIK';
+        $data['title'] = 'Riwayat Peminjaman Ruangan & Lab - IFIK';
         $data['peminjaman'] = $peminjaman;
         $data['riwayat'] = $peminjaman;
         $data['total_pengajuan'] = $totalCount;
