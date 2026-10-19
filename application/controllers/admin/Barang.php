@@ -22,8 +22,9 @@ class Barang extends CI_Controller {
         // Proteksi Role: Admin (1), Kaur/Ka Lab (2), Laboran (21), Super Admin (22)
         $role_id = (int) $this->session->userdata('role_id');
         $role_str = strtolower((string) $this->session->userdata('role'));
-        if (!in_array($role_id, [1, 2, 21, 22], true) && !in_array($role_str, ['admin', 'laboran', 'kaur'], true)) {
-            $this->session->set_flashdata('error', 'Akses ditolak! Halaman ini khusus Admin / Laboran.');
+        $jabatan = strtolower((string) $this->session->userdata('jabatan'));
+        if (!in_array($role_id, [1, 2, 21, 22], true) && !in_array($role_str, ['admin', 'laboran', 'kaur'], true) && $jabatan !== 'kaur') {
+            $this->session->set_flashdata('error', 'Akses ditolak! Halaman ini khusus Admin / Laboran / Ka. Ur.');
             redirect('dashboard');
         }
 
