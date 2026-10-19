@@ -24,9 +24,10 @@ $role_labels = [
     'u1' => 'Penguji 1',
     'u2' => 'Penguji 2',
 ];
-$role_label       = $role_labels[$role];
-$dashboard_title  = $is_pembimbing ? 'Dashboard Bimbingan Dosen' : 'Dashboard Dosen Penguji';
-$default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
+$role_label         = $role_labels[$role];
+$dashboard_title    = $title ?? ($is_pembimbing ? 'Dashboard Bimbingan Dosen' : 'Dashboard Dosen Penguji');
+$default_tahap      = isset($default_tahap) ? $default_tahap : ($is_pembimbing ? 'Preview 1' : 'Preview 2');
+$default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -551,20 +552,25 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
 
                 <div class="w-full xl:w-[520px] bg-black/25 backdrop-blur-xl rounded-3xl p-5 border border-white/20 shadow-2xl">
                     <p class="text-[10px] font-black uppercase tracking-widest text-orange-200 mb-3 text-center">Pilih Peran Anda</p>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                        <a href="?role=p1" class="role-switch-btn <?= $is_p1 ? 'active' : 'inactive' ?>">
+                    <?php
+                        $cur_tahap_slug = strtolower(str_replace(' ', '', $default_tahap));
+                        $p_slug = $cur_tahap_slug;
+                        $u_slug = ($cur_tahap_slug === 'preview1') ? 'preview2' : $cur_tahap_slug;
+                    ?>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5" id="roleSwitcherContainer">
+                        <a href="?role=p1&tahap=<?= $p_slug ?>" data-role="p1" class="role-switch-btn <?= $is_p1 ? 'active' : 'inactive' ?>">
                             <i class="bi bi-person-fill-check"></i>
                             <span>Pembimbing 1</span>
                         </a>
-                        <a href="?role=p2" class="role-switch-btn <?= $is_p2 ? 'active' : 'inactive' ?>">
+                        <a href="?role=p2&tahap=<?= $p_slug ?>" data-role="p2" class="role-switch-btn <?= $is_p2 ? 'active' : 'inactive' ?>">
                             <i class="bi bi-person-fill"></i>
                             <span>Pembimbing 2</span>
                         </a>
-                        <a href="?role=u1" class="role-switch-btn <?= $is_u1 ? 'active' : 'inactive' ?>">
+                        <a href="?role=u1&tahap=<?= $u_slug ?>" data-role="u1" class="role-switch-btn <?= $is_u1 ? 'active' : 'inactive' ?>">
                             <i class="bi bi-shield-fill-check"></i>
                             <span>Penguji 1</span>
                         </a>
-                        <a href="?role=u2" class="role-switch-btn <?= $is_u2 ? 'active' : 'inactive' ?>">
+                        <a href="?role=u2&tahap=<?= $u_slug ?>" data-role="u2" class="role-switch-btn <?= $is_u2 ? 'active' : 'inactive' ?>">
                             <i class="bi bi-shield-fill"></i>
                             <span>Penguji 2</span>
                         </a>
@@ -766,7 +772,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                                     <th id="thBapCol" class="py-4 px-4 text-center" style="display: none;">BAP</th>
                                     <th class="py-4 px-4 text-center">Aksi</th>
                                     <th class="py-4 px-4 pr-6 text-center">
-                                        <i class="bi bi-mortarboard-fill text-purple-500 mr-1"></i>Lulus Tahap / Nilai
+                                        <i class="bi bi-arrow-right-circle-fill text-purple-500 mr-1"></i>Lanjut Tahap Berikutnya
                                     </th>
                                 </tr>
                             </thead>
@@ -1430,12 +1436,42 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             'sidang':   { cardId: 'stageCard_sidang',   countId: 'stageCount_sidang',   label: 'Tahap Akhir', tahap: 'Sidang' }
         };
 
+        function updateRoleSwitcherHrefs(stageKey) {
+            const key = stageKey ? stageKey.toLowerCase().replace(/\s+/g, '') : 'preview1';
+            document.querySelectorAll('#roleSwitcherContainer .role-switch-btn').forEach(btn => {
+                const targetRole = btn.getAttribute('data-role');
+                if (!targetRole) return;
+                const isTargetPenguji = (targetRole === 'u1' || targetRole === 'u2');
+                const finalTahap = (isTargetPenguji && key === 'preview1') ? 'preview2' : key;
+                btn.href = `?role=${targetRole}&tahap=${finalTahap}`;
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
-            if (IS_PEMBIMBING) {
-                setTabActive('preview1');
-            } else if (IS_PENGUJI) {
-                setTabActive('preview2');
+            const urlParams = new URLSearchParams(window.location.search);
+            let activeKey = urlParams.get('tahap');
+            if (!activeKey) {
+                activeKey = localStorage.getItem('dosen_active_tahap');
             }
+            if (activeKey) {
+                activeKey = activeKey.toLowerCase().replace(/\s+/g, '');
+                if (IS_PENGUJI && activeKey === 'preview1') activeKey = 'preview2';
+            }
+            if (!activeKey || !STAGE_MAP[activeKey]) {
+                activeKey = '<?= $default_tahap_key ?>';
+                if (IS_PENGUJI && activeKey === 'preview1') activeKey = 'preview2';
+            }
+
+            if (STAGE_MAP[activeKey]) {
+                currentTahap = STAGE_MAP[activeKey].tahap;
+                setTabActive(activeKey);
+            } else {
+                setTabActive(IS_PEMBIMBING ? 'preview1' : 'preview2');
+            }
+
+            localStorage.setItem('dosen_active_tahap', activeKey);
+            updateRoleSwitcherHrefs(activeKey);
+
             renderFilterRowsDW();
             fetchBimbinganData();
             startDosenSSE();
@@ -1508,6 +1544,15 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 currentTahap = 'Sidang';
                 setTabActive('sidang');
             }
+
+            localStorage.setItem('dosen_active_tahap', tab);
+            updateRoleSwitcherHrefs(tab);
+            try {
+                const newUrl = new URL(window.location);
+                newUrl.searchParams.set('tahap', tab);
+                window.history.replaceState({}, '', newUrl);
+            } catch(e) {}
+
             currentPage = 1;
             fetchBimbinganData();
         }
@@ -1728,9 +1773,9 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 if (isLulus) {
                     btnLulus = renderTahapBadgeLulus('Preview 2');
                 } else if (c.approved > 0) {
-                    btnLulus = `<button onclick="handleLulusStagePreview2('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> Preview 2</button>`;
+                    btnLulus = `<button onclick="handleLulusStagePreview2('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-arrow-right-circle-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
                 } else {
-                    btnLulus = `<button disabled title="Belum ada berkas yang di-ACC" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Preview 2</button>`;
+                    btnLulus = `<button disabled title="Belum ada berkas yang di-ACC" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
                 }
 
                 return `<div class="flex flex-col gap-1.5 items-center max-w-[170px] mx-auto">${btnLulus}</div>`;
@@ -1752,12 +1797,12 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                     const alasanLock = !mhs.has_persyaratan_sidang 
                         ? 'Mahasiswa belum mengunggah berkas Persyaratan Sidang'
                         : 'Pembimbing 1 belum memberikan Rekomendasi (Sidang / Non-Sidang)';
-                    btnLulus = `<button disabled title="Terkunci: ${alasanLock}" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Preview 3</button>`;
+                    btnLulus = `<button disabled title="Terkunci: ${alasanLock}" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
                 } else {
-                    btnLulus = `<button onclick="handleLulusStage('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> ${currentTahap}</button>`;
+                    btnLulus = `<button onclick="handleLulusStage('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-arrow-right-circle-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
                 }
             } else {
-                btnLulus = `<button disabled title="Belum ada berkas yang di-ACC" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> ${currentTahap}</button>`;
+                btnLulus = `<button disabled title="Belum ada berkas yang di-ACC" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
             }
 
             // Tombol downgrade telah dipindahkan secara eksklusif ke akun Koordinator TA
@@ -1934,7 +1979,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                             </td>
                         ` : ''}
                         <td class="aksi-cell py-4 px-4 text-center">${btnHtml}</td>
-                        <td data-label="Lulus Tahap / Nilai" class="py-4 px-4 text-center">${lulusTahapHtml}</td>
+                        <td data-label="Lanjut Tahap Berikutnya" class="py-4 px-4 text-center">${lulusTahapHtml}</td>
                     </tr>
                 `;
             });

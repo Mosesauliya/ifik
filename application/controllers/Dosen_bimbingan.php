@@ -770,12 +770,35 @@ class Dosen_bimbingan extends CI_Controller {
             }
         }
 
+        $tahap_input = $this->input->get('tahap', TRUE);
+        $tahap_map = [
+            'preview1'  => 'Preview 1',
+            'preview2'  => 'Preview 2',
+            'preview3'  => 'Preview 3',
+            'sidang'    => 'Sidang',
+            'Preview 1' => 'Preview 1',
+            'Preview 2' => 'Preview 2',
+            'Preview 3' => 'Preview 3',
+            'Sidang'    => 'Sidang',
+        ];
+        $is_penguji = in_array($role, ['u1', 'u2'], true);
+        if ($is_penguji) {
+            $default_tahap = (isset($tahap_map[$tahap_input]) && $tahap_map[$tahap_input] !== 'Preview 1')
+                ? $tahap_map[$tahap_input]
+                : 'Preview 2';
+        } else {
+            $default_tahap = isset($tahap_map[$tahap_input])
+                ? $tahap_map[$tahap_input]
+                : 'Preview 1';
+        }
+
         $data = [
-            'title'        => $is_pembimbing ? 'Dashboard Bimbingan Dosen' : 'Dashboard Dosen Penguji',
-            'role'         => $role,
-            'posisi'       => $display_posisi,
-            'model_posisi' => $model_posisi,
-            'tab_counts'   => $tab_counts,
+            'title'         => $is_pembimbing ? 'Dashboard Bimbingan Dosen' : 'Dashboard Dosen Penguji',
+            'role'          => $role,
+            'posisi'        => $display_posisi,
+            'model_posisi'  => $model_posisi,
+            'tab_counts'    => $tab_counts,
+            'default_tahap' => $default_tahap,
         ];
 
         $this->load->view('mahasiswa/dosen_bimbingan', $data);
