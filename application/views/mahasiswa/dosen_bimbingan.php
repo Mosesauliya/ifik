@@ -24,9 +24,10 @@ $role_labels = [
     'u1' => 'Penguji 1',
     'u2' => 'Penguji 2',
 ];
-$role_label       = $role_labels[$role];
-$dashboard_title  = $is_pembimbing ? 'Dashboard Bimbingan Dosen' : 'Dashboard Dosen Penguji';
-$default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
+$role_label         = $role_labels[$role];
+$dashboard_title    = $title ?? ($is_pembimbing ? 'Dashboard Bimbingan Dosen' : 'Dashboard Dosen Penguji');
+$default_tahap      = isset($default_tahap) ? $default_tahap : ($is_pembimbing ? 'Preview 1' : 'Preview 2');
+$default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -551,20 +552,25 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
 
                 <div class="w-full xl:w-[520px] bg-black/25 backdrop-blur-xl rounded-3xl p-5 border border-white/20 shadow-2xl">
                     <p class="text-[10px] font-black uppercase tracking-widest text-orange-200 mb-3 text-center">Pilih Peran Anda</p>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                        <a href="?role=p1" class="role-switch-btn <?= $is_p1 ? 'active' : 'inactive' ?>">
+                    <?php
+                        $cur_tahap_slug = strtolower(str_replace(' ', '', $default_tahap));
+                        $p_slug = $cur_tahap_slug;
+                        $u_slug = ($cur_tahap_slug === 'preview1') ? 'preview2' : $cur_tahap_slug;
+                    ?>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5" id="roleSwitcherContainer">
+                        <a href="?role=p1&tahap=<?= $p_slug ?>" data-role="p1" class="role-switch-btn <?= $is_p1 ? 'active' : 'inactive' ?>">
                             <i class="bi bi-person-fill-check"></i>
                             <span>Pembimbing 1</span>
                         </a>
-                        <a href="?role=p2" class="role-switch-btn <?= $is_p2 ? 'active' : 'inactive' ?>">
+                        <a href="?role=p2&tahap=<?= $p_slug ?>" data-role="p2" class="role-switch-btn <?= $is_p2 ? 'active' : 'inactive' ?>">
                             <i class="bi bi-person-fill"></i>
                             <span>Pembimbing 2</span>
                         </a>
-                        <a href="?role=u1" class="role-switch-btn <?= $is_u1 ? 'active' : 'inactive' ?>">
+                        <a href="?role=u1&tahap=<?= $u_slug ?>" data-role="u1" class="role-switch-btn <?= $is_u1 ? 'active' : 'inactive' ?>">
                             <i class="bi bi-shield-fill-check"></i>
                             <span>Penguji 1</span>
                         </a>
-                        <a href="?role=u2" class="role-switch-btn <?= $is_u2 ? 'active' : 'inactive' ?>">
+                        <a href="?role=u2&tahap=<?= $u_slug ?>" data-role="u2" class="role-switch-btn <?= $is_u2 ? 'active' : 'inactive' ?>">
                             <i class="bi bi-shield-fill"></i>
                             <span>Penguji 2</span>
                         </a>
@@ -583,48 +589,121 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 </div>
             </div>
 
-            <div class="flex flex-wrap gap-4 border-b border-slate-200 pb-4">
+            <!-- ========================================================
+                 KARTU TAHAP PREVIEW & SIDANG (Interactive Stage Cards)
+                 ======================================================== -->
+            <div class="grid <?= $is_pembimbing ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-3' ?> gap-3.5 sm:gap-4.5 my-2" id="stageCardsContainer">
+                
                 <?php if ($is_pembimbing): ?>
-                    <button onclick="switchDosenTab('preview1')" id="dosenTab1"
-                        class="px-5 py-2.5 rounded-xl font-bold text-sm <?= $is_p1 || $is_p2 ? 'bg-orange-100 text-orange-700 border border-orange-300' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200' ?>">
-                        Preview 1
-                    </button>
+                <!-- CARD PREVIEW 1 -->
+                <div onclick="switchDosenTab('preview1')" id="stageCard_preview1"
+                     class="stage-tab-card group relative p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between <?= ($default_tahap === 'Preview 1') ? 'border-orange-500 bg-gradient-to-br from-orange-50/90 via-white to-amber-50/50 shadow-md shadow-orange-500/10 ring-2 ring-orange-500/20 active-card' : 'border-slate-200/90 bg-white hover:border-orange-300 hover:bg-orange-50/25 hover:shadow-xs' ?>">
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div class="stage-icon-wrap w-11 h-11 rounded-xl flex items-center justify-center text-lg transition-all <?= ($default_tahap === 'Preview 1') ? 'bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm shadow-orange-500/30' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-600' ?>">
+                            <i class="bi bi-journal-text"></i>
+                        </div>
+                        <span class="stage-badge-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all <?= ($default_tahap === 'Preview 1') ? 'bg-orange-500 text-white shadow-xs' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-700' ?>">
+                            <?= ($default_tahap === 'Preview 1') ? '<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Aktif' : 'Tahap 1' ?>
+                        </span>
+                    </div>
+                    <div>
+                        <div class="flex items-baseline gap-1.5 mb-1">
+                            <span id="stageCount_preview1" class="stage-count text-2xl sm:text-3xl font-black transition-colors <?= ($default_tahap === 'Preview 1') ? 'text-orange-600' : 'text-slate-800 group-hover:text-orange-600' ?>">
+                                <?= $tab_counts['Preview 1'] ?? 0 ?>
+                            </span>
+                            <span class="text-xs font-bold text-slate-400">Mahasiswa</span>
+                        </div>
+                        <h4 class="font-extrabold text-sm sm:text-base text-slate-800 tracking-tight group-hover:text-orange-600 transition-colors">
+                            Preview 1
+                        </h4>
+                        <p class="text-[11px] font-medium text-slate-500 mt-0.5 line-clamp-1">
+                            Bimbingan Bab 1–3
+                        </p>
+                    </div>
+                </div>
                 <?php endif; ?>
-                <button onclick="switchDosenTab('preview2')" id="dosenTab2"
-                    class="px-5 py-2.5 rounded-xl font-bold text-sm <?= $is_penguji ? 'bg-orange-100 text-orange-700 border border-orange-300' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200' ?>">
-                    Preview 2
-                </button>
-                <button onclick="switchDosenTab('preview3')" id="dosenTab3"
-                    class="px-5 py-2.5 rounded-xl font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200">
-                    Preview 3
-                </button>
-                <button onclick="switchDosenTab('sidang')" id="dosenTab4"
-                    class="px-5 py-2.5 rounded-xl font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200">
-                    Sidang
-                </button>
-            </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4 mb-2" id="filterCardsContainer">
-                <div onclick="setDosenFilter('all')" id="fCard_all" class="p-3 rounded-xl border border-orange-300 bg-orange-50 cursor-pointer transition text-center shadow-xs">
-                    <div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Semua</div>
-                    <div class="text-xl font-black text-slate-800" id="fCount_all">0</div>
+                <!-- CARD PREVIEW 2 -->
+                <div onclick="switchDosenTab('preview2')" id="stageCard_preview2"
+                     class="stage-tab-card group relative p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between <?= ($default_tahap === 'Preview 2') ? 'border-orange-500 bg-gradient-to-br from-orange-50/90 via-white to-amber-50/50 shadow-md shadow-orange-500/10 ring-2 ring-orange-500/20 active-card' : 'border-slate-200/90 bg-white hover:border-orange-300 hover:bg-orange-50/25 hover:shadow-xs' ?>">
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div class="stage-icon-wrap w-11 h-11 rounded-xl flex items-center justify-center text-lg transition-all <?= ($default_tahap === 'Preview 2') ? 'bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm shadow-orange-500/30' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-600' ?>">
+                            <i class="bi bi-easel2-fill"></i>
+                        </div>
+                        <span class="stage-badge-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all <?= ($default_tahap === 'Preview 2') ? 'bg-orange-500 text-white shadow-xs' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-700' ?>">
+                            <?= ($default_tahap === 'Preview 2') ? '<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Aktif' : 'Tahap 2' ?>
+                        </span>
+                    </div>
+                    <div>
+                        <div class="flex items-baseline gap-1.5 mb-1">
+                            <span id="stageCount_preview2" class="stage-count text-2xl sm:text-3xl font-black transition-colors <?= ($default_tahap === 'Preview 2') ? 'text-orange-600' : 'text-slate-800 group-hover:text-orange-600' ?>">
+                                <?= $tab_counts['Preview 2'] ?? 0 ?>
+                            </span>
+                            <span class="text-xs font-bold text-slate-400">Mahasiswa</span>
+                        </div>
+                        <h4 class="font-extrabold text-sm sm:text-base text-slate-800 tracking-tight group-hover:text-orange-600 transition-colors">
+                            Preview 2
+                        </h4>
+                        <p class="text-[11px] font-medium text-slate-500 mt-0.5 line-clamp-1">
+                            Evaluasi Progres &amp; DE
+                        </p>
+                    </div>
                 </div>
-                <div onclick="setDosenFilter('approved')" id="fCard_approved" class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 cursor-pointer transition text-center">
-                    <div class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Disetujui</div>
-                    <div class="text-xl font-black text-emerald-700" id="fCount_approved">0</div>
+
+                <!-- CARD PREVIEW 3 -->
+                <div onclick="switchDosenTab('preview3')" id="stageCard_preview3"
+                     class="stage-tab-card group relative p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between <?= ($default_tahap === 'Preview 3') ? 'border-orange-500 bg-gradient-to-br from-orange-50/90 via-white to-amber-50/50 shadow-md shadow-orange-500/10 ring-2 ring-orange-500/20 active-card' : 'border-slate-200/90 bg-white hover:border-orange-300 hover:bg-orange-50/25 hover:shadow-xs' ?>">
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div class="stage-icon-wrap w-11 h-11 rounded-xl flex items-center justify-center text-lg transition-all <?= ($default_tahap === 'Preview 3') ? 'bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm shadow-orange-500/30' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-600' ?>">
+                            <i class="bi bi-file-earmark-check-fill"></i>
+                        </div>
+                        <span class="stage-badge-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all <?= ($default_tahap === 'Preview 3') ? 'bg-orange-500 text-white shadow-xs' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-700' ?>">
+                            <?= ($default_tahap === 'Preview 3') ? '<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Aktif' : 'Tahap 3' ?>
+                        </span>
+                    </div>
+                    <div>
+                        <div class="flex items-baseline gap-1.5 mb-1">
+                            <span id="stageCount_preview3" class="stage-count text-2xl sm:text-3xl font-black transition-colors <?= ($default_tahap === 'Preview 3') ? 'text-orange-600' : 'text-slate-800 group-hover:text-orange-600' ?>">
+                                <?= $tab_counts['Preview 3'] ?? 0 ?>
+                            </span>
+                            <span class="text-xs font-bold text-slate-400">Mahasiswa</span>
+                        </div>
+                        <h4 class="font-extrabold text-sm sm:text-base text-slate-800 tracking-tight group-hover:text-orange-600 transition-colors">
+                            Preview 3
+                        </h4>
+                        <p class="text-[11px] font-medium text-slate-500 mt-0.5 line-clamp-1">
+                            Pra-Sidang &amp; Berkas
+                        </p>
+                    </div>
                 </div>
-                <div onclick="setDosenFilter('pending')" id="fCard_pending" class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-amber-50 hover:border-amber-200 cursor-pointer transition text-center">
-                    <div class="text-[10px] text-amber-600 font-bold uppercase tracking-wider">Pending</div>
-                    <div class="text-xl font-black text-amber-700" id="fCount_pending">0</div>
+
+                <!-- CARD SIDANG -->
+                <div onclick="switchDosenTab('sidang')" id="stageCard_sidang"
+                     class="stage-tab-card group relative p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between <?= ($default_tahap === 'Sidang') ? 'border-orange-500 bg-gradient-to-br from-orange-50/90 via-white to-amber-50/50 shadow-md shadow-orange-500/10 ring-2 ring-orange-500/20 active-card' : 'border-slate-200/90 bg-white hover:border-orange-300 hover:bg-orange-50/25 hover:shadow-xs' ?>">
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div class="stage-icon-wrap w-11 h-11 rounded-xl flex items-center justify-center text-lg transition-all <?= ($default_tahap === 'Sidang') ? 'bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm shadow-orange-500/30' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-600' ?>">
+                            <i class="bi bi-mortarboard-fill"></i>
+                        </div>
+                        <span class="stage-badge-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all <?= ($default_tahap === 'Sidang') ? 'bg-orange-500 text-white shadow-xs' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-700' ?>">
+                            <?= ($default_tahap === 'Sidang') ? '<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Aktif' : 'Tahap Akhir' ?>
+                        </span>
+                    </div>
+                    <div>
+                        <div class="flex items-baseline gap-1.5 mb-1">
+                            <span id="stageCount_sidang" class="stage-count text-2xl sm:text-3xl font-black transition-colors <?= ($default_tahap === 'Sidang') ? 'text-orange-600' : 'text-slate-800 group-hover:text-orange-600' ?>">
+                                <?= $tab_counts['Sidang'] ?? 0 ?>
+                            </span>
+                            <span class="text-xs font-bold text-slate-400">Mahasiswa</span>
+                        </div>
+                        <h4 class="font-extrabold text-sm sm:text-base text-slate-800 tracking-tight group-hover:text-orange-600 transition-colors">
+                            Sidang TA
+                        </h4>
+                        <p class="text-[11px] font-medium text-slate-500 mt-0.5 line-clamp-1">
+                            Sidang Akhir &amp; Nilai
+                        </p>
+                    </div>
                 </div>
-                <div onclick="setDosenFilter('revision')" id="fCard_revision" class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-rose-50 hover:border-rose-200 cursor-pointer transition text-center">
-                    <div class="text-[10px] text-rose-600 font-bold uppercase tracking-wider">Revisi</div>
-                    <div class="text-xl font-black text-rose-700" id="fCount_revision">0</div>
-                </div>
-                <div onclick="setDosenFilter('empty')" id="fCard_empty" class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 cursor-pointer transition text-center">
-                    <div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Kosong</div>
-                    <div class="text-xl font-black text-slate-700" id="fCount_empty">0</div>
-                </div>
+
             </div>
 
             <div id="dosenTableContainer" class="space-y-4">
@@ -693,7 +772,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                                     <th id="thBapCol" class="py-4 px-4 text-center" style="display: none;">BAP</th>
                                     <th class="py-4 px-4 text-center">Aksi</th>
                                     <th class="py-4 px-4 pr-6 text-center">
-                                        <i class="bi bi-mortarboard-fill text-purple-500 mr-1"></i>Lulus Tahap / Nilai
+                                        <i class="bi bi-arrow-right-circle-fill text-purple-500 mr-1"></i>Lanjut Tahap Berikutnya
                                     </th>
                                 </tr>
                             </thead>
@@ -1348,29 +1427,103 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         }
 
         // ============================================================
-        // INIT
+        // INIT & STAGE TABS
         // ============================================================
+        const STAGE_MAP = {
+            'preview1': { cardId: 'stageCard_preview1', countId: 'stageCount_preview1', label: 'Tahap 1', tahap: 'Preview 1' },
+            'preview2': { cardId: 'stageCard_preview2', countId: 'stageCount_preview2', label: 'Tahap 2', tahap: 'Preview 2' },
+            'preview3': { cardId: 'stageCard_preview3', countId: 'stageCount_preview3', label: 'Tahap 3', tahap: 'Preview 3' },
+            'sidang':   { cardId: 'stageCard_sidang',   countId: 'stageCount_sidang',   label: 'Tahap Akhir', tahap: 'Sidang' }
+        };
+
+        function updateRoleSwitcherHrefs(stageKey) {
+            const key = stageKey ? stageKey.toLowerCase().replace(/\s+/g, '') : 'preview1';
+            document.querySelectorAll('#roleSwitcherContainer .role-switch-btn').forEach(btn => {
+                const targetRole = btn.getAttribute('data-role');
+                if (!targetRole) return;
+                const isTargetPenguji = (targetRole === 'u1' || targetRole === 'u2');
+                const finalTahap = (isTargetPenguji && key === 'preview1') ? 'preview2' : key;
+                btn.href = `?role=${targetRole}&tahap=${finalTahap}`;
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
-            if (IS_PEMBIMBING) {
-                if (document.getElementById('dosenTab1')) setTabActive('dosenTab1');
-            } else if (IS_PENGUJI) {
-                setTabActive('dosenTab2');
+            const urlParams = new URLSearchParams(window.location.search);
+            let activeKey = urlParams.get('tahap');
+            if (!activeKey) {
+                activeKey = localStorage.getItem('dosen_active_tahap');
             }
+            if (activeKey) {
+                activeKey = activeKey.toLowerCase().replace(/\s+/g, '');
+                if (IS_PENGUJI && activeKey === 'preview1') activeKey = 'preview2';
+            }
+            if (!activeKey || !STAGE_MAP[activeKey]) {
+                activeKey = '<?= $default_tahap_key ?>';
+                if (IS_PENGUJI && activeKey === 'preview1') activeKey = 'preview2';
+            }
+
+            if (STAGE_MAP[activeKey]) {
+                currentTahap = STAGE_MAP[activeKey].tahap;
+                setTabActive(activeKey);
+            } else {
+                setTabActive(IS_PEMBIMBING ? 'preview1' : 'preview2');
+            }
+
+            localStorage.setItem('dosen_active_tahap', activeKey);
+            updateRoleSwitcherHrefs(activeKey);
+
             renderFilterRowsDW();
             fetchBimbinganData();
             startDosenSSE();
         });
 
-        function setTabActive(id) {
-            const activeCls   = ['bg-orange-100','text-orange-700','border','border-orange-300'];
-            const inactiveCls = ['bg-slate-100','text-slate-600','hover:bg-slate-200','border','border-slate-200'];
-            ['dosenTab1','dosenTab2','dosenTab3','dosenTab4'].forEach(tid => {
-                const el = document.getElementById(tid);
-                if (!el) return;
-                activeCls.forEach(c => el.classList.remove(c));
-                inactiveCls.forEach(c => el.classList.remove(c));
-                if (tid === id) activeCls.forEach(c => el.classList.add(c));
-                else inactiveCls.forEach(c => el.classList.add(c));
+        function setTabActive(stageKey) {
+            const aliasMap = {
+                'dosenTab1': 'preview1',
+                'dosenTab2': 'preview2',
+                'dosenTab3': 'preview3',
+                'dosenTab4': 'sidang',
+                'Preview 1': 'preview1',
+                'Preview 2': 'preview2',
+                'Preview 3': 'preview3',
+                'Sidang':    'sidang'
+            };
+            const activeKey = aliasMap[stageKey] || stageKey;
+
+            Object.entries(STAGE_MAP).forEach(([key, cfg]) => {
+                const card = document.getElementById(cfg.cardId);
+                if (!card) return;
+
+                const isSelected = (key === activeKey);
+                const iconWrap   = card.querySelector('.stage-icon-wrap');
+                const badgePill  = card.querySelector('.stage-badge-pill');
+                const countText  = card.querySelector('.stage-count');
+
+                if (isSelected) {
+                    card.className = 'stage-tab-card group relative p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between border-orange-500 bg-gradient-to-br from-orange-50/90 via-white to-amber-50/50 shadow-md shadow-orange-500/10 ring-2 ring-orange-500/20 active-card';
+                    if (iconWrap) {
+                        iconWrap.className = 'stage-icon-wrap w-11 h-11 rounded-xl flex items-center justify-center text-lg transition-all bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm shadow-orange-500/30';
+                    }
+                    if (badgePill) {
+                        badgePill.className = 'stage-badge-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all bg-orange-500 text-white shadow-xs';
+                        badgePill.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Aktif';
+                    }
+                    if (countText) {
+                        countText.className = 'stage-count text-2xl sm:text-3xl font-black transition-colors text-orange-600';
+                    }
+                } else {
+                    card.className = 'stage-tab-card group relative p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between border-slate-200/90 bg-white hover:border-orange-300 hover:bg-orange-50/25 hover:shadow-xs';
+                    if (iconWrap) {
+                        iconWrap.className = 'stage-icon-wrap w-11 h-11 rounded-xl flex items-center justify-center text-lg transition-all bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-600';
+                    }
+                    if (badgePill) {
+                        badgePill.className = 'stage-badge-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-700';
+                        badgePill.textContent = cfg.label;
+                    }
+                    if (countText) {
+                        countText.className = 'stage-count text-2xl sm:text-3xl font-black transition-colors text-slate-800 group-hover:text-orange-600';
+                    }
+                }
             });
         }
 
@@ -1380,17 +1533,26 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
             if (tab === 'preview1') {
                 if (!IS_PEMBIMBING) return;
                 currentTahap = 'Preview 1';
-                setTabActive('dosenTab1');
+                setTabActive('preview1');
             } else if (tab === 'preview2') {
                 currentTahap = 'Preview 2';
-                setTabActive('dosenTab2');
+                setTabActive('preview2');
             } else if (tab === 'preview3') {
                 currentTahap = 'Preview 3';
-                setTabActive('dosenTab3');
+                setTabActive('preview3');
             } else if (tab === 'sidang') {
                 currentTahap = 'Sidang';
-                setTabActive('dosenTab4');
+                setTabActive('sidang');
             }
+
+            localStorage.setItem('dosen_active_tahap', tab);
+            updateRoleSwitcherHrefs(tab);
+            try {
+                const newUrl = new URL(window.location);
+                newUrl.searchParams.set('tahap', tab);
+                window.history.replaceState({}, '', newUrl);
+            } catch(e) {}
+
             currentPage = 1;
             fetchBimbinganData();
         }
@@ -1419,6 +1581,20 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                             return;
                         }
                         if (res.status) {
+                            if (res.tab_counts) {
+                                const mapCounts = {
+                                    'Preview 1': 'stageCount_preview1',
+                                    'Preview 2': 'stageCount_preview2',
+                                    'Preview 3': 'stageCount_preview3',
+                                    'Sidang':    'stageCount_sidang'
+                                };
+                                for (const [thp, cid] of Object.entries(mapCounts)) {
+                                    const el = document.getElementById(cid);
+                                    if (el && res.tab_counts[thp] !== undefined) {
+                                        el.textContent = res.tab_counts[thp];
+                                    }
+                                }
+                            }
                             bimbinganData = res.data;
                             bimbinganData.sort((a, b) => {
                                 let dateA = a.latest_preview ? new Date(a.latest_preview.created_at).getTime() : 0;
@@ -1448,32 +1624,11 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
         function setDosenFilter(filter) {
             currentDosenFilter = filter;
             currentPage = 1;
-            ['all', 'approved', 'pending', 'revision', 'empty'].forEach(f => {
-                let card = document.getElementById('fCard_' + f);
-                if (!card) return;
-                card.classList.remove('border-orange-300', 'bg-orange-50', 'shadow-xs');
-                if (f === filter) card.classList.add('border-orange-300', 'bg-orange-50', 'shadow-xs');
-                else card.classList.add('border-slate-200', 'bg-slate-50');
-            });
             renderTable();
         }
 
         function updateFilterCounts() {
-            let counts = { all: 0, approved: 0, pending: 0, revision: 0, empty: 0 };
-            bimbinganData.forEach(mhs => {
-                counts.all++;
-                if (!mhs.latest_preview) counts.empty++;
-                else {
-                    let st = mhs.latest_preview.status_pembimbing;
-                    if (st === 'Approved') counts.approved++;
-                    else if (st === 'Revision') counts.revision++;
-                    else counts.pending++;
-                }
-            });
-            for (const [key, val] of Object.entries(counts)) {
-                const el = document.getElementById('fCount_' + key);
-                if (el) el.textContent = val;
-            }
+            // Function maintained for compatibility
         }
 
         // ============================================================
@@ -1618,9 +1773,9 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                 if (isLulus) {
                     btnLulus = renderTahapBadgeLulus('Preview 2');
                 } else if (c.approved > 0) {
-                    btnLulus = `<button onclick="handleLulusStagePreview2('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> Preview 2</button>`;
+                    btnLulus = `<button onclick="handleLulusStagePreview2('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-arrow-right-circle-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
                 } else {
-                    btnLulus = `<button disabled title="Belum ada berkas yang di-ACC" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Preview 2</button>`;
+                    btnLulus = `<button disabled title="Belum ada berkas yang di-ACC" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
                 }
 
                 return `<div class="flex flex-col gap-1.5 items-center max-w-[170px] mx-auto">${btnLulus}</div>`;
@@ -1642,12 +1797,12 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                     const alasanLock = !mhs.has_persyaratan_sidang 
                         ? 'Mahasiswa belum mengunggah berkas Persyaratan Sidang'
                         : 'Pembimbing 1 belum memberikan Rekomendasi (Sidang / Non-Sidang)';
-                    btnLulus = `<button disabled title="Terkunci: ${alasanLock}" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Preview 3</button>`;
+                    btnLulus = `<button disabled title="Terkunci: ${alasanLock}" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
                 } else {
-                    btnLulus = `<button onclick="handleLulusStage('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> ${currentTahap}</button>`;
+                    btnLulus = `<button onclick="handleLulusStage('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-arrow-right-circle-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
                 }
             } else {
-                btnLulus = `<button disabled title="Belum ada berkas yang di-ACC" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> ${currentTahap}</button>`;
+                btnLulus = `<button disabled title="Belum ada berkas yang di-ACC" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
             }
 
             // Tombol downgrade telah dipindahkan secara eksklusif ke akun Koordinator TA
@@ -1824,7 +1979,7 @@ $default_tahap    = $is_pembimbing ? 'Preview 1' : 'Preview 2';
                             </td>
                         ` : ''}
                         <td class="aksi-cell py-4 px-4 text-center">${btnHtml}</td>
-                        <td data-label="Lulus Tahap / Nilai" class="py-4 px-4 text-center">${lulusTahapHtml}</td>
+                        <td data-label="Lanjut Tahap Berikutnya" class="py-4 px-4 text-center">${lulusTahapHtml}</td>
                     </tr>
                 `;
             });

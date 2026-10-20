@@ -943,8 +943,9 @@ class Mahasiswa_model extends CI_Model {
             }
         }
 
-        $this->db->select("
+        $selectCols = "
             COALESCE(u.nim, g.id_mhs)   AS nim,
+            g.id                         AS id_guidance,
             g.judul_1                    AS judul,
             g.peminatan                  AS konsentrasi_dkv,
             COALESCE(u.name, m.nama_depan, g.id_mhs) AS nama_mahasiswa,
@@ -963,7 +964,13 @@ class Mahasiswa_model extends CI_Model {
             g.link_presentasi            AS de_link,
             g.komentar_kelayakan2        AS de_catatan,
             g.lulus_preview2
-        ", FALSE);
+        ";
+        if ($this->db->field_exists('status_preview', 'guidance')) $selectCols .= ", g.status_preview";
+        if ($this->db->field_exists('lulus_preview1', 'guidance')) $selectCols .= ", g.lulus_preview1";
+        if ($this->db->field_exists('lulus_preview3', 'guidance')) $selectCols .= ", g.lulus_preview3";
+        if ($this->db->field_exists('lulus_sidang', 'guidance'))   $selectCols .= ", g.lulus_sidang";
+
+        $this->db->select($selectCols, FALSE);
         $this->db->from('thesis_lecturers tl');
         $this->db->join('guidance g',  'g.id = tl.id_guidance', 'inner');
         $this->db->join('user u',      '(u.id = g.id_mhs OR u.nim = g.id_mhs)', 'left');
@@ -987,6 +994,56 @@ class Mahasiswa_model extends CI_Model {
         }
 
         return $this->db->get()->result_array();
+    }
+
+    /**
+     * Menentukan tahap preview aktif/terkini mahasiswa
+     * Return value: 'Preview 1' | 'Preview 2' | 'Preview 3' | 'Sidang'
+     */
+    public function get_student_current_tahap($student_or_nim) {
+        $student = null;
+        if (is_array($student_or_nim)) {
+            $student = $student_or_nim;
+        } elseif (is_string($student_or_nim) && !empty($student_or_nim)) {
+            $g = $this->get_guidance_by_nim($student_or_nim);
+            if ($g) $student = $g;
+        }
+
+        if (!$student) return 'Preview 1';
+
+        $sp_rank = [
+            'preview1' => 1,
+            'preview2' => 2,
+            'preview3' => 3,
+            'sidang'   => 4,
+            'lulus'    => 4,
+            'selesai'  => 4,
+        ];
+        $sp = strtolower(trim($student['status_preview'] ?? ''));
+        $rank = $sp_rank[$sp] ?? 0;
+
+        if (!empty($student['lulus_sidang']) && (string)$student['lulus_sidang'] === '1') {
+            $rank = max($rank, 4);
+        } elseif (!empty($student['lulus_preview3']) && (string)$student['lulus_preview3'] === '1') {
+            $rank = max($rank, 4);
+        } elseif (!empty($student['lulus_preview2']) && (string)$student['lulus_preview2'] === '1') {
+            $rank = max($rank, 3);
+        } elseif (!empty($student['lulus_preview1']) && (string)$student['lulus_preview1'] === '1') {
+            $rank = max($rank, 2);
+        }
+
+        // Jika status_preview dan lulus_* belum ada pada array $student, ambil dari tabel guidance
+        if ($rank === 0 && !empty($student['nim']) && !isset($student['status_preview'])) {
+            $g = $this->get_guidance_by_nim($student['nim']);
+            if ($g) {
+                return $this->get_student_current_tahap($g);
+            }
+        }
+
+        if ($rank <= 1) return 'Preview 1';
+        if ($rank === 2) return 'Preview 2';
+        if ($rank === 3) return 'Preview 3';
+        return 'Sidang';
     }
 
     public function get_preview_by_id($id_preview)

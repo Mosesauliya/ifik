@@ -557,6 +557,10 @@
 
 <!-- ============ Sesi 1: Carousel ============ -->
 <div class="section-wrapper" id="section-carousel">
+    <?php $dekanat_img = $header_settings->dekanat_image ?? 'dekanat2.png'; ?>
+    <!-- Gambar Dekanat Berdiri Sendiri (Tetap Diam di Tempat Saat Slide Bergeser) -->
+    <img src="<?= base_url('assets/images/' . $dekanat_img) ?>" alt="Dekanat" class="dekanat-img-right">
+
     <div class="carousel-container" id="headerCarousel">
         <!-- Slide 1 -->
         <div class="carousel-slide slide-1">
@@ -595,8 +599,6 @@
                     </div>
                 </div>
             </div>
-            <?php $dekanat_img = $header_settings->dekanat_image ?? 'dekanat2.png'; ?>
-            <img src="<?= base_url('assets/images/' . $dekanat_img) ?>" alt="Dekanat" class="dekanat-img-right">
         </div>
 
         <!-- Slide 2 -->
@@ -664,7 +666,6 @@
                             </div>
                         </div>
                     </div>
-                    <img src="<?= base_url('assets/images/' . $dekanat_img) ?>" alt="Dekanat" class="dekanat-img-right">
                 </div>
             <?php endforeach; ?>
         <?php endif; ?>

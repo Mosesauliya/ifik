@@ -755,11 +755,50 @@ class Dosen_bimbingan extends CI_Controller {
         $display_posisi = in_array($role, ['p1', 'u1'], true) ? 1 : 2;
         $is_pembimbing  = in_array($role, ['p1', 'p2'], true);
 
+        $dosen_id = $this->session->userdata('user_id');
+        $students = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, $model_posisi);
+        $tab_counts = [
+            'Preview 1' => 0,
+            'Preview 2' => 0,
+            'Preview 3' => 0,
+            'Sidang'    => 0,
+        ];
+        foreach ($students as $st) {
+            $thp = $this->Mahasiswa_model->get_student_current_tahap($st);
+            if (isset($tab_counts[$thp])) {
+                $tab_counts[$thp]++;
+            }
+        }
+
+        $tahap_input = $this->input->get('tahap', TRUE);
+        $tahap_map = [
+            'preview1'  => 'Preview 1',
+            'preview2'  => 'Preview 2',
+            'preview3'  => 'Preview 3',
+            'sidang'    => 'Sidang',
+            'Preview 1' => 'Preview 1',
+            'Preview 2' => 'Preview 2',
+            'Preview 3' => 'Preview 3',
+            'Sidang'    => 'Sidang',
+        ];
+        $is_penguji = in_array($role, ['u1', 'u2'], true);
+        if ($is_penguji) {
+            $default_tahap = (isset($tahap_map[$tahap_input]) && $tahap_map[$tahap_input] !== 'Preview 1')
+                ? $tahap_map[$tahap_input]
+                : 'Preview 2';
+        } else {
+            $default_tahap = isset($tahap_map[$tahap_input])
+                ? $tahap_map[$tahap_input]
+                : 'Preview 1';
+        }
+
         $data = [
-            'title'        => $is_pembimbing ? 'Dashboard Bimbingan Dosen' : 'Dashboard Dosen Penguji',
-            'role'         => $role,
-            'posisi'       => $display_posisi,
-            'model_posisi' => $model_posisi,
+            'title'         => $is_pembimbing ? 'Dashboard Bimbingan Dosen' : 'Dashboard Dosen Penguji',
+            'role'          => $role,
+            'posisi'        => $display_posisi,
+            'model_posisi'  => $model_posisi,
+            'tab_counts'    => $tab_counts,
+            'default_tahap' => $default_tahap,
         ];
 
         $this->load->view('mahasiswa/dosen_bimbingan', $data);
@@ -789,10 +828,29 @@ class Dosen_bimbingan extends CI_Controller {
 
         $students = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, $posisi);
 
-        $data  = [];
-        $total = count($students);
+        $counts_by_tahap = [
+            'Preview 1' => 0,
+            'Preview 2' => 0,
+            'Preview 3' => 0,
+            'Sidang'    => 0,
+        ];
 
         foreach ($students as $student) {
+            $st_tahap = $this->Mahasiswa_model->get_student_current_tahap($student);
+            if (isset($counts_by_tahap[$st_tahap])) {
+                $counts_by_tahap[$st_tahap]++;
+            }
+        }
+
+        $data = [];
+
+        foreach ($students as $student) {
+            $student_tahap = $this->Mahasiswa_model->get_student_current_tahap($student);
+            // Mahasiswa hanya ditampilkan di tabel yang sesuai dengan preview/tahap aktif mereka
+            if ($student_tahap !== $tahap) {
+                continue;
+            }
+
             $previews = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], $tahap);
             $latest   = !empty($previews) ? $previews[0] : null;
 
@@ -831,6 +889,7 @@ class Dosen_bimbingan extends CI_Controller {
                 'nama_mahasiswa'         => $student['nama_mahasiswa'] ?? $student['nim'],
                 'judul'                  => $student['judul'] ?? '-',
                 'konsentrasi_dkv'        => $student['konsentrasi_dkv'] ?? '',
+                'current_tahap'          => $student_tahap,
                 'latest_preview'         => $latest,
                 'riwayat_previews'       => $previews,
                 'rekomendasi'            => $rekomen,
@@ -854,9 +913,10 @@ class Dosen_bimbingan extends CI_Controller {
         }
 
         echo json_encode([
-            'status' => true,
-            'data'   => $data,
-            'stats'  => ['total' => $total]
+            'status'     => true,
+            'data'       => $data,
+            'stats'      => ['total' => count($data)],
+            'tab_counts' => $counts_by_tahap
         ]);
     }
 
@@ -883,13 +943,15 @@ class Dosen_bimbingan extends CI_Controller {
             $students = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, $posisi);
             $data = [];
             foreach ($students as $student) {
-                $p1 = $this->Mahasiswa_model->get_latest_preview_status($student['nim'], 'Preview 1');
-                $p2 = $this->Mahasiswa_model->get_latest_preview_status($student['nim'], 'Preview 2');
-                $p3 = $this->Mahasiswa_model->get_latest_preview_status($student['nim'], 'Preview 3');
+                $p1  = $this->Mahasiswa_model->get_latest_preview_status($student['nim'], 'Preview 1');
+                $p2  = $this->Mahasiswa_model->get_latest_preview_status($student['nim'], 'Preview 2');
+                $p3  = $this->Mahasiswa_model->get_latest_preview_status($student['nim'], 'Preview 3');
+                $cur = $this->Mahasiswa_model->get_student_current_tahap($student);
                 $data[] = [
                     'nim'            => $student['nim'],
                     'nama_mahasiswa' => $student['nama_mahasiswa'] ?? $student['nim'],
                     'judul'          => $student['judul'] ?? '-',
+                    'current_tahap'  => $cur,
                     'preview1'       => $p1,
                     'preview2'       => $p2,
                     'preview3'       => $p3
