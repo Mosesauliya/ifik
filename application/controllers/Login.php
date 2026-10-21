@@ -524,15 +524,11 @@ class Login extends CI_Controller {
 			return;
 		}
 
-		$emailSent = isset($pending['email_sent']) ? $pending['email_sent'] : true;
-
 		$data = [
 			'name'         => $pending['name'],
 			'masked_email' => $this->_mask_email($pending['email']),
 			'email'        => $pending['email'],
-			'expires_in'   => max(0, (int)$pending['otp_expires'] - time()),
-			'email_sent'   => $emailSent,
-			'dev_otp'      => (!$emailSent) ? $pending['otp_code'] : null
+			'expires_in'   => max(0, (int)$pending['otp_expires'] - time())
 		];
 
 		$this->load->view('auth/otp', $data);
@@ -658,9 +654,8 @@ class Login extends CI_Controller {
 			]));
 		} else {
 			$this->output->set_content_type('application/json')->set_output(json_encode([
-				'status' => 'fallback',
-				'message' => 'Koneksi SMTP server dibatasi ISP',
-				'dev_otp' => $pending['otp_code']
+				'status' => 'error',
+				'message' => 'Gagal mengirim email OTP'
 			]));
 		}
 	}
