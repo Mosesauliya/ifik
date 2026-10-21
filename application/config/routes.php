@@ -266,11 +266,11 @@ $route['superadmin/ajax_save_rekomen_field'] = 'AdminLayanan/ajax_save_rekomen_f
 $route['superadmin/ajax_delete_rekomen_field'] = 'AdminLayanan/ajax_delete_rekomen_field';
 
 // Dinamis Nilai Sidang TA (Master Rubrik di Koordinator TA)
-$route['superadmin/master_rubrik'] = 'KoordinatorTA/index';
-$route['superadmin/master-rubrik'] = 'KoordinatorTA/index';
-$route['superadmin/dinamis_nilai'] = 'KoordinatorTA/index';
-$route['superadmin/dinamis-nilai'] = 'KoordinatorTA/index';
-$route['superadmin/rubrik_penilaian'] = 'KoordinatorTA/index';
+$route['superadmin/master_rubrik'] = 'KoordinatorTA/master_rubrik';
+$route['superadmin/master-rubrik'] = 'KoordinatorTA/master_rubrik';
+$route['superadmin/dinamis_nilai'] = 'KoordinatorTA/master_rubrik';
+$route['superadmin/dinamis-nilai'] = 'KoordinatorTA/master_rubrik';
+$route['superadmin/rubrik_penilaian'] = 'KoordinatorTA/master_rubrik';
 
 $route['koordinatorta/pengaturan_jalur'] = 'KoordinatorTA/pengaturan_jalur';
 $route['koordinator_ta/pengaturan_jalur'] = 'KoordinatorTA/pengaturan_jalur';
