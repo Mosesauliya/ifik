@@ -1637,6 +1637,15 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 setTabActive('sidang');
             }
 
+            const btnRubrikOverview = document.getElementById('btnRubrikSidangOverview');
+            if (btnRubrikOverview) {
+                if (tab === 'sidang') {
+                    btnRubrikOverview.classList.remove('hidden');
+                } else {
+                    btnRubrikOverview.classList.add('hidden');
+                }
+            }
+
             localStorage.setItem('dosen_active_tahap', tab);
             updateRoleSwitcherHrefs(tab);
             try {
@@ -3871,9 +3880,12 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             }
         };
 
-        // Simpan state kriteria tersimpan untuk Edit Nilai
+        // State Riwayat Versi & Penilaian Dinamis
+        let stateMasterRubriksList = [];
         let currentModalSavedDetails = [];
         let currentActiveRubrik = null;
+        let currentSelectedVersionId = null;
+        let isOpeningFromForm = false;
 
         function _penilaianEscapeHtml(unsafe) {
             if (unsafe === null || unsafe === undefined) return '';
@@ -3883,6 +3895,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
         // Sinkronisasi data master rubrik dinamis dari server
         function syncMasterRubrikFromData(masterRubriks) {
             if (!Array.isArray(masterRubriks) || masterRubriks.length === 0) return;
+            stateMasterRubriksList = masterRubriks;
             masterRubriks.forEach(item => {
                 const pKey = (item.prodi || '').trim();
                 const pemKey = (item.peminatan || '').trim();
@@ -3892,7 +3905,8 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                     RUBRIK_PENILAIAN_PRODI[pKey] = {
                         name: pKey,
                         peminatan: {},
-                        _meta: {}
+                        _meta: {},
+                        _history: {}
                     };
                 }
                 if (!RUBRIK_PENILAIAN_PRODI[pKey].peminatan) {
@@ -3900,6 +3914,9 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 }
                 if (!RUBRIK_PENILAIAN_PRODI[pKey]._meta) {
                     RUBRIK_PENILAIAN_PRODI[pKey]._meta = {};
+                }
+                if (!RUBRIK_PENILAIAN_PRODI[pKey]._history) {
+                    RUBRIK_PENILAIAN_PRODI[pKey]._history = {};
                 }
 
                 if (Array.isArray(item.kriteria) && item.kriteria.length > 0) {
@@ -3917,8 +3934,13 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                     judul_rubrik: item.judul_rubrik || `Rubrik Sidang ${pKey} - ${pemKey}`,
                     total_bobot: item.total_bobot || 100,
                     status: item.status || 'published',
-                    tanggal_publish_formatted: item.tanggal_publish_formatted || ''
+                    tanggal_publish_formatted: item.tanggal_publish_formatted || '',
+                    tanggal_berakhir_formatted: item.tanggal_berakhir_formatted || 'Aktif (Sekarang)'
                 };
+
+                RUBRIK_PENILAIAN_PRODI[pKey]._history[pemKey] = Array.isArray(item.history_versions) && item.history_versions.length > 0
+                    ? item.history_versions
+                    : [item];
             });
         }
 
@@ -4065,7 +4087,11 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             document.getElementById('penilaianCatatan').value = (myDetail && myDetail.catatan) ? myDetail.catatan : '';
             document.getElementById('penilaianStatusKelulusan').value = 'Lulus';
 
-            // 4. Render Rubrik Dinamis dengan smart-mapping nilai lama
+            // 4. Setup Riwayat Versi Selector
+            const peminatanVal = document.getElementById('penilaianPeminatanSelect')?.value || data.peminatan;
+            setupPenilaianVersionSelector(prodiKey, peminatanVal);
+
+            // 5. Render Rubrik Dinamis dengan smart-mapping nilai lama
             renderPenilaianRubrik(currentModalSavedDetails, myNilai);
             calculatePenilaianScore();
         }
@@ -4075,14 +4101,81 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             if (modal) modal.classList.remove('active');
         };
 
+        // Inisialisasi dropdown Riwayat Versi untuk Form Penilaian
+        function setupPenilaianVersionSelector(prodiKey, peminatanKey, preferredVersionId = null) {
+            const wrapper = document.getElementById('penilaianRubrikHistoryWrapper');
+            const selector = document.getElementById('penilaianRubrikVersionSelector');
+            if (!wrapper || !selector) return null;
+
+            const prodiData = RUBRIK_PENILAIAN_PRODI[prodiKey] || {};
+            const historyList = (prodiData._history && prodiData._history[peminatanKey])
+                || (stateMasterRubriksList.find(m => m.prodi === prodiKey && m.peminatan === peminatanKey)?.history_versions)
+                || [];
+
+            if (historyList.length > 0) {
+                wrapper.classList.remove('hidden');
+                wrapper.classList.add('flex');
+                let optHtml = '';
+                let defaultSelId = preferredVersionId;
+
+                // Urutkan versi terbaru di paling atas
+                historyList.sort((a, b) => (parseInt(b.versi || 1) - parseInt(a.versi || 1)));
+
+                historyList.forEach((v, idx) => {
+                    const isPub = (v.status || 'published').toLowerCase() === 'published';
+                    const tag = isPub ? 'Aktif' : 'Arsip';
+                    if (!defaultSelId && (isPub || idx === 0)) {
+                        defaultSelId = v.id;
+                    }
+                    const isSel = (String(v.id) === String(defaultSelId));
+                    optHtml += `<option value="${v.id}" ${isSel ? 'selected' : ''}>v${v.versi || 1} (${tag})</option>`;
+                });
+
+                selector.innerHTML = optHtml;
+                currentSelectedVersionId = defaultSelId || historyList[0].id;
+                return historyList.find(v => String(v.id) === String(currentSelectedVersionId)) || historyList[0];
+            } else {
+                wrapper.classList.add('hidden');
+                wrapper.classList.remove('flex');
+                selector.innerHTML = '';
+                currentSelectedVersionId = null;
+                return null;
+            }
+        }
+
+        window.onPenilaianVersionChange = function (versionId) {
+            currentSelectedVersionId = versionId;
+            renderPenilaianRubrik(currentModalSavedDetails, 0);
+            calculatePenilaianScore();
+
+            // Beri notifikasi toast kecil saat ganti versi
+            const prodiSelect = document.getElementById('penilaianProdiSelect');
+            const peminatanSelect = document.getElementById('penilaianPeminatanSelect');
+            const prodiKey = detectProdiKey(prodiSelect ? prodiSelect.value : 'DKV');
+            const peminatanKey = peminatanSelect ? peminatanSelect.value : '';
+            const historyList = (RUBRIK_PENILAIAN_PRODI[prodiKey]?._history?.[peminatanKey]) || [];
+            const targetVer = historyList.find(v => String(v.id) === String(versionId));
+            if (targetVer) {
+                const tag = (targetVer.status === 'published') ? 'Aktif' : 'Arsip';
+                showToast(`Memuat butir kriteria Rubrik Versi ${targetVer.versi || 1} (${tag})`, 'info');
+            }
+        };
+
         window.onPenilaianProdiChange = function (prodiVal) {
             const prodiKey = detectProdiKey(prodiVal);
             setupPenilaianPeminatanOptions(prodiKey, null);
+            const peminatanVal = document.getElementById('penilaianPeminatanSelect')?.value || '';
+            setupPenilaianVersionSelector(prodiKey, peminatanVal);
             renderPenilaianRubrik(currentModalSavedDetails, 0);
             calculatePenilaianScore();
         };
 
         window.onPenilaianPeminatanChange = function () {
+            const prodiSelect = document.getElementById('penilaianProdiSelect');
+            const peminatanSelect = document.getElementById('penilaianPeminatanSelect');
+            const prodiKey = detectProdiKey(prodiSelect ? prodiSelect.value : 'DKV');
+            const peminatanKey = peminatanSelect ? peminatanSelect.value : '';
+            setupPenilaianVersionSelector(prodiKey, peminatanKey);
             renderPenilaianRubrik(currentModalSavedDetails, 0);
             calculatePenilaianScore();
         };
@@ -4095,6 +4188,9 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             const totalBobotLabel = document.getElementById('penilaianTotalBobotLabel');
             const versionBadge = document.getElementById('penilaianRubrikVersionBadge');
             const versionText = document.getElementById('penilaianRubrikVersionText');
+            const masaBerlakuInfo = document.getElementById('penilaianRubrikMasaBerlakuInfo');
+            const masaBerlakuText = document.getElementById('penilaianRubrikMasaBerlakuText');
+            const judulInfo = document.getElementById('penilaianRubrikJudulInfo');
 
             if (!container) return;
 
@@ -4102,22 +4198,59 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             const peminatanKey = peminatanSelect ? peminatanSelect.value : '';
             const prodiData = RUBRIK_PENILAIAN_PRODI[prodiKey] || RUBRIK_PENILAIAN_PRODI['DKV'] || {};
             const peminatanMap = prodiData.peminatan || {};
+            const historyList = (prodiData._history && prodiData._history[peminatanKey]) || [];
 
-            let criteriaList = peminatanMap[peminatanKey] || null;
-            if (!criteriaList) {
-                const firstKey = Object.keys(peminatanMap)[0];
-                criteriaList = firstKey ? peminatanMap[firstKey] : [];
+            // Cari versi spesifik yang dipilih dari dropdown riwayat versi
+            let targetVersion = null;
+            if (currentSelectedVersionId && historyList.length > 0) {
+                targetVersion = historyList.find(v => String(v.id) === String(currentSelectedVersionId));
+            }
+            if (!targetVersion && historyList.length > 0) {
+                targetVersion = historyList[0];
             }
 
-            // Update badge versi rubrik jika tersedia
-            const metaInfo = (prodiData._meta && prodiData._meta[peminatanKey]) || currentActiveRubrik || null;
-            if (versionBadge && versionText && metaInfo) {
+            let criteriaList = [];
+            if (targetVersion && Array.isArray(targetVersion.kriteria) && targetVersion.kriteria.length > 0) {
+                criteriaList = targetVersion.kriteria.map((crit, idx) => ({
+                    id: crit.id || crit.kode_kriteria || ('k' + (idx + 1)),
+                    title: crit.title || crit.nama_kriteria || `Kriteria ${idx + 1}`,
+                    desc: crit.desc || crit.deskripsi || '',
+                    bobot: parseFloat(crit.bobot) || 0
+                }));
+            } else {
+                criteriaList = peminatanMap[peminatanKey] || null;
+                if (!criteriaList) {
+                    const firstKey = Object.keys(peminatanMap)[0];
+                    criteriaList = firstKey ? peminatanMap[firstKey] : [];
+                }
+            }
+
+            // Update badge versi & masa berlaku
+            const metaInfo = targetVersion || (prodiData._meta && prodiData._meta[peminatanKey]) || currentActiveRubrik || null;
+            if (metaInfo) {
                 const vNum = metaInfo.versi || 1;
-                const vStatus = metaInfo.status === 'archived' ? 'Versi Lama' : 'Aktif';
-                versionText.textContent = `Rubrik v${vNum} (${vStatus})`;
-                versionBadge.classList.remove('hidden');
-            } else if (versionBadge) {
-                versionBadge.classList.add('hidden');
+                const isPub = (metaInfo.status || 'published').toLowerCase() === 'published';
+                if (versionBadge && versionText) {
+                    if (isPub) {
+                        versionBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300';
+                        versionText.innerHTML = `<i class="bi bi-shield-check mr-1 text-emerald-600"></i>Versi ${vNum} (Aktif)`;
+                    } else {
+                        versionBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300';
+                        versionText.innerHTML = `<i class="bi bi-box-archive mr-1 text-amber-600"></i>Versi ${vNum} (Arsip)`;
+                    }
+                    versionBadge.classList.remove('hidden');
+                }
+
+                if (masaBerlakuInfo && masaBerlakuText) {
+                    const tglMulai = metaInfo.tanggal_publish_formatted || metaInfo.tanggal_publish || 'Terbit';
+                    const tglSelesai = metaInfo.tanggal_berakhir_formatted || metaInfo.tanggal_berakhir || 'Aktif Sekarang';
+                    masaBerlakuText.innerHTML = `<i class="bi bi-calendar-check text-violet-600"></i> Berlaku: ${tglMulai} s.d. ${tglSelesai}`;
+                    if (judulInfo) judulInfo.textContent = metaInfo.judul_rubrik || '';
+                    masaBerlakuInfo.classList.remove('hidden');
+                }
+            } else {
+                if (versionBadge) versionBadge.classList.add('hidden');
+                if (masaBerlakuInfo) masaBerlakuInfo.classList.add('hidden');
             }
 
             // SMART MAPPING NILAI LAMA SAAT EDIT NILAI
@@ -4323,6 +4456,246 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
     <div id="floatingBapContainer" class="fixed bottom-0 left-16 sm:left-20 top-16 pointer-events-none z-[100000] p-3 sm:p-5 flex flex-col items-start justify-start gap-4 overflow-y-auto max-h-[calc(100vh-4rem)] scroll-smooth" style="display: none; max-width: 65vw;"></div>
 
     <script>
+        // ============================================================
+        // MODAL DETAIL RIWAYAT VERSI RUBRIK SIDANG
+        // ============================================================
+        window.openRubrikSidangOverviewModal = function (preferredProdi = null, preferredPeminatan = null) {
+            isOpeningFromForm = false;
+            openDetailRiwayatRubrikCommon(preferredProdi, preferredPeminatan);
+        };
+
+        window.openModalDetailRiwayatRubrikFromForm = function () {
+            isOpeningFromForm = true;
+            const curProdi = document.getElementById('penilaianProdiSelect')?.value || 'DKV';
+            const curPem = document.getElementById('penilaianPeminatanSelect')?.value || '';
+            openDetailRiwayatRubrikCommon(curProdi, curPem);
+        };
+
+        function openDetailRiwayatRubrikCommon(preferredProdi = null, preferredPeminatan = null) {
+            const modal = document.getElementById('modalDetailRiwayatRubrik');
+            if (!modal) return;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
+
+            const container = document.getElementById('overviewVersionListContainer');
+            if (container) {
+                container.innerHTML = '<div class="text-center py-10 text-slate-400 text-xs"><i class="bi bi-arrow-repeat inline-block animate-spin mr-1"></i> Memuat riwayat versi rubrik...</div>';
+            }
+
+            // Jika state master rubrik masih kosong, fetch dari endpoint dosen_bimbingan
+            if (!stateMasterRubriksList || stateMasterRubriksList.length === 0) {
+                fetch('<?= site_url('dosen_bimbingan/ajax_get_all_master_rubrik') ?>', {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res && res.status && Array.isArray(res.data)) {
+                        syncMasterRubrikFromData(res.data);
+                    }
+                    populateOverviewModal(preferredProdi, preferredPeminatan);
+                })
+                .catch(err => {
+                    console.error(err);
+                    populateOverviewModal(preferredProdi, preferredPeminatan);
+                });
+            } else {
+                populateOverviewModal(preferredProdi, preferredPeminatan);
+            }
+        }
+
+        window.closeModalDetailRiwayatRubrik = function () {
+            const modal = document.getElementById('modalDetailRiwayatRubrik');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            // Jangan hilangkan overflow-hidden jika modal penilaian sedang aktif
+            const modalPenilaian = document.getElementById('modalPenilaianSidang');
+            if (!modalPenilaian || !modalPenilaian.classList.contains('active')) {
+                document.body.classList.remove('overflow-hidden');
+            }
+        };
+
+        function populateOverviewModal(preferredProdi = null, preferredPeminatan = null) {
+            const prodiSel = document.getElementById('overviewProdiSelect');
+            const pemSel = document.getElementById('overviewPeminatanSelect');
+            if (!prodiSel || !pemSel) return;
+
+            const prodiKeys = Object.keys(RUBRIK_PENILAIAN_PRODI);
+            let pHtml = '';
+            const activeProdi = preferredProdi ? detectProdiKey(preferredProdi) : (prodiKeys[0] || 'DKV');
+
+            prodiKeys.forEach(k => {
+                const label = RUBRIK_PENILAIAN_PRODI[k].name || k;
+                const isSel = (k === activeProdi);
+                pHtml += `<option value="${k}" ${isSel ? 'selected' : ''}>${k} - ${label}</option>`;
+            });
+            prodiSel.innerHTML = pHtml;
+
+            setupOverviewPeminatanOptions(activeProdi, preferredPeminatan);
+            renderOverviewVersionCards(activeProdi, pemSel.value);
+        }
+
+        function setupOverviewPeminatanOptions(prodiKey, selectedPeminatan = null) {
+            const pemSel = document.getElementById('overviewPeminatanSelect');
+            if (!pemSel) return;
+            const prodiData = RUBRIK_PENILAIAN_PRODI[prodiKey] || RUBRIK_PENILAIAN_PRODI['DKV'] || {};
+            const pemList = Object.keys(prodiData.peminatan || {});
+            let html = '';
+            let defaultPem = selectedPeminatan;
+
+            pemList.forEach(p => {
+                if (!defaultPem) defaultPem = p;
+                const isSel = (p === selectedPeminatan) || (!selectedPeminatan && p === defaultPem);
+                html += `<option value="${p}" ${isSel ? 'selected' : ''}>${p}</option>`;
+            });
+
+            pemSel.innerHTML = html;
+        }
+
+        window.onOverviewProdiChange = function (prodiVal) {
+            setupOverviewPeminatanOptions(prodiVal, null);
+            const pemSel = document.getElementById('overviewPeminatanSelect');
+            renderOverviewVersionCards(prodiVal, pemSel ? pemSel.value : '');
+        };
+
+        window.onOverviewPeminatanChange = function (pemVal) {
+            const prodiSel = document.getElementById('overviewProdiSelect');
+            renderOverviewVersionCards(prodiSel ? prodiSel.value : 'DKV', pemVal);
+        };
+
+        function renderOverviewVersionCards(prodi, peminatan) {
+            const container = document.getElementById('overviewVersionListContainer');
+            if (!container) return;
+
+            const prodiData = RUBRIK_PENILAIAN_PRODI[prodi] || {};
+            let historyList = (prodiData._history && prodiData._history[peminatan]) || [];
+
+            if (historyList.length === 0) {
+                const group = stateMasterRubriksList.find(m => m.prodi === prodi && m.peminatan === peminatan);
+                if (group && Array.isArray(group.history_versions) && group.history_versions.length > 0) {
+                    historyList = group.history_versions;
+                }
+            }
+
+            if (historyList.length === 0) {
+                // Fallback dari preset lokal jika belum ada di database
+                const fallbackCrit = prodiData.peminatan?.[peminatan] || [];
+                historyList = [{
+                    id: 'local_preset',
+                    versi: 1,
+                    judul_rubrik: `Rubrik Sidang Tugas Akhir ${prodi} - ${peminatan}`,
+                    total_bobot: 100,
+                    status: 'published',
+                    tanggal_publish_formatted: 'Preset Kurikulum Default',
+                    tanggal_berakhir_formatted: 'Aktif (Sekarang)',
+                    kriteria: fallbackCrit
+                }];
+            }
+
+            // Urutkan versi DESC (versi terbaru di paling atas)
+            historyList.sort((a, b) => parseInt(b.versi || 1) - parseInt(a.versi || 1));
+
+            let html = '';
+            historyList.forEach(v => {
+                const isPub = (v.status || 'published').toLowerCase() === 'published';
+                const statusBadge = isPub
+                    ? '<span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5"><i class="bi bi-circle-fill text-[8px] text-emerald-600 animate-pulse"></i> Published (Aktif)</span>'
+                    : '<span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1.5"><i class="bi bi-box-archive text-amber-600"></i> Arsip / Riwayat Lampau</span>';
+
+                const criteria = Array.isArray(v.kriteria) ? v.kriteria : [];
+
+                let critRowsHtml = '';
+                criteria.forEach((c, idx) => {
+                    const cTitle = c.title || c.nama_kriteria || `Kriteria ${idx + 1}`;
+                    const cDesc = c.desc || c.deskripsi || '-';
+                    const cBobot = parseFloat(c.bobot) || 0;
+                    critRowsHtml += `
+                        <tr class="border-b border-slate-100 hover:bg-slate-50/80 transition-colors text-xs">
+                            <td class="py-2.5 px-3 font-mono font-bold text-slate-500 text-center">${idx + 1}</td>
+                            <td class="py-2.5 px-3 font-extrabold text-slate-800">${_penilaianEscapeHtml(cTitle)}</td>
+                            <td class="py-2.5 px-3 text-slate-600 leading-relaxed">${_penilaianEscapeHtml(cDesc)}</td>
+                            <td class="py-2.5 px-3 font-mono font-black text-amber-700 text-right">${cBobot}%</td>
+                        </tr>
+                    `;
+                });
+
+                let applyButtonHtml = '';
+                if (isOpeningFromForm) {
+                    applyButtonHtml = `
+                        <button type="button" onclick="applyVersionToPenilaian('${v.id}')"
+                                class="px-3.5 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-extrabold text-xs shadow-sm transition active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                            <i class="bi bi-check2-circle"></i> Gunakan Versi Ini
+                        </button>
+                    `;
+                }
+
+                html += `
+                    <div class="rounded-2xl border-2 ${isPub ? 'border-violet-300 bg-white shadow-md shadow-violet-500/5' : 'border-slate-200 bg-slate-50/50'} overflow-hidden transition-all">
+                        <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${isPub ? 'bg-gradient-to-r from-violet-50/60 to-white' : 'bg-slate-100/50'}">
+                            <div class="flex items-center gap-3">
+                                <span class="px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider ${isPub ? 'bg-violet-600 text-white' : 'bg-slate-200 text-slate-700'}">
+                                    Versi ${v.versi || 1}
+                                </span>
+                                <div>
+                                    <h4 class="text-xs sm:text-sm font-extrabold text-slate-900">${_penilaianEscapeHtml(v.judul_rubrik || ('Rubrik Sidang ' + prodi + ' - ' + peminatan))}</h4>
+                                    <p class="text-[11px] text-slate-500 mt-0.5">
+                                        Masa berlaku: <strong>${v.tanggal_publish_formatted || v.tanggal_publish || 'Awal'}</strong> s.d. <strong>${v.tanggal_berakhir_formatted || v.tanggal_berakhir || 'Aktif Sekarang'}</strong>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2.5 self-end sm:self-center">
+                                ${statusBadge}
+                                ${applyButtonHtml}
+                            </div>
+                        </div>
+
+                        <div class="p-3 sm:p-4 overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="text-[10px] uppercase font-black tracking-wider text-slate-400 border-b border-slate-200">
+                                        <th class="py-2 px-3 text-center w-12">#</th>
+                                        <th class="py-2 px-3 w-48">Kriteria</th>
+                                        <th class="py-2 px-3">Indikator Penilaian &amp; Deskripsi</th>
+                                        <th class="py-2 px-3 text-right w-24">Bobot</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${critRowsHtml || '<tr><td colspan="4" class="text-center py-4 text-slate-400 text-xs">Belum ada butir kriteria terdaftar.</td></tr>'}
+                                </tbody>
+                                <tfoot>
+                                    <tr class="bg-slate-50 font-bold text-xs text-slate-800">
+                                        <td colspan="3" class="py-2 px-3 text-right uppercase tracking-wider font-extrabold">Total Bobot:</td>
+                                        <td class="py-2 px-3 text-right font-black font-mono text-amber-700">${v.total_bobot || 100}%</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        window.applyVersionToPenilaian = function (versionId) {
+            const selector = document.getElementById('penilaianRubrikVersionSelector');
+            if (selector) {
+                selector.value = versionId;
+            }
+            onPenilaianVersionChange(versionId);
+            closeModalDetailRiwayatRubrik();
+            Swal.fire({
+                icon: 'success',
+                title: 'Versi Diterapkan',
+                text: 'Kriteria formulir penilaian telah disesuaikan dengan versi yang Anda pilih.',
+                timer: 1600,
+                showConfirmButton: false
+            });
+        };
+
         window.activeBapPopups = [];
 
         function toggleBapPopup(nim, nama, type) {
