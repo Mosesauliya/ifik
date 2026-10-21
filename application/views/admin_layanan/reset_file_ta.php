@@ -414,5 +414,7 @@ document.getElementById('modalConfirmBtn').addEventListener('click',function(){
 
 const up=new URLSearchParams(window.location.search);if(up.get('msg')==='success'){const b=document.createElement('div');b.className='fixed top-4 right-4 z-[999999] bg-green-500 text-white px-5 py-3 rounded-xl shadow-lg text-sm font-bold flex items-center gap-2';b.innerHTML='<i class="bi bi-check-circle-fill"></i> File berhasil direset!';document.body.appendChild(b);setTimeout(()=>b.remove(),3500);}
 </script>
+    <!-- Global Custom Circle Cursor -->
+    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>
