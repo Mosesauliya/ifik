@@ -247,6 +247,31 @@ $route['adminlayanan/hapus_syarat_sidang/(:any)'] = 'AdminLayanan/hapus_syarat_s
 $route['superadmin/syarat_sidang'] = 'AdminLayanan/pengaturan_berkas_sidang';
 $route['superadmin/pengaturan_berkas_sidang'] = 'AdminLayanan/pengaturan_berkas_sidang';
 $route['adminlayanan/pengaturan_jalur'] = 'AdminLayanan/pengaturan_jalur';
+$route['adminlayanan/seed_default_jalur'] = 'AdminLayanan/seed_default_jalur';
+$route['adminlayanan/ajax_get_rekomen_options'] = 'AdminLayanan/ajax_get_rekomen_options';
+$route['adminlayanan/ajax_save_rekomen_option'] = 'AdminLayanan/ajax_save_rekomen_option';
+$route['adminlayanan/ajax_delete_rekomen_option'] = 'AdminLayanan/ajax_delete_rekomen_option';
+$route['adminlayanan/ajax_delete_rekomen_category'] = 'AdminLayanan/ajax_delete_rekomen_category';
+$route['adminlayanan/ajax_save_rekomen_field'] = 'AdminLayanan/ajax_save_rekomen_field';
+$route['adminlayanan/ajax_delete_rekomen_field'] = 'AdminLayanan/ajax_delete_rekomen_field';
+
+$route['superadmin/pengaturan_jalur'] = 'AdminLayanan/pengaturan_jalur';
+$route['superadmin/pengaturan-jalur'] = 'AdminLayanan/pengaturan_jalur';
+$route['superadmin/seed_default_jalur'] = 'AdminLayanan/seed_default_jalur';
+$route['superadmin/ajax_get_rekomen_options'] = 'AdminLayanan/ajax_get_rekomen_options';
+$route['superadmin/ajax_save_rekomen_option'] = 'AdminLayanan/ajax_save_rekomen_option';
+$route['superadmin/ajax_delete_rekomen_option'] = 'AdminLayanan/ajax_delete_rekomen_option';
+$route['superadmin/ajax_delete_rekomen_category'] = 'AdminLayanan/ajax_delete_rekomen_category';
+$route['superadmin/ajax_save_rekomen_field'] = 'AdminLayanan/ajax_save_rekomen_field';
+$route['superadmin/ajax_delete_rekomen_field'] = 'AdminLayanan/ajax_delete_rekomen_field';
+
+// Dinamis Nilai Sidang TA (Master Rubrik di Koordinator TA)
+$route['superadmin/master_rubrik'] = 'KoordinatorTA/index';
+$route['superadmin/master-rubrik'] = 'KoordinatorTA/index';
+$route['superadmin/dinamis_nilai'] = 'KoordinatorTA/index';
+$route['superadmin/dinamis-nilai'] = 'KoordinatorTA/index';
+$route['superadmin/rubrik_penilaian'] = 'KoordinatorTA/index';
+
 $route['koordinatorta/pengaturan_jalur'] = 'KoordinatorTA/pengaturan_jalur';
 $route['koordinator_ta/pengaturan_jalur'] = 'KoordinatorTA/pengaturan_jalur';
 $route['adminlayanan/simpan_syarat_berkas'] = 'AdminLayanan/simpan_syarat_berkas';
@@ -319,6 +344,13 @@ $route['program-studi']                               = 'ProgramStudi/index';
 $route['program_studi']                               = 'ProgramStudi/index';
 $route['program_studi/(:any)']                        = 'ProgramStudi/$1';
 $route['program_studi/(:any)/(:any)']                 = 'ProgramStudi/$1/$2';
+
+// Dinamis Kategori Ruangan Routes (Dialihkan ke Kelolaruangan / Tab Fasilitas)
+$route['superadmin/kategori_ruangan']                 = 'Kelolaruangan';
+$route['superadmin/kategori-ruangan']                 = 'Kelolaruangan';
+$route['admin/kategori_ruangan']                      = 'Kelolaruangan';
+$route['admin/kategori-ruangan']                      = 'Kelolaruangan';
+
 
 // Ketua KK Routes
 $route['ketuakk'] = 'KetuaKK/index';
@@ -434,6 +466,12 @@ $route['laboran/ticketing/fields'] = 'LaboranTicketing/custom_fields';
 $route['laboran/ticketing/fields/save'] = 'LaboranTicketing/custom_fields_save';
 $route['laboran/ticketing/fields/delete/(:num)'] = 'LaboranTicketing/custom_fields_delete/$1';
 $route['laboran/ticketing/fields/toggle/(:num)'] = 'LaboranTicketing/custom_fields_toggle/$1';
+
+// [SUPER ADMIN & ADMIN] Dinamis Unit & Kategori Tiket Routes
+$route['superadmin/ticketing_fields'] = 'LaboranTicketing/custom_fields';
+$route['superadmin/ticketing-fields'] = 'LaboranTicketing/custom_fields';
+$route['admin/ticketing_fields']      = 'LaboranTicketing/custom_fields';
+$route['admin/ticketing-fields']      = 'LaboranTicketing/custom_fields';
 
 $route['laboran/ticketing/unit_save'] = 'LaboranTicketing/unit_save';
 $route['laboran/ticketing/unit_toggle/(:num)'] = 'LaboranTicketing/unit_toggle/$1';

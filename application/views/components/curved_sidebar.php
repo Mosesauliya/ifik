@@ -27,6 +27,11 @@ if ($isLoggedIn && $sessionRoleId === 2 && strpos(strtolower($sessionEmail), 'la
     $activeRoleId = 21;
 }
 
+// Jika Dosen berjabatan Kaur dan sedang membuka halaman /kaur/*, set activeRoleId = 2
+if ($isLoggedIn && $sessionRoleId === 3 && strtolower((string)$this->session->userdata('jabatan')) === 'kaur' && strpos($currentUri, 'kaur') === 0) {
+    $activeRoleId = 2;
+}
+
 // Fallback deteksi URI hanya jika user sudah login tapi sessionRoleId belum match
 if ($isLoggedIn && $activeRoleId === 0) {
     if (strpos($currentUri, 'laboran') === 0 || strpos($currentUri, 'peminjamanbarang') === 0) {
@@ -85,6 +90,21 @@ $roleBadgeMap = [
     22 => 'Panel Super Admin'
 ];
 $activeRoleBadge = $roleBadgeMap[$activeRoleId] ?? 'Portal IFIK';
+$userJabatanSession = strtolower((string)($this->session->userdata('jabatan') ?? ''));
+if ($sessionRoleId === 3) {
+    if ($userJabatanSession === 'kaur') {
+        $activeRoleBadge = 'Ka. Ur Laboratorium';
+    } elseif ($userJabatanSession === 'kaprodi') {
+        $activeRoleBadge = 'Kaprodi';
+    } elseif ($userJabatanSession === 'wadek') {
+        $activeRoleBadge = 'Wakil Dekan';
+    } else {
+        $activeRoleBadge = 'Portal Dosen';
+    }
+} elseif ($sessionRoleId === 16) {
+    $prodiName = $this->session->userdata('prodi');
+    $activeRoleBadge = !empty($prodiName) ? 'Admin ' . $prodiName : 'Admin Program Studi';
+}
 
 if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
     $defaultNavItems = $navItems;
@@ -98,9 +118,11 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['category' => 'Pengaturan Tugas Akhir & Sidang', 'has_divider' => true],
                 ['heading' => 'Dinamis Program Studi', 'href' => site_url('superadmin/program_studi'), 'icon_3d' => 'assets/images/icons_3d/preview2.png', 'subheading' => 'Master Program Studi (Prodi)'],
                 ['heading' => 'Dinamis Kelompok Keahlian', 'href' => site_url('superadmin/kelompok_keahlian'), 'icon_3d' => 'assets/images/icons_3d/approval.png', 'subheading' => 'Master Kelompok Keahlian (KK)'],
+                ['heading' => 'Dinamis Unit & Kategori Tiket', 'href' => site_url('superadmin/ticketing_fields'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png', 'subheading' => 'Master Unit & Kategori Tiket'],
                 ['heading' => 'Syarat Berkas & Jenis TA', 'href' => site_url('adminlayanan/pengaturan_berkas'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png', 'subheading' => 'Dinamis Berkas & Jenis TA'],
                 ['heading' => 'Syarat Berkas Sidang', 'href' => site_url('adminlayanan/pengaturan_berkas_sidang'), 'icon_3d' => 'assets/images/icons_3d/sidang.png', 'subheading' => 'Dinamis Persyaratan Sidang'],
                 ['heading' => 'Pengaturan Jalur TA', 'href' => site_url('adminlayanan/pengaturan_jalur'), 'icon_3d' => 'assets/images/icons_3d/daftar.png', 'subheading' => 'Jalur Sidang & Non-Sidang'],
+                ['heading' => 'Dinamis Nilai Sidang', 'href' => site_url('koordinatorta#rubrik'), 'icon_3d' => 'assets/images/icons_3d/preview.png', 'subheading' => 'Master Rubrik & Bobot Nilai'],
 
                 ['category' => 'Akun', 'has_divider' => true],
                 ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
@@ -205,22 +227,37 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 $fasilitasItems[] = ['heading' => 'Approval Peminjaman Wadek', 'href' => site_url('wadek/peminjaman'), 'icon_3d' => 'assets/images/icons_3d/approval.png'];
             }
 
+            // Tampilkan Approval & Fitur Ka. Ur jika dosen menjabat sebagai Kaur
+            if ($userJabatan === 'kaur') {
+                $fasilitasItems[] = ['heading' => 'Approval Peminjaman Ruangan', 'href' => site_url('kaur/approval'), 'icon_3d' => 'assets/images/icons_3d/approval.png'];
+                $fasilitasItems[] = ['heading' => 'Approval Peminjaman Barang', 'href' => site_url('kaur/barang'), 'icon_3d' => 'assets/images/icons_3d/approval.png'];
+                $fasilitasItems[] = ['heading' => 'Kelola Master Barang', 'href' => site_url('admin/barang'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'];
+                $fasilitasItems[] = ['heading' => 'Tanda Tangan Digital Ka. Ur', 'href' => site_url('kaur/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'];
+            }
+
             // Menu fasilitas yang berlaku untuk semua Dosen (bisa minjam) - disederhanakan jadi 2 menu utama
             $fasilitasItems[] = ['heading' => 'Peminjaman Ruangan', 'href' => site_url('peminjaman-ruangan'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'];
             $fasilitasItems[] = ['heading' => 'Peminjaman Barang', 'href' => site_url('peminjaman-barang'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'];
             $fasilitasItems[] = ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'];
+
+            $layananHelpItems = [
+                ['category' => 'Layanan & Bantuan', 'has_divider' => true],
+            ];
+            if ($userJabatan === 'kaur') {
+                $layananHelpItems[] = ['heading' => 'Bantuan & Live Chat Lab', 'href' => site_url('kaur/help'), 'icon_3d' => 'assets/images/icons_3d/help_chat.png'];
+                $layananHelpItems[] = ['heading' => 'Respon Ticketing Kaur', 'href' => site_url('kaur/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'];
+            } else {
+                $layananHelpItems[] = ['heading' => 'Bantuan & Live Chat', 'href' => site_url('dosen/help'), 'icon_3d' => 'assets/images/icons_3d/help_chat.png'];
+            }
+            $layananHelpItems[] = ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'];
+            $layananHelpItems[] = ['heading' => 'Riwayat Ticketing', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'];
 
             $defaultNavItems = array_merge([
                 ['category' => 'Bimbingan & Pengujian'],
                 ['heading' => 'Dosen Pembimbing', 'href' => site_url('dosen/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
                 ['heading' => 'Dosen Wali', 'href' => site_url('dosen/wali'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
                 ['heading' => 'Tanda Tangan Digital', 'href' => site_url('dosen/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
-
-                ['category' => 'Layanan & Bantuan', 'has_divider' => true],
-                ['heading' => 'Bantuan & Live Chat', 'href' => site_url('dosen/help'), 'icon_3d' => 'assets/images/icons_3d/help_chat.png'],
-                ['heading' => 'Buat Tiket Kendala', 'href' => site_url('dosen/ticketing/input'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
-                ['heading' => 'Riwayat Ticketing', 'href' => site_url('dosen/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
-            ], $fasilitasItems);
+            ], $layananHelpItems, $fasilitasItems);
             break;
 
         case 1: // Admin System
@@ -242,10 +279,8 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['heading' => 'Pengaturan Jalur TA', 'href' => site_url('adminlayanan/pengaturan_jalur'), 'icon_3d' => 'assets/images/icons_3d/daftar.png', 'subheading' => 'Jalur Sidang & Non-Sidang'],
 
                 ['category' => 'Manajemen Sistem & Fasilitas', 'has_divider' => true],
-                ['heading' => 'Kelola Fasilitas & Ruangan', 'href' => site_url('kelolaruangan'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
-                ['heading' => 'Pengaturan Header', 'href' => site_url('adminheader'), 'icon_3d' => 'assets/images/icons_3d/header_setting.png'],
                 ['heading' => 'Pengaturan Footer', 'href' => site_url('adminfooter'), 'icon_3d' => 'assets/images/icons_3d/footer_setting.png'],
-                ['heading' => 'Pengaturan Unit Ticketing', 'href' => site_url('admin#unit-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
+                ['heading' => 'Pengaturan Unit Ticketing', 'href' => site_url('superadmin/ticketing_fields'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
                 ['heading' => 'Respon Ticketing Lab', 'href' => site_url('laboran/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/ticketing.png'],
                 ['heading' => 'Riwayat Log History', 'href' => site_url('admin/log_history'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
 
@@ -371,11 +406,6 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['heading' => 'Respon Ticketing', 'href' => site_url('prodi/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
                 ['heading' => 'Riwayat', 'href' => site_url('prodi/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
                 ['heading' => 'Approval Peminjaman', 'href' => site_url('prodi/peminjaman'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
-
-                ['category' => 'Portal Akademik & Dosen', 'has_divider' => true],
-                ['heading' => 'Dosen Pembimbing', 'href' => site_url('dosen/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
-                ['heading' => 'Dosen Wali', 'href' => site_url('dosen/wali'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
-                ['heading' => 'Tanda Tangan Digital', 'href' => site_url('dosen/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
 
                 ['category' => 'Fasilitas & Peminjaman', 'has_divider' => true],
                 ['heading' => 'Peminjaman Ruangan', 'href' => site_url('peminjaman-ruangan'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],

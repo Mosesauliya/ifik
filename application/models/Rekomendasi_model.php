@@ -23,80 +23,83 @@ class Rekomendasi_model extends CI_Model {
                 `sort_order` INT DEFAULT 0,
                 `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+        }
 
-            // Seed default options
-            $default_options = [
-                [
-                    'category' => 'main',
-                    'code' => 'main_sidang',
-                    'title' => 'SIDANG',
-                    'description' => 'Lanjut ke Majelis Ujian Sidang Akhir TA',
-                    'icon_type' => 'bi',
-                    'icon_class' => 'bi-mortarboard-fill',
-                    'is_active' => 1,
-                    'sort_order' => 1
-                ],
-                [
-                    'category' => 'main',
-                    'code' => 'main_non_sidang',
-                    'title' => 'NON SIDANG',
-                    'description' => 'Rekognisi Prestasi / HKI / Kebijakan / MBKM',
-                    'icon_type' => 'bi',
-                    'icon_class' => 'bi-award-fill',
-                    'is_active' => 1,
-                    'sort_order' => 2
-                ],
-                [
-                    'category' => 'non_sidang',
-                    'code' => 'prestasi',
-                    'title' => 'Prestasi',
-                    'description' => 'Tugas Akhir jalur Prestasi / Kejuaraan Lomba',
-                    'icon_type' => 'bi',
-                    'icon_class' => 'bi-award-fill',
-                    'is_active' => 1,
-                    'sort_order' => 1
-                ],
-                [
-                    'category' => 'non_sidang',
-                    'code' => 'kebijakan',
-                    'title' => 'Implementasi kebijakan',
-                    'description' => 'Tugas Akhir jalur Implementasi Kebijakan',
-                    'icon_type' => 'bi',
-                    'icon_class' => 'bi-gear-wide-connected',
-                    'is_active' => 1,
-                    'sort_order' => 2
-                ],
-                [
-                    'category' => 'non_sidang',
-                    'code' => 'hki',
-                    'title' => 'HAK KEKAYAAN INTELEKTUAL',
-                    'description' => 'Tugas Akhir jalur Hak Kekayaan Intelektual / Paten',
-                    'icon_type' => 'bi',
-                    'icon_class' => 'bi-file-earmark-check-fill',
-                    'is_active' => 1,
-                    'sort_order' => 3
-                ],
-                [
-                    'category' => 'non_sidang',
-                    'code' => 'pameran',
-                    'title' => 'Pameran',
-                    'description' => 'Tugas Akhir jalur Pameran Karya',
-                    'icon_type' => 'bi',
-                    'icon_class' => 'bi-easel-fill',
-                    'is_active' => 1,
-                    'sort_order' => 4
-                ],
-                [
-                    'category' => 'non_sidang',
-                    'code' => 'project_industri',
-                    'title' => 'Project Pada Industri',
-                    'description' => 'Tugas Akhir jalur Proyek Industri / Magang MBKM',
-                    'icon_type' => 'bi',
-                    'icon_class' => 'bi-building-gear',
-                    'is_active' => 1,
-                    'sort_order' => 5
-                ]
-            ];
+        // Seed default options if empty
+        $default_options = [
+            [
+                'category' => 'main',
+                'code' => 'main_sidang',
+                'title' => 'SIDANG',
+                'description' => 'Lanjut ke Majelis Ujian Sidang Akhir TA',
+                'icon_type' => 'bi',
+                'icon_class' => 'bi-mortarboard-fill',
+                'is_active' => 1,
+                'sort_order' => 1
+            ],
+            [
+                'category' => 'main',
+                'code' => 'main_non_sidang',
+                'title' => 'NON SIDANG',
+                'description' => 'Rekognisi Prestasi / HKI / Kebijakan / MBKM',
+                'icon_type' => 'bi',
+                'icon_class' => 'bi-award-fill',
+                'is_active' => 1,
+                'sort_order' => 2
+            ],
+            [
+                'category' => 'non_sidang',
+                'code' => 'prestasi',
+                'title' => 'Prestasi',
+                'description' => 'Tugas Akhir jalur Prestasi / Kejuaraan Lomba',
+                'icon_type' => 'bi',
+                'icon_class' => 'bi-award-fill',
+                'is_active' => 1,
+                'sort_order' => 1
+            ],
+            [
+                'category' => 'non_sidang',
+                'code' => 'kebijakan',
+                'title' => 'Implementasi kebijakan',
+                'description' => 'Tugas Akhir jalur Implementasi Kebijakan',
+                'icon_type' => 'bi',
+                'icon_class' => 'bi-gear-wide-connected',
+                'is_active' => 1,
+                'sort_order' => 2
+            ],
+            [
+                'category' => 'non_sidang',
+                'code' => 'hki',
+                'title' => 'HAK KEKAYAAN INTELEKTUAL',
+                'description' => 'Tugas Akhir jalur Hak Kekayaan Intelektual / Paten',
+                'icon_type' => 'bi',
+                'icon_class' => 'bi-file-earmark-check-fill',
+                'is_active' => 1,
+                'sort_order' => 3
+            ],
+            [
+                'category' => 'non_sidang',
+                'code' => 'pameran',
+                'title' => 'Pameran',
+                'description' => 'Tugas Akhir jalur Pameran Karya',
+                'icon_type' => 'bi',
+                'icon_class' => 'bi-easel-fill',
+                'is_active' => 1,
+                'sort_order' => 4
+            ],
+            [
+                'category' => 'non_sidang',
+                'code' => 'project_industri',
+                'title' => 'Project Pada Industri',
+                'description' => 'Tugas Akhir jalur Proyek Industri / Magang MBKM',
+                'icon_type' => 'bi',
+                'icon_class' => 'bi-building-gear',
+                'is_active' => 1,
+                'sort_order' => 5
+            ]
+        ];
+
+        if ($this->db->table_exists('rekomen_jalur_options') && $this->db->count_all('rekomen_jalur_options') === 0) {
             $this->db->insert_batch('rekomen_jalur_options', $default_options);
         }
 
@@ -113,8 +116,10 @@ class Rekomendasi_model extends CI_Model {
                 `help_text` VARCHAR(255) NULL,
                 `sort_order` INT DEFAULT 0
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+        }
 
-            // Seed default fields for all non_sidang options
+        // Seed default fields for all non_sidang options if empty
+        if ($this->db->table_exists('rekomen_jalur_fields') && $this->db->count_all('rekomen_jalur_fields') === 0) {
             $non_sidang_options = $this->db->get_where('rekomen_jalur_options', ['category' => 'non_sidang'])->result_array();
             $fields_batch = [];
             foreach ($non_sidang_options as $opt) {
@@ -170,6 +175,128 @@ class Rekomendasi_model extends CI_Model {
                 `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+        }
+    }
+
+    public function seed_defaults_force() {
+        $default_options = [
+            [
+                'category' => 'main',
+                'code' => 'main_sidang',
+                'title' => 'SIDANG',
+                'description' => 'Lanjut ke Majelis Ujian Sidang Akhir TA',
+                'icon_type' => 'bi',
+                'icon_class' => 'bi-mortarboard-fill',
+                'is_active' => 1,
+                'sort_order' => 1
+            ],
+            [
+                'category' => 'main',
+                'code' => 'main_non_sidang',
+                'title' => 'NON SIDANG',
+                'description' => 'Rekognisi Prestasi / HKI / Kebijakan / MBKM',
+                'icon_type' => 'bi',
+                'icon_class' => 'bi-award-fill',
+                'is_active' => 1,
+                'sort_order' => 2
+            ],
+            [
+                'category' => 'non_sidang',
+                'code' => 'prestasi',
+                'title' => 'Prestasi',
+                'description' => 'Tugas Akhir jalur Prestasi / Kejuaraan Lomba',
+                'icon_type' => 'bi',
+                'icon_class' => 'bi-award-fill',
+                'is_active' => 1,
+                'sort_order' => 1
+            ],
+            [
+                'category' => 'non_sidang',
+                'code' => 'kebijakan',
+                'title' => 'Implementasi kebijakan',
+                'description' => 'Tugas Akhir jalur Implementasi Kebijakan',
+                'icon_type' => 'bi',
+                'icon_class' => 'bi-gear-wide-connected',
+                'is_active' => 1,
+                'sort_order' => 2
+            ],
+            [
+                'category' => 'non_sidang',
+                'code' => 'hki',
+                'title' => 'HAK KEKAYAAN INTELEKTUAL',
+                'description' => 'Tugas Akhir jalur Hak Kekayaan Intelektual / Paten',
+                'icon_type' => 'bi',
+                'icon_class' => 'bi-file-earmark-check-fill',
+                'is_active' => 1,
+                'sort_order' => 3
+            ],
+            [
+                'category' => 'non_sidang',
+                'code' => 'pameran',
+                'title' => 'Pameran',
+                'description' => 'Tugas Akhir jalur Pameran Karya',
+                'icon_type' => 'bi',
+                'icon_class' => 'bi-easel-fill',
+                'is_active' => 1,
+                'sort_order' => 4
+            ],
+            [
+                'category' => 'non_sidang',
+                'code' => 'project_industri',
+                'title' => 'Project Pada Industri',
+                'description' => 'Tugas Akhir jalur Proyek Industri / Magang MBKM',
+                'icon_type' => 'bi',
+                'icon_class' => 'bi-building-gear',
+                'is_active' => 1,
+                'sort_order' => 5
+            ]
+        ];
+
+        foreach ($default_options as $opt) {
+            $exist = $this->db->get_where('rekomen_jalur_options', ['code' => $opt['code']])->row_array();
+            if (!$exist) {
+                $this->db->insert('rekomen_jalur_options', $opt);
+            }
+        }
+
+        $non_sidang_options = $this->db->get_where('rekomen_jalur_options', ['category' => 'non_sidang'])->result_array();
+        foreach ($non_sidang_options as $opt) {
+            $fCount = $this->db->where('jalur_id', $opt['id'])->count_all_results('rekomen_jalur_fields');
+            if ($fCount === 0) {
+                $fields_batch = [
+                    [
+                        'jalur_id' => $opt['id'],
+                        'field_key' => 'eviden',
+                        'field_label' => 'Eviden',
+                        'field_type' => 'file',
+                        'allowed_ext' => 'pdf,docx,doc',
+                        'is_required' => 1,
+                        'help_text' => 'Format file diharuskan pdf/docx',
+                        'sort_order' => 1
+                    ],
+                    [
+                        'jalur_id' => $opt['id'],
+                        'field_key' => 'persetujuan_pembimbing',
+                        'field_label' => 'Persetujuan Pembimbing',
+                        'field_type' => 'file',
+                        'allowed_ext' => 'pdf,docx,doc',
+                        'is_required' => 1,
+                        'help_text' => 'Format file diharuskan pdf/docx',
+                        'sort_order' => 2
+                    ],
+                    [
+                        'jalur_id' => $opt['id'],
+                        'field_key' => 'catatan_alasan',
+                        'field_label' => 'Tanggapan untuk rekomendasi non sidang jalur ' . strtolower($opt['title']),
+                        'field_type' => 'textarea',
+                        'allowed_ext' => NULL,
+                        'is_required' => 0,
+                        'help_text' => 'Masukan alasan direkomendasikan ke jalur TA',
+                        'sort_order' => 3
+                    ]
+                ];
+                $this->db->insert_batch('rekomen_jalur_fields', $fields_batch);
+            }
         }
     }
 
@@ -269,6 +396,12 @@ class Rekomendasi_model extends CI_Model {
         $this->db->order_by('category', 'ASC');
         $this->db->order_by('sort_order', 'ASC');
         $options = $this->db->get('rekomen_jalur_options')->result_array();
+        if (empty($options)) {
+            $this->_init_tables();
+            $this->db->order_by('category', 'ASC');
+            $this->db->order_by('sort_order', 'ASC');
+            $options = $this->db->get('rekomen_jalur_options')->result_array();
+        }
         foreach ($options as &$opt) {
             $this->db->where('jalur_id', $opt['id']);
             $this->db->order_by('sort_order', 'ASC');
