@@ -1255,7 +1255,7 @@ class Mahasiswa_model extends CI_Model {
         $g = $this->get_guidance_by_nim($nim);
         if (!$g) return null;
 
-        $mhs = $this->db->select('u.name AS nama_mahasiswa, u.nim AS nim_mhs, g.judul_1, g.peminatan')
+        $mhs = $this->db->select('u.name AS nama_mahasiswa, u.nim AS nim_mhs, u.prodi AS user_prodi, g.judul_1, g.peminatan')
             ->from('guidance g')
             ->join('user u', '(u.id = g.id_mhs OR u.nim = g.id_mhs)', 'left')
             ->where('g.id', $g['id'])
@@ -1275,12 +1275,73 @@ class Mahasiswa_model extends CI_Model {
             return ['catatan' => (string)$raw, 'detail' => null, 'saved_at' => null];
         };
 
+        // Ambil data master rubrik dinamis dari Koordinator TA
+        $master_rubriks = [];
+        $active_rubrik  = null;
+        if (class_exists('CI_Controller')) {
+            $CI =& get_instance();
+            $CI->load->model('KoordinatorTA_model');
+            if (isset($CI->KoordinatorTA_model)) {
+                $master_rubriks = $CI->KoordinatorTA_model->get_all_master_rubrik();
+            }
+        }
+
+        // Tentukan kode prodi & peminatan mahasiswa
+        $rawProdi  = trim($mhs['user_prodi'] ?? '');
+        $peminatan = trim($g['peminatan'] ?? '');
+        $prodiCode = 'DKV';
+
+        if (!empty($rawProdi)) {
+            $uP = strtoupper($rawProdi);
+            if (strpos($uP, 'DIB') !== false || strpos($uP, 'BISNIS') !== false) {
+                $prodiCode = 'DIB';
+            } elseif (strpos($uP, 'INTERIOR') !== false || $uP === 'DI') {
+                $prodiCode = 'DI';
+            } elseif (strpos($uP, 'PRODUK') !== false || $uP === 'DP') {
+                $prodiCode = 'DP';
+            } elseif (strpos($uP, 'DKV') !== false || strpos($uP, 'VISUAL') !== false) {
+                $prodiCode = 'DKV';
+            } elseif (strpos($uP, 'INFORMATIKA') !== false || $uP === 'IF') {
+                $prodiCode = 'IF';
+            } elseif (strpos($uP, 'SISTEM INFORMASI') !== false || $uP === 'SI') {
+                $prodiCode = 'SI';
+            } else {
+                $prodiCode = $rawProdi;
+            }
+        } elseif (!empty($peminatan)) {
+            $uPem = strtoupper($peminatan);
+            if (strpos($uPem, 'MULTIMEDIA') !== false || strpos($uPem, 'GAME') !== false || strpos($uPem, 'DESIGNPRENEUR') !== false || strpos($uPem, 'VIID') !== false) {
+                $prodiCode = 'DKV';
+            } elseif (strpos($uPem, 'KOMERSIAL') !== false || strpos($uPem, 'RESIDENSIAL') !== false) {
+                $prodiCode = 'DI';
+            }
+        }
+
+        if (!empty($CI->KoordinatorTA_model)) {
+            $evalDate = !empty($g['tanggal_sidang']) ? $g['tanggal_sidang'] : null;
+            $active_rubrik = $CI->KoordinatorTA_model->get_active_rubrik_for_evaluation($prodiCode, $peminatan, $evalDate);
+            if (!$active_rubrik && !empty($master_rubriks)) {
+                foreach ($master_rubriks as $mr) {
+                    if (strcasecmp($mr['prodi'], $prodiCode) === 0) {
+                        if (empty($peminatan) || strcasecmp($mr['peminatan'], $peminatan) === 0) {
+                            $active_rubrik = $mr;
+                            break;
+                        }
+                    }
+                }
+                if (!$active_rubrik && !empty($master_rubriks)) {
+                    $active_rubrik = $master_rubriks[0];
+                }
+            }
+        }
+
         return [
             'nim'              => $mhs['nim_mhs'] ?? $nim,
             'nama'             => $mhs['nama_mahasiswa'] ?? '-',
             'judul'            => $g['judul_1'] ?? '-',
-            'peminatan'        => $g['peminatan'] ?? '-',
-            'prodi'            => 'Desain Komunikasi Visual',
+            'peminatan'        => $peminatan ?: '-',
+            'prodi'            => $prodiCode,
+            'prodi_name'       => $rawProdi ?: $prodiCode,
             'tgl_sidang'       => $g['tanggal_sidang'] ?? null,
             'waktu_sidang'     => $g['waktu_sidang'] ?? null,
             'ruangan_sidang'   => $g['ruang_sidang'] ?? null,
@@ -1300,6 +1361,8 @@ class Mahasiswa_model extends CI_Model {
                 3 => $parse_detail($g['penilaiansidang_penguji1'] ?? ''),
                 4 => $parse_detail($g['penilaiansidang_penguji2'] ?? ''),
             ],
+            'master_rubriks'   => $master_rubriks,
+            'active_rubrik'    => $active_rubrik,
         ];
     }
 

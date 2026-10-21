@@ -1231,4 +1231,98 @@ class Dosen_bimbingan extends CI_Controller {
         }
         echo json_encode(['status' => true, 'data' => $detail]);
     }
+
+    /**
+     * AJAX Endpoint: Detail Nilai Sidang Mahasiswa + Dynamic Rubrik Koordinator TA
+     */
+    public function get_detail_nilai_sidang_ajax() {
+        header('Content-Type: application/json');
+
+        if (!$this->_is_authorized_reviewer()) {
+            echo json_encode(['status' => false, 'message' => 'Unauthorized']);
+            return;
+        }
+
+        $nim = $this->input->get('nim') ?: $this->input->post('nim');
+        if (empty($nim)) {
+            echo json_encode(['status' => false, 'message' => 'NIM wajib diisi.']);
+            return;
+        }
+
+        $detail = $this->Mahasiswa_model->get_detail_nilai_sidang($nim);
+        if (!$detail) {
+            echo json_encode(['status' => false, 'message' => 'Data mahasiswa tidak ditemukan.']);
+            return;
+        }
+
+        echo json_encode(['status' => true, 'data' => $detail]);
+    }
+
+    /**
+     * AJAX Endpoint: Simpan / Edit Penilaian Sidang Mahasiswa
+     */
+    public function simpan_nilai_sidang_ajax() {
+        header('Content-Type: application/json');
+
+        if (!$this->_is_authorized_reviewer()) {
+            echo json_encode(['status' => false, 'message' => 'Unauthorized']);
+            return;
+        }
+
+        $nim         = $this->input->post('nim');
+        $posisi      = (int)$this->input->post('posisi');
+        $nilai       = $this->input->post('nilai_akhir');
+        $catatan     = $this->input->post('catatan');
+        $detail_raw  = $this->input->post('detail_penilaian');
+
+        if (empty($nim) || !in_array($posisi, [1, 2, 3, 4], true)) {
+            echo json_encode(['status' => false, 'message' => 'Parameter tidak lengkap atau posisi tidak valid.']);
+            return;
+        }
+
+        if ($nilai === null || $nilai === '' || !is_numeric($nilai) || (float)$nilai < 0 || (float)$nilai > 100) {
+            echo json_encode(['status' => false, 'message' => 'Nilai akhir wajib diisi angka antara 0 sampai 100.']);
+            return;
+        }
+
+        $role_id = (int)$this->session->userdata('role_id');
+        if ($role_id !== 1) {
+            $dosen_id = $this->session->userdata('user_id');
+            $students = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, $posisi);
+            $nims = array_column($students, 'nim');
+            if (!in_array($nim, $nims, true)) {
+                echo json_encode(['status' => false, 'message' => 'Anda tidak memiliki hak akses memberi nilai untuk mahasiswa ini pada posisi ini.']);
+                return;
+            }
+        }
+
+        $detail = null;
+        if (!empty($detail_raw)) {
+            $detail = is_string($detail_raw) ? json_decode($detail_raw, true) : $detail_raw;
+        }
+
+        $res = $this->Mahasiswa_model->save_nilai_sidang_by_posisi(
+            $nim,
+            $posisi,
+            (float)$nilai,
+            (string)$catatan,
+            $detail
+        );
+
+        echo json_encode($res);
+    }
+
+    /**
+     * AJAX Endpoint: Ambil Seluruh Master Rubrik Penilaian Dinamis
+     */
+    public function ajax_get_all_master_rubrik() {
+        header('Content-Type: application/json');
+        if (!$this->_is_authorized_reviewer()) {
+            echo json_encode(['status' => false, 'message' => 'Unauthorized']);
+            return;
+        }
+        $this->load->model('KoordinatorTA_model');
+        $rubriks = $this->KoordinatorTA_model->get_all_master_rubrik();
+        echo json_encode(['status' => true, 'data' => $rubriks]);
+    }
 }

@@ -722,6 +722,10 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                                     class="px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-600 hover:bg-orange-50 transition cursor-pointer flex items-center gap-1.5">
                                 <i class="bi bi-arrow-counterclockwise"></i> Reset
                             </button>
+                            <button type="button" id="btnRubrikSidangOverview" onclick="openRubrikSidangOverviewModal()"
+                                    class="<?= ($default_tahap === 'Sidang') ? '' : 'hidden' ?> px-3 py-1.5 rounded-xl border border-violet-200 bg-violet-50 hover:bg-violet-100 text-xs font-bold text-violet-800 transition cursor-pointer flex items-center gap-1.5 shadow-2xs">
+                                <i class="bi bi-clock-history text-violet-600"></i> Riwayat Versi Rubrik
+                            </button>
                         </div>
                     </div>
 
@@ -923,13 +927,17 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                             <p class="text-slate-700 truncate" id="penilaianPenguji2">Penguji 2: -</p>
                         </div>
                     </div>
-                    <div id="penilaianPrevNilaiWrap" class="hidden p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px]">
-                        <span class="font-bold text-amber-800 uppercase tracking-wider text-[10px] block mb-0.5">
-                            <i class="bi bi-info-circle-fill"></i> Nilai Tersimpan
-                        </span>
-                        <p class="text-amber-900">
-                            Nilai Anda sebelumnya: <strong id="penilaianPrevNilai">-</strong>.
-                            Isi form di bawah untuk memperbarui.
+                    <div id="penilaianPrevNilaiWrap" class="hidden p-3 rounded-xl bg-amber-50 border border-amber-200 text-[11px] space-y-1">
+                        <div class="flex items-center justify-between flex-wrap gap-1">
+                            <span class="font-extrabold text-amber-800 uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+                                <i class="bi bi-pencil-square text-amber-600"></i> Mode Edit Nilai Sidang
+                            </span>
+                            <span class="px-2.5 py-0.5 rounded-md bg-amber-200/90 text-amber-900 font-extrabold text-[10px]">
+                                Nilai Anda Sebelumnya: <strong id="penilaianPrevNilai">-</strong>
+                            </span>
+                        </div>
+                        <p class="text-amber-900 text-xs leading-relaxed">
+                            Nilai tersimpan sebelumnya otomatis dimuat ke formulir rubrik aktif di bawah. Anda dapat menyesuaikan skor kriteria dan catatan, lalu simpan perubahan.
                         </p>
                     </div>
                 </div>
@@ -939,9 +947,6 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                         <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 block mb-1.5">Program Studi</label>
                         <select id="penilaianProdiSelect" onchange="onPenilaianProdiChange(this.value)"
                             class="w-full px-3.5 py-3 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-amber-500 outline-none cursor-pointer">
-                            <option value="DKV">DKV - Desain Komunikasi Visual</option>
-                            <option value="SI">SI - Sistem Informasi</option>
-                            <option value="IF">IF - Informatika</option>
                         </select>
                     </div>
                     <div>
@@ -952,11 +957,36 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 </div>
 
                 <div class="space-y-3">
-                    <div class="flex items-center justify-between flex-wrap gap-2">
-                        <label class="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                            <i class="bi bi-list-check text-amber-600"></i> Rubrik Penilaian
-                        </label>
-                        <span class="text-[11px] font-semibold text-slate-400">Total Bobot: <strong class="text-slate-700" id="penilaianTotalBobotLabel">100%</strong></span>
+                    <div class="flex items-center justify-between flex-wrap gap-2.5 p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <label class="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                                <i class="bi bi-list-check text-amber-600"></i> Rubrik Penilaian Sidang TA
+                            </label>
+                            <span id="penilaianRubrikVersionBadge" class="hidden px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-violet-100 text-violet-800 border border-violet-200">
+                                <i class="bi bi-shield-check mr-1 text-violet-600"></i><span id="penilaianRubrikVersionText">Rubrik Aktif</span>
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-2.5 flex-wrap">
+                            <!-- Riwayat Versi Dropdown Wrapper -->
+                            <div id="penilaianRubrikHistoryWrapper" class="hidden items-center gap-1.5 text-xs text-slate-600 bg-white px-2.5 py-1 rounded-xl border border-violet-200 shadow-2xs">
+                                <span class="font-extrabold text-violet-800 text-[10.5px] flex items-center gap-1">
+                                    <i class="bi bi-clock-history text-violet-600"></i> Versi:
+                                </span>
+                                <select id="penilaianRubrikVersionSelector" onchange="onPenilaianVersionChange(this.value)" class="bg-transparent border-0 text-xs font-black text-violet-900 outline-none cursor-pointer focus:ring-0 pr-1">
+                                    <!-- Populated dynamically -->
+                                </select>
+                                <button type="button" onclick="openModalDetailRiwayatRubrikFromForm()" class="w-6 h-6 rounded-md bg-violet-50 text-violet-700 hover:bg-violet-100 flex items-center justify-center text-xs transition cursor-pointer" title="Lihat Rincian Riwayat Versi">
+                                    <i class="bi bi-info-circle-fill"></i>
+                                </button>
+                            </div>
+                            <span class="text-[11px] font-semibold text-slate-400">Total Bobot: <strong class="text-slate-700" id="penilaianTotalBobotLabel">100%</strong></span>
+                        </div>
+                    </div>
+                    <div id="penilaianRubrikMasaBerlakuInfo" class="hidden px-3.5 py-2 bg-violet-50/70 border border-violet-200/80 rounded-xl text-[11px] text-violet-900 flex items-center justify-between flex-wrap gap-2">
+                        <span id="penilaianRubrikMasaBerlakuText" class="font-bold flex items-center gap-1.5">
+                            <i class="bi bi-calendar-check text-violet-600"></i> Masa Berlaku: Aktif (Sekarang)
+                        </span>
+                        <span id="penilaianRubrikJudulInfo" class="font-semibold text-slate-500 truncate max-w-[280px]"></span>
                     </div>
                     <div id="penilaianRubrikContainer" class="space-y-3"></div>
                 </div>
@@ -1005,6 +1035,68 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ================= MODAL DETAIL RIWAYAT VERSI RUBRIK SIDANG ================= -->
+    <div id="modalDetailRiwayatRubrik" class="hidden fixed inset-0 z-[250] items-center justify-center p-4">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs" onclick="closeModalDetailRiwayatRubrik()"></div>
+        <div class="relative bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200 z-10">
+            <!-- Modal Header -->
+            <div class="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-violet-50/90 via-purple-50/40 to-white shrink-0">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-violet-500/25 shrink-0">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h3 class="text-base sm:text-lg font-extrabold text-slate-900">Riwayat Versi Rubrik Penilaian Sidang</h3>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-violet-100 text-violet-800 border border-violet-200">Arsip &amp; Versi Aktif</span>
+                        </div>
+                        <p class="text-xs font-medium text-slate-500 mt-0.5">Daftar seluruh versi indikator soal, kriteria, dan bobot penilaian yang dikelola oleh Koordinator TA.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModalDetailRiwayatRubrik()" class="w-9 h-9 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer">
+                    <i class="bi bi-x-lg text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Filter Prodi & Peminatan in modal -->
+            <div class="p-4 sm:px-6 bg-slate-50/70 border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-600 block mb-1">
+                            <i class="bi bi-mortarboard mr-1 text-violet-600"></i> Program Studi:
+                        </label>
+                        <select id="overviewProdiSelect" onchange="onOverviewProdiChange(this.value)" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none cursor-pointer focus:ring-2 focus:ring-violet-500">
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-600 block mb-1">
+                            <i class="bi bi-tag mr-1 text-violet-600"></i> Peminatan / Konsentrasi:
+                        </label>
+                        <select id="overviewPeminatanSelect" onchange="onOverviewPeminatanChange(this.value)" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none cursor-pointer focus:ring-2 focus:ring-violet-500">
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Version Timeline Container -->
+            <div class="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4" id="overviewVersionListContainer">
+                <div class="text-center py-10 text-slate-400 text-xs">
+                    <i class="bi bi-arrow-repeat inline-block animate-spin mr-1"></i> Memuat riwayat versi rubrik...
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 sm:px-6 border-t border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
+                <span class="text-xs text-slate-500 font-medium flex items-center gap-1.5">
+                    <i class="bi bi-info-circle text-violet-600"></i> Versi lama dilindungi secara historis untuk mahasiswa sidang lampau.
+                </span>
+                <button type="button" onclick="closeModalDetailRiwayatRubrik()" class="px-5 py-2.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer">
+                    Tutup
+                </button>
+            </div>
         </div>
     </div>
 
@@ -3690,70 +3782,198 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
 
     <script>
         // ============================================================
-        // RUBRIK PENILAIAN PRODI (Hardcoded)
+        // RUBRIK PENILAIAN PRODI DINAMIS (Tersinkronisasi dengan Master Rubrik Koordinator TA)
         // ============================================================
-        const RUBRIK_PENILAIAN_PRODI = {
+        let RUBRIK_PENILAIAN_PRODI = {
             'DKV': {
+                name: 'Desain Komunikasi Visual (DKV)',
                 peminatan: {
-                    'Desain Grafis': [
-                        { id:'k1', title:'Kreativitas & Orisinalitas', desc:'Kemampuan menghasilkan ide desain yang baru dan unik.', bobot:20 },
-                        { id:'k2', title:'Eksekusi Visual', desc:'Penguasaan elemen & prinsip desain (tipografi, warna, komposisi).', bobot:25 },
-                        { id:'k3', title:'Keselarasan Konsep & Solusi', desc:'Seberapa baik karya menjawab permasalahan/brief.', bobot:25 },
-                        { id:'k4', title:'Keterampilan Teknis & Media', desc:'Penguasaan perangkat lunak atau teknik manual.', bobot:15 },
-                        { id:'k5', title:'Presentasi & Komunikasi', desc:'Kemampuan mempresentasikan dan mempertahankan argumen.', bobot:15 }
-                    ],
                     'Multimedia': [
-                        { id:'k1', title:'Kreativitas Ide & Narasi', desc:'Kekuatan storytelling dan orisinalitas ide.', bobot:20 },
-                        { id:'k2', title:'Eksekusi Audio-Visual', desc:'Kualitas sinematografi, animasi, suara, penyuntingan.', bobot:25 },
-                        { id:'k3', title:'Fungsionalitas & Interaktivitas', desc:'Tingkat kebergunaan dan interaksi media.', bobot:25 },
-                        { id:'k4', title:'Keterampilan Teknis Media', desc:'Penguasaan teknologi, software, atau peralatan.', bobot:15 },
-                        { id:'k5', title:'Presentasi Karya', desc:'Sistematika penyajian dan kemampuan menjawab.', bobot:15 }
-                    ]
-                }
-            },
-            'IF': {
-                peminatan: {
-                    'Rekayasa Perangkat Lunak': [
-                        { id:'k1', title:'Analisis & Perancangan Sistem', desc:'Kedalaman analisis kebutuhan dan perancangan.', bobot:25 },
-                        { id:'k2', title:'Implementasi & Kualitas Kode', desc:'Kualitas implementasi teknis dan rekayasa perangkat lunak.', bobot:30 },
-                        { id:'k3', title:'Pengujian & Validasi', desc:'Metodologi pengujian dan validasi hasil.', bobot:20 },
-                        { id:'k4', title:'Dokumentasi & Laporan', desc:'Kualitas dokumentasi teknis dan laporan TA.', bobot:15 },
-                        { id:'k5', title:'Presentasi & Sikap', desc:'Kemampuan menyampaikan dan mempertahankan hasil.', bobot:10 }
+                        { id:'k1', title:'Konsep & Storyboard Multimedia', desc:'Kedalaman gagasan, orisinalitas ide, alur narasi, dan struktur storyboard visual.', bobot:25 },
+                        { id:'k2', title:'Penguasaan Teknis Audio Visual & Animasi', desc:'Kualitas editing, rendering, compositing, motion graphic, dan sinkronisasi audio-visual.', bobot:30 },
+                        { id:'k3', title:'Interaktivitas & User Experience (UI/UX)', desc:'Kemudahan interaksi antarmuka, responsivitas, dan fungsionalitas media multimedia terapan.', bobot:25 },
+                        { id:'k4', title:'Komprehensi & Presentasi Sidang', desc:'Kelancaran penyampaian argumen karya, penguasaan materi, dan pertanggungjawaban desain.', bobot:20 }
                     ],
-                    'Kecerdasan Artifisial': [
-                        { id:'k1', title:'Pemahaman Konsep AI', desc:'Penguasaan teori dan konsep AI/ML.', bobot:25 },
-                        { id:'k2', title:'Perancangan Model', desc:'Ketepatan pemilihan model dan metrik.', bobot:25 },
-                        { id:'k3', title:'Eksperimen & Evaluasi', desc:'Kualitas eksperimen dan evaluasi hasil.', bobot:25 },
-                        { id:'k4', title:'Dokumentasi & Laporan', desc:'Kualitas laporan dan dokumentasi.', bobot:15 },
-                        { id:'k5', title:'Presentasi & Sikap', desc:'Kemampuan menyampaikan hasil.', bobot:10 }
+                    'Game': [
+                        { id:'k1', title:'Game Design Document (GDD) & Core Concept', desc:'Kelengkapan GDD, target audience, core loop, dan inovasi genre mekanika game.', bobot:25 },
+                        { id:'k2', title:'Game Mechanics, Balancing & Asset Art 2D/3D', desc:'Kualitas asset grafis karakter/lingkungan, animasi, balancing kesulitan, dan level design.', bobot:30 },
+                        { id:'k3', title:'Playability, Prototype Testing & Bug Handling', desc:'Kelancaran gameplay (playability), performa frame rate, dan hasil uji coba playtest pengguna.', bobot:25 },
+                        { id:'k4', title:'Live Demo & Argumentasi Teknis Sidang', desc:'Penguasaan implementasi game engine, demonstrasi gameplay langsung, dan respon tanya jawab.', bobot:20 }
+                    ],
+                    'Designpreneur': [
+                        { id:'k1', title:'Riset Pasar & Business Model Canvas (BMC)', desc:'Validasi problem-solution fit, positioning pasar, analisis kompetitor, dan segmen konsumen.', bobot:25 },
+                        { id:'k2', title:'Identitas Visual & Desain Produk/Kemasan Komersial', desc:'Kekuatan branding, packaging design, konsistensi collateral visual, dan daya tarik jual.', bobot:30 },
+                        { id:'k3', title:'Strategi Pemasaran & Feasibility Finansial', desc:'Rencana go-to-market, cost of goods sold (COGS), proyeksi ROI, dan skalabilitas bisnis.', bobot:25 },
+                        { id:'k4', title:'Pitching Produk & Pertanggungjawaban Bisnis', desc:'Kualitas deck presentasi, kemampuan pitching, dan kesiapan eksekusi komersial di pasar.', bobot:20 }
+                    ],
+                    'VIID': [
+                        { id:'k1', title:'Riset Strategis & Brand Architecture VIID', desc:'Landasan riset identitas visual, brand DNA, brand archetype, dan positioning strategi.', bobot:25 },
+                        { id:'k2', title:'Sistem Identitas Visual & Graphic Guidelines', desc:'Ketepatan tipografi, color palette, grid system, logo versatility, dan manual guideline lengkap.', bobot:30 },
+                        { id:'k3', title:'Aplikasi Interaktif & Environmental Media Terapan', desc:'Penerapan identitas visual pada media digital/interaktif, signage, wayfinding, dan merchandise.', bobot:25 },
+                        { id:'k4', title:'Presentasi Konsep & Ketajaman Analisis Visual', desc:'Artikulasi konsep visual, justifikasi semiotika desain, dan penguasaan respon akademik.', bobot:20 }
                     ]
-                }
+                },
+                _meta: {}
             },
-            'SI': {
+            'DI': {
+                name: 'Desain Interior (DI)',
                 peminatan: {
-                    'Sistem Informasi Enterprise': [
-                        { id:'k1', title:'Analisis Proses Bisnis', desc:'Kedalaman analisis proses bisnis & kebutuhan sistem.', bobot:25 },
-                        { id:'k2', title:'Perancangan Sistem', desc:'Kualitas perancangan arsitektur & data.', bobot:25 },
-                        { id:'k3', title:'Implementasi & Integrasi', desc:'Keberhasilan implementasi dan integrasi sistem.', bobot:20 },
-                        { id:'k4', title:'Dokumentasi & Laporan', desc:'Kualitas dokumentasi dan laporan.', bobot:15 },
-                        { id:'k5', title:'Presentasi & Sikap', desc:'Kemampuan menyampaikan hasil.', bobot:15 }
+                    'Komersial': [
+                        { id:'k1', title:'Konsep Ruang & Analisis Tapak Komersial', desc:'Kesesuaian tema desain dengan fungsi komersial, zoning, dan brand experience pengunjung.', bobot:25 },
+                        { id:'k2', title:'Detail Konstruksi, Material & Furnitur Kustom', desc:'Spesifikasi material, keakuratan gambar kerja interior, dan inovasi furnitur kustom.', bobot:30 },
+                        { id:'k3', title:'Ergonomi, Tata Cahaya (Lighting) & Akustik Ruang', desc:'Efisiensi sirkulasi, standar kenyamanan termal, pencahayaan buatan/alami, dan akustik.', bobot:25 },
+                        { id:'k4', title:'Visualisasi 3D Rendering & Presentasi Sidang', desc:'Realisme 3D render, kelengkapan maket/board material, dan argumentasi pemilihan desain.', bobot:20 }
+                    ],
+                    'Residensial': [
+                        { id:'k1', title:'Analisis Kebutuhan Penghuni & Konsep Hunian', desc:'Pemahaman profil klien, efisiensi zonasi ruang privat-publik, dan atmosfer interior.', bobot:25 },
+                        { id:'k2', title:'Pemilihan Material, Tekstur & Furnitur Hunian', desc:'Kualitas pemilihan finishing, keselarasan warna, dan ketahanan material interior.', bobot:30 },
+                        { id:'k3', title:'Sirkulasi Ruang, Utilitas & Keberlanjutan (Eco-Design)', desc:'Penataan utilitas ME, sirkulasi udara alami, dan penggunaan material ramah lingkungan.', bobot:25 },
+                        { id:'k4', title:'Gambar Kerja Teknis & Pertanggungjawaban Desain', desc:'Kelengkapan dokumen gambar arsitektural interior dan kelancaran presentasi sidang.', bobot:20 }
                     ]
-                }
+                },
+                _meta: {}
+            },
+            'DIB': {
+                name: 'Desain Interior Bisnis (DIB)',
+                peminatan: {
+                    'Spatial Branding': [
+                        { id:'k1', title:'Analisis Spatial Branding & Customer Journey', desc:'Integrasi brand identity ke dalam elemen spasial, touchpoints konsumen, dan visual merchandising.', bobot:25 },
+                        { id:'k2', title:'Layout Efisiensi Ruang Retail & Sirkulasi', desc:'Optimalisasi sales floor, zoning display produk, dan kenyamanan sirkulasi flow pengunjung.', bobot:30 },
+                        { id:'k3', title:'Analisis Kelayakan Finansial & Fit-out Costing', desc:'Estimasi RAB interior, pemilihan material tahan lama cost-effective, dan ROI ruang bisnis.', bobot:25 },
+                        { id:'k4', title:'Pitching Konsep Bisnis Interior & Presentasi Teknis', desc:'Kemampuan menyampaikan value proposition ruang terhadap peningkatan performa bisnis.', bobot:20 }
+                    ],
+                    'Hospitality': [
+                        { id:'k1', title:'Konsep Hospitality & Standar Layanan Ruang', desc:'Karakter ambience penginapan/kafe/hotel, alur front-of-house dan back-of-house efisien.', bobot:25 },
+                        { id:'k2', title:'Spesifikasi Material Heavy-Duty & Furnitur Kontrak', desc:'Ketahanan material standar komersial tinggi, kemudahan perawatan, dan estetika premium.', bobot:30 },
+                        { id:'k3', title:'Standar Keamanan, Pencahayaan Mood & Akustik', desc:'Penerapan jalur evakuasi, pencahayaan dramatis, dan peredaman suara lingkungan hospitality.', bobot:25 },
+                        { id:'k4', title:'Presentasi Komprehensif & Gambar Detail Interior', desc:'Kelengkapan gambar kerja dan kepiawaian dalam menjawab pertanyaan dewan penguji.', bobot:20 }
+                    ]
+                },
+                _meta: {}
+            },
+            'DP': {
+                name: 'Desain Produk (DP)',
+                peminatan: {
+                    'Desain Industri': [
+                        { id:'k1', title:'User Research, Problem Framing & Inovasi Fungsi', desc:'Ketepatan identifikasi masalah pengguna, riset antropometri, dan kebaruan solusi fungsi produk.', bobot:25 },
+                        { id:'k2', title:'Bentuk Estetika, Ergonomi & Styling Produk', desc:'Kematangan eksplorasi bentuk, proporsi, kenyamanan genggaman/penggunaan, dan CMF design.', bobot:30 },
+                        { id:'k3', title:'Material, Manufakturabilitas & Prototyping Uji', desc:'Kesesuaian proses produksi massal, pemilihan polimer/logam, dan hasil uji prototype fisik.', bobot:25 },
+                        { id:'k4', title:'Demonstrasi Produk Fisik & Argumentasi Sidang', desc:'Unjuk kerja prototype 1:1, detail exploded view 3D CAD, dan penguasaan materi sidang.', bobot:20 }
+                    ],
+                    'Furnitur': [
+                        { id:'k1', title:'Riset Kebutuhan Furnitur & Analisis Ergonomi', desc:'Standar antropometri duduk/kerja, fungsi multi-purpose, dan efisiensi ruang pakai.', bobot:25 },
+                        { id:'k2', title:'Konstruksi Sambungan, Kekuatan Struktur & Material', desc:'Inovasi joint system (knockdown/tenon), pemilihan kayu/metal, dan uji beban struktur.', bobot:30 },
+                        { id:'k3', title:'Finishing, Kemudahan Perakitan & Kemasan Flat-pack', desc:'Kualitas finishing permukaan, efisiensi kemasan distribusi, dan instruksi perakitan.', bobot:25 },
+                        { id:'k4', title:'Presentasi Prototype Skala 1:1 & Pertanggungjawaban', desc:'Kualitas mock-up fisik, keakuratan gambar kerja teknik, dan ketajaman jawaban ujian.', bobot:20 }
+                    ]
+                },
+                _meta: {}
             }
         };
+
+        // Simpan state kriteria tersimpan untuk Edit Nilai
+        let currentModalSavedDetails = [];
+        let currentActiveRubrik = null;
 
         function _penilaianEscapeHtml(unsafe) {
             if (unsafe === null || unsafe === undefined) return '';
             return String(unsafe).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
         }
 
+        // Sinkronisasi data master rubrik dinamis dari server
+        function syncMasterRubrikFromData(masterRubriks) {
+            if (!Array.isArray(masterRubriks) || masterRubriks.length === 0) return;
+            masterRubriks.forEach(item => {
+                const pKey = (item.prodi || '').trim();
+                const pemKey = (item.peminatan || '').trim();
+                if (!pKey || !pemKey) return;
+
+                if (!RUBRIK_PENILAIAN_PRODI[pKey]) {
+                    RUBRIK_PENILAIAN_PRODI[pKey] = {
+                        name: pKey,
+                        peminatan: {},
+                        _meta: {}
+                    };
+                }
+                if (!RUBRIK_PENILAIAN_PRODI[pKey].peminatan) {
+                    RUBRIK_PENILAIAN_PRODI[pKey].peminatan = {};
+                }
+                if (!RUBRIK_PENILAIAN_PRODI[pKey]._meta) {
+                    RUBRIK_PENILAIAN_PRODI[pKey]._meta = {};
+                }
+
+                if (Array.isArray(item.kriteria) && item.kriteria.length > 0) {
+                    RUBRIK_PENILAIAN_PRODI[pKey].peminatan[pemKey] = item.kriteria.map((crit, idx) => ({
+                        id: crit.id || crit.kode_kriteria || ('k' + (idx + 1)),
+                        title: crit.title || crit.nama_kriteria || `Kriteria ${idx + 1}`,
+                        desc: crit.desc || crit.deskripsi || '',
+                        bobot: parseFloat(crit.bobot) || 0
+                    }));
+                }
+
+                RUBRIK_PENILAIAN_PRODI[pKey]._meta[pemKey] = {
+                    id: item.id,
+                    versi: item.versi || 1,
+                    judul_rubrik: item.judul_rubrik || `Rubrik Sidang ${pKey} - ${pemKey}`,
+                    total_bobot: item.total_bobot || 100,
+                    status: item.status || 'published',
+                    tanggal_publish_formatted: item.tanggal_publish_formatted || ''
+                };
+            });
+        }
+
         function detectProdiKey(prodiName) {
             if (!prodiName) return 'DKV';
-            const p = String(prodiName).toLowerCase();
-            if (p.includes('sistem informasi')) return 'SI';
-            if (p.includes('informatika') || p.includes('ilmu komputer')) return 'IF';
-            if (p.includes('dkv') || p.includes('desain komunikasi visual')) return 'DKV';
-            return 'DKV';
+            const raw = String(prodiName).trim();
+            // 1. Direct match with keys
+            const keys = Object.keys(RUBRIK_PENILAIAN_PRODI);
+            for (let k of keys) {
+                if (k.toLowerCase() === raw.toLowerCase()) return k;
+            }
+            // 2. Keyword heuristic
+            const p = raw.toUpperCase();
+            if (p.includes('DIB') || p.includes('BISNIS')) return 'DIB';
+            if (p.includes('INTERIOR') || p.includes('DI')) return 'DI';
+            if (p.includes('PRODUK') || p.includes('DP')) return 'DP';
+            if (p.includes('DKV') || p.includes('DESAIN KOMUNIKASI VISUAL')) return 'DKV';
+            if (p.includes('INFORMATIKA') || p.includes('IF')) return 'IF';
+            if (p.includes('SISTEM INFORMASI') || p.includes('SI')) return 'SI';
+            return keys[0] || 'DKV';
+        }
+
+        function renderProdiSelectOptions(selectedProdi) {
+            const sel = document.getElementById('penilaianProdiSelect');
+            if (!sel) return;
+            const keys = Object.keys(RUBRIK_PENILAIAN_PRODI);
+            let html = '';
+            keys.forEach(k => {
+                const labelName = RUBRIK_PENILAIAN_PRODI[k].name || k;
+                const isSel = (k === selectedProdi);
+                html += `<option value="${k}" ${isSel ? 'selected' : ''}>${k} - ${labelName}</option>`;
+            });
+            sel.innerHTML = html;
+        }
+
+        function setupPenilaianPeminatanOptions(prodiKey, selectedPeminatan) {
+            const sel = document.getElementById('penilaianPeminatanSelect');
+            if (!sel) return;
+            const prodiData = RUBRIK_PENILAIAN_PRODI[prodiKey] || RUBRIK_PENILAIAN_PRODI['DKV'];
+            const list = Object.keys(prodiData.peminatan || {});
+            let html = '';
+            let matched = false;
+
+            list.forEach(p => {
+                const isSel = (p.toLowerCase() === String(selectedPeminatan || '').toLowerCase().trim());
+                if (isSel) matched = true;
+                html += `<option value="${p}" ${isSel ? 'selected' : ''}>${p}</option>`;
+            });
+
+            // Fallback jika peminatan mahasiswa belum ada di daftar kriteria
+            if (!matched && selectedPeminatan && selectedPeminatan !== '-') {
+                html = `<option value="${selectedPeminatan}" selected>${selectedPeminatan}</option>` + html;
+            }
+
+            sel.innerHTML = html;
         }
 
         window.openModalPenilaianSidang = function (nim) {
@@ -3774,15 +3994,18 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             document.getElementById('penilaianGradeBadge').textContent = '-';
             document.getElementById('penilaianGradeBadge').className = 'grade-badge grade-none';
             document.getElementById('penilaianPrevNilaiWrap').classList.add('hidden');
-            document.getElementById('penilaianRubrikContainer').innerHTML = '<div class="text-center py-6 text-slate-400 text-xs"><i class="bi bi-arrow-repeat inline-block animate-spin mr-1"></i> Memuat rubrik...</div>';
+            const vBadge = document.getElementById('penilaianRubrikVersionBadge');
+            if (vBadge) vBadge.classList.add('hidden');
+
+            document.getElementById('penilaianRubrikContainer').innerHTML = '<div class="text-center py-6 text-slate-400 text-xs"><i class="bi bi-arrow-repeat inline-block animate-spin mr-1"></i> Memuat rubrik penilaian terbaru...</div>';
             modal.classList.add('active');
 
-            const url = `<?= site_url('mahasiswa/get_detail_nilai_sidang_ajax') ?>?nim=${encodeURIComponent(nim)}`;
+            const url = `<?= site_url('dosen_bimbingan/get_detail_nilai_sidang_ajax') ?>?nim=${encodeURIComponent(nim)}`;
             fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(r => r.json())
                 .then(res => {
                     if (!res.status || !res.data) {
-                        showToast(res.message || 'Gagal memuat data.', 'error');
+                        showToast(res.message || 'Gagal memuat data bimbingan.', 'error');
                         closeModalPenilaianSidang();
                         return;
                     }
@@ -3790,7 +4013,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 })
                 .catch(err => {
                     console.error(err);
-                    showToast('Kesalahan koneksi saat memuat data.', 'error');
+                    showToast('Kesalahan koneksi saat memuat data penilaian.', 'error');
                     closeModalPenilaianSidang();
                 });
         };
@@ -3816,12 +4039,21 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             document.getElementById('penilaianPenguji1').textContent = 'Penguji 1: ' + (data.penguji_1 || '-');
             document.getElementById('penilaianPenguji2').textContent = 'Penguji 2: ' + (data.penguji_2 || '-');
 
+            // 1. Sinkronisasi master rubrik dari server (Koordinator TA)
+            if (data.master_rubriks && Array.isArray(data.master_rubriks)) {
+                syncMasterRubrikFromData(data.master_rubriks);
+            }
+            currentActiveRubrik = data.active_rubrik || null;
+
+            // 2. Set Prodi & Peminatan
             const prodiKey = detectProdiKey(data.prodi || data.peminatan);
-            document.getElementById('penilaianProdiSelect').value = prodiKey;
+            renderProdiSelectOptions(prodiKey);
             setupPenilaianPeminatanOptions(prodiKey, data.peminatan);
 
+            // 3. Cek Nilai Tersimpan (Mode Edit Nilai)
             const myDetail = (data.detail && data.detail[MODEL_POSISI]) || null;
             const myNilai  = (data.nilai && data.nilai[MODEL_POSISI]) || 0;
+            currentModalSavedDetails = (myDetail && Array.isArray(myDetail.detail)) ? myDetail.detail : [];
 
             if (myNilai > 0) {
                 document.getElementById('penilaianPrevNilaiWrap').classList.remove('hidden');
@@ -3833,19 +4065,9 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             document.getElementById('penilaianCatatan').value = (myDetail && myDetail.catatan) ? myDetail.catatan : '';
             document.getElementById('penilaianStatusKelulusan').value = 'Lulus';
 
-            renderPenilaianRubrik((myDetail && myDetail.detail) ? myDetail.detail : null, myNilai);
-
-            if (myDetail && Array.isArray(myDetail.detail) && myDetail.detail.length > 0) {
-                setTimeout(() => {
-                    myDetail.detail.forEach((d) => {
-                        const inp = document.querySelector(`.rubrik-score-input[data-crit-id="${d.id}"]`);
-                        if (inp && d.nilai !== undefined && d.nilai !== null) inp.value = d.nilai;
-                    });
-                    calculatePenilaianScore();
-                }, 30);
-            } else {
-                calculatePenilaianScore();
-            }
+            // 4. Render Rubrik Dinamis dengan smart-mapping nilai lama
+            renderPenilaianRubrik(currentModalSavedDetails, myNilai);
+            calculatePenilaianScore();
         }
 
         window.closeModalPenilaianSidang = function () {
@@ -3853,54 +4075,94 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             if (modal) modal.classList.remove('active');
         };
 
-        function setupPenilaianPeminatanOptions(prodiKey, selectedPeminatan) {
-            const sel = document.getElementById('penilaianPeminatanSelect');
-            if (!sel) return;
-            const prodiData = RUBRIK_PENILAIAN_PRODI[prodiKey] || RUBRIK_PENILAIAN_PRODI['DKV'];
-            const list = Object.keys(prodiData.peminatan || {});
-            let html = '';
-            list.forEach(p => {
-                const isSel = (p === selectedPeminatan) || (!selectedPeminatan && p === list[0]);
-                html += `<option value="${p}" ${isSel ? 'selected' : ''}>${p}</option>`;
-            });
-            sel.innerHTML = html;
-        }
-
         window.onPenilaianProdiChange = function (prodiVal) {
             const prodiKey = detectProdiKey(prodiVal);
             setupPenilaianPeminatanOptions(prodiKey, null);
-            renderPenilaianRubrik(null, 0);
-            calculatePenilaianScore();
-        };
-        window.onPenilaianPeminatanChange = function () {
-            renderPenilaianRubrik(null, 0);
+            renderPenilaianRubrik(currentModalSavedDetails, 0);
             calculatePenilaianScore();
         };
 
+        window.onPenilaianPeminatanChange = function () {
+            renderPenilaianRubrik(currentModalSavedDetails, 0);
+            calculatePenilaianScore();
+        };
+
+        // Render Rubrik Dinamis dengan Smart Mapping untuk Edit Nilai
         window.renderPenilaianRubrik = function (existingDetail, myNilai) {
             const container = document.getElementById('penilaianRubrikContainer');
             const prodiSelect = document.getElementById('penilaianProdiSelect');
             const peminatanSelect = document.getElementById('penilaianPeminatanSelect');
             const totalBobotLabel = document.getElementById('penilaianTotalBobotLabel');
+            const versionBadge = document.getElementById('penilaianRubrikVersionBadge');
+            const versionText = document.getElementById('penilaianRubrikVersionText');
+
             if (!container) return;
+
             const prodiKey = detectProdiKey(prodiSelect ? prodiSelect.value : 'DKV');
             const peminatanKey = peminatanSelect ? peminatanSelect.value : '';
-            const prodiData = RUBRIK_PENILAIAN_PRODI[prodiKey] || RUBRIK_PENILAIAN_PRODI['DKV'];
-            const criteriaList = prodiData.peminatan[peminatanKey] || prodiData.peminatan[Object.keys(prodiData.peminatan)[0]] || [];
+            const prodiData = RUBRIK_PENILAIAN_PRODI[prodiKey] || RUBRIK_PENILAIAN_PRODI['DKV'] || {};
+            const peminatanMap = prodiData.peminatan || {};
 
-            let mapNilaiTersimpan = {};
-            if (existingDetail && Array.isArray(existingDetail)) {
-                existingDetail.forEach((d) => { if (d && d.id) mapNilaiTersimpan[d.id] = d.nilai; });
+            let criteriaList = peminatanMap[peminatanKey] || null;
+            if (!criteriaList) {
+                const firstKey = Object.keys(peminatanMap)[0];
+                criteriaList = firstKey ? peminatanMap[firstKey] : [];
+            }
+
+            // Update badge versi rubrik jika tersedia
+            const metaInfo = (prodiData._meta && prodiData._meta[peminatanKey]) || currentActiveRubrik || null;
+            if (versionBadge && versionText && metaInfo) {
+                const vNum = metaInfo.versi || 1;
+                const vStatus = metaInfo.status === 'archived' ? 'Versi Lama' : 'Aktif';
+                versionText.textContent = `Rubrik v${vNum} (${vStatus})`;
+                versionBadge.classList.remove('hidden');
+            } else if (versionBadge) {
+                versionBadge.classList.add('hidden');
+            }
+
+            // SMART MAPPING NILAI LAMA SAAT EDIT NILAI
+            // 1. Prioritas ID kriteria (k1, k2, etc.)
+            // 2. Normalisasi kecocokan judul kriteria
+            // 3. Fallback indeks urutan
+            const savedScoresById = {};
+            const savedScoresByTitle = {};
+            const savedScoresByIndex = [];
+
+            if (Array.isArray(existingDetail) && existingDetail.length > 0) {
+                existingDetail.forEach((d, idx) => {
+                    if (d) {
+                        const val = (d.nilai !== undefined && d.nilai !== null && d.nilai !== '') ? parseFloat(d.nilai) : null;
+                        if (val !== null && !isNaN(val)) {
+                            if (d.id) savedScoresById[String(d.id).trim()] = val;
+                            if (d.title) savedScoresByTitle[String(d.title).trim().toLowerCase()] = val;
+                            savedScoresByIndex[idx] = val;
+                        }
+                    }
+                });
             }
 
             let totalBobot = 0;
             let html = '';
+
             criteriaList.forEach((crit, idx) => {
-                const bobot = parseFloat(crit.bobot) || 25;
+                const bobot = parseFloat(crit.bobot) || 0;
                 totalBobot += bobot;
-                const val = (mapNilaiTersimpan[crit.id] !== undefined && mapNilaiTersimpan[crit.id] !== null) ? mapNilaiTersimpan[crit.id] : '';
+
+                // Smart Mapping
+                let val = '';
+                const cId = String(crit.id || ('k' + (idx + 1))).trim();
+                const cTitle = String(crit.title || '').trim().toLowerCase();
+
+                if (savedScoresById[cId] !== undefined) {
+                    val = savedScoresById[cId];
+                } else if (savedScoresByTitle[cTitle] !== undefined) {
+                    val = savedScoresByTitle[cTitle];
+                } else if (savedScoresByIndex[idx] !== undefined) {
+                    val = savedScoresByIndex[idx];
+                }
+
                 html += `
-                    <div class="rubrik-row">
+                    <div class="rubrik-row p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs transition-all hover:border-amber-300">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div class="flex items-start gap-3 flex-1 min-w-0">
                                 <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-md shadow-amber-500/20 mt-0.5">${idx + 1}</div>
@@ -3914,16 +4176,18 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                             </div>
                             <div class="flex items-center gap-3 shrink-0 self-end sm:self-center">
                                 <span class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200">Bobot: <strong class="text-amber-700">${bobot}%</strong></span>
-                                <input type="number" min="0" max="100" step="0.5" data-bobot="${bobot}" data-crit-id="${_penilaianEscapeHtml(crit.id)}" data-crit-title="${_penilaianEscapeHtml(crit.title)}" data-crit-desc="${_penilaianEscapeHtml(crit.desc)}" value="${val}" placeholder="0-100" oninput="calculatePenilaianScore()" class="rubrik-score-input" required>
+                                <input type="number" min="0" max="100" step="0.5" data-bobot="${bobot}" data-crit-id="${_penilaianEscapeHtml(cId)}" data-crit-title="${_penilaianEscapeHtml(crit.title)}" data-crit-desc="${_penilaianEscapeHtml(crit.desc)}" value="${val}" placeholder="0-100" oninput="calculatePenilaianScore()" class="rubrik-score-input" required>
                             </div>
                         </div>
                     </div>
                 `;
             });
+
             if (totalBobotLabel) {
                 totalBobotLabel.textContent = totalBobot + '%';
-                totalBobotLabel.className = (totalBobot === 100) ? 'text-slate-700 font-extrabold' : 'text-rose-600 font-extrabold';
+                totalBobotLabel.className = (Math.round(totalBobot) === 100) ? 'text-slate-700 font-extrabold' : 'text-rose-600 font-extrabold';
             }
+
             container.innerHTML = html;
         };
 
@@ -3934,15 +4198,22 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             const statusKelEl  = document.getElementById('penilaianStatusKelulusan');
             let totalWeighted = 0;
             let hasAnyInput = false;
+
             inputs.forEach(inp => {
                 const val = parseFloat(inp.value);
                 const bobot = parseFloat(inp.getAttribute('data-bobot')) || 0;
-                if (!isNaN(val)) { totalWeighted += (val * bobot) / 100; hasAnyInput = true; }
+                if (!isNaN(val)) {
+                    totalWeighted += (val * bobot) / 100;
+                    hasAnyInput = true;
+                }
             });
+
             const finalScore = hasAnyInput ? totalWeighted : 0;
             if (totalScoreEl) totalScoreEl.textContent = finalScore.toFixed(2);
+
             let grade = '-';
             let gradeClass = 'grade-badge grade-none';
+
             if (hasAnyInput) {
                 if (finalScore >= 85)         { grade = 'A';  gradeClass = 'grade-badge grade-A'; }
                 else if (finalScore >= 77.5)  { grade = 'AB'; gradeClass = 'grade-badge grade-AB'; }
@@ -3952,15 +4223,18 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 else if (finalScore >= 45)    { grade = 'D';  gradeClass = 'grade-badge grade-D'; }
                 else                          { grade = 'E';  gradeClass = 'grade-badge grade-E'; }
             }
+
             if (gradeBadgeEl) {
                 gradeBadgeEl.textContent = grade;
                 gradeBadgeEl.className = gradeClass;
             }
+
             if (statusKelEl && hasAnyInput) {
                 if (finalScore >= 70) statusKelEl.value = 'Lulus';
                 else if (finalScore >= 55) statusKelEl.value = 'Lulus dengan Revisi';
                 else statusKelEl.value = 'Tidak Lulus';
             }
+
             return { score: finalScore, grade: grade };
         };
 
@@ -3969,10 +4243,16 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             const nim = document.getElementById('penilaianNim')?.value;
             const catatan = document.getElementById('penilaianCatatan')?.value || '';
             const calc = calculatePenilaianScore();
-            if (!nim) { Swal.fire({ icon:'error', title:'Error', text:'NIM tidak valid.' }); return; }
+
+            if (!nim) {
+                Swal.fire({ icon:'error', title:'Error', text:'NIM mahasiswa tidak valid.' });
+                return;
+            }
+
             const scoreInputs = document.querySelectorAll('.rubrik-score-input');
             const details = [];
             let allValid = true;
+
             scoreInputs.forEach(inp => {
                 const val = parseFloat(inp.value);
                 if (isNaN(val) || val < 0 || val > 100) allValid = false;
@@ -3984,37 +4264,58 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                     nilai: isNaN(val) ? 0 : val,
                 });
             });
+
             if (!allValid) {
-                Swal.fire({ icon:'warning', title:'Nilai Belum Lengkap', text:'Pastikan seluruh kolom nilai terisi (0-100).' });
+                Swal.fire({ icon:'warning', title:'Nilai Belum Lengkap', text:'Pastikan seluruh kolom nilai kriteria terisi angka antara 0 sampai 100.' });
                 return;
             }
+
             const btn = document.getElementById('btnSubmitPenilaianSidang');
-            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-arrow-repeat inline-block animate-spin"></i> Menyimpan...'; }
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="bi bi-arrow-repeat inline-block animate-spin mr-1.5"></i> Menyimpan...';
+            }
+
             const fd = new FormData();
             fd.append('nim', nim);
             fd.append('posisi', MODEL_POSISI);
             fd.append('nilai_akhir', calc.score.toFixed(2));
             fd.append('catatan', catatan);
             fd.append('detail_penilaian', JSON.stringify(details));
-            fetch('<?= site_url('mahasiswa/simpan_nilai_sidang_ajax') ?>', {
-                method: 'POST', body: fd,
+
+            fetch('<?= site_url('dosen_bimbingan/simpan_nilai_sidang_ajax') ?>', {
+                method: 'POST',
+                body: fd,
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
             .then(r => r.json())
             .then(res => {
                 if (res && res.status) {
                     closeModalPenilaianSidang();
-                    Swal.fire({ icon:'success', title:'Berhasil', text: res.message || 'Nilai sidang tersimpan.' }).then(() => { fetchBimbinganData(true); });
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Nilai Berhasil Disimpan',
+                        text: res.message || 'Penilaian sidang tugas akhir berhasil diperbarui.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        if (typeof fetchBimbinganData === 'function') {
+                            fetchBimbinganData(true);
+                        }
+                    });
                 } else {
-                    Swal.fire({ icon:'error', title:'Gagal', text: res.message || 'Gagal menyimpan nilai.' });
+                    Swal.fire({ icon:'error', title:'Gagal Menyimpan', text: res.message || 'Gagal menyimpan nilai sidang.' });
                 }
             })
             .catch(err => {
                 console.error(err);
-                Swal.fire({ icon:'error', title:'Error', text:'Terjadi kesalahan sistem.' });
+                Swal.fire({ icon:'error', title:'Error Sistem', text:'Terjadi kesalahan koneksi saat menyimpan penilaian.' });
             })
             .finally(() => {
-                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-save-fill"></i> Simpan Penilaian Sidang'; }
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-save-fill"></i> Simpan Penilaian Sidang';
+                }
             });
         };
     </script>

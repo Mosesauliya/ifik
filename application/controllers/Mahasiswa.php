@@ -29,7 +29,11 @@ class Mahasiswa extends CI_Controller {
 
         // 2. Cek Role (Hanya Role 4 = Mahasiswa, atau Role 1 = Admin)
         $role_id = (int)$this->session->userdata('role_id');
-        if ($role_id !== 4 && $role_id !== 1) {
+        $current_method = $this->router->fetch_method();
+        $isReviewerMethod = in_array($current_method, ['get_detail_nilai_sidang_ajax', 'simpan_nilai_sidang_ajax'], true);
+        if ($isReviewerMethod && in_array($role_id, [1, 2, 3, 4, 5, 6, 9, 22], true)) {
+            // Izinkan reviewer mengakses endpoint penilaian sidang
+        } elseif ($role_id !== 4 && $role_id !== 1) {
             if ($isAjax) {
                 $this->output
                     ->set_status_header(403)
