@@ -302,5 +302,7 @@ $gambar_url = !empty($berita->gambar) ? base_url($berita->gambar) : base_url('as
         &copy; <?= date('Y') ?> IFIK Portal. Seluruh hak cipta dilindungi.
     </footer>
 
+    <!-- Global Custom Circle Cursor -->
+    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>

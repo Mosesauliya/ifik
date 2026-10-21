@@ -556,3 +556,6 @@ $barangNavGroups[] = [
 
 <!-- Curved Sidebar Core Script -->
 <script src="<?= base_url('assets/js/curved_sidebar.js?v=' . time()); ?>"></script>
+
+<!-- Global Custom Circle Cursor -->
+<?php $this->load->view('partials/custom_cursor'); ?>
