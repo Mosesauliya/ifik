@@ -28,9 +28,9 @@ class KoordinatorTA extends CI_Controller {
             return;
         }
 
-        // 2. Cek Role (Hanya Role 6 = Koordinator TA, atau Role 1 = Admin)
+        // 2. Cek Role (Hanya Role 6 = Koordinator TA, atau Role 1 & 22 = Admin / Super Admin)
         $role_id = (int)$this->session->userdata('role_id');
-        if ($role_id !== 6 && $role_id !== 1) {
+        if ($role_id !== 6 && $role_id !== 1 && $role_id !== 22) {
             if ($isAjax) {
                 $this->output
                     ->set_status_header(403)
@@ -879,6 +879,15 @@ class KoordinatorTA extends CI_Controller {
             'status' => true,
             'data'   => $detail
         ));
+    }
+
+    /**
+     * Halaman Dedicated Form Master Rubrik Penilaian Sidang TA (Dinamis Nilai)
+     */
+    public function master_rubrik() {
+        $data['title'] = 'Kelola Master Rubrik Penilaian Sidang TA';
+        $data['rubriks'] = $this->KoordinatorTA_model->get_all_master_rubrik();
+        $this->load->view('koordinator_ta/master_rubrik', $data);
     }
 
     // AJAX Endpoint: Ambil Semua Master Rubrik Dinamis

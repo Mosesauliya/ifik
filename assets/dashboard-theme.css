@@ -31,6 +31,10 @@
 .scm-dashboard .sidebar-footer { display: flex; align-items: center; gap: 8px; margin: 28px 8px 0; padding-top: 16px; border-top: 1px solid #242729; color: var(--scm-muted); font-size: .72rem; }
 .scm-dashboard .sidebar-status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--scm-green); box-shadow: 0 0 0 4px rgba(67, 209, 122, .1); }
 .scm-dashboard .dashboard-content { min-width: 0; min-height: 100vh; margin-left: 236px; }
+.scm-dashboard .page-wrapper-for-sidebar,
+.scm-dashboard .dashboard-content.page-wrapper-for-sidebar { margin-left: 270px; width: calc(100% - 270px); }
+body.scm-dashboard.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar,
+body.scm-dashboard.curved-sidebar-desktop-collapsed .dashboard-content.page-wrapper-for-sidebar { margin-left: 0 !important; width: 100% !important; }
 .scm-dashboard .topbar { background: #0b0c0d !important; border-bottom: 1px solid #242729 !important; box-shadow: 0 8px 24px rgba(0, 0, 0, .16); }
 .scm-dashboard .dashboard-topbar-brand { display: none !important; }
 .scm-dashboard .topbar .btn-outline-light { color: #dfe2e5; border-color: #44494d; }

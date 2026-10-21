@@ -11016,6 +11016,13 @@
         const initialHash = window.location.hash ? window.location.hash.replace(/^#/, '') : '';
         if (initialHash && ['pendaftaran', 'preview2', 'sidang'].includes(initialHash)) {
             window.switchDashboardTab(initialHash);
+        } else if (initialHash === 'rubrik' || initialHash === 'master_rubrik') {
+            window.switchDashboardTab('sidang');
+            setTimeout(() => {
+                if (typeof window.openModalMasterRubrik === 'function') {
+                    window.openModalMasterRubrik();
+                }
+            }, 350);
         }
         updateFilterBadge();
         updateP2FilterBadge();

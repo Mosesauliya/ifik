@@ -108,6 +108,13 @@
                         <p class="text-xs text-slate-500 mt-0.5">Tambah tab kategori utama baru, edit sub-jalur, dan atur form persyaratannya secara dinamis.</p>
                     </div>
                 </div>
+
+                <div class="flex items-center gap-2">
+                    <a href="<?= site_url('adminlayanan/seed_default_jalur') ?>" onclick="return confirm('Muat ulang data jalur default (Sidang & 5 Sub-Jalur Non-Sidang)?')" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-orange-600 hover:border-orange-300 text-xs font-bold shadow-xs hover:shadow transition">
+                        <i class="bi bi-arrow-clockwise text-orange-600"></i>
+                        <span>Muat / Pulihkan Jalur Default</span>
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -208,9 +215,19 @@
                         <button onclick="deleteOptionAdmin(<?= $opt['id']; ?>)" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 transition">
                             <i class="bi bi-trash-fill"></i> Hapus
                         </button>
-                    </div>
                 </div>
-                <?php endforeach; endif; ?>
+                <?php endforeach; else: ?>
+                <div class="col-span-full bg-white rounded-3xl border-2 border-dashed border-orange-200 p-8 text-center space-y-3">
+                    <div class="w-12 h-12 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center text-2xl mx-auto">
+                        <i class="bi bi-inbox-fill"></i>
+                    </div>
+                    <h4 class="font-extrabold text-slate-800 text-base">Belum Ada Kategori Utama</h4>
+                    <p class="text-xs text-slate-500 max-w-md mx-auto">Database kategori pilihan utama masih kosong. Anda dapat menambahkan card baru secara manual atau klik tombol di bawah untuk memuat data default sistem.</p>
+                    <a href="<?= site_url('adminlayanan/seed_default_jalur') ?>" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold shadow-md transition">
+                        <i class="bi bi-arrow-clockwise"></i> Muat Jalur Default (Sidang &amp; Non-Sidang)
+                    </a>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -302,7 +319,18 @@
                         <?php endif; ?>
                     </div>
                 </div>
-                <?php endforeach; endif; ?>
+                <?php endforeach; else: ?>
+                <div class="p-8 rounded-3xl bg-white border-2 border-dashed border-emerald-200 text-center space-y-3">
+                    <div class="w-12 h-12 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl font-bold">
+                        <i class="bi bi-inbox-fill"></i>
+                    </div>
+                    <h4 class="font-extrabold text-slate-800 text-base">Belum Ada Sub-Jalur Non-Sidang</h4>
+                    <p class="text-xs text-slate-500 max-w-md mx-auto">Sub-jalur non-sidang dan form persyaratannya masih kosong. Klik tombol di bawah untuk memuat data bawaan (Prestasi, HKI, Kebijakan, Pameran, Proyek Industri) secara otomatis.</p>
+                    <a href="<?= site_url('adminlayanan/seed_default_jalur') ?>" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md transition">
+                        <i class="bi bi-arrow-clockwise"></i> Muat Sub-Jalur Bawaan
+                    </a>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -422,7 +450,7 @@
             <button onclick="closeModalAdmin('modalEditJalur')" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 text-2xl font-bold">&times;</button>
             <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2 border-b pb-3"><i class="bi bi-pencil-square text-orange-500"></i> Edit Jalur / Kategori</h3>
             
-            <form id="formEditJalurSubmit" action="<?= site_url('mahasiswa/ajax_save_rekomen_option') ?>" method="POST" class="space-y-4">
+            <form id="formEditJalurSubmit" action="<?= site_url('adminlayanan/ajax_save_rekomen_option') ?>" method="POST" class="space-y-4">
                 <input type="hidden" name="id" id="editJalurId">
                 <input type="hidden" name="category" id="editJalurCategory">
                 <div>
@@ -451,7 +479,7 @@
             <button onclick="closeModalAdmin('modalEditField')" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 text-2xl font-bold">&times;</button>
             <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2 border-b pb-3"><i class="bi bi-pencil-square text-emerald-500"></i> Edit Field Persyaratan</h3>
             
-            <form id="formEditFieldSubmit" action="<?= site_url('mahasiswa/ajax_save_rekomen_field') ?>" method="POST" class="space-y-4">
+            <form id="formEditFieldSubmit" action="<?= site_url('adminlayanan/ajax_save_rekomen_field') ?>" method="POST" class="space-y-4">
                 <input type="hidden" name="id" id="editFieldId">
                 <input type="hidden" name="jalur_id" id="editFieldJalurId">
                 <div>
@@ -721,7 +749,7 @@
                     formData1.append('code', catKey + '_default');
                     formData1.append('icon_class', iconClass);
 
-                    fetch('<?= site_url("mahasiswa/ajax_save_rekomen_option") ?>', {
+                    fetch('<?= site_url("adminlayanan/ajax_save_rekomen_option") ?>', {
                         method: 'POST',
                         body: formData1,
                         headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -736,7 +764,7 @@
                         formData2.append('code', 'main_' + catKey);
                         formData2.append('icon_class', iconClass);
 
-                        return fetch('<?= site_url("mahasiswa/ajax_save_rekomen_option") ?>', {
+                        return fetch('<?= site_url("adminlayanan/ajax_save_rekomen_option") ?>', {
                             method: 'POST',
                             body: formData2,
                             headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -769,7 +797,7 @@
                     }
                     formData.append('icon_class', iconClass);
 
-                    fetch('<?= site_url("mahasiswa/ajax_save_rekomen_option") ?>', {
+                    fetch('<?= site_url("adminlayanan/ajax_save_rekomen_option") ?>', {
                         method: 'POST',
                         body: formData,
                         headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -800,7 +828,7 @@
                     formData.append('allowed_ext', ext);
                     formData.append('is_required', req);
 
-                    fetch('<?= site_url("mahasiswa/ajax_save_rekomen_field") ?>', {
+                    fetch('<?= site_url("adminlayanan/ajax_save_rekomen_field") ?>', {
                         method: 'POST',
                         body: formData,
                         headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -854,7 +882,7 @@
                 const formData = new FormData();
                 formData.append('id', id);
 
-                fetch('<?= site_url("mahasiswa/ajax_delete_rekomen_option") ?>', {
+                fetch('<?= site_url("adminlayanan/ajax_delete_rekomen_option") ?>', {
                     method: 'POST',
                     body: formData,
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -871,7 +899,7 @@
                 const formData = new FormData();
                 formData.append('id', id);
 
-                fetch('<?= site_url("mahasiswa/ajax_delete_rekomen_field") ?>', {
+                fetch('<?= site_url("adminlayanan/ajax_delete_rekomen_field") ?>', {
                     method: 'POST',
                     body: formData,
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -888,7 +916,7 @@
                 const formData = new FormData();
                 formData.append('category', catKey);
 
-                fetch('<?= site_url("mahasiswa/ajax_delete_rekomen_category") ?>', {
+                fetch('<?= site_url("adminlayanan/ajax_delete_rekomen_category") ?>', {
                     method: 'POST',
                     body: formData,
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }

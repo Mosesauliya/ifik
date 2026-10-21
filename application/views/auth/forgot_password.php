@@ -189,5 +189,7 @@
   <p class="footer-copy">&copy; 2025 Fakultas Industri Kreatif &mdash; Telkom University</p>
 
   <script src="<?= base_url('assets/js/forgot_password.js'); ?>?v=<?= time(); ?>"></script>
+  <!-- Global Custom Circle Cursor -->
+  <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>

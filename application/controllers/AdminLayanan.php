@@ -257,6 +257,118 @@ class AdminLayanan extends CI_Controller {
         $this->load->view('admin_layanan/pengaturan_berkas_sidang', $data);
     }
 
+
+    /**
+     * Halaman Pengaturan Master Jalur Sidang & Non-Sidang (Dinamis)
+     */
+    public function pengaturan_jalur() {
+        $data['title'] = 'Pengaturan Jalur Sidang & Non-Sidang (Dinamis)';
+        $this->load->model('Rekomendasi_model');
+        $data['options'] = $this->Rekomendasi_model->get_all_options();
+        $data['options_grouped'] = $this->Rekomendasi_model->get_all_options_grouped();
+        $this->load->view('admin_layanan/pengaturan_jalur', $data);
+    }
+
+    /**
+     * Muat / Reset Ulang Data Default Jalur Sidang & Non-Sidang
+     */
+    public function seed_default_jalur() {
+        $this->load->model('Rekomendasi_model');
+        $this->Rekomendasi_model->seed_defaults_force();
+        $this->session->set_flashdata('success', 'Data jalur Sidang & Non-Sidang bawaan berhasil dimuat ke database!');
+        redirect('adminlayanan/pengaturan_jalur');
+    }
+
+    public function ajax_get_rekomen_options() {
+        $this->load->model('Rekomendasi_model');
+        $main = $this->Rekomendasi_model->get_active_main_options();
+        $non_sidang = $this->Rekomendasi_model->get_active_non_sidang_options();
+        echo json_encode([
+            'status' => 'success',
+            'data' => $non_sidang,
+            'main_options' => $main
+        ]);
+        exit;
+    }
+
+    public function ajax_save_rekomen_option() {
+        $this->load->model('Rekomendasi_model');
+        $id = $this->input->post('id');
+        $data = [
+            'category' => $this->input->post('category') ?: 'non_sidang',
+            'code' => strtolower(url_title($this->input->post('title'), '_', true)) . '_' . time(),
+            'title' => $this->input->post('title'),
+            'description' => $this->input->post('description'),
+            'icon_type' => 'bi',
+            'icon_class' => $this->input->post('icon_class') ?: 'bi-award-fill',
+            'is_active' => $this->input->post('is_active') !== null ? (int)$this->input->post('is_active') : 1,
+            'sort_order' => (int)($this->input->post('sort_order') ?: 0)
+        ];
+
+        if ($id) {
+            unset($data['code']);
+        }
+
+        $res_id = $this->Rekomendasi_model->save_option($data, $id);
+        echo json_encode(['status' => 'success', 'message' => 'Jalur berhasil disimpan!', 'id' => $res_id]);
+        exit;
+    }
+
+    public function ajax_delete_rekomen_option() {
+        $this->load->model('Rekomendasi_model');
+        $id = $this->input->post('id');
+        if ($id) {
+            $this->Rekomendasi_model->delete_option($id);
+            echo json_encode(['status' => 'success', 'message' => 'Jalur berhasil dihapus!']);
+            exit;
+        }
+        echo json_encode(['status' => 'error', 'message' => 'ID tidak ditemukan']);
+        exit;
+    }
+
+    public function ajax_delete_rekomen_category() {
+        $this->load->model('Rekomendasi_model');
+        $category = $this->input->post('category');
+        if ($category) {
+            $this->Rekomendasi_model->delete_category($category);
+            echo json_encode(['status' => 'success', 'message' => 'Tab Kategori beserta seluruh isinya berhasil dihapus!']);
+            exit;
+        }
+        echo json_encode(['status' => 'error', 'message' => 'Kategori tidak ditemukan']);
+        exit;
+    }
+
+    public function ajax_save_rekomen_field() {
+        $this->load->model('Rekomendasi_model');
+        $id = $this->input->post('id');
+        $data = [
+            'jalur_id' => $this->input->post('jalur_id'),
+            'field_key' => $this->input->post('field_key') ?: strtolower(url_title($this->input->post('field_label'), '_', true)),
+            'field_label' => $this->input->post('field_label'),
+            'field_type' => $this->input->post('field_type') ?: 'file',
+            'allowed_ext' => $this->input->post('allowed_ext') ?: 'pdf,docx,doc',
+            'is_required' => (int)($this->input->post('is_required') ?: 0),
+            'help_text' => $this->input->post('help_text') ?: 'Format file diharuskan pdf/docx',
+            'sort_order' => (int)($this->input->post('sort_order') ?: 0)
+        ];
+
+        $res_id = $this->Rekomendasi_model->save_field($data, $id);
+        echo json_encode(['status' => 'success', 'message' => 'Field persyaratan berhasil disimpan!', 'id' => $res_id]);
+        exit;
+    }
+
+    public function ajax_delete_rekomen_field() {
+        $this->load->model('Rekomendasi_model');
+        $id = $this->input->post('id');
+        if ($id) {
+            $this->Rekomendasi_model->delete_field($id);
+            echo json_encode(['status' => 'success', 'message' => 'Field berhasil dihapus!']);
+            exit;
+        }
+        echo json_encode(['status' => 'error', 'message' => 'ID field tidak ditemukan']);
+        exit;
+    }
+
     /**
      * Simpan / Tambah / Edit Syarat Berkas Sidang
      */

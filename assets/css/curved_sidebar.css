@@ -427,6 +427,9 @@ body.curved-sidebar-open {
         transform: translateX(0);
     }
     
+    body:not(.curved-sidebar-desktop-collapsed) .page-wrapper-for-sidebar,
+    body:not(.curved-sidebar-desktop-collapsed) .curved-page-container,
+    body:not(.curved-sidebar-desktop-collapsed) #laaMainContentWrapper,
     .page-wrapper-for-sidebar,
     .curved-page-container {
         margin-left: 270px;
@@ -450,9 +453,10 @@ body.curved-sidebar-open {
     }
 
     body.curved-sidebar-desktop-collapsed .page-wrapper-for-sidebar,
-    body.curved-sidebar-desktop-collapsed .curved-page-container {
-        margin-left: 0;
-        width: 100%;
+    body.curved-sidebar-desktop-collapsed .curved-page-container,
+    body.curved-sidebar-desktop-collapsed #laaMainContentWrapper {
+        margin-left: 0 !important;
+        width: 100% !important;
     }
 
     body.curved-sidebar-desktop-collapsed .modal-overlay,

@@ -223,5 +223,7 @@
         &copy; <?= date('Y') ?> IFIK Portal — Fakultas Industri Kreatif. Seluruh hak cipta dilindungi.
     </footer>
 
+    <!-- Global Custom Circle Cursor -->
+    <?php $this->load->view('partials/custom_cursor'); ?>
 </body>
 </html>
