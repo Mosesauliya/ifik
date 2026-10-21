@@ -971,11 +971,15 @@ class KoordinatorTA extends CI_Controller {
         $this->load->model('Help_chat_model');
         $nip_koor = $this->session->userdata('nip') ?: ($this->session->userdata('username') ?: '1987010102');
         $user_id = $this->session->userdata('user_id') ?: 6;
+        $role_id = (int)$this->session->userdata('role_id') ?: 6;
+        $user_nama = $this->session->userdata('name') ?: 'Dr. Koordinator TA, M.T.';
+        $this->Help_chat_model->update_presence($user_id, $role_id, $user_nama, 'koordinator_ta', 1);
 
-        $data['title'] = 'Bantuan & Live Chat - Koordinator TA';
-        $data['nip_koor'] = $nip_koor;
-        $data['stats'] = $this->Help_chat_model->get_stats(null, $user_id);
-        $data['conversations'] = $this->Help_chat_model->get_conversations('all', '', null, $user_id);
+        $data['title']             = 'Bantuan & Live Chat - Koordinator TA';
+        $data['nip_koor']          = $nip_koor;
+        $data['stats']             = $this->Help_chat_model->get_stats(null, $user_id);
+        $data['conversations']     = $this->Help_chat_model->get_conversations('all', '', null, $user_id);
+        $data['channels_presence'] = $this->Help_chat_model->get_channels_presence();
 
         $this->load->view('koordinator_ta/help', $data);
     }
@@ -1032,10 +1036,14 @@ class KoordinatorTA extends CI_Controller {
         }
 
         $userId    = $this->session->userdata('user_id') ?: 6;
+        $roleId    = (int)$this->session->userdata('role_id') ?: 6;
         $userNama  = $this->session->userdata('name') ?: 'Dr. Koordinator TA, M.T.';
         $userEmail = $this->session->userdata('email') ?: 'koordinator.ta@telkomuniversity.ac.id';
         $userNip   = $this->session->userdata('nip') ?: ($this->session->userdata('username') ?: '1987010102');
         session_write_close();
+
+        $this->Help_chat_model->update_presence($userId, $roleId, $userNama, 'koordinator_ta', 1);
+        $channelsPresence = $this->Help_chat_model->get_channels_presence();
 
         $conv = $this->Help_chat_model->get_or_create_channel($userId, $userNama, $userEmail, 'Koordinator TA', $userNip, $target_role);
 
@@ -1047,7 +1055,7 @@ class KoordinatorTA extends CI_Controller {
 
         foreach ($messages as $m) {
             $formattedMessages[] = [
-                'id'          => (int)$m->id,
+                'id'          => (string)$m->id,
                 'sender_id'   => $m->sender_id,
                 'sender_name' => htmlspecialchars($m->sender_name),
                 'sender_role' => $m->sender_role,
@@ -1069,7 +1077,7 @@ class KoordinatorTA extends CI_Controller {
         echo json_encode([
             'status'       => 'success',
             'conversation' => [
-                'id'                => (int)$conv->id,
+                'id'                => (string)$conv->id,
                 'target_role'       => htmlspecialchars($conv->target_role ?? $target_role),
                 'target_role_label' => $this->_get_target_role_label($conv->target_role ?? $target_role),
                 'topik'             => htmlspecialchars($conv->topik),
@@ -1077,8 +1085,9 @@ class KoordinatorTA extends CI_Controller {
                 'last_message_time' => $this->_format_help_time_ago($conv->last_message_time ?? $conv->created_at),
                 'created_at'        => date('d M Y, H:i', strtotime($conv->created_at))
             ],
-            'messages'     => $formattedMessages,
-            'unreads'      => [
+            'messages'          => $formattedMessages,
+            'channels_presence' => $channelsPresence,
+            'unreads'           => [
                 'laboran'       => $statsLaboran['unread'] ?? 0,
                 'kaur'          => $statsKaur['unread'] ?? 0,
                 'admin_layanan' => $statsAdmin['unread'] ?? 0
@@ -1111,7 +1120,7 @@ class KoordinatorTA extends CI_Controller {
 
         foreach ($messages as $m) {
             $formattedMessages[] = [
-                'id'          => (int)$m->id,
+                'id'          => (string)$m->id,
                 'sender_id'   => $m->sender_id,
                 'sender_name' => htmlspecialchars($m->sender_name),
                 'sender_role' => $m->sender_role,
@@ -1128,7 +1137,7 @@ class KoordinatorTA extends CI_Controller {
         echo json_encode([
             'status'       => 'success',
             'conversation' => [
-                'id'                => (int)$conversation->id,
+                'id'                => (string)$conversation->id,
                 'target_role'       => htmlspecialchars($conversation->target_role ?? 'laboran'),
                 'target_role_label' => $this->_get_target_role_label($conversation->target_role ?? 'laboran'),
                 'topik'             => htmlspecialchars($conversation->topik),
@@ -1185,7 +1194,7 @@ class KoordinatorTA extends CI_Controller {
         if ($conv_id) {
             echo json_encode([
                 'status'          => 'success',
-                'conversation_id' => (int)$conv_id,
+                'conversation_id' => (string)$conv_id,
                 'message'         => 'Permintaan bantuan berhasil dikirim ke ' . $this->_get_target_role_label($target_role) . '.'
             ]);
         } else {
@@ -1204,10 +1213,11 @@ class KoordinatorTA extends CI_Controller {
         header('Content-Type: application/json');
         $this->load->model('Help_chat_model');
 
-        $conversation_id = $this->input->post('conversation_id');
+        $conversation_id = trim($this->input->post('conversation_id') ?? '');
         $message         = trim($this->input->post('message') ?? '');
+        $target_role     = strtolower(trim($this->input->post('target_role') ?? 'laboran'));
 
-        if (empty($conversation_id) || empty($message)) {
+        if (empty($message)) {
             echo json_encode([
                 'status'  => 'error',
                 'message' => 'Pesan tidak boleh kosong.'
@@ -1215,7 +1225,19 @@ class KoordinatorTA extends CI_Controller {
             exit;
         }
 
-        $conversation = $this->Help_chat_model->get_conversation_by_id($conversation_id);
+        $userId    = $this->session->userdata('user_id') ?: ($this->session->userdata('id') ?: 'koor-ta-01');
+        $userNama  = $this->session->userdata('name') ?: 'Dr. Koordinator TA, M.T.';
+        $userEmail = $this->session->userdata('email') ?: 'koordinator.ta@telkomuniversity.ac.id';
+        $userNip   = $this->session->userdata('nip') ?: ($this->session->userdata('username') ?: '-');
+
+        $conversation = !empty($conversation_id) ? $this->Help_chat_model->get_conversation_by_id($conversation_id) : null;
+        if (!$conversation) {
+            $conversation = $this->Help_chat_model->get_or_create_channel($userId, $userNama, $userEmail, 'Koordinator TA', $userNip, $target_role);
+            if ($conversation) {
+                $conversation_id = (string)$conversation->id;
+            }
+        }
+
         if (!$conversation) {
             echo json_encode([
                 'status'  => 'error',
@@ -1223,9 +1245,6 @@ class KoordinatorTA extends CI_Controller {
             ]);
             exit;
         }
-
-        $userId   = $this->session->userdata('user_id') ?: 6;
-        $userNama = $this->session->userdata('name') ?: 'Dr. Koordinator TA, M.T.';
 
         $msgId = $this->Help_chat_model->send_message(
             $conversation_id,
@@ -1237,10 +1256,11 @@ class KoordinatorTA extends CI_Controller {
 
         if ($msgId) {
             echo json_encode([
-                'status'  => 'success',
-                'message' => 'Pesan terkirim.',
-                'data'    => [
-                    'id'          => $msgId,
+                'status'          => 'success',
+                'conversation_id' => $conversation_id,
+                'message'         => 'Pesan terkirim.',
+                'data'            => [
+                    'id'          => (string)$msgId,
                     'sender_name' => $userNama,
                     'sender_role' => 'koordinator_ta',
                     'is_me'       => true,
@@ -1257,10 +1277,6 @@ class KoordinatorTA extends CI_Controller {
         }
         exit;
     }
-
-    /**
-     * AJAX: Toggle status Open / Resolved
-     */
     public function help_toggle_status_ajax() {
         header('Content-Type: application/json');
         $this->load->model('Help_chat_model');
@@ -1378,6 +1394,29 @@ class KoordinatorTA extends CI_Controller {
             return date('d M Y', $timestamp);
         }
     }
+
+    /**
+     * AJAX: Heartbeat ping untuk Koordinator TA
+     */
+    public function help_heartbeat_ajax() {
+        header('Content-Type: application/json');
+        $this->load->model('Help_chat_model');
+
+        $userId    = $this->session->userdata('user_id') ?: 6;
+        $roleId    = (int)$this->session->userdata('role_id') ?: 6;
+        $userNama  = $this->session->userdata('name') ?: 'Dr. Koordinator TA, M.T.';
+        $isOnline  = (int)($this->input->post('is_online') !== null ? $this->input->post('is_online') : 1);
+        session_write_close();
+
+        $this->Help_chat_model->update_presence($userId, $roleId, $userNama, 'koordinator_ta', $isOnline);
+        $channelsPresence = $this->Help_chat_model->get_channels_presence();
+
+        echo json_encode([
+            'status'            => 'success',
+            'timestamp'         => date('Y-m-d H:i:s'),
+            'channels_presence' => $channelsPresence
+        ]);
+        exit;
+    }
+
 }
-
-

@@ -42,13 +42,46 @@ class LaboranHelp extends CI_Controller {
             $targetRole = 'all';
         }
 
+        $staff = $this->_get_current_staff_session();
+        $this->Help_chat_model->update_presence($staff['user_id'], $staff['role_id'], $staff['name'], $staff['target_role'], 1);
+
         $data['title'] = $channelTitle . ' - ' . $roleLabel;
         $data['panelRole'] = $roleLabel;
         $data['channelTitle'] = $channelTitle;
         $data['channelDesc'] = $channelDesc;
         $data['targetRole'] = $targetRole;
         $data['stats'] = $this->Help_chat_model->get_stats($targetRole);
-        $data['conversations'] = $this->Help_chat_model->get_conversations('all', '', $targetRole);
+        $conversations = $this->Help_chat_model->get_conversations('all', '', $targetRole);
+
+        $userIds = [];
+        $userNames = [];
+        foreach ($conversations as $c) {
+            if (isset($c->user_id) && $c->user_id !== '') {
+                $userIds[] = (string)$c->user_id;
+            }
+            if (!empty($c->user_nama)) {
+                $userNames[] = (string)$c->user_nama;
+            }
+        }
+        $presenceMap = $this->Help_chat_model->get_users_presence($userIds, 90, $userNames);
+
+        foreach ($conversations as &$c) {
+            $nameKey = !empty($c->user_nama) ? strtolower(trim($c->user_nama)) : '';
+            $userPresence = $presenceMap[$c->user_id] 
+                ?? ($presenceMap[$nameKey] 
+                ?? [
+                    'online'    => false,
+                    'status'    => 'offline',
+                    'label'     => 'Offline',
+                    'last_seen' => 'Offline'
+                ]);
+
+            $c->is_online = $userPresence['online'];
+            $c->user_status = $userPresence['status'];
+            $c->user_last_seen = $userPresence['last_seen'];
+        }
+        unset($c);
+        $data['conversations'] = $conversations;
 
         $this->load->view('laboran/help/index', $data);
     }
@@ -77,27 +110,56 @@ class LaboranHelp extends CI_Controller {
             }
         }
 
+        $staff = $this->_get_current_staff_session();
+        $this->Help_chat_model->update_presence($staff['user_id'], $staff['role_id'], $staff['name'], $staff['target_role'], 1);
+
         // Release PHP session lock so concurrent polling and chat-switching requests execute immediately
         session_write_close();
 
         $conversations = $this->Help_chat_model->get_conversations($status, $search, $targetRole);
         $stats = $this->Help_chat_model->get_stats($targetRole);
 
+        $userIds = [];
+        $userNames = [];
+        foreach ($conversations as $c) {
+            if (isset($c->user_id) && $c->user_id !== '') {
+                $userIds[] = (string)$c->user_id;
+            }
+            if (!empty($c->user_nama)) {
+                $userNames[] = (string)$c->user_nama;
+            }
+        }
+        $presenceMap = $this->Help_chat_model->get_users_presence($userIds, 90, $userNames);
+
         $formatted = [];
         foreach ($conversations as $c) {
+            $nameKey = !empty($c->user_nama) ? strtolower(trim($c->user_nama)) : '';
+            $userPresence = $presenceMap[$c->user_id] 
+                ?? ($presenceMap[$nameKey] 
+                ?? [
+                    'online'    => false,
+                    'status'    => 'offline',
+                    'label'     => 'Offline',
+                    'last_seen' => 'Offline'
+                ]);
+
             $formatted[] = [
-                'id'                => (int)$c->id,
+                'id'                => (string)$c->id,
                 'user_id'           => $c->user_id,
                 'user_nama'         => $c->user_nama ?? 'Pengguna',
                 'user_email'        => $c->user_email ?? '',
                 'user_role'         => $c->user_role ?? 'Mahasiswa',
                 'user_nim_nip'      => $c->user_nim_nip ?? '-',
                 'topik'             => $c->topik ?? 'Bantuan Umum',
-                'status'            => $c->status,
+                'status'            => $c->status ?? 'open',
                 'last_message'      => $c->last_message ?? '',
                 'last_message_time' => $this->_format_time_ago($c->last_message_time ?? $c->created_at),
-                'unread_laboran'    => (int)$c->unread_laboran,
+                'unread_laboran'    => (int)($c->unread_staff ?? ($c->unread_laboran ?? 0)),
+                'unread_staff'      => (int)($c->unread_staff ?? ($c->unread_laboran ?? 0)),
                 'unread_user'       => (int)$c->unread_user,
+                'is_online'         => $userPresence['online'],
+                'user_status'       => $userPresence['status'],
+                'user_last_seen'    => $userPresence['last_seen'],
                 'created_at'        => date('d M Y, H:i', strtotime($c->created_at))
             ];
         }
@@ -140,7 +202,7 @@ class LaboranHelp extends CI_Controller {
             $isMe = $isStaff || ($currentUserId && (string)$m->sender_id === (string)$currentUserId);
 
             $formattedMessages[] = [
-                'id'          => (int)$m->id,
+                'id'          => (string)$m->id,
                 'sender_id'   => $m->sender_id,
                 'sender_name' => $m->sender_name,
                 'sender_role' => $m->sender_role,
@@ -154,16 +216,33 @@ class LaboranHelp extends CI_Controller {
             ];
         }
 
+        $uids = (isset($conversation->user_id) && $conversation->user_id !== '') ? [(string)$conversation->user_id] : [];
+        $unames = !empty($conversation->user_nama) ? [(string)$conversation->user_nama] : [];
+        $userPresenceMap = $this->Help_chat_model->get_users_presence($uids, 90, $unames);
+        $nameKey = !empty($conversation->user_nama) ? strtolower(trim($conversation->user_nama)) : '';
+        $userPresence = $userPresenceMap[$conversation->user_id] 
+            ?? ($userPresenceMap[$nameKey] 
+            ?? [
+                'online'    => false,
+                'status'    => 'offline',
+                'label'     => 'Offline',
+                'last_seen' => 'Offline'
+            ]);
+
         echo json_encode([
             'status'       => 'success',
             'conversation' => [
-                'id'                => (int)$conversation->id,
+                'id'                => (string)$conversation->id,
+                'user_id'           => $conversation->user_id,
                 'user_nama'         => $conversation->user_nama,
                 'user_email'        => $conversation->user_email ?? '',
                 'user_role'         => $conversation->user_role ?? 'Mahasiswa',
                 'user_nim_nip'      => $conversation->user_nim_nip ?? '-',
-                'topik'             => $conversation->topik,
-                'status'            => $conversation->status,
+                'topik'             => $conversation->topik ?? 'Bantuan Umum',
+                'status'            => $conversation->status ?? 'open',
+                'user_is_online'    => $userPresence['online'],
+                'user_status'       => $userPresence['status'],
+                'user_last_seen'    => $userPresence['last_seen'],
                 'laboran_nama'      => $conversation->laboran_nama ?? 'Belum ada',
                 'last_message_time' => $this->_format_time_ago($conversation->last_message_time ?? $conversation->created_at),
                 'created_at'        => date('d M Y, H:i', strtotime($conversation->created_at))
@@ -391,7 +470,7 @@ class LaboranHelp extends CI_Controller {
         if ($conv_id) {
             echo json_encode([
                 'status'          => 'success',
-                'conversation_id' => (int)$conv_id,
+                'conversation_id' => (string)$conv_id,
                 'message'         => 'Pesan berhasil terkirim ke Help Desk Laboran.'
             ]);
         } else {
@@ -486,9 +565,9 @@ class LaboranHelp extends CI_Controller {
         $formatted = [];
         foreach ($conversations as $c) {
             $formatted[] = [
-                'id'                => (int)$c->id,
+                'id'                => (string)$c->id,
                 'topik'             => htmlspecialchars($c->topik),
-                'status'            => $c->status,
+                'status'            => $c->status ?? 'open',
                 'last_message'      => htmlspecialchars($c->last_message ?? ''),
                 'last_message_time' => $this->_format_time_ago($c->last_message_time ?? $c->created_at),
                 'unread_user'       => (int)$c->unread_user,
@@ -566,4 +645,66 @@ class LaboranHelp extends CI_Controller {
             return date('d M Y', $timestamp);
         }
     }
+
+    /**
+     * Heartbeat AJAX untuk staf/admin (Laboran / Ka. Ur / Admin Layanan)
+     */
+    public function heartbeat_ajax() {
+        header('Content-Type: application/json');
+
+        $staff = $this->_get_current_staff_session();
+        $isOnline = (int)($this->input->post('is_online') !== null ? $this->input->post('is_online') : 1);
+        session_write_close();
+
+        $this->Help_chat_model->update_presence($staff['user_id'], $staff['role_id'], $staff['name'], $staff['target_role'], $isOnline);
+
+        echo json_encode([
+            'status'    => 'success',
+            'timestamp' => date('Y-m-d H:i:s'),
+            'role'      => $staff['target_role'],
+            'user_id'   => $staff['user_id'],
+            'is_online' => (bool)$isOnline
+        ]);
+        exit;
+    }
+
+
+    /**
+     * Helper resolusi session staf yang robust (mendukung berbagai format session user)
+     */
+    private function _get_current_staff_session() {
+        $userId = $this->session->userdata('user_id')
+            ?: ($this->session->userdata('id_user')
+            ?: ($this->session->userdata('id')
+            ?: ($this->session->userdata('username') ?: 'laboran')));
+
+        $name = $this->session->userdata('name')
+            ?: ($this->session->userdata('nama')
+            ?: 'Petugas Layanan');
+
+        $roleName = strtolower((string)($this->session->userdata('role') ?? ''));
+        $roleId = (int)($this->session->userdata('role_id') ?? 0);
+
+        $currentUri = trim(uri_string(), '/');
+        $targetRole = 'laboran';
+
+        if (strpos($currentUri, 'kaur') === 0 || $roleId === 2 || strpos($roleName, 'kaur') !== false) {
+            $targetRole = 'kaur';
+            $roleId = $roleId ?: 2;
+        } elseif (strpos($currentUri, 'adminlayanan') === 0 || $roleId === 5 || strpos($roleName, 'laa') !== false || strpos($roleName, 'layanan') !== false) {
+            $targetRole = 'admin_layanan';
+            $roleId = $roleId ?: 5;
+        } elseif (strpos($currentUri, 'laboran') === 0 || $roleId === 21 || strpos($roleName, 'laboran') !== false) {
+            $targetRole = 'laboran';
+            $roleId = $roleId ?: 21;
+        }
+
+        return [
+            'user_id'     => (string)$userId,
+            'role_id'     => $roleId,
+            'name'        => $name,
+            'target_role' => $targetRole
+        ];
+    }
+
 }

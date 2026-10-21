@@ -37,11 +37,15 @@ class DosenHelp extends CI_Controller {
      * Halaman utama Bantuan & Live Chat untuk Dosen
      */
     public function index() {
-        $user_id = $this->session->userdata('user_id') ?: 3;
+        $user_id   = $this->session->userdata('user_id') ?: 3;
+        $role_id   = (int)$this->session->userdata('role_id') ?: 3;
+        $user_nama = $this->session->userdata('name') ?: 'Dosen IFIK';
+        $this->Help_chat_model->update_presence($user_id, $role_id, $user_nama, 'dosen', 1);
 
-        $data['title']         = 'Bantuan & Live Chat - Portal Dosen';
-        $data['stats']         = $this->Help_chat_model->get_stats(null, $user_id);
-        $data['conversations'] = $this->Help_chat_model->get_conversations('all', '', null, $user_id);
+        $data['title']             = 'Bantuan & Live Chat - Portal Dosen';
+        $data['stats']             = $this->Help_chat_model->get_stats(null, $user_id);
+        $data['conversations']     = $this->Help_chat_model->get_conversations('all', '', null, $user_id);
+        $data['channels_presence'] = $this->Help_chat_model->get_channels_presence();
 
         $this->load->view('dosen/help', $data);
     }
@@ -58,10 +62,14 @@ class DosenHelp extends CI_Controller {
         }
 
         $userId    = $this->session->userdata('user_id') ?: 3;
+        $roleId    = (int)$this->session->userdata('role_id') ?: 3;
         $userNama  = $this->session->userdata('name') ?: 'Dosen IFIK';
         $userEmail = $this->session->userdata('email') ?: 'dosen@telkomuniversity.ac.id';
         $userNip   = $this->session->userdata('nip') ?: ($this->session->userdata('username') ?: '-');
         session_write_close();
+
+        $this->Help_chat_model->update_presence($userId, $roleId, $userNama, 'dosen', 1);
+        $channelsPresence = $this->Help_chat_model->get_channels_presence();
 
         $conv = $this->Help_chat_model->get_or_create_channel(
             $userId, $userNama, $userEmail, 'Dosen', $userNip, $target_role
@@ -75,7 +83,7 @@ class DosenHelp extends CI_Controller {
 
         foreach ($messages as $m) {
             $formattedMessages[] = [
-                'id'          => (int)$m->id,
+                'id'          => (string)$m->id,
                 'sender_id'   => $m->sender_id,
                 'sender_name' => htmlspecialchars($m->sender_name),
                 'sender_role' => $m->sender_role,
@@ -97,7 +105,7 @@ class DosenHelp extends CI_Controller {
         echo json_encode([
             'status'       => 'success',
             'conversation' => [
-                'id'                => (int)$conv->id,
+                'id'                => (string)$conv->id,
                 'target_role'       => htmlspecialchars($conv->target_role ?? $target_role),
                 'target_role_label' => $this->_get_target_role_label($conv->target_role ?? $target_role),
                 'topik'             => htmlspecialchars($conv->topik),
@@ -105,8 +113,9 @@ class DosenHelp extends CI_Controller {
                 'last_message_time' => $this->_format_time_ago($conv->last_message_time ?? $conv->created_at),
                 'created_at'        => date('d M Y, H:i', strtotime($conv->created_at))
             ],
-            'messages' => $formattedMessages,
-            'unreads'  => [
+            'messages'          => $formattedMessages,
+            'channels_presence' => $channelsPresence,
+            'unreads'           => [
                 'laboran'       => $statsLaboran['unread'] ?? 0,
                 'kaur'          => $statsKaur['unread'] ?? 0,
                 'admin_layanan' => $statsAdmin['unread'] ?? 0
@@ -154,7 +163,7 @@ class DosenHelp extends CI_Controller {
         if ($conv_id) {
             echo json_encode([
                 'status'          => 'success',
-                'conversation_id' => (int)$conv_id,
+                'conversation_id' => (string)$conv_id,
                 'message'         => 'Permintaan bantuan berhasil dikirim ke ' . $this->_get_target_role_label($target_role) . '.'
             ]);
         } else {
@@ -169,22 +178,33 @@ class DosenHelp extends CI_Controller {
     public function help_send_message_ajax() {
         header('Content-Type: application/json');
 
-        $conversation_id = $this->input->post('conversation_id');
+        $conversation_id = trim($this->input->post('conversation_id') ?? '');
         $message         = trim($this->input->post('message') ?? '');
+        $target_role     = strtolower(trim($this->input->post('target_role') ?? 'laboran'));
 
-        if (empty($conversation_id) || empty($message)) {
+        if (empty($message)) {
             echo json_encode(['status' => 'error', 'message' => 'Pesan tidak boleh kosong.']);
             exit;
         }
 
-        $conversation = $this->Help_chat_model->get_conversation_by_id($conversation_id);
+        $userId    = $this->session->userdata('user_id') ?: ($this->session->userdata('id') ?: 'dsn-wali-01');
+        $userNama  = $this->session->userdata('name') ?: 'Dr. Dosen Wali, M.T.';
+        $userEmail = $this->session->userdata('email') ?: 'wali@telkomuniversity.ac.id';
+        $userNip   = $this->session->userdata('nip') ?: ($this->session->userdata('username') ?: '-');
+
+        $conversation = !empty($conversation_id) ? $this->Help_chat_model->get_conversation_by_id($conversation_id) : null;
+        if (!$conversation) {
+            // Auto-heal / fallback: cari atau buat channel aktif untuk user ini
+            $conversation = $this->Help_chat_model->get_or_create_channel($userId, $userNama, $userEmail, 'Dosen', $userNip, $target_role);
+            if ($conversation) {
+                $conversation_id = (string)$conversation->id;
+            }
+        }
+
         if (!$conversation) {
             echo json_encode(['status' => 'error', 'message' => 'Percakapan tidak ditemukan.']);
             exit;
         }
-
-        $userId   = $this->session->userdata('user_id') ?: 3;
-        $userNama = $this->session->userdata('name') ?: 'Dosen IFIK';
 
         $msgId = $this->Help_chat_model->send_message(
             $conversation_id,
@@ -196,10 +216,11 @@ class DosenHelp extends CI_Controller {
 
         if ($msgId) {
             echo json_encode([
-                'status'  => 'success',
-                'message' => 'Pesan terkirim.',
-                'data'    => [
-                    'id'          => $msgId,
+                'status'          => 'success',
+                'conversation_id' => $conversation_id,
+                'message'         => 'Pesan terkirim.',
+                'data'            => [
+                    'id'          => (string)$msgId,
                     'sender_name' => $userNama,
                     'sender_role' => 'dosen',
                     'is_me'       => true,
@@ -213,10 +234,6 @@ class DosenHelp extends CI_Controller {
         }
         exit;
     }
-
-    /**
-     * AJAX: Toggle status Open / Resolved
-     */
     public function help_toggle_status_ajax() {
         header('Content-Type: application/json');
 
@@ -315,4 +332,28 @@ class DosenHelp extends CI_Controller {
         elseif ($diff < 172800)  return 'Kemarin, ' . date('H:i', $timestamp);
         else                     return date('d M Y', $timestamp);
     }
+
+    /**
+     * AJAX: Heartbeat ping untuk memperbarui status online Dosen & mengambil status terkini petugas
+     */
+    public function help_heartbeat_ajax() {
+        header('Content-Type: application/json');
+
+        $userId    = $this->session->userdata('user_id') ?: 3;
+        $roleId    = (int)$this->session->userdata('role_id') ?: 3;
+        $userNama  = $this->session->userdata('name') ?: 'Dosen IFIK';
+        $isOnline  = (int)($this->input->post('is_online') !== null ? $this->input->post('is_online') : 1);
+        session_write_close();
+
+        $this->Help_chat_model->update_presence($userId, $roleId, $userNama, 'dosen', $isOnline);
+        $channelsPresence = $this->Help_chat_model->get_channels_presence();
+
+        echo json_encode([
+            'status'            => 'success',
+            'timestamp'         => date('Y-m-d H:i:s'),
+            'channels_presence' => $channelsPresence
+        ]);
+        exit;
+    }
+
 }
