@@ -263,7 +263,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
         case 1: // Admin System
             $defaultNavItems = [
                 ['category' => 'Pusat Kendali'],
-                ['heading' => 'Dashboard Control', 'href' => site_url('adminheader'), 'icon_3d' => 'assets/images/icons_3d/home.png'],
+                ['heading' => 'Dashboard Control', 'href' => site_url('admin'), 'icon_3d' => 'assets/images/icons_3d/home.png'],
                 ['heading' => 'Approval Peminjaman', 'href' => site_url('kelolabooking'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
                 ['heading' => 'Kelola Master Barang', 'href' => site_url('admin/barang'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
                 ['heading' => 'Peminjaman Ruangan', 'href' => site_url('peminjaman-ruangan'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
