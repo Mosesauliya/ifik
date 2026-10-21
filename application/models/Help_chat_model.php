@@ -5,18 +5,19 @@ class Help_chat_model extends CI_Model {
 
     private $table_conversations = 'help_conversations';
     private $table_messages      = 'help_messages';
-    private $table_presence      = 'help_user_presence';
+    private $presence_file;
 
     public function __construct() {
         parent::__construct();
         date_default_timezone_set('Asia/Jakarta');
         @$this->db->query("SET NAMES utf8mb4 COLLATE utf8mb4_general_ci");
         @$this->db->query("SET time_zone = '+07:00'");
+        $this->presence_file = APPPATH . 'cache/help_presence_state.json';
         $this->_ensure_tables();
     }
 
     /**
-     * Pastikan tabel-tabel bantuan chat tersedia di database dengan skema terbaru
+     * Pastikan 2 tabel bantuan chat tersedia di database
      */
     private function _ensure_tables() {
         if (!$this->db->table_exists($this->table_conversations)) {
@@ -52,21 +53,35 @@ class Help_chat_model extends CI_Model {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
             $this->db->query($sql2);
         }
+    }
 
-        if (!$this->db->table_exists($this->table_presence)) {
-            $sql3 = "CREATE TABLE IF NOT EXISTS `{$this->table_presence}` (
-                `user_id` VARCHAR(64) NOT NULL PRIMARY KEY,
-                `role_id` INT NULL,
-                `target_role` VARCHAR(50) NULL,
-                `user_nama` VARCHAR(150) NULL,
-                `last_active_at` DATETIME NOT NULL,
-                `is_online` TINYINT(1) DEFAULT 1,
-                INDEX (`role_id`),
-                INDEX (`target_role`),
-                INDEX (`last_active_at`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
-            $this->db->query($sql3);
+    /**
+     * Helper Cache: Baca data presence dari file JSON di application/cache
+     */
+    private function _get_presence_cache() {
+        if (!file_exists($this->presence_file)) {
+            return [];
         }
+        $content = @file_get_contents($this->presence_file);
+        if (empty($content)) {
+            return [];
+        }
+        $data = json_decode($content, true);
+        return is_array($data) ? $data : [];
+    }
+
+    /**
+     * Helper Cache: Tulis data presence ke file JSON di application/cache
+     */
+    private function _save_presence_cache(array $data) {
+        // Prune data yang sudah kadaluarsa > 2 hari agar file tetap kecil (< 5KB)
+        $cleanThreshold = time() - 172800;
+        foreach ($data as $uid => $row) {
+            if (isset($row['last_active_ts']) && $row['last_active_ts'] < $cleanThreshold) {
+                unset($data[$uid]);
+            }
+        }
+        @file_put_contents($this->presence_file, json_encode($data), LOCK_EX);
     }
 
     /**
@@ -170,12 +185,7 @@ class Help_chat_model extends CI_Model {
         $this->db->join("user_role r", "r.id = u.role_id", "left");
         $this->db->where('c.id', (string)$id);
 
-        $row = $this->db->get()->row();
-        if ($row) {
-            $row->topik = 'Pusat Bantuan & Layanan';
-            $row->status = 'open';
-        }
-        return $row;
+        return $this->db->get()->row();
     }
 
     /**
@@ -401,49 +411,39 @@ class Help_chat_model extends CI_Model {
     }
 
     /**
-     * Update status kehadiran / online user atau petugas
+     * Update status kehadiran / online user atau petugas via File Cache (0 Query MySQL)
      */
     public function update_presence($user_id, $role_id = null, $user_nama = null, $target_role = null, $is_online = 1) {
         if (empty($user_id)) return false;
 
+        $user_id = (string)$user_id;
         $now = date('Y-m-d H:i:s');
+        $now_ts = time();
         $is_online = (int)$is_online;
 
-        $this->_ensure_tables();
+        $cache = $this->_get_presence_cache();
+        $prev = $cache[$user_id] ?? [];
 
-        $updateFields = [
-            "`last_active_at` = " . $this->db->escape($now),
-            "`is_online` = " . $is_online
+        $cache[$user_id] = [
+            'user_id'        => $user_id,
+            'role_id'        => $role_id !== null ? (int)$role_id : ($prev['role_id'] ?? null),
+            'target_role'    => $target_role !== null ? (string)$target_role : ($prev['target_role'] ?? null),
+            'user_nama'      => $user_nama !== null ? (string)$user_nama : ($prev['user_nama'] ?? null),
+            'last_active_at' => $now,
+            'last_active_ts' => $now_ts,
+            'is_online'      => $is_online
         ];
-        if ($role_id !== null) {
-            $updateFields[] = "`role_id` = " . (int)$role_id;
-        }
-        if ($user_nama !== null) {
-            $updateFields[] = "`user_nama` = " . $this->db->escape($user_nama);
-        }
-        if ($target_role !== null) {
-            $updateFields[] = "`target_role` = " . $this->db->escape($target_role);
-        }
 
-        $sql = "INSERT INTO `{$this->table_presence}` (`user_id`, `role_id`, `user_nama`, `target_role`, `last_active_at`, `is_online`)
-                VALUES (" . 
-                $this->db->escape((string)$user_id) . ", " . 
-                ($role_id !== null ? (int)$role_id : "NULL") . ", " . 
-                ($user_nama !== null ? $this->db->escape($user_nama) : "NULL") . ", " . 
-                ($target_role !== null ? $this->db->escape($target_role) : "NULL") . ", " . 
-                $this->db->escape($now) . ", " . 
-                $is_online . ")
-                ON DUPLICATE KEY UPDATE " . implode(', ', $updateFields);
-
-        $res = $this->db->query($sql);
-        return $res;
+        $this->_save_presence_cache($cache);
+        return true;
     }
 
     /**
-     * Dapatkan status kehadiran untuk ketiga saluran petugas (laboran, kaur, admin_layanan)
+     * Dapatkan status kehadiran untuk ketiga saluran petugas (laboran, kaur, admin_layanan) via File Cache
      */
     public function get_channels_presence($timeout_seconds = 90) {
-        $threshold = date('Y-m-d H:i:s', time() - $timeout_seconds);
+        $now_ts = time();
+        $threshold_ts = $now_ts - $timeout_seconds;
 
         $roleMap = [
             'laboran'       => 21,
@@ -451,34 +451,32 @@ class Help_chat_model extends CI_Model {
             'admin_layanan' => 5
         ];
 
+        $cache = $this->_get_presence_cache();
         $result = [];
+
         foreach ($roleMap as $target => $roleId) {
-            $this->db->from($this->table_presence);
-            $this->db->group_start();
-            $this->db->where('target_role', $target);
-            $this->db->or_where('role_id', $roleId);
-            $this->db->group_end();
-            $this->db->where('is_online', 1);
-            $this->db->where('last_active_at >=', $threshold);
-            $countPresence = $this->db->count_all_results();
-
-            $totalActive = $countPresence;
-            $isOnline = ($totalActive > 0);
-
-            $this->db->from($this->table_presence);
-            $this->db->group_start();
-            $this->db->where('target_role', $target);
-            $this->db->or_where('role_id', $roleId);
-            $this->db->group_end();
-            $this->db->order_by('last_active_at', 'DESC');
-            $this->db->limit(1);
-            $latestPresence = $this->db->get()->row();
-
+            $totalActive = 0;
             $latestTime = null;
-            if ($latestPresence && !empty($latestPresence->last_active_at)) {
-                $latestTime = $latestPresence->last_active_at;
+            $latestTs = 0;
+
+            foreach ($cache as $p) {
+                $isTargetMatch = (isset($p['target_role']) && strtolower($p['target_role']) === $target) 
+                               || (isset($p['role_id']) && (int)$p['role_id'] === $roleId);
+                if (!$isTargetMatch) continue;
+
+                $pTs = isset($p['last_active_ts']) ? (int)$p['last_active_ts'] : strtotime($p['last_active_at'] ?? '0');
+                if ($pTs > $latestTs) {
+                    $latestTs = $pTs;
+                    $latestTime = $p['last_active_at'] ?? date('Y-m-d H:i:s', $pTs);
+                }
+
+                $isOnlineFlag = isset($p['is_online']) ? (int)$p['is_online'] === 1 : true;
+                if ($isOnlineFlag && $pTs >= $threshold_ts) {
+                    $totalActive++;
+                }
             }
 
+            $isOnline = ($totalActive > 0);
             $lastSeen = $isOnline ? 'Online' : ($latestTime ? $this->format_last_seen($latestTime) : 'Offline');
 
             $result[$target] = [
@@ -495,7 +493,7 @@ class Help_chat_model extends CI_Model {
     }
 
     /**
-     * Dapatkan status kehadiran kumpulan user (berdasarkan array user_id atau user_nama)
+     * Dapatkan status kehadiran kumpulan user via File Cache (0 Query MySQL)
      */
     public function get_users_presence($user_ids, $timeout_seconds = 90, $user_names = []) {
         if (!is_array($user_ids)) $user_ids = [$user_ids];
@@ -506,36 +504,27 @@ class Help_chat_model extends CI_Model {
 
         if (empty($user_ids) && empty($user_names)) return [];
 
-        $threshold = date('Y-m-d H:i:s', time() - $timeout_seconds);
-
-        $this->db->from($this->table_presence);
-        $this->db->group_start();
-        if (!empty($user_ids)) {
-            $this->db->where_in('user_id', $user_ids);
-        }
-        if (!empty($user_names)) {
-            if (!empty($user_ids)) {
-                $this->db->or_where_in('user_nama', $user_names);
-            } else {
-                $this->db->where_in('user_nama', $user_names);
-            }
-        }
-        $this->db->group_end();
-        $rows = $this->db->get()->result();
+        $now_ts = time();
+        $threshold_ts = $now_ts - $timeout_seconds;
+        $cache = $this->_get_presence_cache();
 
         $map = [];
-        foreach ($rows as $r) {
-            $isOnline = ((int)$r->is_online === 1 && strtotime($r->last_active_at) >= strtotime($threshold));
+        foreach ($cache as $uid => $p) {
+            $pTs = isset($p['last_active_ts']) ? (int)$p['last_active_ts'] : strtotime($p['last_active_at'] ?? '0');
+            $isOnline = (isset($p['is_online']) ? (int)$p['is_online'] === 1 : true) && ($pTs >= $threshold_ts);
+            $lastActive = $p['last_active_at'] ?? date('Y-m-d H:i:s', $pTs);
+
             $presenceData = [
                 'online'      => $isOnline,
                 'status'      => $isOnline ? 'online' : 'offline',
                 'label'       => $isOnline ? 'Online' : 'Offline',
-                'last_seen'   => $this->format_last_seen($r->last_active_at),
-                'last_active' => $r->last_active_at
+                'last_seen'   => $this->format_last_seen($lastActive),
+                'last_active' => $lastActive
             ];
-            $map[$r->user_id] = $presenceData;
-            if (!empty($r->user_nama)) {
-                $map[strtolower(trim($r->user_nama))] = $presenceData;
+
+            $map[$uid] = $presenceData;
+            if (!empty($p['user_nama'])) {
+                $map[strtolower(trim($p['user_nama']))] = $presenceData;
             }
         }
 
