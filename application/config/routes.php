@@ -51,6 +51,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 */
 $route['default_controller'] = 'dashboard';
 $route['login'] = 'login';
+$route['login/otp'] = 'login/otp';
+$route['login/verify_otp'] = 'login/verify_otp';
+$route['login/resend_otp'] = 'login/resend_otp';
+$route['login/cancel_otp'] = 'login/cancel_otp';
 $route['logout'] = 'login/logout';
 $route['forgot_password'] = 'login/forgot_password';
 $route['forgot-password'] = 'login/forgot_password';
