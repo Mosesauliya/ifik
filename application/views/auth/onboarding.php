@@ -107,7 +107,8 @@
       no_hp: <?= json_encode(!empty($no_hp) ? $no_hp : ''); ?>,
       dosen_list: <?= json_encode(!empty($dosen_wali_list) ? $dosen_wali_list : []); ?>,
       konsentrasi_list: <?= json_encode(!empty($konsentrasi_list) ? $konsentrasi_list : []); ?>,
-      kk_list: <?= json_encode(!empty($kk_list) ? $kk_list : []); ?>
+      kk_list: <?= json_encode(!empty($kk_list) ? $kk_list : []); ?>,
+      used_kode_dosen: <?= json_encode(!empty($used_kode_dosen) ? $used_kode_dosen : (object)[]); ?>
     };
   </script>
 

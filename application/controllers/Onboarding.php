@@ -188,14 +188,50 @@ class Onboarding extends CI_Controller {
 
         $data['dosen_wali_list'] = $dosenList;
 
-        $data['konsentrasi_list'] = array(
-            'Desain Komunikasi Visual',
-            'Informatika',
-            'Rekayasa Perangkat Lunak',
-            'Desain Produk',
-            'Desain Interior',
-            'Kriya Tekstil & Fashion'
-        );
+        // Fetch Program Studi dynamically from MySQL database `master_prodi`
+        $prodiList = [];
+        if ($this->db->table_exists('master_prodi')) {
+            $this->db->where('is_active', 1);
+            $this->db->order_by('urutan', 'ASC');
+            $this->db->order_by('nama_prodi', 'ASC');
+            $queryProdi = $this->db->get('master_prodi')->result_array();
+            foreach ($queryProdi as $qp) {
+                if (!empty($qp['nama_prodi'])) {
+                    $prodiList[] = $qp['nama_prodi'];
+                }
+            }
+        }
+        if (empty($prodiList)) {
+            $prodiList = [
+                'S1 Desain Komunikasi Visual (DKV)',
+                'S1 Desain Interior',
+                'S1 Desain Produk',
+                'S1 Kriya Tekstil dan Mode',
+                'S1 Seni Rupa',
+                'S1 Film & Animasi',
+                'S2 Magister Desain',
+                'S1 Informatika'
+            ];
+        }
+        $data['konsentrasi_list'] = $prodiList;
+
+        // Fetch all existing kode_dosen to enforce uniqueness (excluding current user)
+        $usedKodeDosen = [];
+        if ($this->db->field_exists('kode_dosen', 'user')) {
+            $this->db->select('UPPER(kode_dosen) as kd, name');
+            $this->db->where('kode_dosen IS NOT NULL', null, false);
+            $this->db->where('kode_dosen !=', '');
+            if (!empty($user->id)) {
+                $this->db->where('id !=', $user->id);
+            }
+            $resKD = $this->db->get('user')->result_array();
+            foreach ($resKD as $rk) {
+                if (!empty($rk['kd'])) {
+                    $usedKodeDosen[strtoupper(trim($rk['kd']))] = $rk['name'];
+                }
+            }
+        }
+        $data['used_kode_dosen'] = $usedKodeDosen;
 
         // Fetch Kelompok Keahlian (KK) dynamically from MySQL database
         $kkList = [];
@@ -326,16 +362,35 @@ class Onboarding extends CI_Controller {
         $isMahasiswa = (strpos($roleName, 'mahasiswa') !== false);
         $isDosen = !$isMahasiswa;
 
-        // Validate Kode Dosen (Strict for Lecturers)
-        if ($isDosen && empty($kodeDosen)) {
-            $msg = 'Kode dosen (inisial) wajib diisi untuk verifikasi identitas dosen!';
-            if ($isAjax) {
-                $this->output->set_content_type('application/json')->set_status_header(400)->set_output(json_encode(['status' => 'error', 'message' => $msg]));
+        // Validate Kode Dosen (Strict for Lecturers + Uniqueness Check)
+        if ($isDosen) {
+            if (empty($kodeDosen)) {
+                $msg = 'Kode dosen (inisial) wajib diisi untuk verifikasi identitas dosen!';
+                if ($isAjax) {
+                    $this->output->set_content_type('application/json')->set_status_header(400)->set_output(json_encode(['status' => 'error', 'message' => $msg]));
+                    return;
+                }
+                $this->session->set_flashdata('error', $msg);
+                redirect('onboarding');
                 return;
             }
-            $this->session->set_flashdata('error', $msg);
-            redirect('onboarding');
-            return;
+
+            // Validasi keunikan kode dosen: tidak boleh sama dengan dosen lain
+            if ($this->db->field_exists('kode_dosen', 'user')) {
+                $this->db->where('UPPER(kode_dosen)', strtoupper($kodeDosen));
+                $this->db->where('id !=', $user->id);
+                $existingKD = $this->db->get('user')->row();
+                if ($existingKD) {
+                    $msg = "Kode dosen '{$kodeDosen}' sudah digunakan oleh dosen lain ({$existingKD->name}). Harap gunakan inisial/kode dosen yang berbeda!";
+                    if ($isAjax) {
+                        $this->output->set_content_type('application/json')->set_status_header(400)->set_output(json_encode(['status' => 'error', 'message' => $msg]));
+                        return;
+                    }
+                    $this->session->set_flashdata('error', $msg);
+                    redirect('onboarding');
+                    return;
+                }
+            }
         }
 
         // Validate No Handphone (For all roles)
@@ -608,4 +663,40 @@ class Onboarding extends CI_Controller {
             ->set_content_type('application/json')
             ->set_output($json ? $json : json_encode(['data' => []]));
     }
+
+    /**
+     * AJAX endpoint to check if kode_dosen is already taken
+     */
+    public function check_kode_dosen()
+    {
+        $code = strtoupper(trim((string)$this->input->get_post('kode_dosen', true)));
+        $userId = $this->session->userdata('user_id');
+
+        if (empty($code)) {
+            $this->output->set_content_type('application/json')->set_output(json_encode([
+                'valid' => false,
+                'message' => 'Kode dosen tidak boleh kosong'
+            ]));
+            return;
+        }
+
+        $this->db->where('UPPER(kode_dosen)', $code);
+        if (!empty($userId)) {
+            $this->db->where('id !=', $userId);
+        }
+        $existing = $this->db->get('user')->row();
+
+        if ($existing) {
+            $this->output->set_content_type('application/json')->set_output(json_encode([
+                'valid' => false,
+                'message' => "Kode dosen '{$code}' sudah digunakan oleh dosen lain ({$existing->name})"
+            ]));
+        } else {
+            $this->output->set_content_type('application/json')->set_output(json_encode([
+                'valid' => true,
+                'message' => 'Kode dosen tersedia'
+            ]));
+        }
+    }
+
 }
