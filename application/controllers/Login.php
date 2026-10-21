@@ -167,7 +167,9 @@ class Login extends CI_Controller {
 				$this->session->set_userdata('pending_2fa', $pending_2fa);
 
 				// Kirim OTP via Gmail SMTP
-				$this->_send_otp_email($user->name, $user->email, $otpCode);
+				$mailSent = $this->_send_otp_email($user->name, $user->email, $otpCode);
+				$pending_2fa['email_sent'] = $mailSent;
+				$this->session->set_userdata('pending_2fa', $pending_2fa);
 
 				redirect('login/otp');
 				return;
@@ -525,11 +527,15 @@ class Login extends CI_Controller {
 			return;
 		}
 
+		$emailSent = isset($pending['email_sent']) ? $pending['email_sent'] : true;
+
 		$data = [
 			'name'         => $pending['name'],
 			'masked_email' => $this->_mask_email($pending['email']),
 			'email'        => $pending['email'],
-			'expires_in'   => max(0, (int)$pending['otp_expires'] - time())
+			'expires_in'   => max(0, (int)$pending['otp_expires'] - time()),
+			'email_sent'   => $emailSent,
+			'dev_otp'      => (!$emailSent) ? $pending['otp_code'] : null
 		];
 
 		$this->load->view('auth/otp', $data);
@@ -603,7 +609,9 @@ class Login extends CI_Controller {
 		$this->session->set_userdata('pending_2fa', $pending);
 
 		// Kirim email
-		$this->_send_otp_email($pending['name'], $pending['email'], $newOtp);
+		$mailSent = $this->_send_otp_email($pending['name'], $pending['email'], $newOtp);
+		$pending['email_sent'] = $mailSent;
+		$this->session->set_userdata('pending_2fa', $pending);
 
 		$this->session->set_flashdata('success', 'Kode OTP baru telah berhasil dikirimkan ke email Anda.');
 		redirect('login/otp');
@@ -681,11 +689,16 @@ class Login extends CI_Controller {
 		$htmlBody = $this->_build_otp_email_template($userName, $otpCode);
 		$this->email->message($htmlBody);
 
-		if (!$this->email->send()) {
-			log_message('error', 'Gagal mengirim email OTP: ' . $this->email->print_debugger(['headers']));
+		try {
+			if (!$this->email->send()) {
+				log_message('error', 'Gagal mengirim email OTP: ' . $this->email->print_debugger(['headers']));
+				return false;
+			}
+			return true;
+		} catch (\Throwable $e) {
+			log_message('error', 'Exception kirim email OTP: ' . $e->getMessage());
 			return false;
 		}
-		return true;
 	}
 
 	/**

@@ -119,6 +119,17 @@
               <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
               <span><?= htmlspecialchars($masked_email); ?></span>
             </div>
+
+            <?php if (!empty($dev_otp)): ?>
+            <!-- Fallback Alert jika Port SMTP Server NAS Diblokir ISP -->
+            <div class="mt-3 p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs text-center shadow-sm">
+              <span class="font-bold text-[11px] text-amber-700">⚠️ KONEKSI SMTP SERVER DI-LIMIT / OFFLINE</span>
+              <p class="text-[11px] text-amber-800 mt-0.5">Kode OTP Anda untuk login:</p>
+              <div class="mt-1 font-mono text-base font-extrabold tracking-widest text-amber-900 bg-amber-100/80 py-1 px-3 rounded-lg inline-block border border-amber-300">
+                <?= htmlspecialchars($dev_otp); ?>
+              </div>
+            </div>
+            <?php endif; ?>
           </div>
 
           <!-- Flash Alerts -->
