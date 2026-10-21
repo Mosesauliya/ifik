@@ -158,19 +158,41 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       submitBtn.disabled = true;
-      submitBtn.innerHTML = `
-        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="margin-top:-2px;">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <span>Memverifikasi Autentikasi...</span>
-      `;
-      if (capProgressBar) capProgressBar.style.width = '100%';
+      let progress = 0;
 
-      // Langsung kirim form tanpa delay animasi palsu
-      setTimeout(() => {
-        loginForm.submit();
-      }, 150);
+      const updateButton = (pct) => {
+        submitBtn.innerHTML = `
+          <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="margin-top:-2px;">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span>Memverifikasi Autentikasi... ${pct}%</span>
+        `;
+        if (capProgressBar) capProgressBar.style.width = pct + '%';
+      };
+
+      updateButton(0);
+
+      // Animasi scan progress bar
+      const duration = 2400; // 2.4 detik smooth animation
+      const intervalTime = 30;
+      const step = 100 / (duration / intervalTime);
+
+      const timer = setInterval(() => {
+        progress += step;
+        if (progress >= 100) {
+          progress = 100;
+          updateButton(100);
+          clearInterval(timer);
+
+          // Submit form tepat saat 100%
+          setTimeout(() => {
+            loginForm.submit();
+          }, 80);
+        } else {
+          updateButton(Math.floor(progress));
+        }
+      }, intervalTime);
     });
   }
 

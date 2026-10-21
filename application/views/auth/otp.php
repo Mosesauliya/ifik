@@ -120,6 +120,12 @@
               <span><?= htmlspecialchars($masked_email); ?></span>
             </div>
 
+            <!-- Live Status Pengiriman Email OTP -->
+            <div id="otpLiveStatus" class="mt-2.5 text-xs flex items-center justify-center gap-1.5 text-amber-800/80">
+              <svg class="animate-spin w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+              <span>Mengirimkan kode OTP ke email Anda...</span>
+            </div>
+
             <?php if (!empty($dev_otp)): ?>
             <!-- Fallback Alert jika Port SMTP Server NAS Diblokir ISP -->
             <div class="mt-3 p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs text-center shadow-sm">
@@ -319,6 +325,35 @@
         if (capProgressBar) capProgressBar.style.width = '100%';
         otpForm.submit();
       });
+
+      // Background AJAX Send Email
+      fetch('<?= base_url('login/send_otp_ajax'); ?>')
+        .then(res => res.json())
+        .then(data => {
+          const liveStatus = document.getElementById('otpLiveStatus');
+          if (!liveStatus) return;
+          if (data.status === 'success') {
+            liveStatus.className = 'mt-2.5 text-xs flex items-center justify-center gap-1.5 text-emerald-700 font-semibold';
+            liveStatus.innerHTML = `
+              <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              <span>Kode OTP telah terkirim ke email Anda</span>
+            `;
+          } else if (data.status === 'fallback') {
+            liveStatus.className = 'mt-2 text-xs text-center';
+            liveStatus.innerHTML = `
+              <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs text-center shadow-sm">
+                <span class="font-bold text-[11px] text-amber-700">⚠️ KONEKSI SMTP SERVER DI-LIMIT / OFFLINE</span>
+                <p class="text-[11px] text-amber-800 mt-0.5">Kode OTP Anda untuk login:</p>
+                <div class="mt-1 font-mono text-base font-extrabold tracking-widest text-amber-900 bg-amber-100/80 py-1 px-3 rounded-lg inline-block border border-amber-300">
+                  ${data.dev_otp}
+                </div>
+              </div>
+            `;
+          }
+        })
+        .catch(err => {
+          console.log('Background OTP check done');
+        });
 
       // 1. Countdown Expire Timer (5 Menit)
       let timeLeft = <?= (int)($expires_in ?? 300); ?>;

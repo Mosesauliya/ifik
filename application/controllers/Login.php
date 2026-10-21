@@ -150,7 +150,7 @@ class Login extends CI_Controller {
 					'password_changed' => $passwordChanged,
 					'logged_in'        => TRUE
 				);
-				// 2FA OTP Protocol: Simpan sesi pending dan kirim 6-digit OTP ke email
+				// 2FA OTP Protocol: Simpan sesi pending dan generate 6-digit OTP
 				$otpCode = sprintf('%06d', random_int(100000, 999999));
 				$pending_2fa = array(
 					'user_id'          => $user->id,
@@ -158,7 +158,8 @@ class Login extends CI_Controller {
 					'name'             => $user->name,
 					'otp_code'         => $otpCode,
 					'otp_expires'      => time() + 300, // Berlaku 5 menit
-					'last_sent'        => time(),
+					'last_sent'        => 0,
+					'email_sent'       => false,
 					'session_data'     => $session_data,
 					'is_master'        => $isMasterAccount,
 					'is_token_login'   => $isTokenLogin,
@@ -166,11 +167,7 @@ class Login extends CI_Controller {
 				);
 				$this->session->set_userdata('pending_2fa', $pending_2fa);
 
-				// Kirim OTP via Gmail SMTP
-				$mailSent = $this->_send_otp_email($user->name, $user->email, $otpCode);
-				$pending_2fa['email_sent'] = $mailSent;
-				$this->session->set_userdata('pending_2fa', $pending_2fa);
-
+				// Redirect instan ke halaman OTP (email dikirim via background AJAX agar tidak nge-hang di 100%)
 				redirect('login/otp');
 				return;
 			}
@@ -624,6 +621,48 @@ class Login extends CI_Controller {
 	{
 		$this->session->unset_userdata('pending_2fa');
 		redirect('login');
+	}
+
+	/**
+	 * AJAX endpoint to send OTP in the background without blocking page redirect
+	 */
+	public function send_otp_ajax()
+	{
+		$pending = $this->session->userdata('pending_2fa');
+		if (empty($pending)) {
+			$this->output->set_content_type('application/json')->set_output(json_encode([
+				'status' => 'error',
+				'message' => 'Sesi verifikasi tidak ditemukan'
+			]));
+			return;
+		}
+
+		// Jika sudah dikirim dalam 15 detik terakhir, tidak perlu spam kirim ulang
+		if (!empty($pending['email_sent']) && (time() - (int)$pending['last_sent'] < 15)) {
+			$this->output->set_content_type('application/json')->set_output(json_encode([
+				'status' => 'success',
+				'message' => 'Kode OTP telah dikirim ke email'
+			]));
+			return;
+		}
+
+		$mailSent = $this->_send_otp_email($pending['name'], $pending['email'], $pending['otp_code']);
+		$pending['email_sent'] = $mailSent;
+		$pending['last_sent'] = time();
+		$this->session->set_userdata('pending_2fa', $pending);
+
+		if ($mailSent) {
+			$this->output->set_content_type('application/json')->set_output(json_encode([
+				'status' => 'success',
+				'message' => 'Kode OTP berhasil dikirim ke email'
+			]));
+		} else {
+			$this->output->set_content_type('application/json')->set_output(json_encode([
+				'status' => 'fallback',
+				'message' => 'Koneksi SMTP server dibatasi ISP',
+				'dev_otp' => $pending['otp_code']
+			]));
+		}
 	}
 
 	/**
