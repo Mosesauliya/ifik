@@ -662,6 +662,12 @@ class User_model extends CI_Model {
             if (isset($data['prodi']) && $this->db->field_exists('prodi', $this->tbl_user)) {
                 $updateData['prodi'] = trim((string)$data['prodi']);
             }
+            if (isset($data['id_kk']) && $this->db->field_exists('id_kk', $this->tbl_user)) {
+                $updateData['id_kk'] = !empty($data['id_kk']) ? (int)$data['id_kk'] : null;
+            }
+            if (isset($data['kelompok_keahlian']) && $this->db->field_exists('kelompok_keahlian', $this->tbl_user)) {
+                $updateData['kelompok_keahlian'] = !empty($data['kelompok_keahlian']) ? trim((string)$data['kelompok_keahlian']) : null;
+            }
             if ($this->db->field_exists('updated_at', $this->tbl_user)) $updateData['updated_at'] = date('Y-m-d H:i:s');
 
             $isUserProtected = (!empty($existing->password_changed) && (int)$existing->password_changed === 1) || (!empty($existing->is_active) && (int)$existing->is_active === 1);
@@ -699,6 +705,12 @@ class User_model extends CI_Model {
             }
             if (isset($data['prodi']) && $this->db->field_exists('prodi', $this->tbl_user)) {
                 $insertData['prodi'] = trim((string)$data['prodi']);
+            }
+            if (isset($data['id_kk']) && $this->db->field_exists('id_kk', $this->tbl_user)) {
+                $insertData['id_kk'] = !empty($data['id_kk']) ? (int)$data['id_kk'] : null;
+            }
+            if (isset($data['kelompok_keahlian']) && $this->db->field_exists('kelompok_keahlian', $this->tbl_user)) {
+                $insertData['kelompok_keahlian'] = !empty($data['kelompok_keahlian']) ? trim((string)$data['kelompok_keahlian']) : null;
             }
             $roleCheck = isset($data['role_id']) ? (int)$data['role_id'] : 4;
             if ($roleCheck !== 4) {

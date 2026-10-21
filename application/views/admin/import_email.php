@@ -1498,6 +1498,23 @@
                             </select>
                         </div>
                     </div>
+
+                    <!-- Khusus Role Dosen: Pemilihan Kelompok Keahlian (KK) -->
+                    <div id="wrapper-kk" class="hidden">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">
+                            <i class="fa-solid fa-layer-group text-purple-600 mr-1"></i> Kelompok Keahlian (KK) <span class="text-slate-400 font-normal">(Khusus Dosen)</span>
+                        </label>
+                        <select id="acc-kk" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                            <option value="">-- Pilih Kelompok Keahlian --</option>
+                            <?php if (!empty($kk_list)): ?>
+                                <?php foreach ($kk_list as $kk): ?>
+                                    <option value="<?= htmlspecialchars($kk['id']) ?>" data-kode="<?= htmlspecialchars($kk['kode_kk'] ?? $kk['nama_kk']) ?>">
+                                        <?= htmlspecialchars($kk['nama_kk']) ?><?= (!empty($kk['kode_kk']) && $kk['kode_kk'] !== $kk['nama_kk']) ? ' (' . htmlspecialchars($kk['kode_kk']) . ')' : '' ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="pt-2 flex justify-end gap-2">
@@ -3079,6 +3096,7 @@
                                     ${acc.jabatan === 'kaprodi' ? `<span class="inline-block px-2 py-0.2 text-[9px] font-bold text-amber-700 bg-amber-100/90 rounded border border-amber-300">Kaprodi</span>` : ''}
                                     ${acc.jabatan === 'kaur' ? `<span class="inline-block px-2 py-0.2 text-[9px] font-bold text-emerald-700 bg-emerald-100/90 rounded border border-emerald-300">Ka. Ur Lab</span>` : ''}
                                     ${acc.jabatan === 'wadek' ? `<span class="inline-block px-2 py-0.2 text-[9px] font-bold text-indigo-700 bg-indigo-100/90 rounded border border-indigo-300">Wadek</span>` : ''}
+                                    ${acc.kelompok_keahlian ? `<span class="inline-block px-2 py-0.2 text-[9px] font-bold text-purple-700 bg-purple-100/90 rounded border border-purple-300">KK: ${acc.kelompok_keahlian}</span>` : ''}
                                 </div>
                             </div>
                         </td>
@@ -4371,6 +4389,7 @@
             const container   = document.getElementById('container-dosen-fields');
             const wrapJabatan = document.getElementById('wrapper-jabatan');
             const wrapProdi   = document.getElementById('wrapper-prodi');
+            const wrapKk      = document.getElementById('wrapper-kk');
             const rowFields   = document.getElementById('row-prodi-jabatan');
             if (!container) return;
 
@@ -4382,14 +4401,17 @@
                 container.classList.remove('hidden');
                 if (wrapJabatan) wrapJabatan.classList.remove('hidden');
                 if (wrapProdi) wrapProdi.classList.remove('hidden');
+                if (wrapKk) wrapKk.classList.remove('hidden');
                 if (rowFields) rowFields.className = 'grid grid-cols-2 gap-3';
             } else if (isMhs) {
                 container.classList.remove('hidden');
                 if (wrapJabatan) wrapJabatan.classList.add('hidden');
                 if (wrapProdi) wrapProdi.classList.remove('hidden');
+                if (wrapKk) wrapKk.classList.add('hidden');
                 if (rowFields) rowFields.className = 'grid grid-cols-1 gap-3';
             } else {
                 container.classList.add('hidden');
+                if (wrapKk) wrapKk.classList.add('hidden');
             }
         }
 
@@ -4397,6 +4419,8 @@
             document.getElementById('modal-account-title').innerText = 'Tambah Akun Manual';
             document.getElementById('account-id').value = '';
             document.getElementById('account-form').reset();
+            const kkEl = document.getElementById('acc-kk');
+            if (kkEl) kkEl.value = '';
             const roleEl = document.getElementById('acc-role');
             if (roleEl) handleRoleChange(roleEl.value);
             document.getElementById('modal-account').classList.remove('hidden');
@@ -4425,6 +4449,20 @@
             if (prodiEl) {
                 prodiEl.value = acc.prodi || '';
             }
+            const kkEl = document.getElementById('acc-kk');
+            if (kkEl) {
+                kkEl.value = acc.id_kk ? String(acc.id_kk) : '';
+                if (!kkEl.value && acc.kelompok_keahlian) {
+                    for (let i = 0; i < kkEl.options.length; i++) {
+                        const opt = kkEl.options[i];
+                        if (opt.text.toLowerCase().includes(acc.kelompok_keahlian.toLowerCase()) || 
+                            (opt.getAttribute('data-kode') && opt.getAttribute('data-kode').toLowerCase() === acc.kelompok_keahlian.toLowerCase())) {
+                            kkEl.value = opt.value;
+                            break;
+                        }
+                    }
+                }
+            }
 
             handleRoleChange(acc.role);
 
@@ -4451,6 +4489,7 @@
             const isMhs = role && role.toLowerCase().includes('mahasiswa');
             const jabatan = isDosen && document.getElementById('acc-jabatan') ? document.getElementById('acc-jabatan').value : 'dosen';
             const prodi = (isDosen || isMhs) && document.getElementById('acc-prodi') ? document.getElementById('acc-prodi').value : '';
+            const id_kk = isDosen && document.getElementById('acc-kk') ? document.getElementById('acc-kk').value : '';
 
             if (!isValidTelkomEmail(email)) {
                 emailInput.focus();
@@ -4502,7 +4541,7 @@
             fetch('<?= site_url("import-email/save_user") ?>', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, name, email, role, nim_nip, jabatan, prodi })
+                body: JSON.stringify({ id, name, email, role, nim_nip, jabatan, prodi, id_kk })
             })
             .then(res => res.json())
             .then(res => {

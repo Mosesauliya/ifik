@@ -136,6 +136,7 @@ class ImportEmail extends CI_Controller {
 
         $this->load->helper('fik_prodi');
         $data['prodi_list'] = function_exists('fik_program_studi') ? fik_program_studi() : [];
+        $data['kk_list'] = $this->db->table_exists('kelompok_keahlian') ? $this->db->order_by('nama_kk', 'ASC')->get('kelompok_keahlian')->result_array() : [];
 
         $data['title'] = $title;
         $data['user_role_id'] = $roleId;
@@ -588,6 +589,15 @@ class ImportEmail extends CI_Controller {
         $rawToken = isset($json['token']) && !empty($json['token']) ? trim($json['token']) : null;
         $jabatan = isset($json['jabatan']) ? strtolower(trim((string)$json['jabatan'])) : '';
         $prodi = isset($json['prodi']) ? trim((string)$json['prodi']) : '';
+        $idKk = isset($json['id_kk']) ? trim((string)$json['id_kk']) : '';
+        $isDosenRole = ((int)$targetRoleId === 3 || strpos(strtolower($json['role'] ?? ''), 'dosen') !== false);
+        $namaKk = '';
+        if ($isDosenRole && !empty($idKk) && $this->db->table_exists('kelompok_keahlian')) {
+            $kkRow = $this->db->get_where('kelompok_keahlian', ['id' => $idKk])->row();
+            if ($kkRow) {
+                $namaKk = !empty($kkRow->kode_kk) ? $kkRow->kode_kk : $kkRow->nama_kk;
+            }
+        }
 
         if ($targetUserId) {
             // EDIT EXISTING USER BY ID (STRICTLY SUPER ADMIN ONLY)
@@ -623,6 +633,13 @@ class ImportEmail extends CI_Controller {
             if ($this->db->field_exists('nidn_nim', $userTbl)) $updateData['nidn_nim'] = $nimNip;
             if ($this->db->field_exists('jabatan', $userTbl)) $updateData['jabatan'] = $jabatan ?: 'dosen';
             if ($this->db->field_exists('prodi', $userTbl)) $updateData['prodi'] = $prodi;
+            if ($isDosenRole) {
+                if ($this->db->field_exists('id_kk', $userTbl)) $updateData['id_kk'] = !empty($idKk) ? (int)$idKk : null;
+                if ($this->db->field_exists('kelompok_keahlian', $userTbl)) $updateData['kelompok_keahlian'] = !empty($namaKk) ? $namaKk : null;
+            } else {
+                if ($this->db->field_exists('id_kk', $userTbl)) $updateData['id_kk'] = null;
+                if ($this->db->field_exists('kelompok_keahlian', $userTbl)) $updateData['kelompok_keahlian'] = null;
+            }
             if ((int)$targetRoleId !== 4) {
                 // Non-Mahasiswa (Dosen, Laboran, Kaur, dll): simpan ke nip
                 if ($this->db->field_exists('nip', $userTbl)) $updateData['nip'] = $nimNip;
@@ -671,6 +688,10 @@ class ImportEmail extends CI_Controller {
                 'jabatan' => $jabatan ?: 'dosen',
                 'prodi' => $prodi
             ];
+            if ($isDosenRole) {
+                $userData['id_kk'] = !empty($idKk) ? (int)$idKk : null;
+                $userData['kelompok_keahlian'] = !empty($namaKk) ? $namaKk : null;
+            }
             $this->User_model->upsert_user($userData);
         }
 
@@ -802,6 +823,8 @@ class ImportEmail extends CI_Controller {
                 'role_id' => (int)$u['role_id'],
                 'jabatan' => !empty($u['jabatan']) ? strtolower(trim($u['jabatan'])) : 'dosen',
                 'prodi' => !empty($u['prodi']) ? trim($u['prodi']) : '',
+                'id_kk' => !empty($u['id_kk']) ? (int)$u['id_kk'] : '',
+                'kelompok_keahlian' => !empty($u['kelompok_keahlian']) ? trim($u['kelompok_keahlian']) : '',
                 'nim_nip' => !empty($u['nidn_nim']) ? $u['nidn_nim'] : '-',
                 'token' => !empty($u['token']) ? $u['token'] : '',
                 'token_display' => !empty($u['token']) ? (strlen($u['token']) > 12 ? substr($u['token'], 0, 8) . '...' . substr($u['token'], -4) : $u['token']) : '',
