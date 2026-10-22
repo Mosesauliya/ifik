@@ -573,7 +573,7 @@ class Perwalian_model extends CI_Model {
     // =========================================================================
 
     public function get_monitoring_list($filters = []) {
-        $this->db->select('p.*, u.name as nama_lengkap, u.email, u.prodi as user_prodi, COUNT(pd.id) as total_mk, SUM(pd.sks) as total_sks')
+        $this->db->select('p.*, MAX(u.name) as nama_lengkap, MAX(u.email) as email, MAX(u.prodi) as user_prodi, COUNT(pd.id) as total_mk, COALESCE(SUM(pd.sks), 0) as total_sks')
                  ->from('perwalian p')
                  ->join('user u', 'p.nim COLLATE utf8mb4_general_ci = u.nim COLLATE utf8mb4_general_ci OR p.nim COLLATE utf8mb4_general_ci = u.username COLLATE utf8mb4_general_ci', 'left')
                  ->join('perwalian_detail pd', 'p.id_perwalian = pd.id_perwalian AND pd.status_tahap = "akan_diambil"', 'left')
@@ -641,7 +641,7 @@ class Perwalian_model extends CI_Model {
     // =========================================================================
 
     public function get_perwalian_by_dosen($nip_dosen, $filters = []) {
-        $this->db->select('p.*, COUNT(pd.id) as total_mk, SUM(pd.sks) as total_sks')
+        $this->db->select('p.*, COUNT(pd.id) as total_mk, COALESCE(SUM(pd.sks), 0) as total_sks')
                  ->from('perwalian p')
                  ->join('perwalian_detail pd', 'p.id_perwalian = pd.id_perwalian AND pd.status_tahap = "akan_diambil"', 'left')
                  ->where('p.nip_dosen_wali', trim($nip_dosen))
