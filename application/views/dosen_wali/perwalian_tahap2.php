@@ -1760,11 +1760,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             initStatsSliderListenerT2();
         });
-    </script>
-</body>
-</html>
 
-        // =========================================================================
+// =========================================================================
         // AJAX DYNAMIC UI UPDATE HELPERS (Tahap 2)
         // =========================================================================
         function updatePerwalianTahap2Counters(idPerwalian, totalLulus, totalTidakLulus, statusTahap2, stats) {
@@ -1889,3 +1886,6 @@
                 updatePerwalianTahap2Status(0, '', stats);
             }
         }
+    </script>
+</body>
+</html>
