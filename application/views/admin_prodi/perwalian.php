@@ -760,9 +760,6 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        let parsedMKData = [];
-        let parsedKRSData = [];
-
         function switchTab(tabId) {
             document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
