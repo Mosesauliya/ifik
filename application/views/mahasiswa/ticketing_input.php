@@ -191,7 +191,22 @@
                         <select id="sub_prodi" name="sub_prodi" onchange="handleSubProdiChange(this.value)"
                                 class="w-full pl-11 pr-10 py-3 rounded-xl bg-orange-50/40 border border-orange-200 focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 text-sm font-semibold text-slate-800 transition-all outline-hidden appearance-none cursor-pointer">
                             <option value="">-- Pilih Program Studi / Jurusan --</option>
-                            <?php foreach (fik_program_studi() as $prodiOpt): ?>
+                            <?php 
+                                if (!function_exists('fik_program_studi')) {
+                                    $this->load->helper('fik_prodi');
+                                }
+                                $prodiOptions = function_exists('fik_program_studi') ? fik_program_studi() : [
+                                    'S1 Desain Komunikasi Visual (DKV)',
+                                    'S1 Desain Interior',
+                                    'S1 Desain Produk',
+                                    'S1 Kriya Tekstil dan Mode',
+                                    'S1 Seni Rupa',
+                                    'S1 Film & Animasi',
+                                    'S2 Magister Desain',
+                                    'S1 Informatika'
+                                ];
+                                foreach ($prodiOptions as $prodiOpt): 
+                            ?>
                                 <option value="<?= htmlspecialchars($prodiOpt); ?>"><?= htmlspecialchars($prodiOpt); ?></option>
                             <?php endforeach; ?>
                         </select>

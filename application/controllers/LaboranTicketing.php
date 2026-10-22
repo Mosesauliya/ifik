@@ -9,7 +9,7 @@ class LaboranTicketing extends CI_Controller {
         parent::__construct();
         $this->load->database();
         $this->load->library(['session', 'form_validation']);
-        $this->load->helper(['url', 'form', 'text']);
+        $this->load->helper(['url', 'form', 'text', 'fik_prodi']);
         $this->load->model('DosenTicketing_model');
 
         if ($this->db->table_exists('tb_ticketing')) {

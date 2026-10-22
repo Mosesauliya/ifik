@@ -14,7 +14,7 @@ class DosenTicketing extends CI_Controller {
         }
 
         $this->load->model('DosenTicketing_model');
-        $this->load->helper(['url', 'form']);
+        $this->load->helper(['url', 'form', 'fik_prodi']);
     }
 
     /**
