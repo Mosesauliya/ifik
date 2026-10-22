@@ -958,20 +958,40 @@
                 </button>
             </div>
 
-            <!-- Preview Container -->
+            <!-- Preview Container with Robust Validation Info -->
             <div id="importPreviewContainer" class="hidden space-y-3">
-                <div class="flex items-center justify-between text-xs">
-                    <span class="font-bold text-slate-700">Pratinjau Data Nilai (<span id="importRowCount">0</span> baris):</span>
-                    <button type="button" onclick="resetImportFile()" class="text-rose-600 hover:underline">Ganti File</button>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="font-bold text-slate-800">Pratinjau Validasi Nilai:</span>
+                        <span class="px-2 py-0.5 text-[11px] font-bold rounded-md bg-slate-100 text-slate-700" id="importBadgeTotal">Total: <span id="importRowCount">0</span></span>
+                        <span class="px-2 py-0.5 text-[11px] font-bold rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200" id="importBadgeValid">Cocok: <span id="importValidCount">0</span></span>
+                        <span class="px-2 py-0.5 text-[11px] font-bold rounded-md bg-rose-100 text-rose-800 border border-rose-200" id="importBadgeInvalid">Tidak Cocok: <span id="importInvalidCount">0</span></span>
+                    </div>
+                    <button type="button" onclick="resetImportFile()" class="text-rose-600 hover:text-rose-700 font-semibold hover:underline text-xs flex items-center gap-1 self-start sm:self-auto cursor-pointer">
+                        <i class="fa-solid fa-rotate-left text-[10px]"></i> Ganti File
+                    </button>
                 </div>
-                <div class="max-h-48 overflow-y-auto border border-slate-200 rounded-xl">
+
+                <!-- Alert banner for validation status -->
+                <div id="importWarningBanner" class="hidden p-3 rounded-xl text-xs space-y-1">
+                    <div class="font-bold flex items-center gap-1.5" id="importWarningTitle">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span id="importWarningTitleText">Peringatan Validasi File</span>
+                    </div>
+                    <p class="text-[11px] leading-relaxed" id="importWarningText">
+                        Beberapa kode mata kuliah atau format nilai tidak sesuai dengan rencana studi mahasiswa. Baris berwarna merah tidak akan disimpan ke sistem.
+                    </p>
+                </div>
+
+                <div class="max-h-56 overflow-y-auto border border-slate-200 rounded-xl shadow-2xs">
                     <table class="w-full text-left text-xs">
-                        <thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-600">
+                        <thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-600 sticky top-0 border-b border-slate-200">
                             <tr>
-                                <th class="py-2 px-3">NIM</th>
-                                <th class="py-2 px-3">Kode MK</th>
-                                <th class="py-2 px-3 text-center">Nilai</th>
-                                <th class="py-2 px-3 text-center">Status</th>
+                                <th class="py-2.5 px-3">NIM</th>
+                                <th class="py-2.5 px-3">Kode MK di File</th>
+                                <th class="py-2.5 px-3">Mata Kuliah di Sistem</th>
+                                <th class="py-2.5 px-3 text-center">Nilai</th>
+                                <th class="py-2.5 px-3 text-center">Hasil Validasi</th>
                             </tr>
                         </thead>
                         <tbody id="importPreviewTableBody" class="divide-y divide-slate-100"></tbody>
@@ -1395,31 +1415,155 @@
             const tbody = document.getElementById('importPreviewTableBody');
             tbody.innerHTML = '';
 
-            rows.slice(0, 50).forEach(r => {
-                const isLulus = ['A', 'AB', 'B', 'BC', 'C'].includes(r.nilai_huruf);
-                const isTidakLulus = ['D', 'E'].includes(r.nilai_huruf);
-                const badge = isLulus 
-                    ? `<span class="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-100 text-emerald-800">LULUS</span>`
-                    : (isTidakLulus 
-                        ? `<span class="px-2 py-0.5 text-[10px] font-bold rounded bg-rose-100 text-rose-800">TIDAK LULUS</span>`
-                        : `<span class="px-2 py-0.5 text-[10px] rounded bg-slate-100 text-slate-600">-</span>`);
+            const VALID_GRADES = ['A', 'AB', 'B', 'BC', 'C', 'D', 'E'];
+            let validCount = 0;
+            let invalidCount = 0;
+
+            // 1. Buat peta mata kuliah terdaftar jika dalam mode single mahasiswa
+            let mkMap = null;
+            let targetNim = '';
+            if (importTargetIdPerwalian && currentPerwalian2) {
+                mkMap = {};
+                const list = currentPerwalian2.mata_kuliah || currentPerwalian2.details || [];
+                list.forEach(m => {
+                    const code = String(m.kode_mk || '').trim().toUpperCase();
+                    if (code) {
+                        mkMap[code] = m.nama_mk || 'Mata Kuliah Terdaftar';
+                    }
+                });
+                targetNim = String((currentPerwalian2.perwalian ? currentPerwalian2.perwalian.nim : '') || '').trim();
+            }
+
+            rows.slice(0, 100).forEach(r => {
+                const mkCode = String(r.kode_mk || '').trim().toUpperCase();
+                const grade = String(r.nilai_huruf || '').trim().toUpperCase();
+                const rowNim = String(r.nim || '').trim();
+
+                let isRowValid = true;
+                let errorReason = '';
+                let namaMkDisplay = '-';
+
+                // Validasi Nilai Huruf
+                if (!VALID_GRADES.includes(grade)) {
+                    isRowValid = false;
+                    errorReason = 'Nilai tidak sah (harus A, AB, B, BC, C, D, E)';
+                }
+
+                // Validasi Kode MK & NIM pada mode Single Mahasiswa
+                if (mkMap !== null) {
+                    if (targetNim && rowNim && rowNim !== targetNim) {
+                        isRowValid = false;
+                        errorReason = `NIM tidak sesuai (Harus: ${targetNim})`;
+                    } else if (!mkMap[mkCode]) {
+                        isRowValid = false;
+                        errorReason = 'Kode MK TIDAK COCOK dengan rencana studi mahasiswa';
+                        namaMkDisplay = '<span class="text-rose-600 font-bold text-[11px] flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation"></i> Tidak terdaftar di KRS</span>';
+                    } else {
+                        namaMkDisplay = `<span class="text-slate-900 font-medium">${escapeHtml(mkMap[mkCode])}</span>`;
+                    }
+                } else {
+                    namaMkDisplay = '<span class="text-slate-500 italic">Mata Kuliah Bimbingan</span>';
+                }
+
+                // Tandai pada objek baris
+                r._isValid = isRowValid;
+
+                let rowClass = 'hover:bg-slate-50/60';
+                let statusBadge = '';
+
+                if (isRowValid) {
+                    validCount++;
+                    const isLulus = ['A', 'AB', 'B', 'BC', 'C'].includes(grade);
+                    statusBadge = isLulus 
+                        ? `<span class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="fa-solid fa-check mr-1 text-[9px]"></i> Valid (Lulus)</span>`
+                        : `<span class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full bg-rose-100 text-rose-800 border border-rose-300"><i class="fa-solid fa-xmark mr-1 text-[9px]"></i> Valid (Tidak Lulus)</span>`;
+                } else {
+                    invalidCount++;
+                    rowClass = 'bg-rose-50/80 hover:bg-rose-100/60 border-l-4 border-l-rose-500';
+                    statusBadge = `<span class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full bg-rose-200 text-rose-900 border border-rose-300 gap-1"><i class="fa-solid fa-circle-xmark text-rose-600"></i> ${escapeHtml(errorReason)}</span>`;
+                }
 
                 tbody.innerHTML += `
-                    <tr>
-                        <td class="py-1.5 px-3 font-mono">${escapeHtml(r.nim || '-')}</td>
-                        <td class="py-1.5 px-3 font-mono font-bold">${escapeHtml(r.kode_mk)}</td>
-                        <td class="py-1.5 px-3 text-center font-bold font-mono">${escapeHtml(r.nilai_huruf)}</td>
-                        <td class="py-1.5 px-3 text-center">${badge}</td>
+                    <tr class="${rowClass}">
+                        <td class="py-2 px-3 font-mono font-bold ${rowNim && targetNim && rowNim !== targetNim ? 'text-rose-700 bg-rose-100/50' : 'text-slate-600'}">${escapeHtml(rowNim || '-')}</td>
+                        <td class="py-2 px-3 font-mono font-black ${!isRowValid && errorReason.includes('Kode MK') ? 'text-rose-700 bg-rose-100/70 font-mono underline decoration-rose-400' : 'text-slate-900'}">${escapeHtml(mkCode || '-')}</td>
+                        <td class="py-2 px-3 text-xs">${namaMkDisplay}</td>
+                        <td class="py-2 px-3 text-center font-black font-mono ${!VALID_GRADES.includes(grade) ? 'text-rose-600 bg-rose-100' : 'text-slate-900'}">${escapeHtml(grade || '-')}</td>
+                        <td class="py-2 px-3 text-center whitespace-nowrap">${statusBadge}</td>
                     </tr>
                 `;
             });
 
+            // Update badge counters
+            document.getElementById('importValidCount').innerText = validCount;
+            document.getElementById('importInvalidCount').innerText = invalidCount;
+
+            // Update warning banner
+            const banner = document.getElementById('importWarningBanner');
+            const bannerTitle = document.getElementById('importWarningTitle');
+            const bannerTitleText = document.getElementById('importWarningTitleText');
+            const bannerText = document.getElementById('importWarningText');
+            const btnProcess = document.getElementById('btnProcessImport');
+
+            if (invalidCount > 0 && validCount === 0) {
+                // Semua baris tidak cocok / gagal
+                banner.className = 'p-3 rounded-xl text-xs space-y-1 bg-rose-100 border border-rose-300 text-rose-900';
+                bannerTitle.className = 'font-bold flex items-center gap-1.5 text-rose-800';
+                bannerTitleText.innerText = 'Semua Data Tidak Cocok!';
+                bannerText.innerHTML = 'Seluruh kode mata kuliah pada file Excel Anda <strong>tidak terdaftar pada rencana studi mahasiswa ini</strong>. Silakan periksa kembali atau gunakan tombol <strong>"Unduh Template Mahasiswa Ini"</strong> di atas.';
+                banner.classList.remove('hidden');
+
+                btnProcess.setAttribute('disabled', 'true');
+                btnProcess.innerHTML = `<i class="fa-solid fa-ban mr-1.5"></i> Tidak Ada Data Cocok`;
+            } else if (invalidCount > 0 && validCount > 0) {
+                // Sebagian cocok, sebagian tidak
+                banner.className = 'p-3 rounded-xl text-xs space-y-1 bg-amber-50 border border-amber-300 text-amber-900';
+                bannerTitle.className = 'font-bold flex items-center gap-1.5 text-amber-800';
+                bannerTitleText.innerText = 'Sebagian Kode MK Tidak Cocok';
+                bannerText.innerHTML = `Ditemukan <strong>${invalidCount} baris</strong> dengan Kode MK / Nilai tidak cocok. Hanya <strong>${validCount} mata kuliah yang valid</strong> yang akan disimpan ke sistem. Baris yang tidak cocok akan otomatis dilewati.`;
+                banner.classList.remove('hidden');
+
+                btnProcess.removeAttribute('disabled');
+                btnProcess.innerHTML = `<i class="fa-solid fa-check mr-1.5"></i> Simpan ${validCount} Nilai Valid`;
+            } else {
+                // Semua valid
+                banner.classList.add('hidden');
+                btnProcess.removeAttribute('disabled');
+                btnProcess.innerHTML = `<i class="fa-solid fa-check mr-1.5"></i> Simpan Nilai ke Sistem (${validCount} MK)`;
+            }
+
             document.getElementById('importPreviewContainer').classList.remove('hidden');
-            document.getElementById('btnProcessImport').removeAttribute('disabled');
         }
 
         async function processImportNilai() {
             if (parsedImportRows.length === 0) return;
+
+            // Filter hanya baris yang valid
+            const validRowsToSubmit = parsedImportRows.filter(r => r._isValid !== false);
+            const invalidRowsCount = parsedImportRows.length - validRowsToSubmit.length;
+
+            if (validRowsToSubmit.length === 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Tidak Ada Data Valid',
+                    text: 'Tidak ada kode mata kuliah yang cocok dengan rencana studi mahasiswa. Silakan gunakan template resmi.'
+                });
+                return;
+            }
+
+            // Jika ada baris yang tidak cocok, beri konfirmasi dulu
+            if (invalidRowsCount > 0) {
+                const conf = await Swal.fire({
+                    icon: 'warning',
+                    title: 'Konfirmasi Penyimpanan Nilai',
+                    html: `Terdapat <b>${invalidRowsCount} baris mata kuliah tidak cocok</b> yang akan dilewati.<br><br>Hanya <b>${validRowsToSubmit.length} mata kuliah valid</b> yang akan disimpan ke sistem. Lanjutkan?`,
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Simpan yang Valid',
+                    confirmButtonColor: '#059669',
+                    cancelButtonText: 'Batal & Perbaiki File'
+                });
+                if (!conf.isConfirmed) return;
+            }
 
             Swal.fire({ title: 'Menyimpan Nilai...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
 
@@ -1428,7 +1572,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        rows: parsedImportRows,
+                        rows: validRowsToSubmit,
                         id_perwalian: importTargetIdPerwalian
                     })
                 });
@@ -1453,7 +1597,7 @@
                         position: 'top-end'
                     });
                 } else {
-                    Swal.fire('Gagal', json.message, 'error');
+                    Swal.fire('Gagal Import', json.message, 'error');
                 }
             } catch (err) {
                 Swal.close();

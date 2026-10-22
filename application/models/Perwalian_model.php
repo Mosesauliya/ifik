@@ -1039,14 +1039,14 @@ class Perwalian_model extends CI_Model {
                 continue;
             }
 
-            // Hitung status kelulusan otomatis
-            if (in_array($nilai, ['A', 'AB', 'B', 'BC', 'C'], true)) {
-                $status_lulus = 'Lulus';
-            } elseif (in_array($nilai, ['D', 'E'], true)) {
-                $status_lulus = 'Tidak Lulus';
-            } else {
-                $status_lulus = 'Belum Ditentukan';
+            // Validasi nilai huruf wajib standar
+            if (!in_array($nilai, ['A', 'AB', 'B', 'BC', 'C', 'D', 'E'], true)) {
+                $skipped++;
+                continue;
             }
+
+            // Hitung status kelulusan otomatis
+            $status_lulus = in_array($nilai, ['A', 'AB', 'B', 'BC', 'C'], true) ? 'Lulus' : 'Tidak Lulus';
 
             if (!empty($specific_id_perwalian)) {
                 // Mode single mahasiswa: langsung update detail
@@ -1101,11 +1101,25 @@ class Perwalian_model extends CI_Model {
             }
         }
 
+        if ($updated === 0) {
+            return [
+                'status'  => false,
+                'updated' => 0,
+                'skipped' => $skipped,
+                'message' => 'Tidak ada mata kuliah yang cocok untuk diimpor. Pastikan Kode MK sesuai dengan rencana studi mahasiswa.'
+            ];
+        }
+
+        $msg = "Berhasil memperbarui {$updated} nilai mata kuliah.";
+        if ($skipped > 0) {
+            $msg .= " ({$skipped} baris dilewati karena Kode MK/NIM tidak sesuai).";
+        }
+
         return [
             'status'  => true,
             'updated' => $updated,
             'skipped' => $skipped,
-            'message' => "Berhasil memperbarui {$updated} nilai mata kuliah ({$skipped} baris dilewati)."
+            'message' => $msg
         ];
     }
 
