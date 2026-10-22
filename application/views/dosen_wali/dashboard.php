@@ -3642,8 +3642,9 @@
     }
 
     function resolveDocPdfUrl(filename) {
-        if (!filename) return '<?= base_url("uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf"); ?>';
+        if (!filename) return '';
         filename = String(filename).trim();
+        if (!filename) return '';
         if (filename.startsWith('http://') || filename.startsWith('https://')) return filename;
 
         let folder = 'uploads/persyaratan_ta/';
@@ -3767,15 +3768,12 @@
         if (!rawFilename && mhs.berkas_map && mhs.berkas_map[docKey]) {
             rawFilename = mhs.berkas_map[docKey].file_name;
         }
-        if (!rawFilename) {
-            rawFilename = `${docKey}_${mhs.nim}.pdf`;
-        }
         const pdfUrl = resolveDocPdfUrl(rawFilename);
 
-        if (iframe) iframe.src = pdfUrl;
+        if (iframe) iframe.src = pdfUrl || 'about:blank';
         if (btnTab) {
-            btnTab.href = pdfUrl;
-            btnTab.style.display = 'inline-flex';
+            btnTab.href = pdfUrl || '#';
+            btnTab.style.display = pdfUrl ? 'inline-flex' : 'none';
         }
 
         const currentStatus = mhs[docMeta.statusField] || (mhs.berkas_map && mhs.berkas_map[docKey] ? (mhs.berkas_map[docKey].status_verifikasi === 'Valid' ? 'Approved' : (mhs.berkas_map[docKey].status_verifikasi === 'Invalid' ? 'Rejected' : 'Pending')) : 'Pending');
@@ -4298,7 +4296,7 @@
             `;
 
             const itemsHtml = (filteredDocs.length > 0) ? filteredDocs.map(doc => {
-                const rawFilename = mhs[doc.fileField] || `${doc.key}_${nim}.pdf`;
+                const rawFilename = mhs[doc.fileField] || (mhs.berkas_map && mhs.berkas_map[doc.key]?.file_name) || '';
                 const pdfUrl = resolveDocPdfUrl(rawFilename);
                 const status = getMhsDocStatus(nim, doc.key);
                 // Berkas ini aktif jika sedang ada di salah satu slot window.activePreviews
@@ -4710,7 +4708,7 @@
                 const mhs = window.mhsDataMap[p.nim] || {};
                 const doc = docList.find(d => d.key === p.docKey) || { title: p.docKey, fileField: `file_${p.docKey}` };
                 const fileField = doc.fileField || `file_${p.docKey}`;
-                const rawFilename = mhs[fileField] || (mhs.berkas_map && mhs.berkas_map[p.docKey]?.file_name) || `${p.docKey}_${p.nim}.pdf`;
+                const rawFilename = mhs[fileField] || (mhs.berkas_map && mhs.berkas_map[p.docKey]?.file_name) || '';
                 const pdfUrl = resolveDocPdfUrl(rawFilename);
                 const fullName = (mhs.nama_depan ? (mhs.nama_depan + ' ' + (mhs.nama_belakang || '')) : (mhs.nama || 'Mahasiswa ' + p.nim)).trim();
 
@@ -4812,7 +4810,7 @@
                     `
                     : `
                         <div class="${isMobile ? 'h-[310px] sm:h-[360px]' : 'h-[390px] sm:h-[430px] md:h-[450px]'} bg-slate-200 relative border-b border-slate-200 overflow-hidden cursor-default select-none">
-                            <iframe id="iframePreviewBerkas_${p.nim}_${p.docKey}" src="${pdfUrl}#toolbar=0&navpanes=0" class="w-full h-full border-0 pointer-events-auto" title="Pratinjau Dokumen PDF"></iframe>
+                            ${pdfUrl ? `<iframe id="iframePreviewBerkas_${p.nim}_${p.docKey}" src="${pdfUrl}#toolbar=0&navpanes=0" class="w-full h-full border-0 pointer-events-auto" title="Pratinjau Dokumen PDF"></iframe>` : `<div class="w-full h-full flex flex-col items-center justify-center p-6 text-slate-400 text-center"><i class="fa-solid fa-file-circle-xmark text-4xl mb-2 text-slate-300"></i><p class="text-xs font-semibold text-slate-500">Berkas Belum Diunggah</p></div>`}
                         </div>
                     `;
 

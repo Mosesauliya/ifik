@@ -175,12 +175,31 @@
         <?php endif; ?>
 
         <?php
-            $current_stage = $detail['current_stage'] ?? 'Dosen Wali';
+            $has_submitted_ta = !empty($detail['has_submitted_ta']);
+            $current_stage = $detail['current_stage'] ?? ($has_submitted_ta ? 'Dosen Wali' : 'Belum Mengajukan');
             $status_wali = $detail['status_approval_wali'] ?? 'Pending';
-            $isLocked = ($status_wali === 'Approved' || in_array($current_stage, array('Admin Layanan', 'Koordinator TA', 'Ketua KK', 'Selesai Approval', 'Selesai')));
+            $isLocked = !$has_submitted_ta || ($status_wali === 'Approved' || in_array($current_stage, array('Admin Layanan', 'Koordinator TA', 'Ketua KK', 'Selesai Approval', 'Selesai')));
         ?>
 
-        <?php if($isLocked): ?>
+        <?php if(!$has_submitted_ta): ?>
+            <!-- Banner Belum Mendaftar TA -->
+            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 sm:p-5 flex items-start gap-4 shadow-xs">
+                <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-lg font-bold shrink-0 shadow-xs">
+                    <i class="bi bi-info-circle-fill"></i>
+                </div>
+                <div class="flex-grow">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h4 class="text-sm font-bold text-slate-900">Mahasiswa Belum Mengajukan Pendaftaran TA</h4>
+                        <span class="px-2.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-extrabold rounded-full border border-amber-200 uppercase tracking-wide">
+                            Belum Mengajukan
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-600 font-medium leading-relaxed mt-1">
+                        Mahasiswa ini belum mengajukan usulan judul Tugas Akhir maupun mengunggah berkas persyaratan. Verifikasi berkas dan persetujuan dinonaktifkan sampai mahasiswa melakukan pendaftaran TA.
+                    </p>
+                </div>
+            </div>
+        <?php elseif($isLocked): ?>
             <!-- Banner Status Terkunci (Read-Only) -->
             <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 sm:p-5 flex items-start gap-4 shadow-xs">
                 <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-lg font-bold shrink-0 shadow-xs">
@@ -416,7 +435,7 @@
                     <?php
                         $resolve_pdf_url = function($filename) {
                             if (empty($filename)) {
-                                return base_url('uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf');
+                                return '';
                             }
                             if (strpos($filename, 'uploads/') === 0 && file_exists(FCPATH . $filename)) {
                                 return base_url($filename);
@@ -425,7 +444,10 @@
                             if (file_exists(FCPATH . $sub_path)) {
                                 return base_url($sub_path);
                             }
-                            return base_url('uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf');
+                            if (file_exists(FCPATH . $filename)) {
+                                return base_url($filename);
+                            }
+                            return '';
                         };
 
                         $berkas_items = [];
@@ -696,7 +718,13 @@
                             <i class="bi bi-arrow-left"></i> Kembali ke Daftar
                         </a>
 
-                        <?php if(!$isLocked): ?>
+                        <?php if(!$has_submitted_ta): ?>
+                        <div class="order-1 sm:order-2">
+                            <span class="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl text-xs font-bold shadow-xs">
+                                <i class="bi bi-clock-history text-sm text-amber-600"></i> Mahasiswa Belum Mengajukan Pendaftaran TA
+                            </span>
+                        </div>
+                        <?php elseif(!$isLocked): ?>
                         <div class="flex flex-wrap items-center gap-4 sm:gap-5 w-full sm:w-auto order-1 sm:order-2">
                             <!-- Button Reject / Kembalikan -->
                             <button type="submit" name="action" value="reject" id="btnActionReject" onclick="return confirmReject();" 
@@ -1044,6 +1072,23 @@
 
         async function loadDocumentToViewer(containerEl, iframeEl, url, filename) {
             if (!containerEl && !iframeEl) return;
+            if (!url) {
+                if (iframeEl) {
+                    iframeEl.classList.add('hidden');
+                    iframeEl.src = 'about:blank';
+                }
+                if (containerEl) {
+                    containerEl.classList.remove('hidden');
+                    containerEl.innerHTML = `
+                        <div class="flex flex-col items-center justify-center py-16 text-slate-400 space-y-3">
+                            <i class="bi bi-file-earmark-x text-5xl text-slate-300"></i>
+                            <span class="text-sm font-semibold text-slate-600">Berkas Belum Diunggah</span>
+                            <p class="text-xs text-slate-400 max-w-xs text-center">Mahasiswa belum mengunggah dokumen persyaratan ini.</p>
+                        </div>
+                    `;
+                }
+                return;
+            }
             const isMobile = window.innerWidth < 1024;
             const isImg = Boolean(url && url.match(/\.(png|jpe?g|webp|gif)$/i));
             
@@ -1457,15 +1502,21 @@
 
             if (titleEl) titleEl.textContent = doc.label;
             if (fileEl) fileEl.textContent = doc.file;
-            if (dlEl) dlEl.href = doc.url;
+            if (dlEl) {
+                if (doc.url) {
+                    dlEl.href = doc.url;
+                    dlEl.style.display = 'inline-flex';
+                } else {
+                    dlEl.style.display = 'none';
+                }
+            }
             if (counterEl) counterEl.textContent = (currentMultiDocIndex + 1) + ' / ' + window.docList.length;
 
             if (prevBtn) prevBtn.disabled = (currentMultiDocIndex === 0);
             if (nextBtn) nextBtn.disabled = (currentMultiDocIndex === window.docList.length - 1);
 
             const canvasWrapper = document.getElementById('multiDocCanvasWrapper');
-            const defaultSamplePdf = '<?= base_url("uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf"); ?>';
-            const targetUrl = (doc.url && doc.url.match(/\.(pdf|png|jpg|jpeg)$/i)) ? doc.url : defaultSamplePdf;
+            const targetUrl = (doc.url && doc.url.match(/\.(pdf|png|jpg|jpeg)$/i)) ? doc.url : '';
             loadDocumentToViewer(canvasWrapper, iframe, targetUrl, doc.file || doc.label);
 
             updateMultiDocDrawerForActive();
@@ -1693,9 +1744,7 @@
 
             const canvasWrapper = document.getElementById('singlePdfCanvasWrapper');
             const iframe = document.getElementById('pdfIframeViewer');
-            const defaultSamplePdf = '<?= base_url("uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf"); ?>';
-
-            const targetUrl = (fileUrl && fileUrl.match(/\.(pdf|png|jpg|jpeg)$/i)) ? fileUrl : defaultSamplePdf;
+            const targetUrl = (fileUrl && fileUrl.match(/\.(pdf|png|jpg|jpeg)$/i)) ? fileUrl : '';
             loadDocumentToViewer(canvasWrapper, iframe, targetUrl, filename || title);
 
             // Wire up modal buttons
@@ -2351,9 +2400,11 @@
         }
 
         function simulateDownload() {
-            const defaultSamplePdf = '<?= base_url("uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf"); ?>';
-            const targetUrl = (currentModalFileUrl && currentModalFileUrl.match(/\.(pdf|png|jpg|jpeg)$/i)) ? currentModalFileUrl : defaultSamplePdf;
-            window.open(targetUrl, '_blank');
+            if (currentModalFileUrl && currentModalFileUrl.match(/\.(pdf|png|jpg|jpeg)$/i)) {
+                window.open(currentModalFileUrl, '_blank');
+            } else {
+                alert('Dokumen belum diunggah atau tidak tersedia.');
+            }
         }
 
         function copyNIM(nim) {

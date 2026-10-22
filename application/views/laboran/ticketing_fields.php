@@ -83,8 +83,14 @@
         
         <!-- Header & Breadcrumb -->
         <div class="mb-8">
+            <?php 
+            $curRoleId = (int)$this->session->userdata('role_id');
+            $panelName = ($curRoleId === 22) ? 'Super Admin' : (($curRoleId === 1) ? 'Panel Admin' : 'Panel Laboran');
+            $panelUrl  = ($curRoleId === 22) ? site_url('import-email') : (($curRoleId === 1) ? site_url('admin') : site_url('laboran'));
+            $checkUrl  = ($curRoleId === 22 || $curRoleId === 1) ? site_url('dosen/ticketing/input') : site_url('laboran/ticketing/input');
+            ?>
             <div class="flex items-center gap-2 text-xs font-semibold text-slate-400 mb-2">
-                <a href="<?= site_url('laboran') ?>" class="hover:text-orange-600 transition-colors">Panel Laboran</a>
+                <a href="<?= $panelUrl; ?>" class="hover:text-orange-600 transition-colors"><?= $panelName; ?></a>
                 <i class="bi bi-chevron-right text-[10px]"></i>
                 <span class="text-slate-600">Layanan Ticketing</span>
                 <i class="bi bi-chevron-right text-[10px]"></i>
@@ -105,7 +111,7 @@
                 </div>
 
                 <div class="flex items-center gap-2.5">
-                    <a href="<?= site_url('laboran/ticketing/input') ?>" target="_blank"
+                    <a href="<?= $checkUrl; ?>" target="_blank"
                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:text-orange-600 hover:border-orange-200 hover:bg-orange-50/50 text-sm font-bold shadow-xs transition-all">
                         <i class="bi bi-box-arrow-up-right text-xs"></i>
                         <span>Cek Form Tiket</span>

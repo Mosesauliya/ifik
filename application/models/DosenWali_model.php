@@ -84,7 +84,7 @@ class DosenWali_model extends CI_Model {
         $namaDosen = !empty($user['name']) ? $user['name'] : ($this->session->userdata('name') ?: 'Dosen Wali');
         $kodeDosen = !empty($user['kode_dosen']) ? $user['kode_dosen'] : ($this->session->userdata('kode_dosen') ?: 'DWL');
         $nipDosen  = !empty($user['nip']) ? $user['nip'] : ($user['nidn_nim'] ?? ($nip ?: '-'));
-        $prodi     = !empty($user['prodi']) ? $user['prodi'] : ($this->session->userdata('selected_prodi') ?: 'Desain Komunikasi Visual');
+        $prodi     = !empty($user['prodi']) ? $user['prodi'] : ($this->session->userdata('selected_prodi') ?: '-');
 
         return array(
             'nip'        => $nipDosen,
@@ -838,7 +838,7 @@ class DosenWali_model extends CI_Model {
             $catatan_judul = $g_row['komentar'] ?? '';
             $status_jenis_ta = $status_judul;
             $catatan_jenis_ta = $catatan_judul;
-            $konsentrasi = !empty($g_row['peminatan']) ? $g_row['peminatan'] : (!empty($pt_row['konsentrasi_dkv']) ? $pt_row['konsentrasi_dkv'] : (!empty($prodiMhs) ? $prodiMhs : 'Informatika'));
+            $konsentrasi = !empty($g_row['peminatan']) ? $g_row['peminatan'] : (!empty($pt_row['konsentrasi_dkv']) ? $pt_row['konsentrasi_dkv'] : (!empty($prodiMhs) ? $prodiMhs : '-'));
             $jenis_ta = !empty(trim($g_row['jenis_TA'] ?? '')) ? trim($g_row['jenis_TA']) : (!empty(trim($pt_row['jenis_ta'] ?? '')) ? trim($pt_row['jenis_ta']) : 'TA Reguler');
             $tgl_daftar = $g_row['date'] ?? ($pt_row['created_at'] ?? ($info['date'] ?? date('Y-m-d H:i:s')));
 
@@ -1017,24 +1017,36 @@ class DosenWali_model extends CI_Model {
             $pt_row = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
         }
 
+        $pb_rows = [];
+        if ($this->db->table_exists('pendaftaran_berkas')) {
+            $pb_rows = $this->db->get_where('pendaftaran_berkas', ['nim' => $nim])->result_array();
+        }
+
+        // Jika mahasiswa sama sekali tidak terdaftar di sistem
+        if (!$user_row && !$mhs_row && !$guidance && !$pt_row && empty($files) && empty($pb_rows)) {
+            return null;
+        }
+
+        $has_submitted_ta = (!empty($guidance) || !empty($pt_row) || !empty($files) || !empty($pb_rows));
+
         $namaMhs = !empty($user_row['name'])
             ? $user_row['name']
             : (!empty($mhs_row['nama_depan'])
                 ? trim($mhs_row['nama_depan'] . ' ' . ($mhs_row['nama_belakang'] ?? ''))
                 : ('Mahasiswa ' . $nim));
         $emailMhs = $user_row['email'] ?? ($mhs_row['email'] ?? '-');
-        $prodiMhs = $user_row['prodi'] ?? ($mhs_row['prodi'] ?? ($mhs_row['konsentrasi_dkv'] ?? 'Desain Komunikasi Visual'));
+        $prodiMhs = $user_row['prodi'] ?? ($mhs_row['prodi'] ?? ($mhs_row['konsentrasi_dkv'] ?? '-'));
         $noHpMhs  = $user_row['no_telp'] ?? ($user_row['no_hp'] ?? ($mhs_row['no_hp'] ?? '-'));
 
         $judul_1 = !empty($guidance['judul_1']) ? $guidance['judul_1'] : ($pt_row['judul_1'] ?? '-');
         $judul_2 = !empty($guidance['judul_2']) ? $guidance['judul_2'] : ($pt_row['judul_2'] ?? '');
         $judul_3 = !empty($guidance['judul_3']) ? $guidance['judul_3'] : ($pt_row['judul_3'] ?? '');
         $judul_en = $guidance['judul_en'] ?? ($pt_row['judul_en'] ?? '');
-        $jenis_ta = !empty(trim($guidance['jenis_TA'] ?? '')) ? trim($guidance['jenis_TA']) : (!empty(trim($guidance['jenis_ta'] ?? '')) ? trim($guidance['jenis_ta']) : (!empty(trim($pt_row['jenis_ta'] ?? '')) ? trim($pt_row['jenis_ta']) : 'TA Reguler'));
-        $status_judul = !empty($guidance['keterangan']) ? $guidance['keterangan'] : ($pt_row['status_approval_wali'] ?? 'Pending');
+        $jenis_ta = !empty(trim($guidance['jenis_TA'] ?? '')) ? trim($guidance['jenis_TA']) : (!empty(trim($guidance['jenis_ta'] ?? '')) ? trim($guidance['jenis_ta']) : (!empty(trim($pt_row['jenis_ta'] ?? '')) ? trim($pt_row['jenis_ta']) : ($has_submitted_ta ? 'TA Reguler' : '-')));
+        $status_judul = !empty($guidance['keterangan']) ? $guidance['keterangan'] : ($pt_row['status_approval_wali'] ?? ($has_submitted_ta ? 'Pending' : 'Belum Mengajukan'));
         $catatan_judul = $guidance['komentar'] ?? '';
-        $konsentrasi = !empty($guidance['peminatan']) ? $guidance['peminatan'] : (!empty($pt_row['konsentrasi_dkv']) ? $pt_row['konsentrasi_dkv'] : (!empty($prodiMhs) ? $prodiMhs : 'Informatika'));
-        $tgl_daftar = $guidance['date'] ?? ($pt_row['created_at'] ?? date('Y-m-d H:i:s'));
+        $konsentrasi = !empty($guidance['peminatan']) ? $guidance['peminatan'] : (!empty($pt_row['konsentrasi_dkv']) ? $pt_row['konsentrasi_dkv'] : (!empty($prodiMhs) && $prodiMhs !== '-' ? $prodiMhs : '-'));
+        $tgl_daftar = $guidance['date'] ?? ($pt_row['created_at'] ?? ($has_submitted_ta ? date('Y-m-d H:i:s') : '-'));
 
         $all_approved = true;
         $has_rejected = false;
@@ -1077,8 +1089,7 @@ class DosenWali_model extends CI_Model {
         }
 
         // Ambil juga dari pendaftaran_berkas jika ada
-        if ($this->db->table_exists('pendaftaran_berkas')) {
-            $pb_rows = $this->db->get_where('pendaftaran_berkas', ['nim' => $nim])->result_array();
+        if (!empty($pb_rows)) {
             foreach ($pb_rows as $pbRow) {
                 $has_file = true;
                 $kb = $pbRow['kode_berkas'];
@@ -1103,23 +1114,26 @@ class DosenWali_model extends CI_Model {
                 } elseif ($kb === 'bebas_lab' && empty($file_bebas_lab)) {
                     $file_bebas_lab = $pbRow['file_name']; $st_bebas_lab = $cleanSt; if (empty($cat_bebas_lab)) $cat_bebas_lab = $pbCat;
                 }
-
-                // Note: pendaftaran_berkas status_verifikasi belongs to Admin LAA, so do not alter Dosen Wali $all_approved
             }
         }
 
-        if ($status_judul === 'Rejected') {
+        if (!$has_submitted_ta) {
+            $status_wali = 'Belum Mengajukan';
+            $cur_stage = 'Belum Mengajukan Pendaftaran TA';
+        } elseif ($status_judul === 'Rejected') {
             $status_wali = 'Rejected';
+            $cur_stage = 'Dosen Wali (Ditolak)';
         } elseif ($all_approved && $has_file && $status_judul === 'Approved') {
             $status_wali = 'Approved';
+            $cur_stage = 'Admin Layanan';
         } else {
             $status_wali = $has_rejected ? 'Rejected' : 'Pending';
+            $cur_stage = ($status_wali === 'Rejected') ? 'Dosen Wali (Ditolak)' : 'Dosen Wali';
         }
 
         $st_admin  = 'Pending';
         $st_koor   = 'Pending';
         $st_kk     = 'Pending';
-        $cur_stage = ($status_wali === 'Approved') ? 'Admin Layanan' : ($status_wali === 'Rejected' ? 'Dosen Wali (Ditolak)' : 'Dosen Wali');
 
         $res = [
             'id'                     => $user_row['id'] ?? $nim,
@@ -1144,6 +1158,7 @@ class DosenWali_model extends CI_Model {
             'status_approval_koor'   => $st_koor,
             'status_approval_kk'     => $st_kk,
             'current_stage'          => $cur_stage,
+            'has_submitted_ta'       => $has_submitted_ta,
             'tgl_daftar'             => $tgl_daftar,
             'created_at'             => $tgl_daftar,
             'file_ksm'               => $file_ksm,

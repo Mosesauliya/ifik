@@ -779,7 +779,7 @@
                                         <?= htmlspecialchars(!empty(trim($pendaftaran['jenis_ta'] ?? '')) ? trim($pendaftaran['jenis_ta']) : 'TA Reguler'); ?>
                                     </span>
                                     <div class="text-xs text-slate-500 font-semibold mt-1">
-                                        <?= htmlspecialchars(!empty(trim($pendaftaran['peminatan'] ?? '')) ? trim($pendaftaran['peminatan']) : (!empty(trim($pendaftaran['konsentrasi_dkv'] ?? '')) ? trim($pendaftaran['konsentrasi_dkv']) : 'Informatika')); ?>
+                                        <?= htmlspecialchars(!empty(trim($pendaftaran['peminatan'] ?? '')) ? trim($pendaftaran['peminatan']) : (!empty(trim($pendaftaran['konsentrasi_dkv'] ?? '')) && trim($pendaftaran['konsentrasi_dkv']) !== '-' ? trim($pendaftaran['konsentrasi_dkv']) : (!empty($mahasiswa['prodi']) ? $mahasiswa['prodi'] : '-'))); ?>
                                     </div>
                                 </td>
                                 <td class="py-4 px-4 text-slate-800 font-bold text-xs whitespace-nowrap align-middle">
@@ -1015,7 +1015,7 @@
                                                         Jenis &amp; Skema Tugas Akhir
                                                     </h4>
                                                     <p class="text-[11px] text-slate-500 font-mono truncate mt-0.5">
-                                                        Skema Saat Ini: <?= htmlspecialchars($pendaftaran['jenis_ta'] ?? '-'); ?> (<?= htmlspecialchars($pendaftaran['konsentrasi_dkv'] ?? 'Informatika'); ?>)
+                                                        Skema Saat Ini: <?= htmlspecialchars($pendaftaran['jenis_ta'] ?? '-'); ?> (<?= htmlspecialchars(!empty($pendaftaran['konsentrasi_dkv']) && $pendaftaran['konsentrasi_dkv'] !== '-' ? $pendaftaran['konsentrasi_dkv'] : (!empty($mahasiswa['prodi']) ? $mahasiswa['prodi'] : '-')); ?>)
                                                     </p>
                                                 </div>
                                             </div>
@@ -1239,7 +1239,7 @@
                                             <div class="min-w-0">
                                                 <h4 class="font-extrabold text-xs sm:text-sm text-slate-900 truncate">Jenis &amp; Skema Tugas Akhir</h4>
                                                 <p class="text-[11px] text-slate-500 font-medium truncate mt-0.5">
-                                                    Skema: <strong class="text-slate-700"><?= htmlspecialchars($pendaftaran['jenis_ta'] ?? 'Pengkaryaan'); ?></strong> &bull; Konsentrasi: <strong class="text-slate-700"><?= htmlspecialchars($pendaftaran['konsentrasi_dkv'] ?? 'Informatika'); ?></strong>
+                                                    Skema: <strong class="text-slate-700"><?= htmlspecialchars($pendaftaran['jenis_ta'] ?? '-'); ?></strong> &bull; Konsentrasi: <strong class="text-slate-700"><?= htmlspecialchars(!empty($pendaftaran['konsentrasi_dkv']) && $pendaftaran['konsentrasi_dkv'] !== '-' ? $pendaftaran['konsentrasi_dkv'] : (!empty($mahasiswa['prodi']) ? $mahasiswa['prodi'] : '-')); ?></strong>
                                                 </p>
                                             </div>
                                         </div>
