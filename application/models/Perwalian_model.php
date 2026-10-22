@@ -936,16 +936,14 @@ class Perwalian_model extends CI_Model {
         $id_detail = (int)$id_detail;
         $nilai_huruf = strtoupper(trim((string)$nilai_huruf));
 
-        if ($status_kelulusan === null || $status_kelulusan === '') {
-            if (in_array($nilai_huruf, ['A', 'AB', 'B', 'BC', 'C'], true)) {
-                $status_kelulusan = 'Lulus';
-            } elseif (in_array($nilai_huruf, ['D', 'E'], true)) {
-                $status_kelulusan = 'Tidak Lulus';
-            } elseif (empty($nilai_huruf)) {
-                $status_kelulusan = 'Belum Ditentukan';
-            } else {
-                $status_kelulusan = 'Belum Ditentukan';
-            }
+        // Status kelulusan otomatis ditentukan 100% dari nilai huruf:
+        // A, AB, B, BC, C = Lulus | D, E = Tidak Lulus | Kosong = Belum Ditentukan
+        if (in_array($nilai_huruf, ['A', 'AB', 'B', 'BC', 'C'], true)) {
+            $status_kelulusan = 'Lulus';
+        } elseif (in_array($nilai_huruf, ['D', 'E'], true)) {
+            $status_kelulusan = 'Tidak Lulus';
+        } else {
+            $status_kelulusan = 'Belum Ditentukan';
         }
 
         $now = date('Y-m-d H:i:s');

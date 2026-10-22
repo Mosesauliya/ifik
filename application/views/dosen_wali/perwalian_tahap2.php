@@ -891,10 +891,9 @@
                                     <th class="py-2.5 px-3 w-10 text-center">No</th>
                                     <th class="py-2.5 px-3">Kode MK</th>
                                     <th class="py-2.5 px-3">Nama Mata Kuliah</th>
-                                    <th class="py-2.5 px-3 text-center">SKS</th>
-                                    <th class="py-2.5 px-3 text-center w-36">Nilai Huruf</th>
-                                    <th class="py-2.5 px-3 text-center w-36">Status Kelulusan</th>
-                                    <th class="py-2.5 px-3 text-center w-48">Set Status Kelulusan</th>
+                                    <th class="py-2.5 px-3 text-center w-16">SKS</th>
+                                    <th class="py-2.5 px-3 text-center w-40">Nilai Huruf</th>
+                                    <th class="py-2.5 px-3 text-center w-44">Status Kelulusan</th>
                                 </tr>
                             </thead>
                             <tbody id="m2GradingTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
@@ -1097,7 +1096,7 @@
             if (mkList.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" class="py-8 text-center text-slate-400">
+                        <td colspan="6" class="py-8 text-center text-slate-400">
                             <i class="fa-solid fa-book-open text-2xl text-slate-300 mb-2 block"></i>
                             <p class="font-medium text-slate-600">Belum ada mata kuliah yang dikontrak untuk semester ini.</p>
                             <p class="text-xs text-slate-400 mt-1">Mata kuliah ditentukan dari hasil pengajuan KRS di Tahap 1 atau setup oleh Admin Prodi.</p>
@@ -1114,13 +1113,13 @@
                     const isTidakLulus = (status === 'Tidak Lulus');
 
                     const statusBadgeHtml = isLulus 
-                        ? `<span class="inline-flex items-center px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="fa-solid fa-check mr-1 text-[10px]"></i> LULUS</span>`
+                        ? `<span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="fa-solid fa-circle-check mr-1.5 text-emerald-600"></i> Lulus</span>`
                         : (isTidakLulus 
-                            ? `<span class="inline-flex items-center px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-rose-100 text-rose-800 border border-rose-300"><i class="fa-solid fa-xmark mr-1 text-[10px]"></i> TIDAK LULUS</span>`
-                            : `<span class="inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-full bg-slate-100 text-slate-600">Belum Ditentukan</span>`);
+                            ? `<span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-rose-100 text-rose-800 border border-rose-300"><i class="fa-solid fa-circle-xmark mr-1.5 text-rose-600"></i> Tidak Lulus</span>`
+                            : `<span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-500 border border-slate-200"><i class="fa-solid fa-minus mr-1 text-slate-400"></i> Belum Dinilai</span>`);
 
                     tbody.innerHTML += `
-                        <tr class="hover:bg-slate-50/60" id="m2Row_${mk.id}">
+                        <tr class="hover:bg-slate-50/60 transition" id="m2Row_${mk.id}">
                             <td class="py-2.5 px-3 text-center font-mono text-slate-400">${idx + 1}</td>
                             <td class="py-2.5 px-3 font-mono font-bold text-slate-900">${escapeHtml(mk.kode_mk)}</td>
                             <td class="py-2.5 px-3 font-medium text-slate-800">${escapeHtml(mk.nama_mk)}</td>
@@ -1128,7 +1127,7 @@
                             
                             <!-- Dropdown Nilai Mutu -->
                             <td class="py-2.5 px-3 text-center">
-                                <select onchange="onGradeChange(${mk.id}, this.value)" class="w-20 px-2 py-1 text-xs font-bold text-center bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/40 font-mono">
+                                <select onchange="onGradeChange(${mk.id}, this.value)" class="w-24 px-2.5 py-1.5 text-xs font-bold text-center bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/40 font-mono shadow-2xs cursor-pointer">
                                     <option value="" ${!grade ? 'selected' : ''}>- Nilai -</option>
                                     <option value="A" ${grade === 'A' ? 'selected' : ''} class="text-emerald-700 font-bold">A</option>
                                     <option value="AB" ${grade === 'AB' ? 'selected' : ''} class="text-emerald-700 font-bold">AB</option>
@@ -1140,21 +1139,9 @@
                                 </select>
                             </td>
 
-                            <!-- Badge Status Kelulusan -->
+                            <!-- Badge Status Kelulusan (Otomatis 100% Berdasarkan Nilai) -->
                             <td class="py-2.5 px-3 text-center" id="m2StatusCol_${mk.id}">
                                 ${statusBadgeHtml}
-                            </td>
-
-                            <!-- Quick Switch Set Status (Lulus / Tidak Lulus) -->
-                            <td class="py-2.5 px-3 text-center">
-                                <div class="inline-flex rounded-xl border border-slate-200 p-0.5 bg-slate-50 gap-1">
-                                    <button type="button" id="btnSetLulus_${mk.id}" title="Set Status Lulus" onclick="toggleStatus(${mk.id}, 'Lulus')" class="px-2.5 py-1 text-xs rounded-lg font-bold transition flex items-center gap-1 cursor-pointer ${isLulus ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:text-emerald-700 hover:bg-emerald-50'}">
-                                        <i class="fa-solid fa-check text-[10px]"></i> Lulus
-                                    </button>
-                                    <button type="button" id="btnSetTidakLulus_${mk.id}" title="Set Status Tidak Lulus" onclick="toggleStatus(${mk.id}, 'Tidak Lulus')" class="px-2.5 py-1 text-xs rounded-lg font-bold transition flex items-center gap-1 cursor-pointer ${isTidakLulus ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-600 hover:text-rose-700 hover:bg-rose-50'}">
-                                        <i class="fa-solid fa-xmark text-[10px]"></i> Tidak Lulus
-                                    </button>
-                                </div>
                             </td>
                         </tr>
                     `;
@@ -1173,6 +1160,9 @@
                 autoStatus = 'Tidak Lulus';
             }
 
+            // Langsung update badge kelulusan di UI secara instan (real-time)
+            updateStatusBadgeUI(idDetail, autoStatus);
+
             const fd = new FormData();
             fd.append('id_detail', idDetail);
             fd.append('nilai_huruf', grade);
@@ -1185,36 +1175,13 @@
                 });
                 const json = await res.json();
                 if (json.status) {
-                    updateStatusBadgeUI(idDetail, autoStatus);
                     if (json.data && json.data.id_perwalian) {
                         updatePerwalianTahap2Counters(json.data.id_perwalian, json.data.total_lulus, json.data.total_tidak_lulus, json.data.status_tahap2, json.stats);
                     }
-                    showToast('Nilai berhasil disimpan', 'success');
+                    refreshModalGradingProgress();
+                    showToast('Nilai & status otomatis diperbarui', 'success');
                 } else {
                     Swal.fire('Gagal', json.message, 'error');
-                }
-            } catch (err) {
-                showToast('Gagal koneksi server', 'error');
-            }
-        }
-
-        async function toggleStatus(idDetail, status) {
-            const fd = new FormData();
-            fd.append('id_detail', idDetail);
-            fd.append('status_kelulusan', status);
-
-            try {
-                const res = await fetch(`<?= site_url('dosen/wali/perwalian_update_nilai'); ?>`, {
-                    method: 'POST',
-                    body: fd
-                });
-                const json = await res.json();
-                if (json.status) {
-                    updateStatusBadgeUI(idDetail, status);
-                    if (json.data && json.data.id_perwalian) {
-                        updatePerwalianTahap2Counters(json.data.id_perwalian, json.data.total_lulus, json.data.total_tidak_lulus, json.data.status_tahap2, json.stats);
-                    }
-                    showToast(`Status diubah: ${status}`, 'success');
                 }
             } catch (err) {
                 showToast('Gagal koneksi server', 'error');
@@ -1225,27 +1192,24 @@
             const col = document.getElementById(`m2StatusCol_${idDetail}`);
             if (col) {
                 if (status === 'Lulus') {
-                    col.innerHTML = `<span class="inline-flex items-center px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="fa-solid fa-check mr-1 text-[10px]"></i> LULUS</span>`;
+                    col.innerHTML = `<span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="fa-solid fa-circle-check mr-1.5 text-emerald-600"></i> Lulus</span>`;
                 } else if (status === 'Tidak Lulus') {
-                    col.innerHTML = `<span class="inline-flex items-center px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-rose-100 text-rose-800 border border-rose-300"><i class="fa-solid fa-xmark mr-1 text-[10px]"></i> TIDAK LULUS</span>`;
+                    col.innerHTML = `<span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-rose-100 text-rose-800 border border-rose-300"><i class="fa-solid fa-circle-xmark mr-1.5 text-rose-600"></i> Tidak Lulus</span>`;
                 } else {
-                    col.innerHTML = `<span class="inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-full bg-slate-100 text-slate-600">Belum Ditentukan</span>`;
+                    col.innerHTML = `<span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-500 border border-slate-200"><i class="fa-solid fa-minus mr-1 text-slate-400"></i> Belum Dinilai</span>`;
                 }
             }
+        }
 
-            const btnLulus = document.getElementById(`btnSetLulus_${idDetail}`);
-            const btnTidakLulus = document.getElementById(`btnSetTidakLulus_${idDetail}`);
-            if (btnLulus && btnTidakLulus) {
-                if (status === 'Lulus') {
-                    btnLulus.className = "px-2.5 py-1 text-xs rounded-lg font-bold transition flex items-center gap-1 cursor-pointer bg-emerald-600 text-white shadow-xs";
-                    btnTidakLulus.className = "px-2.5 py-1 text-xs rounded-lg font-bold transition flex items-center gap-1 cursor-pointer text-slate-600 hover:text-rose-700 hover:bg-rose-50";
-                } else if (status === 'Tidak Lulus') {
-                    btnLulus.className = "px-2.5 py-1 text-xs rounded-lg font-bold transition flex items-center gap-1 cursor-pointer text-slate-600 hover:text-emerald-700 hover:bg-emerald-50";
-                    btnTidakLulus.className = "px-2.5 py-1 text-xs rounded-lg font-bold transition flex items-center gap-1 cursor-pointer bg-rose-600 text-white shadow-xs";
-                } else {
-                    btnLulus.className = "px-2.5 py-1 text-xs rounded-lg font-bold transition flex items-center gap-1 cursor-pointer text-slate-600 hover:text-emerald-700 hover:bg-emerald-50";
-                    btnTidakLulus.className = "px-2.5 py-1 text-xs rounded-lg font-bold transition flex items-center gap-1 cursor-pointer text-slate-600 hover:text-rose-700 hover:bg-rose-50";
-                }
+        function refreshModalGradingProgress() {
+            const selects = document.querySelectorAll('#m2GradingTableBody select');
+            let graded = 0;
+            selects.forEach(s => {
+                if (s.value && s.value.trim() !== '') graded++;
+            });
+            const textEl = document.getElementById('m2GradingProgressText');
+            if (textEl) {
+                textEl.innerText = `${graded} / ${selects.length} Mata Kuliah Dinilai`;
             }
         }
 
