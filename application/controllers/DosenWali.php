@@ -1045,7 +1045,7 @@ class DosenWali extends CI_Controller {
         if ($res) {
             $pesan = ($status === 'Disetujui') 
                 ? 'Rencana studi mahasiswa berhasil disetujui (Tahap 1 selesai).' 
-                : 'Catatan revisi telah dikirimkan ke mahasiswa untuk diperbaiki.';
+                : 'Permintaan revisi rencana studi telah dikirimkan ke mahasiswa untuk diperbaiki.';
 
             $dosen_ids = $this->_get_current_dosen_identifiers();
             $stats = $this->Perwalian_model->get_dosen_perwalian_stats($dosen_ids);

@@ -831,11 +831,7 @@
                     </div>
                 </div>
 
-                <!-- Catatan Mahasiswa -->
-                <div id="m1CatatanMhsBox" class="p-3 rounded-xl bg-amber-50 border border-amber-200 hidden">
-                    <span class="text-[11px] font-bold text-amber-800 block"><i class="fa-solid fa-comment-dots mr-1"></i> Catatan Mahasiswa:</span>
-                    <p class="text-xs text-amber-900 mt-1 italic" id="m1CatatanMhsText"></p>
-                </div>
+
 
                 <!-- Tabel Mata Kuliah yang Diajukan -->
                 <div class="border border-slate-200 rounded-xl overflow-hidden">
@@ -953,14 +949,7 @@
                     krsBox.innerHTML = `<span class="text-xs text-slate-400 italic">Belum diunggah</span>`;
                 }
 
-                // Catatan Mahasiswa
-                const catBox = document.getElementById('m1CatatanMhsBox');
-                if (p.catatan_mahasiswa) {
-                    catBox.classList.remove('hidden');
-                    document.getElementById('m1CatatanMhsText').innerText = p.catatan_mahasiswa;
-                } else {
-                    catBox.classList.add('hidden');
-                }
+
 
                 // Table Rows & Mobile List
                 const tbody = document.getElementById('m1MkTableBody');
@@ -968,175 +957,169 @@
                 if (tbody) tbody.innerHTML = '';
                 if (mobList) mobList.innerHTML = '';
 
-                if (mkList.length === 0) {
+                // Kelompokkan mata kuliah sesuai dengan semester
+                const groupedBySemester = {};
+                mkList.forEach(mk => {
+                    const sem = parseInt(mk.semester_mk || mk.semester || 1);
+                    if (!groupedBySemester[sem]) {
+                        groupedBySemester[sem] = [];
+                    }
+                    groupedBySemester[sem].push(mk);
+                });
+
+                const sortedSemesters = Object.keys(groupedBySemester).sort((a, b) => parseInt(a) - parseInt(b));
+
+                if (sortedSemesters.length === 0) {
                     if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400 italic">Belum ada mata kuliah yang dikontrak.</td></tr>`;
                     if (mobList) mobList.innerHTML = `<div class="p-4 text-center text-slate-400 text-xs italic">Belum ada mata kuliah yang dikontrak.</div>`;
                 } else {
                     const stTahap1 = p.status_tahap1 || 'Draft';
-                    let badgeClass = 'bg-amber-100 text-amber-800';
+                    let badgeClass = 'bg-amber-100 text-amber-800 border-amber-200';
                     let statusLabel = 'Diajukan';
 
                     if (stTahap1 === 'Disetujui') {
-                        badgeClass = 'bg-emerald-100 text-emerald-800';
+                        badgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-200';
                         statusLabel = 'Disetujui';
                     } else if (stTahap1 === 'Revisi') {
-                        badgeClass = 'bg-rose-100 text-rose-800';
+                        badgeClass = 'bg-rose-100 text-rose-800 border-rose-200';
                         statusLabel = 'Perlu Revisi';
                     } else if (stTahap1 === 'Draft') {
-                        badgeClass = 'bg-slate-100 text-slate-600';
+                        badgeClass = 'bg-slate-100 text-slate-600 border-slate-200';
                         statusLabel = 'Draft';
                     }
 
-                    mkList.forEach((mk, idx) => {
+                    sortedSemesters.forEach(sem => {
+                        const mks = groupedBySemester[sem];
+                        const totalSksSem = mks.reduce((acc, curr) => acc + parseInt(curr.sks || 0), 0);
+
+                        // Header Pemisah Semester di Tabel Desktop
                         if (tbody) {
                             tbody.innerHTML += `
-                                <tr class="hover:bg-slate-50/60">
-                                    <td class="py-2.5 px-3 text-center font-mono text-slate-400">${idx + 1}</td>
-                                    <td class="py-2.5 px-3 font-mono font-bold text-slate-900">${escapeHtml(mk.kode_mk)}</td>
-                                    <td class="py-2.5 px-3 font-medium text-slate-800">${escapeHtml(mk.nama_mk)}</td>
-                                    <td class="py-2.5 px-3 text-center font-mono font-semibold">${mk.sks}</td>
-                                    <td class="py-2.5 px-3 text-center">
-                                        <span class="px-2 py-0.5 text-[10px] font-semibold rounded-md ${badgeClass}">${statusLabel}</span>
+                                <tr class="bg-gradient-to-r from-orange-50/90 via-amber-50/60 to-orange-50/90 border-y border-orange-200/80">
+                                    <td colspan="5" class="py-2 px-3.5">
+                                        <div class="flex items-center justify-between text-xs font-bold text-orange-950">
+                                            <span class="flex items-center gap-1.5">
+                                                <i class="fa-solid fa-graduation-cap text-orange-600 text-sm"></i>
+                                                <span class="tracking-wide uppercase text-[11px]">Semester ${sem}</span>
+                                            </span>
+                                            <span class="text-[11px] font-mono font-bold px-2 py-0.5 bg-white text-orange-800 rounded-md border border-orange-200 shadow-2xs">
+                                                Subtotal: ${totalSksSem} SKS (${mks.length} MK)
+                                            </span>
+                                        </div>
                                     </td>
                                 </tr>
                             `;
+
+                            mks.forEach((mk, idx) => {
+                                tbody.innerHTML += `
+                                    <tr class="hover:bg-slate-50/60 transition">
+                                        <td class="py-2.5 px-3 text-center font-mono text-slate-400 text-xs">${idx + 1}</td>
+                                        <td class="py-2.5 px-3 font-mono font-bold text-slate-900">${escapeHtml(mk.kode_mk)}</td>
+                                        <td class="py-2.5 px-3 font-medium text-slate-800">${escapeHtml(mk.nama_mk)}</td>
+                                        <td class="py-2.5 px-3 text-center font-mono font-bold text-slate-700">${mk.sks}</td>
+                                        <td class="py-2.5 px-3 text-center">
+                                            <span class="px-2 py-0.5 text-[10px] font-semibold rounded-md border ${badgeClass}">${statusLabel}</span>
+                                        </td>
+                                    </tr>
+                                `;
+                            });
                         }
 
+                        // Header Pemisah Semester di Card Mobile
                         if (mobList) {
                             mobList.innerHTML += `
-                                <div class="p-3 flex items-start justify-between gap-2.5">
-                                    <div class="min-w-0 flex-1">
-                                        <div class="flex items-center gap-1.5 flex-wrap">
-                                            <span class="font-mono font-bold text-xs text-slate-900">${escapeHtml(mk.kode_mk)}</span>
-                                            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded-md">${mk.sks} SKS</span>
-                                        </div>
-                                        <div class="text-xs font-medium text-slate-800 mt-1 leading-snug">${escapeHtml(mk.nama_mk)}</div>
-                                    </div>
-                                    <span class="px-2 py-0.5 text-[10px] font-semibold rounded-md ${badgeClass} shrink-0 whitespace-nowrap self-start mt-0.5">${statusLabel}</span>
+                                <div class="px-3 py-2 bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 border-y border-orange-200/80 flex items-center justify-between text-xs font-bold text-orange-950">
+                                    <span class="flex items-center gap-1.5">
+                                        <i class="fa-solid fa-graduation-cap text-orange-600 text-sm"></i>
+                                        <span class="tracking-wide uppercase text-[11px]">Semester ${sem}</span>
+                                    </span>
+                                    <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-white text-orange-800 rounded border border-orange-200 shadow-2xs">
+                                        ${totalSksSem} SKS
+                                    </span>
                                 </div>
                             `;
+
+                            mks.forEach((mk) => {
+                                mobList.innerHTML += `
+                                    <div class="p-3 flex items-start justify-between gap-2.5 hover:bg-slate-50/80 transition">
+                                        <div class="min-w-0 flex-1">
+                                            <div class="flex items-center gap-1.5 flex-wrap">
+                                                <span class="font-mono font-bold text-xs text-slate-900">${escapeHtml(mk.kode_mk)}</span>
+                                                <span class="text-[10px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded-md">${mk.sks} SKS</span>
+                                            </div>
+                                            <div class="text-xs font-medium text-slate-800 mt-1 leading-snug">${escapeHtml(mk.nama_mk)}</div>
+                                        </div>
+                                        <span class="px-2 py-0.5 text-[10px] font-semibold rounded-md border ${badgeClass} shrink-0 whitespace-nowrap self-start mt-0.5">${statusLabel}</span>
+                                    </div>
+                                `;
+                            });
                         }
                     });
                 }
 
-                // Render Section Keputusan Dosen Wali Secara Dinamis
+                // Render Section Keputusan Dosen Wali Secara Langsung & Sederhana (Tanpa Komentar)
                 const keputusanContainer = document.getElementById('m1KeputusanSection');
                 const st = p.status_tahap1 || 'Draft';
-                const catatanWaliVal = escapeHtml(p.catatan_wali || '');
 
                 if (st === 'Disetujui') {
                     keputusanContainer.innerHTML = `
-                        <div class="p-3.5 sm:p-4 rounded-xl border border-emerald-300 bg-emerald-50/80 space-y-2.5 sm:space-y-3">
-                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2">
-                                <span class="text-xs font-bold text-emerald-900 flex items-center gap-1.5">
-                                    <i class="fa-solid fa-circle-check text-emerald-600 text-base shrink-0"></i>
-                                    <span>KRS Mahasiswa Ini Telah Disetujui (ACC)</span>
-                                </span>
-                                <span class="text-[11px] font-semibold text-emerald-700 bg-white px-2.5 py-0.5 rounded-full border border-emerald-200 whitespace-nowrap self-start sm:self-auto">
-                                    Tahap 1 Selesai
-                                </span>
-                            </div>
-                            <p class="text-xs text-emerald-800 leading-relaxed">
-                                Kontrak rencana studi dan beban SKS telah diverifikasi. Mahasiswa telah berhak mengikuti perkuliahan dan masuk ke antrean penilaian (Tahap 2).
-                            </p>
-                            ${p.catatan_wali ? `
-                                <div class="p-2.5 bg-white/80 rounded-lg border border-emerald-200 text-xs text-slate-700">
-                                    <strong class="text-emerald-900 block mb-0.5"><i class="fa-solid fa-comment-dots mr-1"></i> Catatan Persetujuan:</strong>
-                                    <span class="italic text-slate-800">"${catatanWaliVal}"</span>
+                        <div class="p-3.5 sm:p-4 rounded-xl border border-emerald-300 bg-emerald-50/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-circle-check text-base"></i>
                                 </div>
-                            ` : ''}
-                            <div class="pt-2.5 border-t border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                <span class="text-[11px] text-slate-600">Perlu mengubah keputusan?</span>
-                                <button type="button" onclick="showFormRevisiFromApproved()" class="w-full sm:w-auto px-3.5 py-2 text-xs font-semibold text-rose-700 bg-white hover:bg-rose-50 border border-rose-200 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs whitespace-nowrap">
-                                    <i class="fa-solid fa-rotate-left text-rose-500"></i> Batalkan Persetujuan & Minta Revisi
-                                </button>
+                                <div>
+                                    <h4 class="text-xs font-bold text-emerald-950 uppercase tracking-wide">KRS Mahasiswa Telah Disetujui (ACC)</h4>
+                                    <p class="text-[11px] text-emerald-700">Tahap 1 selesai. Mahasiswa dapat mengikuti perkuliahan dan masuk antrean penilaian.</p>
+                                </div>
                             </div>
-                        </div>
-
-                        <div id="m1FormRevisiKhusus" class="hidden p-3.5 sm:p-4 rounded-xl border-2 border-rose-200 bg-rose-50/60 space-y-3 mt-3">
-                            <div class="flex items-center justify-between">
-                                <h4 class="text-xs font-bold text-rose-900 uppercase tracking-wider flex items-center">
-                                    <i class="fa-solid fa-triangle-exclamation text-rose-600 mr-2"></i> Konfirmasi Pembatalan Persetujuan
-                                </h4>
-                                <button type="button" onclick="hideFormRevisiFromApproved()" class="text-xs text-slate-400 hover:text-slate-600 font-bold p-1">Batal</button>
-                            </div>
-                            <p class="text-[11px] text-rose-700">Status akan dikembalikan menjadi <strong>Revisi</strong> dan mahasiswa diminta memperbaiki kontrak KRS.</p>
-                            <div>
-                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Alasan Pembatalan / Arahan Revisi untuk Mahasiswa <span class="text-rose-500">*</span>:</label>
-                                <textarea id="m1InputCatatanWali" rows="2" placeholder="Tuliskan alasan mengapa persetujuan dibatalkan dan apa yang harus direvisi..." class="w-full p-2.5 text-xs bg-white border border-rose-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/40">${catatanWaliVal}</textarea>
-                            </div>
-                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-1">
-                                <button type="button" onclick="hideFormRevisiFromApproved()" class="w-full sm:w-auto px-3.5 py-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition text-center">
-                                    Batal
-                                </button>
-                                <button type="button" onclick="submitDecisionTahap1('Revisi')" class="w-full sm:w-auto px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 rounded-xl shadow-sm transition text-center flex items-center justify-center gap-1.5 whitespace-nowrap">
-                                    <i class="fa-solid fa-rotate-left"></i> Kirim Permintaan Revisi
-                                </button>
-                            </div>
+                            <button type="button" onclick="submitDecisionTahap1('Revisi')" class="px-3.5 py-2 text-xs font-bold text-rose-700 bg-white hover:bg-rose-50 border border-rose-300 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs whitespace-nowrap shrink-0">
+                                <i class="fa-solid fa-rotate-left text-rose-500"></i> Batalkan & Minta Revisi
+                            </button>
                         </div>
                     `;
                 } else if (st === 'Revisi') {
                     keputusanContainer.innerHTML = `
-                        <div class="p-3.5 sm:p-4 rounded-xl border border-amber-300 bg-amber-50/70 space-y-2.5 sm:space-y-3">
-                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2">
-                                <span class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
-                                    <i class="fa-solid fa-clock-rotate-left text-amber-600 text-base shrink-0"></i>
-                                    <span>KRS Sedang Dalam Tahap Revisi</span>
-                                </span>
-                                <span class="text-[11px] font-semibold text-amber-700 bg-white px-2.5 py-0.5 rounded-full border border-amber-200 whitespace-nowrap self-start sm:self-auto">
-                                    Menunggu Mahasiswa
-                                </span>
-                            </div>
-                            <p class="text-xs text-amber-800 leading-relaxed">
-                                Dosen Wali telah meminta perbaikan rencana studi. Mahasiswa perlu menyesuaikan mata kuliah dan mengajukan kembali.
-                            </p>
-                            ${p.catatan_wali ? `
-                                <div class="p-2.5 bg-white/80 rounded-lg border border-amber-200 text-xs text-slate-700">
-                                    <strong class="text-amber-900 block mb-0.5"><i class="fa-solid fa-comment-dots mr-1"></i> Catatan Revisi Terakhir:</strong>
-                                    <span class="italic text-slate-800">"${catatanWaliVal}"</span>
+                        <div class="p-3.5 sm:p-4 rounded-xl border border-amber-300 bg-amber-50/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-clock-rotate-left text-base"></i>
                                 </div>
-                            ` : ''}
-                            <div class="pt-2.5 border-t border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                <span class="text-[11px] text-slate-600">Mahasiswa sudah konfirmasi offline/sesuai?</span>
-                                <button type="button" onclick="submitDecisionTahap1('Disetujui')" class="w-full sm:w-auto px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 whitespace-nowrap">
-                                    <i class="fa-solid fa-check-double mr-1.5"></i> Langsung Setujui KRS Ini
-                                </button>
+                                <div>
+                                    <h4 class="text-xs font-bold text-amber-950 uppercase tracking-wide">Status: Perlu Revisi</h4>
+                                    <p class="text-[11px] text-amber-700">Mahasiswa diminta memperbaiki kontrak rencana studi sebelum disetujui.</p>
+                                </div>
                             </div>
+                            <button type="button" onclick="submitDecisionTahap1('Disetujui')" class="px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer shrink-0">
+                                <i class="fa-solid fa-check-double mr-1.5"></i> Langsung Setujui KRS Ini
+                            </button>
                         </div>
                     `;
                 } else if (st === 'Draft') {
                     keputusanContainer.innerHTML = `
-                        <div class="p-3.5 sm:p-4 rounded-xl border border-slate-300 bg-slate-50 space-y-2">
-                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2">
-                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                    <i class="fa-solid fa-pen-ruler text-slate-500 text-base shrink-0"></i>
-                                    <span>Rencana Studi Masih Berupa Draft</span>
-                                </span>
-                                <span class="text-[11px] font-semibold text-slate-600 bg-white px-2.5 py-0.5 rounded-full border border-slate-200 whitespace-nowrap self-start sm:self-auto">
-                                    Belum Diajukan
-                                </span>
-                            </div>
-                            <p class="text-xs text-slate-600 leading-relaxed">
-                                Mahasiswa belum menekan tombol ajukan rencana studi. Verifikasi dan persetujuan dapat dilakukan setelah mahasiswa resmi mengajukan KRS.
-                            </p>
+                        <div class="p-3.5 rounded-xl border border-slate-300 bg-slate-50 flex items-center justify-between gap-2">
+                            <span class="text-xs font-bold text-slate-700 flex items-center gap-2">
+                                <i class="fa-solid fa-pen-ruler text-slate-400 text-base"></i>
+                                <span>Rencana studi masih berupa Draft (Belum diajukan resmi oleh mahasiswa).</span>
+                            </span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 bg-slate-200 text-slate-600 rounded">Draft</span>
                         </div>
                     `;
                 } else {
                     // Default: 'Diajukan'
                     keputusanContainer.innerHTML = `
-                        <div class="p-3.5 sm:p-4 rounded-xl border-2 border-orange-200 bg-orange-50/40 space-y-3">
-                            <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center">
-                                <i class="fa-solid fa-pen-nib text-orange-600 mr-2"></i> Keputusan Dosen Wali
-                            </h4>
+                        <div class="p-3.5 sm:p-4 rounded-xl border-2 border-orange-200 bg-orange-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Catatan / Arahan Dosen Wali untuk Mahasiswa:</label>
-                                <textarea id="m1InputCatatanWali" rows="2" placeholder="Tuliskan catatan arahan, konfirmasi SKS, atau alasan revisi..." class="w-full p-2.5 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/40">${catatanWaliVal}</textarea>
+                                <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center">
+                                    <i class="fa-solid fa-pen-nib text-orange-600 mr-2"></i> Keputusan Persetujuan Rencana Studi
+                                </h4>
+                                <p class="text-[11px] text-slate-500 mt-0.5">Tentukan persetujuan kontrak KRS mahasiswa ini secara langsung.</p>
                             </div>
-                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-1">
-                                <button type="button" onclick="submitDecisionTahap1('Revisi')" class="w-full sm:w-auto px-4 py-2 text-xs font-bold text-rose-700 bg-rose-100 hover:bg-rose-200 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap">
-                                    <i class="fa-solid fa-rotate-left mr-1.5"></i> Minta Revisi KRS
+                            <div class="flex items-center gap-2 shrink-0">
+                                <button type="button" onclick="submitDecisionTahap1('Revisi')" class="px-4 py-2 text-xs font-bold text-rose-700 bg-white hover:bg-rose-50 border border-rose-300 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap shadow-2xs">
+                                    <i class="fa-solid fa-rotate-left mr-1"></i> Minta Revisi KRS
                                 </button>
-                                <button type="button" onclick="submitDecisionTahap1('Disetujui')" class="w-full sm:w-auto px-5 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl shadow-md transition cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap">
+                                <button type="button" onclick="submitDecisionTahap1('Disetujui')" class="px-5 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl shadow-md transition cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap">
                                     <i class="fa-solid fa-check-double mr-1.5"></i> Setujui KRS Mahasiswa
                                 </button>
                             </div>
@@ -1151,19 +1134,7 @@
             }
         }
 
-        function showFormRevisiFromApproved() {
-            const form = document.getElementById('m1FormRevisiKhusus');
-            if (form) {
-                form.classList.remove('hidden');
-                const inp = document.getElementById('m1InputCatatanWali');
-                if (inp) inp.focus();
-            }
-        }
 
-        function hideFormRevisiFromApproved() {
-            const form = document.getElementById('m1FormRevisiKhusus');
-            if (form) form.classList.add('hidden');
-        }
 
         function closeReviewModal() {
             document.getElementById('modalReviewKRS').classList.add('hidden');
@@ -1173,20 +1144,8 @@
         async function submitDecisionTahap1(status) {
             if (!currentPerwalian) return;
             const idPerwalian = currentPerwalian.perwalian.id_perwalian;
-            const catatanInput = document.getElementById('m1InputCatatanWali');
-            const catatan = catatanInput ? catatanInput.value.trim() : '';
 
-            if (status === 'Revisi' && !catatan) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Catatan Revisi Diperlukan',
-                    text: 'Silakan tuliskan alasan revisi atau arahan mata kuliah apa yang harus diperbaiki oleh mahasiswa.',
-                });
-                if (catatanInput) catatanInput.focus();
-                return;
-            }
-
-            const actionLabel = (status === 'Disetujui') ? 'menyetujui KRS mahasiswa ini' : 'meminta revisi KRS mahasiswa ini';
+            const actionLabel = (status === 'Disetujui') ? 'menyetujui kontrak rencana studi (KRS) mahasiswa ini' : 'meminta revisi rencana studi mahasiswa ini';
             const btnColor = (status === 'Disetujui') ? '#10b981' : '#f43f5e';
 
             const conf = await Swal.fire({
@@ -1206,7 +1165,6 @@
             const fd = new FormData();
             fd.append('id_perwalian', idPerwalian);
             fd.append('status', status);
-            fd.append('catatan_wali', catatan);
 
             try {
                 const res = await fetch(`<?= site_url('dosen/wali/perwalian_approve_tahap1'); ?>`, {

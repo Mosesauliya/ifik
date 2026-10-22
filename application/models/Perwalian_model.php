@@ -782,11 +782,14 @@ class Perwalian_model extends CI_Model {
 
         if (!$perwalian) return null;
 
-        // Ambil daftar mata kuliah yang diajukan (status_tahap: akan_diambil)
-        $mk_list = $this->db->from('perwalian_detail')
-            ->where('id_perwalian', $id_perwalian)
-            ->where('status_tahap', 'akan_diambil')
-            ->order_by('id', 'ASC')
+        // Ambil daftar mata kuliah yang diajukan dipisahkan / diurutkan per semester
+        $mk_list = $this->db->select('pd.*, COALESCE(m.semester, 1) as semester_mk, m.jenis as jenis_mk')
+            ->from('perwalian_detail pd')
+            ->join('master_mata_kuliah m', 'pd.kode_mk = m.kode_mk', 'left')
+            ->where('pd.id_perwalian', $id_perwalian)
+            ->where('pd.status_tahap', 'akan_diambil')
+            ->order_by('semester_mk', 'ASC')
+            ->order_by('pd.id', 'ASC')
             ->get()
             ->result_array();
 
