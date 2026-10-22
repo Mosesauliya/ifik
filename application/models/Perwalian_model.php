@@ -964,11 +964,29 @@ class Perwalian_model extends CI_Model {
             }
         }
 
-        return [
+        $counts = [
+            'id_perwalian'      => 0,
+            'total_lulus'       => 0,
+            'total_tidak_lulus' => 0,
+            'status_tahap2'     => 'Proses Penilaian',
+        ];
+        if ($detail) {
+            $id_perwalian = (int)$detail['id_perwalian'];
+            $counts['id_perwalian'] = $id_perwalian;
+            $allDetails = $this->db->get_where('perwalian_detail', ['id_perwalian' => $id_perwalian])->result_array();
+            foreach ($allDetails as $d) {
+                if ($d['status_kelulusan'] === 'Lulus') $counts['total_lulus']++;
+                elseif ($d['status_kelulusan'] === 'Tidak Lulus') $counts['total_tidak_lulus']++;
+            }
+            $pNow = $this->get_perwalian_by_id($id_perwalian);
+            $counts['status_tahap2'] = !empty($pNow['status_tahap2']) ? $pNow['status_tahap2'] : 'Proses Penilaian';
+        }
+
+        return array_merge([
             'status'           => true,
             'nilai_huruf'      => $nilai_huruf,
             'status_kelulusan' => $status_kelulusan,
-        ];
+        ], $counts);
     }
 
     /**

@@ -327,7 +327,7 @@
                             <div class="relative z-10 flex items-start justify-between gap-2.5 sm:gap-3">
                                 <div class="flex-1 min-w-0">
                                     <p class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-orange-600 transition-colors">TOTAL MAHASISWA</p>
-                                    <h3 class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 sm:mt-1 tracking-tight"><?= $totMhs2; ?></h3>
+                                    <h3 id="statT2TotalMhs" class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 sm:mt-1 tracking-tight"><?= $totMhs2; ?></h3>
                                     <p class="text-[11px] sm:text-xs font-medium text-slate-500 mt-0.5 sm:mt-1 line-clamp-1">Perwalian bimbingan Anda</p>
                                 </div>
                                 
@@ -366,7 +366,7 @@
                             <div class="relative z-10 flex items-start justify-between gap-2.5 sm:gap-3">
                                 <div class="flex-1 min-w-0">
                                     <p class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-amber-600 transition-colors">BELUM DINILAI</p>
-                                    <h3 class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 sm:mt-1 tracking-tight">
+                                    <h3 id="statT2Belum" class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 sm:mt-1 tracking-tight">
                                         <?= $belumDinilai; ?> <span class="text-[11px] sm:text-xs font-semibold text-amber-600 font-normal">(<?= $pctBelum; ?>%)</span>
                                     </h3>
                                     <p class="text-[11px] sm:text-xs font-medium text-slate-500 mt-0.5 sm:mt-1 line-clamp-1">Belum ada evaluasi nilai</p>
@@ -407,7 +407,7 @@
                             <div class="relative z-10 flex items-start justify-between gap-2.5 sm:gap-3">
                                 <div class="flex-1 min-w-0">
                                     <p class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-cyan-600 transition-colors">PROSES PENILAIAN</p>
-                                    <h3 class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 sm:mt-1 tracking-tight">
+                                    <h3 id="statT2Proses" class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 sm:mt-1 tracking-tight">
                                         <?= $proses; ?> <span class="text-[11px] sm:text-xs font-semibold text-cyan-600 font-normal">(<?= $pctProses; ?>%)</span>
                                     </h3>
                                     <p class="text-[11px] sm:text-xs font-medium text-slate-500 mt-0.5 sm:mt-1 line-clamp-1">Nilai sedang diinput bertahap</p>
@@ -448,7 +448,7 @@
                             <div class="relative z-10 flex items-start justify-between gap-2.5 sm:gap-3">
                                 <div class="flex-1 min-w-0">
                                     <p class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-emerald-600 transition-colors">EVALUASI SELESAI</p>
-                                    <h3 class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 sm:mt-1 tracking-tight">
+                                    <h3 id="statT2Selesai" class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 sm:mt-1 tracking-tight">
                                         <?= $selesai; ?> <span class="text-[11px] sm:text-xs font-semibold text-emerald-600 font-normal">(<?= $pctSelesai; ?>%)</span>
                                     </h3>
                                     <p class="text-[11px] sm:text-xs font-medium text-slate-500 mt-0.5 sm:mt-1 line-clamp-1">Nilai lengkap & perwalian terkunci</p>
@@ -626,6 +626,9 @@
                                     $rowPeriode = strtolower(htmlspecialchars(($item['tahun_ajaran'] ?? '') . ' ' . ($item['semester'] ?? '')));
                                 ?>
                                     <tr class="t2-table-row hover:bg-purple-50/40 transition"
+                                        id="t2Row_<?= (int)$item['id_perwalian']; ?>"
+                                        data-id="<?= (int)$item['id_perwalian']; ?>"
+                                        data-total-mk="<?= (int)$item['total_mk']; ?>"
                                         data-nim="<?= $rowNim; ?>"
                                         data-nama="<?= $rowNama; ?>"
                                         data-prodi="<?= $rowProdi; ?>"
@@ -666,20 +669,18 @@
                                         </td>
 
                                         <!-- Progress Penilaian -->
-                                        <td class="py-3.5 px-4 text-center">
-                                            <div class="font-mono font-bold text-slate-800">
+                                        <td class="py-3.5 px-4 text-center" id="t2ProgressCol_<?= (int)$item['id_perwalian']; ?>">
+                                            <div class="font-mono font-bold text-slate-800" id="t2DinilaiText_<?= (int)$item['id_perwalian']; ?>">
                                                 <?= (int)$item['total_dinilai']; ?> / <?= (int)$item['total_mk']; ?> Dinilai
                                             </div>
-                                            <?php if ((int)$item['total_dinilai'] > 0): ?>
-                                                <div class="text-[10px] text-slate-500 mt-0.5 space-x-1">
-                                                    <span class="text-emerald-600 font-semibold"><i class="fa-solid fa-circle-check text-[9px]"></i> <?= (int)$item['total_lulus']; ?> Lulus</span>
-                                                    <span class="text-rose-600 font-semibold"><i class="fa-solid fa-circle-xmark text-[9px]"></i> <?= (int)$item['total_tidak_lulus']; ?> TL</span>
-                                                </div>
-                                            <?php endif; ?>
+                                            <div class="text-[10px] text-slate-500 mt-0.5 space-x-1" id="t2GradingCountRow_<?= (int)$item['id_perwalian']; ?>" <?= ((int)$item['total_dinilai'] > 0) ? '' : 'style="display: none;"'; ?>>
+                                                <span class="text-emerald-600 font-semibold"><i class="fa-solid fa-circle-check text-[9px]"></i> <span id="t2LulusVal_<?= (int)$item['id_perwalian']; ?>"><?= (int)$item['total_lulus']; ?></span> Lulus</span>
+                                                <span class="text-rose-600 font-semibold"><i class="fa-solid fa-circle-xmark text-[9px]"></i> <span id="t2TidakLulusVal_<?= (int)$item['id_perwalian']; ?>"><?= (int)$item['total_tidak_lulus']; ?></span> TL</span>
+                                            </div>
                                         </td>
 
                                         <!-- Badge Status Tahap 2 -->
-                                        <td class="py-3.5 px-4 text-center">
+                                        <td class="py-3.5 px-4 text-center" id="t2StatusCol_<?= (int)$item['id_perwalian']; ?>">
                                             <?php
                                                 $st2 = isset($item['status_tahap2']) && $item['status_tahap2'] !== '' ? $item['status_tahap2'] : 'Belum Dinilai';
                                                 $badge2ClassMap = [
@@ -742,6 +743,9 @@
                             $badge2Icon  = isset($badge2IconMap[$st2]) ? $badge2IconMap[$st2] : 'fa-hourglass-start';
                         ?>
                             <div class="t2-card-row bg-white border border-slate-200/90 rounded-2xl shadow-xs p-3.5 space-y-3"
+                                 id="t2Card_<?= (int)$item['id_perwalian']; ?>"
+                                 data-id="<?= (int)$item['id_perwalian']; ?>"
+                                 data-total-mk="<?= (int)$item['total_mk']; ?>"
                                  data-nim="<?= $rowNim; ?>"
                                  data-nama="<?= $rowNama; ?>"
                                  data-prodi="<?= $rowProdi; ?>"
@@ -759,7 +763,7 @@
                                             <div class="text-[11px] text-slate-500 font-mono">NIM: <?= htmlspecialchars($item['nim']); ?></div>
                                         </div>
                                     </div>
-                                    <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full border shrink-0 <?= $badge2Class; ?>">
+                                    <span id="t2CardStatusBadge_<?= (int)$item['id_perwalian']; ?>" class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full border shrink-0 <?= $badge2Class; ?>">
                                         <i class="fa-solid <?= $badge2Icon; ?> mr-1 text-[9px]"></i>
                                         <?= htmlspecialchars($st2); ?>
                                     </span>
@@ -784,15 +788,13 @@
                                     <div class="flex items-center justify-between pt-1 border-t border-slate-200/60">
                                         <span class="text-slate-500">Progress Nilai:</span>
                                         <div class="text-right">
-                                            <span class="font-mono font-bold text-slate-800 text-xs">
+                                            <span class="font-mono font-bold text-slate-800 text-xs" id="t2CardDinilaiText_<?= (int)$item['id_perwalian']; ?>">
                                                 <?= (int)$item['total_dinilai']; ?> / <?= (int)$item['total_mk']; ?> Dinilai
                                             </span>
-                                            <?php if ((int)$item['total_dinilai'] > 0): ?>
-                                                <div class="text-[10px] space-x-1 mt-0.5">
-                                                    <span class="text-emerald-600 font-semibold"><i class="fa-solid fa-circle-check text-[9px]"></i> <?= (int)$item['total_lulus']; ?> Lulus</span>
-                                                    <span class="text-rose-600 font-semibold"><i class="fa-solid fa-circle-xmark text-[9px]"></i> <?= (int)$item['total_tidak_lulus']; ?> TL</span>
-                                                </div>
-                                            <?php endif; ?>
+                                            <div class="text-[10px] space-x-1 mt-0.5" id="t2CardGradingCount_<?= (int)$item['id_perwalian']; ?>" <?= ((int)$item['total_dinilai'] > 0) ? '' : 'style="display: none;"'; ?>>
+                                                <span class="text-emerald-600 font-semibold"><i class="fa-solid fa-circle-check text-[9px]"></i> <span id="t2CardLulusVal_<?= (int)$item['id_perwalian']; ?>"><?= (int)$item['total_lulus']; ?></span> Lulus</span>
+                                                <span class="text-rose-600 font-semibold"><i class="fa-solid fa-circle-xmark text-[9px]"></i> <span id="t2CardTidakLulusVal_<?= (int)$item['id_perwalian']; ?>"><?= (int)$item['total_tidak_lulus']; ?></span> TL</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1122,6 +1124,9 @@
                 const json = await res.json();
                 if (json.status) {
                     updateStatusBadgeUI(idDetail, autoStatus);
+                    if (json.data && json.data.id_perwalian) {
+                        updatePerwalianTahap2Counters(json.data.id_perwalian, json.data.total_lulus, json.data.total_tidak_lulus, json.data.status_tahap2, json.stats);
+                    }
                     showToast('Nilai berhasil disimpan', 'success');
                 } else {
                     Swal.fire('Gagal', json.message, 'error');
@@ -1144,6 +1149,9 @@
                 const json = await res.json();
                 if (json.status) {
                     updateStatusBadgeUI(idDetail, status);
+                    if (json.data && json.data.id_perwalian) {
+                        updatePerwalianTahap2Counters(json.data.id_perwalian, json.data.total_lulus, json.data.total_tidak_lulus, json.data.status_tahap2, json.stats);
+                    }
                     showToast(`Status diubah: ${status}`, 'success');
                 }
             } catch (err) {
@@ -1210,8 +1218,17 @@
                 Swal.close();
 
                 if (json.status) {
-                    await Swal.fire('Selesai!', json.message, 'success');
-                    window.location.reload();
+                    closeGradingModal();
+                    updatePerwalianTahap2Status(idPerwalian, 'Selesai', json.stats);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Selesai!',
+                        text: json.message,
+                        timer: 2000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
                 } else {
                     Swal.fire('Gagal', json.message, 'error');
                 }
@@ -1362,13 +1379,22 @@
                 Swal.close();
 
                 if (json.status) {
-                    await Swal.fire('Sukses!', json.message, 'success');
                     closeImportModal();
                     if (importTargetIdPerwalian) {
                         openGradingModal(importTargetIdPerwalian);
-                    } else {
-                        window.location.reload();
                     }
+                    if (json.list) {
+                        updateAllPerwalianTahap2UI(json.list, json.stats);
+                    }
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sukses Import!',
+                        text: json.message,
+                        timer: 2000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
                 } else {
                     Swal.fire('Gagal', json.message, 'error');
                 }
@@ -1737,3 +1763,129 @@
     </script>
 </body>
 </html>
+
+        // =========================================================================
+        // AJAX DYNAMIC UI UPDATE HELPERS (Tahap 2)
+        // =========================================================================
+        function updatePerwalianTahap2Counters(idPerwalian, totalLulus, totalTidakLulus, statusTahap2, stats) {
+            totalLulus = parseInt(totalLulus || 0);
+            totalTidakLulus = parseInt(totalTidakLulus || 0);
+            const totalDinilai = totalLulus + totalTidakLulus;
+
+            // Dapatkan total MK dari data-attribute baris atau card
+            const row = document.getElementById(`t2Row_${idPerwalian}`);
+            const card = document.getElementById(`t2Card_${idPerwalian}`);
+            const totalMk = parseInt((row ? row.getAttribute('data-total-mk') : 0) || (card ? card.getAttribute('data-total-mk') : 0) || 0);
+
+            // 1. Update di tabel desktop
+            const dinilaiText = document.getElementById(`t2DinilaiText_${idPerwalian}`);
+            if (dinilaiText) {
+                dinilaiText.innerText = `${totalDinilai} / ${totalMk} Dinilai`;
+            }
+            const countRow = document.getElementById(`t2GradingCountRow_${idPerwalian}`);
+            if (countRow) {
+                countRow.style.display = totalDinilai > 0 ? '' : 'none';
+            }
+            const lulusVal = document.getElementById(`t2LulusVal_${idPerwalian}`);
+            if (lulusVal) lulusVal.innerText = totalLulus;
+            const tidakLulusVal = document.getElementById(`t2TidakLulusVal_${idPerwalian}`);
+            if (tidakLulusVal) tidakLulusVal.innerText = totalTidakLulus;
+
+            // 2. Update di mobile card
+            const cardDinilaiText = document.getElementById(`t2CardDinilaiText_${idPerwalian}`);
+            if (cardDinilaiText) {
+                cardDinilaiText.innerText = `${totalDinilai} / ${totalMk} Dinilai`;
+            }
+            const cardCount = document.getElementById(`t2CardGradingCount_${idPerwalian}`);
+            if (cardCount) {
+                cardCount.style.display = totalDinilai > 0 ? '' : 'none';
+            }
+            const cardLulusVal = document.getElementById(`t2CardLulusVal_${idPerwalian}`);
+            if (cardLulusVal) cardLulusVal.innerText = totalLulus;
+            const cardTidakLulusVal = document.getElementById(`t2CardTidakLulusVal_${idPerwalian}`);
+            if (cardTidakLulusVal) cardTidakLulusVal.innerText = totalTidakLulus;
+
+            // 3. Update status jika ada
+            if (statusTahap2) {
+                updatePerwalianTahap2Status(idPerwalian, statusTahap2, stats);
+            }
+        }
+
+        function updatePerwalianTahap2Status(idPerwalian, newStatus, stats) {
+            let badgeClass = 'bg-slate-100 text-slate-600 border-slate-300';
+            let badgeIcon = 'fa-hourglass-start';
+
+            if (newStatus === 'Selesai') {
+                badgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                badgeIcon = 'fa-lock';
+            } else if (newStatus === 'Proses Penilaian') {
+                badgeClass = 'bg-purple-100 text-purple-800 border-purple-300';
+                badgeIcon = 'fa-pen-clip';
+            }
+
+            // 1. Update row desktop
+            const row = document.getElementById(`t2Row_${idPerwalian}`);
+            if (row) {
+                row.setAttribute('data-status', newStatus.toLowerCase());
+            }
+            const stCol = document.getElementById(`t2StatusCol_${idPerwalian}`);
+            if (stCol) {
+                stCol.innerHTML = `
+                    <span class="inline-flex items-center px-2.5 py-1 text-[11px] font-semibold rounded-full border ${badgeClass}">
+                        <i class="fa-solid ${badgeIcon} mr-1 text-[10px]"></i>
+                        ${escapeHtml(newStatus)}
+                    </span>
+                `;
+            }
+
+            // 2. Update mobile card
+            const card = document.getElementById(`t2Card_${idPerwalian}`);
+            if (card) {
+                card.setAttribute('data-status', newStatus.toLowerCase());
+            }
+            const cardBadge = document.getElementById(`t2CardStatusBadge_${idPerwalian}`);
+            if (cardBadge) {
+                cardBadge.className = `inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full border shrink-0 ${badgeClass}`;
+                cardBadge.innerHTML = `<i class="fa-solid ${badgeIcon} mr-1 text-[9px]"></i> ${escapeHtml(newStatus)}`;
+            }
+
+            // 3. Update top summary statistics
+            if (stats) {
+                const tot = parseInt(stats.total_bimbingan || 0);
+                const belum = parseInt(stats.tahap2_belum_dinilai || 0);
+                const proses = parseInt(stats.tahap2_proses || 0);
+                const selesai = parseInt(stats.tahap2_selesai || 0);
+
+                const pctBelum = tot > 0 ? Math.round((belum / tot) * 100) : 0;
+                const pctProses = tot > 0 ? Math.round((proses / tot) * 100) : 0;
+                const pctSelesai = tot > 0 ? Math.round((selesai / tot) * 100) : 0;
+
+                const elTot = document.getElementById('statT2TotalMhs');
+                if (elTot) elTot.innerText = tot;
+                const elBelum = document.getElementById('statT2Belum');
+                if (elBelum) elBelum.innerHTML = `${belum} <span class="text-[11px] sm:text-xs font-semibold text-amber-600 font-normal">(${pctBelum}%)</span>`;
+                const elProses = document.getElementById('statT2Proses');
+                if (elProses) elProses.innerHTML = `${proses} <span class="text-[11px] sm:text-xs font-semibold text-cyan-600 font-normal">(${pctProses}%)</span>`;
+                const elSelesai = document.getElementById('statT2Selesai');
+                if (elSelesai) elSelesai.innerHTML = `${selesai} <span class="text-[11px] sm:text-xs font-semibold text-emerald-600 font-normal">(${pctSelesai}%)</span>`;
+            }
+        }
+
+        function updateAllPerwalianTahap2UI(list, stats) {
+            if (Array.isArray(list)) {
+                list.forEach(item => {
+                    if (item.id_perwalian) {
+                        updatePerwalianTahap2Counters(
+                            item.id_perwalian,
+                            item.total_lulus || 0,
+                            item.total_tidak_lulus || 0,
+                            item.status_tahap2 || 'Belum Dinilai',
+                            null
+                        );
+                    }
+                });
+            }
+            if (stats) {
+                updatePerwalianTahap2Status(0, '', stats);
+            }
+        }

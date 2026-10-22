@@ -1046,10 +1046,16 @@ class DosenWali extends CI_Controller {
             $pesan = ($status === 'Disetujui') 
                 ? 'Rencana studi mahasiswa berhasil disetujui (Tahap 1 selesai).' 
                 : 'Catatan revisi telah dikirimkan ke mahasiswa untuk diperbaiki.';
+
+            $dosen_ids = $this->_get_current_dosen_identifiers();
+            $stats = $this->Perwalian_model->get_dosen_perwalian_stats($dosen_ids);
+
             $this->output->set_output(json_encode([
                 'status'        => true,
                 'message'       => $pesan,
-                'status_tahap1' => $status
+                'status_tahap1' => $status,
+                'id_perwalian'  => $id_perwalian,
+                'stats'         => $stats
             ]));
         } else {
             $this->output->set_output(json_encode(['status' => false, 'message' => 'Gagal memperbarui status perwalian.']));
@@ -1090,10 +1096,14 @@ class DosenWali extends CI_Controller {
         }
 
         $res = $this->Perwalian_model->update_nilai_detail($id_detail, $nilai_huruf, $status_lulus);
+        $dosen_ids = $this->_get_current_dosen_identifiers();
+        $stats = $this->Perwalian_model->get_dosen_perwalian_stats($dosen_ids);
+
         $this->output->set_output(json_encode([
             'status'  => true,
             'message' => 'Nilai dan status kelulusan berhasil diperbarui.',
-            'data'    => $res
+            'data'    => $res,
+            'stats'   => $stats
         ]));
     }
 
@@ -1139,6 +1149,12 @@ class DosenWali extends CI_Controller {
         }
 
         $result = $this->Perwalian_model->submit_perwalian_tahap2($id_perwalian);
+        if (!empty($result['status'])) {
+            $dosen_ids = $this->_get_current_dosen_identifiers();
+            $result['stats'] = $this->Perwalian_model->get_dosen_perwalian_stats($dosen_ids);
+            $result['id_perwalian'] = $id_perwalian;
+            $result['status_tahap2'] = 'Selesai';
+        }
         $this->output->set_output(json_encode($result));
     }
 }

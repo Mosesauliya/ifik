@@ -300,7 +300,7 @@
                             <div class="relative z-10 flex items-start justify-between gap-2.5 sm:gap-3">
                                 <div class="flex-1 min-w-0">
                                     <p class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-orange-600 transition-colors">TOTAL MAHASISWA</p>
-                                    <h3 class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 sm:mt-1 tracking-tight"><?= $totMhs; ?></h3>
+                                    <h3 id="statT1TotalMhs" class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 sm:mt-1 tracking-tight"><?= $totMhs; ?></h3>
                                     <p class="text-[11px] sm:text-xs font-medium text-slate-500 mt-0.5 sm:mt-1 line-clamp-1">Mahasiswa bimbingan Anda</p>
                                 </div>
                                 
@@ -339,7 +339,7 @@
                             <div class="relative z-10 flex items-start justify-between gap-2.5 sm:gap-3">
                                 <div class="flex-1 min-w-0">
                                     <p class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-cyan-600 transition-colors">MENUNGGU REVIEW</p>
-                                    <h3 class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 sm:mt-1 tracking-tight">
+                                    <h3 id="statT1Diajukan" class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 sm:mt-1 tracking-tight">
                                         <?= $diajukan; ?> <span class="text-[11px] sm:text-xs font-semibold text-cyan-600 font-normal">(<?= $pctDiajukan; ?>%)</span>
                                     </h3>
                                     <p class="text-[11px] sm:text-xs font-medium text-slate-500 mt-0.5 sm:mt-1 line-clamp-1">Membutuhkan verifikasi KRS</p>
@@ -380,7 +380,7 @@
                             <div class="relative z-10 flex items-start justify-between gap-2.5 sm:gap-3">
                                 <div class="flex-1 min-w-0">
                                     <p class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-emerald-600 transition-colors">KRS DISETUJUI</p>
-                                    <h3 class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 sm:mt-1 tracking-tight">
+                                    <h3 id="statT1Disetujui" class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 sm:mt-1 tracking-tight">
                                         <?= $disetujui; ?> <span class="text-[11px] sm:text-xs font-semibold text-emerald-600 font-normal">(<?= $pctDisetujui; ?>%)</span>
                                     </h3>
                                     <p class="text-[11px] sm:text-xs font-medium text-slate-500 mt-0.5 sm:mt-1 line-clamp-1">Telah disetujui & siap kuliah</p>
@@ -421,10 +421,10 @@
                             <div class="relative z-10 flex items-start justify-between gap-2.5 sm:gap-3">
                                 <div class="flex-1 min-w-0">
                                     <p class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-amber-600 transition-colors">REVISI / DRAFT</p>
-                                    <h3 class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 sm:mt-1 tracking-tight">
+                                    <h3 id="statT1RevDraft" class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 sm:mt-1 tracking-tight">
                                         <?= $revDraft; ?> <span class="text-[11px] sm:text-xs font-semibold text-amber-600 font-normal">(<?= $pctRevDraft; ?>%)</span>
                                     </h3>
-                                    <p class="text-[11px] sm:text-xs font-medium text-slate-500 mt-0.5 sm:mt-1 line-clamp-1"><?= $revisi; ?> revisi, <?= $draft; ?> draft krs</p>
+                                    <p id="statT1SubRevDraft" class="text-[11px] sm:text-xs font-medium text-slate-500 mt-0.5 sm:mt-1 line-clamp-1"><?= $revisi; ?> revisi, <?= $draft; ?> draft krs</p>
                                 </div>
                                 
                                 <div class="relative shrink-0">
@@ -600,6 +600,8 @@
                                     $rowPeriode = strtolower(htmlspecialchars(($item['tahun_ajaran'] ?? '') . ' ' . ($item['semester'] ?? '')));
                                 ?>
                                     <tr class="t1-table-row hover:bg-orange-50/40 transition" 
+                                        id="t1Row_<?= (int)$item['id_perwalian']; ?>"
+                                        data-id="<?= (int)$item['id_perwalian']; ?>"
                                         data-nim="<?= $rowNim; ?>" 
                                         data-nama="<?= $rowNama; ?>" 
                                         data-prodi="<?= $rowProdi; ?>" 
@@ -641,7 +643,7 @@
                                         </td>
 
                                         <!-- Badge Status KRS -->
-                                        <td class="py-3.5 px-4 text-center">
+                                        <td class="py-3.5 px-4 text-center" id="t1StatusCol_<?= (int)$item['id_perwalian']; ?>">
                                             <?php
                                                 $st1 = isset($item['status_tahap1']) && $item['status_tahap1'] !== '' ? $item['status_tahap1'] : 'Draft';
                                                 $badgeClassMap1 = [
@@ -718,6 +720,8 @@
                             $badgeIcon  = isset($badgeIconMap1[$st1]) ? $badgeIconMap1[$st1] : 'fa-pen-to-square';
                         ?>
                             <div class="t1-card-row bg-white border border-slate-200/90 rounded-2xl shadow-xs p-3.5 space-y-3"
+                                 id="t1Card_<?= (int)$item['id_perwalian']; ?>"
+                                 data-id="<?= (int)$item['id_perwalian']; ?>"
                                  data-nim="<?= $rowNim; ?>"
                                  data-nama="<?= $rowNama; ?>"
                                  data-prodi="<?= $rowProdi; ?>"
@@ -735,7 +739,7 @@
                                             <div class="text-[11px] text-slate-500 font-mono">NIM: <?= htmlspecialchars($item['nim']); ?></div>
                                         </div>
                                     </div>
-                                    <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full border shrink-0 <?= $badgeClass; ?>">
+                                    <span id="t1CardStatusBadge_<?= (int)$item['id_perwalian']; ?>" class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full border shrink-0 <?= $badgeClass; ?>">
                                         <i class="fa-solid <?= $badgeIcon; ?> mr-1 text-[9px]"></i>
                                         <?= htmlspecialchars($st1); ?>
                                     </span>
@@ -1213,14 +1217,98 @@
                 Swal.close();
 
                 if (json.status) {
-                    await Swal.fire('Berhasil!', json.message, 'success');
-                    window.location.reload();
+                    // Update state perwalian jika masih dibuka
+                    if (currentPerwalian && currentPerwalian.perwalian) {
+                        currentPerwalian.perwalian.status_tahap1 = status;
+                        currentPerwalian.perwalian.catatan_wali = catatan;
+                    }
+                    closeReviewModal();
+
+                    // Update UI realtime tanpa reload
+                    updatePerwalianTahap1UI(idPerwalian, status, json.stats);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: json.message,
+                        timer: 2000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
                 } else {
                     Swal.fire('Gagal', json.message, 'error');
                 }
             } catch (err) {
                 Swal.close();
                 Swal.fire('Error', 'Gagal memproses keputusan.', 'error');
+            }
+        }
+
+        function updatePerwalianTahap1UI(idPerwalian, newStatus, stats) {
+            let badgeClass = 'bg-slate-100 text-slate-700 border-slate-300';
+            let badgeIcon = 'fa-pen-to-square';
+
+            if (newStatus === 'Disetujui') {
+                badgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                badgeIcon = 'fa-circle-check';
+            } else if (newStatus === 'Diajukan') {
+                badgeClass = 'bg-amber-100 text-amber-800 border-amber-300 animate-pulse';
+                badgeIcon = 'fa-clock';
+            } else if (newStatus === 'Revisi') {
+                badgeClass = 'bg-rose-100 text-rose-800 border-rose-300';
+                badgeIcon = 'fa-triangle-exclamation';
+            }
+
+            // 1. Update status di table row desktop
+            const row = document.getElementById(`t1Row_${idPerwalian}`);
+            if (row) {
+                row.setAttribute('data-status', newStatus.toLowerCase());
+            }
+            const stCol = document.getElementById(`t1StatusCol_${idPerwalian}`);
+            if (stCol) {
+                stCol.innerHTML = `
+                    <span class="inline-flex items-center px-2.5 py-1 text-[11px] font-semibold rounded-full border ${badgeClass}">
+                        <i class="fa-solid ${badgeIcon} mr-1 text-[10px]"></i>
+                        ${escapeHtml(newStatus)}
+                    </span>
+                `;
+            }
+
+            // 2. Update status di mobile card
+            const card = document.getElementById(`t1Card_${idPerwalian}`);
+            if (card) {
+                card.setAttribute('data-status', newStatus.toLowerCase());
+            }
+            const cardBadge = document.getElementById(`t1CardStatusBadge_${idPerwalian}`);
+            if (cardBadge) {
+                cardBadge.className = `inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full border shrink-0 ${badgeClass}`;
+                cardBadge.innerHTML = `<i class="fa-solid ${badgeIcon} mr-1 text-[9px]"></i> ${escapeHtml(newStatus)}`;
+            }
+
+            // 3. Update top summary statistics
+            if (stats) {
+                const tot = parseInt(stats.total_bimbingan || 0);
+                const diajukan = parseInt(stats.tahap1_diajukan || 0);
+                const disetujui = parseInt(stats.tahap1_disetujui || 0);
+                const revisi = parseInt(stats.tahap1_revisi || 0);
+                const draft = parseInt(stats.tahap1_draft || 0);
+                const revDraft = revisi + draft;
+
+                const pctDiajukan = tot > 0 ? Math.round((diajukan / tot) * 100) : 0;
+                const pctDisetujui = tot > 0 ? Math.round((disetujui / tot) * 100) : 0;
+                const pctRevDraft = tot > 0 ? Math.round((revDraft / tot) * 100) : 0;
+
+                const elTot = document.getElementById('statT1TotalMhs');
+                if (elTot) elTot.innerText = tot;
+                const elDiajukan = document.getElementById('statT1Diajukan');
+                if (elDiajukan) elDiajukan.innerHTML = `${diajukan} <span class="text-[11px] sm:text-xs font-semibold text-cyan-600 font-normal">(${pctDiajukan}%)</span>`;
+                const elDisetujui = document.getElementById('statT1Disetujui');
+                if (elDisetujui) elDisetujui.innerHTML = `${disetujui} <span class="text-[11px] sm:text-xs font-semibold text-emerald-600 font-normal">(${pctDisetujui}%)</span>`;
+                const elRevDraft = document.getElementById('statT1RevDraft');
+                if (elRevDraft) elRevDraft.innerHTML = `${revDraft} <span class="text-[11px] sm:text-xs font-semibold text-amber-600 font-normal">(${pctRevDraft}%)</span>`;
+                const elSub = document.getElementById('statT1SubRevDraft');
+                if (elSub) elSub.innerText = `${revisi} revisi, ${draft} draft krs`;
             }
         }
 
