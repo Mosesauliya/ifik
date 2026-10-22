@@ -31,7 +31,7 @@ class Perwalian_model extends CI_Model {
                   `updated_at` DATETIME NULL,
                   INDEX `idx_mk_prodi` (`prodi`),
                   INDEX `idx_mk_semester` (`semester`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
             ");
         }
 
@@ -59,7 +59,7 @@ class Perwalian_model extends CI_Model {
                   INDEX `idx_perwalian_nim` (`nim`),
                   INDEX `idx_perwalian_wali` (`nip_dosen_wali`),
                   INDEX `idx_perwalian_periode` (`tahun_ajaran`, `semester`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
             ");
         }
 
@@ -81,8 +81,22 @@ class Perwalian_model extends CI_Model {
                   INDEX `idx_detail_perwalian` (`id_perwalian`),
                   INDEX `idx_detail_mk` (`kode_mk`),
                   INDEX `idx_detail_status_tahap` (`status_tahap`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
             ");
+        }
+
+        // 4. Pastikan collation tabel-tabel perwalian selaras dengan tabel user/mahasiswa (utf8mb4_general_ci)
+        try {
+            if ($this->db->table_exists('perwalian')) {
+                $check = $this->db->query("SELECT TABLE_COLLATION FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'perwalian'")->row_array();
+                if (!empty($check['TABLE_COLLATION']) && $check['TABLE_COLLATION'] !== 'utf8mb4_general_ci') {
+                    $this->db->query("ALTER TABLE `master_mata_kuliah` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;");
+                    $this->db->query("ALTER TABLE `perwalian` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;");
+                    $this->db->query("ALTER TABLE `perwalian_detail` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;");
+                }
+            }
+        } catch (\Throwable $e) {
+            // Abaikan jika user DB tidak memiliki privilege ALTER
         }
     }
 
@@ -561,7 +575,7 @@ class Perwalian_model extends CI_Model {
     public function get_monitoring_list($filters = []) {
         $this->db->select('p.*, u.name as nama_lengkap, u.email, u.prodi as user_prodi, COUNT(pd.id) as total_mk, SUM(pd.sks) as total_sks')
                  ->from('perwalian p')
-                 ->join('user u', 'p.nim = u.nim OR p.nim = u.username', 'left')
+                 ->join('user u', 'p.nim COLLATE utf8mb4_general_ci = u.nim COLLATE utf8mb4_general_ci OR p.nim COLLATE utf8mb4_general_ci = u.username COLLATE utf8mb4_general_ci', 'left')
                  ->join('perwalian_detail pd', 'p.id_perwalian = pd.id_perwalian AND pd.status_tahap = "akan_diambil"', 'left')
                  ->group_by('p.id_perwalian');
 
