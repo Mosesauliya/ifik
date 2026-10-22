@@ -552,7 +552,7 @@
                         </span>
                     </div>
                     <p class="text-[11px] sm:text-xs text-slate-500 leading-normal">
-                        Periksa kesesuaian mata kuliah, beban SKS, dan slip KRS fisik mahasiswa
+                        Periksa kesesuaian mata kuliah, beban SKS, dan berkas KRS mahasiswa secara langsung (side-by-side cross-check)
                     </p>
                 </div>
 
@@ -567,14 +567,13 @@
                                 <th class="py-3.5 px-4 text-center whitespace-nowrap">Periode</th>
                                 <th class="py-3.5 px-4 text-center whitespace-nowrap">Beban SKS</th>
                                 <th class="py-3.5 px-4 text-center whitespace-nowrap">Status KRS</th>
-                                <th class="py-3.5 px-4 text-center whitespace-nowrap">Dokumen KRS</th>
                                 <th class="py-3.5 px-4 text-center whitespace-nowrap">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-slate-700">
                             <?php if (empty($list_perwalian)): ?>
                                 <tr>
-                                    <td colspan="8" class="py-12 text-center text-slate-400">
+                                    <td colspan="7" class="py-12 text-center text-slate-400">
                                         <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2 text-slate-400 text-lg">
                                             <i class="fa-solid fa-folder-open"></i>
                                         </div>
@@ -584,7 +583,7 @@
                                 </tr>
                             <?php else: ?>
                                 <tr id="noSearchResultRowT1" style="display: none;">
-                                    <td colspan="8" class="py-12 text-center text-slate-400">
+                                    <td colspan="7" class="py-12 text-center text-slate-400">
                                         <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2 text-slate-400 text-lg">
                                             <i class="fa-solid fa-magnifying-glass"></i>
                                         </div>
@@ -665,21 +664,12 @@
                                             </span>
                                         </td>
 
-                                        <!-- Dokumen KRS Fisik -->
-                                        <td class="py-3.5 px-4 text-center">
-                                            <?php if (!empty($item['file_krs'])): ?>
-                                                <button type="button" onclick="previewKRSModal('<?= base_url('uploads/krs/' . $item['file_krs']); ?>', '<?= htmlspecialchars($item['file_krs']); ?>')" class="inline-flex items-center text-xs text-orange-600 hover:text-orange-700 font-semibold hover:underline">
-                                                    <i class="fa-solid fa-file-pdf mr-1 text-rose-500"></i> Lihat Slip
-                                                </button>
-                                            <?php else: ?>
-                                                <span class="text-slate-400 text-[11px] italic">Belum Upload</span>
-                                            <?php endif; ?>
-                                        </td>
+
 
                                         <!-- Action Review -->
                                         <td class="py-3.5 px-4 text-center whitespace-nowrap">
                                             <button type="button" onclick="openReviewKRSModal(<?= (int)$item['id_perwalian']; ?>)" class="inline-flex items-center justify-center px-3.5 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 rounded-xl shadow-sm transition">
-                                                <i class="fa-solid fa-magnifying-glass-chart mr-1.5"></i> Review KRS
+                                                <i class="fa-solid fa-code-compare mr-1.5"></i> Review & Cross-Check
                                             </button>
                                         </td>
                                     </tr>
@@ -761,21 +751,12 @@
                                             <?= (int)$item['total_sks']; ?> SKS <span class="font-normal text-slate-500 text-[11px]">(<?= (int)$item['total_mk']; ?> MK)</span>
                                         </span>
                                     </div>
-                                    <div class="flex items-center justify-between pt-1 border-t border-slate-200/60">
-                                        <span class="text-slate-500">Slip KRS Fisik:</span>
-                                        <?php if (!empty($item['file_krs'])): ?>
-                                            <button type="button" onclick="previewKRSModal('<?= base_url('uploads/krs/' . $item['file_krs']); ?>', '<?= htmlspecialchars($item['file_krs']); ?>')" class="inline-flex items-center text-xs text-orange-600 hover:text-orange-700 font-bold hover:underline">
-                                                <i class="fa-solid fa-file-pdf mr-1 text-rose-500"></i> Lihat Berkas
-                                            </button>
-                                        <?php else: ?>
-                                            <span class="text-slate-400 text-[11px] italic">Belum Upload</span>
-                                        <?php endif; ?>
-                                    </div>
+
                                 </div>
 
                                 <!-- Card Action Button -->
                                 <button type="button" onclick="openReviewKRSModal(<?= (int)$item['id_perwalian']; ?>)" class="w-full py-2 px-3 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition active:scale-98 cursor-pointer">
-                                    <i class="fa-solid fa-magnifying-glass-chart text-[11px]"></i> Review KRS
+                                    <i class="fa-solid fa-code-compare text-[11px]"></i> Review & Cross-Check
                                 </button>
                             </div>
                         <?php endforeach; ?>
@@ -787,116 +768,120 @@
     </div>
 
     <!-- ========================================================================= -->
-    <!-- MODAL: REVIEW & APPROVAL KRS TAHAP 1                                      -->
+    <!-- MODAL: REVIEW & CROSS-CHECK KRS TAHAP 1 (SPLIT SCREEN)                    -->
     <!-- ========================================================================= -->
-    <div id="modalReviewKRS" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100000] hidden flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-        <div class="clay-card w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden bg-white shadow-2xl">
+    <div id="modalReviewKRS" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-[100000] hidden flex items-center justify-center p-2 sm:p-3 md:p-4">
+        <div class="clay-card w-full max-w-[97vw] xl:max-w-7xl h-[94vh] flex flex-col overflow-hidden bg-white shadow-2xl rounded-2xl border border-slate-200">
             <!-- Modal Header -->
-            <div class="px-4 py-3 sm:px-6 sm:py-4 bg-gradient-to-r from-orange-500 to-amber-600 text-white flex items-center justify-between gap-2 shrink-0">
+            <div class="px-4 py-2.5 sm:px-6 sm:py-3 bg-gradient-to-r from-orange-500 to-amber-600 text-white flex items-center justify-between gap-3 shrink-0 shadow-xs">
                 <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
-                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center text-white shrink-0">
-                        <i class="fa-solid fa-file-contract text-base sm:text-lg"></i>
+                    <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/20 flex items-center justify-center text-white shrink-0">
+                        <i class="fa-solid fa-code-compare text-sm sm:text-base"></i>
                     </div>
                     <div class="min-w-0">
-                        <h3 class="font-bold text-sm sm:text-base leading-tight truncate" id="m1MhsNama">Nama Mahasiswa</h3>
-                        <p class="text-[11px] sm:text-xs text-orange-100 truncate">
-                            NIM: <span class="font-mono font-bold" id="m1MhsNim">-</span> | 
-                            Prodi: <span id="m1MhsProdi">-</span> | 
-                            Periode: <span id="m1MhsPeriode">-</span>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h3 class="font-bold text-sm sm:text-base leading-tight truncate" id="m1MhsNama">Nama Mahasiswa</h3>
+                            <span id="m1StatusBadge" class="px-2 py-0.5 text-[10px] sm:text-[11px] font-bold rounded-full bg-white/20 text-white border border-white/30"></span>
+                        </div>
+                        <p class="text-[11px] sm:text-xs text-orange-100 truncate mt-0.5">
+                            NIM: <span class="font-mono font-bold text-white" id="m1MhsNim">-</span> | 
+                            Prodi: <span class="text-white font-medium" id="m1MhsProdi">-</span> | 
+                            Periode: <span class="text-white font-medium" id="m1MhsPeriode">-</span>
                         </p>
                     </div>
                 </div>
-                <button type="button" onclick="closeReviewModal()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition shrink-0">
-                    <i class="fa-solid fa-xmark text-sm"></i>
-                </button>
+                <div class="flex items-center gap-2 shrink-0">
+                    <button type="button" onclick="closeReviewModal()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition">
+                        <i class="fa-solid fa-xmark text-sm sm:text-base"></i>
+                    </button>
+                </div>
             </div>
 
-            <!-- Modal Body -->
-            <div class="p-3.5 sm:p-6 overflow-y-auto flex-grow space-y-3.5 sm:space-y-5">
-                <!-- Info Cards -->
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                    <div class="p-2.5 sm:p-3.5 rounded-xl border bg-slate-50/80 border-slate-200">
-                        <span class="text-[10px] font-bold text-slate-500 uppercase block">Status Pengajuan</span>
-                        <div id="m1StatusBadge" class="text-xs sm:text-sm font-bold mt-1"></div>
-                    </div>
-                    <div class="p-2.5 sm:p-3.5 rounded-xl border bg-slate-50/80 border-slate-200">
-                        <span class="text-[10px] font-bold text-slate-500 uppercase block">Total Beban SKS</span>
-                        <div class="text-base sm:text-xl font-bold font-mono text-slate-900 mt-0.5">
-                            <span id="m1TotalSks">0</span> <span class="text-[11px] sm:text-xs font-semibold text-slate-500">SKS</span>
+            <!-- Modal Body: Split Screen Side-by-Side (File vs Input Data) -->
+            <div class="flex-grow grid grid-cols-1 lg:grid-cols-12 overflow-hidden bg-slate-100 min-h-0">
+                <!-- Panel Kiri: Berkas Dokumen Slip/Draft KRS Mahasiswa (60% on xl) -->
+                <div class="lg:col-span-6 xl:col-span-7 flex flex-col h-[40vh] lg:h-full border-b lg:border-b-0 lg:border-r border-slate-200 bg-slate-900 overflow-hidden min-h-0">
+                    <!-- Header Panel Berkas -->
+                    <div class="px-3.5 py-2 bg-slate-800 text-slate-200 border-b border-slate-700/80 flex items-center justify-between gap-2 shrink-0">
+                        <div class="flex items-center space-x-2 min-w-0">
+                            <i class="fa-solid fa-file-invoice text-orange-400 text-xs sm:text-sm shrink-0"></i>
+                            <span class="text-xs font-bold text-slate-100 truncate">Berkas Draft / Slip KRS Mahasiswa</span>
+                        </div>
+                        <div class="flex items-center space-x-1.5 shrink-0" id="m1DocActions">
+                            <a id="m1DocOpenNewTab" href="#" target="_blank" class="px-2.5 py-1 text-[11px] font-medium bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg flex items-center gap-1.5 transition">
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> Buka Tab Baru
+                            </a>
                         </div>
                     </div>
-                    <div class="col-span-2 sm:col-span-1 p-2.5 sm:p-3.5 rounded-xl border bg-slate-50/80 border-slate-200 flex sm:flex-col items-center sm:items-start justify-between sm:justify-start gap-1">
-                        <span class="text-[10px] font-bold text-slate-500 uppercase block">Slip KRS Fisik</span>
-                        <div id="m1FileKrsBox" class="mt-0 sm:mt-1"></div>
+
+                    <!-- Viewer Container (PDF / Image Iframe) -->
+                    <div class="flex-grow relative bg-slate-950 overflow-hidden flex items-center justify-center min-h-0" id="m1DocViewerBox">
+                        <iframe id="m1DocFrame" src="" class="w-full h-full border-0 bg-white"></iframe>
+                        <div id="m1DocEmpty" class="hidden absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-slate-400 bg-slate-900/95 z-10">
+                            <div class="w-12 h-12 rounded-2xl bg-slate-800 text-slate-500 flex items-center justify-center mx-auto mb-2 text-xl">
+                                <i class="fa-solid fa-file-circle-xmark"></i>
+                            </div>
+                            <p class="font-bold text-xs sm:text-sm text-slate-300">Belum Ada Berkas KRS Diunggah</p>
+                            <p class="text-[11px] text-slate-400 mt-1 max-w-xs leading-relaxed">Mahasiswa belum mengunggah file slip/draft KRS fisik. Anda tetap dapat memverifikasi rencana studi pada panel sebelah kanan.</p>
+                        </div>
                     </div>
                 </div>
 
-
-
-                <!-- Tabel Mata Kuliah yang Diajukan -->
-                <div class="border border-slate-200 rounded-xl overflow-hidden">
-                    <div class="px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                        <span class="text-xs font-bold text-slate-800 uppercase">Daftar Mata Kuliah yang Dikontrak</span>
-                        <span class="text-xs font-mono text-slate-500" id="m1CountMk">0 Mata Kuliah</span>
+                <!-- Panel Kanan: Hasil Input Rencana Studi & Keputusan Persetujuan (40% on xl) -->
+                <div class="lg:col-span-6 xl:col-span-5 flex flex-col h-[54vh] lg:h-full bg-white overflow-hidden min-h-0">
+                    <!-- Header Panel Input -->
+                    <div class="px-3.5 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2 shrink-0">
+                        <div class="flex items-center space-x-2 min-w-0">
+                            <i class="fa-solid fa-list-check text-orange-600 text-xs sm:text-sm"></i>
+                            <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">Hasil Input Rencana Studi</span>
+                        </div>
+                        <span class="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 border border-orange-200" id="m1RightTotalInfo">0 SKS (0 MK)</span>
                     </div>
 
-                    <!-- Desktop Table View (>= 640px) -->
-                    <div class="hidden sm:block overflow-x-auto">
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-slate-100/60 text-slate-600 font-bold uppercase text-[10px]">
-                                <tr>
-                                    <th class="py-2.5 px-3 w-10 text-center">No</th>
-                                    <th class="py-2.5 px-3">Kode MK</th>
-                                    <th class="py-2.5 px-3">Nama Mata Kuliah</th>
-                                    <th class="py-2.5 px-3 text-center">SKS</th>
-                                    <th class="py-2.5 px-3 text-center">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="m1MkTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
-                        </table>
+                    <!-- Petunjuk Cross-Check -->
+                    <div class="px-3.5 pt-2.5 pb-1">
+                        <div class="text-[11px] text-slate-600 bg-orange-50/70 border border-orange-200/80 rounded-xl p-2.5 flex items-start gap-2">
+                            <i class="fa-solid fa-code-compare text-orange-600 mt-0.5 text-xs shrink-0"></i>
+                            <div>Cocokkan mata kuliah hasil input di bawah ini dengan dokumen pada panel sebelah kiri sebelum menentukan persetujuan.</div>
+                        </div>
                     </div>
 
-                    <!-- Mobile Card List View (< 640px) -->
-                    <div class="block sm:hidden divide-y divide-slate-100" id="m1MkMobileList"></div>
+                    <!-- Scrollable Course List (Grouped by Semester) -->
+                    <div class="flex-grow overflow-y-auto px-3.5 py-1.5 space-y-3 min-h-0">
+                        <div class="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
+                            <div class="hidden sm:block overflow-x-auto">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-slate-100/70 text-slate-600 font-bold uppercase text-[10px]">
+                                        <tr>
+                                            <th class="py-2 px-2.5 w-7 text-center">No</th>
+                                            <th class="py-2 px-2.5">Kode MK</th>
+                                            <th class="py-2 px-2.5">Nama Mata Kuliah</th>
+                                            <th class="py-2 px-2.5 text-center">SKS</th>
+                                            <th class="py-2 px-2.5 text-center">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="m1MkTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+                                </table>
+                            </div>
+                            <div class="block sm:hidden divide-y divide-slate-100" id="m1MkMobileList"></div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Decision Section (1-Click Action) -->
+                    <div id="m1KeputusanSection" class="p-3 bg-slate-50 border-t border-slate-200 shrink-0"></div>
                 </div>
-
-                <!-- Dynamic Section Keputusan Dosen Wali (Berdasarkan Status Pengajuan) -->
-                <div id="m1KeputusanSection"></div>
             </div>
 
             <!-- Modal Footer -->
-            <div class="px-4 py-2.5 sm:px-6 sm:py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-end shrink-0">
-                <button type="button" onclick="closeReviewModal()" class="w-full sm:w-auto px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition text-center">
+            <div class="px-4 py-2 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
+                <span class="text-[11px] text-slate-500 italic hidden sm:inline">Periksa seluruh mata kuliah yang dikontrak sebelum mengambil keputusan.</span>
+                <button type="button" onclick="closeReviewModal()" class="w-full sm:w-auto px-4 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition text-center ml-auto">
                     Tutup
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Preview KRS Modal (Iframe PDF/Image) -->
-    <div id="modalPreviewKRS" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[100010] hidden flex items-center justify-center p-2 sm:p-4">
-        <div class="clay-card w-full max-w-4xl h-[90vh] flex flex-col bg-white overflow-hidden shadow-2xl">
-            <div class="px-3.5 sm:px-5 py-3 bg-slate-900 text-white flex items-center justify-between gap-2 shrink-0">
-                <div class="flex items-center space-x-2 min-w-0 flex-1">
-                    <i class="fa-solid fa-file-pdf text-rose-400 shrink-0 text-sm"></i>
-                    <div class="min-w-0">
-                        <span class="text-xs font-bold block truncate" id="krsPreviewFilename">Slip KRS Mahasiswa</span>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-2 shrink-0">
-                    <a id="btnDownloadKrsDirect" href="#" target="_blank" class="px-2.5 py-1 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg whitespace-nowrap flex items-center gap-1">
-                        <i class="fa-solid fa-download text-[11px]"></i> <span>Unduh</span>
-                    </a>
-                    <button type="button" onclick="closeKrsPreview()" class="w-7 h-7 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
-                        <i class="fa-solid fa-xmark text-sm"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="flex-grow bg-slate-100 p-2 overflow-hidden">
-                <iframe id="krsPreviewFrame" src="" class="w-full h-full rounded-lg border-0 bg-white"></iframe>
-            </div>
-        </div>
-    </div>
 
     <!-- Script Tahap 1 -->
     <script>
@@ -936,17 +921,33 @@
                 document.getElementById('m1TotalSks').innerText = currentPerwalian.total_sks;
                 document.getElementById('m1CountMk').innerText = `${mkList.length} Mata Kuliah`;
 
-                // File KRS Box
-                const krsBox = document.getElementById('m1FileKrsBox');
-                if (p.file_krs) {
-                    const url = `<?= base_url('uploads/krs/'); ?>${p.file_krs}`;
-                    krsBox.innerHTML = `
-                        <button type="button" onclick="previewKRSModal('${url}', '${p.file_krs}')" class="inline-flex items-center px-3 py-1 text-xs font-semibold text-orange-700 bg-orange-100 hover:bg-orange-200 rounded-lg transition">
-                            <i class="fa-solid fa-file-pdf text-rose-500 mr-1.5"></i> Lihat Dokumen KRS
-                        </button>
-                    `;
+                // Load Berkas Dokumen Langsung ke Panel Kiri (Split View Cross-Check)
+                const docFrame = document.getElementById('m1DocFrame');
+                const docEmpty = document.getElementById('m1DocEmpty');
+                const docOpenNewTab = document.getElementById('m1DocOpenNewTab');
+                const docActions = document.getElementById('m1DocActions');
+                const rightTotalInfo = document.getElementById('m1RightTotalInfo');
+
+                if (rightTotalInfo) {
+                    rightTotalInfo.innerText = `${currentPerwalian.total_sks} SKS (${mkList.length} MK)`;
+                }
+
+                if (p.file_krs && p.file_krs.trim() !== '') {
+                    const docUrl = `<?= base_url('uploads/krs/'); ?>${p.file_krs}`;
+                    if (docFrame) {
+                        docFrame.src = docUrl;
+                        docFrame.classList.remove('hidden');
+                    }
+                    if (docEmpty) docEmpty.classList.add('hidden');
+                    if (docOpenNewTab) docOpenNewTab.href = docUrl;
+                    if (docActions) docActions.classList.remove('hidden');
                 } else {
-                    krsBox.innerHTML = `<span class="text-xs text-slate-400 italic">Belum diunggah</span>`;
+                    if (docFrame) {
+                        docFrame.src = '';
+                        docFrame.classList.add('hidden');
+                    }
+                    if (docEmpty) docEmpty.classList.remove('hidden');
+                    if (docActions) docActions.classList.add('hidden');
                 }
 
 
@@ -1138,7 +1139,13 @@
 
         function closeReviewModal() {
             document.getElementById('modalReviewKRS').classList.add('hidden');
+            const docFrame = document.getElementById('m1DocFrame');
+            if (docFrame) docFrame.src = '';
             currentPerwalian = null;
+        }
+
+        function previewKRSModal(url, filename) {
+            if (url) window.open(url, '_blank');
         }
 
         async function submitDecisionTahap1(status) {
@@ -1270,17 +1277,7 @@
             }
         }
 
-        function previewKRSModal(url, filename) {
-            document.getElementById('krsPreviewFilename').innerText = filename;
-            document.getElementById('btnDownloadKrsDirect').href = url;
-            document.getElementById('krsPreviewFrame').src = url;
-            document.getElementById('modalPreviewKRS').classList.remove('hidden');
-        }
 
-        function closeKrsPreview() {
-            document.getElementById('modalPreviewKRS').classList.add('hidden');
-            document.getElementById('krsPreviewFrame').src = '';
-        }
 
         function escapeHtml(text) {
             if (!text) return '';
