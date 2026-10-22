@@ -786,7 +786,8 @@
                         <p class="text-[11px] sm:text-xs text-orange-100 truncate mt-0.5">
                             NIM: <span class="font-mono font-bold text-white" id="m1MhsNim">-</span> | 
                             Prodi: <span class="text-white font-medium" id="m1MhsProdi">-</span> | 
-                            Periode: <span class="text-white font-medium" id="m1MhsPeriode">-</span>
+                            Periode: <span class="text-white font-medium" id="m1MhsPeriode">-</span> | 
+                            Beban: <span class="font-mono font-bold text-white"><span id="m1TotalSks">0</span> SKS</span> (<span id="m1CountMk">0 Mata Kuliah</span>)
                         </p>
                     </div>
                 </div>
@@ -908,18 +909,33 @@
                 const p = currentPerwalian.perwalian;
                 const mkList = currentPerwalian.mata_kuliah || [];
 
-                document.getElementById('m1MhsNama').innerText = p.nama_lengkap || p.nama_mahasiswa || 'Mahasiswa';
-                document.getElementById('m1MhsNim').innerText = p.nim || '-';
-                document.getElementById('m1MhsProdi').innerText = p.prodi || p.user_prodi || '-';
-                document.getElementById('m1MhsPeriode').innerText = `${p.tahun_ajaran} (${p.semester})`;
+                const elNama = document.getElementById('m1MhsNama');
+                if (elNama) elNama.innerText = p.nama_lengkap || p.nama_mahasiswa || 'Mahasiswa';
+
+                const elNim = document.getElementById('m1MhsNim');
+                if (elNim) elNim.innerText = p.nim || '-';
+
+                const elProdi = document.getElementById('m1MhsProdi');
+                if (elProdi) elProdi.innerText = p.prodi || p.user_prodi || '-';
+
+                const elPeriode = document.getElementById('m1MhsPeriode');
+                if (elPeriode) elPeriode.innerText = `${p.tahun_ajaran} (${p.semester})`;
 
                 // Status Badge
                 const stEl = document.getElementById('m1StatusBadge');
-                stEl.innerText = p.status_tahap1 || 'Draft';
-                stEl.className = 'text-sm font-bold ' + (p.status_tahap1 === 'Disetujui' ? 'text-emerald-600' : (p.status_tahap1 === 'Diajukan' ? 'text-amber-600' : 'text-slate-700'));
+                if (stEl) {
+                    stEl.innerText = p.status_tahap1 || 'Draft';
+                    stEl.className = 'px-2 py-0.5 text-[10px] sm:text-[11px] font-bold rounded-full border ' + 
+                        (p.status_tahap1 === 'Disetujui' ? 'bg-emerald-500/20 text-emerald-100 border-emerald-300/40' : 
+                        (p.status_tahap1 === 'Diajukan' ? 'bg-amber-500/20 text-amber-100 border-amber-300/40' : 
+                        'bg-slate-500/20 text-slate-100 border-slate-300/40'));
+                }
 
-                document.getElementById('m1TotalSks').innerText = currentPerwalian.total_sks;
-                document.getElementById('m1CountMk').innerText = `${mkList.length} Mata Kuliah`;
+                const elTotalSks = document.getElementById('m1TotalSks');
+                if (elTotalSks) elTotalSks.innerText = currentPerwalian.total_sks;
+
+                const elCountMk = document.getElementById('m1CountMk');
+                if (elCountMk) elCountMk.innerText = `${mkList.length} Mata Kuliah`;
 
                 // Load Berkas Dokumen Langsung ke Panel Kiri (Split View Cross-Check)
                 const docFrame = document.getElementById('m1DocFrame');
@@ -1130,8 +1146,9 @@
 
                 document.getElementById('modalReviewKRS').classList.remove('hidden');
             } catch (err) {
+                console.error('Error openReviewKRSModal:', err);
                 Swal.close();
-                Swal.fire('Error', 'Terjadi kesalahan jaringan saat memuat data.', 'error');
+                Swal.fire('Error', 'Terjadi kesalahan saat memuat data: ' + (err.message || 'Error tidak diketahui'), 'error');
             }
         }
 
