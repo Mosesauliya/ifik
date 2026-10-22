@@ -196,12 +196,26 @@ class AdminProdi extends CI_Controller {
             return;
         }
 
-        $res = $this->Perwalian_model->upsert_mata_kuliah_bulk($json['courses']);
-        $total = $res['inserted'] + $res['updated'];
+        $allowUpdate = !empty($json['allow_update']);
+        $res = $this->Perwalian_model->upsert_mata_kuliah_bulk($json['courses'], ['allow_update' => $allowUpdate]);
+
+        $msgParts = [];
+        if ($res['inserted'] > 0) $msgParts[] = "{$res['inserted']} data baru berhasil disimpan";
+        if ($res['updated'] > 0) $msgParts[] = "{$res['updated']} data berhasil diperbarui";
+        if ($res['skipped_duplicate'] > 0) $msgParts[] = "{$res['skipped_duplicate']} data duplikat dilewati";
+        if ($res['skipped_invalid'] > 0) $msgParts[] = "{$res['skipped_invalid']} data salah field/format dilewati";
+
+        $message = !empty($msgParts) ? implode(', ', $msgParts) . '.' : 'Tidak ada data valid yang diproses.';
+        $status = ($res['inserted'] > 0 || $res['updated'] > 0) ? 'success' : ($res['skipped_invalid'] > 0 ? 'warning' : 'info');
 
         $this->output->set_output(json_encode([
-            'status'  => 'success',
-            'message' => "Berhasil memproses {$total} mata kuliah ({$res['inserted']} baru, {$res['updated']} diperbarui)."
+            'status'            => $status,
+            'message'           => $message,
+            'inserted'          => $res['inserted'],
+            'updated'           => $res['updated'],
+            'skipped_duplicate' => $res['skipped_duplicate'],
+            'skipped_invalid'   => $res['skipped_invalid'],
+            'errors'            => $res['errors'],
         ]));
     }
 
@@ -250,9 +264,24 @@ class AdminProdi extends CI_Controller {
 
         $res = $this->Perwalian_model->upsert_krs_bulk($json['krs_rows'], $tahun, $semester);
 
+        $msgParts = [];
+        if ($res['courses_added'] > 0) $msgParts[] = "{$res['courses_added']} mata kuliah berhasil dimasukkan";
+        if ($res['new_perwalian'] > 0) $msgParts[] = "{$res['new_perwalian']} berkas perwalian baru dibuat";
+        if ($res['skipped_duplicate'] > 0) $msgParts[] = "{$res['skipped_duplicate']} data duplikat dilewati";
+        if ($res['skipped_invalid'] > 0) $msgParts[] = "{$res['skipped_invalid']} baris tidak valid dilewati";
+
+        $message = !empty($msgParts) ? implode(', ', $msgParts) . '.' : 'Tidak ada data valid yang diproses.';
+        $status = ($res['courses_added'] > 0) ? 'success' : ($res['skipped_invalid'] > 0 ? 'warning' : 'info');
+
         $this->output->set_output(json_encode([
-            'status'  => 'success',
-            'message' => "Berhasil memproses {$res['processed']} entri KRS ({$res['new_perwalian']} berkas perwalian baru dibuat, {$res['courses_added']} mata kuliah dimasukkan)."
+            'status'            => $status,
+            'message'           => $message,
+            'processed'         => $res['processed'],
+            'new_perwalian'     => $res['new_perwalian'],
+            'courses_added'     => $res['courses_added'],
+            'skipped_duplicate' => $res['skipped_duplicate'],
+            'skipped_invalid'   => $res['skipped_invalid'],
+            'errors'            => $res['errors'],
         ]));
     }
 }
