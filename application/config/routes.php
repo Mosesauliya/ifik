@@ -152,6 +152,7 @@ $route['dosenwali/update_judul_approval_ajax']  = 'DosenWali/update_judul_approv
 $route['dosen/wali/update_jenis_approval_ajax'] = 'DosenWali/update_jenis_approval_ajax';
 $route['dosenwali/update_jenis_approval_ajax']  = 'DosenWali/update_jenis_approval_ajax';
 $route['dosen/wali/(:any)'] = 'DosenWali/$1';
+$route['dosen/perwalian'] = 'DosenWali/perwalian';
 $route['dosen/wali/(:any)/(:any)'] = 'DosenWali/$1/$2';
 
 $route['dosenwali'] = 'DosenWali';

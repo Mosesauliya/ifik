@@ -637,26 +637,284 @@ class Perwalian_model extends CI_Model {
     }
 
     // =========================================================================
-    // HELPER UNTUK ALIF (APPROVAL DOSEN WALI & TAHAP 2 EVALUASI NILAI)
+    // MODUL DOSEN WALI (APPROVAL TAHAP 1, GENERATE MK, PENILAIAN TAHAP 2)
+    // Dibuat khusus tanpa hardcoding, mendukung multi-identifier & auto-grading
     // =========================================================================
 
-    public function get_perwalian_by_dosen($nip_dosen, $filters = []) {
-        $this->db->select('p.*, COUNT(pd.id) as total_mk, COALESCE(SUM(pd.sks), 0) as total_sks')
-                 ->from('perwalian p')
-                 ->join('perwalian_detail pd', 'p.id_perwalian = pd.id_perwalian AND pd.status_tahap = "akan_diambil"', 'left')
-                 ->where('p.nip_dosen_wali', trim($nip_dosen))
-                 ->group_by('p.id_perwalian');
+    /**
+     * Dapatkan daftar perwalian mahasiswa bimbingan dari dosen tertentu.
+     * Mendukung multi-identifier (NIP, Kode Dosen, Username, ID) dan filter dinamis.
+     */
+    public function get_perwalian_by_dosen($dosen_identifiers, $filters = []) {
+        $ids = is_array($dosen_identifiers) ? array_filter(array_unique($dosen_identifiers)) : [trim((string)$dosen_identifiers)];
+        $ids = array_values(array_filter($ids, fn($v) => !empty($v)));
 
+        $this->db->select('
+            p.*, 
+            MAX(u.name) as nama_lengkap_user, 
+            MAX(u.email) as email_mahasiswa, 
+            MAX(u.no_telp) as no_telp_mahasiswa,
+            MAX(u.images) as foto_mahasiswa,
+            COUNT(pd.id) as total_mk,
+            COALESCE(SUM(pd.sks), 0) as total_sks,
+            COALESCE(SUM(CASE WHEN pd.status_kelulusan = "Lulus" THEN 1 ELSE 0 END), 0) as total_lulus,
+            COALESCE(SUM(CASE WHEN pd.status_kelulusan = "Tidak Lulus" THEN 1 ELSE 0 END), 0) as total_tidak_lulus,
+            COALESCE(SUM(CASE WHEN pd.nilai_huruf IS NOT NULL AND pd.nilai_huruf != "" THEN 1 ELSE 0 END), 0) as total_dinilai
+        ')
+        ->from('perwalian p')
+        ->join('user u', 'p.nim = u.nim OR p.nim = u.username', 'left', false)
+        ->join('perwalian_detail pd', 'p.id_perwalian = pd.id_perwalian AND pd.status_tahap = "akan_diambil"', 'left');
+
+        // Filter Dosen Wali (Multi-identifier atau 'all' untuk SuperAdmin)
+        if (!in_array('all', $ids, true) && !empty($ids)) {
+            $this->db->group_start();
+            $this->db->where_in('p.nip_dosen_wali', $ids);
+            $this->db->or_where_in('u.dosen_wali', $ids);
+            $this->db->group_end();
+        }
+
+        // Filter Pencarian Dinamis (NIM / Nama Mahasiswa)
+        if (!empty($filters['search'])) {
+            $s = trim($filters['search']);
+            $this->db->group_start()
+                ->like('p.nim', $s)
+                ->or_like('p.nama_mahasiswa', $s)
+                ->or_like('u.name', $s)
+                ->or_like('p.prodi', $s)
+            ->group_end();
+        }
+
+        // Filter Status Tahap 1
         if (!empty($filters['status_tahap1']) && $filters['status_tahap1'] !== 'all') {
             $this->db->where('p.status_tahap1', $filters['status_tahap1']);
         }
 
+        // Filter Status Tahap 2
+        if (!empty($filters['status_tahap2']) && $filters['status_tahap2'] !== 'all') {
+            $this->db->where('p.status_tahap2', $filters['status_tahap2']);
+        }
+
+        // Filter Tahun Ajaran & Semester Dinamis
+        if (!empty($filters['tahun_ajaran']) && $filters['tahun_ajaran'] !== 'all') {
+            $this->db->where('p.tahun_ajaran', $filters['tahun_ajaran']);
+        }
+        if (!empty($filters['semester']) && $filters['semester'] !== 'all') {
+            $this->db->where('p.semester', $filters['semester']);
+        }
+
+        // Filter Program Studi Dinamis
+        if (!empty($filters['prodi']) && $filters['prodi'] !== 'all') {
+            $this->db->group_start()
+                ->where('p.prodi', $filters['prodi'])
+                ->or_where('u.prodi', $filters['prodi'])
+            ->group_end();
+        }
+
+        $this->db->group_by('p.id_perwalian');
         $this->db->order_by('p.updated_at', 'DESC');
         return $this->db->get()->result_array();
     }
 
+    /**
+     * Dapatkan ringkasan statistik perwalian untuk dosen wali
+     */
+    public function get_dosen_perwalian_stats($dosen_identifiers, $tahun = null, $semester = null) {
+        $ids = is_array($dosen_identifiers) ? array_filter(array_unique($dosen_identifiers)) : [trim((string)$dosen_identifiers)];
+        $ids = array_values(array_filter($ids, fn($v) => !empty($v)));
+
+        $this->db->from('perwalian p')
+                 ->join('user u', 'p.nim = u.nim OR p.nim = u.username', 'left', false);
+
+        if (!in_array('all', $ids, true) && !empty($ids)) {
+            $this->db->group_start();
+            $this->db->where_in('p.nip_dosen_wali', $ids);
+            $this->db->or_where_in('u.dosen_wali', $ids);
+            $this->db->group_end();
+        }
+
+        if (!empty($tahun) && $tahun !== 'all') {
+            $this->db->where('p.tahun_ajaran', $tahun);
+        }
+        if (!empty($semester) && $semester !== 'all') {
+            $this->db->where('p.semester', $semester);
+        }
+
+        $records = $this->db->get()->result_array();
+
+        $stats = [
+            'total_bimbingan'     => count($records),
+            'tahap1_draft'        => 0,
+            'tahap1_diajukan'     => 0,
+            'tahap1_disetujui'    => 0,
+            'tahap1_revisi'       => 0,
+            'tahap2_belum_dinilai'=> 0,
+            'tahap2_proses'       => 0,
+            'tahap2_selesai'      => 0,
+        ];
+
+        foreach ($records as $r) {
+            $st1 = strtolower(trim($r['status_tahap1'] ?? 'draft'));
+            if ($st1 === 'diajukan') $stats['tahap1_diajukan']++;
+            elseif ($st1 === 'disetujui') $stats['tahap1_disetujui']++;
+            elseif ($st1 === 'revisi') $stats['tahap1_revisi']++;
+            else $stats['tahap1_draft']++;
+
+            $st2 = strtolower(trim($r['status_tahap2'] ?? 'belum dinilai'));
+            if ($st2 === 'proses penilaian') $stats['tahap2_proses']++;
+            elseif ($st2 === 'selesai') $stats['tahap2_selesai']++;
+            else $stats['tahap2_belum_dinilai']++;
+        }
+
+        return $stats;
+    }
+
+    /**
+     * Dapatkan detail lengkap perwalian beserta mata kuliahnya
+     */
+    public function get_perwalian_detail_full($id_perwalian) {
+        $id_perwalian = (int)$id_perwalian;
+        $perwalian = $this->db->select('p.*, u.name as nama_lengkap, u.email as user_email, u.no_telp as user_phone, u.images as user_photo, u.prodi as user_prodi')
+            ->from('perwalian p')
+            ->join('user u', 'p.nim = u.nim OR p.nim = u.username', 'left', false)
+            ->where('p.id_perwalian', $id_perwalian)
+            ->get()
+            ->row_array();
+
+        if (!$perwalian) return null;
+
+        // Ambil daftar mata kuliah yang diajukan (status_tahap: akan_diambil)
+        $mk_list = $this->db->from('perwalian_detail')
+            ->where('id_perwalian', $id_perwalian)
+            ->where('status_tahap', 'akan_diambil')
+            ->order_by('id', 'ASC')
+            ->get()
+            ->result_array();
+
+        // Hitung total SKS & statistik nilai
+        $totalSks = 0;
+        $sksLulus = 0;
+        $sksTidakLulus = 0;
+        $totalDinilai = 0;
+
+        foreach ($mk_list as &$mk) {
+            $totalSks += (int)$mk['sks'];
+            $st = trim($mk['status_kelulusan'] ?? '');
+            if ($st === 'Lulus') $sksLulus += (int)$mk['sks'];
+            elseif ($st === 'Tidak Lulus') $sksTidakLulus += (int)$mk['sks'];
+
+            if (!empty($mk['nilai_huruf'])) {
+                $totalDinilai++;
+            }
+        }
+        unset($mk);
+
+        // Ambil riwayat MK yang SUDAH diambil di semester sebelumnya
+        $mk_riwayat = $this->get_riwayat_mk_sudah_diambil($perwalian['nim']);
+
+        return [
+            'perwalian'       => $perwalian,
+            'mata_kuliah'     => $mk_list,
+            'riwayat_mk'      => $mk_riwayat,
+            'total_sks'       => $totalSks,
+
+
+            'sks_lulus'       => $sksLulus,
+            'sks_tidak_lulus' => $sksTidakLulus,
+            'total_dinilai'   => $totalDinilai,
+            'total_mk'        => count($mk_list),
+            'is_all_graded'   => count($mk_list) > 0 && ($totalDinilai === count($mk_list)),
+        ];
+    }
+
+    /**
+     * Fitur GENERATE MK:
+     * Jika mahasiswa belum punya daftar MK di perwalian_detail,
+     * salin otomatis daftar mata kuliah kurikulum dari master_mata_kuliah.
+     */
+    public function generate_mk_for_perwalian($id_perwalian) {
+        $id_perwalian = (int)$id_perwalian;
+        $perwalian = $this->get_perwalian_by_id($id_perwalian);
+        if (!$perwalian) {
+            return ['status' => false, 'message' => 'Data perwalian tidak ditemukan.'];
+        }
+
+        // Cek apakah sudah ada MK
+        $existing = $this->db->get_where('perwalian_detail', [
+            'id_perwalian' => $id_perwalian,
+            'status_tahap' => 'akan_diambil',
+        ])->result_array();
+
+        if (!empty($existing)) {
+            // MK sudah ada, pastikan status_kelulusan default siap dinilai
+            $now = date('Y-m-d H:i:s');
+            $this->db->where('id_perwalian', $id_perwalian)->update('perwalian', [
+                'updated_at' => $now,
+            ]);
+            return [
+                'status'  => true,
+                'count'   => count($existing),
+                'message' => 'Mata kuliah mahasiswa sudah aktif dan siap untuk dinilai (' . count($existing) . ' MK).'
+            ];
+        }
+
+        // Jika belum ada MK sama sekali, ambil kurikulum standar dari master_mata_kuliah
+        $prodi = trim($perwalian['prodi'] ?? '');
+        $this->db->from('master_mata_kuliah')->where('is_active', 1);
+
+        if (!empty($prodi)) {
+            $this->db->group_start()
+                ->where('prodi', $prodi)
+                ->or_where('prodi', '')
+                ->or_where('prodi IS NULL', null, false)
+            ->group_end();
+        }
+
+        // Batasi 6-8 MK default (sekitar 20 SKS)
+        $masterList = $this->db->order_by('semester', 'ASC')->order_by('kode_mk', 'ASC')->limit(8)->get()->result_array();
+
+        if (empty($masterList)) {
+            return [
+                'status'  => false,
+                'message' => 'Master mata kuliah untuk program studi ini masih kosong. Silakan koordinasi dengan Admin Prodi.'
+            ];
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $inserted = 0;
+        foreach ($masterList as $m) {
+            $this->db->insert('perwalian_detail', [
+                'id_perwalian'     => $id_perwalian,
+                'kode_mk'          => strtoupper(trim($m['kode_mk'])),
+                'nama_mk'          => trim($m['nama_mk']),
+                'sks'              => max(1, (int)$m['sks']),
+                'status_tahap'     => 'akan_diambil',
+                'nilai_huruf'      => null,
+                'status_kelulusan' => 'Belum Ditentukan',
+                'is_imported'      => 0,
+                'created_at'       => $now,
+                'updated_at'       => $now,
+            ]);
+            $inserted++;
+        }
+
+        $this->db->where('id_perwalian', $id_perwalian)->update('perwalian', [
+            'updated_at' => $now,
+        ]);
+
+        return [
+            'status'  => true,
+            'count'   => $inserted,
+            'message' => "Berhasil men-generate {$inserted} mata kuliah ke dalam rencana studi mahasiswa."
+        ];
+    }
+
+    /**
+     * Approval / Penolakan KRS Tahap 1 oleh Dosen Wali
+     */
     public function approve_tahap1($id_perwalian, $status = 'Disetujui', $catatan = '') {
         $now = date('Y-m-d H:i:s');
+        $status = in_array($status, ['Disetujui', 'Revisi', 'Diajukan', 'Draft'], true) ? $status : 'Disetujui';
+
         return $this->db->where('id_perwalian', (int)$id_perwalian)->update('perwalian', [
             'status_tahap1'       => $status,
             'catatan_wali'        => trim($catatan),
@@ -666,26 +924,209 @@ class Perwalian_model extends CI_Model {
     }
 
     /**
-     * Update nilai per mata kuliah (Tahap 2: A, AB, B, BC, C = Lulus; D, E = Tidak Lulus)
+     * Update nilai per mata kuliah (Tahap 2):
+     * A, AB, B, BC, C -> Otomatis Lulus (Hijau)
+     * D, E -> Otomatis Tidak Lulus (Merah)
+     * Juga memperbarui status_tahap2 parent menjadi 'Proses Penilaian' jika belum dinilai.
      */
     public function update_nilai_detail($id_detail, $nilai_huruf, $status_kelulusan = null) {
-        $nilai_huruf = strtoupper(trim($nilai_huruf));
+        $id_detail = (int)$id_detail;
+        $nilai_huruf = strtoupper(trim((string)$nilai_huruf));
 
-        if ($status_kelulusan === null) {
-            // Logika default: A, AB, B, BC, C -> Lulus; D, E -> Tidak Lulus
+        if ($status_kelulusan === null || $status_kelulusan === '') {
             if (in_array($nilai_huruf, ['A', 'AB', 'B', 'BC', 'C'], true)) {
                 $status_kelulusan = 'Lulus';
             } elseif (in_array($nilai_huruf, ['D', 'E'], true)) {
                 $status_kelulusan = 'Tidak Lulus';
+            } elseif (empty($nilai_huruf)) {
+                $status_kelulusan = 'Belum Ditentukan';
             } else {
                 $status_kelulusan = 'Belum Ditentukan';
             }
         }
 
-        return $this->db->where('id', (int)$id_detail)->update('perwalian_detail', [
+        $now = date('Y-m-d H:i:s');
+        $this->db->where('id', $id_detail)->update('perwalian_detail', [
+            'nilai_huruf'      => !empty($nilai_huruf) ? $nilai_huruf : null,
+            'status_kelulusan' => $status_kelulusan,
+            'updated_at'       => $now,
+        ]);
+
+        // Cek parent perwalian dan update status_tahap2 jika masih 'Belum Dinilai'
+        $detail = $this->db->get_where('perwalian_detail', ['id' => $id_detail])->row_array();
+        if ($detail) {
+            $p = $this->get_perwalian_by_id($detail['id_perwalian']);
+            if ($p && $p['status_tahap2'] === 'Belum Dinilai') {
+                $this->db->where('id_perwalian', $detail['id_perwalian'])->update('perwalian', [
+                    'status_tahap2' => 'Proses Penilaian',
+                    'updated_at'    => $now,
+                ]);
+            }
+        }
+
+        return [
+            'status'           => true,
             'nilai_huruf'      => $nilai_huruf,
             'status_kelulusan' => $status_kelulusan,
-            'updated_at'       => date('Y-m-d H:i:s'),
+        ];
+    }
+
+    /**
+     * Submit Tahap 2: Selesaikan & Kunci Evaluasi Nilai Perwalian
+     * Menyalin status_tahap = 'sudah_diambil' untuk MK yang telah dievaluasi
+     */
+    public function submit_perwalian_tahap2($id_perwalian) {
+        $id_perwalian = (int)$id_perwalian;
+        $now = date('Y-m-d H:i:s');
+
+        // Pastikan ada MK yang dinilai
+        $details = $this->db->get_where('perwalian_detail', [
+            'id_perwalian' => $id_perwalian,
+            'status_tahap' => 'akan_diambil',
+        ])->result_array();
+
+        if (empty($details)) {
+            return ['status' => false, 'message' => 'Tidak ada mata kuliah untuk diselesaikan.'];
+        }
+
+        // Tandai status perwalian selesai
+        $this->db->where('id_perwalian', $id_perwalian)->update('perwalian', [
+            'status_tahap2' => 'Selesai',
+            'updated_at'    => $now,
         ]);
+
+        return ['status' => true, 'message' => 'Evaluasi perwalian Tahap 2 berhasil diselesaikan dan dikunci.'];
+    }
+
+    /**
+     * Import Nilai Bulk dari Excel oleh Dosen Wali
+     * Baris bisa berupa: [nim, kode_mk, nilai_huruf] atau [kode_mk, nilai_huruf] jika id_perwalian sudah ditentukan
+     */
+    public function import_nilai_bulk_dosen($dosen_identifiers, $rows, $specific_id_perwalian = null) {
+        if (empty($rows)) {
+            return ['status' => false, 'message' => 'Data baris nilai kosong.'];
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $updated = 0;
+        $skipped = 0;
+
+        foreach ($rows as $r) {
+            $kode_mk = strtoupper(trim((string)($r['kode_mk'] ?? ($r['kode'] ?? ($r['Kode MK'] ?? '')))));
+            $nilai   = strtoupper(trim((string)($r['nilai_huruf'] ?? ($r['nilai'] ?? ($r['Nilai'] ?? ($r['Nilai Huruf'] ?? ''))))));
+            $nim     = trim((string)($r['nim'] ?? ($r['NIM'] ?? '')));
+
+            if (empty($kode_mk) || empty($nilai)) {
+                $skipped++;
+                continue;
+            }
+
+            // Hitung status kelulusan otomatis
+            if (in_array($nilai, ['A', 'AB', 'B', 'BC', 'C'], true)) {
+                $status_lulus = 'Lulus';
+            } elseif (in_array($nilai, ['D', 'E'], true)) {
+                $status_lulus = 'Tidak Lulus';
+            } else {
+                $status_lulus = 'Belum Ditentukan';
+            }
+
+            if (!empty($specific_id_perwalian)) {
+                // Mode single mahasiswa: langsung update detail
+                $det = $this->db->get_where('perwalian_detail', [
+                    'id_perwalian' => (int)$specific_id_perwalian,
+                    'kode_mk'      => $kode_mk,
+                    'status_tahap' => 'akan_diambil',
+                ])->row_array();
+
+                if ($det) {
+                    $this->db->where('id', $det['id'])->update('perwalian_detail', [
+                        'nilai_huruf'      => $nilai,
+                        'status_kelulusan' => $status_lulus,
+                        'updated_at'       => $now,
+                    ]);
+                    $updated++;
+                } else {
+                    $skipped++;
+                }
+            } elseif (!empty($nim)) {
+                // Mode kolektif bimbingan: cari perwalian aktif mahasiswa tersebut
+                $p = $this->db->get_where('perwalian', ['nim' => $nim])->order_by('id_perwalian', 'DESC')->row_array();
+                if ($p) {
+                    $det = $this->db->get_where('perwalian_detail', [
+                        'id_perwalian' => $p['id_perwalian'],
+                        'kode_mk'      => $kode_mk,
+                        'status_tahap' => 'akan_diambil',
+                    ])->row_array();
+
+                    if ($det) {
+                        $this->db->where('id', $det['id'])->update('perwalian_detail', [
+                            'nilai_huruf'      => $nilai,
+                            'status_kelulusan' => $status_lulus,
+                            'updated_at'       => $now,
+                        ]);
+
+                        if ($p['status_tahap2'] === 'Belum Dinilai') {
+                            $this->db->where('id_perwalian', $p['id_perwalian'])->update('perwalian', [
+                                'status_tahap2' => 'Proses Penilaian',
+                                'updated_at'    => $now,
+                            ]);
+                        }
+                        $updated++;
+                    } else {
+                        $skipped++;
+                    }
+                } else {
+                    $skipped++;
+                }
+            } else {
+                $skipped++;
+            }
+        }
+
+        return [
+            'status'  => true,
+            'updated' => $updated,
+            'skipped' => $skipped,
+            'message' => "Berhasil memperbarui {$updated} nilai mata kuliah ({$skipped} baris dilewati)."
+        ];
+    }
+
+    /**
+     * Dapatkan opsi filter dinamis dari database (Tahun Ajaran, Semester, Prodi)
+     * Tidak ada yang di-hardcode!
+     */
+    public function get_filter_options() {
+        // 1. Tahun Ajaran
+        $thnList = $this->db->distinct()->select('tahun_ajaran')->from('perwalian')->order_by('tahun_ajaran', 'DESC')->get()->result_array();
+        $tahun_ajaran = array_filter(array_column($thnList, 'tahun_ajaran'));
+        if (empty($tahun_ajaran)) {
+            $tahun_ajaran = ['2024/2025', '2023/2024'];
+        }
+
+        // 2. Semester
+        $smtList = $this->db->distinct()->select('semester')->from('perwalian')->order_by('semester', 'ASC')->get()->result_array();
+        $semester = array_filter(array_column($smtList, 'semester'));
+        if (empty($semester)) {
+            $semester = ['Ganjil', 'Genap'];
+        }
+
+        // 3. Program Studi (dari master_prodi)
+        $prodi = [];
+        if ($this->db->table_exists('master_prodi')) {
+            $pList = $this->db->select('kode_prodi, nama_prodi')->from('master_prodi')->where('is_active', 1)->order_by('urutan', 'ASC')->get()->result_array();
+            foreach ($pList as $pl) {
+                $prodi[] = $pl['nama_prodi'];
+            }
+        }
+        if (empty($prodi)) {
+            $pDist = $this->db->distinct()->select('prodi')->from('user')->where('prodi IS NOT NULL', null, false)->where('prodi !=', '')->get()->result_array();
+            $prodi = array_column($pDist, 'prodi');
+        }
+
+        return [
+            'tahun_ajaran' => array_values(array_unique($tahun_ajaran)),
+            'semester'     => array_values(array_unique($semester)),
+            'prodi'        => array_values(array_unique($prodi)),
+        ];
     }
 }
