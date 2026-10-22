@@ -168,19 +168,19 @@
 
                 <div class="p-4 rounded-xl bg-orange-50/50 border border-orange-200/80 space-y-1">
                     <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Program Studi</span>
-                    <p class="text-sm font-extrabold text-slate-900"><?= htmlspecialchars($mahasiswa['prodi'] ?? 'S1 Desain Komunikasi Visual'); ?></p>
+                    <p class="text-sm font-extrabold text-slate-900"><?= htmlspecialchars(!empty($mahasiswa['prodi']) ? $mahasiswa['prodi'] : '-'); ?></p>
                 </div>
 
                 <div class="p-4 rounded-xl bg-orange-50/50 border border-orange-200/80 space-y-1">
                     <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Peminatan / Konsentrasi</span>
-                    <p class="text-sm font-extrabold text-slate-900"><?= htmlspecialchars($pendaftaran['konsentrasi_dkv'] ?? ($mahasiswa['konsentrasi_dkv'] ?? 'Desain Grafis')); ?></p>
+                    <p class="text-sm font-extrabold text-slate-900"><?= htmlspecialchars(!empty($pendaftaran['konsentrasi_dkv']) ? $pendaftaran['konsentrasi_dkv'] : (!empty($mahasiswa['konsentrasi_dkv']) ? $mahasiswa['konsentrasi_dkv'] : (!empty($mahasiswa['prodi']) ? $mahasiswa['prodi'] : '-'))); ?></p>
                 </div>
 
                 <div class="p-4 rounded-xl bg-orange-50/50 border border-orange-200/80 space-y-1 sm:col-span-2">
                     <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Alamat Domisili &amp; Lokasi</span>
                     <p class="text-xs font-semibold text-slate-800 flex items-start gap-2 mt-0.5">
                         <i class="bi bi-geo-alt-fill text-orange-500 text-sm shrink-0"></i>
-                        <span><?= htmlspecialchars($mahasiswa['alamat'] ?? 'Jl. Telekomunikasi No. 1, Terusan Buah Batu, Bandung, Jawa Barat'); ?></span>
+                        <span><?= htmlspecialchars(!empty($mahasiswa['alamat']) ? $mahasiswa['alamat'] : '-'); ?></span>
                     </p>
                 </div>
             </div>

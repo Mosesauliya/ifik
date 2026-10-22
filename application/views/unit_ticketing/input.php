@@ -216,12 +216,9 @@ $panelTitle     = $panelTitle     ?? 'Formulir Pelaporan Kendala';
                         <select id="sub_prodi" name="sub_prodi"
                                 class="w-full pl-11 pr-10 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 text-sm font-semibold text-slate-800 transition-all outline-hidden appearance-none cursor-pointer">
                             <option value="" disabled selected>-- Pilih Jurusan / Program Studi --</option>
-                            <option value="Desain Komunikasi Visual (DKV)">Desain Komunikasi Visual (DKV)</option>
-                            <option value="Desain Interior (DI)">Desain Interior (DI)</option>
-                            <option value="Desain Produk (DP)">Desain Produk (DP)</option>
-                            <option value="Kriya Tekstil dan Fashion (KTF)">Kriya Tekstil dan Fashion (KTF)</option>
-                            <option value="Seni Rupa (SR)">Seni Rupa (SR)</option>
-                            <option value="Film dan Animasi">Film dan Animasi</option>
+                            <?php foreach (fik_program_studi() as $prodiOpt): ?>
+                                <option value="<?= htmlspecialchars($prodiOpt); ?>"><?= htmlspecialchars($prodiOpt); ?></option>
+                            <?php endforeach; ?>
                         </select>
                         <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
                             <i class="bi bi-chevron-down text-xs"></i>

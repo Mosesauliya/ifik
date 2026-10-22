@@ -37,7 +37,12 @@ class DosenHelp extends CI_Controller {
      * Halaman utama Bantuan & Live Chat untuk Dosen
      */
     public function index() {
-        $user_id = $this->session->userdata('user_id') ?: 3;
+        $profile = $this->_get_current_user_profile();
+        if (!$profile['id']) {
+            redirect('login');
+            return;
+        }
+        $user_id = $profile['id'];
 
         $data['title']         = 'Bantuan & Live Chat - Portal Dosen';
         $data['stats']         = $this->Help_chat_model->get_stats(null, $user_id);
@@ -57,10 +62,16 @@ class DosenHelp extends CI_Controller {
             $target_role = 'laboran';
         }
 
-        $userId    = $this->session->userdata('user_id') ?: 3;
-        $userNama  = $this->session->userdata('name') ?: 'Dosen IFIK';
-        $userEmail = $this->session->userdata('email') ?: 'dosen@telkomuniversity.ac.id';
-        $userNip   = $this->session->userdata('nip') ?: ($this->session->userdata('username') ?: '-');
+        $profile = $this->_get_current_user_profile();
+        if (!$profile['id']) {
+            echo json_encode(['status' => 'error', 'message' => 'Sesi login telah berakhir.']);
+            exit;
+        }
+
+        $userId    = $profile['id'];
+        $userNama  = $profile['nama'];
+        $userEmail = $profile['email'];
+        $userNip   = $profile['nip'];
         session_write_close();
 
         $conv = $this->Help_chat_model->get_or_create_channel(
@@ -134,10 +145,16 @@ class DosenHelp extends CI_Controller {
             exit;
         }
 
-        $userId    = $this->session->userdata('user_id') ?: 3;
-        $userNama  = $this->session->userdata('name') ?: 'Dosen IFIK';
-        $userEmail = $this->session->userdata('email') ?: 'dosen@telkomuniversity.ac.id';
-        $userNip   = $this->session->userdata('nip') ?: ($this->session->userdata('username') ?: '-');
+        $profile = $this->_get_current_user_profile();
+        if (!$profile['id']) {
+            echo json_encode(['status' => 'error', 'message' => 'Sesi login telah berakhir.']);
+            exit;
+        }
+
+        $userId    = $profile['id'];
+        $userNama  = $profile['nama'];
+        $userEmail = $profile['email'];
+        $userNip   = $profile['nip'];
 
         $conv_id = $this->Help_chat_model->create_conversation([
             'user_id'      => $userId,
@@ -183,8 +200,14 @@ class DosenHelp extends CI_Controller {
             exit;
         }
 
-        $userId   = $this->session->userdata('user_id') ?: 3;
-        $userNama = $this->session->userdata('name') ?: 'Dosen IFIK';
+        $profile = $this->_get_current_user_profile();
+        if (!$profile['id']) {
+            echo json_encode(['status' => 'error', 'message' => 'Sesi login telah berakhir.']);
+            exit;
+        }
+
+        $userId   = $profile['id'];
+        $userNama = $profile['nama'];
 
         $msgId = $this->Help_chat_model->send_message(
             $conversation_id,
@@ -228,8 +251,14 @@ class DosenHelp extends CI_Controller {
             exit;
         }
 
-        $userId   = $this->session->userdata('user_id') ?: 3;
-        $userNama = $this->session->userdata('name') ?: 'Dosen IFIK';
+        $profile = $this->_get_current_user_profile();
+        if (!$profile['id']) {
+            echo json_encode(['status' => 'error', 'message' => 'Sesi login telah berakhir.']);
+            exit;
+        }
+
+        $userId   = $profile['id'];
+        $userNama = $profile['nama'];
 
         $updated = $this->Help_chat_model->update_status($conversation_id, $status);
 
@@ -314,5 +343,31 @@ class DosenHelp extends CI_Controller {
         elseif ($diff < 86400)   return floor($diff / 3600) . ' jam lalu';
         elseif ($diff < 172800)  return 'Kemarin, ' . date('H:i', $timestamp);
         else                     return date('d M Y', $timestamp);
+    }
+
+    /**
+     * Dapatkan profil dosen yang sedang login secara dinamis
+     */
+    private function _get_current_user_profile() {
+        $userId = $this->session->userdata('user_id') ?: $this->session->userdata('id');
+        $nama   = $this->session->userdata('name');
+        $email  = $this->session->userdata('email');
+        $nip    = $this->session->userdata('nip') ?: ($this->session->userdata('nidn_nim') ?: $this->session->userdata('username'));
+
+        if ($userId && (!$nama || !$email || !$nip)) {
+            $user = $this->db->get_where('user', ['id' => $userId])->row();
+            if ($user) {
+                $nama  = $nama ?: $user->name;
+                $email = $email ?: $user->email;
+                $nip   = $nip ?: (!empty($user->nip) ? $user->nip : (!empty($user->nidn_nim) ? $user->nidn_nim : $user->username));
+            }
+        }
+
+        return [
+            'id'    => $userId ? (int)$userId : null,
+            'nama'  => $nama ?: 'Dosen',
+            'email' => $email ?: '',
+            'nip'   => $nip ?: '-'
+        ];
     }
 }

@@ -688,8 +688,13 @@ class LaboranTicketing extends CI_Controller {
         }
 
         $roleId = (int)$this->session->userdata('role_id');
-        // Jika sedang login sebagai mahasiswa tapi mengakses menu konfigurasi laboran, auto-switch ke laboran
-        if ($roleId === 4) {
+        // Izin akses penuh untuk Super Admin (22), Admin System (1), dan Laboran (21)
+        if (in_array($roleId, [1, 21, 22], true)) {
+            return;
+        }
+
+        // Jika sedang login sebagai mahasiswa tapi mengakses menu konfigurasi laboran saat development
+        if ($roleId === 4 && ENVIRONMENT !== 'production') {
             $this->session->set_userdata([
                 'user_id'          => 'laboran-01',
                 'role_id'          => 21,
@@ -702,6 +707,24 @@ class LaboranTicketing extends CI_Controller {
                 'logged_in'        => TRUE
             ]);
             return;
+        }
+
+        $this->session->set_flashdata('error', 'Akses ditolak! Halaman ini khusus untuk Administrator dan Laboran.');
+        redirect('dashboard');
+        exit;
+    }
+
+    private function _redirect_fields() {
+        $referer = $this->input->server('HTTP_REFERER');
+        if (!empty($referer) && (strpos($referer, 'ticketing_fields') !== false || strpos($referer, 'ticketing/fields') !== false)) {
+            redirect($referer);
+            return;
+        }
+        $roleId = (int)$this->session->userdata('role_id');
+        if ($roleId === 22) {
+            redirect('superadmin/ticketing_fields');
+        } else {
+            redirect('laboran/ticketing/fields');
         }
     }
 
@@ -995,7 +1018,7 @@ class LaboranTicketing extends CI_Controller {
 
         if (!$this->db->table_exists('ticketing_units')) {
             $this->session->set_flashdata('error', 'Konfigurasi unit saat ini menggunakan standar sistem bawaan kode. Tabel database ticketing_units dinonaktifkan.');
-            redirect('laboran/ticketing/fields');
+            $this->_redirect_fields();
             return;
         }
 
@@ -1007,7 +1030,7 @@ class LaboranTicketing extends CI_Controller {
 
         if (empty($nama_unit)) {
             $this->session->set_flashdata('error', 'Nama Unit Tujuan wajib diisi.');
-            redirect('laboran/ticketing/fields');
+            $this->_redirect_fields();
             return;
         }
 
@@ -1027,7 +1050,7 @@ class LaboranTicketing extends CI_Controller {
             $exists = $this->db->get_where('ticketing_units', ['nama_unit' => $nama_unit])->row();
             if ($exists) {
                 $this->session->set_flashdata('error', "Unit Tujuan \"{$nama_unit}\" sudah ada.");
-                redirect('laboran/ticketing/fields');
+                $this->_redirect_fields();
                 return;
             }
 
@@ -1082,7 +1105,7 @@ class LaboranTicketing extends CI_Controller {
             }
         }
 
-        redirect('laboran/ticketing/fields');
+        $this->_redirect_fields();
     }
 
     /**
@@ -1093,14 +1116,14 @@ class LaboranTicketing extends CI_Controller {
 
         if (!$this->db->table_exists('ticketing_units')) {
             $this->session->set_flashdata('error', 'Konfigurasi unit saat ini menggunakan standar sistem.');
-            redirect('laboran/ticketing/fields');
+            $this->_redirect_fields();
             return;
         }
 
         $unit = $this->db->get_where('ticketing_units', ['id' => (int)$id])->row();
         if (!$unit) {
             $this->session->set_flashdata('error', 'Unit tidak ditemukan.');
-            redirect('laboran/ticketing/fields');
+            $this->_redirect_fields();
             return;
         }
 
@@ -1112,7 +1135,7 @@ class LaboranTicketing extends CI_Controller {
 
         $stText = ($newStatus == 1) ? 'diaktifkan' : 'dinonaktifkan';
         $this->session->set_flashdata('success', "Unit <b>\"{$unit->nama_unit}\"</b> berhasil {$stText}!");
-        redirect('laboran/ticketing/fields');
+        $this->_redirect_fields();
     }
 
     /**
@@ -1123,7 +1146,7 @@ class LaboranTicketing extends CI_Controller {
 
         if (!$this->db->table_exists('ticketing_units')) {
             $this->session->set_flashdata('error', 'Konfigurasi unit saat ini menggunakan standar sistem.');
-            redirect('laboran/ticketing/fields');
+            $this->_redirect_fields();
             return;
         }
 
@@ -1135,7 +1158,7 @@ class LaboranTicketing extends CI_Controller {
             $this->session->set_flashdata('error', 'Unit tidak ditemukan.');
         }
 
-        redirect('laboran/ticketing/fields');
+        $this->_redirect_fields();
     }
 
     /**
@@ -1147,7 +1170,7 @@ class LaboranTicketing extends CI_Controller {
 
         if (!$this->db->table_exists('ticketing_kategori')) {
             $this->session->set_flashdata('error', 'Konfigurasi kategori saat ini menggunakan standar sistem bawaan kode.');
-            redirect('laboran/ticketing/fields');
+            $this->_redirect_fields();
             return;
         }
 
@@ -1161,7 +1184,7 @@ class LaboranTicketing extends CI_Controller {
 
         if ($unit_id <= 0) {
             $this->session->set_flashdata('error', 'Pilih Unit Induk Tujuan.');
-            redirect('laboran/ticketing/fields');
+            $this->_redirect_fields();
             return;
         }
 
@@ -1171,7 +1194,7 @@ class LaboranTicketing extends CI_Controller {
             // Edit satu kategori
             if (empty($nama_kategori)) {
                 $this->session->set_flashdata('error', 'Nama Kategori Kendala wajib diisi.');
-                redirect('laboran/ticketing/fields');
+                $this->_redirect_fields();
                 return;
             }
 
@@ -1201,7 +1224,7 @@ class LaboranTicketing extends CI_Controller {
 
             if (empty($itemsToAdd)) {
                 $this->session->set_flashdata('error', 'Masukkan setidaknya satu nama Kategori Kendala.');
-                redirect('laboran/ticketing/fields');
+                $this->_redirect_fields();
                 return;
             }
 
@@ -1228,7 +1251,7 @@ class LaboranTicketing extends CI_Controller {
             }
         }
 
-        redirect('laboran/ticketing/fields');
+        $this->_redirect_fields();
     }
 
     /**
@@ -1239,14 +1262,14 @@ class LaboranTicketing extends CI_Controller {
 
         if (!$this->db->table_exists('ticketing_kategori')) {
             $this->session->set_flashdata('error', 'Konfigurasi kategori saat ini menggunakan standar sistem bawaan kode.');
-            redirect('laboran/ticketing/fields');
+            $this->_redirect_fields();
             return;
         }
 
         $kat = $this->db->get_where('ticketing_kategori', ['id' => (int)$id])->row();
         if (!$kat) {
             $this->session->set_flashdata('error', 'Kategori tidak ditemukan.');
-            redirect('laboran/ticketing/fields');
+            $this->_redirect_fields();
             return;
         }
 
@@ -1258,7 +1281,7 @@ class LaboranTicketing extends CI_Controller {
 
         $stText = ($newStatus == 1) ? 'diaktifkan' : 'dinonaktifkan';
         $this->session->set_flashdata('success', "Kategori <b>\"{$kat->nama_kategori}\"</b> berhasil {$stText}!");
-        redirect('laboran/ticketing/fields');
+        $this->_redirect_fields();
     }
 
     /**
@@ -1269,7 +1292,7 @@ class LaboranTicketing extends CI_Controller {
 
         if (!$this->db->table_exists('ticketing_kategori')) {
             $this->session->set_flashdata('error', 'Konfigurasi kategori saat ini menggunakan standar sistem bawaan kode.');
-            redirect('laboran/ticketing/fields');
+            $this->_redirect_fields();
             return;
         }
 
@@ -1280,16 +1303,16 @@ class LaboranTicketing extends CI_Controller {
             // Proteksi: Kategori 'Lain-lain' wajib ada dan tidak boleh dihapus
             if (stripos($kat->nama_kategori, 'Lain-lain') === 0 || stripos($kat->nama_kategori, 'Lainnya') === 0) {
                 $this->session->set_flashdata('error', "Kategori <b>\"{$kat->nama_kategori}\"</b> adalah kategori wajib sistem dan tidak dapat dihapus! Anda dapat menggunakan fitur <b>Nonaktif</b> jika tidak ingin menampilkannya di formulir pelapor.");
-                redirect('laboran/ticketing/fields');
+                $this->_redirect_fields();
                 return;
             }
 
             $this->db->where('id', $kat->id)->delete('ticketing_kategori');
             $this->session->set_flashdata('success', "Kategori <b>\"{$kat->nama_kategori}\"</b> berhasil dihapus dari daftar pilihan!");
-            redirect('laboran/ticketing/fields');
+            $this->_redirect_fields();
         } else {
             $this->session->set_flashdata('error', 'Kategori tidak ditemukan.');
-            redirect('laboran/ticketing/fields');
+            $this->_redirect_fields();
         }
     }
 
@@ -1310,7 +1333,7 @@ class LaboranTicketing extends CI_Controller {
 
         if (empty($field_label)) {
             $this->session->set_flashdata('error', 'Nama Label Field wajib diisi.');
-            redirect('laboran/ticketing/fields');
+            $this->_redirect_fields();
             return;
         }
 
@@ -1366,7 +1389,7 @@ class LaboranTicketing extends CI_Controller {
             $this->session->set_flashdata('success', "Field inputan baru <b>\"{$field_label}\"</b> berhasil ditambahkan ke formulir tiket!");
         }
 
-        redirect('laboran/ticketing/fields');
+        $this->_redirect_fields();
     }
 
     /**
@@ -1378,7 +1401,7 @@ class LaboranTicketing extends CI_Controller {
         $field = $this->db->get_where('laboran_ticketing_fields', ['id' => (int)$id])->row();
         if (!$field) {
             $this->session->set_flashdata('error', 'Field tidak ditemukan.');
-            redirect('laboran/ticketing/fields');
+            $this->_redirect_fields();
             return;
         }
 
@@ -1390,7 +1413,7 @@ class LaboranTicketing extends CI_Controller {
 
         $statusText = ($newStatus == 1) ? 'diaktifkan' : 'dinonaktifkan';
         $this->session->set_flashdata('success', "Field <b>\"{$field->field_label}\"</b> berhasil {$statusText}!");
-        redirect('laboran/ticketing/fields');
+        $this->_redirect_fields();
     }
 
     /**
@@ -1407,6 +1430,6 @@ class LaboranTicketing extends CI_Controller {
             $this->session->set_flashdata('error', 'Field tidak ditemukan.');
         }
 
-        redirect('laboran/ticketing/fields');
+        $this->_redirect_fields();
     }
 }
