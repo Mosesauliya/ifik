@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
       title: isDosen ? "4. Program Studi & KK" : "4. Akademik & Dosen",
       date: "Langkah 4 dari 4",
       content: isDosen
-        ? "Langkah 4: Pilih Program Studi / Homebase dan Kelompok Keahlian (KK)."
+        ? "Langkah 4: Pilih Program Studi dan Kelompok Keahlian (KK)."
         : "Langkah 4: Pilih konsentrasi peminatan dan dosen wali akademik pembimbing.",
       category: "Akademik",
       status: "pending",
@@ -576,7 +576,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const availableDosen = getDosenByJurusan(curJurusan);
       const selectedDosen = availableDosen.find(d => d.nip === formDataState.dosen_wali) || availableDosen[0] || daftarDosen[0];
       const initialDosenName = selectedDosen ? selectedDosen.nama : '';
-      const konsentrasiLabel = isDosen ? 'Program Studi / Homebase *' : 'Konsentrasi / Program Studi *';
+      const konsentrasiLabel = 'Program Studi *';
 
       // Build Dosen Wali Autocomplete block ONLY for Mahasiswa / KK & Info Box for Dosen
       const roleSpecificBlock = isDosen ? `
@@ -647,30 +647,15 @@ document.addEventListener('DOMContentLoaded', () => {
                   <svg class="orb-select-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                 </button>
                 <div class="orb-select-dropdown">
-                  <div class="orb-select-option ${formDataState.konsentrasi === 'Desain Komunikasi Visual' ? 'selected' : ''}" data-val="Desain Komunikasi Visual">
-                    <span>Desain Komunikasi Visual</span>
-                    <svg class="orb-opt-check" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                  </div>
-                  <div class="orb-select-option ${formDataState.konsentrasi === 'Informatika' ? 'selected' : ''}" data-val="Informatika">
-                    <span>Informatika</span>
-                    <svg class="orb-opt-check" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                  </div>
-                  <div class="orb-select-option ${formDataState.konsentrasi === 'Rekayasa Perangkat Lunak' ? 'selected' : ''}" data-val="Rekayasa Perangkat Lunak">
-                    <span>Rekayasa Perangkat Lunak</span>
-                    <svg class="orb-opt-check" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                  </div>
-                  <div class="orb-select-option ${formDataState.konsentrasi === 'Desain Produk' ? 'selected' : ''}" data-val="Desain Produk">
-                    <span>Desain Produk</span>
-                    <svg class="orb-opt-check" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                  </div>
-                  <div class="orb-select-option ${formDataState.konsentrasi === 'Desain Interior' ? 'selected' : ''}" data-val="Desain Interior">
-                    <span>Desain Interior</span>
-                    <svg class="orb-opt-check" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                  </div>
-                  <div class="orb-select-option ${formDataState.konsentrasi === 'Kriya Tekstil & Fashion' ? 'selected' : ''}" data-val="Kriya Tekstil & Fashion">
-                    <span>Kriya Tekstil & Fashion</span>
-                    <svg class="orb-opt-check" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                  </div>
+                  ${(initData.konsentrasi_list && initData.konsentrasi_list.length > 0 ? initData.konsentrasi_list : ['Desain Komunikasi Visual', 'Informatika', 'Desain Interior', 'Desain Produk']).map(k => {
+                    const isSel = (formDataState.konsentrasi === k);
+                    return `
+                      <div class="orb-select-option ${isSel ? 'selected' : ''}" data-val="${k}">
+                        <span>${k}</span>
+                        <svg class="orb-opt-check" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                      </div>
+                    `;
+                  }).join('')}
                 </div>
               </div>
             </div>
@@ -909,10 +894,55 @@ document.addEventListener('DOMContentLoaded', () => {
       setupStrictNameInput(namaDepanInput, badgeDepan);
       setupStrictNameInput(namaBelakangInput, badgeBelakang);
 
-      // Auto format Kode Dosen to uppercase alphanumeric
+      // Auto format Kode Dosen & Real-time Keunikan Kode Dosen
+      const usedKodeDosenMap = initData.used_kode_dosen || {};
+      const badgeKodeDosen = card.querySelector('#orbBadgeKodeDosen');
+
+      function validateKodeDosenUnique(code) {
+        if (!code) return { valid: false, message: 'Kode Dosen inisial wajib diisi!' };
+        const cleanCode = code.toUpperCase().trim();
+        if (usedKodeDosenMap[cleanCode]) {
+          return {
+            valid: false,
+            message: `Kode dosen '${cleanCode}' sudah digunakan oleh dosen lain (${usedKodeDosenMap[cleanCode]})!`
+          };
+        }
+        return { valid: true };
+      }
+
       if (kodeDosenInput) {
         kodeDosenInput.addEventListener('input', () => {
           kodeDosenInput.value = kodeDosenInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+          const val = kodeDosenInput.value.trim();
+          if (!val) {
+            if (badgeKodeDosen) {
+              badgeKodeDosen.textContent = 'Inisial Dosen';
+              badgeKodeDosen.className = 'text-[10px] text-orange-600 font-mono font-semibold';
+            }
+            kodeDosenInput.classList.remove('is-invalid');
+            return;
+          }
+          const check = validateKodeDosenUnique(val);
+          if (!check.valid) {
+            kodeDosenInput.classList.add('is-invalid');
+            if (badgeKodeDosen) {
+              badgeKodeDosen.textContent = 'Sudah Digunakan!';
+              badgeKodeDosen.className = 'text-[10px] text-red-600 font-mono font-bold animate-pulse';
+            }
+            if (errElem) {
+              errElem.textContent = check.message;
+              errElem.classList.remove('hidden');
+            }
+          } else {
+            kodeDosenInput.classList.remove('is-invalid');
+            if (badgeKodeDosen) {
+              badgeKodeDosen.textContent = '✓ Tersedia';
+              badgeKodeDosen.className = 'text-[10px] text-emerald-600 font-mono font-bold';
+            }
+            if (errElem && errElem.textContent.includes('Kode dosen')) {
+              errElem.classList.add('hidden');
+            }
+          }
         });
       }
 
@@ -961,9 +991,17 @@ document.addEventListener('DOMContentLoaded', () => {
           markFieldInvalid(namaBelakangInput, 'Nama Belakang wajib diisi!');
           return;
         }
-        if (isDosen && kodeDosenInput && !kodeDosenInput.value.trim()) {
-          markFieldInvalid(kodeDosenInput, 'Kode Dosen inisial wajib diisi!');
-          return;
+        if (isDosen && kodeDosenInput) {
+          const codeVal = kodeDosenInput.value.trim();
+          if (!codeVal) {
+            markFieldInvalid(kodeDosenInput, 'Kode Dosen inisial wajib diisi!');
+            return;
+          }
+          const check = validateKodeDosenUnique(codeVal);
+          if (!check.valid) {
+            markFieldInvalid(kodeDosenInput, check.message);
+            return;
+          }
         }
         if (noHpInput && !noHpInput.value.trim()) {
           markFieldInvalid(noHpInput, 'Nomor Handphone / WhatsApp wajib diisi!');

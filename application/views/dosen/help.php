@@ -249,11 +249,92 @@
             position: absolute;
             bottom: -2px;
             right: -2px;
-            width: 10px;
-            height: 10px;
+            width: 11px;
+            height: 11px;
             border-radius: 50%;
             background: #22c55e;
             border: 2px solid #fff;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.06);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .online-dot.online {
+            background: #22c55e;
+            box-shadow: 0 0 0 2px #fff, 0 0 8px rgba(34, 197, 94, 0.7);
+        }
+
+        .online-dot.offline {
+            background: #94a3b8;
+            box-shadow: 0 0 0 2px #fff;
+        }
+
+        /* Status pill inside contact card */
+        .channel-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 1px 7px;
+            border-radius: 10px;
+            transition: all 0.25s ease;
+        }
+        .channel-status-pill.online {
+            color: #15803d;
+            background: #dcfce7;
+            border: 1px solid #bbf7d0;
+        }
+        .channel-status-pill.offline {
+            color: #64748b;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+        }
+        .channel-status-pill .pulse-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        .channel-status-pill.online .pulse-dot {
+            animation: pulse-dot-anim 1.8s infinite;
+        }
+        @keyframes pulse-dot-anim {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.4); opacity: 0.6; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Header presence status */
+        .header-presence-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 9px;
+            border-radius: 12px;
+            margin-left: 8px;
+            vertical-align: middle;
+            transition: all 0.3s ease;
+        }
+        .header-presence-badge.online {
+            color: #15803d;
+            background: #dcfce7;
+            border: 1px solid #bbf7d0;
+        }
+        .header-presence-badge.offline {
+            color: #64748b;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+        }
+        .header-presence-badge .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        .header-presence-badge.online .badge-dot {
+            animation: pulse-dot-anim 1.8s infinite;
         }
 
         .contact-info {
@@ -1061,12 +1142,15 @@
                         <div class="contact-channel-card laboran active" id="channel_laboran" onclick="switchChannel('laboran')">
                             <div class="contact-avatar">
                                 🧪
-                                <div class="online-dot"></div>
+                                <div class="online-dot online" id="dot_laboran"></div>
                             </div>
                             <div class="contact-info">
                                 <div class="contact-name">
                                     <span>Petugas Laboran</span>
-                                    <span class="contact-unread-badge" id="unread_laboran" style="display: none;">0</span>
+                                    <div style="display:flex; align-items:center; gap:6px;">
+                                        <span class="channel-status-pill online" id="pill_laboran"><span class="pulse-dot"></span> Online</span>
+                                        <span class="contact-unread-badge" id="unread_laboran" style="display: none;">0</span>
+                                    </div>
                                 </div>
                                 <div class="contact-desc">Fasilitas Lab, Alat, Jaringan & Ruang Uji</div>
                             </div>
@@ -1076,12 +1160,15 @@
                         <div class="contact-channel-card kaur" id="channel_kaur" onclick="switchChannel('kaur')">
                             <div class="contact-avatar">
                                 🏛️
-                                <div class="online-dot"></div>
+                                <div class="online-dot online" id="dot_kaur"></div>
                             </div>
                             <div class="contact-info">
                                 <div class="contact-name">
                                     <span>Ka. Ur Laboratorium</span>
-                                    <span class="contact-unread-badge" id="unread_kaur" style="display: none;">0</span>
+                                    <div style="display:flex; align-items:center; gap:6px;">
+                                        <span class="channel-status-pill online" id="pill_kaur"><span class="pulse-dot"></span> Online</span>
+                                        <span class="contact-unread-badge" id="unread_kaur" style="display: none;">0</span>
+                                    </div>
                                 </div>
                                 <div class="contact-desc">Kebijakan Lab, Validasi & Izin Khusus</div>
                             </div>
@@ -1091,12 +1178,15 @@
                         <div class="contact-channel-card admin_layanan" id="channel_admin_layanan" onclick="switchChannel('admin_layanan')">
                             <div class="contact-avatar">
                                 📋
-                                <div class="online-dot"></div>
+                                <div class="online-dot online" id="dot_admin_layanan"></div>
                             </div>
                             <div class="contact-info">
                                 <div class="contact-name">
                                     <span>Admin Layanan (LAA)</span>
-                                    <span class="contact-unread-badge" id="unread_admin_layanan" style="display: none;">0</span>
+                                    <div style="display:flex; align-items:center; gap:6px;">
+                                        <span class="channel-status-pill online" id="pill_admin_layanan"><span class="pulse-dot"></span> Online</span>
+                                        <span class="contact-unread-badge" id="unread_admin_layanan" style="display: none;">0</span>
+                                    </div>
                                 </div>
                                 <div class="contact-desc">Berkas TA, SK Pembimbing & Yudisium</div>
                             </div>
@@ -1113,11 +1203,15 @@
                             <button type="button" class="btn-mobile-back" onclick="closeMobileChat()">
                                 <i class="fa-solid fa-arrow-left"></i>
                             </button>
-                            <div class="header-avatar" id="headerAvatar">LB</div>
+                            <div class="header-avatar-wrap" style="position: relative; display: inline-flex;">
+                                <div class="header-avatar" id="headerAvatar">LB</div>
+                                <div class="online-dot online" id="headerAvatarDot"></div>
+                            </div>
                             <div class="header-info">
                                 <h2>
                                     <span id="activeTargetName">Petugas Laboran</span>
                                     <span class="role-pill laboran" id="activeTargetRolePill">LABORAN</span>
+                                    <span class="header-presence-badge online" id="headerPresenceBadge"><span class="badge-dot"></span> <span id="headerPresenceText">Online</span></span>
                                 </h2>
                                 <p id="activeTargetSub">Fasilitas Lab, Ruang & Alat Pengujian</p>
                             </div>
@@ -1218,7 +1312,64 @@
             }
         };
 
+        
+        // Presence state cache
+        let channelsPresenceState = <?= json_encode($channels_presence ?? []) ?>;
+
+        function applyPresenceState(presence) {
+            if (!presence) return;
+            channelsPresenceState = presence;
+
+            const channels = ['laboran', 'kaur', 'admin_layanan'];
+            channels.forEach(ch => {
+                const info = presence[ch];
+                const isOnline = info ? (info.online || info.status === 'online') : false;
+                const lastSeen = info ? (info.last_seen || 'Offline') : 'Offline';
+
+                // Update dot
+                const dotEl = $('#dot_' + ch);
+                dotEl.removeClass('online offline').addClass(isOnline ? 'online' : 'offline');
+
+                // Update pill
+                const pillEl = $('#pill_' + ch);
+                if (isOnline) {
+                    pillEl.removeClass('offline').addClass('online').html('<span class="pulse-dot"></span> Online');
+                    pillEl.attr('title', 'Petugas sedang aktif di portal');
+                } else {
+                    pillEl.removeClass('online').addClass('offline').html('<span class="pulse-dot"></span> Offline');
+                    pillEl.attr('title', 'Terakhir aktif: ' + lastSeen);
+                }
+            });
+
+            updateActiveHeaderPresence();
+        }
+
+        function updateActiveHeaderPresence() {
+            if (!currentTargetRole || !channelsPresenceState) return;
+            const cur = channelsPresenceState[currentTargetRole];
+            const isOnline = cur ? (cur.online || cur.status === 'online') : false;
+            const lastSeen = cur ? (cur.last_seen || 'Offline') : 'Offline';
+
+            const headerDot = $('#headerAvatarDot');
+            headerDot.removeClass('online offline').addClass(isOnline ? 'online' : 'offline');
+
+            const badge = $('#headerPresenceBadge');
+            const textEl = $('#headerPresenceText');
+
+            if (isOnline) {
+                badge.removeClass('offline').addClass('online');
+                textEl.text('Online');
+                badge.attr('title', 'Petugas sedang aktif merespons chat');
+            } else {
+                badge.removeClass('online').addClass('offline');
+                textEl.text(lastSeen !== 'Offline' ? lastSeen : 'Offline');
+                badge.attr('title', 'Petugas sedang offline');
+            }
+        }
+
         $(document).ready(function() {
+            applyPresenceState(channelsPresenceState);
+
             // Load initial channel
             switchChannel('laboran', false);
 
@@ -1240,6 +1391,30 @@
 
             // Initialize emoji picker
             initEmojiPicker();
+
+            // Heartbeat ping setiap 20 detik untuk presence online dinamis
+            setInterval(function() {
+                $.ajax({
+                    url: '<?= site_url("dosen/help/heartbeat") ?>',
+                    type: 'POST',
+                    data: { is_online: 1 },
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res && res.channels_presence) {
+                            applyPresenceState(res.channels_presence);
+                        }
+                    }
+                });
+            }, 20000);
+
+            // Sinyal offline instan jika tab browser ditutup
+            window.addEventListener('beforeunload', function() {
+                if (navigator.sendBeacon) {
+                    const formData = new FormData();
+                    formData.append('is_online', '0');
+                    navigator.sendBeacon('<?= site_url("dosen/help/heartbeat") ?>', formData);
+                }
+            });
         });
 
         function isFeedAtBottom() {
@@ -1269,6 +1444,7 @@
 
             $('#activeTargetSub').text(conf.sub);
             $('#composerInput').attr('placeholder', conf.placeholder);
+            updateActiveHeaderPresence();
 
             // On mobile, show fullscreen chat area
             if (window.innerWidth <= 900) {
@@ -1299,6 +1475,7 @@
                         activeConversationId = res.conversation.id;
                         renderMessages(res.messages, showLoader);
                         updateUnreadBadges(res.unreads);
+                        if (res.channels_presence) applyPresenceState(res.channels_presence);
                     } else {
                         renderMessages([], showLoader);
                     }
@@ -1329,6 +1506,7 @@
                         activeConversationId = res.conversation.id;
                         renderMessages(res.messages, scrollToBottom);
                         updateUnreadBadges(res.unreads);
+                        if (res.channels_presence) applyPresenceState(res.channels_presence);
                     }
                 },
                 error: function(xhr, status, error) {
@@ -1495,12 +1673,16 @@
                 type: 'POST',
                 data: {
                     conversation_id: activeConversationId,
+                    target_role: currentTargetRole,
                     message: message
                 },
                 dataType: 'json',
                 success: function(res) {
                     finishSend();
                     if (res && res.status === 'success') {
+                        if (res.conversation_id) {
+                            activeConversationId = res.conversation_id;
+                        }
                         refreshActiveChannel(true);
                     } else {
                         Swal.fire({

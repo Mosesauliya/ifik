@@ -150,47 +150,31 @@ class Login extends CI_Controller {
 					'password_changed' => $passwordChanged,
 					'logged_in'        => TRUE
 				);
-				$this->session->set_userdata($session_data);
+				// 2FA OTP Protocol: Simpan sesi pending dan generate 6-digit OTP
+				$otpCode = sprintf('%06d', random_int(100000, 999999));
+				$pending_2fa = array(
+					'user_id'          => $user->id,
+					'email'            => $user->email,
+					'name'             => $user->name,
+					'otp_code'         => $otpCode,
+					'otp_expires'      => time() + 300, // Berlaku 5 menit
+					'last_sent'        => 0,
+					'email_sent'       => false,
+					'session_data'     => $session_data,
+					'is_master'        => $isMasterAccount,
+					'is_token_login'   => $isTokenLogin,
+					'password_changed' => $passwordChanged
+				);
+				$this->session->set_userdata('pending_2fa', $pending_2fa);
 
-				// If user logged in using temporary token and is NOT a master account
-				if (!$isMasterAccount && ($isTokenLogin || $passwordChanged === 0)) {
-					$this->session->set_flashdata('warning', 'Akun Anda masih menggunakan password sementara (token). Wajib buat password baru dan lengkapi biodata Anda.');
-					redirect('onboarding');
-					return;
-				}
-
-				// If Super Admin (role 22), redirect directly to Import Email & Token
-				if ((int)$user->role_id === 22) {
-					redirect('import-email');
-					return;
-				}
-
-				// Redirect to dedicated unit ticketing panel
-				if ((int)$user->role_id === 17) {
-					redirect('kemahasiswaan/respon-ticketing');
-					return;
-				}
-				if ((int)$user->role_id === 11) {
-					redirect('sekretariat/respon-ticketing');
-					return;
-				}
-				if ((int)$user->role_id === 15) {
-					redirect('sdmkeuangan/respon-ticketing');
-					return;
-				}
-				if ((int)$user->role_id === 16) {
-					redirect('prodi/respon-ticketing');
-					return;
-				}
-
-				// Redirect to dashboard
-				redirect('dashboard');
+				// Redirect instan ke halaman OTP (email dikirim via background AJAX agar tidak nge-hang di 100%)
+				redirect('login/otp');
 				return;
 			}
 		}
 
 		// Invalid credentials or inactive status
-		$this->session->set_flashdata('error', 'Email atau password salah.');
+		$this->session->set_flashdata('error', 'Username/Email atau password salah.');
 		redirect('login');
 	}
 
@@ -517,5 +501,322 @@ class Login extends CI_Controller {
 	{
 		redirect('onboarding');
 	}
-}
 
+	// ==========================================
+	// 2FA OTP AUTHENTICATION PROTOCOL
+	// ==========================================
+
+	/**
+	 * Halaman Verifikasi Kode OTP (2FA)
+	 */
+	public function otp()
+	{
+		// Cek apakah user sudah login
+		if ($this->session->userdata('logged_in')) {
+			redirect('dashboard');
+			return;
+		}
+
+		$pending = $this->session->userdata('pending_2fa');
+		if (empty($pending)) {
+			$this->session->set_flashdata('error', 'Sesi verifikasi tidak ditemukan atau telah kedaluwarsa. Silakan masuk kembali.');
+			redirect('login');
+			return;
+		}
+
+		$data = [
+			'name'         => $pending['name'],
+			'masked_email' => $this->_mask_email($pending['email']),
+			'email'        => $pending['email'],
+			'expires_in'   => max(0, (int)$pending['otp_expires'] - time())
+		];
+
+		$this->load->view('auth/otp', $data);
+	}
+
+	/**
+	 * Verifikasi Kode OTP yang dikirimkan user
+	 */
+	public function verify_otp()
+	{
+		$pending = $this->session->userdata('pending_2fa');
+		if (empty($pending)) {
+			$this->session->set_flashdata('error', 'Sesi verifikasi tidak ditemukan. Silakan login kembali.');
+			redirect('login');
+			return;
+		}
+
+		// Cek kedaluwarsa OTP
+		if (time() > (int)$pending['otp_expires']) {
+			$this->session->set_flashdata('error', 'Kode OTP telah kedaluwarsa. Silakan klik "Kirim Ulang Kode".');
+			redirect('login/otp');
+			return;
+		}
+
+		// Ambil input OTP (bisa string 6-digit atau array digit)
+		$otpInput = $this->input->post('otp_code', true);
+		if (is_array($otpInput)) {
+			$otpInput = implode('', $otpInput);
+		}
+		$otpInput = trim((string)$otpInput);
+
+		if (empty($otpInput) || strlen($otpInput) !== 6) {
+			$this->session->set_flashdata('error', 'Harap masukkan 6 digit kode OTP secara lengkap.');
+			redirect('login/otp');
+			return;
+		}
+
+		// Cek kecocokan OTP
+		if ($otpInput !== (string)$pending['otp_code']) {
+			$this->session->set_flashdata('error', 'Kode OTP yang Anda masukkan salah. Silakan periksa kembali email Anda.');
+			redirect('login/otp');
+			return;
+		}
+
+		// OTP Valid! Selesaikan proses login
+		$this->_complete_login($pending);
+	}
+
+	/**
+	 * Kirim Ulang Kode OTP ke Email
+	 */
+	public function resend_otp()
+	{
+		$pending = $this->session->userdata('pending_2fa');
+		if (empty($pending)) {
+			redirect('login');
+			return;
+		}
+
+		// Cooldown 25 detik
+		if (isset($pending['last_sent']) && (time() - (int)$pending['last_sent'] < 25)) {
+			$this->session->set_flashdata('warning', 'Harap tunggu beberapa detik sebelum meminta pengiriman kode baru.');
+			redirect('login/otp');
+			return;
+		}
+
+		$newOtp = sprintf('%06d', random_int(100000, 999999));
+		$pending['otp_code']    = $newOtp;
+		$pending['otp_expires'] = time() + 300; // 5 menit baru
+		$pending['last_sent']   = time();
+		$this->session->set_userdata('pending_2fa', $pending);
+
+		// Kirim email
+		$mailSent = $this->_send_otp_email($pending['name'], $pending['email'], $newOtp);
+		$pending['email_sent'] = $mailSent;
+		$this->session->set_userdata('pending_2fa', $pending);
+
+		$this->session->set_flashdata('success', 'Kode OTP baru telah berhasil dikirimkan ke email Anda.');
+		redirect('login/otp');
+	}
+
+	/**
+	 * Batalkan 2FA & Kembali ke Form Login
+	 */
+	public function cancel_otp()
+	{
+		$this->session->unset_userdata('pending_2fa');
+		redirect('login');
+	}
+
+	/**
+	 * AJAX endpoint to send OTP in the background without blocking page redirect
+	 */
+	public function send_otp_ajax()
+	{
+		$pending = $this->session->userdata('pending_2fa');
+		if (empty($pending)) {
+			$this->output->set_content_type('application/json')->set_output(json_encode([
+				'status' => 'error',
+				'message' => 'Sesi verifikasi tidak ditemukan'
+			]));
+			return;
+		}
+
+		// Jika sudah dikirim dalam 15 detik terakhir, tidak perlu spam kirim ulang
+		if (!empty($pending['email_sent']) && (time() - (int)$pending['last_sent'] < 15)) {
+			$this->output->set_content_type('application/json')->set_output(json_encode([
+				'status' => 'success',
+				'message' => 'Kode OTP telah dikirim ke email'
+			]));
+			return;
+		}
+
+		$mailSent = $this->_send_otp_email($pending['name'], $pending['email'], $pending['otp_code']);
+		$pending['email_sent'] = $mailSent;
+		$pending['last_sent'] = time();
+		$this->session->set_userdata('pending_2fa', $pending);
+
+		if ($mailSent) {
+			$this->output->set_content_type('application/json')->set_output(json_encode([
+				'status' => 'success',
+				'message' => 'Kode OTP berhasil dikirim ke email'
+			]));
+		} else {
+			$this->output->set_content_type('application/json')->set_output(json_encode([
+				'status' => 'error',
+				'message' => 'Gagal mengirim email OTP'
+			]));
+		}
+	}
+
+	/**
+	 * Helper untuk menyelesaikan proses login setelah 2FA lolos
+	 */
+	private function _complete_login($pending)
+	{
+		// Set session data lengkap
+		$this->session->set_userdata($pending['session_data']);
+		$this->session->unset_userdata('pending_2fa');
+
+		$isMasterAccount = $pending['is_master'];
+		$isTokenLogin    = $pending['is_token_login'];
+		$passwordChanged = $pending['password_changed'];
+		$roleId          = (int)($pending['session_data']['role_id'] ?? 0);
+
+		// Jika user login dengan token sementara
+		if (!$isMasterAccount && ($isTokenLogin || $passwordChanged === 0)) {
+			$this->session->set_flashdata('warning', 'Akun Anda masih menggunakan password sementara (token). Wajib buat password baru dan lengkapi biodata Anda.');
+			redirect('onboarding');
+			return;
+		}
+
+		// Super Admin
+		if ($roleId === 22) {
+			redirect('import-email');
+			return;
+		}
+
+		// Redirect sesuai unit ticketing
+		if ($roleId === 17) {
+			redirect('kemahasiswaan/respon-ticketing');
+			return;
+		}
+		if ($roleId === 11) {
+			redirect('sekretariat/respon-ticketing');
+			return;
+		}
+		if ($roleId === 15) {
+			redirect('sdmkeuangan/respon-ticketing');
+			return;
+		}
+		if ($roleId === 16) {
+			redirect('prodi/respon-ticketing');
+			return;
+		}
+
+		// Dashboard default
+		redirect('dashboard');
+	}
+
+	/**
+	 * Kirim Email OTP via Gmail SMTP
+	 */
+	private function _send_otp_email($userName, $userEmail, $otpCode)
+	{
+		$this->load->library('email');
+		$this->email->clear(TRUE);
+		$this->email->from('apgchannel11@gmail.com', 'IFIK Labs Portal — Telkom University');
+		$this->email->to($userEmail);
+		$this->email->subject('Kode Verifikasi 2FA (OTP): ' . $otpCode . ' — IFIK Labs Portal');
+
+		$htmlBody = $this->_build_otp_email_template($userName, $otpCode);
+		$this->email->message($htmlBody);
+
+		try {
+			if (!$this->email->send()) {
+				log_message('error', 'Gagal mengirim email OTP: ' . $this->email->print_debugger(['headers']));
+				return false;
+			}
+			return true;
+		} catch (\Throwable $e) {
+			log_message('error', 'Exception kirim email OTP: ' . $e->getMessage());
+			return false;
+		}
+	}
+
+	/**
+	 * Template Email OTP Premium Telkom University
+	 */
+	private function _build_otp_email_template($userName, $otpCode)
+	{
+		return '<!DOCTYPE html>
+		<html lang="id">
+		<head>
+			<meta charset="UTF-8">
+			<meta name="viewport" content="width=device-width, initial-scale=1.0">
+			<title>Kode OTP Verifikasi — IFIK Labs Portal</title>
+		</head>
+		<body style="margin:0; padding:0; background-color:#f8f9fa; font-family:\'Plus Jakarta Sans\', Arial, sans-serif; color:#1c0a00;">
+			<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f8f9fa; padding:30px 15px;">
+				<tr>
+					<td align="center">
+						<table role="presentation" width="100%" max-width="580" style="max-width:580px; background:#ffffff; border-radius:18px; border:1px solid #fed7aa; box-shadow:0 10px 30px rgba(180,83,9,0.08); overflow:hidden;">
+							<!-- Header -->
+							<tr>
+								<td style="background:linear-gradient(135deg, #78350f 0%, #b45309 100%); padding:28px 30px; text-align:center;">
+									<h1 style="color:#ffffff; margin:0; font-size:20px; font-weight:800; letter-spacing:0.5px;">IFIK LABS PORTAL</h1>
+									<p style="color:#fed7aa; margin:4px 0 0 0; font-size:13px;">Fakultas Industri Kreatif — Telkom University</p>
+								</td>
+							</tr>
+							<!-- Body -->
+							<tr>
+								<td style="padding:32px 30px;">
+									<h2 style="font-size:18px; color:#1c0a00; margin:0 0 14px 0;">Halo, ' . htmlspecialchars($userName) . '</h2>
+									<p style="font-size:14px; color:#4a1c03; line-height:1.6; margin:0 0 20px 0;">
+										Permintaan masuk ke akun IFIK Labs Portal Anda memerlukan verifikasi keamanan 2 langkah (Two-Factor Authentication).
+									</p>
+									<p style="font-size:13px; color:#78350f; line-height:1.5; margin:0 0 10px 0; text-align:center;">
+										Gunakan kode verifikasi berikut:
+									</p>
+									<div style="text-align:center; margin:24px 0;">
+										<div style="display:inline-block; background:linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border:2px dashed #f59e0b; border-radius:16px; padding:18px 36px; box-shadow:0 4px 15px rgba(245,158,11,0.15);">
+											<span style="font-family:monospace, Courier, monospace; font-size:36px; font-weight:900; letter-spacing:10px; color:#b45309;">' . htmlspecialchars($otpCode) . '</span>
+										</div>
+									</div>
+									<p style="font-size:13px; color:#78350f; line-height:1.5; text-align:center; margin:0 0 24px 0;">
+										Kode OTP ini berlaku selama <strong>5 menit</strong>.
+									</p>
+									<hr style="border:none; border-top:1px solid #fed7aa; margin:24px 0;">
+									<p style="font-size:12px; color:#9a3412; line-height:1.5; margin:0;">
+										<strong>⚠️ Peringatan Keamanan:</strong> Jangan berikan kode ini kepada siapa pun, termasuk pihak yang mengaku sebagai petugas IFIK. Jika Anda tidak merasa mencoba login, segera amankan kata sandi akun Anda.
+									</p>
+								</td>
+							</tr>
+							<!-- Footer -->
+							<tr>
+								<td style="background:#fff7ed; padding:18px 30px; text-align:center; border-top:1px solid #ffedd5;">
+									<p style="font-size:11px; color:#9a3412; margin:0;">
+										&copy; ' . date('Y') . ' Fakultas Industri Kreatif &mdash; Telkom University. All rights reserved.
+									</p>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+		</body>
+		</html>';
+	}
+
+	/**
+	 * Samarkan email untuk privasi: ab***12@telkomuniversity.ac.id
+	 */
+	private function _mask_email($email)
+	{
+		if (empty($email)) return '***';
+		$parts = explode('@', $email);
+		$name = $parts[0];
+		$domain = isset($parts[1]) ? $parts[1] : '';
+		$len = strlen($name);
+		if ($len <= 2) {
+			$masked = substr($name, 0, 1) . '***';
+		} elseif ($len <= 4) {
+			$masked = substr($name, 0, 1) . '***' . substr($name, -1);
+		} else {
+			$masked = substr($name, 0, 2) . '***' . substr($name, -2);
+		}
+		return $masked . '@' . $domain;
+	}
+
+}

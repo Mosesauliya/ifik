@@ -51,6 +51,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 */
 $route['default_controller'] = 'dashboard';
 $route['login'] = 'login';
+$route['login/otp'] = 'login/otp';
+$route['login/verify_otp'] = 'login/verify_otp';
+$route['login/resend_otp'] = 'login/resend_otp';
+$route['login/cancel_otp'] = 'login/cancel_otp';
+$route['login/send_otp_ajax'] = 'login/send_otp_ajax';
 $route['logout'] = 'login/logout';
 $route['forgot_password'] = 'login/forgot_password';
 $route['forgot-password'] = 'login/forgot_password';
@@ -147,6 +152,7 @@ $route['dosenwali/update_judul_approval_ajax']  = 'DosenWali/update_judul_approv
 $route['dosen/wali/update_jenis_approval_ajax'] = 'DosenWali/update_jenis_approval_ajax';
 $route['dosenwali/update_jenis_approval_ajax']  = 'DosenWali/update_jenis_approval_ajax';
 $route['dosen/wali/(:any)'] = 'DosenWali/$1';
+$route['dosen/perwalian'] = 'DosenWali/perwalian';
 $route['dosen/wali/(:any)/(:any)'] = 'DosenWali/$1/$2';
 
 $route['dosenwali'] = 'DosenWali';
@@ -184,12 +190,14 @@ $route['kaur/respon-ticketing/(:any)'] = 'DosenTicketing/respon_$1';
 // Koordinator TA Help Chat Routes (Harus sebelum wildcard)
 $route['koordinatorta/help'] = 'KoordinatorTA/help';
 $route['koordinator/help'] = 'KoordinatorTA/help';
+$route['koordinatorta/help/heartbeat'] = 'KoordinatorTA/help_heartbeat_ajax';
+$route['koordinator/help/heartbeat'] = 'KoordinatorTA/help_heartbeat_ajax';
 $route['koordinatorta/help/channel'] = 'KoordinatorTA/help_get_channel_ajax';
 $route['koordinator/help/channel'] = 'KoordinatorTA/help_get_channel_ajax';
 $route['koordinatorta/help/conversations'] = 'KoordinatorTA/help_get_conversations_ajax';
 $route['koordinator/help/conversations'] = 'KoordinatorTA/help_get_conversations_ajax';
-$route['koordinatorta/help/messages/(:num)'] = 'KoordinatorTA/help_get_messages_ajax/$1';
-$route['koordinator/help/messages/(:num)'] = 'KoordinatorTA/help_get_messages_ajax/$1';
+$route['koordinatorta/help/messages/(:any)'] = 'KoordinatorTA/help_get_messages_ajax/$1';
+$route['koordinator/help/messages/(:any)'] = 'KoordinatorTA/help_get_messages_ajax/$1';
 $route['koordinatorta/help/create'] = 'KoordinatorTA/help_create_chat_ajax';
 $route['koordinator/help/create'] = 'KoordinatorTA/help_create_chat_ajax';
 $route['koordinatorta/help/send'] = 'KoordinatorTA/help_send_message_ajax';
@@ -292,8 +300,9 @@ $route['adminlayanan/downgrade_preview_ajax']       = 'AdminLayanan/downgrade_pr
 
 // Admin Layanan Live Chat Routes (Must be before wildcard (:any))
 $route['adminlayanan/help'] = 'LaboranHelp/index';
+$route['adminlayanan/help/heartbeat'] = 'LaboranHelp/heartbeat_ajax';
 $route['adminlayanan/help/conversations'] = 'LaboranHelp/get_conversations_ajax';
-$route['adminlayanan/help/messages/(:num)'] = 'LaboranHelp/get_messages_ajax/$1';
+$route['adminlayanan/help/messages/(:any)'] = 'LaboranHelp/get_messages_ajax/$1';
 $route['adminlayanan/help/send'] = 'LaboranHelp/send_message_ajax';
 $route['adminlayanan/help/toggle-status'] = 'LaboranHelp/toggle_status_ajax';
 
@@ -540,8 +549,21 @@ $route['prodi/peminjaman/bulk']                       = 'kaprodi/peminjaman/bulk
 $route['prodi/peminjaman/(:any)']                     = 'kaprodi/peminjaman/$1';
 $route['prodi/peminjaman/(:any)/(:any)']              = 'kaprodi/peminjaman/$1/$2';
 
+// Program Studi Perwalian Routes (Role 16, Admin, Super Admin)
+$route['prodi/perwalian']                             = 'AdminProdi/index';
+$route['prodi/perwalian/(:any)']                      = 'AdminProdi/$1';
+$route['prodi/perwalian/(:any)/(:any)']               = 'AdminProdi/$1/$2';
+
+// Mahasiswa Perwalian Routes (Role 4)
+$route['mahasiswa/perwalian']                         = 'Mahasiswa/perwalian';
+$route['mahasiswa/perwalian_upload_krs']              = 'Mahasiswa/perwalian_upload_krs';
+$route['mahasiswa/perwalian_tambah_mk']               = 'Mahasiswa/perwalian_tambah_mk';
+$route['mahasiswa/perwalian_hapus_mk']                = 'Mahasiswa/perwalian_hapus_mk';
+$route['mahasiswa/perwalian_submit']                  = 'Mahasiswa/perwalian_submit';
+
 // Dosen Help Chat Routes (Harus sebelum Laboran Help routes)
 $route['dosen/help'] = 'DosenHelp/index';
+$route['dosen/help/heartbeat'] = 'DosenHelp/help_heartbeat_ajax';
 $route['dosen/help/channel'] = 'DosenHelp/help_get_channel_ajax';
 $route['dosen/help/create'] = 'DosenHelp/help_create_chat_ajax';
 $route['dosen/help/send'] = 'DosenHelp/help_send_message_ajax';
@@ -552,8 +574,10 @@ $route['mahasiswa/upload_bap_ajax'] = 'dosen_bimbingan/upload_bap_ajax';
 
 // Laboran Help Desk / Live Chat Routes
 $route['laboran/help'] = 'LaboranHelp/index';
+$route['laboran/help/heartbeat'] = 'LaboranHelp/heartbeat_ajax';
+$route['kaur/help/heartbeat'] = 'LaboranHelp/heartbeat_ajax';
 $route['laboran/help/conversations'] = 'LaboranHelp/get_conversations_ajax';
-$route['laboran/help/messages/(:num)'] = 'LaboranHelp/get_messages_ajax/$1';
+$route['laboran/help/messages/(:any)'] = 'LaboranHelp/get_messages_ajax/$1';
 $route['laboran/help/send'] = 'LaboranHelp/send_message_ajax';
 $route['laboran/help/send-user-message'] = 'LaboranHelp/send_user_message_ajax';
 $route['laboran/help/create-chat'] = 'LaboranHelp/create_chat_user_ajax';
@@ -568,7 +592,7 @@ $route['kaur/help'] = 'LaboranHelp/index';
 // User / Mahasiswa / Dosen Public Help Desk API Routes (Mudah diintegrasikan teman)
 $route['api/help/create'] = 'LaboranHelp/create_chat_user_ajax';
 $route['api/help/send'] = 'LaboranHelp/send_user_message_ajax';
-$route['api/help/messages/(:num)'] = 'LaboranHelp/get_messages_ajax/$1';
+$route['api/help/messages/(:any)'] = 'LaboranHelp/get_messages_ajax/$1';
 $route['api/help/my-chats'] = 'LaboranHelp/my_conversations_ajax';
 
 // Peminjaman Barang / Laboran Scanner & Serah Terima Routes (Linux & NAS Case-Sensitive Compatibility)

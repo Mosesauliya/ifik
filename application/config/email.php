@@ -19,4 +19,4 @@ $config['charset']      = 'utf-8';
 $config['newline']      = "\r\n";
 $config['crlf']         = "\r\n";
 $config['wordwrap']     = TRUE;
-$config['smtp_timeout'] = 15;
+$config['smtp_timeout'] = 5;

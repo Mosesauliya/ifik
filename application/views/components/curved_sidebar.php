@@ -174,6 +174,8 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['category' => 'Portal Akademik & Dosen', 'has_divider' => true],
                 ['heading' => 'Dosen Pembimbing', 'href' => site_url('dosen/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
                 ['heading' => 'Dosen Wali', 'href' => site_url('dosen/wali'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Perwalian Tahap 1 (KRS)', 'href' => site_url('dosen/wali/perwalian_tahap1'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
+                ['heading' => 'Perwalian Tahap 2 (Nilai)', 'href' => site_url('dosen/wali/perwalian_tahap2'), 'icon_3d' => 'assets/images/icons_3d/preview2.png'],
                 ['heading' => 'Tanda Tangan Digital', 'href' => site_url('kaur/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
 
                 ['category' => 'Layanan & Bantuan', 'has_divider' => true],
@@ -255,7 +257,9 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
             $defaultNavItems = array_merge([
                 ['category' => 'Bimbingan & Pengujian'],
                 ['heading' => 'Dosen Pembimbing', 'href' => site_url('dosen/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
-                ['heading' => 'Dosen Wali', 'href' => site_url('dosen/wali'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Dosen Wali (Tugas Akhir)', 'href' => site_url('dosen/wali'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Perwalian Tahap 1 (KRS)', 'href' => site_url('dosen/wali/perwalian_tahap1'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
+                ['heading' => 'Perwalian Tahap 2 (Nilai)', 'href' => site_url('dosen/wali/perwalian_tahap2'), 'icon_3d' => 'assets/images/icons_3d/preview2.png'],
                 ['heading' => 'Tanda Tangan Digital', 'href' => site_url('dosen/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
             ], $layananHelpItems, $fasilitasItems);
             break;
@@ -328,6 +332,8 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['category' => 'Portal Dosen & Pembimbing', 'has_divider' => true],
                 ['heading' => 'Dosen Pembimbing', 'href' => site_url('dosen/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
                 ['heading' => 'Dosen Wali', 'href' => site_url('dosen/wali'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Perwalian Tahap 1 (KRS)', 'href' => site_url('dosen/wali/perwalian_tahap1'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
+                ['heading' => 'Perwalian Tahap 2 (Nilai)', 'href' => site_url('dosen/wali/perwalian_tahap2'), 'icon_3d' => 'assets/images/icons_3d/preview2.png'],
                 ['heading' => 'Tanda Tangan Digital', 'href' => site_url('dosen/tanda-tangan'), 'icon_3d' => 'assets/images/icons_3d/tanda_tangan.png'],
 
                 ['category' => 'Layanan & Bantuan', 'has_divider' => true],
@@ -348,6 +354,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['heading' => 'Dashboard', 'href' => site_url('mahasiswa'), 'icon_3d' => 'assets/images/icons_3d/home.png'],
                 ['heading' => 'Pendaftaran TA', 'href' => site_url('mahasiswa/pendaftaran_ta'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
                 ['heading' => 'Bimbingan TA', 'href' => site_url('mahasiswa/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
+                ['heading' => 'Perwalian (KRS)', 'href' => site_url('mahasiswa/perwalian'), 'icon_3d' => 'assets/images/icons_3d/preview2.png'],
 
                 ['category' => 'Fasilitas & Peminjaman', 'has_divider' => true],
                 ['heading' => 'Peminjaman Ruangan', 'href' => site_url('peminjaman-ruangan'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
@@ -406,6 +413,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['heading' => 'Respon Ticketing', 'href' => site_url('prodi/respon-ticketing'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png'],
                 ['heading' => 'Riwayat', 'href' => site_url('prodi/ticketing/riwayat'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
                 ['heading' => 'Approval Peminjaman', 'href' => site_url('prodi/peminjaman'), 'icon_3d' => 'assets/images/icons_3d/approval.png'],
+                ['heading' => 'Perwalian & Data Akademik', 'href' => site_url('prodi/perwalian'), 'icon_3d' => 'assets/images/icons_3d/preview2.png'],
 
                 ['category' => 'Fasilitas & Peminjaman', 'has_divider' => true],
                 ['heading' => 'Peminjaman Ruangan', 'href' => site_url('peminjaman-ruangan'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],

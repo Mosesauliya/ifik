@@ -40,8 +40,8 @@
     <!-- LEFT HERO TEXT -->
     <div class="hero-text" id="heroText">
       <img src="<?= base_url('assets/images/logo-dummy.webp'); ?>" alt="Logo IFIK" class="hero-logo-img">
-      <h1 class="hero-title">Masuk dengan<br>Email Tel-U.</h1>
-      <p class="hero-sub">Gunakan akun email resmi <span class="hero-highlight">@telkomuniversity.ac.id</span> atau <span class="hero-highlight">@student.telkomuniversity.ac.id</span> untuk mengakses layanan portal IFIK.</p>
+      <h1 class="hero-title">Masuk dengan<br>Akun Tel-U.</h1>
+      <p class="hero-sub">Gunakan username atau email resmi <span class="hero-highlight">Telkom University</span> untuk mengakses layanan portal IFIK.</p>
       
       <!-- Pesan Informasi LAA -->
       <div class="hero-laa-notice">
@@ -134,7 +134,7 @@
             <img src="<?= base_url('assets/images/logo-dummy.webp'); ?>" alt="Logo IFIK" class="brand-logo-img">
           </div>
 
-          <p class="card-sub">Gunakan email Telkom University kamu</p>
+          <p class="card-sub">Gunakan username atau email Telkom University kamu</p>
 
           <!-- Flash Error -->
           <?php if ($this->session->flashdata('error')): ?>
@@ -148,13 +148,13 @@
           <form action="<?= base_url('login/authenticate'); ?>" method="POST" id="loginForm">
             <input type="hidden" name="<?= $this->security->get_csrf_token_name(); ?>" value="<?= $this->security->get_csrf_hash(); ?>">
 
-            <!-- Email Input -->
+            <!-- Email / Username Input -->
             <div class="field-group">
-              <label class="field-label">Email</label>
+              <label class="field-label">Username atau Email</label>
               <div class="field-wrap" id="emailWrapper">
                 <svg class="field-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                 <input type="text" id="identityInput" name="identity" required
-                       placeholder="nama@telkomuniversity.ac.id"
+                       placeholder="Username atau email Tel-U"
                        class="field-input">
               </div>
               <p id="emailHint" class="field-hint"></p>

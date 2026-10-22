@@ -310,6 +310,7 @@
         }
 
         .conv-avatar {
+            position: relative;
             width: 44px;
             height: 44px;
             border-radius: 12px;
@@ -322,6 +323,110 @@
             color: #ffffff;
             background: linear-gradient(135deg, #64748b, #475569);
             box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+
+        .conv-avatar .online-dot {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .conv-avatar .online-dot.online {
+            background: #22c55e;
+            box-shadow: 0 0 0 1px #fff, 0 0 8px rgba(34, 197, 94, 0.7);
+        }
+        .conv-avatar .online-dot.offline {
+            background: #94a3b8;
+        }
+
+        .user-presence-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 10px;
+            transition: all 0.25s ease;
+        }
+        .user-presence-pill.online {
+            color: #15803d;
+            background: #dcfce7;
+            border: 1px solid #bbf7d0;
+        }
+        .user-presence-pill.offline {
+            color: #64748b;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+        }
+        .user-presence-pill .pulse-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        .user-presence-pill.online .pulse-dot {
+            animation: pulse-dot-anim 1.8s infinite;
+        }
+        @keyframes pulse-dot-anim {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.4); opacity: 0.6; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Header user presence badge */
+        .header-presence-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 9px;
+            border-radius: 12px;
+            margin-left: 8px;
+            vertical-align: middle;
+            transition: all 0.3s ease;
+        }
+        .header-presence-badge.online {
+            color: #15803d;
+            background: #dcfce7;
+            border: 1px solid #bbf7d0;
+        }
+        .header-presence-badge.offline {
+            color: #64748b;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+        }
+        .header-presence-badge .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        .header-presence-badge.online .badge-dot {
+            animation: pulse-dot-anim 1.8s infinite;
+        }
+
+        .header-avatar-wrap .online-dot {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            transition: all 0.3s ease;
+        }
+        .header-avatar-wrap .online-dot.online {
+            background: #22c55e;
+            box-shadow: 0 0 0 2px #fff, 0 0 8px rgba(34, 197, 94, 0.7);
+        }
+        .header-avatar-wrap .online-dot.offline {
+            background: #94a3b8;
         }
 
         .conv-avatar.role-mahasiswa { background: linear-gradient(135deg, #0284c7, #0369a1); }
@@ -1376,11 +1481,15 @@
                             <button type="button" class="btn-mobile-back" onclick="closeMobileChat()">
                                 <i class="fa-solid fa-arrow-left"></i>
                             </button>
-                            <div class="header-avatar" id="headerAvatar">RF</div>
+                            <div class="header-avatar-wrap" style="position: relative; display: inline-flex;">
+                                <div class="header-avatar" id="headerAvatar">RF</div>
+                                <div class="online-dot online" id="headerUserDot"></div>
+                            </div>
                             <div class="header-info">
                                 <h2 id="headerUserName">
                                     <span>Rian Firmansyah</span>
                                     <span class="role-pill mahasiswa" id="headerUserRole">Mahasiswa</span>
+                                    <span class="header-presence-badge online" id="headerUserPresenceBadge"><span class="badge-dot"></span> <span id="headerUserPresenceText">Online</span></span>
                                 </h2>
                                 <p id="headerUserSub">1301213001 &bull; Topik: Peminjaman Ruangan Lab</p>
                             </div>
@@ -1468,6 +1577,32 @@
 
             // Initialize emoji picker
             initEmojiPicker();
+
+            function sendLaboranHeartbeat(isOnline = 1) {
+                $.ajax({
+                    url: '<?= site_url("laboran/help/heartbeat") ?>',
+                    type: 'POST',
+                    data: { is_online: isOnline },
+                    dataType: 'json'
+                });
+            }
+
+            // Kirim heartbeat instan saat pertama kali halaman dimuat
+            sendLaboranHeartbeat(1);
+
+            // Ulangi heartbeat setiap 15 detik
+            setInterval(function() {
+                sendLaboranHeartbeat(1);
+            }, 15000);
+
+            // Sinyal offline instan jika tab browser ditutup
+            window.addEventListener('beforeunload', function() {
+                if (navigator.sendBeacon) {
+                    const formData = new FormData();
+                    formData.append('is_online', '0');
+                    navigator.sendBeacon('<?= site_url("laboran/help/heartbeat") ?>', formData);
+                }
+            });
         });
 
         function setFilterStatus(status, btn) {
@@ -1542,13 +1677,19 @@
                 const initials = getInitials(c.user_nama);
                 const roleClass = c.user_role.toLowerCase() === 'dosen' ? 'role-dosen' : 'role-mahasiswa';
                 const rolePillClass = c.user_role.toLowerCase() === 'dosen' ? 'dosen' : 'mahasiswa';
-                const statusPill = '';
+                const isOnline = c.is_online ? true : false;
+                const onlineClass = isOnline ? 'online' : 'offline';
+                const onlineTitle = isOnline ? 'Sedang Online' : ('Terakhir dilihat: ' + (c.user_last_seen || 'Offline'));
+                const statusPill = `<span class="user-presence-pill ${onlineClass}"><span class="pulse-dot"></span> ${isOnline ? 'Online' : 'Offline'}</span>`;
                 
                 const unread = (c.unread_laboran > 0) ? `<span class="unread-badge">${c.unread_laboran}</span>` : '';
 
                 const html = `
-                    <div class="conversation-item ${isActive}" data-id="${c.id}" onclick="selectConversation(${c.id})">
-                        <div class="conv-avatar ${roleClass}">${initials}</div>
+                    <div class="conversation-item ${isActive}" data-id="${c.id}" onclick="selectConversation('${c.id}')">
+                        <div class="conv-avatar ${roleClass}">
+                            ${initials}
+                            <div class="online-dot ${onlineClass}" title="${onlineTitle}"></div>
+                        </div>
                         <div class="conv-info">
                             <div class="conv-header-line">
                                 <div class="conv-name">${escapeHtml(c.user_nama)}</div>
@@ -1639,6 +1780,24 @@
             const roleEl = $('#headerUserRole');
             roleEl.text(conv.user_role);
             roleEl.attr('class', 'role-pill ' + (conv.user_role.toLowerCase() === 'dosen' ? 'dosen' : 'mahasiswa'));
+
+            // Presence online/offline update
+            const isOnline = conv.user_is_online ? true : false;
+            const lastSeen = conv.user_last_seen || 'Offline';
+
+            $('#headerUserDot').removeClass('online offline').addClass(isOnline ? 'online' : 'offline');
+
+            const badge = $('#headerUserPresenceBadge');
+            const textEl = $('#headerUserPresenceText');
+            if (isOnline) {
+                badge.removeClass('offline').addClass('online');
+                textEl.text('Online');
+                badge.attr('title', 'Pengguna sedang online di portal');
+            } else {
+                badge.removeClass('online').addClass('offline');
+                textEl.text(lastSeen !== 'Offline' ? lastSeen : 'Offline');
+                badge.attr('title', 'Terakhir dilihat: ' + lastSeen);
+            }
 
             $('#headerUserSub').html(`${conv.user_nim_nip} &bull; <strong>Topik:</strong> ${escapeHtml(conv.topik)}`);
 

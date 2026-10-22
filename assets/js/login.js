@@ -71,17 +71,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const isTelU = /@(student\.)?telkomuniversity\.ac\.id$/i.test(val);
     const isGeneralEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
 
-    if (!hasAt && !strict) { setEmailState('none'); return false; }
-
-    if (isTelU) {
-      setEmailState('valid', 'Email Telkom University valid');
-      return true;
-    } else if (isGeneralEmail) {
-      setEmailState('valid', 'Email valid');
-      return true;
+    if (hasAt) {
+      if (isTelU) {
+        setEmailState('valid', 'Email Telkom University valid');
+        return true;
+      } else if (isGeneralEmail) {
+        setEmailState('valid', 'Email valid');
+        return true;
+      } else {
+        if (strict) setEmailState('error', 'Masukkan format email yang valid');
+        return false;
+      }
     } else {
-      setEmailState('error', 'Masukkan format email yang valid');
-      return false;
+      // Input berupa username
+      if (val.length >= 3) {
+        setEmailState('valid', 'Username siap digunakan');
+        return true;
+      } else {
+        if (strict) setEmailState('error', 'Username minimal 3 karakter');
+        else setEmailState('none');
+        return false;
+      }
     }
   }
 
@@ -119,11 +129,22 @@ document.addEventListener('DOMContentLoaded', () => {
       if (isSubmitting) return; // Prevent double submit
       e.preventDefault();
 
-      const emailVal = identityInput ? identityInput.value.trim() : '';
-      const isEmailValid = /^[^\s@]+@(student\.)?telkomuniversity\.ac\.id$/i.test(emailVal) || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal);
+      const identityVal = identityInput ? identityInput.value.trim() : '';
+      if (!identityVal) {
+        setEmailState('error', 'Masukkan username atau email Anda');
+        triggerErrorShake();
+        return;
+      }
 
-      if (!isEmailValid) {
-        setEmailState('error', 'Harus email @telkomuniversity.ac.id atau @student.telkomuniversity.ac.id');
+      if (identityVal.includes('@')) {
+        const isEmailValid = /^[^\s@]+@(student\.)?telkomuniversity\.ac\.id$/i.test(identityVal) || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identityVal);
+        if (!isEmailValid) {
+          setEmailState('error', 'Format email tidak valid (gunakan email Telkom University)');
+          triggerErrorShake();
+          return;
+        }
+      } else if (identityVal.length < 3) {
+        setEmailState('error', 'Username minimal 3 karakter');
         triggerErrorShake();
         return;
       }
@@ -138,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       submitBtn.disabled = true;
       let progress = 0;
-      
+
       const updateButton = (pct) => {
         submitBtn.innerHTML = `
           <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="margin-top:-2px;">
@@ -152,9 +173,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       updateButton(0);
 
-      // Smooth progress bar update over 3.2 seconds (3200ms)
-      const duration = 3200;
-      const intervalTime = 40;
+      // Animasi scan progress bar
+      const duration = 2400; // 2.4 detik smooth animation
+      const intervalTime = 30;
       const step = 100 / (duration / intervalTime);
 
       const timer = setInterval(() => {
@@ -163,10 +184,11 @@ document.addEventListener('DOMContentLoaded', () => {
           progress = 100;
           updateButton(100);
           clearInterval(timer);
-          
+
+          // Submit form tepat saat 100%
           setTimeout(() => {
             loginForm.submit();
-          }, 200);
+          }, 80);
         } else {
           updateButton(Math.floor(progress));
         }
