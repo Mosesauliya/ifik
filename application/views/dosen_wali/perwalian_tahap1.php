@@ -643,19 +643,19 @@
                                         <!-- Badge Status KRS -->
                                         <td class="py-3.5 px-4 text-center">
                                             <?php
-                                                $st1 = $item['status_tahap1'] ?? 'Draft';
-                                                $badgeClass = match($st1) {
+                                                $st1 = isset($item['status_tahap1']) && $item['status_tahap1'] !== '' ? $item['status_tahap1'] : 'Draft';
+                                                $badgeClassMap1 = [
                                                     'Disetujui' => 'bg-emerald-100 text-emerald-800 border-emerald-300',
                                                     'Diajukan'  => 'bg-amber-100 text-amber-800 border-amber-300 animate-pulse',
                                                     'Revisi'    => 'bg-rose-100 text-rose-800 border-rose-300',
-                                                    default     => 'bg-slate-100 text-slate-700 border-slate-300',
-                                                };
-                                                $badgeIcon = match($st1) {
+                                                ];
+                                                $badgeIconMap1 = [
                                                     'Disetujui' => 'fa-circle-check',
                                                     'Diajukan'  => 'fa-clock',
                                                     'Revisi'    => 'fa-triangle-exclamation',
-                                                    default     => 'fa-pen-to-square',
-                                                };
+                                                ];
+                                                $badgeClass = isset($badgeClassMap1[$st1]) ? $badgeClassMap1[$st1] : 'bg-slate-100 text-slate-700 border-slate-300';
+                                                $badgeIcon  = isset($badgeIconMap1[$st1]) ? $badgeIconMap1[$st1] : 'fa-pen-to-square';
                                             ?>
                                             <span class="inline-flex items-center px-2.5 py-1 text-[11px] font-semibold rounded-full border <?= $badgeClass; ?>">
                                                 <i class="fa-solid <?= $badgeIcon; ?> mr-1 text-[10px]"></i>
@@ -713,19 +713,9 @@
                             $rowStatus = strtolower(htmlspecialchars($item['status_tahap1'] ?? ''));
                             $rowPeriode = strtolower(htmlspecialchars(($item['tahun_ajaran'] ?? '') . ' ' . ($item['semester'] ?? '')));
                             $full_name = htmlspecialchars($item['nama_lengkap_user'] ?: ($item['nama_mahasiswa'] ?: 'Mahasiswa'));
-                            $st1 = $item['status_tahap1'] ?? 'Draft';
-                            $badgeClass = match($st1) {
-                                'Disetujui' => 'bg-emerald-100 text-emerald-800 border-emerald-300',
-                                'Diajukan'  => 'bg-amber-100 text-amber-800 border-amber-300 animate-pulse',
-                                'Revisi'    => 'bg-rose-100 text-rose-800 border-rose-300',
-                                default     => 'bg-slate-100 text-slate-700 border-slate-300',
-                            };
-                            $badgeIcon = match($st1) {
-                                'Disetujui' => 'fa-circle-check',
-                                'Diajukan'  => 'fa-clock',
-                                'Revisi'    => 'fa-triangle-exclamation',
-                                default     => 'fa-pen-to-square',
-                            };
+                            $st1 = isset($item['status_tahap1']) && $item['status_tahap1'] !== '' ? $item['status_tahap1'] : 'Draft';
+                            $badgeClass = isset($badgeClassMap1[$st1]) ? $badgeClassMap1[$st1] : 'bg-slate-100 text-slate-700 border-slate-300';
+                            $badgeIcon  = isset($badgeIconMap1[$st1]) ? $badgeIconMap1[$st1] : 'fa-pen-to-square';
                         ?>
                             <div class="t1-card-row bg-white border border-slate-200/90 rounded-2xl shadow-xs p-3.5 space-y-3"
                                  data-nim="<?= $rowNim; ?>"

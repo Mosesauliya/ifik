@@ -681,17 +681,17 @@
                                         <!-- Badge Status Tahap 2 -->
                                         <td class="py-3.5 px-4 text-center">
                                             <?php
-                                                $st2 = $item['status_tahap2'] ?? 'Belum Dinilai';
-                                                $badge2Class = match($st2) {
+                                                $st2 = isset($item['status_tahap2']) && $item['status_tahap2'] !== '' ? $item['status_tahap2'] : 'Belum Dinilai';
+                                                $badge2ClassMap = [
                                                     'Selesai'          => 'bg-emerald-100 text-emerald-800 border-emerald-300',
                                                     'Proses Penilaian' => 'bg-purple-100 text-purple-800 border-purple-300',
-                                                    default            => 'bg-slate-100 text-slate-600 border-slate-300',
-                                                };
-                                                $badge2Icon = match($st2) {
+                                                ];
+                                                $badge2IconMap = [
                                                     'Selesai'          => 'fa-lock',
                                                     'Proses Penilaian' => 'fa-pen-clip',
-                                                    default            => 'fa-hourglass-start',
-                                                };
+                                                ];
+                                                $badge2Class = isset($badge2ClassMap[$st2]) ? $badge2ClassMap[$st2] : 'bg-slate-100 text-slate-600 border-slate-300';
+                                                $badge2Icon  = isset($badge2IconMap[$st2]) ? $badge2IconMap[$st2] : 'fa-hourglass-start';
                                             ?>
                                             <span class="inline-flex items-center px-2.5 py-1 text-[11px] font-semibold rounded-full border <?= $badge2Class; ?>">
                                                 <i class="fa-solid <?= $badge2Icon; ?> mr-1 text-[10px]"></i>
@@ -737,17 +737,9 @@
                             $rowStatus = strtolower(htmlspecialchars($item['status_tahap2'] ?? 'Belum Dinilai'));
                             $rowPeriode = strtolower(htmlspecialchars(($item['tahun_ajaran'] ?? '') . ' ' . ($item['semester'] ?? '')));
                             $full_name = htmlspecialchars($item['nama_lengkap_user'] ?: ($item['nama_mahasiswa'] ?: 'Mahasiswa'));
-                            $st2 = $item['status_tahap2'] ?? 'Belum Dinilai';
-                            $badge2Class = match($st2) {
-                                'Selesai'          => 'bg-emerald-100 text-emerald-800 border-emerald-300',
-                                'Proses Penilaian' => 'bg-purple-100 text-purple-800 border-purple-300',
-                                default            => 'bg-slate-100 text-slate-600 border-slate-300',
-                            };
-                            $badge2Icon = match($st2) {
-                                'Selesai'          => 'fa-lock',
-                                'Proses Penilaian' => 'fa-pen-clip',
-                                default            => 'fa-hourglass-start',
-                            };
+                            $st2 = isset($item['status_tahap2']) && $item['status_tahap2'] !== '' ? $item['status_tahap2'] : 'Belum Dinilai';
+                            $badge2Class = isset($badge2ClassMap[$st2]) ? $badge2ClassMap[$st2] : 'bg-slate-100 text-slate-600 border-slate-300';
+                            $badge2Icon  = isset($badge2IconMap[$st2]) ? $badge2IconMap[$st2] : 'fa-hourglass-start';
                         ?>
                             <div class="t2-card-row bg-white border border-slate-200/90 rounded-2xl shadow-xs p-3.5 space-y-3"
                                  data-nim="<?= $rowNim; ?>"
