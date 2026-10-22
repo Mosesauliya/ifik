@@ -707,10 +707,16 @@
                                         </td>
 
                                         <!-- Action Button -->
-                                        <td class="py-3.5 px-4 text-center whitespace-nowrap">
-                                            <button type="button" onclick="openGradingModal(<?= (int)$item['id_perwalian']; ?>)" class="inline-flex items-center justify-center px-3.5 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl shadow-sm transition">
-                                                <i class="fa-solid fa-pen-to-square mr-1.5"></i> Input Nilai
-                                            </button>
+                                        <td class="py-3.5 px-4 text-center whitespace-nowrap" id="t2BtnCol_<?= (int)$item['id_perwalian']; ?>">
+                                            <?php if ($st2 === 'Selesai'): ?>
+                                                <button type="button" onclick="openGradingModal(<?= (int)$item['id_perwalian']; ?>)" class="inline-flex items-center justify-center px-3.5 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl shadow-2xs transition">
+                                                    <i class="fa-solid fa-eye mr-1.5 text-emerald-600"></i> Lihat / Edit Nilai
+                                                </button>
+                                            <?php else: ?>
+                                                <button type="button" onclick="openGradingModal(<?= (int)$item['id_perwalian']; ?>)" class="inline-flex items-center justify-center px-3.5 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl shadow-sm transition">
+                                                    <i class="fa-solid fa-pen-to-square mr-1.5"></i> Input Nilai
+                                                </button>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -806,9 +812,15 @@
                                 </div>
 
                                 <!-- Card Action Button -->
-                                <button type="button" onclick="openGradingModal(<?= (int)$item['id_perwalian']; ?>)" class="w-full py-2 px-3 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition active:scale-98 cursor-pointer">
-                                    <i class="fa-solid fa-pen-to-square text-[11px]"></i> Input Nilai
-                                </button>
+                                <?php if ($st2 === 'Selesai'): ?>
+                                    <button type="button" id="t2CardBtn_<?= (int)$item['id_perwalian']; ?>" onclick="openGradingModal(<?= (int)$item['id_perwalian']; ?>)" class="w-full py-2 px-3 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl shadow-2xs flex items-center justify-center gap-1.5 transition active:scale-98 cursor-pointer">
+                                        <i class="fa-solid fa-eye text-emerald-600 text-[11px]"></i> Lihat / Edit Nilai
+                                    </button>
+                                <?php else: ?>
+                                    <button type="button" id="t2CardBtn_<?= (int)$item['id_perwalian']; ?>" onclick="openGradingModal(<?= (int)$item['id_perwalian']; ?>)" class="w-full py-2 px-3 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition active:scale-98 cursor-pointer">
+                                        <i class="fa-solid fa-pen-to-square text-[11px]"></i> Input Nilai
+                                    </button>
+                                <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -2098,6 +2110,35 @@
             if (cardBadge) {
                 cardBadge.className = `inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full border shrink-0 ${badgeClass}`;
                 cardBadge.innerHTML = `<i class="fa-solid ${badgeIcon} mr-1 text-[9px]"></i> ${escapeHtml(newStatus)}`;
+            }
+
+            // 3. Update Tombol Aksi Desktop & Mobile
+            const btnCol = document.getElementById(`t2BtnCol_${idPerwalian}`);
+            if (btnCol) {
+                if (newStatus === 'Selesai') {
+                    btnCol.innerHTML = `
+                        <button type="button" onclick="openGradingModal(${idPerwalian})" class="inline-flex items-center justify-center px-3.5 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl shadow-2xs transition">
+                            <i class="fa-solid fa-eye mr-1.5 text-emerald-600"></i> Lihat / Edit Nilai
+                        </button>
+                    `;
+                } else {
+                    btnCol.innerHTML = `
+                        <button type="button" onclick="openGradingModal(${idPerwalian})" class="inline-flex items-center justify-center px-3.5 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl shadow-sm transition">
+                            <i class="fa-solid fa-pen-to-square mr-1.5"></i> Input Nilai
+                        </button>
+                    `;
+                }
+            }
+
+            const cardBtn = document.getElementById(`t2CardBtn_${idPerwalian}`);
+            if (cardBtn) {
+                if (newStatus === 'Selesai') {
+                    cardBtn.className = "w-full py-2 px-3 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl shadow-2xs flex items-center justify-center gap-1.5 transition active:scale-98 cursor-pointer";
+                    cardBtn.innerHTML = `<i class="fa-solid fa-eye text-emerald-600 text-[11px]"></i> Lihat / Edit Nilai`;
+                } else {
+                    cardBtn.className = "w-full py-2 px-3 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition active:scale-98 cursor-pointer";
+                    cardBtn.innerHTML = `<i class="fa-solid fa-pen-to-square text-[11px]"></i> Input Nilai`;
+                }
             }
 
             // 3. Update top summary statistics
