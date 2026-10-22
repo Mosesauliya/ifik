@@ -213,8 +213,14 @@
             cursor: pointer;
         }
         .dropzone-box:hover {
-            border-color: #ea580c;
-            background: #fff7ed;
+            border-color: #059669;
+            background: #f0fdf4;
+        }
+        .dropzone-box.drag-active {
+            border-color: #059669 !important;
+            background: #dcfce7 !important;
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px -5px rgba(5, 150, 105, 0.25);
         }
 
         .page-wrapper-for-sidebar {
@@ -929,12 +935,15 @@
 
             <!-- Dropzone -->
             <input type="file" id="fileExcelInput" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleExcelSelect(event)">
-            <div onclick="document.getElementById('fileExcelInput').click()" class="dropzone-box p-6 text-center">
-                <span class="text-3xl text-emerald-600"><i class="fa-solid fa-cloud-arrow-up"></i></span>
-                <h4 class="text-xs font-bold text-slate-800 mt-2">Pilih File Excel Nilai (.xlsx / .csv)</h4>
-                <p class="text-[11px] text-slate-500 mt-1" id="importColumnHints">
+            <div id="excelDropzone" onclick="document.getElementById('fileExcelInput').click()" class="dropzone-box p-6 text-center select-none transition-all duration-200">
+                <span class="text-3xl text-emerald-600 block pointer-events-none"><i class="fa-solid fa-cloud-arrow-up"></i></span>
+                <h4 class="text-xs font-bold text-slate-800 mt-2 pointer-events-none" id="dropzoneTitleText">Pilih atau Drag & Drop File Excel (.xlsx / .csv)</h4>
+                <p class="text-[11px] text-slate-500 mt-1 pointer-events-none" id="importColumnHints">
                     Header: <code>NIM</code>, <code>Kode MK</code>, <code>Nilai Huruf</code> (A, AB, B, BC, C, D, E)
                 </p>
+                <div class="mt-2 text-[10px] text-emerald-700 font-semibold pointer-events-none flex items-center justify-center gap-1">
+                    <i class="fa-solid fa-arrow-pointer text-[10px]"></i> Klik untuk memilih file atau tarik & letakkan (drag & drop) file langsung di sini
+                </div>
             </div>
 
             <!-- Download Template Shortcut inside modal -->
@@ -1301,8 +1310,24 @@
         }
 
         function handleExcelSelect(e) {
-            const file = e.target.files[0];
+            const file = (e.target.files && e.target.files.length > 0) ? e.target.files[0] : null;
+            if (file) {
+                processExcelFile(file);
+            }
+        }
+
+        function processExcelFile(file) {
             if (!file) return;
+
+            // Validasi ekstensi file
+            const fileName = file.name.toLowerCase();
+            const validExts = ['.xlsx', '.xls', '.csv'];
+            const isValid = validExts.some(ext => fileName.endsWith(ext));
+            if (!isValid) {
+                Swal.fire('Format File Tidak Sesuai', 'Silakan unggah file dengan format .xlsx, .xls, atau .csv.', 'warning');
+                resetImportFile();
+                return;
+            }
 
             const reader = new FileReader();
             reader.onload = function(evt) {
@@ -1331,6 +1356,38 @@
                 }
             };
             reader.readAsArrayBuffer(file);
+        }
+
+        function initExcelDropzone() {
+            const dropzone = document.getElementById('excelDropzone');
+            if (!dropzone) return;
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, () => {
+                    dropzone.classList.add('drag-active');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, () => {
+                    dropzone.classList.remove('drag-active');
+                }, false);
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt ? dt.files : null;
+                if (files && files.length > 0) {
+                    processExcelFile(files[0]);
+                }
+            }, false);
         }
 
         function renderImportPreview(rows) {
@@ -1759,7 +1816,12 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             initStatsSliderListenerT2();
+            initExcelDropzone();
         });
+
+        // Cegah browser membuka file secara default saat di-drop di luar dropzone
+        window.addEventListener('dragover', (e) => e.preventDefault(), false);
+        window.addEventListener('drop', (e) => e.preventDefault(), false);
 
 // =========================================================================
         // AJAX DYNAMIC UI UPDATE HELPERS (Tahap 2)
