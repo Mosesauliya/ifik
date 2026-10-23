@@ -8,9 +8,130 @@
     <!-- Tailwind CSS & Fonts -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+        <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SheetJS (XLSX parsing & export) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <!-- ========================================================================= -->
+    <!-- MODAL: IMPORT NILAI EXCEL (FITUR ALIF)                                    -->
+    <!-- ========================================================================= -->
+    <div id="modalImportNilai" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[100010] hidden flex items-center justify-center p-2.5 pb-6 sm:p-4 overflow-y-auto">
+        <div class="clay-card w-full max-w-3xl xl:max-w-4xl max-h-[82vh] max-h-[82dvh] sm:max-h-[92vh] flex flex-col overflow-hidden bg-white shadow-2xl rounded-2xl">
+            <!-- Modal Fixed Header -->
+            <div class="px-5 py-3.5 sm:px-6 sm:py-4 border-b border-slate-100 flex items-center justify-between gap-3 shrink-0 bg-white">
+                <div class="flex items-center space-x-2.5 min-w-0">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-file-excel text-base"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <h3 class="font-bold text-sm text-slate-900 truncate" id="importModalTitle">Import Rekap Nilai Mahasiswa dari Excel</h3>
+                        <p class="text-xs text-slate-500 truncate" id="importModalSubtitle">Format: .xlsx, .xls, .csv</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeImportModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center transition shrink-0 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body (Scrollable) -->
+            <div class="p-4 sm:p-6 overflow-y-auto flex-grow space-y-3.5">
+                <!-- Dropzone Input File -->
+                <input type="file" id="fileExcelInput" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleExcelSelect(event)">
+                <div id="excelDropzone" onclick="document.getElementById('fileExcelInput').click()" class="dropzone-box p-6 text-center select-none transition-all duration-200">
+                    <span class="text-3xl text-emerald-600 block pointer-events-none"><i class="fa-solid fa-cloud-arrow-up"></i></span>
+                    <h4 class="text-xs font-bold text-slate-800 mt-2 pointer-events-none" id="dropzoneTitleText">Pilih atau Drag & Drop File Excel (.xlsx / .csv)</h4>
+                    <p class="text-[11px] text-slate-500 mt-1 pointer-events-none" id="importColumnHints">
+                        Header: <code>Kode MK</code>, <code>Nilai Huruf</code> (A, AB, B, BC, C, D, E)
+                    </p>
+                    <div class="mt-2 text-[10px] text-emerald-700 font-semibold pointer-events-none flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-arrow-pointer text-[10px]"></i> Klik untuk memilih file atau tarik & letakkan (drag & drop) file langsung di sini
+                    </div>
+                </div>
+
+                <!-- Compact File Loaded Bar (Shows when file is active) -->
+                <div id="excelSelectedFileBar" class="hidden p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl flex items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center space-x-2.5 min-w-0">
+                        <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-file-excel"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <span class="font-bold text-slate-900 block truncate" id="excelSelectedFileName">file.xlsx</span>
+                            <span class="text-[11px] text-emerald-700 block" id="excelSelectedFileInfo">File berhasil dimuat & divalidasi</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="resetImportFile()" class="px-2.5 py-1 text-xs font-semibold text-rose-700 hover:text-rose-800 bg-white hover:bg-rose-50 border border-rose-200 rounded-lg transition shrink-0 flex items-center gap-1 cursor-pointer shadow-2xs">
+                        <i class="fa-solid fa-rotate-left text-[10px]"></i> Ganti File
+                    </button>
+                </div>
+
+                <!-- Download Template Shortcut inside modal -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 bg-emerald-50/60 border border-emerald-100 rounded-xl text-xs gap-2">
+                    <div class="flex items-center space-x-2 text-emerald-900">
+                        <i class="fa-solid fa-circle-info text-emerald-600 shrink-0"></i>
+                        <span id="importTemplateHintText">Belum punya format Excel yang sesuai?</span>
+                    </div>
+                    <button type="button" onclick="downloadTemplateForCurrentMode()" class="inline-flex items-center justify-center px-3 py-1.5 font-bold text-emerald-700 bg-white hover:bg-emerald-100/80 border border-emerald-300 rounded-lg shadow-2xs transition shrink-0 cursor-pointer">
+                        <i class="fa-solid fa-download mr-1.5 text-emerald-600"></i>
+                        <span id="btnTemplateDownloadText">Download Template</span>
+                    </button>
+                </div>
+
+                <!-- Preview Container with Robust Validation Info -->
+                <div id="importPreviewContainer" class="hidden space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="font-bold text-slate-800">Pratinjau Validasi Nilai:</span>
+                            <span class="px-2.5 py-0.5 text-[11px] font-bold rounded-md bg-slate-100 text-slate-700 border border-slate-200" id="importBadgeTotal">Total: <span id="importRowCount">0</span></span>
+                            <span class="px-2.5 py-0.5 text-[11px] font-bold rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300" id="importBadgeValid">Cocok: <span id="importValidCount">0</span></span>
+                            <span class="px-2.5 py-0.5 text-[11px] font-bold rounded-md bg-rose-100 text-rose-800 border border-rose-300" id="importBadgeInvalid">Tidak Cocok: <span id="importInvalidCount">0</span></span>
+                        </div>
+                    </div>
+
+                    <!-- Alert banner for validation status -->
+                    <div id="importWarningBanner" class="hidden p-3 rounded-xl text-xs space-y-1">
+                        <div class="font-bold flex items-center gap-1.5" id="importWarningTitle">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span id="importWarningTitleText">Peringatan Validasi File</span>
+                        </div>
+                        <p class="text-[11px] leading-relaxed" id="importWarningText">
+                            Beberapa kode mata kuliah atau format nilai tidak sesuai dengan rencana studi mahasiswa. Baris berwarna merah tidak akan disimpan ke sistem.
+                        </p>
+                    </div>
+
+                    <!-- Table Preview with clean overflow -->
+                    <div class="border border-slate-200 rounded-xl overflow-hidden shadow-2xs bg-white">
+                        <div class="max-h-60 overflow-y-auto overflow-x-auto">
+                            <table class="w-full text-left text-xs min-w-[550px]">
+                                <thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-600 sticky top-0 border-b border-slate-200 z-10">
+                                    <tr>
+                                        <th class="py-2.5 px-3 w-28 whitespace-nowrap">NIM</th>
+                                        <th class="py-2.5 px-3 w-28 whitespace-nowrap">Kode MK di File</th>
+                                        <th class="py-2.5 px-3 min-w-[140px]">Mata Kuliah di Sistem</th>
+                                        <th class="py-2.5 px-3 w-16 text-center whitespace-nowrap">Nilai</th>
+                                        <th class="py-2.5 px-3 w-40 text-center whitespace-nowrap">Hasil Validasi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="importPreviewTableBody" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Fixed Footer -->
+            <div class="px-5 py-3 sm:px-6 sm:py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-end space-x-2 shrink-0">
+                <button type="button" onclick="closeImportModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200/60 rounded-xl transition cursor-pointer">
+                    Batal
+                </button>
+                <button type="button" id="btnProcessImport" onclick="processImportNilai()" disabled class="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl shadow-md transition flex items-center cursor-pointer">
+                    <i class="fa-solid fa-check mr-1.5"></i> Simpan Nilai ke Sistem
+                </button>
+            </div>
+        </div>
+    </div>
     <script>
         tailwind.config = {
             theme: {
@@ -67,6 +188,17 @@
             cursor: not-allowed;
         }
 
+                .dropzone-box {
+            border: 2px dashed #cbd5e1;
+            border-radius: 18px;
+            background: #f8fafc;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .dropzone-box:hover, .dropzone-box.dragover, .dropzone-box.drag-active {
+            border-color: #059669 !important;
+            background: #ecfdf5 !important;
+        }
         .dropzone-upload {
             border: 2px dashed #cbd5e1;
             border-radius: 16px;
@@ -495,6 +627,123 @@
     </div>
 
     <!-- JAVASCRIPT LOGIC -->
+    <!-- ========================================================================= -->
+    <!-- MODAL: IMPORT NILAI EXCEL (FITUR ALIF)                                    -->
+    <!-- ========================================================================= -->
+    <div id="modalImportNilai" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[100010] hidden flex items-center justify-center p-2.5 pb-6 sm:p-4 overflow-y-auto">
+        <div class="clay-card w-full max-w-3xl xl:max-w-4xl max-h-[82vh] max-h-[82dvh] sm:max-h-[92vh] flex flex-col overflow-hidden bg-white shadow-2xl rounded-2xl">
+            <!-- Modal Fixed Header -->
+            <div class="px-5 py-3.5 sm:px-6 sm:py-4 border-b border-slate-100 flex items-center justify-between gap-3 shrink-0 bg-white">
+                <div class="flex items-center space-x-2.5 min-w-0">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-file-excel text-base"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <h3 class="font-bold text-sm text-slate-900 truncate" id="importModalTitle">Import Rekap Nilai Mahasiswa dari Excel</h3>
+                        <p class="text-xs text-slate-500 truncate" id="importModalSubtitle">Format: .xlsx, .xls, .csv</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeImportModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center transition shrink-0 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body (Scrollable) -->
+            <div class="p-4 sm:p-6 overflow-y-auto flex-grow space-y-3.5">
+                <!-- Dropzone Input File -->
+                <input type="file" id="fileExcelInput" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleExcelSelect(event)">
+                <div id="excelDropzone" onclick="document.getElementById('fileExcelInput').click()" class="dropzone-box p-6 text-center select-none transition-all duration-200">
+                    <span class="text-3xl text-emerald-600 block pointer-events-none"><i class="fa-solid fa-cloud-arrow-up"></i></span>
+                    <h4 class="text-xs font-bold text-slate-800 mt-2 pointer-events-none" id="dropzoneTitleText">Pilih atau Drag & Drop File Excel (.xlsx / .csv)</h4>
+                    <p class="text-[11px] text-slate-500 mt-1 pointer-events-none" id="importColumnHints">
+                        Header: <code>Kode MK</code>, <code>Nilai Huruf</code> (A, AB, B, BC, C, D, E)
+                    </p>
+                    <div class="mt-2 text-[10px] text-emerald-700 font-semibold pointer-events-none flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-arrow-pointer text-[10px]"></i> Klik untuk memilih file atau tarik & letakkan (drag & drop) file langsung di sini
+                    </div>
+                </div>
+
+                <!-- Compact File Loaded Bar (Shows when file is active) -->
+                <div id="excelSelectedFileBar" class="hidden p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl flex items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center space-x-2.5 min-w-0">
+                        <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-file-excel"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <span class="font-bold text-slate-900 block truncate" id="excelSelectedFileName">file.xlsx</span>
+                            <span class="text-[11px] text-emerald-700 block" id="excelSelectedFileInfo">File berhasil dimuat & divalidasi</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="resetImportFile()" class="px-2.5 py-1 text-xs font-semibold text-rose-700 hover:text-rose-800 bg-white hover:bg-rose-50 border border-rose-200 rounded-lg transition shrink-0 flex items-center gap-1 cursor-pointer shadow-2xs">
+                        <i class="fa-solid fa-rotate-left text-[10px]"></i> Ganti File
+                    </button>
+                </div>
+
+                <!-- Download Template Shortcut inside modal -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 bg-emerald-50/60 border border-emerald-100 rounded-xl text-xs gap-2">
+                    <div class="flex items-center space-x-2 text-emerald-900">
+                        <i class="fa-solid fa-circle-info text-emerald-600 shrink-0"></i>
+                        <span id="importTemplateHintText">Belum punya format Excel yang sesuai?</span>
+                    </div>
+                    <button type="button" onclick="downloadTemplateForCurrentMode()" class="inline-flex items-center justify-center px-3 py-1.5 font-bold text-emerald-700 bg-white hover:bg-emerald-100/80 border border-emerald-300 rounded-lg shadow-2xs transition shrink-0 cursor-pointer">
+                        <i class="fa-solid fa-download mr-1.5 text-emerald-600"></i>
+                        <span id="btnTemplateDownloadText">Download Template</span>
+                    </button>
+                </div>
+
+                <!-- Preview Container with Robust Validation Info -->
+                <div id="importPreviewContainer" class="hidden space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="font-bold text-slate-800">Pratinjau Validasi Nilai:</span>
+                            <span class="px-2.5 py-0.5 text-[11px] font-bold rounded-md bg-slate-100 text-slate-700 border border-slate-200" id="importBadgeTotal">Total: <span id="importRowCount">0</span></span>
+                            <span class="px-2.5 py-0.5 text-[11px] font-bold rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300" id="importBadgeValid">Cocok: <span id="importValidCount">0</span></span>
+                            <span class="px-2.5 py-0.5 text-[11px] font-bold rounded-md bg-rose-100 text-rose-800 border border-rose-300" id="importBadgeInvalid">Tidak Cocok: <span id="importInvalidCount">0</span></span>
+                        </div>
+                    </div>
+
+                    <!-- Alert banner for validation status -->
+                    <div id="importWarningBanner" class="hidden p-3 rounded-xl text-xs space-y-1">
+                        <div class="font-bold flex items-center gap-1.5" id="importWarningTitle">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span id="importWarningTitleText">Peringatan Validasi File</span>
+                        </div>
+                        <p class="text-[11px] leading-relaxed" id="importWarningText">
+                            Beberapa kode mata kuliah atau format nilai tidak sesuai dengan rencana studi mahasiswa. Baris berwarna merah tidak akan disimpan ke sistem.
+                        </p>
+                    </div>
+
+                    <!-- Table Preview with clean overflow -->
+                    <div class="border border-slate-200 rounded-xl overflow-hidden shadow-2xs bg-white">
+                        <div class="max-h-60 overflow-y-auto overflow-x-auto">
+                            <table class="w-full text-left text-xs min-w-[550px]">
+                                <thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-600 sticky top-0 border-b border-slate-200 z-10">
+                                    <tr>
+                                        <th class="py-2.5 px-3 w-28 whitespace-nowrap">NIM</th>
+                                        <th class="py-2.5 px-3 w-28 whitespace-nowrap">Kode MK di File</th>
+                                        <th class="py-2.5 px-3 min-w-[140px]">Mata Kuliah di Sistem</th>
+                                        <th class="py-2.5 px-3 w-16 text-center whitespace-nowrap">Nilai</th>
+                                        <th class="py-2.5 px-3 w-40 text-center whitespace-nowrap">Hasil Validasi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="importPreviewTableBody" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Fixed Footer -->
+            <div class="px-5 py-3 sm:px-6 sm:py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-end space-x-2 shrink-0">
+                <button type="button" onclick="closeImportModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200/60 rounded-xl transition cursor-pointer">
+                    Batal
+                </button>
+                <button type="button" id="btnProcessImport" onclick="processImportNilai()" disabled class="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl shadow-md transition flex items-center cursor-pointer">
+                    <i class="fa-solid fa-check mr-1.5"></i> Simpan Nilai ke Sistem
+                </button>
+            </div>
+        </div>
+    </div>
     <script>
         const idPerwalian = <?= (int)$perwalian['id_perwalian'] ?>;
 

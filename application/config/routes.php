@@ -560,6 +560,9 @@ $route['mahasiswa/perwalian_upload_krs']              = 'Mahasiswa/perwalian_upl
 $route['mahasiswa/perwalian_tambah_mk']               = 'Mahasiswa/perwalian_tambah_mk';
 $route['mahasiswa/perwalian_hapus_mk']                = 'Mahasiswa/perwalian_hapus_mk';
 $route['mahasiswa/perwalian_submit']                  = 'Mahasiswa/perwalian_submit';
+$route['mahasiswa/perwalian_update_nilai']            = 'Mahasiswa/perwalian_update_nilai';
+$route['mahasiswa/perwalian_import_nilai']            = 'Mahasiswa/perwalian_import_nilai';
+$route['mahasiswa/perwalian_submit_tahap2']           = 'Mahasiswa/perwalian_submit_tahap2';
 
 // Dosen Help Chat Routes (Harus sebelum Laboran Help routes)
 $route['dosen/help'] = 'DosenHelp/index';
