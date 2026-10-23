@@ -536,7 +536,7 @@
                 <!-- Info Search Counter & Active Filter Tags -->
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs text-slate-500 pt-1 border-t border-slate-100">
                     <div id="searchResultSummaryT1" class="text-[11px] sm:text-xs">
-                        Menampilkan <strong class="text-slate-900 font-bold" id="visibleRowCountT1"><?= count($list_perwalian); ?></strong> dari <strong class="text-slate-900 font-bold"><?= count($list_perwalian); ?></strong> mahasiswa bimbingan.
+                        Menampilkan <strong class="text-slate-900 font-bold" id="visibleRowCountT1"><?= count($list_perwalian); ?></strong> dari <strong class="text-slate-900 font-bold" id="totalRowCountT1"><?= count($list_perwalian); ?></strong> mahasiswa bimbingan.
                     </div>
                     <div id="activeTagsContainerT1" class="flex flex-wrap items-center gap-1.5"></div>
                 </div>
@@ -547,7 +547,7 @@
                 <div class="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 space-y-1">
                     <div class="flex items-center justify-between gap-2.5 sm:gap-4">
                         <h2 class="text-xs sm:text-sm font-bold text-slate-900 leading-tight">Daftar Pengajuan Rencana Studi Mahasiswa (Tahap 1)</h2>
-                        <span class="text-[11px] sm:text-xs font-bold px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg whitespace-nowrap shrink-0">
+                        <span data-sync-count class="text-[11px] sm:text-xs font-bold px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg whitespace-nowrap shrink-0">
                             <?= count($list_perwalian); ?> Mahasiswa
                         </span>
                     </div>
@@ -1371,6 +1371,58 @@
         }
 
 
+
+        // ===== Auto-sync data tanpa refresh (polling ringan) =====
+        let __syncSig = null;
+        let __syncBusy = false;
+
+        async function syncListFromServer() {
+            if (__syncBusy || document.hidden) return;
+            __syncBusy = true;
+            try {
+                const res = await fetch(window.location.href, {
+                    cache: 'no-store',
+                    credentials: 'same-origin',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!res.ok) return;
+                const html = await res.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+
+                const newBody = doc.querySelector('table tbody.divide-y');
+                const newCards = doc.getElementById('t1MobileCardsContainer');
+                if (!newBody || !newCards) return; // mis. sesi habis -> halaman login
+
+                const sig = newBody.innerHTML + '||' + newCards.innerHTML;
+                if (sig === __syncSig) return;
+                __syncSig = sig;
+
+                const curBody = document.querySelector('table tbody.divide-y');
+                const curCards = document.getElementById('t1MobileCardsContainer');
+                if (curBody) curBody.innerHTML = newBody.innerHTML;
+                if (curCards) curCards.innerHTML = newCards.innerHTML;
+
+                ['statT1TotalMhs', 'statT1Diajukan', 'statT1Disetujui', 'statT1RevDraft', 'statT1SubRevDraft'].forEach(id => {
+                    const n = doc.getElementById(id), c = document.getElementById(id);
+                    if (n && c) c.innerHTML = n.innerHTML;
+                });
+
+                const nt = doc.getElementById('totalRowCountT1'), ct = document.getElementById('totalRowCountT1');
+                if (nt && ct) ct.innerText = nt.innerText;
+                const nb = doc.querySelector('[data-sync-count]'), cb = document.querySelector('[data-sync-count]');
+                if (nb && cb) cb.innerText = nb.innerText;
+
+                // terapkan ulang filter pencarian yang sedang aktif
+                if (typeof executeMultiSearchT1 === 'function') executeMultiSearchT1();
+            } catch (e) {
+                /* abaikan error jaringan sesaat, coba lagi di siklus berikutnya */
+            } finally {
+                __syncBusy = false;
+            }
+        }
+
+        setInterval(syncListFromServer, 4000);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) syncListFromServer(); });
 
         function escapeHtml(text) {
             if (!text) return '';
