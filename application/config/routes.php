@@ -152,6 +152,7 @@ $route['dosenwali/update_judul_approval_ajax']  = 'DosenWali/update_judul_approv
 $route['dosen/wali/update_jenis_approval_ajax'] = 'DosenWali/update_jenis_approval_ajax';
 $route['dosenwali/update_jenis_approval_ajax']  = 'DosenWali/update_jenis_approval_ajax';
 $route['dosen/wali/(:any)'] = 'DosenWali/$1';
+$route['dosen/perwalian'] = 'DosenWali/perwalian';
 $route['dosen/wali/(:any)/(:any)'] = 'DosenWali/$1/$2';
 
 $route['dosenwali'] = 'DosenWali';
@@ -547,6 +548,18 @@ $route['prodi/peminjaman/tolak/(:any)']               = 'kaprodi/peminjaman/tola
 $route['prodi/peminjaman/bulk']                       = 'kaprodi/peminjaman/bulk';
 $route['prodi/peminjaman/(:any)']                     = 'kaprodi/peminjaman/$1';
 $route['prodi/peminjaman/(:any)/(:any)']              = 'kaprodi/peminjaman/$1/$2';
+
+// Program Studi Perwalian Routes (Role 16, Admin, Super Admin)
+$route['prodi/perwalian']                             = 'AdminProdi/index';
+$route['prodi/perwalian/(:any)']                      = 'AdminProdi/$1';
+$route['prodi/perwalian/(:any)/(:any)']               = 'AdminProdi/$1/$2';
+
+// Mahasiswa Perwalian Routes (Role 4)
+$route['mahasiswa/perwalian']                         = 'Mahasiswa/perwalian';
+$route['mahasiswa/perwalian_upload_krs']              = 'Mahasiswa/perwalian_upload_krs';
+$route['mahasiswa/perwalian_tambah_mk']               = 'Mahasiswa/perwalian_tambah_mk';
+$route['mahasiswa/perwalian_hapus_mk']                = 'Mahasiswa/perwalian_hapus_mk';
+$route['mahasiswa/perwalian_submit']                  = 'Mahasiswa/perwalian_submit';
 
 // Dosen Help Chat Routes (Harus sebelum Laboran Help routes)
 $route['dosen/help'] = 'DosenHelp/index';

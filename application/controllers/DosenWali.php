@@ -85,7 +85,8 @@ class DosenWali extends CI_Controller {
 
     private function _is_stage_locked($nim) {
         $detail = $this->DosenWali_model->get_detail_pendaftaran_mahasiswa($nim);
-        if (!$detail) return false;
+        if (!$detail) return true;
+        if (empty($detail['has_submitted_ta'])) return true;
         $current_stage = $detail['current_stage'] ?? 'Dosen Wali';
         $status_wali = $detail['status_approval_wali'] ?? 'Pending';
         return ($status_wali === 'Approved' || in_array($current_stage, ['Admin Layanan', 'Koordinator TA', 'Ketua KK', 'Selesai Approval', 'Selesai']));
@@ -101,44 +102,9 @@ class DosenWali extends CI_Controller {
         $data['dosen_info']     = $this->DosenWali_model->get_dosen_wali_info($nip_dosen);
         $data['detail']         = $this->DosenWali_model->get_detail_pendaftaran_mahasiswa($nim);
         if (empty($data['detail'])) {
-            $data['detail'] = [
-                'id'                     => $nim,
-                'nim'                    => $nim,
-                'nama_depan'             => 'Mahasiswa ' . $nim,
-                'nama_belakang'          => '',
-                'mhs_konsentrasi'        => 'Desain Komunikasi Visual',
-                'prodi'                  => 'Desain Komunikasi Visual',
-                'email'                  => '-',
-                'no_hp'                  => '-',
-                'judul_1'                => 'Usulan Judul Tugas Akhir',
-                'judul_2'                => '',
-                'judul_3'                => '',
-                'judul_en'               => '',
-                'jenis_ta'               => 'Pengkaryaan',
-                'status_judul'           => 'Pending',
-                'catatan_judul'          => '',
-                'status_approval_wali'   => 'Pending',
-                'status_approval_admin'  => 'Pending',
-                'status_approval_koor'   => 'Pending',
-                'status_approval_kk'     => 'Pending',
-                'current_stage'          => 'Dosen Wali',
-                'tgl_daftar'             => date('Y-m-d H:i:s'),
-                'created_at'             => date('Y-m-d H:i:s'),
-                'file_ksm'               => '',
-                'status_file_ksm'        => 'Pending',
-                'catatan_file_ksm'       => '',
-                'file_transkrip'         => '',
-                'status_file_transkrip'  => 'Pending',
-                'catatan_file_transkrip' => '',
-                'file_pernyataan'        => '',
-                'status_file_pernyataan' => 'Pending',
-                'catatan_file_pernyataan'=> '',
-                'file_bebas_lab'         => '',
-                'status_file_bebas_lab'  => 'Pending',
-                'catatan_file_bebas_lab' => '',
-                'berkas_map'             => [],
-                'total_berkas'           => 0
-            ];
+            $this->session->set_flashdata('error', 'Data mahasiswa dengan NIM ' . htmlspecialchars($nim) . ' tidak ditemukan.');
+            redirect('dosen/wali');
+            return;
         }
         $data['syarat_berkas']  = $this->AdminLayanan_model->get_active_syarat_berkas();
         $data['student_berkas'] = $this->AdminLayanan_model->get_student_berkas_map($nim);
@@ -877,5 +843,284 @@ class DosenWali extends CI_Controller {
         }
         redirect('dosen/wali');
     }
-}
 
+    // =========================================================================
+    // MODUL PERWALIAN MAHASISWA BIMBINGAN (TAHAP 1 & TAHAP 2)
+    // Dibuat dinamis tanpa hardcode, mendukung multi-identifier & SheetJS import
+    // =========================================================================
+
+    /**
+     * Helper: Dapatkan seluruh identitas pengenal Dosen yang sedang login
+     * (NIP, Kode Dosen, Username, NIM, ID) agar pencarian di DB 100% akurat.
+     */
+    private function _get_current_dosen_identifiers() {
+        $userId = $this->session->userdata('user_id');
+        $user = null;
+        if ($userId && $this->db->table_exists('user')) {
+            $user = $this->db->get_where('user', ['id' => $userId])->row_array();
+        }
+        
+        $ids = [];
+        if ($user) {
+            if (!empty($user['nip'])) $ids[] = trim($user['nip']);
+            if (!empty($user['kode_dosen'])) $ids[] = trim($user['kode_dosen']);
+            if (!empty($user['username'])) $ids[] = trim($user['username']);
+            if (!empty($user['nim'])) $ids[] = trim($user['nim']);
+            if (!empty($user['id'])) $ids[] = trim($user['id']);
+        }
+        
+        foreach (['nip', 'nidn_nim', 'username', 'nim', 'kode_dosen'] as $key) {
+            $v = $this->session->userdata($key);
+            if (!empty($v)) $ids[] = trim((string)$v);
+        }
+        
+        // Superadmin bypass: Jika role_id == 1, bisa melihat semua
+        if ((int)$this->session->userdata('role_id') === 1) {
+            $ids[] = 'all';
+        }
+        
+        return array_values(array_filter(array_unique($ids)));
+    }
+
+    /**
+     * Redirect alias perwalian default ke Tahap 1
+     */
+    public function perwalian() {
+        redirect('dosen/wali/perwalian_tahap1');
+    }
+
+    /**
+     * MENU 1: Perwalian Tahap 1 (Kontrak KRS Awal Semester)
+     * Dosen Wali memverifikasi berkas KRS, cek kuota SKS (max 24), dan menyetujui / meminta revisi.
+     */
+    public function perwalian_tahap1() {
+        $this->load->model('Perwalian_model');
+
+        $dosen_ids = $this->_get_current_dosen_identifiers();
+        $nip_primary = $this->_get_current_nip();
+
+        $filters = [
+            'search'        => trim($this->input->get('search', true) ?? ''),
+            'status_tahap1' => trim($this->input->get('status_tahap1', true) ?? 'all'),
+            'tahun_ajaran'  => trim($this->input->get('tahun_ajaran', true) ?? 'all'),
+            'semester'      => trim($this->input->get('semester', true) ?? 'all'),
+            'prodi'         => trim($this->input->get('prodi', true) ?? 'all'),
+        ];
+
+        $filter_options = $this->Perwalian_model->get_filter_options();
+        $list_perwalian = $this->Perwalian_model->get_perwalian_by_dosen($dosen_ids, $filters);
+        $stats = $this->Perwalian_model->get_dosen_perwalian_stats(
+            $dosen_ids, 
+            $filters['tahun_ajaran'] !== 'all' ? $filters['tahun_ajaran'] : null,
+            $filters['semester'] !== 'all' ? $filters['semester'] : null
+        );
+
+        $dosen_info = $this->DosenWali_model->get_dosen_wali_info($nip_primary);
+
+        $data = [
+            'title'          => 'Perwalian Tahap 1 (Kontrak KRS) - Dosen Wali',
+            'dosen_info'     => $dosen_info,
+            'list_perwalian' => $list_perwalian,
+            'stats'          => $stats,
+            'filters'        => $filters,
+            'filter_options' => $filter_options,
+        ];
+
+        $this->load->view('dosen_wali/perwalian_tahap1', $data);
+    }
+
+    /**
+     * MENU 2: Perwalian Tahap 2 (Input & Evaluasi Nilai Akhir Semester)
+     * Dosen Wali meng-generate MK, import Excel nilai, checklist lulus/tidak lulus, dan kunci perwalian.
+     */
+    public function perwalian_tahap2() {
+        $this->load->model('Perwalian_model');
+
+        $dosen_ids = $this->_get_current_dosen_identifiers();
+        $nip_primary = $this->_get_current_nip();
+
+        $filters = [
+            'search'        => trim($this->input->get('search', true) ?? ''),
+            'status_tahap2' => trim($this->input->get('status_tahap2', true) ?? 'all'),
+            'tahun_ajaran'  => trim($this->input->get('tahun_ajaran', true) ?? 'all'),
+            'semester'      => trim($this->input->get('semester', true) ?? 'all'),
+            'prodi'         => trim($this->input->get('prodi', true) ?? 'all'),
+        ];
+
+        $filter_options = $this->Perwalian_model->get_filter_options();
+        $list_perwalian = $this->Perwalian_model->get_perwalian_by_dosen($dosen_ids, $filters);
+        $stats = $this->Perwalian_model->get_dosen_perwalian_stats(
+            $dosen_ids, 
+            $filters['tahun_ajaran'] !== 'all' ? $filters['tahun_ajaran'] : null,
+            $filters['semester'] !== 'all' ? $filters['semester'] : null
+        );
+
+        $dosen_info = $this->DosenWali_model->get_dosen_wali_info($nip_primary);
+
+        $data = [
+            'title'          => 'Perwalian Tahap 2 (Evaluasi & Penilaian) - Dosen Wali',
+            'dosen_info'     => $dosen_info,
+            'list_perwalian' => $list_perwalian,
+            'stats'          => $stats,
+            'filters'        => $filters,
+            'filter_options' => $filter_options,
+        ];
+
+        $this->load->view('dosen_wali/perwalian_tahap2', $data);
+    }
+
+    /**
+     * AJAX: Dapatkan Detail Perwalian Mahasiswa (Data Mahasiswa + MK + Bukti KRS)
+     */
+    public function perwalian_detail_ajax($id_perwalian) {
+        $this->output->set_content_type('application/json');
+        $this->load->model('Perwalian_model');
+
+        $detail = $this->Perwalian_model->get_perwalian_detail_full((int)$id_perwalian);
+        if (!$detail) {
+            $this->output->set_output(json_encode([
+                'status'  => false,
+                'message' => 'Data perwalian tidak ditemukan.'
+            ]));
+            return;
+        }
+
+        $this->output->set_output(json_encode([
+            'status' => true,
+            'data'   => $detail
+        ]));
+    }
+
+    /**
+     * AJAX: Approval / Revisi KRS Tahap 1 oleh Dosen Wali
+     */
+    public function perwalian_approve_tahap1() {
+        $this->output->set_content_type('application/json');
+        $this->load->model('Perwalian_model');
+
+        $id_perwalian = (int)$this->input->post('id_perwalian', true);
+        $status       = trim($this->input->post('status', true) ?? 'Disetujui');
+        $catatan      = trim($this->input->post('catatan_wali', true) ?? '');
+
+        if (!$id_perwalian) {
+            $this->output->set_output(json_encode(['status' => false, 'message' => 'ID Perwalian tidak valid.']));
+            return;
+        }
+
+        $res = $this->Perwalian_model->approve_tahap1($id_perwalian, $status, $catatan);
+        if ($res) {
+            $pesan = ($status === 'Disetujui') 
+                ? 'Rencana studi mahasiswa berhasil disetujui (Tahap 1 selesai).' 
+                : 'Permintaan revisi rencana studi telah dikirimkan ke mahasiswa untuk diperbaiki.';
+
+            $dosen_ids = $this->_get_current_dosen_identifiers();
+            $stats = $this->Perwalian_model->get_dosen_perwalian_stats($dosen_ids);
+
+            $this->output->set_output(json_encode([
+                'status'        => true,
+                'message'       => $pesan,
+                'status_tahap1' => $status,
+                'id_perwalian'  => $id_perwalian,
+                'stats'         => $stats
+            ]));
+        } else {
+            $this->output->set_output(json_encode(['status' => false, 'message' => 'Gagal memperbarui status perwalian.']));
+        }
+    }
+
+    /**
+     * AJAX: Generate Mata Kuliah untuk Mahasiswa (Tahap 2 / Rencana Studi)
+     */
+    public function perwalian_generate_mk() {
+        $this->output->set_content_type('application/json');
+        $this->load->model('Perwalian_model');
+
+        $id_perwalian = (int)$this->input->post('id_perwalian', true);
+        if (!$id_perwalian) {
+            $this->output->set_output(json_encode(['status' => false, 'message' => 'ID Perwalian tidak valid.']));
+            return;
+        }
+
+        $res = ['status' => false, 'message' => 'Generate MK dikelola oleh Admin Prodi.'];
+        $this->output->set_output(json_encode($res));
+    }
+
+    /**
+     * AJAX: Update Nilai Per Mata Kuliah (A, AB, B, BC, C, D, E) atau Switch Lulus/Tidak Lulus
+     */
+    public function perwalian_update_nilai() {
+        $this->output->set_content_type('application/json');
+        $this->load->model('Perwalian_model');
+
+        $id_detail    = (int)$this->input->post('id_detail', true);
+        $nilai_huruf  = strtoupper(trim($this->input->post('nilai_huruf', true) ?? ''));
+        $status_lulus = $this->input->post('status_kelulusan', true);
+
+        if (!$id_detail) {
+            $this->output->set_output(json_encode(['status' => false, 'message' => 'ID detail mata kuliah tidak valid.']));
+            return;
+        }
+
+        $res = $this->Perwalian_model->update_nilai_detail($id_detail, $nilai_huruf, $status_lulus);
+        $dosen_ids = $this->_get_current_dosen_identifiers();
+        $stats = $this->Perwalian_model->get_dosen_perwalian_stats($dosen_ids);
+
+        $this->output->set_output(json_encode([
+            'status'  => true,
+            'message' => 'Nilai dan status kelulusan berhasil diperbarui.',
+            'data'    => $res,
+            'stats'   => $stats
+        ]));
+    }
+
+    /**
+     * AJAX: Import Nilai Bulk dari File Excel (.xlsx / .csv)
+     */
+    public function perwalian_import_nilai() {
+        @set_time_limit(300);
+        $this->output->set_content_type('application/json');
+        $this->load->model('Perwalian_model');
+
+        $rawInput = file_get_contents('php://input');
+        $json = json_decode($rawInput, true);
+
+        $rows = $json['rows'] ?? [];
+        $id_perwalian = !empty($json['id_perwalian']) ? (int)$json['id_perwalian'] : null;
+
+        if (empty($rows) || !is_array($rows)) {
+            $this->output->set_output(json_encode([
+                'status'  => false,
+                'message' => 'Data baris nilai kosong atau format JSON tidak sesuai.'
+            ]));
+            return;
+        }
+
+        $dosen_ids = $this->_get_current_dosen_identifiers();
+        $result = $this->Perwalian_model->import_nilai_bulk_dosen($dosen_ids, $rows, $id_perwalian);
+
+        $this->output->set_output(json_encode($result));
+    }
+
+    /**
+     * AJAX: Selesaikan & Kunci Perwalian Tahap 2
+     */
+    public function perwalian_submit_tahap2() {
+        $this->output->set_content_type('application/json');
+        $this->load->model('Perwalian_model');
+
+        $id_perwalian = (int)$this->input->post('id_perwalian', true);
+        if (!$id_perwalian) {
+            $this->output->set_output(json_encode(['status' => false, 'message' => 'ID Perwalian tidak valid.']));
+            return;
+        }
+
+        $result = $this->Perwalian_model->submit_perwalian_tahap2($id_perwalian);
+        if (!empty($result['status'])) {
+            $dosen_ids = $this->_get_current_dosen_identifiers();
+            $result['stats'] = $this->Perwalian_model->get_dosen_perwalian_stats($dosen_ids);
+            $result['id_perwalian'] = $id_perwalian;
+            $result['status_tahap2'] = 'Selesai';
+        }
+        $this->output->set_output(json_encode($result));
+    }
+}

@@ -406,8 +406,9 @@
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Konsentrasi (Otomatis dari Biodata)</label>
                                 <div class="relative">
-                                    <input type="text" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-100/90 text-slate-800 font-semibold text-xs outline-none cursor-not-allowed pr-28" value="<?= htmlspecialchars(!empty($mahasiswa['konsentrasi_dkv']) ? $mahasiswa['konsentrasi_dkv'] : ($pendaftaran['konsentrasi_dkv'] ?? 'Desain Komunikasi Visual')); ?>" readonly>
-                                    <input type="hidden" name="konsentrasi_dkv" value="<?= htmlspecialchars(!empty($mahasiswa['konsentrasi_dkv']) ? $mahasiswa['konsentrasi_dkv'] : ($pendaftaran['konsentrasi_dkv'] ?? 'Desain Komunikasi Visual')); ?>">
+                                    <?php $display_konsentrasi = !empty($mahasiswa['konsentrasi_dkv']) ? $mahasiswa['konsentrasi_dkv'] : (!empty($mahasiswa['prodi']) ? $mahasiswa['prodi'] : (!empty($pendaftaran['konsentrasi_dkv']) && $pendaftaran['konsentrasi_dkv'] !== '-' ? $pendaftaran['konsentrasi_dkv'] : '-')); ?>
+                                    <input type="text" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-100/90 text-slate-800 font-semibold text-xs outline-none cursor-not-allowed pr-28" value="<?= htmlspecialchars($display_konsentrasi); ?>" readonly>
+                                    <input type="hidden" name="konsentrasi_dkv" value="<?= htmlspecialchars($display_konsentrasi); ?>">
                                     <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-lg flex items-center gap-1">
                                         <i class="bi bi-check-circle-fill"></i> Otomatis
                                     </span>
@@ -738,7 +739,7 @@
 
                                 <div>
                                     <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">KONSENTRASI PROGRAM STUDI</span>
-                                    <p class="text-xs font-bold text-slate-800 mt-0.5" id="summaryKonsentrasi"><?= htmlspecialchars(!empty($mahasiswa['konsentrasi_dkv']) ? $mahasiswa['konsentrasi_dkv'] : ($pendaftaran['konsentrasi_dkv'] ?? 'Desain Komunikasi Visual')); ?></p>
+                                    <p class="text-xs font-bold text-slate-800 mt-0.5" id="summaryKonsentrasi"><?= htmlspecialchars(!empty($mahasiswa['konsentrasi_dkv']) ? $mahasiswa['konsentrasi_dkv'] : (!empty($mahasiswa['prodi']) ? $mahasiswa['prodi'] : (!empty($pendaftaran['konsentrasi_dkv']) && $pendaftaran['konsentrasi_dkv'] !== '-' ? $pendaftaran['konsentrasi_dkv'] : '-'))); ?></p>
                                 </div>
                             </div>
 

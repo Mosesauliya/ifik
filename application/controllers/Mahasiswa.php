@@ -27,13 +27,36 @@ class Mahasiswa extends CI_Controller {
             return;
         }
 
-        // 2. Cek Role (Hanya Role 4 = Mahasiswa, atau Role 1 = Admin)
+        // 2. Cek Role (Khusus fitur Mahasiswa: Role 4, atau Admin / Super Admin: Role 1, 22)
+        // Pengecualian: method-method rekomendasi TA (bisa diakses oleh Dosen & Koordinator TA / Admin)
         $role_id = (int)$this->session->userdata('role_id');
         $current_method = $this->router->fetch_method();
         $isReviewerMethod = in_array($current_method, ['get_detail_nilai_sidang_ajax', 'simpan_nilai_sidang_ajax'], true);
         if ($isReviewerMethod && in_array($role_id, [1, 2, 3, 4, 5, 6, 9, 22], true)) {
             // Izinkan reviewer mengakses endpoint penilaian sidang
-        } elseif ($role_id !== 4 && $role_id !== 1) {
+            return;
+        }
+
+        $isRekomenMethod = (stripos($current_method, 'rekomen') !== false);
+        $shared_rekomen_methods = array(
+            'ajax_get_rekomen_options',
+            'submit_rekomendasi_sidang',
+            'submit_rekomendasi_nonsidang',
+            'ajax_get_all_rekomen_crud',
+            'ajax_save_rekomen_option',
+            'ajax_delete_rekomen_option',
+            'ajax_delete_rekomen_category',
+            'ajax_save_rekomen_field',
+            'ajax_delete_rekomen_field'
+        );
+
+        if ($isRekomenMethod || in_array($current_method, $shared_rekomen_methods)) {
+            // Metode rekomendasi & manajemen jalur diizinkan untuk semua role yang telah login
+            // (Mahasiswa, Dosen, Koordinator TA, Admin Layanan, Super Admin)
+            return;
+        }
+
+        if ($role_id !== 4 && $role_id !== 1 && $role_id !== 22) {
             if ($isAjax) {
                 $this->output
                     ->set_status_header(403)
@@ -870,7 +893,7 @@ class Mahasiswa extends CI_Controller {
             $file_name = $upload_data['file_name'];
 
             $mhs = $this->Mahasiswa_model->get_mahasiswa($nim);
-            $mhs_konsentrasi = !empty($mhs['konsentrasi_dkv']) ? $mhs['konsentrasi_dkv'] : 'Desain Komunikasi Visual';
+            $mhs_konsentrasi = !empty($mhs['konsentrasi_dkv']) ? $mhs['konsentrasi_dkv'] : (!empty($mhs['prodi']) ? $mhs['prodi'] : '-');
             $mhs_id_kk = !empty($mhs['id_kk']) ? $mhs['id_kk'] : 1;
 
             $kode_berkas = str_replace('file_', '', $field_name);
@@ -1066,7 +1089,7 @@ class Mahasiswa extends CI_Controller {
         try {
             $nim = $this->input->post('nim') ?: $this->_get_current_nim();
             $mhs = $this->Mahasiswa_model->get_mahasiswa($nim);
-            $mhs_konsentrasi = !empty($mhs['konsentrasi_dkv']) ? $mhs['konsentrasi_dkv'] : 'Desain Komunikasi Visual';
+            $mhs_konsentrasi = !empty($mhs['konsentrasi_dkv']) ? $mhs['konsentrasi_dkv'] : (!empty($mhs['prodi']) ? $mhs['prodi'] : '-');
             $mhs_id_kk = !empty($mhs['id_kk']) ? $mhs['id_kk'] : 1;
             $existing_status = $this->Mahasiswa_model->get_status_pendaftaran($nim);
 
@@ -1998,4 +2021,189 @@ public function upload_berkas_sidang_ajax() {
         ]);
     }
 }
+
+
+    // =========================================================================
+    // MODUL PERWALIAN & KONTRAK KRS MAHASISWA
+    // =========================================================================
+
+    /**
+     * Halaman Utama Perwalian Mahasiswa (Tahap 1 Kontrak KRS & Riwayat Nilai)
+     */
+    public function perwalian() {
+        $this->load->model('Perwalian_model');
+        $nim = $this->_get_current_nim();
+
+        if (empty($nim)) {
+            $this->session->set_flashdata('error', 'Identitas NIM tidak ditemukan.');
+            redirect('mahasiswa');
+            return;
+        }
+
+        $tahun_ajaran = $this->input->get('tahun', true) ?: '2024/2025';
+        $semester     = $this->input->get('semester', true) ?: 'Ganjil';
+
+        $perwalian = $this->Perwalian_model->get_active_perwalian_by_nim($nim, $tahun_ajaran, $semester);
+        $id_perwalian = (int)$perwalian['id_perwalian'];
+
+        $mk_kontrak = $this->Perwalian_model->get_perwalian_detail($id_perwalian, 'akan_diambil');
+        $mk_sudah   = $this->Perwalian_model->get_riwayat_mk_sudah_diambil($nim);
+
+        $data['title']              = 'Perwalian & Kontrak KRS - IFIK';
+        $data['nim']                = $nim;
+        $data['nama_mhs']           = $perwalian['nama_mahasiswa'];
+        $data['perwalian']          = $perwalian;
+        $data['mk_kontrak']         = $mk_kontrak;
+        $data['total_sks_kontrak']  = array_sum(array_column($mk_kontrak, 'sks'));
+        $data['mk_sudah']           = $mk_sudah;
+        $data['master_mk']          = $this->Perwalian_model->get_mata_kuliah(['is_active' => 1]);
+        $data['tahun_ajaran']       = $tahun_ajaran;
+        $data['semester']           = $semester;
+
+        $this->load->view('mahasiswa/perwalian', $data);
+    }
+
+    /**
+     * AJAX: Upload Bukti Fisik/Resmi KRS dari SIAKAD/i-Gracias
+     */
+    public function perwalian_upload_krs() {
+        $this->output->set_content_type('application/json');
+        $this->load->model('Perwalian_model');
+        $nim = $this->_get_current_nim();
+
+        $id_perwalian = (int)$this->input->post('id_perwalian');
+        if (!$id_perwalian) {
+            $perwalian = $this->Perwalian_model->get_active_perwalian_by_nim($nim);
+            $id_perwalian = (int)$perwalian['id_perwalian'];
+        }
+
+        $upload_dir = FCPATH . 'uploads/krs/';
+        if (!is_dir($upload_dir)) {
+            @mkdir($upload_dir, 0777, true);
+        }
+
+        $config['upload_path']   = $upload_dir;
+        $config['allowed_types'] = 'pdf|jpg|jpeg|png';
+        $config['max_size']      = 5120; // 5MB
+        $config['file_name']     = 'krs_' . $nim . '_' . time();
+
+        $this->load->library('upload', $config);
+        $this->upload->initialize($config);
+
+        if (!$this->upload->do_upload('file_krs')) {
+            $this->output->set_output(json_encode([
+                'status'  => 'error',
+                'message' => $this->upload->display_errors('', '')
+            ]));
+            return;
+        }
+
+        $uploadData = $this->upload->data();
+        $filename   = $uploadData['file_name'];
+
+        $this->Perwalian_model->update_bukti_krs($id_perwalian, $filename);
+
+        $this->output->set_output(json_encode([
+            'status'    => 'success',
+            'message'   => 'Bukti KRS resmi berhasil diunggah.',
+            'file_name' => $filename,
+            'file_url'  => base_url('uploads/krs/' . $filename),
+        ]));
+    }
+
+    /**
+     * AJAX: Tambah Mata Kuliah ke Kontrak Mahasiswa
+     */
+    public function perwalian_tambah_mk() {
+        $this->output->set_content_type('application/json');
+        $this->load->model('Perwalian_model');
+        $nim = $this->_get_current_nim();
+
+        $id_perwalian = (int)$this->input->post('id_perwalian');
+        $kode_mk      = strtoupper(trim($this->input->post('kode_mk', true)));
+
+        if (!$id_perwalian) {
+            $perwalian = $this->Perwalian_model->get_active_perwalian_by_nim($nim);
+            $id_perwalian = (int)$perwalian['id_perwalian'];
+        }
+
+        if (empty($kode_mk)) {
+            $this->output->set_output(json_encode(['status' => 'error', 'message' => 'Kode MK tidak boleh kosong.']));
+            return;
+        }
+
+        $this->Perwalian_model->add_mk_to_kontrak($id_perwalian, $kode_mk);
+        $this->output->set_output(json_encode([
+            'status'  => 'success',
+            'message' => 'Mata kuliah berhasil ditambahkan ke kontrak.'
+        ]));
+    }
+
+    /**
+     * AJAX: Hapus Mata Kuliah dari Kontrak Mahasiswa
+     */
+    public function perwalian_hapus_mk() {
+        $this->output->set_content_type('application/json');
+        $this->load->model('Perwalian_model');
+        $nim = $this->_get_current_nim();
+
+        $id_perwalian = (int)$this->input->post('id_perwalian');
+        $kode_mk      = trim($this->input->post('kode_mk', true));
+
+        if (!$id_perwalian) {
+            $perwalian = $this->Perwalian_model->get_active_perwalian_by_nim($nim);
+            $id_perwalian = (int)$perwalian['id_perwalian'];
+        }
+
+        $this->Perwalian_model->remove_mk_from_kontrak($id_perwalian, $kode_mk);
+        $this->output->set_output(json_encode([
+            'status'  => 'success',
+            'message' => 'Mata kuliah berhasil dihapus dari kontrak.'
+        ]));
+    }
+
+    /**
+     * AJAX: Submit Pengajuan Perwalian Tahap 1 ke Dosen Wali
+     */
+    public function perwalian_submit() {
+        $this->output->set_content_type('application/json');
+        $this->load->model('Perwalian_model');
+        $nim = $this->_get_current_nim();
+
+        $id_perwalian = (int)$this->input->post('id_perwalian');
+        $catatan      = trim($this->input->post('catatan_mahasiswa', true));
+
+        if (!$id_perwalian) {
+            $perwalian = $this->Perwalian_model->get_active_perwalian_by_nim($nim);
+            $id_perwalian = (int)$perwalian['id_perwalian'];
+        } else {
+            $perwalian = $this->Perwalian_model->get_perwalian_by_id($id_perwalian);
+        }
+
+        // Validasi: Wajib ada minimal 1 MK dikontrak
+        $mk_kontrak = $this->Perwalian_model->get_perwalian_detail($id_perwalian, 'akan_diambil');
+        if (empty($mk_kontrak)) {
+            $this->output->set_output(json_encode([
+                'status'  => 'error',
+                'message' => 'Anda belum memilih/mengontrak mata kuliah untuk semester ini.'
+            ]));
+            return;
+        }
+
+        // Validasi: Wajib ada file KRS bukti
+        if (empty($perwalian['file_krs'])) {
+            $this->output->set_output(json_encode([
+                'status'  => 'error',
+                'message' => 'Harap unggah bukti fisik/resmi KRS dari sistem kampus terlebih dahulu sebagai bukti sah.'
+            ]));
+            return;
+        }
+
+        $this->Perwalian_model->submit_perwalian_tahap1($id_perwalian, $catatan);
+
+        $this->output->set_output(json_encode([
+            'status'  => 'success',
+            'message' => 'Pengajuan perwalian Tahap 1 berhasil dikirimkan ke Dosen Wali.'
+        ]));
+    }
 }

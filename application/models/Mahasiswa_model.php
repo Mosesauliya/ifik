@@ -90,7 +90,7 @@ class Mahasiswa_model extends CI_Model {
         try {
             if (!empty($nim) && $this->db->table_exists('user')) {
                 $user_row = $this->db
-                    ->select('id, name, username, email')
+                    ->select('id, name, username, email, prodi')
                     ->group_start()
                         ->where('nim', $nim)
                         ->or_where('username', $nim)
@@ -101,7 +101,7 @@ class Mahasiswa_model extends CI_Model {
             }
             if (!$user_row && $this->session->userdata('user_id') && $this->db->table_exists('user')) {
                 $user_row = $this->db
-                    ->select('id, name, username, email')
+                    ->select('id, name, username, email, prodi')
                     ->where('id', $this->session->userdata('user_id'))
                     ->limit(1)
                     ->get('user')
@@ -115,6 +115,7 @@ class Mahasiswa_model extends CI_Model {
         $parts = explode(' ', trim($full_name), 2);
         $nama_depan_default    = $parts[0] ?? 'Mahasiswa';
         $nama_belakang_default = $parts[1] ?? '';
+        $prodi_default = !empty($user_row['prodi']) ? $user_row['prodi'] : ($this->session->userdata('selected_prodi') ?: '-');
 
         $data_mhs = null;
         try {
@@ -134,6 +135,12 @@ class Mahasiswa_model extends CI_Model {
             if (empty($data_mhs['nim'])) {
                 $data_mhs['nim'] = $nim ?: $session_nim;
             }
+            if (empty($data_mhs['prodi'])) {
+                $data_mhs['prodi'] = $prodi_default;
+            }
+            if (empty($data_mhs['konsentrasi_dkv'])) {
+                $data_mhs['konsentrasi_dkv'] = ($data_mhs['prodi'] && $data_mhs['prodi'] !== '-') ? $data_mhs['prodi'] : $prodi_default;
+            }
             return $data_mhs;
         }
 
@@ -146,8 +153,8 @@ class Mahasiswa_model extends CI_Model {
             'provinsi'        => '',
             'latitude'        => '',
             'longitude'       => '',
-            'konsentrasi_dkv' => 'Desain Komunikasi Visual',
-            'prodi'           => 'Desain Komunikasi Visual',
+            'konsentrasi_dkv' => $prodi_default,
+            'prodi'           => $prodi_default,
         ];
     }
 
@@ -214,7 +221,7 @@ class Mahasiswa_model extends CI_Model {
             if (in_array('peminatan', $g_fields)) {
                 $g_data['peminatan'] = !empty(trim($data_ta['konsentrasi_dkv'] ?? ''))
                     ? trim($data_ta['konsentrasi_dkv'])
-                    : (!empty(trim($existing_g['peminatan'] ?? '')) ? trim($existing_g['peminatan']) : 'Informatika');
+                    : (!empty(trim($existing_g['peminatan'] ?? '')) ? trim($existing_g['peminatan']) : (!empty(trim($data_ta['prodi'] ?? '')) ? trim($data_ta['prodi']) : '-'));
             }
             if (in_array('tahun', $g_fields)) $g_data['tahun'] = date('Y');
             $is_sub_flag = !empty($data_ta['is_submitted']);
@@ -551,7 +558,7 @@ class Mahasiswa_model extends CI_Model {
             'judul_2'               => $guidance['judul_2'] ?? ($pt_data['judul_2'] ?? ''),
             'judul_3'               => $guidance['judul_3'] ?? ($pt_data['judul_3'] ?? ''),
             'judul_en'              => $guidance['judul_en'] ?? ($pt_data['judul_en'] ?? ''),
-            'konsentrasi_dkv'       => $guidance['peminatan'] ?? ($pt_data['konsentrasi_dkv'] ?? 'Informatika'),
+            'konsentrasi_dkv'       => !empty($guidance['peminatan']) ? $guidance['peminatan'] : (!empty($pt_data['konsentrasi_dkv']) ? $pt_data['konsentrasi_dkv'] : (!empty($pt_data['prodi']) ? $pt_data['prodi'] : '-')),
             'status_approval_wali'  => $status_doswal,
             'status_approval_admin' => $status_laa,
             'status_approval_koor'  => $status_koor,
@@ -1413,9 +1420,9 @@ class Mahasiswa_model extends CI_Model {
             'nim'              => $mhs['nim_mhs'] ?? $nim,
             'nama'             => $mhs['nama_mahasiswa'] ?? '-',
             'judul'            => $g['judul_1'] ?? '-',
-            'peminatan'        => $peminatan ?: '-',
-            'prodi'            => $prodiCode,
-            'prodi_name'       => $rawProdi ?: $prodiCode,
+            'peminatan'        => $peminatan ?: ($g['peminatan'] ?? '-'),
+            'prodi'            => $prodiCode ?: (!empty($mhs['user_prodi']) ? $mhs['user_prodi'] : (!empty($g['prodi']) ? $g['prodi'] : (!empty($g['peminatan']) ? $g['peminatan'] : '-'))),
+            'prodi_name'       => $rawProdi ?: (!empty($g['prodi']) ? $g['prodi'] : ($peminatan ?: $prodiCode)),
             'tgl_sidang'       => $g['tanggal_sidang'] ?? null,
             'waktu_sidang'     => $g['waktu_sidang'] ?? null,
             'ruangan_sidang'   => $g['ruang_sidang'] ?? null,
