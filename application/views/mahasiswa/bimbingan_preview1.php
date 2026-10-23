@@ -263,20 +263,30 @@
                 foreach ($riwayat_preview3 as $_r3) {
                     if (!empty($_r3['file_bimbingan']) && $latest_p3_bim === null) {
                         $latest_p3_bim = $_r3;
+                        $st_b_eff = (!empty($_r3['status_file_bimbingan']) && $_r3['status_file_bimbingan'] !== 'Pending')
+                            ? $_r3['status_file_bimbingan']
+                            : ($_r3['status_pembimbing'] ?? 'Pending');
+                        if ($st_b_eff === 'Approved') $has_app_bimbingan = true;
                     }
                     if (!empty($_r3['file_sitasi']) && $latest_p3_sit === null) {
                         $latest_p3_sit = $_r3;
+                        $st_s_eff = (!empty($_r3['status_file_sitasi']) && $_r3['status_file_sitasi'] !== 'Pending')
+                            ? $_r3['status_file_sitasi']
+                            : ($_r3['status_pembimbing'] ?? 'Pending');
+                        if ($st_s_eff === 'Approved') $has_app_sitasi = true;
                     }
                     if (!empty($_r3['file_persyaratan']) && $latest_p3_per === null) {
                         $latest_p3_per = $_r3;
-                    }
-                    if (($_r3['status_pembimbing'] ?? '') === 'Approved') {
-                        if (!empty($_r3['file_bimbingan']))   $has_app_bimbingan   = true;
-                        if (!empty($_r3['file_sitasi']))       $has_app_sitasi      = true;
-                        if (!empty($_r3['file_persyaratan']))  $has_app_persyaratan = true;
+                        $st_p_eff = (!empty($_r3['status_file_persyaratan']) && $_r3['status_file_persyaratan'] !== 'Pending')
+                            ? $_r3['status_file_persyaratan']
+                            : ($_r3['status_pembimbing'] ?? 'Pending');
+                        if ($st_p_eff === 'Approved') $has_app_persyaratan = true;
                     }
                 }
             }
+
+            $rekomen_type  = strtolower(trim($rekomendasi['recommendation_type'] ?? 'sidang'));
+            $is_non_sidang = ($rekomen_type === 'non_sidang');
 
             // Flag status blokir & revisi Preview 1
             $st_p1_raw      = !empty($latest_p1) ? ($latest_p1['status_pembimbing'] ?? 'Pending') : null;
@@ -1952,7 +1962,7 @@
                 </div>
             </div>
 
-            <?php elseif (!empty($is_sidang_scheduled)): ?>
+            <?php elseif (!$is_non_sidang && !empty($is_sidang_scheduled)): ?>
             <div class="card-3d-warm rounded-3xl p-7 sm:p-9 space-y-5 w-full shadow-lg border-2 border-sky-300 bg-sky-50/40">
                 <div class="flex items-start gap-4">
                     <div class="w-12 h-12 rounded-2xl bg-sky-600 text-white flex items-center justify-center text-2xl shrink-0 box-3d shadow-md shadow-sky-600/30">
@@ -1998,37 +2008,39 @@
                 </div>
             </div>
 
-            <?php else: ?>
-            <div class="card-3d-warm rounded-3xl p-7 sm:p-9 space-y-5 w-full shadow-md border-2 border-slate-200 bg-white">
+            <?php elseif (!$is_non_sidang): ?>
+            <div class="card-3d-warm rounded-3xl p-7 sm:p-9 space-y-5 w-full shadow-md border-2 border-amber-200 bg-amber-50/30">
                 <div class="flex items-start gap-4">
-                    <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center text-2xl shrink-0 box-3d border border-slate-200">
-                        <i class="bi bi-calendar-event"></i>
+                    <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-2xl shrink-0 box-3d border border-amber-300">
+                        <i class="bi bi-door-closed-fill"></i>
                     </div>
                     <div class="space-y-1">
-                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 block">STATUS JADWAL SIDANG</span>
-                        <h3 class="text-lg sm:text-xl font-extrabold text-slate-900">Jadwal Sidang Belum Ditetapkan</h3>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-amber-200/80 text-amber-900 mb-1">
+                            <i class="bi bi-clock-history"></i> BELUM DI-PLOTTING
+                        </span>
+                        <h3 class="text-lg sm:text-xl font-extrabold text-slate-900">Belum Ada Ruangan &amp; Jadwal Sidang</h3>
                         <p class="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
-                            Jadwal pelaksanaan sidang dan dewan penguji akan ditetapkan oleh Koordinator Tugas Akhir setelah berkas pendaftaran Anda disetujui (ACC). Silakan pantau halaman ini secara berkala.
+                            Tanggal dan ruangan pelaksanaan sidang Tugas Akhir Anda <strong>belum di-plotting</strong> oleh Koordinator Tugas Akhir. Anda baru dapat mengunggah dokumen sidang akhir setelah tanggal dan ruangan sidang ditetapkan.
                         </p>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs pt-3 border-t border-slate-100">
-                    <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs pt-3 border-t border-amber-200/70">
+                    <div class="p-3.5 bg-white rounded-xl border border-amber-200/80 space-y-1">
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Hari &amp; Tanggal:</span>
-                        <p class="font-bold text-slate-700 italic">Menunggu Penetapan</p>
-                        <p class="text-slate-400 text-[11px]">-</p>
+                        <p class="font-bold text-amber-800 italic">Belum Di-plotting</p>
+                        <p class="text-slate-400 text-[11px]">Menunggu Koordinator TA</p>
                     </div>
-                    <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1">
+                    <div class="p-3.5 bg-white rounded-xl border border-amber-200/80 space-y-1">
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Ruangan / Tempat:</span>
-                        <p class="font-bold text-slate-700 italic">Menunggu Penetapan</p>
-                        <p class="text-slate-400 text-[11px]">-</p>
+                        <p class="font-bold text-amber-800 italic">Belum Ada Ruangan</p>
+                        <p class="text-slate-400 text-[11px]">Menunggu Koordinator TA</p>
                     </div>
-                    <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1">
+                    <div class="p-3.5 bg-white rounded-xl border border-amber-200/80 space-y-1">
                         <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block">Dewan Penguji:</span>
                         <p class="font-bold text-slate-700 truncate">1. <?= htmlspecialchars($dosen_u1); ?></p>
                         <p class="font-bold text-slate-700 truncate">2. <?= htmlspecialchars($dosen_u2); ?></p>
                     </div>
-                    <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1">
+                    <div class="p-3.5 bg-white rounded-xl border border-amber-200/80 space-y-1">
                         <span class="text-[10px] font-bold text-orange-600 uppercase tracking-wider block">Dosen Pembimbing:</span>
                         <p class="font-bold text-slate-700 truncate">1. <?= htmlspecialchars($dosen_p1); ?></p>
                         <p class="font-bold text-slate-700 truncate">2. <?= htmlspecialchars($dosen_p2); ?></p>
@@ -2103,7 +2115,10 @@
                 } elseif (!$is_ps_app) {
                     $sidang_locked = true;
                     $lock_message  = 'Anda harus melengkapi dan mendapatkan persetujuan Admin Layanan (LAA) pada tahap Persyaratan Sidang terlebih dahulu sebelum dapat mengunggah berkas Sidang TA.';
-                } elseif (empty($penguji_ta)) {
+                } elseif (!$is_non_sidang && empty($is_sidang_scheduled)) {
+                    $sidang_locked = true;
+                    $lock_message  = 'Belum ada ruangan dan jadwal sidang (belum di-plotting oleh Koordinator TA). Anda baru dapat mengunggah berkas sidang setelah tanggal dan ruangan sidang ditetapkan.';
+                } elseif (!$is_non_sidang && empty($penguji_ta)) {
                     $sidang_locked = true;
                     $lock_message  = 'Dosen Penguji belum di-assign. Silakan hubungi Koordinator TA untuk menetapkan Dosen Penguji sebelum Anda dapat mengunggah berkas sidang.';
                 }

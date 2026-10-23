@@ -592,7 +592,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             <!-- ========================================================
                  KARTU TAHAP PREVIEW & SIDANG (Interactive Stage Cards)
                  ======================================================== -->
-            <div class="grid <?= $is_pembimbing ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-5' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' ?> gap-3.5 sm:gap-4.5 my-2" id="stageCardsContainer">
+            <div class="grid <?= $is_pembimbing ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-6' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-5' ?> gap-3.5 sm:gap-4.5 my-2" id="stageCardsContainer">
                 
                 <?php if ($is_pembimbing): ?>
                 <!-- CARD PREVIEW 1 -->
@@ -712,7 +712,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                             <i class="bi bi-mortarboard-fill"></i>
                         </div>
                         <span class="stage-badge-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all <?= ($default_tahap === 'Sidang') ? 'bg-orange-500 text-white shadow-xs' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-700' ?>">
-                            <?= ($default_tahap === 'Sidang') ? '<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Aktif' : 'Tahap Akhir' ?>
+                            <?= ($default_tahap === 'Sidang') ? '<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Aktif' : 'Tahap 5' ?>
                         </span>
                     </div>
                     <div>
@@ -727,6 +727,33 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                         </h4>
                         <p class="text-[11px] font-medium text-slate-500 mt-0.5 line-clamp-1">
                             Sidang Akhir &amp; Nilai
+                        </p>
+                    </div>
+                </div>
+
+                <!-- CARD LULUS -->
+                <div onclick="switchDosenTab('lulus')" id="stageCard_lulus"
+                     class="stage-tab-card group relative p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between <?= ($default_tahap === 'Lulus') ? 'border-orange-500 bg-gradient-to-br from-orange-50/90 via-white to-amber-50/50 shadow-md shadow-orange-500/10 ring-2 ring-orange-500/20 active-card' : 'border-slate-200/90 bg-white hover:border-orange-300 hover:bg-orange-50/25 hover:shadow-xs' ?>">
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div class="stage-icon-wrap w-11 h-11 rounded-xl flex items-center justify-center text-lg transition-all <?= ($default_tahap === 'Lulus') ? 'bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm shadow-orange-500/30' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-600' ?>">
+                            <i class="bi bi-patch-check-fill"></i>
+                        </div>
+                        <span class="stage-badge-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all <?= ($default_tahap === 'Lulus') ? 'bg-orange-500 text-white shadow-xs' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-700' ?>">
+                            <?= ($default_tahap === 'Lulus') ? '<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Aktif' : 'Tahap Akhir' ?>
+                        </span>
+                    </div>
+                    <div>
+                        <div class="flex items-baseline gap-1.5 mb-1">
+                            <span id="stageCount_lulus" class="stage-count text-2xl sm:text-3xl font-black transition-colors <?= ($default_tahap === 'Lulus') ? 'text-orange-600' : 'text-slate-800 group-hover:text-orange-600' ?>">
+                                <?= $tab_counts['Lulus'] ?? 0 ?>
+                            </span>
+                            <span class="text-xs font-bold text-slate-400">Mahasiswa</span>
+                        </div>
+                        <h4 class="font-extrabold text-sm sm:text-base text-slate-800 tracking-tight group-hover:text-orange-600 transition-colors">
+                            Lulus
+                        </h4>
+                        <p class="text-[11px] font-medium text-slate-500 mt-0.5 line-clamp-1">
+                            Nilai Publish &amp; Lulus TA
                         </p>
                     </div>
                 </div>
@@ -1303,7 +1330,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
         // PIC (Penanggung Jawab) per Tahap
         // ============================================================
         function getResponsibleRole(tahap) {
-            if (tahap === 'Persyaratan Sidang') return null;
+            if (tahap === 'Persyaratan Sidang' || tahap === 'Lulus') return null;
             return (tahap === 'Preview 1' || tahap === 'Preview 3') ? 'p1' : 'u1';
         }
         function isCurrentUserPIC() {
@@ -1314,12 +1341,17 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             return false;
         }
         function getFileStatus(preview, fileType) {
-            if (currentTahap === 'Persyaratan Sidang' && preview && Array.isArray(preview.files_persyaratan_sidang)) {
+            if (!preview) return 'Pending';
+            if (currentTahap === 'Persyaratan Sidang' && Array.isArray(preview.files_persyaratan_sidang)) {
                 const found = preview.files_persyaratan_sidang.find(f => f.type === fileType);
                 return found ? (found.status || 'Pending') : 'Pending';
             }
             const col = 'status_file_' + fileType;
-            return (preview && preview[col]) ? preview[col] : 'Pending';
+            if (preview[col] && preview[col] !== 'Pending') return preview[col];
+            if (preview.status_pembimbing && preview.status_pembimbing !== 'Pending') {
+                return preview.status_pembimbing;
+            }
+            return preview[col] || 'Pending';
         }
         function getFileCatatan(preview, fileType) {
             if (currentTahap === 'Persyaratan Sidang' && preview && Array.isArray(preview.files_persyaratan_sidang)) {
@@ -1330,11 +1362,12 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             return (preview && preview[col]) ? preview[col] : '';
         }
         function getTahapKey(tahap) {
-            return ({ 'Preview 1':'preview1', 'Preview 2':'preview2', 'Preview 3':'preview3', 'Persyaratan Sidang':'persyaratan_sidang', 'Sidang':'sidang' })[tahap] || 'preview1';
+            return ({ 'Preview 1':'preview1', 'Preview 2':'preview2', 'Preview 3':'preview3', 'Persyaratan Sidang':'persyaratan_sidang', 'Sidang':'sidang', 'Lulus':'lulus' })[tahap] || 'preview1';
         }
         function isStageLulus(preview) {
             if (!preview) return false;
             if (currentTahap === 'Persyaratan Sidang') return preview.status_pembimbing === 'Approved';
+            if (currentTahap === 'Lulus') return true;
             const key = getTahapKey(currentTahap);
             return String(preview['lulus_' + key] ?? 0) === '1';
         }
@@ -1344,7 +1377,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             else if (stageName === 'Preview 2') badgeClass = 'bg-indigo-50 text-indigo-700 border-indigo-200';
             else if (stageName === 'Preview 3') badgeClass = 'bg-purple-50 text-purple-700 border-purple-200';
             else if (stageName === 'Persyaratan Sidang') badgeClass = 'bg-teal-50 text-teal-700 border-teal-200';
-            else if (stageName === 'Sidang')   badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-300 font-extrabold';
+            else if (stageName === 'Sidang' || stageName === 'Lulus') badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-300 font-extrabold';
 
             const label = extraText ? `${stageName} ${extraText}` : stageName;
             return `<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold border ${badgeClass} whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> ${label}</span>`;
@@ -1361,7 +1394,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
         // ============================================================
         function getFileTypesForTahap(tahap) {
             if (tahap === 'Preview 3') return ['sitasi', 'bimbingan', 'persyaratan'];
-            if (tahap === 'Sidang')    return ['sidang'];
+            if (tahap === 'Sidang' || tahap === 'Lulus') return ['sidang'];
             return ['draft'];
         }
         function getFileNameByType(preview, type) {
@@ -1423,14 +1456,14 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             let cols = 7;
             const showRekomendasi = IS_P1 && currentTahap === 'Preview 3';
             if (showRekomendasi) cols++;
-            const showBap = IS_U1 && currentTahap === 'Sidang';
+            const showBap = IS_U1 && (currentTahap === 'Sidang' || currentTahap === 'Lulus');
             if (showBap) cols++;
             return cols;
         }
 
         function getUploadBaseUrl(tahap) {
             if (tahap === 'Persyaratan Sidang') return '<?= base_url('uploads/berkas_sidang/') ?>';
-            return (tahap === 'Sidang')
+            return (tahap === 'Sidang' || tahap === 'Lulus')
                 ? '<?= base_url('uploads/sidang/') ?>'
                 : '<?= base_url('uploads/preview_ta/') ?>';
         }
@@ -1584,7 +1617,8 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             'preview2':          { cardId: 'stageCard_preview2',          countId: 'stageCount_preview2',          label: 'Tahap 2',     tahap: 'Preview 2' },
             'preview3':          { cardId: 'stageCard_preview3',          countId: 'stageCount_preview3',          label: 'Tahap 3',     tahap: 'Preview 3' },
             'persyaratansidang': { cardId: 'stageCard_persyaratansidang', countId: 'stageCount_persyaratansidang', label: 'Tahap 4',     tahap: 'Persyaratan Sidang' },
-            'sidang':            { cardId: 'stageCard_sidang',            countId: 'stageCount_sidang',            label: 'Tahap Akhir', tahap: 'Sidang' }
+            'sidang':            { cardId: 'stageCard_sidang',            countId: 'stageCount_sidang',            label: 'Tahap 5',     tahap: 'Sidang' },
+            'lulus':             { cardId: 'stageCard_lulus',             countId: 'stageCount_lulus',             label: 'Tahap Akhir', tahap: 'Lulus' }
         };
 
         function updateRoleSwitcherHrefs(stageKey) {
@@ -1639,7 +1673,8 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 'Preview 3':          'preview3',
                 'Persyaratan Sidang': 'persyaratansidang',
                 'persyaratan_sidang': 'persyaratansidang',
-                'Sidang':             'sidang'
+                'Sidang':             'sidang',
+                'Lulus':              'lulus'
             };
             const activeKey = aliasMap[stageKey] || stageKey;
 
@@ -1700,6 +1735,9 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             } else if (tab === 'sidang') {
                 currentTahap = 'Sidang';
                 setTabActive('sidang');
+            } else if (tab === 'lulus') {
+                currentTahap = 'Lulus';
+                setTabActive('lulus');
             }
 
             const btnRubrikOverview = document.getElementById('btnRubrikSidangOverview');
@@ -1753,7 +1791,8 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                                     'Preview 2':          'stageCount_preview2',
                                     'Preview 3':          'stageCount_preview3',
                                     'Persyaratan Sidang': 'stageCount_persyaratansidang',
-                                    'Sidang':             'stageCount_sidang'
+                                    'Sidang':             'stageCount_sidang',
+                                    'Lulus':              'stageCount_lulus'
                                 };
                                 for (const [thp, cid] of Object.entries(mapCounts)) {
                                     const el = document.getElementById(cid);
@@ -1827,8 +1866,31 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
          * - Tahap Preview 1/2/3: tombol Lulus Tahap + Downgrade (hanya PIC).
          */
         function renderLulusTahapCell(mhs) {
-            const order = ['Preview 1', 'Preview 2', 'Preview 3', 'Persyaratan Sidang', 'Sidang'];
+            const order = ['Preview 1', 'Preview 2', 'Preview 3', 'Persyaratan Sidang', 'Sidang', 'Lulus'];
             const currIdx = order.indexOf(currentTahap);
+
+            // ===== LULUS: Mahasiswa yang nilainya sudah dipublish oleh Koordinator TA dan berstatus Lulus =====
+            if (currentTahap === 'Lulus') {
+                const kel = mhs.kelulusan_info || {};
+                const nilaiStr = (kel.nilai_akhir !== undefined && kel.nilai_akhir !== null && parseFloat(kel.nilai_akhir) > 0)
+                    ? parseFloat(kel.nilai_akhir).toFixed(2)
+                    : '-';
+                const gradeStr = kel.grade || '-';
+                const statusKel = kel.status_kelulusan || 'Lulus';
+                const isRevisi = statusKel.toLowerCase().includes('revisi');
+                const badgeCls = isRevisi
+                    ? 'bg-teal-50 text-teal-800 border-teal-300'
+                    : 'bg-emerald-50 text-emerald-700 border-emerald-300';
+
+                return `<div class="flex flex-col gap-1 items-center max-w-[190px] mx-auto">
+                    <span class="px-2.5 py-1 rounded-full ${badgeCls} border font-extrabold text-[11px] inline-flex items-center gap-1.5 whitespace-nowrap shadow-2xs">
+                        <i class="bi bi-patch-check-fill"></i> ${statusKel}
+                    </span>
+                    <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 font-bold text-[10px] inline-flex items-center gap-1 whitespace-nowrap">
+                        Nilai Akhir: <strong>${nilaiStr}</strong> (${gradeStr})
+                    </span>
+                </div>`;
+            }
 
             // ===== PERSYARATAN SIDANG: Verifikasi oleh Admin LAA (Tidak ada dosen yang bisa ACC) =====
             if (currentTahap === 'Persyaratan Sidang') {
@@ -1861,13 +1923,26 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 </div>`;
             }
 
-            // ===== SIDANG: tombol Nilai =====
+            // ===== SIDANG: tombol Nilai + Status Card Ruangan (khusus rekomendasi Sidang) =====
             if (currentTahap === 'Sidang') {
                 const latest = mhs.latest_preview;
                 const hasFile = !!(latest && (latest.file_sidang || latest.file_draft));
+                const rekType = (mhs.rekomendasi && mhs.rekomendasi.recommendation_type)
+                    ? String(mhs.rekomendasi.recommendation_type).toLowerCase()
+                    : 'sidang';
+                const isNonSidang = (rekType === 'non_sidang');
+                const isPlotted = !!(mhs.jadwal_sidang && mhs.jadwal_sidang.is_sidang_scheduled);
+
+                let belumAdaRuanganCard = '';
+                if (!isNonSidang && !isPlotted) {
+                    belumAdaRuanganCard = `<span class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-300 font-bold text-[10px] inline-flex items-center gap-1 whitespace-nowrap shadow-2xs" title="Tanggal dan ruangan sidang belum di-plotting oleh Koordinator TA">
+                        <i class="bi bi-door-closed-fill text-amber-600"></i> Belum Ada Ruangan
+                    </span>`;
+                }
 
                 if (!hasFile) {
-                    return `<div class="flex flex-col gap-1.5 items-center max-w-[170px] mx-auto">
+                    return `<div class="flex flex-col gap-1.5 items-center max-w-[180px] mx-auto">
+                        ${belumAdaRuanganCard}
                         <button type="button" disabled title="Mahasiswa belum mengunggah berkas sidang"
                                 class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap">
                             <i class="bi bi-lock-fill"></i> Belum Ada Berkas
@@ -1884,7 +1959,8 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 const label = nilaiTersimpan ? 'Edit Nilai' : 'Beri Nilai';
                 const icon  = nilaiTersimpan ? 'bi-pencil-square' : 'bi-star-fill';
 
-                return `<div class="flex flex-col gap-1.5 items-center max-w-[170px] mx-auto">
+                return `<div class="flex flex-col gap-1.5 items-center max-w-[180px] mx-auto">
+                    ${belumAdaRuanganCard}
                     <button type="button"
                             onclick="openModalPenilaianSidang('${mhs.nim}')"
                             class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap active:scale-95">
@@ -1990,13 +2066,33 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             let btnLulus = '';
             if (isLulus) {
                 btnLulus = renderTahapBadgeLulus(currentTahap);
-            } else if (c.approved > 0) {
-                if (currentTahap === 'Preview 3' && !mhs.rekomendasi) {
+            } else if (currentTahap === 'Preview 3') {
+                // Wajib di-ACC di ke-3 kategori berkas: Bimbingan, Sitasi, dan Persyaratan Jalur Tugas Akhir
+                const catMap = [
+                    { key: 'bimbingan',   label: 'Lembar Bimbingan' },
+                    { key: 'sitasi',      label: 'Lembar Sitasi' },
+                    { key: 'persyaratan', label: 'Persyaratan Jalur TA' }
+                ];
+                const unapprovedCats = [];
+                catMap.forEach(cat => {
+                    const fname = getFileNameByType(latest, cat.key);
+                    const st = fname ? getFileStatus(latest, cat.key) : 'Missing';
+                    if (!fname || st !== 'Approved') {
+                        unapprovedCats.push(cat.label);
+                    }
+                });
+
+                if (unapprovedCats.length > 0) {
+                    const alasanBerkas = `Seluruh 3 kategori berkas wajib di-ACC terlebih dahulu. Belum ACC (${c.approved}/3): ${unapprovedCats.join(', ')}`;
+                    btnLulus = `<button disabled title="Terkunci: ${alasanBerkas}" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Lanjut Tahap (${c.approved}/3 ACC)</button>`;
+                } else if (!mhs.rekomendasi) {
                     const alasanLock = 'Pembimbing 1 belum memberikan Rekomendasi (Sidang / Non-Sidang)';
                     btnLulus = `<button disabled title="Terkunci: ${alasanLock}" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
                 } else {
                     btnLulus = `<button onclick="handleLulusStage('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-arrow-right-circle-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
                 }
+            } else if (c.approved > 0) {
+                btnLulus = `<button onclick="handleLulusStage('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-arrow-right-circle-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
             } else {
                 btnLulus = `<button disabled title="Belum ada berkas yang di-ACC" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
             }
@@ -2013,7 +2109,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
         function renderTable() {
             const tbody = document.getElementById('bimbinganTableBody');
 
-            const showBapCol = (typeof IS_U1 !== 'undefined' && IS_U1) && currentTahap === 'Sidang';
+            const showBapCol = (typeof IS_U1 !== 'undefined' && IS_U1) && (currentTahap === 'Sidang' || currentTahap === 'Lulus');
             const thBapEl = document.getElementById('thBapCol');
             if (thBapEl) thBapEl.style.display = showBapCol ? '' : 'none';
 
@@ -2109,8 +2205,8 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 }
 
                 let checkboxHtml = '';
-                if (currentTahap === 'Persyaratan Sidang') {
-                    checkboxHtml = `<input type="checkbox" disabled class="w-4 h-4 rounded border-slate-200 cursor-not-allowed opacity-50" title="Tahap Persyaratan Sidang diverifikasi oleh Admin Layanan (LAA)">`;
+                if (currentTahap === 'Persyaratan Sidang' || currentTahap === 'Lulus') {
+                    checkboxHtml = `<input type="checkbox" disabled class="w-4 h-4 rounded border-slate-200 cursor-not-allowed opacity-50" title="${currentTahap === 'Lulus' ? 'Mahasiswa telah lulus' : 'Tahap Persyaratan Sidang diverifikasi oleh Admin Layanan (LAA)'}">`;
                 } else if (mhs.latest_preview && !mhs.latest_preview.file_missing) {
                     if (mhs.latest_preview.status_pembimbing !== 'Approved') {
                         checkboxHtml = `<input type="checkbox" value="${mhs.latest_preview.id}" data-name="${mhs.nama_mahasiswa}" data-file="${mhs.latest_preview.file_draft}" data-id="${mhs.latest_preview.id}" data-status="${mhs.latest_preview.status_pembimbing || 'Pending'}" data-catatan="${encodeURIComponent(mhs.latest_preview.catatan_pembimbing || '')}" data-catatan2="${encodeURIComponent(mhs.latest_preview.catatan_pembimbing_2 || '')}" class="dosen-student-cb w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer">`;
@@ -2667,7 +2763,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
         window.inlineCommentStates = window.inlineCommentStates || {};
 
         function openInlineComment(scope, nim, fileIndex, fileType, action = 'Comment') {
-            if (currentTahap === 'Persyaratan Sidang') return;
+            if (currentTahap === 'Persyaratan Sidang' || currentTahap === 'Lulus') return;
             const key = fileItemKey(scope, nim, fileIndex, fileType);
             const slot = document.getElementById('inlineSlot_' + key);
             if (!slot) {
@@ -2966,7 +3062,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 }
                 return [];
             }
-            if (currentTahap === 'Sidang') {
+            if (currentTahap === 'Sidang' || currentTahap === 'Lulus') {
                 const fname = preview.file_sidang || preview.file_draft;
                 if (fname) return [{ type: 'sidang', label: 'File Sidang Akhir', file: fname, icon: 'bi-file-earmark-text-fill' }];
                 return [];
