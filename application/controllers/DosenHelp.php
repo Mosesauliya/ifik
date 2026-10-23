@@ -23,10 +23,11 @@ class DosenHelp extends CI_Controller {
             return;
         }
 
-        // Cek role: Dosen (3), Ketua KK (9), PIC KK (7), atau Admin (1)
+        // Cek role: Dosen (3), Koordinator TA (6), PIC KK (7), Ketua KK (9), atau Admin (1)
         $role_id = (int)$this->session->userdata('role_id');
-        $allowed = [1, 3, 7, 9];
-        if (!in_array($role_id, $allowed)) {
+        $allowed = [1, 3, 6, 7, 9];
+        $isDosen = in_array($role_id, $allowed, true) || !empty($this->session->userdata('dosen_wali'));
+        if (!$isDosen) {
             $this->session->set_flashdata('error', 'Akses ditolak! Halaman ini khusus untuk Dosen.');
             redirect('login');
             return;
@@ -38,13 +39,14 @@ class DosenHelp extends CI_Controller {
      */
     public function index() {
         $profile = $this->_get_current_user_profile();
-        if (!$profile['id']) {
+        $user_id = !empty($profile['id']) ? (string)$profile['id'] : ((string)$this->session->userdata('user_id') ?: (string)$this->session->userdata('id'));
+        if (!$user_id) {
+            $this->session->set_flashdata('error', 'Sesi login tidak valid. Silakan login kembali.');
             redirect('login');
             return;
         }
-        $user_id   = $profile['id'];
         $role_id   = (int)$this->session->userdata('role_id') ?: 3;
-        $user_nama = $profile['nama'];
+        $user_nama = !empty($profile['nama']) ? $profile['nama'] : ($this->session->userdata('name') ?: 'Dosen');
         $this->Help_chat_model->update_presence($user_id, $role_id, $user_nama, 'dosen', 1);
 
         $data['title']             = 'Bantuan & Live Chat - Portal Dosen';
@@ -391,12 +393,28 @@ class DosenHelp extends CI_Controller {
      * Dapatkan profil dosen yang sedang login secara dinamis
      */
     private function _get_current_user_profile() {
-        $userId = $this->session->userdata('user_id') ?: $this->session->userdata('id');
+        $userId = $this->session->userdata('user_id') ?: ($this->session->userdata('id') ?: null);
         $nama   = $this->session->userdata('name');
         $email  = $this->session->userdata('email');
         $nip    = $this->session->userdata('nip') ?: ($this->session->userdata('nidn_nim') ?: $this->session->userdata('username'));
 
-        if ($userId && (!$nama || !$email || !$nip)) {
+        if (!$userId && ($nip || $email)) {
+            $user = null;
+            if ($nip) {
+                $user = $this->db->get_where('user', ['nidn_nim' => $nip])->row();
+                if (!$user) {
+                    $user = $this->db->get_where('user', ['username' => $nip])->row();
+                }
+            }
+            if (empty($user) && $email) {
+                $user = $this->db->get_where('user', ['email' => $email])->row();
+            }
+            if (!empty($user)) {
+                $userId = $user->id;
+                $nama   = $nama ?: $user->name;
+                $email  = $email ?: $user->email;
+            }
+        } elseif ($userId && (!$nama || !$email || !$nip)) {
             $user = $this->db->get_where('user', ['id' => $userId])->row();
             if ($user) {
                 $nama  = $nama ?: $user->name;
@@ -406,7 +424,7 @@ class DosenHelp extends CI_Controller {
         }
 
         return [
-            'id'    => $userId ? (int)$userId : null,
+            'id'    => !empty($userId) ? (string)$userId : null,
             'nama'  => $nama ?: 'Dosen',
             'email' => $email ?: '',
             'nip'   => $nip ?: '-'
