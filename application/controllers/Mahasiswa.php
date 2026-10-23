@@ -2200,4 +2200,83 @@ public function upload_berkas_sidang_ajax() {
             'message' => 'Pengajuan perwalian Tahap 1 berhasil dikirimkan ke Dosen Wali.'
         ]));
     }
+
+    /**
+     * AJAX: Import Nilai Mahasiswa dari Excel (Tahap 2)
+     */
+    public function perwalian_import_nilai() {
+        @set_time_limit(300);
+        $this->output->set_content_type('application/json');
+        $this->load->model('Perwalian_model');
+
+        $nim = $this->_get_current_nim();
+        if (empty($nim)) {
+            $this->output->set_output(json_encode(['status' => false, 'message' => 'Sesi login tidak valid.']));
+            return;
+        }
+
+        $rawInput = file_get_contents('php://input');
+        $json = json_decode($rawInput, true);
+
+        $rows = $json['rows'] ?? [];
+        $id_perwalian = !empty($json['id_perwalian']) ? (int)$json['id_perwalian'] : null;
+
+        if (empty($id_perwalian)) {
+            $active = $this->Perwalian_model->get_active_perwalian_by_nim($nim);
+            $id_perwalian = (int)($active['id_perwalian'] ?? 0);
+        }
+
+        if (empty($rows) || !is_array($rows)) {
+            $this->output->set_output(json_encode([
+                'status'  => false,
+                'message' => 'Data baris nilai kosong atau format tidak sesuai.'
+            ]));
+            return;
+        }
+
+        $res = $this->Perwalian_model->import_nilai_mahasiswa($id_perwalian, $nim, $rows);
+        $this->output->set_output(json_encode($res));
+    }
+
+    /**
+     * AJAX: Update Nilai Per Mata Kuliah oleh Mahasiswa (Tahap 2)
+     */
+    public function perwalian_update_nilai() {
+        $this->output->set_content_type('application/json');
+        $this->load->model('Perwalian_model');
+
+        $nim = $this->_get_current_nim();
+        $id_detail = (int)$this->input->post('id_detail', true);
+        $nilai = strtoupper(trim((string)$this->input->post('nilai_huruf', true)));
+
+        if (!$id_detail) {
+            $this->output->set_output(json_encode(['status' => false, 'message' => 'ID detail tidak valid.']));
+            return;
+        }
+
+        // Pastikan detail milik perwalian mahasiswa ini dan status_tahap1 sudah Disetujui
+        $det = $this->db->select('pd.*, p.nim, p.status_tahap1')
+                        ->from('perwalian_detail pd')
+                        ->join('perwalian p', 'pd.id_perwalian = p.id_perwalian', 'inner')
+                        ->where('pd.id', $id_detail)
+                        ->where('p.nim', $nim)
+                        ->get()->row_array();
+
+        if (!$det) {
+            $this->output->set_output(json_encode(['status' => false, 'message' => 'Data mata kuliah tidak ditemukan atau Anda tidak memiliki akses.']));
+            return;
+        }
+
+        if ($det['status_tahap1'] !== 'Disetujui') {
+            $this->output->set_output(json_encode(['status' => false, 'message' => 'Tahap 1 (KRS) harus disetujui Dosen Wali terlebih dahulu sebelum mengisi nilai.']));
+            return;
+        }
+
+        $res = $this->Perwalian_model->update_nilai_detail($id_detail, $nilai);
+        $this->output->set_output(json_encode([
+            'status'           => true,
+            'message'          => 'Nilai berhasil disimpan.',
+            'status_kelulusan' => $res['status_kelulusan'] ?? 'Belum Ditentukan'
+        ]));
+    }
 }
