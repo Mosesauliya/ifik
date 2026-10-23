@@ -887,11 +887,10 @@
                                 <table class="w-full text-left text-xs">
                                     <thead class="bg-slate-100/70 text-slate-600 font-bold uppercase text-[10px]">
                                         <tr>
-                                            <th class="py-2 px-2.5 w-7 text-center">No</th>
+                                            <th class="py-2 px-2.5 w-8 text-center">No</th>
                                             <th class="py-2 px-2.5">Kode MK</th>
                                             <th class="py-2 px-2.5">Nama Mata Kuliah</th>
-                                            <th class="py-2 px-2.5 text-center">SKS</th>
-                                            <th class="py-2 px-2.5 text-center">Status</th>
+                                            <th class="py-2 px-3 text-center w-16">SKS</th>
                                         </tr>
                                     </thead>
                                     <tbody id="m1MkTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
@@ -1060,24 +1059,9 @@
                 const sortedSemesters = Object.keys(groupedBySemester).sort((a, b) => parseInt(a) - parseInt(b));
 
                 if (sortedSemesters.length === 0) {
-                    if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400 italic">Belum ada mata kuliah yang dikontrak.</td></tr>`;
+                    if (tbody) tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-400 italic">Belum ada mata kuliah yang dikontrak.</td></tr>`;
                     if (mobList) mobList.innerHTML = `<div class="p-4 text-center text-slate-400 text-xs italic">Belum ada mata kuliah yang dikontrak.</div>`;
                 } else {
-                    const stTahap1 = p.status_tahap1 || 'Draft';
-                    let badgeClass = 'bg-amber-100 text-amber-800 border-amber-200';
-                    let statusLabel = 'Diajukan';
-
-                    if (stTahap1 === 'Disetujui') {
-                        badgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-200';
-                        statusLabel = 'Disetujui';
-                    } else if (stTahap1 === 'Revisi') {
-                        badgeClass = 'bg-rose-100 text-rose-800 border-rose-200';
-                        statusLabel = 'Perlu Revisi';
-                    } else if (stTahap1 === 'Draft') {
-                        badgeClass = 'bg-slate-100 text-slate-600 border-slate-200';
-                        statusLabel = 'Draft';
-                    }
-
                     sortedSemesters.forEach(sem => {
                         const mks = groupedBySemester[sem];
                         const totalSksSem = mks.reduce((acc, curr) => acc + parseInt(curr.sks || 0), 0);
@@ -1086,7 +1070,7 @@
                         if (tbody) {
                             tbody.innerHTML += `
                                 <tr class="bg-gradient-to-r from-orange-50/90 via-amber-50/60 to-orange-50/90 border-y border-orange-200/80">
-                                    <td colspan="5" class="py-2 px-3.5">
+                                    <td colspan="4" class="py-2 px-3.5">
                                         <div class="flex items-center justify-between text-xs font-bold text-orange-950">
                                             <span class="flex items-center gap-1.5">
                                                 <i class="fa-solid fa-graduation-cap text-orange-600 text-sm"></i>
@@ -1107,9 +1091,6 @@
                                         <td class="py-2.5 px-3 font-mono font-bold text-slate-900">${escapeHtml(mk.kode_mk)}</td>
                                         <td class="py-2.5 px-3 font-medium text-slate-800">${escapeHtml(mk.nama_mk)}</td>
                                         <td class="py-2.5 px-3 text-center font-mono font-bold text-slate-700">${mk.sks}</td>
-                                        <td class="py-2.5 px-3 text-center">
-                                            <span class="px-2 py-0.5 text-[10px] font-semibold rounded-md border ${badgeClass}">${statusLabel}</span>
-                                        </td>
                                     </tr>
                                 `;
                             });
@@ -1131,15 +1112,12 @@
 
                             mks.forEach((mk) => {
                                 mobList.innerHTML += `
-                                    <div class="p-3 flex items-start justify-between gap-2.5 hover:bg-slate-50/80 transition">
+                                    <div class="p-3 flex items-center justify-between gap-2.5 hover:bg-slate-50/80 transition">
                                         <div class="min-w-0 flex-1">
-                                            <div class="flex items-center gap-1.5 flex-wrap">
-                                                <span class="font-mono font-bold text-xs text-slate-900">${escapeHtml(mk.kode_mk)}</span>
-                                                <span class="text-[10px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded-md">${mk.sks} SKS</span>
-                                            </div>
-                                            <div class="text-xs font-medium text-slate-800 mt-1 leading-snug">${escapeHtml(mk.nama_mk)}</div>
+                                            <div class="font-mono font-bold text-xs text-slate-900">${escapeHtml(mk.kode_mk)}</div>
+                                            <div class="text-xs font-medium text-slate-800 mt-0.5 leading-snug">${escapeHtml(mk.nama_mk)}</div>
                                         </div>
-                                        <span class="px-2 py-0.5 text-[10px] font-semibold rounded-md border ${badgeClass} shrink-0 whitespace-nowrap self-start mt-0.5">${statusLabel}</span>
+                                        <span class="text-[11px] font-mono font-bold px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md shrink-0">${mk.sks} SKS</span>
                                     </div>
                                 `;
                             });
