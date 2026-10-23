@@ -941,6 +941,7 @@ class DosenWali extends CI_Controller {
 
         $filters = [
             'search'        => trim($this->input->get('search', true) ?? ''),
+            'status_tahap1' => 'Disetujui', // Hanya mahasiswa yang KRS Tahap 1-nya sudah Disetujui (ACC) yang masuk ke Tahap 2
             'status_tahap2' => trim($this->input->get('status_tahap2', true) ?? 'all'),
             'tahun_ajaran'  => trim($this->input->get('tahun_ajaran', true) ?? 'all'),
             'semester'      => trim($this->input->get('semester', true) ?? 'all'),

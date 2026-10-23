@@ -307,7 +307,7 @@
         <main class="w-full px-3 sm:px-8 py-4 sm:py-8 flex-grow">
 
             <?php
-                $totMhs2 = (int)($stats['total_bimbingan'] ?? 0);
+                $totMhs2 = (int)($stats['tahap1_disetujui'] ?? 0);
                 $belumDinilai = (int)($stats['tahap2_belum_dinilai'] ?? 0);
                 $selesai = (int)($stats['tahap2_selesai'] ?? 0);
                 $proses = (int)($stats['tahap2_proses'] ?? 0);
@@ -334,7 +334,7 @@
                                 <div class="flex-1 min-w-0">
                                     <p class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-orange-600 transition-colors">TOTAL MAHASISWA</p>
                                     <h3 id="statT2TotalMhs" class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 sm:mt-1 tracking-tight"><?= $totMhs2; ?></h3>
-                                    <p class="text-[11px] sm:text-xs font-medium text-slate-500 mt-0.5 sm:mt-1 line-clamp-1">Perwalian bimbingan Anda</p>
+                                    <p class="text-[11px] sm:text-xs font-medium text-slate-500 mt-0.5 sm:mt-1 line-clamp-1">KRS Tahap 1 telah disetujui</p>
                                 </div>
                                 
                                 <div class="relative shrink-0">
@@ -611,7 +611,8 @@
                                         <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2 text-slate-400 text-lg">
                                             <i class="fa-solid fa-award"></i>
                                         </div>
-                                        <p class="font-medium text-slate-600">Belum ada data evaluasi nilai untuk filter ini.</p>
+                                        <p class="font-medium text-slate-600">Belum ada mahasiswa yang KRS Tahap 1-nya disetujui untuk dievaluasi.</p>
+                                        <p class="text-xs text-slate-400 mt-1">Mahasiswa akan otomatis muncul di Tahap 2 setelah KRS pada Tahap 1 Anda setujui.</p>
                                     </td>
                                 </tr>
                             <?php else: ?>
@@ -732,7 +733,8 @@
                             <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2 text-slate-400 text-lg">
                                 <i class="fa-solid fa-award"></i>
                             </div>
-                            <p class="font-medium text-slate-600 text-xs">Belum ada data evaluasi nilai untuk filter ini.</p>
+                            <p class="font-medium text-slate-600 text-xs">Belum ada mahasiswa yang KRS Tahap 1-nya disetujui untuk dievaluasi.</p>
+                            <p class="text-[11px] text-slate-400 mt-1">Mahasiswa otomatis muncul di Tahap 2 setelah KRS Tahap 1 disetujui.</p>
                         </div>
                     <?php else: ?>
                         <div id="noSearchResultCardT2" class="py-10 text-center text-slate-400 bg-white rounded-2xl border border-slate-200/80 p-5" style="display: none;">
@@ -2159,7 +2161,7 @@
 
             // 3. Update top summary statistics
             if (stats) {
-                const tot = parseInt(stats.total_bimbingan || 0);
+                const tot = parseInt(stats.tahap1_disetujui || 0);
                 const belum = parseInt(stats.tahap2_belum_dinilai || 0);
                 const proses = parseInt(stats.tahap2_proses || 0);
                 const selesai = parseInt(stats.tahap2_selesai || 0);

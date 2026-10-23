@@ -759,10 +759,13 @@ class Perwalian_model extends CI_Model {
             elseif ($st1 === 'revisi') $stats['tahap1_revisi']++;
             else $stats['tahap1_draft']++;
 
-            $st2 = strtolower(trim($r['status_tahap2'] ?? 'belum dinilai'));
-            if ($st2 === 'proses penilaian') $stats['tahap2_proses']++;
-            elseif ($st2 === 'selesai') $stats['tahap2_selesai']++;
-            else $stats['tahap2_belum_dinilai']++;
+            // Hanya mahasiswa yang Tahap 1-nya sudah 'Disetujui' yang dihitung pada statistik Tahap 2
+            if ($st1 === 'disetujui') {
+                $st2 = strtolower(trim($r['status_tahap2'] ?? 'belum dinilai'));
+                if ($st2 === 'proses penilaian') $stats['tahap2_proses']++;
+                elseif ($st2 === 'selesai') $stats['tahap2_selesai']++;
+                else $stats['tahap2_belum_dinilai']++;
+            }
         }
 
         return $stats;
@@ -1068,8 +1071,8 @@ class Perwalian_model extends CI_Model {
                     $skipped++;
                 }
             } elseif (!empty($nim)) {
-                // Mode kolektif bimbingan: cari perwalian aktif mahasiswa tersebut
-                $p = $this->db->get_where('perwalian', ['nim' => $nim])->order_by('id_perwalian', 'DESC')->row_array();
+                // Mode kolektif bimbingan: cari perwalian aktif mahasiswa yang Tahap 1-nya sudah Disetujui
+                $p = $this->db->where(['nim' => $nim, 'status_tahap1' => 'Disetujui'])->order_by('id_perwalian', 'DESC')->get('perwalian')->row_array();
                 if ($p) {
                     $det = $this->db->get_where('perwalian_detail', [
                         'id_perwalian' => $p['id_perwalian'],
