@@ -304,7 +304,11 @@ class Mahasiswa_model extends CI_Model {
             $prev_debug = $this->db->db_debug;
             $this->db->db_debug = FALSE;
             try {
-                $q_g = $this->db->select('id, id_mhs, judul_1, judul_2, judul_3, judul_en, jenis_TA, peminatan, komentar, keterangan, date, lulus_preview1, lulus_preview2, lulus_preview3, lulus_sidang, status_preview')
+                $select_g = 'id, id_mhs, judul_1, judul_2, judul_3, judul_en, jenis_TA, peminatan, komentar, keterangan, date, lulus_preview1, lulus_preview2, lulus_preview3, lulus_sidang, status_preview';
+                if ($this->db->field_exists('status_filesidang', 'guidance')) {
+                    $select_g .= ', status_filesidang';
+                }
+                $q_g = $this->db->select($select_g)
                     ->where_in('id_mhs', $target_ids)
                     ->order_by('date', 'DESC')
                     ->limit(1)
@@ -572,6 +576,12 @@ class Mahasiswa_model extends CI_Model {
             'catatan_admin'         => trim($catatan_admin),
             'catatan_koor'          => $pt_data['catatan_koor'] ?? '',
             'berkas_kurang'         => $pt_data['berkas_kurang'] ?? null,
+            'lulus_preview1'        => $guidance['lulus_preview1'] ?? 0,
+            'lulus_preview2'        => $guidance['lulus_preview2'] ?? 0,
+            'lulus_preview3'        => $guidance['lulus_preview3'] ?? 0,
+            'lulus_sidang'          => $guidance['lulus_sidang'] ?? 0,
+            'status_preview'        => $guidance['status_preview'] ?? '',
+            'status_filesidang'     => $guidance['status_filesidang'] ?? '',
             'created_at'            => $pt_data['created_at'] ?? ($guidance['date'] ?? null),
             'updated_at'            => $pt_data['updated_at'] ?? ($guidance['date'] ?? null)
         ), $files_result);
@@ -979,6 +989,7 @@ class Mahasiswa_model extends CI_Model {
             g.lulus_preview2
         ";
         if ($this->db->field_exists('status_preview', 'guidance')) $selectCols .= ", g.status_preview";
+        if ($this->db->field_exists('status_filesidang', 'guidance')) $selectCols .= ", g.status_filesidang";
         if ($this->db->field_exists('lulus_preview1', 'guidance')) $selectCols .= ", g.lulus_preview1";
         if ($this->db->field_exists('lulus_preview3', 'guidance')) $selectCols .= ", g.lulus_preview3";
         if ($this->db->field_exists('lulus_sidang', 'guidance'))   $selectCols .= ", g.lulus_sidang";
@@ -1011,7 +1022,7 @@ class Mahasiswa_model extends CI_Model {
 
     /**
      * Menentukan tahap preview aktif/terkini mahasiswa
-     * Return value: 'Preview 1' | 'Preview 2' | 'Preview 3' | 'Sidang'
+     * Return value: 'Preview 1' | 'Preview 2' | 'Preview 3' | 'Persyaratan Sidang' | 'Sidang'
      */
     public function get_student_current_tahap($student_or_nim) {
         $student = null;
@@ -1025,20 +1036,29 @@ class Mahasiswa_model extends CI_Model {
         if (!$student) return 'Preview 1';
 
         $sp_rank = [
-            'preview1' => 1,
-            'preview2' => 2,
-            'preview3' => 3,
-            'sidang'   => 4,
-            'lulus'    => 4,
-            'selesai'  => 4,
+            'preview1'           => 1,
+            'preview2'           => 2,
+            'preview3'           => 3,
+            'persyaratan_sidang' => 4,
+            'persyaratansidang'  => 4,
+            'sidang'             => 5,
+            'lulus'              => 5,
+            'selesai'            => 5,
         ];
         $sp = strtolower(trim($student['status_preview'] ?? ''));
         $rank = $sp_rank[$sp] ?? 0;
 
+        $fs_status = strtolower(trim($student['status_filesidang'] ?? ''));
+        $is_fs_approved = in_array($fs_status, ['disetujui admin laa', 'approved', 'disetujui', 'lulus'], true);
+
         if (!empty($student['lulus_sidang']) && (string)$student['lulus_sidang'] === '1') {
-            $rank = max($rank, 4);
+            $rank = max($rank, 5);
         } elseif (!empty($student['lulus_preview3']) && (string)$student['lulus_preview3'] === '1') {
-            $rank = max($rank, 4);
+            if ($is_fs_approved) {
+                $rank = max($rank, 5);
+            } else {
+                $rank = 4;
+            }
         } elseif (!empty($student['lulus_preview2']) && (string)$student['lulus_preview2'] === '1') {
             $rank = max($rank, 3);
         } elseif (!empty($student['lulus_preview1']) && (string)$student['lulus_preview1'] === '1') {
@@ -1056,6 +1076,7 @@ class Mahasiswa_model extends CI_Model {
         if ($rank <= 1) return 'Preview 1';
         if ($rank === 2) return 'Preview 2';
         if ($rank === 3) return 'Preview 3';
+        if ($rank === 4) return 'Persyaratan Sidang';
         return 'Sidang';
     }
 
@@ -1806,28 +1827,7 @@ class Mahasiswa_model extends CI_Model {
         }
 
         if ($tahap_key === 'preview3') {
-            // 1. Cek apakah mahasiswa sudah mengirim berkas persyaratan sidang
-            $has_syarat = false;
-            if (!empty($preview['file_persyaratan'])) {
-                $has_syarat = true;
-            } else {
-                $this->load->model('AdminLayanan_model');
-                $bs = $this->AdminLayanan_model->get_berkas_pendaftaran_sidang($nim);
-                foreach ($bs as $b) {
-                    if (!empty($b['file_name']) && $b['file_name'] !== '-') {
-                        $has_syarat = true;
-                        break;
-                    }
-                }
-            }
-            if (!$has_syarat) {
-                return [
-                    'status'  => false,
-                    'message' => 'Mahasiswa belum dapat diluluskan: Mahasiswa belum mengunggah berkas Persyaratan Sidang.'
-                ];
-            }
-
-            // 2. Cek apakah Pembimbing 1 sudah memberikan rekomendasi (Sidang / Non-Sidang)
+            // Cek apakah Pembimbing 1 sudah memberikan rekomendasi (Sidang / Non-Sidang)
             $this->load->model('Rekomendasi_model');
             $rek = $this->Rekomendasi_model->get_latest_submission($nim);
             if (!$rek) {
@@ -1850,20 +1850,20 @@ class Mahasiswa_model extends CI_Model {
         $this->db->where('id', $g['id'])->update('guidance', $update);
 
         if ($this->db->field_exists('status_preview', 'guidance')) {
-            $hierarchy = ['preview1' => 1, 'preview2' => 2, 'preview3' => 3, 'sidang' => 4];
+            $hierarchy = ['preview1' => 1, 'preview2' => 2, 'preview3' => 3, 'persyaratan_sidang' => 4, 'persyaratansidang' => 4, 'sidang' => 5];
             $curr = strtolower(trim($g['status_preview'] ?? 'pending'));
             $curr_rank = $hierarchy[$curr] ?? 0;
 
             $next = null;
             if     ($tahap_key === 'preview1') $next = 'preview2';
             elseif ($tahap_key === 'preview2') $next = 'preview3';
-            elseif ($tahap_key === 'preview3') $next = 'sidang';
+            elseif ($tahap_key === 'preview3') $next = 'persyaratan_sidang';
 
             if ($next && isset($hierarchy[$next])) {
                 if ($hierarchy[$next] > $curr_rank) {
                     $this->db->where('id', $g['id'])->update('guidance', ['status_preview' => $next]);
                 }
-            } elseif ($tahap_key === 'sidang' && $curr_rank < 4) {
+            } elseif ($tahap_key === 'sidang' && $curr_rank < 5) {
                 $this->db->where('id', $g['id'])->update('guidance', ['status_preview' => 'sidang']);
             }
         }
@@ -1898,9 +1898,9 @@ class Mahasiswa_model extends CI_Model {
         $normalize = function ($t) {
             $map = [
                 'Preview 1' => 'preview1', 'Preview 2' => 'preview2',
-                'Preview 3' => 'preview3', 'Sidang' => 'sidang',
+                'Preview 3' => 'preview3', 'Persyaratan Sidang' => 'persyaratan_sidang', 'Sidang' => 'sidang',
                 'preview1' => 'preview1', 'preview2' => 'preview2',
-                'preview3' => 'preview3', 'sidang' => 'sidang',
+                'preview3' => 'preview3', 'persyaratan_sidang' => 'persyaratan_sidang', 'persyaratansidang' => 'persyaratan_sidang', 'sidang' => 'sidang',
             ];
             return $map[$t] ?? null;
         };
@@ -1911,7 +1911,7 @@ class Mahasiswa_model extends CI_Model {
             return ['status' => false, 'message' => 'Parameter tahap tidak valid.'];
         }
 
-        $hierarchy = ['preview1' => 1, 'preview2' => 2, 'preview3' => 3, 'sidang' => 4];
+        $hierarchy = ['preview1' => 1, 'preview2' => 2, 'preview3' => 3, 'persyaratan_sidang' => 4, 'sidang' => 5];
         if ($hierarchy[$ke] >= $hierarchy[$dari]) {
             return ['status' => false, 'message' => 'Downgrade hanya boleh ke tahap yang lebih rendah.'];
         }

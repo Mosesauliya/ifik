@@ -509,6 +509,9 @@ class AdminLayanan_model extends CI_Model {
                 ->row_array();
 
             $fp_update = array();
+            if (!empty($file_name) && $this->db->field_exists('file', 'file_pendaftaran')) {
+                $fp_update['file'] = $file_name;
+            }
             if ($this->db->field_exists('status_adminlaa', 'file_pendaftaran')) {
                 $fp_update['status_adminlaa'] = $fp_status;
             }
@@ -2330,6 +2333,8 @@ class AdminLayanan_model extends CI_Model {
             }
 
             $catatan = !empty($found['catatan']) ? $found['catatan'] : (!empty($found['komentar']) ? $found['komentar'] : '');
+            $is_uploaded = (!empty($found) && !empty($found['file']) && !preg_match('/^[a-z_]+_\d+\.pdf$/i', basename($found['file'])) && strpos(basename($found['file']), 'berkas_') !== 0);
+            $uploaded_at = !empty($found['date_edit']) ? $found['date_edit'] : (!empty($found['date']) ? $found['date'] : null);
 
             $berkas[] = array(
                 'no'          => $idx + 1,
@@ -2340,6 +2345,8 @@ class AdminLayanan_model extends CI_Model {
                 'file_url'    => $this->resolve_pdf_url($file_name),
                 'status'      => $status,
                 'is_valid'    => ($status === 'Disetujui Admin LAA'),
+                'is_uploaded' => $is_uploaded,
+                'uploaded_at' => $uploaded_at,
                 'catatan'     => $catatan,
                 'is_required' => $s['is_required'] ?? 1
             );
@@ -2402,6 +2409,24 @@ class AdminLayanan_model extends CI_Model {
                 $overall_status = 'Pending Verifikasi';
             }
 
+            $update_guidance = [
+                'status_filesidang' => $overall_status
+            ];
+            if ($overall_status === 'Disetujui Admin LAA' && $this->db->field_exists('status_preview', 'guidance')) {
+                $g_row = $this->db->group_start()
+                    ->where('id_mhs', $nim)
+                    ->or_where('id_mhs', $nim_clean)
+                    ->or_where('id_mhs', $nim_prefixed)
+                    ->or_where('id', $nim)
+                    ->or_where('id', $nim_clean)
+                    ->group_end()
+                    ->get('guidance')
+                    ->row_array();
+                if ($g_row && (!empty($g_row['lulus_preview3']) || in_array(strtolower(trim($g_row['status_preview'] ?? '')), ['preview3', 'persyaratan_sidang', 'persyaratansidang'], true))) {
+                    $update_guidance['status_preview'] = 'sidang';
+                }
+            }
+
             $this->db->group_start()
                      ->where('id_mhs', $nim)
                      ->or_where('id_mhs', $nim_clean)
@@ -2409,9 +2434,7 @@ class AdminLayanan_model extends CI_Model {
                      ->or_where('id', $nim)
                      ->or_where('id', $nim_clean)
                      ->group_end()
-                     ->update('guidance', [
-                         'status_filesidang' => $overall_status
-                     ]);
+                     ->update('guidance', $update_guidance);
         }
 
         return true;

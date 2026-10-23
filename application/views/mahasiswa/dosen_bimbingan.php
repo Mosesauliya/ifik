@@ -592,7 +592,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             <!-- ========================================================
                  KARTU TAHAP PREVIEW & SIDANG (Interactive Stage Cards)
                  ======================================================== -->
-            <div class="grid <?= $is_pembimbing ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-3' ?> gap-3.5 sm:gap-4.5 my-2" id="stageCardsContainer">
+            <div class="grid <?= $is_pembimbing ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-5' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' ?> gap-3.5 sm:gap-4.5 my-2" id="stageCardsContainer">
                 
                 <?php if ($is_pembimbing): ?>
                 <!-- CARD PREVIEW 1 -->
@@ -673,6 +673,33 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                         </h4>
                         <p class="text-[11px] font-medium text-slate-500 mt-0.5 line-clamp-1">
                             Pra-Sidang &amp; Berkas
+                        </p>
+                    </div>
+                </div>
+
+                <!-- CARD PERSYARATAN SIDANG -->
+                <div onclick="switchDosenTab('persyaratansidang')" id="stageCard_persyaratansidang"
+                     class="stage-tab-card group relative p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between <?= ($default_tahap === 'Persyaratan Sidang') ? 'border-orange-500 bg-gradient-to-br from-orange-50/90 via-white to-amber-50/50 shadow-md shadow-orange-500/10 ring-2 ring-orange-500/20 active-card' : 'border-slate-200/90 bg-white hover:border-orange-300 hover:bg-orange-50/25 hover:shadow-xs' ?>">
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div class="stage-icon-wrap w-11 h-11 rounded-xl flex items-center justify-center text-lg transition-all <?= ($default_tahap === 'Persyaratan Sidang') ? 'bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm shadow-orange-500/30' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-600' ?>">
+                            <i class="bi bi-folder-check"></i>
+                        </div>
+                        <span class="stage-badge-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all <?= ($default_tahap === 'Persyaratan Sidang') ? 'bg-orange-500 text-white shadow-xs' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-700' ?>">
+                            <?= ($default_tahap === 'Persyaratan Sidang') ? '<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Aktif' : 'Tahap 4' ?>
+                        </span>
+                    </div>
+                    <div>
+                        <div class="flex items-baseline gap-1.5 mb-1">
+                            <span id="stageCount_persyaratansidang" class="stage-count text-2xl sm:text-3xl font-black transition-colors <?= ($default_tahap === 'Persyaratan Sidang') ? 'text-orange-600' : 'text-slate-800 group-hover:text-orange-600' ?>">
+                                <?= $tab_counts['Persyaratan Sidang'] ?? 0 ?>
+                            </span>
+                            <span class="text-xs font-bold text-slate-400">Mahasiswa</span>
+                        </div>
+                        <h4 class="font-extrabold text-sm sm:text-base text-slate-800 tracking-tight group-hover:text-orange-600 transition-colors">
+                            Persyaratan Sidang
+                        </h4>
+                        <p class="text-[11px] font-medium text-slate-500 mt-0.5 line-clamp-1">
+                            Verifikasi Berkas LAA
                         </p>
                     </div>
                 </div>
@@ -1276,27 +1303,38 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
         // PIC (Penanggung Jawab) per Tahap
         // ============================================================
         function getResponsibleRole(tahap) {
+            if (tahap === 'Persyaratan Sidang') return null;
             return (tahap === 'Preview 1' || tahap === 'Preview 3') ? 'p1' : 'u1';
         }
         function isCurrentUserPIC() {
             const pic = getResponsibleRole(currentTahap);
+            if (!pic) return false;
             if (pic === 'p1') return IS_P1;
             if (pic === 'u1') return IS_U1;
             return false;
         }
         function getFileStatus(preview, fileType) {
+            if (currentTahap === 'Persyaratan Sidang' && preview && Array.isArray(preview.files_persyaratan_sidang)) {
+                const found = preview.files_persyaratan_sidang.find(f => f.type === fileType);
+                return found ? (found.status || 'Pending') : 'Pending';
+            }
             const col = 'status_file_' + fileType;
             return (preview && preview[col]) ? preview[col] : 'Pending';
         }
         function getFileCatatan(preview, fileType) {
+            if (currentTahap === 'Persyaratan Sidang' && preview && Array.isArray(preview.files_persyaratan_sidang)) {
+                const found = preview.files_persyaratan_sidang.find(f => f.type === fileType);
+                return found ? (found.catatan || '') : '';
+            }
             const col = 'catatan_file_' + fileType;
             return (preview && preview[col]) ? preview[col] : '';
         }
         function getTahapKey(tahap) {
-            return ({ 'Preview 1':'preview1', 'Preview 2':'preview2', 'Preview 3':'preview3', 'Sidang':'sidang' })[tahap] || 'preview1';
+            return ({ 'Preview 1':'preview1', 'Preview 2':'preview2', 'Preview 3':'preview3', 'Persyaratan Sidang':'persyaratan_sidang', 'Sidang':'sidang' })[tahap] || 'preview1';
         }
         function isStageLulus(preview) {
             if (!preview) return false;
+            if (currentTahap === 'Persyaratan Sidang') return preview.status_pembimbing === 'Approved';
             const key = getTahapKey(currentTahap);
             return String(preview['lulus_' + key] ?? 0) === '1';
         }
@@ -1305,6 +1343,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             if (stageName === 'Preview 1') badgeClass = 'bg-blue-50 text-blue-700 border-blue-200';
             else if (stageName === 'Preview 2') badgeClass = 'bg-indigo-50 text-indigo-700 border-indigo-200';
             else if (stageName === 'Preview 3') badgeClass = 'bg-purple-50 text-purple-700 border-purple-200';
+            else if (stageName === 'Persyaratan Sidang') badgeClass = 'bg-teal-50 text-teal-700 border-teal-200';
             else if (stageName === 'Sidang')   badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-300 font-extrabold';
 
             const label = extraText ? `${stageName} ${extraText}` : stageName;
@@ -1335,6 +1374,15 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             return '';
         }
         function countFileStatuses(preview, tahap) {
+            if (tahap === 'Persyaratan Sidang' && preview && Array.isArray(preview.files_persyaratan_sidang)) {
+                return {
+                    approved: preview.approved_count || 0,
+                    revision: preview.revision_count || 0,
+                    pending:  preview.pending_count  || 0,
+                    missing:  Math.max(0, (preview.total_required || 0) - (preview.uploaded_count || 0)),
+                    total:    preview.total_required || preview.files_persyaratan_sidang.length
+                };
+            }
             const types = getFileTypesForTahap(tahap);
             let approved = 0, revision = 0, pending = 0, missing = 0;
             types.forEach(t => {
@@ -1350,6 +1398,15 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
         }
         function getAggregatedFileComments(preview, tahap) {
             if (!preview) return '';
+            if (tahap === 'Persyaratan Sidang' && Array.isArray(preview.files_persyaratan_sidang)) {
+                const parts = [];
+                preview.files_persyaratan_sidang.forEach(f => {
+                    if (f.catatan && String(f.catatan).replace(/<[^>]*>/g, '').trim()) {
+                        parts.push(`<div class="mb-1"><span class="text-slate-500 text-[10px] font-bold">[LAA - ${f.label || f.type}]</span> ${f.catatan}</div>`);
+                    }
+                });
+                return parts.join('');
+            }
             const types = getFileTypesForTahap(tahap);
             const labels = { draft:'Draft', sitasi:'Sitasi', bimbingan:'Bimbingan', persyaratan:'Persyaratan', sidang:'Sidang' };
             const parts = [];
@@ -1372,6 +1429,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
         }
 
         function getUploadBaseUrl(tahap) {
+            if (tahap === 'Persyaratan Sidang') return '<?= base_url('uploads/berkas_sidang/') ?>';
             return (tahap === 'Sidang')
                 ? '<?= base_url('uploads/sidang/') ?>'
                 : '<?= base_url('uploads/preview_ta/') ?>';
@@ -1522,14 +1580,15 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
         // INIT & STAGE TABS
         // ============================================================
         const STAGE_MAP = {
-            'preview1': { cardId: 'stageCard_preview1', countId: 'stageCount_preview1', label: 'Tahap 1', tahap: 'Preview 1' },
-            'preview2': { cardId: 'stageCard_preview2', countId: 'stageCount_preview2', label: 'Tahap 2', tahap: 'Preview 2' },
-            'preview3': { cardId: 'stageCard_preview3', countId: 'stageCount_preview3', label: 'Tahap 3', tahap: 'Preview 3' },
-            'sidang':   { cardId: 'stageCard_sidang',   countId: 'stageCount_sidang',   label: 'Tahap Akhir', tahap: 'Sidang' }
+            'preview1':          { cardId: 'stageCard_preview1',          countId: 'stageCount_preview1',          label: 'Tahap 1',     tahap: 'Preview 1' },
+            'preview2':          { cardId: 'stageCard_preview2',          countId: 'stageCount_preview2',          label: 'Tahap 2',     tahap: 'Preview 2' },
+            'preview3':          { cardId: 'stageCard_preview3',          countId: 'stageCount_preview3',          label: 'Tahap 3',     tahap: 'Preview 3' },
+            'persyaratansidang': { cardId: 'stageCard_persyaratansidang', countId: 'stageCount_persyaratansidang', label: 'Tahap 4',     tahap: 'Persyaratan Sidang' },
+            'sidang':            { cardId: 'stageCard_sidang',            countId: 'stageCount_sidang',            label: 'Tahap Akhir', tahap: 'Sidang' }
         };
 
         function updateRoleSwitcherHrefs(stageKey) {
-            const key = stageKey ? stageKey.toLowerCase().replace(/\s+/g, '') : 'preview1';
+            const key = stageKey ? stageKey.toLowerCase().replace(/[\s_]+/g, '') : 'preview1';
             document.querySelectorAll('#roleSwitcherContainer .role-switch-btn').forEach(btn => {
                 const targetRole = btn.getAttribute('data-role');
                 if (!targetRole) return;
@@ -1546,7 +1605,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 activeKey = localStorage.getItem('dosen_active_tahap');
             }
             if (activeKey) {
-                activeKey = activeKey.toLowerCase().replace(/\s+/g, '');
+                activeKey = activeKey.toLowerCase().replace(/[\s_]+/g, '');
                 if (IS_PENGUJI && activeKey === 'preview1') activeKey = 'preview2';
             }
             if (!activeKey || !STAGE_MAP[activeKey]) {
@@ -1571,14 +1630,16 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
 
         function setTabActive(stageKey) {
             const aliasMap = {
-                'dosenTab1': 'preview1',
-                'dosenTab2': 'preview2',
-                'dosenTab3': 'preview3',
-                'dosenTab4': 'sidang',
-                'Preview 1': 'preview1',
-                'Preview 2': 'preview2',
-                'Preview 3': 'preview3',
-                'Sidang':    'sidang'
+                'dosenTab1':          'preview1',
+                'dosenTab2':          'preview2',
+                'dosenTab3':          'preview3',
+                'dosenTab4':          'sidang',
+                'Preview 1':          'preview1',
+                'Preview 2':          'preview2',
+                'Preview 3':          'preview3',
+                'Persyaratan Sidang': 'persyaratansidang',
+                'persyaratan_sidang': 'persyaratansidang',
+                'Sidang':             'sidang'
             };
             const activeKey = aliasMap[stageKey] || stageKey;
 
@@ -1632,6 +1693,10 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             } else if (tab === 'preview3') {
                 currentTahap = 'Preview 3';
                 setTabActive('preview3');
+            } else if (tab === 'persyaratansidang' || tab === 'persyaratan_sidang') {
+                tab = 'persyaratansidang';
+                currentTahap = 'Persyaratan Sidang';
+                setTabActive('persyaratansidang');
             } else if (tab === 'sidang') {
                 currentTahap = 'Sidang';
                 setTabActive('sidang');
@@ -1684,10 +1749,11 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                         if (res.status) {
                             if (res.tab_counts) {
                                 const mapCounts = {
-                                    'Preview 1': 'stageCount_preview1',
-                                    'Preview 2': 'stageCount_preview2',
-                                    'Preview 3': 'stageCount_preview3',
-                                    'Sidang':    'stageCount_sidang'
+                                    'Preview 1':          'stageCount_preview1',
+                                    'Preview 2':          'stageCount_preview2',
+                                    'Preview 3':          'stageCount_preview3',
+                                    'Persyaratan Sidang': 'stageCount_persyaratansidang',
+                                    'Sidang':             'stageCount_sidang'
                                 };
                                 for (const [thp, cid] of Object.entries(mapCounts)) {
                                     const el = document.getElementById(cid);
@@ -1761,8 +1827,39 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
          * - Tahap Preview 1/2/3: tombol Lulus Tahap + Downgrade (hanya PIC).
          */
         function renderLulusTahapCell(mhs) {
-            const order = ['Preview 1', 'Preview 2', 'Preview 3', 'Sidang'];
+            const order = ['Preview 1', 'Preview 2', 'Preview 3', 'Persyaratan Sidang', 'Sidang'];
             const currIdx = order.indexOf(currentTahap);
+
+            // ===== PERSYARATAN SIDANG: Verifikasi oleh Admin LAA (Tidak ada dosen yang bisa ACC) =====
+            if (currentTahap === 'Persyaratan Sidang') {
+                const latest = mhs.latest_preview;
+                if (!latest) {
+                    return `<div class="flex flex-col gap-1 items-center max-w-[180px] mx-auto">
+                        <span class="px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-500 border border-slate-200 font-bold text-[11px] inline-flex items-center gap-1.5 whitespace-nowrap">
+                            <i class="bi bi-hourglass"></i> Belum Upload Berkas
+                        </span>
+                    </div>`;
+                }
+                if (latest.status_pembimbing === 'Approved') {
+                    return `<div class="flex flex-col gap-1 items-center max-w-[180px] mx-auto">
+                        <span class="px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[11px] inline-flex items-center gap-1.5 whitespace-nowrap">
+                            <i class="bi bi-check-circle-fill"></i> Disetujui Admin LAA
+                        </span>
+                    </div>`;
+                }
+                if (latest.status_pembimbing === 'Revision') {
+                    return `<div class="flex flex-col gap-1 items-center max-w-[180px] mx-auto">
+                        <span class="px-2.5 py-1.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 font-bold text-[11px] inline-flex items-center gap-1.5 whitespace-nowrap">
+                            <i class="bi bi-x-circle-fill"></i> Revisi Admin LAA
+                        </span>
+                    </div>`;
+                }
+                return `<div class="flex flex-col gap-1 items-center max-w-[180px] mx-auto">
+                    <span class="px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 font-bold text-[11px] inline-flex items-center gap-1.5 whitespace-nowrap" title="Diverifikasi oleh Admin Layanan (LAA)">
+                        <i class="bi bi-shield-lock-fill"></i> Verifikasi LAA (${latest.uploaded_count || 0}/${latest.total_required || 0})
+                    </span>
+                </div>`;
+            }
 
             // ===== SIDANG: tombol Nilai =====
             if (currentTahap === 'Sidang') {
@@ -1894,10 +1991,8 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             if (isLulus) {
                 btnLulus = renderTahapBadgeLulus(currentTahap);
             } else if (c.approved > 0) {
-                if (currentTahap === 'Preview 3' && (!mhs.has_persyaratan_sidang || !mhs.rekomendasi)) {
-                    const alasanLock = !mhs.has_persyaratan_sidang 
-                        ? 'Mahasiswa belum mengunggah berkas Persyaratan Sidang'
-                        : 'Pembimbing 1 belum memberikan Rekomendasi (Sidang / Non-Sidang)';
+                if (currentTahap === 'Preview 3' && !mhs.rekomendasi) {
+                    const alasanLock = 'Pembimbing 1 belum memberikan Rekomendasi (Sidang / Non-Sidang)';
                     btnLulus = `<button disabled title="Terkunci: ${alasanLock}" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
                 } else {
                     btnLulus = `<button onclick="handleLulusStage('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-arrow-right-circle-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
@@ -2014,7 +2109,9 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 }
 
                 let checkboxHtml = '';
-                if (mhs.latest_preview && !mhs.latest_preview.file_missing) {
+                if (currentTahap === 'Persyaratan Sidang') {
+                    checkboxHtml = `<input type="checkbox" disabled class="w-4 h-4 rounded border-slate-200 cursor-not-allowed opacity-50" title="Tahap Persyaratan Sidang diverifikasi oleh Admin Layanan (LAA)">`;
+                } else if (mhs.latest_preview && !mhs.latest_preview.file_missing) {
                     if (mhs.latest_preview.status_pembimbing !== 'Approved') {
                         checkboxHtml = `<input type="checkbox" value="${mhs.latest_preview.id}" data-name="${mhs.nama_mahasiswa}" data-file="${mhs.latest_preview.file_draft}" data-id="${mhs.latest_preview.id}" data-status="${mhs.latest_preview.status_pembimbing || 'Pending'}" data-catatan="${encodeURIComponent(mhs.latest_preview.catatan_pembimbing || '')}" data-catatan2="${encodeURIComponent(mhs.latest_preview.catatan_pembimbing_2 || '')}" class="dosen-student-cb w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer">`;
                     } else {
@@ -2386,7 +2483,11 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 document.getElementById('hoverPanelName').textContent = mhs.nama_mahasiswa + ' (' + mhs.nim + ')';
 
                 const pdfWrap = document.getElementById('hoverPdfWrap');
-                if (latest && (latest.file_draft || latest.file_sidang)) {
+                if (currentTahap === 'Persyaratan Sidang' && latest && Array.isArray(latest.files_persyaratan_sidang) && latest.files_persyaratan_sidang.length > 0) {
+                    const firstPs = latest.files_persyaratan_sidang[0];
+                    const fileUrl = firstPs.file_url || (getUploadBaseUrl(currentTahap) + encodeURIComponent(firstPs.file));
+                    pdfWrap.innerHTML = `<iframe src="${fileUrl}" class="w-full h-full" frameborder="0"></iframe>`;
+                } else if (latest && (latest.file_draft || latest.file_sidang)) {
                     const fname = (currentTahap === 'Sidang')
                         ? (latest.file_sidang || latest.file_draft)
                         : latest.file_draft;
@@ -2399,6 +2500,13 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 const formWrap = document.getElementById('hoverFormWrap');
                 if (!latest) {
                     formWrap.innerHTML = `<p class="text-xs text-slate-500 italic">Tidak ada berkas untuk dikomentari.</p>`;
+                } else if (currentTahap === 'Persyaratan Sidang') {
+                    formWrap.innerHTML = `
+                        <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-center gap-2.5">
+                            <i class="bi bi-shield-lock-fill text-amber-600 text-base shrink-0"></i>
+                            <span>Berkas pada tahap <strong>Persyaratan Sidang</strong> diverifikasi secara terpusat oleh <strong>Admin Layanan (LAA)</strong>. Dosen hanya dapat melihat berkas.</span>
+                        </div>
+                    `;
                 } else {
                     const curComment = getCurrentComment(latest);
 
@@ -2559,6 +2667,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
         window.inlineCommentStates = window.inlineCommentStates || {};
 
         function openInlineComment(scope, nim, fileIndex, fileType, action = 'Comment') {
+            if (currentTahap === 'Persyaratan Sidang') return;
             const key = fileItemKey(scope, nim, fileIndex, fileType);
             const slot = document.getElementById('inlineSlot_' + key);
             if (!slot) {
@@ -2845,6 +2954,18 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
         // ============================================================
         function getPreviewFiles(preview) {
             if (!preview) return [];
+            if (currentTahap === 'Persyaratan Sidang') {
+                if (Array.isArray(preview.files_persyaratan_sidang)) {
+                    return preview.files_persyaratan_sidang.map(f => ({
+                        type:     f.type,
+                        label:    f.label,
+                        file:     f.file,
+                        file_url: f.file_url || '',
+                        icon:     'bi-file-earmark-check-fill'
+                    }));
+                }
+                return [];
+            }
             if (currentTahap === 'Sidang') {
                 const fname = preview.file_sidang || preview.file_draft;
                 if (fname) return [{ type: 'sidang', label: 'File Sidang Akhir', file: fname, icon: 'bi-file-earmark-text-fill' }];
@@ -2975,7 +3096,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                             itemsHtml += `<div class="p-2.5 text-center text-slate-400 text-xs italic">Tidak ada file pada pengajuan ini.</div>`;
                         } else {
                             files.forEach((f) => {
-                                const fileUrl   = getUploadBaseUrl(currentTahap) + encodeURIComponent(f.file);
+                                const fileUrl   = f.file_url || (getUploadBaseUrl(currentTahap) + encodeURIComponent(f.file));
                                 const fileName  = f.file;
                                 const isActive  = isPreviewItemActive(mhs.nim, realIdx, f.type);
                                 const activeCardBorder = isActive ? 'ring-2 ring-orange-500 border-orange-300 bg-orange-50/45' : 'border-slate-200 bg-white hover:border-slate-300';
@@ -3065,7 +3186,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 const fileObj  = files.find(f => f.type === fileType) || files[0];
                 if (!fileObj) return;
 
-                const fileUrl   = getUploadBaseUrl(currentTahap) + encodeURIComponent(fileObj.file);
+                const fileUrl   = fileObj.file_url || (getUploadBaseUrl(currentTahap) + encodeURIComponent(fileObj.file));
                 const fileName  = fileObj.file;
                 const fileLabel = fileObj.label;
                 const fullName  = mhs.nama_mahasiswa || 'Mahasiswa';
@@ -3150,9 +3271,15 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                                 </span>
                             </div>
                             <div class="flex items-center gap-1.5">
+                                ${currentTahap !== 'Persyaratan Sidang' ? `
                                 <button type="button" id="btnToggleComment_${previewKey}" onclick="toggleHideInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${fileType}')" class="px-2.5 py-1 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs text-[11px]" title="Sembunyikan / Tampilkan Catatan">
                                     <i class="bi bi-eye-slash-fill text-[11px]"></i><span>Sembunyikan Catatan</span>
                                 </button>
+                                ` : `
+                                <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-500 border border-slate-200 font-bold text-[10px] inline-flex items-center gap-1">
+                                    <i class="bi bi-shield-lock-fill"></i> Verifikasi Admin LAA
+                                </span>
+                                `}
                                 <a href="${fileUrl}" download="${fileName}" target="_blank" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs text-[11px]">
                                     <i class="bi bi-download"></i><span>Unduh</span>
                                 </a>

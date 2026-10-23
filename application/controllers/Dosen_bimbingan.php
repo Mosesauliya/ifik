@@ -10,7 +10,7 @@ class Dosen_bimbingan extends CI_Controller {
     private $allowed_status = ['Approved', 'Revision', 'Pending'];
 
     /** Tahap yang boleh di-query dari dashboard dosen */
-    private $allowed_tahap = ['Preview 1', 'Preview 2', 'Preview 3', 'Sidang'];
+    private $allowed_tahap = ['Preview 1', 'Preview 2', 'Preview 3', 'Persyaratan Sidang', 'Sidang'];
 
     public function __construct() {
         parent::__construct();
@@ -83,7 +83,7 @@ class Dosen_bimbingan extends CI_Controller {
         if (!$this->_is_authorized_reviewer()) return false;
 
         $posisi = (int) $posisi;
-        if ($posisi < 1 || $posisi > 4 || empty($id_preview)) return false;
+        if ($posisi < 1 || $posisi > 4 || empty($id_preview) || strpos((string)$id_preview, 'ps_') === 0) return false;
 
         $preview = $this->Mahasiswa_model->get_preview_by_id($id_preview);
         if (empty($preview)) return false;
@@ -192,6 +192,29 @@ class Dosen_bimbingan extends CI_Controller {
 
         $data['de_detail']           = $this->Mahasiswa_model->get_de_detail($nim);
         $data['is_de']               = !empty($data['de_detail']['is_de']);
+
+        $this->load->model('AdminLayanan_model');
+        $berkas_ps = $this->AdminLayanan_model->get_berkas_pendaftaran_sidang($nim);
+        $ps_uploaded = 0;
+        $ps_approved = 0;
+        $ps_revision = 0;
+        foreach ($berkas_ps as $bps) {
+            if (!empty($bps['is_uploaded'])) {
+                $ps_uploaded++;
+            }
+            if (($bps['status'] ?? '') === 'Disetujui Admin LAA') {
+                $ps_approved++;
+            } elseif (($bps['status'] ?? '') === 'Revisi Admin LAA') {
+                $ps_revision++;
+            }
+        }
+        $fs_status = strtolower(trim($data['pendaftaran']['status_filesidang'] ?? ''));
+        $is_ps_app = in_array($fs_status, ['disetujui admin laa', 'approved', 'disetujui', 'lulus'], true)
+            || (!empty($berkas_ps) && $ps_approved === count($berkas_ps));
+        $data['berkas_syarat_sidang'] = $berkas_ps;
+        $data['upload_count_ps']      = $ps_uploaded;
+        $data['is_ps_app']            = $is_ps_app;
+        $data['is_ps_revision']       = ($ps_revision > 0 || strpos($fs_status, 'revisi') !== false);
 
         $this->load->view('mahasiswa/bimbingan_preview1', $data);
     }
@@ -762,6 +785,20 @@ class Dosen_bimbingan extends CI_Controller {
             }
 
             $jadwal_sidang = $this->Mahasiswa_model->get_jadwal_sidang($nim);
+            $this->load->model('AdminLayanan_model');
+            $berkas_ps = $this->AdminLayanan_model->get_berkas_pendaftaran_sidang($nim);
+            $ps_uploaded = 0;
+            $ps_approved = 0;
+            $ps_revision = 0;
+            foreach ($berkas_ps as $bps) {
+                if (!empty($bps['is_uploaded'])) $ps_uploaded++;
+                if (($bps['status'] ?? '') === 'Disetujui Admin LAA') $ps_approved++;
+                elseif (($bps['status'] ?? '') === 'Revisi Admin LAA') $ps_revision++;
+            }
+            $g_curr = $this->Mahasiswa_model->get_guidance_by_nim($nim);
+            $fs_status = strtolower(trim($g_curr['status_filesidang'] ?? ''));
+            $is_ps_app = in_array($fs_status, ['disetujui admin laa', 'approved', 'disetujui', 'lulus'], true)
+                || (!empty($berkas_ps) && $ps_approved === count($berkas_ps));
 
             $data = [
                 'riwayat_p1'          => $riwayat_p1,
@@ -775,10 +812,14 @@ class Dosen_bimbingan extends CI_Controller {
                 'upload_count_p1'     => count($riwayat_p1),
                 'upload_count_p2'     => count($riwayat_p2),
                 'upload_count_p3'     => count($riwayat_p3),
+                'upload_count_ps'     => $ps_uploaded,
                 'upload_count_sidang' => count($riwayat_sidang),
                 'is_p1_app'           => (bool)(!empty($riwayat_p1[0]['lulus_preview1']) && (string)$riwayat_p1[0]['lulus_preview1'] === '1'),
                 'is_p2_app'           => (bool)(!empty($riwayat_p2[0]['lulus_preview2']) && (string)$riwayat_p2[0]['lulus_preview2'] === '1'),
                 'is_p3_app'           => (bool)(!empty($riwayat_p3[0]['lulus_preview3']) && (string)$riwayat_p3[0]['lulus_preview3'] === '1'),
+                'is_ps_app'           => $is_ps_app,
+                'is_ps_revision'      => ($ps_revision > 0 || strpos($fs_status, 'revisi') !== false),
+                'berkas_syarat_sidang'=> $berkas_ps,
                 'has_app_bimbingan'   => $has_app_bimbingan,
                 'has_app_sitasi'      => $has_app_sitasi,
                 'has_app_persyaratan' => $has_app_persyaratan,
@@ -831,10 +872,11 @@ class Dosen_bimbingan extends CI_Controller {
         $dosen_id = $this->session->userdata('user_id');
         $students = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, $model_posisi);
         $tab_counts = [
-            'Preview 1' => 0,
-            'Preview 2' => 0,
-            'Preview 3' => 0,
-            'Sidang'    => 0,
+            'Preview 1'          => 0,
+            'Preview 2'          => 0,
+            'Preview 3'          => 0,
+            'Persyaratan Sidang' => 0,
+            'Sidang'             => 0,
         ];
         foreach ($students as $st) {
             $thp = $this->Mahasiswa_model->get_student_current_tahap($st);
@@ -845,14 +887,17 @@ class Dosen_bimbingan extends CI_Controller {
 
         $tahap_input = $this->input->get('tahap', TRUE);
         $tahap_map = [
-            'preview1'  => 'Preview 1',
-            'preview2'  => 'Preview 2',
-            'preview3'  => 'Preview 3',
-            'sidang'    => 'Sidang',
-            'Preview 1' => 'Preview 1',
-            'Preview 2' => 'Preview 2',
-            'Preview 3' => 'Preview 3',
-            'Sidang'    => 'Sidang',
+            'preview1'           => 'Preview 1',
+            'preview2'           => 'Preview 2',
+            'preview3'           => 'Preview 3',
+            'persyaratan_sidang' => 'Persyaratan Sidang',
+            'persyaratansidang'  => 'Persyaratan Sidang',
+            'sidang'             => 'Sidang',
+            'Preview 1'          => 'Preview 1',
+            'Preview 2'          => 'Preview 2',
+            'Preview 3'          => 'Preview 3',
+            'Persyaratan Sidang' => 'Persyaratan Sidang',
+            'Sidang'             => 'Sidang',
         ];
         $is_penguji = in_array($role, ['u1', 'u2'], true);
         if ($is_penguji) {
@@ -902,10 +947,11 @@ class Dosen_bimbingan extends CI_Controller {
         $students = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, $posisi);
 
         $counts_by_tahap = [
-            'Preview 1' => 0,
-            'Preview 2' => 0,
-            'Preview 3' => 0,
-            'Sidang'    => 0,
+            'Preview 1'          => 0,
+            'Preview 2'          => 0,
+            'Preview 3'          => 0,
+            'Persyaratan Sidang' => 0,
+            'Sidang'             => 0,
         ];
 
         foreach ($students as $student) {
@@ -924,12 +970,77 @@ class Dosen_bimbingan extends CI_Controller {
                 continue;
             }
 
-            $previews = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], $tahap);
-            $latest   = !empty($previews) ? $previews[0] : null;
+            if ($tahap === 'Persyaratan Sidang') {
+                $this->load->model('AdminLayanan_model');
+                $bs = $this->AdminLayanan_model->get_berkas_pendaftaran_sidang($student['nim']);
+                $files_ps = [];
+                $uploaded_count = 0;
+                $approved_count = 0;
+                $revision_count = 0;
+                $pending_count  = 0;
+                $latest_date    = null;
+
+                foreach ($bs as $b) {
+                    $st_b = $b['status'] ?? 'Pending Verifikasi';
+                    $norm_st = ($st_b === 'Disetujui Admin LAA') ? 'Approved' : (($st_b === 'Revisi Admin LAA') ? 'Revision' : 'Pending');
+                    if (!empty($b['is_uploaded'])) {
+                        $uploaded_count++;
+                        if ($norm_st === 'Approved') $approved_count++;
+                        elseif ($norm_st === 'Revision') $revision_count++;
+                        else $pending_count++;
+
+                        if (!empty($b['uploaded_at']) && (!$latest_date || strtotime($b['uploaded_at']) > strtotime($latest_date))) {
+                            $latest_date = $b['uploaded_at'];
+                        }
+
+                        $files_ps[] = [
+                            'type'     => $b['kode'],
+                            'label'    => $b['nama_file'],
+                            'file'     => $b['file_name'],
+                            'file_url' => $b['file_url'],
+                            'status'   => $norm_st,
+                            'raw_status' => $st_b,
+                            'catatan'  => $b['catatan'] ?? '',
+                        ];
+                    }
+                }
+
+                $fs_status = strtolower(trim($student['status_filesidang'] ?? ''));
+                $overall_ps = 'Pending';
+                if (in_array($fs_status, ['disetujui admin laa', 'approved', 'disetujui', 'lulus'], true) || (count($bs) > 0 && $approved_count === count($bs))) {
+                    $overall_ps = 'Approved';
+                } elseif ($revision_count > 0 || strpos($fs_status, 'revisi') !== false) {
+                    $overall_ps = 'Revision';
+                }
+
+                if ($uploaded_count > 0) {
+                    $latest = [
+                        'id'                       => 'ps_' . $student['nim'],
+                        'nim'                      => $student['nim'],
+                        'tahapan_preview'          => 'persyaratan_sidang',
+                        'created_at'               => $latest_date ?: date('Y-m-d H:i:s'),
+                        'status_pembimbing'        => $overall_ps,
+                        'status_penguji'           => $overall_ps,
+                        'files_persyaratan_sidang' => $files_ps,
+                        'total_required'           => count($bs),
+                        'uploaded_count'           => $uploaded_count,
+                        'approved_count'           => $approved_count,
+                        'revision_count'           => $revision_count,
+                        'pending_count'            => $pending_count,
+                    ];
+                    $previews = [$latest];
+                } else {
+                    $latest   = null;
+                    $previews = [];
+                }
+            } else {
+                $previews = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], $tahap);
+                $latest   = !empty($previews) ? $previews[0] : null;
+            }
 
             $rekomen = $this->Rekomendasi_model->get_latest_submission($student['nim']);
 
-            if ($latest && !empty($latest['file_draft'])) {
+            if ($latest && !empty($latest['file_draft']) && $tahap !== 'Persyaratan Sidang') {
                 if ($tahap === 'Sidang') {
                     $sidangFile = $latest['file_sidang'] ?? $latest['file_draft'];
                     $filePath = FCPATH . 'uploads/sidang/' . $sidangFile;
@@ -942,14 +1053,14 @@ class Dosen_bimbingan extends CI_Controller {
             }
 
             $has_syarat_sidang = false;
-            if ($tahap === 'Preview 3') {
+            if ($tahap === 'Preview 3' || $tahap === 'Persyaratan Sidang') {
                 if (!empty($latest['file_persyaratan'])) {
                     $has_syarat_sidang = true;
                 } else {
                     $this->load->model('AdminLayanan_model');
-                    $bs = $this->AdminLayanan_model->get_berkas_pendaftaran_sidang($student['nim']);
-                    foreach ($bs as $b) {
-                        if (!empty($b['file_name']) && $b['file_name'] !== '-') {
+                    $bs_check = $this->AdminLayanan_model->get_berkas_pendaftaran_sidang($student['nim']);
+                    foreach ($bs_check as $b) {
+                        if (!empty($b['is_uploaded'])) {
                             $has_syarat_sidang = true;
                             break;
                         }
@@ -1051,6 +1162,7 @@ class Dosen_bimbingan extends CI_Controller {
     /** Helper: role PIC untuk suatu tahap. */
     private function _get_responsible_role($tahap) {
         $t = strtolower(trim($tahap));
+        if ($t === 'persyaratan sidang' || $t === 'persyaratan_sidang' || $t === 'persyaratansidang') return null;
         if ($t === 'preview1' || $t === 'preview 1' || $t === 'preview3' || $t === 'preview 3') return 'p1';
         return 'u1';
     }
@@ -1101,6 +1213,14 @@ class Dosen_bimbingan extends CI_Controller {
         $valid_actions = ['Approved', 'Revision', 'Reset', 'Comment'];
         if (!in_array($action, $valid_actions, true)) {
             echo json_encode(['status' => false, 'message' => 'Action tidak valid: ' . $action]);
+            return;
+        }
+
+        if (strpos((string)$id_preview, 'ps_') === 0) {
+            echo json_encode([
+                'status'  => false,
+                'message' => 'Berkas Persyaratan Sidang diverifikasi oleh Admin Layanan (LAA), bukan oleh Dosen.',
+            ]);
             return;
         }
 
@@ -1162,6 +1282,13 @@ class Dosen_bimbingan extends CI_Controller {
         }
 
         $pic_role = $this->_get_responsible_role($tahap);
+        if ($pic_role === null) {
+            echo json_encode([
+                'status'  => false,
+                'message' => 'Tahap Persyaratan Sidang diverifikasi secara terpusat oleh Admin Layanan (LAA).',
+            ]);
+            return;
+        }
 
         if (!$this->_is_pic_for_student($nim, $pic_role)) {
             echo json_encode([

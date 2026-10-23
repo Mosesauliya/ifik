@@ -312,9 +312,14 @@
             $is_sidang_approved = ($st_sidang_clean === 'approved');
             $is_sidang_revision = in_array($st_sidang_clean, ['revision', 'rejected', 'revisi']);
 
+            $is_ps_app      = !empty($is_ps_app);
+            $is_ps_revision = !empty($is_ps_revision);
+            $upload_count_ps = (int)($upload_count_ps ?? 0);
+
             if (!$is_p1_app) { $active_step = 'preview1'; }
             elseif (!$is_p2_app) { $active_step = 'preview2'; }
             elseif (!$is_p3_app) { $active_step = 'preview3'; }
+            elseif (!$is_ps_app && empty($is_nilai_published)) { $active_step = 'persyaratan_sidang'; }
             else { $active_step = 'sidang'; }
 
             // ---------- Tim penguji (Penguji 1 & Penguji 2) ----------
@@ -324,7 +329,7 @@
             // ---------- Status bimbingan terkini ----------
             $stage_no  = $latest_p3 ? 3 : ($latest_p2 ? 2 : ($latest_p1 ? 1 : 0));
             $stage_row = [1 => $latest_p1, 2 => $latest_p2, 3 => $latest_p3][$stage_no] ?? null;
-            $next_label = [1 => ' (Lanjut Preview 2)', 2 => ' (Lanjut Preview 3)', 3 => ' (Siap Sidang)'];
+            $next_label = [1 => ' (Lanjut Preview 2)', 2 => ' (Lanjut Preview 3)', 3 => ' (Lanjut Persyaratan Sidang)'];
 
             $curr_status = 'Belum Memulai Bimbingan';
             $curr_tone   = 'text-white/70';
@@ -337,8 +342,24 @@
                               || (!empty($pendaftaran['lulus_preview' . $stage_no]) && (string)$pendaftaran['lulus_preview' . $stage_no] === '1');
                 $st = $stage_row['status_pembimbing'] ?? '';
                 if ($is_curr_lulus) {
-                    $curr_status = 'Lulus Tahap Preview ' . $stage_no . $next_label[$stage_no];
-                    $curr_tone = 'text-emerald-300'; $curr_icon = 'bi-check-circle-fill';
+                    if ($stage_no === 3) {
+                        if ($is_ps_app) {
+                            $curr_status = 'Lulus Persyaratan Sidang (Siap Sidang TA)';
+                            $curr_tone = 'text-emerald-300'; $curr_icon = 'bi-check-circle-fill';
+                        } elseif ($is_ps_revision) {
+                            $curr_status = 'Persyaratan Sidang Perlu Revisi (Admin LAA)';
+                            $curr_tone = 'text-rose-300'; $curr_icon = 'bi-x-circle-fill';
+                        } elseif ($upload_count_ps > 0) {
+                            $curr_status = 'Persyaratan Sidang Diverifikasi Admin LAA';
+                            $curr_tone = 'text-amber-200'; $curr_icon = 'bi-clock-fill';
+                        } else {
+                            $curr_status = 'Lulus Tahap Preview 3 (Lanjut Persyaratan Sidang)';
+                            $curr_tone = 'text-emerald-300'; $curr_icon = 'bi-check-circle-fill';
+                        }
+                    } else {
+                        $curr_status = 'Lulus Tahap Preview ' . $stage_no . $next_label[$stage_no];
+                        $curr_tone = 'text-emerald-300'; $curr_icon = 'bi-check-circle-fill';
+                    }
                 } elseif ($st === 'Approved') {
                     $curr_status = 'Berkas Preview ' . $stage_no . ' Disetujui (Menunggu Lulus Tahap)';
                     $curr_tone = 'text-amber-200'; $curr_icon = 'bi-clock-fill';
@@ -356,11 +377,13 @@
             }
 
             // ---------- Sub-label & state milestone chip ----------
-            $ms1_sub = $is_p1_app ? 'Selesai' : ($upload_count_p1 > 0 ? 'Menunggu review' : 'Aktif');
-            $ms2_sub = $is_p2_app ? 'Selesai' : ($is_p1_app ? 'Terbuka' : 'Terkunci');
-            $ms3_sub = $is_p3_app ? 'Selesai' : ($is_p2_app ? 'Terbuka' : 'Terkunci');
-            $ms4_sub = !empty($is_nilai_published) ? 'Hasil terbit' : ($is_p3_app ? 'Siap daftar' : 'Terkunci');
-            $ms4_open = ($is_p3_app || !empty($is_nilai_published));
+            $ms1_sub    = $is_p1_app ? 'Selesai' : ($upload_count_p1 > 0 ? 'Menunggu review' : 'Aktif');
+            $ms2_sub    = $is_p2_app ? 'Selesai' : ($is_p1_app ? 'Terbuka' : 'Terkunci');
+            $ms3_sub    = $is_p3_app ? 'Selesai' : ($is_p2_app ? 'Terbuka' : 'Terkunci');
+            $ms_ps_sub  = $is_ps_app ? 'Selesai' : ($is_ps_revision ? 'Perlu revisi' : ($upload_count_ps > 0 ? 'Verifikasi LAA' : ($is_p3_app ? 'Terbuka' : 'Terkunci')));
+            $ms_ps_open = ($is_p3_app || $is_ps_app);
+            $ms4_sub    = !empty($is_nilai_published) ? 'Hasil terbit' : ($is_ps_app ? 'Siap daftar' : 'Terkunci');
+            $ms4_open   = ($is_ps_app || !empty($is_nilai_published));
         ?>
         <script>window._statusNotes = <?= json_encode(['p1' => $curr_n1, 'p2' => $curr_n2]); ?>;</script>
 
@@ -394,13 +417,6 @@
                                 </div>
                             </div>
                         <?php endif; ?>
-
-                        <button type="button" onclick="openModalPersyaratanSidang()"
-                                class="w-full py-2 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-extrabold text-xs shadow-md shadow-amber-500/30 transition flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-95 cursor-pointer">
-                            <i class="bi bi-file-earmark-check-fill"></i>
-                            <span>Persyaratan Sidang</span>
-                            <i class="bi bi-arrow-right-short text-base"></i>
-                        </button>
                     </div>
 
                     <!-- TIM PEMBIMBING & PENGUJI -->
@@ -469,7 +485,7 @@
                     </div>
 
                     <!-- MILESTONE BIMBINGAN & EVALUASI TA -->
-                    <div class="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-2 min-w-0">
+                    <div class="flex-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 min-w-0">
 
                         <div onclick="switchPreviewTab('preview1')" id="tabBtnPreview1" title="Proposal &amp; Bab 1–3 (Pembimbing 1)"
                              class="tab-card ms-chip <?= $active_step === 'preview1' ? 'tab-card-active' : '' ?>">
@@ -504,10 +520,21 @@
                             </div>
                         </div>
 
+                        <div onclick="switchPreviewTab('persyaratan_sidang')" id="tabBtnPersyaratanSidang" title="Kelengkapan Berkas Persyaratan Sidang (Verifikasi Admin LAA)"
+                             class="tab-card ms-chip <?= !$ms_ps_open ? 'ms-locked' : '' ?> <?= $active_step === 'persyaratan_sidang' ? 'tab-card-active' : '' ?>">
+                            <div class="ms-ico w-8 h-8 rounded-lg <?= $is_ps_app ? 'bg-emerald-500' : ($ms_ps_open ? 'bg-teal-500' : 'bg-white/20'); ?> text-white flex items-center justify-center text-sm shrink-0">
+                                <i class="bi <?= $is_ps_app ? 'bi-check-lg' : ($ms_ps_open ? 'bi-folder-check' : 'bi-lock-fill'); ?>"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <h4 class="text-xs font-bold leading-tight truncate">Persyaratan Sidang</h4>
+                                <span class="ms-sub text-[10px] font-semibold block truncate"><?= $ms_ps_sub ?></span>
+                            </div>
+                        </div>
+
                         <div onclick="switchPreviewTab('sidang')" id="tabBtnSidang" title="Pendaftaran, Jadwal &amp; Hasil Sidang"
                              class="tab-card ms-chip <?= !$ms4_open ? 'ms-locked' : '' ?> <?= $active_step === 'sidang' ? 'tab-card-active' : '' ?>">
                             <div class="ms-ico w-8 h-8 rounded-lg <?= $ms4_open ? 'bg-emerald-500' : 'bg-white/20'; ?> text-white flex items-center justify-center text-sm shrink-0">
-                                <i class="bi <?= !empty($is_nilai_published) ? 'bi-award-fill' : ($is_p3_app ? 'bi-mortarboard-fill' : 'bi-lock-fill'); ?>"></i>
+                                <i class="bi <?= !empty($is_nilai_published) ? 'bi-award-fill' : ($ms4_open ? 'bi-mortarboard-fill' : 'bi-lock-fill'); ?>"></i>
                             </div>
                             <div class="min-w-0">
                                 <h4 class="text-xs font-bold leading-tight truncate">Sidang TA</h4>
@@ -1586,6 +1613,114 @@
             </div>
         </div>
 
+        <!-- ================= TAB CONTENT PANEL: PERSYARATAN SIDANG ================= -->
+        <div id="panelPersyaratanSidang" class="tab-panel space-y-7 <?= $active_step === 'persyaratan_sidang' ? '' : 'hidden' ?>">
+
+            <div class="card-3d-warm rounded-3xl p-7 sm:p-9 space-y-6 w-full shadow-md shadow-teal-500/5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-teal-100 pb-5">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-teal-700 block mb-1">TAHAP 4 — VERIFIKASI BERKAS OLEH ADMIN LAYANAN (LAA)</span>
+                        <h3 class="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2.5">
+                            <i class="bi bi-folder-check text-teal-600 text-xl"></i> Unggah Berkas Persyaratan Sidang Tugas Akhir
+                        </h3>
+                        <p class="text-xs sm:text-sm text-slate-600 font-normal mt-1.5">
+                            Unggah dokumen kelengkapan administrasi pendaftaran Sidang Tugas Akhir sesuai daftar dari Admin LAA. Berkas pada tahap ini diverifikasi oleh <strong class="text-slate-900 font-semibold">Admin Layanan (LAA)</strong>.
+                        </p>
+                    </div>
+                    <div class="shrink-0">
+                        <?php if ($is_ps_app): ?>
+                            <span class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs">
+                                <i class="bi bi-check-circle-fill text-emerald-600"></i> Disetujui Admin LAA
+                            </span>
+                        <?php elseif ($is_ps_revision): ?>
+                            <span class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 shadow-2xs">
+                                <i class="bi bi-x-circle-fill text-rose-600"></i> Perlu Revisi LAA
+                            </span>
+                        <?php elseif ($upload_count_ps > 0): ?>
+                            <span class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">
+                                <i class="bi bi-clock-fill text-amber-600"></i> Menunggu Verifikasi LAA
+                            </span>
+                        <?php elseif ($is_p3_app): ?>
+                            <span class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-teal-100 text-teal-800 border border-teal-300 shadow-2xs">
+                                <i class="bi bi-unlock-fill text-teal-600"></i> Tahap Terbuka
+                            </span>
+                        <?php else: ?>
+                            <span class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-2xs">
+                                <i class="bi bi-lock-fill text-slate-400"></i> Tahap Terkunci
+                            </span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <?php if (!$is_p3_app): ?>
+                <div class="py-10 text-center bg-slate-50 border border-slate-200 rounded-3xl max-w-3xl">
+                    <i class="bi bi-lock-fill text-4xl text-slate-400 mb-3 block"></i>
+                    <h4 class="font-bold text-lg text-slate-700">Tahap Persyaratan Sidang Terkunci</h4>
+                    <p class="text-slate-500 text-sm mt-2">Anda harus menyelesaikan dan dinyatakan lulus pada tahap <strong>Preview 3</strong> oleh Pembimbing 1 terlebih dahulu sebelum dapat mengunggah berkas Persyaratan Sidang.</p>
+                </div>
+                <?php else: ?>
+                    <?php if ($is_ps_app): ?>
+                    <div class="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-start gap-3.5 max-w-3xl">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-lg shrink-0 box-3d">
+                            <i class="bi bi-patch-check-fill"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm sm:text-base text-emerald-900">Seluruh Berkas Persyaratan Sidang Telah Disetujui Admin LAA</h4>
+                            <p class="text-emerald-700 text-xs sm:text-sm mt-1">Verifikasi administrasi persyaratan sidang telah selesai. Anda sekarang dapat melanjutkan ke tahap <strong>Sidang TA</strong>.</p>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <div class="space-y-4 max-w-3xl" id="psBodyContent">
+                        <div class="text-center py-10 text-slate-400">
+                            <i class="bi bi-arrow-repeat animate-spin text-2xl inline-block"></i>
+                            <p class="mt-2 text-xs font-semibold">Memuat daftar persyaratan sidang...</p>
+                        </div>
+                    </div>
+
+                    <?php if (!$is_ps_app): ?>
+                    <div class="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 max-w-3xl">
+                        <span class="text-xs text-slate-500 font-medium">
+                            <i class="bi bi-info-circle mr-1 text-teal-600"></i> Format: PDF / DOC / DOCX / JPG / PNG — Maks. 5MB per berkas
+                        </span>
+                        <button type="button" id="psBtnSubmit" onclick="submitPersyaratanSidang()"
+                                class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-teal-500/25 transition cursor-pointer">
+                            <i class="bi bi-cloud-arrow-up-fill text-base"></i>
+                            <span>Upload &amp; Simpan Berkas Persyaratan</span>
+                        </button>
+                    </div>
+                    <?php endif; ?>
+                <?php endif; ?>
+            </div>
+
+            <div class="card-3d-warm rounded-3xl p-7 sm:p-9 space-y-6 w-full shadow-md shadow-teal-500/5">
+                <div class="flex items-center justify-between border-b border-teal-100 pb-4">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-teal-700 block mb-1">LOG AKTIVITAS PERSYARATAN SIDANG</span>
+                        <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2.5">
+                            <i class="bi bi-clock-history text-teal-600 text-xl"></i> Status &amp; Riwayat Berkas Persyaratan Sidang
+                        </h3>
+                    </div>
+                </div>
+                <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-2xs mt-4">
+                    <table class="responsive-log-table w-full text-left border-collapse text-xs sm:text-sm">
+                        <thead class="bg-slate-50 text-slate-700 font-bold uppercase py-3.5 border-b border-slate-200">
+                            <tr>
+                                <th class="py-4 px-4 w-12 text-center">#</th>
+                                <th class="py-4 px-4">Nama Berkas Persyaratan</th>
+                                <th class="py-4 px-4">Dokumen Terunggah</th>
+                                <th class="py-4 px-4 text-center">Status Verifikasi LAA</th>
+                                <th class="py-4 px-4">Catatan Admin LAA</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 font-medium" id="logTablePersyaratanSidang">
+                            <tr><td colspan="5" class="text-center py-8 text-slate-500"><i class="bi bi-arrow-repeat animate-spin mr-2 text-lg"></i> Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- ================= TAB CONTENT PANEL: SIDANG AKHIR ================= -->
         <div id="panelSidang" class="tab-panel <?= $active_step === 'sidang' ? '' : 'hidden' ?> space-y-7">
             <?php
@@ -1961,6 +2096,9 @@
                 if (!$is_p3_app) {
                     $sidang_locked = true;
                     $lock_message  = 'Anda harus menyelesaikan Preview 3 dan mendapatkan persetujuan Pembimbing 1 terlebih dahulu sebelum dapat mengunggah berkas sidang.';
+                } elseif (!$is_ps_app) {
+                    $sidang_locked = true;
+                    $lock_message  = 'Anda harus melengkapi dan mendapatkan persetujuan Admin Layanan (LAA) pada tahap Persyaratan Sidang terlebih dahulu sebelum dapat mengunggah berkas Sidang TA.';
                 } elseif (empty($penguji_ta)) {
                     $sidang_locked = true;
                     $lock_message  = 'Dosen Penguji belum di-assign. Silakan hubungi Koordinator TA untuk menetapkan Dosen Penguji sebelum Anda dapat mengunggah berkas sidang.';
@@ -2840,7 +2978,7 @@
         function switchPreviewTab(targetTab) {
             document.querySelectorAll('.tab-panel').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-card').forEach(el => {
-                el.classList.remove('tab-card-active', 'border-orange-500', 'border-amber-300', 'border-indigo-300', 'border-emerald-400', 'ring-4', 'ring-orange-400/20', 'ring-amber-400/20', 'ring-indigo-400/20', 'ring-emerald-400/20');
+                el.classList.remove('tab-card-active', 'border-orange-500', 'border-amber-300', 'border-indigo-300', 'border-teal-300', 'border-emerald-400', 'ring-4', 'ring-orange-400/20', 'ring-amber-400/20', 'ring-indigo-400/20', 'ring-teal-400/20', 'ring-emerald-400/20');
             });
 
             if (targetTab === 'preview1') {
@@ -2852,6 +2990,14 @@
             } else if (targetTab === 'preview3') {
                 document.getElementById('panelPreview3').classList.remove('hidden');
                 document.getElementById('tabBtnPreview3').classList.add('tab-card-active', 'border-indigo-300', 'ring-4', 'ring-indigo-400/20');
+            } else if (targetTab === 'persyaratan_sidang') {
+                const panelPs = document.getElementById('panelPersyaratanSidang');
+                const btnPs = document.getElementById('tabBtnPersyaratanSidang');
+                if (panelPs) panelPs.classList.remove('hidden');
+                if (btnPs) btnPs.classList.add('tab-card-active', 'border-teal-300', 'ring-4', 'ring-teal-400/20');
+                if (typeof loadMasterSyaratSidang === 'function' && (!_psMasterData || !_psMasterData.length)) {
+                    loadMasterSyaratSidang();
+                }
             } else if (targetTab === 'sidang') {
                 document.getElementById('panelSidang').classList.remove('hidden');
                 document.getElementById('tabBtnSidang').classList.add('tab-card-active', 'border-emerald-400', 'ring-4', 'ring-emerald-400/20');
@@ -3020,7 +3166,17 @@
             const latest = stageNo ? data['latest_p' + stageNo] : null;
             let text = 'Belum Memulai Bimbingan', icon = 'bi-dash-circle', tone = 'text-white/70';
 
-            if (data.is_p3_app) { text = 'Lulus Preview 3 (Siap Sidang)'; icon = 'bi-check-circle-fill'; tone = 'text-emerald-300'; }
+            if (data.is_p3_app) {
+                if (data.is_ps_app) {
+                    text = 'Lulus Persyaratan Sidang (Siap Sidang TA)'; icon = 'bi-check-circle-fill'; tone = 'text-emerald-300';
+                } else if (data.is_ps_revision) {
+                    text = 'Persyaratan Sidang Perlu Revisi (Admin LAA)'; icon = 'bi-x-circle-fill'; tone = 'text-rose-300';
+                } else if (data.upload_count_ps > 0) {
+                    text = 'Persyaratan Sidang Diverifikasi Admin LAA'; icon = 'bi-clock-fill'; tone = 'text-amber-200';
+                } else {
+                    text = 'Lulus Preview 3 (Lanjut Persyaratan Sidang)'; icon = 'bi-check-circle-fill'; tone = 'text-emerald-300';
+                }
+            }
             else if (data.is_p2_app) { text = 'Lulus Preview 2 (Lanjut Preview 3)'; icon = 'bi-check-circle-fill'; tone = 'text-emerald-300'; }
             else if (data.is_p1_app) { text = 'Lulus Preview 1 (Lanjut Preview 2)'; icon = 'bi-check-circle-fill'; tone = 'text-emerald-300'; }
             else if (stageNo) {
@@ -3154,6 +3310,8 @@
                         const orig_is_p1_app = <?php echo $is_p1_app ? 'true' : 'false'; ?>;
                         const orig_is_p2_app = <?php echo $is_p2_app ? 'true' : 'false'; ?>;
                         const orig_is_p3_app = <?php echo $is_p3_app ? 'true' : 'false'; ?>;
+                        const orig_is_ps_app = <?php echo $is_ps_app ? 'true' : 'false'; ?>;
+                        const orig_is_ps_rev = <?php echo $is_ps_revision ? 'true' : 'false'; ?>;
 
                         // Deteksi perubahan status per-file Preview 3
                         const orig_has_app_bimbingan   = <?php echo (!empty($has_app_bimbingan)   ? 'true' : 'false'); ?>;
@@ -3180,9 +3338,10 @@
                             (orig_st_p1 && curr_st_p1 && orig_st_p1 !== curr_st_p1) ||
                             (orig_st_p2 && curr_st_p2 && orig_st_p2 !== curr_st_p2) ||
                             (orig_st_sidang && curr_st_sidang && orig_st_sidang !== curr_st_sidang) ||
-                            (curr_is_sidang_sched !== orig_is_sidang_sched);
+                            (curr_is_sidang_sched !== orig_is_sidang_sched) ||
+                            (!!data.is_ps_revision !== orig_is_ps_rev);
 
-                        if ((data.is_p1_app && !orig_is_p1_app) || (data.is_p2_app && !orig_is_p2_app) || (data.is_p3_app && !orig_is_p3_app) || fileStatusChanged || reviewStatusChanged) {
+                        if ((data.is_p1_app && !orig_is_p1_app) || (data.is_p2_app && !orig_is_p2_app) || (data.is_p3_app && !orig_is_p3_app) || (data.is_ps_app && !orig_is_ps_app) || fileStatusChanged || reviewStatusChanged) {
                             window.location.reload();
                         }
                     }
@@ -3199,6 +3358,9 @@
             renderLogTable(<?= json_encode($riwayat_preview2 ?? []) ?>, 'logTablePreview2', 'preview2');
             renderLogTable(<?= json_encode($riwayat_preview3 ?? []) ?>, 'logTablePreview3', 'preview3');
             renderLogTable(<?= json_encode($riwayat_sidang ?? []) ?>, 'logTableSidang', 'sidang');
+            if (typeof loadMasterSyaratSidang === 'function') {
+                loadMasterSyaratSidang();
+            }
         });
     </script>
 
@@ -3321,101 +3483,36 @@
     </script>
     <?php endif; ?>
 
-    <!-- ========================================================== -->
-    <!-- MODAL: PERSYARATAN SIDANG (DINAMIS) — SELALU DI-RENDER     -->
-    <!-- ========================================================== -->
-    <div id="modalPersyaratanSidang" class="fixed inset-0 z-[10000] bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 overflow-y-auto">
-        <div class="bg-white w-full max-w-3xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-6 flex flex-col max-h-[90vh]">
-
-            <div class="px-5 sm:px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-orange-50/60 to-amber-50/30 shrink-0">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-md shadow-orange-500/20 shrink-0">
-                        <i class="bi bi-file-earmark-check-fill text-lg"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-sm sm:text-base font-extrabold text-slate-800">Persyaratan Sidang Tugas Akhir</h3>
-                        <p class="text-[11px] text-slate-500 font-medium">Daftar berkas dinamis dari Admin LAA. Status verifikasi akan tampil setelah diunggah.</p>
-                    </div>
-                </div>
-                <button type="button" onclick="closeModalPersyaratanSidang()"
-                        class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition">
-                    <i class="bi bi-x-lg text-sm"></i>
-                </button>
-            </div>
-
-            <div class="p-5 sm:p-6 overflow-y-auto space-y-3" id="psBodyContent">
-                <div class="text-center py-10 text-slate-400">
-                    <i class="bi bi-arrow-repeat animate-spin text-2xl inline-block"></i>
-                    <p class="mt-2 text-xs font-semibold">Memuat daftar persyaratan sidang...</p>
-                </div>
-            </div>
-
-            <div class="px-5 sm:px-6 py-3.5 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-3 shrink-0">
-                <span class="text-[11px] text-slate-400 font-medium hidden sm:block">
-                    Format: PDF / DOC / DOCX / JPG / PNG — Maks. 5MB per berkas
-                </span>
-                <div class="flex items-center gap-2 ml-auto">
-                    <button type="button" onclick="closeModalPersyaratanSidang()"
-                            class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold transition">
-                        Tutup
-                    </button>
-                    <button type="button" id="psBtnSubmit" onclick="submitPersyaratanSidang()"
-                            class="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold shadow-md shadow-orange-500/25 transition">
-                        <i class="bi bi-cloud-arrow-up-fill text-sm"></i>
-                        <span>Upload Semua Berkas</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
         // ============================================================
-        // MODAL PERSYARATAN SIDANG — DINAMIS DARI MASTER LAA
+        // TAHAP PERSYARATAN SIDANG — DINAMIS DARI MASTER LAA
         // ============================================================
         let _psMasterData = [];
         let _psUploadedData = [];
 
         function openModalPersyaratanSidang() {
-            const m = document.getElementById('modalPersyaratanSidang');
-            if (!m) {
-                console.error('[PS] Element #modalPersyaratanSidang tidak ditemukan!');
-                return;
-            }
-            m.classList.remove('hidden');
-            m.classList.add('flex');
-            document.body.style.overflow = 'hidden';
-            loadMasterSyaratSidang();
+            switchPreviewTab('persyaratan_sidang');
         }
 
-        function closeModalPersyaratanSidang() {
-            const m = document.getElementById('modalPersyaratanSidang');
-            if (!m) return;
-            m.classList.add('hidden');
-            m.classList.remove('flex');
-            document.body.style.overflow = '';
-        }
+        function closeModalPersyaratanSidang() {}
 
         function loadMasterSyaratSidang() {
             const body = document.getElementById('psBodyContent');
-            body.innerHTML = `<div class="text-center py-10 text-slate-400">
-                <i class="bi bi-arrow-repeat animate-spin text-2xl inline-block"></i>
-                <p class="mt-2 text-xs font-semibold">Memuat daftar persyaratan sidang...</p>
-            </div>`;
+            if (body) {
+                body.innerHTML = `<div class="text-center py-10 text-slate-400">
+                    <i class="bi bi-arrow-repeat animate-spin text-2xl inline-block"></i>
+                    <p class="mt-2 text-xs font-semibold">Memuat daftar persyaratan sidang...</p>
+                </div>`;
+            }
 
             fetch('<?= site_url("mahasiswa/get_master_syarat_sidang_ajax") ?>')
                 .then(r => r.json())
                 .then(res => {
                     if (!res.status) throw new Error(res.message || 'Gagal memuat data.');
 
-                    // ============================================
-                    // FILTER: buang file hantu (placeholder dari sistem)
-                    // ============================================
                     const uploaded = (res.uploaded || []).filter(b => {
                         if (!b || !b.file_name) return false;
-                        // Buang placeholder seperti "berkas_xyz_<nim>.pdf"
                         if (b.file_name.startsWith('berkas_')) return false;
-                        // Buang pattern "<kode>_<nim>.pdf" (tanpa timestamp)
                         if (/^[a-z_]+_\d+\.pdf$/i.test(b.file_name)) return false;
                         return true;
                     });
@@ -3423,11 +3520,63 @@
                     _psMasterData   = res.master || [];
                     _psUploadedData = uploaded;
                     renderSyaratSidangForm();
+                    renderLogTablePersyaratanSidang();
                 })
                 .catch(err => {
                     console.error('[PS] fetch error:', err);
-                    body.innerHTML = `<div class="text-center py-10 text-rose-500 text-xs font-bold">${err.message}</div>`;
+                    if (body) body.innerHTML = `<div class="text-center py-10 text-rose-500 text-xs font-bold">${err.message}</div>`;
                 });
+        }
+
+        function renderLogTablePersyaratanSidang() {
+            const tbody = document.getElementById('logTablePersyaratanSidang');
+            if (!tbody) return;
+            if (!_psMasterData || !_psMasterData.length) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-12 px-4 text-slate-500 font-medium">Belum ada daftar persyaratan sidang yang dikonfigurasi.</td></tr>`;
+                return;
+            }
+            let html = '';
+            _psMasterData.forEach((item, idx) => {
+                const kode = item.kode_berkas || '';
+                const uploaded = _psUploadedData.find(u => u.kode === kode);
+                const hasFile = uploaded && uploaded.file_name;
+                const statusSt = hasFile ? (uploaded.status || 'Pending Verifikasi') : 'Belum Diunggah';
+                const catatan = hasFile && uploaded.catatan ? escapeHtml(uploaded.catatan) : '-';
+
+                let badgeHtml = `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-500 border border-slate-200"><i class="bi bi-dash-circle"></i> Belum Diunggah</span>`;
+                if (hasFile) {
+                    const s = statusSt.toLowerCase();
+                    if (s.includes('setuju') || s.includes('valid') || s.includes('approved')) {
+                        badgeHtml = `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs"><i class="bi bi-check-circle-fill text-emerald-600"></i> Disetujui Admin LAA</span>`;
+                    } else if (s.includes('revisi') || s.includes('tolak') || s.includes('invalid') || s.includes('rejected')) {
+                        badgeHtml = `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 shadow-2xs"><i class="bi bi-x-circle-fill text-rose-600"></i> Perlu Revisi LAA</span>`;
+                    } else {
+                        badgeHtml = `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs"><i class="bi bi-clock-fill text-amber-600"></i> Menunggu Verifikasi LAA</span>`;
+                    }
+                }
+
+                const fileCell = hasFile
+                    ? `<div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-teal-50 text-teal-600 border border-teal-200 flex items-center justify-center text-base shrink-0">
+                            <i class="bi bi-file-earmark-check-fill"></i>
+                        </div>
+                        <a href="${uploaded.file_url}" target="_blank" class="font-bold text-slate-900 hover:text-teal-600 hover:underline truncate max-w-xs block text-xs sm:text-sm">${escapeHtml(uploaded.file_name)}</a>
+                       </div>`
+                    : `<span class="text-slate-400 italic text-xs">Belum ada berkas</span>`;
+
+                html += `
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="cell-no py-4 px-4 text-center font-bold text-slate-700"><span>${idx + 1}</span></td>
+                    <td class="py-4 px-4">
+                        <div class="font-bold text-slate-900 text-xs sm:text-sm">${escapeHtml(item.nama_berkas || '')} ${parseInt(item.is_required) === 1 ? '<span class="text-rose-500">*</span>' : ''}</div>
+                        ${item.deskripsi ? `<div class="text-xs text-slate-500 font-normal mt-0.5">${escapeHtml(item.deskripsi)}</div>` : ''}
+                    </td>
+                    <td data-label="Dokumen Terunggah" class="py-4 px-4">${fileCell}</td>
+                    <td data-label="Status Verifikasi LAA" class="cell-center py-4 px-4 text-center whitespace-nowrap">${badgeHtml}</td>
+                    <td data-label="Catatan Admin LAA" class="py-4 px-4 text-slate-600 text-xs italic">${catatan}</td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
         }
 
         function _psStatusBadge(status) {
@@ -3443,6 +3592,7 @@
 
         function renderSyaratSidangForm() {
             const body = document.getElementById('psBodyContent');
+            if (!body) return;
 
             if (!_psMasterData.length) {
                 body.innerHTML = `<div class="text-center py-10 text-slate-400 text-xs font-semibold">
