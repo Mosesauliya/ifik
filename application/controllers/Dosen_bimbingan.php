@@ -179,13 +179,16 @@ class Dosen_bimbingan extends CI_Controller {
 
         $data['criteria_items'] = $rekap['kriteria_referensi'] ?? [];
 
-        $data['tgl_sidang']          = $data['pendaftaran']['tgl_sidang']         ?? null;
-        $data['jam_mulai_sidang']    = $data['pendaftaran']['jam_mulai_sidang']   ?? null;
-        $data['jam_selesai_sidang']  = $data['pendaftaran']['jam_selesai_sidang'] ?? null;
-        $data['ruangan_sidang']      = $data['pendaftaran']['ruangan_sidang']     ?? null;
-        $data['tgl_publish_sidang']  = $data['pendaftaran']['tgl_publish_sidang'] ?? null;
-        $data['catatan_sidang']      = $data['pendaftaran']['catatan_koor']       ?? '';
-        $data['is_sidang_scheduled'] = (!empty($data['tgl_sidang']) && !empty($data['jam_mulai_sidang']));
+        // Data Jadwal & Lokasi Sidang Aktual (Non-Dummy dari guidance / log)
+        $jadwal_sidang = $this->Mahasiswa_model->get_jadwal_sidang($nim);
+        $data['tgl_sidang']          = $jadwal_sidang['tgl_sidang'];
+        $data['jam_mulai_sidang']    = $jadwal_sidang['jam_mulai_sidang'];
+        $data['jam_selesai_sidang']  = $jadwal_sidang['jam_selesai_sidang'];
+        $data['ruangan_sidang']      = $jadwal_sidang['ruangan_sidang'];
+        $data['link_sidang']         = $jadwal_sidang['link_sidang'];
+        $data['tgl_publish_sidang']  = $jadwal_sidang['tgl_publish_sidang'];
+        $data['catatan_sidang']      = !empty($jadwal_sidang['catatan_sidang']) ? $jadwal_sidang['catatan_sidang'] : ($data['pendaftaran']['catatan_koor'] ?? '');
+        $data['is_sidang_scheduled'] = $jadwal_sidang['is_sidang_scheduled'];
 
         $data['de_detail']           = $this->Mahasiswa_model->get_de_detail($nim);
         $data['is_de']               = !empty($data['de_detail']['is_de']);
@@ -200,6 +203,25 @@ class Dosen_bimbingan extends CI_Controller {
     public function upload_preview() {
         $nim = $this->_get_current_nim();
         $tahap = $this->input->post('tahap_preview') ?: 'Preview 1';
+
+        // Pengecekan blokir: jika sudah upload dan status masih Pending (belum ACC/Revisi), blokir upload ulang
+        $latest = $this->Mahasiswa_model->get_latest_preview_status($nim, $tahap);
+        if ($latest && strtolower($latest['status_pembimbing'] ?? '') === 'pending') {
+            $this->session->set_flashdata('error', "Unggah berkas diblokir: Anda masih memiliki berkas {$tahap} yang sedang dalam proses peninjauan (Pending). Anda baru dapat mengunggah kembali setelah berkas disetujui (ACC) atau memerlukan revisi.");
+            redirect('mahasiswa/bimbingan');
+            return;
+        }
+
+        if ($tahap === 'Preview 1' && !empty($latest['lulus_preview1']) && (string)$latest['lulus_preview1'] === '1') {
+            $this->session->set_flashdata('error', "Tahap Preview 1 telah selesai dan disetujui (ACC). Anda tidak dapat mengunggah ulang berkas.");
+            redirect('mahasiswa/bimbingan');
+            return;
+        }
+        if ($tahap === 'Preview 2' && !empty($latest['lulus_preview2']) && (string)$latest['lulus_preview2'] === '1') {
+            $this->session->set_flashdata('error', "Tahap Preview 2 telah selesai dan disetujui (ACC). Anda tidak dapat mengunggah ulang berkas.");
+            redirect('mahasiswa/bimbingan');
+            return;
+        }
 
         $upload_dir = './uploads/preview_ta/';
         if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
@@ -283,6 +305,29 @@ class Dosen_bimbingan extends CI_Controller {
             return;
         }
 
+        // Pengecekan blokir: jika berkas jenis ini sudah pernah diunggah dan masih Pending, blokir upload ulang
+        $riwayat_p3 = $this->Mahasiswa_model->get_riwayat_preview($nim, $tahap);
+        foreach ($riwayat_p3 as $r) {
+            if (!empty($r['file_' . $jenis])) {
+                $st = strtolower($r['status_pembimbing'] ?? '');
+                if ($st === 'pending') {
+                    echo json_encode([
+                        'status'  => false,
+                        'message' => "Unggah berkas diblokir: Berkas " . ucfirst($jenis) . " Anda sebelumnya masih dalam proses peninjauan (Pending). Harap menunggu keputusan ACC atau catatan revisi dari dosen sebelum mengunggah kembali."
+                    ]);
+                    return;
+                }
+                if ($st === 'approved') {
+                    echo json_encode([
+                        'status'  => false,
+                        'message' => "Berkas " . ucfirst($jenis) . " telah disetujui (ACC). Anda tidak perlu mengunggah ulang berkas ini."
+                    ]);
+                    return;
+                }
+                break;
+            }
+        }
+
         $config = [
             'upload_path'   => $upload_dir,
             'allowed_types' => 'pdf|doc|docx',
@@ -332,6 +377,26 @@ class Dosen_bimbingan extends CI_Controller {
         header('Content-Type: application/json');
 
         $nim = $this->_get_current_nim();
+
+        // Pengecekan blokir: jika berkas sidang sebelumnya masih Pending, blokir upload ulang
+        $riwayat_sidang = $this->Mahasiswa_model->get_riwayat_preview($nim, 'Sidang');
+        if (!empty($riwayat_sidang)) {
+            $st_sidang = strtolower($riwayat_sidang[0]['status_pembimbing'] ?? '');
+            if ($st_sidang === 'pending') {
+                echo json_encode([
+                    'status'  => false,
+                    'message' => 'Unggah dokumen diblokir: Berkas pendaftaran sidang Anda sedang dalam proses peninjauan/verifikasi (Pending). Harap menunggu keputusan verifikasi atau arahan revisi sebelum mengunggah kembali.'
+                ]);
+                return;
+            }
+            if ($st_sidang === 'approved') {
+                echo json_encode([
+                    'status'  => false,
+                    'message' => 'Dokumen sidang Anda telah disetujui (ACC). Pengunggahan ulang tidak diperlukan.'
+                ]);
+                return;
+            }
+        }
 
         $upload_dir = './uploads/sidang/';
         if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
@@ -696,6 +761,8 @@ class Dosen_bimbingan extends CI_Controller {
                 }
             }
 
+            $jadwal_sidang = $this->Mahasiswa_model->get_jadwal_sidang($nim);
+
             $data = [
                 'riwayat_p1'          => $riwayat_p1,
                 'riwayat_p2'          => $riwayat_p2,
@@ -715,6 +782,12 @@ class Dosen_bimbingan extends CI_Controller {
                 'has_app_bimbingan'   => $has_app_bimbingan,
                 'has_app_sitasi'      => $has_app_sitasi,
                 'has_app_persyaratan' => $has_app_persyaratan,
+                'tgl_sidang'          => $jadwal_sidang['tgl_sidang'],
+                'jam_mulai_sidang'    => $jadwal_sidang['jam_mulai_sidang'],
+                'jam_selesai_sidang'  => $jadwal_sidang['jam_selesai_sidang'],
+                'ruangan_sidang'      => $jadwal_sidang['ruangan_sidang'],
+                'link_sidang'         => $jadwal_sidang['link_sidang'],
+                'is_sidang_scheduled' => $jadwal_sidang['is_sidang_scheduled'],
                 'de_detail'           => $this->Mahasiswa_model->get_de_detail($nim),
             ];
 

@@ -580,6 +580,12 @@ class Mahasiswa_model extends CI_Model {
             $res['bap_published_at'] = null;
         }
 
+        // =========================================================
+        // JADWAL & LOKASI SIDANG AKTUAL (NON-DUMMY)
+        // =========================================================
+        $jadwal_sidang = $this->get_jadwal_sidang($nim);
+        $res = array_merge($res, $jadwal_sidang);
+
         return $res;
     }
 
@@ -1156,6 +1162,74 @@ class Mahasiswa_model extends CI_Model {
         $this->db->limit(1);
 
         return $this->db->get('guidance')->row_array() ?: null;
+    }
+
+    /**
+     * Ambil detail jadwal sidang aktual (lokasi, jam mulai, jam selesai, link sidang)
+     * Memastikan data riil dari guidance / log_approval_history, bukan dummy/hardcoded
+     */
+    public function get_jadwal_sidang($nim) {
+        $empty = [
+            'tgl_sidang'          => null,
+            'jam_mulai_sidang'    => null,
+            'jam_selesai_sidang'  => null,
+            'ruangan_sidang'      => null,
+            'link_sidang'         => null,
+            'tgl_publish_sidang'  => null,
+            'catatan_sidang'      => '',
+            'is_sidang_scheduled' => false
+        ];
+        if (empty($nim) || !$this->db->table_exists('guidance')) return $empty;
+
+        $g = $this->get_guidance_by_nim($nim);
+        if (!$g) return $empty;
+
+        $tgl_sidang  = !empty($g['tanggal_sidang']) ? $g['tanggal_sidang'] : (!empty($g['tanggal_presentasi']) ? $g['tanggal_presentasi'] : null);
+        $waktu_mulai = !empty($g['waktu_sidang']) ? $g['waktu_sidang'] : (!empty($g['waktu_presentasi']) ? $g['waktu_presentasi'] : null);
+        $ruang       = !empty($g['ruang_sidang']) ? trim($g['ruang_sidang']) : null;
+        $link        = !empty($g['link_sidang']) ? trim($g['link_sidang']) : (!empty($g['link_presentasi']) ? trim($g['link_presentasi']) : null);
+        $jam_selesai = null;
+        $tgl_publish = null;
+
+        if ($this->db->table_exists('log_approval_history')) {
+            $logs = $this->db->from('log_approval_history')
+                ->where_in('modul', ['Sidang TA', 'Publish Nilai Sidang'])
+                ->where('ref_id', (string)$nim)
+                ->order_by('id', 'DESC')
+                ->get()->result_array();
+
+            foreach ($logs as $l) {
+                $parsed = (!empty($l['catatan']) && $l['catatan'][0] === '{') ? json_decode($l['catatan'], true) : [];
+                if ($l['modul'] === 'Sidang TA' && empty($jam_selesai)) {
+                    if (!empty($parsed['jam_selesai'])) $jam_selesai = $parsed['jam_selesai'];
+                    if (empty($tgl_sidang) && !empty($parsed['tanggal_sidang'])) $tgl_sidang = $parsed['tanggal_sidang'];
+                    if (empty($waktu_mulai) && !empty($parsed['waktu_sidang'])) $waktu_mulai = $parsed['waktu_sidang'];
+                    if (empty($ruang) && !empty($parsed['ruang_sidang'])) $ruang = $parsed['ruang_sidang'];
+                }
+                if ($l['modul'] === 'Publish Nilai Sidang' && empty($tgl_publish)) {
+                    $tgl_publish = $parsed['tgl_publish'] ?? $l['created_at'];
+                }
+            }
+        }
+
+        if (empty($jam_selesai) && !empty($waktu_mulai)) {
+            $h = (int)substr($waktu_mulai, 0, 2);
+            $m = substr($waktu_mulai, 3, 2);
+            $jam_selesai = sprintf('%02d:%s:00', min(23, $h + 2), $m);
+        }
+
+        $is_sched = (!empty($tgl_sidang) && (!empty($waktu_mulai) || !empty($ruang)));
+
+        return [
+            'tgl_sidang'          => $tgl_sidang,
+            'jam_mulai_sidang'    => $waktu_mulai,
+            'jam_selesai_sidang'  => $jam_selesai,
+            'ruangan_sidang'      => $ruang,
+            'link_sidang'         => $link,
+            'tgl_publish_sidang'  => $tgl_publish,
+            'catatan_sidang'      => $g['komentar'] ?? '',
+            'is_sidang_scheduled' => $is_sched
+        ];
     }
 
     public function save_nilai_sidang_by_posisi($nim, $posisi, $nilai, $catatan = '', $detail = null) {

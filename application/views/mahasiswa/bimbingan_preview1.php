@@ -256,8 +256,20 @@
             $has_app_bimbingan   = false;
             $has_app_sitasi      = false;
             $has_app_persyaratan = false;
+            $latest_p3_bim       = null;
+            $latest_p3_sit       = null;
+            $latest_p3_per       = null;
             if (!empty($riwayat_preview3)) {
                 foreach ($riwayat_preview3 as $_r3) {
+                    if (!empty($_r3['file_bimbingan']) && $latest_p3_bim === null) {
+                        $latest_p3_bim = $_r3;
+                    }
+                    if (!empty($_r3['file_sitasi']) && $latest_p3_sit === null) {
+                        $latest_p3_sit = $_r3;
+                    }
+                    if (!empty($_r3['file_persyaratan']) && $latest_p3_per === null) {
+                        $latest_p3_per = $_r3;
+                    }
                     if (($_r3['status_pembimbing'] ?? '') === 'Approved') {
                         if (!empty($_r3['file_bimbingan']))   $has_app_bimbingan   = true;
                         if (!empty($_r3['file_sitasi']))       $has_app_sitasi      = true;
@@ -265,6 +277,40 @@
                     }
                 }
             }
+
+            // Flag status blokir & revisi Preview 1
+            $st_p1_raw      = !empty($latest_p1) ? ($latest_p1['status_pembimbing'] ?? 'Pending') : null;
+            $st_p1_clean    = $st_p1_raw ? strtolower($st_p1_raw) : null;
+            $is_p1_pending  = ($st_p1_clean === 'pending');
+            $is_p1_approved = ($st_p1_clean === 'approved');
+            $is_p1_revision = in_array($st_p1_clean, ['revision', 'rejected', 'revisi']);
+
+            // Flag status blokir & revisi Preview 2
+            $st_p2_raw      = !empty($latest_p2) ? ($latest_p2['status_pembimbing'] ?? 'Pending') : null;
+            $st_p2_clean    = $st_p2_raw ? strtolower($st_p2_raw) : null;
+            $is_p2_pending  = ($st_p2_clean === 'pending');
+            $is_p2_approved = ($st_p2_clean === 'approved');
+            $is_p2_revision = in_array($st_p2_clean, ['revision', 'rejected', 'revisi']);
+
+            // Flag status blokir & revisi Preview 3 (Per Berkas)
+            $st_p3_bim_clean = $latest_p3_bim ? strtolower($latest_p3_bim['status_pembimbing'] ?? 'pending') : null;
+            $is_p3_bim_pending  = ($st_p3_bim_clean === 'pending');
+            $is_p3_bim_revision = in_array($st_p3_bim_clean, ['revision', 'rejected', 'revisi']);
+
+            $st_p3_sit_clean = $latest_p3_sit ? strtolower($latest_p3_sit['status_pembimbing'] ?? 'pending') : null;
+            $is_p3_sit_pending  = ($st_p3_sit_clean === 'pending');
+            $is_p3_sit_revision = in_array($st_p3_sit_clean, ['revision', 'rejected', 'revisi']);
+
+            $st_p3_per_clean = $latest_p3_per ? strtolower($latest_p3_per['status_pembimbing'] ?? 'pending') : null;
+            $is_p3_per_pending  = ($st_p3_per_clean === 'pending');
+            $is_p3_per_revision = in_array($st_p3_per_clean, ['revision', 'rejected', 'revisi']);
+
+            // Flag status blokir & revisi Sidang
+            $st_sidang_raw   = !empty($latest_sidang) ? ($latest_sidang['status_pembimbing'] ?? 'Pending') : null;
+            $st_sidang_clean = $st_sidang_raw ? strtolower($st_sidang_raw) : null;
+            $is_sidang_pending  = ($st_sidang_clean === 'pending');
+            $is_sidang_approved = ($st_sidang_clean === 'approved');
+            $is_sidang_revision = in_array($st_sidang_clean, ['revision', 'rejected', 'revisi']);
 
             if (!$is_p1_app) { $active_step = 'preview1'; }
             elseif (!$is_p2_app) { $active_step = 'preview2'; }
@@ -503,13 +549,123 @@
                             <h4 class="font-bold text-lg text-emerald-800">Tahap Terkunci (Selesai)</h4>
                             <p class="text-emerald-700 text-sm mt-2">Tahap ini telah disetujui oleh Pembimbing 1. Anda tidak dapat mengunggah ulang berkas. Silakan lanjut ke Preview 2.</p>
                         </div>
+                        <?php elseif($is_p1_approved): ?>
+                        <!-- Visual Cue: Berkas Telah Di-ACC (Menunggu Lulus Tahap) -->
+                        <div class="card-3d-warm rounded-3xl p-6 sm:p-7 space-y-4 border-2 border-emerald-300 bg-emerald-50/60 shadow-md shadow-emerald-500/10">
+                            <div class="flex items-center justify-between gap-3 border-b border-emerald-200 pb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-2xl shrink-0 box-3d shadow-md shadow-emerald-500/20">
+                                        <i class="bi bi-patch-check-fill"></i>
+                                    </div>
+                                    <div>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-200 text-emerald-800 mb-1">
+                                            <i class="bi bi-check-circle-fill"></i> Berkas Disetujui (ACC)
+                                        </span>
+                                        <h4 class="font-black text-lg text-emerald-950">Draft Preview 1 Telah Disetujui</h4>
+                                        <p class="text-xs text-emerald-800">Dosen Pembimbing 1 telah memberikan persetujuan (ACC). Menunggu pengesahan tahap untuk membuka Preview 2.</p>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1.5 rounded-xl bg-white border border-emerald-300 text-emerald-800 text-xs font-bold shrink-0 flex items-center gap-1.5 shadow-2xs">
+                                    <i class="bi bi-lock-fill text-emerald-600"></i> Upload Selesai
+                                </span>
+                            </div>
+                            <div class="p-3.5 bg-white rounded-2xl border border-emerald-200/80 flex items-center justify-between gap-3 text-xs">
+                                <div class="flex items-center gap-2.5 truncate">
+                                    <i class="bi bi-file-earmark-check-fill text-emerald-600 text-xl"></i>
+                                    <span class="font-mono font-bold text-slate-800 truncate"><?= htmlspecialchars($latest_p1['file_draft'] ?? '-'); ?></span>
+                                </div>
+                                <a href="<?= base_url('uploads/preview_ta/' . rawurlencode($latest_p1['file_draft'] ?? '')); ?>" target="_blank" class="px-3 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold shrink-0 transition">
+                                    Lihat Berkas
+                                </a>
+                            </div>
+                        </div>
+                        <?php elseif($is_p1_pending): ?>
+                        <!-- Visual Cue: Berkas Sedang Ditinjau (Upload Terblokir) -->
+                        <div class="card-3d-warm rounded-3xl p-6 sm:p-7 space-y-5 border-2 border-amber-300 bg-amber-50/50 shadow-md shadow-amber-500/10">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-200 pb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-2xl shrink-0 box-3d shadow-md shadow-amber-500/20">
+                                        <i class="bi bi-hourglass-split animate-pulse"></i>
+                                    </div>
+                                    <div>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-amber-200 text-amber-900 mb-1">
+                                            <span class="w-2 h-2 rounded-full bg-amber-600 animate-ping"></span> Menunggu Peninjauan Dosen
+                                        </span>
+                                        <h4 class="font-black text-lg text-slate-900">Berkas Preview 1 Sedang Ditinjau</h4>
+                                        <p class="text-xs text-slate-600">Ditinjau oleh: <strong class="text-slate-900"><?= htmlspecialchars($pembimbing_1); ?></strong></p>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1.5 rounded-xl bg-white border border-amber-300 text-amber-900 text-xs font-bold shrink-0 self-start sm:self-auto flex items-center gap-1.5 shadow-2xs">
+                                    <i class="bi bi-lock-fill text-amber-600"></i> Upload Terkunci
+                                </span>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-white border border-amber-200/80 space-y-2.5">
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Dokumen yang Telah Diunggah</span>
+                                <div class="flex items-center justify-between gap-3 min-w-0">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <div class="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center text-lg shrink-0">
+                                            <i class="bi bi-file-earmark-pdf-fill"></i>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <a href="<?= base_url('uploads/preview_ta/' . rawurlencode($latest_p1['file_draft'] ?? '')); ?>" target="_blank" class="font-bold text-slate-900 hover:text-orange-600 hover:underline text-sm truncate block">
+                                                <?= htmlspecialchars($latest_p1['file_draft'] ?? '-'); ?>
+                                            </a>
+                                            <span class="text-[11px] text-slate-500">
+                                                <i class="bi bi-clock mr-1"></i> Diunggah pada: <?= !empty($latest_p1['created_at']) ? date('d M Y, H:i', strtotime($latest_p1['created_at'])) . ' WIB' : '-'; ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <a href="<?= base_url('uploads/preview_ta/' . rawurlencode($latest_p1['file_draft'] ?? '')); ?>" target="_blank" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs shrink-0 transition flex items-center gap-1.5">
+                                        <i class="bi bi-download"></i> Unduh
+                                    </a>
+                                </div>
+                                <?php if (!empty($latest_p1['catatan_mahasiswa'])): ?>
+                                    <div class="pt-2 border-t border-slate-100 text-xs text-slate-600">
+                                        <span class="font-semibold text-slate-700">Catatan Anda:</span>
+                                        <p class="italic text-slate-500 mt-0.5"><?= htmlspecialchars($latest_p1['catatan_mahasiswa']); ?></p>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-amber-100/70 border border-amber-300 text-amber-900 text-xs leading-relaxed flex items-start gap-2.5">
+                                <i class="bi bi-info-circle-fill text-amber-600 text-base shrink-0 mt-0.5"></i>
+                                <div>
+                                    <strong class="font-bold block mb-0.5">Pengunggahan Berkas Dikunci Sementara:</strong>
+                                    Anda telah mengunggah berkas untuk tahap Preview 1. Pengunggahan baru diblokir sementara hingga Pembimbing 1 memberikan persetujuan (ACC) atau catatan revisi.
+                                </div>
+                            </div>
+                        </div>
                         <?php else: ?>
+                        <?php if ($is_p1_revision): ?>
+                        <!-- Visual Cue: Dosen Meminta Revisi — Upload Ulang Dibuka -->
+                        <div class="p-5 rounded-2xl bg-rose-50 border-2 border-rose-300 text-rose-950 space-y-3 mb-6">
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-rose-200 text-rose-800">
+                                    <i class="bi bi-arrow-repeat text-rose-600"></i> Perlu Revisi — Unggah Ulang Dibuka
+                                </span>
+                                <span class="text-[11px] text-rose-700 font-semibold">
+                                    Status: Perbaikan Naskah
+                                </span>
+                            </div>
+                            <div class="space-y-1">
+                                <h4 class="font-black text-sm text-rose-900">Catatan Revisi dari Pembimbing 1:</h4>
+                                <div class="p-3 bg-white rounded-xl border border-rose-200 text-xs leading-relaxed text-slate-800 italic">
+                                    <?= !empty($latest_p1['catatan_pembimbing']) ? nl2br(htmlspecialchars(strip_tags($latest_p1['catatan_pembimbing']))) : 'Silakan lakukan revisi sesuai arahan pembimbing.'; ?>
+                                </div>
+                            </div>
+                            <p class="text-xs text-rose-800 font-medium">
+                                Silakan perbaiki naskah draft Bab 1–3 Anda, lalu unggah dokumen perbaikan terbaru melalui formulir di bawah ini.
+                            </p>
+                        </div>
+                        <?php endif; ?>
+
                         <?= form_open_multipart('mahasiswa/upload_preview', ['id' => 'formUploadPreview1', 'class' => 'space-y-6']); ?>
                             <input type="hidden" name="tahap_preview" value="Preview 1">
                             
                             <div>
                                 <label class="block text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wider mb-2.5">
-                                    Berkas Draft Laporan / Proposal TA <span class="text-rose-500">*</span>
+                                    Berkas Draft Laporan / Proposal TA <?= $is_p1_revision ? '(Revisi)' : ''; ?> <span class="text-rose-500">*</span>
                                 </label>
                                 
                                 <div class="drop-zone relative border-2 border-dashed border-orange-300 hover:border-orange-500 bg-orange-50/30 hover:bg-orange-50/60 rounded-3xl p-8 sm:p-10 text-center transition-all cursor-pointer group" id="dropZoneP1">
@@ -543,7 +699,7 @@
 
                             <div>
                                 <label for="catatanP1" class="block text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wider mb-2.5">
-                                    Catatan Progres Bimbingan <span class="text-slate-400 font-normal normal-case">(Opsional)</span>
+                                    Catatan Progres Bimbingan <?= $is_p1_revision ? '(Perbaikan Revisi)' : ''; ?> <span class="text-slate-400 font-normal normal-case">(Opsional)</span>
                                 </label>
                                 <textarea name="catatan_mahasiswa" id="catatanP1" rows="3" class="w-full p-4 text-sm rounded-2xl border border-slate-200 focus:ring-4 focus:ring-orange-400/20 focus:border-orange-500 outline-none resize-none text-slate-900 placeholder:text-slate-400 transition bg-white font-medium" placeholder="Contoh: Mengunggah draft revisi Bab 1 s/d Bab 3 sesuai arahan Pembimbing 1..."></textarea>
                             </div>
@@ -551,7 +707,7 @@
                             <div class="pt-2">
                                 <button type="submit" class="w-full py-4 px-8 rounded-2xl bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 hover:from-orange-700 hover:to-amber-600 text-white font-bold text-sm sm:text-base shadow-lg shadow-orange-500/25 transition flex items-center justify-center gap-3 cursor-pointer hover:scale-[1.01] active:scale-[0.99] box-3d">
                                     <i class="bi bi-cloud-arrow-up-fill text-lg"></i>
-                                    <span>Kirim Berkas Draft Preview 1</span>
+                                    <span><?= $is_p1_revision ? 'Kirim Berkas Revisi Preview 1' : 'Kirim Berkas Draft Preview 1'; ?></span>
                                 </button>
                             </div>
                         <?= form_close(); ?>
@@ -675,13 +831,123 @@
                             <h4 class="font-bold text-lg text-emerald-800">Tahap Terkunci (Selesai)</h4>
                             <p class="text-emerald-700 text-sm mt-2">Tahap ini telah disetujui oleh Penguji. Anda tidak dapat mengunggah ulang berkas. Silakan lanjut ke Preview 3.</p>
                         </div>
+                        <?php elseif($is_p2_approved): ?>
+                        <!-- Visual Cue: Berkas Telah Di-ACC (Menunggu Lulus Tahap) -->
+                        <div class="card-3d-warm rounded-3xl p-6 sm:p-7 space-y-4 border-2 border-emerald-300 bg-emerald-50/60 shadow-md shadow-emerald-500/10">
+                            <div class="flex items-center justify-between gap-3 border-b border-emerald-200 pb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-2xl shrink-0 box-3d shadow-md shadow-emerald-500/20">
+                                        <i class="bi bi-patch-check-fill"></i>
+                                    </div>
+                                    <div>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-200 text-emerald-800 mb-1">
+                                            <i class="bi bi-check-circle-fill"></i> Berkas Disetujui (ACC)
+                                        </span>
+                                        <h4 class="font-black text-lg text-emerald-950">Berkas Preview 2 Telah Disetujui</h4>
+                                        <p class="text-xs text-emerald-800">Dosen Penguji telah menyetujui berkas progress Anda. Menunggu evaluasi kelulusan tahap untuk membuka Preview 3.</p>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1.5 rounded-xl bg-white border border-emerald-300 text-emerald-800 text-xs font-bold shrink-0 flex items-center gap-1.5 shadow-2xs">
+                                    <i class="bi bi-lock-fill text-emerald-600"></i> Upload Selesai
+                                </span>
+                            </div>
+                            <div class="p-3.5 bg-white rounded-2xl border border-emerald-200/80 flex items-center justify-between gap-3 text-xs">
+                                <div class="flex items-center gap-2.5 truncate">
+                                    <i class="bi bi-file-earmark-check-fill text-emerald-600 text-xl"></i>
+                                    <span class="font-mono font-bold text-slate-800 truncate"><?= htmlspecialchars($latest_p2['file_draft'] ?? '-'); ?></span>
+                                </div>
+                                <a href="<?= base_url('uploads/preview_ta/' . rawurlencode($latest_p2['file_draft'] ?? '')); ?>" target="_blank" class="px-3 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold shrink-0 transition">
+                                    Lihat Berkas
+                                </a>
+                            </div>
+                        </div>
+                        <?php elseif($is_p2_pending): ?>
+                        <!-- Visual Cue: Berkas Sedang Ditinjau (Upload Terblokir) -->
+                        <div class="card-3d-warm rounded-3xl p-6 sm:p-7 space-y-5 border-2 border-amber-300 bg-amber-50/50 shadow-md shadow-amber-500/10">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-200 pb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-2xl shrink-0 box-3d shadow-md shadow-amber-500/20">
+                                        <i class="bi bi-hourglass-split animate-pulse"></i>
+                                    </div>
+                                    <div>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-amber-200 text-amber-900 mb-1">
+                                            <span class="w-2 h-2 rounded-full bg-amber-600 animate-ping"></span> Sedang Dievaluasi Penguji
+                                        </span>
+                                        <h4 class="font-black text-lg text-slate-900">Berkas Preview 2 Sedang Dievaluasi</h4>
+                                        <p class="text-xs text-slate-600">Dievaluasi oleh: <strong class="text-slate-900"><?= htmlspecialchars($penguji_ta); ?></strong></p>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1.5 rounded-xl bg-white border border-amber-300 text-amber-900 text-xs font-bold shrink-0 self-start sm:self-auto flex items-center gap-1.5 shadow-2xs">
+                                    <i class="bi bi-lock-fill text-amber-600"></i> Upload Terkunci
+                                </span>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-white border border-amber-200/80 space-y-2.5">
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Dokumen Progress yang Telah Diunggah</span>
+                                <div class="flex items-center justify-between gap-3 min-w-0">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg shrink-0">
+                                            <i class="bi bi-file-earmark-zip-fill"></i>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <a href="<?= base_url('uploads/preview_ta/' . rawurlencode($latest_p2['file_draft'] ?? '')); ?>" target="_blank" class="font-bold text-slate-900 hover:text-amber-700 hover:underline text-sm truncate block">
+                                                <?= htmlspecialchars($latest_p2['file_draft'] ?? '-'); ?>
+                                            </a>
+                                            <span class="text-[11px] text-slate-500">
+                                                <i class="bi bi-clock mr-1"></i> Diunggah pada: <?= !empty($latest_p2['created_at']) ? date('d M Y, H:i', strtotime($latest_p2['created_at'])) . ' WIB' : '-'; ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <a href="<?= base_url('uploads/preview_ta/' . rawurlencode($latest_p2['file_draft'] ?? '')); ?>" target="_blank" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs shrink-0 transition flex items-center gap-1.5">
+                                        <i class="bi bi-download"></i> Unduh
+                                    </a>
+                                </div>
+                                <?php if (!empty($latest_p2['catatan_mahasiswa'])): ?>
+                                    <div class="pt-2 border-t border-slate-100 text-xs text-slate-600">
+                                        <span class="font-semibold text-slate-700">Catatan / Link Karya:</span>
+                                        <p class="italic text-slate-500 mt-0.5"><?= htmlspecialchars($latest_p2['catatan_mahasiswa']); ?></p>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-amber-100/70 border border-amber-300 text-amber-900 text-xs leading-relaxed flex items-start gap-2.5">
+                                <i class="bi bi-info-circle-fill text-amber-600 text-base shrink-0 mt-0.5"></i>
+                                <div>
+                                    <strong class="font-bold block mb-0.5">Pengunggahan Berkas Dikunci Sementara:</strong>
+                                    Anda telah mengunggah berkas untuk tahap Preview 2. Pengunggahan baru diblokir sementara sampai Dosen Penguji menyelesaikan evaluasi berkas ini (ACC atau Revisi).
+                                </div>
+                            </div>
+                        </div>
                         <?php else: ?>
+                        <?php if ($is_p2_revision): ?>
+                        <!-- Visual Cue: Dosen Penguji Meminta Revisi — Upload Ulang Dibuka -->
+                        <div class="p-5 rounded-2xl bg-rose-50 border-2 border-rose-300 text-rose-950 space-y-3 mb-6">
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-rose-200 text-rose-800">
+                                    <i class="bi bi-arrow-repeat text-rose-600"></i> Perlu Revisi Progress — Unggah Ulang Dibuka
+                                </span>
+                                <span class="text-[11px] text-rose-700 font-semibold">
+                                    Status: Perbaikan Berkas Preview 2
+                                </span>
+                            </div>
+                            <div class="space-y-1">
+                                <h4 class="font-black text-sm text-rose-900">Catatan Evaluasi Penguji:</h4>
+                                <div class="p-3 bg-white rounded-xl border border-rose-200 text-xs leading-relaxed text-slate-800 italic">
+                                    <?= !empty($latest_p2['catatan_penguji_1']) ? nl2br(htmlspecialchars(strip_tags($latest_p2['catatan_penguji_1']))) : (!empty($latest_p2['catatan_pembimbing']) ? nl2br(htmlspecialchars(strip_tags($latest_p2['catatan_pembimbing']))) : 'Silakan lakukan revisi sesuai catatan evaluasi.'); ?>
+                                </div>
+                            </div>
+                            <p class="text-xs text-rose-800 font-medium">
+                                Silakan perbaiki dokumen progress Bab 4 atau karya/prototype Anda, lalu unggah dokumen perbaikan terbaru melalui formulir di bawah ini.
+                            </p>
+                        </div>
+                        <?php endif; ?>
+
                         <?= form_open_multipart('mahasiswa/upload_preview', ['id' => 'formUploadPreview2', 'class' => 'space-y-6']); ?>
                             <input type="hidden" name="tahap_preview" value="Preview 2">
                             
                             <div>
                                 <label class="block text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wider mb-2.5">
-                                    Berkas Progress Bab 4 &amp; Link Prototype / Demo <span class="text-rose-500">*</span>
+                                    Berkas Progress Bab 4 &amp; Link Prototype / Demo <?= $is_p2_revision ? '(Revisi)' : ''; ?> <span class="text-rose-500">*</span>
                                 </label>
                                 
                                 <div class="drop-zone relative border-2 border-dashed border-amber-300 hover:border-amber-500 bg-amber-50/30 hover:bg-amber-50/60 rounded-3xl p-8 sm:p-10 text-center transition-all cursor-pointer group" id="dropZoneP2">
@@ -711,7 +977,7 @@
 
                             <div>
                                 <label class="block text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wider mb-2.5">
-                                    Catatan Progress Karya / Link Demo Video &amp; Figma
+                                    Catatan Progress Karya / Link Demo Video &amp; Figma <?= $is_p2_revision ? '(Perbaikan Revisi)' : ''; ?>
                                 </label>
                                 <textarea name="catatan_mahasiswa" rows="3" class="w-full p-4 text-sm rounded-2xl border border-slate-200 focus:ring-4 focus:ring-amber-400/20 focus:border-amber-500 outline-none resize-none text-slate-900 placeholder:text-slate-400 transition bg-white font-medium" placeholder="Tuliskan tautan prototype Figma, link repositori GitHub, atau ringkasan progres Bab 4..."></textarea>
                             </div>
@@ -719,7 +985,7 @@
                             <div class="pt-2">
                                 <button type="submit" class="w-full py-4 px-8 rounded-2xl bg-gradient-to-r from-amber-600 via-amber-500 to-orange-500 hover:from-amber-700 hover:to-orange-600 text-white font-bold text-sm sm:text-base shadow-lg shadow-amber-500/25 transition flex items-center justify-center gap-3 cursor-pointer box-3d">
                                     <i class="bi bi-cloud-arrow-up-fill text-lg"></i>
-                                    <span>Kirim Berkas Preview 2</span>
+                                    <span><?= $is_p2_revision ? 'Kirim Berkas Revisi Preview 2' : 'Kirim Berkas Preview 2'; ?></span>
                                 </button>
                             </div>
                         <?= form_close(); ?>
@@ -962,11 +1228,11 @@
                         <!-- FORM FILE BIMBINGAN -->
                         <?= form_open_multipart('mahasiswa/upload_preview3_ajax', ['id' => 'formUploadP3Bimbingan', 'class' => 'space-y-3']); ?>
                         <input type="hidden" name="jenis_file" value="bimbingan">
-                        <div class="p-5 rounded-2xl border border-slate-200 <?= $has_app_bimbingan ? 'bg-emerald-50' : 'bg-white/60' ?> space-y-3" id="containerBimbinganP3">
+                        <div class="p-5 rounded-2xl border border-slate-200 <?= $has_app_bimbingan ? 'bg-emerald-50' : ($is_p3_bim_pending ? 'bg-amber-50/60 border-amber-300' : 'bg-white/60') ?> space-y-3" id="containerBimbinganP3">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-xl <?= $has_app_bimbingan ? 'bg-emerald-500' : 'bg-indigo-500' ?> text-white flex items-center justify-center text-lg shrink-0 box-3d">
-                                        <i class="bi <?= $has_app_bimbingan ? 'bi-check-lg' : 'bi-file-earmark-check-fill' ?>"></i>
+                                    <div class="w-10 h-10 rounded-xl <?= $has_app_bimbingan ? 'bg-emerald-500' : ($is_p3_bim_pending ? 'bg-amber-500' : 'bg-indigo-500') ?> text-white flex items-center justify-center text-lg shrink-0 box-3d">
+                                        <i class="bi <?= $has_app_bimbingan ? 'bi-check-lg' : ($is_p3_bim_pending ? 'bi-hourglass-split' : 'bi-file-earmark-check-fill') ?>"></i>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-bold text-slate-900">File Bimbingan <span class="text-rose-500">*</span></label>
@@ -974,27 +1240,90 @@
                                     </div>
                                 </div>
                                 <?php if($has_app_bimbingan): ?>
-                                    <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold border border-emerald-300">Telah Disetujui</span>
+                                    <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold border border-emerald-300">Telah Disetujui (ACC)</span>
+                                <?php elseif($is_p3_bim_pending): ?>
+                                    <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 flex items-center gap-1.5"><i class="bi bi-clock-history"></i> Sedang Ditinjau</span>
                                 <?php endif; ?>
                             </div>
-                            <?php if(!$has_app_bimbingan): ?>
-                            <div class="drop-zone-sidang relative border-2 border-dashed rounded-2xl p-4 text-center transition-all cursor-pointer" id="dropZoneBimbinganP3">
-                                <input type="file" name="file_upload" id="fileBimbinganP3" accept=".pdf,.doc,.docx" required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
-                                <div class="pointer-events-none">
-                                    <i class="bi bi-cloud-arrow-up text-2xl text-slate-400"></i>
-                                    <p class="text-sm text-slate-500 mt-1">Klik untuk pilih file atau seret ke sini</p>
+
+                            <?php if($has_app_bimbingan): ?>
+                                <?php if(!empty($latest_p3_bim['file_bimbingan'])): ?>
+                                <div class="p-3 bg-white rounded-xl border border-emerald-200 flex items-center justify-between text-xs">
+                                    <div class="flex items-center gap-2 truncate">
+                                        <i class="bi bi-file-earmark-check-fill text-emerald-600 text-lg"></i>
+                                        <span class="font-mono font-bold text-slate-800 truncate"><?= htmlspecialchars($latest_p3_bim['file_bimbingan']); ?></span>
+                                    </div>
+                                    <a href="<?= base_url('uploads/preview_ta/' . rawurlencode($latest_p3_bim['file_bimbingan'])); ?>" target="_blank" class="px-3 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold shrink-0 transition">
+                                        Lihat Berkas
+                                    </a>
                                 </div>
-                            </div>
-                            <div id="fileBadgeBimbinganP3" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center justify-between">
-                                <span id="fileNameBimbinganP3" class="truncate font-mono">file.pdf</span>
-                                <span id="fileSizeBimbinganP3" class="text-emerald-700">0 MB</span>
-                            </div>
-                            <div class="pt-2 hidden" id="submitWrapBimbinganP3">
-                                <input type="text" name="catatan_mahasiswa" placeholder="Catatan kelayakan (opsional)..." class="w-full p-3 mb-3 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none focus:border-indigo-400">
-                                <button type="submit" class="w-full py-3 px-4 rounded-xl bg-indigo-600 text-white font-bold text-xs shadow-md transition hover:bg-indigo-700">
-                                    Submit File Bimbingan
-                                </button>
-                            </div>
+                                <?php endif; ?>
+
+                            <?php elseif($is_p3_bim_pending): ?>
+                                <!-- Visual Cue: Pending Review -->
+                                <div class="p-4 rounded-xl bg-amber-50/80 border border-amber-200 space-y-3">
+                                    <div class="flex items-center justify-between gap-2 min-w-0">
+                                        <div class="flex items-center gap-2.5 min-w-0">
+                                            <i class="bi bi-file-earmark-pdf-fill text-amber-600 text-xl shrink-0"></i>
+                                            <div class="min-w-0">
+                                                <a href="<?= base_url('uploads/preview_ta/' . rawurlencode($latest_p3_bim['file_bimbingan'] ?? '')); ?>" target="_blank" class="font-bold text-slate-900 hover:text-amber-700 hover:underline text-xs truncate block">
+                                                    <?= htmlspecialchars($latest_p3_bim['file_bimbingan'] ?? '-'); ?>
+                                                </a>
+                                                <span class="text-[11px] text-slate-500">
+                                                    <i class="bi bi-clock mr-1"></i> Diunggah: <?= !empty($latest_p3_bim['created_at']) ? date('d M Y, H:i', strtotime($latest_p3_bim['created_at'])) . ' WIB' : '-'; ?>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <a href="<?= base_url('uploads/preview_ta/' . rawurlencode($latest_p3_bim['file_bimbingan'] ?? '')); ?>" target="_blank" class="px-3 py-1 rounded-lg bg-white border border-amber-300 text-amber-900 font-bold text-xs hover:bg-amber-100 transition shrink-0 flex items-center gap-1">
+                                            <i class="bi bi-download"></i> Unduh
+                                        </a>
+                                    </div>
+                                    <?php if (!empty($latest_p3_bim['catatan_mahasiswa'])): ?>
+                                    <div class="pt-2 border-t border-amber-200/60 text-xs text-slate-600 italic">
+                                        "<?= htmlspecialchars($latest_p3_bim['catatan_mahasiswa']); ?>"
+                                    </div>
+                                    <?php endif; ?>
+                                    <div class="p-3 rounded-lg bg-amber-100/70 border border-amber-300 text-amber-950 text-xs flex items-center gap-2">
+                                        <i class="bi bi-lock-fill text-amber-600 shrink-0"></i>
+                                        <span><strong>Upload Terkunci:</strong> Berkas sedang ditinjau Pembimbing 1. Harap menunggu keputusan ACC atau revisi sebelum dapat mengunggah kembali.</span>
+                                    </div>
+                                </div>
+
+                            <?php else: ?>
+                                <?php if($is_p3_bim_revision): ?>
+                                <!-- Visual Cue: Revision Note -->
+                                <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-300 text-rose-950 space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-rose-200 text-rose-800">
+                                            <i class="bi bi-arrow-repeat text-rose-600"></i> Perlu Revisi File Bimbingan
+                                        </span>
+                                        <span class="text-[11px] text-rose-700 font-semibold">Unggah Ulang Dibuka</span>
+                                    </div>
+                                    <?php if (!empty($latest_p3_bim['catatan_pembimbing'])): ?>
+                                    <div class="p-2.5 bg-white rounded-lg border border-rose-200 text-xs italic text-slate-800">
+                                        <?= nl2br(htmlspecialchars(strip_tags($latest_p3_bim['catatan_pembimbing']))); ?>
+                                    </div>
+                                    <?php endif; ?>
+                                </div>
+                                <?php endif; ?>
+
+                                <div class="drop-zone-sidang relative border-2 border-dashed rounded-2xl p-4 text-center transition-all cursor-pointer" id="dropZoneBimbinganP3">
+                                    <input type="file" name="file_upload" id="fileBimbinganP3" accept=".pdf,.doc,.docx" required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                                    <div class="pointer-events-none">
+                                        <i class="bi bi-cloud-arrow-up text-2xl text-slate-400"></i>
+                                        <p class="text-sm text-slate-500 mt-1">Klik untuk pilih file atau seret ke sini</p>
+                                    </div>
+                                </div>
+                                <div id="fileBadgeBimbinganP3" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center justify-between">
+                                    <span id="fileNameBimbinganP3" class="truncate font-mono">file.pdf</span>
+                                    <span id="fileSizeBimbinganP3" class="text-emerald-700">0 MB</span>
+                                </div>
+                                <div class="pt-2 hidden" id="submitWrapBimbinganP3">
+                                    <input type="text" name="catatan_mahasiswa" placeholder="Catatan kelayakan (opsional)..." class="w-full p-3 mb-3 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none focus:border-indigo-400">
+                                    <button type="submit" class="w-full py-3 px-4 rounded-xl bg-indigo-600 text-white font-bold text-xs shadow-md transition hover:bg-indigo-700">
+                                        <?= $is_p3_bim_revision ? 'Submit Revisi File Bimbingan' : 'Submit File Bimbingan'; ?>
+                                    </button>
+                                </div>
                             <?php endif; ?>
                         </div>
                         <?= form_close(); ?>
@@ -1002,11 +1331,11 @@
                         <!-- FORM FILE SITASI -->
                         <?= form_open_multipart('mahasiswa/upload_preview3_ajax', ['id' => 'formUploadP3Sitasi', 'class' => 'space-y-3']); ?>
                         <input type="hidden" name="jenis_file" value="sitasi">
-                        <div class="p-5 rounded-2xl border border-slate-200 <?= $has_app_sitasi ? 'bg-emerald-50' : (!$has_app_bimbingan ? 'bg-slate-50 opacity-50' : 'bg-white/60') ?> space-y-3 transition-all duration-300" id="containerSitasiP3">
+                        <div class="p-5 rounded-2xl border border-slate-200 <?= $has_app_sitasi ? 'bg-emerald-50' : (!$has_app_bimbingan ? 'bg-slate-50 opacity-50' : ($is_p3_sit_pending ? 'bg-amber-50/60 border-amber-300' : 'bg-white/60')) ?> space-y-3 transition-all duration-300" id="containerSitasiP3">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-xl <?= $has_app_sitasi ? 'bg-emerald-500' : (!$has_app_bimbingan ? 'bg-slate-400' : 'bg-indigo-500') ?> text-white flex items-center justify-center text-lg shrink-0 box-3d transition-colors" id="iconSitasiP3">
-                                        <i class="bi <?= $has_app_sitasi ? 'bi-check-lg' : 'bi-quote' ?>"></i>
+                                    <div class="w-10 h-10 rounded-xl <?= $has_app_sitasi ? 'bg-emerald-500' : (!$has_app_bimbingan ? 'bg-slate-400' : ($is_p3_sit_pending ? 'bg-amber-500' : 'bg-indigo-500')) ?> text-white flex items-center justify-center text-lg shrink-0 box-3d transition-colors" id="iconSitasiP3">
+                                        <i class="bi <?= $has_app_sitasi ? 'bi-check-lg' : ($is_p3_sit_pending ? 'bi-hourglass-split' : 'bi-quote') ?>"></i>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-bold text-slate-900">File Sitasi <span class="text-rose-500">*</span></label>
@@ -1014,27 +1343,99 @@
                                     </div>
                                 </div>
                                 <?php if($has_app_sitasi): ?>
-                                    <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold border border-emerald-300">Telah Disetujui</span>
+                                    <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold border border-emerald-300">Telah Disetujui (ACC)</span>
+                                <?php elseif($is_p3_sit_pending): ?>
+                                    <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 flex items-center gap-1.5"><i class="bi bi-clock-history"></i> Sedang Ditinjau</span>
                                 <?php endif; ?>
                             </div>
-                            <?php if(!$has_app_sitasi): ?>
-                            <div class="drop-zone-sidang relative border-2 border-dashed rounded-2xl p-4 text-center transition-all <?= !$has_app_bimbingan ? 'cursor-not-allowed bg-slate-100' : 'cursor-pointer' ?>" id="dropZoneSitasiP3">
-                                <input type="file" name="file_upload" id="fileSitasiP3" accept=".pdf,.doc,.docx" required <?= !$has_app_bimbingan ? 'disabled' : '' ?> class="absolute inset-0 w-full h-full opacity-0 <?= !$has_app_bimbingan ? 'cursor-not-allowed' : 'cursor-pointer' ?> z-10">
-                                <div class="pointer-events-none">
-                                    <i class="bi <?= !$has_app_bimbingan ? 'bi-lock-fill' : 'bi-cloud-arrow-up' ?> text-2xl text-slate-400" id="iconLockSitasiP3"></i>
-                                    <p class="text-sm text-slate-500 mt-1" id="textLockSitasiP3"><?= !$has_app_bimbingan ? 'Terkunci (Tunggu File Bimbingan di-ACC)' : 'Klik untuk pilih file atau seret ke sini' ?></p>
+
+                            <?php if($has_app_sitasi): ?>
+                                <?php if(!empty($latest_p3_sit['file_sitasi'])): ?>
+                                <div class="p-3 bg-white rounded-xl border border-emerald-200 flex items-center justify-between text-xs">
+                                    <div class="flex items-center gap-2 truncate">
+                                        <i class="bi bi-file-earmark-check-fill text-emerald-600 text-lg"></i>
+                                        <span class="font-mono font-bold text-slate-800 truncate"><?= htmlspecialchars($latest_p3_sit['file_sitasi']); ?></span>
+                                    </div>
+                                    <a href="<?= base_url('uploads/preview_ta/' . rawurlencode($latest_p3_sit['file_sitasi'])); ?>" target="_blank" class="px-3 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold shrink-0 transition">
+                                        Lihat Berkas
+                                    </a>
                                 </div>
-                            </div>
-                            <div id="fileBadgeSitasiP3" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center justify-between">
-                                <span id="fileNameSitasiP3" class="truncate font-mono">file.pdf</span>
-                                <span id="fileSizeSitasiP3" class="text-emerald-700">0 MB</span>
-                            </div>
-                            <div class="pt-2 hidden" id="submitWrapSitasiP3">
-                                <input type="text" name="catatan_mahasiswa" placeholder="Catatan kelayakan (opsional)..." class="w-full p-3 mb-3 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none focus:border-indigo-400">
-                                <button type="submit" class="w-full py-3 px-4 rounded-xl bg-indigo-600 text-white font-bold text-xs shadow-md transition hover:bg-indigo-700">
-                                    Submit File Sitasi
-                                </button>
-                            </div>
+                                <?php endif; ?>
+
+                            <?php elseif(!$has_app_bimbingan): ?>
+                                <div class="drop-zone-sidang relative border-2 border-dashed rounded-2xl p-4 text-center transition-all cursor-not-allowed bg-slate-100" id="dropZoneSitasiP3">
+                                    <input type="file" name="file_upload" id="fileSitasiP3" accept=".pdf,.doc,.docx" required disabled class="absolute inset-0 w-full h-full opacity-0 cursor-not-allowed z-10">
+                                    <div class="pointer-events-none">
+                                        <i class="bi bi-lock-fill text-2xl text-slate-400" id="iconLockSitasiP3"></i>
+                                        <p class="text-sm text-slate-500 mt-1" id="textLockSitasiP3">Terkunci (Tunggu File Bimbingan di-ACC)</p>
+                                    </div>
+                                </div>
+
+                            <?php elseif($is_p3_sit_pending): ?>
+                                <!-- Visual Cue: Pending Review -->
+                                <div class="p-4 rounded-xl bg-amber-50/80 border border-amber-200 space-y-3">
+                                    <div class="flex items-center justify-between gap-2 min-w-0">
+                                        <div class="flex items-center gap-2.5 min-w-0">
+                                            <i class="bi bi-file-earmark-pdf-fill text-amber-600 text-xl shrink-0"></i>
+                                            <div class="min-w-0">
+                                                <a href="<?= base_url('uploads/preview_ta/' . rawurlencode($latest_p3_sit['file_sitasi'] ?? '')); ?>" target="_blank" class="font-bold text-slate-900 hover:text-amber-700 hover:underline text-xs truncate block">
+                                                    <?= htmlspecialchars($latest_p3_sit['file_sitasi'] ?? '-'); ?>
+                                                </a>
+                                                <span class="text-[11px] text-slate-500">
+                                                    <i class="bi bi-clock mr-1"></i> Diunggah: <?= !empty($latest_p3_sit['created_at']) ? date('d M Y, H:i', strtotime($latest_p3_sit['created_at'])) . ' WIB' : '-'; ?>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <a href="<?= base_url('uploads/preview_ta/' . rawurlencode($latest_p3_sit['file_sitasi'] ?? '')); ?>" target="_blank" class="px-3 py-1 rounded-lg bg-white border border-amber-300 text-amber-900 font-bold text-xs hover:bg-amber-100 transition shrink-0 flex items-center gap-1">
+                                            <i class="bi bi-download"></i> Unduh
+                                        </a>
+                                    </div>
+                                    <?php if (!empty($latest_p3_sit['catatan_mahasiswa'])): ?>
+                                    <div class="pt-2 border-t border-amber-200/60 text-xs text-slate-600 italic">
+                                        "<?= htmlspecialchars($latest_p3_sit['catatan_mahasiswa']); ?>"
+                                    </div>
+                                    <?php endif; ?>
+                                    <div class="p-3 rounded-lg bg-amber-100/70 border border-amber-300 text-amber-950 text-xs flex items-center gap-2">
+                                        <i class="bi bi-lock-fill text-amber-600 shrink-0"></i>
+                                        <span><strong>Upload Terkunci:</strong> Berkas sedang ditinjau Pembimbing 1. Harap menunggu keputusan ACC atau revisi sebelum dapat mengunggah kembali.</span>
+                                    </div>
+                                </div>
+
+                            <?php else: ?>
+                                <?php if($is_p3_sit_revision): ?>
+                                <!-- Visual Cue: Revision Note -->
+                                <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-300 text-rose-950 space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-rose-200 text-rose-800">
+                                            <i class="bi bi-arrow-repeat text-rose-600"></i> Perlu Revisi File Sitasi
+                                        </span>
+                                        <span class="text-[11px] text-rose-700 font-semibold">Unggah Ulang Dibuka</span>
+                                    </div>
+                                    <?php if (!empty($latest_p3_sit['catatan_pembimbing'])): ?>
+                                    <div class="p-2.5 bg-white rounded-lg border border-rose-200 text-xs italic text-slate-800">
+                                        <?= nl2br(htmlspecialchars(strip_tags($latest_p3_sit['catatan_pembimbing']))); ?>
+                                    </div>
+                                    <?php endif; ?>
+                                </div>
+                                <?php endif; ?>
+
+                                <div class="drop-zone-sidang relative border-2 border-dashed rounded-2xl p-4 text-center transition-all cursor-pointer" id="dropZoneSitasiP3">
+                                    <input type="file" name="file_upload" id="fileSitasiP3" accept=".pdf,.doc,.docx" required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                                    <div class="pointer-events-none">
+                                        <i class="bi bi-cloud-arrow-up text-2xl text-slate-400" id="iconLockSitasiP3"></i>
+                                        <p class="text-sm text-slate-500 mt-1" id="textLockSitasiP3">Klik untuk pilih file atau seret ke sini</p>
+                                    </div>
+                                </div>
+                                <div id="fileBadgeSitasiP3" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center justify-between">
+                                    <span id="fileNameSitasiP3" class="truncate font-mono">file.pdf</span>
+                                    <span id="fileSizeSitasiP3" class="text-emerald-700">0 MB</span>
+                                </div>
+                                <div class="pt-2 hidden" id="submitWrapSitasiP3">
+                                    <input type="text" name="catatan_mahasiswa" placeholder="Catatan kelayakan (opsional)..." class="w-full p-3 mb-3 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none focus:border-indigo-400">
+                                    <button type="submit" class="w-full py-3 px-4 rounded-xl bg-indigo-600 text-white font-bold text-xs shadow-md transition hover:bg-indigo-700">
+                                        <?= $is_p3_sit_revision ? 'Submit Revisi File Sitasi' : 'Submit File Sitasi'; ?>
+                                    </button>
+                                </div>
                             <?php endif; ?>
                         </div>
                         <?= form_close(); ?>
@@ -1042,11 +1443,11 @@
                         <!-- FORM FILE PERSYARATAN -->
                         <?= form_open_multipart('mahasiswa/upload_preview3_ajax', ['id' => 'formUploadP3Persyaratan', 'class' => 'space-y-3']); ?>
                         <input type="hidden" name="jenis_file" value="persyaratan">
-                        <div class="p-5 rounded-2xl border border-slate-200 <?= $has_app_persyaratan ? 'bg-emerald-50' : (!$has_app_sitasi ? 'bg-slate-50 opacity-50' : 'bg-white/60') ?> space-y-3 transition-all duration-300" id="containerPersyaratanP3">
+                        <div class="p-5 rounded-2xl border border-slate-200 <?= $has_app_persyaratan ? 'bg-emerald-50' : (!$has_app_sitasi ? 'bg-slate-50 opacity-50' : ($is_p3_per_pending ? 'bg-amber-50/60 border-amber-300' : 'bg-white/60')) ?> space-y-3 transition-all duration-300" id="containerPersyaratanP3">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-xl <?= $has_app_persyaratan ? 'bg-emerald-500' : (!$has_app_sitasi ? 'bg-slate-400' : 'bg-indigo-500') ?> text-white flex items-center justify-center text-lg shrink-0 box-3d transition-colors" id="iconPersyaratanP3">
-                                        <i class="bi <?= $has_app_persyaratan ? 'bi-check-lg' : 'bi-signpost-split-fill' ?>"></i>
+                                    <div class="w-10 h-10 rounded-xl <?= $has_app_persyaratan ? 'bg-emerald-500' : (!$has_app_sitasi ? 'bg-slate-400' : ($is_p3_per_pending ? 'bg-amber-500' : 'bg-indigo-500')) ?> text-white flex items-center justify-center text-lg shrink-0 box-3d transition-colors" id="iconPersyaratanP3">
+                                        <i class="bi <?= $has_app_persyaratan ? 'bi-check-lg' : ($is_p3_per_pending ? 'bi-hourglass-split' : 'bi-signpost-split-fill') ?>"></i>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-bold text-slate-900">Persyaratan Jalur Tugas Akhir <span class="text-rose-500">*</span></label>
@@ -1054,27 +1455,99 @@
                                     </div>
                                 </div>
                                 <?php if($has_app_persyaratan): ?>
-                                    <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold border border-emerald-300">Telah Disetujui</span>
+                                    <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold border border-emerald-300">Telah Disetujui (ACC)</span>
+                                <?php elseif($is_p3_per_pending): ?>
+                                    <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 flex items-center gap-1.5"><i class="bi bi-clock-history"></i> Sedang Ditinjau</span>
                                 <?php endif; ?>
                             </div>
-                            <?php if(!$has_app_persyaratan): ?>
-                            <div class="drop-zone-sidang relative border-2 border-dashed rounded-2xl p-4 text-center transition-all <?= !$has_app_sitasi ? 'cursor-not-allowed bg-slate-100' : 'cursor-pointer' ?>" id="dropZonePersyaratanP3">
-                                <input type="file" name="file_upload" id="filePersyaratanP3" accept=".pdf,.doc,.docx" required <?= !$has_app_sitasi ? 'disabled' : '' ?> class="absolute inset-0 w-full h-full opacity-0 <?= !$has_app_sitasi ? 'cursor-not-allowed' : 'cursor-pointer' ?> z-10">
-                                <div class="pointer-events-none">
-                                    <i class="bi <?= !$has_app_sitasi ? 'bi-lock-fill' : 'bi-cloud-arrow-up' ?> text-2xl text-slate-400" id="iconLockPersyaratanP3"></i>
-                                    <p class="text-sm text-slate-500 mt-1" id="textLockPersyaratanP3"><?= !$has_app_sitasi ? 'Terkunci (Tunggu File Sitasi di-ACC)' : 'Klik untuk pilih file atau seret ke sini' ?></p>
+
+                            <?php if($has_app_persyaratan): ?>
+                                <?php if(!empty($latest_p3_per['file_persyaratan'])): ?>
+                                <div class="p-3 bg-white rounded-xl border border-emerald-200 flex items-center justify-between text-xs">
+                                    <div class="flex items-center gap-2 truncate">
+                                        <i class="bi bi-file-earmark-check-fill text-emerald-600 text-lg"></i>
+                                        <span class="font-mono font-bold text-slate-800 truncate"><?= htmlspecialchars($latest_p3_per['file_persyaratan']); ?></span>
+                                    </div>
+                                    <a href="<?= base_url('uploads/preview_ta/' . rawurlencode($latest_p3_per['file_persyaratan'])); ?>" target="_blank" class="px-3 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold shrink-0 transition">
+                                        Lihat Berkas
+                                    </a>
                                 </div>
-                            </div>
-                            <div id="fileBadgePersyaratanP3" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center justify-between">
-                                <span id="fileNamePersyaratanP3" class="truncate font-mono">file.pdf</span>
-                                <span id="fileSizePersyaratanP3" class="text-emerald-700">0 MB</span>
-                            </div>
-                            <div class="pt-2 hidden" id="submitWrapPersyaratanP3">
-                                <input type="text" name="catatan_mahasiswa" placeholder="Catatan kelayakan (opsional)..." class="w-full p-3 mb-3 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none focus:border-indigo-400">
-                                <button type="submit" class="w-full py-3 px-4 rounded-xl bg-indigo-600 text-white font-bold text-xs shadow-md transition hover:bg-indigo-700">
-                                    Submit File Persyaratan
-                                </button>
-                            </div>
+                                <?php endif; ?>
+
+                            <?php elseif(!$has_app_sitasi): ?>
+                                <div class="drop-zone-sidang relative border-2 border-dashed rounded-2xl p-4 text-center transition-all cursor-not-allowed bg-slate-100" id="dropZonePersyaratanP3">
+                                    <input type="file" name="file_upload" id="filePersyaratanP3" accept=".pdf,.doc,.docx" required disabled class="absolute inset-0 w-full h-full opacity-0 cursor-not-allowed z-10">
+                                    <div class="pointer-events-none">
+                                        <i class="bi bi-lock-fill text-2xl text-slate-400" id="iconLockPersyaratanP3"></i>
+                                        <p class="text-sm text-slate-500 mt-1" id="textLockPersyaratanP3">Terkunci (Tunggu File Sitasi di-ACC)</p>
+                                    </div>
+                                </div>
+
+                            <?php elseif($is_p3_per_pending): ?>
+                                <!-- Visual Cue: Pending Review -->
+                                <div class="p-4 rounded-xl bg-amber-50/80 border border-amber-200 space-y-3">
+                                    <div class="flex items-center justify-between gap-2 min-w-0">
+                                        <div class="flex items-center gap-2.5 min-w-0">
+                                            <i class="bi bi-file-earmark-pdf-fill text-amber-600 text-xl shrink-0"></i>
+                                            <div class="min-w-0">
+                                                <a href="<?= base_url('uploads/preview_ta/' . rawurlencode($latest_p3_per['file_persyaratan'] ?? '')); ?>" target="_blank" class="font-bold text-slate-900 hover:text-amber-700 hover:underline text-xs truncate block">
+                                                    <?= htmlspecialchars($latest_p3_per['file_persyaratan'] ?? '-'); ?>
+                                                </a>
+                                                <span class="text-[11px] text-slate-500">
+                                                    <i class="bi bi-clock mr-1"></i> Diunggah: <?= !empty($latest_p3_per['created_at']) ? date('d M Y, H:i', strtotime($latest_p3_per['created_at'])) . ' WIB' : '-'; ?>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <a href="<?= base_url('uploads/preview_ta/' . rawurlencode($latest_p3_per['file_persyaratan'] ?? '')); ?>" target="_blank" class="px-3 py-1 rounded-lg bg-white border border-amber-300 text-amber-900 font-bold text-xs hover:bg-amber-100 transition shrink-0 flex items-center gap-1">
+                                            <i class="bi bi-download"></i> Unduh
+                                        </a>
+                                    </div>
+                                    <?php if (!empty($latest_p3_per['catatan_mahasiswa'])): ?>
+                                    <div class="pt-2 border-t border-amber-200/60 text-xs text-slate-600 italic">
+                                        "<?= htmlspecialchars($latest_p3_per['catatan_mahasiswa']); ?>"
+                                    </div>
+                                    <?php endif; ?>
+                                    <div class="p-3 rounded-lg bg-amber-100/70 border border-amber-300 text-amber-950 text-xs flex items-center gap-2">
+                                        <i class="bi bi-lock-fill text-amber-600 shrink-0"></i>
+                                        <span><strong>Upload Terkunci:</strong> Berkas sedang ditinjau Pembimbing 1. Harap menunggu keputusan ACC atau revisi sebelum dapat mengunggah kembali.</span>
+                                    </div>
+                                </div>
+
+                            <?php else: ?>
+                                <?php if($is_p3_per_revision): ?>
+                                <!-- Visual Cue: Revision Note -->
+                                <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-300 text-rose-950 space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-rose-200 text-rose-800">
+                                            <i class="bi bi-arrow-repeat text-rose-600"></i> Perlu Revisi File Persyaratan
+                                        </span>
+                                        <span class="text-[11px] text-rose-700 font-semibold">Unggah Ulang Dibuka</span>
+                                    </div>
+                                    <?php if (!empty($latest_p3_per['catatan_pembimbing'])): ?>
+                                    <div class="p-2.5 bg-white rounded-lg border border-rose-200 text-xs italic text-slate-800">
+                                        <?= nl2br(htmlspecialchars(strip_tags($latest_p3_per['catatan_pembimbing']))); ?>
+                                    </div>
+                                    <?php endif; ?>
+                                </div>
+                                <?php endif; ?>
+
+                                <div class="drop-zone-sidang relative border-2 border-dashed rounded-2xl p-4 text-center transition-all cursor-pointer" id="dropZonePersyaratanP3">
+                                    <input type="file" name="file_upload" id="filePersyaratanP3" accept=".pdf,.doc,.docx" required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                                    <div class="pointer-events-none">
+                                        <i class="bi bi-cloud-arrow-up text-2xl text-slate-400" id="iconLockPersyaratanP3"></i>
+                                        <p class="text-sm text-slate-500 mt-1" id="textLockPersyaratanP3">Klik untuk pilih file atau seret ke sini</p>
+                                    </div>
+                                </div>
+                                <div id="fileBadgePersyaratanP3" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center justify-between">
+                                    <span id="fileNamePersyaratanP3" class="truncate font-mono">file.pdf</span>
+                                    <span id="fileSizePersyaratanP3" class="text-emerald-700">0 MB</span>
+                                </div>
+                                <div class="pt-2 hidden" id="submitWrapPersyaratanP3">
+                                    <input type="text" name="catatan_mahasiswa" placeholder="Catatan kelayakan (opsional)..." class="w-full p-3 mb-3 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none focus:border-indigo-400">
+                                    <button type="submit" class="w-full py-3 px-4 rounded-xl bg-indigo-600 text-white font-bold text-xs shadow-md transition hover:bg-indigo-700">
+                                        <?= $is_p3_per_revision ? 'Submit Revisi File Persyaratan' : 'Submit File Persyaratan'; ?>
+                                    </button>
+                                </div>
                             <?php endif; ?>
                         </div>
                         <?= form_close(); ?>
@@ -1254,7 +1727,15 @@
                         <div class="p-3 bg-white rounded-xl border border-slate-200/80 space-y-1">
                             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tempat / Ruangan:</span>
                             <p class="font-bold text-slate-900"><?= htmlspecialchars($ruangan_sidang_fmt); ?></p>
-                            <p class="text-slate-500">Gedung Fakultas Industri Kreatif</p>
+                            <?php if (!empty($link_sidang)): ?>
+                                <a href="<?= htmlspecialchars($link_sidang); ?>" target="_blank" class="inline-flex items-center gap-1 text-[11px] text-indigo-600 hover:text-indigo-800 font-bold hover:underline">
+                                    <i class="bi bi-camera-video-fill"></i> Link Video Conference
+                                </a>
+                            <?php elseif (!empty($ruangan_sidang) && $ruangan_sidang !== 'Belum Ditentukan'): ?>
+                                <p class="text-slate-500 text-[11px]">Ruang Sidang FIK</p>
+                            <?php else: ?>
+                                <p class="text-slate-400 text-[11px] italic">Lokasi belum ditetapkan</p>
+                            <?php endif; ?>
                         </div>
                         <div class="p-3 bg-white rounded-xl border border-slate-200/80 space-y-1">
                             <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block">Dewan Dosen Penguji:</span>
@@ -1309,7 +1790,15 @@
                     <div class="p-3 bg-white rounded-xl border border-amber-200 space-y-1">
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Ruangan:</span>
                         <p class="font-bold text-slate-900"><?= htmlspecialchars($ruangan_sidang_fmt); ?></p>
-                        <p class="text-slate-500">Gedung FIK</p>
+                        <?php if (!empty($link_sidang)): ?>
+                            <a href="<?= htmlspecialchars($link_sidang); ?>" target="_blank" class="inline-flex items-center gap-1 text-[11px] text-indigo-600 hover:text-indigo-800 font-bold hover:underline">
+                                <i class="bi bi-camera-video-fill"></i> Link Video Conference
+                            </a>
+                        <?php elseif (!empty($ruangan_sidang) && $ruangan_sidang !== 'Belum Ditentukan'): ?>
+                            <p class="text-slate-500 text-[11px]">Ruang Sidang FIK</p>
+                        <?php else: ?>
+                            <p class="text-slate-400 text-[11px] italic">Lokasi belum ditetapkan</p>
+                        <?php endif; ?>
                     </div>
                     <div class="p-3 bg-white rounded-xl border border-amber-200 space-y-1">
                         <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block">Dewan Penguji:</span>
@@ -1347,7 +1836,15 @@
                     <div class="p-3.5 bg-white rounded-xl border border-sky-200 space-y-1 shadow-2xs">
                         <span class="text-[10px] font-bold text-sky-700 uppercase tracking-wider block">Ruangan Sidang:</span>
                         <p class="font-extrabold text-slate-900 text-sm"><?= htmlspecialchars($ruangan_sidang_fmt); ?></p>
-                        <p class="text-slate-500">Gedung Fakultas Industri Kreatif</p>
+                        <?php if (!empty($link_sidang)): ?>
+                            <a href="<?= htmlspecialchars($link_sidang); ?>" target="_blank" class="inline-flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-bold hover:underline">
+                                <i class="bi bi-camera-video-fill"></i> Buka Link Sidang Online
+                            </a>
+                        <?php elseif (!empty($ruangan_sidang) && $ruangan_sidang !== 'Belum Ditentukan'): ?>
+                            <p class="text-slate-500 text-xs">Ruang Sidang FIK</p>
+                        <?php else: ?>
+                            <p class="text-slate-400 text-xs italic">Menunggu penetapan ruang</p>
+                        <?php endif; ?>
                     </div>
                     <div class="p-3.5 bg-white rounded-xl border border-sky-200 space-y-1 shadow-2xs">
                         <span class="text-[10px] font-bold text-indigo-700 uppercase tracking-wider block">Dewan Dosen Penguji:</span>
@@ -1358,6 +1855,44 @@
                         <span class="text-[10px] font-bold text-orange-700 uppercase tracking-wider block">Dosen Pembimbing:</span>
                         <p class="font-bold text-slate-900 truncate">1. <?= htmlspecialchars($dosen_p1); ?></p>
                         <p class="font-bold text-slate-900 truncate">2. <?= htmlspecialchars($dosen_p2); ?></p>
+                    </div>
+                </div>
+            </div>
+
+            <?php else: ?>
+            <div class="card-3d-warm rounded-3xl p-7 sm:p-9 space-y-5 w-full shadow-md border-2 border-slate-200 bg-white">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center text-2xl shrink-0 box-3d border border-slate-200">
+                        <i class="bi bi-calendar-event"></i>
+                    </div>
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 block">STATUS JADWAL SIDANG</span>
+                        <h3 class="text-lg sm:text-xl font-extrabold text-slate-900">Jadwal Sidang Belum Ditetapkan</h3>
+                        <p class="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+                            Jadwal pelaksanaan sidang dan dewan penguji akan ditetapkan oleh Koordinator Tugas Akhir setelah berkas pendaftaran Anda disetujui (ACC). Silakan pantau halaman ini secara berkala.
+                        </p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs pt-3 border-t border-slate-100">
+                    <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Hari &amp; Tanggal:</span>
+                        <p class="font-bold text-slate-700 italic">Menunggu Penetapan</p>
+                        <p class="text-slate-400 text-[11px]">-</p>
+                    </div>
+                    <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Ruangan / Tempat:</span>
+                        <p class="font-bold text-slate-700 italic">Menunggu Penetapan</p>
+                        <p class="text-slate-400 text-[11px]">-</p>
+                    </div>
+                    <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1">
+                        <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block">Dewan Penguji:</span>
+                        <p class="font-bold text-slate-700 truncate">1. <?= htmlspecialchars($dosen_u1); ?></p>
+                        <p class="font-bold text-slate-700 truncate">2. <?= htmlspecialchars($dosen_u2); ?></p>
+                    </div>
+                    <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1">
+                        <span class="text-[10px] font-bold text-orange-600 uppercase tracking-wider block">Dosen Pembimbing:</span>
+                        <p class="font-bold text-slate-700 truncate">1. <?= htmlspecialchars($dosen_p1); ?></p>
+                        <p class="font-bold text-slate-700 truncate">2. <?= htmlspecialchars($dosen_p2); ?></p>
                     </div>
                 </div>
             </div>
@@ -1438,12 +1973,124 @@
                     <h4 class="font-bold text-lg text-slate-700">Tahap Terkunci</h4>
                     <p class="text-slate-500 text-sm mt-2"><?= $lock_message ?></p>
                 </div>
+                <?php elseif ($is_sidang_approved): ?>
+                <!-- Visual Cue: Berkas Sidang Disetujui (ACC) -->
+                <div class="card-3d-warm rounded-3xl p-6 sm:p-7 space-y-4 border-2 border-emerald-300 bg-emerald-50/60 shadow-md shadow-emerald-500/10">
+                    <div class="flex items-center justify-between gap-3 border-b border-emerald-200 pb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-2xl shrink-0 box-3d shadow-md shadow-emerald-500/20">
+                                <i class="bi bi-patch-check-fill"></i>
+                            </div>
+                            <div>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-200 text-emerald-800 mb-1">
+                                    <i class="bi bi-check-circle-fill"></i> Berkas Disetujui (ACC)
+                                </span>
+                                <h4 class="font-black text-lg text-emerald-950">Berkas Pendaftaran Sidang Diterima</h4>
+                                <p class="text-xs text-emerald-800">Berkas sidang Anda telah diverifikasi dan disetujui. Silakan menunggu jadwal sidang yang ditetapkan oleh Koordinator TA.</p>
+                            </div>
+                        </div>
+                        <span class="px-3 py-1.5 rounded-xl bg-white border border-emerald-300 text-emerald-800 text-xs font-bold shrink-0 flex items-center gap-1.5 shadow-2xs">
+                            <i class="bi bi-lock-fill text-emerald-600"></i> Pendaftaran Selesai
+                        </span>
+                    </div>
+                    <?php $file_sidang_name = $latest_sidang['file_sidang'] ?? ($latest_sidang['file_draft'] ?? '-'); ?>
+                    <div class="p-3.5 bg-white rounded-2xl border border-emerald-200/80 flex items-center justify-between gap-3 text-xs">
+                        <div class="flex items-center gap-2.5 truncate">
+                            <i class="bi bi-file-earmark-check-fill text-emerald-600 text-xl"></i>
+                            <span class="font-mono font-bold text-slate-800 truncate"><?= htmlspecialchars($file_sidang_name); ?></span>
+                        </div>
+                        <a href="<?= base_url('uploads/sidang/' . rawurlencode($file_sidang_name)); ?>" target="_blank" class="px-3 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold shrink-0 transition">
+                            Lihat Berkas
+                        </a>
+                    </div>
+                </div>
+                <?php elseif ($is_sidang_pending): ?>
+                <!-- Visual Cue: Berkas Sedang Diverifikasi (Upload Terblokir) -->
+                <div class="card-3d-warm rounded-3xl p-6 sm:p-7 space-y-5 border-2 border-amber-300 bg-amber-50/50 shadow-md shadow-amber-500/10">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-200 pb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-2xl shrink-0 box-3d shadow-md shadow-amber-500/20">
+                                <i class="bi bi-hourglass-split animate-pulse"></i>
+                            </div>
+                            <div>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-amber-200 text-amber-900 mb-1">
+                                    <span class="w-2 h-2 rounded-full bg-amber-600 animate-ping"></span> Sedang Ditinjau / Diverifikasi
+                                </span>
+                                <h4 class="font-black text-lg text-slate-900">Berkas Sidang Dalam Proses Peninjauan</h4>
+                                <p class="text-xs text-slate-600">Dokumen pendaftaran sidang Anda sedang diverifikasi oleh Dosen Pembimbing dan Koordinator TA.</p>
+                            </div>
+                        </div>
+                        <span class="px-3 py-1.5 rounded-xl bg-white border border-amber-300 text-amber-900 text-xs font-bold shrink-0 self-start sm:self-auto flex items-center gap-1.5 shadow-2xs">
+                            <i class="bi bi-lock-fill text-amber-600"></i> Upload Terkunci
+                        </span>
+                    </div>
+
+                    <?php $file_sidang_name = $latest_sidang['file_sidang'] ?? ($latest_sidang['file_draft'] ?? '-'); ?>
+                    <div class="p-4 rounded-2xl bg-white border border-amber-200/80 space-y-2.5">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Dokumen yang Telah Diunggah</span>
+                        <div class="flex items-center justify-between gap-3 min-w-0">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg shrink-0">
+                                    <i class="bi bi-file-earmark-text-fill"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <a href="<?= base_url('uploads/sidang/' . rawurlencode($file_sidang_name)); ?>" target="_blank" class="font-bold text-slate-900 hover:text-amber-700 hover:underline text-sm truncate block">
+                                        <?= htmlspecialchars($file_sidang_name); ?>
+                                    </a>
+                                    <span class="text-[11px] text-slate-500">
+                                        <i class="bi bi-clock mr-1"></i> Diunggah pada: <?= !empty($latest_sidang['created_at']) ? date('d M Y, H:i', strtotime($latest_sidang['created_at'])) . ' WIB' : '-'; ?>
+                                    </span>
+                                </div>
+                            </div>
+                            <a href="<?= base_url('uploads/sidang/' . rawurlencode($file_sidang_name)); ?>" target="_blank" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs shrink-0 transition flex items-center gap-1.5">
+                                <i class="bi bi-download"></i> Unduh
+                            </a>
+                        </div>
+                        <?php if (!empty($latest_sidang['catatan_mahasiswa'])): ?>
+                            <div class="pt-2 border-t border-slate-100 text-xs text-slate-600">
+                                <span class="font-semibold text-slate-700">Catatan Pendaftaran:</span>
+                                <p class="italic text-slate-500 mt-0.5"><?= htmlspecialchars($latest_sidang['catatan_mahasiswa']); ?></p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-amber-100/70 border border-amber-300 text-amber-900 text-xs leading-relaxed flex items-start gap-2.5">
+                        <i class="bi bi-info-circle-fill text-amber-600 text-base shrink-0 mt-0.5"></i>
+                        <div>
+                            <strong class="font-bold block mb-0.5">Pengunggahan Berkas Dikunci Sementara:</strong>
+                            Anda telah mengunggah berkas pendaftaran sidang. Pengunggahan baru diblokir sementara sampai berkas ini diverifikasi dan disetujui (ACC) atau diberikan arahan revisi.
+                        </div>
+                    </div>
+                </div>
                 <?php else: ?>
+                <?php if ($is_sidang_revision): ?>
+                <!-- Visual Cue: Dosen Meminta Revisi Berkas Sidang — Upload Ulang Dibuka -->
+                <div class="p-5 rounded-2xl bg-rose-50 border-2 border-rose-300 text-rose-950 space-y-3 mb-6">
+                    <div class="flex items-center justify-between gap-3">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-rose-200 text-rose-800">
+                            <i class="bi bi-arrow-repeat text-rose-600"></i> Perlu Revisi Berkas Sidang — Unggah Ulang Dibuka
+                        </span>
+                        <span class="text-[11px] text-rose-700 font-semibold">
+                            Status: Perbaikan Dokumen Sidang
+                        </span>
+                    </div>
+                    <div class="space-y-1">
+                        <h4 class="font-black text-sm text-rose-900">Catatan Evaluasi / Arahan Revisi:</h4>
+                        <div class="p-3 bg-white rounded-xl border border-rose-200 text-xs leading-relaxed text-slate-800 italic">
+                            <?= !empty($latest_sidang['catatan_pembimbing']) ? nl2br(htmlspecialchars(strip_tags($latest_sidang['catatan_pembimbing']))) : (!empty($latest_sidang['catatan_sidang']) ? nl2br(htmlspecialchars(strip_tags($latest_sidang['catatan_sidang']))) : 'Silakan lakukan revisi berkas sidang sesuai catatan dosen.'); ?>
+                        </div>
+                    </div>
+                    <p class="text-xs text-rose-800 font-medium">
+                        Silakan perbaiki dokumen naskah/berkas sidang Anda, lalu unggah dokumen perbaikan terbaru melalui formulir di bawah ini.
+                    </p>
+                </div>
+                <?php endif; ?>
+
                 <?= form_open_multipart('mahasiswa/upload_sidang', ['id' => 'formUploadSidang', 'class' => 'space-y-6']); ?>
 
                 <div>
                     <label class="block text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wider mb-2.5">
-                        File Dokumen Sidang <span class="text-rose-500">*</span>
+                        File Dokumen Sidang <?= $is_sidang_revision ? '(Revisi)' : ''; ?> <span class="text-rose-500">*</span>
                     </label>
                     
                     <div class="drop-zone relative border-2 border-dashed border-emerald-300 hover:border-emerald-500 bg-emerald-50/30 hover:bg-emerald-50/60 rounded-3xl p-8 sm:p-10 text-center transition-all cursor-pointer group" id="dropZoneSidangSingle">
@@ -1482,7 +2129,7 @@
                 <div class="pt-2">
                     <button type="submit" class="w-full py-4 px-8 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-emerald-500/25 transition flex items-center justify-center gap-3 cursor-pointer hover:scale-[1.01] active:scale-[0.99] box-3d">
                         <i class="bi bi-cloud-arrow-up-fill text-lg"></i>
-                        <span>Submit Berkas Sidang Akhir</span>
+                        <span><?= $is_sidang_revision ? 'Submit Revisi Berkas Sidang Akhir' : 'Submit Berkas Sidang Akhir'; ?></span>
                     </button>
                 </div>
                 <?= form_close(); ?>
@@ -2090,6 +2737,7 @@
                             this.reset();
                             const fileBadge = document.getElementById('fileBadgeP' + (formId === 'formUploadPreview1' ? '1' : '2'));
                             if(fileBadge) fileBadge.classList.add('hidden');
+                            setTimeout(() => window.location.reload(), 1500);
                         } else {
                             showToast(data.message || 'Terjadi kesalahan saat mengunggah', 'error');
                         }
@@ -2172,6 +2820,7 @@
                         this.reset();
                         const badge = document.getElementById('fileBadgeSidangSingle');
                         if(badge) badge.classList.add('hidden');
+                        setTimeout(() => window.location.reload(), 1500);
                     } else {
                         showToast(data.message || 'Terjadi kesalahan saat mengunggah berkas sidang', 'error');
                     }
@@ -2510,13 +3159,30 @@
                         const orig_has_app_bimbingan   = <?php echo (!empty($has_app_bimbingan)   ? 'true' : 'false'); ?>;
                         const orig_has_app_sitasi      = <?php echo (!empty($has_app_sitasi)      ? 'true' : 'false'); ?>;
                         const orig_has_app_persyaratan = <?php echo (!empty($has_app_persyaratan) ? 'true' : 'false'); ?>;
+
+                        // Deteksi perubahan status review (Pending -> Revision / Approved)
+                        const orig_st_p1              = <?= json_encode($latest_p1['status_pembimbing'] ?? '') ?>;
+                        const orig_st_p2              = <?= json_encode($latest_p2['status_pembimbing'] ?? '') ?>;
+                        const orig_st_sidang          = <?= json_encode($latest_sidang['status_pembimbing'] ?? '') ?>;
+                        const orig_is_sidang_sched    = <?= !empty($is_sidang_scheduled) ? 'true' : 'false' ?>;
                         
                         const fileStatusChanged =
                             (data.has_app_bimbingan   && !orig_has_app_bimbingan)   ||
                             (data.has_app_sitasi       && !orig_has_app_sitasi)      ||
                             (data.has_app_persyaratan  && !orig_has_app_persyaratan);
 
-                        if ((data.is_p1_app && !orig_is_p1_app) || (data.is_p2_app && !orig_is_p2_app) || (data.is_p3_app && !orig_is_p3_app) || fileStatusChanged) {
+                        const curr_st_p1           = data.latest_p1 ? (data.latest_p1.status_pembimbing || '') : '';
+                        const curr_st_p2           = data.latest_p2 ? (data.latest_p2.status_pembimbing || '') : '';
+                        const curr_st_sidang       = data.latest_sidang ? (data.latest_sidang.status_pembimbing || '') : '';
+                        const curr_is_sidang_sched = !!data.is_sidang_scheduled;
+
+                        const reviewStatusChanged =
+                            (orig_st_p1 && curr_st_p1 && orig_st_p1 !== curr_st_p1) ||
+                            (orig_st_p2 && curr_st_p2 && orig_st_p2 !== curr_st_p2) ||
+                            (orig_st_sidang && curr_st_sidang && orig_st_sidang !== curr_st_sidang) ||
+                            (curr_is_sidang_sched !== orig_is_sidang_sched);
+
+                        if ((data.is_p1_app && !orig_is_p1_app) || (data.is_p2_app && !orig_is_p2_app) || (data.is_p3_app && !orig_is_p3_app) || fileStatusChanged || reviewStatusChanged) {
                             window.location.reload();
                         }
                     }
