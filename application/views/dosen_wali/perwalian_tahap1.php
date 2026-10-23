@@ -1153,64 +1153,64 @@
 
                 if (st === 'Disetujui') {
                     keputusanContainer.innerHTML = `
-                        <div class="p-3.5 sm:p-4 rounded-xl border border-emerald-300 bg-emerald-50/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div class="flex items-center gap-2">
-                                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                                    <i class="fa-solid fa-circle-check text-base"></i>
+                        <div class="p-3 rounded-xl border border-emerald-300 bg-emerald-50/80 space-y-2.5">
+                            <div class="flex items-start gap-2.5">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                                    <i class="fa-solid fa-circle-check text-sm"></i>
                                 </div>
-                                <div>
+                                <div class="min-w-0 flex-1">
                                     <h4 class="text-xs font-bold text-emerald-950 uppercase tracking-wide">KRS Mahasiswa Telah Disetujui (ACC)</h4>
-                                    <p class="text-[11px] text-emerald-700">Tahap 1 selesai. Mahasiswa dapat mengikuti perkuliahan dan masuk antrean penilaian.</p>
+                                    <p class="text-[11px] text-emerald-700 leading-snug mt-0.5">Tahap 1 selesai. Mahasiswa dapat mengikuti perkuliahan dan masuk antrean penilaian.</p>
                                 </div>
                             </div>
-                            <button type="button" onclick="submitDecisionTahap1('Revisi')" class="px-3.5 py-2 text-xs font-bold text-rose-700 bg-white hover:bg-rose-50 border border-rose-300 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs whitespace-nowrap shrink-0">
+                            <button type="button" onclick="submitDecisionTahap1('Revisi')" class="w-full px-3.5 py-2 text-xs font-bold text-rose-700 bg-white hover:bg-rose-50 border border-rose-300 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs">
                                 <i class="fa-solid fa-rotate-left text-rose-500"></i> Batalkan & Minta Revisi
                             </button>
                         </div>
                     `;
                 } else if (st === 'Revisi') {
                     keputusanContainer.innerHTML = `
-                        <div class="p-3.5 sm:p-4 rounded-xl border border-amber-300 bg-amber-50/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div class="flex items-center gap-2">
-                                <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
-                                    <i class="fa-solid fa-clock-rotate-left text-base"></i>
+                        <div class="p-3 rounded-xl border border-amber-300 bg-amber-50/80 space-y-2.5">
+                            <div class="flex items-start gap-2.5">
+                                <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
+                                    <i class="fa-solid fa-clock-rotate-left text-sm"></i>
                                 </div>
-                                <div>
+                                <div class="min-w-0 flex-1">
                                     <h4 class="text-xs font-bold text-amber-950 uppercase tracking-wide">Status: Perlu Revisi</h4>
-                                    <p class="text-[11px] text-amber-700">Mahasiswa diminta memperbaiki kontrak rencana studi sebelum disetujui.</p>
+                                    <p class="text-[11px] text-amber-700 leading-snug mt-0.5">Mahasiswa diminta memperbaiki kontrak rencana studi sebelum disetujui.</p>
                                 </div>
                             </div>
-                            <button type="button" onclick="submitDecisionTahap1('Disetujui')" class="px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer shrink-0">
-                                <i class="fa-solid fa-check-double mr-1.5"></i> Langsung Setujui KRS Ini
+                            <button type="button" onclick="submitDecisionTahap1('Disetujui')" class="w-full px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i class="fa-solid fa-check-double"></i> Langsung Setujui KRS Ini
                             </button>
                         </div>
                     `;
                 } else if (st === 'Draft') {
                     keputusanContainer.innerHTML = `
-                        <div class="p-3.5 rounded-xl border border-slate-300 bg-slate-50 flex items-center justify-between gap-2">
+                        <div class="p-3 rounded-xl border border-slate-300 bg-slate-50 flex items-center justify-between gap-2">
                             <span class="text-xs font-bold text-slate-700 flex items-center gap-2">
-                                <i class="fa-solid fa-pen-ruler text-slate-400 text-base"></i>
+                                <i class="fa-solid fa-pen-ruler text-slate-400 text-sm"></i>
                                 <span>Rencana studi masih berupa Draft (Belum diajukan resmi oleh mahasiswa).</span>
                             </span>
-                            <span class="text-[10px] font-bold px-2 py-0.5 bg-slate-200 text-slate-600 rounded">Draft</span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 bg-slate-200 text-slate-600 rounded shrink-0">Draft</span>
                         </div>
                     `;
                 } else {
                     // Default: 'Diajukan'
                     keputusanContainer.innerHTML = `
-                        <div class="p-3.5 sm:p-4 rounded-xl border-2 border-orange-200 bg-orange-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="p-3 rounded-xl border-2 border-orange-200 bg-orange-50/50 space-y-2.5">
                             <div>
                                 <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center">
-                                    <i class="fa-solid fa-pen-nib text-orange-600 mr-2"></i> Keputusan Persetujuan Rencana Studi
+                                    <i class="fa-solid fa-pen-nib text-orange-600 mr-1.5"></i> Keputusan Persetujuan Rencana Studi
                                 </h4>
                                 <p class="text-[11px] text-slate-500 mt-0.5">Tentukan persetujuan kontrak KRS mahasiswa ini secara langsung.</p>
                             </div>
-                            <div class="flex items-center gap-2 shrink-0">
-                                <button type="button" onclick="submitDecisionTahap1('Revisi')" class="px-4 py-2 text-xs font-bold text-rose-700 bg-white hover:bg-rose-50 border border-rose-300 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap shadow-2xs">
-                                    <i class="fa-solid fa-rotate-left mr-1"></i> Minta Revisi KRS
+                            <div class="grid grid-cols-2 gap-2">
+                                <button type="button" onclick="submitDecisionTahap1('Revisi')" class="w-full px-3 py-2 text-xs font-bold text-rose-700 bg-white hover:bg-rose-50 border border-rose-300 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs">
+                                    <i class="fa-solid fa-rotate-left"></i> Minta Revisi KRS
                                 </button>
-                                <button type="button" onclick="submitDecisionTahap1('Disetujui')" class="px-5 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl shadow-md transition cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap">
-                                    <i class="fa-solid fa-check-double mr-1.5"></i> Setujui KRS Mahasiswa
+                                <button type="button" onclick="submitDecisionTahap1('Disetujui')" class="w-full px-3 py-2 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl shadow-md transition cursor-pointer flex items-center justify-center gap-1.5">
+                                    <i class="fa-solid fa-check-double"></i> Setujui KRS Mahasiswa
                                 </button>
                             </div>
                         </div>
