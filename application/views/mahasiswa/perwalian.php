@@ -221,27 +221,52 @@
                                     </td>
                                 </tr>
                             <?php else: ?>
-                                <?php $no = 1; foreach($mk_kontrak as $c): ?>
-                                    <tr class="hover:bg-orange-50/30 transition">
-                                        <td class="p-3 text-center text-slate-400 font-mono"><?= $no++ ?></td>
-                                        <td class="p-3 font-mono font-bold text-brand-700"><?= htmlspecialchars($c['kode_mk']) ?></td>
-                                        <td class="p-3 font-semibold text-slate-800"><?= htmlspecialchars($c['nama_mk']) ?></td>
-                                        <td class="p-3 text-center font-bold text-slate-700"><?= (int)$c['sks'] ?> SKS</td>
-                                        <td class="p-3 text-center">
-                                            <?php if(!empty($c['is_imported'])): ?>
-                                                <span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md font-semibold text-[11px]">Import Prodi</span>
-                                            <?php else: ?>
-                                                <span class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-md font-semibold text-[11px]">Input Mandiri</span>
-                                            <?php endif; ?>
+                                <?php
+                                    $groupedKontrak = [];
+                                    foreach ($mk_kontrak as $c) {
+                                        $sem = (int)($c['semester_mk'] ?? ($c['semester'] ?? 1));
+                                        $groupedKontrak[$sem][] = $c;
+                                    }
+                                    ksort($groupedKontrak);
+                                    $colCount = ($st1 !== 'Disetujui') ? 6 : 5;
+                                ?>
+                                <?php foreach ($groupedKontrak as $sem => $items): 
+                                    $subSks = array_sum(array_map(fn($x) => (int)$x['sks'], $items));
+                                ?>
+                                    <tr class="bg-gradient-to-r from-orange-50/90 via-amber-50/60 to-orange-50/90 border-y border-orange-200/80">
+                                        <td colspan="<?= $colCount ?>" class="py-2 px-3.5">
+                                            <div class="flex items-center justify-between text-xs font-bold text-orange-950">
+                                                <span class="flex items-center gap-1.5 uppercase tracking-wide text-[11px]">
+                                                    🎓 Semester <?= (int)$sem ?>
+                                                </span>
+                                                <span class="text-[11px] font-mono font-bold px-2.5 py-0.5 bg-white text-orange-800 rounded-md border border-orange-200">
+                                                    Subtotal: <?= $subSks ?> SKS (<?= count($items) ?> MK)
+                                                </span>
+                                            </div>
                                         </td>
-                                        <?php if($st1 !== 'Disetujui'): ?>
-                                            <td class="p-3 text-center">
-                                                <button onclick="hapusMKFromKontrak('<?= htmlspecialchars($c['kode_mk']) ?>')" class="p-1 hover:bg-rose-100 text-rose-600 rounded transition" title="Hapus dari kontrak">
-                                                    🗑️
-                                                </button>
-                                            </td>
-                                        <?php endif; ?>
                                     </tr>
+                                    <?php $no = 1; foreach($items as $c): ?>
+                                        <tr class="hover:bg-orange-50/30 transition">
+                                            <td class="p-3 text-center text-slate-400 font-mono"><?= $no++ ?></td>
+                                            <td class="p-3 font-mono font-bold text-brand-700"><?= htmlspecialchars($c['kode_mk']) ?></td>
+                                            <td class="p-3 font-semibold text-slate-800"><?= htmlspecialchars($c['nama_mk']) ?></td>
+                                            <td class="p-3 text-center font-bold text-slate-700"><?= (int)$c['sks'] ?> SKS</td>
+                                            <td class="p-3 text-center">
+                                                <?php if(!empty($c['is_imported'])): ?>
+                                                    <span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md font-semibold text-[11px]">Import Prodi</span>
+                                                <?php else: ?>
+                                                    <span class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-md font-semibold text-[11px]">Input Mandiri</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <?php if($st1 !== 'Disetujui'): ?>
+                                                <td class="p-3 text-center">
+                                                    <button onclick="hapusMKFromKontrak('<?= htmlspecialchars($c['kode_mk']) ?>')" class="p-1 hover:bg-rose-100 text-rose-600 rounded transition" title="Hapus dari kontrak">
+                                                        🗑️
+                                                    </button>
+                                                </td>
+                                            <?php endif; ?>
+                                        </tr>
+                                    <?php endforeach; ?>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </tbody>
@@ -365,26 +390,50 @@
                                     <td colspan="6" class="p-6 text-center text-slate-400">Belum ada data mata kuliah yang sudah diambil.</td>
                                 </tr>
                             <?php else: ?>
-                                <?php $no = 1; foreach($mk_sudah as $row): 
-                                    $nilai = strtoupper(trim($row['nilai_huruf'] ?? ''));
-                                    $isLulus = in_array($nilai, ['A', 'AB', 'B', 'BC', 'C'], true);
-                                    $badgeTone = $isLulus ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200';
-                                    $badgeLabel = $isLulus ? 'LULUS' : 'TIDAK LULUS / MENGULANG';
+                                <?php
+                                    $groupedSudah = [];
+                                    foreach ($mk_sudah as $r) {
+                                        $sem = (int)($r['semester_mk'] ?? ($r['semester'] ?? 1));
+                                        $groupedSudah[$sem][] = $r;
+                                    }
+                                    ksort($groupedSudah);
                                 ?>
-                                    <tr class="hover:bg-slate-50/60 transition">
-                                        <td class="p-3 text-center text-slate-400 font-mono"><?= $no++ ?></td>
-                                        <td class="p-3 font-mono font-bold text-slate-800"><?= htmlspecialchars($row['kode_mk']) ?></td>
-                                        <td class="p-3 font-semibold text-slate-800"><?= htmlspecialchars($row['nama_mk']) ?></td>
-                                        <td class="p-3 text-center font-bold text-slate-700"><?= (int)$row['sks'] ?> SKS</td>
-                                        <td class="p-3 text-center font-mono font-extrabold text-sm <?= $isLulus ? 'text-emerald-700' : 'text-rose-700' ?>">
-                                            <?= htmlspecialchars($nilai ?: '-') ?>
-                                        </td>
-                                        <td class="p-3 text-center">
-                                            <span class="px-2.5 py-1 rounded-full font-bold text-[11px] border <?= $badgeTone ?>">
-                                                <?= $isLulus ? '🟢 ' : '🔴 ' ?><?= $badgeLabel ?>
-                                            </span>
+                                <?php foreach ($groupedSudah as $sem => $items): 
+                                    $subSks = array_sum(array_map(fn($x) => (int)$x['sks'], $items));
+                                ?>
+                                    <tr class="bg-gradient-to-r from-orange-50/90 via-amber-50/60 to-orange-50/90 border-y border-orange-200/80">
+                                        <td colspan="6" class="py-2 px-3.5">
+                                            <div class="flex items-center justify-between text-xs font-bold text-orange-950">
+                                                <span class="flex items-center gap-1.5 uppercase tracking-wide text-[11px]">
+                                                    🎓 Semester <?= (int)$sem ?>
+                                                </span>
+                                                <span class="text-[11px] font-mono font-bold px-2.5 py-0.5 bg-white text-orange-800 rounded-md border border-orange-200">
+                                                    Subtotal: <?= $subSks ?> SKS (<?= count($items) ?> MK)
+                                                </span>
+                                            </div>
                                         </td>
                                     </tr>
+                                    <?php $no = 1; foreach($items as $row): 
+                                        $nilai = strtoupper(trim($row['nilai_huruf'] ?? ''));
+                                        $isLulus = in_array($nilai, ['A', 'AB', 'B', 'BC', 'C'], true);
+                                        $badgeTone = $isLulus ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200';
+                                        $badgeLabel = $isLulus ? 'LULUS' : 'TIDAK LULUS / MENGULANG';
+                                    ?>
+                                        <tr class="hover:bg-slate-50/60 transition">
+                                            <td class="p-3 text-center text-slate-400 font-mono"><?= $no++ ?></td>
+                                            <td class="p-3 font-mono font-bold text-slate-800"><?= htmlspecialchars($row['kode_mk']) ?></td>
+                                            <td class="p-3 font-semibold text-slate-800"><?= htmlspecialchars($row['nama_mk']) ?></td>
+                                            <td class="p-3 text-center font-bold text-slate-700"><?= (int)$row['sks'] ?> SKS</td>
+                                            <td class="p-3 text-center font-mono font-extrabold text-sm <?= $isLulus ? 'text-emerald-700' : 'text-rose-700' ?>">
+                                                <?= htmlspecialchars($nilai ?: '-') ?>
+                                            </td>
+                                            <td class="p-3 text-center">
+                                                <span class="px-2.5 py-1 rounded-full font-bold text-[11px] border <?= $badgeTone ?>">
+                                                    <?= $isLulus ? '🟢 ' : '🔴 ' ?><?= $badgeLabel ?>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </tbody>

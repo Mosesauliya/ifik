@@ -1095,7 +1095,7 @@
             tbody.innerHTML = '';
 
             let gradedCount = 0;
-            if (mkList.length === 0) {
+            if (!mkList || mkList.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="6" class="py-8 text-center text-slate-400">
@@ -1106,47 +1106,81 @@
                     </tr>
                 `;
             } else {
-                mkList.forEach((mk, idx) => {
-                    const grade = (mk.nilai_huruf || '').toUpperCase();
-                    if (grade) gradedCount++;
+                // Kelompokkan mata kuliah sesuai dengan semester
+                const groupedBySemester = {};
+                mkList.forEach(mk => {
+                    const sem = parseInt(mk.semester_mk || mk.semester || 1);
+                    if (!groupedBySemester[sem]) {
+                        groupedBySemester[sem] = [];
+                    }
+                    groupedBySemester[sem].push(mk);
+                });
 
-                    const status = mk.status_kelulusan || 'Belum Ditentukan';
-                    const isLulus = (status === 'Lulus');
-                    const isTidakLulus = (status === 'Tidak Lulus');
+                const sortedSemesters = Object.keys(groupedBySemester).sort((a, b) => parseInt(a) - parseInt(b));
 
-                    const statusBadgeHtml = isLulus 
-                        ? `<span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="fa-solid fa-circle-check mr-1.5 text-emerald-600"></i> Lulus</span>`
-                        : (isTidakLulus 
-                            ? `<span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-rose-100 text-rose-800 border border-rose-300"><i class="fa-solid fa-circle-xmark mr-1.5 text-rose-600"></i> Tidak Lulus</span>`
-                            : `<span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-500 border border-slate-200"><i class="fa-solid fa-minus mr-1 text-slate-400"></i> Belum Dinilai</span>`);
+                sortedSemesters.forEach(sem => {
+                    const mks = groupedBySemester[sem];
+                    const totalSksSem = mks.reduce((acc, curr) => acc + parseInt(curr.sks || 0), 0);
 
+                    // Header Pemisah Semester
                     tbody.innerHTML += `
-                        <tr class="hover:bg-slate-50/60 transition" id="m2Row_${mk.id}">
-                            <td class="py-2.5 px-3 text-center font-mono text-slate-400">${idx + 1}</td>
-                            <td class="py-2.5 px-3 font-mono font-bold text-slate-900">${escapeHtml(mk.kode_mk)}</td>
-                            <td class="py-2.5 px-3 font-medium text-slate-800">${escapeHtml(mk.nama_mk)}</td>
-                            <td class="py-2.5 px-3 text-center font-mono font-semibold">${mk.sks}</td>
-                            
-                            <!-- Dropdown Nilai Mutu -->
-                            <td class="py-2.5 px-3 text-center">
-                                <select onchange="onGradeChange(${mk.id}, this.value)" class="w-24 px-2.5 py-1.5 text-xs font-bold text-center bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/40 font-mono shadow-2xs cursor-pointer">
-                                    <option value="" ${!grade ? 'selected' : ''}>- Nilai -</option>
-                                    <option value="A" ${grade === 'A' ? 'selected' : ''} class="text-emerald-700 font-bold">A</option>
-                                    <option value="AB" ${grade === 'AB' ? 'selected' : ''} class="text-emerald-700 font-bold">AB</option>
-                                    <option value="B" ${grade === 'B' ? 'selected' : ''} class="text-emerald-700 font-bold">B</option>
-                                    <option value="BC" ${grade === 'BC' ? 'selected' : ''} class="text-emerald-700 font-bold">BC</option>
-                                    <option value="C" ${grade === 'C' ? 'selected' : ''} class="text-emerald-700 font-bold">C</option>
-                                    <option value="D" ${grade === 'D' ? 'selected' : ''} class="text-rose-700 font-bold">D</option>
-                                    <option value="E" ${grade === 'E' ? 'selected' : ''} class="text-rose-700 font-bold">E</option>
-                                </select>
-                            </td>
-
-                            <!-- Badge Status Kelulusan (Otomatis 100% Berdasarkan Nilai) -->
-                            <td class="py-2.5 px-3 text-center" id="m2StatusCol_${mk.id}">
-                                ${statusBadgeHtml}
+                        <tr class="bg-gradient-to-r from-purple-50/90 via-indigo-50/60 to-purple-50/90 border-y border-purple-200/80">
+                            <td colspan="6" class="py-2 px-3.5">
+                                <div class="flex items-center justify-between text-xs font-bold text-purple-950">
+                                    <span class="flex items-center gap-1.5">
+                                        <i class="fa-solid fa-graduation-cap text-purple-600 text-sm"></i>
+                                        <span class="tracking-wide uppercase text-[11px]">Semester ${sem}</span>
+                                    </span>
+                                    <span class="text-[11px] font-mono font-bold px-2.5 py-0.5 bg-white text-purple-800 rounded-md border border-purple-200 shadow-2xs">
+                                        Subtotal: ${totalSksSem} SKS (${mks.length} MK)
+                                    </span>
+                                </div>
                             </td>
                         </tr>
                     `;
+
+                    mks.forEach((mk, idx) => {
+                        const grade = (mk.nilai_huruf || '').toUpperCase();
+                        if (grade) gradedCount++;
+
+                        const status = mk.status_kelulusan || 'Belum Ditentukan';
+                        const isLulus = (status === 'Lulus');
+                        const isTidakLulus = (status === 'Tidak Lulus');
+
+                        const statusBadgeHtml = isLulus 
+                            ? `<span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="fa-solid fa-circle-check mr-1.5 text-emerald-600"></i> Lulus</span>`
+                            : (isTidakLulus 
+                                ? `<span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-rose-100 text-rose-800 border border-rose-300"><i class="fa-solid fa-circle-xmark mr-1.5 text-rose-600"></i> Tidak Lulus</span>`
+                                : `<span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-500 border border-slate-200"><i class="fa-solid fa-minus mr-1 text-slate-400"></i> Belum Dinilai</span>`);
+
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-slate-50/60 transition" id="m2Row_${mk.id}">
+                                <td class="py-2.5 px-3 text-center font-mono text-slate-400">${idx + 1}</td>
+                                <td class="py-2.5 px-3 font-mono font-bold text-slate-900">${escapeHtml(mk.kode_mk)}</td>
+                                <td class="py-2.5 px-3 font-medium text-slate-800">${escapeHtml(mk.nama_mk)}</td>
+                                <td class="py-2.5 px-3 text-center font-mono font-semibold">${mk.sks}</td>
+                                
+                                <!-- Dropdown Nilai Mutu -->
+                                <td class="py-2.5 px-3 text-center">
+                                    <select onchange="onGradeChange(${mk.id}, this.value)" class="w-24 px-2.5 py-1.5 text-xs font-bold text-center bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/40 font-mono shadow-2xs cursor-pointer">
+                                        <option value="" ${!grade ? 'selected' : ''}>- Nilai -</option>
+                                        <option value="A" ${grade === 'A' ? 'selected' : ''} class="text-emerald-700 font-bold">A</option>
+                                        <option value="AB" ${grade === 'AB' ? 'selected' : ''} class="text-emerald-700 font-bold">AB</option>
+                                        <option value="B" ${grade === 'B' ? 'selected' : ''} class="text-emerald-700 font-bold">B</option>
+                                        <option value="BC" ${grade === 'BC' ? 'selected' : ''} class="text-emerald-700 font-bold">BC</option>
+                                        <option value="C" ${grade === 'C' ? 'selected' : ''} class="text-emerald-700 font-bold">C</option>
+                                        <option value="D" ${grade === 'D' ? 'selected' : ''} class="text-rose-700 font-bold">D</option>
+                                        <option value="E" ${grade === 'E' ? 'selected' : ''} class="text-rose-700 font-bold">E</option>
+                                    </select>
+                                </td>
+
+                                <!-- Badge Status Kelulusan (Otomatis 100% Berdasarkan Nilai) -->
+                                <td class="py-2.5 px-3 text-center" id="m2StatusCol_${mk.id}">
+                                    ${statusBadgeHtml}
+                                </td>
+                            </tr>
+                        `;
+                    });
                 });
             }
 

@@ -419,14 +419,17 @@ class Perwalian_model extends CI_Model {
      * @param string|null $status_tahap 'akan_diambil' | 'sudah_diambil' | null (all)
      */
     public function get_perwalian_detail($id_perwalian, $status_tahap = null) {
-        $this->db->from('perwalian_detail')
-                 ->where('id_perwalian', (int)$id_perwalian);
+        $this->db->select('pd.*, COALESCE(m.semester, 1) as semester_mk, m.jenis as jenis_mk')
+                 ->from('perwalian_detail pd')
+                 ->join('master_mata_kuliah m', 'pd.kode_mk = m.kode_mk', 'left')
+                 ->where('pd.id_perwalian', (int)$id_perwalian);
 
         if (!empty($status_tahap)) {
-            $this->db->where('status_tahap', $status_tahap);
+            $this->db->where('pd.status_tahap', $status_tahap);
         }
 
-        $this->db->order_by('id', 'ASC');
+        $this->db->order_by('semester_mk', 'ASC');
+        $this->db->order_by('pd.id', 'ASC');
         return $this->db->get()->result_array();
     }
 
@@ -434,11 +437,13 @@ class Perwalian_model extends CI_Model {
      * Ambil riwayat seluruh MK yang SUDAH diambil oleh mahasiswa (dari semester-semester sebelumnya)
      */
     public function get_riwayat_mk_sudah_diambil($nim) {
-        $this->db->select('pd.*, p.tahun_ajaran, p.semester as periode_semester')
+        $this->db->select('pd.*, COALESCE(m.semester, 1) as semester_mk, p.tahun_ajaran, p.semester as periode_semester')
                  ->from('perwalian_detail pd')
                  ->join('perwalian p', 'pd.id_perwalian = p.id_perwalian', 'inner')
+                 ->join('master_mata_kuliah m', 'pd.kode_mk = m.kode_mk', 'left')
                  ->where('p.nim', trim($nim))
                  ->where('pd.status_tahap', 'sudah_diambil')
+                 ->order_by('semester_mk', 'ASC')
                  ->order_by('pd.id', 'ASC');
 
         return $this->db->get()->result_array();
