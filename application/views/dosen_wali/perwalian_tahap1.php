@@ -1278,7 +1278,6 @@
                     // Update state perwalian jika masih dibuka
                     if (currentPerwalian && currentPerwalian.perwalian) {
                         currentPerwalian.perwalian.status_tahap1 = status;
-                        currentPerwalian.perwalian.catatan_wali = catatan;
                     }
                     closeReviewModal();
 
