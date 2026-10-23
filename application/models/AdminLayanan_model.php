@@ -2082,11 +2082,17 @@ class AdminLayanan_model extends CI_Model {
             foreach ($rows as $r) {
                 $nim = $r['nim'] ?: $r['id_mhs'];
                 $isNonSidang = in_array($r['jenis_TA'], ['TA Jurnal', 'TA HKI', 'TA PROYEK', 'TA Lainnya', 'Non-Sidang', 'Publikasi']);
+                $sp_row = strtolower(trim($r['status_preview'] ?? ''));
+                $lulus_p3_row = !empty($r['lulus_preview3']) && (int)$r['lulus_preview3'] === 1;
                 $st = !empty($r['status_filesidang']) ? $r['status_filesidang'] : 'Pending Verifikasi';
-                $isApp = (strpos(strtolower($st), 'disetujui') !== false || strpos(strtolower($st), 'approved') !== false || strtolower(trim($st)) === 'lulus');
+                if (!$lulus_p3_row || in_array($sp_row, ['preview1', 'preview2', 'preview3'], true)) {
+                    $st = 'Pending Verifikasi';
+                }
+                $isApp = ($lulus_p3_row && !in_array($sp_row, ['preview1', 'preview2', 'preview3'], true))
+                    && (strpos(strtolower($st), 'disetujui') !== false || strpos(strtolower($st), 'approved') !== false || strtolower(trim($st)) === 'lulus');
 
                 // Auto-sync jika berkas pendaftaran sidang mahasiswa sudah di-ACC seluruhnya di file_pendaftaran
-                if (!$isApp) {
+                if (!$isApp && $lulus_p3_row && !in_array($sp_row, ['preview1', 'preview2', 'preview3'], true)) {
                     $berkas_mhs = $this->get_berkas_pendaftaran_sidang($nim);
                     if (!empty($berkas_mhs)) {
                         $total_b   = count($berkas_mhs);
@@ -2094,49 +2100,46 @@ class AdminLayanan_model extends CI_Model {
                         $req_val_b = 0;
                         $val_b     = 0;
                         $rev_b     = 0;
-                        $db_b      = 0;
-                        $db_val_b  = 0;
+                        $up_b      = 0;
 
                         foreach ($berkas_mhs as $bm) {
                             $is_req_item = !empty($bm['is_required']);
                             $is_val_item = ($bm['status'] === 'Disetujui Admin LAA');
                             $is_rev_item = ($bm['status'] === 'Revisi Admin LAA');
+                            if (!empty($bm['is_uploaded'])) {
+                                $up_b++;
+                            }
                             if ($is_req_item) {
                                 $req_b++;
                                 if ($is_val_item) $req_val_b++;
                             }
                             if ($is_val_item) $val_b++;
                             if ($is_rev_item) $rev_b++;
-                            if (!empty($bm['in_db'])) {
-                                $db_b++;
-                                if ($is_val_item) $db_val_b++;
-                            }
                         }
 
                         if ($rev_b > 0) {
                             $st = 'Revisi Admin LAA';
                         } elseif (
-                            ($total_b > 0 && $val_b === $total_b) ||
-                            ($req_b > 0 && $req_val_b === $req_b) ||
-                            ($db_b > 0 && $db_val_b === $db_b && $db_b >= max(1, $req_b))
+                            $up_b > 0 && (
+                                ($total_b > 0 && $val_b === $total_b) ||
+                                ($req_b > 0 && $req_val_b === $req_b)
+                            )
                         ) {
                             $st = 'Disetujui Admin LAA';
                             $isApp = true;
                             $upd_g = ['status_filesidang' => 'Disetujui Admin LAA'];
                             if ($this->db->field_exists('status_preview', 'guidance')) {
-                                $sp_curr = strtolower(trim($r['status_preview'] ?? ''));
-                                if (!empty($r['lulus_preview3']) || in_array($sp_curr, ['preview3', 'persyaratan_sidang', 'persyaratansidang', ''], true)) {
+                                if ($lulus_p3_row && in_array($sp_row, ['preview3', 'persyaratan_sidang', 'persyaratansidang', ''], true)) {
                                     $upd_g['status_preview'] = 'sidang';
                                 }
                             }
                             $this->db->where('id', $r['guidance_id'])->update('guidance', $upd_g);
                         }
                     }
-                } else {
+                } elseif ($isApp) {
                     // Jika sudah Disetujui tetapi status_preview masih tertahan di preview3 / persyaratan_sidang, majukan ke sidang
                     if ($this->db->field_exists('status_preview', 'guidance')) {
-                        $sp_curr = strtolower(trim($r['status_preview'] ?? ''));
-                        if (!empty($r['lulus_preview3']) && in_array($sp_curr, ['preview3', 'persyaratan_sidang', 'persyaratansidang'], true)) {
+                        if ($lulus_p3_row && in_array($sp_row, ['preview3', 'persyaratan_sidang', 'persyaratansidang'], true)) {
                             $this->db->where('id', $r['guidance_id'])->update('guidance', ['status_preview' => 'sidang']);
                         }
                     }
@@ -2354,18 +2357,48 @@ class AdminLayanan_model extends CI_Model {
         $nim_clean = preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', (string)$nim);
         $target_ids = $this->get_student_target_ids($nim);
 
+        $syarat_codes_map = [];
+        foreach ($master_syarat as $idx => $ms) {
+            $kc = strtolower(trim($ms['kode_berkas'] ?? ($ms['kode'] ?? 'berkas_' . ($idx + 1))));
+            $syarat_codes_map[$kc] = true;
+            $syarat_codes_map[preg_replace('/[^a-z0-9_]/', '_', $kc)] = true;
+        }
+
         // Check if student is already fully approved directly from guidance
         $is_fully_approved = false;
+        $should_purge_all_ps = false;
+        $should_purge_pre_downgrade_ps = false;
+        $downgrade_ts = 0;
+
         if ($this->db->table_exists('guidance')) {
             $g_check = $this->db->group_start()
                                 ->where_in('id_mhs', $target_ids)
                                 ->or_where_in('id', $target_ids)
+                                ->or_where('id', 'gdn_' . $nim_clean)
                                 ->group_end()
+                                ->order_by('id', 'DESC')
                                 ->get('guidance')
                                 ->row_array();
-            if ($g_check && !empty($g_check['status_filesidang'])) {
-                $g_st = strtolower(trim($g_check['status_filesidang']));
-                if (strpos($g_st, 'disetujui') !== false || strpos($g_st, 'approved') !== false || $g_st === 'lulus') {
+            if ($g_check) {
+                $sp_curr = strtolower(trim($g_check['status_preview'] ?? ''));
+                $lulus_p3 = !empty($g_check['lulus_preview3']) && (int)$g_check['lulus_preview3'] === 1;
+                $g_st = strtolower(trim($g_check['status_filesidang'] ?? ''));
+                $downgrade_ts = !empty($g_check['lulus_at']) ? strtotime($g_check['lulus_at']) : 0;
+
+                if (!$lulus_p3 || in_array($sp_curr, ['preview1', 'preview2', 'preview3'], true)) {
+                    // Mahasiswa berada di Preview 1/2/3: bersihkan seluruh berkas/status Persyaratan Sidang sisa downgrade
+                    $is_fully_approved = false;
+                    $should_purge_all_ps = true;
+                    if (!empty($g_check['status_filesidang'])) {
+                        $this->db->where('id', $g_check['id'])->update('guidance', ['status_filesidang' => null]);
+                    }
+                } elseif (in_array($sp_curr, ['persyaratan_sidang', 'persyaratansidang'], true) && $g_st === '') {
+                    // Mahasiswa di Persyaratan Sidang dengan status_filesidang = null (misal baru di-downgrade)
+                    $is_fully_approved = false;
+                    if (!empty($g_check['lulus_by_role'])) {
+                        $should_purge_pre_downgrade_ps = true;
+                    }
+                } elseif ($g_st !== '' && (strpos($g_st, 'disetujui') !== false || strpos($g_st, 'approved') !== false || $g_st === 'lulus')) {
                     $is_fully_approved = true;
                 }
             }
@@ -2380,15 +2413,38 @@ class AdminLayanan_model extends CI_Model {
                              ->group_end()
                              ->get('file_pendaftaran')
                              ->result_array();
+            $stale_fp_ids = [];
             foreach ($rows as $r) {
                 $key = strtolower(trim($r['nama'] ?? ''));
-                if ($key !== '') {
-                    $db_files[$key] = $r;
-                    $norm_key = preg_replace('/[^a-z0-9_]/', '_', $key);
-                    if (!isset($db_files[$norm_key])) {
-                        $db_files[$norm_key] = $r;
+                if ($key === '') continue;
+                $norm_key = preg_replace('/[^a-z0-9_]/', '_', $key);
+
+                $is_ps_row = isset($syarat_codes_map[$key]) || isset($syarat_codes_map[$norm_key]) || strpos(strtolower($r['id'] ?? ''), 'fps_') === 0;
+                if ($is_ps_row) {
+                    $r_ts = strtotime($r['date_edit'] ?? ($r['date'] ?? ''));
+                    $r_st = strtolower(trim($r['status_adminlaa'] ?? ($r['status_admin_laa'] ?? ($r['status_admin'] ?? ($r['status_laa'] ?? '')))));
+                    $is_old_approved = (strpos($r_st, 'setuju') !== false || strpos($r_st, 'approved') !== false || $r_st === 'valid');
+
+                    if ($should_purge_all_ps || ($should_purge_pre_downgrade_ps && ($is_old_approved || ($downgrade_ts > 0 && $r_ts > 0 && $r_ts <= $downgrade_ts)))) {
+                        if (!empty($r['file']) && strpos($r['file'], 'Sertifikat_Massal') === false) {
+                            $f_path = FCPATH . 'uploads/persyaratan_ta/' . basename($r['file']);
+                            if (is_file($f_path)) @unlink($f_path);
+                        }
+                        if (!empty($r['id'])) {
+                            $stale_fp_ids[] = $r['id'];
+                        }
+                        continue;
                     }
                 }
+
+                $db_files[$key] = $r;
+                if (!isset($db_files[$norm_key])) {
+                    $db_files[$norm_key] = $r;
+                }
+            }
+
+            if (!empty($stale_fp_ids)) {
+                $this->db->where_in('id', array_values(array_unique($stale_fp_ids)))->delete('file_pendaftaran');
             }
         }
 
@@ -2400,7 +2456,16 @@ class AdminLayanan_model extends CI_Model {
             $nama = $s['nama_berkas'] ?? ($s['nama'] ?? 'Dokumen ' . ($idx + 1));
             $found = $db_files[$kode_lower] ?? ($db_files[$kode_norm] ?? null);
 
-            $file_name = !empty($found['file_name']) ? $found['file_name'] : (!empty($found['file']) ? $found['file'] : ($kode . '_' . $nim_clean . '.pdf'));
+            $raw_file = !empty($found['file_name']) ? $found['file_name'] : (!empty($found['file']) ? $found['file'] : '');
+            $base_file = $raw_file !== '' ? basename($raw_file) : '';
+            $is_dummy_name = (
+                $base_file === ''
+                || strtolower($base_file) === strtolower($kode . '_' . $nim_clean . '.pdf')
+                || preg_match('/^[a-z0-9_]+_' . preg_quote($nim_clean, '/') . '\.pdf$/i', $base_file)
+                || strpos($base_file, 'berkas_') === 0
+            );
+            $is_uploaded = ($found !== null && !$is_dummy_name);
+            $file_name = $is_uploaded ? $raw_file : '';
 
             // Parse status from status_adminlaa / status_admin / status_laa
             $raw_status = '';
@@ -2415,13 +2480,14 @@ class AdminLayanan_model extends CI_Model {
                     $raw_status = $found['status_laa'];
                 }
             }
-            if ($raw_status === '' && $is_fully_approved) {
-                // If student was already fully approved, preserve approval
+            if ($raw_status === '' && $is_fully_approved && $is_uploaded) {
                 $raw_status = 'Disetujui Admin LAA';
             }
 
             $stClean = strtolower(trim($raw_status));
-            if ($stClean === 'valid' || strpos($stClean, 'setuju') !== false || strpos($stClean, 'approved') !== false || $stClean === 'acc') {
+            if ($found === null && !$is_fully_approved) {
+                $status = 'Belum Diunggah';
+            } else if ($stClean === 'valid' || strpos($stClean, 'setuju') !== false || strpos($stClean, 'approved') !== false || $stClean === 'acc') {
                 $status = 'Disetujui Admin LAA';
             } else if ($stClean === 'invalid' || strpos($stClean, 'revisi') !== false || strpos($stClean, 'tolak') !== false || strpos($stClean, 'rejected') !== false) {
                 $status = 'Revisi Admin LAA';
@@ -2430,7 +2496,6 @@ class AdminLayanan_model extends CI_Model {
             }
 
             $catatan = !empty($found['catatan']) ? $found['catatan'] : (!empty($found['komentar']) ? $found['komentar'] : '');
-            $is_uploaded = (!empty($found) && !empty($found['file']) && !preg_match('/^[a-z_]+_\d+\.pdf$/i', basename($found['file'])) && strpos(basename($found['file']), 'berkas_') !== 0);
             $uploaded_at = !empty($found['date_edit']) ? $found['date_edit'] : (!empty($found['date']) ? $found['date'] : null);
 
             $berkas[] = array(
@@ -2439,7 +2504,7 @@ class AdminLayanan_model extends CI_Model {
                 'nama_file'   => $nama,
                 'deskripsi'   => $s['deskripsi'] ?? '',
                 'file_name'   => $file_name,
-                'file_url'    => $this->resolve_pdf_url($file_name),
+                'file_url'    => $is_uploaded ? $this->resolve_pdf_url($file_name) : '',
                 'status'      => $status,
                 'is_valid'    => ($status === 'Disetujui Admin LAA'),
                 'is_uploaded' => $is_uploaded,

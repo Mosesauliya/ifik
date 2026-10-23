@@ -13,19 +13,22 @@ class Mahasiswa_model extends CI_Model {
 
     private function _get_user_id_by_nim($nim) {
         if (empty($nim)) return $nim;
+        $clean = preg_replace('/^(usr_mhs_|mhs_|usr_)/i', '', trim((string)$nim));
         if (!$this->db->table_exists('user')) return $nim;
 
         $prev_debug = $this->db->db_debug;
         $this->db->db_debug = FALSE;
         $u = null;
         try {
-            $u = $this->db->select('id, nim, username')
-                ->group_start()
-                    ->where('nim', $nim)
-                    ->or_where('username', $nim)
-                ->group_end()
-                ->limit(1)
-                ->get('user')->row_array();
+            $this->db->select('id, nim, username')->group_start();
+            $this->db->where('nim', $nim)->or_where('nim', $clean);
+            $this->db->or_where('username', $nim)->or_where('username', $clean);
+            $this->db->or_where('id', $nim)->or_where('id', $clean);
+            if ($this->db->field_exists('nidn_nim', 'user')) {
+                $this->db->or_where('nidn_nim', $nim)->or_where('nidn_nim', $clean);
+            }
+            $this->db->group_end();
+            $u = $this->db->limit(1)->get('user')->row_array();
         } catch (Throwable $e) {
             $u = null;
         }
@@ -36,8 +39,16 @@ class Mahasiswa_model extends CI_Model {
 
     private function _get_target_ids_by_nim($nim) {
         if (empty($nim)) return [];
+        $clean = preg_replace('/^(usr_mhs_|mhs_|usr_)/i', '', trim((string)$nim));
         $userId = $this->_get_user_id_by_nim($nim);
-        return array_values(array_unique(array_filter([$userId, $nim, 'usr_mhs_' . $nim, 'mhs_' . $nim])));
+        return array_values(array_unique(array_filter([
+            (string)$userId,
+            (string)$nim,
+            $clean,
+            'usr_mhs_' . $clean,
+            'mhs_' . $clean,
+            'usr_' . $clean
+        ])));
     }
 
     private function _get_guidance_id_by_nim($nim) {
@@ -2002,14 +2013,20 @@ class Mahasiswa_model extends CI_Model {
 
         $target_rank = $hierarchy[$ke];
         $clean_nim = preg_replace('/^(usr_mhs_|mhs_|usr_)/i', '', trim((string)$nim));
-        $target_mhs_ids = array_values(array_unique(array_filter([
-            (string)$nim,
-            $clean_nim,
-            'usr_mhs_' . $clean_nim,
-            'mhs_' . $clean_nim,
-            'usr_' . $clean_nim,
-            (string)($g['id_mhs'] ?? '')
-        ])));
+        $ids_from_nim  = $this->_get_target_ids_by_nim($nim);
+        $ids_from_gmhs = !empty($g['id_mhs']) ? $this->_get_target_ids_by_nim($g['id_mhs']) : [];
+        $target_mhs_ids = array_values(array_unique(array_filter(array_merge(
+            $ids_from_nim,
+            $ids_from_gmhs,
+            [
+                (string)$nim,
+                $clean_nim,
+                'usr_mhs_' . $clean_nim,
+                'mhs_' . $clean_nim,
+                'usr_' . $clean_nim,
+                (string)($g['id_mhs'] ?? '')
+            ]
+        ))));
 
         // Pastikan kolom status_preview adalah VARCHAR(50) agar mendukung nilai 'persyaratan_sidang'
         $prev_dbg = $this->db->db_debug;
@@ -2178,63 +2195,128 @@ class Mahasiswa_model extends CI_Model {
                 $s_rows = $this->db->select('kode_berkas')->get('syarat_berkas_sidang')->result_array();
                 foreach ($s_rows as $sr) {
                     if (!empty($sr['kode_berkas'])) {
-                        $syarat_codes[] = $sr['kode_berkas'];
+                        $syarat_codes[] = strtolower(trim($sr['kode_berkas']));
                     }
                 }
                 $syarat_codes = array_values(array_unique($syarat_codes));
             }
 
-            if ($this->db->table_exists('file_pendaftaran') && !empty($target_mhs_ids)) {
-                $ps_files = $this->db->group_start()
-                                     ->where_in('id_mhs', $target_mhs_ids)
-                                     ->or_like('id_mhs', $clean_nim)
-                                     ->group_end()
-                                     ->group_start()
-                                     ->where_in('nama', $syarat_codes)
-                                     ->or_like('id', 'fps_' . $clean_nim . '_', 'after')
-                                     ->group_end()
-                                     ->get('file_pendaftaran')
-                                     ->result_array();
-                foreach ($ps_files as $psf) {
-                    if (!empty($psf['file']) && strpos($psf['file'], 'Sertifikat_Massal') === false) {
-                        $ps_base = basename($psf['file']);
-                        $ps_path = FCPATH . 'uploads/persyaratan_ta/' . $ps_base;
-                        if (is_file($ps_path)) @unlink($ps_path);
+            // Daftar kode berkas pendaftaran TA awal yang tetap dipertahankan (tidak boleh ikut terhapus)
+            $ta_awal_codes = ['ksm', 'transkrip', 'pernyataan', 'bebas_lab'];
+            if ($this->db->table_exists('syarat_berkas_ta')) {
+                $ta_rows = $this->db->select('kode_berkas')->get('syarat_berkas_ta')->result_array();
+                foreach ($ta_rows as $tr) {
+                    if (!empty($tr['kode_berkas'])) {
+                        $ta_awal_codes[] = strtolower(trim($tr['kode_berkas']));
                     }
                 }
-                $this->db->group_start()
-                         ->where_in('id_mhs', $target_mhs_ids)
-                         ->or_like('id_mhs', $clean_nim)
-                         ->group_end()
-                         ->group_start()
-                         ->where_in('nama', $syarat_codes)
-                         ->or_like('id', 'fps_' . $clean_nim . '_', 'after')
-                         ->group_end()
-                         ->delete('file_pendaftaran');
+                $ta_awal_codes = array_values(array_unique($ta_awal_codes));
+            }
+
+            if ($this->db->table_exists('file_pendaftaran') && !empty($target_mhs_ids)) {
+                $all_fp = $this->db->group_start()
+                                   ->where_in('id_mhs', $target_mhs_ids)
+                                   ->or_like('id_mhs', $clean_nim)
+                                   ->or_like('id', $clean_nim)
+                                   ->group_end()
+                                   ->get('file_pendaftaran')
+                                   ->result_array();
+                $del_fp_ids = [];
+                $del_fp_names = [];
+                foreach ($all_fp as $psf) {
+                    $nm_raw  = strtolower(trim($psf['nama'] ?? ''));
+                    $nm_norm = preg_replace('/[^a-z0-9_]/', '_', $nm_raw);
+                    $id_raw  = strtolower(trim($psf['id'] ?? ''));
+
+                    $is_ta_awal = in_array($nm_raw, $ta_awal_codes, true)
+                        || in_array($nm_norm, $ta_awal_codes, true)
+                        || strpos($nm_raw, 'ksm') !== false
+                        || strpos($nm_raw, 'transkrip') !== false
+                        || strpos($nm_raw, 'pernyataan') !== false
+                        || strpos($nm_raw, 'bebas') !== false;
+
+                    $is_ps_or_bap = in_array($nm_raw, $syarat_codes, true)
+                        || in_array($nm_norm, $syarat_codes, true)
+                        || strpos($id_raw, 'fps_') === 0
+                        || !$is_ta_awal;
+
+                    if ($is_ps_or_bap) {
+                        if (!empty($psf['file']) && strpos($psf['file'], 'Sertifikat_Massal') === false) {
+                            $ps_base = basename($psf['file']);
+                            foreach (['uploads/persyaratan_ta/', 'uploads/sidang/', 'uploads/bap/'] as $pdir) {
+                                $ps_path = FCPATH . $pdir . $ps_base;
+                                if (is_file($ps_path)) @unlink($ps_path);
+                            }
+                        }
+                        if (!empty($psf['id'])) {
+                            $del_fp_ids[] = $psf['id'];
+                        }
+                        if (!empty($psf['nama'])) {
+                            $del_fp_names[] = $psf['nama'];
+                        }
+                    }
+                }
+                if (!empty($del_fp_ids)) {
+                    $this->db->where_in('id', array_values(array_unique($del_fp_ids)))->delete('file_pendaftaran');
+                }
+                if (!empty($del_fp_names)) {
+                    $this->db->group_start()
+                             ->where_in('id_mhs', $target_mhs_ids)
+                             ->or_like('id_mhs', $clean_nim)
+                             ->group_end()
+                             ->where_in('nama', array_values(array_unique($del_fp_names)))
+                             ->delete('file_pendaftaran');
+                }
             }
 
             if ($this->db->table_exists('pendaftaran_berkas') && !empty($target_mhs_ids)) {
-                $this->db->where_in('nim', $target_mhs_ids)
+                $pb_rows = $this->db->group_start()
+                                    ->where_in('nim', $target_mhs_ids)
+                                    ->or_like('nim', $clean_nim)
+                                    ->group_end()
+                                    ->get('pendaftaran_berkas')
+                                    ->result_array();
+                $del_pb_ids = [];
+                foreach ($pb_rows as $pbr) {
+                    $kb_raw  = strtolower(trim($pbr['kode_berkas'] ?? ''));
+                    $kb_norm = preg_replace('/[^a-z0-9_]/', '_', $kb_raw);
+                    $is_ta_awal = in_array($kb_raw, $ta_awal_codes, true)
+                        || in_array($kb_norm, $ta_awal_codes, true)
+                        || strpos($kb_raw, 'ksm') !== false
+                        || strpos($kb_raw, 'transkrip') !== false
+                        || strpos($kb_raw, 'pernyataan') !== false
+                        || strpos($kb_raw, 'bebas') !== false;
+                    if (in_array($kb_raw, $syarat_codes, true) || in_array($kb_norm, $syarat_codes, true) || !$is_ta_awal) {
+                        if (!empty($pbr['file_name']) && strpos($pbr['file_name'], 'Sertifikat_Massal') === false) {
+                            $pb_path = FCPATH . 'uploads/persyaratan_ta/' . basename($pbr['file_name']);
+                            if (is_file($pb_path)) @unlink($pb_path);
+                        }
+                        if (!empty($pbr['id'])) {
+                            $del_pb_ids[] = $pbr['id'];
+                        }
+                    }
+                }
+                if (!empty($del_pb_ids)) {
+                    $this->db->where_in('id', array_values(array_unique($del_pb_ids)))->delete('pendaftaran_berkas');
+                }
+                $this->db->group_start()
+                         ->where_in('nim', $target_mhs_ids)
+                         ->or_like('nim', $clean_nim)
+                         ->group_end()
                          ->where_in('kode_berkas', $syarat_codes)
                          ->delete('pendaftaran_berkas');
             }
         }
 
-        // Jika target rank <= 2 (turun ke Preview 2 atau Preview 1), reset nilai & jadwal Desk Evaluation (DE) Preview 2 serta hapus rekomendasi P1
-        if ($target_rank <= 2) {
-            $de_reset_cols = [
-                'kelayakan2', 'nilai_pembimbing1', 'nilai_pembimbing2', 'nilai_penguji1', 'nilai_penguji2',
-                'penilaian_pembimbing1', 'penilaian_pembimbing2', 'penilaian_penguji1', 'penilaian_penguji2',
-                'tanggal_presentasi', 'waktu_presentasi', 'link_presentasi', 'komentar_kelayakan2'
-            ];
-            foreach ($de_reset_cols as $dc) {
-                if ($this->db->field_exists($dc, 'guidance')) {
-                    $update_g[$dc] = null;
-                }
-            }
-
-            if ($this->db->table_exists('rekomen_submission')) {
-                $sub = $this->db->where_in('nim', $target_mhs_ids)->get('rekomen_submission')->result_array();
+        // Jika target rank <= 3 (turun ke Preview 3, Preview 2, atau Preview 1), hapus rekomendasi P1 & eviden di rekomen_submission
+        if ($target_rank <= 3) {
+            if ($this->db->table_exists('rekomen_submission') && !empty($target_mhs_ids)) {
+                $sub = $this->db->group_start()
+                                ->where_in('nim', $target_mhs_ids)
+                                ->or_like('nim', $clean_nim)
+                                ->group_end()
+                                ->get('rekomen_submission')
+                                ->result_array();
                 foreach ($sub as $s) {
                     if (!empty($s['form_data_json'])) {
                         $fjson = json_decode($s['form_data_json'], true);
@@ -2253,7 +2335,25 @@ class Mahasiswa_model extends CI_Model {
                         }
                     }
                 }
-                $this->db->where_in('nim', $target_mhs_ids)->delete('rekomen_submission');
+                $this->db->group_start()
+                         ->where_in('nim', $target_mhs_ids)
+                         ->or_like('nim', $clean_nim)
+                         ->group_end()
+                         ->delete('rekomen_submission');
+            }
+        }
+
+        // Jika target rank <= 2 (turun ke Preview 2 atau Preview 1), reset nilai & jadwal Desk Evaluation (DE) Preview 2
+        if ($target_rank <= 2) {
+            $de_reset_cols = [
+                'kelayakan2', 'nilai_pembimbing1', 'nilai_pembimbing2', 'nilai_penguji1', 'nilai_penguji2',
+                'penilaian_pembimbing1', 'penilaian_pembimbing2', 'penilaian_penguji1', 'penilaian_penguji2',
+                'tanggal_presentasi', 'waktu_presentasi', 'link_presentasi', 'komentar_kelayakan2'
+            ];
+            foreach ($de_reset_cols as $dc) {
+                if ($this->db->field_exists($dc, 'guidance')) {
+                    $update_g[$dc] = null;
+                }
             }
         }
 

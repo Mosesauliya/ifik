@@ -203,7 +203,7 @@ class Dosen_bimbingan extends CI_Controller {
         foreach ($berkas_ps as $bps) {
             $is_req = !empty($bps['is_required']);
             if ($is_req) $ps_req_total++;
-            if (!empty($bps['is_uploaded']) || !empty($bps['in_db'])) {
+            if (!empty($bps['is_uploaded'])) {
                 $ps_uploaded++;
             }
             if (($bps['status'] ?? '') === 'Disetujui Admin LAA') {
@@ -214,14 +214,21 @@ class Dosen_bimbingan extends CI_Controller {
             }
         }
         $fs_status = strtolower(trim($data['pendaftaran']['status_filesidang'] ?? ''));
-        $is_ps_app = in_array($fs_status, ['disetujui admin laa', 'approved', 'disetujui', 'lulus'], true)
-            || strpos($fs_status, 'disetujui') !== false
-            || (!empty($berkas_ps) && $ps_approved === count($berkas_ps))
-            || ($ps_req_total > 0 && $ps_req_approved === $ps_req_total && $ps_revision === 0);
+        $sp_status = strtolower(trim($data['pendaftaran']['status_preview'] ?? ''));
+        $lulus_p3_flag = (!empty($data['latest_p3']['lulus_preview3']) && (string)$data['latest_p3']['lulus_preview3'] === '1')
+            || (!empty($data['pendaftaran']['lulus_preview3']) && (string)$data['pendaftaran']['lulus_preview3'] === '1');
+        $is_ps_app = $lulus_p3_flag
+            && !in_array($sp_status, ['preview1', 'preview2', 'preview3'], true)
+            && (
+                in_array($fs_status, ['disetujui admin laa', 'approved', 'disetujui', 'lulus'], true)
+                || strpos($fs_status, 'disetujui') !== false
+                || ($ps_uploaded > 0 && !empty($berkas_ps) && $ps_approved === count($berkas_ps))
+                || ($ps_uploaded > 0 && $ps_req_total > 0 && $ps_req_approved === $ps_req_total && $ps_revision === 0)
+            );
         $data['berkas_syarat_sidang'] = $berkas_ps;
         $data['upload_count_ps']      = $ps_uploaded;
         $data['is_ps_app']            = $is_ps_app;
-        $data['is_ps_revision']       = ($ps_revision > 0 || strpos($fs_status, 'revisi') !== false);
+        $data['is_ps_revision']       = ($lulus_p3_flag && !in_array($sp_status, ['preview1', 'preview2', 'preview3'], true)) && ($ps_revision > 0 || strpos($fs_status, 'revisi') !== false);
 
         $this->load->view('mahasiswa/bimbingan_preview1', $data);
     }
@@ -802,7 +809,7 @@ class Dosen_bimbingan extends CI_Controller {
             foreach ($berkas_ps as $bps) {
                 $is_req = !empty($bps['is_required']);
                 if ($is_req) $ps_req_total++;
-                if (!empty($bps['is_uploaded']) || !empty($bps['in_db'])) $ps_uploaded++;
+                if (!empty($bps['is_uploaded'])) $ps_uploaded++;
                 if (($bps['status'] ?? '') === 'Disetujui Admin LAA') {
                     $ps_approved++;
                     if ($is_req) $ps_req_approved++;
@@ -812,10 +819,22 @@ class Dosen_bimbingan extends CI_Controller {
             }
             $g_curr = $this->Mahasiswa_model->get_guidance_by_nim($nim);
             $fs_status = strtolower(trim($g_curr['status_filesidang'] ?? ''));
-            $is_ps_app = in_array($fs_status, ['disetujui admin laa', 'approved', 'disetujui', 'lulus'], true)
-                || strpos($fs_status, 'disetujui') !== false
-                || (!empty($berkas_ps) && $ps_approved === count($berkas_ps))
-                || ($ps_req_total > 0 && $ps_req_approved === $ps_req_total && $ps_revision === 0);
+            $sp_status = strtolower(trim($g_curr['status_preview'] ?? ''));
+            $is_p1_app_sse = (!empty($riwayat_p1[0]['lulus_preview1']) && (string)$riwayat_p1[0]['lulus_preview1'] === '1')
+                || (!empty($g_curr['lulus_preview1']) && (string)$g_curr['lulus_preview1'] === '1');
+            $is_p2_app_sse = (!empty($riwayat_p2[0]['lulus_preview2']) && (string)$riwayat_p2[0]['lulus_preview2'] === '1')
+                || (!empty($g_curr['lulus_preview2']) && (string)$g_curr['lulus_preview2'] === '1');
+            $is_p3_app_sse = (!empty($riwayat_p3[0]['lulus_preview3']) && (string)$riwayat_p3[0]['lulus_preview3'] === '1')
+                || (!empty($g_curr['lulus_preview3']) && (string)$g_curr['lulus_preview3'] === '1');
+
+            $is_ps_app = $is_p3_app_sse
+                && !in_array($sp_status, ['preview1', 'preview2', 'preview3'], true)
+                && (
+                    in_array($fs_status, ['disetujui admin laa', 'approved', 'disetujui', 'lulus'], true)
+                    || strpos($fs_status, 'disetujui') !== false
+                    || ($ps_uploaded > 0 && !empty($berkas_ps) && $ps_approved === count($berkas_ps))
+                    || ($ps_uploaded > 0 && $ps_req_total > 0 && $ps_req_approved === $ps_req_total && $ps_revision === 0)
+                );
 
             $data = [
                 'riwayat_p1'          => $riwayat_p1,
@@ -831,11 +850,11 @@ class Dosen_bimbingan extends CI_Controller {
                 'upload_count_p3'     => count($riwayat_p3),
                 'upload_count_ps'     => $ps_uploaded,
                 'upload_count_sidang' => count($riwayat_sidang),
-                'is_p1_app'           => (bool)(!empty($riwayat_p1[0]['lulus_preview1']) && (string)$riwayat_p1[0]['lulus_preview1'] === '1'),
-                'is_p2_app'           => (bool)(!empty($riwayat_p2[0]['lulus_preview2']) && (string)$riwayat_p2[0]['lulus_preview2'] === '1'),
-                'is_p3_app'           => (bool)(!empty($riwayat_p3[0]['lulus_preview3']) && (string)$riwayat_p3[0]['lulus_preview3'] === '1'),
+                'is_p1_app'           => (bool)$is_p1_app_sse,
+                'is_p2_app'           => (bool)$is_p2_app_sse,
+                'is_p3_app'           => (bool)$is_p3_app_sse,
                 'is_ps_app'           => $is_ps_app,
-                'is_ps_revision'      => ($ps_revision > 0 || strpos($fs_status, 'revisi') !== false),
+                'is_ps_revision'      => ($is_p3_app_sse && !in_array($sp_status, ['preview1', 'preview2', 'preview3'], true)) && ($ps_revision > 0 || strpos($fs_status, 'revisi') !== false),
                 'berkas_syarat_sidang'=> $berkas_ps,
                 'has_app_bimbingan'   => $has_app_bimbingan,
                 'has_app_sitasi'      => $has_app_sitasi,

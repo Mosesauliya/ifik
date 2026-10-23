@@ -337,29 +337,27 @@
             $curr_n1 = '';
             $curr_n2 = '';
 
-            if ($stage_row) {
+            if ($is_p3_app) {
+                if ($is_ps_app) {
+                    $curr_status = 'Lulus Persyaratan Sidang (Siap Sidang TA)';
+                    $curr_tone = 'text-emerald-300'; $curr_icon = 'bi-check-circle-fill';
+                } elseif ($is_ps_revision) {
+                    $curr_status = 'Persyaratan Sidang Perlu Revisi (Admin LAA)';
+                    $curr_tone = 'text-rose-300'; $curr_icon = 'bi-x-circle-fill';
+                } elseif ($upload_count_ps > 0) {
+                    $curr_status = 'Persyaratan Sidang Diverifikasi Admin LAA';
+                    $curr_tone = 'text-amber-200'; $curr_icon = 'bi-clock-fill';
+                } else {
+                    $curr_status = 'Lulus Tahap Preview 3 (Lanjut Persyaratan Sidang)';
+                    $curr_tone = 'text-emerald-300'; $curr_icon = 'bi-check-circle-fill';
+                }
+            } elseif ($stage_row) {
                 $is_curr_lulus = (!empty($stage_row['lulus_preview' . $stage_no]) && (string)$stage_row['lulus_preview' . $stage_no] === '1')
                               || (!empty($pendaftaran['lulus_preview' . $stage_no]) && (string)$pendaftaran['lulus_preview' . $stage_no] === '1');
                 $st = $stage_row['status_pembimbing'] ?? '';
                 if ($is_curr_lulus) {
-                    if ($stage_no === 3) {
-                        if ($is_ps_app) {
-                            $curr_status = 'Lulus Persyaratan Sidang (Siap Sidang TA)';
-                            $curr_tone = 'text-emerald-300'; $curr_icon = 'bi-check-circle-fill';
-                        } elseif ($is_ps_revision) {
-                            $curr_status = 'Persyaratan Sidang Perlu Revisi (Admin LAA)';
-                            $curr_tone = 'text-rose-300'; $curr_icon = 'bi-x-circle-fill';
-                        } elseif ($upload_count_ps > 0) {
-                            $curr_status = 'Persyaratan Sidang Diverifikasi Admin LAA';
-                            $curr_tone = 'text-amber-200'; $curr_icon = 'bi-clock-fill';
-                        } else {
-                            $curr_status = 'Lulus Tahap Preview 3 (Lanjut Persyaratan Sidang)';
-                            $curr_tone = 'text-emerald-300'; $curr_icon = 'bi-check-circle-fill';
-                        }
-                    } else {
-                        $curr_status = 'Lulus Tahap Preview ' . $stage_no . $next_label[$stage_no];
-                        $curr_tone = 'text-emerald-300'; $curr_icon = 'bi-check-circle-fill';
-                    }
+                    $curr_status = 'Lulus Tahap Preview ' . $stage_no . $next_label[$stage_no];
+                    $curr_tone = 'text-emerald-300'; $curr_icon = 'bi-check-circle-fill';
                 } elseif ($st === 'Approved') {
                     $curr_status = 'Berkas Preview ' . $stage_no . ' Disetujui (Menunggu Lulus Tahap)';
                     $curr_tone = 'text-amber-200'; $curr_icon = 'bi-clock-fill';
@@ -374,6 +372,12 @@
                     $curr_n1 = trim(strip_tags($stage_row['catatan_pembimbing'] ?? '')) !== '' ? $stage_row['catatan_pembimbing'] : '';
                 }
                 $curr_n2 = trim(strip_tags($stage_row['catatan_pembimbing_2'] ?? '')) !== '' ? $stage_row['catatan_pembimbing_2'] : '';
+            } elseif ($is_p2_app) {
+                $curr_status = 'Lulus Tahap Preview 2 (Lanjut Preview 3)';
+                $curr_tone = 'text-emerald-300'; $curr_icon = 'bi-check-circle-fill';
+            } elseif ($is_p1_app) {
+                $curr_status = 'Lulus Tahap Preview 1 (Lanjut Preview 2)';
+                $curr_tone = 'text-emerald-300'; $curr_icon = 'bi-check-circle-fill';
             }
 
             // ---------- Sub-label & state milestone chip ----------
@@ -3511,9 +3515,9 @@
                     if (!res.status) throw new Error(res.message || 'Gagal memuat data.');
 
                     const uploaded = (res.uploaded || []).filter(b => {
-                        if (!b || !b.file_name) return false;
+                        if (!b || !b.is_uploaded || !b.file_name) return false;
                         if (b.file_name.startsWith('berkas_')) return false;
-                        if (/^[a-z_]+_\d+\.pdf$/i.test(b.file_name)) return false;
+                        if (/^[a-z0-9_]+_\d+\.pdf$/i.test(b.file_name)) return false;
                         return true;
                     });
 
