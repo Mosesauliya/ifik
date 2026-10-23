@@ -800,15 +800,15 @@
 
             <!-- Mobile Tab Switcher (Hanya Muncul di Tampilan Layar HP / < lg) -->
             <div class="block lg:hidden px-3 py-2 bg-slate-100 border-b border-slate-200 shrink-0">
-                <div class="grid grid-cols-2 p-1 bg-slate-200/90 rounded-xl text-xs font-bold gap-1 select-none">
-                    <button type="button" onclick="switchMobileModalTab('input')" id="m1TabBtnInput" class="py-2 px-2.5 rounded-lg transition flex items-center justify-center gap-1.5 bg-white text-orange-700 shadow-xs cursor-pointer">
-                        <i class="fa-solid fa-list-check"></i>
-                        <span>Hasil Input KRS</span>
-                        <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-orange-100 text-orange-800 font-mono" id="m1TabBadgeMk">0 MK</span>
+                <div class="grid grid-cols-2 p-1 bg-slate-200/90 rounded-xl text-[11px] sm:text-xs font-bold gap-1 select-none">
+                    <button type="button" onclick="switchMobileModalTab('input')" id="m1TabBtnInput" class="py-2 px-2 rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap bg-white text-orange-700 shadow-xs cursor-pointer">
+                        <i class="fa-solid fa-list-check shrink-0"></i>
+                        <span class="truncate">Input KRS</span>
+                        <span class="text-[10px] leading-none px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-800 font-mono whitespace-nowrap shrink-0" id="m1TabBadgeMk">0 MK</span>
                     </button>
-                    <button type="button" onclick="switchMobileModalTab('berkas')" id="m1TabBtnBerkas" class="py-2 px-2.5 rounded-lg transition flex items-center justify-center gap-1.5 text-slate-600 hover:text-slate-900 cursor-pointer">
-                        <i class="fa-solid fa-file-pdf text-rose-500"></i>
-                        <span>Berkas KRS Fisik</span>
+                    <button type="button" onclick="switchMobileModalTab('berkas')" id="m1TabBtnBerkas" class="py-2 px-2 rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap text-slate-600 hover:text-slate-900 cursor-pointer">
+                        <i class="fa-solid fa-file-pdf text-rose-500 shrink-0"></i>
+                        <span class="truncate">Berkas KRS</span>
                     </button>
                 </div>
             </div>
@@ -936,10 +936,10 @@
                     panelInput.classList.remove('flex');
                 }
                 if (btnBerkas) {
-                    btnBerkas.className = "py-2 px-2.5 rounded-lg transition flex items-center justify-center gap-1.5 bg-white text-orange-700 shadow-xs cursor-pointer";
+                    btnBerkas.className = "py-2 px-2 rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap bg-white text-orange-700 shadow-xs cursor-pointer";
                 }
                 if (btnInput) {
-                    btnInput.className = "py-2 px-2.5 rounded-lg transition flex items-center justify-center gap-1.5 text-slate-600 hover:text-slate-900 cursor-pointer";
+                    btnInput.className = "py-2 px-2 rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap text-slate-600 hover:text-slate-900 cursor-pointer";
                 }
             } else {
                 if (panelBerkas) {
@@ -951,10 +951,10 @@
                     panelInput.classList.add('flex');
                 }
                 if (btnInput) {
-                    btnInput.className = "py-2 px-2.5 rounded-lg transition flex items-center justify-center gap-1.5 bg-white text-orange-700 shadow-xs cursor-pointer";
+                    btnInput.className = "py-2 px-2 rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap bg-white text-orange-700 shadow-xs cursor-pointer";
                 }
                 if (btnBerkas) {
-                    btnBerkas.className = "py-2 px-2.5 rounded-lg transition flex items-center justify-center gap-1.5 text-slate-600 hover:text-slate-900 cursor-pointer";
+                    btnBerkas.className = "py-2 px-2 rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap text-slate-600 hover:text-slate-900 cursor-pointer";
                 }
             }
         }
