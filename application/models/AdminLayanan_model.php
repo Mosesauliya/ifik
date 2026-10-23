@@ -370,13 +370,25 @@ class AdminLayanan_model extends CI_Model {
                 if ($this->db->field_exists('nim', $user_tbl)) $this->db->where('nim', $clean_nim);
                 if ($this->db->field_exists('nidn_nim', $user_tbl)) $this->db->or_where('nidn_nim', $clean_nim);
                 if ($this->db->field_exists('username', $user_tbl)) $this->db->or_where('username', $clean_nim);
+                if ($this->db->field_exists('id', $user_tbl)) $this->db->or_where('id', $clean_nim)->or_where('id', $nim);
                 $this->db->group_end();
                 $u = $this->db->get($user_tbl)->row_array();
-                if ($u && !empty($u['id'])) {
-                    $ids[] = $u['id'];
-                    $ids[] = (string)$u['id'];
-                    $ids[] = 'usr_mhs_' . $u['id'];
-                    $ids[] = 'mhs_' . $u['id'];
+                if ($u) {
+                    if (!empty($u['id'])) {
+                        $ids[] = $u['id'];
+                        $ids[] = (string)$u['id'];
+                        $ids[] = 'usr_mhs_' . $u['id'];
+                        $ids[] = 'mhs_' . $u['id'];
+                    }
+                    $u_nim = $u['nim'] ?? ($u['nidn_nim'] ?? ($u['username'] ?? ''));
+                    if (!empty($u_nim)) {
+                        $u_nim_clean = preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', (string)$u_nim);
+                        $ids[] = $u_nim;
+                        $ids[] = $u_nim_clean;
+                        $ids[] = 'usr_mhs_' . $u_nim_clean;
+                        $ids[] = 'mhs_' . $u_nim_clean;
+                        $ids[] = 'usr_' . $u_nim_clean;
+                    }
                 }
             } catch (Throwable $e) {
                 // ignore
@@ -1962,6 +1974,8 @@ class AdminLayanan_model extends CI_Model {
                 g.scoreeprt,
                 g.scoretak,
                 g.status_filesidang,
+                g.status_preview,
+                g.lulus_preview3,
                 g.komentar_pendaftaran_sidang,
                 g.jenis_TA,
                 g.tanggal_sidang,
@@ -2010,16 +2024,6 @@ class AdminLayanan_model extends CI_Model {
                 $this->db->or_like('g.jenis_TA', 'Jurnal');
                 $this->db->or_like('g.jenis_TA', 'HKI');
                 $this->db->or_like('g.jenis_TA', 'PROYEK');
-                $this->db->group_end();
-            }
-
-            // Filter Status
-            if ($filter_status === 'disetujui') {
-                $this->db->where_in('g.status_filesidang', ['Disetujui Admin LAA', 'Approved', 'Disetujui', 'Lulus']);
-            } elseif ($filter_status === 'pending') {
-                $this->db->group_start();
-                $this->db->where_in('g.status_filesidang', ['Pending', 'Belum Disetujui', 'Draft']);
-                $this->db->or_where('g.status_filesidang IS NULL', null, false);
                 $this->db->group_end();
             }
 
@@ -2079,6 +2083,71 @@ class AdminLayanan_model extends CI_Model {
                 $nim = $r['nim'] ?: $r['id_mhs'];
                 $isNonSidang = in_array($r['jenis_TA'], ['TA Jurnal', 'TA HKI', 'TA PROYEK', 'TA Lainnya', 'Non-Sidang', 'Publikasi']);
                 $st = !empty($r['status_filesidang']) ? $r['status_filesidang'] : 'Pending Verifikasi';
+                $isApp = (strpos(strtolower($st), 'disetujui') !== false || strpos(strtolower($st), 'approved') !== false || strtolower(trim($st)) === 'lulus');
+
+                // Auto-sync jika berkas pendaftaran sidang mahasiswa sudah di-ACC seluruhnya di file_pendaftaran
+                if (!$isApp) {
+                    $berkas_mhs = $this->get_berkas_pendaftaran_sidang($nim);
+                    if (!empty($berkas_mhs)) {
+                        $total_b   = count($berkas_mhs);
+                        $req_b     = 0;
+                        $req_val_b = 0;
+                        $val_b     = 0;
+                        $rev_b     = 0;
+                        $db_b      = 0;
+                        $db_val_b  = 0;
+
+                        foreach ($berkas_mhs as $bm) {
+                            $is_req_item = !empty($bm['is_required']);
+                            $is_val_item = ($bm['status'] === 'Disetujui Admin LAA');
+                            $is_rev_item = ($bm['status'] === 'Revisi Admin LAA');
+                            if ($is_req_item) {
+                                $req_b++;
+                                if ($is_val_item) $req_val_b++;
+                            }
+                            if ($is_val_item) $val_b++;
+                            if ($is_rev_item) $rev_b++;
+                            if (!empty($bm['in_db'])) {
+                                $db_b++;
+                                if ($is_val_item) $db_val_b++;
+                            }
+                        }
+
+                        if ($rev_b > 0) {
+                            $st = 'Revisi Admin LAA';
+                        } elseif (
+                            ($total_b > 0 && $val_b === $total_b) ||
+                            ($req_b > 0 && $req_val_b === $req_b) ||
+                            ($db_b > 0 && $db_val_b === $db_b && $db_b >= max(1, $req_b))
+                        ) {
+                            $st = 'Disetujui Admin LAA';
+                            $isApp = true;
+                            $upd_g = ['status_filesidang' => 'Disetujui Admin LAA'];
+                            if ($this->db->field_exists('status_preview', 'guidance')) {
+                                $sp_curr = strtolower(trim($r['status_preview'] ?? ''));
+                                if (!empty($r['lulus_preview3']) || in_array($sp_curr, ['preview3', 'persyaratan_sidang', 'persyaratansidang', ''], true)) {
+                                    $upd_g['status_preview'] = 'sidang';
+                                }
+                            }
+                            $this->db->where('id', $r['guidance_id'])->update('guidance', $upd_g);
+                        }
+                    }
+                } else {
+                    // Jika sudah Disetujui tetapi status_preview masih tertahan di preview3 / persyaratan_sidang, majukan ke sidang
+                    if ($this->db->field_exists('status_preview', 'guidance')) {
+                        $sp_curr = strtolower(trim($r['status_preview'] ?? ''));
+                        if (!empty($r['lulus_preview3']) && in_array($sp_curr, ['preview3', 'persyaratan_sidang', 'persyaratansidang'], true)) {
+                            $this->db->where('id', $r['guidance_id'])->update('guidance', ['status_preview' => 'sidang']);
+                        }
+                    }
+                }
+
+                // Filter Status setelah sinkronisasi
+                if ($filter_status === 'disetujui' && !$isApp) {
+                    continue;
+                } elseif ($filter_status === 'pending' && $isApp) {
+                    continue;
+                }
 
                 $result[] = array(
                     'guidance_id'   => $r['guidance_id'],
@@ -2096,7 +2165,7 @@ class AdminLayanan_model extends CI_Model {
                     'is_non_sidang' => $isNonSidang,
                     'tahap'         => 'Sidang',
                     'status'        => $st,
-                    'is_approved'   => (strpos(strtolower($st), 'disetujui') !== false || strpos(strtolower($st), 'approved') !== false),
+                    'is_approved'   => $isApp,
                     'judul'         => $r['judul_1'] ?: 'Perancangan Kampanye Sosial Visual Komunikasi',
                     'ipk'           => $r['ipk'] ?: 3.72,
                     'totalsks'      => $r['totalsks'] ?: 141,
@@ -2282,48 +2351,76 @@ class AdminLayanan_model extends CI_Model {
      */
     public function get_berkas_pendaftaran_sidang($nim) {
         $master_syarat = $this->get_master_syarat_sidang();
-        $nim_clean = preg_replace('/^usr_mhs_/', '', $nim);
-        $nim_prefixed = 'usr_mhs_' . $nim_clean;
+        $nim_clean = preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', (string)$nim);
+        $target_ids = $this->get_student_target_ids($nim);
 
-        // Check if student is already fully approved (completed)
-        $detail = $this->get_detail_pendaftaran_sidang($nim);
-        $is_fully_approved = !empty($detail['is_approved']);
+        // Check if student is already fully approved directly from guidance
+        $is_fully_approved = false;
+        if ($this->db->table_exists('guidance')) {
+            $g_check = $this->db->group_start()
+                                ->where_in('id_mhs', $target_ids)
+                                ->or_where_in('id', $target_ids)
+                                ->group_end()
+                                ->get('guidance')
+                                ->row_array();
+            if ($g_check && !empty($g_check['status_filesidang'])) {
+                $g_st = strtolower(trim($g_check['status_filesidang']));
+                if (strpos($g_st, 'disetujui') !== false || strpos($g_st, 'approved') !== false || $g_st === 'lulus') {
+                    $is_fully_approved = true;
+                }
+            }
+        }
 
-        // Cek apakah ada record di file_pendaftaran
+        // Cek apakah ada record di file_pendaftaran menggunakan seluruh target_ids
         $db_files = array();
         if ($this->db->table_exists('file_pendaftaran')) {
             $rows = $this->db->group_start()
-                             ->where('id_mhs', $nim)
-                             ->or_where('id_mhs', $nim_clean)
-                             ->or_where('id_mhs', $nim_prefixed)
+                             ->where_in('id_mhs', $target_ids)
+                             ->or_like('id_mhs', $nim_clean)
                              ->group_end()
                              ->get('file_pendaftaran')
                              ->result_array();
             foreach ($rows as $r) {
-                $db_files[strtolower(trim($r['nama']))] = $r;
+                $key = strtolower(trim($r['nama'] ?? ''));
+                if ($key !== '') {
+                    $db_files[$key] = $r;
+                    $norm_key = preg_replace('/[^a-z0-9_]/', '_', $key);
+                    if (!isset($db_files[$norm_key])) {
+                        $db_files[$norm_key] = $r;
+                    }
+                }
             }
         }
 
         $berkas = array();
         foreach ($master_syarat as $idx => $s) {
             $kode = $s['kode_berkas'] ?? ($s['kode'] ?? 'berkas_' . ($idx + 1));
+            $kode_lower = strtolower(trim($kode));
+            $kode_norm  = preg_replace('/[^a-z0-9_]/', '_', $kode_lower);
             $nama = $s['nama_berkas'] ?? ($s['nama'] ?? 'Dokumen ' . ($idx + 1));
-            $found = $db_files[$kode] ?? null;
+            $found = $db_files[$kode_lower] ?? ($db_files[$kode_norm] ?? null);
 
-            $file_name = !empty($found['file_name']) ? $found['file_name'] : (!empty($found['file']) ? $found['file'] : ($kode . '_' . $nim . '.pdf'));
+            $file_name = !empty($found['file_name']) ? $found['file_name'] : (!empty($found['file']) ? $found['file'] : ($kode . '_' . $nim_clean . '.pdf'));
 
-            // Parse status from status_adminlaa
+            // Parse status from status_adminlaa / status_admin / status_laa
             $raw_status = '';
             if ($found) {
                 if (!empty($found['status_adminlaa'])) {
                     $raw_status = $found['status_adminlaa'];
+                } elseif (!empty($found['status_admin_laa'])) {
+                    $raw_status = $found['status_admin_laa'];
+                } elseif (!empty($found['status_admin'])) {
+                    $raw_status = $found['status_admin'];
+                } elseif (!empty($found['status_laa'])) {
+                    $raw_status = $found['status_laa'];
                 }
-            } else if ($is_fully_approved) {
-                // If student was already fully approved before this new requirement item was added, preserve approval
+            }
+            if ($raw_status === '' && $is_fully_approved) {
+                // If student was already fully approved, preserve approval
                 $raw_status = 'Disetujui Admin LAA';
             }
 
-            $stClean = strtolower($raw_status);
+            $stClean = strtolower(trim($raw_status));
             if ($stClean === 'valid' || strpos($stClean, 'setuju') !== false || strpos($stClean, 'approved') !== false || $stClean === 'acc') {
                 $status = 'Disetujui Admin LAA';
             } else if ($stClean === 'invalid' || strpos($stClean, 'revisi') !== false || strpos($stClean, 'tolak') !== false || strpos($stClean, 'rejected') !== false) {
@@ -2346,6 +2443,7 @@ class AdminLayanan_model extends CI_Model {
                 'status'      => $status,
                 'is_valid'    => ($status === 'Disetujui Admin LAA'),
                 'is_uploaded' => $is_uploaded,
+                'in_db'       => ($found !== null),
                 'uploaded_at' => $uploaded_at,
                 'catatan'     => $catatan,
                 'is_required' => $s['is_required'] ?? 1
@@ -2359,43 +2457,92 @@ class AdminLayanan_model extends CI_Model {
      * Update status berkas pendaftaran sidang mahasiswa
      */
     public function save_status_berkas_sidang($nim, $kode_berkas, $status, $catatan = '') {
-        $nim_clean = preg_replace('/^usr_mhs_/', '', $nim);
-        $nim_prefixed = 'usr_mhs_' . $nim_clean;
+        $this->clear_cache();
+        $nim_clean = preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', (string)$nim);
+        $target_ids = $this->get_student_target_ids($nim);
 
         // Standardize status representation
-        $st_lower = strtolower($status);
+        $st_lower = strtolower(trim($status));
         if ($st_lower === 'valid' || strpos($st_lower, 'setuju') !== false || strpos($st_lower, 'approved') !== false || $st_lower === 'acc') {
             $disp_status = 'Disetujui Admin LAA';
+            $fp_short    = 'Approved';
         } else if ($st_lower === 'invalid' || strpos($st_lower, 'revisi') !== false || strpos($st_lower, 'tolak') !== false || strpos($st_lower, 'rejected') !== false) {
             $disp_status = 'Revisi Admin LAA';
+            $fp_short    = 'Rejected';
         } else {
             $disp_status = 'Pending Verifikasi';
+            $fp_short    = 'Pending';
         }
 
         if ($this->db->table_exists('file_pendaftaran')) {
-            $this->db->group_start()
-                     ->where('id_mhs', $nim)
-                     ->or_where('id_mhs', $nim_clean)
-                     ->or_where('id_mhs', $nim_prefixed)
-                     ->group_end()
-                     ->where('nama', $kode_berkas)
-                     ->update('file_pendaftaran', [
-                         'status_adminlaa' => $disp_status,
-                         'komentar'        => $catatan,
-                         'date_edit'       => date('Y-m-d H:i:s')
-                     ]);
+            $existing = $this->db->group_start()
+                                 ->where_in('id_mhs', $target_ids)
+                                 ->or_like('id_mhs', $nim_clean)
+                                 ->group_end()
+                                 ->where('nama', $kode_berkas)
+                                 ->get('file_pendaftaran')
+                                 ->result_array();
+
+            $fp_upd = [
+                'status_adminlaa' => $disp_status,
+                'komentar'        => $catatan,
+                'date_edit'       => date('Y-m-d H:i:s')
+            ];
+            if ($this->db->field_exists('status_admin', 'file_pendaftaran')) {
+                $fp_upd['status_admin'] = $fp_short;
+            }
+            if ($this->db->field_exists('status_laa', 'file_pendaftaran')) {
+                $fp_upd['status_laa'] = $fp_short;
+            }
+            if ($this->db->field_exists('status_admin_laa', 'file_pendaftaran')) {
+                $fp_upd['status_admin_laa'] = $disp_status;
+            }
+            if ($this->db->field_exists('view_adminlaa', 'file_pendaftaran')) {
+                $fp_upd['view_adminlaa'] = ($fp_short === 'Pending') ? 0 : 1;
+            }
+
+            if (!empty($existing)) {
+                $this->db->group_start()
+                         ->where_in('id_mhs', $target_ids)
+                         ->or_like('id_mhs', $nim_clean)
+                         ->group_end()
+                         ->where('nama', $kode_berkas)
+                         ->update('file_pendaftaran', $fp_upd);
+            } else {
+                $u_id = !empty($target_ids) ? $target_ids[0] : ('usr_mhs_' . $nim_clean);
+                $ins_fp = array_merge([
+                    'id'            => 'fps_' . $nim_clean . '_' . $kode_berkas . '_' . time(),
+                    'id_mhs'        => $u_id,
+                    'nama'          => $kode_berkas,
+                    'file'          => $kode_berkas . '_' . $nim_clean . '.pdf',
+                    'date'          => date('Y-m-d H:i:s'),
+                    'view_doswal'   => 1,
+                    'status_doswal' => 'Approved'
+                ], $fp_upd);
+                $this->db->insert('file_pendaftaran', $ins_fp);
+            }
         }
 
         // Auto-evaluate overall guidance status for defense registration
+        $overall_status = 'Pending Verifikasi';
         if ($this->db->table_exists('guidance')) {
             $all_berkas = $this->get_berkas_pendaftaran_sidang($nim_clean);
             $total_count = count($all_berkas);
+            $req_count = 0;
+            $req_valid_count = 0;
             $valid_count = 0;
             $invalid_count = 0;
 
             foreach ($all_berkas as $b) {
+                $is_req = !empty($b['is_required']);
+                if ($is_req) {
+                    $req_count++;
+                }
                 if ($b['status'] === 'Disetujui Admin LAA') {
                     $valid_count++;
+                    if ($is_req) {
+                        $req_valid_count++;
+                    }
                 } elseif ($b['status'] === 'Revisi Admin LAA') {
                     $invalid_count++;
                 }
@@ -2403,7 +2550,7 @@ class AdminLayanan_model extends CI_Model {
 
             if ($invalid_count > 0) {
                 $overall_status = 'Revisi Admin LAA';
-            } elseif ($total_count > 0 && $valid_count === $total_count) {
+            } elseif (($total_count > 0 && $valid_count === $total_count) || ($req_count > 0 && $req_valid_count === $req_count)) {
                 $overall_status = 'Disetujui Admin LAA';
             } else {
                 $overall_status = 'Pending Verifikasi';
@@ -2414,27 +2561,72 @@ class AdminLayanan_model extends CI_Model {
             ];
             if ($overall_status === 'Disetujui Admin LAA' && $this->db->field_exists('status_preview', 'guidance')) {
                 $g_row = $this->db->group_start()
-                    ->where('id_mhs', $nim)
-                    ->or_where('id_mhs', $nim_clean)
-                    ->or_where('id_mhs', $nim_prefixed)
-                    ->or_where('id', $nim)
-                    ->or_where('id', $nim_clean)
+                    ->where_in('id_mhs', $target_ids)
+                    ->or_where_in('id', $target_ids)
                     ->group_end()
                     ->get('guidance')
                     ->row_array();
-                if ($g_row && (!empty($g_row['lulus_preview3']) || in_array(strtolower(trim($g_row['status_preview'] ?? '')), ['preview3', 'persyaratan_sidang', 'persyaratansidang'], true))) {
+                if ($g_row && (!empty($g_row['lulus_preview3']) || in_array(strtolower(trim($g_row['status_preview'] ?? '')), ['preview3', 'persyaratan_sidang', 'persyaratansidang', ''], true))) {
                     $update_guidance['status_preview'] = 'sidang';
                 }
             }
 
             $this->db->group_start()
-                     ->where('id_mhs', $nim)
-                     ->or_where('id_mhs', $nim_clean)
-                     ->or_where('id_mhs', $nim_prefixed)
-                     ->or_where('id', $nim)
-                     ->or_where('id', $nim_clean)
+                     ->where_in('id_mhs', $target_ids)
+                     ->or_where_in('id', $target_ids)
                      ->group_end()
                      ->update('guidance', $update_guidance);
+        }
+
+        return [
+            'overall_status' => $overall_status,
+            'is_approved'    => ($overall_status === 'Disetujui Admin LAA')
+        ];
+    }
+
+    /**
+     * Setujui seluruh berkas persyaratan sidang mahasiswa sekaligus
+     */
+    public function approve_all_berkas_sidang($nim, $status = 'Disetujui Admin LAA', $catatan = '') {
+        $this->clear_cache();
+        $nim_clean = preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', (string)$nim);
+        $target_ids = $this->get_student_target_ids($nim);
+
+        $st_lower = strtolower(trim($status));
+        $is_app = ($st_lower === 'valid' || strpos($st_lower, 'setuju') !== false || strpos($st_lower, 'approved') !== false || $st_lower === 'acc');
+        $disp_status = $is_app ? 'Disetujui Admin LAA' : $status;
+
+        if ($is_app) {
+            $master_syarat = $this->get_master_syarat_sidang();
+            foreach ($master_syarat as $idx => $s) {
+                $kode = $s['kode_berkas'] ?? ($s['kode'] ?? 'berkas_' . ($idx + 1));
+                $this->save_status_berkas_sidang($nim, $kode, 'Disetujui Admin LAA', $catatan);
+            }
+        }
+
+        if ($this->db->table_exists('guidance')) {
+            $upd = [
+                'status_filesidang' => $disp_status
+            ];
+            if ($this->db->field_exists('komentar_pendaftaran_sidang', 'guidance')) {
+                $upd['komentar_pendaftaran_sidang'] = $catatan;
+            }
+            if ($is_app && $this->db->field_exists('status_preview', 'guidance')) {
+                $g_row = $this->db->group_start()
+                    ->where_in('id_mhs', $target_ids)
+                    ->or_where_in('id', $target_ids)
+                    ->group_end()
+                    ->get('guidance')
+                    ->row_array();
+                if ($g_row && (!empty($g_row['lulus_preview3']) || in_array(strtolower(trim($g_row['status_preview'] ?? '')), ['preview3', 'persyaratan_sidang', 'persyaratansidang', ''], true))) {
+                    $upd['status_preview'] = 'sidang';
+                }
+            }
+            $this->db->group_start()
+                     ->where_in('id_mhs', $target_ids)
+                     ->or_where_in('id', $target_ids)
+                     ->group_end()
+                     ->update('guidance', $upd);
         }
 
         return true;

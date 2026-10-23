@@ -197,20 +197,27 @@ class Dosen_bimbingan extends CI_Controller {
         $berkas_ps = $this->AdminLayanan_model->get_berkas_pendaftaran_sidang($nim);
         $ps_uploaded = 0;
         $ps_approved = 0;
+        $ps_req_total = 0;
+        $ps_req_approved = 0;
         $ps_revision = 0;
         foreach ($berkas_ps as $bps) {
-            if (!empty($bps['is_uploaded'])) {
+            $is_req = !empty($bps['is_required']);
+            if ($is_req) $ps_req_total++;
+            if (!empty($bps['is_uploaded']) || !empty($bps['in_db'])) {
                 $ps_uploaded++;
             }
             if (($bps['status'] ?? '') === 'Disetujui Admin LAA') {
                 $ps_approved++;
+                if ($is_req) $ps_req_approved++;
             } elseif (($bps['status'] ?? '') === 'Revisi Admin LAA') {
                 $ps_revision++;
             }
         }
         $fs_status = strtolower(trim($data['pendaftaran']['status_filesidang'] ?? ''));
         $is_ps_app = in_array($fs_status, ['disetujui admin laa', 'approved', 'disetujui', 'lulus'], true)
-            || (!empty($berkas_ps) && $ps_approved === count($berkas_ps));
+            || strpos($fs_status, 'disetujui') !== false
+            || (!empty($berkas_ps) && $ps_approved === count($berkas_ps))
+            || ($ps_req_total > 0 && $ps_req_approved === $ps_req_total && $ps_revision === 0);
         $data['berkas_syarat_sidang'] = $berkas_ps;
         $data['upload_count_ps']      = $ps_uploaded;
         $data['is_ps_app']            = $is_ps_app;
@@ -789,16 +796,26 @@ class Dosen_bimbingan extends CI_Controller {
             $berkas_ps = $this->AdminLayanan_model->get_berkas_pendaftaran_sidang($nim);
             $ps_uploaded = 0;
             $ps_approved = 0;
+            $ps_req_total = 0;
+            $ps_req_approved = 0;
             $ps_revision = 0;
             foreach ($berkas_ps as $bps) {
-                if (!empty($bps['is_uploaded'])) $ps_uploaded++;
-                if (($bps['status'] ?? '') === 'Disetujui Admin LAA') $ps_approved++;
-                elseif (($bps['status'] ?? '') === 'Revisi Admin LAA') $ps_revision++;
+                $is_req = !empty($bps['is_required']);
+                if ($is_req) $ps_req_total++;
+                if (!empty($bps['is_uploaded']) || !empty($bps['in_db'])) $ps_uploaded++;
+                if (($bps['status'] ?? '') === 'Disetujui Admin LAA') {
+                    $ps_approved++;
+                    if ($is_req) $ps_req_approved++;
+                } elseif (($bps['status'] ?? '') === 'Revisi Admin LAA') {
+                    $ps_revision++;
+                }
             }
             $g_curr = $this->Mahasiswa_model->get_guidance_by_nim($nim);
             $fs_status = strtolower(trim($g_curr['status_filesidang'] ?? ''));
             $is_ps_app = in_array($fs_status, ['disetujui admin laa', 'approved', 'disetujui', 'lulus'], true)
-                || (!empty($berkas_ps) && $ps_approved === count($berkas_ps));
+                || strpos($fs_status, 'disetujui') !== false
+                || (!empty($berkas_ps) && $ps_approved === count($berkas_ps))
+                || ($ps_req_total > 0 && $ps_req_approved === $ps_req_total && $ps_revision === 0);
 
             $data = [
                 'riwayat_p1'          => $riwayat_p1,

@@ -1490,12 +1490,14 @@ class AdminLayanan extends CI_Controller {
             return;
         }
 
-        $this->AdminLayanan_model->save_status_berkas_sidang($nim, $kode_berkas, $status, $catatan);
+        $eval = $this->AdminLayanan_model->save_status_berkas_sidang($nim, $kode_berkas, $status, $catatan);
 
         $this->output->set_content_type('application/json')
                      ->set_output(json_encode([
-                         'success' => true,
-                         'message' => 'Status berkas berhasil diupdate menjadi: ' . $status
+                         'success'        => true,
+                         'message'        => 'Status berkas berhasil diupdate menjadi: ' . $status,
+                         'overall_status' => $eval['overall_status'] ?? 'Pending Verifikasi',
+                         'is_approved'    => !empty($eval['is_approved'])
                      ]));
     }
 
@@ -1572,11 +1574,8 @@ class AdminLayanan extends CI_Controller {
         $status  = trim($this->input->post('status') ?? 'Disetujui Admin LAA');
         $catatan = trim($this->input->post('catatan') ?? '');
 
-        if (!empty($nim) && $this->db->table_exists('guidance')) {
-            $this->db->where('id_mhs', $nim)->or_where('id', $nim)->update('guidance', [
-                'status_filesidang'           => $status,
-                'komentar_pendaftaran_sidang' => $catatan
-            ]);
+        if (!empty($nim)) {
+            $this->AdminLayanan_model->approve_all_berkas_sidang($nim, $status, $catatan);
             $this->session->set_flashdata('success', 'Status pendaftaran sidang mahasiswa NIM ' . $nim . ' berhasil diupdate!');
         }
 

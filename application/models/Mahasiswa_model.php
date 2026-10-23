@@ -1049,7 +1049,61 @@ class Mahasiswa_model extends CI_Model {
         $rank = $sp_rank[$sp] ?? 0;
 
         $fs_status = strtolower(trim($student['status_filesidang'] ?? ''));
-        $is_fs_approved = in_array($fs_status, ['disetujui admin laa', 'approved', 'disetujui', 'lulus'], true);
+        $is_fs_approved = in_array($fs_status, ['disetujui admin laa', 'approved', 'disetujui', 'lulus'], true)
+            || strpos($fs_status, 'disetujui') !== false
+            || strpos($fs_status, 'approved') !== false;
+
+        // Fallback evaluasi berkas persyaratan sidang jika sudah lulus Preview 3 namun status_filesidang belum ter-sync
+        if (!$is_fs_approved && ((!empty($student['lulus_preview3']) && (string)$student['lulus_preview3'] === '1') || $rank === 4)) {
+            $nim_eval = $student['nim'] ?? ($student['id_mhs'] ?? '');
+            if (!empty($nim_eval)) {
+                $this->load->model('AdminLayanan_model');
+                $berkas_ps = $this->AdminLayanan_model->get_berkas_pendaftaran_sidang($nim_eval);
+                if (!empty($berkas_ps)) {
+                    $tot_ps     = count($berkas_ps);
+                    $req_ps     = 0;
+                    $req_val_ps = 0;
+                    $val_ps     = 0;
+                    $rev_ps     = 0;
+                    $db_ps      = 0;
+                    $db_val_ps  = 0;
+                    foreach ($berkas_ps as $bps) {
+                        $is_r = !empty($bps['is_required']);
+                        $is_v = (($bps['status'] ?? '') === 'Disetujui Admin LAA');
+                        $is_x = (($bps['status'] ?? '') === 'Revisi Admin LAA');
+                        if ($is_r) {
+                            $req_ps++;
+                            if ($is_v) $req_val_ps++;
+                        }
+                        if ($is_v) $val_ps++;
+                        if ($is_x) $rev_ps++;
+                        if (!empty($bps['in_db'])) {
+                            $db_ps++;
+                            if ($is_v) $db_val_ps++;
+                        }
+                    }
+                    if ($rev_ps === 0 && (
+                        ($tot_ps > 0 && $val_ps === $tot_ps) ||
+                        ($req_ps > 0 && $req_val_ps === $req_ps) ||
+                        ($db_ps > 0 && $db_val_ps === $db_ps && $db_ps >= max(1, $req_ps))
+                    )) {
+                        $is_fs_approved = true;
+                        if ($this->db->table_exists('guidance')) {
+                            $target_ids = $this->AdminLayanan_model->get_student_target_ids($nim_eval);
+                            $upd_g = ['status_filesidang' => 'Disetujui Admin LAA'];
+                            if ($this->db->field_exists('status_preview', 'guidance')) {
+                                $upd_g['status_preview'] = 'sidang';
+                            }
+                            $this->db->group_start()
+                                     ->where_in('id_mhs', $target_ids)
+                                     ->or_where_in('id', $target_ids)
+                                     ->group_end()
+                                     ->update('guidance', $upd_g);
+                        }
+                    }
+                }
+            }
+        }
 
         if (!empty($student['lulus_sidang']) && (string)$student['lulus_sidang'] === '1') {
             $rank = max($rank, 5);
