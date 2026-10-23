@@ -308,6 +308,9 @@ class Mahasiswa_model extends CI_Model {
                 if ($this->db->field_exists('status_filesidang', 'guidance')) {
                     $select_g .= ', status_filesidang';
                 }
+                if ($this->db->field_exists('downgrade_log', 'guidance')) {
+                    $select_g .= ', downgrade_log';
+                }
                 $q_g = $this->db->select($select_g)
                     ->where_in('id_mhs', $target_ids)
                     ->order_by('date', 'DESC')
@@ -318,6 +321,23 @@ class Mahasiswa_model extends CI_Model {
                 }
                 if (!$guidance) {
                     $guidance = $this->db->get_where('guidance', ['id' => 'gdn_' . $nim])->row_array();
+                }
+                if ($guidance && trim($guidance['status_preview'] ?? '') === '' && !empty($guidance['downgrade_log'])) {
+                    $dg_arr = json_decode($guidance['downgrade_log'], true);
+                    if (is_array($dg_arr) && !empty($dg_arr)) {
+                        $last_dg = end($dg_arr);
+                        if (!empty($last_dg['ke'])) {
+                            $this->repair_truncated_downgrade($nim, $last_dg['dari'] ?? 'sidang', strtolower(trim($last_dg['ke'])));
+                            $q_g2 = $this->db->select($select_g)
+                                ->where_in('id_mhs', $target_ids)
+                                ->order_by('date', 'DESC')
+                                ->limit(1)
+                                ->get('guidance');
+                            if ($q_g2 && $q_g2->num_rows() > 0) {
+                                $guidance = $q_g2->row_array();
+                            }
+                        }
+                    }
                 }
             } catch (Throwable $e) {
                 log_message('error', 'Error fetching guidance: ' . $e->getMessage());
@@ -1266,10 +1286,10 @@ class Mahasiswa_model extends CI_Model {
         $g = $this->get_guidance_by_nim($nim);
         if (!$g) return $empty;
 
-        $tgl_sidang  = !empty($g['tanggal_sidang']) ? $g['tanggal_sidang'] : (!empty($g['tanggal_presentasi']) ? $g['tanggal_presentasi'] : null);
-        $waktu_mulai = !empty($g['waktu_sidang']) ? $g['waktu_sidang'] : (!empty($g['waktu_presentasi']) ? $g['waktu_presentasi'] : null);
+        $tgl_sidang  = !empty($g['tanggal_sidang']) ? $g['tanggal_sidang'] : null;
+        $waktu_mulai = !empty($g['waktu_sidang']) ? $g['waktu_sidang'] : null;
         $ruang       = !empty($g['ruang_sidang']) ? trim($g['ruang_sidang']) : null;
-        $link        = !empty($g['link_sidang']) ? trim($g['link_sidang']) : (!empty($g['link_presentasi']) ? trim($g['link_presentasi']) : null);
+        $link        = !empty($g['link_sidang']) ? trim($g['link_sidang']) : null;
         $jam_selesai = null;
         $tgl_publish = null;
 
@@ -1904,6 +1924,11 @@ class Mahasiswa_model extends CI_Model {
         $this->db->where('id', $g['id'])->update('guidance', $update);
 
         if ($this->db->field_exists('status_preview', 'guidance')) {
+            $prev_dbg = $this->db->db_debug;
+            $this->db->db_debug = FALSE;
+            @$this->db->query("ALTER TABLE `guidance` MODIFY COLUMN `status_preview` VARCHAR(50) NULL DEFAULT 'preview1'");
+            $this->db->db_debug = $prev_dbg;
+
             $hierarchy = ['preview1' => 1, 'preview2' => 2, 'preview3' => 3, 'persyaratan_sidang' => 4, 'persyaratansidang' => 4, 'sidang' => 5];
             $curr = strtolower(trim($g['status_preview'] ?? 'pending'));
             $curr_rank = $hierarchy[$curr] ?? 0;
@@ -1976,43 +2001,90 @@ class Mahasiswa_model extends CI_Model {
         }
 
         $target_rank = $hierarchy[$ke];
+        $clean_nim = preg_replace('/^(usr_mhs_|mhs_|usr_)/i', '', trim((string)$nim));
+        $target_mhs_ids = array_values(array_unique(array_filter([
+            (string)$nim,
+            $clean_nim,
+            'usr_mhs_' . $clean_nim,
+            'mhs_' . $clean_nim,
+            'usr_' . $clean_nim,
+            (string)($g['id_mhs'] ?? '')
+        ])));
 
-        if ($this->db->table_exists('thesis')) {
-            $thesis_fields = $this->db->list_fields('thesis');
+        // Pastikan kolom status_preview adalah VARCHAR(50) agar mendukung nilai 'persyaratan_sidang'
+        $prev_dbg = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+        @$this->db->query("ALTER TABLE `guidance` MODIFY COLUMN `status_preview` VARCHAR(50) NULL DEFAULT 'preview1'");
+        $this->db->db_debug = $prev_dbg;
 
-            $status_cols = array_values(array_filter($thesis_fields, function ($c) {
-                return strpos($c, 'status_file_') === 0;
-            }));
-            $catatan_cols = array_values(array_filter($thesis_fields, function ($c) {
-                return strpos($c, 'catatan_file_') === 0;
-            }));
+        // Kumpulkan seluruh ID guidance milik mahasiswa ini (antisipasi jika ada duplikat baris guidance)
+        $g_rows = $this->db->group_start()
+                           ->where_in('id_mhs', $target_mhs_ids)
+                           ->or_where_in('id', $target_mhs_ids)
+                           ->or_where('id', 'gdn_' . $clean_nim)
+                           ->or_where('id', $g['id'])
+                           ->group_end()
+                           ->get('guidance')
+                           ->result_array();
+        $all_gids = array_values(array_unique(array_filter(array_merge([$g['id']], array_column($g_rows, 'id')))));
 
-            foreach ($hierarchy as $stage => $rank) {
-                if ($rank > $target_rank) {
-                    $this->db->where('id_guidance', $g['id']);
-                    $this->db->where('tahapan_preview', $stage);
-                    $this->db->delete('thesis');
-                } elseif ($rank === $target_rank) {
-                    $update_thesis = [];
-                    foreach ($status_cols as $c) $update_thesis[$c] = 'Pending';
-                    foreach ($catatan_cols as $c) $update_thesis[$c] = '';
-                    if (in_array('status', $thesis_fields)) $update_thesis['status'] = 'Pending';
-
-                    if (!empty($update_thesis)) {
-                        $this->db->where('id_guidance', $g['id']);
-                        $this->db->where('tahapan_preview', $stage);
-                        $this->db->update('thesis', $update_thesis);
-                    }
-                }
+        // Daftar variasi nama tahapan untuk dihapus (mulai dari target_rank ke atas: rank >= target_rank)
+        $stage_variants = [
+            1 => ['preview1', 'Preview 1', 'preview 1'],
+            2 => ['preview2', 'Preview 2', 'preview 2'],
+            3 => ['preview3', 'Preview 3', 'preview 3'],
+            4 => ['persyaratan_sidang', 'Persyaratan Sidang', 'persyaratansidang'],
+            5 => ['sidang', 'Sidang', 'sidang ta', 'Sidang TA'],
+        ];
+        $del_stages = [];
+        foreach ($stage_variants as $rk => $vars) {
+            if ($rk >= $target_rank) {
+                $del_stages = array_merge($del_stages, $vars);
             }
         }
 
-        $update_g = [];
-        foreach ($hierarchy as $t => $rank) {
-            if ($rank >= $target_rank) {
-                $col = 'lulus_' . $t;
-                if ($this->db->field_exists($col, 'guidance')) $update_g[$col] = 0;
+        // Hapus seluruh berkas & record di tabel thesis untuk tahap tujuan dan seluruh tahap di atasnya (rank >= target_rank)
+        if ($this->db->table_exists('thesis') && !empty($all_gids) && !empty($del_stages)) {
+            $old_thesis = $this->db->where_in('id_guidance', $all_gids)
+                                   ->where_in('tahapan_preview', $del_stages)
+                                   ->get('thesis')
+                                   ->result_array();
+            foreach ($old_thesis as $ot) {
+                foreach (['pdf_file', 'file_sitasi', 'file_bimbingan', 'file_persyaratan', 'file_sidang'] as $fcol) {
+                    if (!empty($ot[$fcol])) {
+                        $fname = basename($ot[$fcol]);
+                        foreach (['uploads/preview_ta/', 'uploads/sidang/'] as $dir) {
+                            $fpath = FCPATH . $dir . $fname;
+                            if (is_file($fpath)) @unlink($fpath);
+                        }
+                    }
+                }
             }
+            $this->db->where_in('id_guidance', $all_gids)
+                     ->where_in('tahapan_preview', $del_stages)
+                     ->delete('thesis');
+        }
+
+        // Bersihkan juga tabel bimbingan_preview untuk tahap tujuan dan seluruh tahap di atasnya (rank >= target_rank)
+        if ($this->db->table_exists('bimbingan_preview') && !empty($target_mhs_ids) && !empty($del_stages)) {
+            $this->db->where_in('nim', $target_mhs_ids)
+                     ->where_in('tahap_preview', $del_stages)
+                     ->delete('bimbingan_preview');
+        }
+
+        // Sinkronisasi flag lulus_preview1..3 dan lulus_sidang sesuai target_rank
+        $update_g = [];
+        if ($this->db->field_exists('lulus_preview1', 'guidance')) {
+            $update_g['lulus_preview1'] = ($target_rank > 1) ? 1 : 0;
+        }
+        if ($this->db->field_exists('lulus_preview2', 'guidance')) {
+            $update_g['lulus_preview2'] = ($target_rank > 2) ? 1 : 0;
+        }
+        if ($this->db->field_exists('lulus_preview3', 'guidance')) {
+            $update_g['lulus_preview3'] = ($target_rank > 3) ? 1 : 0;
+        }
+        if ($this->db->field_exists('lulus_sidang', 'guidance')) {
+            $update_g['lulus_sidang'] = 0;
         }
         if ($this->db->field_exists('status_preview', 'guidance')) {
             $update_g['status_preview'] = $ke;
@@ -2020,9 +2092,10 @@ class Mahasiswa_model extends CI_Model {
         if ($this->db->field_exists('lulus_by_role', 'guidance')) $update_g['lulus_by_role'] = $role;
         if ($this->db->field_exists('lulus_at', 'guidance'))      $update_g['lulus_at']      = date('Y-m-d H:i:s');
 
-        // Jika di-downgrade dari tahap sidang atau ke preview, hapus nilai sidang
-        if ($dari === 'sidang' || $target_rank < 4) {
-            $sidang_score_cols = [
+        // Jika di-downgrade dari tahap sidang (target_rank < 5), hapus nilai sidang, tempat/jadwal sidang, dan akses/berkas BAP
+        if ($dari === 'sidang' || $target_rank < 5) {
+            $sidang_reset_cols = [
+                // Nilai & Evaluasi Sidang
                 'nilaisidang_pembimbing1', 'nilaisidang_pembimbing_1', 'nilai_sidang_pembimbing1', 'nilai_sidang_pembimbing_1',
                 'nilaisidang_pembimbing2', 'nilaisidang_pembimbing_2', 'nilai_sidang_pembimbing2', 'nilai_sidang_pembimbing_2',
                 'nilaisidang_penguji1', 'nilaisidang_penguji_1', 'nilai_sidang_penguji1', 'nilai_sidang_penguji_1',
@@ -2031,23 +2104,137 @@ class Mahasiswa_model extends CI_Model {
                 'penilaiansidang_pembimbing2', 'penilaiansidang_pembimbing_2', 'evaluasi_pembimbing2',
                 'penilaiansidang_penguji1', 'penilaiansidang_penguji_1', 'evaluasi_penguji1',
                 'penilaiansidang_penguji2', 'penilaiansidang_penguji_2', 'evaluasi_penguji2',
-                'nilai_akhir_sidang', 'skor_akhir_sidang', 'kelulusan_sidang', 'lulus_sidang'
+                'nilai_akhir_sidang', 'skor_akhir_sidang', 'kelulusan_sidang', 'lulus_sidang',
+                // Tempat & Jadwal Sidang
+                'ruang_sidang', 'ruangan_sidang', 'tempat_sidang',
+                'tanggal_sidang', 'waktu_sidang', 'jam_sidang', 'jam_selesai', 'link_sidang',
+                // BAP & Akses BAP
+                'bap', 'bap2', 'status_bap', 'status_bap2', 'file_bap'
             ];
-            foreach ($sidang_score_cols as $sc) {
+            foreach ($sidang_reset_cols as $sc) {
                 if ($this->db->field_exists($sc, 'guidance')) {
                     $update_g[$sc] = null;
                 }
             }
+
+            // Hapus file fisik BAP dari guidance jika ada
+            foreach ($g_rows as $gr) {
+                foreach (['bap', 'bap2'] as $bcol) {
+                    if (!empty($gr[$bcol])) {
+                        $bfile = basename($gr[$bcol]);
+                        foreach (['uploads/bap/', 'uploads/sidang/', 'uploads/persyaratan_ta/'] as $bdir) {
+                            $bpath = FCPATH . $bdir . $bfile;
+                            if (is_file($bpath)) @unlink($bpath);
+                        }
+                    }
+                }
+            }
+
+            // Hapus record BAP di file_pendaftaran agar akses BAP mahasiswa (bap_published) dicabut
+            if ($this->db->table_exists('file_pendaftaran') && !empty($target_mhs_ids)) {
+                $bap_rows = $this->db->group_start()
+                                     ->where_in('id_mhs', $target_mhs_ids)
+                                     ->or_like('id_mhs', $clean_nim)
+                                     ->group_end()
+                                     ->where_in('nama', ['bap', 'bap2', 'file_bap'])
+                                     ->get('file_pendaftaran')
+                                     ->result_array();
+                foreach ($bap_rows as $br) {
+                    if (!empty($br['file'])) {
+                        $bf = basename($br['file']);
+                        foreach (['uploads/persyaratan_ta/', 'uploads/bap/', 'uploads/sidang/'] as $bdir) {
+                            $bp = FCPATH . $bdir . $bf;
+                            if (is_file($bp)) @unlink($bp);
+                        }
+                    }
+                }
+                $this->db->group_start()
+                         ->where_in('id_mhs', $target_mhs_ids)
+                         ->or_like('id_mhs', $clean_nim)
+                         ->group_end()
+                         ->where_in('nama', ['bap', 'bap2', 'file_bap'])
+                         ->delete('file_pendaftaran');
+            }
+
+            // Hapus riwayat penjadwalan Sidang TA & Publish Nilai Sidang di log_approval_history agar jadwal/tempat sidang tidak kembali muncul
+            if ($this->db->table_exists('log_approval_history') && !empty($target_mhs_ids)) {
+                $this->db->where_in('ref_id', $target_mhs_ids)
+                         ->where_in('modul', ['Sidang TA', 'Publish Nilai Sidang', 'Penilaian Sidang'])
+                         ->delete('log_approval_history');
+            }
         }
 
-        if (!empty($update_g)) {
-            $this->db->where('id', $g['id'])->update('guidance', $update_g);
+        // Hapus seluruh berkas & status verifikasi Persyaratan Sidang jika target_rank <= 4 (Persyaratan Sidang atau ke bawah)
+        if ($target_rank <= 4) {
+            if ($this->db->field_exists('status_filesidang', 'guidance')) {
+                $update_g['status_filesidang'] = null;
+            }
+            if ($this->db->field_exists('komentar_pendaftaran_sidang', 'guidance')) {
+                $update_g['komentar_pendaftaran_sidang'] = null;
+            }
+
+            $syarat_codes = ['surat_izin_wali', 'formulir_sidang', 'daftar_nilai', 'sertifikat_eprt', 'sertifikat_tak', 'bukti_bimbingan', 'bukti_skpi'];
+            if ($this->db->table_exists('syarat_berkas_sidang')) {
+                $s_rows = $this->db->select('kode_berkas')->get('syarat_berkas_sidang')->result_array();
+                foreach ($s_rows as $sr) {
+                    if (!empty($sr['kode_berkas'])) {
+                        $syarat_codes[] = $sr['kode_berkas'];
+                    }
+                }
+                $syarat_codes = array_values(array_unique($syarat_codes));
+            }
+
+            if ($this->db->table_exists('file_pendaftaran') && !empty($target_mhs_ids)) {
+                $ps_files = $this->db->group_start()
+                                     ->where_in('id_mhs', $target_mhs_ids)
+                                     ->or_like('id_mhs', $clean_nim)
+                                     ->group_end()
+                                     ->group_start()
+                                     ->where_in('nama', $syarat_codes)
+                                     ->or_like('id', 'fps_' . $clean_nim . '_', 'after')
+                                     ->group_end()
+                                     ->get('file_pendaftaran')
+                                     ->result_array();
+                foreach ($ps_files as $psf) {
+                    if (!empty($psf['file']) && strpos($psf['file'], 'Sertifikat_Massal') === false) {
+                        $ps_base = basename($psf['file']);
+                        $ps_path = FCPATH . 'uploads/persyaratan_ta/' . $ps_base;
+                        if (is_file($ps_path)) @unlink($ps_path);
+                    }
+                }
+                $this->db->group_start()
+                         ->where_in('id_mhs', $target_mhs_ids)
+                         ->or_like('id_mhs', $clean_nim)
+                         ->group_end()
+                         ->group_start()
+                         ->where_in('nama', $syarat_codes)
+                         ->or_like('id', 'fps_' . $clean_nim . '_', 'after')
+                         ->group_end()
+                         ->delete('file_pendaftaran');
+            }
+
+            if ($this->db->table_exists('pendaftaran_berkas') && !empty($target_mhs_ids)) {
+                $this->db->where_in('nim', $target_mhs_ids)
+                         ->where_in('kode_berkas', $syarat_codes)
+                         ->delete('pendaftaran_berkas');
+            }
         }
 
-        // Jika target rank <= 2 (turun ke Preview 2 atau Preview 1), hapus rekomendasi sidang / non-sidang
+        // Jika target rank <= 2 (turun ke Preview 2 atau Preview 1), reset nilai & jadwal Desk Evaluation (DE) Preview 2 serta hapus rekomendasi P1
         if ($target_rank <= 2) {
+            $de_reset_cols = [
+                'kelayakan2', 'nilai_pembimbing1', 'nilai_pembimbing2', 'nilai_penguji1', 'nilai_penguji2',
+                'penilaian_pembimbing1', 'penilaian_pembimbing2', 'penilaian_penguji1', 'penilaian_penguji2',
+                'tanggal_presentasi', 'waktu_presentasi', 'link_presentasi', 'komentar_kelayakan2'
+            ];
+            foreach ($de_reset_cols as $dc) {
+                if ($this->db->field_exists($dc, 'guidance')) {
+                    $update_g[$dc] = null;
+                }
+            }
+
             if ($this->db->table_exists('rekomen_submission')) {
-                $sub = $this->db->get_where('rekomen_submission', ['nim' => $nim])->result_array();
+                $sub = $this->db->where_in('nim', $target_mhs_ids)->get('rekomen_submission')->result_array();
                 foreach ($sub as $s) {
                     if (!empty($s['form_data_json'])) {
                         $fjson = json_decode($s['form_data_json'], true);
@@ -2066,20 +2253,35 @@ class Mahasiswa_model extends CI_Model {
                         }
                     }
                 }
-                $this->db->where('nim', $nim)->delete('rekomen_submission');
+                $this->db->where_in('nim', $target_mhs_ids)->delete('rekomen_submission');
             }
         }
 
+        if (!empty($update_g) && !empty($all_gids)) {
+            $this->db->where_in('id', $all_gids)->update('guidance', $update_g);
+        }
+
+        $stage_map_title = [
+            'preview1'           => 'Preview 1',
+            'preview2'           => 'Preview 2',
+            'preview3'           => 'Preview 3',
+            'persyaratan_sidang' => 'Persyaratan Sidang',
+            'sidang'             => 'Sidang'
+        ];
+        $stage_label = $stage_map_title[$ke] ?? ucfirst($ke);
+
         if ($this->db->table_exists('pendaftaran_ta')) {
-            $stage_map_title = ['preview1' => 'Preview 1', 'preview2' => 'Preview 2', 'preview3' => 'Preview 3'];
-            $update_ta = ['current_stage' => 'Bimbingan (' . ($stage_map_title[$ke] ?? ucfirst($ke)) . ')'];
+            $update_ta = ['current_stage' => 'Bimbingan (' . $stage_label . ')'];
             if ($this->db->field_exists('status_sidang', 'pendaftaran_ta')) {
                 $update_ta['status_sidang'] = 'Belum Dijadwalkan';
             }
-            $this->db->where('nim', $nim)->update('pendaftaran_ta', $update_ta);
+            if (($dari === 'sidang' || $target_rank < 5) && $this->db->field_exists('file_bap', 'pendaftaran_ta')) {
+                $update_ta['file_bap'] = null;
+            }
+            $this->db->where_in('nim', $target_mhs_ids)->update('pendaftaran_ta', $update_ta);
         }
 
-        if ($this->db->field_exists('downgrade_log', 'guidance')) {
+        if ($this->db->field_exists('downgrade_log', 'guidance') && !empty($all_gids)) {
             $existing = $g['downgrade_log'] ?? '';
             $log_arr = [];
             if (!empty($existing)) {
@@ -2094,7 +2296,7 @@ class Mahasiswa_model extends CI_Model {
                 'at'     => date('Y-m-d H:i:s'),
                 'by'     => $this->session->userdata('name') ?: '-',
             ];
-            $this->db->where('id', $g['id'])->update('guidance', [
+            $this->db->where_in('id', $all_gids)->update('guidance', [
                 'downgrade_log' => json_encode($log_arr, JSON_UNESCAPED_UNICODE)
             ]);
         }
@@ -2116,10 +2318,28 @@ class Mahasiswa_model extends CI_Model {
 
         return [
             'status'  => true,
-            'message' => 'Mahasiswa berhasil di-downgrade ke ' . ucfirst($ke) . '. Semua berkas di-reset ke Pending.',
+            'message' => 'Mahasiswa berhasil di-downgrade ke ' . $stage_label . '. Semua berkas dan akses tahap sebelumnya telah di-reset.',
             'dari'    => $dari,
             'ke'      => $ke,
         ];
+    }
+
+    /**
+     * Memperbaiki data mahasiswa yang sebelumnya terkena truncate kolom ENUM status_preview = ''
+     * saat di-downgrade ke persyaratan_sidang.
+     */
+    public function repair_truncated_downgrade($nim, $dari_tahap, $ke_tahap) {
+        $g = $this->get_guidance_by_nim($nim);
+        $orig_log = $g['downgrade_log'] ?? null;
+        $dari = !empty($dari_tahap) ? $dari_tahap : 'sidang';
+        $res = $this->downgrade_stage($nim, $dari, $ke_tahap, 'Admin LAA', 'Sinkronisasi status downgrade');
+        if ($orig_log !== null && $this->db->table_exists('guidance')) {
+            $target_ids = $this->_get_target_ids_by_nim($nim);
+            if (!empty($target_ids)) {
+                $this->db->where_in('id_mhs', $target_ids)->update('guidance', ['downgrade_log' => $orig_log]);
+            }
+        }
+        return $res;
     }
 
     // =================================================================

@@ -2928,6 +2928,16 @@ class AdminLayanan_model extends CI_Model {
      * Ambil daftar submission rekomendasi bimbingan TA dan status tahap mahasiswa untuk Admin LAA
      */
     public function get_rekomendasi_submissions_list($search = '', $filter_type = 'all') {
+        $prev_dbg = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+        @$this->db->query("ALTER TABLE `guidance` MODIFY COLUMN `status_preview` VARCHAR(50) NULL DEFAULT 'preview1'");
+        $this->db->db_debug = $prev_dbg;
+
+        $select_extra = '';
+        if ($this->db->field_exists('downgrade_log', 'guidance')) {
+            $select_extra = 'g.downgrade_log,';
+        }
+
         $this->db->select('
             g.id AS id_guidance,
             g.id_mhs AS nim,
@@ -2936,6 +2946,8 @@ class AdminLayanan_model extends CI_Model {
             g.lulus_preview2,
             g.lulus_preview3,
             g.lulus_sidang,
+            g.status_filesidang,
+            ' . $select_extra . '
             g.judul_1 AS judul,
             g.peminatan,
             TRIM(CONCAT(IFNULL(m.nama_depan, ""), " ", IFNULL(m.nama_belakang, ""))) AS nama_mhs,
@@ -3009,21 +3021,47 @@ class AdminLayanan_model extends CI_Model {
             }
 
             // Normalisasi status preview terkini
-            $sp = strtolower(trim($row['status_preview'] ?? 'preview1'));
-            if ($sp === 'preview1' || empty($sp)) {
-                $row['tahap_terkini'] = 'Preview 1';
-                $row['tahap_key']     = 'preview1';
-            } elseif ($sp === 'preview2') {
-                $row['tahap_terkini'] = 'Preview 2';
-                $row['tahap_key']     = 'preview2';
-            } elseif ($sp === 'preview3') {
-                $row['tahap_terkini'] = 'Preview 3';
-                $row['tahap_key']     = 'preview3';
-            } elseif ($sp === 'sidang') {
+            $sp = strtolower(trim($row['status_preview'] ?? ''));
+
+            // Auto-heal jika sebelumnya status_preview terpotong menjadi string kosong akibat tipe kolom ENUM lama saat downgrade
+            if ($sp === '' && !empty($row['downgrade_log'])) {
+                $dg_arr = json_decode($row['downgrade_log'], true);
+                if (is_array($dg_arr) && !empty($dg_arr)) {
+                    $last_dg = end($dg_arr);
+                    if (!empty($last_dg['ke'])) {
+                        $sp = strtolower(trim($last_dg['ke']));
+                        $this->load->model('Mahasiswa_model');
+                        $this->Mahasiswa_model->repair_truncated_downgrade($nim, $last_dg['dari'] ?? 'sidang', $sp);
+                        $row['status_preview']    = $sp;
+                        $row['status_filesidang'] = null;
+                        $row['lulus_sidang']      = 0;
+                        $row['lulus_preview3']    = ($sp === 'persyaratan_sidang') ? 1 : 0;
+                        $row['lulus_preview2']    = in_array($sp, ['persyaratan_sidang', 'preview3'], true) ? 1 : 0;
+                        $row['lulus_preview1']    = in_array($sp, ['persyaratan_sidang', 'preview3', 'preview2'], true) ? 1 : 0;
+                    }
+                }
+            }
+
+            $st_fs = strtolower(trim($row['status_filesidang'] ?? ''));
+            $is_fs_acc = (strpos($st_fs, 'disetujui') !== false || strpos($st_fs, 'approved') !== false || $st_fs === 'lulus');
+
+            if ($sp === 'sidang' || !empty($row['lulus_sidang']) || (!empty($row['lulus_preview3']) && $is_fs_acc && $sp !== 'persyaratan_sidang')) {
                 $row['tahap_terkini'] = 'Sidang';
                 $row['tahap_key']     = 'sidang';
+            } elseif ($sp === 'persyaratan_sidang' || $sp === 'persyaratansidang' || !empty($row['lulus_preview3'])) {
+                $row['tahap_terkini'] = 'Persyaratan Sidang';
+                $row['tahap_key']     = 'persyaratan_sidang';
+            } elseif ($sp === 'preview3' || !empty($row['lulus_preview2'])) {
+                $row['tahap_terkini'] = 'Preview 3';
+                $row['tahap_key']     = 'preview3';
+            } elseif ($sp === 'preview2' || !empty($row['lulus_preview1'])) {
+                $row['tahap_terkini'] = 'Preview 2';
+                $row['tahap_key']     = 'preview2';
+            } elseif ($sp === 'preview1' || empty($sp)) {
+                $row['tahap_terkini'] = 'Preview 1';
+                $row['tahap_key']     = 'preview1';
             } else {
-                $row['tahap_terkini'] = ucfirst($sp);
+                $row['tahap_terkini'] = ucfirst(str_replace('_', ' ', $sp));
                 $row['tahap_key']     = $sp;
             }
 

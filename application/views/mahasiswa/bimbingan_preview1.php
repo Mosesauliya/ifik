@@ -3341,7 +3341,7 @@
                             (curr_is_sidang_sched !== orig_is_sidang_sched) ||
                             (!!data.is_ps_revision !== orig_is_ps_rev);
 
-                        if ((data.is_p1_app && !orig_is_p1_app) || (data.is_p2_app && !orig_is_p2_app) || (data.is_p3_app && !orig_is_p3_app) || (data.is_ps_app && !orig_is_ps_app) || fileStatusChanged || reviewStatusChanged) {
+                        if ((!!data.is_p1_app !== orig_is_p1_app) || (!!data.is_p2_app !== orig_is_p2_app) || (!!data.is_p3_app !== orig_is_p3_app) || (!!data.is_ps_app !== orig_is_ps_app) || fileStatusChanged || reviewStatusChanged) {
                             window.location.reload();
                         }
                     }
