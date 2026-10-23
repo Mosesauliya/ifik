@@ -912,6 +912,51 @@ class Perwalian_model extends CI_Model {
     }
 
     /**
+     * Reset Status / Berkas Perwalian Mahasiswa (Buka Kunci atau Reset Total)
+     * @param int $id_perwalian
+     * @param string $action 'unlock' (buka kunci ke Draft/Revisi) | 'total' (kosongkan MK & file)
+     * @param string $catatan
+     */
+    public function reset_perwalian($id_perwalian, $action = 'unlock', $catatan = '') {
+        $now = date('Y-m-d H:i:s');
+        $perwalian = $this->db->get_where('perwalian', ['id_perwalian' => (int)$id_perwalian])->row_array();
+        if (!$perwalian) return false;
+
+        if ($action === 'total') {
+            // Hapus file KRS fisik jika ada
+            if (!empty($perwalian['file_krs'])) {
+                $filePath = FCPATH . 'uploads/krs/' . $perwalian['file_krs'];
+                if (file_exists($filePath)) {
+                    @unlink($filePath);
+                }
+            }
+
+            // Hapus detail mata kuliah yang 'akan_diambil'
+            $this->db->where('id_perwalian', (int)$id_perwalian)
+                     ->where('status_tahap', 'akan_diambil')
+                     ->delete('perwalian_detail');
+
+            return $this->db->where('id_perwalian', (int)$id_perwalian)->update('perwalian', [
+                'status_tahap1'       => 'Draft',
+                'file_krs'            => null,
+                'catatan_wali'        => !empty($catatan) ? trim($catatan) : 'Berkas KRS telah direset total oleh Admin Prodi.',
+                'tgl_pengajuan'       => null,
+                'tgl_approval_tahap1' => null,
+                'updated_at'          => $now,
+            ]);
+        } else {
+            // Mode unlock: kembalikan ke Draft atau Revisi agar form mahasiswa terbuka kembali
+            $newStatus = !empty($catatan) ? 'Revisi' : 'Draft';
+            return $this->db->where('id_perwalian', (int)$id_perwalian)->update('perwalian', [
+                'status_tahap1'       => $newStatus,
+                'catatan_wali'        => !empty($catatan) ? trim($catatan) : $perwalian['catatan_wali'],
+                'tgl_approval_tahap1' => null,
+                'updated_at'          => $now,
+            ]);
+        }
+    }
+
+    /**
      * Update nilai per mata kuliah (Tahap 2: A, AB, B, BC, C = Lulus; D, E = Tidak Lulus)
      */
     public function update_nilai_detail($id_detail, $nilai_huruf, $status_kelulusan = null) {

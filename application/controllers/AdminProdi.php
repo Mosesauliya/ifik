@@ -284,4 +284,39 @@ class AdminProdi extends CI_Controller {
             'errors'            => $res['errors'],
         ]));
     }
+
+    // =========================================================================
+    // AJAX: RESET / BUKA KUNCI PERWALIAN MAHASISWA
+    // =========================================================================
+
+    public function reset_perwalian() {
+        $this->output->set_content_type('application/json');
+        $id_perwalian = (int)$this->input->post('id_perwalian', true);
+        $action       = trim($this->input->post('action', true)) ?: 'unlock';
+        $catatan      = trim($this->input->post('catatan', true));
+
+        if ($id_perwalian <= 0) {
+            $this->output->set_output(json_encode([
+                'status'  => 'error',
+                'message' => 'ID perwalian tidak valid.'
+            ]));
+            return;
+        }
+
+        $ok = $this->Perwalian_model->reset_perwalian($id_perwalian, $action, $catatan);
+        if ($ok) {
+            $msg = ($action === 'total')
+                ? 'Berkas KRS berhasil direset total. Mahasiswa dapat menginput ulang dari awal.'
+                : 'Kunci KRS berhasil dibuka (Status kembali ke Draft/Revisi). Mahasiswa sekarang dapat mengedit kembali mata kuliahnya.';
+            $this->output->set_output(json_encode([
+                'status'  => 'success',
+                'message' => $msg
+            ]));
+        } else {
+            $this->output->set_output(json_encode([
+                'status'  => 'error',
+                'message' => 'Gagal mereset status perwalian mahasiswa.'
+            ]));
+        }
+    }
 }

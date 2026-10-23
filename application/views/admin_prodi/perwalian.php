@@ -483,12 +483,13 @@
                                     <th class="p-3 text-center">Bukti KRS Asli</th>
                                     <th class="p-3 text-center">Status Tahap 1</th>
                                     <th class="p-3">Tgl Pengajuan</th>
+                                    <th class="p-3 text-center w-36">Aksi Status</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
                                 <?php if(empty($monitoring)): ?>
                                     <tr>
-                                        <td colspan="7" class="p-8 text-center text-slate-400">Belum ada pengajuan perwalian pada periode ini.</td>
+                                        <td colspan="8" class="p-8 text-center text-slate-400">Belum ada pengajuan perwalian pada periode ini.</td>
                                     </tr>
                                 <?php else: ?>
                                     <?php $no = 1; foreach($monitoring as $row): 
@@ -497,6 +498,7 @@
                                         if ($st === 'Diajukan') $badgeClass = 'bg-amber-100 text-amber-800';
                                         elseif ($st === 'Disetujui') $badgeClass = 'bg-emerald-100 text-emerald-800';
                                         elseif ($st === 'Revisi') $badgeClass = 'bg-rose-100 text-rose-800';
+                                        $mhsName = $row['nama_mahasiswa'] ?: ($row['nama_lengkap'] ?: $row['nim']);
                                     ?>
                                         <tr class="hover:bg-slate-50/60 transition">
                                             <td class="p-3 text-center text-slate-400 font-mono"><?= $no++ ?></td>
@@ -524,6 +526,21 @@
                                             </td>
                                             <td class="p-3 text-slate-500 font-mono text-[11px]">
                                                 <?= !empty($row['tgl_pengajuan']) ? date('d M Y, H:i', strtotime($row['tgl_pengajuan'])) : '-' ?>
+                                            </td>
+                                            <td class="p-3 text-center">
+                                                <?php if ($st === 'Disetujui'): ?>
+                                                    <button type="button" onclick="confirmResetKRS(<?= (int)$row['id_perwalian'] ?>, '<?= htmlspecialchars($mhsName, ENT_QUOTES) ?>', 'Disetujui')" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-[11px] font-bold inline-flex items-center gap-1 transition shadow-2xs cursor-pointer" title="Buka kunci status agar mahasiswa bisa mengubah KRS">
+                                                        <span>🔓</span> Buka Kunci
+                                                    </button>
+                                                <?php elseif ($st === 'Diajukan'): ?>
+                                                    <button type="button" onclick="confirmResetKRS(<?= (int)$row['id_perwalian'] ?>, '<?= htmlspecialchars($mhsName, ENT_QUOTES) ?>', 'Diajukan')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-[11px] font-bold inline-flex items-center gap-1 transition shadow-2xs cursor-pointer" title="Kembalikan pengajuan ke Draft">
+                                                        <span>↩️</span> Batal Ajukan
+                                                    </button>
+                                                <?php else: ?>
+                                                    <button type="button" onclick="confirmResetKRS(<?= (int)$row['id_perwalian'] ?>, '<?= htmlspecialchars($mhsName, ENT_QUOTES) ?>', '<?= htmlspecialchars($st, ENT_QUOTES) ?>')" class="px-2 py-0.5 text-slate-400 hover:text-rose-600 rounded text-[11px] inline-flex items-center gap-1 transition cursor-pointer" title="Opsi kelola status">
+                                                        <span>⚙️</span> Reset
+                                                    </button>
+                                                <?php endif; ?>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -1213,6 +1230,94 @@
             } catch (err) {
                 Swal.fire('Error', 'Gagal memperbarui dosen wali', 'error');
             }
+        }
+
+        // --- RESET / BUKA KUNCI KRS MAHASISWA ---
+        function confirmResetKRS(id, name, currentStatus) {
+            const isApproved = currentStatus === 'Disetujui';
+            Swal.fire({
+                title: isApproved ? 'Buka Kunci / Reset KRS' : 'Kelola Status KRS',
+                html: `
+                    <div class="text-left text-xs space-y-3 mt-1">
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                            <span class="text-slate-500 block">Mahasiswa:</span>
+                            <span class="font-extrabold text-slate-800 text-sm block">${name}</span>
+                            <div class="mt-1 flex items-center gap-2">
+                                <span class="text-slate-500">Status Saat Ini:</span>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isApproved ? 'bg-emerald-100 text-emerald-800' : (currentStatus === 'Diajukan' ? 'bg-amber-100 text-amber-800' : 'bg-slate-200 text-slate-700')}">${currentStatus}</span>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block font-bold text-slate-700">Pilih Tindakan:</label>
+                            <label class="flex items-start gap-2.5 p-3 bg-amber-50/70 border border-amber-200 rounded-xl cursor-pointer hover:bg-amber-100/60 transition">
+                                <input type="radio" name="resetMode" value="unlock" checked class="mt-0.5 text-brand-600 focus:ring-brand-500">
+                                <div>
+                                    <span class="font-bold text-amber-900 block text-xs">Buka Kunci (Kembalikan ke Draft / Revisi)</span>
+                                    <span class="text-[11px] text-amber-700 block leading-relaxed mt-0.5">Mata kuliah yang sudah dipilih mahasiswa <strong>tetap aman</strong>. Mahasiswa dapat langsung menambah atau mengurangi MK dan mengunggah ulang bukti KRS.</span>
+                                </div>
+                            </label>
+                            <label class="flex items-start gap-2.5 p-3 bg-rose-50/70 border border-rose-200 rounded-xl cursor-pointer hover:bg-rose-100/60 transition">
+                                <input type="radio" name="resetMode" value="total" class="mt-0.5 text-rose-600 focus:ring-rose-500">
+                                <div>
+                                    <span class="font-bold text-rose-900 block text-xs">Reset Total (Kosongkan Berkas & MK)</span>
+                                    <span class="text-[11px] text-rose-700 block leading-relaxed mt-0.5">Menghapus seluruh mata kuliah yang telah dipilih dan berkas KRS. Mahasiswa akan memulai pengisian perwalian dari kosong.</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Catatan ke Mahasiswa / Dosen Wali (Opsional):</label>
+                            <textarea id="swalResetCatatan" rows="2" placeholder="Contoh: Silakan revisi mata kuliah pilihan atau sesuaikan SKS..." class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonColor: '#ea580c',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Proses Tindakan',
+                cancelButtonText: 'Batal',
+                focusConfirm: false,
+                preConfirm: () => {
+                    const selectedMode = document.querySelector('input[name="resetMode"]:checked')?.value || 'unlock';
+                    const catatan = document.getElementById('swalResetCatatan')?.value || '';
+                    return { action: selectedMode, catatan: catatan };
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed && result.value) {
+                    const { action, catatan } = result.value;
+                    const fd = new FormData();
+                    fd.append('id_perwalian', id);
+                    fd.append('action', action);
+                    fd.append('catatan', catatan);
+
+                    Swal.fire({
+                        title: 'Memproses...',
+                        text: 'Sedang memperbarui status perwalian...',
+                        didOpen: () => Swal.showLoading(),
+                        allowOutsideClick: false
+                    });
+
+                    try {
+                        const res = await fetch('<?= site_url("prodi/perwalian/reset_perwalian") ?>', {
+                            method: 'POST',
+                            body: fd
+                        });
+                        const json = await res.json();
+                        if (json.status === 'success') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: json.message,
+                                timer: 1800,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        } else {
+                            Swal.fire('Gagal', json.message, 'error');
+                        }
+                    } catch (err) {
+                        Swal.fire('Error', 'Terjadi kesalahan sistem saat menghubungi server.', 'error');
+                    }
+                }
+            });
         }
 
         // --- VALIDASI & IMPORT REKAP KRS KOLEKTIF ---
