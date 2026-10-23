@@ -768,42 +768,57 @@
     </div>
 
     <!-- ========================================================================= -->
-    <!-- MODAL: REVIEW & CROSS-CHECK KRS TAHAP 1 (SPLIT SCREEN)                    -->
+    <!-- MODAL: REVIEW & CROSS-CHECK KRS TAHAP 1 (RESPONSIVE SPLIT/TABS)           -->
     <!-- ========================================================================= -->
-    <div id="modalReviewKRS" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-[100000] hidden flex items-center justify-center p-2 sm:p-3 md:p-4">
-        <div class="clay-card w-full max-w-[97vw] xl:max-w-7xl h-[94vh] flex flex-col overflow-hidden bg-white shadow-2xl rounded-2xl border border-slate-200">
+    <div id="modalReviewKRS" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-[100000] hidden flex items-center justify-center p-1.5 sm:p-3 md:p-4">
+        <div class="clay-card w-full max-w-[97vw] xl:max-w-7xl h-[96vh] sm:h-[94vh] flex flex-col overflow-hidden bg-white shadow-2xl rounded-2xl border border-slate-200">
             <!-- Modal Header -->
-            <div class="px-4 py-2.5 sm:px-6 sm:py-3 bg-gradient-to-r from-orange-500 to-amber-600 text-white flex items-center justify-between gap-3 shrink-0 shadow-xs">
-                <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+            <div class="px-3.5 py-2.5 sm:px-6 sm:py-3 bg-gradient-to-r from-orange-500 to-amber-600 text-white flex items-center justify-between gap-2 sm:gap-3 shrink-0 shadow-xs">
+                <div class="flex items-center space-x-2 sm:space-x-3 min-w-0">
                     <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/20 flex items-center justify-center text-white shrink-0">
                         <i class="fa-solid fa-code-compare text-sm sm:text-base"></i>
                     </div>
                     <div class="min-w-0">
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <h3 class="font-bold text-sm sm:text-base leading-tight truncate" id="m1MhsNama">Nama Mahasiswa</h3>
-                            <span id="m1StatusBadge" class="px-2 py-0.5 text-[10px] sm:text-[11px] font-bold rounded-full bg-white/20 text-white border border-white/30"></span>
+                        <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                            <h3 class="font-bold text-xs sm:text-base leading-tight truncate" id="m1MhsNama">Nama Mahasiswa</h3>
+                            <span id="m1StatusBadge" class="px-2 py-0.5 text-[9px] sm:text-[11px] font-bold rounded-full bg-white/20 text-white border border-white/30 shrink-0"></span>
                         </div>
-                        <p class="text-[11px] sm:text-xs text-orange-100 truncate mt-0.5">
+                        <p class="text-[10px] sm:text-xs text-orange-100 truncate mt-0.5">
                             NIM: <span class="font-mono font-bold text-white" id="m1MhsNim">-</span> | 
                             Prodi: <span class="text-white font-medium" id="m1MhsProdi">-</span> | 
-                            Periode: <span class="text-white font-medium" id="m1MhsPeriode">-</span> | 
+                            <span class="hidden sm:inline">Periode: <span class="text-white font-medium" id="m1MhsPeriode">-</span> | </span>
                             Beban: <span class="font-mono font-bold text-white"><span id="m1TotalSks">0</span> SKS</span> (<span id="m1CountMk">0 Mata Kuliah</span>)
                         </p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
-                    <button type="button" onclick="closeReviewModal()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition">
+                    <button type="button" onclick="closeReviewModal()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer">
                         <i class="fa-solid fa-xmark text-sm sm:text-base"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- Modal Body: Split Screen Side-by-Side (File vs Input Data) -->
-            <div class="flex-grow grid grid-cols-1 lg:grid-cols-12 overflow-hidden bg-slate-100 min-h-0">
-                <!-- Panel Kiri: Berkas Dokumen Slip/Draft KRS Mahasiswa (60% on xl) -->
-                <div class="lg:col-span-6 xl:col-span-7 flex flex-col h-[40vh] lg:h-full border-b lg:border-b-0 lg:border-r border-slate-200 bg-slate-900 overflow-hidden min-h-0">
+            <!-- Mobile Tab Switcher (Hanya Muncul di Tampilan Layar HP / < lg) -->
+            <div class="block lg:hidden px-3 py-2 bg-slate-100 border-b border-slate-200 shrink-0">
+                <div class="grid grid-cols-2 p-1 bg-slate-200/90 rounded-xl text-xs font-bold gap-1 select-none">
+                    <button type="button" onclick="switchMobileModalTab('input')" id="m1TabBtnInput" class="py-2 px-2.5 rounded-lg transition flex items-center justify-center gap-1.5 bg-white text-orange-700 shadow-xs cursor-pointer">
+                        <i class="fa-solid fa-list-check"></i>
+                        <span>Hasil Input KRS</span>
+                        <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-orange-100 text-orange-800 font-mono" id="m1TabBadgeMk">0 MK</span>
+                    </button>
+                    <button type="button" onclick="switchMobileModalTab('berkas')" id="m1TabBtnBerkas" class="py-2 px-2.5 rounded-lg transition flex items-center justify-center gap-1.5 text-slate-600 hover:text-slate-900 cursor-pointer">
+                        <i class="fa-solid fa-file-pdf text-rose-500"></i>
+                        <span>Berkas KRS Fisik</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body: Side-by-Side on Desktop (lg), Tabbed Full-Height on Mobile (< lg) -->
+            <div class="flex-grow grid grid-cols-1 lg:grid-cols-12 overflow-hidden bg-slate-100 min-h-0 relative">
+                <!-- Panel Dokumen Berkas KRS Mahasiswa -->
+                <div id="m1PanelBerkas" class="hidden lg:flex lg:col-span-6 xl:col-span-7 flex-col h-full border-b lg:border-b-0 lg:border-r border-slate-200 bg-slate-900 overflow-hidden min-h-0">
                     <!-- Header Panel Berkas -->
-                    <div class="px-3.5 py-2 bg-slate-800 text-slate-200 border-b border-slate-700/80 flex items-center justify-between gap-2 shrink-0">
+                    <div class="px-3.5 py-2 sm:py-2.5 bg-slate-800 text-slate-200 border-b border-slate-700/80 flex items-center justify-between gap-2 shrink-0">
                         <div class="flex items-center space-x-2 min-w-0">
                             <i class="fa-solid fa-file-invoice text-orange-400 text-xs sm:text-sm shrink-0"></i>
                             <span class="text-xs font-bold text-slate-100 truncate">Berkas Draft / Slip KRS Mahasiswa</span>
@@ -823,15 +838,22 @@
                                 <i class="fa-solid fa-file-circle-xmark"></i>
                             </div>
                             <p class="font-bold text-xs sm:text-sm text-slate-300">Belum Ada Berkas KRS Diunggah</p>
-                            <p class="text-[11px] text-slate-400 mt-1 max-w-xs leading-relaxed">Mahasiswa belum mengunggah file slip/draft KRS fisik. Anda tetap dapat memverifikasi rencana studi pada panel sebelah kanan.</p>
+                            <p class="text-[11px] text-slate-400 mt-1 max-w-xs leading-relaxed">Mahasiswa belum mengunggah file slip/draft KRS fisik. Anda tetap dapat memverifikasi rencana studi pada panel input.</p>
                         </div>
+                    </div>
+
+                    <!-- Tombol Beralih Cepat ke Input di Mobile -->
+                    <div class="p-2.5 bg-slate-800 border-t border-slate-700 block lg:hidden shrink-0">
+                        <button type="button" onclick="switchMobileModalTab('input')" class="w-full py-2 px-3 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
+                            <i class="fa-solid fa-list-check"></i> Kembali ke Form & Setujui KRS ➔
+                        </button>
                     </div>
                 </div>
 
-                <!-- Panel Kanan: Hasil Input Rencana Studi & Keputusan Persetujuan (40% on xl) -->
-                <div class="lg:col-span-6 xl:col-span-5 flex flex-col h-[54vh] lg:h-full bg-white overflow-hidden min-h-0">
-                    <!-- Header Panel Input -->
-                    <div class="px-3.5 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2 shrink-0">
+                <!-- Panel Hasil Input Rencana Studi & Keputusan Persetujuan -->
+                <div id="m1PanelInput" class="flex lg:flex lg:col-span-6 xl:col-span-5 flex-col h-full bg-white overflow-hidden min-h-0">
+                    <!-- Header Panel Input (Desktop) -->
+                    <div class="px-3.5 py-2 sm:py-2.5 bg-slate-50 border-b border-slate-200 hidden lg:flex items-center justify-between gap-2 shrink-0">
                         <div class="flex items-center space-x-2 min-w-0">
                             <i class="fa-solid fa-list-check text-orange-600 text-xs sm:text-sm"></i>
                             <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">Hasil Input Rencana Studi</span>
@@ -839,8 +861,19 @@
                         <span class="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 border border-orange-200" id="m1RightTotalInfo">0 SKS (0 MK)</span>
                     </div>
 
-                    <!-- Petunjuk Cross-Check -->
-                    <div class="px-3.5 pt-2.5 pb-1">
+                    <!-- Shortcut Cepat Lihat Berkas di Mobile -->
+                    <div class="p-2.5 bg-orange-50/70 border-b border-orange-100 block lg:hidden shrink-0">
+                        <button type="button" onclick="switchMobileModalTab('berkas')" class="w-full py-2 px-3 text-xs font-semibold text-orange-800 bg-white hover:bg-orange-100/60 border border-orange-200 rounded-xl transition flex items-center justify-between shadow-2xs cursor-pointer">
+                            <span class="flex items-center gap-2">
+                                <i class="fa-solid fa-file-pdf text-rose-500 text-sm"></i>
+                                <span>Lihat Berkas Dokumen Slip KRS Fisik</span>
+                            </span>
+                            <span class="text-[11px] font-bold text-orange-600">Buka ➔</span>
+                        </button>
+                    </div>
+
+                    <!-- Petunjuk Cross-Check di Desktop -->
+                    <div class="px-3.5 pt-2.5 pb-1 hidden lg:block shrink-0">
                         <div class="text-[11px] text-slate-600 bg-orange-50/70 border border-orange-200/80 rounded-xl p-2.5 flex items-start gap-2">
                             <i class="fa-solid fa-code-compare text-orange-600 mt-0.5 text-xs shrink-0"></i>
                             <div>Cocokkan mata kuliah hasil input di bawah ini dengan dokumen pada panel sebelah kiri sebelum menentukan persetujuan.</div>
@@ -848,7 +881,7 @@
                     </div>
 
                     <!-- Scrollable Course List (Grouped by Semester) -->
-                    <div class="flex-grow overflow-y-auto px-3.5 py-1.5 space-y-3 min-h-0">
+                    <div class="flex-grow overflow-y-auto px-3 sm:px-3.5 py-2 space-y-3 min-h-0">
                         <div class="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
                             <div class="hidden sm:block overflow-x-auto">
                                 <table class="w-full text-left text-xs">
@@ -874,9 +907,9 @@
             </div>
 
             <!-- Modal Footer -->
-            <div class="px-4 py-2 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
+            <div class="px-4 py-2 sm:py-2.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
                 <span class="text-[11px] text-slate-500 italic hidden sm:inline">Periksa seluruh mata kuliah yang dikontrak sebelum mengambil keputusan.</span>
-                <button type="button" onclick="closeReviewModal()" class="w-full sm:w-auto px-4 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition text-center ml-auto">
+                <button type="button" onclick="closeReviewModal()" class="w-full sm:w-auto px-4 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition text-center ml-auto cursor-pointer">
                     Tutup
                 </button>
             </div>
@@ -887,6 +920,46 @@
     <!-- Script Tahap 1 -->
     <script>
         let currentPerwalian = null;
+
+        function switchMobileModalTab(tab) {
+            const panelBerkas = document.getElementById('m1PanelBerkas');
+            const panelInput = document.getElementById('m1PanelInput');
+            const btnBerkas = document.getElementById('m1TabBtnBerkas');
+            const btnInput = document.getElementById('m1TabBtnInput');
+
+            if (tab === 'berkas') {
+                if (panelBerkas) {
+                    panelBerkas.classList.remove('hidden');
+                    panelBerkas.classList.add('flex');
+                }
+                if (panelInput) {
+                    panelInput.classList.add('hidden');
+                    panelInput.classList.remove('flex');
+                }
+                if (btnBerkas) {
+                    btnBerkas.className = "py-2 px-2.5 rounded-lg transition flex items-center justify-center gap-1.5 bg-white text-orange-700 shadow-xs cursor-pointer";
+                }
+                if (btnInput) {
+                    btnInput.className = "py-2 px-2.5 rounded-lg transition flex items-center justify-center gap-1.5 text-slate-600 hover:text-slate-900 cursor-pointer";
+                }
+            } else {
+                if (panelBerkas) {
+                    panelBerkas.classList.add('hidden');
+                    panelBerkas.classList.remove('flex');
+                }
+                if (panelInput) {
+                    panelInput.classList.remove('hidden');
+                    panelInput.classList.add('flex');
+                }
+                if (btnInput) {
+                    btnInput.className = "py-2 px-2.5 rounded-lg transition flex items-center justify-center gap-1.5 bg-white text-orange-700 shadow-xs cursor-pointer";
+                }
+                if (btnBerkas) {
+                    btnBerkas.className = "py-2 px-2.5 rounded-lg transition flex items-center justify-center gap-1.5 text-slate-600 hover:text-slate-900 cursor-pointer";
+                }
+            }
+        }
+
 
         async function openReviewKRSModal(idPerwalian) {
             Swal.fire({
@@ -1144,6 +1217,9 @@
                     `;
                 }
 
+                switchMobileModalTab('input');
+                const tabBadge = document.getElementById('m1TabBadgeMk');
+                if (tabBadge) tabBadge.innerText = `${mkList.length} MK`;
                 document.getElementById('modalReviewKRS').classList.remove('hidden');
             } catch (err) {
                 console.error('Error openReviewKRSModal:', err);
