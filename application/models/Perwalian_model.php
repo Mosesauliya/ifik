@@ -963,7 +963,33 @@ class Perwalian_model extends CI_Model {
 
         $this->db->group_by('p.id_perwalian');
         $this->db->order_by('p.updated_at', 'DESC');
-        return $this->db->get()->result_array();
+        $rows = $this->db->get()->result_array();
+
+        // Self-healing: pastikan status_tahap2 selalu sinkron dengan jumlah MK yang benar-benar sudah dinilai
+        foreach ($rows as &$r) {
+            $totMk = (int)($r['total_mk'] ?? 0);
+            $totDinilai = (int)($r['total_dinilai'] ?? 0);
+            $curSt2 = $r['status_tahap2'] ?? 'Belum Dinilai';
+            $fixedSt2 = $curSt2;
+
+            if ($totDinilai === 0) {
+                $fixedSt2 = 'Belum Dinilai';
+            } elseif ($totDinilai < $totMk) {
+                $fixedSt2 = 'Proses Penilaian';
+            } elseif ($curSt2 === 'Belum Dinilai') {
+                $fixedSt2 = 'Proses Penilaian';
+            }
+
+            if ($fixedSt2 !== $curSt2) {
+                $r['status_tahap2'] = $fixedSt2;
+                $this->db->where('id_perwalian', (int)$r['id_perwalian'])->update('perwalian', [
+                    'status_tahap2' => $fixedSt2,
+                ]);
+            }
+        }
+        unset($r);
+
+        return $rows;
     }
 
     /**
@@ -973,8 +999,14 @@ class Perwalian_model extends CI_Model {
         $ids = is_array($dosen_identifiers) ? array_filter(array_unique($dosen_identifiers)) : [trim((string)$dosen_identifiers)];
         $ids = array_values(array_filter($ids, fn($v) => !empty($v)));
 
-        $this->db->from('perwalian p')
-                 ->join('user u', 'p.nim = u.nim OR p.nim = u.username', 'left', false);
+        $this->db->select('
+            p.*,
+            COUNT(pd.id) as total_mk,
+            COALESCE(SUM(CASE WHEN pd.nilai_huruf IS NOT NULL AND pd.nilai_huruf != "" THEN 1 ELSE 0 END), 0) as total_dinilai
+        ')
+        ->from('perwalian p')
+        ->join('user u', 'p.nim = u.nim OR p.nim = u.username', 'left', false)
+        ->join('perwalian_detail pd', 'p.id_perwalian = pd.id_perwalian AND pd.status_tahap = "akan_diambil"', 'left');
 
         if (!in_array('all', $ids, true) && !empty($ids)) {
             $this->db->group_start();
@@ -990,6 +1022,7 @@ class Perwalian_model extends CI_Model {
             $this->db->where('p.semester', $semester);
         }
 
+        $this->db->group_by('p.id_perwalian');
         $records = $this->db->get()->result_array();
 
         $stats = [
@@ -1012,7 +1045,19 @@ class Perwalian_model extends CI_Model {
 
             // Hanya mahasiswa yang Tahap 1-nya sudah 'Disetujui' yang dihitung pada statistik Tahap 2
             if ($st1 === 'disetujui') {
-                $st2 = strtolower(trim($r['status_tahap2'] ?? 'belum dinilai'));
+                $totMk = (int)($r['total_mk'] ?? 0);
+                $totDinilai = (int)($r['total_dinilai'] ?? 0);
+                $curSt2 = $r['status_tahap2'] ?? 'Belum Dinilai';
+
+                if ($totDinilai === 0) {
+                    $curSt2 = 'Belum Dinilai';
+                } elseif ($totDinilai < $totMk) {
+                    $curSt2 = 'Proses Penilaian';
+                } elseif ($curSt2 === 'Belum Dinilai') {
+                    $curSt2 = 'Proses Penilaian';
+                }
+
+                $st2 = strtolower(trim($curSt2));
                 if ($st2 === 'proses penilaian') $stats['tahap2_proses']++;
                 elseif ($st2 === 'selesai') $stats['tahap2_selesai']++;
                 else $stats['tahap2_belum_dinilai']++;
@@ -1253,34 +1298,49 @@ class Perwalian_model extends CI_Model {
             'updated_at'       => $now,
         ]);
 
-        // Cek parent perwalian dan update status_tahap2 jika masih 'Belum Dinilai'
         $detail = $this->db->get_where('perwalian_detail', ['id' => $id_detail])->row_array();
-        if ($detail) {
-            $p = $this->get_perwalian_by_id($detail['id_perwalian']);
-            if ($p && $p['status_tahap2'] === 'Belum Dinilai') {
-                $this->db->where('id_perwalian', $detail['id_perwalian'])->update('perwalian', [
-                    'status_tahap2' => 'Proses Penilaian',
-                    'updated_at'    => $now,
-                ]);
-            }
-        }
-
         $counts = [
             'id_perwalian'      => 0,
             'total_lulus'       => 0,
             'total_tidak_lulus' => 0,
-            'status_tahap2'     => 'Proses Penilaian',
+            'status_tahap2'     => 'Belum Dinilai',
         ];
+
         if ($detail) {
             $id_perwalian = (int)$detail['id_perwalian'];
             $counts['id_perwalian'] = $id_perwalian;
-            $allDetails = $this->db->get_where('perwalian_detail', ['id_perwalian' => $id_perwalian])->result_array();
+            $allDetails = $this->db->get_where('perwalian_detail', [
+                'id_perwalian' => $id_perwalian,
+                'status_tahap' => 'akan_diambil',
+            ])->result_array();
+
+            $totMk = count($allDetails);
+            $totDinilai = 0;
             foreach ($allDetails as $d) {
                 if ($d['status_kelulusan'] === 'Lulus') $counts['total_lulus']++;
                 elseif ($d['status_kelulusan'] === 'Tidak Lulus') $counts['total_tidak_lulus']++;
+                if (!empty($d['nilai_huruf'])) $totDinilai++;
             }
-            $pNow = $this->get_perwalian_by_id($id_perwalian);
-            $counts['status_tahap2'] = !empty($pNow['status_tahap2']) ? $pNow['status_tahap2'] : 'Proses Penilaian';
+
+            $p = $this->get_perwalian_by_id($id_perwalian);
+            $curSt2 = $p['status_tahap2'] ?? 'Belum Dinilai';
+
+            if ($totDinilai === 0) {
+                $newSt2 = 'Belum Dinilai';
+            } elseif ($totDinilai < $totMk) {
+                $newSt2 = 'Proses Penilaian';
+            } else {
+                // Semua MK sudah ada nilai: jika sebelumnya sudah Selesai tetap Selesai, jika belum jadi Proses Penilaian
+                $newSt2 = ($curSt2 === 'Selesai') ? 'Selesai' : 'Proses Penilaian';
+            }
+
+            if ($newSt2 !== $curSt2) {
+                $this->db->where('id_perwalian', $id_perwalian)->update('perwalian', [
+                    'status_tahap2' => $newSt2,
+                    'updated_at'    => $now,
+                ]);
+            }
+            $counts['status_tahap2'] = $newSt2;
         }
 
         return array_merge([
@@ -1298,7 +1358,7 @@ class Perwalian_model extends CI_Model {
         $id_perwalian = (int)$id_perwalian;
         $now = date('Y-m-d H:i:s');
 
-        // Pastikan ada MK yang dinilai
+        // Pastikan ada MK yang dinilai dan seluruhnya sudah memiliki nilai_huruf
         $details = $this->db->get_where('perwalian_detail', [
             'id_perwalian' => $id_perwalian,
             'status_tahap' => 'akan_diambil',
@@ -1306,6 +1366,12 @@ class Perwalian_model extends CI_Model {
 
         if (empty($details)) {
             return ['status' => false, 'message' => 'Tidak ada mata kuliah untuk diselesaikan.'];
+        }
+
+        foreach ($details as $d) {
+            if (empty(trim((string)($d['nilai_huruf'] ?? '')))) {
+                return ['status' => false, 'message' => 'Seluruh mata kuliah wajib diberi Nilai Huruf sebelum perwalian dikunci.'];
+            }
         }
 
         // Tandai status perwalian selesai
