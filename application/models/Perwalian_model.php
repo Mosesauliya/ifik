@@ -181,47 +181,186 @@ class Perwalian_model extends CI_Model {
     }
 
     /**
-     * Bulk Upsert Mata Kuliah dari Excel / JSON
+     * Validasi baris mata kuliah sebelum import
+     * Memeriksa kesalahan mengisi field, swap kolom, dan format data.
      */
-    public function upsert_mata_kuliah_bulk($rows) {
-        if (empty($rows)) return ['inserted' => 0, 'updated' => 0];
+    public function validate_course_row($r) {
+        $errors = [];
+
+        // 1. Ambil data mentah
+        $rawKode = trim((string)($r['kode_mk'] ?? ($r['kode'] ?? ($r['Kode MK'] ?? ''))));
+        $rawNama = trim((string)($r['nama_mk'] ?? ($r['nama'] ?? ($r['Nama Mata Kuliah'] ?? ''))));
+        $rawSks  = $r['sks'] ?? ($r['SKS'] ?? null);
+        $rawSmt  = $r['semester'] ?? ($r['Semester'] ?? null);
+        $rawJenis= trim((string)($r['jenis'] ?? ($r['Jenis'] ?? ($r['Sifat'] ?? 'Wajib'))));
+        $rawProdi= trim((string)($r['prodi'] ?? ($r['Prodi'] ?? ($r['Program Studi'] ?? ''))));
+        $rawKur  = trim((string)($r['kurikulum'] ?? ($r['Kurikulum'] ?? '2024')));
+
+        // Validasi Kode MK
+        if ($rawKode === '') {
+            $errors[] = 'Kode MK tidak boleh kosong';
+        } else {
+            // Deteksi jika tertukar dengan Nama MK (panjang > 25 atau banyak spasi / kalimat)
+            if (strlen($rawKode) > 25 || substr_count($rawKode, ' ') >= 3) {
+                $errors[] = 'Kolom Kode MK terindikasi tertukar dengan Nama MK (format kode harus singkat alfanumerik, misal CS101)';
+            } elseif (strlen($rawKode) < 2) {
+                $errors[] = 'Kode MK terlalu pendek (minimal 2 karakter)';
+            }
+        }
+
+        // Validasi Nama MK
+        if ($rawNama === '') {
+            $errors[] = 'Nama Mata Kuliah tidak boleh kosong';
+        } else {
+            // Deteksi jika tertukar dengan Kode MK (terlalu pendek tanpa spasi dan berupa kode)
+            if (strlen($rawNama) <= 5 && !strpos($rawNama, ' ') && preg_match('/^[A-Za-z0-9_-]+$/', $rawNama)) {
+                $errors[] = 'Kolom Nama MK terindikasi tertukar dengan Kode MK (terlalu pendek untuk nama mata kuliah)';
+            } elseif (strlen($rawNama) < 3) {
+                $errors[] = 'Nama Mata Kuliah terlalu pendek (minimal 3 karakter)';
+            }
+        }
+
+        // Validasi SKS
+        if ($rawSks === null || $rawSks === '') {
+            $errors[] = 'Kolom SKS wajib diisi angka';
+        } elseif (!is_numeric($rawSks)) {
+            $errors[] = "Kolom SKS harus berupa angka (1-10), bukan teks '{$rawSks}' (kemungkinan kolom tertukar)";
+        } else {
+            $intSks = (int)$rawSks;
+            if ($intSks <= 0 || $intSks > 10) {
+                $errors[] = "Jumlah SKS tidak wajar ({$intSks} SKS). Harus antara 1-10 SKS";
+            }
+        }
+
+        // Validasi Semester
+        if ($rawSmt !== null && $rawSmt !== '') {
+            if (!is_numeric($rawSmt)) {
+                $errors[] = "Kolom Semester harus berupa angka (1-8), bukan teks '{$rawSmt}'";
+            } else {
+                $intSmt = (int)$rawSmt;
+                if ($intSmt <= 0 || $intSmt > 14) {
+                    $errors[] = "Semester tidak wajar ({$intSmt}). Harus antara 1-8";
+                }
+            }
+        }
+
+        // Validasi Jenis
+        $normJenis = ucfirst(strtolower($rawJenis));
+        if (!empty($rawJenis) && !in_array($normJenis, ['Wajib', 'Pilihan'])) {
+            $errors[] = "Jenis mata kuliah harus 'Wajib' atau 'Pilihan', bukan '{$rawJenis}'";
+        }
+
+        return [
+            'is_valid' => empty($errors),
+            'errors'   => $errors,
+            'clean'    => [
+                'kode_mk'   => strtoupper($rawKode),
+                'nama_mk'   => $rawNama,
+                'sks'       => max(1, min(10, (int)$rawSks)),
+                'semester'  => max(1, min(14, (int)($rawSmt ?: 1))),
+                'prodi'     => $rawProdi,
+                'jenis'     => in_array($normJenis, ['Wajib', 'Pilihan']) ? $normJenis : 'Wajib',
+                'kurikulum' => !empty($rawKur) ? $rawKur : '2024',
+            ]
+        ];
+    }
+
+    /**
+     * Bulk Upsert Mata Kuliah dari Excel / JSON dengan validasi duplicate & error checking
+     */
+    public function upsert_mata_kuliah_bulk($rows, $options = []) {
+        if (empty($rows)) return [
+            'inserted'          => 0,
+            'updated'           => 0,
+            'skipped_duplicate' => 0,
+            'skipped_invalid'   => 0,
+            'errors'            => [],
+        ];
 
         $now = date('Y-m-d H:i:s');
         $inserted = 0;
         $updated = 0;
+        $skipped_dup = 0;
+        $skipped_inv = 0;
+        $errorLogs = [];
 
-        foreach ($rows as $r) {
-            $kode = strtoupper(trim($r['kode_mk'] ?? ($r['kode'] ?? ($r['Kode MK'] ?? ''))));
-            $nama = trim($r['nama_mk'] ?? ($r['nama'] ?? ($r['Nama Mata Kuliah'] ?? '')));
-            if (empty($kode) || empty($nama)) continue;
+        $allowUpdate = !empty($options['allow_update']);
+        $seenKodeInFile = [];
+        $seenNamaInFile = [];
 
-            $sks = max(1, (int)($r['sks'] ?? ($r['SKS'] ?? 3)));
-            $semester = max(1, (int)($r['semester'] ?? ($r['Semester'] ?? 1)));
-            $prodi = trim($r['prodi'] ?? ($r['Prodi'] ?? ($r['Program Studi'] ?? '')));
-            $jenis = trim($r['jenis'] ?? ($r['Jenis'] ?? ($r['Sifat'] ?? 'Wajib')));
-            $kurikulum = trim($r['kurikulum'] ?? ($r['Kurikulum'] ?? '2024'));
+        foreach ($rows as $index => $r) {
+            $rowNum = $index + 1;
+            $val = $this->validate_course_row($r);
 
+            if (!$val['is_valid']) {
+                $skipped_inv++;
+                $errorLogs[] = [
+                    'row'     => $rowNum,
+                    'kode_mk' => $r['kode_mk'] ?? ($r['Kode MK'] ?? '-'),
+                    'reason'  => implode('; ', $val['errors']),
+                ];
+                continue;
+            }
+
+            $c = $val['clean'];
+            $kode = $c['kode_mk'];
+            $namaLower = strtolower($c['nama_mk']);
+
+            // 1. Cek duplikasi di dalam file yang sama
+            if (isset($seenKodeInFile[$kode])) {
+                $skipped_dup++;
+                $errorLogs[] = [
+                    'row'     => $rowNum,
+                    'kode_mk' => $kode,
+                    'reason'  => "Duplikat di dalam file: Kode MK {$kode} sudah muncul di baris {$seenKodeInFile[$kode]}",
+                ];
+                continue;
+            }
+            $seenKodeInFile[$kode] = $rowNum;
+
+            if (isset($seenNamaInFile[$namaLower]) && $seenNamaInFile[$namaLower]['prodi'] === $c['prodi']) {
+                $prevRow = $seenNamaInFile[$namaLower]['row'];
+                $skipped_dup++;
+                $errorLogs[] = [
+                    'row'     => $rowNum,
+                    'kode_mk' => $kode,
+                    'reason'  => "Duplikat di dalam file: Nama MK '{$c['nama_mk']}' sudah ada di baris {$prevRow}",
+                ];
+                continue;
+            }
+            $seenNamaInFile[$namaLower] = ['row' => $rowNum, 'prodi' => $c['prodi']];
+
+            // 2. Cek duplikasi di Database
             $existing = $this->get_mata_kuliah_by_kode($kode);
             if ($existing) {
-                $this->db->where('id', $existing['id'])->update('master_mata_kuliah', [
-                    'nama_mk'    => $nama,
-                    'sks'        => $sks,
-                    'semester'   => $semester,
-                    'prodi'      => !empty($prodi) ? $prodi : $existing['prodi'],
-                    'jenis'      => !empty($jenis) ? $jenis : $existing['jenis'],
-                    'kurikulum'  => !empty($kurikulum) ? $kurikulum : $existing['kurikulum'],
-                    'updated_at' => $now,
-                ]);
-                $updated++;
+                if ($allowUpdate) {
+                    $this->db->where('id', $existing['id'])->update('master_mata_kuliah', [
+                        'nama_mk'    => $c['nama_mk'],
+                        'sks'        => $c['sks'],
+                        'semester'   => $c['semester'],
+                        'prodi'      => !empty($c['prodi']) ? $c['prodi'] : $existing['prodi'],
+                        'jenis'      => !empty($c['jenis']) ? $c['jenis'] : $existing['jenis'],
+                        'kurikulum'  => !empty($c['kurikulum']) ? $c['kurikulum'] : $existing['kurikulum'],
+                        'updated_at' => $now,
+                    ]);
+                    $updated++;
+                } else {
+                    $skipped_dup++;
+                    $errorLogs[] = [
+                        'row'     => $rowNum,
+                        'kode_mk' => $kode,
+                        'reason'  => "Duplikat Database: Kode MK {$kode} ({$existing['nama_mk']}) sudah terdaftar di sistem",
+                    ];
+                }
             } else {
                 $this->db->insert('master_mata_kuliah', [
                     'kode_mk'    => $kode,
-                    'nama_mk'    => $nama,
-                    'sks'        => $sks,
-                    'semester'   => $semester,
-                    'prodi'      => $prodi,
-                    'jenis'      => $jenis,
-                    'kurikulum'  => $kurikulum,
+                    'nama_mk'    => $c['nama_mk'],
+                    'sks'        => $c['sks'],
+                    'semester'   => $c['semester'],
+                    'prodi'      => $c['prodi'],
+                    'jenis'      => $c['jenis'],
+                    'kurikulum'  => $c['kurikulum'],
                     'is_active'  => 1,
                     'created_at' => $now,
                     'updated_at' => $now,
@@ -230,7 +369,13 @@ class Perwalian_model extends CI_Model {
             }
         }
 
-        return ['inserted' => $inserted, 'updated' => $updated];
+        return [
+            'inserted'          => $inserted,
+            'updated'           => $updated,
+            'skipped_duplicate' => $skipped_dup,
+            'skipped_invalid'   => $skipped_inv,
+            'errors'            => $errorLogs,
+        ];
     }
 
     // =========================================================================
@@ -285,24 +430,114 @@ class Perwalian_model extends CI_Model {
     // =========================================================================
 
     /**
+     * Validasi baris KRS sebelum import
+     */
+    public function validate_krs_row($r) {
+        $errors = [];
+        $rawNim   = trim((string)($r['nim'] ?? ($r['NIM'] ?? ($r['nim_mahasiswa'] ?? ''))));
+        $rawKode  = strtoupper(trim((string)($r['kode_mk'] ?? ($r['kode'] ?? ($r['Kode MK'] ?? '')))));
+        $rawTahun = trim((string)($r['tahun_ajaran'] ?? ($r['tahun'] ?? '')));
+        $rawSmt   = trim((string)($r['semester'] ?? ''));
+
+        // Validasi NIM
+        if ($rawNim === '') {
+            $errors[] = 'NIM tidak boleh kosong';
+        } else {
+            if (!preg_match('/^[0-9A-Za-z]{6,25}$/', $rawNim) || strpos($rawNim, ' ') !== false) {
+                $errors[] = "Format NIM tidak valid ('{$rawNim}'). Kemungkinan tertukar dengan Nama mahasiswa";
+            }
+        }
+
+        // Validasi Kode MK
+        if ($rawKode === '') {
+            $errors[] = 'Kode MK tidak boleh kosong';
+        } else {
+            if (strlen($rawKode) > 25 || substr_count($rawKode, ' ') >= 2) {
+                $errors[] = "Format Kode MK tidak valid ('{$rawKode}'). Kemungkinan tertukar dengan Nama MK";
+            }
+        }
+
+        // Validasi Tahun Ajaran (jika ada)
+        if (!empty($rawTahun) && !preg_match('/^\d{4}\/\d{4}$/', $rawTahun)) {
+            $errors[] = "Format Tahun Ajaran harus YYYY/YYYY (misal 2024/2025), bukan '{$rawTahun}'";
+        }
+
+        // Validasi Semester (jika ada)
+        $normSmt = ucfirst(strtolower($rawSmt));
+        if (!empty($rawSmt) && !in_array($normSmt, ['Ganjil', 'Genap'])) {
+            $errors[] = "Semester harus 'Ganjil' atau 'Genap', bukan '{$rawSmt}'";
+        }
+
+        return [
+            'is_valid' => empty($errors),
+            'errors'   => $errors,
+            'clean'    => [
+                'nim'          => $rawNim,
+                'kode_mk'      => $rawKode,
+                'tahun_ajaran' => $rawTahun,
+                'semester'     => in_array($normSmt, ['Ganjil', 'Genap']) ? $normSmt : '',
+            ]
+        ];
+    }
+
+    /**
      * Bulk Import KRS dari SIAKAD / i-Gracias oleh Admin Prodi
      * Setiap baris: [nim, kode_mk, tahun_ajaran, semester]
      */
-    public function upsert_krs_bulk($rows, $defaultTahun = '2024/2025', $defaultSemester = 'Ganjil') {
-        if (empty($rows)) return ['processed' => 0, 'new_perwalian' => 0, 'courses_added' => 0];
+    public function upsert_krs_bulk($rows, $defaultTahun = '2024/2025', $defaultSemester = 'Ganjil', $options = []) {
+        if (empty($rows)) return [
+            'processed'          => 0,
+            'new_perwalian'      => 0,
+            'courses_added'      => 0,
+            'skipped_duplicate'  => 0,
+            'skipped_invalid'    => 0,
+            'errors'             => [],
+        ];
 
         $now = date('Y-m-d H:i:s');
         $processed = 0;
         $new_perwalian = 0;
         $courses_added = 0;
+        $skipped_dup = 0;
+        $skipped_inv = 0;
+        $errorLogs = [];
 
-        foreach ($rows as $r) {
-            $nim = trim((string)($r['nim'] ?? ($r['NIM'] ?? ($r['nim_mahasiswa'] ?? ''))));
-            $kode_mk = strtoupper(trim((string)($r['kode_mk'] ?? ($r['kode'] ?? ($r['Kode MK'] ?? '')))));
-            if (empty($nim) || empty($kode_mk)) continue;
+        $seenInFile = [];
 
-            $tahun = trim((string)($r['tahun_ajaran'] ?? ($r['tahun'] ?? $defaultTahun)));
-            $smt = trim((string)($r['semester'] ?? $defaultSemester));
+        foreach ($rows as $index => $r) {
+            $rowNum = $index + 1;
+            $val = $this->validate_krs_row($r);
+
+            if (!$val['is_valid']) {
+                $skipped_inv++;
+                $errorLogs[] = [
+                    'row'     => $rowNum,
+                    'nim'     => $r['nim'] ?? ($r['NIM'] ?? '-'),
+                    'kode_mk' => $r['kode_mk'] ?? ($r['Kode MK'] ?? '-'),
+                    'reason'  => implode('; ', $val['errors']),
+                ];
+                continue;
+            }
+
+            $c = $val['clean'];
+            $nim = $c['nim'];
+            $kode_mk = $c['kode_mk'];
+            $tahun = !empty($c['tahun_ajaran']) ? $c['tahun_ajaran'] : $defaultTahun;
+            $smt = !empty($c['semester']) ? $c['semester'] : $defaultSemester;
+
+            $fileKey = "{$nim}_{$kode_mk}_{$tahun}_{$smt}";
+            if (isset($seenInFile[$fileKey])) {
+                $prevRow = $seenInFile[$fileKey];
+                $skipped_dup++;
+                $errorLogs[] = [
+                    'row'     => $rowNum,
+                    'nim'     => $nim,
+                    'kode_mk' => $kode_mk,
+                    'reason'  => "Duplikat di dalam file: NIM {$nim} dengan Kode MK {$kode_mk} sudah ada di baris {$prevRow}",
+                ];
+                continue;
+            }
+            $seenInFile[$fileKey] = $rowNum;
 
             // Ambil / buat perwalian mahasiswa
             $perwalian = $this->get_active_perwalian_by_nim($nim, $tahun, $smt);
@@ -323,7 +558,15 @@ class Perwalian_model extends CI_Model {
                 'status_tahap' => 'akan_diambil',
             ])->row_array();
 
-            if (!$existDetail) {
+            if ($existDetail) {
+                $skipped_dup++;
+                $errorLogs[] = [
+                    'row'     => $rowNum,
+                    'nim'     => $nim,
+                    'kode_mk' => $kode_mk,
+                    'reason'  => "Duplikat KRS: Mahasiswa {$nim} sudah mengambil MK {$kode_mk} ({$nama_mk})",
+                ];
+            } else {
                 $this->db->insert('perwalian_detail', [
                     'id_perwalian'     => $id_perwalian,
                     'kode_mk'          => $kode_mk,
@@ -342,9 +585,12 @@ class Perwalian_model extends CI_Model {
         }
 
         return [
-            'processed'       => $processed,
-            'new_perwalian'   => $new_perwalian,
-            'courses_added'   => $courses_added,
+            'processed'          => $processed,
+            'new_perwalian'      => $new_perwalian,
+            'courses_added'      => $courses_added,
+            'skipped_duplicate'  => $skipped_dup,
+            'skipped_invalid'    => $skipped_inv,
+            'errors'             => $errorLogs,
         ];
     }
 
@@ -419,14 +665,17 @@ class Perwalian_model extends CI_Model {
      * @param string|null $status_tahap 'akan_diambil' | 'sudah_diambil' | null (all)
      */
     public function get_perwalian_detail($id_perwalian, $status_tahap = null) {
-        $this->db->from('perwalian_detail')
-                 ->where('id_perwalian', (int)$id_perwalian);
+        $this->db->select('pd.*, COALESCE(m.semester, 1) as semester_mk, m.jenis as jenis_mk')
+                 ->from('perwalian_detail pd')
+                 ->join('master_mata_kuliah m', 'pd.kode_mk = m.kode_mk', 'left')
+                 ->where('pd.id_perwalian', (int)$id_perwalian);
 
         if (!empty($status_tahap)) {
-            $this->db->where('status_tahap', $status_tahap);
+            $this->db->where('pd.status_tahap', $status_tahap);
         }
 
-        $this->db->order_by('id', 'ASC');
+        $this->db->order_by('semester_mk', 'ASC');
+        $this->db->order_by('pd.id', 'ASC');
         return $this->db->get()->result_array();
     }
 
@@ -434,11 +683,13 @@ class Perwalian_model extends CI_Model {
      * Ambil riwayat seluruh MK yang SUDAH diambil oleh mahasiswa (dari semester-semester sebelumnya)
      */
     public function get_riwayat_mk_sudah_diambil($nim) {
-        $this->db->select('pd.*, p.tahun_ajaran, p.semester as periode_semester')
+        $this->db->select('pd.*, COALESCE(m.semester, 1) as semester_mk, p.tahun_ajaran, p.semester as periode_semester')
                  ->from('perwalian_detail pd')
                  ->join('perwalian p', 'pd.id_perwalian = p.id_perwalian', 'inner')
+                 ->join('master_mata_kuliah m', 'pd.kode_mk = m.kode_mk', 'left')
                  ->where('p.nim', trim($nim))
                  ->where('pd.status_tahap', 'sudah_diambil')
+                 ->order_by('semester_mk', 'ASC')
                  ->order_by('pd.id', 'ASC');
 
         return $this->db->get()->result_array();
@@ -712,7 +963,33 @@ class Perwalian_model extends CI_Model {
 
         $this->db->group_by('p.id_perwalian');
         $this->db->order_by('p.updated_at', 'DESC');
-        return $this->db->get()->result_array();
+        $rows = $this->db->get()->result_array();
+
+        // Self-healing: pastikan status_tahap2 selalu sinkron dengan jumlah MK yang benar-benar sudah dinilai
+        foreach ($rows as &$r) {
+            $totMk = (int)($r['total_mk'] ?? 0);
+            $totDinilai = (int)($r['total_dinilai'] ?? 0);
+            $curSt2 = $r['status_tahap2'] ?? 'Belum Dinilai';
+            $fixedSt2 = $curSt2;
+
+            if ($totDinilai === 0) {
+                $fixedSt2 = 'Belum Dinilai';
+            } elseif ($totDinilai < $totMk) {
+                $fixedSt2 = 'Proses Penilaian';
+            } elseif ($curSt2 === 'Belum Dinilai') {
+                $fixedSt2 = 'Proses Penilaian';
+            }
+
+            if ($fixedSt2 !== $curSt2) {
+                $r['status_tahap2'] = $fixedSt2;
+                $this->db->where('id_perwalian', (int)$r['id_perwalian'])->update('perwalian', [
+                    'status_tahap2' => $fixedSt2,
+                ]);
+            }
+        }
+        unset($r);
+
+        return $rows;
     }
 
     /**
@@ -722,8 +999,14 @@ class Perwalian_model extends CI_Model {
         $ids = is_array($dosen_identifiers) ? array_filter(array_unique($dosen_identifiers)) : [trim((string)$dosen_identifiers)];
         $ids = array_values(array_filter($ids, fn($v) => !empty($v)));
 
-        $this->db->from('perwalian p')
-                 ->join('user u', 'p.nim = u.nim OR p.nim = u.username', 'left', false);
+        $this->db->select('
+            p.*,
+            COUNT(pd.id) as total_mk,
+            COALESCE(SUM(CASE WHEN pd.nilai_huruf IS NOT NULL AND pd.nilai_huruf != "" THEN 1 ELSE 0 END), 0) as total_dinilai
+        ')
+        ->from('perwalian p')
+        ->join('user u', 'p.nim = u.nim OR p.nim = u.username', 'left', false)
+        ->join('perwalian_detail pd', 'p.id_perwalian = pd.id_perwalian AND pd.status_tahap = "akan_diambil"', 'left');
 
         if (!in_array('all', $ids, true) && !empty($ids)) {
             $this->db->group_start();
@@ -739,6 +1022,7 @@ class Perwalian_model extends CI_Model {
             $this->db->where('p.semester', $semester);
         }
 
+        $this->db->group_by('p.id_perwalian');
         $records = $this->db->get()->result_array();
 
         $stats = [
@@ -759,10 +1043,25 @@ class Perwalian_model extends CI_Model {
             elseif ($st1 === 'revisi') $stats['tahap1_revisi']++;
             else $stats['tahap1_draft']++;
 
-            $st2 = strtolower(trim($r['status_tahap2'] ?? 'belum dinilai'));
-            if ($st2 === 'proses penilaian') $stats['tahap2_proses']++;
-            elseif ($st2 === 'selesai') $stats['tahap2_selesai']++;
-            else $stats['tahap2_belum_dinilai']++;
+            // Hanya mahasiswa yang Tahap 1-nya sudah 'Disetujui' yang dihitung pada statistik Tahap 2
+            if ($st1 === 'disetujui') {
+                $totMk = (int)($r['total_mk'] ?? 0);
+                $totDinilai = (int)($r['total_dinilai'] ?? 0);
+                $curSt2 = $r['status_tahap2'] ?? 'Belum Dinilai';
+
+                if ($totDinilai === 0) {
+                    $curSt2 = 'Belum Dinilai';
+                } elseif ($totDinilai < $totMk) {
+                    $curSt2 = 'Proses Penilaian';
+                } elseif ($curSt2 === 'Belum Dinilai') {
+                    $curSt2 = 'Proses Penilaian';
+                }
+
+                $st2 = strtolower(trim($curSt2));
+                if ($st2 === 'proses penilaian') $stats['tahap2_proses']++;
+                elseif ($st2 === 'selesai') $stats['tahap2_selesai']++;
+                else $stats['tahap2_belum_dinilai']++;
+            }
         }
 
         return $stats;
@@ -927,6 +1226,52 @@ class Perwalian_model extends CI_Model {
     }
 
     /**
+     * Reset Status / Berkas Perwalian Mahasiswa (Buka Kunci atau Reset Total)
+     * @param int $id_perwalian
+     * @param string $action 'unlock' (buka kunci ke Draft/Revisi) | 'total' (kosongkan MK & file)
+     * @param string $catatan
+     */
+    public function reset_perwalian($id_perwalian, $action = 'unlock', $catatan = '') {
+        $now = date('Y-m-d H:i:s');
+        $perwalian = $this->db->get_where('perwalian', ['id_perwalian' => (int)$id_perwalian])->row_array();
+        if (!$perwalian) return false;
+
+        if ($action === 'total') {
+            // Hapus file KRS fisik jika ada
+            if (!empty($perwalian['file_krs'])) {
+                $filePath = FCPATH . 'uploads/krs/' . $perwalian['file_krs'];
+                if (file_exists($filePath)) {
+                    @unlink($filePath);
+                }
+            }
+
+            // Hapus detail mata kuliah yang 'akan_diambil'
+            $this->db->where('id_perwalian', (int)$id_perwalian)
+                     ->where('status_tahap', 'akan_diambil')
+                     ->delete('perwalian_detail');
+
+            return $this->db->where('id_perwalian', (int)$id_perwalian)->update('perwalian', [
+                'status_tahap1'       => 'Draft',
+                'file_krs'            => null,
+                'catatan_wali'        => !empty($catatan) ? trim($catatan) : 'Berkas KRS telah direset total oleh Admin Prodi.',
+                'tgl_pengajuan'       => null,
+                'tgl_approval_tahap1' => null,
+                'updated_at'          => $now,
+            ]);
+        } else {
+            // Mode unlock: kembalikan ke Draft atau Revisi agar form mahasiswa terbuka kembali
+            $newStatus = !empty($catatan) ? 'Revisi' : 'Draft';
+            return $this->db->where('id_perwalian', (int)$id_perwalian)->update('perwalian', [
+                'status_tahap1'       => $newStatus,
+                'catatan_wali'        => !empty($catatan) ? trim($catatan) : $perwalian['catatan_wali'],
+                'tgl_approval_tahap1' => null,
+                'updated_at'          => $now,
+            ]);
+        }
+    }
+
+
+    /**
      * Update nilai per mata kuliah (Tahap 2):
      * A, AB, B, BC, C -> Otomatis Lulus (Hijau)
      * D, E -> Otomatis Tidak Lulus (Merah)
@@ -953,34 +1298,49 @@ class Perwalian_model extends CI_Model {
             'updated_at'       => $now,
         ]);
 
-        // Cek parent perwalian dan update status_tahap2 jika masih 'Belum Dinilai'
         $detail = $this->db->get_where('perwalian_detail', ['id' => $id_detail])->row_array();
-        if ($detail) {
-            $p = $this->get_perwalian_by_id($detail['id_perwalian']);
-            if ($p && $p['status_tahap2'] === 'Belum Dinilai') {
-                $this->db->where('id_perwalian', $detail['id_perwalian'])->update('perwalian', [
-                    'status_tahap2' => 'Proses Penilaian',
-                    'updated_at'    => $now,
-                ]);
-            }
-        }
-
         $counts = [
             'id_perwalian'      => 0,
             'total_lulus'       => 0,
             'total_tidak_lulus' => 0,
-            'status_tahap2'     => 'Proses Penilaian',
+            'status_tahap2'     => 'Belum Dinilai',
         ];
+
         if ($detail) {
             $id_perwalian = (int)$detail['id_perwalian'];
             $counts['id_perwalian'] = $id_perwalian;
-            $allDetails = $this->db->get_where('perwalian_detail', ['id_perwalian' => $id_perwalian])->result_array();
+            $allDetails = $this->db->get_where('perwalian_detail', [
+                'id_perwalian' => $id_perwalian,
+                'status_tahap' => 'akan_diambil',
+            ])->result_array();
+
+            $totMk = count($allDetails);
+            $totDinilai = 0;
             foreach ($allDetails as $d) {
                 if ($d['status_kelulusan'] === 'Lulus') $counts['total_lulus']++;
                 elseif ($d['status_kelulusan'] === 'Tidak Lulus') $counts['total_tidak_lulus']++;
+                if (!empty($d['nilai_huruf'])) $totDinilai++;
             }
-            $pNow = $this->get_perwalian_by_id($id_perwalian);
-            $counts['status_tahap2'] = !empty($pNow['status_tahap2']) ? $pNow['status_tahap2'] : 'Proses Penilaian';
+
+            $p = $this->get_perwalian_by_id($id_perwalian);
+            $curSt2 = $p['status_tahap2'] ?? 'Belum Dinilai';
+
+            if ($totDinilai === 0) {
+                $newSt2 = 'Belum Dinilai';
+            } elseif ($totDinilai < $totMk) {
+                $newSt2 = 'Proses Penilaian';
+            } else {
+                // Semua MK sudah ada nilai: jika sebelumnya sudah Selesai tetap Selesai, jika belum jadi Proses Penilaian
+                $newSt2 = ($curSt2 === 'Selesai') ? 'Selesai' : 'Proses Penilaian';
+            }
+
+            if ($newSt2 !== $curSt2) {
+                $this->db->where('id_perwalian', $id_perwalian)->update('perwalian', [
+                    'status_tahap2' => $newSt2,
+                    'updated_at'    => $now,
+                ]);
+            }
+            $counts['status_tahap2'] = $newSt2;
         }
 
         return array_merge([
@@ -998,7 +1358,7 @@ class Perwalian_model extends CI_Model {
         $id_perwalian = (int)$id_perwalian;
         $now = date('Y-m-d H:i:s');
 
-        // Pastikan ada MK yang dinilai
+        // Pastikan ada MK yang dinilai dan seluruhnya sudah memiliki nilai_huruf
         $details = $this->db->get_where('perwalian_detail', [
             'id_perwalian' => $id_perwalian,
             'status_tahap' => 'akan_diambil',
@@ -1006,6 +1366,12 @@ class Perwalian_model extends CI_Model {
 
         if (empty($details)) {
             return ['status' => false, 'message' => 'Tidak ada mata kuliah untuk diselesaikan.'];
+        }
+
+        foreach ($details as $d) {
+            if (empty(trim((string)($d['nilai_huruf'] ?? '')))) {
+                return ['status' => false, 'message' => 'Seluruh mata kuliah wajib diberi Nilai Huruf sebelum perwalian dikunci.'];
+            }
         }
 
         // Tandai status perwalian selesai
@@ -1068,8 +1434,8 @@ class Perwalian_model extends CI_Model {
                     $skipped++;
                 }
             } elseif (!empty($nim)) {
-                // Mode kolektif bimbingan: cari perwalian aktif mahasiswa tersebut
-                $p = $this->db->get_where('perwalian', ['nim' => $nim])->order_by('id_perwalian', 'DESC')->row_array();
+                // Mode kolektif bimbingan: cari perwalian aktif mahasiswa yang Tahap 1-nya sudah Disetujui
+                $p = $this->db->where(['nim' => $nim, 'status_tahap1' => 'Disetujui'])->order_by('id_perwalian', 'DESC')->get('perwalian')->row_array();
                 if ($p) {
                     $det = $this->db->get_where('perwalian_detail', [
                         'id_perwalian' => $p['id_perwalian'],

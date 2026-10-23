@@ -14,14 +14,14 @@ class DosenTicketing extends CI_Controller {
         }
 
         $this->load->model('DosenTicketing_model');
-        $this->load->helper(['url', 'form']);
+        $this->load->helper(['url', 'form', 'fik_prodi']);
     }
 
     /**
-     * Default index: Redirect to input
+     * Default index: Redirect to riwayat
      */
     public function index() {
-        redirect('dosen/ticketing/input');
+        redirect('dosen/ticketing/riwayat');
     }
 
     /**

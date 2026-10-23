@@ -171,7 +171,7 @@ $route['dosen/wali/tanda-tangan/hapus'] = 'DosenWali/hapus_tanda_tangan';
 $route['dosen/wali/tanda-tangan/download'] = 'DosenWali/download_tanda_tangan';
 
 // Dosen Ticketing Routes
-$route['dosen/ticketing'] = 'DosenTicketing/input';
+$route['dosen/ticketing'] = 'DosenTicketing/riwayat';
 $route['dosen/ticketing/input'] = 'DosenTicketing/input';
 $route['dosen/ticketing/simpan'] = 'DosenTicketing/simpan';
 $route['dosen/ticketing/riwayat'] = 'DosenTicketing/riwayat';
@@ -372,7 +372,7 @@ $route['ketuakk/(:any)'] = 'KetuaKK/$1';
 $route['ketuakk/(:any)/(:any)'] = 'KetuaKK/$1/$2';
 
 // Central Admin Panel Routes
-$route['admin'] = 'Admin/index';
+$route['admin'] = 'AdminHeader/index';
 $route['admin/log_history'] = 'Admin/log_history';
 $route['log-history'] = 'Admin/log_history';
 $route['adminfooter'] = 'AdminFooter/index';
@@ -491,7 +491,7 @@ $route['laboran/ticketing/kategori_toggle/(:num)'] = 'LaboranTicketing/kategori_
 $route['laboran/ticketing/kategori_delete/(:num)'] = 'LaboranTicketing/kategori_delete/$1';
 
 // Mahasiswa Ticketing Routes
-$route['mahasiswa/ticketing'] = 'Mahasiswa/ticketing_input';
+$route['mahasiswa/ticketing'] = 'Mahasiswa/ticketing_riwayat';
 $route['mahasiswa/ticketing/input'] = 'Mahasiswa/ticketing_input';
 $route['mahasiswa/ticketing/simpan'] = 'Mahasiswa/ticketing_simpan';
 $route['mahasiswa/ticketing/riwayat'] = 'Mahasiswa/ticketing_riwayat';

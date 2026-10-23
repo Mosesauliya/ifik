@@ -7,7 +7,7 @@ class Mahasiswa extends CI_Controller {
         parent::__construct();
         $this->load->model('Mahasiswa_model');
         $this->load->library('form_validation');
-        $this->load->helper(array('form', 'url'));
+        $this->load->helper(array('form', 'url', 'fik_prodi'));
 
         $isAjax = $this->input->is_ajax_request() ||
                   (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') ||

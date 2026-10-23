@@ -1415,16 +1415,16 @@
     </div>
 
     <!-- MODAL: Add / Edit Account Manual -->
-    <div id="modal-account" class="fixed inset-0 z-[100050] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200">
-            <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+    <div id="modal-account" class="fixed inset-0 z-[100050] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 my-auto">
+            <div class="px-6 py-4 bg-slate-900 text-white rounded-t-2xl flex items-center justify-between">
                 <h3 id="modal-account-title" class="font-bold text-sm">Tambah Akun Manual</h3>
-                <button onclick="closeAccountModal()" class="text-slate-400 hover:text-white">
+                <button type="button" onclick="closeAccountModal()" class="text-slate-400 hover:text-white">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
-            <form id="account-form" onsubmit="saveAccountForm(event)" class="p-6 space-y-4">
+            <form id="account-form" onsubmit="saveAccountForm(event)" class="p-5 sm:p-6 space-y-4">
                 <input type="hidden" id="account-id">
 
                 <div>
@@ -1437,32 +1437,39 @@
                     <input type="email" id="acc-email" required class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none">
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Peran / Role *</label>
-                        <select id="acc-role" onchange="handleRoleChange(this.value)" required class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                            <?php if (!empty($is_koor_ta) || (int)$this->session->userdata('role_id') === 6): ?>
-                                <option value="Koordinator TA">Koordinator TA (6)</option>
-                            <?php elseif (!empty($is_laa) || (int)$this->session->userdata('role_id') === 5): ?>
-                                <option value="Mahasiswa">Mahasiswa (4)</option>
-                                <option value="Admin LAA">Admin LAA (5)</option>
-                            <?php elseif (!empty($is_laboran) || (int)$this->session->userdata('role_id') === 21): ?>
-                                <option value="Mahasiswa">Mahasiswa (4)</option>
-                                <option value="Dosen">Dosen (3)</option>
-                                <option value="Laboran">Laboran (21)</option>
-                            <?php else: ?>
-                                <option value="Mahasiswa">Mahasiswa (4)</option>
-                                <option value="Dosen">Dosen (3)</option>
-                                <option value="Laboran">Laboran (21)</option>
-                                <option value="Ka. Ur">Kepala Urusan (2)</option>
-                                <option value="Admin LAA">Admin LAA (5)</option>
-                                <option value="Koordinator TA">Koordinator TA (6)</option>
-                                <option value="PIC KK">PIC KK (7)</option>
-                                <option value="Ketua KK">Ketua KK (9)</option>
-                                <option value="Admin">Admin (1)</option>
-                                <option value="Super Admin">Super Admin (22)</option>
-                            <?php endif; ?>
-                        </select>
+                        <div class="relative custom-dropdown-container" id="custom-wrap-acc-role">
+                            <select id="acc-role" onchange="handleRoleChange(this.value)" required class="hidden">
+                                <?php if (!empty($is_koor_ta) || (int)$this->session->userdata('role_id') === 6): ?>
+                                    <option value="Koordinator TA">Koordinator TA (6)</option>
+                                <?php elseif (!empty($is_laa) || (int)$this->session->userdata('role_id') === 5): ?>
+                                    <option value="Mahasiswa">Mahasiswa (4)</option>
+                                    <option value="Admin LAA">Admin LAA (5)</option>
+                                <?php elseif (!empty($is_laboran) || (int)$this->session->userdata('role_id') === 21): ?>
+                                    <option value="Mahasiswa">Mahasiswa (4)</option>
+                                    <option value="Dosen">Dosen (3)</option>
+                                    <option value="Laboran">Laboran (21)</option>
+                                <?php else: ?>
+                                    <option value="Mahasiswa">Mahasiswa (4)</option>
+                                    <option value="Dosen">Dosen (3)</option>
+                                    <option value="Laboran">Laboran (21)</option>
+                                    <option value="Ka. Ur">Kepala Urusan (2)</option>
+                                    <option value="Admin LAA">Admin LAA (5)</option>
+                                    <option value="Koordinator TA">Koordinator TA (6)</option>
+                                    <option value="PIC KK">PIC KK (7)</option>
+                                    <option value="Ketua KK">Ketua KK (9)</option>
+                                    <option value="Admin">Admin (1)</option>
+                                    <option value="Super Admin">Super Admin (22)</option>
+                                <?php endif; ?>
+                            </select>
+                            <button type="button" onclick="toggleCustomDropdown('modal-acc-role', event)" class="w-full px-3 py-2 text-xs bg-slate-50 hover:bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none flex items-center justify-between gap-2 text-left font-medium text-slate-800 cursor-pointer transition-colors">
+                                <span id="label-modal-acc-role" class="truncate">Mahasiswa (4)</span>
+                                <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200 shrink-0" id="arrow-filter-modal-acc-role"></i>
+                            </button>
+                            <div id="menu-filter-modal-acc-role" class="custom-dropdown-menu hidden absolute top-full left-0 mt-1.5 w-full max-h-52 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl z-[100060] p-1 space-y-0.5 text-xs"></div>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">NIM / NIP / ID</label>
@@ -1472,30 +1479,44 @@
 
                 <!-- Field Dinamis: Jabatan Dosen & Program Studi -->
                 <div id="container-dosen-fields" class="space-y-4 pt-1 border-t border-slate-100 hidden">
-                    <div class="grid grid-cols-2 gap-3" id="row-prodi-jabatan">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="row-prodi-jabatan">
                         <div id="wrapper-jabatan">
                             <label class="block text-xs font-bold text-slate-700 mb-1">
                                 <i class="fa-solid fa-user-tag text-brand-600 mr-1"></i> Jabatan Dosen
                             </label>
-                            <select id="acc-jabatan" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                                <option value="dosen">Dosen Biasa</option>
-                                <option value="kaprodi">Kaprodi (Kepala Program Studi)</option>
-                                <option value="kaur">Ka. Ur Laboratorium (Kepala Urusan)</option>
-                                <option value="wadek">Wakil Dekan (Wadek)</option>
-                            </select>
+                            <div class="relative custom-dropdown-container" id="custom-wrap-acc-jabatan">
+                                <select id="acc-jabatan" class="hidden">
+                                    <option value="dosen">Dosen Biasa</option>
+                                    <option value="kaprodi">Kaprodi (Kepala Program Studi)</option>
+                                    <option value="kaur">Ka. Ur Laboratorium (Kepala Urusan)</option>
+                                    <option value="wadek">Wakil Dekan (Wadek)</option>
+                                </select>
+                                <button type="button" onclick="toggleCustomDropdown('modal-acc-jabatan', event)" class="w-full px-3 py-2 text-xs bg-slate-50 hover:bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none flex items-center justify-between gap-2 text-left font-medium text-slate-800 cursor-pointer transition-colors">
+                                    <span id="label-modal-acc-jabatan" class="truncate">Dosen Biasa</span>
+                                    <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200 shrink-0" id="arrow-filter-modal-acc-jabatan"></i>
+                                </button>
+                                <div id="menu-filter-modal-acc-jabatan" class="custom-dropdown-menu hidden absolute top-full left-0 mt-1.5 w-full max-h-52 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl z-[100060] p-1 space-y-0.5 text-xs"></div>
+                            </div>
                         </div>
                         <div id="wrapper-prodi">
                             <label class="block text-xs font-bold text-slate-700 mb-1">
                                 <i class="fa-solid fa-graduation-cap text-brand-600 mr-1"></i> Program Studi
                             </label>
-                            <select id="acc-prodi" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                                <option value="">-- Pilih Program Studi --</option>
-                                <?php if (!empty($prodi_list)): ?>
-                                    <?php foreach ($prodi_list as $p): ?>
-                                        <option value="<?= htmlspecialchars($p) ?>"><?= htmlspecialchars($p) ?></option>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </select>
+                            <div class="relative custom-dropdown-container" id="custom-wrap-acc-prodi">
+                                <select id="acc-prodi" class="hidden">
+                                    <option value="">-- Pilih Program Studi --</option>
+                                    <?php if (!empty($prodi_list)): ?>
+                                        <?php foreach ($prodi_list as $p): ?>
+                                            <option value="<?= htmlspecialchars($p) ?>"><?= htmlspecialchars($p) ?></option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                                <button type="button" onclick="toggleCustomDropdown('modal-acc-prodi', event)" class="w-full px-3 py-2 text-xs bg-slate-50 hover:bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none flex items-center justify-between gap-2 text-left font-medium text-slate-800 cursor-pointer transition-colors">
+                                    <span id="label-modal-acc-prodi" class="truncate">-- Pilih Program Studi --</span>
+                                    <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200 shrink-0" id="arrow-filter-modal-acc-prodi"></i>
+                                </button>
+                                <div id="menu-filter-modal-acc-prodi" class="custom-dropdown-menu hidden absolute top-full right-0 left-0 mt-1.5 w-full max-h-52 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl z-[100060] p-1 space-y-0.5 text-xs"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -1504,16 +1525,23 @@
                         <label class="block text-xs font-bold text-slate-700 mb-1">
                             <i class="fa-solid fa-layer-group text-purple-600 mr-1"></i> Kelompok Keahlian (KK) <span class="text-slate-400 font-normal">(Khusus Dosen)</span>
                         </label>
-                        <select id="acc-kk" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                            <option value="">-- Pilih Kelompok Keahlian --</option>
-                            <?php if (!empty($kk_list)): ?>
-                                <?php foreach ($kk_list as $kk): ?>
-                                    <option value="<?= htmlspecialchars($kk['id']) ?>" data-kode="<?= htmlspecialchars($kk['kode_kk'] ?? $kk['nama_kk']) ?>">
-                                        <?= htmlspecialchars($kk['nama_kk']) ?><?= (!empty($kk['kode_kk']) && $kk['kode_kk'] !== $kk['nama_kk']) ? ' (' . htmlspecialchars($kk['kode_kk']) . ')' : '' ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </select>
+                        <div class="relative custom-dropdown-container" id="custom-wrap-acc-kk">
+                            <select id="acc-kk" class="hidden">
+                                <option value="">-- Pilih Kelompok Keahlian --</option>
+                                <?php if (!empty($kk_list)): ?>
+                                    <?php foreach ($kk_list as $kk): ?>
+                                        <option value="<?= htmlspecialchars($kk['id']) ?>" data-kode="<?= htmlspecialchars($kk['kode_kk'] ?? $kk['nama_kk']) ?>">
+                                            <?= htmlspecialchars($kk['nama_kk']) ?><?= (!empty($kk['kode_kk']) && $kk['kode_kk'] !== $kk['nama_kk']) ? ' (' . htmlspecialchars($kk['kode_kk']) . ')' : '' ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                            <button type="button" onclick="toggleCustomDropdown('modal-acc-kk', event)" class="w-full px-3 py-2 text-xs bg-slate-50 hover:bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none flex items-center justify-between gap-2 text-left font-medium text-slate-800 cursor-pointer transition-colors">
+                                <span id="label-modal-acc-kk" class="truncate">-- Pilih Kelompok Keahlian --</span>
+                                <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dropdown-arrow transition-transform duration-200 shrink-0" id="arrow-filter-modal-acc-kk"></i>
+                            </button>
+                            <div id="menu-filter-modal-acc-kk" class="custom-dropdown-menu hidden absolute bottom-full left-0 mb-1.5 w-full max-h-48 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl z-[100060] p-1 space-y-0.5 text-xs"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -1576,9 +1604,9 @@
             </div>
 
             <!-- Body Content -->
-            <div class="p-6 overflow-y-auto space-y-4 flex-1 bg-slate-50/50">
+            <div class="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1 bg-slate-50/50">
                 <!-- Summary Stats Bar (Clickable as Filters) -->
-                <div class="grid grid-cols-4 gap-3">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div onclick="filterPreviewRows('all')" class="p-3.5 bg-white border border-slate-200 hover:border-slate-400 rounded-xl shadow-2xs cursor-pointer transition-all hover:scale-[1.02]">
                         <div class="text-[10px] font-bold tracking-wider uppercase text-slate-400">TOTAL DIBACA</div>
                         <div class="text-xl font-extrabold text-slate-800 mt-0.5" id="preview-stat-total">0</div>
@@ -1617,7 +1645,7 @@
 
                 <!-- Clean Filter Toolbar -->
                 <div class="flex flex-wrap items-center justify-between gap-3 bg-white px-3.5 py-2.5 rounded-xl border border-slate-200 shadow-2xs">
-                    <div class="flex items-center gap-1.5 text-xs">
+                    <div class="flex flex-wrap items-center gap-1.5 text-xs">
                         <button type="button" onclick="filterPreviewRows('valid')" id="tab-preview-valid" class="px-3 py-1.5 font-bold rounded-lg bg-brand-600 text-white shadow-2xs transition-all">Hanya Valid (<span id="count-tab-valid">0</span>)</button>
                         <button type="button" onclick="filterPreviewRows('invalid_domain')" id="tab-preview-invalid_domain" class="px-3 py-1.5 font-semibold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all text-rose-700">Domain Ditolak (<span id="count-tab-invalid_domain">0</span>)</button>
                         <button type="button" onclick="filterPreviewRows('duplicate')" id="tab-preview-duplicate" class="px-3 py-1.5 font-semibold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all text-amber-700">Duplikat (<span id="count-tab-duplicate">0</span>)</button>
@@ -1632,7 +1660,7 @@
                 </div>
 
                 <!-- Preview Table -->
-                <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-2xs max-h-80 overflow-y-auto">
+                <div class="bg-white border border-slate-200 rounded-xl overflow-x-auto shadow-2xs max-h-80 overflow-y-auto">
                     <table class="w-full text-left border-collapse">
                         <thead class="bg-slate-100 text-[11px] font-bold text-slate-600 uppercase tracking-wider sticky top-0 border-b border-slate-200 z-10">
                             <tr>
@@ -4385,6 +4413,53 @@
         }
 
         // 10. ADD / EDIT MANUAL ACCOUNT MODAL
+        function syncSingleModalCustomSelect(selectId, typeKey) {
+            const selectEl = document.getElementById(selectId);
+            const labelEl  = document.getElementById('label-' + typeKey);
+            const menuEl   = document.getElementById('menu-filter-' + typeKey);
+            if (!selectEl || !labelEl || !menuEl) return;
+
+            const selectedOpt = selectEl.options[selectEl.selectedIndex] || selectEl.options[0];
+            labelEl.textContent = selectedOpt ? selectedOpt.text.trim() : '-- Pilih --';
+
+            menuEl.innerHTML = '';
+            Array.from(selectEl.options).forEach(opt => {
+                const isSelected = (opt.value === selectEl.value);
+                const item = document.createElement('div');
+                item.className = 'dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between gap-2 font-medium transition-colors ' +
+                    (isSelected ? 'active bg-orange-50 text-brand-600 font-bold' : 'text-slate-700 hover:bg-orange-50 hover:text-brand-600');
+                
+                const span = document.createElement('span');
+                span.className = 'leading-snug break-words flex-1';
+                span.textContent = opt.text.trim();
+
+                const icon = document.createElement('i');
+                icon.className = 'fa-solid fa-check text-xs check-icon shrink-0 ' + (isSelected ? 'text-brand-600' : 'hidden');
+
+                item.appendChild(span);
+                item.appendChild(icon);
+
+                item.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    selectEl.value = opt.value;
+                    if (selectId === 'acc-role') {
+                        handleRoleChange(opt.value);
+                    }
+                    syncSingleModalCustomSelect(selectId, typeKey);
+                    closeAllCustomDropdowns();
+                });
+
+                menuEl.appendChild(item);
+            });
+        }
+
+        function syncModalCustomSelects() {
+            syncSingleModalCustomSelect('acc-role', 'modal-acc-role');
+            syncSingleModalCustomSelect('acc-jabatan', 'modal-acc-jabatan');
+            syncSingleModalCustomSelect('acc-prodi', 'modal-acc-prodi');
+            syncSingleModalCustomSelect('acc-kk', 'modal-acc-kk');
+        }
+
         function handleRoleChange(roleVal) {
             const container   = document.getElementById('container-dosen-fields');
             const wrapJabatan = document.getElementById('wrapper-jabatan');
@@ -4402,7 +4477,7 @@
                 if (wrapJabatan) wrapJabatan.classList.remove('hidden');
                 if (wrapProdi) wrapProdi.classList.remove('hidden');
                 if (wrapKk) wrapKk.classList.remove('hidden');
-                if (rowFields) rowFields.className = 'grid grid-cols-2 gap-3';
+                if (rowFields) rowFields.className = 'grid grid-cols-1 sm:grid-cols-2 gap-3';
             } else if (isMhs) {
                 container.classList.remove('hidden');
                 if (wrapJabatan) wrapJabatan.classList.add('hidden');
@@ -4423,6 +4498,7 @@
             if (kkEl) kkEl.value = '';
             const roleEl = document.getElementById('acc-role');
             if (roleEl) handleRoleChange(roleEl.value);
+            syncModalCustomSelects();
             document.getElementById('modal-account').classList.remove('hidden');
         }
 
@@ -4465,11 +4541,13 @@
             }
 
             handleRoleChange(acc.role);
+            syncModalCustomSelects();
 
             document.getElementById('modal-account').classList.remove('hidden');
         }
 
         function closeAccountModal() {
+            closeAllCustomDropdowns();
             document.getElementById('modal-account').classList.add('hidden');
         }
 

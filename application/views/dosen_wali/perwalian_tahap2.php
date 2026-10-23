@@ -307,7 +307,7 @@
         <main class="w-full px-3 sm:px-8 py-4 sm:py-8 flex-grow">
 
             <?php
-                $totMhs2 = (int)($stats['total_bimbingan'] ?? 0);
+                $totMhs2 = (int)($stats['tahap1_disetujui'] ?? 0);
                 $belumDinilai = (int)($stats['tahap2_belum_dinilai'] ?? 0);
                 $selesai = (int)($stats['tahap2_selesai'] ?? 0);
                 $proses = (int)($stats['tahap2_proses'] ?? 0);
@@ -334,7 +334,7 @@
                                 <div class="flex-1 min-w-0">
                                     <p class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-orange-600 transition-colors">TOTAL MAHASISWA</p>
                                     <h3 id="statT2TotalMhs" class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 sm:mt-1 tracking-tight"><?= $totMhs2; ?></h3>
-                                    <p class="text-[11px] sm:text-xs font-medium text-slate-500 mt-0.5 sm:mt-1 line-clamp-1">Perwalian bimbingan Anda</p>
+                                    <p class="text-[11px] sm:text-xs font-medium text-slate-500 mt-0.5 sm:mt-1 line-clamp-1">KRS Tahap 1 telah disetujui</p>
                                 </div>
                                 
                                 <div class="relative shrink-0">
@@ -569,7 +569,7 @@
                 <!-- Info Search Counter & Active Filter Tags -->
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs text-slate-500 pt-1 border-t border-slate-100">
                     <div id="searchResultSummaryT2" class="text-[11px] sm:text-xs">
-                        Menampilkan <strong class="text-slate-900 font-bold" id="visibleRowCountT2"><?= count($list_perwalian); ?></strong> dari <strong class="text-slate-900 font-bold"><?= count($list_perwalian); ?></strong> mahasiswa bimbingan.
+                        Menampilkan <strong class="text-slate-900 font-bold" id="visibleRowCountT2"><?= count($list_perwalian); ?></strong> dari <strong class="text-slate-900 font-bold" id="totalRowCountT2"><?= count($list_perwalian); ?></strong> mahasiswa bimbingan.
                     </div>
                     <div id="activeTagsContainerT2" class="flex flex-wrap items-center gap-1.5"></div>
                 </div>
@@ -580,7 +580,7 @@
                 <div class="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 space-y-1">
                     <div class="flex items-center justify-between gap-2.5 sm:gap-4">
                         <h2 class="text-xs sm:text-sm font-bold text-slate-900 leading-tight">Daftar Penilaian Hasil Studi Mahasiswa (Tahap 2)</h2>
-                        <span class="text-[11px] sm:text-xs font-bold px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg whitespace-nowrap shrink-0">
+                        <span data-sync-count class="text-[11px] sm:text-xs font-bold px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg whitespace-nowrap shrink-0">
                             <?= count($list_perwalian); ?> Mahasiswa
                         </span>
                     </div>
@@ -611,7 +611,8 @@
                                         <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2 text-slate-400 text-lg">
                                             <i class="fa-solid fa-award"></i>
                                         </div>
-                                        <p class="font-medium text-slate-600">Belum ada data evaluasi nilai untuk filter ini.</p>
+                                        <p class="font-medium text-slate-600">Belum ada mahasiswa yang KRS Tahap 1-nya disetujui untuk dievaluasi.</p>
+                                        <p class="text-xs text-slate-400 mt-1">Mahasiswa akan otomatis muncul di Tahap 2 setelah KRS pada Tahap 1 Anda setujui.</p>
                                     </td>
                                 </tr>
                             <?php else: ?>
@@ -732,7 +733,8 @@
                             <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2 text-slate-400 text-lg">
                                 <i class="fa-solid fa-award"></i>
                             </div>
-                            <p class="font-medium text-slate-600 text-xs">Belum ada data evaluasi nilai untuk filter ini.</p>
+                            <p class="font-medium text-slate-600 text-xs">Belum ada mahasiswa yang KRS Tahap 1-nya disetujui untuk dievaluasi.</p>
+                            <p class="text-[11px] text-slate-400 mt-1">Mahasiswa otomatis muncul di Tahap 2 setelah KRS Tahap 1 disetujui.</p>
                         </div>
                     <?php else: ?>
                         <div id="noSearchResultCardT2" class="py-10 text-center text-slate-400 bg-white rounded-2xl border border-slate-200/80 p-5" style="display: none;">
@@ -833,8 +835,8 @@
     <!-- ========================================================================= -->
     <!-- MODAL: FORM PENILAIAN TAHAP 2 (GENERATE MK, INPUT NILAI, CHECKLIST, LOCK) -->
     <!-- ========================================================================= -->
-    <div id="modalGradingTahap2" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100000] hidden flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-        <div class="clay-card w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden bg-white shadow-2xl">
+    <div id="modalGradingTahap2" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100000] hidden flex items-center justify-center p-2.5 pb-6 sm:p-4 overflow-y-auto">
+        <div class="clay-card w-full max-w-4xl max-h-[82vh] max-h-[82dvh] sm:max-h-[92vh] flex flex-col overflow-hidden bg-white shadow-2xl">
             <!-- Modal Header -->
             <div class="px-4 py-3 sm:px-6 sm:py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center justify-between gap-2 shrink-0">
                 <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
@@ -927,8 +929,8 @@
     <!-- ========================================================================= -->
     <!-- MODAL: IMPORT NILAI EXCEL (KOLEKTIF & SINGLE)                             -->
     <!-- ========================================================================= -->
-    <div id="modalImportNilai" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[100010] hidden flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-        <div class="clay-card w-full max-w-3xl xl:max-w-4xl max-h-[92vh] flex flex-col overflow-hidden bg-white shadow-2xl rounded-2xl">
+    <div id="modalImportNilai" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[100010] hidden flex items-center justify-center p-2.5 pb-6 sm:p-4 overflow-y-auto">
+        <div class="clay-card w-full max-w-3xl xl:max-w-4xl max-h-[82vh] max-h-[82dvh] sm:max-h-[92vh] flex flex-col overflow-hidden bg-white shadow-2xl rounded-2xl">
             <!-- Modal Fixed Header -->
             <div class="px-5 py-3.5 sm:px-6 sm:py-4 border-b border-slate-100 flex items-center justify-between gap-3 shrink-0 bg-white">
                 <div class="flex items-center space-x-2.5 min-w-0">
@@ -1093,7 +1095,7 @@
             tbody.innerHTML = '';
 
             let gradedCount = 0;
-            if (mkList.length === 0) {
+            if (!mkList || mkList.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="6" class="py-8 text-center text-slate-400">
@@ -1104,47 +1106,81 @@
                     </tr>
                 `;
             } else {
-                mkList.forEach((mk, idx) => {
-                    const grade = (mk.nilai_huruf || '').toUpperCase();
-                    if (grade) gradedCount++;
+                // Kelompokkan mata kuliah sesuai dengan semester
+                const groupedBySemester = {};
+                mkList.forEach(mk => {
+                    const sem = parseInt(mk.semester_mk || mk.semester || 1);
+                    if (!groupedBySemester[sem]) {
+                        groupedBySemester[sem] = [];
+                    }
+                    groupedBySemester[sem].push(mk);
+                });
 
-                    const status = mk.status_kelulusan || 'Belum Ditentukan';
-                    const isLulus = (status === 'Lulus');
-                    const isTidakLulus = (status === 'Tidak Lulus');
+                const sortedSemesters = Object.keys(groupedBySemester).sort((a, b) => parseInt(a) - parseInt(b));
 
-                    const statusBadgeHtml = isLulus 
-                        ? `<span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="fa-solid fa-circle-check mr-1.5 text-emerald-600"></i> Lulus</span>`
-                        : (isTidakLulus 
-                            ? `<span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-rose-100 text-rose-800 border border-rose-300"><i class="fa-solid fa-circle-xmark mr-1.5 text-rose-600"></i> Tidak Lulus</span>`
-                            : `<span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-500 border border-slate-200"><i class="fa-solid fa-minus mr-1 text-slate-400"></i> Belum Dinilai</span>`);
+                sortedSemesters.forEach(sem => {
+                    const mks = groupedBySemester[sem];
+                    const totalSksSem = mks.reduce((acc, curr) => acc + parseInt(curr.sks || 0), 0);
 
+                    // Header Pemisah Semester
                     tbody.innerHTML += `
-                        <tr class="hover:bg-slate-50/60 transition" id="m2Row_${mk.id}">
-                            <td class="py-2.5 px-3 text-center font-mono text-slate-400">${idx + 1}</td>
-                            <td class="py-2.5 px-3 font-mono font-bold text-slate-900">${escapeHtml(mk.kode_mk)}</td>
-                            <td class="py-2.5 px-3 font-medium text-slate-800">${escapeHtml(mk.nama_mk)}</td>
-                            <td class="py-2.5 px-3 text-center font-mono font-semibold">${mk.sks}</td>
-                            
-                            <!-- Dropdown Nilai Mutu -->
-                            <td class="py-2.5 px-3 text-center">
-                                <select onchange="onGradeChange(${mk.id}, this.value)" class="w-24 px-2.5 py-1.5 text-xs font-bold text-center bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/40 font-mono shadow-2xs cursor-pointer">
-                                    <option value="" ${!grade ? 'selected' : ''}>- Nilai -</option>
-                                    <option value="A" ${grade === 'A' ? 'selected' : ''} class="text-emerald-700 font-bold">A</option>
-                                    <option value="AB" ${grade === 'AB' ? 'selected' : ''} class="text-emerald-700 font-bold">AB</option>
-                                    <option value="B" ${grade === 'B' ? 'selected' : ''} class="text-emerald-700 font-bold">B</option>
-                                    <option value="BC" ${grade === 'BC' ? 'selected' : ''} class="text-emerald-700 font-bold">BC</option>
-                                    <option value="C" ${grade === 'C' ? 'selected' : ''} class="text-emerald-700 font-bold">C</option>
-                                    <option value="D" ${grade === 'D' ? 'selected' : ''} class="text-rose-700 font-bold">D</option>
-                                    <option value="E" ${grade === 'E' ? 'selected' : ''} class="text-rose-700 font-bold">E</option>
-                                </select>
-                            </td>
-
-                            <!-- Badge Status Kelulusan (Otomatis 100% Berdasarkan Nilai) -->
-                            <td class="py-2.5 px-3 text-center" id="m2StatusCol_${mk.id}">
-                                ${statusBadgeHtml}
+                        <tr class="bg-gradient-to-r from-purple-50/90 via-indigo-50/60 to-purple-50/90 border-y border-purple-200/80">
+                            <td colspan="6" class="py-2 px-3.5">
+                                <div class="flex items-center justify-between text-xs font-bold text-purple-950">
+                                    <span class="flex items-center gap-1.5">
+                                        <i class="fa-solid fa-graduation-cap text-purple-600 text-sm"></i>
+                                        <span class="tracking-wide uppercase text-[11px]">Semester ${sem}</span>
+                                    </span>
+                                    <span class="text-[11px] font-mono font-bold px-2.5 py-0.5 bg-white text-purple-800 rounded-md border border-purple-200 shadow-2xs">
+                                        Subtotal: ${totalSksSem} SKS (${mks.length} MK)
+                                    </span>
+                                </div>
                             </td>
                         </tr>
                     `;
+
+                    mks.forEach((mk, idx) => {
+                        const grade = (mk.nilai_huruf || '').toUpperCase();
+                        if (grade) gradedCount++;
+
+                        const status = mk.status_kelulusan || 'Belum Ditentukan';
+                        const isLulus = (status === 'Lulus');
+                        const isTidakLulus = (status === 'Tidak Lulus');
+
+                        const statusBadgeHtml = isLulus 
+                            ? `<span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="fa-solid fa-circle-check mr-1.5 text-emerald-600"></i> Lulus</span>`
+                            : (isTidakLulus 
+                                ? `<span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-rose-100 text-rose-800 border border-rose-300"><i class="fa-solid fa-circle-xmark mr-1.5 text-rose-600"></i> Tidak Lulus</span>`
+                                : `<span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-500 border border-slate-200"><i class="fa-solid fa-minus mr-1 text-slate-400"></i> Belum Dinilai</span>`);
+
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-slate-50/60 transition" id="m2Row_${mk.id}">
+                                <td class="py-2.5 px-3 text-center font-mono text-slate-400">${idx + 1}</td>
+                                <td class="py-2.5 px-3 font-mono font-bold text-slate-900">${escapeHtml(mk.kode_mk)}</td>
+                                <td class="py-2.5 px-3 font-medium text-slate-800">${escapeHtml(mk.nama_mk)}</td>
+                                <td class="py-2.5 px-3 text-center font-mono font-semibold">${mk.sks}</td>
+                                
+                                <!-- Dropdown Nilai Mutu -->
+                                <td class="py-2.5 px-3 text-center">
+                                    <select onchange="onGradeChange(${mk.id}, this.value)" class="w-24 px-2.5 py-1.5 text-xs font-bold text-center bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/40 font-mono shadow-2xs cursor-pointer">
+                                        <option value="" ${!grade ? 'selected' : ''}>- Nilai -</option>
+                                        <option value="A" ${grade === 'A' ? 'selected' : ''} class="text-emerald-700 font-bold">A</option>
+                                        <option value="AB" ${grade === 'AB' ? 'selected' : ''} class="text-emerald-700 font-bold">AB</option>
+                                        <option value="B" ${grade === 'B' ? 'selected' : ''} class="text-emerald-700 font-bold">B</option>
+                                        <option value="BC" ${grade === 'BC' ? 'selected' : ''} class="text-emerald-700 font-bold">BC</option>
+                                        <option value="C" ${grade === 'C' ? 'selected' : ''} class="text-emerald-700 font-bold">C</option>
+                                        <option value="D" ${grade === 'D' ? 'selected' : ''} class="text-rose-700 font-bold">D</option>
+                                        <option value="E" ${grade === 'E' ? 'selected' : ''} class="text-rose-700 font-bold">E</option>
+                                    </select>
+                                </td>
+
+                                <!-- Badge Status Kelulusan (Otomatis 100% Berdasarkan Nilai) -->
+                                <td class="py-2.5 px-3 text-center" id="m2StatusCol_${mk.id}">
+                                    ${statusBadgeHtml}
+                                </td>
+                            </tr>
+                        `;
+                    });
                 });
             }
 
@@ -1642,6 +1678,58 @@
             XLSX.writeFile(wb, 'template_nilai_perwalian_dosen.xlsx');
         }
 
+        // ===== Auto-sync data tanpa refresh (polling ringan) =====
+        let __syncSig = null;
+        let __syncBusy = false;
+
+        async function syncListFromServer() {
+            if (__syncBusy || document.hidden) return;
+            __syncBusy = true;
+            try {
+                const res = await fetch(window.location.href, {
+                    cache: 'no-store',
+                    credentials: 'same-origin',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!res.ok) return;
+                const html = await res.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+
+                const newBody = doc.querySelector('table tbody.divide-y');
+                const newCards = doc.getElementById('t2MobileCardsContainer');
+                if (!newBody || !newCards) return; // mis. sesi habis -> halaman login
+
+                const sig = newBody.innerHTML + '||' + newCards.innerHTML;
+                if (sig === __syncSig) return;
+                __syncSig = sig;
+
+                const curBody = document.querySelector('table tbody.divide-y');
+                const curCards = document.getElementById('t2MobileCardsContainer');
+                if (curBody) curBody.innerHTML = newBody.innerHTML;
+                if (curCards) curCards.innerHTML = newCards.innerHTML;
+
+                ['statT2TotalMhs', 'statT2Belum', 'statT2Proses', 'statT2Selesai'].forEach(id => {
+                    const n = doc.getElementById(id), c = document.getElementById(id);
+                    if (n && c) c.innerHTML = n.innerHTML;
+                });
+
+                const nt = doc.getElementById('totalRowCountT2'), ct = document.getElementById('totalRowCountT2');
+                if (nt && ct) ct.textContent = nt.textContent.trim();
+                const nb = doc.querySelector('[data-sync-count]'), cb = document.querySelector('[data-sync-count]');
+                if (nb && cb) cb.textContent = nb.textContent.trim();
+
+                // terapkan ulang filter pencarian yang sedang aktif
+                if (typeof executeMultiSearchT2 === 'function') executeMultiSearchT2();
+            } catch (e) {
+                /* abaikan error jaringan sesaat, coba lagi di siklus berikutnya */
+            } finally {
+                __syncBusy = false;
+            }
+        }
+
+        setInterval(syncListFromServer, 4000);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) syncListFromServer(); });
+
         function escapeHtml(text) {
             if (!text) return '';
             return String(text).replace(/[&<>"']/g, function(m) {
@@ -2107,7 +2195,7 @@
 
             // 3. Update top summary statistics
             if (stats) {
-                const tot = parseInt(stats.total_bimbingan || 0);
+                const tot = parseInt(stats.tahap1_disetujui || 0);
                 const belum = parseInt(stats.tahap2_belum_dinilai || 0);
                 const proses = parseInt(stats.tahap2_proses || 0);
                 const selesai = parseInt(stats.tahap2_selesai || 0);

@@ -322,7 +322,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
       border-radius: 18px;
       border: 1px solid var(--border-color);
       box-shadow: 0 8px 30px rgba(0,0,0,0.04);
-      overflow-x: hidden;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
     .table {
       width: 100%;
@@ -919,18 +920,182 @@ defined('BASEPATH') OR exit('No direct script access allowed');
         left: 0 !important;
         width: 100% !important;
       }
+      body.curved-sidebar-desktop-collapsed .admin-top-title {
+        padding-left: 36px;
+      }
     }
 
     @media (max-width: 991.98px) {
       .page-wrapper-for-sidebar {
         margin-left: 0 !important;
         width: 100% !important;
-        padding-top: 56px;
+      }
+      .admin-top-title {
+        padding-left: 46px !important;
+        line-height: 1.25;
       }
       .modal-overlay,
       #modalRuangan {
         left: 0 !important;
         width: 100% !important;
+      }
+    }
+
+    /* === MOBILE CARD VIEW FOR FASILITAS & RUANGAN (<= 768px) === */
+    @media (max-width: 768px) {
+      .tab-btn {
+        flex: 1 1 auto;
+        justify-content: center;
+        padding: 10px 14px;
+        font-size: 0.82rem;
+      }
+      .fasilitas-action-btns {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .fasilitas-action-btns > button {
+        flex: 1 1 100%;
+        justify-content: center;
+      }
+      .search-box-wrapper {
+        max-width: 100%;
+        width: 100%;
+        flex-wrap: wrap;
+      }
+      .search-box {
+        flex: 1 1 100%;
+      }
+      .btn-search-action,
+      .btn-reset-action {
+        flex: 1 1 auto;
+        justify-content: center;
+      }
+
+      /* Transform #ruanganTable into Mobile Cards */
+      #tabContentFasilitas .table-card {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        overflow: visible;
+      }
+      #ruanganTable,
+      #ruanganTable tbody {
+        display: block;
+        width: 100%;
+      }
+      #ruanganTable thead {
+        display: none;
+      }
+      #ruanganTable tbody tr {
+        display: grid;
+        grid-template-columns: 62px 1fr;
+        gap: 0;
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+        margin-bottom: 14px;
+        padding: 14px;
+        transition: all 0.2s ease;
+      }
+      #ruanganTable tbody tr:hover {
+        background: #ffffff;
+        border-color: #fdba74;
+      }
+      /* Photo Cell (Top Left of Card) */
+      #ruanganTable tbody td:nth-child(1) {
+        grid-column: 1;
+        grid-row: 1;
+        padding: 0 12px 12px 0;
+        border-bottom: 1px dashed #fed7aa;
+        text-align: left !important;
+        align-self: start;
+      }
+      #ruanganTable tbody td:nth-child(1) .room-thumbnail {
+        width: 52px;
+        height: 52px;
+        border-radius: 12px;
+      }
+      /* Room Name & Codes Cell (Top Right of Card) */
+      #ruanganTable tbody td:nth-child(2) {
+        grid-column: 2;
+        grid-row: 1;
+        padding: 0 0 12px 0;
+        border-bottom: 1px dashed #fed7aa;
+        min-width: 0;
+      }
+      /* Full-width labeled detail rows */
+      #ruanganTable tbody td:nth-child(3),
+      #ruanganTable tbody td:nth-child(4),
+      #ruanganTable tbody td:nth-child(5),
+      #ruanganTable tbody td:nth-child(6),
+      #ruanganTable tbody td:nth-child(7) {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 9px 0;
+        border-bottom: 1px solid #f1f5f9;
+        text-align: right !important;
+      }
+      #ruanganTable tbody td:nth-child(3)::before,
+      #ruanganTable tbody td:nth-child(4)::before,
+      #ruanganTable tbody td:nth-child(5)::before,
+      #ruanganTable tbody td:nth-child(6)::before,
+      #ruanganTable tbody td:nth-child(7)::before {
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        text-align: left;
+        flex-shrink: 0;
+      }
+      #ruanganTable tbody td:nth-child(3)::before { content: "Kategori & Tagline"; }
+      #ruanganTable tbody td:nth-child(4)::before { content: "3D Model"; }
+      #ruanganTable tbody td:nth-child(5)::before { content: "Fasilitas & Jam"; }
+      #ruanganTable tbody td:nth-child(6)::before { content: "Status Ruangan"; }
+      #ruanganTable tbody td:nth-child(7)::before { content: "Aksi Kelola"; }
+
+      #ruanganTable tbody td:nth-child(3) > div,
+      #ruanganTable tbody td:nth-child(5) > div {
+        text-align: right;
+      }
+      /* Card Footer Actions */
+      #ruanganTable tbody td:nth-child(7) {
+        padding: 12px 0 2px 0;
+        border-bottom: none;
+      }
+      #ruanganTable tbody td:nth-child(7) .btn-action {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        font-size: 1rem;
+      }
+      /* Empty State / Search Not Found Row */
+      #ruanganTable tbody td[colspan] {
+        grid-column: 1 / -1 !important;
+        display: block !important;
+        text-align: center !important;
+        border-bottom: none !important;
+        padding: 32px 16px !important;
+      }
+      #ruanganTable tbody td[colspan]::before {
+        display: none !important;
+      }
+
+      /* Modal Ruangan Mobile Adjustments */
+      .modal-header { padding: 14px 18px; }
+      .modal-body { padding: 16px 18px; }
+      .modal-footer { padding: 12px 18px; }
+      .jam-operasional-grid {
+        grid-template-columns: 1fr 1fr !important;
+      }
+      .jam-operasional-grid > div:nth-child(3) {
+        grid-column: 1 / -1;
       }
     }
   </style>
@@ -941,21 +1106,21 @@ defined('BASEPATH') OR exit('No direct script access allowed');
   <?php $this->load->view('components/curved_sidebar'); ?>
 
   <!-- Main Page Content Wrapper (Smoothly shifts and shrinks when sidebar is open) -->
-  <div id="mainPageContent" class="page-wrapper-for-sidebar min-h-screen p-6 md:p-10">
+  <div id="mainPageContent" class="page-wrapper-for-sidebar min-h-screen p-4 sm:p-6 md:p-10">
     <div class="max-w-7xl mx-auto">
       <!-- Top Header -->
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
         <div>
-            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Dashboard Control</h1>
-            <p class="text-gray-500 mt-1">Akses terpadu pengaturan banner carousel portal serta kelola fasilitas &amp; ruangan laboratorium.</p>
+            <h1 class="admin-top-title text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight transition-all duration-300">Dashboard Control</h1>
+            <p class="text-sm sm:text-base text-gray-500 mt-1.5">Akses terpadu pengaturan banner carousel portal serta kelola fasilitas &amp; ruangan laboratorium.</p>
         </div>
-        <a href="<?= base_url('dashboard') ?>" class="inline-flex items-center gap-1 text-brand font-bold hover:underline">
+        <a href="<?= base_url('dashboard') ?>" class="inline-flex items-center gap-1 text-brand font-bold hover:underline text-sm sm:text-base">
             &larr; Kembali ke Dashboard
         </a>
       </div>
 
     <!-- TAB MENU NAVIGATION -->
-    <div class="flex items-center gap-3 mb-8 border-b border-orange-200/60 pb-4">
+    <div class="flex items-center flex-wrap gap-2.5 sm:gap-3 mb-8 border-b border-orange-200/60 pb-4">
         <button type="button" id="tabBtnHeader" onclick="switchAdminTab('header')" class="tab-btn <?= (!isset($active_tab) || $active_tab !== 'fasilitas') ? 'active' : '' ?>">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
             <span>Pengaturan Header &amp; Slide</span>
@@ -1228,7 +1393,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                 </h2>
                 <p class="text-sm text-gray-500 mt-0.5">Kelola data ruangan, spesifikasi perangkat, jam operasional, foto &amp; model 3D.</p>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="fasilitas-action-btns flex items-center gap-3 flex-wrap">
                 <button type="button" onclick="openModalKategoriRuangan()" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-orange-600 transition shadow-xs cursor-pointer">
                     📁 Kelola Kategori Ruangan
                 </button>
@@ -1683,7 +1848,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                           <?php endforeach; ?>
                       </div>
 
-                      <div style="display:grid; grid-template-columns: 1fr 1fr 2fr; gap:10px; align-items:center; background:#f8fafc; padding:12px; border-radius:14px; border:1px solid #e2e8f0;">
+                      <div class="jam-operasional-grid" style="display:grid; grid-template-columns: 1fr 1fr 2fr; gap:10px; align-items:center; background:#f8fafc; padding:12px; border-radius:14px; border:1px solid #e2e8f0;">
                           <div>
                               <span style="font-size:0.7rem; font-weight:700; color:#64748b; display:block; margin-bottom:4px;">Jam Buka</span>
                               <div style="display:flex; gap:4px; align-items:center;">

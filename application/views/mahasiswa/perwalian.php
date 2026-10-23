@@ -74,7 +74,7 @@
             transition: all 0.2s ease;
             cursor: pointer;
         }
-        .dropzone-upload:hover {
+        .dropzone-upload:hover, .dropzone-upload.dragover {
             border-color: #ea580c;
             background: #fff7ed;
         }
@@ -221,27 +221,52 @@
                                     </td>
                                 </tr>
                             <?php else: ?>
-                                <?php $no = 1; foreach($mk_kontrak as $c): ?>
-                                    <tr class="hover:bg-orange-50/30 transition">
-                                        <td class="p-3 text-center text-slate-400 font-mono"><?= $no++ ?></td>
-                                        <td class="p-3 font-mono font-bold text-brand-700"><?= htmlspecialchars($c['kode_mk']) ?></td>
-                                        <td class="p-3 font-semibold text-slate-800"><?= htmlspecialchars($c['nama_mk']) ?></td>
-                                        <td class="p-3 text-center font-bold text-slate-700"><?= (int)$c['sks'] ?> SKS</td>
-                                        <td class="p-3 text-center">
-                                            <?php if(!empty($c['is_imported'])): ?>
-                                                <span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md font-semibold text-[11px]">Import Prodi</span>
-                                            <?php else: ?>
-                                                <span class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-md font-semibold text-[11px]">Input Mandiri</span>
-                                            <?php endif; ?>
+                                <?php
+                                    $groupedKontrak = [];
+                                    foreach ($mk_kontrak as $c) {
+                                        $sem = (int)($c['semester_mk'] ?? ($c['semester'] ?? 1));
+                                        $groupedKontrak[$sem][] = $c;
+                                    }
+                                    ksort($groupedKontrak);
+                                    $colCount = ($st1 !== 'Disetujui') ? 6 : 5;
+                                ?>
+                                <?php foreach ($groupedKontrak as $sem => $items): 
+                                    $subSks = array_sum(array_map(fn($x) => (int)$x['sks'], $items));
+                                ?>
+                                    <tr class="bg-gradient-to-r from-orange-50/90 via-amber-50/60 to-orange-50/90 border-y border-orange-200/80">
+                                        <td colspan="<?= $colCount ?>" class="py-2 px-3.5">
+                                            <div class="flex items-center justify-between text-xs font-bold text-orange-950">
+                                                <span class="flex items-center gap-1.5 uppercase tracking-wide text-[11px]">
+                                                    🎓 Semester <?= (int)$sem ?>
+                                                </span>
+                                                <span class="text-[11px] font-mono font-bold px-2.5 py-0.5 bg-white text-orange-800 rounded-md border border-orange-200">
+                                                    Subtotal: <?= $subSks ?> SKS (<?= count($items) ?> MK)
+                                                </span>
+                                            </div>
                                         </td>
-                                        <?php if($st1 !== 'Disetujui'): ?>
-                                            <td class="p-3 text-center">
-                                                <button onclick="hapusMKFromKontrak('<?= htmlspecialchars($c['kode_mk']) ?>')" class="p-1 hover:bg-rose-100 text-rose-600 rounded transition" title="Hapus dari kontrak">
-                                                    🗑️
-                                                </button>
-                                            </td>
-                                        <?php endif; ?>
                                     </tr>
+                                    <?php $no = 1; foreach($items as $c): ?>
+                                        <tr class="hover:bg-orange-50/30 transition">
+                                            <td class="p-3 text-center text-slate-400 font-mono"><?= $no++ ?></td>
+                                            <td class="p-3 font-mono font-bold text-brand-700"><?= htmlspecialchars($c['kode_mk']) ?></td>
+                                            <td class="p-3 font-semibold text-slate-800"><?= htmlspecialchars($c['nama_mk']) ?></td>
+                                            <td class="p-3 text-center font-bold text-slate-700"><?= (int)$c['sks'] ?> SKS</td>
+                                            <td class="p-3 text-center">
+                                                <?php if(!empty($c['is_imported'])): ?>
+                                                    <span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md font-semibold text-[11px]">Import Prodi</span>
+                                                <?php else: ?>
+                                                    <span class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-md font-semibold text-[11px]">Input Mandiri</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <?php if($st1 !== 'Disetujui'): ?>
+                                                <td class="p-3 text-center">
+                                                    <button onclick="hapusMKFromKontrak('<?= htmlspecialchars($c['kode_mk']) ?>')" class="p-1 hover:bg-rose-100 text-rose-600 rounded transition" title="Hapus dari kontrak">
+                                                        🗑️
+                                                    </button>
+                                                </td>
+                                            <?php endif; ?>
+                                        </tr>
+                                    <?php endforeach; ?>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </tbody>
@@ -269,14 +294,24 @@
                     </p>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                        <div>
-                            <input type="file" id="fileKRSInput" accept=".pdf, .jpg, .jpeg, .png" class="hidden" onchange="uploadBuktiKRS(event)">
-                            <div onclick="document.getElementById('fileKRSInput').click()" class="dropzone-upload p-5 text-center">
-                                <span class="text-2xl">📄</span>
-                                <h4 class="text-xs font-bold text-slate-800 mt-1">Klik untuk Memilih / Unggah Berkas KRS</h4>
-                                <p class="text-[11px] text-slate-400 mt-0.5">Format: PDF, PNG, JPG (Maks. 5MB)</p>
+                        <?php if($st1 !== 'Disetujui'): ?>
+                            <div>
+                                <input type="file" id="fileKRSInput" accept=".pdf, .jpg, .jpeg, .png" class="hidden" onchange="uploadBuktiKRS(event)">
+                                <div id="krsDropzone" onclick="document.getElementById('fileKRSInput').click()" class="dropzone-upload p-5 text-center cursor-pointer group">
+                                    <div class="pointer-events-none">
+                                        <span class="text-3xl block mb-1 group-hover:scale-110 transition-transform">📄</span>
+                                        <h4 class="text-xs font-bold text-slate-800">Tarik & Lepas (Drag & Drop) atau <span class="text-brand-600 underline">Pilih Berkas</span></h4>
+                                        <p class="text-[11px] text-slate-400 mt-0.5">Format: PDF, PNG, JPG (Maks. 5MB)</p>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        <?php else: ?>
+                            <div class="p-5 text-center bg-slate-100 border-2 border-dashed border-slate-200 rounded-2xl">
+                                <span class="text-2xl">🔒</span>
+                                <h4 class="text-xs font-bold text-slate-600 mt-1">Berkas Terkunci</h4>
+                                <p class="text-[11px] text-slate-400 mt-0.5">Perwalian telah disetujui, bukti KRS tidak dapat diubah</p>
+                            </div>
+                        <?php endif; ?>
 
                         <!-- Current File Preview Box -->
                         <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
@@ -286,7 +321,7 @@
                                     <p class="text-xs font-bold text-slate-800 truncate" id="krsFileName">
                                         <?= !empty($perwalian['file_krs']) ? htmlspecialchars($perwalian['file_krs']) : 'Belum ada bukti KRS yang diunggah' ?>
                                     </p>
-                                    <p class="text-[11px] text-slate-500 mt-0.5">
+                                    <p class="text-[11px] text-slate-500 mt-0.5" id="krsFileStatus">
                                         <?= !empty($perwalian['file_krs']) ? 'Berkas tersimpan di sistem' : 'Wajib diunggah sebelum submit' ?>
                                     </p>
                                 </div>
@@ -365,26 +400,50 @@
                                     <td colspan="6" class="p-6 text-center text-slate-400">Belum ada data mata kuliah yang sudah diambil.</td>
                                 </tr>
                             <?php else: ?>
-                                <?php $no = 1; foreach($mk_sudah as $row): 
-                                    $nilai = strtoupper(trim($row['nilai_huruf'] ?? ''));
-                                    $isLulus = in_array($nilai, ['A', 'AB', 'B', 'BC', 'C'], true);
-                                    $badgeTone = $isLulus ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200';
-                                    $badgeLabel = $isLulus ? 'LULUS' : 'TIDAK LULUS / MENGULANG';
+                                <?php
+                                    $groupedSudah = [];
+                                    foreach ($mk_sudah as $r) {
+                                        $sem = (int)($r['semester_mk'] ?? ($r['semester'] ?? 1));
+                                        $groupedSudah[$sem][] = $r;
+                                    }
+                                    ksort($groupedSudah);
                                 ?>
-                                    <tr class="hover:bg-slate-50/60 transition">
-                                        <td class="p-3 text-center text-slate-400 font-mono"><?= $no++ ?></td>
-                                        <td class="p-3 font-mono font-bold text-slate-800"><?= htmlspecialchars($row['kode_mk']) ?></td>
-                                        <td class="p-3 font-semibold text-slate-800"><?= htmlspecialchars($row['nama_mk']) ?></td>
-                                        <td class="p-3 text-center font-bold text-slate-700"><?= (int)$row['sks'] ?> SKS</td>
-                                        <td class="p-3 text-center font-mono font-extrabold text-sm <?= $isLulus ? 'text-emerald-700' : 'text-rose-700' ?>">
-                                            <?= htmlspecialchars($nilai ?: '-') ?>
-                                        </td>
-                                        <td class="p-3 text-center">
-                                            <span class="px-2.5 py-1 rounded-full font-bold text-[11px] border <?= $badgeTone ?>">
-                                                <?= $isLulus ? '🟢 ' : '🔴 ' ?><?= $badgeLabel ?>
-                                            </span>
+                                <?php foreach ($groupedSudah as $sem => $items): 
+                                    $subSks = array_sum(array_map(fn($x) => (int)$x['sks'], $items));
+                                ?>
+                                    <tr class="bg-gradient-to-r from-orange-50/90 via-amber-50/60 to-orange-50/90 border-y border-orange-200/80">
+                                        <td colspan="6" class="py-2 px-3.5">
+                                            <div class="flex items-center justify-between text-xs font-bold text-orange-950">
+                                                <span class="flex items-center gap-1.5 uppercase tracking-wide text-[11px]">
+                                                    🎓 Semester <?= (int)$sem ?>
+                                                </span>
+                                                <span class="text-[11px] font-mono font-bold px-2.5 py-0.5 bg-white text-orange-800 rounded-md border border-orange-200">
+                                                    Subtotal: <?= $subSks ?> SKS (<?= count($items) ?> MK)
+                                                </span>
+                                            </div>
                                         </td>
                                     </tr>
+                                    <?php $no = 1; foreach($items as $row): 
+                                        $nilai = strtoupper(trim($row['nilai_huruf'] ?? ''));
+                                        $isLulus = in_array($nilai, ['A', 'AB', 'B', 'BC', 'C'], true);
+                                        $badgeTone = $isLulus ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200';
+                                        $badgeLabel = $isLulus ? 'LULUS' : 'TIDAK LULUS / MENGULANG';
+                                    ?>
+                                        <tr class="hover:bg-slate-50/60 transition">
+                                            <td class="p-3 text-center text-slate-400 font-mono"><?= $no++ ?></td>
+                                            <td class="p-3 font-mono font-bold text-slate-800"><?= htmlspecialchars($row['kode_mk']) ?></td>
+                                            <td class="p-3 font-semibold text-slate-800"><?= htmlspecialchars($row['nama_mk']) ?></td>
+                                            <td class="p-3 text-center font-bold text-slate-700"><?= (int)$row['sks'] ?> SKS</td>
+                                            <td class="p-3 text-center font-mono font-extrabold text-sm <?= $isLulus ? 'text-emerald-700' : 'text-rose-700' ?>">
+                                                <?= htmlspecialchars($nilai ?: '-') ?>
+                                            </td>
+                                            <td class="p-3 text-center">
+                                                <span class="px-2.5 py-1 rounded-full font-bold text-[11px] border <?= $badgeTone ?>">
+                                                    <?= $isLulus ? '🟢 ' : '🔴 ' ?><?= $badgeLabel ?>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </tbody>
@@ -547,9 +606,37 @@
             });
         }
 
-        async function uploadBuktiKRS(e) {
-            const file = e.target.files[0];
+        function uploadBuktiKRS(e) {
+            const file = e.target.files ? e.target.files[0] : null;
+            if (file) {
+                processKRSFile(file);
+            }
+        }
+
+        async function processKRSFile(file) {
             if (!file) return;
+
+            // Validasi format berkas
+            const allowedExts = ['pdf', 'jpg', 'jpeg', 'png'];
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            if (!allowedExts.includes(fileExt)) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Format Tidak Sesuai',
+                    text: 'Hanya berkas berformat PDF, JPG, JPEG, atau PNG yang diperbolehkan.'
+                });
+                return;
+            }
+
+            // Validasi ukuran berkas (maks. 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Berkas Terlalu Besar',
+                    text: 'Ukuran berkas melebihi batas maksimal 5MB.'
+                });
+                return;
+            }
 
             const fd = new FormData();
             fd.append('id_perwalian', idPerwalian);
@@ -568,16 +655,55 @@
                 if (json.status === 'success') {
                     Swal.fire({ icon: 'success', title: 'Berhasil', text: json.message, timer: 1500, showConfirmButton: false });
                     document.getElementById('krsFileName').innerText = json.file_name;
+                    const statusEl = document.getElementById('krsFileStatus');
+                    if (statusEl) statusEl.innerText = 'Berkas tersimpan di sistem';
                     const link = document.getElementById('krsFileLink');
-                    link.setAttribute('onclick', `previewKRSModal('${json.file_url}', '${json.file_name}')`);
-                    link.classList.remove('hidden');
+                    if (link) {
+                        link.setAttribute('onclick', `previewKRSModal('${json.file_url}', '${json.file_name}')`);
+                        link.classList.remove('hidden');
+                    }
                 } else {
                     Swal.fire('Gagal Unggah', json.message, 'error');
                 }
             } catch (err) {
                 Swal.fire('Error', 'Terjadi kesalahan sistem saat unggah.', 'error');
+            } finally {
+                const inputEl = document.getElementById('fileKRSInput');
+                if (inputEl) inputEl.value = '';
             }
         }
+
+        // --- DRAG AND DROP SETUP ---
+        function setupDropzone(dropzoneEl, fileHandler) {
+            if (!dropzoneEl) return;
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzoneEl.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropzoneEl.classList.add('border-brand-500', 'bg-orange-50', 'ring-4', 'ring-orange-200');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzoneEl.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropzoneEl.classList.remove('border-brand-500', 'bg-orange-50', 'ring-4', 'ring-orange-200');
+                }, false);
+            });
+
+            dropzoneEl.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                if (dt && dt.files && dt.files.length > 0) {
+                    fileHandler(dt.files[0]);
+                }
+            }, false);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupDropzone(document.getElementById('krsDropzone'), processKRSFile);
+        });
 
         async function submitPerwalian() {
             const catatan = document.getElementById('catatanMhs').value;
