@@ -1678,9 +1678,9 @@
                 });
 
                 const nt = doc.getElementById('totalRowCountT2'), ct = document.getElementById('totalRowCountT2');
-                if (nt && ct) ct.innerText = nt.innerText;
+                if (nt && ct) ct.textContent = nt.textContent.trim();
                 const nb = doc.querySelector('[data-sync-count]'), cb = document.querySelector('[data-sync-count]');
-                if (nb && cb) cb.innerText = nb.innerText;
+                if (nb && cb) cb.textContent = nb.textContent.trim();
 
                 // terapkan ulang filter pencarian yang sedang aktif
                 if (typeof executeMultiSearchT2 === 'function') executeMultiSearchT2();
