@@ -389,24 +389,67 @@
 
                     <!-- Preview Container -->
                     <div id="krsPreviewContainer" class="hidden mt-6 space-y-4">
-                        <div class="flex items-center justify-between">
-                            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                                <span>📋</span> Preview Data KRS (<span id="krsPreviewCount">0</span> baris terdeteksi)
-                            </h3>
-                            <button onclick="submitImportKRS()" id="btnSubmitKRS" class="btn-brand-primary px-4 py-2 text-xs flex items-center gap-2">
+                        <!-- Stat Cards -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                            <div onclick="filterKRSPreview('all')" class="p-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100 transition shadow-2xs">
+                                <span class="text-[11px] font-bold text-slate-500 block">Total Baris</span>
+                                <span class="text-lg font-extrabold text-slate-800 font-mono" id="statKRSTotal">0</span>
+                            </div>
+                            <div onclick="filterKRSPreview('valid')" class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl cursor-pointer hover:bg-emerald-100 transition shadow-2xs">
+                                <span class="text-[11px] font-bold text-emerald-700 block">✓ Valid (Siap Simpan)</span>
+                                <span class="text-lg font-extrabold text-emerald-700 font-mono" id="statKRSValid">0</span>
+                            </div>
+                            <div onclick="filterKRSPreview('duplicate')" class="p-3 bg-amber-50 border border-amber-200 rounded-xl cursor-pointer hover:bg-amber-100 transition shadow-2xs">
+                                <span class="text-[11px] font-bold text-amber-700 block">⚠️ Duplikat</span>
+                                <span class="text-lg font-extrabold text-amber-700 font-mono" id="statKRSDuplicate">0</span>
+                            </div>
+                            <div onclick="filterKRSPreview('error')" class="p-3 bg-rose-50 border border-rose-200 rounded-xl cursor-pointer hover:bg-rose-100 transition shadow-2xs">
+                                <span class="text-[11px] font-bold text-rose-700 block">✕ Salah Format</span>
+                                <span class="text-lg font-extrabold text-rose-700 font-mono" id="statKRSError">0</span>
+                            </div>
+                        </div>
+
+                        <!-- Alerts -->
+                        <div id="alertKRSDuplicate" class="hidden px-3.5 py-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span>⚠️</span>
+                                <span>Ditemukan data KRS duplikat (NIM & Kode MK ganda). Data duplikat otomatis ditandai agar tidak terjadi double input.</span>
+                            </div>
+                            <label class="inline-flex items-center gap-1.5 text-[11px] font-bold text-amber-900 cursor-pointer">
+                                <input type="checkbox" id="chkSkipKRSDuplicate" checked onchange="renderKRSPreviewTable()" class="rounded text-brand-600 focus:ring-brand-500">
+                                Lewati Duplikat
+                            </label>
+                        </div>
+
+                        <div id="alertKRSError" class="hidden px-3.5 py-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-center gap-2">
+                            <span>❌</span>
+                            <span>Terdapat baris KRS tidak valid (NIM terindikasi nama orang / format salah). Baris ini akan otomatis dilewati.</span>
+                        </div>
+
+                        <!-- Filter Tabs & Actions -->
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
+                            <div class="flex items-center gap-1.5 text-xs">
+                                <button type="button" onclick="filterKRSPreview('all')" id="tabKRSFilter-all" class="px-3 py-1 font-bold rounded-lg bg-brand-500 text-white transition">Semua (<span id="countTabKRS-all">0</span>)</button>
+                                <button type="button" onclick="filterKRSPreview('valid')" id="tabKRSFilter-valid" class="px-3 py-1 font-bold rounded-lg text-slate-600 hover:bg-slate-100 transition">Hanya Valid (<span id="countTabKRS-valid">0</span>)</button>
+                                <button type="button" onclick="filterKRSPreview('duplicate')" id="tabKRSFilter-duplicate" class="px-3 py-1 font-bold rounded-lg text-amber-700 hover:bg-amber-50 transition">Duplikat (<span id="countTabKRS-duplicate">0</span>)</button>
+                                <button type="button" onclick="filterKRSPreview('error')" id="tabKRSFilter-error" class="px-3 py-1 font-bold rounded-lg text-rose-700 hover:bg-rose-50 transition">Error (<span id="countTabKRS-error">0</span>)</button>
+                            </div>
+                            <button onclick="submitImportKRS()" id="btnSubmitKRS" disabled class="btn-brand-primary px-5 py-2 text-xs flex items-center gap-2 font-bold disabled:opacity-50 disabled:cursor-not-allowed">
                                 <span>🚀</span> Simpan & Masukkan ke Perwalian Mahasiswa
                             </button>
                         </div>
 
                         <div class="overflow-x-auto max-h-80 rounded-xl border border-slate-200">
                             <table class="w-full text-left text-xs" id="krsPreviewTable">
-                                <thead class="bg-slate-100 text-slate-700 sticky top-0 font-bold uppercase text-[11px]">
+                                <thead class="bg-slate-100 text-slate-700 sticky top-0 font-bold uppercase text-[11px] shadow-xs">
                                     <tr>
                                         <th class="p-2.5 text-center w-12">No</th>
-                                        <th class="p-2.5">NIM</th>
-                                        <th class="p-2.5">Kode MK</th>
+                                        <th class="p-2.5 w-28">Status</th>
+                                        <th class="p-2.5 w-32">NIM</th>
+                                        <th class="p-2.5 w-28">Kode MK</th>
                                         <th class="p-2.5">Tahun Ajaran</th>
                                         <th class="p-2.5">Semester</th>
+                                        <th class="p-2.5">Keterangan / Diagnosa</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100" id="krsPreviewTbody"></tbody>
@@ -440,12 +483,13 @@
                                     <th class="p-3 text-center">Bukti KRS Asli</th>
                                     <th class="p-3 text-center">Status Tahap 1</th>
                                     <th class="p-3">Tgl Pengajuan</th>
+                                    <th class="p-3 text-center w-36">Aksi Status</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
                                 <?php if(empty($monitoring)): ?>
                                     <tr>
-                                        <td colspan="7" class="p-8 text-center text-slate-400">Belum ada pengajuan perwalian pada periode ini.</td>
+                                        <td colspan="8" class="p-8 text-center text-slate-400">Belum ada pengajuan perwalian pada periode ini.</td>
                                     </tr>
                                 <?php else: ?>
                                     <?php $no = 1; foreach($monitoring as $row): 
@@ -454,6 +498,7 @@
                                         if ($st === 'Diajukan') $badgeClass = 'bg-amber-100 text-amber-800';
                                         elseif ($st === 'Disetujui') $badgeClass = 'bg-emerald-100 text-emerald-800';
                                         elseif ($st === 'Revisi') $badgeClass = 'bg-rose-100 text-rose-800';
+                                        $mhsName = $row['nama_mahasiswa'] ?: ($row['nama_lengkap'] ?: $row['nim']);
                                     ?>
                                         <tr class="hover:bg-slate-50/60 transition">
                                             <td class="p-3 text-center text-slate-400 font-mono"><?= $no++ ?></td>
@@ -481,6 +526,21 @@
                                             </td>
                                             <td class="p-3 text-slate-500 font-mono text-[11px]">
                                                 <?= !empty($row['tgl_pengajuan']) ? date('d M Y, H:i', strtotime($row['tgl_pengajuan'])) : '-' ?>
+                                            </td>
+                                            <td class="p-3 text-center">
+                                                <?php if ($st === 'Disetujui'): ?>
+                                                    <button type="button" onclick="confirmResetKRS(<?= (int)$row['id_perwalian'] ?>, '<?= htmlspecialchars($mhsName, ENT_QUOTES) ?>', 'Disetujui')" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-[11px] font-bold inline-flex items-center gap-1 transition shadow-2xs cursor-pointer" title="Buka kunci status agar mahasiswa bisa mengubah KRS">
+                                                        <span>🔓</span> Buka Kunci
+                                                    </button>
+                                                <?php elseif ($st === 'Diajukan'): ?>
+                                                    <button type="button" onclick="confirmResetKRS(<?= (int)$row['id_perwalian'] ?>, '<?= htmlspecialchars($mhsName, ENT_QUOTES) ?>', 'Diajukan')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-[11px] font-bold inline-flex items-center gap-1 transition shadow-2xs cursor-pointer" title="Kembalikan pengajuan ke Draft">
+                                                        <span>↩️</span> Batal Ajukan
+                                                    </button>
+                                                <?php else: ?>
+                                                    <button type="button" onclick="confirmResetKRS(<?= (int)$row['id_perwalian'] ?>, '<?= htmlspecialchars($mhsName, ENT_QUOTES) ?>', '<?= htmlspecialchars($st, ENT_QUOTES) ?>')" class="px-2 py-0.5 text-slate-400 hover:text-rose-600 rounded text-[11px] inline-flex items-center gap-1 transition cursor-pointer" title="Opsi kelola status">
+                                                        <span>⚙️</span> Reset
+                                                    </button>
+                                                <?php endif; ?>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -560,41 +620,120 @@
     </div>
 
     <!-- ======================================================================= -->
-    <!-- MODAL 2: IMPORT EXCEL MATA KULIAH -->
+    <!-- MODAL 2: IMPORT EXCEL MATA KULIAH (VALIDASI DUPLIKAT & FIELD KETAT) -->
     <!-- ======================================================================= -->
-    <div id="modalImportMK" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200">
-            <div class="flex items-center justify-between pb-4 border-b border-slate-100">
-                <h3 class="text-base font-bold text-slate-800">Import Master Mata Kuliah (Excel / CSV)</h3>
-                <button onclick="closeModalImportMK()" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+    <div id="modalImportMK" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5" onclick="if(event.target === this) closeModalImportMK()">
+        <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in duration-200">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-orange-100 text-brand-600 flex items-center justify-center text-xl shadow-xs">
+                        📥
+                    </div>
+                    <div>
+                        <h3 class="text-base font-extrabold text-slate-800">Import Master Mata Kuliah</h3>
+                        <p class="text-xs text-slate-500">Dilengkapi validasi duplikasi data & proteksi kesalahan pengisian kolom</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="downloadTemplateMK()" class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 shadow-2xs transition flex items-center gap-1.5">
+                        <span>📄</span> Unduh Template
+                    </button>
+                    <button type="button" onclick="closeModalImportMK()" class="w-8 h-8 rounded-xl bg-white hover:bg-slate-100 text-slate-400 hover:text-slate-600 border border-slate-200 flex items-center justify-center font-bold text-sm transition">✕</button>
+                </div>
             </div>
             
-            <div class="mt-4 space-y-4">
+            <!-- Modal Body Scrollable -->
+            <div class="p-6 overflow-y-auto space-y-4 flex-1">
+                <!-- Dropzone Area -->
                 <input type="file" id="fileMKInput" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleMKFileSelect(event)">
-                <div onclick="document.getElementById('fileMKInput').click()" class="dropzone-box p-6 text-center" id="mkDropzone">
-                    <span class="text-3xl">📥</span>
-                    <h4 class="text-xs font-bold text-slate-800 mt-2">Pilih File Excel Kurikulum (.xlsx / .csv)</h4>
-                    <p class="text-[11px] text-slate-500">Header: <code>Kode MK</code>, <code>Nama Mata Kuliah</code>, <code>SKS</code>, <code>Semester</code>, <code>Prodi</code>, <code>Jenis</code></p>
+                <div onclick="document.getElementById('fileMKInput').click()" class="dropzone-box p-6 text-center cursor-pointer transition hover:border-brand-500 hover:bg-orange-50/30" id="mkDropzone">
+                    <div class="w-12 h-12 rounded-2xl bg-orange-50 text-brand-600 mx-auto flex items-center justify-center text-2xl mb-2">📊</div>
+                    <h4 class="text-xs font-bold text-slate-800">Klik atau Tarik File Excel (.xlsx / .csv) ke Sini</h4>
+                    <p class="text-[11px] text-slate-500 mt-1">Template kolom: <code>Kode MK</code>, <code>Nama Mata Kuliah</code>, <code>SKS</code>, <code>Semester</code>, <code>Prodi</code>, <code>Jenis</code></p>
+                    <div class="mt-2 text-[10px] text-amber-600 bg-amber-50 inline-block px-2.5 py-1 rounded-full border border-amber-200 font-medium">
+                        🛡️ Sistem otomatis memeriksa kolom tertukar, format angka, dan mata kuliah ganda.
+                    </div>
                 </div>
 
-                <div id="previewMKContainer" class="hidden space-y-3">
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="font-bold text-slate-700">Preview Data (<span id="countParsedMK">0</span> mata kuliah)</span>
-                        <button onclick="sendImportMK()" id="btnSaveImportMK" class="btn-brand-primary px-4 py-2 text-xs font-bold">Simpan ke Database</button>
+                <!-- Preview Container -->
+                <div id="previewMKContainer" class="hidden space-y-4">
+                    <!-- Stat Cards -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        <div onclick="filterMKPreview('all')" class="p-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100 transition shadow-2xs">
+                            <span class="text-[11px] font-bold text-slate-500 block">Total Baris</span>
+                            <span class="text-lg font-extrabold text-slate-800 font-mono" id="statMKTotal">0</span>
+                        </div>
+                        <div onclick="filterMKPreview('valid')" class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl cursor-pointer hover:bg-emerald-100 transition shadow-2xs">
+                            <span class="text-[11px] font-bold text-emerald-700 block">✓ Valid (Siap Simpan)</span>
+                            <span class="text-lg font-extrabold text-emerald-700 font-mono" id="statMKValid">0</span>
+                        </div>
+                        <div onclick="filterMKPreview('duplicate')" class="p-3 bg-amber-50 border border-amber-200 rounded-xl cursor-pointer hover:bg-amber-100 transition shadow-2xs">
+                            <span class="text-[11px] font-bold text-amber-700 block">⚠️ Duplikat</span>
+                            <span class="text-lg font-extrabold text-amber-700 font-mono" id="statMKDuplicate">0</span>
+                        </div>
+                        <div onclick="filterMKPreview('error')" class="p-3 bg-rose-50 border border-rose-200 rounded-xl cursor-pointer hover:bg-rose-100 transition shadow-2xs">
+                            <span class="text-[11px] font-bold text-rose-700 block">✕ Salah Format</span>
+                            <span class="text-lg font-extrabold text-rose-700 font-mono" id="statMKError">0</span>
+                        </div>
                     </div>
-                    <div class="max-h-60 overflow-y-auto rounded-xl border border-slate-200 text-xs">
+
+                    <!-- Alert Banner jika ada duplikat atau error -->
+                    <div id="alertMKDuplicate" class="hidden px-3.5 py-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span>⚠️</span>
+                            <span id="alertMKDuplicateText">Ditemukan data duplikat. Data duplikat otomatis ditandai agar tidak terjadi penggandaan mata kuliah.</span>
+                        </div>
+                        <label class="inline-flex items-center gap-1.5 text-[11px] font-bold text-amber-900 cursor-pointer">
+                            <input type="checkbox" id="chkSkipMKDuplicate" checked onchange="renderMKPreviewTable()" class="rounded text-brand-600 focus:ring-brand-500">
+                            Lewati Duplikat
+                        </label>
+                    </div>
+
+                    <div id="alertMKError" class="hidden px-3.5 py-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-center gap-2">
+                        <span>❌</span>
+                        <span id="alertMKErrorText">Terdapat baris dengan kesalahan pengisian (kolom tertukar / format angka salah). Baris ini tidak akan dimasukkan.</span>
+                    </div>
+
+                    <!-- Tab Filter Pills -->
+                    <div class="flex items-center gap-1.5 border-b border-slate-200 pb-2 text-xs">
+                        <button type="button" onclick="filterMKPreview('all')" id="tabMKFilter-all" class="px-3 py-1 font-bold rounded-lg bg-brand-500 text-white transition">Semua (<span id="countTabMK-all">0</span>)</button>
+                        <button type="button" onclick="filterMKPreview('valid')" id="tabMKFilter-valid" class="px-3 py-1 font-bold rounded-lg text-slate-600 hover:bg-slate-100 transition">Hanya Valid (<span id="countTabMK-valid">0</span>)</button>
+                        <button type="button" onclick="filterMKPreview('duplicate')" id="tabMKFilter-duplicate" class="px-3 py-1 font-bold rounded-lg text-amber-700 hover:bg-amber-50 transition">Duplikat (<span id="countTabMK-duplicate">0</span>)</button>
+                        <button type="button" onclick="filterMKPreview('error')" id="tabMKFilter-error" class="px-3 py-1 font-bold rounded-lg text-rose-700 hover:bg-rose-50 transition">Error (<span id="countTabMK-error">0</span>)</button>
+                    </div>
+
+                    <!-- Table Preview -->
+                    <div class="max-h-72 overflow-y-auto rounded-xl border border-slate-200 text-xs">
                         <table class="w-full text-left" id="tablePreviewMK">
-                            <thead class="bg-slate-100 text-slate-700 uppercase text-[10px] font-bold sticky top-0">
+                            <thead class="bg-slate-100 text-slate-700 uppercase text-[10px] font-bold sticky top-0 shadow-xs">
                                 <tr>
-                                    <th class="p-2">Kode</th>
-                                    <th class="p-2">Nama</th>
-                                    <th class="p-2 text-center">SKS</th>
-                                    <th class="p-2 text-center">Smt</th>
+                                    <th class="p-2.5 text-center w-12">No</th>
+                                    <th class="p-2.5 w-28">Status</th>
+                                    <th class="p-2.5 w-24">Kode MK</th>
+                                    <th class="p-2.5">Nama Mata Kuliah</th>
+                                    <th class="p-2.5 text-center w-16">SKS</th>
+                                    <th class="p-2.5 text-center w-16">Smt</th>
+                                    <th class="p-2.5 w-20">Jenis</th>
+                                    <th class="p-2.5">Keterangan / Diagnosa</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100" id="tbodyPreviewMK"></tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
+                <div class="text-xs text-slate-500">
+                    <span id="footerMKValidNote">Pilih file excel untuk memulai validasi data.</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="closeModalImportMK()" class="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition">Batal</button>
+                    <button type="button" onclick="sendImportMK()" id="btnSaveImportMK" disabled class="btn-brand-primary px-5 py-2 text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed">
+                        Simpan ke Database
+                    </button>
                 </div>
             </div>
         </div>
@@ -638,9 +777,6 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        let parsedMKData = [];
-        let parsedKRSData = [];
-
         function switchTab(tabId) {
             document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -746,11 +882,135 @@
             });
         }
 
+        const EXISTING_MK_CODES = <?= json_encode(array_values(array_filter(array_map('strtoupper', array_column($mata_kuliah, 'kode_mk'))))) ?>;
+        const EXISTING_MK_NAMES = <?= json_encode(array_values(array_filter(array_map('strtolower', array_column($mata_kuliah, 'nama_mk'))))) ?>;
+
+        let parsedMKData = [];
+        let mkPreviewFilter = 'all';
+
+        let parsedKRSData = [];
+        let krsPreviewFilter = 'all';
+
+        // --- VALIDASI CLIENT-SIDE MASTER MATA KULIAH ---
+        function validateCourseClient(r, index, seenCodes, seenNames) {
+            const rowNum = index + 1;
+            const errors = [];
+            let isDuplicate = false;
+            let duplicateType = '';
+
+            let rawKode = String(r['Kode MK'] || r['kode_mk'] || r['Kode'] || r['KODE'] || r['Kode Matakuliah'] || '').trim();
+            let rawNama = String(r['Nama Mata Kuliah'] || r['nama_mk'] || r['Nama'] || r['NAMA'] || r['Mata Kuliah'] || r['Nama MK'] || '').trim();
+            let rawSks  = r['SKS'] !== undefined ? r['SKS'] : (r['sks'] !== undefined ? r['sks'] : (r['Sks'] !== undefined ? r['Sks'] : ''));
+            let rawSmt  = r['Semester'] !== undefined ? r['Semester'] : (r['semester'] !== undefined ? r['semester'] : (r['Smt'] !== undefined ? r['Smt'] : ''));
+            let rawProdi= String(r['Program Studi'] || r['Prodi'] || r['prodi'] || '<?= htmlspecialchars($user_prodi) ?>').trim();
+            let rawJenis= String(r['Jenis'] || r['Sifat'] || r['jenis'] || 'Wajib').trim();
+            let rawKur  = String(r['Kurikulum'] || r['kurikulum'] || '2024').trim();
+
+            // 1. Validasi Kode MK & Cek Tertukar
+            if (!rawKode) {
+                errors.push('Kode MK wajib diisi');
+            } else {
+                if (rawKode.length > 25 || rawKode.split(/\s+/).length >= 3) {
+                    errors.push(`Kolom Kode MK tertukar dengan Nama MK ('${rawKode.substring(0, 22)}...')`);
+                } else if (rawKode.length < 2) {
+                    errors.push('Kode MK terlalu pendek (< 2 karakter)');
+                }
+            }
+
+            // 2. Validasi Nama MK & Cek Tertukar
+            if (!rawNama) {
+                errors.push('Nama Mata Kuliah wajib diisi');
+            } else {
+                if (rawNama.length <= 5 && !rawNama.includes(' ') && /^[A-Za-z0-9_-]+$/.test(rawNama)) {
+                    errors.push(`Kolom Nama MK terindikasi tertukar dengan Kode ('${rawNama}')`);
+                } else if (rawNama.length < 3) {
+                    errors.push('Nama Mata Kuliah terlalu pendek (< 3 karakter)');
+                }
+            }
+
+            // 3. Validasi SKS
+            if (rawSks === '' || rawSks === null || rawSks === undefined) {
+                errors.push('SKS wajib diisi');
+            } else {
+                const numSks = Number(rawSks);
+                if (isNaN(numSks) || !Number.isInteger(numSks)) {
+                    errors.push(`Kolom SKS harus angka (1-10), bukan '${rawSks}' (kemungkinan kolom tertukar)`);
+                } else if (numSks <= 0 || numSks > 10) {
+                    errors.push(`SKS tidak wajar (${numSks} SKS). Harus antara 1-10`);
+                }
+            }
+
+            // 4. Validasi Semester
+            if (rawSmt !== '' && rawSmt !== null && rawSmt !== undefined) {
+                const numSmt = Number(rawSmt);
+                if (isNaN(numSmt) || !Number.isInteger(numSmt)) {
+                    errors.push(`Kolom Semester harus angka (1-8), bukan '${rawSmt}'`);
+                } else if (numSmt <= 0 || numSmt > 14) {
+                    errors.push(`Semester tidak wajar (${numSmt}). Harus antara 1-8`);
+                }
+            }
+
+            // 5. Validasi Jenis
+            const normJenis = rawJenis.charAt(0).toUpperCase() + rawJenis.slice(1).toLowerCase();
+            if (rawJenis && !['Wajib', 'Pilihan'].includes(normJenis)) {
+                errors.push(`Jenis harus 'Wajib' atau 'Pilihan', bukan '${rawJenis}'`);
+            }
+
+            const upperKode = rawKode.toUpperCase();
+            const lowerNama = rawNama.toLowerCase();
+
+            // 6. Validasi Duplikasi
+            if (errors.length === 0) {
+                if (seenCodes[upperKode]) {
+                    isDuplicate = true;
+                    duplicateType = `Duplikat di File: Kode MK ${upperKode} sama dengan baris ${seenCodes[upperKode]}`;
+                } else {
+                    seenCodes[upperKode] = rowNum;
+                }
+
+                if (!isDuplicate && seenNames[lowerNama]) {
+                    isDuplicate = true;
+                    duplicateType = `Duplikat di File: Nama '${rawNama}' sama dengan baris ${seenNames[lowerNama]}`;
+                } else if (!isDuplicate) {
+                    seenNames[lowerNama] = rowNum;
+                }
+
+                if (!isDuplicate) {
+                    if (EXISTING_MK_CODES.includes(upperKode)) {
+                        isDuplicate = true;
+                        duplicateType = `Sudah ada di Database (Kode ${upperKode})`;
+                    } else if (EXISTING_MK_NAMES.includes(lowerNama)) {
+                        isDuplicate = true;
+                        duplicateType = `Nama mata kuliah sudah terdaftar di database`;
+                    }
+                }
+            }
+
+            let status = 'valid';
+            if (errors.length > 0) status = 'error';
+            else if (isDuplicate) status = 'duplicate';
+
+            return {
+                rowNum: rowNum,
+                kode_mk: upperKode,
+                nama_mk: rawNama,
+                sks: Number(rawSks) || 3,
+                semester: Number(rawSmt) || 1,
+                prodi: rawProdi,
+                jenis: ['Wajib', 'Pilihan'].includes(normJenis) ? normJenis : 'Wajib',
+                kurikulum: rawKur || '2024',
+                status: status,
+                errors: errors,
+                duplicateInfo: duplicateType,
+            };
+        }
+
         // --- MODAL IMPORT MK ---
         function openModalImportMK() {
             document.getElementById('previewMKContainer').classList.add('hidden');
             document.getElementById('fileMKInput').value = '';
             parsedMKData = [];
+            mkPreviewFilter = 'all';
             document.getElementById('modalImportMK').classList.remove('hidden');
         }
         function closeModalImportMK() {
@@ -770,59 +1030,163 @@
                 const data = new Uint8Array(evt.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const json = XLSX.utils.sheet_to_json(firstSheet);
+                const json = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
 
-                parsedMKData = json.map(r => ({
-                    kode_mk: r['Kode MK'] || r['kode_mk'] || r['Kode'] || '',
-                    nama_mk: r['Nama Mata Kuliah'] || r['nama_mk'] || r['Nama'] || '',
-                    sks: r['SKS'] || r['sks'] || 3,
-                    semester: r['Semester'] || r['semester'] || 1,
-                    prodi: r['Program Studi'] || r['Prodi'] || r['prodi'] || '<?= htmlspecialchars($user_prodi) ?>',
-                    jenis: r['Jenis'] || r['Sifat'] || 'Wajib',
-                    kurikulum: r['Kurikulum'] || '2024'
-                })).filter(r => r.kode_mk && r.nama_mk);
-
-                if (parsedMKData.length === 0) {
-                    Swal.fire('Format Kosong', 'Tidak ada baris mata kuliah yang valid ditemukan dalam file.', 'warning');
+                if (!json || json.length === 0) {
+                    Swal.fire('File Kosong', 'Tidak ada baris data yang ditemukan dalam file.', 'warning');
                     return;
                 }
 
-                document.getElementById('countParsedMK').innerText = parsedMKData.length;
-                const tbody = document.getElementById('tbodyPreviewMK');
-                tbody.innerHTML = parsedMKData.slice(0, 50).map(r => `
-                    <tr>
-                        <td class="p-2 font-mono font-bold text-brand-700">${r.kode_mk}</td>
-                        <td class="p-2 font-semibold text-slate-800">${r.nama_mk}</td>
-                        <td class="p-2 text-center">${r.sks}</td>
-                        <td class="p-2 text-center">Smt ${r.semester}</td>
-                    </tr>
-                `).join('');
+                const seenCodes = {};
+                const seenNames = {};
+                parsedMKData = json.map((r, i) => validateCourseClient(r, i, seenCodes, seenNames));
 
+                updateMKStats();
+                renderMKPreviewTable();
                 document.getElementById('previewMKContainer').classList.remove('hidden');
             };
             reader.readAsArrayBuffer(file);
         }
 
+        function updateMKStats() {
+            const total = parsedMKData.length;
+            const validCount = parsedMKData.filter(r => r.status === 'valid').length;
+            const dupCount = parsedMKData.filter(r => r.status === 'duplicate').length;
+            const errCount = parsedMKData.filter(r => r.status === 'error').length;
+
+            document.getElementById('statMKTotal').innerText = total;
+            document.getElementById('statMKValid').innerText = validCount;
+            document.getElementById('statMKDuplicate').innerText = dupCount;
+            document.getElementById('statMKError').innerText = errCount;
+
+            document.getElementById('countTabMK-all').innerText = total;
+            document.getElementById('countTabMK-valid').innerText = validCount;
+            document.getElementById('countTabMK-duplicate').innerText = dupCount;
+            document.getElementById('countTabMK-error').innerText = errCount;
+
+            const alertDup = document.getElementById('alertMKDuplicate');
+            if (dupCount > 0) alertDup.classList.remove('hidden');
+            else alertDup.classList.add('hidden');
+
+            const alertErr = document.getElementById('alertMKError');
+            if (errCount > 0) alertErr.classList.remove('hidden');
+            else alertErr.classList.add('hidden');
+        }
+
+        function filterMKPreview(filterType) {
+            mkPreviewFilter = filterType;
+            ['all', 'valid', 'duplicate', 'error'].forEach(t => {
+                const btn = document.getElementById('tabMKFilter-' + t);
+                if (t === filterType) {
+                    btn.className = 'px-3 py-1 font-bold rounded-lg bg-brand-500 text-white transition';
+                } else {
+                    btn.className = 'px-3 py-1 font-bold rounded-lg text-slate-600 hover:bg-slate-100 transition';
+                }
+            });
+            renderMKPreviewTable();
+        }
+
+        function renderMKPreviewTable() {
+            const tbody = document.getElementById('tbodyPreviewMK');
+            const skipDup = document.getElementById('chkSkipMKDuplicate')?.checked ?? true;
+
+            let filtered = parsedMKData;
+            if (mkPreviewFilter === 'valid') {
+                filtered = parsedMKData.filter(r => r.status === 'valid');
+            } else if (mkPreviewFilter === 'duplicate') {
+                filtered = parsedMKData.filter(r => r.status === 'duplicate');
+            } else if (mkPreviewFilter === 'error') {
+                filtered = parsedMKData.filter(r => r.status === 'error');
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-400 italic">Tidak ada baris pada filter ini.</td></tr>`;
+            } else {
+                tbody.innerHTML = filtered.slice(0, 100).map(r => {
+                    let statusBadge = '';
+                    let rowBg = '';
+                    let note = '';
+
+                    if (r.status === 'valid') {
+                        statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">✓ Valid</span>`;
+                        note = `<span class="text-emerald-700 font-medium">Format sesuai template</span>`;
+                    } else if (r.status === 'duplicate') {
+                        statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300">⚠️ Duplikat</span>`;
+                        rowBg = 'bg-amber-50/40';
+                        note = `<span class="text-amber-800 font-semibold">${r.duplicateInfo}</span>`;
+                    } else {
+                        statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300">✕ Error</span>`;
+                        rowBg = 'bg-rose-50/50';
+                        note = `<span class="text-rose-700 font-bold">${r.errors.join('<br>')}</span>`;
+                    }
+
+                    return `
+                        <tr class="${rowBg}">
+                            <td class="p-2.5 text-center text-slate-400 font-mono text-[11px]">${r.rowNum}</td>
+                            <td class="p-2.5">${statusBadge}</td>
+                            <td class="p-2.5 font-mono font-bold ${r.status === 'error' && r.errors.some(e=>e.includes('Kode')) ? 'text-rose-600 bg-rose-100/50 px-1 rounded' : 'text-brand-700'}">${r.kode_mk || '-'}</td>
+                            <td class="p-2.5 font-semibold text-slate-800 ${r.status === 'error' && r.errors.some(e=>e.includes('Nama')) ? 'text-rose-600 bg-rose-100/50 px-1 rounded' : ''}">${r.nama_mk || '-'}</td>
+                            <td class="p-2.5 text-center font-mono ${r.status === 'error' && r.errors.some(e=>e.includes('SKS')) ? 'text-rose-600 font-bold bg-rose-100/50 rounded' : ''}">${r.sks}</td>
+                            <td class="p-2.5 text-center ${r.status === 'error' && r.errors.some(e=>e.includes('Semester')) ? 'text-rose-600 font-bold bg-rose-100/50 rounded' : ''}">Smt ${r.semester}</td>
+                            <td class="p-2.5 text-slate-600">${r.jenis}</td>
+                            <td class="p-2.5 text-[11px] leading-tight">${note}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // Hitung data yang siap disimpan
+            const readyRows = parsedMKData.filter(r => r.status === 'valid' || (!skipDup && r.status === 'duplicate'));
+            const btnSave = document.getElementById('btnSaveImportMK');
+            const footerNote = document.getElementById('footerMKValidNote');
+
+            if (readyRows.length > 0) {
+                btnSave.disabled = false;
+                btnSave.innerText = `Simpan (${readyRows.length} Data) ke Database`;
+                footerNote.innerHTML = `<span class="text-emerald-700 font-bold">✓ ${readyRows.length} baris siap disimpan</span>${skipDup && parsedMKData.some(r=>r.status==='duplicate') ? ' (duplikat dilewati)' : ''}.`;
+            } else {
+                btnSave.disabled = true;
+                btnSave.innerText = 'Tidak Ada Data Valid';
+                footerNote.innerHTML = `<span class="text-rose-600 font-bold">Tidak ada baris valid yang dapat disimpan.</span> Perbaiki file excel sesuai template.`;
+            }
+        }
+
         async function sendImportMK() {
-            if (parsedMKData.length === 0) return;
+            const skipDup = document.getElementById('chkSkipMKDuplicate')?.checked ?? true;
+            const readyRows = parsedMKData.filter(r => r.status === 'valid' || (!skipDup && r.status === 'duplicate'));
+            if (readyRows.length === 0) return;
+
             const btn = document.getElementById('btnSaveImportMK');
             btn.disabled = true;
-            btn.innerText = 'Menyimpan...';
+            btn.innerText = 'Menyimpan ke database...';
 
             try {
                 const res = await fetch('<?= site_url("prodi/perwalian/import_mata_kuliah") ?>', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ courses: parsedMKData })
+                    body: JSON.stringify({
+                        courses: readyRows,
+                        allow_update: !skipDup
+                    })
                 });
                 const json = await res.json();
                 if (json.status === 'success') {
-                    Swal.fire('Sukses', json.message, 'success').then(() => location.reload());
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Import Berhasil!',
+                        html: `
+                            <div class="text-left text-xs space-y-1 mt-2">
+                                <p class="font-bold text-slate-800">${json.message}</p>
+                                ${json.skipped_duplicate > 0 ? `<p class="text-amber-700 font-medium">⚠️ ${json.skipped_duplicate} data duplikat dilewati.</p>` : ''}
+                                ${json.skipped_invalid > 0 ? `<p class="text-rose-700 font-medium">✕ ${json.skipped_invalid} baris tidak valid dilewati.</p>` : ''}
+                            </div>
+                        `,
+                    }).then(() => location.reload());
                 } else {
-                    Swal.fire('Gagal', json.message, 'error');
+                    Swal.fire('Peringatan Import', json.message, json.status === 'warning' ? 'warning' : 'error');
                 }
             } catch (err) {
-                Swal.fire('Error', 'Gagal memproses data import.', 'error');
+                Swal.fire('Error', 'Gagal memproses data import ke server.', 'error');
             } finally {
                 btn.disabled = false;
                 btn.innerText = 'Simpan ke Database';
@@ -831,13 +1195,23 @@
 
         function downloadTemplateMK() {
             const sampleData = [
-                { 'Kode MK': 'CS101', 'Nama Mata Kuliah': 'Algoritma & Pemrograman', 'SKS': 3, 'Semester': 1, 'Program Studi': 'S1 Informatika', 'Jenis': 'Wajib', 'Kurikulum': '2024' },
-                { 'Kode MK': 'CS102', 'Nama Mata Kuliah': 'Struktur Data', 'SKS': 4, 'Semester': 2, 'Program Studi': 'S1 Informatika', 'Jenis': 'Wajib', 'Kurikulum': '2024' },
-                { 'Kode MK': 'CS201', 'Nama Mata Kuliah': 'Pemrograman Web', 'SKS': 3, 'Semester': 3, 'Program Studi': 'S1 Informatika', 'Jenis': 'Wajib', 'Kurikulum': '2024' },
+                { 'Kode MK': 'CS101', 'Nama Mata Kuliah': 'Algoritma & Pemrograman', 'SKS': 3, 'Semester': 1, 'Program Studi': '<?= htmlspecialchars($user_prodi ?: "S1 Informatika") ?>', 'Jenis': 'Wajib', 'Kurikulum': '2024' },
+                { 'Kode MK': 'CS102', 'Nama Mata Kuliah': 'Struktur Data & Analisis Algoritma', 'SKS': 4, 'Semester': 2, 'Program Studi': '<?= htmlspecialchars($user_prodi ?: "S1 Informatika") ?>', 'Jenis': 'Wajib', 'Kurikulum': '2024' },
+                { 'Kode MK': 'CS201', 'Nama Mata Kuliah': 'Pemrograman Berbasis Web', 'SKS': 3, 'Semester': 3, 'Program Studi': '<?= htmlspecialchars($user_prodi ?: "S1 Informatika") ?>', 'Jenis': 'Wajib', 'Kurikulum': '2024' },
+                { 'Kode MK': 'CS305', 'Nama Mata Kuliah': 'Kecerdasan Buatan Terapan', 'SKS': 3, 'Semester': 5, 'Program Studi': '<?= htmlspecialchars($user_prodi ?: "S1 Informatika") ?>', 'Jenis': 'Pilihan', 'Kurikulum': '2024' },
             ];
             const ws = XLSX.utils.json_to_sheet(sampleData);
+            ws['!cols'] = [
+                { wch: 16 }, // Kode MK
+                { wch: 38 }, // Nama Mata Kuliah
+                { wch: 10 }, // SKS
+                { wch: 12 }, // Semester
+                { wch: 28 }, // Program Studi
+                { wch: 14 }, // Jenis
+                { wch: 14 }  // Kurikulum
+            ];
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Template MK');
+            XLSX.utils.book_append_sheet(wb, ws, 'Template Master MK');
             XLSX.writeFile(wb, 'template_master_mata_kuliah.xlsx');
         }
 
@@ -858,7 +1232,162 @@
             }
         }
 
-        // --- IMPORT REKAP KRS KOLEKTIF ---
+        // --- RESET / BUKA KUNCI KRS MAHASISWA ---
+        function confirmResetKRS(id, name, currentStatus) {
+            const isApproved = currentStatus === 'Disetujui';
+            Swal.fire({
+                title: isApproved ? 'Buka Kunci / Reset KRS' : 'Kelola Status KRS',
+                html: `
+                    <div class="text-left text-xs space-y-3 mt-1">
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                            <span class="text-slate-500 block">Mahasiswa:</span>
+                            <span class="font-extrabold text-slate-800 text-sm block">${name}</span>
+                            <div class="mt-1 flex items-center gap-2">
+                                <span class="text-slate-500">Status Saat Ini:</span>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isApproved ? 'bg-emerald-100 text-emerald-800' : (currentStatus === 'Diajukan' ? 'bg-amber-100 text-amber-800' : 'bg-slate-200 text-slate-700')}">${currentStatus}</span>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block font-bold text-slate-700">Pilih Tindakan:</label>
+                            <label class="flex items-start gap-2.5 p-3 bg-amber-50/70 border border-amber-200 rounded-xl cursor-pointer hover:bg-amber-100/60 transition">
+                                <input type="radio" name="resetMode" value="unlock" checked class="mt-0.5 text-brand-600 focus:ring-brand-500">
+                                <div>
+                                    <span class="font-bold text-amber-900 block text-xs">Buka Kunci (Kembalikan ke Draft / Revisi)</span>
+                                    <span class="text-[11px] text-amber-700 block leading-relaxed mt-0.5">Mata kuliah yang sudah dipilih mahasiswa <strong>tetap aman</strong>. Mahasiswa dapat langsung menambah atau mengurangi MK dan mengunggah ulang bukti KRS.</span>
+                                </div>
+                            </label>
+                            <label class="flex items-start gap-2.5 p-3 bg-rose-50/70 border border-rose-200 rounded-xl cursor-pointer hover:bg-rose-100/60 transition">
+                                <input type="radio" name="resetMode" value="total" class="mt-0.5 text-rose-600 focus:ring-rose-500">
+                                <div>
+                                    <span class="font-bold text-rose-900 block text-xs">Reset Total (Kosongkan Berkas & MK)</span>
+                                    <span class="text-[11px] text-rose-700 block leading-relaxed mt-0.5">Menghapus seluruh mata kuliah yang telah dipilih dan berkas KRS. Mahasiswa akan memulai pengisian perwalian dari kosong.</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Catatan ke Mahasiswa / Dosen Wali (Opsional):</label>
+                            <textarea id="swalResetCatatan" rows="2" placeholder="Contoh: Silakan revisi mata kuliah pilihan atau sesuaikan SKS..." class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonColor: '#ea580c',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Proses Tindakan',
+                cancelButtonText: 'Batal',
+                focusConfirm: false,
+                preConfirm: () => {
+                    const selectedMode = document.querySelector('input[name="resetMode"]:checked')?.value || 'unlock';
+                    const catatan = document.getElementById('swalResetCatatan')?.value || '';
+                    return { action: selectedMode, catatan: catatan };
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed && result.value) {
+                    const { action, catatan } = result.value;
+                    const fd = new FormData();
+                    fd.append('id_perwalian', id);
+                    fd.append('action', action);
+                    fd.append('catatan', catatan);
+
+                    Swal.fire({
+                        title: 'Memproses...',
+                        text: 'Sedang memperbarui status perwalian...',
+                        didOpen: () => Swal.showLoading(),
+                        allowOutsideClick: false
+                    });
+
+                    try {
+                        const res = await fetch('<?= site_url("prodi/perwalian/reset_perwalian") ?>', {
+                            method: 'POST',
+                            body: fd
+                        });
+                        const json = await res.json();
+                        if (json.status === 'success') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: json.message,
+                                timer: 1800,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        } else {
+                            Swal.fire('Gagal', json.message, 'error');
+                        }
+                    } catch (err) {
+                        Swal.fire('Error', 'Terjadi kesalahan sistem saat menghubungi server.', 'error');
+                    }
+                }
+            });
+        }
+
+        // --- VALIDASI & IMPORT REKAP KRS KOLEKTIF ---
+        function validateKRSClient(r, index, seenKRS) {
+            const rowNum = index + 1;
+            const errors = [];
+            let isDuplicate = false;
+            let duplicateType = '';
+
+            let rawNim   = String(r['NIM'] || r['nim'] || r['nim_mahasiswa'] || r['Nim'] || '').trim();
+            let rawKode  = String(r['Kode MK'] || r['kode_mk'] || r['Kode'] || r['KODE'] || r['Kode Matakuliah'] || '').trim().toUpperCase();
+            let rawTahun = String(r['Tahun Ajaran'] || r['tahun_ajaran'] || r['Tahun'] || '<?= htmlspecialchars($tahun_ajaran) ?>').trim();
+            let rawSmt   = String(r['Semester'] || r['semester'] || r['Smt'] || '<?= htmlspecialchars($semester) ?>').trim();
+
+            // 1. Validasi NIM
+            if (!rawNim) {
+                errors.push('NIM wajib diisi');
+            } else {
+                if (!/^[0-9A-Za-z]{6,25}$/.test(rawNim) || rawNim.includes(' ')) {
+                    errors.push(`Format NIM tidak valid ('${rawNim}'). Kemungkinan kolom tertukar dengan Nama`);
+                }
+            }
+
+            // 2. Validasi Kode MK
+            if (!rawKode) {
+                errors.push('Kode MK wajib diisi');
+            } else {
+                if (rawKode.length > 25 || rawKode.split(/\s+/).length >= 2) {
+                    errors.push(`Format Kode MK tidak valid ('${rawKode}'). Kemungkinan kolom tertukar dengan Nama MK`);
+                }
+            }
+
+            // 3. Validasi Tahun Ajaran
+            if (rawTahun && !/^\d{4}\/\d{4}$/.test(rawTahun)) {
+                errors.push(`Tahun Ajaran harus format YYYY/YYYY (misal 2024/2025), bukan '${rawTahun}'`);
+            }
+
+            // 4. Validasi Semester
+            const normSmt = rawSmt.charAt(0).toUpperCase() + rawSmt.slice(1).toLowerCase();
+            if (rawSmt && !['Ganjil', 'Genap'].includes(normSmt)) {
+                errors.push(`Semester harus 'Ganjil' atau 'Genap', bukan '${rawSmt}'`);
+            }
+
+            // 5. Cek Duplikat di File
+            if (errors.length === 0) {
+                const key = `${rawNim}_${rawKode}_${rawTahun}_${normSmt}`;
+                if (seenKRS[key]) {
+                    isDuplicate = true;
+                    duplicateType = `Duplikat di File: NIM ${rawNim} & Kode ${rawKode} sudah ada di baris ${seenKRS[key]}`;
+                } else {
+                    seenKRS[key] = rowNum;
+                }
+            }
+
+            let status = 'valid';
+            if (errors.length > 0) status = 'error';
+            else if (isDuplicate) status = 'duplicate';
+
+            return {
+                rowNum: rowNum,
+                nim: rawNim,
+                kode_mk: rawKode,
+                tahun_ajaran: rawTahun,
+                semester: ['Ganjil', 'Genap'].includes(normSmt) ? normSmt : 'Ganjil',
+                status: status,
+                errors: errors,
+                duplicateInfo: duplicateType,
+            };
+        }
+
         function handleKRSFileSelect(e) {
             const file = (e && e.target && e.target.files) ? e.target.files[0] : e;
             processKRSFile(file);
@@ -872,39 +1401,126 @@
                 const data = new Uint8Array(evt.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const json = XLSX.utils.sheet_to_json(firstSheet);
+                const json = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
 
-                parsedKRSData = json.map(r => ({
-                    nim: String(r['NIM'] || r['nim'] || r['nim_mahasiswa'] || '').trim(),
-                    kode_mk: String(r['Kode MK'] || r['kode_mk'] || r['Kode'] || '').trim().toUpperCase(),
-                    tahun_ajaran: r['Tahun Ajaran'] || r['tahun_ajaran'] || '<?= htmlspecialchars($tahun_ajaran) ?>',
-                    semester: r['Semester'] || r['semester'] || '<?= htmlspecialchars($semester) ?>'
-                })).filter(r => r.nim && r.kode_mk);
-
-                if (parsedKRSData.length === 0) {
-                    Swal.fire('File Kosong', 'Tidak ada data NIM & Kode MK yang valid dalam file.', 'warning');
+                if (!json || json.length === 0) {
+                    Swal.fire('File Kosong', 'Tidak ada data dalam file rekap KRS.', 'warning');
                     return;
                 }
 
-                document.getElementById('krsPreviewCount').innerText = parsedKRSData.length;
-                const tbody = document.getElementById('krsPreviewTbody');
-                tbody.innerHTML = parsedKRSData.slice(0, 50).map((r, i) => `
-                    <tr>
-                        <td class="p-2.5 text-center text-slate-400 font-mono">${i + 1}</td>
-                        <td class="p-2.5 font-mono font-bold text-slate-900">${r.nim}</td>
-                        <td class="p-2.5 font-mono font-bold text-brand-700">${r.kode_mk}</td>
-                        <td class="p-2.5 text-slate-600">${r.tahun_ajaran}</td>
-                        <td class="p-2.5 text-slate-600">${r.semester}</td>
-                    </tr>
-                `).join('');
+                const seenKRS = {};
+                parsedKRSData = json.map((r, i) => validateKRSClient(r, i, seenKRS));
 
+                updateKRSStats();
+                renderKRSPreviewTable();
                 document.getElementById('krsPreviewContainer').classList.remove('hidden');
             };
             reader.readAsArrayBuffer(file);
         }
 
+        function updateKRSStats() {
+            const total = parsedKRSData.length;
+            const validCount = parsedKRSData.filter(r => r.status === 'valid').length;
+            const dupCount = parsedKRSData.filter(r => r.status === 'duplicate').length;
+            const errCount = parsedKRSData.filter(r => r.status === 'error').length;
+
+            document.getElementById('statKRSTotal').innerText = total;
+            document.getElementById('statKRSValid').innerText = validCount;
+            document.getElementById('statKRSDuplicate').innerText = dupCount;
+            document.getElementById('statKRSError').innerText = errCount;
+
+            document.getElementById('countTabKRS-all').innerText = total;
+            document.getElementById('countTabKRS-valid').innerText = validCount;
+            document.getElementById('countTabKRS-duplicate').innerText = dupCount;
+            document.getElementById('countTabKRS-error').innerText = errCount;
+
+            const alertDup = document.getElementById('alertKRSDuplicate');
+            if (dupCount > 0) alertDup.classList.remove('hidden');
+            else alertDup.classList.add('hidden');
+
+            const alertErr = document.getElementById('alertKRSError');
+            if (errCount > 0) alertErr.classList.remove('hidden');
+            else alertErr.classList.add('hidden');
+        }
+
+        function filterKRSPreview(filterType) {
+            krsPreviewFilter = filterType;
+            ['all', 'valid', 'duplicate', 'error'].forEach(t => {
+                const btn = document.getElementById('tabKRSFilter-' + t);
+                if (t === filterType) {
+                    btn.className = 'px-3 py-1 font-bold rounded-lg bg-brand-500 text-white transition';
+                } else {
+                    btn.className = 'px-3 py-1 font-bold rounded-lg text-slate-600 hover:bg-slate-100 transition';
+                }
+            });
+            renderKRSPreviewTable();
+        }
+
+        function renderKRSPreviewTable() {
+            const tbody = document.getElementById('krsPreviewTbody');
+            const skipDup = document.getElementById('chkSkipKRSDuplicate')?.checked ?? true;
+
+            let filtered = parsedKRSData;
+            if (krsPreviewFilter === 'valid') {
+                filtered = parsedKRSData.filter(r => r.status === 'valid');
+            } else if (krsPreviewFilter === 'duplicate') {
+                filtered = parsedKRSData.filter(r => r.status === 'duplicate');
+            } else if (krsPreviewFilter === 'error') {
+                filtered = parsedKRSData.filter(r => r.status === 'error');
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400 italic">Tidak ada baris pada filter ini.</td></tr>`;
+            } else {
+                tbody.innerHTML = filtered.slice(0, 100).map(r => {
+                    let statusBadge = '';
+                    let rowBg = '';
+                    let note = '';
+
+                    if (r.status === 'valid') {
+                        statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">✓ Valid</span>`;
+                        note = `<span class="text-emerald-700 font-medium">Format sesuai</span>`;
+                    } else if (r.status === 'duplicate') {
+                        statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300">⚠️ Duplikat</span>`;
+                        rowBg = 'bg-amber-50/40';
+                        note = `<span class="text-amber-800 font-semibold">${r.duplicateInfo}</span>`;
+                    } else {
+                        statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300">✕ Error</span>`;
+                        rowBg = 'bg-rose-50/50';
+                        note = `<span class="text-rose-700 font-bold">${r.errors.join('<br>')}</span>`;
+                    }
+
+                    return `
+                        <tr class="${rowBg}">
+                            <td class="p-2.5 text-center text-slate-400 font-mono text-[11px]">${r.rowNum}</td>
+                            <td class="p-2.5">${statusBadge}</td>
+                            <td class="p-2.5 font-mono font-bold ${r.status === 'error' && r.errors.some(e=>e.includes('NIM')) ? 'text-rose-600 bg-rose-100/50 px-1 rounded' : 'text-slate-900'}">${r.nim}</td>
+                            <td class="p-2.5 font-mono font-bold ${r.status === 'error' && r.errors.some(e=>e.includes('Kode')) ? 'text-rose-600 bg-rose-100/50 px-1 rounded' : 'text-brand-700'}">${r.kode_mk}</td>
+                            <td class="p-2.5 text-slate-600">${r.tahun_ajaran}</td>
+                            <td class="p-2.5 text-slate-600">${r.semester}</td>
+                            <td class="p-2.5 text-[11px] leading-tight">${note}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            const readyRows = parsedKRSData.filter(r => r.status === 'valid' || (!skipDup && r.status === 'duplicate'));
+            const btnSubmit = document.getElementById('btnSubmitKRS');
+
+            if (readyRows.length > 0) {
+                btnSubmit.disabled = false;
+                btnSubmit.innerText = `Simpan (${readyRows.length} Entri KRS) ke Database`;
+            } else {
+                btnSubmit.disabled = true;
+                btnSubmit.innerText = 'Tidak Ada Data Valid';
+            }
+        }
+
         async function submitImportKRS() {
-            if (parsedKRSData.length === 0) return;
+            const skipDup = document.getElementById('chkSkipKRSDuplicate')?.checked ?? true;
+            const readyRows = parsedKRSData.filter(r => r.status === 'valid' || (!skipDup && r.status === 'duplicate'));
+            if (readyRows.length === 0) return;
+
             const btn = document.getElementById('btnSubmitKRS');
             btn.disabled = true;
             btn.innerText = 'Memproses ke database...';
@@ -914,19 +1530,29 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        krs_rows: parsedKRSData,
+                        krs_rows: readyRows,
                         tahun_ajaran: '<?= htmlspecialchars($tahun_ajaran) ?>',
                         semester: '<?= htmlspecialchars($semester) ?>'
                     })
                 });
                 const json = await res.json();
                 if (json.status === 'success') {
-                    Swal.fire('Berhasil!', json.message, 'success').then(() => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        html: `
+                            <div class="text-left text-xs space-y-1 mt-2">
+                                <p class="font-bold text-slate-800">${json.message}</p>
+                                ${json.skipped_duplicate > 0 ? `<p class="text-amber-700 font-medium">⚠️ ${json.skipped_duplicate} data duplikat dilewati.</p>` : ''}
+                                ${json.skipped_invalid > 0 ? `<p class="text-rose-700 font-medium">✕ ${json.skipped_invalid} baris tidak valid dilewati.</p>` : ''}
+                            </div>
+                        `
+                    }).then(() => {
                         switchTab('monitoring');
                         location.reload();
                     });
                 } else {
-                    Swal.fire('Gagal', json.message, 'error');
+                    Swal.fire('Peringatan Import', json.message, json.status === 'warning' ? 'warning' : 'error');
                 }
             } catch (err) {
                 Swal.fire('Error', 'Gagal memproses import data KRS.', 'error');
@@ -938,11 +1564,18 @@
 
         function downloadTemplateKRS() {
             const sampleData = [
-                { 'NIM': '1301210001', 'Kode MK': 'CS101', 'Tahun Ajaran': '2024/2025', 'Semester': 'Ganjil' },
-                { 'NIM': '1301210001', 'Kode MK': 'CS102', 'Tahun Ajaran': '2024/2025', 'Semester': 'Ganjil' },
-                { 'NIM': '1301210002', 'Kode MK': 'CS201', 'Tahun Ajaran': '2024/2025', 'Semester': 'Ganjil' },
+                { 'NIM': '1301210001', 'Kode MK': 'CS101', 'Tahun Ajaran': '<?= htmlspecialchars($tahun_ajaran) ?>', 'Semester': '<?= htmlspecialchars($semester) ?>' },
+                { 'NIM': '1301210001', 'Kode MK': 'CS102', 'Tahun Ajaran': '<?= htmlspecialchars($tahun_ajaran) ?>', 'Semester': '<?= htmlspecialchars($semester) ?>' },
+                { 'NIM': '1301210002', 'Kode MK': 'CS201', 'Tahun Ajaran': '<?= htmlspecialchars($tahun_ajaran) ?>', 'Semester': '<?= htmlspecialchars($semester) ?>' },
+                { 'NIM': '1301210003', 'Kode MK': 'CS305', 'Tahun Ajaran': '<?= htmlspecialchars($tahun_ajaran) ?>', 'Semester': '<?= htmlspecialchars($semester) ?>' },
             ];
             const ws = XLSX.utils.json_to_sheet(sampleData);
+            ws['!cols'] = [
+                { wch: 18 }, // NIM
+                { wch: 16 }, // Kode MK
+                { wch: 18 }, // Tahun Ajaran
+                { wch: 14 }  // Semester
+            ];
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Template Rekap KRS');
             XLSX.writeFile(wb, 'template_rekap_krs_siakad.xlsx');

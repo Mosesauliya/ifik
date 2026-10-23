@@ -74,7 +74,7 @@
             transition: all 0.2s ease;
             cursor: pointer;
         }
-        .dropzone-upload:hover {
+        .dropzone-upload:hover, .dropzone-upload.dragover {
             border-color: #ea580c;
             background: #fff7ed;
         }
@@ -294,14 +294,24 @@
                     </p>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                        <div>
-                            <input type="file" id="fileKRSInput" accept=".pdf, .jpg, .jpeg, .png" class="hidden" onchange="uploadBuktiKRS(event)">
-                            <div onclick="document.getElementById('fileKRSInput').click()" class="dropzone-upload p-5 text-center">
-                                <span class="text-2xl">📄</span>
-                                <h4 class="text-xs font-bold text-slate-800 mt-1">Klik untuk Memilih / Unggah Berkas KRS</h4>
-                                <p class="text-[11px] text-slate-400 mt-0.5">Format: PDF, PNG, JPG (Maks. 5MB)</p>
+                        <?php if($st1 !== 'Disetujui'): ?>
+                            <div>
+                                <input type="file" id="fileKRSInput" accept=".pdf, .jpg, .jpeg, .png" class="hidden" onchange="uploadBuktiKRS(event)">
+                                <div id="krsDropzone" onclick="document.getElementById('fileKRSInput').click()" class="dropzone-upload p-5 text-center cursor-pointer group">
+                                    <div class="pointer-events-none">
+                                        <span class="text-3xl block mb-1 group-hover:scale-110 transition-transform">📄</span>
+                                        <h4 class="text-xs font-bold text-slate-800">Tarik & Lepas (Drag & Drop) atau <span class="text-brand-600 underline">Pilih Berkas</span></h4>
+                                        <p class="text-[11px] text-slate-400 mt-0.5">Format: PDF, PNG, JPG (Maks. 5MB)</p>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        <?php else: ?>
+                            <div class="p-5 text-center bg-slate-100 border-2 border-dashed border-slate-200 rounded-2xl">
+                                <span class="text-2xl">🔒</span>
+                                <h4 class="text-xs font-bold text-slate-600 mt-1">Berkas Terkunci</h4>
+                                <p class="text-[11px] text-slate-400 mt-0.5">Perwalian telah disetujui, bukti KRS tidak dapat diubah</p>
+                            </div>
+                        <?php endif; ?>
 
                         <!-- Current File Preview Box -->
                         <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
@@ -311,7 +321,7 @@
                                     <p class="text-xs font-bold text-slate-800 truncate" id="krsFileName">
                                         <?= !empty($perwalian['file_krs']) ? htmlspecialchars($perwalian['file_krs']) : 'Belum ada bukti KRS yang diunggah' ?>
                                     </p>
-                                    <p class="text-[11px] text-slate-500 mt-0.5">
+                                    <p class="text-[11px] text-slate-500 mt-0.5" id="krsFileStatus">
                                         <?= !empty($perwalian['file_krs']) ? 'Berkas tersimpan di sistem' : 'Wajib diunggah sebelum submit' ?>
                                     </p>
                                 </div>
@@ -596,9 +606,37 @@
             });
         }
 
-        async function uploadBuktiKRS(e) {
-            const file = e.target.files[0];
+        function uploadBuktiKRS(e) {
+            const file = e.target.files ? e.target.files[0] : null;
+            if (file) {
+                processKRSFile(file);
+            }
+        }
+
+        async function processKRSFile(file) {
             if (!file) return;
+
+            // Validasi format berkas
+            const allowedExts = ['pdf', 'jpg', 'jpeg', 'png'];
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            if (!allowedExts.includes(fileExt)) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Format Tidak Sesuai',
+                    text: 'Hanya berkas berformat PDF, JPG, JPEG, atau PNG yang diperbolehkan.'
+                });
+                return;
+            }
+
+            // Validasi ukuran berkas (maks. 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Berkas Terlalu Besar',
+                    text: 'Ukuran berkas melebihi batas maksimal 5MB.'
+                });
+                return;
+            }
 
             const fd = new FormData();
             fd.append('id_perwalian', idPerwalian);
@@ -617,16 +655,55 @@
                 if (json.status === 'success') {
                     Swal.fire({ icon: 'success', title: 'Berhasil', text: json.message, timer: 1500, showConfirmButton: false });
                     document.getElementById('krsFileName').innerText = json.file_name;
+                    const statusEl = document.getElementById('krsFileStatus');
+                    if (statusEl) statusEl.innerText = 'Berkas tersimpan di sistem';
                     const link = document.getElementById('krsFileLink');
-                    link.setAttribute('onclick', `previewKRSModal('${json.file_url}', '${json.file_name}')`);
-                    link.classList.remove('hidden');
+                    if (link) {
+                        link.setAttribute('onclick', `previewKRSModal('${json.file_url}', '${json.file_name}')`);
+                        link.classList.remove('hidden');
+                    }
                 } else {
                     Swal.fire('Gagal Unggah', json.message, 'error');
                 }
             } catch (err) {
                 Swal.fire('Error', 'Terjadi kesalahan sistem saat unggah.', 'error');
+            } finally {
+                const inputEl = document.getElementById('fileKRSInput');
+                if (inputEl) inputEl.value = '';
             }
         }
+
+        // --- DRAG AND DROP SETUP ---
+        function setupDropzone(dropzoneEl, fileHandler) {
+            if (!dropzoneEl) return;
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzoneEl.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropzoneEl.classList.add('border-brand-500', 'bg-orange-50', 'ring-4', 'ring-orange-200');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzoneEl.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropzoneEl.classList.remove('border-brand-500', 'bg-orange-50', 'ring-4', 'ring-orange-200');
+                }, false);
+            });
+
+            dropzoneEl.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                if (dt && dt.files && dt.files.length > 0) {
+                    fileHandler(dt.files[0]);
+                }
+            }, false);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupDropzone(document.getElementById('krsDropzone'), processKRSFile);
+        });
 
         async function submitPerwalian() {
             const catatan = document.getElementById('catatanMhs').value;
