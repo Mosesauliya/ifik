@@ -770,8 +770,8 @@
     <!-- ========================================================================= -->
     <!-- MODAL: REVIEW & CROSS-CHECK KRS TAHAP 1 (RESPONSIVE SPLIT/TABS)           -->
     <!-- ========================================================================= -->
-    <div id="modalReviewKRS" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-[100000] hidden flex items-center justify-center p-1.5 sm:p-3 md:p-4">
-        <div class="clay-card w-full max-w-[97vw] xl:max-w-7xl h-[96vh] sm:h-[94vh] flex flex-col overflow-hidden bg-white shadow-2xl rounded-2xl border border-slate-200">
+    <div id="modalReviewKRS" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-[100000] hidden flex items-center justify-center p-2.5 pb-6 sm:p-3 md:p-4">
+        <div class="clay-card w-full max-w-[96vw] xl:max-w-7xl h-[80vh] max-h-[82dvh] sm:h-[92vh] sm:max-h-[92vh] flex flex-col overflow-hidden bg-white shadow-2xl rounded-2xl border border-slate-200">
             <!-- Modal Header -->
             <div class="px-3.5 py-2.5 sm:px-6 sm:py-3 bg-gradient-to-r from-orange-500 to-amber-600 text-white flex items-center justify-between gap-2 sm:gap-3 shrink-0 shadow-xs">
                 <div class="flex items-center space-x-2 sm:space-x-3 min-w-0">
@@ -861,17 +861,6 @@
                         <span class="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 border border-orange-200" id="m1RightTotalInfo">0 SKS (0 MK)</span>
                     </div>
 
-                    <!-- Shortcut Cepat Lihat Berkas di Mobile -->
-                    <div class="p-2.5 bg-orange-50/70 border-b border-orange-100 block lg:hidden shrink-0">
-                        <button type="button" onclick="switchMobileModalTab('berkas')" class="w-full py-2 px-3 text-xs font-semibold text-orange-800 bg-white hover:bg-orange-100/60 border border-orange-200 rounded-xl transition flex items-center justify-between shadow-2xs cursor-pointer">
-                            <span class="flex items-center gap-2">
-                                <i class="fa-solid fa-file-pdf text-rose-500 text-sm"></i>
-                                <span>Lihat Berkas Dokumen Slip KRS Fisik</span>
-                            </span>
-                            <span class="text-[11px] font-bold text-orange-600">Buka ➔</span>
-                        </button>
-                    </div>
-
                     <!-- Petunjuk Cross-Check di Desktop -->
                     <div class="px-3.5 pt-2.5 pb-1 hidden lg:block shrink-0">
                         <div class="text-[11px] text-slate-600 bg-orange-50/70 border border-orange-200/80 rounded-xl p-2.5 flex items-start gap-2">
@@ -901,14 +890,14 @@
                     </div>
 
                     <!-- Dynamic Decision Section (1-Click Action) -->
-                    <div id="m1KeputusanSection" class="p-3 bg-slate-50 border-t border-slate-200 shrink-0"></div>
+                    <div id="m1KeputusanSection" class="p-2.5 sm:p-3 bg-slate-50 border-t border-slate-200 shrink-0"></div>
                 </div>
             </div>
 
-            <!-- Modal Footer -->
-            <div class="px-4 py-2 sm:py-2.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
-                <span class="text-[11px] text-slate-500 italic hidden sm:inline">Periksa seluruh mata kuliah yang dikontrak sebelum mengambil keputusan.</span>
-                <button type="button" onclick="closeReviewModal()" class="w-full sm:w-auto px-4 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition text-center ml-auto cursor-pointer">
+            <!-- Modal Footer (Desktop / Tablet) -->
+            <div class="hidden sm:flex px-4 py-2 sm:py-2.5 bg-slate-50 border-t border-slate-200 items-center justify-between shrink-0">
+                <span class="text-[11px] text-slate-500 italic">Periksa seluruh mata kuliah yang dikontrak sebelum mengambil keputusan.</span>
+                <button type="button" onclick="closeReviewModal()" class="px-4 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition text-center ml-auto cursor-pointer">
                     Tutup
                 </button>
             </div>

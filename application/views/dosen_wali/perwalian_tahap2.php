@@ -833,8 +833,8 @@
     <!-- ========================================================================= -->
     <!-- MODAL: FORM PENILAIAN TAHAP 2 (GENERATE MK, INPUT NILAI, CHECKLIST, LOCK) -->
     <!-- ========================================================================= -->
-    <div id="modalGradingTahap2" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100000] hidden flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-        <div class="clay-card w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden bg-white shadow-2xl">
+    <div id="modalGradingTahap2" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100000] hidden flex items-center justify-center p-2.5 pb-6 sm:p-4 overflow-y-auto">
+        <div class="clay-card w-full max-w-4xl max-h-[82vh] max-h-[82dvh] sm:max-h-[92vh] flex flex-col overflow-hidden bg-white shadow-2xl">
             <!-- Modal Header -->
             <div class="px-4 py-3 sm:px-6 sm:py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center justify-between gap-2 shrink-0">
                 <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
@@ -927,8 +927,8 @@
     <!-- ========================================================================= -->
     <!-- MODAL: IMPORT NILAI EXCEL (KOLEKTIF & SINGLE)                             -->
     <!-- ========================================================================= -->
-    <div id="modalImportNilai" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[100010] hidden flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-        <div class="clay-card w-full max-w-3xl xl:max-w-4xl max-h-[92vh] flex flex-col overflow-hidden bg-white shadow-2xl rounded-2xl">
+    <div id="modalImportNilai" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[100010] hidden flex items-center justify-center p-2.5 pb-6 sm:p-4 overflow-y-auto">
+        <div class="clay-card w-full max-w-3xl xl:max-w-4xl max-h-[82vh] max-h-[82dvh] sm:max-h-[92vh] flex flex-col overflow-hidden bg-white shadow-2xl rounded-2xl">
             <!-- Modal Fixed Header -->
             <div class="px-5 py-3.5 sm:px-6 sm:py-4 border-b border-slate-100 flex items-center justify-between gap-3 shrink-0 bg-white">
                 <div class="flex items-center space-x-2.5 min-w-0">
