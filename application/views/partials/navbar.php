@@ -459,7 +459,7 @@
         <?php
             // ====== Tentukan label & URL panel berdasarkan role ======
             $panel_label = 'Panel Admin';
-            $panel_url   = base_url('ImportEmail');
+            $panel_url   = base_url('adminheader');
 
             if ($role_id == 22) {
                 $panel_label = 'Panel Super Admin';
@@ -471,8 +471,20 @@
                 $panel_label = 'Panel Kaur';
                 $panel_url   = base_url('kaur');
             } elseif ($role_id == 3) {
-                $panel_label = 'Panel Dosen';
-                $panel_url   = base_url('dosen/wali');
+                $user_jabatan = strtolower((string)($this->session->userdata('jabatan') ?? ''));
+                if ($user_jabatan === 'kaur') {
+                    $panel_label = 'Panel Ka. Ur';
+                    $panel_url   = base_url('kaur');
+                } elseif ($user_jabatan === 'kaprodi') {
+                    $panel_label = 'Panel Kaprodi';
+                    $panel_url   = base_url('kaprodi/peminjaman');
+                } elseif ($user_jabatan === 'wadek') {
+                    $panel_label = 'Panel Wadek';
+                    $panel_url   = base_url('wadek/peminjaman');
+                } else {
+                    $panel_label = 'Panel Dosen';
+                    $panel_url   = base_url('dosen/wali');
+                }
             } elseif ($role_id == 6) {
                 $panel_label = 'Panel Koordinator TA';
                 $panel_url   = base_url('koordinatorta');
@@ -482,6 +494,19 @@
             } elseif ($role_id == 9) {
                 $panel_label = 'Panel Ketua KK';
                 $panel_url   = base_url('ketuakk');
+            } elseif ($role_id == 16) {
+                $user_p = $this->session->userdata('prodi');
+                $panel_label = !empty($user_p) ? 'Panel ' . $user_p : 'Panel Program Studi';
+                $panel_url   = base_url('prodi/respon-ticketing');
+            } elseif ($role_id == 17) {
+                $panel_label = 'Panel Kemahasiswaan';
+                $panel_url   = base_url('kemahasiswaan/respon-ticketing');
+            } elseif ($role_id == 11) {
+                $panel_label = 'Panel Sekretariat';
+                $panel_url   = base_url('sekretariat/respon-ticketing');
+            } elseif ($role_id == 15) {
+                $panel_label = 'Panel SDM & Keuangan';
+                $panel_url   = base_url('sdmkeuangan/respon-ticketing');
             }
 
         ?>

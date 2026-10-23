@@ -22,6 +22,8 @@ class Admin extends CI_Controller {
             redirect('import-email');
             return;
         }
+        redirect('adminheader');
+        return;
         $data['title']       = ($role_id === 22) ? 'Central Super Admin Panel - IFIK Portal' : 'Central Admin Panel - IFIK Portal';
         
         // Metrik LAA
