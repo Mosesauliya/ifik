@@ -4,15 +4,17 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 if (!function_exists('fik_program_studi')) {
     function fik_program_studi()
     {
-        $CI =& get_instance();
-        if (isset($CI->db) && $CI->db->table_exists('master_prodi')) {
-            $rows = $CI->db->select('nama_prodi')
-                           ->where('is_active', 1)
-                           ->order_by('urutan', 'ASC')
-                           ->get('master_prodi')
-                           ->result_array();
-            if (!empty($rows)) {
-                return array_column($rows, 'nama_prodi');
+        if (function_exists('get_instance')) {
+            $CI = get_instance();
+            if (isset($CI->db) && $CI->db && method_exists($CI->db, 'table_exists') && $CI->db->table_exists('master_prodi')) {
+                $rows = $CI->db->select('nama_prodi')
+                               ->where('is_active', 1)
+                               ->order_by('urutan', 'ASC')
+                               ->get('master_prodi')
+                               ->result_array();
+                if (!empty($rows)) {
+                    return array_column($rows, 'nama_prodi');
+                }
             }
         }
 

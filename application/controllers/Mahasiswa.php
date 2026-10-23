@@ -7,7 +7,7 @@ class Mahasiswa extends CI_Controller {
         parent::__construct();
         $this->load->model('Mahasiswa_model');
         $this->load->library('form_validation');
-        $this->load->helper(array('form', 'url'));
+        $this->load->helper(array('form', 'url', 'fik_prodi'));
 
         $isAjax = $this->input->is_ajax_request() ||
                   (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') ||
@@ -27,12 +27,30 @@ class Mahasiswa extends CI_Controller {
             return;
         }
 
-        // 2. Cek Role (Hanya Role 4 = Mahasiswa, atau Role 1 = Admin)
+        // 2. Cek Role (Khusus fitur Mahasiswa: Role 4, atau Admin / Super Admin: Role 1, 22)
         // Pengecualian: method-method rekomendasi TA (bisa diakses oleh Dosen & Koordinator TA / Admin)
-        $method = $this->router->fetch_method();
-        $isRekomenMethod = (stripos($method, 'rekomen') !== false);
         $role_id = (int)$this->session->userdata('role_id');
-        if ($role_id !== 4 && $role_id !== 1 && !$isRekomenMethod) {
+        $current_method = $this->router->fetch_method();
+        $isRekomenMethod = (stripos($current_method, 'rekomen') !== false);
+        $shared_rekomen_methods = array(
+            'ajax_get_rekomen_options',
+            'submit_rekomendasi_sidang',
+            'submit_rekomendasi_nonsidang',
+            'ajax_get_all_rekomen_crud',
+            'ajax_save_rekomen_option',
+            'ajax_delete_rekomen_option',
+            'ajax_delete_rekomen_category',
+            'ajax_save_rekomen_field',
+            'ajax_delete_rekomen_field'
+        );
+
+        if ($isRekomenMethod || in_array($current_method, $shared_rekomen_methods)) {
+            // Metode rekomendasi & manajemen jalur diizinkan untuk semua role yang telah login
+            // (Mahasiswa, Dosen, Koordinator TA, Admin Layanan, Super Admin)
+            return;
+        }
+
+        if ($role_id !== 4 && $role_id !== 1 && $role_id !== 22) {
             if ($isAjax) {
                 $this->output
                     ->set_status_header(403)
@@ -869,7 +887,7 @@ class Mahasiswa extends CI_Controller {
             $file_name = $upload_data['file_name'];
 
             $mhs = $this->Mahasiswa_model->get_mahasiswa($nim);
-            $mhs_konsentrasi = !empty($mhs['konsentrasi_dkv']) ? $mhs['konsentrasi_dkv'] : 'Desain Komunikasi Visual';
+            $mhs_konsentrasi = !empty($mhs['konsentrasi_dkv']) ? $mhs['konsentrasi_dkv'] : (!empty($mhs['prodi']) ? $mhs['prodi'] : '-');
             $mhs_id_kk = !empty($mhs['id_kk']) ? $mhs['id_kk'] : 1;
 
             $kode_berkas = str_replace('file_', '', $field_name);
@@ -1065,7 +1083,7 @@ class Mahasiswa extends CI_Controller {
         try {
             $nim = $this->input->post('nim') ?: $this->_get_current_nim();
             $mhs = $this->Mahasiswa_model->get_mahasiswa($nim);
-            $mhs_konsentrasi = !empty($mhs['konsentrasi_dkv']) ? $mhs['konsentrasi_dkv'] : 'Desain Komunikasi Visual';
+            $mhs_konsentrasi = !empty($mhs['konsentrasi_dkv']) ? $mhs['konsentrasi_dkv'] : (!empty($mhs['prodi']) ? $mhs['prodi'] : '-');
             $mhs_id_kk = !empty($mhs['id_kk']) ? $mhs['id_kk'] : 1;
             $existing_status = $this->Mahasiswa_model->get_status_pendaftaran($nim);
 

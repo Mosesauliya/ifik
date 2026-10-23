@@ -14,7 +14,7 @@ class DosenTicketing extends CI_Controller {
         }
 
         $this->load->model('DosenTicketing_model');
-        $this->load->helper(['url', 'form']);
+        $this->load->helper(['url', 'form', 'fik_prodi']);
     }
 
     /**
@@ -470,8 +470,11 @@ class DosenTicketing extends CI_Controller {
      */
     public function respon_index() {
         $roleId = (int)$this->session->userdata('role_id');
-        // Hanya role Kaur (2) atau Superadmin (1) yang dapat merespon tiket Kaur
-        if (!in_array($roleId, [1, 2])) {
+        $jabatan = strtolower((string)($this->session->userdata('jabatan') ?? ''));
+        $is_kaur = in_array($roleId, [1, 2, 22]) || ($roleId === 3 && $jabatan === 'kaur');
+
+        // Hanya role Kaur (2), Dosen Kaur, atau Admin yang dapat merespon tiket Kaur
+        if (!$is_kaur) {
             $this->session->set_flashdata('error', 'Akses ditolak. Halaman Respon Tiket khusus untuk Kepala Urusan (Kaur).');
             redirect('dosen/ticketing/riwayat');
             return;
@@ -511,7 +514,9 @@ class DosenTicketing extends CI_Controller {
      */
     public function respon_detail($id_or_kode) {
         $roleId = (int)$this->session->userdata('role_id');
-        if (!in_array($roleId, [1, 2])) {
+        $jabatan = strtolower((string)($this->session->userdata('jabatan') ?? ''));
+        $is_kaur = in_array($roleId, [1, 2, 22]) || ($roleId === 3 && $jabatan === 'kaur');
+        if (!$is_kaur) {
             return $this->output
                 ->set_content_type('application/json')
                 ->set_status_header(403)
@@ -573,7 +578,9 @@ class DosenTicketing extends CI_Controller {
      */
     public function respon_simpan_tanggapan() {
         $roleId = (int)$this->session->userdata('role_id');
-        if (!in_array($roleId, [1, 2])) {
+        $jabatan = strtolower((string)($this->session->userdata('jabatan') ?? ''));
+        $is_kaur = in_array($roleId, [1, 2, 22]) || ($roleId === 3 && $jabatan === 'kaur');
+        if (!$is_kaur) {
             $this->session->set_flashdata('error', 'Akses ditolak. Khusus untuk Kepala Urusan (Kaur).');
             redirect('dosen/ticketing/riwayat');
             return;

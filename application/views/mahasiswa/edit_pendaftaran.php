@@ -385,18 +385,20 @@
                 <div class="space-y-1.5 pt-2">
                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Konsentrasi Studi (Otomatis dari Biodata)</label>
                     <div class="relative">
-                        <input type="text" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-100 text-slate-800 font-semibold text-xs outline-none cursor-not-allowed" value="<?= htmlspecialchars(!empty($mahasiswa['konsentrasi_dkv']) ? $mahasiswa['konsentrasi_dkv'] : ($pendaftaran['konsentrasi_dkv'] ?? 'Desain Komunikasi Visual')); ?>" readonly>
-                        <input type="hidden" name="konsentrasi_dkv" value="<?= htmlspecialchars(!empty($mahasiswa['konsentrasi_dkv']) ? $mahasiswa['konsentrasi_dkv'] : ($pendaftaran['konsentrasi_dkv'] ?? 'Desain Komunikasi Visual')); ?>">
+                        <?php $display_konsentrasi = !empty($mahasiswa['konsentrasi_dkv']) ? $mahasiswa['konsentrasi_dkv'] : (!empty($mahasiswa['prodi']) ? $mahasiswa['prodi'] : (!empty($pendaftaran['konsentrasi_dkv']) && $pendaftaran['konsentrasi_dkv'] !== '-' ? $pendaftaran['konsentrasi_dkv'] : '-')); ?>
+                        <input type="text" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-100 text-slate-800 font-semibold text-xs outline-none cursor-not-allowed" value="<?= htmlspecialchars($display_konsentrasi); ?>" readonly>
+                        <input type="hidden" name="konsentrasi_dkv" value="<?= htmlspecialchars($display_konsentrasi); ?>">
                     </div>
                 </div>
             </div>
             <?php else: ?>
                 <!-- Bagian 2 Approved: Hidden fields & compact status card -->
+                <?php $display_konsentrasi = !empty($mahasiswa['konsentrasi_dkv']) ? $mahasiswa['konsentrasi_dkv'] : (!empty($mahasiswa['prodi']) ? $mahasiswa['prodi'] : (!empty($pendaftaran['konsentrasi_dkv']) && $pendaftaran['konsentrasi_dkv'] !== '-' ? $pendaftaran['konsentrasi_dkv'] : '-')); ?>
                 <input type="hidden" name="judul_1" value="<?= htmlspecialchars($pendaftaran['judul_1'] ?? ''); ?>">
                 <input type="hidden" name="judul_2" value="<?= htmlspecialchars($pendaftaran['judul_2'] ?? ''); ?>">
                 <input type="hidden" name="judul_3" value="<?= htmlspecialchars($pendaftaran['judul_3'] ?? ''); ?>">
                 <input type="hidden" name="judul_en" value="<?= htmlspecialchars($pendaftaran['judul_en'] ?? ''); ?>">
-                <input type="hidden" name="konsentrasi_dkv" value="<?= htmlspecialchars(!empty($mahasiswa['konsentrasi_dkv']) ? $mahasiswa['konsentrasi_dkv'] : ($pendaftaran['konsentrasi_dkv'] ?? 'Desain Komunikasi Visual')); ?>">
+                <input type="hidden" name="konsentrasi_dkv" value="<?= htmlspecialchars($display_konsentrasi); ?>">
                 <div class="card-3d-warm card-no-hover rounded-2xl p-5 border border-emerald-200 bg-white/90 shadow-2xs flex items-center justify-between gap-4">
                     <div class="flex items-center gap-3.5 min-w-0">
                         <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white font-bold text-base flex items-center justify-center shrink-0 box-3d shadow-xs">
