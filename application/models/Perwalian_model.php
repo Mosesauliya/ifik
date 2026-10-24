@@ -75,6 +75,8 @@ class Perwalian_model extends CI_Model {
                   `status_tahap` ENUM('akan_diambil', 'sudah_diambil') NOT NULL DEFAULT 'akan_diambil',
                   `nilai_huruf` VARCHAR(5) NULL,
                   `status_kelulusan` ENUM('Belum Ditentukan', 'Lulus', 'Tidak Lulus') NOT NULL DEFAULT 'Belum Ditentukan',
+                  `is_approved_wali` TINYINT(1) NOT NULL DEFAULT 0,
+                  `tgl_approved_wali` DATETIME NULL,
                   `is_imported` TINYINT(1) DEFAULT 0,
                   `created_at` DATETIME NULL,
                   `updated_at` DATETIME NULL,
@@ -83,6 +85,14 @@ class Perwalian_model extends CI_Model {
                   INDEX `idx_detail_status_tahap` (`status_tahap`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
             ");
+        } else {
+            try {
+                if (!$this->db->field_exists('is_approved_wali', 'perwalian_detail')) {
+                    $this->db->query("ALTER TABLE `perwalian_detail` ADD COLUMN `is_approved_wali` TINYINT(1) NOT NULL DEFAULT 0 AFTER `status_kelulusan`, ADD COLUMN `tgl_approved_wali` DATETIME NULL AFTER `is_approved_wali`;");
+                }
+            } catch (\Throwable $e) {
+                // Abaikan jika kolom sudah ada
+            }
         }
 
         // 4. Pastikan collation tabel-tabel perwalian selaras dengan tabel user/mahasiswa (utf8mb4_general_ci)
@@ -910,7 +920,8 @@ class Perwalian_model extends CI_Model {
             COALESCE(SUM(pd.sks), 0) as total_sks,
             COALESCE(SUM(CASE WHEN pd.status_kelulusan = "Lulus" THEN 1 ELSE 0 END), 0) as total_lulus,
             COALESCE(SUM(CASE WHEN pd.status_kelulusan = "Tidak Lulus" THEN 1 ELSE 0 END), 0) as total_tidak_lulus,
-            COALESCE(SUM(CASE WHEN pd.nilai_huruf IS NOT NULL AND pd.nilai_huruf != "" THEN 1 ELSE 0 END), 0) as total_dinilai
+            COALESCE(SUM(CASE WHEN pd.nilai_huruf IS NOT NULL AND pd.nilai_huruf != "" THEN 1 ELSE 0 END), 0) as total_dinilai,
+            COALESCE(SUM(CASE WHEN pd.is_approved_wali = 1 THEN 1 ELSE 0 END), 0) as total_approved_mk
         ')
         ->from('perwalian p')
         ->join('user u', 'p.nim = u.nim OR p.nim = u.username', 'left', false)
@@ -965,19 +976,18 @@ class Perwalian_model extends CI_Model {
         $this->db->order_by('p.updated_at', 'DESC');
         $rows = $this->db->get()->result_array();
 
-        // Self-healing: pastikan status_tahap2 selalu sinkron dengan jumlah MK yang benar-benar sudah dinilai
+        // Self-healing: pastikan status_tahap2 selalu sinkron dengan jumlah MK yang sudah di-approve Dosen Wali
         foreach ($rows as &$r) {
             $totMk = (int)($r['total_mk'] ?? 0);
-            $totDinilai = (int)($r['total_dinilai'] ?? 0);
+            $totApproved = (int)($r['total_approved_mk'] ?? 0);
             $curSt2 = $r['status_tahap2'] ?? 'Belum Dinilai';
-            $fixedSt2 = $curSt2;
 
-            if ($totDinilai === 0) {
+            if ($totMk === 0 || $totApproved === 0) {
                 $fixedSt2 = 'Belum Dinilai';
-            } elseif ($totDinilai < $totMk) {
+            } elseif ($totApproved < $totMk) {
                 $fixedSt2 = 'Proses Penilaian';
-            } elseif ($curSt2 === 'Belum Dinilai') {
-                $fixedSt2 = 'Proses Penilaian';
+            } else {
+                $fixedSt2 = 'Selesai';
             }
 
             if ($fixedSt2 !== $curSt2) {
@@ -1002,7 +1012,8 @@ class Perwalian_model extends CI_Model {
         $this->db->select('
             p.*,
             COUNT(pd.id) as total_mk,
-            COALESCE(SUM(CASE WHEN pd.nilai_huruf IS NOT NULL AND pd.nilai_huruf != "" THEN 1 ELSE 0 END), 0) as total_dinilai
+            COALESCE(SUM(CASE WHEN pd.nilai_huruf IS NOT NULL AND pd.nilai_huruf != "" THEN 1 ELSE 0 END), 0) as total_dinilai,
+            COALESCE(SUM(CASE WHEN pd.is_approved_wali = 1 THEN 1 ELSE 0 END), 0) as total_approved_mk
         ')
         ->from('perwalian p')
         ->join('user u', 'p.nim = u.nim OR p.nim = u.username', 'left', false)
@@ -1046,15 +1057,14 @@ class Perwalian_model extends CI_Model {
             // Hanya mahasiswa yang Tahap 1-nya sudah 'Disetujui' yang dihitung pada statistik Tahap 2
             if ($st1 === 'disetujui') {
                 $totMk = (int)($r['total_mk'] ?? 0);
-                $totDinilai = (int)($r['total_dinilai'] ?? 0);
-                $curSt2 = $r['status_tahap2'] ?? 'Belum Dinilai';
+                $totApproved = (int)($r['total_approved_mk'] ?? 0);
 
-                if ($totDinilai === 0) {
+                if ($totMk === 0 || $totApproved === 0) {
                     $curSt2 = 'Belum Dinilai';
-                } elseif ($totDinilai < $totMk) {
+                } elseif ($totApproved < $totMk) {
                     $curSt2 = 'Proses Penilaian';
-                } elseif ($curSt2 === 'Belum Dinilai') {
-                    $curSt2 = 'Proses Penilaian';
+                } else {
+                    $curSt2 = 'Selesai';
                 }
 
                 $st2 = strtolower(trim($curSt2));
@@ -1092,20 +1102,38 @@ class Perwalian_model extends CI_Model {
             ->get()
             ->result_array();
 
-        // Hitung total SKS & statistik nilai
+        // Hitung total SKS & statistik nilai / approval
         $totalSks = 0;
         $sksLulus = 0;
         $sksTidakLulus = 0;
         $totalDinilai = 0;
+        $totalApproved = 0;
 
         foreach ($mk_list as &$mk) {
             $totalSks += (int)$mk['sks'];
+            $nilai = strtoupper(trim((string)($mk['nilai_huruf'] ?? '')));
             $st = trim($mk['status_kelulusan'] ?? '');
+
+            // Auto-sync status_kelulusan jika nilai_huruf sudah diisi mahasiswa
+            if (!empty($nilai)) {
+                if (in_array($nilai, ['A', 'AB', 'B', 'BC', 'C'], true) && $st !== 'Lulus') {
+                    $st = 'Lulus';
+                    $mk['status_kelulusan'] = 'Lulus';
+                    $this->db->where('id', (int)$mk['id'])->update('perwalian_detail', ['status_kelulusan' => 'Lulus']);
+                } elseif (in_array($nilai, ['D', 'E'], true) && $st !== 'Tidak Lulus') {
+                    $st = 'Tidak Lulus';
+                    $mk['status_kelulusan'] = 'Tidak Lulus';
+                    $this->db->where('id', (int)$mk['id'])->update('perwalian_detail', ['status_kelulusan' => 'Tidak Lulus']);
+                }
+                $totalDinilai++;
+            }
+
             if ($st === 'Lulus') $sksLulus += (int)$mk['sks'];
             elseif ($st === 'Tidak Lulus') $sksTidakLulus += (int)$mk['sks'];
 
-            if (!empty($mk['nilai_huruf'])) {
-                $totalDinilai++;
+            $mk['is_approved_wali'] = (int)($mk['is_approved_wali'] ?? 0);
+            if ($mk['is_approved_wali'] === 1) {
+                $totalApproved++;
             }
         }
         unset($mk);
@@ -1114,17 +1142,105 @@ class Perwalian_model extends CI_Model {
         $mk_riwayat = $this->get_riwayat_mk_sudah_diambil($perwalian['nim']);
 
         return [
-            'perwalian'       => $perwalian,
-            'mata_kuliah'     => $mk_list,
-            'riwayat_mk'      => $mk_riwayat,
-            'total_sks'       => $totalSks,
+            'perwalian'         => $perwalian,
+            'mata_kuliah'       => $mk_list,
+            'riwayat_mk'        => $mk_riwayat,
+            'total_sks'         => $totalSks,
+            'sks_lulus'         => $sksLulus,
+            'sks_tidak_lulus'   => $sksTidakLulus,
+            'total_dinilai'     => $totalDinilai,
+            'total_approved_mk' => $totalApproved,
+            'total_mk'          => count($mk_list),
+            'is_all_graded'     => count($mk_list) > 0 && ($totalDinilai === count($mk_list)),
+            'is_all_approved'   => count($mk_list) > 0 && ($totalApproved === count($mk_list)),
+        ];
+    }
 
+    /**
+     * Approve / Unapprove Mata Kuliah pada Tahap 2 oleh Dosen Wali (Satu-satu per MK atau Multiple sekaligus)
+     */
+    public function approve_mk_tahap2($id_perwalian, $detail_ids = [], $approve = 1) {
+        $id_perwalian = (int)$id_perwalian;
+        $approve = ((int)$approve === 1) ? 1 : 0;
+        $now = date('Y-m-d H:i:s');
 
-            'sks_lulus'       => $sksLulus,
-            'sks_tidak_lulus' => $sksTidakLulus,
-            'total_dinilai'   => $totalDinilai,
-            'total_mk'        => count($mk_list),
-            'is_all_graded'   => count($mk_list) > 0 && ($totalDinilai === count($mk_list)),
+        if ($id_perwalian <= 0) {
+            return ['status' => false, 'message' => 'ID Perwalian tidak valid.'];
+        }
+
+        if ($detail_ids === 'all') {
+            $this->db->where([
+                'id_perwalian' => $id_perwalian,
+                'status_tahap' => 'akan_diambil',
+            ])->update('perwalian_detail', [
+                'is_approved_wali'  => $approve,
+                'tgl_approved_wali' => $approve ? $now : null,
+                'updated_at'        => $now,
+            ]);
+        } else {
+            if (!is_array($detail_ids)) {
+                $detail_ids = [$detail_ids];
+            }
+            $cleanIds = array_values(array_filter(array_map('intval', $detail_ids), fn($v) => $v > 0));
+            if (empty($cleanIds)) {
+                return ['status' => false, 'message' => 'Pilih minimal satu mata kuliah untuk diproses.'];
+            }
+
+            $this->db->where('id_perwalian', $id_perwalian)
+                     ->where_in('id', $cleanIds)
+                     ->update('perwalian_detail', [
+                         'is_approved_wali'  => $approve,
+                         'tgl_approved_wali' => $approve ? $now : null,
+                         'updated_at'        => $now,
+                     ]);
+        }
+
+        // Hitung ulang progress approval untuk menentukan status_tahap2 secara otomatis
+        $allDetails = $this->db->get_where('perwalian_detail', [
+            'id_perwalian' => $id_perwalian,
+            'status_tahap' => 'akan_diambil',
+        ])->result_array();
+
+        $totMk = count($allDetails);
+        $totApproved = 0;
+        $totLulus = 0;
+        $totTidakLulus = 0;
+        $totDinilai = 0;
+        $approvedIds = [];
+
+        foreach ($allDetails as $d) {
+            if ((int)($d['is_approved_wali'] ?? 0) === 1) {
+                $totApproved++;
+                $approvedIds[] = (int)$d['id'];
+            }
+            if ($d['status_kelulusan'] === 'Lulus') $totLulus++;
+            elseif ($d['status_kelulusan'] === 'Tidak Lulus') $totTidakLulus++;
+            if (!empty($d['nilai_huruf'])) $totDinilai++;
+        }
+
+        if ($totMk === 0 || $totApproved === 0) {
+            $newSt2 = 'Belum Dinilai';
+        } elseif ($totApproved < $totMk) {
+            $newSt2 = 'Proses Penilaian';
+        } else {
+            $newSt2 = 'Selesai';
+        }
+
+        $this->db->where('id_perwalian', $id_perwalian)->update('perwalian', [
+            'status_tahap2' => $newSt2,
+            'updated_at'    => $now,
+        ]);
+
+        return [
+            'status'            => true,
+            'id_perwalian'      => $id_perwalian,
+            'total_mk'          => $totMk,
+            'total_approved_mk' => $totApproved,
+            'total_lulus'       => $totLulus,
+            'total_tidak_lulus' => $totTidakLulus,
+            'total_dinilai'     => $totDinilai,
+            'status_tahap2'     => $newSt2,
+            'approved_ids'      => $approvedIds,
         ];
     }
 

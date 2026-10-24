@@ -1103,6 +1103,49 @@ class DosenWali extends CI_Controller {
     }
 
     /**
+     * AJAX: Approve / Unapprove Mata Kuliah pada Tahap 2 (Satu-satu per MK atau Multiple Sekaligus)
+     */
+    public function perwalian_approve_mk_tahap2() {
+        $this->output->set_content_type('application/json');
+        $this->load->model('Perwalian_model');
+
+        $id_perwalian = (int)$this->input->post('id_perwalian', true);
+        $approve      = (int)($this->input->post('approve', true) ?? 1);
+        $raw_ids      = $this->input->post('detail_ids', true);
+
+        if (!$id_perwalian) {
+            $this->output->set_output(json_encode(['status' => false, 'message' => 'ID Perwalian tidak valid.']));
+            return;
+        }
+
+        if ($raw_ids === 'all') {
+            $detail_ids = 'all';
+        } elseif (is_array($raw_ids)) {
+            $detail_ids = $raw_ids;
+        } elseif (is_string($raw_ids) && strlen(trim($raw_ids)) > 0) {
+            $decoded = json_decode($raw_ids, true);
+            $detail_ids = is_array($decoded) ? $decoded : explode(',', $raw_ids);
+        } else {
+            $single_id = (int)$this->input->post('id_detail', true);
+            $detail_ids = $single_id > 0 ? [$single_id] : [];
+        }
+
+        $res = $this->Perwalian_model->approve_mk_tahap2($id_perwalian, $detail_ids, $approve);
+        if (!empty($res['status'])) {
+            $dosen_ids = $this->_get_current_dosen_identifiers();
+            $stats = $this->Perwalian_model->get_dosen_perwalian_stats($dosen_ids);
+            $this->output->set_output(json_encode([
+                'status'  => true,
+                'message' => $approve ? 'Mata kuliah berhasil disetujui (Approved).' : 'Persetujuan mata kuliah dibatalkan.',
+                'data'    => $res,
+                'stats'   => $stats,
+            ]));
+        } else {
+            $this->output->set_output(json_encode($res));
+        }
+    }
+
+    /**
      * AJAX: Selesaikan & Kunci Perwalian Tahap 2
      */
     public function perwalian_submit_tahap2() {
