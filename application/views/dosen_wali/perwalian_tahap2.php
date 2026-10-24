@@ -588,14 +588,14 @@
                     <table class="w-full text-left text-xs">
                         <thead class="bg-slate-50/80 text-slate-600 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200/80">
                             <tr>
-                                <th class="py-3 px-2.5 w-10 text-center whitespace-nowrap">No</th>
-                                <th class="py-3 px-2.5 whitespace-nowrap">Mahasiswa</th>
-                                <th class="py-3 px-2.5 whitespace-nowrap">Program Studi</th>
-                                <th class="py-3 px-2.5 text-center whitespace-nowrap">Periode</th>
-                                <th class="py-3 px-2.5 text-center whitespace-nowrap">Mata Kuliah</th>
-                                <th class="py-3 px-2.5 text-center whitespace-nowrap">Progress</th>
-                                <th class="py-3 px-2.5 text-center whitespace-nowrap">Status Evaluasi</th>
-                                <th class="py-3 px-2.5 text-center whitespace-nowrap">Aksi</th>
+                                <th class="py-3 pl-4 pr-2 w-10 text-center whitespace-nowrap">No</th>
+                                <th class="py-3 px-2 whitespace-nowrap">Mahasiswa</th>
+                                <th class="py-3 px-2 whitespace-nowrap">Prodi</th>
+                                <th class="py-3 px-2 text-center whitespace-nowrap">Periode</th>
+                                <th class="py-3 px-2 text-center whitespace-nowrap">Mata Kuliah</th>
+                                <th class="py-3 px-2 text-center whitespace-nowrap">Progress</th>
+                                <th class="py-3 px-2 text-center whitespace-nowrap">Status Evaluasi</th>
+                                <th class="py-3 pl-2 pr-4 text-center whitespace-nowrap">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-slate-700">
@@ -637,33 +637,33 @@
                                         data-status="<?= $rowStatus; ?>"
                                         data-periode="<?= $rowPeriode; ?>"
                                     >
-                                        <td class="py-2.5 px-2.5 text-center font-mono text-slate-400 whitespace-nowrap"><?= $no++; ?></td>
+                                        <td class="py-2.5 pl-4 pr-2 text-center font-mono text-slate-400 whitespace-nowrap"><?= $no++; ?></td>
                                         
                                         <!-- Mahasiswa Identity -->
-                                        <td class="py-2.5 px-2.5 max-w-[150px] lg:max-w-[190px] xl:max-w-[240px]">
-                                            <div class="font-bold text-slate-900 text-xs sm:text-sm leading-snug truncate" title="<?= $fullNamaMhs; ?>">
+                                        <td class="py-2.5 px-2">
+                                            <div class="font-bold text-slate-900 text-xs sm:text-sm leading-snug truncate max-w-[130px] lg:max-w-[160px]" title="<?= $fullNamaMhs; ?>">
                                                 <?= $fullNamaMhs; ?>
                                             </div>
-                                            <div class="text-[11px] font-mono text-slate-500 leading-tight whitespace-nowrap truncate">
+                                            <div class="text-[11px] font-mono text-slate-500 leading-tight whitespace-nowrap">
                                                 NIM: <?= htmlspecialchars($item['nim']); ?>
                                             </div>
                                         </td>
 
                                         <!-- Prodi -->
-                                        <td class="py-2.5 px-2.5 whitespace-nowrap">
+                                        <td class="py-2.5 px-2 whitespace-nowrap">
                                             <span class="inline-block px-2 py-0.5 text-[11px] font-medium bg-slate-100 text-slate-700 rounded-md whitespace-nowrap">
                                                 <?= htmlspecialchars($item['prodi'] ?: '-'); ?>
                                             </span>
                                         </td>
 
                                         <!-- Periode -->
-                                        <td class="py-2.5 px-2.5 text-center font-mono text-[11px] whitespace-nowrap leading-tight">
+                                        <td class="py-2.5 px-2 text-center font-mono text-[11px] whitespace-nowrap leading-tight">
                                             <div><?= htmlspecialchars($item['tahun_ajaran']); ?></div>
                                             <div class="text-slate-400"><?= htmlspecialchars($item['semester']); ?></div>
                                         </td>
 
                                         <!-- Total MK & SKS -->
-                                        <td class="py-2.5 px-2.5 text-center whitespace-nowrap">
+                                        <td class="py-2.5 px-2 text-center whitespace-nowrap">
                                             <span class="font-mono font-bold text-slate-900">
                                                 <?= (int)$item['total_mk']; ?> MK
                                             </span>
@@ -671,7 +671,7 @@
                                         </td>
 
                                         <!-- Progress Approval -->
-                                        <td class="py-2.5 px-2.5 text-center whitespace-nowrap" id="t2ProgressCol_<?= (int)$item['id_perwalian']; ?>">
+                                        <td class="py-2.5 px-2 text-center whitespace-nowrap" id="t2ProgressCol_<?= (int)$item['id_perwalian']; ?>">
                                             <div class="font-mono font-bold text-slate-800 whitespace-nowrap" id="t2DinilaiText_<?= (int)$item['id_perwalian']; ?>">
                                                 <?= (int)($item['total_approved_mk'] ?? 0); ?> / <?= (int)$item['total_mk']; ?> Disetujui
                                             </div>
@@ -682,7 +682,7 @@
                                         </td>
 
                                         <!-- Badge Status Tahap 2 -->
-                                        <td class="py-2.5 px-2.5 text-center whitespace-nowrap" id="t2StatusCol_<?= (int)$item['id_perwalian']; ?>">
+                                        <td class="py-2.5 px-2 text-center whitespace-nowrap" id="t2StatusCol_<?= (int)$item['id_perwalian']; ?>">
                                             <?php
                                                 $st2 = isset($item['status_tahap2']) && $item['status_tahap2'] !== '' ? $item['status_tahap2'] : 'Belum Dinilai';
                                                 $badge2ClassMap = [
@@ -696,21 +696,21 @@
                                                 $badge2Class = isset($badge2ClassMap[$st2]) ? $badge2ClassMap[$st2] : 'bg-slate-100 text-slate-600 border-slate-300';
                                                 $badge2Icon  = isset($badge2IconMap[$st2]) ? $badge2IconMap[$st2] : 'fa-hourglass-start';
                                             ?>
-                                            <span class="inline-flex items-center px-2.5 py-0.5 text-[11px] font-semibold rounded-full border whitespace-nowrap <?= $badge2Class; ?>">
+                                            <span class="inline-flex items-center px-2 py-0.5 text-[11px] font-semibold rounded-full border whitespace-nowrap <?= $badge2Class; ?>">
                                                 <i class="fa-solid <?= $badge2Icon; ?> mr-1 text-[10px]"></i>
                                                 <?= htmlspecialchars($st2); ?>
                                             </span>
                                         </td>
 
                                         <!-- Action Button -->
-                                        <td class="py-2.5 px-2.5 text-center whitespace-nowrap" id="t2BtnCol_<?= (int)$item['id_perwalian']; ?>">
+                                        <td class="py-2.5 pl-2 pr-4 text-center whitespace-nowrap" id="t2BtnCol_<?= (int)$item['id_perwalian']; ?>">
                                             <?php if ($st2 === 'Selesai'): ?>
-                                                <button type="button" onclick="openGradingModal(<?= (int)$item['id_perwalian']; ?>)" class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl shadow-2xs transition cursor-pointer whitespace-nowrap">
-                                                    <i class="fa-solid fa-eye mr-1.5 text-emerald-600"></i> Lihat / Edit Approval
+                                                <button type="button" onclick="openGradingModal(<?= (int)$item['id_perwalian']; ?>)" class="inline-flex items-center justify-center px-2.5 py-1.5 text-[11px] font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl shadow-2xs transition cursor-pointer whitespace-nowrap">
+                                                    <i class="fa-solid fa-eye mr-1 text-emerald-600"></i> Lihat / Edit
                                                 </button>
                                             <?php else: ?>
-                                                <button type="button" onclick="openGradingModal(<?= (int)$item['id_perwalian']; ?>)" class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl shadow-sm transition cursor-pointer whitespace-nowrap">
-                                                    <i class="fa-solid fa-list-check mr-1.5"></i> Review & Approve
+                                                <button type="button" onclick="openGradingModal(<?= (int)$item['id_perwalian']; ?>)" class="inline-flex items-center justify-center px-2.5 py-1.5 text-[11px] font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl shadow-sm transition cursor-pointer whitespace-nowrap">
+                                                    <i class="fa-solid fa-list-check mr-1"></i> Review & Approve
                                                 </button>
                                             <?php endif; ?>
                                         </td>
@@ -2230,14 +2230,14 @@
             if (btnCol) {
                 if (newStatus === 'Selesai') {
                     btnCol.innerHTML = `
-                        <button type="button" onclick="openGradingModal(${idPerwalian})" class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl shadow-2xs transition cursor-pointer whitespace-nowrap">
-                            <i class="fa-solid fa-eye mr-1.5 text-emerald-600"></i> Lihat / Edit Approval
+                        <button type="button" onclick="openGradingModal(${idPerwalian})" class="inline-flex items-center justify-center px-2.5 py-1.5 text-[11px] font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl shadow-2xs transition cursor-pointer whitespace-nowrap">
+                            <i class="fa-solid fa-eye mr-1 text-emerald-600"></i> Lihat / Edit
                         </button>
                     `;
                 } else {
                     btnCol.innerHTML = `
-                        <button type="button" onclick="openGradingModal(${idPerwalian})" class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl shadow-sm transition cursor-pointer whitespace-nowrap">
-                            <i class="fa-solid fa-list-check mr-1.5"></i> Review & Approve
+                        <button type="button" onclick="openGradingModal(${idPerwalian})" class="inline-flex items-center justify-center px-2.5 py-1.5 text-[11px] font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl shadow-sm transition cursor-pointer whitespace-nowrap">
+                            <i class="fa-solid fa-list-check mr-1"></i> Review & Approve
                         </button>
                     `;
                 }
