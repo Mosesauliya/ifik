@@ -592,7 +592,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             <!-- ========================================================
                  KARTU TAHAP PREVIEW & SIDANG (Interactive Stage Cards)
                  ======================================================== -->
-            <div class="grid <?= $is_pembimbing ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-3' ?> gap-3.5 sm:gap-4.5 my-2" id="stageCardsContainer">
+            <div class="grid <?= $is_pembimbing ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-6' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-5' ?> gap-3.5 sm:gap-4.5 my-2" id="stageCardsContainer">
                 
                 <?php if ($is_pembimbing): ?>
                 <!-- CARD PREVIEW 1 -->
@@ -677,6 +677,33 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                     </div>
                 </div>
 
+                <!-- CARD PERSYARATAN SIDANG -->
+                <div onclick="switchDosenTab('persyaratansidang')" id="stageCard_persyaratansidang"
+                     class="stage-tab-card group relative p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between <?= ($default_tahap === 'Persyaratan Sidang') ? 'border-orange-500 bg-gradient-to-br from-orange-50/90 via-white to-amber-50/50 shadow-md shadow-orange-500/10 ring-2 ring-orange-500/20 active-card' : 'border-slate-200/90 bg-white hover:border-orange-300 hover:bg-orange-50/25 hover:shadow-xs' ?>">
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div class="stage-icon-wrap w-11 h-11 rounded-xl flex items-center justify-center text-lg transition-all <?= ($default_tahap === 'Persyaratan Sidang') ? 'bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm shadow-orange-500/30' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-600' ?>">
+                            <i class="bi bi-folder-check"></i>
+                        </div>
+                        <span class="stage-badge-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all <?= ($default_tahap === 'Persyaratan Sidang') ? 'bg-orange-500 text-white shadow-xs' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-700' ?>">
+                            <?= ($default_tahap === 'Persyaratan Sidang') ? '<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Aktif' : 'Tahap 4' ?>
+                        </span>
+                    </div>
+                    <div>
+                        <div class="flex items-baseline gap-1.5 mb-1">
+                            <span id="stageCount_persyaratansidang" class="stage-count text-2xl sm:text-3xl font-black transition-colors <?= ($default_tahap === 'Persyaratan Sidang') ? 'text-orange-600' : 'text-slate-800 group-hover:text-orange-600' ?>">
+                                <?= $tab_counts['Persyaratan Sidang'] ?? 0 ?>
+                            </span>
+                            <span class="text-xs font-bold text-slate-400">Mahasiswa</span>
+                        </div>
+                        <h4 class="font-extrabold text-sm sm:text-base text-slate-800 tracking-tight group-hover:text-orange-600 transition-colors">
+                            Persyaratan Sidang
+                        </h4>
+                        <p class="text-[11px] font-medium text-slate-500 mt-0.5 line-clamp-1">
+                            Verifikasi Berkas LAA
+                        </p>
+                    </div>
+                </div>
+
                 <!-- CARD SIDANG -->
                 <div onclick="switchDosenTab('sidang')" id="stageCard_sidang"
                      class="stage-tab-card group relative p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between <?= ($default_tahap === 'Sidang') ? 'border-orange-500 bg-gradient-to-br from-orange-50/90 via-white to-amber-50/50 shadow-md shadow-orange-500/10 ring-2 ring-orange-500/20 active-card' : 'border-slate-200/90 bg-white hover:border-orange-300 hover:bg-orange-50/25 hover:shadow-xs' ?>">
@@ -685,7 +712,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                             <i class="bi bi-mortarboard-fill"></i>
                         </div>
                         <span class="stage-badge-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all <?= ($default_tahap === 'Sidang') ? 'bg-orange-500 text-white shadow-xs' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-700' ?>">
-                            <?= ($default_tahap === 'Sidang') ? '<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Aktif' : 'Tahap Akhir' ?>
+                            <?= ($default_tahap === 'Sidang') ? '<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Aktif' : 'Tahap 5' ?>
                         </span>
                     </div>
                     <div>
@@ -700,6 +727,33 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                         </h4>
                         <p class="text-[11px] font-medium text-slate-500 mt-0.5 line-clamp-1">
                             Sidang Akhir &amp; Nilai
+                        </p>
+                    </div>
+                </div>
+
+                <!-- CARD LULUS -->
+                <div onclick="switchDosenTab('lulus')" id="stageCard_lulus"
+                     class="stage-tab-card group relative p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between <?= ($default_tahap === 'Lulus') ? 'border-orange-500 bg-gradient-to-br from-orange-50/90 via-white to-amber-50/50 shadow-md shadow-orange-500/10 ring-2 ring-orange-500/20 active-card' : 'border-slate-200/90 bg-white hover:border-orange-300 hover:bg-orange-50/25 hover:shadow-xs' ?>">
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div class="stage-icon-wrap w-11 h-11 rounded-xl flex items-center justify-center text-lg transition-all <?= ($default_tahap === 'Lulus') ? 'bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm shadow-orange-500/30' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-600' ?>">
+                            <i class="bi bi-patch-check-fill"></i>
+                        </div>
+                        <span class="stage-badge-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all <?= ($default_tahap === 'Lulus') ? 'bg-orange-500 text-white shadow-xs' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-700' ?>">
+                            <?= ($default_tahap === 'Lulus') ? '<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Aktif' : 'Tahap Akhir' ?>
+                        </span>
+                    </div>
+                    <div>
+                        <div class="flex items-baseline gap-1.5 mb-1">
+                            <span id="stageCount_lulus" class="stage-count text-2xl sm:text-3xl font-black transition-colors <?= ($default_tahap === 'Lulus') ? 'text-orange-600' : 'text-slate-800 group-hover:text-orange-600' ?>">
+                                <?= $tab_counts['Lulus'] ?? 0 ?>
+                            </span>
+                            <span class="text-xs font-bold text-slate-400">Mahasiswa</span>
+                        </div>
+                        <h4 class="font-extrabold text-sm sm:text-base text-slate-800 tracking-tight group-hover:text-orange-600 transition-colors">
+                            Lulus
+                        </h4>
+                        <p class="text-[11px] font-medium text-slate-500 mt-0.5 line-clamp-1">
+                            Nilai Publish &amp; Lulus TA
                         </p>
                     </div>
                 </div>
@@ -721,6 +775,10 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                             <button type="button" onclick="resetFiltersDW()"
                                     class="px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-600 hover:bg-orange-50 transition cursor-pointer flex items-center gap-1.5">
                                 <i class="bi bi-arrow-counterclockwise"></i> Reset
+                            </button>
+                            <button type="button" id="btnRubrikSidangOverview" onclick="openRubrikSidangOverviewModal()"
+                                    class="<?= ($default_tahap === 'Sidang') ? '' : 'hidden' ?> px-3 py-1.5 rounded-xl border border-violet-200 bg-violet-50 hover:bg-violet-100 text-xs font-bold text-violet-800 transition cursor-pointer flex items-center gap-1.5 shadow-2xs">
+                                <i class="bi bi-clock-history text-violet-600"></i> Riwayat Versi Rubrik
                             </button>
                         </div>
                     </div>
@@ -923,13 +981,17 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                             <p class="text-slate-700 truncate" id="penilaianPenguji2">Penguji 2: -</p>
                         </div>
                     </div>
-                    <div id="penilaianPrevNilaiWrap" class="hidden p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px]">
-                        <span class="font-bold text-amber-800 uppercase tracking-wider text-[10px] block mb-0.5">
-                            <i class="bi bi-info-circle-fill"></i> Nilai Tersimpan
-                        </span>
-                        <p class="text-amber-900">
-                            Nilai Anda sebelumnya: <strong id="penilaianPrevNilai">-</strong>.
-                            Isi form di bawah untuk memperbarui.
+                    <div id="penilaianPrevNilaiWrap" class="hidden p-3 rounded-xl bg-amber-50 border border-amber-200 text-[11px] space-y-1">
+                        <div class="flex items-center justify-between flex-wrap gap-1">
+                            <span class="font-extrabold text-amber-800 uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+                                <i class="bi bi-pencil-square text-amber-600"></i> Mode Edit Nilai Sidang
+                            </span>
+                            <span class="px-2.5 py-0.5 rounded-md bg-amber-200/90 text-amber-900 font-extrabold text-[10px]">
+                                Nilai Anda Sebelumnya: <strong id="penilaianPrevNilai">-</strong>
+                            </span>
+                        </div>
+                        <p class="text-amber-900 text-xs leading-relaxed">
+                            Nilai tersimpan sebelumnya otomatis dimuat ke formulir rubrik aktif di bawah. Anda dapat menyesuaikan skor kriteria dan catatan, lalu simpan perubahan.
                         </p>
                     </div>
                 </div>
@@ -939,9 +1001,6 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                         <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 block mb-1.5">Program Studi</label>
                         <select id="penilaianProdiSelect" onchange="onPenilaianProdiChange(this.value)"
                             class="w-full px-3.5 py-3 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-amber-500 outline-none cursor-pointer">
-                            <option value="DKV">DKV - Desain Komunikasi Visual</option>
-                            <option value="SI">SI - Sistem Informasi</option>
-                            <option value="IF">IF - Informatika</option>
                         </select>
                     </div>
                     <div>
@@ -952,11 +1011,36 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 </div>
 
                 <div class="space-y-3">
-                    <div class="flex items-center justify-between flex-wrap gap-2">
-                        <label class="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                            <i class="bi bi-list-check text-amber-600"></i> Rubrik Penilaian
-                        </label>
-                        <span class="text-[11px] font-semibold text-slate-400">Total Bobot: <strong class="text-slate-700" id="penilaianTotalBobotLabel">100%</strong></span>
+                    <div class="flex items-center justify-between flex-wrap gap-2.5 p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <label class="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                                <i class="bi bi-list-check text-amber-600"></i> Rubrik Penilaian Sidang TA
+                            </label>
+                            <span id="penilaianRubrikVersionBadge" class="hidden px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-violet-100 text-violet-800 border border-violet-200">
+                                <i class="bi bi-shield-check mr-1 text-violet-600"></i><span id="penilaianRubrikVersionText">Rubrik Aktif</span>
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-2.5 flex-wrap">
+                            <!-- Riwayat Versi Dropdown Wrapper -->
+                            <div id="penilaianRubrikHistoryWrapper" class="hidden items-center gap-1.5 text-xs text-slate-600 bg-white px-2.5 py-1 rounded-xl border border-violet-200 shadow-2xs">
+                                <span class="font-extrabold text-violet-800 text-[10.5px] flex items-center gap-1">
+                                    <i class="bi bi-clock-history text-violet-600"></i> Versi:
+                                </span>
+                                <select id="penilaianRubrikVersionSelector" onchange="onPenilaianVersionChange(this.value)" class="bg-transparent border-0 text-xs font-black text-violet-900 outline-none cursor-pointer focus:ring-0 pr-1">
+                                    <!-- Populated dynamically -->
+                                </select>
+                                <button type="button" onclick="openModalDetailRiwayatRubrikFromForm()" class="w-6 h-6 rounded-md bg-violet-50 text-violet-700 hover:bg-violet-100 flex items-center justify-center text-xs transition cursor-pointer" title="Lihat Rincian Riwayat Versi">
+                                    <i class="bi bi-info-circle-fill"></i>
+                                </button>
+                            </div>
+                            <span class="text-[11px] font-semibold text-slate-400">Total Bobot: <strong class="text-slate-700" id="penilaianTotalBobotLabel">100%</strong></span>
+                        </div>
+                    </div>
+                    <div id="penilaianRubrikMasaBerlakuInfo" class="hidden px-3.5 py-2 bg-violet-50/70 border border-violet-200/80 rounded-xl text-[11px] text-violet-900 flex items-center justify-between flex-wrap gap-2">
+                        <span id="penilaianRubrikMasaBerlakuText" class="font-bold flex items-center gap-1.5">
+                            <i class="bi bi-calendar-check text-violet-600"></i> Masa Berlaku: Aktif (Sekarang)
+                        </span>
+                        <span id="penilaianRubrikJudulInfo" class="font-semibold text-slate-500 truncate max-w-[280px]"></span>
                     </div>
                     <div id="penilaianRubrikContainer" class="space-y-3"></div>
                 </div>
@@ -1005,6 +1089,68 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ================= MODAL DETAIL RIWAYAT VERSI RUBRIK SIDANG ================= -->
+    <div id="modalDetailRiwayatRubrik" class="hidden fixed inset-0 z-[250] items-center justify-center p-4">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs" onclick="closeModalDetailRiwayatRubrik()"></div>
+        <div class="relative bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200 z-10">
+            <!-- Modal Header -->
+            <div class="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-violet-50/90 via-purple-50/40 to-white shrink-0">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-violet-500/25 shrink-0">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h3 class="text-base sm:text-lg font-extrabold text-slate-900">Riwayat Versi Rubrik Penilaian Sidang</h3>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-violet-100 text-violet-800 border border-violet-200">Arsip &amp; Versi Aktif</span>
+                        </div>
+                        <p class="text-xs font-medium text-slate-500 mt-0.5">Daftar seluruh versi indikator soal, kriteria, dan bobot penilaian yang dikelola oleh Koordinator TA.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModalDetailRiwayatRubrik()" class="w-9 h-9 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer">
+                    <i class="bi bi-x-lg text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Filter Prodi & Peminatan in modal -->
+            <div class="p-4 sm:px-6 bg-slate-50/70 border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-600 block mb-1">
+                            <i class="bi bi-mortarboard mr-1 text-violet-600"></i> Program Studi:
+                        </label>
+                        <select id="overviewProdiSelect" onchange="onOverviewProdiChange(this.value)" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none cursor-pointer focus:ring-2 focus:ring-violet-500">
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-600 block mb-1">
+                            <i class="bi bi-tag mr-1 text-violet-600"></i> Peminatan / Konsentrasi:
+                        </label>
+                        <select id="overviewPeminatanSelect" onchange="onOverviewPeminatanChange(this.value)" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none cursor-pointer focus:ring-2 focus:ring-violet-500">
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Version Timeline Container -->
+            <div class="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4" id="overviewVersionListContainer">
+                <div class="text-center py-10 text-slate-400 text-xs">
+                    <i class="bi bi-arrow-repeat inline-block animate-spin mr-1"></i> Memuat riwayat versi rubrik...
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 sm:px-6 border-t border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
+                <span class="text-xs text-slate-500 font-medium flex items-center gap-1.5">
+                    <i class="bi bi-info-circle text-violet-600"></i> Versi lama dilindungi secara historis untuk mahasiswa sidang lampau.
+                </span>
+                <button type="button" onclick="closeModalDetailRiwayatRubrik()" class="px-5 py-2.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer">
+                    Tutup
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1184,27 +1330,44 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
         // PIC (Penanggung Jawab) per Tahap
         // ============================================================
         function getResponsibleRole(tahap) {
+            if (tahap === 'Persyaratan Sidang' || tahap === 'Lulus') return null;
             return (tahap === 'Preview 1' || tahap === 'Preview 3') ? 'p1' : 'u1';
         }
         function isCurrentUserPIC() {
             const pic = getResponsibleRole(currentTahap);
+            if (!pic) return false;
             if (pic === 'p1') return IS_P1;
             if (pic === 'u1') return IS_U1;
             return false;
         }
         function getFileStatus(preview, fileType) {
+            if (!preview) return 'Pending';
+            if (currentTahap === 'Persyaratan Sidang' && Array.isArray(preview.files_persyaratan_sidang)) {
+                const found = preview.files_persyaratan_sidang.find(f => f.type === fileType);
+                return found ? (found.status || 'Pending') : 'Pending';
+            }
             const col = 'status_file_' + fileType;
-            return (preview && preview[col]) ? preview[col] : 'Pending';
+            if (preview[col] && preview[col] !== 'Pending') return preview[col];
+            if (preview.status_pembimbing && preview.status_pembimbing !== 'Pending') {
+                return preview.status_pembimbing;
+            }
+            return preview[col] || 'Pending';
         }
         function getFileCatatan(preview, fileType) {
+            if (currentTahap === 'Persyaratan Sidang' && preview && Array.isArray(preview.files_persyaratan_sidang)) {
+                const found = preview.files_persyaratan_sidang.find(f => f.type === fileType);
+                return found ? (found.catatan || '') : '';
+            }
             const col = 'catatan_file_' + fileType;
             return (preview && preview[col]) ? preview[col] : '';
         }
         function getTahapKey(tahap) {
-            return ({ 'Preview 1':'preview1', 'Preview 2':'preview2', 'Preview 3':'preview3', 'Sidang':'sidang' })[tahap] || 'preview1';
+            return ({ 'Preview 1':'preview1', 'Preview 2':'preview2', 'Preview 3':'preview3', 'Persyaratan Sidang':'persyaratan_sidang', 'Sidang':'sidang', 'Lulus':'lulus' })[tahap] || 'preview1';
         }
         function isStageLulus(preview) {
             if (!preview) return false;
+            if (currentTahap === 'Persyaratan Sidang') return preview.status_pembimbing === 'Approved';
+            if (currentTahap === 'Lulus') return true;
             const key = getTahapKey(currentTahap);
             return String(preview['lulus_' + key] ?? 0) === '1';
         }
@@ -1213,7 +1376,8 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             if (stageName === 'Preview 1') badgeClass = 'bg-blue-50 text-blue-700 border-blue-200';
             else if (stageName === 'Preview 2') badgeClass = 'bg-indigo-50 text-indigo-700 border-indigo-200';
             else if (stageName === 'Preview 3') badgeClass = 'bg-purple-50 text-purple-700 border-purple-200';
-            else if (stageName === 'Sidang')   badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-300 font-extrabold';
+            else if (stageName === 'Persyaratan Sidang') badgeClass = 'bg-teal-50 text-teal-700 border-teal-200';
+            else if (stageName === 'Sidang' || stageName === 'Lulus') badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-300 font-extrabold';
 
             const label = extraText ? `${stageName} ${extraText}` : stageName;
             return `<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold border ${badgeClass} whitespace-nowrap"><i class="bi bi-mortarboard-fill"></i> ${label}</span>`;
@@ -1230,7 +1394,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
         // ============================================================
         function getFileTypesForTahap(tahap) {
             if (tahap === 'Preview 3') return ['sitasi', 'bimbingan', 'persyaratan'];
-            if (tahap === 'Sidang')    return ['sidang'];
+            if (tahap === 'Sidang' || tahap === 'Lulus') return ['sidang'];
             return ['draft'];
         }
         function getFileNameByType(preview, type) {
@@ -1243,6 +1407,15 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             return '';
         }
         function countFileStatuses(preview, tahap) {
+            if (tahap === 'Persyaratan Sidang' && preview && Array.isArray(preview.files_persyaratan_sidang)) {
+                return {
+                    approved: preview.approved_count || 0,
+                    revision: preview.revision_count || 0,
+                    pending:  preview.pending_count  || 0,
+                    missing:  Math.max(0, (preview.total_required || 0) - (preview.uploaded_count || 0)),
+                    total:    preview.total_required || preview.files_persyaratan_sidang.length
+                };
+            }
             const types = getFileTypesForTahap(tahap);
             let approved = 0, revision = 0, pending = 0, missing = 0;
             types.forEach(t => {
@@ -1258,6 +1431,15 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
         }
         function getAggregatedFileComments(preview, tahap) {
             if (!preview) return '';
+            if (tahap === 'Persyaratan Sidang' && Array.isArray(preview.files_persyaratan_sidang)) {
+                const parts = [];
+                preview.files_persyaratan_sidang.forEach(f => {
+                    if (f.catatan && String(f.catatan).replace(/<[^>]*>/g, '').trim()) {
+                        parts.push(`<div class="mb-1"><span class="text-slate-500 text-[10px] font-bold">[LAA - ${f.label || f.type}]</span> ${f.catatan}</div>`);
+                    }
+                });
+                return parts.join('');
+            }
             const types = getFileTypesForTahap(tahap);
             const labels = { draft:'Draft', sitasi:'Sitasi', bimbingan:'Bimbingan', persyaratan:'Persyaratan', sidang:'Sidang' };
             const parts = [];
@@ -1274,13 +1456,14 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             let cols = 7;
             const showRekomendasi = IS_P1 && currentTahap === 'Preview 3';
             if (showRekomendasi) cols++;
-            const showBap = IS_U1 && currentTahap === 'Sidang';
+            const showBap = IS_U1 && (currentTahap === 'Sidang' || currentTahap === 'Lulus');
             if (showBap) cols++;
             return cols;
         }
 
         function getUploadBaseUrl(tahap) {
-            return (tahap === 'Sidang')
+            if (tahap === 'Persyaratan Sidang') return '<?= base_url('uploads/berkas_sidang/') ?>';
+            return (tahap === 'Sidang' || tahap === 'Lulus')
                 ? '<?= base_url('uploads/sidang/') ?>'
                 : '<?= base_url('uploads/preview_ta/') ?>';
         }
@@ -1430,14 +1613,16 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
         // INIT & STAGE TABS
         // ============================================================
         const STAGE_MAP = {
-            'preview1': { cardId: 'stageCard_preview1', countId: 'stageCount_preview1', label: 'Tahap 1', tahap: 'Preview 1' },
-            'preview2': { cardId: 'stageCard_preview2', countId: 'stageCount_preview2', label: 'Tahap 2', tahap: 'Preview 2' },
-            'preview3': { cardId: 'stageCard_preview3', countId: 'stageCount_preview3', label: 'Tahap 3', tahap: 'Preview 3' },
-            'sidang':   { cardId: 'stageCard_sidang',   countId: 'stageCount_sidang',   label: 'Tahap Akhir', tahap: 'Sidang' }
+            'preview1':          { cardId: 'stageCard_preview1',          countId: 'stageCount_preview1',          label: 'Tahap 1',     tahap: 'Preview 1' },
+            'preview2':          { cardId: 'stageCard_preview2',          countId: 'stageCount_preview2',          label: 'Tahap 2',     tahap: 'Preview 2' },
+            'preview3':          { cardId: 'stageCard_preview3',          countId: 'stageCount_preview3',          label: 'Tahap 3',     tahap: 'Preview 3' },
+            'persyaratansidang': { cardId: 'stageCard_persyaratansidang', countId: 'stageCount_persyaratansidang', label: 'Tahap 4',     tahap: 'Persyaratan Sidang' },
+            'sidang':            { cardId: 'stageCard_sidang',            countId: 'stageCount_sidang',            label: 'Tahap 5',     tahap: 'Sidang' },
+            'lulus':             { cardId: 'stageCard_lulus',             countId: 'stageCount_lulus',             label: 'Tahap Akhir', tahap: 'Lulus' }
         };
 
         function updateRoleSwitcherHrefs(stageKey) {
-            const key = stageKey ? stageKey.toLowerCase().replace(/\s+/g, '') : 'preview1';
+            const key = stageKey ? stageKey.toLowerCase().replace(/[\s_]+/g, '') : 'preview1';
             document.querySelectorAll('#roleSwitcherContainer .role-switch-btn').forEach(btn => {
                 const targetRole = btn.getAttribute('data-role');
                 if (!targetRole) return;
@@ -1454,7 +1639,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 activeKey = localStorage.getItem('dosen_active_tahap');
             }
             if (activeKey) {
-                activeKey = activeKey.toLowerCase().replace(/\s+/g, '');
+                activeKey = activeKey.toLowerCase().replace(/[\s_]+/g, '');
                 if (IS_PENGUJI && activeKey === 'preview1') activeKey = 'preview2';
             }
             if (!activeKey || !STAGE_MAP[activeKey]) {
@@ -1479,14 +1664,17 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
 
         function setTabActive(stageKey) {
             const aliasMap = {
-                'dosenTab1': 'preview1',
-                'dosenTab2': 'preview2',
-                'dosenTab3': 'preview3',
-                'dosenTab4': 'sidang',
-                'Preview 1': 'preview1',
-                'Preview 2': 'preview2',
-                'Preview 3': 'preview3',
-                'Sidang':    'sidang'
+                'dosenTab1':          'preview1',
+                'dosenTab2':          'preview2',
+                'dosenTab3':          'preview3',
+                'dosenTab4':          'sidang',
+                'Preview 1':          'preview1',
+                'Preview 2':          'preview2',
+                'Preview 3':          'preview3',
+                'Persyaratan Sidang': 'persyaratansidang',
+                'persyaratan_sidang': 'persyaratansidang',
+                'Sidang':             'sidang',
+                'Lulus':              'lulus'
             };
             const activeKey = aliasMap[stageKey] || stageKey;
 
@@ -1540,9 +1728,25 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             } else if (tab === 'preview3') {
                 currentTahap = 'Preview 3';
                 setTabActive('preview3');
+            } else if (tab === 'persyaratansidang' || tab === 'persyaratan_sidang') {
+                tab = 'persyaratansidang';
+                currentTahap = 'Persyaratan Sidang';
+                setTabActive('persyaratansidang');
             } else if (tab === 'sidang') {
                 currentTahap = 'Sidang';
                 setTabActive('sidang');
+            } else if (tab === 'lulus') {
+                currentTahap = 'Lulus';
+                setTabActive('lulus');
+            }
+
+            const btnRubrikOverview = document.getElementById('btnRubrikSidangOverview');
+            if (btnRubrikOverview) {
+                if (tab === 'sidang') {
+                    btnRubrikOverview.classList.remove('hidden');
+                } else {
+                    btnRubrikOverview.classList.add('hidden');
+                }
             }
 
             localStorage.setItem('dosen_active_tahap', tab);
@@ -1583,10 +1787,12 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                         if (res.status) {
                             if (res.tab_counts) {
                                 const mapCounts = {
-                                    'Preview 1': 'stageCount_preview1',
-                                    'Preview 2': 'stageCount_preview2',
-                                    'Preview 3': 'stageCount_preview3',
-                                    'Sidang':    'stageCount_sidang'
+                                    'Preview 1':          'stageCount_preview1',
+                                    'Preview 2':          'stageCount_preview2',
+                                    'Preview 3':          'stageCount_preview3',
+                                    'Persyaratan Sidang': 'stageCount_persyaratansidang',
+                                    'Sidang':             'stageCount_sidang',
+                                    'Lulus':              'stageCount_lulus'
                                 };
                                 for (const [thp, cid] of Object.entries(mapCounts)) {
                                     const el = document.getElementById(cid);
@@ -1660,16 +1866,83 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
          * - Tahap Preview 1/2/3: tombol Lulus Tahap + Downgrade (hanya PIC).
          */
         function renderLulusTahapCell(mhs) {
-            const order = ['Preview 1', 'Preview 2', 'Preview 3', 'Sidang'];
+            const order = ['Preview 1', 'Preview 2', 'Preview 3', 'Persyaratan Sidang', 'Sidang', 'Lulus'];
             const currIdx = order.indexOf(currentTahap);
 
-            // ===== SIDANG: tombol Nilai =====
+            // ===== LULUS: Mahasiswa yang nilainya sudah dipublish oleh Koordinator TA dan berstatus Lulus =====
+            if (currentTahap === 'Lulus') {
+                const kel = mhs.kelulusan_info || {};
+                const nilaiStr = (kel.nilai_akhir !== undefined && kel.nilai_akhir !== null && parseFloat(kel.nilai_akhir) > 0)
+                    ? parseFloat(kel.nilai_akhir).toFixed(2)
+                    : '-';
+                const gradeStr = kel.grade || '-';
+                const statusKel = kel.status_kelulusan || 'Lulus';
+                const isRevisi = statusKel.toLowerCase().includes('revisi');
+                const badgeCls = isRevisi
+                    ? 'bg-teal-50 text-teal-800 border-teal-300'
+                    : 'bg-emerald-50 text-emerald-700 border-emerald-300';
+
+                return `<div class="flex flex-col gap-1 items-center max-w-[190px] mx-auto">
+                    <span class="px-2.5 py-1 rounded-full ${badgeCls} border font-extrabold text-[11px] inline-flex items-center gap-1.5 whitespace-nowrap shadow-2xs">
+                        <i class="bi bi-patch-check-fill"></i> ${statusKel}
+                    </span>
+                    <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 font-bold text-[10px] inline-flex items-center gap-1 whitespace-nowrap">
+                        Nilai Akhir: <strong>${nilaiStr}</strong> (${gradeStr})
+                    </span>
+                </div>`;
+            }
+
+            // ===== PERSYARATAN SIDANG: Verifikasi oleh Admin LAA (Tidak ada dosen yang bisa ACC) =====
+            if (currentTahap === 'Persyaratan Sidang') {
+                const latest = mhs.latest_preview;
+                if (!latest) {
+                    return `<div class="flex flex-col gap-1 items-center max-w-[180px] mx-auto">
+                        <span class="px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-500 border border-slate-200 font-bold text-[11px] inline-flex items-center gap-1.5 whitespace-nowrap">
+                            <i class="bi bi-hourglass"></i> Belum Upload Berkas
+                        </span>
+                    </div>`;
+                }
+                if (latest.status_pembimbing === 'Approved') {
+                    return `<div class="flex flex-col gap-1 items-center max-w-[180px] mx-auto">
+                        <span class="px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[11px] inline-flex items-center gap-1.5 whitespace-nowrap">
+                            <i class="bi bi-check-circle-fill"></i> Disetujui Admin LAA
+                        </span>
+                    </div>`;
+                }
+                if (latest.status_pembimbing === 'Revision') {
+                    return `<div class="flex flex-col gap-1 items-center max-w-[180px] mx-auto">
+                        <span class="px-2.5 py-1.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 font-bold text-[11px] inline-flex items-center gap-1.5 whitespace-nowrap">
+                            <i class="bi bi-x-circle-fill"></i> Revisi Admin LAA
+                        </span>
+                    </div>`;
+                }
+                return `<div class="flex flex-col gap-1 items-center max-w-[180px] mx-auto">
+                    <span class="px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 font-bold text-[11px] inline-flex items-center gap-1.5 whitespace-nowrap" title="Diverifikasi oleh Admin Layanan (LAA)">
+                        <i class="bi bi-shield-lock-fill"></i> Verifikasi LAA (${latest.uploaded_count || 0}/${latest.total_required || 0})
+                    </span>
+                </div>`;
+            }
+
+            // ===== SIDANG: tombol Nilai + Status Card Ruangan (khusus rekomendasi Sidang) =====
             if (currentTahap === 'Sidang') {
                 const latest = mhs.latest_preview;
                 const hasFile = !!(latest && (latest.file_sidang || latest.file_draft));
+                const rekType = (mhs.rekomendasi && mhs.rekomendasi.recommendation_type)
+                    ? String(mhs.rekomendasi.recommendation_type).toLowerCase()
+                    : 'sidang';
+                const isNonSidang = (rekType === 'non_sidang');
+                const isPlotted = !!(mhs.jadwal_sidang && mhs.jadwal_sidang.is_sidang_scheduled);
+
+                let belumAdaRuanganCard = '';
+                if (!isNonSidang && !isPlotted) {
+                    belumAdaRuanganCard = `<span class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-300 font-bold text-[10px] inline-flex items-center gap-1 whitespace-nowrap shadow-2xs" title="Tanggal dan ruangan sidang belum di-plotting oleh Koordinator TA">
+                        <i class="bi bi-door-closed-fill text-amber-600"></i> Belum Ada Ruangan
+                    </span>`;
+                }
 
                 if (!hasFile) {
-                    return `<div class="flex flex-col gap-1.5 items-center max-w-[170px] mx-auto">
+                    return `<div class="flex flex-col gap-1.5 items-center max-w-[180px] mx-auto">
+                        ${belumAdaRuanganCard}
                         <button type="button" disabled title="Mahasiswa belum mengunggah berkas sidang"
                                 class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap">
                             <i class="bi bi-lock-fill"></i> Belum Ada Berkas
@@ -1686,7 +1959,8 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 const label = nilaiTersimpan ? 'Edit Nilai' : 'Beri Nilai';
                 const icon  = nilaiTersimpan ? 'bi-pencil-square' : 'bi-star-fill';
 
-                return `<div class="flex flex-col gap-1.5 items-center max-w-[170px] mx-auto">
+                return `<div class="flex flex-col gap-1.5 items-center max-w-[180px] mx-auto">
+                    ${belumAdaRuanganCard}
                     <button type="button"
                             onclick="openModalPenilaianSidang('${mhs.nim}')"
                             class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap active:scale-95">
@@ -1792,15 +2066,33 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             let btnLulus = '';
             if (isLulus) {
                 btnLulus = renderTahapBadgeLulus(currentTahap);
-            } else if (c.approved > 0) {
-                if (currentTahap === 'Preview 3' && (!mhs.has_persyaratan_sidang || !mhs.rekomendasi)) {
-                    const alasanLock = !mhs.has_persyaratan_sidang 
-                        ? 'Mahasiswa belum mengunggah berkas Persyaratan Sidang'
-                        : 'Pembimbing 1 belum memberikan Rekomendasi (Sidang / Non-Sidang)';
+            } else if (currentTahap === 'Preview 3') {
+                // Wajib di-ACC di ke-3 kategori berkas: Bimbingan, Sitasi, dan Persyaratan Jalur Tugas Akhir
+                const catMap = [
+                    { key: 'bimbingan',   label: 'Lembar Bimbingan' },
+                    { key: 'sitasi',      label: 'Lembar Sitasi' },
+                    { key: 'persyaratan', label: 'Persyaratan Jalur TA' }
+                ];
+                const unapprovedCats = [];
+                catMap.forEach(cat => {
+                    const fname = getFileNameByType(latest, cat.key);
+                    const st = fname ? getFileStatus(latest, cat.key) : 'Missing';
+                    if (!fname || st !== 'Approved') {
+                        unapprovedCats.push(cat.label);
+                    }
+                });
+
+                if (unapprovedCats.length > 0) {
+                    const alasanBerkas = `Seluruh 3 kategori berkas wajib di-ACC terlebih dahulu. Belum ACC (${c.approved}/3): ${unapprovedCats.join(', ')}`;
+                    btnLulus = `<button disabled title="Terkunci: ${alasanBerkas}" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Lanjut Tahap (${c.approved}/3 ACC)</button>`;
+                } else if (!mhs.rekomendasi) {
+                    const alasanLock = 'Pembimbing 1 belum memberikan Rekomendasi (Sidang / Non-Sidang)';
                     btnLulus = `<button disabled title="Terkunci: ${alasanLock}" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
                 } else {
                     btnLulus = `<button onclick="handleLulusStage('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-arrow-right-circle-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
                 }
+            } else if (c.approved > 0) {
+                btnLulus = `<button onclick="handleLulusStage('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-arrow-right-circle-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
             } else {
                 btnLulus = `<button disabled title="Belum ada berkas yang di-ACC" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
             }
@@ -1817,7 +2109,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
         function renderTable() {
             const tbody = document.getElementById('bimbinganTableBody');
 
-            const showBapCol = (typeof IS_U1 !== 'undefined' && IS_U1) && currentTahap === 'Sidang';
+            const showBapCol = (typeof IS_U1 !== 'undefined' && IS_U1) && (currentTahap === 'Sidang' || currentTahap === 'Lulus');
             const thBapEl = document.getElementById('thBapCol');
             if (thBapEl) thBapEl.style.display = showBapCol ? '' : 'none';
 
@@ -1913,7 +2205,9 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 }
 
                 let checkboxHtml = '';
-                if (mhs.latest_preview && !mhs.latest_preview.file_missing) {
+                if (currentTahap === 'Persyaratan Sidang' || currentTahap === 'Lulus') {
+                    checkboxHtml = `<input type="checkbox" disabled class="w-4 h-4 rounded border-slate-200 cursor-not-allowed opacity-50" title="${currentTahap === 'Lulus' ? 'Mahasiswa telah lulus' : 'Tahap Persyaratan Sidang diverifikasi oleh Admin Layanan (LAA)'}">`;
+                } else if (mhs.latest_preview && !mhs.latest_preview.file_missing) {
                     if (mhs.latest_preview.status_pembimbing !== 'Approved') {
                         checkboxHtml = `<input type="checkbox" value="${mhs.latest_preview.id}" data-name="${mhs.nama_mahasiswa}" data-file="${mhs.latest_preview.file_draft}" data-id="${mhs.latest_preview.id}" data-status="${mhs.latest_preview.status_pembimbing || 'Pending'}" data-catatan="${encodeURIComponent(mhs.latest_preview.catatan_pembimbing || '')}" data-catatan2="${encodeURIComponent(mhs.latest_preview.catatan_pembimbing_2 || '')}" class="dosen-student-cb w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer">`;
                     } else {
@@ -2285,7 +2579,11 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 document.getElementById('hoverPanelName').textContent = mhs.nama_mahasiswa + ' (' + mhs.nim + ')';
 
                 const pdfWrap = document.getElementById('hoverPdfWrap');
-                if (latest && (latest.file_draft || latest.file_sidang)) {
+                if (currentTahap === 'Persyaratan Sidang' && latest && Array.isArray(latest.files_persyaratan_sidang) && latest.files_persyaratan_sidang.length > 0) {
+                    const firstPs = latest.files_persyaratan_sidang[0];
+                    const fileUrl = firstPs.file_url || (getUploadBaseUrl(currentTahap) + encodeURIComponent(firstPs.file));
+                    pdfWrap.innerHTML = `<iframe src="${fileUrl}" class="w-full h-full" frameborder="0"></iframe>`;
+                } else if (latest && (latest.file_draft || latest.file_sidang)) {
                     const fname = (currentTahap === 'Sidang')
                         ? (latest.file_sidang || latest.file_draft)
                         : latest.file_draft;
@@ -2298,6 +2596,13 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 const formWrap = document.getElementById('hoverFormWrap');
                 if (!latest) {
                     formWrap.innerHTML = `<p class="text-xs text-slate-500 italic">Tidak ada berkas untuk dikomentari.</p>`;
+                } else if (currentTahap === 'Persyaratan Sidang') {
+                    formWrap.innerHTML = `
+                        <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-center gap-2.5">
+                            <i class="bi bi-shield-lock-fill text-amber-600 text-base shrink-0"></i>
+                            <span>Berkas pada tahap <strong>Persyaratan Sidang</strong> diverifikasi secara terpusat oleh <strong>Admin Layanan (LAA)</strong>. Dosen hanya dapat melihat berkas.</span>
+                        </div>
+                    `;
                 } else {
                     const curComment = getCurrentComment(latest);
 
@@ -2458,6 +2763,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
         window.inlineCommentStates = window.inlineCommentStates || {};
 
         function openInlineComment(scope, nim, fileIndex, fileType, action = 'Comment') {
+            if (currentTahap === 'Persyaratan Sidang' || currentTahap === 'Lulus') return;
             const key = fileItemKey(scope, nim, fileIndex, fileType);
             const slot = document.getElementById('inlineSlot_' + key);
             if (!slot) {
@@ -2744,7 +3050,19 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
         // ============================================================
         function getPreviewFiles(preview) {
             if (!preview) return [];
-            if (currentTahap === 'Sidang') {
+            if (currentTahap === 'Persyaratan Sidang') {
+                if (Array.isArray(preview.files_persyaratan_sidang)) {
+                    return preview.files_persyaratan_sidang.map(f => ({
+                        type:     f.type,
+                        label:    f.label,
+                        file:     f.file,
+                        file_url: f.file_url || '',
+                        icon:     'bi-file-earmark-check-fill'
+                    }));
+                }
+                return [];
+            }
+            if (currentTahap === 'Sidang' || currentTahap === 'Lulus') {
                 const fname = preview.file_sidang || preview.file_draft;
                 if (fname) return [{ type: 'sidang', label: 'File Sidang Akhir', file: fname, icon: 'bi-file-earmark-text-fill' }];
                 return [];
@@ -2874,7 +3192,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                             itemsHtml += `<div class="p-2.5 text-center text-slate-400 text-xs italic">Tidak ada file pada pengajuan ini.</div>`;
                         } else {
                             files.forEach((f) => {
-                                const fileUrl   = getUploadBaseUrl(currentTahap) + encodeURIComponent(f.file);
+                                const fileUrl   = f.file_url || (getUploadBaseUrl(currentTahap) + encodeURIComponent(f.file));
                                 const fileName  = f.file;
                                 const isActive  = isPreviewItemActive(mhs.nim, realIdx, f.type);
                                 const activeCardBorder = isActive ? 'ring-2 ring-orange-500 border-orange-300 bg-orange-50/45' : 'border-slate-200 bg-white hover:border-slate-300';
@@ -2964,7 +3282,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 const fileObj  = files.find(f => f.type === fileType) || files[0];
                 if (!fileObj) return;
 
-                const fileUrl   = getUploadBaseUrl(currentTahap) + encodeURIComponent(fileObj.file);
+                const fileUrl   = fileObj.file_url || (getUploadBaseUrl(currentTahap) + encodeURIComponent(fileObj.file));
                 const fileName  = fileObj.file;
                 const fileLabel = fileObj.label;
                 const fullName  = mhs.nama_mahasiswa || 'Mahasiswa';
@@ -3049,9 +3367,15 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                                 </span>
                             </div>
                             <div class="flex items-center gap-1.5">
+                                ${currentTahap !== 'Persyaratan Sidang' ? `
                                 <button type="button" id="btnToggleComment_${previewKey}" onclick="toggleHideInlineComment('preview', '${p.nim}', ${p.fileIndex}, '${fileType}')" class="px-2.5 py-1 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs text-[11px]" title="Sembunyikan / Tampilkan Catatan">
                                     <i class="bi bi-eye-slash-fill text-[11px]"></i><span>Sembunyikan Catatan</span>
                                 </button>
+                                ` : `
+                                <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-500 border border-slate-200 font-bold text-[10px] inline-flex items-center gap-1">
+                                    <i class="bi bi-shield-lock-fill"></i> Verifikasi Admin LAA
+                                </span>
+                                `}
                                 <a href="${fileUrl}" download="${fileName}" target="_blank" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs text-[11px]">
                                     <i class="bi bi-download"></i><span>Unduh</span>
                                 </a>
@@ -3690,70 +4014,211 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
 
     <script>
         // ============================================================
-        // RUBRIK PENILAIAN PRODI (Hardcoded)
+        // RUBRIK PENILAIAN PRODI DINAMIS (Tersinkronisasi dengan Master Rubrik Koordinator TA)
         // ============================================================
-        const RUBRIK_PENILAIAN_PRODI = {
+        let RUBRIK_PENILAIAN_PRODI = {
             'DKV': {
+                name: 'Desain Komunikasi Visual (DKV)',
                 peminatan: {
-                    'Desain Grafis': [
-                        { id:'k1', title:'Kreativitas & Orisinalitas', desc:'Kemampuan menghasilkan ide desain yang baru dan unik.', bobot:20 },
-                        { id:'k2', title:'Eksekusi Visual', desc:'Penguasaan elemen & prinsip desain (tipografi, warna, komposisi).', bobot:25 },
-                        { id:'k3', title:'Keselarasan Konsep & Solusi', desc:'Seberapa baik karya menjawab permasalahan/brief.', bobot:25 },
-                        { id:'k4', title:'Keterampilan Teknis & Media', desc:'Penguasaan perangkat lunak atau teknik manual.', bobot:15 },
-                        { id:'k5', title:'Presentasi & Komunikasi', desc:'Kemampuan mempresentasikan dan mempertahankan argumen.', bobot:15 }
-                    ],
                     'Multimedia': [
-                        { id:'k1', title:'Kreativitas Ide & Narasi', desc:'Kekuatan storytelling dan orisinalitas ide.', bobot:20 },
-                        { id:'k2', title:'Eksekusi Audio-Visual', desc:'Kualitas sinematografi, animasi, suara, penyuntingan.', bobot:25 },
-                        { id:'k3', title:'Fungsionalitas & Interaktivitas', desc:'Tingkat kebergunaan dan interaksi media.', bobot:25 },
-                        { id:'k4', title:'Keterampilan Teknis Media', desc:'Penguasaan teknologi, software, atau peralatan.', bobot:15 },
-                        { id:'k5', title:'Presentasi Karya', desc:'Sistematika penyajian dan kemampuan menjawab.', bobot:15 }
-                    ]
-                }
-            },
-            'IF': {
-                peminatan: {
-                    'Rekayasa Perangkat Lunak': [
-                        { id:'k1', title:'Analisis & Perancangan Sistem', desc:'Kedalaman analisis kebutuhan dan perancangan.', bobot:25 },
-                        { id:'k2', title:'Implementasi & Kualitas Kode', desc:'Kualitas implementasi teknis dan rekayasa perangkat lunak.', bobot:30 },
-                        { id:'k3', title:'Pengujian & Validasi', desc:'Metodologi pengujian dan validasi hasil.', bobot:20 },
-                        { id:'k4', title:'Dokumentasi & Laporan', desc:'Kualitas dokumentasi teknis dan laporan TA.', bobot:15 },
-                        { id:'k5', title:'Presentasi & Sikap', desc:'Kemampuan menyampaikan dan mempertahankan hasil.', bobot:10 }
+                        { id:'k1', title:'Konsep & Storyboard Multimedia', desc:'Kedalaman gagasan, orisinalitas ide, alur narasi, dan struktur storyboard visual.', bobot:25 },
+                        { id:'k2', title:'Penguasaan Teknis Audio Visual & Animasi', desc:'Kualitas editing, rendering, compositing, motion graphic, dan sinkronisasi audio-visual.', bobot:30 },
+                        { id:'k3', title:'Interaktivitas & User Experience (UI/UX)', desc:'Kemudahan interaksi antarmuka, responsivitas, dan fungsionalitas media multimedia terapan.', bobot:25 },
+                        { id:'k4', title:'Komprehensi & Presentasi Sidang', desc:'Kelancaran penyampaian argumen karya, penguasaan materi, dan pertanggungjawaban desain.', bobot:20 }
                     ],
-                    'Kecerdasan Artifisial': [
-                        { id:'k1', title:'Pemahaman Konsep AI', desc:'Penguasaan teori dan konsep AI/ML.', bobot:25 },
-                        { id:'k2', title:'Perancangan Model', desc:'Ketepatan pemilihan model dan metrik.', bobot:25 },
-                        { id:'k3', title:'Eksperimen & Evaluasi', desc:'Kualitas eksperimen dan evaluasi hasil.', bobot:25 },
-                        { id:'k4', title:'Dokumentasi & Laporan', desc:'Kualitas laporan dan dokumentasi.', bobot:15 },
-                        { id:'k5', title:'Presentasi & Sikap', desc:'Kemampuan menyampaikan hasil.', bobot:10 }
+                    'Game': [
+                        { id:'k1', title:'Game Design Document (GDD) & Core Concept', desc:'Kelengkapan GDD, target audience, core loop, dan inovasi genre mekanika game.', bobot:25 },
+                        { id:'k2', title:'Game Mechanics, Balancing & Asset Art 2D/3D', desc:'Kualitas asset grafis karakter/lingkungan, animasi, balancing kesulitan, dan level design.', bobot:30 },
+                        { id:'k3', title:'Playability, Prototype Testing & Bug Handling', desc:'Kelancaran gameplay (playability), performa frame rate, dan hasil uji coba playtest pengguna.', bobot:25 },
+                        { id:'k4', title:'Live Demo & Argumentasi Teknis Sidang', desc:'Penguasaan implementasi game engine, demonstrasi gameplay langsung, dan respon tanya jawab.', bobot:20 }
+                    ],
+                    'Designpreneur': [
+                        { id:'k1', title:'Riset Pasar & Business Model Canvas (BMC)', desc:'Validasi problem-solution fit, positioning pasar, analisis kompetitor, dan segmen konsumen.', bobot:25 },
+                        { id:'k2', title:'Identitas Visual & Desain Produk/Kemasan Komersial', desc:'Kekuatan branding, packaging design, konsistensi collateral visual, dan daya tarik jual.', bobot:30 },
+                        { id:'k3', title:'Strategi Pemasaran & Feasibility Finansial', desc:'Rencana go-to-market, cost of goods sold (COGS), proyeksi ROI, dan skalabilitas bisnis.', bobot:25 },
+                        { id:'k4', title:'Pitching Produk & Pertanggungjawaban Bisnis', desc:'Kualitas deck presentasi, kemampuan pitching, dan kesiapan eksekusi komersial di pasar.', bobot:20 }
+                    ],
+                    'VIID': [
+                        { id:'k1', title:'Riset Strategis & Brand Architecture VIID', desc:'Landasan riset identitas visual, brand DNA, brand archetype, dan positioning strategi.', bobot:25 },
+                        { id:'k2', title:'Sistem Identitas Visual & Graphic Guidelines', desc:'Ketepatan tipografi, color palette, grid system, logo versatility, dan manual guideline lengkap.', bobot:30 },
+                        { id:'k3', title:'Aplikasi Interaktif & Environmental Media Terapan', desc:'Penerapan identitas visual pada media digital/interaktif, signage, wayfinding, dan merchandise.', bobot:25 },
+                        { id:'k4', title:'Presentasi Konsep & Ketajaman Analisis Visual', desc:'Artikulasi konsep visual, justifikasi semiotika desain, dan penguasaan respon akademik.', bobot:20 }
                     ]
-                }
+                },
+                _meta: {}
             },
-            'SI': {
+            'DI': {
+                name: 'Desain Interior (DI)',
                 peminatan: {
-                    'Sistem Informasi Enterprise': [
-                        { id:'k1', title:'Analisis Proses Bisnis', desc:'Kedalaman analisis proses bisnis & kebutuhan sistem.', bobot:25 },
-                        { id:'k2', title:'Perancangan Sistem', desc:'Kualitas perancangan arsitektur & data.', bobot:25 },
-                        { id:'k3', title:'Implementasi & Integrasi', desc:'Keberhasilan implementasi dan integrasi sistem.', bobot:20 },
-                        { id:'k4', title:'Dokumentasi & Laporan', desc:'Kualitas dokumentasi dan laporan.', bobot:15 },
-                        { id:'k5', title:'Presentasi & Sikap', desc:'Kemampuan menyampaikan hasil.', bobot:15 }
+                    'Komersial': [
+                        { id:'k1', title:'Konsep Ruang & Analisis Tapak Komersial', desc:'Kesesuaian tema desain dengan fungsi komersial, zoning, dan brand experience pengunjung.', bobot:25 },
+                        { id:'k2', title:'Detail Konstruksi, Material & Furnitur Kustom', desc:'Spesifikasi material, keakuratan gambar kerja interior, dan inovasi furnitur kustom.', bobot:30 },
+                        { id:'k3', title:'Ergonomi, Tata Cahaya (Lighting) & Akustik Ruang', desc:'Efisiensi sirkulasi, standar kenyamanan termal, pencahayaan buatan/alami, dan akustik.', bobot:25 },
+                        { id:'k4', title:'Visualisasi 3D Rendering & Presentasi Sidang', desc:'Realisme 3D render, kelengkapan maket/board material, dan argumentasi pemilihan desain.', bobot:20 }
+                    ],
+                    'Residensial': [
+                        { id:'k1', title:'Analisis Kebutuhan Penghuni & Konsep Hunian', desc:'Pemahaman profil klien, efisiensi zonasi ruang privat-publik, dan atmosfer interior.', bobot:25 },
+                        { id:'k2', title:'Pemilihan Material, Tekstur & Furnitur Hunian', desc:'Kualitas pemilihan finishing, keselarasan warna, dan ketahanan material interior.', bobot:30 },
+                        { id:'k3', title:'Sirkulasi Ruang, Utilitas & Keberlanjutan (Eco-Design)', desc:'Penataan utilitas ME, sirkulasi udara alami, dan penggunaan material ramah lingkungan.', bobot:25 },
+                        { id:'k4', title:'Gambar Kerja Teknis & Pertanggungjawaban Desain', desc:'Kelengkapan dokumen gambar arsitektural interior dan kelancaran presentasi sidang.', bobot:20 }
                     ]
-                }
+                },
+                _meta: {}
+            },
+            'DIB': {
+                name: 'Desain Interior Bisnis (DIB)',
+                peminatan: {
+                    'Spatial Branding': [
+                        { id:'k1', title:'Analisis Spatial Branding & Customer Journey', desc:'Integrasi brand identity ke dalam elemen spasial, touchpoints konsumen, dan visual merchandising.', bobot:25 },
+                        { id:'k2', title:'Layout Efisiensi Ruang Retail & Sirkulasi', desc:'Optimalisasi sales floor, zoning display produk, dan kenyamanan sirkulasi flow pengunjung.', bobot:30 },
+                        { id:'k3', title:'Analisis Kelayakan Finansial & Fit-out Costing', desc:'Estimasi RAB interior, pemilihan material tahan lama cost-effective, dan ROI ruang bisnis.', bobot:25 },
+                        { id:'k4', title:'Pitching Konsep Bisnis Interior & Presentasi Teknis', desc:'Kemampuan menyampaikan value proposition ruang terhadap peningkatan performa bisnis.', bobot:20 }
+                    ],
+                    'Hospitality': [
+                        { id:'k1', title:'Konsep Hospitality & Standar Layanan Ruang', desc:'Karakter ambience penginapan/kafe/hotel, alur front-of-house dan back-of-house efisien.', bobot:25 },
+                        { id:'k2', title:'Spesifikasi Material Heavy-Duty & Furnitur Kontrak', desc:'Ketahanan material standar komersial tinggi, kemudahan perawatan, dan estetika premium.', bobot:30 },
+                        { id:'k3', title:'Standar Keamanan, Pencahayaan Mood & Akustik', desc:'Penerapan jalur evakuasi, pencahayaan dramatis, dan peredaman suara lingkungan hospitality.', bobot:25 },
+                        { id:'k4', title:'Presentasi Komprehensif & Gambar Detail Interior', desc:'Kelengkapan gambar kerja dan kepiawaian dalam menjawab pertanyaan dewan penguji.', bobot:20 }
+                    ]
+                },
+                _meta: {}
+            },
+            'DP': {
+                name: 'Desain Produk (DP)',
+                peminatan: {
+                    'Desain Industri': [
+                        { id:'k1', title:'User Research, Problem Framing & Inovasi Fungsi', desc:'Ketepatan identifikasi masalah pengguna, riset antropometri, dan kebaruan solusi fungsi produk.', bobot:25 },
+                        { id:'k2', title:'Bentuk Estetika, Ergonomi & Styling Produk', desc:'Kematangan eksplorasi bentuk, proporsi, kenyamanan genggaman/penggunaan, dan CMF design.', bobot:30 },
+                        { id:'k3', title:'Material, Manufakturabilitas & Prototyping Uji', desc:'Kesesuaian proses produksi massal, pemilihan polimer/logam, dan hasil uji prototype fisik.', bobot:25 },
+                        { id:'k4', title:'Demonstrasi Produk Fisik & Argumentasi Sidang', desc:'Unjuk kerja prototype 1:1, detail exploded view 3D CAD, dan penguasaan materi sidang.', bobot:20 }
+                    ],
+                    'Furnitur': [
+                        { id:'k1', title:'Riset Kebutuhan Furnitur & Analisis Ergonomi', desc:'Standar antropometri duduk/kerja, fungsi multi-purpose, dan efisiensi ruang pakai.', bobot:25 },
+                        { id:'k2', title:'Konstruksi Sambungan, Kekuatan Struktur & Material', desc:'Inovasi joint system (knockdown/tenon), pemilihan kayu/metal, dan uji beban struktur.', bobot:30 },
+                        { id:'k3', title:'Finishing, Kemudahan Perakitan & Kemasan Flat-pack', desc:'Kualitas finishing permukaan, efisiensi kemasan distribusi, dan instruksi perakitan.', bobot:25 },
+                        { id:'k4', title:'Presentasi Prototype Skala 1:1 & Pertanggungjawaban', desc:'Kualitas mock-up fisik, keakuratan gambar kerja teknik, dan ketajaman jawaban ujian.', bobot:20 }
+                    ]
+                },
+                _meta: {}
             }
         };
+
+        // State Riwayat Versi & Penilaian Dinamis
+        let stateMasterRubriksList = [];
+        let currentModalSavedDetails = [];
+        let currentActiveRubrik = null;
+        let currentSelectedVersionId = null;
+        let isOpeningFromForm = false;
 
         function _penilaianEscapeHtml(unsafe) {
             if (unsafe === null || unsafe === undefined) return '';
             return String(unsafe).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
         }
 
+        // Sinkronisasi data master rubrik dinamis dari server
+        function syncMasterRubrikFromData(masterRubriks) {
+            if (!Array.isArray(masterRubriks) || masterRubriks.length === 0) return;
+            stateMasterRubriksList = masterRubriks;
+            masterRubriks.forEach(item => {
+                const pKey = (item.prodi || '').trim();
+                const pemKey = (item.peminatan || '').trim();
+                if (!pKey || !pemKey) return;
+
+                if (!RUBRIK_PENILAIAN_PRODI[pKey]) {
+                    RUBRIK_PENILAIAN_PRODI[pKey] = {
+                        name: pKey,
+                        peminatan: {},
+                        _meta: {},
+                        _history: {}
+                    };
+                }
+                if (!RUBRIK_PENILAIAN_PRODI[pKey].peminatan) {
+                    RUBRIK_PENILAIAN_PRODI[pKey].peminatan = {};
+                }
+                if (!RUBRIK_PENILAIAN_PRODI[pKey]._meta) {
+                    RUBRIK_PENILAIAN_PRODI[pKey]._meta = {};
+                }
+                if (!RUBRIK_PENILAIAN_PRODI[pKey]._history) {
+                    RUBRIK_PENILAIAN_PRODI[pKey]._history = {};
+                }
+
+                if (Array.isArray(item.kriteria) && item.kriteria.length > 0) {
+                    RUBRIK_PENILAIAN_PRODI[pKey].peminatan[pemKey] = item.kriteria.map((crit, idx) => ({
+                        id: crit.id || crit.kode_kriteria || ('k' + (idx + 1)),
+                        title: crit.title || crit.nama_kriteria || `Kriteria ${idx + 1}`,
+                        desc: crit.desc || crit.deskripsi || '',
+                        bobot: parseFloat(crit.bobot) || 0
+                    }));
+                }
+
+                RUBRIK_PENILAIAN_PRODI[pKey]._meta[pemKey] = {
+                    id: item.id,
+                    versi: item.versi || 1,
+                    judul_rubrik: item.judul_rubrik || `Rubrik Sidang ${pKey} - ${pemKey}`,
+                    total_bobot: item.total_bobot || 100,
+                    status: item.status || 'published',
+                    tanggal_publish_formatted: item.tanggal_publish_formatted || '',
+                    tanggal_berakhir_formatted: item.tanggal_berakhir_formatted || 'Aktif (Sekarang)'
+                };
+
+                RUBRIK_PENILAIAN_PRODI[pKey]._history[pemKey] = Array.isArray(item.history_versions) && item.history_versions.length > 0
+                    ? item.history_versions
+                    : [item];
+            });
+        }
+
         function detectProdiKey(prodiName) {
             if (!prodiName) return 'DKV';
-            const p = String(prodiName).toLowerCase();
-            if (p.includes('sistem informasi')) return 'SI';
-            if (p.includes('informatika') || p.includes('ilmu komputer')) return 'IF';
-            if (p.includes('dkv') || p.includes('desain komunikasi visual')) return 'DKV';
-            return 'DKV';
+            const raw = String(prodiName).trim();
+            // 1. Direct match with keys
+            const keys = Object.keys(RUBRIK_PENILAIAN_PRODI);
+            for (let k of keys) {
+                if (k.toLowerCase() === raw.toLowerCase()) return k;
+            }
+            // 2. Keyword heuristic
+            const p = raw.toUpperCase();
+            if (p.includes('DIB') || p.includes('BISNIS')) return 'DIB';
+            if (p.includes('INTERIOR') || p.includes('DI')) return 'DI';
+            if (p.includes('PRODUK') || p.includes('DP')) return 'DP';
+            if (p.includes('DKV') || p.includes('DESAIN KOMUNIKASI VISUAL')) return 'DKV';
+            if (p.includes('INFORMATIKA') || p.includes('IF')) return 'IF';
+            if (p.includes('SISTEM INFORMASI') || p.includes('SI')) return 'SI';
+            return keys[0] || 'DKV';
+        }
+
+        function renderProdiSelectOptions(selectedProdi) {
+            const sel = document.getElementById('penilaianProdiSelect');
+            if (!sel) return;
+            const keys = Object.keys(RUBRIK_PENILAIAN_PRODI);
+            let html = '';
+            keys.forEach(k => {
+                const labelName = RUBRIK_PENILAIAN_PRODI[k].name || k;
+                const isSel = (k === selectedProdi);
+                html += `<option value="${k}" ${isSel ? 'selected' : ''}>${k} - ${labelName}</option>`;
+            });
+            sel.innerHTML = html;
+        }
+
+        function setupPenilaianPeminatanOptions(prodiKey, selectedPeminatan) {
+            const sel = document.getElementById('penilaianPeminatanSelect');
+            if (!sel) return;
+            const prodiData = RUBRIK_PENILAIAN_PRODI[prodiKey] || RUBRIK_PENILAIAN_PRODI['DKV'];
+            const list = Object.keys(prodiData.peminatan || {});
+            let html = '';
+            let matched = false;
+
+            list.forEach(p => {
+                const isSel = (p.toLowerCase() === String(selectedPeminatan || '').toLowerCase().trim());
+                if (isSel) matched = true;
+                html += `<option value="${p}" ${isSel ? 'selected' : ''}>${p}</option>`;
+            });
+
+            // Fallback jika peminatan mahasiswa belum ada di daftar kriteria
+            if (!matched && selectedPeminatan && selectedPeminatan !== '-') {
+                html = `<option value="${selectedPeminatan}" selected>${selectedPeminatan}</option>` + html;
+            }
+
+            sel.innerHTML = html;
         }
 
         window.openModalPenilaianSidang = function (nim) {
@@ -3774,15 +4239,18 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             document.getElementById('penilaianGradeBadge').textContent = '-';
             document.getElementById('penilaianGradeBadge').className = 'grade-badge grade-none';
             document.getElementById('penilaianPrevNilaiWrap').classList.add('hidden');
-            document.getElementById('penilaianRubrikContainer').innerHTML = '<div class="text-center py-6 text-slate-400 text-xs"><i class="bi bi-arrow-repeat inline-block animate-spin mr-1"></i> Memuat rubrik...</div>';
+            const vBadge = document.getElementById('penilaianRubrikVersionBadge');
+            if (vBadge) vBadge.classList.add('hidden');
+
+            document.getElementById('penilaianRubrikContainer').innerHTML = '<div class="text-center py-6 text-slate-400 text-xs"><i class="bi bi-arrow-repeat inline-block animate-spin mr-1"></i> Memuat rubrik penilaian terbaru...</div>';
             modal.classList.add('active');
 
-            const url = `<?= site_url('mahasiswa/get_detail_nilai_sidang_ajax') ?>?nim=${encodeURIComponent(nim)}`;
+            const url = `<?= site_url('dosen_bimbingan/get_detail_nilai_sidang_ajax') ?>?nim=${encodeURIComponent(nim)}`;
             fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(r => r.json())
                 .then(res => {
                     if (!res.status || !res.data) {
-                        showToast(res.message || 'Gagal memuat data.', 'error');
+                        showToast(res.message || 'Gagal memuat data bimbingan.', 'error');
                         closeModalPenilaianSidang();
                         return;
                     }
@@ -3790,7 +4258,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 })
                 .catch(err => {
                     console.error(err);
-                    showToast('Kesalahan koneksi saat memuat data.', 'error');
+                    showToast('Kesalahan koneksi saat memuat data penilaian.', 'error');
                     closeModalPenilaianSidang();
                 });
         };
@@ -3816,12 +4284,21 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             document.getElementById('penilaianPenguji1').textContent = 'Penguji 1: ' + (data.penguji_1 || '-');
             document.getElementById('penilaianPenguji2').textContent = 'Penguji 2: ' + (data.penguji_2 || '-');
 
+            // 1. Sinkronisasi master rubrik dari server (Koordinator TA)
+            if (data.master_rubriks && Array.isArray(data.master_rubriks)) {
+                syncMasterRubrikFromData(data.master_rubriks);
+            }
+            currentActiveRubrik = data.active_rubrik || null;
+
+            // 2. Set Prodi & Peminatan
             const prodiKey = detectProdiKey(data.prodi || data.peminatan);
-            document.getElementById('penilaianProdiSelect').value = prodiKey;
+            renderProdiSelectOptions(prodiKey);
             setupPenilaianPeminatanOptions(prodiKey, data.peminatan);
 
+            // 3. Cek Nilai Tersimpan (Mode Edit Nilai)
             const myDetail = (data.detail && data.detail[MODEL_POSISI]) || null;
             const myNilai  = (data.nilai && data.nilai[MODEL_POSISI]) || 0;
+            currentModalSavedDetails = (myDetail && Array.isArray(myDetail.detail)) ? myDetail.detail : [];
 
             if (myNilai > 0) {
                 document.getElementById('penilaianPrevNilaiWrap').classList.remove('hidden');
@@ -3833,19 +4310,13 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             document.getElementById('penilaianCatatan').value = (myDetail && myDetail.catatan) ? myDetail.catatan : '';
             document.getElementById('penilaianStatusKelulusan').value = 'Lulus';
 
-            renderPenilaianRubrik((myDetail && myDetail.detail) ? myDetail.detail : null, myNilai);
+            // 4. Setup Riwayat Versi Selector
+            const peminatanVal = document.getElementById('penilaianPeminatanSelect')?.value || data.peminatan;
+            setupPenilaianVersionSelector(prodiKey, peminatanVal);
 
-            if (myDetail && Array.isArray(myDetail.detail) && myDetail.detail.length > 0) {
-                setTimeout(() => {
-                    myDetail.detail.forEach((d) => {
-                        const inp = document.querySelector(`.rubrik-score-input[data-crit-id="${d.id}"]`);
-                        if (inp && d.nilai !== undefined && d.nilai !== null) inp.value = d.nilai;
-                    });
-                    calculatePenilaianScore();
-                }, 30);
-            } else {
-                calculatePenilaianScore();
-            }
+            // 5. Render Rubrik Dinamis dengan smart-mapping nilai lama
+            renderPenilaianRubrik(currentModalSavedDetails, myNilai);
+            calculatePenilaianScore();
         }
 
         window.closeModalPenilaianSidang = function () {
@@ -3853,54 +4324,201 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             if (modal) modal.classList.remove('active');
         };
 
-        function setupPenilaianPeminatanOptions(prodiKey, selectedPeminatan) {
-            const sel = document.getElementById('penilaianPeminatanSelect');
-            if (!sel) return;
-            const prodiData = RUBRIK_PENILAIAN_PRODI[prodiKey] || RUBRIK_PENILAIAN_PRODI['DKV'];
-            const list = Object.keys(prodiData.peminatan || {});
-            let html = '';
-            list.forEach(p => {
-                const isSel = (p === selectedPeminatan) || (!selectedPeminatan && p === list[0]);
-                html += `<option value="${p}" ${isSel ? 'selected' : ''}>${p}</option>`;
-            });
-            sel.innerHTML = html;
+        // Inisialisasi dropdown Riwayat Versi untuk Form Penilaian
+        function setupPenilaianVersionSelector(prodiKey, peminatanKey, preferredVersionId = null) {
+            const wrapper = document.getElementById('penilaianRubrikHistoryWrapper');
+            const selector = document.getElementById('penilaianRubrikVersionSelector');
+            if (!wrapper || !selector) return null;
+
+            const prodiData = RUBRIK_PENILAIAN_PRODI[prodiKey] || {};
+            const historyList = (prodiData._history && prodiData._history[peminatanKey])
+                || (stateMasterRubriksList.find(m => m.prodi === prodiKey && m.peminatan === peminatanKey)?.history_versions)
+                || [];
+
+            if (historyList.length > 0) {
+                wrapper.classList.remove('hidden');
+                wrapper.classList.add('flex');
+                let optHtml = '';
+                let defaultSelId = preferredVersionId;
+
+                // Urutkan versi terbaru di paling atas
+                historyList.sort((a, b) => (parseInt(b.versi || 1) - parseInt(a.versi || 1)));
+
+                historyList.forEach((v, idx) => {
+                    const isPub = (v.status || 'published').toLowerCase() === 'published';
+                    const tag = isPub ? 'Aktif' : 'Arsip';
+                    if (!defaultSelId && (isPub || idx === 0)) {
+                        defaultSelId = v.id;
+                    }
+                    const isSel = (String(v.id) === String(defaultSelId));
+                    optHtml += `<option value="${v.id}" ${isSel ? 'selected' : ''}>v${v.versi || 1} (${tag})</option>`;
+                });
+
+                selector.innerHTML = optHtml;
+                currentSelectedVersionId = defaultSelId || historyList[0].id;
+                return historyList.find(v => String(v.id) === String(currentSelectedVersionId)) || historyList[0];
+            } else {
+                wrapper.classList.add('hidden');
+                wrapper.classList.remove('flex');
+                selector.innerHTML = '';
+                currentSelectedVersionId = null;
+                return null;
+            }
         }
+
+        window.onPenilaianVersionChange = function (versionId) {
+            currentSelectedVersionId = versionId;
+            renderPenilaianRubrik(currentModalSavedDetails, 0);
+            calculatePenilaianScore();
+
+            // Beri notifikasi toast kecil saat ganti versi
+            const prodiSelect = document.getElementById('penilaianProdiSelect');
+            const peminatanSelect = document.getElementById('penilaianPeminatanSelect');
+            const prodiKey = detectProdiKey(prodiSelect ? prodiSelect.value : 'DKV');
+            const peminatanKey = peminatanSelect ? peminatanSelect.value : '';
+            const historyList = (RUBRIK_PENILAIAN_PRODI[prodiKey]?._history?.[peminatanKey]) || [];
+            const targetVer = historyList.find(v => String(v.id) === String(versionId));
+            if (targetVer) {
+                const tag = (targetVer.status === 'published') ? 'Aktif' : 'Arsip';
+                showToast(`Memuat butir kriteria Rubrik Versi ${targetVer.versi || 1} (${tag})`, 'info');
+            }
+        };
 
         window.onPenilaianProdiChange = function (prodiVal) {
             const prodiKey = detectProdiKey(prodiVal);
             setupPenilaianPeminatanOptions(prodiKey, null);
-            renderPenilaianRubrik(null, 0);
-            calculatePenilaianScore();
-        };
-        window.onPenilaianPeminatanChange = function () {
-            renderPenilaianRubrik(null, 0);
+            const peminatanVal = document.getElementById('penilaianPeminatanSelect')?.value || '';
+            setupPenilaianVersionSelector(prodiKey, peminatanVal);
+            renderPenilaianRubrik(currentModalSavedDetails, 0);
             calculatePenilaianScore();
         };
 
+        window.onPenilaianPeminatanChange = function () {
+            const prodiSelect = document.getElementById('penilaianProdiSelect');
+            const peminatanSelect = document.getElementById('penilaianPeminatanSelect');
+            const prodiKey = detectProdiKey(prodiSelect ? prodiSelect.value : 'DKV');
+            const peminatanKey = peminatanSelect ? peminatanSelect.value : '';
+            setupPenilaianVersionSelector(prodiKey, peminatanKey);
+            renderPenilaianRubrik(currentModalSavedDetails, 0);
+            calculatePenilaianScore();
+        };
+
+        // Render Rubrik Dinamis dengan Smart Mapping untuk Edit Nilai
         window.renderPenilaianRubrik = function (existingDetail, myNilai) {
             const container = document.getElementById('penilaianRubrikContainer');
             const prodiSelect = document.getElementById('penilaianProdiSelect');
             const peminatanSelect = document.getElementById('penilaianPeminatanSelect');
             const totalBobotLabel = document.getElementById('penilaianTotalBobotLabel');
+            const versionBadge = document.getElementById('penilaianRubrikVersionBadge');
+            const versionText = document.getElementById('penilaianRubrikVersionText');
+            const masaBerlakuInfo = document.getElementById('penilaianRubrikMasaBerlakuInfo');
+            const masaBerlakuText = document.getElementById('penilaianRubrikMasaBerlakuText');
+            const judulInfo = document.getElementById('penilaianRubrikJudulInfo');
+
             if (!container) return;
+
             const prodiKey = detectProdiKey(prodiSelect ? prodiSelect.value : 'DKV');
             const peminatanKey = peminatanSelect ? peminatanSelect.value : '';
-            const prodiData = RUBRIK_PENILAIAN_PRODI[prodiKey] || RUBRIK_PENILAIAN_PRODI['DKV'];
-            const criteriaList = prodiData.peminatan[peminatanKey] || prodiData.peminatan[Object.keys(prodiData.peminatan)[0]] || [];
+            const prodiData = RUBRIK_PENILAIAN_PRODI[prodiKey] || RUBRIK_PENILAIAN_PRODI['DKV'] || {};
+            const peminatanMap = prodiData.peminatan || {};
+            const historyList = (prodiData._history && prodiData._history[peminatanKey]) || [];
 
-            let mapNilaiTersimpan = {};
-            if (existingDetail && Array.isArray(existingDetail)) {
-                existingDetail.forEach((d) => { if (d && d.id) mapNilaiTersimpan[d.id] = d.nilai; });
+            // Cari versi spesifik yang dipilih dari dropdown riwayat versi
+            let targetVersion = null;
+            if (currentSelectedVersionId && historyList.length > 0) {
+                targetVersion = historyList.find(v => String(v.id) === String(currentSelectedVersionId));
+            }
+            if (!targetVersion && historyList.length > 0) {
+                targetVersion = historyList[0];
+            }
+
+            let criteriaList = [];
+            if (targetVersion && Array.isArray(targetVersion.kriteria) && targetVersion.kriteria.length > 0) {
+                criteriaList = targetVersion.kriteria.map((crit, idx) => ({
+                    id: crit.id || crit.kode_kriteria || ('k' + (idx + 1)),
+                    title: crit.title || crit.nama_kriteria || `Kriteria ${idx + 1}`,
+                    desc: crit.desc || crit.deskripsi || '',
+                    bobot: parseFloat(crit.bobot) || 0
+                }));
+            } else {
+                criteriaList = peminatanMap[peminatanKey] || null;
+                if (!criteriaList) {
+                    const firstKey = Object.keys(peminatanMap)[0];
+                    criteriaList = firstKey ? peminatanMap[firstKey] : [];
+                }
+            }
+
+            // Update badge versi & masa berlaku
+            const metaInfo = targetVersion || (prodiData._meta && prodiData._meta[peminatanKey]) || currentActiveRubrik || null;
+            if (metaInfo) {
+                const vNum = metaInfo.versi || 1;
+                const isPub = (metaInfo.status || 'published').toLowerCase() === 'published';
+                if (versionBadge && versionText) {
+                    if (isPub) {
+                        versionBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300';
+                        versionText.innerHTML = `<i class="bi bi-shield-check mr-1 text-emerald-600"></i>Versi ${vNum} (Aktif)`;
+                    } else {
+                        versionBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300';
+                        versionText.innerHTML = `<i class="bi bi-box-archive mr-1 text-amber-600"></i>Versi ${vNum} (Arsip)`;
+                    }
+                    versionBadge.classList.remove('hidden');
+                }
+
+                if (masaBerlakuInfo && masaBerlakuText) {
+                    const tglMulai = metaInfo.tanggal_publish_formatted || metaInfo.tanggal_publish || 'Terbit';
+                    const tglSelesai = metaInfo.tanggal_berakhir_formatted || metaInfo.tanggal_berakhir || 'Aktif Sekarang';
+                    masaBerlakuText.innerHTML = `<i class="bi bi-calendar-check text-violet-600"></i> Berlaku: ${tglMulai} s.d. ${tglSelesai}`;
+                    if (judulInfo) judulInfo.textContent = metaInfo.judul_rubrik || '';
+                    masaBerlakuInfo.classList.remove('hidden');
+                }
+            } else {
+                if (versionBadge) versionBadge.classList.add('hidden');
+                if (masaBerlakuInfo) masaBerlakuInfo.classList.add('hidden');
+            }
+
+            // SMART MAPPING NILAI LAMA SAAT EDIT NILAI
+            // 1. Prioritas ID kriteria (k1, k2, etc.)
+            // 2. Normalisasi kecocokan judul kriteria
+            // 3. Fallback indeks urutan
+            const savedScoresById = {};
+            const savedScoresByTitle = {};
+            const savedScoresByIndex = [];
+
+            if (Array.isArray(existingDetail) && existingDetail.length > 0) {
+                existingDetail.forEach((d, idx) => {
+                    if (d) {
+                        const val = (d.nilai !== undefined && d.nilai !== null && d.nilai !== '') ? parseFloat(d.nilai) : null;
+                        if (val !== null && !isNaN(val)) {
+                            if (d.id) savedScoresById[String(d.id).trim()] = val;
+                            if (d.title) savedScoresByTitle[String(d.title).trim().toLowerCase()] = val;
+                            savedScoresByIndex[idx] = val;
+                        }
+                    }
+                });
             }
 
             let totalBobot = 0;
             let html = '';
+
             criteriaList.forEach((crit, idx) => {
-                const bobot = parseFloat(crit.bobot) || 25;
+                const bobot = parseFloat(crit.bobot) || 0;
                 totalBobot += bobot;
-                const val = (mapNilaiTersimpan[crit.id] !== undefined && mapNilaiTersimpan[crit.id] !== null) ? mapNilaiTersimpan[crit.id] : '';
+
+                // Smart Mapping
+                let val = '';
+                const cId = String(crit.id || ('k' + (idx + 1))).trim();
+                const cTitle = String(crit.title || '').trim().toLowerCase();
+
+                if (savedScoresById[cId] !== undefined) {
+                    val = savedScoresById[cId];
+                } else if (savedScoresByTitle[cTitle] !== undefined) {
+                    val = savedScoresByTitle[cTitle];
+                } else if (savedScoresByIndex[idx] !== undefined) {
+                    val = savedScoresByIndex[idx];
+                }
+
                 html += `
-                    <div class="rubrik-row">
+                    <div class="rubrik-row p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs transition-all hover:border-amber-300">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div class="flex items-start gap-3 flex-1 min-w-0">
                                 <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-md shadow-amber-500/20 mt-0.5">${idx + 1}</div>
@@ -3914,16 +4532,18 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                             </div>
                             <div class="flex items-center gap-3 shrink-0 self-end sm:self-center">
                                 <span class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200">Bobot: <strong class="text-amber-700">${bobot}%</strong></span>
-                                <input type="number" min="0" max="100" step="0.5" data-bobot="${bobot}" data-crit-id="${_penilaianEscapeHtml(crit.id)}" data-crit-title="${_penilaianEscapeHtml(crit.title)}" data-crit-desc="${_penilaianEscapeHtml(crit.desc)}" value="${val}" placeholder="0-100" oninput="calculatePenilaianScore()" class="rubrik-score-input" required>
+                                <input type="number" min="0" max="100" step="0.5" data-bobot="${bobot}" data-crit-id="${_penilaianEscapeHtml(cId)}" data-crit-title="${_penilaianEscapeHtml(crit.title)}" data-crit-desc="${_penilaianEscapeHtml(crit.desc)}" value="${val}" placeholder="0-100" oninput="calculatePenilaianScore()" class="rubrik-score-input" required>
                             </div>
                         </div>
                     </div>
                 `;
             });
+
             if (totalBobotLabel) {
                 totalBobotLabel.textContent = totalBobot + '%';
-                totalBobotLabel.className = (totalBobot === 100) ? 'text-slate-700 font-extrabold' : 'text-rose-600 font-extrabold';
+                totalBobotLabel.className = (Math.round(totalBobot) === 100) ? 'text-slate-700 font-extrabold' : 'text-rose-600 font-extrabold';
             }
+
             container.innerHTML = html;
         };
 
@@ -3934,15 +4554,22 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             const statusKelEl  = document.getElementById('penilaianStatusKelulusan');
             let totalWeighted = 0;
             let hasAnyInput = false;
+
             inputs.forEach(inp => {
                 const val = parseFloat(inp.value);
                 const bobot = parseFloat(inp.getAttribute('data-bobot')) || 0;
-                if (!isNaN(val)) { totalWeighted += (val * bobot) / 100; hasAnyInput = true; }
+                if (!isNaN(val)) {
+                    totalWeighted += (val * bobot) / 100;
+                    hasAnyInput = true;
+                }
             });
+
             const finalScore = hasAnyInput ? totalWeighted : 0;
             if (totalScoreEl) totalScoreEl.textContent = finalScore.toFixed(2);
+
             let grade = '-';
             let gradeClass = 'grade-badge grade-none';
+
             if (hasAnyInput) {
                 if (finalScore >= 85)         { grade = 'A';  gradeClass = 'grade-badge grade-A'; }
                 else if (finalScore >= 77.5)  { grade = 'AB'; gradeClass = 'grade-badge grade-AB'; }
@@ -3952,15 +4579,18 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 else if (finalScore >= 45)    { grade = 'D';  gradeClass = 'grade-badge grade-D'; }
                 else                          { grade = 'E';  gradeClass = 'grade-badge grade-E'; }
             }
+
             if (gradeBadgeEl) {
                 gradeBadgeEl.textContent = grade;
                 gradeBadgeEl.className = gradeClass;
             }
+
             if (statusKelEl && hasAnyInput) {
                 if (finalScore >= 70) statusKelEl.value = 'Lulus';
                 else if (finalScore >= 55) statusKelEl.value = 'Lulus dengan Revisi';
                 else statusKelEl.value = 'Tidak Lulus';
             }
+
             return { score: finalScore, grade: grade };
         };
 
@@ -3969,10 +4599,16 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
             const nim = document.getElementById('penilaianNim')?.value;
             const catatan = document.getElementById('penilaianCatatan')?.value || '';
             const calc = calculatePenilaianScore();
-            if (!nim) { Swal.fire({ icon:'error', title:'Error', text:'NIM tidak valid.' }); return; }
+
+            if (!nim) {
+                Swal.fire({ icon:'error', title:'Error', text:'NIM mahasiswa tidak valid.' });
+                return;
+            }
+
             const scoreInputs = document.querySelectorAll('.rubrik-score-input');
             const details = [];
             let allValid = true;
+
             scoreInputs.forEach(inp => {
                 const val = parseFloat(inp.value);
                 if (isNaN(val) || val < 0 || val > 100) allValid = false;
@@ -3984,37 +4620,58 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                     nilai: isNaN(val) ? 0 : val,
                 });
             });
+
             if (!allValid) {
-                Swal.fire({ icon:'warning', title:'Nilai Belum Lengkap', text:'Pastikan seluruh kolom nilai terisi (0-100).' });
+                Swal.fire({ icon:'warning', title:'Nilai Belum Lengkap', text:'Pastikan seluruh kolom nilai kriteria terisi angka antara 0 sampai 100.' });
                 return;
             }
+
             const btn = document.getElementById('btnSubmitPenilaianSidang');
-            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-arrow-repeat inline-block animate-spin"></i> Menyimpan...'; }
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="bi bi-arrow-repeat inline-block animate-spin mr-1.5"></i> Menyimpan...';
+            }
+
             const fd = new FormData();
             fd.append('nim', nim);
             fd.append('posisi', MODEL_POSISI);
             fd.append('nilai_akhir', calc.score.toFixed(2));
             fd.append('catatan', catatan);
             fd.append('detail_penilaian', JSON.stringify(details));
-            fetch('<?= site_url('mahasiswa/simpan_nilai_sidang_ajax') ?>', {
-                method: 'POST', body: fd,
+
+            fetch('<?= site_url('dosen_bimbingan/simpan_nilai_sidang_ajax') ?>', {
+                method: 'POST',
+                body: fd,
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
             .then(r => r.json())
             .then(res => {
                 if (res && res.status) {
                     closeModalPenilaianSidang();
-                    Swal.fire({ icon:'success', title:'Berhasil', text: res.message || 'Nilai sidang tersimpan.' }).then(() => { fetchBimbinganData(true); });
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Nilai Berhasil Disimpan',
+                        text: res.message || 'Penilaian sidang tugas akhir berhasil diperbarui.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        if (typeof fetchBimbinganData === 'function') {
+                            fetchBimbinganData(true);
+                        }
+                    });
                 } else {
-                    Swal.fire({ icon:'error', title:'Gagal', text: res.message || 'Gagal menyimpan nilai.' });
+                    Swal.fire({ icon:'error', title:'Gagal Menyimpan', text: res.message || 'Gagal menyimpan nilai sidang.' });
                 }
             })
             .catch(err => {
                 console.error(err);
-                Swal.fire({ icon:'error', title:'Error', text:'Terjadi kesalahan sistem.' });
+                Swal.fire({ icon:'error', title:'Error Sistem', text:'Terjadi kesalahan koneksi saat menyimpan penilaian.' });
             })
             .finally(() => {
-                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-save-fill"></i> Simpan Penilaian Sidang'; }
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-save-fill"></i> Simpan Penilaian Sidang';
+                }
             });
         };
     </script>
@@ -4022,6 +4679,246 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
     <div id="floatingBapContainer" class="fixed bottom-0 left-16 sm:left-20 top-16 pointer-events-none z-[100000] p-3 sm:p-5 flex flex-col items-start justify-start gap-4 overflow-y-auto max-h-[calc(100vh-4rem)] scroll-smooth" style="display: none; max-width: 65vw;"></div>
 
     <script>
+        // ============================================================
+        // MODAL DETAIL RIWAYAT VERSI RUBRIK SIDANG
+        // ============================================================
+        window.openRubrikSidangOverviewModal = function (preferredProdi = null, preferredPeminatan = null) {
+            isOpeningFromForm = false;
+            openDetailRiwayatRubrikCommon(preferredProdi, preferredPeminatan);
+        };
+
+        window.openModalDetailRiwayatRubrikFromForm = function () {
+            isOpeningFromForm = true;
+            const curProdi = document.getElementById('penilaianProdiSelect')?.value || 'DKV';
+            const curPem = document.getElementById('penilaianPeminatanSelect')?.value || '';
+            openDetailRiwayatRubrikCommon(curProdi, curPem);
+        };
+
+        function openDetailRiwayatRubrikCommon(preferredProdi = null, preferredPeminatan = null) {
+            const modal = document.getElementById('modalDetailRiwayatRubrik');
+            if (!modal) return;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
+
+            const container = document.getElementById('overviewVersionListContainer');
+            if (container) {
+                container.innerHTML = '<div class="text-center py-10 text-slate-400 text-xs"><i class="bi bi-arrow-repeat inline-block animate-spin mr-1"></i> Memuat riwayat versi rubrik...</div>';
+            }
+
+            // Jika state master rubrik masih kosong, fetch dari endpoint dosen_bimbingan
+            if (!stateMasterRubriksList || stateMasterRubriksList.length === 0) {
+                fetch('<?= site_url('dosen_bimbingan/ajax_get_all_master_rubrik') ?>', {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res && res.status && Array.isArray(res.data)) {
+                        syncMasterRubrikFromData(res.data);
+                    }
+                    populateOverviewModal(preferredProdi, preferredPeminatan);
+                })
+                .catch(err => {
+                    console.error(err);
+                    populateOverviewModal(preferredProdi, preferredPeminatan);
+                });
+            } else {
+                populateOverviewModal(preferredProdi, preferredPeminatan);
+            }
+        }
+
+        window.closeModalDetailRiwayatRubrik = function () {
+            const modal = document.getElementById('modalDetailRiwayatRubrik');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            // Jangan hilangkan overflow-hidden jika modal penilaian sedang aktif
+            const modalPenilaian = document.getElementById('modalPenilaianSidang');
+            if (!modalPenilaian || !modalPenilaian.classList.contains('active')) {
+                document.body.classList.remove('overflow-hidden');
+            }
+        };
+
+        function populateOverviewModal(preferredProdi = null, preferredPeminatan = null) {
+            const prodiSel = document.getElementById('overviewProdiSelect');
+            const pemSel = document.getElementById('overviewPeminatanSelect');
+            if (!prodiSel || !pemSel) return;
+
+            const prodiKeys = Object.keys(RUBRIK_PENILAIAN_PRODI);
+            let pHtml = '';
+            const activeProdi = preferredProdi ? detectProdiKey(preferredProdi) : (prodiKeys[0] || 'DKV');
+
+            prodiKeys.forEach(k => {
+                const label = RUBRIK_PENILAIAN_PRODI[k].name || k;
+                const isSel = (k === activeProdi);
+                pHtml += `<option value="${k}" ${isSel ? 'selected' : ''}>${k} - ${label}</option>`;
+            });
+            prodiSel.innerHTML = pHtml;
+
+            setupOverviewPeminatanOptions(activeProdi, preferredPeminatan);
+            renderOverviewVersionCards(activeProdi, pemSel.value);
+        }
+
+        function setupOverviewPeminatanOptions(prodiKey, selectedPeminatan = null) {
+            const pemSel = document.getElementById('overviewPeminatanSelect');
+            if (!pemSel) return;
+            const prodiData = RUBRIK_PENILAIAN_PRODI[prodiKey] || RUBRIK_PENILAIAN_PRODI['DKV'] || {};
+            const pemList = Object.keys(prodiData.peminatan || {});
+            let html = '';
+            let defaultPem = selectedPeminatan;
+
+            pemList.forEach(p => {
+                if (!defaultPem) defaultPem = p;
+                const isSel = (p === selectedPeminatan) || (!selectedPeminatan && p === defaultPem);
+                html += `<option value="${p}" ${isSel ? 'selected' : ''}>${p}</option>`;
+            });
+
+            pemSel.innerHTML = html;
+        }
+
+        window.onOverviewProdiChange = function (prodiVal) {
+            setupOverviewPeminatanOptions(prodiVal, null);
+            const pemSel = document.getElementById('overviewPeminatanSelect');
+            renderOverviewVersionCards(prodiVal, pemSel ? pemSel.value : '');
+        };
+
+        window.onOverviewPeminatanChange = function (pemVal) {
+            const prodiSel = document.getElementById('overviewProdiSelect');
+            renderOverviewVersionCards(prodiSel ? prodiSel.value : 'DKV', pemVal);
+        };
+
+        function renderOverviewVersionCards(prodi, peminatan) {
+            const container = document.getElementById('overviewVersionListContainer');
+            if (!container) return;
+
+            const prodiData = RUBRIK_PENILAIAN_PRODI[prodi] || {};
+            let historyList = (prodiData._history && prodiData._history[peminatan]) || [];
+
+            if (historyList.length === 0) {
+                const group = stateMasterRubriksList.find(m => m.prodi === prodi && m.peminatan === peminatan);
+                if (group && Array.isArray(group.history_versions) && group.history_versions.length > 0) {
+                    historyList = group.history_versions;
+                }
+            }
+
+            if (historyList.length === 0) {
+                // Fallback dari preset lokal jika belum ada di database
+                const fallbackCrit = prodiData.peminatan?.[peminatan] || [];
+                historyList = [{
+                    id: 'local_preset',
+                    versi: 1,
+                    judul_rubrik: `Rubrik Sidang Tugas Akhir ${prodi} - ${peminatan}`,
+                    total_bobot: 100,
+                    status: 'published',
+                    tanggal_publish_formatted: 'Preset Kurikulum Default',
+                    tanggal_berakhir_formatted: 'Aktif (Sekarang)',
+                    kriteria: fallbackCrit
+                }];
+            }
+
+            // Urutkan versi DESC (versi terbaru di paling atas)
+            historyList.sort((a, b) => parseInt(b.versi || 1) - parseInt(a.versi || 1));
+
+            let html = '';
+            historyList.forEach(v => {
+                const isPub = (v.status || 'published').toLowerCase() === 'published';
+                const statusBadge = isPub
+                    ? '<span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5"><i class="bi bi-circle-fill text-[8px] text-emerald-600 animate-pulse"></i> Published (Aktif)</span>'
+                    : '<span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1.5"><i class="bi bi-box-archive text-amber-600"></i> Arsip / Riwayat Lampau</span>';
+
+                const criteria = Array.isArray(v.kriteria) ? v.kriteria : [];
+
+                let critRowsHtml = '';
+                criteria.forEach((c, idx) => {
+                    const cTitle = c.title || c.nama_kriteria || `Kriteria ${idx + 1}`;
+                    const cDesc = c.desc || c.deskripsi || '-';
+                    const cBobot = parseFloat(c.bobot) || 0;
+                    critRowsHtml += `
+                        <tr class="border-b border-slate-100 hover:bg-slate-50/80 transition-colors text-xs">
+                            <td class="py-2.5 px-3 font-mono font-bold text-slate-500 text-center">${idx + 1}</td>
+                            <td class="py-2.5 px-3 font-extrabold text-slate-800">${_penilaianEscapeHtml(cTitle)}</td>
+                            <td class="py-2.5 px-3 text-slate-600 leading-relaxed">${_penilaianEscapeHtml(cDesc)}</td>
+                            <td class="py-2.5 px-3 font-mono font-black text-amber-700 text-right">${cBobot}%</td>
+                        </tr>
+                    `;
+                });
+
+                let applyButtonHtml = '';
+                if (isOpeningFromForm) {
+                    applyButtonHtml = `
+                        <button type="button" onclick="applyVersionToPenilaian('${v.id}')"
+                                class="px-3.5 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-extrabold text-xs shadow-sm transition active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                            <i class="bi bi-check2-circle"></i> Gunakan Versi Ini
+                        </button>
+                    `;
+                }
+
+                html += `
+                    <div class="rounded-2xl border-2 ${isPub ? 'border-violet-300 bg-white shadow-md shadow-violet-500/5' : 'border-slate-200 bg-slate-50/50'} overflow-hidden transition-all">
+                        <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${isPub ? 'bg-gradient-to-r from-violet-50/60 to-white' : 'bg-slate-100/50'}">
+                            <div class="flex items-center gap-3">
+                                <span class="px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider ${isPub ? 'bg-violet-600 text-white' : 'bg-slate-200 text-slate-700'}">
+                                    Versi ${v.versi || 1}
+                                </span>
+                                <div>
+                                    <h4 class="text-xs sm:text-sm font-extrabold text-slate-900">${_penilaianEscapeHtml(v.judul_rubrik || ('Rubrik Sidang ' + prodi + ' - ' + peminatan))}</h4>
+                                    <p class="text-[11px] text-slate-500 mt-0.5">
+                                        Masa berlaku: <strong>${v.tanggal_publish_formatted || v.tanggal_publish || 'Awal'}</strong> s.d. <strong>${v.tanggal_berakhir_formatted || v.tanggal_berakhir || 'Aktif Sekarang'}</strong>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2.5 self-end sm:self-center">
+                                ${statusBadge}
+                                ${applyButtonHtml}
+                            </div>
+                        </div>
+
+                        <div class="p-3 sm:p-4 overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="text-[10px] uppercase font-black tracking-wider text-slate-400 border-b border-slate-200">
+                                        <th class="py-2 px-3 text-center w-12">#</th>
+                                        <th class="py-2 px-3 w-48">Kriteria</th>
+                                        <th class="py-2 px-3">Indikator Penilaian &amp; Deskripsi</th>
+                                        <th class="py-2 px-3 text-right w-24">Bobot</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${critRowsHtml || '<tr><td colspan="4" class="text-center py-4 text-slate-400 text-xs">Belum ada butir kriteria terdaftar.</td></tr>'}
+                                </tbody>
+                                <tfoot>
+                                    <tr class="bg-slate-50 font-bold text-xs text-slate-800">
+                                        <td colspan="3" class="py-2 px-3 text-right uppercase tracking-wider font-extrabold">Total Bobot:</td>
+                                        <td class="py-2 px-3 text-right font-black font-mono text-amber-700">${v.total_bobot || 100}%</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        window.applyVersionToPenilaian = function (versionId) {
+            const selector = document.getElementById('penilaianRubrikVersionSelector');
+            if (selector) {
+                selector.value = versionId;
+            }
+            onPenilaianVersionChange(versionId);
+            closeModalDetailRiwayatRubrik();
+            Swal.fire({
+                icon: 'success',
+                title: 'Versi Diterapkan',
+                text: 'Kriteria formulir penilaian telah disesuaikan dengan versi yang Anda pilih.',
+                timer: 1600,
+                showConfirmButton: false
+            });
+        };
+
         window.activeBapPopups = [];
 
         function toggleBapPopup(nim, nama, type) {

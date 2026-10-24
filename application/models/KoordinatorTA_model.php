@@ -1637,6 +1637,7 @@ class KoordinatorTA_model extends CI_Model {
             ))
         ));
 
+        $this->_sync_guidance_kelulusan_sidang($student, $status_publish);
         $msg = ($status_publish === 'Published')
             ? "Nilai akhir sidang {$namaMhs} ({$nim}) berhasil dipublikasikan secara langsung ke mahasiswa!"
             : "Publikasi nilai {$namaMhs} ({$nim}) berhasil dijadwalkan pada " . date('d M Y, H:i', strtotime($finalPublishDate)) . " WIB.";
@@ -1651,8 +1652,64 @@ class KoordinatorTA_model extends CI_Model {
     }
 
     /**
-     * Batch / Publikasi Nilai Massal untuk Mahasiswa Terpilih
+     * Sinkronisasi status kelulusan sidang ke tabel guidance saat Koordinator TA mempublikasikan nilai.
+     * Sistem mengecek apakah rata-rata nilai sidang memenuhi syarat kelulusan (>= 55).
+     * Jika Lulus dan status Published, ubah status tahap di guidance (status_preview) menjadi 'lulus' dan lulus_sidang = 1.
+     * Jika Draft atau Tidak Lulus, kembalikan status tahap ke 'sidang' dan lulus_sidang = 0.
      */
+    private function _sync_guidance_kelulusan_sidang($student, $status_publish = 'Published') {
+        if (!$this->db->table_exists('guidance')) return;
+        $id_guidance = $student['guidance_id'] ?? ($student['id_guidance'] ?? null);
+        $nim = $student['nim'] ?? ($student['user_id'] ?? null);
+
+        $n1  = (float)($student['nilaisidang_pembimbing1'] ?? 0);
+        $n2  = (float)($student['nilaisidang_pembimbing2'] ?? 0);
+        $np1 = (float)($student['nilaisidang_penguji1'] ?? 0);
+        $np2 = (float)($student['nilaisidang_penguji2'] ?? 0);
+        $is_lengkap = ($n1 > 0 && $n2 > 0 && $np1 > 0 && $np2 > 0);
+
+        $nilai_akhir = $is_lengkap ? round(($n1 + $n2 + $np1 + $np2) / 4, 2) : (float)($student['nilai_akhir_sidang'] ?? 0);
+        $status_kel = strtolower(trim($student['status_kelulusan_sidang'] ?? ''));
+        $is_lulus_score = ($is_lengkap && $nilai_akhir >= 55 && $status_kel !== 'tidak lulus');
+
+        // Pastikan kolom status_preview di tabel guidance berformat VARCHAR(50) agar nilai 'lulus' tidak terpotong oleh ENUM lama
+        $prev_dbg = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+        @$this->db->query("ALTER TABLE `guidance` MODIFY COLUMN `status_preview` VARCHAR(50) NULL DEFAULT 'preview1'");
+        $this->db->db_debug = $prev_dbg;
+
+        $upd = array();
+        if ($status_publish === 'Published' && $is_lulus_score) {
+            if ($this->db->field_exists('lulus_sidang', 'guidance')) $upd['lulus_sidang'] = 1;
+            if ($this->db->field_exists('status_preview', 'guidance')) $upd['status_preview'] = 'lulus';
+        } elseif ($status_publish === 'Draft' || !$is_lulus_score) {
+            if ($this->db->field_exists('lulus_sidang', 'guidance')) $upd['lulus_sidang'] = 0;
+            if ($this->db->field_exists('status_preview', 'guidance')) $upd['status_preview'] = 'sidang';
+        }
+
+        if (empty($upd)) return;
+
+        $target_ids = array_values(array_unique(array_filter([
+            $nim,
+            $student['user_id'] ?? null,
+            'usr_mhs_' . $nim,
+            'mhs_' . $nim,
+            'usr_' . $nim,
+            'gdn_' . $nim
+        ])));
+
+        $this->db->group_start();
+        if (!empty($id_guidance)) {
+            $this->db->or_where('id', $id_guidance);
+        }
+        if (!empty($target_ids)) {
+            $this->db->or_where_in('id_mhs', $target_ids);
+            $this->db->or_where_in('id', $target_ids);
+        }
+        $this->db->group_end();
+        $this->db->update('guidance', $upd);
+    }
+
     public function batch_publish_nilai_ajax($nims, $status_publish = 'Published', $tgl_publish = null, $catatan = '') {
         if (empty($nims) || !is_array($nims)) {
             return array('status' => false, 'message' => 'Pilih setidaknya satu mahasiswa untuk dipublikasikan nilainya.');
@@ -1690,6 +1747,7 @@ class KoordinatorTA_model extends CI_Model {
                         'catatan_koor'     => $catatan
                     ))
                 ));
+                $this->_sync_guidance_kelulusan_sidang($student, $status_publish);
                 $successList[] = "{$namaMhs} ({$nim})";
             } else {
                 $belumTerisi = !empty($student['komponen_belum_terisi']) ? implode(', ', $student['komponen_belum_terisi']) : 'Nilai belum lengkap';

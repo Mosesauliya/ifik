@@ -67,7 +67,7 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2 self-start sm:self-auto">
+                <div class="flex items-center gap-2 self-start sm:self-auto" id="overallStatusBadgeSidang">
                     <?php if ($detail['is_approved']): ?>
                         <span class="px-3.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200 flex items-center gap-1.5 shadow-xs">
                             <i class="bi bi-check-circle-fill text-emerald-500"></i> Status: Disetujui Admin LAA
@@ -821,6 +821,18 @@
                             statusCell.innerHTML = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200"><i class="bi bi-x-circle-fill"></i> Revisi Admin LAA</span>${catHtml}`;
                         } else {
                             statusCell.innerHTML = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200"><i class="bi bi-clock-fill"></i> Pending Verifikasi</span>`;
+                        }
+                    }
+
+                    const overallBadgeEl = document.getElementById('overallStatusBadgeSidang');
+                    if (overallBadgeEl) {
+                        const allValidLocal = (window.ALL_BERKAS || []).length > 0 && (window.ALL_BERKAS || []).every(b => b.is_valid);
+                        if (res.is_approved || allValidLocal) {
+                            overallBadgeEl.innerHTML = `<span class="px-3.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200 flex items-center gap-1.5 shadow-xs"><i class="bi bi-check-circle-fill text-emerald-500"></i> Status: Disetujui Admin LAA</span>`;
+                        } else if ((res.overall_status || '').toLowerCase().includes('revisi')) {
+                            overallBadgeEl.innerHTML = `<span class="px-3.5 py-1.5 rounded-xl bg-rose-50 text-rose-700 text-xs font-bold border border-rose-200 flex items-center gap-1.5 shadow-xs"><i class="bi bi-x-circle-fill text-rose-500"></i> Status: Revisi Admin LAA</span>`;
+                        } else {
+                            overallBadgeEl.innerHTML = `<span class="px-3.5 py-1.5 rounded-xl bg-amber-50 text-amber-700 text-xs font-bold border border-amber-200 flex items-center gap-1.5 shadow-xs"><i class="bi bi-clock-fill text-amber-500"></i> Status: Pending Verifikasi</span>`;
                         }
                     }
 

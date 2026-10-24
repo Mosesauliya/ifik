@@ -10,7 +10,7 @@ class Dosen_bimbingan extends CI_Controller {
     private $allowed_status = ['Approved', 'Revision', 'Pending'];
 
     /** Tahap yang boleh di-query dari dashboard dosen */
-    private $allowed_tahap = ['Preview 1', 'Preview 2', 'Preview 3', 'Sidang'];
+    private $allowed_tahap = ['Preview 1', 'Preview 2', 'Preview 3', 'Persyaratan Sidang', 'Sidang', 'Lulus'];
 
     public function __construct() {
         parent::__construct();
@@ -83,7 +83,7 @@ class Dosen_bimbingan extends CI_Controller {
         if (!$this->_is_authorized_reviewer()) return false;
 
         $posisi = (int) $posisi;
-        if ($posisi < 1 || $posisi > 4 || empty($id_preview)) return false;
+        if ($posisi < 1 || $posisi > 4 || empty($id_preview) || strpos((string)$id_preview, 'ps_') === 0) return false;
 
         $preview = $this->Mahasiswa_model->get_preview_by_id($id_preview);
         if (empty($preview)) return false;
@@ -168,8 +168,23 @@ class Dosen_bimbingan extends CI_Controller {
         $rekap = $this->Mahasiswa_model->get_rekap_nilai_sidang($nim);
         $data['rekap_nilai_sidang'] = $rekap;
 
-        $data['is_nilai_published'] = !empty($rekap['semua_terisi']);
-        $data['is_nilai_draft']     = (!empty($rekap['has_data']) && empty($rekap['semua_terisi']));
+        // Data Jadwal & Lokasi Sidang Aktual (Sinkron dengan Koordinator TA)
+        $jadwal_sidang = $this->Mahasiswa_model->get_jadwal_sidang($nim);
+        $data['tgl_sidang']          = $jadwal_sidang['tgl_sidang'];
+        $data['jam_mulai_sidang']    = $jadwal_sidang['jam_mulai_sidang'];
+        $data['jam_selesai_sidang']  = $jadwal_sidang['jam_selesai_sidang'];
+        $data['ruangan_sidang']      = $jadwal_sidang['ruangan_sidang'];
+        $data['link_sidang']         = $jadwal_sidang['link_sidang'];
+        $data['tgl_publish_sidang']  = $jadwal_sidang['tgl_publish_sidang'];
+        $data['catatan_sidang']      = !empty($jadwal_sidang['catatan_sidang']) ? $jadwal_sidang['catatan_sidang'] : ($data['pendaftaran']['catatan_koor'] ?? '');
+        $data['is_sidang_scheduled'] = $jadwal_sidang['is_sidang_scheduled'];
+
+        $sp_mhs   = strtolower(trim($data['pendaftaran']['status_preview'] ?? ''));
+        $kel_info = $this->Mahasiswa_model->get_kelulusan_sidang_info($nim);
+
+        $is_published = ($sp_mhs === 'lulus' || !empty($kel_info['is_published']));
+        $data['is_nilai_published'] = $is_published && !empty($rekap['semua_terisi']);
+        $data['is_nilai_draft']     = !$data['is_nilai_published'] && !empty($jadwal_sidang['is_sidang_scheduled']) && (!empty($rekap['has_data']) || !empty($rekap['semua_terisi']));
 
         $data['nilai_akhir'] = !empty($rekap['nilai_akhir'])
             ? number_format((float)$rekap['nilai_akhir'], 2, '.', '')
@@ -179,16 +194,46 @@ class Dosen_bimbingan extends CI_Controller {
 
         $data['criteria_items'] = $rekap['kriteria_referensi'] ?? [];
 
-        $data['tgl_sidang']          = $data['pendaftaran']['tgl_sidang']         ?? null;
-        $data['jam_mulai_sidang']    = $data['pendaftaran']['jam_mulai_sidang']   ?? null;
-        $data['jam_selesai_sidang']  = $data['pendaftaran']['jam_selesai_sidang'] ?? null;
-        $data['ruangan_sidang']      = $data['pendaftaran']['ruangan_sidang']     ?? null;
-        $data['tgl_publish_sidang']  = $data['pendaftaran']['tgl_publish_sidang'] ?? null;
-        $data['catatan_sidang']      = $data['pendaftaran']['catatan_koor']       ?? '';
-        $data['is_sidang_scheduled'] = (!empty($data['tgl_sidang']) && !empty($data['jam_mulai_sidang']));
-
         $data['de_detail']           = $this->Mahasiswa_model->get_de_detail($nim);
         $data['is_de']               = !empty($data['de_detail']['is_de']);
+        $data['rekomendasi']         = $this->Rekomendasi_model->get_latest_submission($nim);
+
+        $this->load->model('AdminLayanan_model');
+        $berkas_ps = $this->AdminLayanan_model->get_berkas_pendaftaran_sidang($nim);
+        $ps_uploaded = 0;
+        $ps_approved = 0;
+        $ps_req_total = 0;
+        $ps_req_approved = 0;
+        $ps_revision = 0;
+        foreach ($berkas_ps as $bps) {
+            $is_req = !empty($bps['is_required']);
+            if ($is_req) $ps_req_total++;
+            if (!empty($bps['is_uploaded'])) {
+                $ps_uploaded++;
+            }
+            if (($bps['status'] ?? '') === 'Disetujui Admin LAA') {
+                $ps_approved++;
+                if ($is_req) $ps_req_approved++;
+            } elseif (($bps['status'] ?? '') === 'Revisi Admin LAA') {
+                $ps_revision++;
+            }
+        }
+        $fs_status = strtolower(trim($data['pendaftaran']['status_filesidang'] ?? ''));
+        $sp_status = strtolower(trim($data['pendaftaran']['status_preview'] ?? ''));
+        $lulus_p3_flag = (!empty($data['latest_p3']['lulus_preview3']) && (string)$data['latest_p3']['lulus_preview3'] === '1')
+            || (!empty($data['pendaftaran']['lulus_preview3']) && (string)$data['pendaftaran']['lulus_preview3'] === '1');
+        $is_ps_app = $lulus_p3_flag
+            && !in_array($sp_status, ['preview1', 'preview2', 'preview3'], true)
+            && (
+                in_array($fs_status, ['disetujui admin laa', 'approved', 'disetujui', 'lulus'], true)
+                || strpos($fs_status, 'disetujui') !== false
+                || ($ps_uploaded > 0 && !empty($berkas_ps) && $ps_approved === count($berkas_ps))
+                || ($ps_uploaded > 0 && $ps_req_total > 0 && $ps_req_approved === $ps_req_total && $ps_revision === 0)
+            );
+        $data['berkas_syarat_sidang'] = $berkas_ps;
+        $data['upload_count_ps']      = $ps_uploaded;
+        $data['is_ps_app']            = $is_ps_app;
+        $data['is_ps_revision']       = ($lulus_p3_flag && !in_array($sp_status, ['preview1', 'preview2', 'preview3'], true)) && ($ps_revision > 0 || strpos($fs_status, 'revisi') !== false);
 
         $this->load->view('mahasiswa/bimbingan_preview1', $data);
     }
@@ -200,6 +245,25 @@ class Dosen_bimbingan extends CI_Controller {
     public function upload_preview() {
         $nim = $this->_get_current_nim();
         $tahap = $this->input->post('tahap_preview') ?: 'Preview 1';
+
+        // Pengecekan blokir: jika sudah upload dan status masih Pending (belum ACC/Revisi), blokir upload ulang
+        $latest = $this->Mahasiswa_model->get_latest_preview_status($nim, $tahap);
+        if ($latest && strtolower($latest['status_pembimbing'] ?? '') === 'pending') {
+            $this->session->set_flashdata('error', "Unggah berkas diblokir: Anda masih memiliki berkas {$tahap} yang sedang dalam proses peninjauan (Pending). Anda baru dapat mengunggah kembali setelah berkas disetujui (ACC) atau memerlukan revisi.");
+            redirect('mahasiswa/bimbingan');
+            return;
+        }
+
+        if ($tahap === 'Preview 1' && !empty($latest['lulus_preview1']) && (string)$latest['lulus_preview1'] === '1') {
+            $this->session->set_flashdata('error', "Tahap Preview 1 telah selesai dan disetujui (ACC). Anda tidak dapat mengunggah ulang berkas.");
+            redirect('mahasiswa/bimbingan');
+            return;
+        }
+        if ($tahap === 'Preview 2' && !empty($latest['lulus_preview2']) && (string)$latest['lulus_preview2'] === '1') {
+            $this->session->set_flashdata('error', "Tahap Preview 2 telah selesai dan disetujui (ACC). Anda tidak dapat mengunggah ulang berkas.");
+            redirect('mahasiswa/bimbingan');
+            return;
+        }
 
         $upload_dir = './uploads/preview_ta/';
         if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
@@ -283,6 +347,29 @@ class Dosen_bimbingan extends CI_Controller {
             return;
         }
 
+        // Pengecekan blokir: jika berkas jenis ini sudah pernah diunggah dan masih Pending, blokir upload ulang
+        $riwayat_p3 = $this->Mahasiswa_model->get_riwayat_preview($nim, $tahap);
+        foreach ($riwayat_p3 as $r) {
+            if (!empty($r['file_' . $jenis])) {
+                $st = strtolower($r['status_pembimbing'] ?? '');
+                if ($st === 'pending') {
+                    echo json_encode([
+                        'status'  => false,
+                        'message' => "Unggah berkas diblokir: Berkas " . ucfirst($jenis) . " Anda sebelumnya masih dalam proses peninjauan (Pending). Harap menunggu keputusan ACC atau catatan revisi dari dosen sebelum mengunggah kembali."
+                    ]);
+                    return;
+                }
+                if ($st === 'approved') {
+                    echo json_encode([
+                        'status'  => false,
+                        'message' => "Berkas " . ucfirst($jenis) . " telah disetujui (ACC). Anda tidak perlu mengunggah ulang berkas ini."
+                    ]);
+                    return;
+                }
+                break;
+            }
+        }
+
         $config = [
             'upload_path'   => $upload_dir,
             'allowed_types' => 'pdf|doc|docx',
@@ -332,6 +419,42 @@ class Dosen_bimbingan extends CI_Controller {
         header('Content-Type: application/json');
 
         $nim = $this->_get_current_nim();
+
+        // Pengecekan rekomendasi Sidang vs Non-Sidang untuk validasi plotting jadwal & ruangan
+        $rekomen = $this->Rekomendasi_model->get_latest_submission($nim);
+        $rekomen_type = strtolower(trim($rekomen['recommendation_type'] ?? 'sidang'));
+        $is_non_sidang = ($rekomen_type === 'non_sidang');
+
+        if (!$is_non_sidang) {
+            $jadwal = $this->Mahasiswa_model->get_jadwal_sidang($nim);
+            if (empty($jadwal['is_sidang_scheduled'])) {
+                echo json_encode([
+                    'status'  => false,
+                    'message' => 'Unggah dokumen diblokir: Tanggal dan ruangan sidang Anda belum di-plotting oleh Koordinator TA. Harap menunggu hingga jadwal & ruangan sidang ditetapkan.'
+                ]);
+                return;
+            }
+        }
+
+        // Pengecekan blokir: jika berkas sidang sebelumnya masih Pending, blokir upload ulang
+        $riwayat_sidang = $this->Mahasiswa_model->get_riwayat_preview($nim, 'Sidang');
+        if (!empty($riwayat_sidang)) {
+            $st_sidang = strtolower($riwayat_sidang[0]['status_pembimbing'] ?? '');
+            if ($st_sidang === 'pending') {
+                echo json_encode([
+                    'status'  => false,
+                    'message' => 'Unggah dokumen diblokir: Berkas pendaftaran sidang Anda sedang dalam proses peninjauan/verifikasi (Pending). Harap menunggu keputusan verifikasi atau arahan revisi sebelum mengunggah kembali.'
+                ]);
+                return;
+            }
+            if ($st_sidang === 'approved') {
+                echo json_encode([
+                    'status'  => false,
+                    'message' => 'Dokumen sidang Anda telah disetujui (ACC). Pengunggahan ulang tidak diperlukan.'
+                ]);
+                return;
+            }
+        }
 
         $upload_dir = './uploads/sidang/';
         if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
@@ -688,13 +811,70 @@ class Dosen_bimbingan extends CI_Controller {
             $has_app_bimbingan   = false;
             $has_app_sitasi      = false;
             $has_app_persyaratan = false;
+            $seen_bimbingan      = false;
+            $seen_sitasi         = false;
+            $seen_persyaratan    = false;
             foreach ($riwayat_p3 as $r) {
-                if (($r['status_pembimbing'] ?? '') === 'Approved') {
-                    if (!empty($r['file_bimbingan']))   $has_app_bimbingan   = true;
-                    if (!empty($r['file_sitasi']))       $has_app_sitasi      = true;
-                    if (!empty($r['file_persyaratan']))  $has_app_persyaratan = true;
+                if (!$seen_bimbingan && !empty($r['file_bimbingan'])) {
+                    $seen_bimbingan = true;
+                    $st_b = (!empty($r['status_file_bimbingan']) && $r['status_file_bimbingan'] !== 'Pending')
+                        ? $r['status_file_bimbingan']
+                        : ($r['status_pembimbing'] ?? 'Pending');
+                    if ($st_b === 'Approved') $has_app_bimbingan = true;
+                }
+                if (!$seen_sitasi && !empty($r['file_sitasi'])) {
+                    $seen_sitasi = true;
+                    $st_s = (!empty($r['status_file_sitasi']) && $r['status_file_sitasi'] !== 'Pending')
+                        ? $r['status_file_sitasi']
+                        : ($r['status_pembimbing'] ?? 'Pending');
+                    if ($st_s === 'Approved') $has_app_sitasi = true;
+                }
+                if (!$seen_persyaratan && !empty($r['file_persyaratan'])) {
+                    $seen_persyaratan = true;
+                    $st_p = (!empty($r['status_file_persyaratan']) && $r['status_file_persyaratan'] !== 'Pending')
+                        ? $r['status_file_persyaratan']
+                        : ($r['status_pembimbing'] ?? 'Pending');
+                    if ($st_p === 'Approved') $has_app_persyaratan = true;
                 }
             }
+
+            $jadwal_sidang = $this->Mahasiswa_model->get_jadwal_sidang($nim);
+            $this->load->model('AdminLayanan_model');
+            $berkas_ps = $this->AdminLayanan_model->get_berkas_pendaftaran_sidang($nim);
+            $ps_uploaded = 0;
+            $ps_approved = 0;
+            $ps_req_total = 0;
+            $ps_req_approved = 0;
+            $ps_revision = 0;
+            foreach ($berkas_ps as $bps) {
+                $is_req = !empty($bps['is_required']);
+                if ($is_req) $ps_req_total++;
+                if (!empty($bps['is_uploaded'])) $ps_uploaded++;
+                if (($bps['status'] ?? '') === 'Disetujui Admin LAA') {
+                    $ps_approved++;
+                    if ($is_req) $ps_req_approved++;
+                } elseif (($bps['status'] ?? '') === 'Revisi Admin LAA') {
+                    $ps_revision++;
+                }
+            }
+            $g_curr = $this->Mahasiswa_model->get_guidance_by_nim($nim);
+            $fs_status = strtolower(trim($g_curr['status_filesidang'] ?? ''));
+            $sp_status = strtolower(trim($g_curr['status_preview'] ?? ''));
+            $is_p1_app_sse = (!empty($riwayat_p1[0]['lulus_preview1']) && (string)$riwayat_p1[0]['lulus_preview1'] === '1')
+                || (!empty($g_curr['lulus_preview1']) && (string)$g_curr['lulus_preview1'] === '1');
+            $is_p2_app_sse = (!empty($riwayat_p2[0]['lulus_preview2']) && (string)$riwayat_p2[0]['lulus_preview2'] === '1')
+                || (!empty($g_curr['lulus_preview2']) && (string)$g_curr['lulus_preview2'] === '1');
+            $is_p3_app_sse = (!empty($riwayat_p3[0]['lulus_preview3']) && (string)$riwayat_p3[0]['lulus_preview3'] === '1')
+                || (!empty($g_curr['lulus_preview3']) && (string)$g_curr['lulus_preview3'] === '1');
+
+            $is_ps_app = $is_p3_app_sse
+                && !in_array($sp_status, ['preview1', 'preview2', 'preview3'], true)
+                && (
+                    in_array($fs_status, ['disetujui admin laa', 'approved', 'disetujui', 'lulus'], true)
+                    || strpos($fs_status, 'disetujui') !== false
+                    || ($ps_uploaded > 0 && !empty($berkas_ps) && $ps_approved === count($berkas_ps))
+                    || ($ps_uploaded > 0 && $ps_req_total > 0 && $ps_req_approved === $ps_req_total && $ps_revision === 0)
+                );
 
             $data = [
                 'riwayat_p1'          => $riwayat_p1,
@@ -708,13 +888,24 @@ class Dosen_bimbingan extends CI_Controller {
                 'upload_count_p1'     => count($riwayat_p1),
                 'upload_count_p2'     => count($riwayat_p2),
                 'upload_count_p3'     => count($riwayat_p3),
+                'upload_count_ps'     => $ps_uploaded,
                 'upload_count_sidang' => count($riwayat_sidang),
-                'is_p1_app'           => (bool)(!empty($riwayat_p1[0]['lulus_preview1']) && (string)$riwayat_p1[0]['lulus_preview1'] === '1'),
-                'is_p2_app'           => (bool)(!empty($riwayat_p2[0]['lulus_preview2']) && (string)$riwayat_p2[0]['lulus_preview2'] === '1'),
-                'is_p3_app'           => (bool)(!empty($riwayat_p3[0]['lulus_preview3']) && (string)$riwayat_p3[0]['lulus_preview3'] === '1'),
+                'is_p1_app'           => (bool)$is_p1_app_sse,
+                'is_p2_app'           => (bool)$is_p2_app_sse,
+                'is_p3_app'           => (bool)$is_p3_app_sse,
+                'is_ps_app'           => $is_ps_app,
+                'is_ps_revision'      => ($is_p3_app_sse && !in_array($sp_status, ['preview1', 'preview2', 'preview3'], true)) && ($ps_revision > 0 || strpos($fs_status, 'revisi') !== false),
+                'berkas_syarat_sidang'=> $berkas_ps,
                 'has_app_bimbingan'   => $has_app_bimbingan,
                 'has_app_sitasi'      => $has_app_sitasi,
                 'has_app_persyaratan' => $has_app_persyaratan,
+                'tgl_sidang'          => $jadwal_sidang['tgl_sidang'],
+                'jam_mulai_sidang'    => $jadwal_sidang['jam_mulai_sidang'],
+                'jam_selesai_sidang'  => $jadwal_sidang['jam_selesai_sidang'],
+                'ruangan_sidang'      => $jadwal_sidang['ruangan_sidang'],
+                'link_sidang'         => $jadwal_sidang['link_sidang'],
+                'is_sidang_scheduled' => $jadwal_sidang['is_sidang_scheduled'],
+                'rekomendasi'         => $this->Rekomendasi_model->get_latest_submission($nim),
                 'de_detail'           => $this->Mahasiswa_model->get_de_detail($nim),
             ];
 
@@ -758,10 +949,12 @@ class Dosen_bimbingan extends CI_Controller {
         $dosen_id = $this->session->userdata('user_id');
         $students = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, $model_posisi);
         $tab_counts = [
-            'Preview 1' => 0,
-            'Preview 2' => 0,
-            'Preview 3' => 0,
-            'Sidang'    => 0,
+            'Preview 1'          => 0,
+            'Preview 2'          => 0,
+            'Preview 3'          => 0,
+            'Persyaratan Sidang' => 0,
+            'Sidang'             => 0,
+            'Lulus'              => 0,
         ];
         foreach ($students as $st) {
             $thp = $this->Mahasiswa_model->get_student_current_tahap($st);
@@ -772,14 +965,19 @@ class Dosen_bimbingan extends CI_Controller {
 
         $tahap_input = $this->input->get('tahap', TRUE);
         $tahap_map = [
-            'preview1'  => 'Preview 1',
-            'preview2'  => 'Preview 2',
-            'preview3'  => 'Preview 3',
-            'sidang'    => 'Sidang',
-            'Preview 1' => 'Preview 1',
-            'Preview 2' => 'Preview 2',
-            'Preview 3' => 'Preview 3',
-            'Sidang'    => 'Sidang',
+            'preview1'           => 'Preview 1',
+            'preview2'           => 'Preview 2',
+            'preview3'           => 'Preview 3',
+            'persyaratan_sidang' => 'Persyaratan Sidang',
+            'persyaratansidang'  => 'Persyaratan Sidang',
+            'sidang'             => 'Sidang',
+            'lulus'              => 'Lulus',
+            'Preview 1'          => 'Preview 1',
+            'Preview 2'          => 'Preview 2',
+            'Preview 3'          => 'Preview 3',
+            'Persyaratan Sidang' => 'Persyaratan Sidang',
+            'Sidang'             => 'Sidang',
+            'Lulus'              => 'Lulus',
         ];
         $is_penguji = in_array($role, ['u1', 'u2'], true);
         if ($is_penguji) {
@@ -829,10 +1027,12 @@ class Dosen_bimbingan extends CI_Controller {
         $students = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, $posisi);
 
         $counts_by_tahap = [
-            'Preview 1' => 0,
-            'Preview 2' => 0,
-            'Preview 3' => 0,
-            'Sidang'    => 0,
+            'Preview 1'          => 0,
+            'Preview 2'          => 0,
+            'Preview 3'          => 0,
+            'Persyaratan Sidang' => 0,
+            'Sidang'             => 0,
+            'Lulus'              => 0,
         ];
 
         foreach ($students as $student) {
@@ -851,13 +1051,111 @@ class Dosen_bimbingan extends CI_Controller {
                 continue;
             }
 
-            $previews = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], $tahap);
-            $latest   = !empty($previews) ? $previews[0] : null;
+            if ($tahap === 'Persyaratan Sidang') {
+                $this->load->model('AdminLayanan_model');
+                $bs = $this->AdminLayanan_model->get_berkas_pendaftaran_sidang($student['nim']);
+                $files_ps = [];
+                $uploaded_count = 0;
+                $approved_count = 0;
+                $revision_count = 0;
+                $pending_count  = 0;
+                $latest_date    = null;
+
+                foreach ($bs as $b) {
+                    $st_b = $b['status'] ?? 'Pending Verifikasi';
+                    $norm_st = ($st_b === 'Disetujui Admin LAA') ? 'Approved' : (($st_b === 'Revisi Admin LAA') ? 'Revision' : 'Pending');
+                    if (!empty($b['is_uploaded'])) {
+                        $uploaded_count++;
+                        if ($norm_st === 'Approved') $approved_count++;
+                        elseif ($norm_st === 'Revision') $revision_count++;
+                        else $pending_count++;
+
+                        if (!empty($b['uploaded_at']) && (!$latest_date || strtotime($b['uploaded_at']) > strtotime($latest_date))) {
+                            $latest_date = $b['uploaded_at'];
+                        }
+
+                        $files_ps[] = [
+                            'type'     => $b['kode'],
+                            'label'    => $b['nama_file'],
+                            'file'     => $b['file_name'],
+                            'file_url' => $b['file_url'],
+                            'status'   => $norm_st,
+                            'raw_status' => $st_b,
+                            'catatan'  => $b['catatan'] ?? '',
+                        ];
+                    }
+                }
+
+                $fs_status = strtolower(trim($student['status_filesidang'] ?? ''));
+                $overall_ps = 'Pending';
+                if (in_array($fs_status, ['disetujui admin laa', 'approved', 'disetujui', 'lulus'], true) || (count($bs) > 0 && $approved_count === count($bs))) {
+                    $overall_ps = 'Approved';
+                } elseif ($revision_count > 0 || strpos($fs_status, 'revisi') !== false) {
+                    $overall_ps = 'Revision';
+                }
+
+                if ($uploaded_count > 0) {
+                    $latest = [
+                        'id'                       => 'ps_' . $student['nim'],
+                        'nim'                      => $student['nim'],
+                        'tahapan_preview'          => 'persyaratan_sidang',
+                        'created_at'               => $latest_date ?: date('Y-m-d H:i:s'),
+                        'status_pembimbing'        => $overall_ps,
+                        'status_penguji'           => $overall_ps,
+                        'files_persyaratan_sidang' => $files_ps,
+                        'total_required'           => count($bs),
+                        'uploaded_count'           => $uploaded_count,
+                        'approved_count'           => $approved_count,
+                        'revision_count'           => $revision_count,
+                        'pending_count'            => $pending_count,
+                    ];
+                    $previews = [$latest];
+                } else {
+                    $latest   = null;
+                    $previews = [];
+                }
+            } else {
+                $query_tahap = ($tahap === 'Lulus') ? 'Sidang' : $tahap;
+                $previews = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], $query_tahap);
+                if ($tahap === 'Lulus' && empty($previews)) {
+                    $previews = $this->Mahasiswa_model->get_riwayat_preview($student['nim'], 'Preview 3');
+                }
+                $latest = !empty($previews) ? $previews[0] : null;
+
+                // Untuk Preview 3: jika berkas Bimbingan, Sitasi, dan Persyaratan Jalur TA diunggah di row terpisah,
+                // gabungkan berkas & status terbaru dari ke-3 kategori ke dalam $latest agar status ACC per-kategori akurat
+                if ($tahap === 'Preview 3' && !empty($previews) && $latest) {
+                    foreach (['bimbingan', 'sitasi', 'persyaratan'] as $cat_k) {
+                        $f_col  = 'file_' . $cat_k;
+                        $st_col = 'status_file_' . $cat_k;
+                        $ct_col = 'catatan_file_' . $cat_k;
+                        foreach ($previews as $pr_row) {
+                            if (!empty($pr_row[$f_col])) {
+                                $latest[$f_col] = $pr_row[$f_col];
+                                $eff_st = (!empty($pr_row[$st_col]) && $pr_row[$st_col] !== 'Pending')
+                                    ? $pr_row[$st_col]
+                                    : ($pr_row['status_pembimbing'] ?? 'Pending');
+                                $latest[$st_col] = $eff_st;
+                                if (!empty($pr_row[$ct_col])) {
+                                    $latest[$ct_col] = $pr_row[$ct_col];
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
 
             $rekomen = $this->Rekomendasi_model->get_latest_submission($student['nim']);
+            $jadwal_sidang = ($tahap === 'Sidang' || $tahap === 'Lulus')
+                ? $this->Mahasiswa_model->get_jadwal_sidang($student['nim'])
+                : null;
+            $kelulusan_info = ($tahap === 'Sidang' || $tahap === 'Lulus')
+                ? $this->Mahasiswa_model->get_kelulusan_sidang_info($student)
+                : null;
 
-            if ($latest && !empty($latest['file_draft'])) {
-                if ($tahap === 'Sidang') {
+            if ($latest && !empty($latest['file_draft']) && $tahap !== 'Persyaratan Sidang') {
+                if ($tahap === 'Sidang' || $tahap === 'Lulus') {
                     $sidangFile = $latest['file_sidang'] ?? $latest['file_draft'];
                     $filePath = FCPATH . 'uploads/sidang/' . $sidangFile;
                 } else {
@@ -869,14 +1167,14 @@ class Dosen_bimbingan extends CI_Controller {
             }
 
             $has_syarat_sidang = false;
-            if ($tahap === 'Preview 3') {
+            if ($tahap === 'Preview 3' || $tahap === 'Persyaratan Sidang') {
                 if (!empty($latest['file_persyaratan'])) {
                     $has_syarat_sidang = true;
                 } else {
                     $this->load->model('AdminLayanan_model');
-                    $bs = $this->AdminLayanan_model->get_berkas_pendaftaran_sidang($student['nim']);
-                    foreach ($bs as $b) {
-                        if (!empty($b['file_name']) && $b['file_name'] !== '-') {
+                    $bs_check = $this->AdminLayanan_model->get_berkas_pendaftaran_sidang($student['nim']);
+                    foreach ($bs_check as $b) {
+                        if (!empty($b['is_uploaded'])) {
                             $has_syarat_sidang = true;
                             break;
                         }
@@ -893,6 +1191,8 @@ class Dosen_bimbingan extends CI_Controller {
                 'latest_preview'         => $latest,
                 'riwayat_previews'       => $previews,
                 'rekomendasi'            => $rekomen,
+                'jadwal_sidang'          => $jadwal_sidang,
+                'kelulusan_info'         => $kelulusan_info,
                 'has_persyaratan_sidang' => $has_syarat_sidang,
                 'status_de'              => $student['status_de'] ?? ($latest['kelayakan2'] ?? null),
                 'nilai_pembimbing1'      => $student['nilai_pembimbing1'] ?? ($latest['nilai_pembimbing1'] ?? null),
@@ -978,6 +1278,7 @@ class Dosen_bimbingan extends CI_Controller {
     /** Helper: role PIC untuk suatu tahap. */
     private function _get_responsible_role($tahap) {
         $t = strtolower(trim($tahap));
+        if ($t === 'persyaratan sidang' || $t === 'persyaratan_sidang' || $t === 'persyaratansidang') return null;
         if ($t === 'preview1' || $t === 'preview 1' || $t === 'preview3' || $t === 'preview 3') return 'p1';
         return 'u1';
     }
@@ -1028,6 +1329,14 @@ class Dosen_bimbingan extends CI_Controller {
         $valid_actions = ['Approved', 'Revision', 'Reset', 'Comment'];
         if (!in_array($action, $valid_actions, true)) {
             echo json_encode(['status' => false, 'message' => 'Action tidak valid: ' . $action]);
+            return;
+        }
+
+        if (strpos((string)$id_preview, 'ps_') === 0) {
+            echo json_encode([
+                'status'  => false,
+                'message' => 'Berkas Persyaratan Sidang diverifikasi oleh Admin Layanan (LAA), bukan oleh Dosen.',
+            ]);
             return;
         }
 
@@ -1089,6 +1398,13 @@ class Dosen_bimbingan extends CI_Controller {
         }
 
         $pic_role = $this->_get_responsible_role($tahap);
+        if ($pic_role === null) {
+            echo json_encode([
+                'status'  => false,
+                'message' => 'Tahap Persyaratan Sidang diverifikasi secara terpusat oleh Admin Layanan (LAA).',
+            ]);
+            return;
+        }
 
         if (!$this->_is_pic_for_student($nim, $pic_role)) {
             echo json_encode([
@@ -1230,5 +1546,99 @@ class Dosen_bimbingan extends CI_Controller {
             return;
         }
         echo json_encode(['status' => true, 'data' => $detail]);
+    }
+
+    /**
+     * AJAX Endpoint: Detail Nilai Sidang Mahasiswa + Dynamic Rubrik Koordinator TA
+     */
+    public function get_detail_nilai_sidang_ajax() {
+        header('Content-Type: application/json');
+
+        if (!$this->_is_authorized_reviewer()) {
+            echo json_encode(['status' => false, 'message' => 'Unauthorized']);
+            return;
+        }
+
+        $nim = $this->input->get('nim') ?: $this->input->post('nim');
+        if (empty($nim)) {
+            echo json_encode(['status' => false, 'message' => 'NIM wajib diisi.']);
+            return;
+        }
+
+        $detail = $this->Mahasiswa_model->get_detail_nilai_sidang($nim);
+        if (!$detail) {
+            echo json_encode(['status' => false, 'message' => 'Data mahasiswa tidak ditemukan.']);
+            return;
+        }
+
+        echo json_encode(['status' => true, 'data' => $detail]);
+    }
+
+    /**
+     * AJAX Endpoint: Simpan / Edit Penilaian Sidang Mahasiswa
+     */
+    public function simpan_nilai_sidang_ajax() {
+        header('Content-Type: application/json');
+
+        if (!$this->_is_authorized_reviewer()) {
+            echo json_encode(['status' => false, 'message' => 'Unauthorized']);
+            return;
+        }
+
+        $nim         = $this->input->post('nim');
+        $posisi      = (int)$this->input->post('posisi');
+        $nilai       = $this->input->post('nilai_akhir');
+        $catatan     = $this->input->post('catatan');
+        $detail_raw  = $this->input->post('detail_penilaian');
+
+        if (empty($nim) || !in_array($posisi, [1, 2, 3, 4], true)) {
+            echo json_encode(['status' => false, 'message' => 'Parameter tidak lengkap atau posisi tidak valid.']);
+            return;
+        }
+
+        if ($nilai === null || $nilai === '' || !is_numeric($nilai) || (float)$nilai < 0 || (float)$nilai > 100) {
+            echo json_encode(['status' => false, 'message' => 'Nilai akhir wajib diisi angka antara 0 sampai 100.']);
+            return;
+        }
+
+        $role_id = (int)$this->session->userdata('role_id');
+        if ($role_id !== 1) {
+            $dosen_id = $this->session->userdata('user_id');
+            $students = $this->Mahasiswa_model->get_students_by_dosen($dosen_id, $posisi);
+            $nims = array_column($students, 'nim');
+            if (!in_array($nim, $nims, true)) {
+                echo json_encode(['status' => false, 'message' => 'Anda tidak memiliki hak akses memberi nilai untuk mahasiswa ini pada posisi ini.']);
+                return;
+            }
+        }
+
+        $detail = null;
+        if (!empty($detail_raw)) {
+            $detail = is_string($detail_raw) ? json_decode($detail_raw, true) : $detail_raw;
+        }
+
+        $res = $this->Mahasiswa_model->save_nilai_sidang_by_posisi(
+            $nim,
+            $posisi,
+            (float)$nilai,
+            (string)$catatan,
+            $detail
+        );
+
+        echo json_encode($res);
+    }
+
+    /**
+     * AJAX Endpoint: Ambil Seluruh Master Rubrik Penilaian Dinamis
+     */
+    public function ajax_get_all_master_rubrik() {
+        header('Content-Type: application/json');
+        if (!$this->_is_authorized_reviewer()) {
+            echo json_encode(['status' => false, 'message' => 'Unauthorized']);
+            return;
+        }
+        $this->load->model('KoordinatorTA_model');
+        $rubriks = $this->KoordinatorTA_model->get_all_master_rubrik();
+        echo json_encode(['status' => true, 'data' => $rubriks]);
     }
 }
