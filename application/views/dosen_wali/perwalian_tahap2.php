@@ -571,16 +571,29 @@
 
             <!-- Table Mahasiswa Bimbingan Tahap 2 -->
             <div class="clay-card overflow-hidden">
-                <div class="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 space-y-1">
-                    <div class="flex items-center justify-between gap-2.5 sm:gap-4">
+                <div class="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
+                    <div class="space-y-0.5">
                         <h2 class="text-xs sm:text-sm font-bold text-slate-900 leading-tight">Daftar Persetujuan Nilai Hasil Studi Mahasiswa (Tahap 2)</h2>
-                        <span data-sync-count class="text-[11px] sm:text-xs font-bold px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg whitespace-nowrap shrink-0">
+                        <p class="text-[11px] sm:text-xs text-slate-500 leading-normal">
+                            Periksa nilai mutu (A-E) yang diinput mahasiswa dan lakukan persetujuan (approve) satu per satu maupun sekaligus (multiple approve)
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 shrink-0">
+                        <div class="flex items-center gap-1.5 text-[11px] sm:text-xs text-slate-600 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl shadow-2xs">
+                            <span class="font-medium">Tampilkan</span>
+                            <select id="recordsPerPageT2" onchange="changePageSizeT2(this.value)" class="h-6 px-1.5 text-xs font-bold bg-white border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-purple-500 cursor-pointer">
+                                <option value="5">5</option>
+                                <option value="10" selected>10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            <span class="font-medium">data/hal</span>
+                        </div>
+                        <span data-sync-count class="text-[11px] sm:text-xs font-bold px-2.5 py-1.5 bg-slate-100 text-slate-700 rounded-xl whitespace-nowrap shrink-0 border border-slate-200/80">
                             <?= count($list_perwalian); ?> Mahasiswa
                         </span>
                     </div>
-                    <p class="text-[11px] sm:text-xs text-slate-500 leading-normal">
-                        Periksa nilai mutu (A-E) yang diinput mahasiswa dan lakukan persetujuan (approve) satu per satu maupun sekaligus (multiple approve)
-                    </p>
                 </div>
 
                 <!-- 1. Desktop Table View (>= 768px) -->
@@ -822,6 +835,16 @@
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
+
+                <!-- Table Bottom Pagination Bar -->
+                <?php if (!empty($list_perwalian)): ?>
+                <div class="px-4 sm:px-5 py-3 bg-slate-50/70 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs text-slate-500 font-medium">
+                    <div class="text-center sm:text-left">
+                        Menampilkan data <strong id="pageStartT2" class="text-slate-800 font-bold">1</strong> - <strong id="pageEndT2" class="text-slate-800 font-bold"><?= min(10, count($list_perwalian)); ?></strong> dari total <strong id="totalRecordsBottomT2" class="text-slate-800 font-bold"><?= count($list_perwalian); ?></strong> mahasiswa
+                    </div>
+                    <div class="flex items-center justify-center sm:justify-end gap-1 max-w-full overflow-x-auto scrollbar-none py-0.5" id="paginationContainerT2"></div>
+                </div>
+                <?php endif; ?>
             </div>
 
         </main>
@@ -1994,6 +2017,125 @@
             if (menu) menu.classList.add('hidden');
         }
 
+        let currentPageT2 = 1;
+        let pageSizeT2 = 10;
+
+        function changePageSizeT2(size) {
+            pageSizeT2 = parseInt(size) || 10;
+            currentPageT2 = 1;
+            renderPaginationT2();
+        }
+
+        function goToPageT2(page) {
+            currentPageT2 = page;
+            renderPaginationT2();
+        }
+
+        function renderPaginationT2() {
+            const allRows = Array.from(document.querySelectorAll('.t2-table-row'));
+            const allCards = Array.from(document.querySelectorAll('.t2-card-row'));
+
+            const matchedRows = allRows.filter(r => r.dataset.filtered !== '0');
+            const matchedCards = allCards.filter(c => c.dataset.filtered !== '0');
+            const totalMatched = matchedRows.length;
+
+            const totalPages = Math.max(1, Math.ceil(totalMatched / pageSizeT2));
+            if (currentPageT2 > totalPages) currentPageT2 = totalPages;
+            if (currentPageT2 < 1) currentPageT2 = 1;
+
+            const startIdx = (currentPageT2 - 1) * pageSizeT2;
+            const endIdx = startIdx + pageSizeT2;
+
+            // Hide all first
+            allRows.forEach(r => r.style.display = 'none');
+            allCards.forEach(c => c.style.display = 'none');
+
+            // Show current page slice & update row number
+            matchedRows.slice(startIdx, endIdx).forEach((row, idx) => {
+                row.style.display = '';
+                const firstTd = row.querySelector('td');
+                if (firstTd) firstTd.innerText = startIdx + idx + 1;
+            });
+            matchedCards.slice(startIdx, endIdx).forEach(card => {
+                card.style.display = '';
+            });
+
+            // Update info counters
+            const startNum = totalMatched > 0 ? startIdx + 1 : 0;
+            const endNum = Math.min(endIdx, totalMatched);
+
+            const elStart = document.getElementById('pageStartT2');
+            const elEnd = document.getElementById('pageEndT2');
+            const elTotalBottom = document.getElementById('totalRecordsBottomT2');
+            if (elStart) elStart.innerText = startNum;
+            if (elEnd) elEnd.innerText = endNum;
+            if (elTotalBottom) elTotalBottom.innerText = totalMatched;
+
+            const counterEl = document.getElementById('visibleRowCountT2');
+            if (counterEl) counterEl.innerText = totalMatched;
+
+            const emptyRow = document.getElementById('noSearchResultRowT2');
+            if (emptyRow) emptyRow.style.display = (totalMatched === 0 && allRows.length > 0) ? '' : 'none';
+            const emptyCard = document.getElementById('noSearchResultCardT2');
+            if (emptyCard) emptyCard.style.display = (totalMatched === 0 && allCards.length > 0) ? '' : 'none';
+
+            // Render windowed pagination buttons
+            const container = document.getElementById('paginationContainerT2');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const btnBase = 'min-w-[30px] h-7 px-2 rounded-lg text-xs font-bold flex items-center justify-center transition border select-none ';
+            const btnActive = 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-600 shadow-xs cursor-default';
+            const btnInactive = 'bg-white hover:bg-purple-50 text-slate-700 hover:text-purple-700 border-slate-200 cursor-pointer';
+            const btnDisabled = 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed pointer-events-none';
+
+            // Prev button
+            const prevBtn = document.createElement('button');
+            prevBtn.type = 'button';
+            prevBtn.className = btnBase + (currentPageT2 <= 1 ? btnDisabled : btnInactive);
+            prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left text-[10px]"></i>';
+            if (currentPageT2 > 1) prevBtn.onclick = () => goToPageT2(currentPageT2 - 1);
+            container.appendChild(prevBtn);
+
+            // Calculate page numbers with ellipsis for large datasets
+            const pages = [];
+            if (totalPages <= 7) {
+                for (let i = 1; i <= totalPages; i++) pages.push(i);
+            } else {
+                pages.push(1);
+                if (currentPageT2 > 3) pages.push('...');
+                const startP = Math.max(2, currentPageT2 - 1);
+                const endP = Math.min(totalPages - 1, currentPageT2 + 1);
+                for (let i = startP; i <= endP; i++) pages.push(i);
+                if (currentPageT2 < totalPages - 2) pages.push('...');
+                pages.push(totalPages);
+            }
+
+            pages.forEach(p => {
+                if (p === '...') {
+                    const span = document.createElement('span');
+                    span.className = 'px-1.5 text-slate-400 font-bold text-xs';
+                    span.innerText = '...';
+                    container.appendChild(span);
+                } else {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = btnBase + (p === currentPageT2 ? btnActive : btnInactive);
+                    btn.innerText = p;
+                    if (p !== currentPageT2) btn.onclick = () => goToPageT2(p);
+                    container.appendChild(btn);
+                }
+            });
+
+            // Next button
+            const nextBtn = document.createElement('button');
+            nextBtn.type = 'button';
+            nextBtn.className = btnBase + (currentPageT2 >= totalPages ? btnDisabled : btnInactive);
+            nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right text-[10px]"></i>';
+            if (currentPageT2 < totalPages) nextBtn.onclick = () => goToPageT2(currentPageT2 + 1);
+            container.appendChild(nextBtn);
+        }
+
         // EKSEKUSI PENCARIAN (HANYA KETIKA ENTER / CARI DIKLIK)
         function executeMultiSearchT2() {
             const filters = [];
@@ -2043,34 +2185,19 @@
                 return true;
             }
 
-            // Saring Baris Tabel Desktop
+            // Tandai hasil saringan pada Baris Tabel Desktop & Kartu Mobile
             const rows = document.querySelectorAll('.t2-table-row');
-            let visibleCount = 0;
             rows.forEach(row => {
-                const match = checkMatchT2(row);
-                row.style.display = match ? '' : 'none';
-                if (match) visibleCount++;
+                row.dataset.filtered = checkMatchT2(row) ? '1' : '0';
             });
 
-            // Saring Kartu Mobile
             const cards = document.querySelectorAll('.t2-card-row');
             cards.forEach(card => {
-                const match = checkMatchT2(card);
-                card.style.display = match ? '' : 'none';
+                card.dataset.filtered = checkMatchT2(card) ? '1' : '0';
             });
 
-            // Update Counter
-            const counterEl = document.getElementById('visibleRowCountT2');
-            if (counterEl) counterEl.innerText = visibleCount;
-
-            const emptyRow = document.getElementById('noSearchResultRowT2');
-            if (emptyRow) {
-                emptyRow.style.display = (visibleCount === 0 && rows.length > 0) ? '' : 'none';
-            }
-            const emptyCard = document.getElementById('noSearchResultCardT2');
-            if (emptyCard) {
-                emptyCard.style.display = (visibleCount === 0 && cards.length > 0) ? '' : 'none';
-            }
+            currentPageT2 = 1;
+            renderPaginationT2();
 
             // Update Active Filter Tags
             renderActiveFilterTagsT2(filters);
@@ -2155,6 +2282,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             initStatsSliderListenerT2();
             initExcelDropzone();
+            renderPaginationT2();
         });
 
         // Cegah browser membuka file secara default saat di-drop di luar dropzone
